@@ -6,7 +6,7 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
-import {getDonationRepository, getEmailService} from '@app/api/middleware/ServiceSingletons';
+import {getEmailService} from '@app/api/middleware/ServiceSingletons';
 import {
 	createOperatorPassFulfilmentService,
 	type OperatorPassFulfilmentService,
@@ -85,7 +85,6 @@ export class StripeService {
 			userRepository: this.userRepository,
 			emailService: getEmailService(),
 			cacheService: this.cacheService,
-			donationRepository: getDonationRepository(),
 			services: operatorPassServices,
 		});
 		this.gifts = new StripeGiftService(

@@ -42,23 +42,6 @@
 	--face-ink: var(--pl-btn-ink);
 }
 
-.danger {
-	--face: var(--pl-danger-face);
-	--face-hover: var(--pl-danger-hover);
-	--face-press: var(--pl-danger-press);
-	--face-ledge: var(--pl-danger-ledge);
-	--face-ink: var(--pl-danger-ink);
-}
-
-.small {
-	--ledge: var(--pl-ledge-s);
-	min-height: 2.5rem;
-	padding: 0.5rem 1rem;
-	border-radius: var(--pl-radius-s);
-	font-size: 0.9375rem;
-	font-weight: 700;
-}
-
 @container plutonium-page (min-width: 40rem) {
 	.button {
 		width: auto;

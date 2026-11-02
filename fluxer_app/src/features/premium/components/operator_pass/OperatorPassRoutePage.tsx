@@ -18,12 +18,13 @@ export function OperatorPassRoutePage() {
 		const params = new URLSearchParams(location.search);
 		RouterUtils.replaceWith(Routes.ME);
 		if (!isOperatorPassAvailable()) return;
-		if (params.get('view') === 'passes') {
+		const view = params.get('view');
+		if (view === 'passes' || view === 'visionary') {
 			ModalCommands.push(
 				ModalCommands.modal(
 					() => (
 						<UserSettingsModal
-							initialTab="my_profile"
+							initialTab="operator_pass"
 							data-flx="premium.operator-pass-route-page.user-settings-modal"
 						/>
 					),
@@ -34,6 +35,7 @@ export function OperatorPassRoutePage() {
 		}
 		OperatorPassModalCommands.openCheckoutModal({
 			canceled: params.get('status') === 'cancel',
+			sessionId: params.get('session_id') ?? undefined,
 		});
 	}, [location.search]);
 	return null;

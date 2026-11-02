@@ -28,7 +28,11 @@ export function GeolocationController(app: Hono<HonoEnv>): void {
 			ctx.header('Access-Control-Allow-Origin', '*');
 			ctx.header('Access-Control-Allow-Headers', 'Content-Type');
 			ctx.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-			const response = await resolveClientGeoip(getRequestClientIp(ctx), Config.geoip.maxmindDbPath);
+			const response = await resolveClientGeoip(
+				getRequestClientIp(ctx),
+				Config.geoip.maxmindDbPath,
+				Config.instance.agePolicy,
+			);
 			return ctx.json(response);
 		},
 	);

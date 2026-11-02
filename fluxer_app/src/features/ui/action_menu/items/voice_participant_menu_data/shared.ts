@@ -24,7 +24,7 @@ export const CHANGE_STREAM_DESCRIPTOR = msg({
 	comment: 'Voice screen share menu action that changes the shared source.',
 });
 export const PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR = msg({
-	message: 'Pause preview when {productName} isn’t focused',
+	message: "Pause preview when {productName} isn't focused",
 	comment:
 		'Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.',
 });

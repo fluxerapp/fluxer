@@ -255,6 +255,7 @@ function defaultConfig(): MasterConfig {
 			},
 			account_identity: null,
 			tag_style: null,
+			age_policy: {},
 		},
 		payment_disputes: {},
 		operator_pass: {
@@ -329,9 +330,9 @@ function applyProfilePseudonymSecret(config: MasterConfig): void {
 	config.auth.profile_pseudonym_secret = DEVELOPMENT_PROFILE_PSEUDONYM_SECRET;
 }
 
-function validateReplyToEmail(value: string): void {
+function validateSingleEmail(value: string, name: string): void {
 	if (value !== '' && !/^[^\s@<>,;"]+@[^\s@<>,;"]+$/.test(value)) {
-		throw new Error('FLUXER_EMAIL_REPLY_TO_EMAIL must be a single email address such as support@example.com');
+		throw new Error(`${name} must be a single email address such as support@example.com`);
 	}
 }
 
@@ -637,6 +638,32 @@ function validateStoreBillingConfig(config: MasterConfig): void {
 	assertBoolean(config.integrations.store_billing.sandbox_entitles_all, 'FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL');
 }
 
+const AGE_POLICY_REGION_PATTERN = /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/u;
+
+function normalizeAgePolicyRegions(regions: Array<string> | undefined, envName: string): Array<string> | undefined {
+	if (regions === undefined) return undefined;
+	const normalized = regions.map((region) => region.trim().toUpperCase());
+	for (const region of normalized) {
+		if (!AGE_POLICY_REGION_PATTERN.test(region)) {
+			throw new Error(
+				`${envName} entry ${JSON.stringify(region)} must be a country code such as GB or a country and region code such as US-MS`,
+			);
+		}
+	}
+	return [...new Set(normalized)];
+}
+
+function normalizeAgePolicyConfig(config: MasterConfig): void {
+	const agePolicy = config.instance.age_policy;
+	if (agePolicy.enabled !== undefined) {
+		assertBoolean(agePolicy.enabled, 'FLUXER_AGE_POLICY_ENABLED');
+	}
+	config.instance.age_policy = {
+		enabled: agePolicy.enabled,
+		restricted_regions: normalizeAgePolicyRegions(agePolicy.restricted_regions, 'FLUXER_AGE_POLICY_RESTRICTED_REGIONS'),
+	};
+}
+
 function validateDomain(value: string, envName: string): void {
 	if (value === '') return;
 	const parsed = URL.parse(`http://${value}/`);
@@ -708,9 +735,11 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateReportRetentionConfig(config);
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);
-	validateReplyToEmail(config.integrations.email.reply_to_email);
+	validateSingleEmail(config.integrations.email.reply_to_email, 'FLUXER_EMAIL_REPLY_TO_EMAIL');
+	validateSingleEmail(config.integrations.email.support_alert_email ?? '', 'FLUXER_EMAIL_SUPPORT_ALERT_EMAIL');
 	normalizeEmailFallbackConfig(config);
 	normalizeAppOriginAliases(config);
+	normalizeAgePolicyConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(
 		config.services.api.automated_message_deletion_delay_days,

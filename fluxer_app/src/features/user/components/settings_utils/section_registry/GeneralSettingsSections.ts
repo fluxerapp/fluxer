@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	OPERATOR_PASS_LABS_SECTION_DESCRIPTOR,
+	OPERATOR_PASS_PASSES_SECTION_DESCRIPTOR,
+	OPERATOR_PASS_WALL_SECTION_DESCRIPTOR,
+	PAYMENT_METHODS_SECTION_DESCRIPTOR,
+	RECEIPTS_SECTION_DESCRIPTOR,
+	REFUNDS_SECTION_DESCRIPTOR,
+	SUBSCRIPTION_SECTION_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	APPLICATIONS_DESCRIPTOR as APPLICATIONS_LIST_DESCRIPTOR,
@@ -55,6 +64,34 @@ export const generalSettingsSections = [
 		keywords: [],
 		isAdvanced: false,
 	},
+	{
+		id: 'subscription',
+		tabType: 'subscriptions',
+		label: SUBSCRIPTION_SECTION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{
+		id: 'operator-pass-passes',
+		tabType: 'operator_pass',
+		label: OPERATOR_PASS_PASSES_SECTION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{
+		id: 'operator-pass-wall',
+		tabType: 'operator_pass',
+		label: OPERATOR_PASS_WALL_SECTION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{
+		id: 'operator-pass-labs',
+		tabType: 'operator_pass',
+		label: OPERATOR_PASS_LABS_SECTION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
 	{id: 'redeem-gift', tabType: 'gift_inventory', label: REDEEM_A_GIFT_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{
 		id: 'purchased-gifts',
@@ -63,6 +100,15 @@ export const generalSettingsSections = [
 		keywords: [],
 		isAdvanced: false,
 	},
+	{
+		id: 'payment-methods',
+		tabType: 'payments',
+		label: PAYMENT_METHODS_SECTION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{id: 'refunds', tabType: 'payments', label: REFUNDS_SECTION_DESCRIPTOR, keywords: [], isAdvanced: false},
+	{id: 'receipts', tabType: 'payments', label: RECEIPTS_SECTION_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{id: 'blocked-users', tabType: 'blocked_users', label: BLOCKED_USERS_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{
 		id: 'authorized-applications',

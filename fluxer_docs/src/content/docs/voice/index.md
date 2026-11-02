@@ -16,7 +16,7 @@ Fluxer runs voice over LiveKit. The Gateway places a session in a voice channel 
 
 ## Media transport
 
-No HTTP route returns media or the grant. A client sends [Voice State Update](/gateway/commands/#voice-state-update) and gets a [Voice Server Update](/gateway/events/#voice-server-update). The client connects to its `endpoint` with its `token`, using the LiveKit protocol. The grant also has an `e2ee_key` when the channel is end-to-end encrypted.
+No HTTP route returns media or the grant. A client sends [Voice State Update](/gateway/commands/#voice-state-update) and gets a [Voice Server Update](/gateway/events/#voice-server-update). The client connects to its `endpoint` with its `token`, using the LiveKit protocol. The grant also has an `e2ee_key` when the channel encrypts call media. The server creates that key, so this isn't end-to-end encryption. End-to-end encrypted calls are planned with the [new voice and video system](https://fluxer.com/blog/roadmap-2026#2-a-new-voice-and-video-system-with-encrypted-calls).
 
 A [peer-to-peer](/gateway/events/#peer-to-peer-voice) grant has ICE servers and no `endpoint` or `token`.
 

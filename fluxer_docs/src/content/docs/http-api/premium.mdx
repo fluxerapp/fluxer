@@ -164,7 +164,7 @@ The state that decides whether premium features are available. `is_premium` is a
 
 ## Premium billing state object
 
-The account's Stripe customer, subscription, invoices and payment methods.
+The account's Stripe customer, subscription and payment methods.
 
 ### Structure
 
@@ -175,8 +175,7 @@ The account's Stripe customer, subscription, invoices and payment methods.
 | pending_subscription_change | ?[pending subscription change](#pending-subscription-change-object) object | The scheduled billing cycle change |
 | list_price_switch | [list price switch](#list-price-switch-object) object | Whether the subscription can move to the list price |
 | subscription | ?[billing subscription](#billing-subscription-object) object | The current subscription |
-| invoices | array[[billing invoice](#billing-invoice-object)] | Up to 12 recent invoices, newest first |
-| invoices_has_more | boolean | Whether there are older invoices, which the [customer portal](#create-customer-portal) shows |
+| documents | array | Always empty. A self-hosted instance issues no invoices or receipts of its own, so Stripe's receipt settings apply |
 | payment_methods | array[[billing payment method](#billing-payment-method-object)] | The stored payment methods, default first |
 | refund_eligibility | [refund eligibility](/http-api/billing/#refund-eligibility-object) object | Always ineligible, with `reason` set to `feature_unavailable` |
 
@@ -199,27 +198,6 @@ A Stripe subscription, with `status`, `plan_interval` and `plan_currency` in Str
 | plan_amount_minor | ?integer | The price amount, in the minor unit of `plan_currency` |
 | plan_currency | ?string | The lowercase currency of the price |
 | default_payment_method_id | ?string | The payment method the subscription bills |
-
-## Billing invoice object
-
-A Stripe invoice.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| id | string | The Stripe invoice ID |
-| number | ?string | The invoice number |
-| amount_due | integer | The amount due, in the minor unit of `currency` |
-| amount_paid | integer | The amount paid, in the minor unit of `currency` |
-| currency | string | The lowercase currency of the invoice |
-| status | ?string | The invoice status |
-| created_at | ?ISO8601 timestamp | When the invoice was created |
-| paid_at | ?ISO8601 timestamp | When the invoice was paid |
-| billing_reason | ?string | Why Stripe created the invoice |
-| subscription_id | ?string | The subscription that produced the invoice, or null for a one-off purchase |
-| hosted_invoice_url | ?string | The hosted invoice page |
-| invoice_pdf | ?string | The invoice PDF |
 
 ## Billing payment method object
 
@@ -408,6 +386,7 @@ Moves the subscription between monthly and yearly and clears a pending cancellat
 | 204 | empty | The change was applied or scheduled |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_NO_ACTIVE_SUBSCRIPTION` when the account has no subscription |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT_CONFIGURATION` when the cycle has no price in the subscription's currency |
+| 400 | [error response](/http-api/#error-response) | `STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE` when the subscription is paid with Pix or UPI, whose mandate covers one billing cycle and amount |
 
 The rate limit is 5 requests per minute, on the `stripe:subscription:change` bucket.
 

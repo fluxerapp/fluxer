@@ -55,7 +55,7 @@ export function isWithdrawalPeriodWorkingDay(day: Date): boolean {
 	return !EASTER_HOLIDAY_OFFSETS_DAYS.some((offset) => addDays(easter, offset).getTime() === day.getTime());
 }
 
-export function getWithdrawalPeriodEndsAt(purchasedAt: Date): Date {
+function getLastWithdrawalDay(purchasedAt: Date): Date {
 	const latestPurchaseDay = new Date(purchasedAt.getTime() + EASTERNMOST_BUYER_UTC_OFFSET_MS);
 	let lastDay = addDays(
 		calendarDay(latestPurchaseDay.getUTCFullYear(), latestPurchaseDay.getUTCMonth(), latestPurchaseDay.getUTCDate()),
@@ -64,5 +64,13 @@ export function getWithdrawalPeriodEndsAt(purchasedAt: Date): Date {
 	while (!isWithdrawalPeriodWorkingDay(lastDay)) {
 		lastDay = addDays(lastDay, 1);
 	}
-	return new Date(addDays(lastDay, 1).getTime() - WESTERNMOST_BUYER_UTC_OFFSET_MS);
+	return lastDay;
+}
+
+export function getWithdrawalPeriodLastDay(purchasedAt: Date): string {
+	return getLastWithdrawalDay(purchasedAt).toISOString().slice(0, 10);
+}
+
+export function getWithdrawalPeriodEndsAt(purchasedAt: Date): Date {
+	return new Date(addDays(getLastWithdrawalDay(purchasedAt), 1).getTime() - WESTERNMOST_BUYER_UTC_OFFSET_MS);
 }

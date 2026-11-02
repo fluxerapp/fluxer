@@ -312,8 +312,6 @@ export interface BillingInvoiceRow {
 	billing_reason: string | null;
 	collection_method: string | null;
 	description: string | null;
-	hosted_invoice_url: string | null;
-	invoice_pdf: string | null;
 	receipt_number: string | null;
 	statement_descriptor: string | null;
 	period_start: Date | null;
@@ -356,8 +354,6 @@ export const BILLING_INVOICE_COLUMNS = [
 	'billing_reason',
 	'collection_method',
 	'description',
-	'hosted_invoice_url',
-	'invoice_pdf',
 	'receipt_number',
 	'statement_descriptor',
 	'period_start',
@@ -410,7 +406,6 @@ export interface BillingPaymentIntentRow {
 	payment_method_types: Array<string> | null;
 	setup_future_usage: string | null;
 	description: string | null;
-	receipt_email: string | null;
 	statement_descriptor: string | null;
 	canceled_at: Date | null;
 	cancellation_reason: string | null;
@@ -439,7 +434,6 @@ export const BILLING_PAYMENT_INTENT_COLUMNS = [
 	'payment_method_types',
 	'setup_future_usage',
 	'description',
-	'receipt_email',
 	'statement_descriptor',
 	'canceled_at',
 	'cancellation_reason',
@@ -473,8 +467,6 @@ export interface BillingChargeRow {
 	card_brand: string | null;
 	card_last4: string | null;
 	card_country: string | null;
-	receipt_url: string | null;
-	receipt_email: string | null;
 	receipt_number: string | null;
 	description: string | null;
 	failure_code: string | null;
@@ -509,8 +501,6 @@ export const BILLING_CHARGE_COLUMNS = [
 	'card_brand',
 	'card_last4',
 	'card_country',
-	'receipt_url',
-	'receipt_email',
 	'receipt_number',
 	'description',
 	'failure_code',

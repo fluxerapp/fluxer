@@ -11,6 +11,7 @@ import {
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {assertMutableUserId, SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
+import type {UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {resolveMaxGuildMembersLimit} from '@app/api/guild/GuildMemberLimitUtils';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
@@ -427,6 +428,7 @@ export class GuildMemberOperationsService {
 			requestCache: RequestCache;
 			initiatorId?: UserID;
 			tierContext?: TierContext;
+			mentionsOnlyNotifications?: boolean;
 		},
 		eventService: GuildMemberEventService,
 	): Promise<GuildMember> {
@@ -442,6 +444,7 @@ export class GuildMemberOperationsService {
 			sourceInviteCode = null,
 			inviterId = null,
 			requestCache,
+			mentionsOnlyNotifications = false,
 		} = params;
 		const initiatorId = params.initiatorId ?? userId;
 		const guild = await this.guildRepository.findUnique(guildId);
@@ -505,7 +508,7 @@ export class GuildMemberOperationsService {
 		if (visit) {
 			await endGuildVisit({userId, guildId, reason: GuildVisitEndReasons.JOINED, notify: false});
 		}
-		await this.applyJoinUserSettings({userId, guildId, user});
+		await this.applyJoinUserSettings({userId, guildId, user, mentionsOnlyNotifications});
 		await eventService.dispatchGuildMemberAdd({member: guildMember, requestCache});
 		await this.gatewayService.joinGuild({userId, guildId});
 		const includeDefault = guild.membersIndexedAt != null;
@@ -646,61 +649,76 @@ export class GuildMemberOperationsService {
 		if (currentGuildCount >= maxGuilds) throw new MaxGuildsError(maxGuilds);
 	}
 
-	private async applyJoinUserSettings(params: {userId: UserID; guildId: GuildID; user: User}): Promise<void> {
-		const {userId, guildId, user} = params;
+	private async applyJoinUserSettings(params: {
+		userId: UserID;
+		guildId: GuildID;
+		user: User;
+		mentionsOnlyNotifications: boolean;
+	}): Promise<void> {
+		const {userId, guildId, user, mentionsOnlyNotifications} = params;
 		const userSettings = await this.userRepository.findSettings(userId);
-		if (!userSettings) {
-			return;
-		}
-		let needsUpdate = false;
-		const settingsRow = userSettings.toRow();
-		if (user.isBot && userSettings.botDefaultGuildsRestricted) {
-			const updatedBotRestrictedGuilds = new Set(userSettings.botRestrictedGuilds);
-			updatedBotRestrictedGuilds.add(guildId);
-			settingsRow.bot_restricted_guilds = updatedBotRestrictedGuilds;
-			needsUpdate = true;
-		} else if (!user.isBot && userSettings.defaultGuildsRestricted) {
-			const updatedRestrictedGuilds = new Set(userSettings.restrictedGuilds);
-			updatedRestrictedGuilds.add(guildId);
-			settingsRow.restricted_guilds = updatedRestrictedGuilds;
-			needsUpdate = true;
-		}
-		if (!user.isBot) {
-			const {folders: nextFolders, modified} = addGuildToUncategorizedFolder({
-				folders: settingsRow.guild_folders ?? [],
-				guildId,
-				defaultIcon: DEFAULT_GUILD_FOLDER_ICON,
-			});
-			if (modified) {
-				settingsRow.guild_folders = nextFolders;
+		if (userSettings) {
+			let needsUpdate = false;
+			const settingsRow = userSettings.toRow();
+			if (user.isBot && userSettings.botDefaultGuildsRestricted) {
+				const updatedBotRestrictedGuilds = new Set(userSettings.botRestrictedGuilds);
+				updatedBotRestrictedGuilds.add(guildId);
+				settingsRow.bot_restricted_guilds = updatedBotRestrictedGuilds;
+				needsUpdate = true;
+			} else if (!user.isBot && userSettings.defaultGuildsRestricted) {
+				const updatedRestrictedGuilds = new Set(userSettings.restrictedGuilds);
+				updatedRestrictedGuilds.add(guildId);
+				settingsRow.restricted_guilds = updatedRestrictedGuilds;
 				needsUpdate = true;
 			}
+			if (!user.isBot) {
+				const {folders: nextFolders, modified} = addGuildToUncategorizedFolder({
+					folders: settingsRow.guild_folders ?? [],
+					guildId,
+					defaultIcon: DEFAULT_GUILD_FOLDER_ICON,
+				});
+				if (modified) {
+					settingsRow.guild_folders = nextFolders;
+					needsUpdate = true;
+				}
+			}
+			if (needsUpdate) {
+				const updatedSettings = await this.userRepository.upsertSettings(settingsRow, userSettings.toRow());
+				await this.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
+			}
 		}
-		if (needsUpdate) {
-			const updatedSettings = await this.userRepository.upsertSettings(settingsRow, userSettings.toRow());
-			await this.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
+		if (user.isBot) {
+			return;
 		}
-		if (!user.isBot && userSettings.defaultHideMutedChannels) {
-			const existingGuildSettings = await this.userRepository.findGuildSettings(userId, guildId);
-			const guildSettingsRow = existingGuildSettings
-				? {...existingGuildSettings.toRow(), hide_muted_channels: true}
-				: {
-						user_id: userId,
-						guild_id: guildId,
-						message_notifications: UserNotificationSettings.INHERIT,
-						muted: false,
-						mute_config: null,
-						mobile_push: true,
-						suppress_everyone: false,
-						suppress_roles: false,
-						hide_muted_channels: true,
-						channel_overrides: null,
-						unread_badges: null,
-						version: 1,
-					};
-			const updatedGuildSettings = await this.userRepository.upsertGuildSettings(guildSettingsRow);
-			await this.dispatchUserGuildSettingsUpdate({userId, settings: updatedGuildSettings});
+		const hideMutedChannels = userSettings?.defaultHideMutedChannels === true;
+		if (!hideMutedChannels && !mentionsOnlyNotifications) {
+			return;
 		}
+		const existingGuildSettings = await this.userRepository.findGuildSettings(userId, guildId);
+		const guildSettingsRow: UserGuildSettingsRow = existingGuildSettings
+			? existingGuildSettings.toRow()
+			: {
+					user_id: userId,
+					guild_id: guildId,
+					message_notifications: UserNotificationSettings.INHERIT,
+					muted: false,
+					mute_config: null,
+					mobile_push: true,
+					suppress_everyone: false,
+					suppress_roles: false,
+					hide_muted_channels: false,
+					channel_overrides: null,
+					unread_badges: null,
+					version: 1,
+				};
+		if (hideMutedChannels) {
+			guildSettingsRow.hide_muted_channels = true;
+		}
+		if (mentionsOnlyNotifications && guildSettingsRow.message_notifications === UserNotificationSettings.INHERIT) {
+			guildSettingsRow.message_notifications = UserNotificationSettings.ONLY_MENTIONS;
+		}
+		const updatedGuildSettings = await this.userRepository.upsertGuildSettings(guildSettingsRow);
+		await this.dispatchUserGuildSettingsUpdate({userId, settings: updatedGuildSettings});
 	}
 
 	private async updateSelfProfile(params: {

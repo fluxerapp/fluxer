@@ -2,7 +2,13 @@
 
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
+	OPERATOR_PASS_CERTIFICATE_BY_PURCHASE_COLUMNS,
+	OPERATOR_PASS_CERTIFICATE_COLUMNS,
+	OPERATOR_PASS_CERTIFICATE_LINK_COLUMNS,
+	OPERATOR_PASS_CERTIFICATE_NUMBER_COLUMNS,
 	OPERATOR_PASS_COLUMNS,
+	OPERATOR_PASS_LABS_GREETING_COLUMNS,
+	OPERATOR_PASS_LABS_MEMBER_COLUMNS,
 	OPERATOR_PASS_OFFER_BY_USER_COLUMNS,
 	OPERATOR_PASS_OFFER_COLUMNS,
 	OPERATOR_PASS_PURCHASE_BY_PAYMENT_INTENT_COLUMNS,
@@ -15,6 +21,7 @@ import {
 	OPERATOR_PASS_UNIT_BY_PURCHASE_COLUMNS,
 	OPERATOR_PASS_UNIT_COLUMNS,
 	OPERATOR_PASS_UNIT_EVENT_COLUMNS,
+	OPERATOR_PASS_VISIONARY_ACTIVATION_COLUMNS,
 	OPERATOR_PASS_WAITLIST_BY_ENTRY_ID_COLUMNS,
 	OPERATOR_PASS_WAITLIST_COLUMNS,
 	OPERATOR_PASS_WALL_AUDIT_LOG_COLUMNS,
@@ -26,6 +33,12 @@ import {
 	OPERATOR_PASS_WALL_REVISION_COLUMNS,
 	OPERATOR_PASS_WALL_STATE_COLUMNS,
 	OPERATOR_PASS_WALL_TOMBSTONE_COLUMNS,
+	type OperatorPassCertificateByPurchaseRow,
+	type OperatorPassCertificateLinkRow,
+	type OperatorPassCertificateNumberRow,
+	type OperatorPassCertificateRow,
+	type OperatorPassLabsGreetingRow,
+	type OperatorPassLabsMemberRow,
 	type OperatorPassOfferByUserRow,
 	type OperatorPassOfferRow,
 	type OperatorPassPurchaseByPaymentIntentRow,
@@ -39,6 +52,7 @@ import {
 	type OperatorPassUnitByPurchaseRow,
 	type OperatorPassUnitEventRow,
 	type OperatorPassUnitRow,
+	type OperatorPassVisionaryActivationRow,
 	type OperatorPassWaitlistByEntryIdRow,
 	type OperatorPassWaitlistRow,
 	type OperatorPassWallAuditLogRow,
@@ -74,6 +88,36 @@ export const OperatorPassPurchases = defineTable<OperatorPassPurchaseRow, 'check
 	name: 'operator_pass_purchases',
 	columns: OPERATOR_PASS_PURCHASE_COLUMNS,
 	primaryKey: ['checkout_session_id'],
+});
+
+export const OperatorPassCertificates = defineTable<OperatorPassCertificateRow, 'pass_id' | 'version', 'pass_id'>({
+	name: 'operator_pass_certificates',
+	columns: OPERATOR_PASS_CERTIFICATE_COLUMNS,
+	primaryKey: ['pass_id', 'version'],
+	partitionKey: ['pass_id'],
+});
+
+export const OperatorPassCertificatesByPurchase = defineTable<
+	OperatorPassCertificateByPurchaseRow,
+	'purchase_id' | 'pass_id',
+	'purchase_id'
+>({
+	name: 'operator_pass_certificates_by_purchase',
+	columns: OPERATOR_PASS_CERTIFICATE_BY_PURCHASE_COLUMNS,
+	primaryKey: ['purchase_id', 'pass_id'],
+	partitionKey: ['purchase_id'],
+});
+
+export const OperatorPassCertificateNumbers = defineTable<OperatorPassCertificateNumberRow, 'number'>({
+	name: 'operator_pass_certificate_numbers',
+	columns: OPERATOR_PASS_CERTIFICATE_NUMBER_COLUMNS,
+	primaryKey: ['number'],
+});
+
+export const OperatorPassCertificateLinks = defineTable<OperatorPassCertificateLinkRow, 'token_'>({
+	name: 'operator_pass_certificate_links',
+	columns: OPERATOR_PASS_CERTIFICATE_LINK_COLUMNS,
+	primaryKey: ['token_'],
 });
 
 export const OperatorPassPurchasesByPaymentIntent = defineTable<
@@ -235,4 +279,23 @@ export const OperatorPassWallTombstones = defineTable<OperatorPassWallTombstoneR
 	name: 'operator_pass_wall_tombstones',
 	columns: OPERATOR_PASS_WALL_TOMBSTONE_COLUMNS,
 	primaryKey: ['token_'],
+});
+
+export const OperatorPassVisionaryActivations = defineTable<OperatorPassVisionaryActivationRow, 'user_id'>({
+	name: 'operator_pass_visionary_activations',
+	columns: OPERATOR_PASS_VISIONARY_ACTIVATION_COLUMNS,
+	primaryKey: ['user_id'],
+});
+
+export const OperatorPassLabsMembers = defineTable<OperatorPassLabsMemberRow, 'user_id'>({
+	name: 'operator_pass_labs_members',
+	columns: OPERATOR_PASS_LABS_MEMBER_COLUMNS,
+	primaryKey: ['user_id'],
+});
+
+export const OperatorPassLabsGreetings = defineTable<OperatorPassLabsGreetingRow, 'bucket' | 'user_id', 'bucket'>({
+	name: 'operator_pass_labs_greetings',
+	columns: OPERATOR_PASS_LABS_GREETING_COLUMNS,
+	primaryKey: ['bucket', 'user_id'],
+	partitionKey: ['bucket'],
 });

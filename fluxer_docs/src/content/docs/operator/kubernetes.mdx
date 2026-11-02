@@ -42,7 +42,7 @@ helm install fluxer ./fluxer/deploy/helm/fluxer \
   -f fluxer-values.yaml --wait --timeout 15m
 ```
 
-Keep `fluxer-values.yaml` for upgrades. When the install is done, `helm test fluxer -n fluxer` checks that the instance answers for your domain.
+Keep `fluxer-values.yaml` for upgrades. When the install is done, `helm test fluxer -n fluxer` checks that the instance responds on your domain.
 
 Open your domain in a browser to create your admin account. The setup page asks for the setup token in the `fluxer-env` Secret.
 

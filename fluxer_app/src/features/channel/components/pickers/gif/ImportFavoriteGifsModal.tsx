@@ -26,7 +26,7 @@ const GIF_URLS_DESCRIPTOR = msg({
 });
 const IMPORT_COMPLETE_WITH_SKIPPED_DESCRIPTOR = msg({
 	message:
-		'Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or limit reached).',
+		'Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or over the limit).',
 	comment:
 		'Completion text in the favorite GIF import modal. importedCount is the number added; skippedCount is the number skipped.',
 });

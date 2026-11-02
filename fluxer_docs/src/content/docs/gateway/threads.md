@@ -154,4 +154,4 @@ Each forum unread request object has `thread_id` and an optional `ack_message_id
 }
 ```
 
-Fluxer answers with one [Forum Unreads](#forum-unreads) and sends nothing when the guild is unavailable to the session, the channel is not a forum or media channel or the session cannot view it. A connection can send five of these commands in any 5 seconds, and Fluxer drops the rest.
+Fluxer responds with one [Forum Unreads](#forum-unreads) and sends nothing when the guild is unavailable to the session, the channel is not a forum or media channel or the session cannot view it. A connection can send five of these commands in any 5 seconds, and Fluxer drops the rest.

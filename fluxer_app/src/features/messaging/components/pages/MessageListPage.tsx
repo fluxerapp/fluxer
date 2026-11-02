@@ -25,7 +25,7 @@ import type React from 'react';
 import {useCallback, useMemo, useRef} from 'react';
 
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
-	message: "You've reached the end",
+	message: "You're at the end",
 	comment: 'Label in the message list page.',
 });
 

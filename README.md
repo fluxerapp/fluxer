@@ -36,10 +36,11 @@ Fluxer is a free and open source instant messaging and VoIP chat app built for f
 
 | Windows | macOS | Linux | Android | iOS |
 | --- | --- | --- | --- | --- |
-| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flathub][flathub] | [Google Play (beta)][android-play] | [TestFlight][ios-testflight] |
-| [Installer (ARM64)][win-setup-arm64] | | [deb (x64)][linux-deb-x64] | [APK (beta)][android-apk] | |
-| [Portable (x64)][win-portable-x64] | | [deb (ARM64)][linux-deb-arm64] | [Obtainium (beta)][obtainium] | |
-| [Portable (ARM64)][win-portable-arm64] | | [rpm (x64)][linux-rpm-x64] | | |
+| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flatpak][flatpak-ref] | [Google Play (beta)][android-play] | [Beta paused][ios-beta-paused] |
+| [Installer (ARM64)][win-setup-arm64] | | [Flathub][flathub] | [APK (beta)][android-apk] | |
+| [Portable (x64)][win-portable-x64] | | [deb (x64)][linux-deb-x64] | [Obtainium (most phones)][obtainium-fcm] | |
+| [Portable (ARM64)][win-portable-arm64] | | [deb (ARM64)][linux-deb-arm64] | [Obtainium (degoogled phones)][obtainium-oss] | |
+| | | [rpm (x64)][linux-rpm-x64] | | |
 | | | [rpm (ARM64)][linux-rpm-arm64] | | |
 | | | [AppImage (x64)][linux-appimage-x64] | | |
 | | | [AppImage (ARM64)][linux-appimage-arm64] | | |
@@ -56,18 +57,18 @@ The package is `fluxer` for stable and `fluxer-canary` for canary. apt and dnf s
 
 ### Flatpak
 
-Stable is on [Flathub][flathub], the easiest route on most desktops:
-
-```sh
-flatpak install flathub app.fluxer.Fluxer
-```
-
-Flathub has stable only. To use Fluxer's own repository, open [the stable][flatpak-ref] or [the canary][flatpak-canary-ref] reference file and your software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` in the address bar.
+Fluxer's own Flatpak repository gets every update the day we release it. Open [the stable][flatpak-ref] or [the canary][flatpak-canary-ref] reference file and your software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` in the address bar.
 
 From a terminal:
 
 ```sh
 flatpak install https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
+```
+
+Stable is also on [Flathub][flathub], but Flathub can be a few weeks behind and has no canary:
+
+```sh
+flatpak install flathub app.fluxer.Fluxer
 ```
 
 ### Debian and Ubuntu
@@ -171,9 +172,10 @@ Use of the Fluxer name and logo is covered by the
 [flatpak-canary-ref]: https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref
 [flathub]: https://flathub.org/apps/app.fluxer.Fluxer
 [android-play]: https://play.google.com/store/apps/details?id=com.fluxer
-[android-apk]: https://github.com/fluxerapp/flutter_client/releases
-[obtainium]: https://obtainium.imranr.dev/
-[ios-testflight]: https://testflight.apple.com/join/PKZR6pK9
+[android-apk]: https://fluxer.com/download/android
+[obtainium-fcm]: https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%7B%22id%22%3A%22com.fluxer%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ffluxerapp%2Fflutter_client%22%2C%22author%22%3A%22fluxerapp%22%2C%22name%22%3A%22Fluxer%20Beta%20%28FCM%29%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22betafcm%5C%22%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%7D%22%7D
+[obtainium-oss]: https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%7B%22id%22%3A%22com.fluxer%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ffluxerapp%2Fflutter_client%22%2C%22author%22%3A%22fluxerapp%22%2C%22name%22%3A%22Fluxer%20Beta%20%28OSS%29%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22betaoss%5C%22%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%7D%22%7D
+[ios-beta-paused]: https://fluxer.com/help/ios-testflight
 [docs]: https://docs.fluxer.com
 [docs-downloads]: https://docs.fluxer.com/downloads/overview/
 [docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/

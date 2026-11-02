@@ -24,7 +24,7 @@ import type React from 'react';
 import {useId} from 'react';
 
 const DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Review the permissions {productName} uses for voice, video, screen sharing, and shortcuts.',
+	message: 'Review the permissions {productName} uses for voice, video, screen sharing, and keybinds.',
 	comment: 'Description of the macOS permissions section in user settings. {productName} is the app name.',
 });
 const NOT_ALLOWED_DESCRIPTOR = msg({

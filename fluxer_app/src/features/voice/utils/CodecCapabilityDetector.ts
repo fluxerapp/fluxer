@@ -170,7 +170,7 @@ function getScreenShareCodecPolicyUnsupported(
 			supported: false,
 			reason: 'opt-in-required',
 			detail:
-				'AV1 screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on AV1 screen sharing in Advanced settings to use it.',
+				"AV1 screen sharing is off by default because it may cause compatibility issues for viewers. We're working on improving this. Turn on AV1 screen sharing in Advanced settings to use it.",
 		};
 	}
 	if (codec === 'h265' && !VoiceSettings.getScreenShareHevcOptIn()) {
@@ -178,7 +178,7 @@ function getScreenShareCodecPolicyUnsupported(
 			supported: false,
 			reason: 'opt-in-required',
 			detail:
-				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
+				"H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We're working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.",
 		};
 	}
 	if (context.firefox && codec === 'h265') {

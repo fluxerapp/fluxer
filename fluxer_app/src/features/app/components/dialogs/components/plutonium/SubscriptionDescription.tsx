@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PerksButton} from '@app/features/app/components/dialogs/components/PerksButton';
-import type {GracePeriodInfo} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
 import styles from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard.module.css';
 import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
+import type {GracePeriodInfo} from '@app/features/premium/utils/SubscriptionStatus';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
 import type {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';

@@ -58,8 +58,6 @@ export function getEnvCurrencyPreferences(countryCode: string | null | undefined
 
 const GIFT_ELIGIBLE_LOCALIZED_CURRENCIES = new Set<Currency>(['DKK', 'ISK', 'NOK', 'SEK']);
 
-const ADAPTIVE_PRICING_DISABLED_CURRENCIES = new Set<Currency>(['DKK', 'ISK', 'NOK', 'SEK']);
-
 const ENV_CATALOG_CURRENCIES = new Set<Currency>([
 	'USD',
 	'EUR',
@@ -90,8 +88,8 @@ export function getGiftCurrencyPreferences(
 	);
 }
 
-export function shouldDisableAdaptivePricing(currency: string): boolean {
-	return !Config.instance.selfHosted && ADAPTIVE_PRICING_DISABLED_CURRENCIES.has(currency.toUpperCase());
+export function shouldDisableAdaptivePricing(): boolean {
+	return !Config.instance.selfHosted;
 }
 
 export function isLocalizedCurrency(

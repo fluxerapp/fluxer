@@ -19,6 +19,7 @@ import {
 	createInvoicePaymentFailedEvent,
 	createInvoiceUpdatedEvent,
 	createStripeApiHandlers,
+	createSubscriptionDeletedEvent,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
@@ -651,6 +652,49 @@ describe('Stripe Webhook - Invoice Events', () => {
 				expect(me.premium_until).toBe(failedPeriodStart.toISOString());
 				expect(me.premium_grace_ends_at).toBe(expectedDeadline);
 			}
+		});
+		test('leaves the user unlinked when the last failure arrives after the subscription was deleted', async () => {
+			const account = await createTestAccount(harness);
+			const subscriptionId = `sub_failed_after_delete_${Date.now()}`;
+			const customerId = 'cus_test_failed_after_delete';
+			const failedPeriodStart = new Date(Math.floor((Date.now() - 10 * DAY_MS) / 1000) * 1000);
+			const failedPeriodEnd = new Date(failedPeriodStart.getTime() + 30 * DAY_MS);
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			await setSubscriptionUserState({
+				accountUserId: account.userId,
+				subscriptionId,
+				customerId,
+				premiumUntil: failedPeriodStart,
+				premiumWillCancel: true,
+				billingCycle: 'monthly',
+			});
+			stripeHandlers.put.subscription(subscriptionId, {status: 'canceled'});
+			await sendStripeWebhook(
+				harness,
+				createSubscriptionDeletedEvent({subscriptionId, customerId, cancellationReason: 'payment_failed'}),
+			);
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
+			const userRepository = new UserRepository();
+			const userId = createUserID(BigInt(account.userId));
+			const afterDelete = (await userRepository.findUnique(userId))!;
+			expect(afterDelete.stripeSubscriptionId).toBeNull();
+			const eventData = createRenewalFailureEvent({
+				invoiceId: `in_failed_after_delete_${Date.now()}`,
+				customerId,
+				subscriptionId,
+				periodStart: failedPeriodStart,
+				periodEnd: failedPeriodEnd,
+			});
+			eventData.data.object.attempt_count = 4;
+			await sendStripeWebhook(harness, eventData);
+			const afterFailure = (await userRepository.findUnique(userId))!;
+			expect(afterFailure.stripeSubscriptionId).toBeNull();
+			expect(afterFailure.premiumWillCancel).toBe(afterDelete.premiumWillCancel);
 		});
 		test('ignores non-renewal invoice payment failures', async () => {
 			const account = await createTestAccount(harness);

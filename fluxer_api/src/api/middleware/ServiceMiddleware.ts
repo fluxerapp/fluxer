@@ -521,6 +521,7 @@ class RequestServices implements RequestScopedServices {
 			this.stripeService.getStripe(),
 			new JobLedgerRepository(),
 			this.storeEntitlementService,
+			this.stripeService.operatorPassFulfilment,
 		);
 		return this.cachedAdminService;
 	}
@@ -870,7 +871,6 @@ class RequestServices implements RequestScopedServices {
 			this.stripeService.getStripe(),
 			getOperatorPassRepository(),
 			getOperatorPassEntitlementService(),
-			getDonationRepository(),
 		);
 		return this.cachedOperatorPassCheckoutService;
 	}

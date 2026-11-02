@@ -15,22 +15,12 @@
 	--pl-indigo-15: #1f1b76;
 	--pl-indigo-16: #1c1865;
 	--pl-indigo-17: #1b1754;
-	--pl-indigo-19: #14123e;
 	--pl-indigo-21: #0f0d2d;
 	--pl-indigo-23: #0b0921;
 	--pl-neutral-6: #848492;
 	--pl-neutral-7: #767685;
 	--pl-neutral-12: #41414f;
 	--pl-neutral-24: #0a0a0d;
-	--pl-red-3: #f4a098;
-	--pl-red-9: #b5001b;
-	--pl-red-10: #a20017;
-	--pl-red-11: #910014;
-	--pl-red-12: #820011;
-	--pl-amber-3: #e7ac66;
-	--pl-amber-12: #5e3a00;
-	--pl-green-3: #8fca9e;
-	--pl-green-12: #005126;
 	--pl-ledge-s: 4px;
 	--pl-ledge-m: 6px;
 	--pl-ledge-l: 8px;
@@ -58,11 +48,6 @@
 	--pl-accent-hover: var(--pl-indigo-8);
 	--pl-accent-press: var(--pl-indigo-10);
 	--pl-accent-ledge: var(--pl-indigo-11);
-	--pl-danger-face: var(--pl-red-10);
-	--pl-danger-hover: var(--pl-red-9);
-	--pl-danger-press: var(--pl-red-11);
-	--pl-danger-ledge: var(--pl-red-12);
-	--pl-danger-ink: var(--pl-indigo-0);
 	--pl-page: var(--pl-indigo-21);
 	--pl-on: var(--pl-indigo-0);
 	--pl-copy: var(--pl-indigo-1);
@@ -71,19 +56,14 @@
 	--pl-board: var(--pl-indigo-17);
 	--pl-board-ledge: var(--pl-indigo-23);
 	--pl-sub: var(--pl-indigo-21);
-	--pl-sub-ledge: var(--pl-indigo-23);
 	--pl-tile: var(--pl-indigo-13);
 	--pl-tile-ledge: var(--pl-indigo-15);
 	--pl-feature: var(--pl-indigo-13);
 	--pl-feature-ledge: var(--pl-indigo-23);
 	--pl-rule: var(--pl-indigo-13);
-	--pl-row-hover: var(--pl-indigo-19);
 	--pl-off: var(--pl-neutral-6);
 	--pl-image-ledge: var(--pl-indigo-15);
 	--pl-text-ledge: var(--pl-indigo-11);
-	--pl-success-ink: var(--pl-green-3);
-	--pl-warning-ink: var(--pl-amber-3);
-	--pl-danger-text: var(--pl-red-3);
 	--pl-btn-face: var(--pl-paper-face);
 	--pl-btn-hover: var(--pl-paper-hover);
 	--pl-btn-press: var(--pl-paper-hover);
@@ -94,9 +74,6 @@
 	--pl-btn2-press: var(--pl-ink-hover);
 	--pl-btn2-ledge: var(--pl-tile-ledge);
 	--pl-btn2-ink: var(--pl-indigo-0);
-	--pl-sub-btn2-face: var(--pl-tile);
-	--pl-sub-btn2-hover: var(--pl-indigo-12);
-	--pl-sub-btn2-ledge: var(--pl-tile-ledge);
 	--pl-gutter: 1rem;
 	--pl-flow: 0.75rem;
 	--pl-stack: 1.25rem;
@@ -137,19 +114,14 @@
 	--pl-board: var(--pl-indigo-1);
 	--pl-board-ledge: var(--pl-indigo-3);
 	--pl-sub: var(--pl-paper-face);
-	--pl-sub-ledge: var(--pl-paper-ledge);
 	--pl-tile: var(--pl-paper-face);
 	--pl-tile-ledge: var(--pl-paper-ledge);
 	--pl-feature: var(--pl-accent-face);
 	--pl-feature-ledge: var(--pl-accent-ledge);
 	--pl-rule: var(--pl-indigo-2);
-	--pl-row-hover: var(--pl-indigo-1);
 	--pl-off: var(--pl-neutral-7);
 	--pl-image-ledge: var(--pl-indigo-2);
 	--pl-text-ledge: var(--pl-indigo-2);
-	--pl-success-ink: var(--pl-green-12);
-	--pl-warning-ink: var(--pl-amber-12);
-	--pl-danger-text: var(--pl-red-12);
 	--pl-btn-face: var(--pl-accent-face);
 	--pl-btn-hover: var(--pl-accent-hover);
 	--pl-btn-press: var(--pl-accent-press);
@@ -160,9 +132,6 @@
 	--pl-btn2-press: var(--pl-paper-hover);
 	--pl-btn2-ledge: var(--pl-paper-ledge);
 	--pl-btn2-ink: var(--pl-paper-ink);
-	--pl-sub-btn2-face: var(--pl-indigo-1);
-	--pl-sub-btn2-hover: var(--pl-indigo-2);
-	--pl-sub-btn2-ledge: var(--pl-indigo-3);
 }
 
 @media (prefers-contrast: more) {
@@ -659,59 +628,29 @@
 	background-size: 128px 128px;
 }
 
-.managePanel {
-	--text-primary: var(--pl-on);
-	--text-primary-muted: var(--pl-on-muted);
-	--text-secondary: var(--pl-on-muted);
-	--text-tertiary: var(--pl-on-muted);
-	--text-link: var(--pl-accent);
-	--background-modifier-accent: var(--pl-rule);
-	--background-modifier-hover: var(--pl-row-hover);
-	padding: 1.5rem 0.75rem;
-	scroll-margin-top: 1rem;
-	text-align: start;
-}
-
-@container plutonium-page (min-width: 40rem) {
-	.managePanel {
-		padding: 1.5rem;
-	}
-}
-
-@container plutonium-page (min-width: 48rem) {
-	.managePanel {
-		padding: 3rem;
-	}
-}
-
-.manageHeading {
-	margin: 0 0 var(--pl-group);
-	color: var(--pl-on);
-	font-size: var(--pl-text-title);
-	font-weight: 700;
-	line-height: var(--pl-text-title-line-height);
-	letter-spacing: var(--pl-text-title-letter-spacing);
-	text-align: center;
-	text-shadow: 0 var(--pl-ledge-s) 0 var(--pl-text-ledge);
-	text-wrap: balance;
-}
-
-.manageSurface {
-	display: flex;
-	flex-direction: column;
-	gap: 1.25rem;
-	padding-bottom: var(--pl-ledge-m);
-}
-
 .featureRows {
 	display: flex;
 	width: 100%;
 	max-width: 72rem;
+	box-sizing: border-box;
 	flex-direction: column;
 	gap: var(--pl-section);
 	margin-inline: auto;
 	padding-block: var(--pl-group);
+	padding-inline: 0.75rem;
 	container-type: inline-size;
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.featureRows {
+		padding-inline: 1.5rem;
+	}
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.featureRows {
+		padding-inline: 0;
+	}
 }
 
 .perkRow {

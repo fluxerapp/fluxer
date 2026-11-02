@@ -59,7 +59,7 @@ const TOO_MANY_PEOPLE_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when a group DM would exceed the maximum number of recipients.',
 });
 const GROUP_DM_LIMIT_TITLE_DESCRIPTOR = msg({
-	message: "You've reached the group DM limit",
+	message: "You're at the group DM limit",
 	comment: 'Title of the error modal shown when the user or a recipient has too many open group DMs.',
 });
 const GROUP_DM_LIMIT_MESSAGE_DESCRIPTOR = msg({

@@ -55,7 +55,6 @@ function emptyEntry(userId: UserID, now: Date): OperatorPassWallEntryRow {
 		hidden: false,
 		legal_hold: false,
 		left_wall_at: null,
-		username_declined: false,
 		live_revision_id: null,
 		live_name: null,
 		live_avatar: null,
@@ -116,7 +115,6 @@ export class OperatorPassWallEntryStore {
 			reason?: OperatorPassWallDeclineReason | null;
 			note?: string | null;
 			statementId?: string | null;
-			usernameDeclined?: boolean;
 		},
 	): Promise<OperatorPassWallDecisionRow> {
 		const decision: OperatorPassWallDecisionRow = {
@@ -129,7 +127,6 @@ export class OperatorPassWallEntryStore {
 			reason: params.reason ?? null,
 			note: params.note ?? null,
 			statement_id: params.statementId ?? null,
-			username_declined: params.usernameDeclined ?? null,
 		};
 		await this.repository.appendWallDecision(decision);
 		return decision;

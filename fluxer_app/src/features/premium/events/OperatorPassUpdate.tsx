@@ -7,6 +7,7 @@ import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {getOperatorPassOfferUserName} from '@app/features/premium/utils/OperatorPassUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import * as OwnProfileBadgesCommands from '@app/features/user/commands/OwnProfileBadgesCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import type {
 	OperatorPassOfferResponse,
@@ -42,6 +43,7 @@ export function handleOperatorPassUpdate(data: OperatorPassPassesResponse, _cont
 	OperatorPassHoldings.setPasses(data);
 	if (previous?.count !== data.count) {
 		UserProfileCommands.clearCurrentUserProfiles();
+		void OwnProfileBadgesCommands.refresh();
 	}
 	for (const offer of OperatorPassHoldings.takeNewIncomingOffers()) {
 		ToastCommands.createToast({

@@ -10,6 +10,8 @@ import {EMAIL_I18N_LOCALE_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nLo
 import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {BillingPaymentMethod, BillingTotals, EmailSendParams} from '@pkgs/email/src/IEmailService';
 
+const PREVIEW_WITHDRAWAL_RULES: Readonly<Record<string, 'uk' | 'brazil'>> = {'en-GB': 'uk', 'pt-BR': 'brazil'};
+
 const DEFAULT_LOCALES = ['en-US', 'sv-SE', 'de', 'ar', 'ja'];
 const PRICES: Record<string, {currency: string; earlyBird: number}> = {
 	'sv-SE': {currency: 'SEK', earlyBird: 225000},
@@ -24,8 +26,19 @@ const PLUTONIUM_PRICES: Record<string, {currency: string; monthly: number; tax: 
 	de: {currency: 'EUR', monthly: 499, tax: 80},
 };
 const PLUTONIUM_USD = {currency: 'USD', monthly: 499, tax: null};
-const INVOICE_URL = 'https://invoice.stripe.com/i/acct_1Example/live_YWNjdF8xRXhhbXBsZQ';
-const INVOICE_LINK_UNTIL = new Date('2026-11-08T14:30:00Z');
+const SAMPLE_DOCUMENT_PDF = {
+	filename: 'Fluxer-OP-000123.pdf',
+	content: new Uint8Array([37, 80, 68, 70]),
+	contentType: 'application/pdf',
+};
+
+function sampleDocument(number: string) {
+	return {
+		number,
+		issuedAt: new Date('2026-10-09T14:30:00Z'),
+		pdf: {...SAMPLE_DOCUMENT_PDF, filename: `Fluxer-${number}.pdf`},
+	};
+}
 
 function plutoniumTotals(locale: string, multiplier = 1): BillingTotals {
 	const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
@@ -49,6 +62,18 @@ const CHARGE_AT = new Date('2026-11-12T08:00:00Z');
 const TIME_ZONE = 'Europe/Stockholm';
 const DONATION_MANAGE_URL = 'https://fluxer.com/donate/manage?email=operator%40example.com';
 const SUBSCRIPTION_ID = 'sub_1SJHDHFPC94Os7Fd';
+
+function passTotals(locale: string, quantity: number): BillingTotals {
+	const price = PRICES[locale] ?? USD;
+	const totalMinor = price.earlyBird * quantity;
+	return {
+		totalMinor,
+		paidMinor: totalMinor,
+		currency: price.currency,
+		tax: price.currency === 'USD' ? null : {amountMinor: Math.round(totalMinor / 5), behavior: 'inclusive'},
+		reverseCharge: false,
+	};
+}
 
 class CaptureEmailProvider implements IEmailProvider {
 	last: EmailMessage | null = null;
@@ -91,7 +116,8 @@ const config: EmailConfig = {
 	productName: 'Fluxer',
 	marketingBaseUrl: 'https://fluxer.com',
 	staticCdnBaseUrl: values['static-base'],
-	legalAddress: 'Fluxer Platform AB, c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
+	legalAddress:
+		'Fluxer Platform AB (org. no. 559537-3993, registered office Haninge, Sweden), c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
 	brandLogo: true,
 };
 const provider = new CaptureEmailProvider();
@@ -156,11 +182,9 @@ function endedUnpaid(locale: string, invoiceStatus: 'void' | 'open' | 'uncollect
 		USER,
 		{
 			premiumName: 'Plutonium',
-			invoiceNumber: 'B1Q2W3E4-0011',
 			invoiceStatus,
 			amountMinor: price.monthly,
 			currency: price.currency,
-			invoiceUrl: INVOICE_URL,
 			seller: true,
 		},
 		locale,
@@ -237,10 +261,13 @@ const previews: Record<string, Preview> = {
 			USER,
 			{
 				labsInviteUrl: 'https://fluxer.gg/fluxer-labs',
+				labsMember: true,
 				invoiceNumber: 'B1Q2W3E4-0001',
 				deliveredAt: DATE,
 				wallName: 'Maja Lind',
 				passCount: 1,
+				certificate: null,
+				visionary: false,
 			},
 			locale,
 		),
@@ -250,10 +277,13 @@ const previews: Record<string, Preview> = {
 			USER,
 			{
 				labsInviteUrl: 'https://fluxer.gg/fluxer-labs',
+				labsMember: false,
 				invoiceNumber: 'E1Q2W3E4-0002',
 				deliveredAt: DATE,
 				wallName: null,
 				passCount: 3,
+				certificate: null,
+				visionary: false,
 			},
 			locale,
 		),
@@ -311,7 +341,7 @@ const previews: Record<string, Preview> = {
 				manageUrl: 'https://fluxer.com/donate/manage',
 				paidAt: DATE,
 				reference: '1234-5678',
-				receiptUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
+				document: sampleDocument('DN-000042'),
 			},
 			locale,
 		),
@@ -321,11 +351,10 @@ const previews: Record<string, Preview> = {
 			USER,
 			{
 				interval: 'month',
-				invoiceNumber: 'D0N4T10N-0003',
 				paidAt: DATE,
 				period: {start: DATE, end: new Date('2026-11-09T14:30:00Z')},
 				totals: {totalMinor: 1000, paidMinor: 1000, currency: 'EUR', tax: null, reverseCharge: false},
-				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
+				document: sampleDocument('DN-000043'),
 				manageUrl: 'https://fluxer.com/donate/manage',
 			},
 			locale,
@@ -335,11 +364,11 @@ const previews: Record<string, Preview> = {
 			'donation_refund_receipt',
 			USER,
 			{
-				reference: 'D0N4T10N-0003',
+				reference: 'DN-000043',
 				refundedAt: DATE,
 				amountMinor: 1000,
 				currency: 'EUR',
-				refundUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
+				creditNote: sampleDocument('KG-000002'),
 			},
 			locale,
 		),
@@ -349,11 +378,9 @@ const previews: Record<string, Preview> = {
 			USER,
 			{
 				reason: 'declined',
-				invoiceNumber: 'D0N4T10N-0004',
 				attemptedAt: DATE,
 				amountMinor: 1000,
 				currency: 'EUR',
-				invoiceUrl: INVOICE_URL,
 				manageUrl: 'https://fluxer.com/donate/manage',
 			},
 			locale,
@@ -524,17 +551,18 @@ const previews: Record<string, Preview> = {
 				invoiceNumber: 'B1Q2W3E4-0001',
 				orderDate: DATE,
 				quantity: 1,
-				amountMinor: price.earlyBird * 1,
-				currency: price.currency,
-				waiverConsentAt: DATE,
-				countryConsent: false,
-				withdrawalDays: null,
+				totals: passTotals(locale, 1),
+				document: sampleDocument('OP-000123'),
+				business: false,
+				consentAt: DATE,
 				withdrawalEndsOn: null,
+				withdrawalCountry: null,
 				wallName: 'Maja Lind',
-				unitAmountMinor: 19900,
+				unitAmountMinor: price.earlyBird,
 				paymentMethod: 'Visa ···· 4242',
-				consentText:
-					"Deliver my pass now. I understand I lose my right to withdraw once it's delivered, and that the bonus isn't part of the price.",
+				deliveryBoxText:
+					"Deliver my certificate now. I understand that I lose my right to withdraw once it's delivered.",
+				termsVersion: '2026-11-01',
 			},
 			locale,
 		);
@@ -548,65 +576,18 @@ const previews: Record<string, Preview> = {
 				invoiceNumber: 'E1Q2W3E4-0002',
 				orderDate: DATE,
 				quantity: 3,
-				amountMinor: price.earlyBird * 3,
-				currency: price.currency,
-				waiverConsentAt: DATE,
-				countryConsent: false,
-				withdrawalDays: null,
-				withdrawalEndsOn: null,
-				wallName: 'Maja Lind',
-				unitAmountMinor: 19900,
-				paymentMethod: 'Visa ···· 4242',
-				consentText:
-					"Deliver all 3 passes now. I understand I lose my right to withdraw once they're delivered, and that the bonus isn't part of the price.",
-			},
-			locale,
-		);
-	},
-	purchase_confirmation_country: (locale) => {
-		const price = PRICES[locale] ?? USD;
-		return service.send(
-			'operator_pass_purchase_confirmation',
-			USER,
-			{
-				invoiceNumber: 'C1Q2W3E4-0003',
-				orderDate: DATE,
-				quantity: 1,
-				amountMinor: price.earlyBird * 1,
-				currency: price.currency,
-				waiverConsentAt: DATE,
-				countryConsent: true,
-				withdrawalDays: 7,
+				totals: passTotals(locale, 3),
+				document: sampleDocument('OP-000123'),
+				business: false,
+				consentAt: DATE,
 				withdrawalEndsOn: new Date(DATE.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-				wallName: 'Maja Lind',
-				unitAmountMinor: 19900,
-				paymentMethod: 'Visa ···· 4242',
-				consentText:
-					"Deliver my pass now. I can still cancel within 7 days for a full refund. The bonus isn't part of the price.",
-			},
-			locale,
-		);
-	},
-	purchase_confirmation_country_multiple: (locale) => {
-		const price = PRICES[locale] ?? USD;
-		return service.send(
-			'operator_pass_purchase_confirmation',
-			USER,
-			{
-				invoiceNumber: 'F1Q2W3E4-0004',
-				orderDate: DATE,
-				quantity: 2,
-				amountMinor: price.earlyBird * 2,
-				currency: price.currency,
-				waiverConsentAt: DATE,
-				countryConsent: true,
-				withdrawalDays: 7,
-				withdrawalEndsOn: new Date(DATE.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+				withdrawalCountry: 'BR',
 				wallName: null,
-				unitAmountMinor: 19900,
+				unitAmountMinor: price.earlyBird,
 				paymentMethod: 'Visa ···· 4242',
-				consentText:
-					"Deliver all 2 passes now. I can still cancel each one within 7 days for a full refund. The bonus isn't part of the price.",
+				deliveryBoxText:
+					'Deliver my certificates now. I can still withdraw within 7 days of delivery and get a full refund.',
+				termsVersion: '2026-11-01',
 			},
 			locale,
 		);
@@ -617,36 +598,18 @@ const previews: Record<string, Preview> = {
 			'operator_pass_withdrawal_receipt',
 			USER,
 			{
-				cancellation: false,
 				name: 'Alex Lindqvist',
 				receivedAt: DATE,
 				invoiceNumber: 'C1Q2W3E4-0003',
 				orderDate: DATE,
 				amountMinor: price.earlyBird,
 				currency: price.currency,
+				delivered: true,
+				passCount: 1,
 				lastPass: true,
-				hasDonation: true,
-				refundViaDispute: false,
-			},
-			locale,
-		);
-	},
-	withdrawal_receipt_cancellation: (locale) => {
-		const price = PRICES[locale] ?? USD;
-		return service.send(
-			'operator_pass_withdrawal_receipt',
-			USER,
-			{
-				cancellation: true,
-				name: 'Alex Lindqvist',
-				receivedAt: DATE,
-				invoiceNumber: 'C1Q2W3E4-0003',
-				orderDate: DATE,
-				amountMinor: price.earlyBird,
-				currency: price.currency,
-				lastPass: true,
-				hasDonation: false,
-				refundViaDispute: false,
+				visionary: false,
+				refund: 'started',
+				creditNote: sampleDocument('KR-000007'),
 			},
 			locale,
 		);
@@ -659,22 +622,29 @@ const previews: Record<string, Preview> = {
 			locale,
 		),
 	offer_accepted: (locale) =>
-		service.send('operator_pass_offer_accepted', USER, {recipientName: 'Tomas Varga', remainingCount: 2}, locale),
+		service.send(
+			'operator_pass_offer_accepted',
+			USER,
+			{recipientName: 'Tomas Varga', remainingCount: 2, visionary: false},
+			locale,
+		),
 	offer_declined: (locale) =>
 		service.send('operator_pass_offer_ended', USER, {otherName: 'Tomas Varga', ended: 'declined'}, locale),
 	offer_taken_back: (locale) =>
 		service.send('operator_pass_offer_ended', USER, {otherName: 'Maja Lind', ended: 'withdrawn'}, locale),
 	offer_canceled: (locale) =>
 		service.send('operator_pass_offer_ended', USER, {otherName: 'Maja Lind', ended: 'cancelled'}, locale),
-	revoked: (locale) => service.send('operator_pass_revoked', USER, {cause: 'refund', lastPass: false}, locale),
+	revoked: (locale) =>
+		service.send('operator_pass_revoked', USER, {cause: 'refund', lastPass: false, visionary: false}, locale),
 	removal_notice: (locale) =>
 		service.send(
 			'operator_pass_removal_notice',
 			USER,
 			{
 				rule: 'Community guidelines section 2, threats',
-				facts: 'Sent threats to another operator in #operators on two days.',
+				facts: 'Sent threats to another Operator in #operators on two days.',
 				replyBy: DATE,
+				visionary: false,
 			},
 			locale,
 		),
@@ -691,7 +661,7 @@ const previews: Record<string, Preview> = {
 			USER,
 			{
 				target: 'name',
-				shown: 'username',
+				shown: 'operator',
 				reason: 'impersonation',
 				note: 'The name copies the name of another open source project.',
 			},
@@ -706,6 +676,8 @@ const previews: Record<string, Preview> = {
 				rule: 'Community guidelines section 4, advertising',
 				facts: 'Posted ads for a hosting company in #operators three times.',
 				automated: false,
+				visionary: false,
+				dispute: null,
 			},
 			locale,
 		),
@@ -720,7 +692,8 @@ const previews: Record<string, Preview> = {
 				paidAt: DATE,
 				period: {start: DATE, end: new Date('2026-11-09T14:30:00Z')},
 				totals: plutoniumTotals(locale),
-				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
+				document: sampleDocument('OP-000123'),
+				business: false,
 				purchase: null,
 			},
 			locale,
@@ -737,11 +710,14 @@ const previews: Record<string, Preview> = {
 				paidAt: DATE,
 				period: {start: DATE, end: new Date('2026-11-09T14:30:00Z')},
 				totals,
-				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
+				document: sampleDocument('OP-000123'),
+				business: false,
 				purchase: {
 					renewal: {interval: 'month', amountMinor: totals.totalMinor, tax: totals.tax ? 'included' : 'none'},
 					consentAt: DATE,
-					withdrawalEndsAt: new Date('2026-10-23T14:30:00Z'),
+					withdrawalEndsOn: '2026-10-23',
+					withdrawalRule: PREVIEW_WITHDRAWAL_RULES[locale] ?? 'eu',
+					withdrawalProRata: PREVIEW_WITHDRAWAL_RULES[locale] !== 'brazil',
 					seller: true,
 				},
 			},
@@ -759,7 +735,8 @@ const previews: Record<string, Preview> = {
 				paidAt: DATE,
 				period: null,
 				totals: plutoniumTotals(locale, 10),
-				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
+				document: sampleDocument('OP-000123'),
+				business: false,
 				purchase: null,
 			},
 			locale,
@@ -778,7 +755,28 @@ const previews: Record<string, Preview> = {
 				paidMinor: price.monthly,
 				paidAt: new Date('2026-10-08T14:30:00Z'),
 				currency: price.currency,
-				refundUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
+				creditNote: sampleDocument('KR-000007'),
+			},
+			locale,
+		);
+	},
+	plutonium_withdrawal_receipt: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'plutonium_withdrawal_receipt',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				name: 'Alex Lindqvist',
+				receivedAt: DATE,
+				purchasedAt: new Date('2026-10-08T14:30:00Z'),
+				gift: false,
+				amountMinor: price.monthly,
+				currency: price.currency,
+				refund: 'started',
+				brazil: locale === 'pt-BR',
+				proRata: locale !== 'pt-BR',
+				reference: 'sub_1Q2W3E4R5T6Y',
 			},
 			locale,
 		);
@@ -791,11 +789,9 @@ const previews: Record<string, Preview> = {
 			{
 				premiumName: 'Plutonium',
 				reason: 'declined',
-				invoiceNumber: 'B1Q2W3E4-0009',
 				attemptedAt: DATE,
 				amountMinor: price.monthly,
 				currency: price.currency,
-				invoiceUrl: INVOICE_URL,
 				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
 			},
 			locale,
@@ -809,11 +805,9 @@ const previews: Record<string, Preview> = {
 			{
 				premiumName: 'Plutonium',
 				reason: 'action_required',
-				invoiceNumber: 'B1Q2W3E4-0009',
 				attemptedAt: DATE,
 				amountMinor: price.monthly,
 				currency: price.currency,
-				invoiceUrl: INVOICE_URL,
 				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
 			},
 			locale,
@@ -902,7 +896,6 @@ const previews: Record<string, Preview> = {
 				receivedAt: DATE,
 				endsAt: CHARGE_AT,
 				reference: SUBSCRIPTION_ID,
-				unpaid: null,
 				seller: true,
 				manageUrl: DONATION_MANAGE_URL,
 			},
@@ -927,38 +920,7 @@ const previews: Record<string, Preview> = {
 			},
 			locale,
 		),
-	billing_credit_note: (locale) => {
-		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
-		return service.send(
-			'billing_credit_note',
-			USER,
-			{
-				amountMinor: price.monthly,
-				currency: price.currency,
-				invoiceNumber: 'B1Q2W3E4-0012',
-				pdfUrl: 'https://pay.stripe.com/credit_notes/acct_1Example/test_YWNjdF8x/pdf',
-				upcomingInvoice: true,
-				seller: true,
-			},
-			locale,
-		);
-	},
-	billing_credit_note_no_upcoming_invoice: (locale) => {
-		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
-		return service.send(
-			'billing_credit_note',
-			USER,
-			{
-				amountMinor: price.monthly,
-				currency: price.currency,
-				invoiceNumber: 'B1Q2W3E4-0012',
-				pdfUrl: 'https://pay.stripe.com/credit_notes/acct_1Example/test_YWNjdF8x/pdf',
-				upcomingInvoice: false,
-				seller: true,
-			},
-			locale,
-		);
-	},
+
 	plutonium_refund_receipt_subscription_ended: (locale) => {
 		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
 		return service.send(
@@ -973,7 +935,7 @@ const previews: Record<string, Preview> = {
 				paidMinor: price.monthly,
 				paidAt: new Date('2026-10-08T14:30:00Z'),
 				currency: price.currency,
-				refundUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
+				creditNote: sampleDocument('KR-000007'),
 				subscriptionEnded: {requestedAt: DATE, reference: SUBSCRIPTION_ID},
 				timeZone: TIME_ZONE,
 			},
@@ -988,11 +950,9 @@ const previews: Record<string, Preview> = {
 			{
 				premiumName: 'Plutonium',
 				reason: 'action_required',
-				invoiceNumber: 'B1Q2W3E4-0009',
 				attemptedAt: DATE,
 				amountMinor: price.monthly,
 				currency: price.currency,
-				invoiceUrl: INVOICE_URL,
 				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
 				reminder: true,
 			},
@@ -1007,11 +967,9 @@ const previews: Record<string, Preview> = {
 			{
 				premiumName: 'Plutonium',
 				reason: 'action_required',
-				invoiceNumber: 'B1Q2W3E4-0010',
 				attemptedAt: DATE,
 				amountMinor: price.monthly,
 				currency: price.currency,
-				invoiceUrl: INVOICE_URL,
 				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
 				planChange: true,
 			},
@@ -1025,24 +983,6 @@ const previews: Record<string, Preview> = {
 			{billingResumed: {premiumName: 'Plutonium', plan: 'monthly'}},
 			locale,
 		),
-	operator_pass_invoice: (locale) =>
-		service.send(
-			'operator_pass_invoice',
-			USER,
-			{
-				invoiceNumber: 'B1Q2W3E4-0002',
-				paidAt: DATE,
-				totals: {
-					totalMinor: 19900,
-					paidMinor: 19900,
-					currency: 'USD',
-					tax: {amountMinor: 3980, behavior: 'inclusive'},
-					reverseCharge: false,
-				},
-				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
-			},
-			locale,
-		),
 	operator_pass_refund_receipt: (locale) =>
 		service.send(
 			'operator_pass_refund_receipt',
@@ -1053,7 +993,11 @@ const previews: Record<string, Preview> = {
 				refundedAt: new Date('2026-10-12T09:00:00Z'),
 				amountMinor: 19900,
 				currency: 'USD',
-				full: true,
+				delivered: true,
+				passCount: 1,
+				lastPass: true,
+				visionary: false,
+				creditNote: sampleDocument('KR-000008'),
 			},
 			locale,
 		),

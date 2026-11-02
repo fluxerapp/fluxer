@@ -89,7 +89,7 @@ tls {
 }
 ```
 
-Then set `FLUXER_VOICE_EDGE_IP` to that address in `edge.env`. Browsers send no server name for an address, and the edge then answers them with that certificate. Set `FLUXER_VOICE_EDGE_EMAIL` there to get notices from Let's Encrypt.
+Then set `FLUXER_VOICE_EDGE_IP` to that address in `edge.env`. Browsers send no server name for an address, and the edge then uses that certificate for them. Set `FLUXER_VOICE_EDGE_EMAIL` there to get notices from Let's Encrypt.
 
 Each server on the machine gets a `handle_path` block of its own in the site, with its ID in the path and in the upstream. The server's endpoint is `wss://` followed by the site address and `/livekit-` with the ID, such as `wss://voice-fra.chat.example.com/livekit-fra-server-1`.
 
@@ -112,7 +112,7 @@ After you change a site, reload Caddy.
 docker compose -p fluxer-voice-edge --env-file edge.env -f voice-edge.compose.yml exec edge caddy reload --config /etc/caddy/Caddyfile
 ```
 
-Check that the server answers through the edge. It answers `OK`. The first certificate can take a minute.
+Check that the server responds through the edge. It returns `OK`. The first certificate can take a minute.
 
 ```sh
 curl https://voice-fra.chat.example.com/livekit-fra-server-1/
@@ -197,7 +197,7 @@ curl -fsS https://chat.example.com/api/voice/join \
   }'
 ```
 
-Set `region_id` to the region from the preview's answer, and `public_ipv4` to the voice machine's address. These fields set where the server goes. The curl can then run on any machine. Without them, Fluxer places the server by the address the request comes from. Fluxer checks that the endpoint answers and that the key and secret work before it saves the server. Add `latitude` with `longitude` to place the server on the map yourself. The [voice admin API](/admin-api/voice/#join-a-voice-server) lists every field and error.
+Set `region_id` to the region from the preview's answer, and `public_ipv4` to the voice machine's address. These fields set where the server goes. The curl can then run on any machine. Without them, Fluxer places the server by the address the request comes from. Fluxer checks that the endpoint responds and that the key and secret work before it saves the server. Add `latitude` with `longitude` to place the server on the map yourself. The [voice admin API](/admin-api/voice/#join-a-voice-server) lists every field and error.
 
 ### In the admin panel
 

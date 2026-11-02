@@ -7,6 +7,7 @@ import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsVa
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import {getStripeCheckoutLocale} from '@app/api/stripe/StripeCheckoutLocale';
+import {getPortalConfigurationId} from '@app/api/stripe/StripePortalConfiguration';
 import {shouldDisableAdaptivePricing} from '@app/api/utils/CurrencyUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -101,7 +102,9 @@ export class DonationCheckoutService {
 				line_items: [lineItem],
 				mode,
 				locale: getStripeCheckoutLocale(locale),
-				...(reusableCustomerId ? {customer: reusableCustomerId} : {customer_email: params.email}),
+				...(reusableCustomerId
+					? {customer: reusableCustomerId, customer_update: {name: 'auto' as const, address: 'auto' as const}}
+					: {customer_email: params.email}),
 				metadata: {
 					...donationMetadata,
 					donation_type: isRecurring ? 'recurring' : 'one_time',
@@ -115,17 +118,28 @@ export class DonationCheckoutService {
 				tax_id_collection: {
 					enabled: true,
 				},
-				...(isBusiness ? {billing_address_collection: 'required' as const} : {}),
-				...(shouldDisableAdaptivePricing(params.currency) ? {adaptive_pricing: {enabled: false}} : {}),
+				billing_address_collection: isBusiness ? 'required' : 'auto',
+				...(shouldDisableAdaptivePricing() ? {adaptive_pricing: {enabled: false}} : {}),
 			};
 			if (mode === 'payment') {
 				sessionParams.customer_creation = 'always';
-				if (isBusiness) {
-					sessionParams.invoice_creation = {enabled: true, invoice_data: {metadata: donationMetadata}};
-				}
 				sessionParams.payment_intent_data = {metadata: donationMetadata};
+				if (params.currency === 'brl') {
+					sessionParams.payment_method_options = {pix: {amount_includes_iof: 'always'}};
+				}
 			} else {
 				sessionParams.subscription_data = {metadata: donationMetadata};
+				if (params.currency === 'brl') {
+					sessionParams.payment_method_options = {
+						pix: {
+							mandate_options: {
+								amount: params.amountCents,
+								amount_includes_iof: 'always',
+								payment_schedule: params.interval === 'year' ? 'yearly' : 'monthly',
+							},
+						},
+					};
+				}
 			}
 			let session: Stripe.Checkout.Session;
 			try {
@@ -136,6 +150,7 @@ export class DonationCheckoutService {
 				}
 				await this.clearStaleCustomerId(reusableCustomerId);
 				delete sessionParams.customer;
+				delete sessionParams.customer_update;
 				sessionParams.customer_email = params.email;
 				session = await this.stripe.checkout.sessions.create(sessionParams);
 			}
@@ -169,6 +184,7 @@ export class DonationCheckoutService {
 		try {
 			const session = await this.stripe.billingPortal.sessions.create({
 				customer: stripeCustomerId,
+				configuration: await getPortalConfigurationId(this.stripe),
 				return_url: `${Config.endpoints.marketing}/donate`,
 			});
 			Logger.debug({stripeCustomerId}, 'Donation portal session created');

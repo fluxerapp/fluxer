@@ -58,7 +58,7 @@ export type OperatorPassWallTakeDownCause =
 	| 'pause'
 	| 'passed_on';
 
-export type OperatorPassUnitSource = 'purchase' | 'transfer' | 'admin';
+export type OperatorPassUnitSource = 'purchase' | 'transfer' | 'visionary' | 'admin';
 
 type OperatorPassUnitStatus = 'held' | 'withdrawn' | 'revoked';
 
@@ -66,6 +66,7 @@ export type OperatorPassOfferStatus = 'pending' | 'accepted' | 'completed' | 'wi
 
 export type OperatorPassUnitEventKind =
 	| 'purchased'
+	| 'visionary_turned_on'
 	| 'delivered'
 	| 'country_rule'
 	| 'offer_created'
@@ -137,7 +138,6 @@ export interface OperatorPassPurchaseRow {
 	quote_honored: boolean;
 	payment_intent_id: Nullish<string>;
 	invoice_id: Nullish<string>;
-	subscription_id: Nullish<string>;
 	created_at: Date;
 	completed_at: Nullish<Date>;
 	refunded_at: Nullish<Date>;
@@ -162,13 +162,62 @@ export interface OperatorPassPurchaseRow {
 	withdrawal_name: Nullish<string>;
 	withdrawal_refund_id: Nullish<string>;
 	withdrawal_channel: Nullish<string>;
+	withdrawal_receipts_owed: Nullish<Map<string, string>>;
 	invoice_number: Nullish<string>;
+	invoice_document_id: Nullish<bigint>;
 	dispute_id: Nullish<string>;
 	dispute_reason: Nullish<string>;
 	dispute_status: Nullish<string>;
 	disputed_at: Nullish<Date>;
 	dispute_closed_at: Nullish<Date>;
+	certificate_names: Nullish<Array<string>>;
+	age_confirmed_at: Nullish<Date>;
+	delivered_at: Nullish<Date>;
+	delivery_recorded_at: Nullish<Date>;
+	welcome_sent_at: Nullish<Date>;
+	welcome_skipped_at: Nullish<Date>;
+	refusal_reason: Nullish<string>;
+	charge_id: Nullish<string>;
+	business_buyer: Nullish<boolean>;
+	holder_had_pass: Nullish<boolean>;
+	labs_greeting: Nullish<boolean>;
+	preview_label?: Nullish<string>;
 	version: number;
+}
+
+type OperatorPassCertificateSource = 'purchase' | 'visionary';
+
+export interface OperatorPassCertificateRow {
+	pass_id: string;
+	version: number;
+	number: number;
+	purchase_id: Nullish<string>;
+	holder_name: string;
+	issued_at: Date;
+	paid_at: Date;
+	phase: string;
+	terms_version: string;
+	sha256: string;
+	pdf: Buffer;
+	source: OperatorPassCertificateSource;
+	cancelled_at: Nullish<Date>;
+	reissue_reason: Nullish<string>;
+	link_token: Nullish<string>;
+}
+
+export interface OperatorPassCertificateLinkRow {
+	token_: string;
+	pass_id: string;
+}
+
+export interface OperatorPassCertificateByPurchaseRow {
+	purchase_id: string;
+	pass_id: string;
+}
+
+export interface OperatorPassCertificateNumberRow {
+	number: number;
+	pass_id: string;
 }
 
 export interface OperatorPassRemovalRow {
@@ -210,7 +259,6 @@ export interface OperatorPassWallEntryRow {
 	hidden: boolean;
 	legal_hold: boolean;
 	left_wall_at: Nullish<Date>;
-	username_declined: boolean;
 	live_revision_id: Nullish<bigint>;
 	live_name: Nullish<string>;
 	live_avatar: Nullish<string>;
@@ -274,7 +322,6 @@ export interface OperatorPassWallDecisionRow {
 	reason: Nullish<OperatorPassWallDeclineReason>;
 	note: Nullish<string>;
 	statement_id: Nullish<string>;
-	username_declined: Nullish<boolean>;
 }
 
 export interface OperatorPassWallAvatarRefRow {
@@ -338,6 +385,37 @@ export interface OperatorPassUnitRow {
 	version: number;
 }
 
+type OperatorPassVisionaryEndReason = 'visionary_ended' | 'deletion';
+
+export type OperatorPassVisionaryNoticeSkipReason =
+	| 'not_visionary'
+	| 'inactive'
+	| 'pending_deletion'
+	| 'removed'
+	| 'turned_on'
+	| 'no_email';
+
+export interface OperatorPassVisionaryActivationRow {
+	user_id: UserID;
+	visionary_since: Nullish<Date>;
+	visionary_sequence: Nullish<number>;
+	activated_at: Nullish<Date>;
+	terms_version: Nullish<string>;
+	terms_box_text: Nullish<string>;
+	age_confirmed_at: Nullish<Date>;
+	consent_ip: Nullish<string>;
+	consent_user_agent: Nullish<string>;
+	pass_id: Nullish<string>;
+	certificate_number: Nullish<number>;
+	completed_at: Nullish<Date>;
+	ended_at: Nullish<Date>;
+	end_reason: Nullish<OperatorPassVisionaryEndReason>;
+	notice_emailed_at: Nullish<Date>;
+	notice_skip_reason: Nullish<OperatorPassVisionaryNoticeSkipReason>;
+	notice_dm_sent_at: Nullish<Date>;
+	version: number;
+}
+
 export interface OperatorPassUnitByHolderRow {
 	holder_id: UserID;
 	pass_id: string;
@@ -360,6 +438,7 @@ export interface OperatorPassOfferRow {
 	ended_at: Nullish<Date>;
 	wall_name: Nullish<string>;
 	wall_opt_out: Nullish<boolean>;
+	labs_greeting: Nullish<boolean>;
 	terms_version: Nullish<string>;
 	version: number;
 }
@@ -452,7 +531,6 @@ export const OPERATOR_PASS_PURCHASE_COLUMNS = [
 	'quote_honored',
 	'payment_intent_id',
 	'invoice_id',
-	'subscription_id',
 	'created_at',
 	'completed_at',
 	'refunded_at',
@@ -477,14 +555,59 @@ export const OPERATOR_PASS_PURCHASE_COLUMNS = [
 	'withdrawal_name',
 	'withdrawal_refund_id',
 	'withdrawal_channel',
+	'withdrawal_receipts_owed',
 	'invoice_number',
+	'invoice_document_id',
 	'dispute_id',
 	'dispute_reason',
 	'dispute_status',
 	'disputed_at',
 	'dispute_closed_at',
+	'certificate_names',
+	'age_confirmed_at',
+	'delivered_at',
+	'delivery_recorded_at',
+	'welcome_sent_at',
+	'welcome_skipped_at',
+	'refusal_reason',
+	'charge_id',
+	'business_buyer',
+	'holder_had_pass',
+	'labs_greeting',
+	'preview_label',
 	'version',
 ] as const satisfies ReadonlyArray<keyof OperatorPassPurchaseRow>;
+
+export const OPERATOR_PASS_CERTIFICATE_COLUMNS = [
+	'pass_id',
+	'version',
+	'number',
+	'purchase_id',
+	'holder_name',
+	'issued_at',
+	'paid_at',
+	'phase',
+	'terms_version',
+	'sha256',
+	'pdf',
+	'source',
+	'cancelled_at',
+	'reissue_reason',
+	'link_token',
+] as const satisfies ReadonlyArray<keyof OperatorPassCertificateRow>;
+
+export const OPERATOR_PASS_CERTIFICATE_LINK_COLUMNS = ['token_', 'pass_id'] as const satisfies ReadonlyArray<
+	keyof OperatorPassCertificateLinkRow
+>;
+
+export const OPERATOR_PASS_CERTIFICATE_BY_PURCHASE_COLUMNS = [
+	'purchase_id',
+	'pass_id',
+] as const satisfies ReadonlyArray<keyof OperatorPassCertificateByPurchaseRow>;
+
+export const OPERATOR_PASS_CERTIFICATE_NUMBER_COLUMNS = ['number', 'pass_id'] as const satisfies ReadonlyArray<
+	keyof OperatorPassCertificateNumberRow
+>;
 
 export const OPERATOR_PASS_PURCHASE_BY_PAYMENT_INTENT_COLUMNS = [
 	'payment_intent_id',
@@ -535,7 +658,6 @@ export const OPERATOR_PASS_WALL_ENTRY_COLUMNS = [
 	'hidden',
 	'legal_hold',
 	'left_wall_at',
-	'username_declined',
 	'live_revision_id',
 	'live_name',
 	'live_avatar',
@@ -599,7 +721,6 @@ export const OPERATOR_PASS_WALL_DECISION_COLUMNS = [
 	'reason',
 	'note',
 	'statement_id',
-	'username_declined',
 ] as const satisfies ReadonlyArray<keyof OperatorPassWallDecisionRow>;
 
 export const OPERATOR_PASS_WALL_AVATAR_REF_COLUMNS = ['avatar', 'user_id'] as const satisfies ReadonlyArray<
@@ -678,6 +799,7 @@ export const OPERATOR_PASS_OFFER_COLUMNS = [
 	'ended_at',
 	'wall_name',
 	'wall_opt_out',
+	'labs_greeting',
 	'terms_version',
 	'version',
 ] as const satisfies ReadonlyArray<keyof OperatorPassOfferRow>;
@@ -701,3 +823,60 @@ export const OPERATOR_PASS_UNIT_EVENT_COLUMNS = [
 	'rule_version',
 	'reason',
 ] as const satisfies ReadonlyArray<keyof OperatorPassUnitEventRow>;
+
+export const OPERATOR_PASS_VISIONARY_ACTIVATION_COLUMNS = [
+	'user_id',
+	'visionary_since',
+	'visionary_sequence',
+	'activated_at',
+	'terms_version',
+	'terms_box_text',
+	'age_confirmed_at',
+	'consent_ip',
+	'consent_user_agent',
+	'pass_id',
+	'certificate_number',
+	'completed_at',
+	'ended_at',
+	'end_reason',
+	'notice_emailed_at',
+	'notice_skip_reason',
+	'notice_dm_sent_at',
+	'version',
+] as const satisfies ReadonlyArray<keyof OperatorPassVisionaryActivationRow>;
+
+export type OperatorPassLabsLeftReason = 'left' | 'kicked' | 'banned' | 'history';
+
+export interface OperatorPassLabsMemberRow {
+	user_id: UserID;
+	greeting: Nullish<boolean>;
+	added_at: Nullish<Date>;
+	left_at: Nullish<Date>;
+	left_reason: Nullish<OperatorPassLabsLeftReason>;
+	greeted_at: Nullish<Date>;
+	greeting_message_id: Nullish<bigint>;
+}
+
+export const OPERATOR_PASS_LABS_MEMBER_COLUMNS = [
+	'user_id',
+	'greeting',
+	'added_at',
+	'left_at',
+	'left_reason',
+	'greeted_at',
+	'greeting_message_id',
+] as const satisfies ReadonlyArray<keyof OperatorPassLabsMemberRow>;
+
+export interface OperatorPassLabsGreetingRow {
+	bucket: string;
+	user_id: UserID;
+	queued_at: Nullish<Date>;
+	message_id: Nullish<bigint>;
+}
+
+export const OPERATOR_PASS_LABS_GREETING_COLUMNS = [
+	'bucket',
+	'user_id',
+	'queued_at',
+	'message_id',
+] as const satisfies ReadonlyArray<keyof OperatorPassLabsGreetingRow>;

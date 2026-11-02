@@ -6,7 +6,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {clsx} from 'clsx';
 import type React from 'react';
 
-type PlutoniumPageButtonVariant = 'primary' | 'secondary' | 'danger';
+type PlutoniumPageButtonVariant = 'primary' | 'secondary';
 
 interface PlutoniumPageButtonProps {
 	variant: PlutoniumPageButtonVariant;
@@ -14,17 +14,13 @@ interface PlutoniumPageButtonProps {
 	disabled?: boolean;
 	loading?: boolean;
 	directional?: boolean;
-	small?: boolean;
-	className?: string;
 	children: React.ReactNode;
-	'aria-label'?: string;
 	'data-flx'?: string;
 }
 
 const VARIANT_CLASS: Record<PlutoniumPageButtonVariant, string | undefined> = {
 	primary: styles.primary,
 	secondary: undefined,
-	danger: styles.danger,
 };
 
 export function PlutoniumPageButton({
@@ -33,24 +29,20 @@ export function PlutoniumPageButton({
 	disabled,
 	loading,
 	directional,
-	small,
-	className,
 	children,
-	'aria-label': ariaLabel,
 	'data-flx': flx,
 }: PlutoniumPageButtonProps) {
 	return (
 		<FocusRing offset={-4} data-flx="premium.plutonium-page.button.focus-ring">
 			<button
 				type="button"
-				className={clsx(styles.button, VARIANT_CLASS[variant], small && styles.small, className)}
+				className={clsx(styles.button, VARIANT_CLASS[variant])}
 				onClick={() => {
 					if (!loading) onClick();
 				}}
 				disabled={disabled}
 				aria-busy={loading || undefined}
 				aria-disabled={loading || undefined}
-				aria-label={ariaLabel}
 				data-flx={flx}
 			>
 				<span className={styles.label} data-flx="premium.plutonium-page.button.label">

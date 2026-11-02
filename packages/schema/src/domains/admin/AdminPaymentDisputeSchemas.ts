@@ -43,7 +43,7 @@ export const AdminPaymentDisputeReviewStatusSchema = createNamedStringLiteralUni
 		[
 			'unjustified',
 			'UNJUSTIFIED',
-			'Found unjustified, the account was warned and is closed if the dispute ends with the money returned',
+			'Found unjustified, the account was warned and, if the dispute ends with the money returned, is closed for Plutonium or barred from the Operator Pass',
 		],
 	],
 	'Payment dispute review status',

@@ -131,7 +131,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `CONNECTION_ALREADY_EXISTS` | A connection of this type with this identifier already exists |
 | `CONNECTION_INITIATION_TOKEN_INVALID` | The connection initiation token is invalid or has expired |
 | `CONNECTION_INVALID_TYPE` | The connection type is not supported |
-| `CONNECTION_LIMIT_REACHED` | You've reached the maximum number of connections ({limit}) |
+| `CONNECTION_LIMIT_REACHED` | You can't have more than {limit} connections |
 | `CONNECTION_NOT_FOUND` | Unknown connection |
 | `CONNECTION_VERIFICATION_FAILED` | Connection verification failed |
 | `CONTENT_BLOCKED` | This content was blocked by safety systems |
@@ -233,31 +233,31 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` | IP authorization resend limit exceeded |
 | `IP_BAN_DECLINED` | This IP address cannot be added to the blocklist |
 | `IP_BAN_LINKED_TO_DECISION` | This network block belongs to an enforcement decision |
-| `MAX_ACTIVE_THREADS` | This community has reached its active thread limit of {count} |
-| `MAX_APPLICATIONS` | You've reached the maximum of {limit} applications |
+| `MAX_ACTIVE_THREADS` | This community is at its active thread limit of {count} |
+| `MAX_APPLICATIONS` | You can't have more than {limit} applications |
 | `MAX_BADGES` | The limit is {count} badges |
-| `MAX_BOOKMARKS` | You've reached the maximum of {count} bookmarks |
-| `MAX_CATEGORY_CHANNELS` | You've reached the maximum of {count} category channels |
-| `MAX_EMOJIS` | You've reached the maximum of {count} emojis |
-| `MAX_FAVORITE_MEMES` | You've reached the maximum of {count} saved media items |
-| `MAX_FORUM_TAGS` | This channel has reached its tag limit of {count} |
-| `MAX_FRIENDS` | You've reached the maximum of {count} friends |
-| `MAX_GROUP_DMS` | You've reached the maximum of {count} group DMs |
-| `MAX_GROUP_DM_RECIPIENTS` | You've reached the maximum of {count} group DM recipients |
-| `MAX_GUILDS` | You've reached the maximum of {count} communities |
-| `MAX_GUILD_CHANNELS` | You've reached the maximum of {count} community channels |
-| `MAX_GUILD_MEMBERS` | You've reached the maximum of {count} community members |
-| `MAX_GUILD_ROLES` | You've reached the maximum of {count} community roles |
-| `MAX_INVITES` | You've reached the maximum of {count} invites |
-| `MAX_PINNED_THREADS_IN_FORUM` | This channel has reached its pinned post limit of {count} |
-| `MAX_REACTIONS` | You've reached the maximum of {count} reactions |
-| `MAX_STICKERS` | You've reached the maximum of {count} stickers |
-| `MAX_THREAD_MEMBERS` | This thread has reached its member limit of {count} |
-| `MAX_WEBHOOKS_PER_CHANNEL` | You've reached the maximum of {count} webhooks per channel |
-| `MAX_WEBHOOKS_PER_GUILD` | You've reached the maximum of {count} webhooks per community |
+| `MAX_BOOKMARKS` | You can't have more than {count} bookmarks |
+| `MAX_CATEGORY_CHANNELS` | You can't have more than {count} category channels |
+| `MAX_EMOJIS` | You can't have more than {count} emojis |
+| `MAX_FAVORITE_MEMES` | You can't have more than {count} saved media items |
+| `MAX_FORUM_TAGS` | This channel is at its tag limit of {count} |
+| `MAX_FRIENDS` | You can't have more than {count} friends |
+| `MAX_GROUP_DMS` | You can't have more than {count} group DMs |
+| `MAX_GROUP_DM_RECIPIENTS` | You can't have more than {count} group DM recipients |
+| `MAX_GUILDS` | You can't have more than {count} communities |
+| `MAX_GUILD_CHANNELS` | You can't have more than {count} community channels |
+| `MAX_GUILD_MEMBERS` | You can't have more than {count} community members |
+| `MAX_GUILD_ROLES` | You can't have more than {count} community roles |
+| `MAX_INVITES` | You can't have more than {count} invites |
+| `MAX_PINNED_THREADS_IN_FORUM` | This channel is at its pinned post limit of {count} |
+| `MAX_REACTIONS` | You can't have more than {count} reactions |
+| `MAX_STICKERS` | You can't have more than {count} stickers |
+| `MAX_THREAD_MEMBERS` | This thread is at its member limit of {count} |
+| `MAX_WEBHOOKS_PER_CHANNEL` | You can't have more than {count} webhooks per channel |
+| `MAX_WEBHOOKS_PER_GUILD` | You can't have more than {count} webhooks per community |
 | `MEDIA_METADATA_ERROR` | Media metadata error |
 | `MESSAGE_ALREADY_CROSSPOSTED` | This message has already been published |
-| `MESSAGE_CROSSPOST_RATE_LIMITED` | This channel has reached its publishing limit |
+| `MESSAGE_CROSSPOST_RATE_LIMITED` | This channel is at its publishing limit |
 | `MESSAGE_NOT_CROSSPOSTABLE` | This message cannot be published |
 | `METHOD_NOT_ALLOWED` | Method not allowed |
 | `MFA_EMAIL_VERIFICATION_REQUIRED` | Confirm your email address to use two-factor authentication or passkeys |
@@ -286,7 +286,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `PREVIEW_MUST_BE_JPEG` | Preview must be JPEG |
 | `PROCESSING_FAILED` | We couldn't process the request |
 | `PROFILE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
-| `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` | This published message has reached its editing limit |
+| `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` | This published message is at its editing limit |
 | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `RATE_LIMITED` | You're being rate limited |
 | `REACTION_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
@@ -311,10 +311,11 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `SINGLE_COMMUNITY_CANNOT_DELETE` | The community for this instance cannot be deleted |
 | `SINGLE_COMMUNITY_CANNOT_LEAVE` | You cannot leave the community for this instance |
 | `SLOWMODE_RATE_LIMITED` | Slowmode rate limited |
-| `SSO_PROVIDER_UNAVAILABLE` | Your sign-in provider didn't answer. Try again in a moment |
+| `SSO_PROVIDER_UNAVAILABLE` | Your sign-in provider didn't respond. Try again in a moment |
 | `SSO_REQUIRED` | This instance requires single sign-on |
 | `STREAM_KEY_CHANNEL_MISMATCH` | Stream key channel mismatch |
 | `STREAM_KEY_SCOPE_MISMATCH` | Stream key scope mismatch |
+| `STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE` | A Pix or UPI subscription can't switch between monthly and yearly |
 | `STRIPE_ERROR` | Payment processing encountered an error |
 | `STRIPE_GIFT_REDEMPTION_IN_PROGRESS` | Gift code redemption is in progress |
 | `STRIPE_INVALID_PRODUCT` | Invalid product selection |
@@ -399,7 +400,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `VOICE_NODE_UNKNOWN` | No voice server has this API key |
 | `VOICE_SERVER_API_KEY_IN_USE` | Another voice server already uses this API key |
 | `VOICE_SERVER_ID_IN_USE` | Another voice server already uses this ID |
-| `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` | You've reached the maximum of {count} WebAuthn credentials |
+| `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` | You can't have more than {count} WebAuthn credentials |
 | `WEBHOOK_FORUM_TARGET_CONFLICT` | You can't specify both `thread_id` and `thread_name` |
 | `WEBHOOK_FORUM_TARGET_REQUIRED` | Webhooks posting to this channel need a `thread_id` or a `thread_name` |
 | `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` | This webhook service can't post to a forum or media channel without a `thread_id` |
@@ -460,7 +461,7 @@ These are the values of `code` inside `errors`.
 | `CUSTOM_STICKERS_REQUIRE_PREMIUM_OUTSIDE_SOURCE` | You can't use custom stickers outside their source communities without Premium |
 | `CUSTOM_STICKER_NOT_FOUND` | Custom sticker wasn't found |
 | `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW` | Communities listed in Explore must have a verification level of at least Low |
-| `DISCRIMINATOR_INVALID_FORMAT` | Discriminator must be {min}–{max} digits |
+| `DISCRIMINATOR_INVALID_FORMAT` | Discriminator must be {min} to {max} digits |
 | `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE` | This instance doesn't use tags |
 | `DISCRIMINATOR_OUT_OF_RANGE` | Discriminator must be between {min} and {max} |
 | `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED` | Duplicate attachment IDs aren't allowed |
@@ -503,7 +504,7 @@ These are the values of `code` inside `errors`.
 | `ENTRANCE_SOUND_INVALID_SCOPE` | Invalid entrance sound scope |
 | `ENTRANCE_SOUND_NAME_LENGTH_INVALID` | Entrance sound names must be between 1 and {max, number} characters |
 | `ENTRANCE_SOUND_NOT_FOUND` | Entrance sound not found |
-| `ENTRANCE_SOUND_QUOTA_REACHED` | You've reached the limit of {max, number} saved entrance sounds |
+| `ENTRANCE_SOUND_QUOTA_REACHED` | You can't save more than {max, number} entrance sounds |
 | `ENTRANCE_SOUND_SIZE_EXCEEDS_LIMIT` | Entrance sounds can be at most {max_bytes, number} bytes |
 | `FAILED_TO_FETCH_SSO_USER_INFO` | We couldn't fetch your SSO user info |
 | `FAILED_TO_PARSE_MULTIPART_FORM_DATA` | We couldn't parse the multipart form data |

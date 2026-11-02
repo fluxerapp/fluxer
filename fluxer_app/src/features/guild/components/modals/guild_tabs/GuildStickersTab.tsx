@@ -63,7 +63,7 @@ const NO_STICKER_SLOTS_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the guild stickers tab.',
 });
 const STICKER_SLOTS_FULL_DESCRIPTION_DESCRIPTOR = msg({
-	message: "You've reached the maximum number of stickers. Delete some existing stickers to make room.",
+	message: "You can't add more stickers. Delete some existing stickers to make room.",
 	comment:
 		'Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.',
 });

@@ -13,12 +13,12 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const BOOKMARK_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: 'Bookmark limit reached',
+	message: "You're at the bookmark limit",
 	comment: 'Short label in the max bookmarks modal.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_DESCRIPTOR = msg({
 	message:
-		"You're at {count, plural, one {# bookmark} other {# bookmarks}} — your instance admin sets this cap. Remove one to add another.",
+		'You have {count, plural, one {# bookmark} other {# bookmarks}}, the most your instance admin allows. Remove one to add another.',
 	comment:
 		'Modal body shown when the bookmarks limit is reached on a self-hosted instance with no upgrade path. {count} is the bookmark cap.',
 });
@@ -29,7 +29,7 @@ const YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_2_DESCRIPTOR = msg({
 });
 const YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_3_DESCRIPTOR = msg({
 	message:
-		"You're at the free cap of {count, plural, one {# bookmark} other {# bookmarks}}. {premiumProductName} bumps you up to {premiumCount, plural, one {# bookmark} other {# bookmarks}} — or remove one to add another.",
+		'You have {count, plural, one {# bookmark} other {# bookmarks}}, the most you can have for free. With {premiumProductName} you can have up to {premiumCount, plural, one {# bookmark} other {# bookmarks}}, or you can remove one to add another.',
 	comment:
 		'Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. {count} is the free cap, {premiumCount} the Plutonium cap.',
 });

@@ -6,6 +6,7 @@ import {deleteRecoveryKit} from '@app/api/auth/AuthRecoveryKit';
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
 import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
@@ -476,13 +477,14 @@ export async function processUserDeletion(
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
-		endOperatorPassesForDeletion(operatorPassRepository, userId).then(async (buyers) => {
+		endOperatorPassesForDeletion(operatorPassRepository, deps.cacheService, userId).then(async (buyers) => {
 			await operatorPassRepository.deleteOperatorPass(userId);
 			for (const buyer of buyers) {
 				await deps.operatorPassServices.holdingService.syncHolding(buyer);
 			}
 		}),
 		deps.operatorPassServices.wallService.forgetForDeletion(userId),
+		new BillingDocumentRepository().removeUserIndex(userId),
 	]);
 	await userRepository.deleteUserSecondaryIndices(userId);
 	const userForAnonymization = await userRepository.findUniqueAssert(userId);

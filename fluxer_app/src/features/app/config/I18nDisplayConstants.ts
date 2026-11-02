@@ -8,6 +8,8 @@ import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstant
 export {PRODUCT_NAME};
 export const PRODUCT_LABS_COMMUNITY_NAME = `${PRODUCT_NAME} Labs`;
 export const OPERATOR_PASS_NAME = 'Operator Pass';
+export const OPERATOR_PASS_SELLER_ADDRESS = 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm';
+export const OPERATOR_PASS_SELLER_PHONE = '+46 79 101 18 18';
 export const DESKTOP_ENTRY_NAME = 'Fluxer';
 export const CANARY_DESKTOP_ENTRY_NAME = 'Fluxer Canary';
 export const PAYMENT_PROVIDER_NAME = 'Stripe';

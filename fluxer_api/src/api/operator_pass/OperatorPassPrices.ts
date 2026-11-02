@@ -22,7 +22,7 @@ interface OperatorPassWithdrawalCountryRule {
 
 export type OperatorPassWithdrawalCountryTable = Readonly<Record<string, OperatorPassWithdrawalCountryRule>>;
 
-export const OPERATOR_PASS_WITHDRAWAL_RULE_VERSION = 'withdrawal-countries-2026-10-15';
+export const OPERATOR_PASS_WITHDRAWAL_RULE_VERSION = 'withdrawal-countries-2026-10-27';
 
 const OPERATOR_PASS_DEFAULT_TRANSFER_LOCK_HOURS = 72;
 
@@ -181,12 +181,10 @@ const OPERATOR_PASS_LOCALIZED_CURRENCIES: ReadonlyArray<OperatorPassCurrency> = 
 
 export function resolveOperatorPassDisabledCurrencies(
 	enabled: Partial<Record<string, boolean>> | undefined,
-	stoppedCountries: ReadonlySet<string>,
 ): ReadonlySet<OperatorPassCurrency> {
 	const disabled = new Set<OperatorPassCurrency>();
 	for (const currency of OPERATOR_PASS_LOCALIZED_CURRENCIES) {
-		const country = CURRENCY_WITHDRAWAL_COUNTRY[currency];
-		if (enabled?.[currency.toLowerCase()] === false || (country !== undefined && stoppedCountries.has(country))) {
+		if (enabled?.[currency.toLowerCase()] === false) {
 			disabled.add(currency);
 		}
 	}
@@ -230,19 +228,6 @@ export function getOperatorPassWallTier(count: number, minimums: ReadonlyArray<n
 		if (count >= minimum) tier = index + 1;
 	}
 	return tier;
-}
-
-export function parseOperatorPassStoppedCountries(source: string | undefined): ReadonlySet<string> {
-	const countries = (source ?? '')
-		.split(',')
-		.map((value) => value.trim().toUpperCase())
-		.filter((value) => value.length > 0);
-	for (const country of countries) {
-		if (!/^[A-Z]{2}$/u.test(country)) {
-			throw new Error(`FLUXER_OPERATOR_PASS_STOPPED_COUNTRIES has an invalid country code ${country}`);
-		}
-	}
-	return new Set(countries);
 }
 
 export interface OperatorPassWithdrawalRuleMatch {

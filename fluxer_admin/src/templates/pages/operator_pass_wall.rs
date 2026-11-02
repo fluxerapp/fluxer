@@ -34,7 +34,9 @@ use crate::{
             },
         },
         layout::admin_layout,
-        pages::payment_disputes::format_amount,
+        pages::{
+            operator_pass_visionary::visionary_activation_card, payment_disputes::format_amount,
+        },
     },
     utils::timestamps::{format_admin_date, format_admin_timestamp},
 };
@@ -92,7 +94,7 @@ fn event_label(kind: &str) -> &str {
         "shown_again" => "Put back on the wall",
         "approved" => "Staff approved the name and avatar",
         "declined" => "Staff declined, statement of reasons sent",
-        "fallback" => "Wall fell back to the username or Operator",
+        "fallback" => "Wall fell back to Operator",
         "display_adjusted" => "Staff adjusted the display, no statement",
         "legal_hold_set" => "Legal hold placed",
         "legal_hold_cleared" => "Legal hold released",
@@ -183,11 +185,8 @@ fn review_state_label(
     let shows = match display {
         Some(OperatorPassWallDisplayStateSchema::Hidden) => "Hidden from the wall for now",
         Some(OperatorPassWallDisplayStateSchema::Removed) => "Off the wall under section 8",
-        Some(OperatorPassWallDisplayStateSchema::Fallback) if entry.username_declined => {
-            "The wall shows Operator with the default avatar"
-        }
         Some(OperatorPassWallDisplayStateSchema::Fallback) => {
-            "The wall shows the username with the default avatar"
+            "The wall shows Operator with the default avatar"
         }
         Some(OperatorPassWallDisplayStateSchema::Live) | None => {
             "The wall shows the approved version"
@@ -284,15 +283,6 @@ fn facts_field(required: bool) -> Markup {
     }
 }
 
-fn username_checkbox() -> Markup {
-    html! {
-        label class="flex items-center gap-2 text-sm" {
-            input type="checkbox" name="username_declined" value="yes";
-            "The username also breaks the rules, so the fallback shows Operator"
-        }
-    }
-}
-
 fn collapsed_form(label: &str, body: Markup) -> Markup {
     html! {
         details class="rounded-lg border border-red-200" {
@@ -352,7 +342,6 @@ fn review_actions(
                 p class="text-sm text-neutral-600" { "Sends a statement of reasons." }
                 (reason_select())
                 (facts_field(true))
-                (username_checkbox())
                 (danger_button("Decline and send the statement"))
             })))
         }
@@ -633,7 +622,6 @@ fn can_force_fallback(entry: &AdminOperatorPassWallEntryResponse) -> bool {
         return false;
     }
     entry.display_state != Some(OperatorPassWallDisplayStateSchema::Fallback)
-        || !entry.username_declined
 }
 
 fn listing_actions(
@@ -657,11 +645,10 @@ fn listing_actions(
                     onsubmit: Some("return confirm('Take the approved name and avatar off the wall and email a statement of reasons?')"),
                     ..form_options
                 }, html! {
-                    p class="text-sm text-neutral-600" { "Sends a statement of reasons. The listing keeps its size, place and badge, and shows the username or Operator with the default avatar." }
+                    p class="text-sm text-neutral-600" { "Sends a statement of reasons. The listing keeps its size, place and badge, and shows Operator with the default avatar." }
                     (reason_select())
                     (facts_field(true))
-                    (username_checkbox())
-                    (danger_button("Force the fallback"))
+                        (danger_button("Force the fallback"))
                 })))
             }
             @if entry.hidden {
@@ -669,10 +656,10 @@ fn listing_actions(
             } @else {
                 (collapsed_form("Hide from the wall", post_form(&action("hide"), PostFormOptions {
                     class: Some("flex flex-col gap-2"),
-                    onsubmit: Some("return confirm('Hide this listing from the wall for now and email a statement of reasons?')"),
+                    onsubmit: Some("return confirm('Hide this listing from the wall while you look into it and email a statement of reasons?')"),
                     ..form_options
                 }, html! {
-                    p class="text-sm text-neutral-600" { "Hides the listing for now and sends a statement of reasons." }
+                    p class="text-sm text-neutral-600" { "Hides the listing under section 3.1 of the Operator Pass terms while a report or possible breach is looked into, and sends a statement of reasons." }
                     (reason_select())
                     (facts_field(true))
                     (danger_button("Hide from the wall"))
@@ -696,7 +683,7 @@ impl AdminOperatorPassRemovalStateSchema {
     fn label(self) -> &'static str {
         match self {
             Self::Notice => "Notice sent, 7 days to reply",
-            Self::Removed => "Pass benefits removed",
+            Self::Removed => "Bonus removed",
         }
     }
 }
@@ -806,14 +793,14 @@ fn removal_section(
                 div class="mt-4 flex flex-col gap-4" {
                     @if removal.is_some() {
                         (post_form(&action("restore"), PostFormOptions {
-                            onsubmit: Some("return confirm('End the notice or removal and restore the pass benefits with the original badge date?')"),
+                            onsubmit: Some("return confirm('End the notice or removal and restore the bonus with the original badge date?')"),
                             ..form_options
-                        }, secondary_button("Restore the pass benefits")))
+                        }, secondary_button("Restore the bonus")))
                     }
                     @if !removed {
-                        (collapsed_form("Remove the pass benefits", post_form(&action("remove"), PostFormOptions {
+                        (collapsed_form("Remove the bonus", post_form(&action("remove"), PostFormOptions {
                             class: Some("flex flex-col gap-2"),
-                            onsubmit: Some("return confirm('Remove the pass benefits and email a statement of reasons?')"),
+                            onsubmit: Some("return confirm('Remove the bonus and email a statement of reasons?')"),
                             ..form_options
                         }, html! {
                             p class="text-sm text-neutral-600" {
@@ -828,7 +815,7 @@ fn removal_section(
                                 input type="checkbox" name="serious" value="yes";
                                 "Serious breach, act without the 7 day notice"
                             }
-                            (danger_button("Remove the pass benefits"))
+                            (danger_button("Remove the bonus"))
                         })))
                     }
                     @if removal.is_none() {
@@ -983,8 +970,17 @@ pub const WITHDRAWAL_CHANNELS: &[(&str, &str)] = &[
     ("other", "Any other clear statement"),
 ];
 
+pub const REISSUE_REASONS: &[(&str, &str)] = &[
+    ("name_change", "The holder changed their name (section 3)"),
+    ("correction", "A mistake on our side (section 6)"),
+    (
+        "objection",
+        "The person named on the page objected (privacy section 5), erase earlier copies",
+    ),
+];
+
 impl OperatorPassPurchaseStatusSchema {
-    fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::Pending => "Waiting for payment",
             Self::Completed => "Paid",
@@ -1040,6 +1036,53 @@ fn withdrawal_form(base: &str, csrf_token: &str, user_id: &str, purchase_id: &st
     )
 }
 
+fn reissue_form(
+    base: &str,
+    csrf_token: &str,
+    user_id: &str,
+    purchase: &OperatorPassPurchaseResponse,
+) -> Markup {
+    collapsed_form(
+        "Issue a new copy of a certificate page",
+        html! {
+            form method="post" data-admin-refresh-on-success=(REFRESH_TARGET) action={(base) (WALL_PATH) "/users/" (user_id) "/reissue"}
+                class="flex flex-col gap-2"
+                onsubmit="return confirm('Issue a new copy of this certificate page? The download in settings then serves the new copy.')" {
+                (csrf_input(csrf_token))
+                input type="hidden" name="back" value="user";
+                input type="hidden" name="purchase_id" value=(purchase.id);
+                p class="text-sm text-neutral-600" {
+                    "The new copy keeps the certificate number, the payment date and the terms version. Earlier copies stay in the records, except when the person named on the page objected: then the name and the PDF file of every earlier copy are erased and only the number, the fingerprint and the issue time stay. Ask the buyer for the name to print instead. Checkout's name checks apply to the new name."
+                }
+                label class="flex flex-col gap-1" {
+                    span class=(LABEL_CLASS) { "Page" }
+                    div class="relative" {
+                        select name="pass_index" required class=(FORM_SELECT_CLASS) {
+                            @for index in 1..=purchase.quantity {
+                                option value=(index) { "Page " (index) }
+                            }
+                        }
+                        (select_chevron())
+                    }
+                }
+                (text_field("holder_name", "Name to print", 48))
+                label class="flex flex-col gap-1" {
+                    span class=(LABEL_CLASS) { "Why" }
+                    div class="relative" {
+                        select name="reissue_reason" required class=(FORM_SELECT_CLASS) {
+                            @for (reason, label) in REISSUE_REASONS {
+                                option value=(reason) { (label) }
+                            }
+                        }
+                        (select_chevron())
+                    }
+                }
+                (danger_button("Issue the new copy"))
+            }
+        },
+    )
+}
+
 fn purchases_section(
     base: &str,
     csrf_token: &str,
@@ -1074,6 +1117,9 @@ fn purchases_section(
                             | OperatorPassPurchaseStatusSchema::DuplicateRefunded
                     ) {
                         div class="mt-3" { (withdrawal_form(base, csrf_token, user_id, &purchase.id)) }
+                    }
+                    @if can_moderate && purchase.delivered_at.is_some() {
+                        div class="mt-3" { (reissue_form(base, csrf_token, user_id, purchase)) }
                     }
                 }
             }
@@ -1137,7 +1183,7 @@ fn entry_rows(
     let off_wall = match display {
         Some(OperatorPassWallDisplayStateSchema::Hidden) => Some("Nothing while it is hidden."),
         Some(OperatorPassWallDisplayStateSchema::Removed) => {
-            Some("Nothing while the pass benefits are removed.")
+            Some("Nothing while the bonus is removed.")
         }
         Some(
             OperatorPassWallDisplayStateSchema::Live | OperatorPassWallDisplayStateSchema::Fallback,
@@ -1187,9 +1233,6 @@ fn entry_rows(
         }
         @if let Some(note) = &entry.decline_note {
             (detail_row("Facts (sent to them)", html! { (note) }))
-        }
-        @if entry.username_declined {
-            (detail_row("Username", html! { "Declined, the fallback shows Operator" }))
         }
         (detail_row("Follows profile changes", html! { (if entry.keep_as_is { "No, kept as it is" } else { "Yes" }) }))
         (detail_row("Chose the yearly list", html! { (if entry.release_list_opt_in { "Yes" } else { "No" }) }))
@@ -1300,7 +1343,7 @@ pub fn operator_pass_wall_user_page(
                         (detail_row("Active passes", html! {
                             @match &data.holder {
                                 Some(holder) => { (holder.count) }
-                                None if removed => { "None while the benefits are removed" }
+                                None if removed => { "None while the bonus is removed" }
                                 None => { "None" }
                             }
                         }))
@@ -1342,6 +1385,9 @@ pub fn operator_pass_wall_user_page(
                     (card_with_header("Purchases", purchases_section(base, csrf_token, user_id, &data.purchases, can_moderate)))
                     (card_with_header("Passes", units_table(base, &data.units)))
                     (card_with_header("Pass it on offers", offers_table(base, &data.offers)))
+                    @if let Some(activation) = &data.visionary_activation {
+                        (card_with_header("Pass that comes with Visionary", visionary_activation_card(activation)))
+                    }
                 }
             }
         }

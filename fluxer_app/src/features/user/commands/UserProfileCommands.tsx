@@ -97,9 +97,13 @@ export async function fetch(userId: string, guildId?: string): Promise<Profile> 
 	}
 }
 
-export async function previewBadges(settings: ProfileBadgePreviewRequest): Promise<ProfileBadgePreviewResponse> {
+export async function previewBadges(
+	settings: ProfileBadgePreviewRequest,
+	signal?: AbortSignal,
+): Promise<ProfileBadgePreviewResponse> {
 	const response = await http.post<ProfileBadgePreviewResponse>(Endpoints.USER_PROFILE_BADGES_PREVIEW, {
 		body: settings,
+		signal,
 	});
 	return response.body;
 }

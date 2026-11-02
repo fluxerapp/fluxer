@@ -18,9 +18,9 @@ import {useState} from 'react';
 
 const PREMIUM_EXPIRED_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Your {premiumProductName} subscription has expired. You have lost all {premiumProductName} perks. Reactivate your subscription to regain access.',
+		'Your {premiumProductName} subscription has expired, and you no longer have access to {premiumProductName} features. Reactivate your subscription to get access again.',
 	comment:
-		'Nagbar body shown when a premium subscription has expired. {premiumProductName} is the premium product name.',
+		'Nagbar body shown when a premium subscription has expired. {premiumProductName} is the premium product name. Use the same word for "features" as in "See all {premiumProductName} features".',
 });
 const REACTIVATE_DESCRIPTOR = msg({
 	message: 'Reactivate',
@@ -28,9 +28,9 @@ const REACTIVATE_DESCRIPTOR = msg({
 });
 const PREMIUM_GRACE_PERIOD_MESSAGE_DESCRIPTOR = msg({
 	message:
-		"Your subscription failed to renew, but you still have access to {premiumProductName} perks until {formattedGraceDate}. Take action now or you'll lose all perks.",
+		'Your {premiumProductName} subscription failed to renew. You still have access to all {premiumProductName} features until {formattedGraceDate}. Update your payment method before then to keep your access.',
 	comment:
-		'Nagbar body shown while a premium subscription is in its grace period. {premiumProductName} is the premium product name and {formattedGraceDate} is already localized.',
+		'Nagbar body shown while a premium subscription is in its grace period after a failed renewal. {premiumProductName} is the premium product name and {formattedGraceDate} is already localized. Use the same word for "features" as in "See all {premiumProductName} features".',
 });
 export const PremiumStatusNagbar = observer(
 	({isMobile, variant}: {isMobile: boolean; variant: 'expired' | 'grace-period'}) => {

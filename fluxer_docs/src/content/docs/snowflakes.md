@@ -24,7 +24,7 @@ Every instance uses the same epoch. Don't rely on the worker ID or sequence.
 
 ## Timestamps
 
-To get the creation time in Unix milliseconds, shift the snowflake right by 22 bits and add the epoch. To build a cursor for a given time, reverse the calculation. The result is the smallest snowflake for that time.
+To get the creation time in Unix milliseconds, shift the snowflake right by 22 bits and add the epoch. To build a cursor for a given time, reverse the calculation to get the smallest snowflake for that time.
 
 ```text
 timestamp_ms = (snowflake >> 22) + 1420070400000
@@ -48,7 +48,7 @@ The HTTP API reports a malformed value as [`INVALID_SNOWFLAKE_FORMAT`](/http-api
 
 ## Pagination
 
-Snowflakes sorted as integers are in creation order, and list endpoints use them as cursors. A cursor doesn't have to be the ID of a real resource, so a snowflake [built from a timestamp](#timestamps) works too.
+Snowflakes sorted as integers are in creation order, and list endpoints use them as cursors. A cursor doesn't have to be the ID of a real resource, and a snowflake [built from a timestamp](#timestamps) works too.
 
 | Cursor | Selects |
 | --- | --- |

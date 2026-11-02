@@ -97,7 +97,7 @@ Fluxer still sends [Message Create](/gateway/events/#message-create) when `MESSA
 
 ## The shard filter
 
-A session that identified with a `shard_id` other than 0 drops every Dispatch that has no guild. This filter does not drop [Rate Limited](/gateway/events/#rate-limited), [Guild Counts Update](/gateway/events/#guild-counts-update) or [Channel Member Counts Update](/gateway/events/#channel-member-counts-update), which answer a command the session sent. Account, direct message, relationship and call events arrive only on shard 0 or on a session that sent no `shard` pair (see [Sharding](/gateway/overview/#sharding)).
+A session that identified with a `shard_id` other than 0 drops every Dispatch that has no guild. This filter does not drop [Rate Limited](/gateway/events/#rate-limited), [Guild Counts Update](/gateway/events/#guild-counts-update) or [Channel Member Counts Update](/gateway/events/#channel-member-counts-update), which are replies to a command the session sent. Account, direct message, relationship and call events arrive only on shard 0 or on a session that sent no `shard` pair (see [Sharding](/gateway/overview/#sharding)).
 
 ## What a bot should send
 

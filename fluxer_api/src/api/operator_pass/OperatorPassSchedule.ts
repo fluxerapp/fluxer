@@ -22,7 +22,7 @@ export type OperatorPassSchedule = Pick<
 export type OperatorPassPricedPhase = Exclude<OperatorPassPhase, 'waitlist'>;
 
 const STRIPE_CHECKOUT_MIN_EXPIRY_MS = ms('30 minutes');
-const STRIPE_CHECKOUT_MAX_EXPIRY_MS = ms('24 hours');
+const OPERATOR_PASS_CHECKOUT_EXPIRY_MS = ms('2 hours');
 const STRIPE_CHECKOUT_EXPIRY_MARGIN_MS = ms('1 minute');
 
 const QUOTE_VERSION = 2;
@@ -43,9 +43,13 @@ export function operatorPassNow(
 export function getOperatorPassPhase(
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
+	previewUnlocked = false,
 ): OperatorPassPhase {
 	const at = now.getTime();
-	if (!schedule.saleOpensAt || !schedule.priceRisesAt || at < schedule.saleOpensAt.getTime()) {
+	if (!schedule.saleOpensAt || !schedule.priceRisesAt) {
+		return 'waitlist';
+	}
+	if (at < schedule.saleOpensAt.getTime() && !previewUnlocked) {
 		return 'waitlist';
 	}
 	if (at < schedule.priceRisesAt.getTime()) {
@@ -180,6 +184,7 @@ export interface OperatorPassCheckoutPriceInput {
 	userId: string | null;
 	quote: string | null | undefined;
 	secret?: string;
+	previewUnlocked?: boolean;
 }
 
 export interface OperatorPassCheckoutPrice {
@@ -212,7 +217,7 @@ function isQuoteHonored(
 
 export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPriceInput): OperatorPassCheckoutPrice {
 	const schedule = input.schedule ?? getOperatorPassSchedule();
-	const phase = getOperatorPassPhase(input.now, schedule);
+	const phase = getOperatorPassPhase(input.now, schedule, input.previewUnlocked);
 	const verified = input.quote ? verifyOperatorPassQuote(input.quote, input.secret) : null;
 	const quote = verified && (verified.userId === null || verified.userId === input.userId) ? verified : null;
 	if (quote && isQuoteHonored(quote, input, schedule, phase)) {
@@ -239,14 +244,14 @@ export function getOperatorPassSessionExpiresAt(
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 	realNowMs = Date.now(),
-): number | undefined {
-	if (pricedPhase !== 'early_bird' || !schedule.priceRisesAt) {
-		return undefined;
+): number {
+	let lifetimeMs = OPERATOR_PASS_CHECKOUT_EXPIRY_MS;
+	if (pricedPhase === 'early_bird' && schedule.priceRisesAt) {
+		const untilGraceEndMs = schedule.priceRisesAt.getTime() + schedule.graceMs - now.getTime();
+		lifetimeMs = Math.max(
+			STRIPE_CHECKOUT_MIN_EXPIRY_MS + STRIPE_CHECKOUT_EXPIRY_MARGIN_MS,
+			Math.min(lifetimeMs, untilGraceEndMs),
+		);
 	}
-	const untilGraceEndMs = schedule.priceRisesAt.getTime() + schedule.graceMs - now.getTime();
-	const lifetimeMs = Math.min(
-		STRIPE_CHECKOUT_MAX_EXPIRY_MS - STRIPE_CHECKOUT_EXPIRY_MARGIN_MS,
-		Math.max(STRIPE_CHECKOUT_MIN_EXPIRY_MS + STRIPE_CHECKOUT_EXPIRY_MARGIN_MS, untilGraceEndMs),
-	);
 	return Math.floor((realNowMs + lifetimeMs) / 1000);
 }

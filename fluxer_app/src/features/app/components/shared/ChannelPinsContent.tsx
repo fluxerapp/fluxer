@@ -61,7 +61,7 @@ const WHENEVER_SOMEONE_PINS_A_MESSAGE_IT_LL_APPEAR_DESCRIPTOR = msg({
 	comment: 'Channel pins empty-state secondary line explaining where pinned messages appear.',
 });
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
-	message: "You've reached the end",
+	message: "You're at the end",
 	comment: 'Short label in the shared app channel pins content.',
 });
 

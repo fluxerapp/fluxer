@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
-import {OperatorPassCheckoutSuccess} from '@app/features/premium/components/operator_pass/OperatorPassCheckoutSuccess';
 import styles from '@app/features/premium/components/pages/PremiumCallbackPage.module.css';
 import {isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -14,15 +15,20 @@ const PremiumCallbackPage = observer(() => {
 	const location = useLocation();
 	const queryParams = new URLSearchParams(location.search);
 	const status = queryParams.get('status');
+	const isOperatorPass = isOperatorPassAvailable() && queryParams.get('product') === 'operator_pass';
+	const operatorPassSessionId = isOperatorPass && status === 'success' ? queryParams.get('session_id') : null;
 	useEffect(() => {
 		if (!shouldShowPremiumFeatures()) {
 			window.location.replace('/');
+			return;
 		}
-	}, []);
-	if (!shouldShowPremiumFeatures()) {
+		if (operatorPassSessionId) {
+			RouterUtils.replaceWith(`${Routes.OPERATOR_PASS}?session_id=${encodeURIComponent(operatorPassSessionId)}`);
+		}
+	}, [operatorPassSessionId]);
+	if (!shouldShowPremiumFeatures() || operatorPassSessionId) {
 		return null;
 	}
-	const isOperatorPass = isOperatorPassAvailable() && queryParams.get('product') === 'operator_pass';
 	const isSuccess = status === 'success';
 	const isCancel = status === 'cancel';
 	const isClosedBillingPortal = status === 'closed-billing-portal';
@@ -35,21 +41,14 @@ const PremiumCallbackPage = observer(() => {
 						weight="fill"
 						data-flx="premium.premium-callback-page.success-icon"
 					/>
-					{isOperatorPass ? (
-						<OperatorPassCheckoutSuccess
-							sessionId={queryParams.get('session_id')}
-							data-flx="premium.premium-callback-page.operator-pass-success"
-						/>
-					) : (
-						<div className={styles.content} data-flx="premium.premium-callback-page.content">
-							<h1 className={styles.title} data-flx="premium.premium-callback-page.title">
-								<Trans>Payment successful</Trans>
-							</h1>
-							<p className={styles.description} data-flx="premium.premium-callback-page.description">
-								<Trans>Your payment was successful. You can now close this tab and return to the app.</Trans>
-							</p>
-						</div>
-					)}
+					<div className={styles.content} data-flx="premium.premium-callback-page.content">
+						<h1 className={styles.title} data-flx="premium.premium-callback-page.title">
+							<Trans>Payment successful</Trans>
+						</h1>
+						<p className={styles.description} data-flx="premium.premium-callback-page.description">
+							<Trans>Your payment was successful. You can now close this tab and return to the app.</Trans>
+						</p>
+					</div>
 				</>
 			)}
 			{isCancel && (

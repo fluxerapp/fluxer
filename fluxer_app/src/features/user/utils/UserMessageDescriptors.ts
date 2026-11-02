@@ -315,7 +315,7 @@ export const ESCAPE_KEY_EXITS_KEYBOARD_MODE_DESCRIPTOR = msg({
 });
 
 export const SHOW_CONTEXT_MENU_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Show context menu shortcuts',
+	message: 'Show context menu keybinds',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 
@@ -658,17 +658,17 @@ export const RESET_TO_DEFAULTS_DESCRIPTOR = msg({
 });
 
 export const SYNC_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Sync shortcuts',
+	message: 'Sync keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
 export const CUSTOM_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Custom shortcuts',
+	message: 'Custom keybinds',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 
 export const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
+	message: 'Default keybinds',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 

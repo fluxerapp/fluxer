@@ -6,7 +6,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Db} from '@app/api/database/CassandraTypes';
-import type {PaymentDisputeProduct, PaymentDisputeReviewRow} from '@app/api/database/types/PaymentDisputeTypes';
+import type {PaymentDisputeReviewRow} from '@app/api/database/types/PaymentDisputeTypes';
 import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {
 	decisionAuditMetadata,
@@ -23,6 +23,12 @@ import {Logger} from '@app/api/Logger';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {
+	barOperatorPassAfterDispute,
+	liftOperatorPassDisputeBar,
+	type OperatorPassDisputeBarProgress,
+	type OperatorPassDisputeServices,
+} from '@app/api/operator_pass/OperatorPassDisputeBar';
 import {followOperatorPassWallStanding} from '@app/api/operator_pass/OperatorPassWallStanding';
 import type {
 	PaymentDisputeRepository,
@@ -71,6 +77,7 @@ export interface PaymentDisputeEnforcementDependencies {
 	oauth2Tokens: Pick<OAuth2TokenRepository, 'deleteAllAccessTokensForUser' | 'deleteAllRefreshTokensForUser'>;
 	systemDm: SystemDmDeps | null;
 	enforcement: EnforcementDecisionService;
+	operatorPass: OperatorPassDisputeServices | null;
 }
 
 export function getPaymentDisputeWarningDeadline(evidenceDueBy: Date | null, now: Date): Date | null {
@@ -95,7 +102,7 @@ function isPaymentDisputeWarningIncomplete(review: PaymentDisputeReviewRow): boo
 	return review.status === 'unjustified' && review.warned_at == null && review.reversed_at == null;
 }
 
-export function shouldCloseAfterPaymentDispute(review: PaymentDisputeReviewRow): boolean {
+function isLostAfterWarning(review: PaymentDisputeReviewRow): boolean {
 	return (
 		review.outcome === 'lost' &&
 		review.status === 'unjustified' &&
@@ -104,15 +111,24 @@ export function shouldCloseAfterPaymentDispute(review: PaymentDisputeReviewRow):
 		review.closed_at != null &&
 		review.closed_at.getTime() >= review.warning_deadline.getTime() &&
 		review.reversed_at == null &&
-		review.enforcement_decision_id == null &&
 		getPaymentDisputeReviewBlockers(review).length === 0
 	);
 }
 
-function getPaymentDisputeClosureReason(product: PaymentDisputeProduct): PaymentDisputeClosureReason {
-	return product === 'operator_pass' && !Config.instance.selfHosted
-		? DeletionReasons.OPERATOR_PASS_PAYMENT_DISPUTE
-		: DeletionReasons.BILLING_DISPUTE_OR_ABUSE;
+export function shouldCloseAfterPaymentDispute(review: PaymentDisputeReviewRow): boolean {
+	return review.product !== 'operator_pass' && review.enforcement_decision_id == null && isLostAfterWarning(review);
+}
+
+function operatorPassDisputeAuditKey(disputeId: string): string {
+	return `payment_dispute:operator_pass_bar:audit_pending:${disputeId}`;
+}
+
+function operatorPassDisputeNoticeKey(disputeId: string): string {
+	return `payment_dispute:operator_pass_bar:notice_pending:${disputeId}`;
+}
+
+export function shouldBarAfterOperatorPassDispute(review: PaymentDisputeReviewRow): boolean {
+	return review.product === 'operator_pass' && isLostAfterWarning(review);
 }
 
 function getClosingDecisionId(user: User): bigint | null {
@@ -227,6 +243,16 @@ export class PaymentDisputeEnforcementService {
 		const decisionEnded = review.enforcement_decision_id
 			? await this.releaseClosure(review, review.enforcement_decision_id, params)
 			: false;
+		const operatorPass = this.deps.operatorPass;
+		if (review.product === 'operator_pass' && operatorPass) {
+			const user = await this.deps.userRepository.findUnique(review.purchaser_id);
+			if (user) {
+				const otherGrounds = (await this.deps.repository.listReviewsByPurchaser(review.purchaser_id)).filter(
+					(other) => other.dispute_id !== review.dispute_id && shouldBarAfterOperatorPassDispute(other),
+				);
+				await liftOperatorPassDisputeBar(operatorPass, this.disputeBarProgress, user, review.dispute_id, otherGrounds);
+			}
+		}
 		const reversed = await this.patchReview(review.dispute_id, {
 			status: Db.set('justified'),
 			reversed_at: Db.set(new Date()),
@@ -276,13 +302,21 @@ export class PaymentDisputeEnforcementService {
 
 	async closeWaitingAccounts(reviews: ReadonlyArray<PaymentDisputeReviewRow>): Promise<number> {
 		let failed = 0;
-		for (const review of reviews.filter(shouldCloseAfterPaymentDispute)) {
+		for (const review of reviews) {
+			const close = shouldCloseAfterPaymentDispute(review);
+			if (!close && !shouldBarAfterOperatorPassDispute(review)) {
+				continue;
+			}
 			const user = await this.deps.userRepository.findUnique(review.purchaser_id);
 			if (!user || user.deletionStartedAt) {
 				continue;
 			}
 			try {
-				await this.closeAccount(review);
+				if (close) {
+					await this.closeAccount(review);
+				} else {
+					await this.barOperatorPass(review);
+				}
 			} catch (error) {
 				failed++;
 				Logger.warn(
@@ -293,6 +327,61 @@ export class PaymentDisputeEnforcementService {
 		}
 		return failed;
 	}
+
+	async barOperatorPass(review: PaymentDisputeReviewRow): Promise<boolean> {
+		const services = this.deps.operatorPass;
+		if (!services) {
+			return false;
+		}
+		return this.withDecisionLock(review.dispute_id, () =>
+			this.withAccountLock(review.purchaser_id, () => this.barOperatorPassLocked(services, review.dispute_id)),
+		);
+	}
+
+	private async barOperatorPassLocked(services: OperatorPassDisputeServices, disputeId: string): Promise<boolean> {
+		const current = await this.requireReview(disputeId);
+		if (!shouldBarAfterOperatorPassDispute(current)) {
+			return false;
+		}
+		const user = await this.deps.userRepository.findUnique(current.purchaser_id);
+		if (!user || user.deletionStartedAt) {
+			return false;
+		}
+		const barred = await barOperatorPassAfterDispute(services, this.disputeBarProgress, user, current);
+		if (barred) {
+			await this.deps.auditService.createAuditLog({
+				adminUserId: SYSTEM_USER_ID,
+				targetType: 'user',
+				targetId: BigInt(user.id),
+				action: 'bar_operator_pass_after_payment_dispute',
+				auditLogReason: `Payment dispute ${current.dispute_id} on Operator Pass order ${current.order_id} was found unjustified, the account was warned and the dispute ended with the money returned after ${current.warning_deadline?.toISOString()}`,
+				metadata: new Map([
+					['dispute_id', current.dispute_id],
+					['decided_by', (current.decided_by ?? SYSTEM_USER_ID).toString()],
+				]),
+			});
+		}
+		return barred;
+	}
+
+	private readonly disputeBarProgress: OperatorPassDisputeBarProgress = {
+		isAuditPending: async (disputeId) =>
+			(await this.deps.cacheService.get<boolean>(operatorPassDisputeAuditKey(disputeId))) === true,
+		markAuditPending: async (disputeId) => {
+			await this.deps.cacheService.set(operatorPassDisputeAuditKey(disputeId), true);
+		},
+		clearAuditPending: async (disputeId) => {
+			await this.deps.cacheService.delete(operatorPassDisputeAuditKey(disputeId));
+		},
+		isNoticePending: async (disputeId) =>
+			(await this.deps.cacheService.get<boolean>(operatorPassDisputeNoticeKey(disputeId))) === true,
+		markNoticePending: async (disputeId) => {
+			await this.deps.cacheService.set(operatorPassDisputeNoticeKey(disputeId), true);
+		},
+		clearNoticePending: async (disputeId) => {
+			await this.deps.cacheService.delete(operatorPassDisputeNoticeKey(disputeId));
+		},
+	};
 
 	async closeAccount(review: PaymentDisputeReviewRow): Promise<PaymentDisputeReviewRow> {
 		return this.withDecisionLock(review.dispute_id, () =>
@@ -310,7 +399,7 @@ export class PaymentDisputeEnforcementService {
 			Logger.warn({disputeId: review.dispute_id}, 'Account of a lost unjustified payment dispute is already gone');
 			return review;
 		}
-		const reasonCode = getPaymentDisputeClosureReason(review.product);
+		const reasonCode = DeletionReasons.BILLING_DISPUTE_OR_ABUSE;
 		const closingDecisionId = getClosingDecisionId(user);
 		if (closingDecisionId !== null) {
 			return this.joinClosure(review, user, closingDecisionId, reasonCode);

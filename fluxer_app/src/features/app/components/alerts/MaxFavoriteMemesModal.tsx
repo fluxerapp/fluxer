@@ -12,18 +12,18 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: 'Saved media limit reached',
+	message: "You're at the saved media limit",
 	comment: 'Short label in the max favorite memes modal.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR = msg({
 	message:
-		"You're at the cap of {count, plural, one {# saved media item} other {# saved media items}} — your instance admin sets this limit.",
+		'You have {count, plural, one {# saved media item} other {# saved media items}}, the most your instance admin allows.',
 	comment:
 		'Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. {count} is the saved media cap.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_FOR_DESCRIPTOR = msg({
 	message:
-		"You're at the free cap of {count, plural, one {# saved media item} other {# saved media items}}. {premiumProductName} bumps you up to {premiumCount, plural, one {# saved media item} other {# saved media items}}.",
+		'You have {count, plural, one {# saved media item} other {# saved media items}}, the most you can have for free. With {premiumProductName} you can have up to {premiumCount, plural, one {# saved media item} other {# saved media items}}.',
 	comment:
 		'Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. {count} is the free cap, {premiumCount} the Plutonium cap.',
 });

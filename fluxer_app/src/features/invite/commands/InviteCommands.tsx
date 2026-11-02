@@ -107,15 +107,34 @@ const ADULTS_ONLY_COMMUNITY_DESCRIPTOR = msg({
 	comment: 'Error dialog text when someone who is not an adult tries to open a community marked 18+.',
 });
 
-function showGuildInviteAcceptFailure(
-	invite: Invite | null,
-	errorCode: string | undefined,
-	responseErr: HttpError | null,
-): void {
-	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
+export function showGuildJoinRefusal(error: unknown): boolean {
+	const errorCode = failureCode(error);
 	if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
-		showAccountLimitedModal(responseErr ? failureMessage(responseErr) : undefined);
-	} else if (errorCode === APIErrorCodes.INVITES_DISABLED) {
+		showAccountLimitedModal(failureMessage(error));
+	} else if (errorCode === APIErrorCodes.USER_BANNED_FROM_GUILD) {
+		showGenericErrorModal({
+			title: () => modalI18n._(UserBannedFromGuildModal_YOU_RE_BANNED_DESCRIPTOR),
+			message: () => modalI18n._(UserBannedFromGuildModal_YOU_ARE_BANNED_FROM_THIS_COMMUNITY_AND_CANNOT_DESCRIPTOR),
+			dataFlx: 'moderation.user-banned-from-guild-modal.confirm-modal',
+		});
+	} else if (errorCode === APIErrorCodes.USER_IP_BANNED_FROM_GUILD) {
+		showGenericErrorModal({
+			title: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_IS_BANNED_DESCRIPTOR),
+			message: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_ADDRESS_IS_BANNED_FROM_THIS_COMMUNITY_DESCRIPTOR),
+			dataFlx: 'moderation.user-ip-banned-from-guild-modal.confirm-modal',
+		});
+	} else {
+		return false;
+	}
+	return true;
+}
+
+function showGuildInviteAcceptFailure(invite: Invite | null, error: unknown): void {
+	if (showGuildJoinRefusal(error)) return;
+	const errorCode = failureCode(error);
+	const responseErr = error instanceof HttpError ? error : null;
+	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
+	if (errorCode === APIErrorCodes.INVITES_DISABLED) {
 		ModalCommands.push(
 			modal(() => (
 				<InvitesDisabledModal
@@ -160,18 +179,6 @@ function showGuildInviteAcceptFailure(
 			title: () => modalI18n._(InviteAcceptFailedModal_FAILED_TO_ACCEPT_INVITE_DESCRIPTOR),
 			message: () => modalI18n._(ADULTS_ONLY_COMMUNITY_DESCRIPTOR),
 			dataFlx: 'invite.invite-commands.show-guild-invite-accept-failure.adults-only-modal',
-		});
-	} else if (errorCode === APIErrorCodes.USER_BANNED_FROM_GUILD) {
-		showGenericErrorModal({
-			title: () => modalI18n._(UserBannedFromGuildModal_YOU_RE_BANNED_DESCRIPTOR),
-			message: () => modalI18n._(UserBannedFromGuildModal_YOU_ARE_BANNED_FROM_THIS_COMMUNITY_AND_CANNOT_DESCRIPTOR),
-			dataFlx: 'moderation.user-banned-from-guild-modal.confirm-modal',
-		});
-	} else if (errorCode === APIErrorCodes.USER_IP_BANNED_FROM_GUILD) {
-		showGenericErrorModal({
-			title: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_IS_BANNED_DESCRIPTOR),
-			message: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_ADDRESS_IS_BANNED_FROM_THIS_COMMUNITY_DESCRIPTOR),
-			dataFlx: 'moderation.user-ip-banned-from-guild-modal.confirm-modal',
 		});
 	} else if (responseErr?.status && responseErr.status >= 400) {
 		showGenericErrorModal({
@@ -282,7 +289,7 @@ export async function acceptAndTransitionToChannel(
 		logger.error(`Failed to accept invite and transition for code ${code}:`, error);
 		removeInviteIfMissing(code, target, responseErr, errorCode);
 		if (!promptForAccountTier(error, () => void acceptAndTransitionToChannel(code, i18n, target))) {
-			showGuildInviteAcceptFailure(invite, errorCode, responseErr);
+			showGuildInviteAcceptFailure(invite, error);
 		}
 		throw error;
 	}

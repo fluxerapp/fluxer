@@ -5,7 +5,11 @@ import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Db} from '@app/api/database/CassandraTypes';
-import type {OperatorPassPurchaseRow, OperatorPassRemovalHistoryRow} from '@app/api/database/types/OperatorPassTypes';
+import type {
+	OperatorPassPurchaseRow,
+	OperatorPassRemovalHistoryRow,
+	OperatorPassUnitRow,
+} from '@app/api/database/types/OperatorPassTypes';
 import type {PaymentDisputeProduct, PaymentDisputeReviewRow} from '@app/api/database/types/PaymentDisputeTypes';
 import {resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {Logger} from '@app/api/Logger';
@@ -103,10 +107,24 @@ function firstPerkRemovalBefore(history: ReadonlyArray<OperatorPassRemovalHistor
 	return first;
 }
 
+function firstOperatorPassRefundAt(
+	purchase: OperatorPassPurchaseRow,
+	units: ReadonlyArray<OperatorPassUnitRow>,
+): Date | null {
+	let first = purchase.refunded_at ?? null;
+	for (const unit of units) {
+		if (unit.end_reason === 'refund' && unit.ended_at && (!first || unit.ended_at < first)) {
+			first = unit.ended_at;
+		}
+	}
+	return first;
+}
+
 export function getOperatorPassDisputeSubject(
 	purchase: OperatorPassPurchaseRow,
 	dispute: Stripe.Dispute,
 	holderRemovals: ReadonlyArray<OperatorPassRemovalHistoryRow>,
+	units: ReadonlyArray<OperatorPassUnitRow>,
 ): PaymentDisputeSubject {
 	const disputedAt = purchase.disputed_at ?? new Date(dispute.created * 1000);
 	return {
@@ -120,10 +138,10 @@ export function getOperatorPassDisputeSubject(
 		currency: purchase.currency,
 		disputedAt,
 		purchasedAt: purchase.purchased_at ?? null,
-		perksStartedAt: purchase.perks_granted_at ?? null,
+		perksStartedAt: purchase.delivered_at ?? purchase.perks_granted_at ?? null,
 		withdrawalEndsAt: getOperatorPassWithdrawalRightEndsAt(purchase),
 		withdrawnAt: purchase.withdrawn_at ?? null,
-		refundedAt: purchase.refunded_at ?? null,
+		refundedAt: firstOperatorPassRefundAt(purchase, units),
 		perksRemovedAt: firstPerkRemovalBefore(holderRemovals, disputedAt),
 	};
 }

@@ -89,7 +89,7 @@ const CHOOSE_THE_VIDEO_CODEC_FOR_SCREEN_SHARING_DESCRIPTOR = msg({
 });
 
 const ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR = msg({
-	message: 'May cause compatibility issues for viewers. We’re working on improving this.',
+	message: "May cause compatibility issues for viewers. We're working on improving this.",
 	comment: 'Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.',
 });
 const AV1_KEYWORD_DESCRIPTOR = msg({

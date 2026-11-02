@@ -93,6 +93,9 @@ catalogs:
     '@nats-io/transport-node':
       specifier: 3.4.0
       version: 3.4.0
+    '@pdf-lib/fontkit':
+      specifier: 1.1.1
+      version: 1.1.1
     '@phosphor-icons/react':
       specifier: 2.1.10
       version: 2.1.10
@@ -186,6 +189,9 @@ catalogs:
     autoprefixer:
       specifier: 10.6.2
       version: 10.6.2
+    bidi-js:
+      specifier: 1.0.3
+      version: 1.0.3
     bowser:
       specifier: 2.15.0
       version: 2.15.0
@@ -219,6 +225,9 @@ catalogs:
     framer-motion:
       specifier: 14.7.1
       version: 14.7.1
+    harfbuzzjs:
+      specifier: 1.6.3
+      version: 1.6.3
     hi-base32:
       specifier: 0.6.0
       version: 0.6.0
@@ -575,6 +584,9 @@ importers:
       '@nats-io/transport-node':
         specifier: 'catalog:'
         version: 3.4.0
+      '@pdf-lib/fontkit':
+        specifier: 'catalog:'
+        version: 1.1.1
       '@pkgs/cache':
         specifier: workspace:*
         version: link:pkgs/cache
@@ -638,6 +650,9 @@ importers:
       argon2:
         specifier: 'catalog:'
         version: 0.45.1
+      bidi-js:
+        specifier: 'catalog:'
+        version: 1.0.3
       bowser:
         specifier: 'catalog:'
         version: 2.15.0
@@ -647,6 +662,9 @@ importers:
       emoji-regex:
         specifier: 'catalog:'
         version: 11.0.0
+      harfbuzzjs:
+        specifier: 'catalog:'
+        version: 1.6.3
       hi-base32:
         specifier: 'catalog:'
         version: 0.6.0
@@ -817,6 +835,15 @@ importers:
       '@fluxer/number_utils':
         specifier: workspace:*
         version: link:../../../packages/number_utils
+      '@pdf-lib/fontkit':
+        specifier: 'catalog:'
+        version: 1.1.1
+      bidi-js:
+        specifier: 'catalog:'
+        version: 1.0.3
+      harfbuzzjs:
+        specifier: 'catalog:'
+        version: 1.6.3
       itty-time:
         specifier: 'catalog:'
         version: 2.0.2
@@ -5716,6 +5743,9 @@ packages:
     resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
     engines: {node: '>= 10.0.0'}
 
+  '@pdf-lib/fontkit@1.1.1':
+    resolution: {integrity: sha512-KjMd7grNapIWS/Dm0gvfHEilSyAmeLvrEGVcqLGi0VYebuqqzTbgF29efCx7tvx+IEbG3zQciRSWl3GkUSvjZg==}
+
   '@pdf-lib/standard-fonts@1.0.0':
     resolution: {integrity: sha512-hU30BK9IUN/su0Mn9VdlVKsWBS6GyhVfqjwl1FjZN4TxP6cCw0jP2w7V3Hf5uX7M0AZJ16vey9yE0ny7Sa59ZA==}
 
@@ -7300,6 +7330,9 @@ packages:
   bcp-47@2.1.2:
     resolution: {integrity: sha512-wsv86UuNFuPnVieKLyECTT+CP1WSAHeoIg5P3xu2kA9Z+7fVPoKt7dxzSeEhtJel0AI+NW3fIW3KtTKQKUCngg==}
 
+  bidi-js@1.0.3:
+    resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
+
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
@@ -8354,6 +8387,9 @@ packages:
   happy-dom@20.14.6:
     resolution: {integrity: sha512-5DDsf4QmEIlRL6NkCv/fxSjYHHkZceL/IaYQdJc2h3G7DRTEai++VTjbfL0LB9geW2VrA3+vrjF3Efx+OTtX0Q==}
     engines: {node: '>=20.0.0'}
+
+  harfbuzzjs@1.6.3:
+    resolution: {integrity: sha512-R5Mfo1UUvQmZJmtScP7fBLKYKnYu82ZdtFT7WbQYeGb3Ut5PR3xfFCJ5/FjbcW5SAfb9cqCSny/KNjp+NJBx0w==}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -15251,6 +15287,10 @@ snapshots:
       '@parcel/watcher-win32-ia32': 2.5.1
       '@parcel/watcher-win32-x64': 2.5.1
 
+  '@pdf-lib/fontkit@1.1.1':
+    dependencies:
+      pako: 1.0.11
+
   '@pdf-lib/standard-fonts@1.0.0':
     dependencies:
       pako: 1.0.11
@@ -16862,6 +16902,10 @@ snapshots:
       is-alphanumerical: 2.0.1
       is-decimal: 2.0.1
 
+  bidi-js@1.0.3:
+    dependencies:
+      require-from-string: 2.0.2
+
   binary-extensions@2.3.0: {}
 
   bluebird@3.7.2: {}
@@ -18047,6 +18091,8 @@ snapshots:
       - bufferutil
       - utf-8-validate
     optional: true
+
+  harfbuzzjs@1.6.3: {}
 
   has-flag@4.0.0: {}
 

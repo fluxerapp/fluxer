@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	OperatorPassCertificateNameType,
 	OperatorPassCurrencySchema,
 	OperatorPassHolderResponse,
 	OperatorPassPriceFeedbackSchema,
 	OperatorPassPurchaseResponse,
+	OperatorPassPurchaseStatusSchema,
 	OperatorPassWaitlistAboutKeySchema,
 	OperatorPassWaitlistFollowupKeySchema,
 	OperatorPassWallDeclineReasonSchema,
@@ -56,8 +58,14 @@ export const AdminOperatorPassRowResponse = z.object({
 		.nullable()
 		.describe('When the holder asked for delivery right away and acknowledged losing the right of withdrawal'),
 	waiver_consent_version: z.string().nullable().describe('Version of the consent text the holder agreed to'),
-	waiver_consent_ip: z.string().nullable().describe('IP address the consent came from, for chargeback evidence'),
-	waiver_user_agent: z.string().nullable().describe('Browser or app that sent the consent'),
+	waiver_consent_ip: z
+		.string()
+		.nullable()
+		.describe('IP address the consent came from, for chargeback evidence. Null unless the admin has USER_VIEW_IP'),
+	waiver_user_agent: z
+		.string()
+		.nullable()
+		.describe('Browser or app that sent the consent. Null unless the admin has USER_VIEW_IP'),
 });
 
 export const AdminOperatorPassRemovalEndReasonSchema = createNamedStringLiteralUnion(
@@ -93,7 +101,7 @@ export const AdminOperatorPassWallEventKindSchema = createNamedStringLiteralUnio
 		['reviewed', 'REVIEWED', 'Staff reviewed the listed name and kept it, from before moderation states'],
 		['approved', 'APPROVED', 'Staff approved the name and the avatar on the wall'],
 		['declined', 'DECLINED', 'Staff declined the name or the avatar, see reason'],
-		['fallback', 'FALLBACK', 'The wall shows the username or Operator because no accepted name is left'],
+		['fallback', 'FALLBACK', 'The wall shows Operator because no accepted name is left'],
 		[
 			'legal_hold_set',
 			'LEGAL_HOLD_SET',
@@ -167,7 +175,6 @@ export const AdminOperatorPassWallEntryResponse = z.object({
 	declined_name: z.string().nullable(),
 	decline_reason: OperatorPassWallDeclineReasonSchema.nullable(),
 	decline_note: z.string().nullable().describe('The facts sent to the holder'),
-	username_declined: z.boolean().describe('Whether the fallback shows Operator because the username breaks the rules'),
 	hidden: z.boolean().describe('Whether staff hid the listing for now'),
 	legal_hold: z
 		.boolean()
@@ -225,10 +232,6 @@ export const AdminOperatorPassWallTimelineResponse = z.object({
 export const AdminOperatorPassWallDecisionRequest = z.object({
 	reason: OperatorPassWallDeclineReasonSchema,
 	note: z.string().trim().min(1).max(300).describe('The facts the decision relies on, shown to the holder'),
-	username_declined: z
-		.boolean()
-		.optional()
-		.describe('Whether the username also breaks the rules, so the fallback shows Operator'),
 });
 
 export const AdminOperatorPassWallBusinessRequest = z.object({
@@ -381,7 +384,7 @@ export const AdminOperatorPassUnitEventResponse = z.object({
 	kind: z
 		.string()
 		.describe(
-			'purchased, country_rule, delivered, offer_created, offer_accepted, offer_declined, offer_withdrawn, offer_cancelled, transferred, paused, resumed, withdrawn or revoked',
+			'purchased, visionary_turned_on, country_rule, delivered, offer_created, offer_accepted, offer_declined, offer_withdrawn, offer_cancelled, transferred, paused, resumed, withdrawn or revoked',
 		),
 	payment_id: z.string().nullable().describe('Stripe payment intent of the purchase'),
 	purchase_id: z.string().nullable().describe('The purchase that paid for the pass'),
@@ -425,6 +428,88 @@ export const AdminOperatorPassOfferResponse = z.object({
 	terms_version: z.string().nullable().describe('Version of the terms the recipient accepted'),
 });
 
+export const AdminOperatorPassVisionaryActivationResponse = z.object({
+	visionary_since: z.iso.datetime().nullable().describe('The date the pass shows, copied at turn-on'),
+	visionary_sequence: z.number().int().nullable().describe('The Visionary number at turn-on'),
+	activated_at: z.iso.datetime().nullable().describe('When the account turned the pass on, null before'),
+	terms_version: z.string().nullable().describe('The Operator Pass terms version the account accepted'),
+	terms_box_text: z.string().nullable().describe('The terms box text as shown, cleared on account deletion'),
+	age_confirmed_at: z.iso.datetime().nullable().describe('When the account ticked the age box'),
+	pass_id: z.string().nullable().describe('The pass, visionary:<user_id>:1'),
+	certificate_number: z.number().int().nullable().describe('Number of the certificate page'),
+	ended_at: z.iso.datetime().nullable().describe('When the pass ended'),
+	end_reason: z.string().nullable().describe('visionary_ended or deletion'),
+	notice_emailed_at: z.iso
+		.datetime()
+		.nullable()
+		.describe('When the Visionary email was handed to the email provider, which is not proof it arrived'),
+	notice_skip_reason: z.string().nullable().describe('Why the last email run skipped the account'),
+	notice_dm_sent_at: z.iso.datetime().nullable().describe('When the system DM about the pass was sent'),
+});
+
+export type AdminOperatorPassVisionaryActivationResponse = z.infer<typeof AdminOperatorPassVisionaryActivationResponse>;
+
+const VisionaryNoticeCount = z.number().int().min(0);
+
+export const AdminOperatorPassVisionaryNoticeResponse = z.object({
+	recipients: VisionaryNoticeCount.describe('Accounts a run would email now'),
+	emailed: VisionaryNoticeCount.describe('Accounts already emailed by an earlier run'),
+	dm_sent: VisionaryNoticeCount.describe('Accounts that got the system DM'),
+	skipped: z
+		.object({
+			not_visionary: VisionaryNoticeCount.describe('Listed in visionary_slots but without Visionary now'),
+			inactive: VisionaryNoticeCount.describe('Deleted, disabled or flagged as spam'),
+			pending_deletion: VisionaryNoticeCount.describe('Account deletion is pending'),
+			removed: VisionaryNoticeCount.describe('The pass was removed permanently under section 8'),
+			turned_on: VisionaryNoticeCount.describe('Already turned the pass on'),
+			no_email: VisionaryNoticeCount.describe('No verified email or a bounced address, the DM still goes when asked'),
+		})
+		.describe('Accounts no run emails, by reason'),
+	date_unknown: VisionaryNoticeCount.describe(
+		'Accounts with no Visionary payment or gift redemption on record, whose pass shows premium_since instead',
+	),
+	running: z.boolean().describe('Whether a run is going right now'),
+});
+
+export type AdminOperatorPassVisionaryNoticeResponse = z.infer<typeof AdminOperatorPassVisionaryNoticeResponse>;
+
+export const AdminOperatorPassVisionaryNoticeSendRequest = z.object({
+	expected_recipients: z
+		.number()
+		.int()
+		.min(0)
+		.describe('The recipients count from the preview staff read. The send is refused when a fresh count differs'),
+	include_dm: z.boolean().describe('Whether every reached account also gets one system DM'),
+});
+
+export type AdminOperatorPassVisionaryNoticeSendRequest = z.infer<typeof AdminOperatorPassVisionaryNoticeSendRequest>;
+
+export const AdminOperatorPassVisionaryNoticeSendResponse = z.object({
+	job_id: z.string().describe('The worker job that sends the emails'),
+	recipients: VisionaryNoticeCount.describe('Accounts the run will email'),
+});
+
+export type AdminOperatorPassVisionaryNoticeSendResponse = z.infer<typeof AdminOperatorPassVisionaryNoticeSendResponse>;
+
+export const AdminOperatorPassVisionaryActivationsCsvResponse = z
+	.file()
+	.describe(
+		'CSV of every Visionary turn-on with user_id, visionary_sequence, visionary_since, activated_at, terms_version, certificate_number, issued_at, ended_at and end_reason',
+	);
+
+export const AdminOperatorPassDeliveriesQuery = z.object({
+	month: z
+		.string()
+		.regex(/^\d{4}-(0[1-9]|1[0-2])$/u)
+		.describe('Calendar month of delivered_at in UTC, as YYYY-MM'),
+});
+
+export const AdminOperatorPassDeliveriesCsvResponse = z
+	.file()
+	.describe(
+		'CSV with one row per pass of every Operator Pass purchase delivered in the month, in the operator-pass-leveranser format the books read',
+	);
+
 export const AdminOperatorPassUserResponse = z.object({
 	holder: OperatorPassHolderResponse.nullable().describe('The pass the account holds now, null when it holds none'),
 	pass: AdminOperatorPassRowResponse.nullable().describe('The stored pass, also while paused or removed'),
@@ -443,6 +528,9 @@ export const AdminOperatorPassUserResponse = z.object({
 	wall_history: z
 		.array(AdminOperatorPassWallEventResponse)
 		.describe('Append-only history of deliveries, the wall name and release lists, oldest first'),
+	visionary_activation: AdminOperatorPassVisionaryActivationResponse.nullable()
+		.optional()
+		.describe('The Visionary turn-on and email record, null when the account has none'),
 });
 
 export type AdminOperatorPassUserResponse = z.infer<typeof AdminOperatorPassUserResponse>;
@@ -492,6 +580,46 @@ export const AdminOperatorPassWithdrawRequest = z.object({
 });
 
 export type AdminOperatorPassWithdrawRequest = z.infer<typeof AdminOperatorPassWithdrawRequest>;
+
+export const AdminOperatorPassCertificatePassIdParam = z.object({
+	pass_id: z
+		.string()
+		.trim()
+		.min(1)
+		.max(300)
+		.describe('The pass ID, the checkout session ID and the pass number joined by a colon'),
+});
+
+export const AdminOperatorPassCertificateReissueReasonSchema = createNamedStringLiteralUnion(
+	[
+		['name_change', 'NAME_CHANGE', 'The holder changed their name, offered under section 3 of the Operator Pass terms'],
+		['correction', 'CORRECTION', 'A mistake on our side, fixed under section 6 of the Operator Pass terms'],
+		[
+			'objection',
+			'OBJECTION',
+			'The person named on the page objected and the objection succeeded, so the name on every earlier copy and the earlier PDF files are erased',
+		],
+	],
+	'Why a new copy of an Operator certificate page is issued',
+);
+
+export const AdminOperatorPassCertificateReissueRequest = z.object({
+	holder_name: OperatorPassCertificateNameType.describe('The name to print on the new copy'),
+	reason: AdminOperatorPassCertificateReissueReasonSchema,
+});
+
+export type AdminOperatorPassCertificateReissueRequest = z.infer<typeof AdminOperatorPassCertificateReissueRequest>;
+
+export const AdminOperatorPassCertificateReissueResponse = z.object({
+	pass_id: z.string().describe('The pass ID'),
+	number: z.number().int().positive().describe('The certificate number, the same on every copy'),
+	version: z.number().int().positive().describe('The version of the new copy'),
+	holder_name: z.string().describe('The name printed on the new copy'),
+	issued_at: z.iso.datetime().describe('When the new copy was issued'),
+	reissue_reason: AdminOperatorPassCertificateReissueReasonSchema,
+});
+
+export type AdminOperatorPassCertificateReissueResponse = z.infer<typeof AdminOperatorPassCertificateReissueResponse>;
 
 const WaitlistCount = z.number().int().nonnegative();
 
@@ -609,3 +737,87 @@ export const AdminOperatorPassWaitlistFollowupTextsResponse = z.object({
 export type AdminOperatorPassWaitlistFollowupTextsResponse = z.infer<
 	typeof AdminOperatorPassWaitlistFollowupTextsResponse
 >;
+
+export const AdminOperatorPassPreviewIpEntry = z.object({
+	id: z.string().describe('The ID of the entry'),
+	value: z.string().describe('The IP address or CIDR range, in canonical form'),
+	label: z.string().describe('Who or what the entry is for'),
+	expires_at: z.iso.datetime().nullable().describe('When the entry stops working, null when it never does'),
+	created_at: z.iso.datetime().describe('When the entry was added'),
+	created_by: SnowflakeStringType.describe('Staff member who added the entry'),
+});
+
+export type AdminOperatorPassPreviewIpEntry = z.infer<typeof AdminOperatorPassPreviewIpEntry>;
+
+export const AdminOperatorPassPreviewPurchase = z.object({
+	purchase_id: z.string().describe('The checkout session ID of the purchase'),
+	purchaser_id: SnowflakeStringType.describe('The account that bought the passes'),
+	label: z.string().describe('The label of the preview entry the purchase was made through'),
+	status: OperatorPassPurchaseStatusSchema,
+	quantity: z.number().int().describe('How many passes the purchase has'),
+	currency: OperatorPassCurrencySchema,
+	created_at: z.iso.datetime().describe('When the checkout was created'),
+	delivered_at: z.iso.datetime().nullable().describe('When the certificate was delivered'),
+	certificate_numbers: z.array(z.number().int()).describe('The certificate numbers the passes took'),
+});
+
+export type AdminOperatorPassPreviewPurchase = z.infer<typeof AdminOperatorPassPreviewPurchase>;
+
+export const AdminOperatorPassPreviewResponse = z.object({
+	entries: z.array(AdminOperatorPassPreviewIpEntry).describe('The preview entries stored in the admin panel'),
+	config_values: z
+		.array(z.string())
+		.describe('The IP addresses and CIDR ranges in FLUXER_OPERATOR_PASS_PREVIEW_IPS, which the panel can not change'),
+	sale_open: z.boolean().describe('Whether the sale is open for everyone, which ends every preview'),
+	purchases: z.array(AdminOperatorPassPreviewPurchase).describe('Every preview purchase, newest first'),
+});
+
+export type AdminOperatorPassPreviewResponse = z.infer<typeof AdminOperatorPassPreviewResponse>;
+
+export const AdminOperatorPassPreviewIpCreateRequest = z.object({
+	value: z.string().trim().min(1).max(64).describe('An IPv4 or IPv6 address, or a CIDR range'),
+	label: z.string().trim().min(1).max(100).describe('Who or what the entry is for'),
+	expires_at: z.iso.datetime().nullish().describe('When the entry stops working'),
+});
+
+export type AdminOperatorPassPreviewIpCreateRequest = z.infer<typeof AdminOperatorPassPreviewIpCreateRequest>;
+
+export const AdminOperatorPassPreviewIpIdParam = z.object({
+	entry_id: z.string().trim().min(1).max(64).describe('The ID of the preview entry'),
+});
+
+export const AdminOperatorPassResetRefusalSchema = createNamedStringLiteralUnion(
+	[
+		['non_preview_purchases', 'NON_PREVIEW_PURCHASES', 'A purchase exists that was not made through a preview entry'],
+		['other_holders', 'OTHER_HOLDERS', 'An account holds passes that no preview purchase explains'],
+		['visionary_activations', 'VISIONARY_ACTIVATIONS', 'A Visionary holder turned on the Operator Pass'],
+		[
+			'other_certificates',
+			'OTHER_CERTIFICATES',
+			'A certificate number belongs to a pass outside the preview purchases',
+		],
+		['billing_documents', 'BILLING_DOCUMENTS', 'A preview purchase has a billing document'],
+	],
+	'Why the Operator Pass data can not be reset',
+);
+
+export const AdminOperatorPassResetPlan = z.object({
+	allowed: z.boolean().describe('Whether the reset may run'),
+	refused_reason: AdminOperatorPassResetRefusalSchema.nullable(),
+	preview_purchases: z.number().int().describe('Preview purchases the reset removes'),
+	non_preview_purchases: z.number().int().describe('Purchases not made through a preview entry, which block the reset'),
+	passes: z.number().int().describe('Passes of the preview purchases'),
+	certificate_numbers: z.number().int().describe('Certificate numbers the preview passes took'),
+	users: z.number().int().describe('Accounts that bought or hold preview passes'),
+});
+
+export type AdminOperatorPassResetPlan = z.infer<typeof AdminOperatorPassResetPlan>;
+
+export const AdminOperatorPassResetRequest = z.object({
+	confirm: z.literal('RESET').describe('Must be RESET'),
+});
+
+export const AdminOperatorPassResetResponse = z.object({
+	removed: AdminOperatorPassResetPlan.describe('What the reset found and removed'),
+	remaining: AdminOperatorPassResetPlan.describe('What a fresh count finds after the reset'),
+});

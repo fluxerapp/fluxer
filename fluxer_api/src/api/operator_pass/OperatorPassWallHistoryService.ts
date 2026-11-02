@@ -78,7 +78,6 @@ export class OperatorPassWallHistoryService {
 					return reconstructOperatorPassWallEntry({
 						userId: entry.user_id,
 						at,
-						username: user?.username ?? null,
 						revisions,
 						decisions,
 						events,
@@ -96,7 +95,6 @@ export class OperatorPassWallHistoryService {
 			const item = reconstructOperatorPassWallEntry({
 				userId: tokenId,
 				at,
-				username: null,
 				revisions: [],
 				decisions: [],
 				events: await this.repository.listWallEvents(tokenId),

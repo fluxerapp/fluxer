@@ -2,6 +2,7 @@
 
 import type {OperatorPassWallEntryRow} from '@app/api/database/types/OperatorPassTypes';
 import type {User} from '@app/api/models/User';
+import {isOperatorPassReservedName} from '@app/api/operator_pass/OperatorPassCertificateNames';
 import {
 	OPERATOR_PASS_WALL_AVATAR_SIZES,
 	operatorPassWallSnapshotUrl,
@@ -11,6 +12,7 @@ import {
 	OPERATOR_PASS_WALL_REVIEW_TARGET_MS,
 } from '@app/api/operator_pass/OperatorPassWallConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {OperatorPassWallNameRejectedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallNameRejectedError';
 import {OperatorPassWallNameRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallNameRequiredError';
 import type {OperatorPassListingResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 
@@ -48,6 +50,9 @@ export function normalizeOperatorPassWallChoice({
 	if (trimmed.length === 0) {
 		throw new OperatorPassWallNameRequiredError();
 	}
+	if (isOperatorPassReservedName(trimmed)) {
+		throw new OperatorPassWallNameRejectedError();
+	}
 	return {name: trimmed, optedOut: false};
 }
 
@@ -59,11 +64,8 @@ export function isOperatorPassWallListed(entry: OperatorPassWallEntryRow): boole
 	return !entry.opted_out && entry.listed_at != null;
 }
 
-export function operatorPassWallShownName(entry: OperatorPassWallEntryRow, user: Pick<User, 'username'>): string {
-	if (entry.live_name) {
-		return entry.live_name;
-	}
-	return entry.username_declined ? OPERATOR_PASS_WALL_FALLBACK_NAME : user.username;
+export function operatorPassWallShownName(entry: OperatorPassWallEntryRow): string {
+	return entry.live_name || OPERATOR_PASS_WALL_FALLBACK_NAME;
 }
 
 export function operatorPassWallReviewState(
@@ -97,7 +99,6 @@ export function operatorPassWallDisplayState(
 export function mapOperatorPassListing(
 	entry: OperatorPassWallEntryRow | null,
 	passCount: number,
-	user: Pick<User, 'username'>,
 	{removed = false}: {removed?: boolean} = {},
 ): OperatorPassListingResponse {
 	const listed = entry != null && isOperatorPassWallListed(entry);
@@ -109,7 +110,7 @@ export function mapOperatorPassListing(
 		status: listed ? 'listed' : 'not_listed',
 		display_state: listed && entry ? operatorPassWallDisplayState(entry, {removed}) : null,
 		review_state: listed && entry ? operatorPassWallReviewState(entry) : null,
-		shown_name: listed && entry ? operatorPassWallShownName(entry, user) : null,
+		shown_name: listed && entry ? operatorPassWallShownName(entry) : null,
 		shown_avatar_url:
 			listed && entry?.live_avatar
 				? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))

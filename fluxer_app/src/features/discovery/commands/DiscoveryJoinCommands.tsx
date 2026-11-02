@@ -25,11 +25,11 @@ const SERVER_FULL_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the error modal shown when a community from Explore has reached its member limit.',
 });
 const SERVER_FULL_MESSAGE_DESCRIPTOR = msg({
-	message: "This community has reached its member limit, so you can't join right now.",
+	message: "This community is at its member limit, so you can't join right now.",
 	comment: 'Body of the error modal shown when a community from Explore has reached its member limit.',
 });
 const TOO_MANY_SERVERS_TITLE_DESCRIPTOR = msg({
-	message: "You've reached the community limit",
+	message: "You're at the community limit",
 	comment: 'Title of the error modal shown when the user is already in the maximum number of communities.',
 });
 const TOO_MANY_SERVERS_MESSAGE_DESCRIPTOR = msg({

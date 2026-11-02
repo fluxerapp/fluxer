@@ -16,7 +16,7 @@ export const VOICE_CHANNEL_NO_LONGER_AVAILABLE_DESCRIPTOR = msg({
 		'Toast / error shown when the user tries to join or restore a voice channel that was deleted or is no longer accessible.',
 });
 export const VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: "You've reached this voice channel's connection limit.",
+	message: "You're at this voice channel's connection limit.",
 	comment:
 		'Toast / error shown when the user tries to join voice with too many active connections in the same channel.',
 });
@@ -25,7 +25,7 @@ export const VOICE_CONNECTION_FAILED_DESCRIPTOR = msg({
 	comment: 'Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.',
 });
 export const VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: 'Camera limit reached — up to {voiceChannelCameraUserLimit} people can share video in this channel.',
+	message: 'This channel is at its camera limit. Up to {voiceChannelCameraUserLimit} people can share video in it.',
 	comment:
 		'Error shown when enabling the camera is rejected because the channel already has the maximum number of users sharing video. {voiceChannelCameraUserLimit} is the configured cap.',
 });

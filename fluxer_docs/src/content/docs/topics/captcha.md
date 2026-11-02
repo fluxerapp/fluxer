@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: CAPTCHA handling
-description: How a client answers the ALTCHA proof-of-work check.
+description: How a client solves the ALTCHA proof-of-work check.
 ---
 
 Some operations return 400 `CAPTCHA_REQUIRED` with an [ALTCHA](https://altcha.org) proof-of-work challenge when the request has no solved challenge. Your client solves it without user input and retries with the `X-Captcha-Token` header.

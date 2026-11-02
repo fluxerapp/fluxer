@@ -1,205 +1,47 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.quantity {
+.layout {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.split {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+	height: min(40rem, calc(100svh - 3rem));
+	overflow: hidden;
+}
+
+.main {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 0.375rem;
-}
-
-.quantityRow {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.75rem;
-}
-
-.stepper {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.quantityValue {
-	min-width: 2rem;
-	color: var(--text-primary);
-	font-size: 1rem;
-	font-weight: 700;
-	line-height: 1.5rem;
-	text-align: center;
-	font-variant-numeric: tabular-nums;
-}
-
-.loading {
-	display: flex;
-	justify-content: center;
-	padding: 2rem 0;
-}
-
-.priceBlock {
-	--operator-pass-accent: var(--brand-primary-light);
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-	padding: 1rem;
-	border-radius: 0.75rem;
-	background-color: color-mix(in srgb, var(--brand-primary) 10%, var(--background-secondary));
-	border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);
-}
-
-:global(.theme-light) .priceBlock {
-	--operator-pass-accent: var(--brand-primary-foreground);
-}
-
-.priceLabel {
-	color: var(--operator-pass-accent);
-	font-size: 0.75rem;
-	font-weight: 700;
-	line-height: 1rem;
-}
-
-.price {
-	color: var(--text-primary);
-	font-size: 2rem;
-	font-weight: 700;
-	line-height: 2.5rem;
-}
-
-.priceNote {
-	margin: 0;
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
-.sectionTitle {
-	margin: 0;
-	color: var(--text-primary);
-	font-size: 1rem;
-	font-weight: 600;
-	line-height: 1.25rem;
-}
-
-.donation {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.total {
-	margin: 0;
-	color: var(--text-primary);
-	font-size: 0.875rem;
-	font-weight: 600;
-	line-height: 1.25rem;
-}
-
-.holder {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 1rem;
-	border-radius: 0.75rem;
-	background-color: color-mix(in srgb, var(--brand-primary) 10%, var(--background-secondary));
-}
-
-.holderIcon {
-	flex-shrink: 0;
-	width: 2.5rem;
-	height: 2.5rem;
-	color: var(--brand-primary-light);
-}
-
-.holderText {
-	display: flex;
-	flex-direction: column;
-	gap: 0.125rem;
 	min-width: 0;
+	min-height: 0;
 }
 
-.holderTitle {
-	margin: 0;
-	color: var(--text-primary);
-	font-size: 1.125rem;
-	font-weight: 700;
-	line-height: 1.5rem;
+.split .header {
+	padding: 0.5rem 1.5rem 0;
 }
 
-.consentBox {
-	padding: 0.75rem;
-	border-radius: 0.5rem;
-	background-color: var(--background-secondary);
-	border: 1px solid var(--background-modifier-accent);
+.content {
+	flex: 1 1 auto;
 }
 
-.consentCheckbox {
-	height: auto !important;
-	align-items: flex-start;
+.split .content {
+	padding: 0.5rem 2.5rem 2rem;
 }
 
-.consentCheckbox > :first-child {
-	flex-shrink: 0;
+.footer {
+	flex-wrap: nowrap;
 }
 
-.consentLabel {
-	color: var(--text-secondary);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
+.split .footer {
+	padding: 1rem 2.5rem 1.5rem;
 }
 
-.consentLabel strong {
-	color: var(--text-primary);
-	font-weight: 600;
-}
-
-.consentBoxError {
-	border-color: var(--status-danger);
-}
-
-.consentError {
-	margin: 0.5rem 0 0;
-	color: var(--status-danger);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
-.summary {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 0.25rem;
-}
-
-.characteristics {
-	margin: 0;
-	color: var(--text-primary);
-	font-size: 1rem;
-	line-height: 1.5rem;
-}
-
-.includedLink {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
-.textButton {
-	align-self: flex-start;
-	padding: 0;
-	border: 0;
-	background: none;
-	color: var(--text-link);
-	font-family: inherit;
-	font-size: 0.875rem;
-	font-weight: 600;
-	line-height: 1.25rem;
-	cursor: pointer;
-}
-
-.textButton:hover {
-	text-decoration: underline;
-}
-
-.textButton:disabled {
-	cursor: not-allowed;
-	opacity: 0.5;
+.back {
+	margin-inline-end: auto;
 }

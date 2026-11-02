@@ -11,7 +11,7 @@ Every [Gateway payload](/gateway/overview/#gateway-payload) has an opcode, and t
 | Op | Name | Description |
 | --- | --- | --- |
 | 0 | Dispatch | Server to client. An event with its name in `t` and a sequence in `s` |
-| 1 | Heartbeat | Both ways. The client sends its last sequence or `null` in `d`. Answer a server heartbeat at once |
+| 1 | Heartbeat | Both ways. The client sends its last sequence or `null` in `d`. Respond to a server heartbeat at once |
 | 2 | Identify | Client to server. Starts a session with an [Identify object](/gateway/commands/#identify) |
 | 3 | Presence Update | Client to server. A [Presence Update object](/gateway/commands/#presence-update) |
 | 4 | Voice State Update | Client to server. A [Voice State Update object](/gateway/commands/#voice-state-update) |
@@ -62,7 +62,7 @@ Other refused voice joins get no opcode 12.
 
 | Code | Name | Meaning |
 | --- | --- | --- |
-| 4000 | Unknown error | The node is draining, session creation failed, or the session in Resume did not answer |
+| 4000 | Unknown error | The node is draining, session creation failed, or the session in Resume did not respond |
 | 4001 | Unknown opcode | An undefined or Gateway-only opcode, a payload with no `d`, or opcode 28 without [thread access](/gateway/threads/#session-flag) or an object `d` |
 | 4002 | Decode error | The payload size, compression, encoding or command fields are invalid |
 | 4003 | Not authenticated | A command arrived before Identify or Resume attached a session |
@@ -96,7 +96,7 @@ Every close with a 4000-range code has a reason. Branch on the code and log the 
 | Reason | Code | Cause |
 | --- | --- | --- |
 | `Failed to start session` | 4000 | Session creation failed for an unclassified reason |
-| `Session unavailable` | 4000 | The session did not answer during Resume |
+| `Session unavailable` | 4000 | The session did not respond during Resume |
 | `Session drain requested; reconnect to continue` | 4000 | Opcode 7 came just before the close |
 | `Encode failed` | 4002 | Hello could not be encoded |
 | `Compression failed: zstd-stream` | 4002 | Hello could not be compressed on a zstd connection |
@@ -112,8 +112,8 @@ Every close with a 4000-range code has a reason. Branch on the code and log the 
 | `Too many connections` | 4008 | The source IP has 256 concurrent connections |
 | `Rate limited` | 4008 | The connection, source IP or user payload budget was exceeded |
 | `Too many sessions` | 4008 | The user already has 100 live sessions, which doesn't apply to bots |
-| `Identify rate limited` | 4008 | The instance is starting too many sessions at once, so try Identify again after a backoff |
-| `Resume rate limited` | 4008 | The instance is resuming too many sessions at once, so try Resume again after a backoff |
+| `Identify rate limited` | 4008 | The instance is starting too many sessions at once. Try Identify again after a backoff |
+| `Resume rate limited` | 4008 | The instance is resuming too many sessions at once. Try Resume again after a backoff |
 | `Heartbeat timeout` | 4009 | No heartbeat was accepted for 45,000 ms |
 
 The Gateway drops [some over-budget commands](/gateway/commands/), such as Presence Update and Voice Signal, without closing the connection.

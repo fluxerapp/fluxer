@@ -211,6 +211,7 @@
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
 			"!fluxer_api/src/api/openapi/openapi.json",
+			"!fluxer_admin/openapi-admin.json",
 			"!fluxer_api/pkgs/email/src/email_i18n/weblate",
 			"!fluxer_api/src/api/content_i18n/weblate",
 			"!packages/errors/src/i18n/weblate",

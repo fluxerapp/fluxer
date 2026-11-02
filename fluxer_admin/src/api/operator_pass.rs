@@ -3,16 +3,18 @@
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::generated::snowflake;
 use super::generated::types::{
+    AdminOperatorPassPreviewIpEntry, AdminOperatorPassPreviewResponse,
     AdminOperatorPassReleaseFileResponse, AdminOperatorPassReleasePreviewResponse,
     AdminOperatorPassReleasePublishRequest, AdminOperatorPassReleasePublishRequestTag,
-    AdminOperatorPassUserResponse, AdminOperatorPassWaitlistFollowupTextsResponse,
-    AdminOperatorPassWaitlistStatsResponse, AdminOperatorPassWallAsOfResponse,
-    AdminOperatorPassWallBulkResponse, AdminOperatorPassWallDecisionResponse,
-    AdminOperatorPassWallEntryResponse, AdminOperatorPassWallQueueResponse,
-    AdminOperatorPassWallRevisionResponse, AdminOperatorPassWallStateResponse,
-    AdminOperatorPassWithdrawRequest, AdminOperatorPassWithdrawRequestName,
-    AdminOperatorPassWithdrawalChannelSchema, OperatorPassPurchaseResponse,
-    OperatorPassWallDeclineReasonSchema, SnowflakeStringType,
+    AdminOperatorPassResetPlan, AdminOperatorPassResetResponse, AdminOperatorPassUserResponse,
+    AdminOperatorPassVisionaryNoticeResponse, AdminOperatorPassVisionaryNoticeSendResponse,
+    AdminOperatorPassWaitlistFollowupTextsResponse, AdminOperatorPassWaitlistStatsResponse,
+    AdminOperatorPassWallAsOfResponse, AdminOperatorPassWallBulkResponse,
+    AdminOperatorPassWallDecisionResponse, AdminOperatorPassWallEntryResponse,
+    AdminOperatorPassWallQueueResponse, AdminOperatorPassWallRevisionResponse,
+    AdminOperatorPassWallStateResponse, AdminOperatorPassWithdrawRequest,
+    AdminOperatorPassWithdrawRequestName, AdminOperatorPassWithdrawalChannelSchema,
+    OperatorPassPurchaseResponse, OperatorPassWallDeclineReasonSchema, SnowflakeStringType,
     WithdrawAdminOperatorPassPurchasePurchaseId,
 };
 use chrono::{DateTime, Utc};
@@ -24,7 +26,6 @@ use serde_json::json;
 pub struct WallDecision<'a> {
     pub reason: OperatorPassWallDeclineReasonSchema,
     pub note: &'a str,
-    pub username_declined: bool,
 }
 
 #[derive(Serialize)]
@@ -98,6 +99,108 @@ fn parse<T, E: std::fmt::Display>(value: Result<T, E>) -> ApiResult<T> {
 }
 
 impl AdminApiClient {
+    pub async fn get_operator_pass_preview(&self) -> ApiResult<AdminOperatorPassPreviewResponse> {
+        self.get("/admin/operator-pass/preview", None).await
+    }
+
+    pub async fn add_operator_pass_preview_ip(
+        &self,
+        value: &str,
+        label: &str,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> ApiResult<AdminOperatorPassPreviewIpEntry> {
+        self.send(
+            Method::POST,
+            "/admin/operator-pass/preview/ips",
+            Some(&json!({"value": value, "label": label, "expires_at": expires_at})),
+            None,
+        )
+        .await
+    }
+
+    pub async fn remove_operator_pass_preview_ip(&self, entry_id: &str) -> ApiResult<()> {
+        self.send_void(
+            Method::DELETE,
+            &format!(
+                "/admin/operator-pass/preview/ips/{}",
+                urlencoding::encode(entry_id)
+            ),
+            None::<&serde_json::Value>,
+            None,
+        )
+        .await
+    }
+
+    pub async fn cancel_operator_pass_preview_purchase(
+        &self,
+        purchase_id: &str,
+    ) -> ApiResult<OperatorPassPurchaseResponse> {
+        self.send(
+            Method::POST,
+            &format!(
+                "/admin/operator-pass/preview/purchases/{}/cancel",
+                urlencoding::encode(purchase_id)
+            ),
+            None::<&serde_json::Value>,
+            None,
+        )
+        .await
+    }
+
+    pub async fn get_operator_pass_reset_plan(&self) -> ApiResult<AdminOperatorPassResetPlan> {
+        self.get("/admin/operator-pass/reset", None).await
+    }
+
+    pub async fn reset_operator_pass_preview_data(
+        &self,
+    ) -> ApiResult<AdminOperatorPassResetResponse> {
+        self.send(
+            Method::POST,
+            "/admin/operator-pass/reset",
+            Some(&json!({"confirm": "RESET"})),
+            None,
+        )
+        .await
+    }
+
+    pub async fn get_operator_pass_visionary_notice_status(
+        &self,
+    ) -> ApiResult<AdminOperatorPassVisionaryNoticeResponse> {
+        self.get("/admin/operator-pass/visionary-notice/status", None)
+            .await
+    }
+
+    pub async fn send_operator_pass_visionary_notice(
+        &self,
+        expected_recipients: u64,
+        include_dm: bool,
+    ) -> ApiResult<AdminOperatorPassVisionaryNoticeSendResponse> {
+        self.send(
+            Method::POST,
+            "/admin/operator-pass/visionary-notice/send",
+            Some(&json!({"expected_recipients": expected_recipients, "include_dm": include_dm})),
+            None,
+        )
+        .await
+    }
+
+    pub async fn get_operator_pass_visionary_activations_csv(
+        &self,
+    ) -> ApiResult<(String, Vec<u8>)> {
+        self.get_bytes("/admin/operator-pass/visionary/activations.csv")
+            .await
+    }
+
+    pub async fn get_operator_pass_deliveries_csv(
+        &self,
+        month: &str,
+    ) -> ApiResult<(String, Vec<u8>)> {
+        self.get_bytes(&format!(
+            "/admin/operator-pass/deliveries.csv?month={month}"
+        ))
+        .await
+    }
+
     pub async fn get_operator_pass_waitlist_stats(
         &self,
     ) -> ApiResult<AdminOperatorPassWaitlistStatsResponse> {
@@ -316,6 +419,21 @@ impl AdminApiClient {
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(response.into_inner())
+    }
+
+    pub async fn reissue_operator_pass_certificate(
+        &self,
+        pass_id: &str,
+        holder_name: &str,
+        reason: &str,
+    ) -> ApiResult<()> {
+        self.send_void(
+            Method::POST,
+            &format!("/admin/operator-pass/certificates/{pass_id}/reissue"),
+            Some(&json!({"holder_name": holder_name, "reason": reason})),
+            None,
+        )
+        .await
     }
 
     pub async fn bulk_operator_pass_wall_revisions(

@@ -29,6 +29,8 @@ pub mod jobs_list_helpers;
 pub mod limit_config;
 pub mod login;
 pub mod messages_page;
+pub mod operator_pass_preview;
+pub mod operator_pass_visionary;
 pub mod operator_pass_waitlist;
 pub mod operator_pass_wall;
 pub mod payment_disputes;

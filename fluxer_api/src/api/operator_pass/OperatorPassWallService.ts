@@ -76,6 +76,7 @@ export class OperatorPassWallService {
 		purchaseId: string | null;
 		choice: OperatorPassWallChoice | null;
 		deliveredAt: Date;
+		revisionSource?: OperatorPassWallRevisionSource;
 	}): Promise<void> {
 		let before: OperatorPassWallEntryRow | null = null;
 		const entry = await this.entries.mutate(params.userId, params.deliveredAt, params.userId, (current) => {
@@ -110,7 +111,9 @@ export class OperatorPassWallService {
 			return {patch, events};
 		});
 		if (params.choice && !params.choice.optedOut && params.choice.name) {
-			await this.submitRevision(params.userId, params.choice.name, 'checkout', params.userId, {useProfileAvatar: true});
+			await this.submitRevision(params.userId, params.choice.name, params.revisionSource ?? 'checkout', params.userId, {
+				useProfileAvatar: true,
+			});
 		}
 		await this.publication.publishChanges([params.userId]);
 		await this.syncListedAvatar(before, entry);

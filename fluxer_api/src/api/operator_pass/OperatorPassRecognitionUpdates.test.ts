@@ -10,6 +10,7 @@ import {
 	endOperatorPassesForDeletion,
 	OperatorPassHoldingService,
 } from '@app/api/operator_pass/OperatorPassHoldingService';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {describe, expect, test, vi} from 'vitest';
 
 const buyer = createUserID(100n);
@@ -44,7 +45,10 @@ function fixture(unit: OperatorPassUnitRow = transferred) {
 		findUnit: vi.fn().mockResolvedValue(unit),
 		listUnitsByPurchase: vi.fn().mockResolvedValue([unit]),
 		listUnitsByHolder: vi.fn().mockResolvedValue([unit]),
+		deleteLabsMember: vi.fn().mockResolvedValue(undefined),
+		findVisionaryActivation: vi.fn().mockResolvedValue(null),
 		listOffersByUser: vi.fn().mockResolvedValue([]),
+		listPurchasesByPurchaser: vi.fn().mockResolvedValue([]),
 		findOperatorPass: vi.fn().mockResolvedValue(pass),
 		updateUnit: vi.fn().mockResolvedValue({...unit, status: 'revoked'}),
 		appendUnitEvent: vi.fn(),
@@ -80,6 +84,15 @@ describe('Operator Pass purchase-credit updates', () => {
 		expect(sync.mock.calls.map(([id]) => id)).toEqual([recipient, buyer]);
 	});
 
+	test('a partial refund ends a pass the buyer still holds before one they passed on', async () => {
+		const own: OperatorPassUnitRow = {...transferred, pass_id: 'purchase:0', holder_id: buyer, source: 'purchase'};
+		const {service, repository} = fixture();
+		repository.listUnitsByPurchase.mockResolvedValue([transferred, own]);
+		await service.endPurchaseUnits(purchase, 'refund', 'revoked', 1);
+		expect(repository.updateUnit).toHaveBeenCalledTimes(1);
+		expect(repository.updateUnit.mock.calls[0]![0]).toMatchObject({pass_id: own.pass_id});
+	});
+
 	test('withdrawal of a transferred unit refreshes its buyer', async () => {
 		const {service, sync} = fixture();
 		await service.withdrawUnit(transferred, purchase);
@@ -90,6 +103,7 @@ describe('Operator Pass purchase-credit updates', () => {
 		const {repository} = fixture();
 		const buyers = await endOperatorPassesForDeletion(
 			repository as unknown as Parameters<typeof endOperatorPassesForDeletion>[0],
+			{} as ICacheService,
 			recipient,
 		);
 		expect(buyers).toEqual([buyer]);

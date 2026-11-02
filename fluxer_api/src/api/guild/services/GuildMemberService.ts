@@ -18,6 +18,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
+import {recordOperatorPassLabsDeparture} from '@app/api/operator_pass/OperatorPassLabsRole';
 import type {TierContext} from '@app/api/user/AccountTier';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -298,11 +299,13 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.operationsService.removeMember(params);
+		await recordOperatorPassLabsDeparture(guildId, targetId, 'kicked');
 		await this.finishMemberKick({guildId, targetId, actorId: userId}, auditLogReason ?? null);
 	}
 
 	async removeMemberAsSystem(params: {targetId: UserID; guildId: GuildID}): Promise<void> {
 		await this.operationsService.removeMemberAsSystem(params);
+		await recordOperatorPassLabsDeparture(params.guildId, params.targetId, 'kicked');
 		await this.finishMemberKick({...params, actorId: SYSTEM_USER_ID}, null);
 	}
 
@@ -340,6 +343,7 @@ export class GuildMemberService {
 		requestCache: RequestCache;
 		initiatorId?: UserID;
 		tierContext?: TierContext;
+		mentionsOnlyNotifications?: boolean;
 	}): Promise<GuildMember> {
 		return this.operationsService.addUserToGuild(params, this.eventService);
 	}
@@ -355,6 +359,7 @@ export class GuildMemberService {
 		const member = await this.guildRepository.getMember(guildId, userId);
 		if (!member) throw new UnknownGuildMemberError();
 		await this.operationsService.leaveGuild(params);
+		await recordOperatorPassLabsDeparture(guildId, userId, 'left');
 		const guild = await this.guildRepository.findUnique(guildId);
 		const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
 		if (searchIndexOptions) {

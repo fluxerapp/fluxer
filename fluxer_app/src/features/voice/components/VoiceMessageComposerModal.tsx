@@ -40,7 +40,7 @@ const COMPOSER_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the desktop voice message composer modal.',
 });
 const RECORDING_HINT_DESCRIPTOR = msg({
-	message: 'Speak now. Press Stop when you are done — you can trim afterwards.',
+	message: 'Speak now. Press Stop when you are done, and you can trim the recording afterwards.',
 	comment: 'Help text shown while recording a voice message on desktop.',
 });
 const REVIEW_HINT_DESCRIPTOR = msg({

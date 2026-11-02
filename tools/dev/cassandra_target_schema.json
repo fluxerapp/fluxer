@@ -7249,6 +7249,118 @@
 			"options": "CLUSTERING ORDER BY (token_ DESC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
 		},
 		{
+			"name": "operator_pass_certificates",
+			"columns": [
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				},
+				{
+					"name": "number",
+					"type": "int"
+				},
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "holder_name",
+					"type": "text"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "paid_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "phase",
+					"type": "text"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "sha256",
+					"type": "text"
+				},
+				{
+					"name": "pdf",
+					"type": "blob"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "cancelled_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reissue_reason",
+					"type": "text"
+				},
+				{
+					"name": "link_token",
+					"type": "text"
+				}
+			],
+			"primary_key": "((pass_id), version)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificates_by_purchase",
+			"columns": [
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((purchase_id), pass_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificate_numbers",
+			"columns": [
+				{
+					"name": "number",
+					"type": "int"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((number))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificate_links",
+			"columns": [
+				{
+					"name": "token_",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((token_))",
+			"options": ""
+		},
+		{
 			"name": "operator_pass_purchases",
 			"columns": [
 				{
@@ -7396,8 +7508,16 @@
 					"type": "text"
 				},
 				{
+					"name": "withdrawal_receipts_owed",
+					"type": "map<text, text>"
+				},
+				{
 					"name": "invoice_number",
 					"type": "text"
+				},
+				{
+					"name": "invoice_document_id",
+					"type": "bigint"
 				},
 				{
 					"name": "dispute_id",
@@ -7418,6 +7538,54 @@
 				{
 					"name": "dispute_closed_at",
 					"type": "timestamp"
+				},
+				{
+					"name": "certificate_names",
+					"type": "list<text>"
+				},
+				{
+					"name": "age_confirmed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "delivered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "delivery_recorded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "welcome_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "welcome_skipped_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "refusal_reason",
+					"type": "text"
+				},
+				{
+					"name": "charge_id",
+					"type": "text"
+				},
+				{
+					"name": "business_buyer",
+					"type": "boolean"
+				},
+				{
+					"name": "holder_had_pass",
+					"type": "boolean"
+				},
+				{
+					"name": "labs_greeting",
+					"type": "boolean"
+				},
+				{
+					"name": "preview_label",
+					"type": "text"
 				}
 			],
 			"primary_key": "((checkout_session_id))",
@@ -11028,6 +11196,10 @@
 				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "labs_greeting",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((offer_id))",
@@ -11105,6 +11277,374 @@
 				}
 			],
 			"primary_key": "((pass_id), occurred_at, event_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_visionary_activations",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "visionary_since",
+					"type": "timestamp"
+				},
+				{
+					"name": "visionary_sequence",
+					"type": "int"
+				},
+				{
+					"name": "activated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "terms_box_text",
+					"type": "text"
+				},
+				{
+					"name": "age_confirmed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "consent_ip",
+					"type": "text"
+				},
+				{
+					"name": "consent_user_agent",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "certificate_number",
+					"type": "int"
+				},
+				{
+					"name": "completed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "end_reason",
+					"type": "text"
+				},
+				{
+					"name": "notice_emailed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "notice_skip_reason",
+					"type": "text"
+				},
+				{
+					"name": "notice_dm_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_labs_members",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "greeting",
+					"type": "boolean"
+				},
+				{
+					"name": "added_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "left_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "left_reason",
+					"type": "text"
+				},
+				{
+					"name": "greeted_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "greeting_message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_labs_greetings",
+			"columns": [
+				{
+					"name": "bucket",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "queued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((bucket), user_id)",
+			"options": ""
+		},
+		{
+			"name": "billing_document_numbers",
+			"columns": [
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				},
+				{
+					"name": "last_number",
+					"type": "bigint"
+				},
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((series), number)",
+			"options": ""
+		},
+		{
+			"name": "billing_documents",
+			"columns": [
+				{
+					"name": "document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				},
+				{
+					"name": "display_number",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "flow",
+					"type": "text"
+				},
+				{
+					"name": "layout",
+					"type": "text"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "supply_date",
+					"type": "text"
+				},
+				{
+					"name": "period_start",
+					"type": "timestamp"
+				},
+				{
+					"name": "period_end",
+					"type": "timestamp"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "total_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "tax_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "tax_lines",
+					"type": "text"
+				},
+				{
+					"name": "sek_tax_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "fx_rate",
+					"type": "text"
+				},
+				{
+					"name": "fx_date",
+					"type": "text"
+				},
+				{
+					"name": "buyer",
+					"type": "text"
+				},
+				{
+					"name": "seller",
+					"type": "text"
+				},
+				{
+					"name": "language",
+					"type": "text"
+				},
+				{
+					"name": "original_document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "original_number",
+					"type": "text"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "stripe_refs",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "donor_email_hash",
+					"type": "text"
+				},
+				{
+					"name": "content",
+					"type": "text"
+				},
+				{
+					"name": "content_sha256",
+					"type": "text"
+				},
+				{
+					"name": "pdf",
+					"type": "blob"
+				},
+				{
+					"name": "pdf_sha256",
+					"type": "text"
+				},
+				{
+					"name": "render_version",
+					"type": "text"
+				},
+				{
+					"name": "emailed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "archived_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((document_id))",
+			"options": ""
+		},
+		{
+			"name": "billing_documents_by_source",
+			"columns": [
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_key))",
+			"options": ""
+		},
+		{
+			"name": "billing_documents_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), issued_at, document_id)",
+			"options": "CLUSTERING ORDER BY (issued_at DESC, document_id DESC)"
+		},
+		{
+			"name": "billing_documents_by_month",
+			"columns": [
+				{
+					"name": "month",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((month), document_id)",
 			"options": ""
 		}
 	],

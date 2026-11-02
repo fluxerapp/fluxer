@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createBillingDocumentService} from '@app/api/billing_documents/BillingDocumentService';
+import {createOperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {getEffectiveBillingConfig} from '@app/api/stripe/BillingConfigCache';
 import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {
@@ -37,8 +39,15 @@ export function createBillingEmailService(stripe: Stripe, addJob: WorkerTaskHelp
 		deps.cacheService,
 		getProductRegistry(),
 		deps.donationRepository,
-		deps.operatorPassRepository,
+		createOperatorPassFulfilmentService({
+			stripe,
+			userRepository: deps.userRepository,
+			emailService: deps.emailService,
+			cacheService: deps.cacheService,
+			services: deps.operatorPassServices,
+		}),
 		addJob,
+		createBillingDocumentService(stripe),
 	);
 }
 

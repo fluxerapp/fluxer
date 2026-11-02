@@ -9,6 +9,7 @@ import {
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
+import {HelpCenterArticleSlug} from '@app/features/app/config/HelpCenterConstants';
 import {I18N_WEBLATE_DOMAIN, I18N_WEBLATE_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
@@ -19,6 +20,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import * as HelpCenterUtils from '@app/features/ui/utils/HelpCenterUtils';
 import * as NativeUtils from '@app/features/ui/utils/NativeUtils';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/tabs/LanguageTab.module.css';
@@ -39,6 +41,11 @@ import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo, useState} from 'react';
 
 const LANGUAGE_FLAG_DESCRIPTOR = msg({message: '{languageName} flag'});
+const MISSING_LANGUAGE_DESCRIPTOR = msg({
+	message: "Don't see your language?",
+	comment:
+		'Link under the Weblate line in the language settings. It opens a help article on fluxer.com about suggesting a new language and helping translate the app. Keep it a short question.',
+});
 
 const SYSTEM_LOCALE_DESCRIPTOR = msg({
 	message: 'System locale: {format}',
@@ -325,6 +332,7 @@ const LanguageTab = observer(() => {
 		{value: TimeFormatTypes.TWELVE_HOUR, name: i18n._(MESSAGE_12_HOUR_DESCRIPTOR), desc: get12HourExample()},
 		{value: TimeFormatTypes.TWENTY_FOUR_HOUR, name: i18n._(MESSAGE_24_HOUR_DESCRIPTOR), desc: get24HourExample()},
 	];
+	const translateHelpUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.TranslateFluxer);
 	const handleLocaleChange = (newLocale: string) => {
 		LocaleUtils.setLocale(newLocale);
 	};
@@ -352,6 +360,17 @@ const LanguageTab = observer(() => {
 									.
 								</Trans>
 							</p>
+							{translateHelpUrl && (
+								<p className={styles.noticeText} data-flx="user.language-tab.missing-language">
+									<ExternalLink
+										href={translateHelpUrl}
+										className={styles.link}
+										data-flx="user.language-tab.missing-language-link"
+									>
+										{i18n._(MISSING_LANGUAGE_DESCRIPTOR)}
+									</ExternalLink>
+								</p>
+							)}
 						</div>
 					</div>
 				</SettingsSection>

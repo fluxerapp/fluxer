@@ -199,8 +199,10 @@ describe('Google Play self-service refunds', () => {
 		expect(fake.spies.refunded).toEqual([]);
 	});
 
-	it('refunds whichever of a Stripe invoice and a Google Play purchase is newer', async () => {
+	it('refunds both a Stripe invoice and a newer Google Play purchase made in the last three days', async () => {
 		const account = await createTestAccount(harness);
+		const stripeHandlers = createStripeApiHandlers();
+		server.use(...stripeHandlers.handlers);
 		await createBuilder(harness, account.token)
 			.post(`/test/users/${account.userId}/premium`)
 			.body({stripe_customer_id: STRIPE_CUSTOMER_ID})
@@ -245,6 +247,12 @@ describe('Google Play self-service refunds', () => {
 		);
 		const {orderId} = await claimSubscription(account, {startedAgo: ms('1 hour'), expiresIn: ms('29 days')});
 
-		expect(await eligibility(account)).toMatchObject({provider: 'google_play', invoice_id: orderId});
+		expect(await eligibility(account)).toMatchObject({eligible: true, provider: 'stripe', invoice_id: 'in_older'});
+
+		const result = await refund(account);
+
+		expect(result).toMatchObject({provider: 'stripe', invoice_id: 'in_older'});
+		expect(stripeHandlers.spies.createdRefunds).toHaveLength(1);
+		expect(fake.spies.refunded).toEqual([{packageName: PACKAGE_NAME, orderId, revoke: true}]);
 	});
 });

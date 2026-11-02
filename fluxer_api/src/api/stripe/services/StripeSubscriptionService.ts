@@ -34,6 +34,7 @@ import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {NoActiveSubscriptionError} from '@fluxer/errors/src/domains/payment/NoActiveSubscriptionError';
+import {StripeBillingCycleChangeNeedsResubscribeError} from '@fluxer/errors/src/domains/payment/StripeBillingCycleChangeNeedsResubscribeError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeInvalidProductConfigurationError} from '@fluxer/errors/src/domains/payment/StripeInvalidProductConfigurationError';
 import {StripeNoActiveSubscriptionError} from '@fluxer/errors/src/domains/payment/StripeNoActiveSubscriptionError';
@@ -462,11 +463,14 @@ export class StripeSubscriptionService {
 		await assertNoOpenPaymentDispute(getPaymentDisputeRepository(), user.id);
 		try {
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
-				expand: ['schedule'],
+				expand: ['schedule', 'default_payment_method'],
 			});
 			const item = getPrimarySubscriptionItem(subscription);
 			if (!item?.id || !item.price?.recurring || !item.price.currency) {
 				throw new StripeError('Subscription is missing a recurring primary item');
+			}
+			if (isMandatePaidSubscription(subscription)) {
+				throw new StripeBillingCycleChangeNeedsResubscribeError();
 			}
 			const currentBillingCycle = this.getBillingCycleFromInterval(item.price.recurring.interval);
 			if (!currentBillingCycle) {
@@ -510,7 +514,7 @@ export class StripeSubscriptionService {
 				);
 				return;
 			}
-			if (effectiveAt === 'period_end') {
+			if (effectiveAt === 'period_end' || currentBillingCycle === 'yearly') {
 				await this.scheduleBillingCycleChangeAtPeriodEnd({
 					user,
 					subscription,
@@ -569,7 +573,11 @@ export class StripeSubscriptionService {
 				{error, userId, subscriptionId: user.stripeSubscriptionId, billingCycle, effectiveAt},
 				'Failed to change subscription billing cycle',
 			);
-			if (error instanceof StripeError || error instanceof StripeInvalidProductConfigurationError) {
+			if (
+				error instanceof StripeError ||
+				error instanceof StripeInvalidProductConfigurationError ||
+				error instanceof StripeBillingCycleChangeNeedsResubscribeError
+			) {
 				throw error;
 			}
 			const message = error instanceof Error ? error.message : 'Failed to change subscription billing cycle';
@@ -1454,4 +1462,20 @@ export class StripeSubscriptionService {
 		}
 		return null;
 	}
+}
+
+const MANDATE_PAYMENT_METHOD_TYPES: ReadonlySet<string> = new Set(['pix', 'upi']);
+
+function isMandatePaidSubscription(subscription: Stripe.Subscription): boolean {
+	const paymentMethod = subscription.default_payment_method;
+	if (paymentMethod && typeof paymentMethod === 'object' && MANDATE_PAYMENT_METHOD_TYPES.has(paymentMethod.type)) {
+		return true;
+	}
+	const options = subscription.payment_settings?.payment_method_options;
+	if (options?.pix || options?.upi) {
+		return true;
+	}
+	return (subscription.payment_settings?.payment_method_types ?? []).some((type) =>
+		MANDATE_PAYMENT_METHOD_TYPES.has(type),
+	);
 }

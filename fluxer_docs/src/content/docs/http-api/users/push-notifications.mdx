@@ -26,7 +26,7 @@ A registration is Web Push when `token` is an endpoint URL sent with both keys, 
 | `ios_apns_voip` | Apple PushKit, for incoming calls on iOS |
 | `android_unified_push` | UnifiedPush |
 
-`android_unified_push` and `ios_apns_voip` only accept Web Push. An iOS device that answers calls registers both `ios_apns` and `ios_apns_voip`, each with its own key pair.
+`android_unified_push` and `ios_apns_voip` only accept Web Push. An iOS device that receives calls registers both `ios_apns` and `ios_apns_voip`, each with its own key pair.
 
 ## Device registration object
 
@@ -116,7 +116,7 @@ Each payload is one of these kinds.
 | Clear | Top-level `type` is `notification_clear` and `action` is `clear_channel` | Dismiss what you showed for `data.channel_id` |
 | Call ring | Top-level `type` is `call_ring` | See [Call ring](#call-ring) |
 
-When an endpoint answers 404 or 410, Fluxer removes the registration. It retries a 429 or 5xx response and keeps the registration.
+When an endpoint returns 404 or 410, Fluxer removes the registration. It retries a 429 or 5xx response and keeps the registration.
 
 ### Call ring
 

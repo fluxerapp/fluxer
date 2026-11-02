@@ -61,7 +61,7 @@ const BROWSER_WAIT_STOPPED_DESCRIPTOR = msg({
 });
 const BROWSER_WAIT_UNREACHABLE_DESCRIPTOR = msg({
 	message:
-		'Fluxer couldn\'t reach {instanceName} to check whether your browser approved this sign-in. Check your connection, then select "Try again".',
+		'Fluxer couldn\'t connect to {instanceName} to check whether your browser approved this sign-in. Check your connection, then select "Try again".',
 	comment:
 		'Status shown in the desktop app when it stopped checking the browser sign-in because the instance could not be reached. instanceName is the server name, such as Fluxer. "Try again" is the label of the button below and must match its translation.',
 });

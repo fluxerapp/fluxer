@@ -138,7 +138,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 			}
 			if (stacked) {
 				lines.push(getContentMessage('profile_badge.operator_pass_count', view.locale, {count}));
-				lines.push(getContentMessage('profile_badge.operator_pass_recognition', view.locale));
+				lines.push(getContentMessage('profile_badge.operator_pass_recognition_v2', view.locale));
 			}
 			let label: string;
 			if (sinceDate && stacked) {

@@ -18,7 +18,7 @@ export const INSTANCE_ADDRESS_INVALID_DESCRIPTOR = msg({
 		'Instance selector error shown when the typed address cannot be an address at all. Example instance domain is interpolated.',
 });
 const INSTANCE_UNREACHABLE_DESCRIPTOR = msg({
-	message: "Couldn't reach a Fluxer instance at {domain}. Check the address and that the instance is online.",
+	message: "Couldn't connect to a Fluxer instance at {domain}. Check the address and that the instance is online.",
 	comment: 'Instance selector error shown when no Fluxer instance answered at the address. Domain is interpolated.',
 });
 const INSTANCE_NEEDS_NEWER_CLIENT_DESCRIPTOR = msg({

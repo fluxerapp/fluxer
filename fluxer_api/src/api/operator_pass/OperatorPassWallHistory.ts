@@ -79,7 +79,6 @@ export interface OperatorPassWallAsOfEntry {
 export function reconstructOperatorPassWallEntry(params: {
 	userId: UserID;
 	at: Date;
-	username: string | null;
 	revisions: ReadonlyArray<OperatorPassWallRevisionRow>;
 	decisions: ReadonlyArray<OperatorPassWallDecisionRow>;
 	events: ReadonlyArray<OperatorPassWallEventRow>;
@@ -110,12 +109,10 @@ export function reconstructOperatorPassWallEntry(params: {
 	const decisions = params.decisions.filter((decision) => decision.decided_at.getTime() <= atMs);
 	let liveId: bigint | null = null;
 	let hidden = false;
-	let usernameDeclined = false;
 	for (const decision of decisions) {
 		switch (decision.kind) {
 			case 'approve':
 				liveId = decision.revision_id ?? liveId;
-				usernameDeclined = false;
 				break;
 			case 'revert':
 				liveId = decision.revision_id ?? liveId;
@@ -130,7 +127,6 @@ export function reconstructOperatorPassWallEntry(params: {
 				hidden = false;
 				break;
 		}
-		usernameDeclined = decision.username_declined === true || usernameDeclined;
 	}
 	if (hidden) {
 		return null;
@@ -148,9 +144,6 @@ export function reconstructOperatorPassWallEntry(params: {
 			deleted: true,
 		};
 	}
-	let name = live?.name;
-	if (name == null) {
-		name = usernameDeclined || !params.username ? OPERATOR_PASS_WALL_FALLBACK_NAME : params.username;
-	}
+	const name = live?.name ?? OPERATOR_PASS_WALL_FALLBACK_NAME;
 	return {userId: params.userId, name, avatar: live?.avatar ?? null, count, tier, firstPassAt, deleted: false};
 }

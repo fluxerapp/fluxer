@@ -255,7 +255,7 @@ const SUMMARY_UNTIL_DESCRIPTOR = msg({
 	comment: 'Summary row value on the confirm step when only an end date is set. {end} is a localized date.',
 });
 const SUMMARY_BETWEEN_DESCRIPTOR = msg({
-	message: '{start} – {end}',
+	message: '{start} to {end}',
 	comment: 'Summary row value when both a start and end date are set. Both values are localized dates.',
 });
 const SUMMARY_GUILD_EXCLUDE_DESCRIPTOR = msg({

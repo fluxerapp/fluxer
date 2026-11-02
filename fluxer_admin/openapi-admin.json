@@ -1843,6 +1843,309 @@
 				]
 			}
 		},
+		"/admin/billing-documents/export": {
+			"get": {
+				"operationId": "get_admin_billing_document_export",
+				"summary": "Download the billing documents of a month for the books",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/zip": {"schema": {"$ref": "#/components/schemas/AdminBillingDocumentExportFileResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns fluxer-dokument-YYYY-MM.zip with fluxer-dokument-YYYY-MM.csv and pdf/<number>.pdf for every invoice, receipt, credit note and refund note issued in the month (Stockholm time). Fails with 409 when any series has a claimed number without a document. The PDFs show buyer names, email addresses and postal addresses. Records the first export of each document as its archive time. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP and USER_VIEW_EMAIL permissions.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "month",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+							"description": "The month to export, as YYYY-MM in Stockholm time"
+						},
+						"description": "The month to export, as YYYY-MM in Stockholm time"
+					}
+				]
+			}
+		},
+		"/admin/billing-documents/legacy-import": {
+			"post": {
+				"operationId": "start_admin_billing_document_legacy_import",
+				"summary": "Import past Stripe invoice PDFs into billing history",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminBillingDocumentLegacyImportResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Queues the worker job that copies each account's paid Stripe invoices created before the cutover into the billing document store as read-only stripe_invoice documents, byte for byte as Stripe issued the PDF, so they show in the account's billing history. Run it once at the cutover, after a dry run. A dry run only counts. The import never runs on its own, skips invoices it already stored and invoices Fluxer issued its own document for, and leaves out invoices that belong to no account. Imported documents take no Fluxer number and are not part of the monthly export for the books. Running it again, or with resume, picks up what is left. Creates audit log entry. Only available on hosted instances. Requires USER_UPDATE_FLAGS permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminBillingDocumentLegacyImportRequest"}}
+					}
+				}
+			},
+			"get": {
+				"operationId": "get_admin_billing_document_legacy_import",
+				"summary": "Get the progress of the Stripe invoice import",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminBillingDocumentLegacyImportResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Shows the counts and position of the last import of past Stripe invoice PDFs, or of its dry run. Returns 404 when no import has run. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
+		"/admin/billing-documents/reissue": {
+			"post": {
+				"operationId": "reissue_admin_billing_document",
+				"summary": "Issue the billing document for a Stripe source",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BillingDocumentResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Issues the Fluxer invoice, receipt or credit note for a checkout session (cs:), invoice (in:), refund (re:) or lost dispute (du:), or returns it when it already exists. A number claimed by an issue that failed gets its document under that same number, which clears the 409 from the export. Use it for a refund made outside Fluxer, or when staff accept the outcome of a lost dispute whose reason is not fraudulent or unrecognized, so the books can reduce the VAT on the credit note. A lost fraudulent or unrecognized dispute gets no credit note, and du: fails for one. Fails with 409 for a checkout session that has a Stripe invoice or is not a one-time payment, because its sale is documented under its in: invoice. Sends no email. Creates audit log entry. Only available on hosted instances. Requires USER_UPDATE_FLAGS permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminBillingDocumentReissueRequest"}}
+					}
+				}
+			}
+		},
+		"/admin/billing-documents/{document_id}/pdf": {
+			"get": {
+				"operationId": "get_admin_billing_document_pdf",
+				"summary": "Download a billing document",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/pdf": {"schema": {"$ref": "#/components/schemas/BillingDocumentFileResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the stored PDF of any billing document, byte for byte as it was issued. The PDF shows the buyer's name, email address and postal address. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP and USER_VIEW_EMAIL permissions.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "document_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The document ID", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The document ID"
+					}
+				]
+			}
+		},
 		"/admin/blocklists": {
 			"get": {
 				"operationId": "list_admin_blocklist_types",
@@ -6302,6 +6605,386 @@
 				]
 			}
 		},
+		"/admin/operator-pass/certificates/{pass_id}/reissue": {
+			"post": {
+				"operationId": "reissue_admin_operator_pass_certificate",
+				"summary": "Issue a new copy of an Operator certificate page",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"$ref": "#/components/schemas/AdminOperatorPassCertificateReissueResponse"}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Issues a new copy of one Operator certificate page with the given name and the same number, payment date and terms version, for a name change under section 3 or a correction under section 6 of the Operator Pass terms, or with a name the buyer gives after the person named on the page objected successfully under section 5 of the Operator Pass privacy notice. Runs the same name checks as checkout. Earlier copies stay in the records, except after an objection, when the name and the PDF file of every earlier copy are erased and only the number, the fingerprint and the issue time stay. For a page that is cancelled after a withdrawal, a refund or a payment dispute, an objection issues no new copy. It erases the name and the PDF file of every copy and the name of that page on the purchase, keeps the number, the fingerprint, the issue times and the cancellation, and ignores holder_name. The page keeps its link, which opens the newest copy, and the purchase lists the new name for that page. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "pass_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 300,
+							"description": "The pass ID, the checkout session ID and the pass number joined by a colon"
+						},
+						"description": "The pass ID, the checkout session ID and the pass number joined by a colon"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassCertificateReissueRequest"}}
+					}
+				}
+			}
+		},
+		"/admin/operator-pass/deliveries.csv": {
+			"get": {
+				"operationId": "get_admin_operator_pass_deliveries",
+				"summary": "Download Operator Pass deliveries for the books",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"text/csv": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassDeliveriesCsvResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns operator-pass-leveranser-YYYY-MM.csv for one calendar month of delivered_at in UTC, with one row per pass of every purchase delivered in that month. The columns bokfor reads are pass_id, source, charge_id, payment_intent_id, delivered_at, holder_had_pass, is_business, withdrawal_country and confirmation_sent_at, followed by the purchase, consent, withdrawal and after-sale columns of the full export. Columns with no stored source yet are empty. Leaves out names, IP addresses and browser details. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "month",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+							"description": "Calendar month of delivered_at in UTC, as YYYY-MM"
+						},
+						"description": "Calendar month of delivered_at in UTC, as YYYY-MM"
+					}
+				]
+			}
+		},
+		"/admin/operator-pass/preview": {
+			"get": {
+				"operationId": "get_admin_operator_pass_preview",
+				"summary": "Get Operator Pass preview entries",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassPreviewResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the IP addresses and CIDR ranges that see the Operator Pass sale open before it opens and buy passes at no cost, and every purchase made that way. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_PREVIEW permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
+		"/admin/operator-pass/preview/ips": {
+			"post": {
+				"operationId": "add_admin_operator_pass_preview_ip",
+				"summary": "Add Operator Pass preview entry",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassPreviewIpEntry"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Adds an IPv4 or IPv6 address or a CIDR range. Until the sale opens for everyone, requests from it see the sale open, and checkouts created from it cost nothing and are marked as preview purchases. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_PREVIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassPreviewIpCreateRequest"}}
+					}
+				}
+			}
+		},
+		"/admin/operator-pass/preview/ips/{entry_id}": {
+			"delete": {
+				"operationId": "remove_admin_operator_pass_preview_ip",
+				"summary": "Remove Operator Pass preview entry",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes a preview entry. Requests from it see the real sale phase again at once. Purchases already made through it stay preview purchases. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_PREVIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "entry_id",
+						"in": "path",
+						"required": true,
+						"schema": {"type": "string", "minLength": 1, "maxLength": 64, "description": "The ID of the preview entry"},
+						"description": "The ID of the preview entry"
+					}
+				]
+			}
+		},
+		"/admin/operator-pass/preview/purchases/{purchase_id}/cancel": {
+			"post": {
+				"operationId": "cancel_admin_operator_pass_preview_purchase",
+				"summary": "Cancel Operator Pass preview purchase",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassPurchaseResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Ends every pass of a preview purchase the way a full refund does: the passes are revoked, the certificate pages are cancelled and keep their numbers, and the purchase is marked refunded. Nothing is charged or refunded in Stripe. An open checkout is expired and its pending purchase deleted. Refuses purchases that are not preview purchases. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_PREVIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "purchase_id",
+						"in": "path",
+						"required": true,
+						"schema": {"type": "string", "minLength": 1, "maxLength": 256, "description": "The purchase ID"},
+						"description": "The purchase ID"
+					}
+				]
+			}
+		},
 		"/admin/operator-pass/purchases/{purchase_id}/withdraw": {
 			"post": {
 				"operationId": "withdraw_admin_operator_pass_purchase",
@@ -6574,6 +7257,342 @@
 						"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassReleasePublishRequest"}}
 					}
 				}
+			}
+		},
+		"/admin/operator-pass/reset": {
+			"get": {
+				"operationId": "get_admin_operator_pass_reset_plan",
+				"summary": "Get Operator Pass reset plan",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassResetPlan"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Counts what a reset of the Operator Pass preview data would remove, and says why it is refused when it is. Writes nothing. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_RESET permission.",
+				"security": [{"adminApiKey": []}]
+			},
+			"post": {
+				"operationId": "reset_admin_operator_pass_preview_data",
+				"summary": "Reset Operator Pass preview data",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassResetResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes every preview purchase with its passes, certificate pages and numbers, gift offers, wall entries and the Fluxer Labs rows they created, ends the Labs role they gave, and starts certificate numbering again at 1. Refused when any purchase was not made through a preview entry, when an account holds passes no preview purchase explains, when a Visionary holder turned on the Operator Pass, when a certificate number belongs to another pass, or when a preview purchase has a billing document. Keeps the waitlist. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_RESET permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassResetRequest"}}}
+				}
+			}
+		},
+		"/admin/operator-pass/visionary-notice/preview": {
+			"post": {
+				"operationId": "preview_admin_operator_pass_visionary_notice",
+				"summary": "Preview the Visionary Operator Pass email",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassVisionaryNoticeResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Counts the accounts in visionary_slots that a run of the email about the Operator Pass that comes with Visionary would reach now, those already emailed and those skipped by reason, and how many have no Visionary payment or gift redemption on record (date_unknown), whose pass date falls back to premium_since. Writes nothing. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_VISIONARY_NOTICE permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
+		"/admin/operator-pass/visionary-notice/send": {
+			"post": {
+				"operationId": "send_admin_operator_pass_visionary_notice",
+				"summary": "Send the Visionary Operator Pass email",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"$ref": "#/components/schemas/AdminOperatorPassVisionaryNoticeSendResponse"}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Queues the worker job that emails every account a preview counts as a recipient about turning on the Operator Pass that comes with Visionary, and with include_dm sends each reached account one system DM. Refused unless Operator Pass sales are open and expected_recipients matches a fresh preview. Each account gets the email at most once, so pressing send again only reaches accounts not reached yet. Never runs on its own. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_VISIONARY_NOTICE permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassVisionaryNoticeSendRequest"}}
+					}
+				}
+			}
+		},
+		"/admin/operator-pass/visionary-notice/status": {
+			"get": {
+				"operationId": "get_admin_operator_pass_visionary_notice_status",
+				"summary": "Get Visionary Operator Pass email status",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassVisionaryNoticeResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Shows how many accounts the email about the Operator Pass that comes with Visionary reached, how many were skipped and why, how many are still to reach, and whether a run is going. Emailed means the email was handed to the provider, not that it arrived. Creates audit log entry. Only available on hosted instances. Requires OPERATOR_PASS_VISIONARY_NOTICE permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
+		"/admin/operator-pass/visionary/activations.csv": {
+			"get": {
+				"operationId": "get_admin_operator_pass_visionary_activations",
+				"summary": "Download Visionary Operator Pass turn-ons",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"text/csv": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassVisionaryActivationsCsvResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns a CSV with one row for each account that turned on the Operator Pass that comes with Visionary, for the books: user_id, visionary_sequence, visionary_since, activated_at, terms_version, certificate_number, issued_at of the first certificate copy, ended_at and end_reason. Leaves out names, IP addresses and browser details. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}]
 			}
 		},
 		"/admin/operator-pass/waitlist/followup-texts": {
@@ -7148,7 +8167,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Records whether an open payment dispute is justified. Unjustified is refused when the terms rule it out, after the dispute closed, or when the warning date, 3 days before the evidence deadline, is less than 2 days away. Unjustified emails the account and sends it a system message naming that date: if the dispute is not withdrawn by then and ends with the money returned, an enforcement decision closes the account and sends the enforcement notice. The warning counts only once both went out. When the instance has direct messages turned off, no system message is sent and the email alone counts. Deciding unjustified again on a review whose warning is incomplete sends only what is missing, with the same date. A justified dispute never leads to action against the account. A decision is final, only an appeal reverses an unjustified one. Creates audit log entry. Requires USER_DELETE permission.",
+				"description": "Records whether an open payment dispute is justified. Unjustified is refused when the terms rule it out, after the dispute closed, or when the warning date, 3 days before the evidence deadline, is less than 2 days away. Unjustified emails the account and sends it a system message naming that date: if the dispute is not withdrawn by then and ends with the money returned, an enforcement decision closes the account and sends the enforcement notice for Plutonium, and for the Operator Pass the bonus is removed permanently under section 8, which bars the account from buying or receiving a pass and emails the statement of reasons. The warning counts only once both went out. When the instance has direct messages turned off, no system message is sent and the email alone counts. Deciding unjustified again on a review whose warning is incomplete sends only what is missing, with the same date. A justified dispute never leads to action against the account. A decision is final, only an appeal reverses an unjustified one. Creates audit log entry. Requires USER_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7218,7 +8237,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Reverses an unjustified finding when an appeal under section 6.2 of the terms shows the dispute was justified. The review becomes justified, and the enforcement decision that closed the account is reversed, which restores the account and sends the enforcement ended notice, unless the deletion already started or another unreversed unjustified dispute is linked to the same decision. Creates audit log entry. Requires USER_DELETE permission, and BAN_IP_REMOVE when the decision blocked networks.",
+				"description": "Reverses an unjustified finding when an appeal under section 6.2 of the terms shows the dispute was justified. The review becomes justified, a permanent Operator Pass bonus removal made for this dispute is lifted, and the enforcement decision that closed the account is reversed, which restores the account and sends the enforcement ended notice, unless the deletion already started or another unreversed unjustified dispute is linked to the same decision. Creates audit log entry. Requires USER_DELETE permission, and BAN_IP_REMOVE when the decision blocked networks.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -9029,6 +10048,68 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/billing-documents": {
+			"get": {
+				"operationId": "list_admin_user_billing_documents",
+				"summary": "List the billing documents of a user",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BillingDocumentListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the invoices, receipts, credit notes and refund notes Fluxer issued to a user, newest first. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
 		"/admin/users/{user_id}/bot-status": {
 			"put": {
 				"operationId": "set_admin_user_bot_status",
@@ -10272,7 +11353,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns the Operator Pass of a user with any section 8 removal and the removal history, and the purchases the user paid for. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"description": "Returns the Operator Pass of a user with any section 8 removal and the removal history, and the purchases the user paid for. The consent IP address and browser details are null unless the admin also has USER_VIEW_IP. Only available on hosted instances. Requires USER_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10288,7 +11369,7 @@
 		"/admin/users/{user_id}/operator-pass/removal": {
 			"post": {
 				"operationId": "remove_admin_operator_pass_perks",
-				"summary": "Remove Operator Pass perks",
+				"summary": "Remove the Operator Pass bonus",
 				"tags": ["Admin"],
 				"responses": {
 					"200": {
@@ -10336,7 +11417,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Removes the Operator Pass perks of a user under section 8 of the Operator Pass terms, for a number of days or permanently, and emails the statement of reasons with the appeal route. A limited removal ends on its own. A permanent removal for a breach that is not serious needs an earlier limited removal and a removal notice sent after it and at least 7 days earlier. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"description": "Removes the bonus that comes with the Operator Pass of a user under section 8 of the Operator Pass terms, for a number of days or permanently, and emails the statement of reasons with the appeal route. A limited removal ends on its own. A permanent removal for a breach that is not serious needs an earlier limited removal and a removal notice sent after it and at least 7 days earlier. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10354,7 +11435,7 @@
 			},
 			"delete": {
 				"operationId": "restore_admin_operator_pass_perks",
-				"summary": "Restore Operator Pass perks",
+				"summary": "Restore the Operator Pass bonus",
 				"tags": ["Admin"],
 				"responses": {
 					"204": {"description": "No Content"},
@@ -10397,7 +11478,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Ends a removal or a pending notice, for example after an appeal under section 6.2 of the terms of service. The perks come back with the original date on the badge. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"description": "Ends a removal or a pending notice, for example after an appeal under section 6.2 of the terms of service. The bonus comes back with the original date on the badge. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10594,7 +11675,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Lists a business on the wall with its company name and logo under section 2.2 of the Operator Pass terms, or replaces its logo. The account must hold a pass and have a purchase with a tax ID, verified when it is an EU VAT number from outside Sweden, paid at least 7 days ago with no refund, open dispute or fraud warning. The logo must be a square PNG, JPEG or WebP image of at least 256 pixels, under 2 MB and not animated. The listing is approved at once, does not follow profile changes, and shows at one fixed size after the listings of people. An approved settings change, a revert or a forced fallback takes it back to a personal listing, and so does a refund, dispute or withdrawal that leaves no qualifying purchase, a section 8 removal, or losing the last pass. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"description": "Lists a business on the wall with its company name and logo under section 3.2 of the Operator Pass terms, or replaces its logo. The account must hold a pass and have a purchase with a tax ID, verified when it is an EU VAT number from outside Sweden, paid at least 7 days ago with no refund, open dispute or fraud warning. The logo must be a square PNG, JPEG or WebP image of at least 256 pixels, under 2 MB and not animated. The listing is approved at once, does not follow profile changes, and shows at one fixed size after the listings of people. An approved settings change, a revert or a forced fallback takes it back to a personal listing, and so does a refund, dispute or withdrawal that leaves no qualifying purchase, a section 8 removal, or losing the last pass. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10664,7 +11745,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Takes the approved name and avatar off the wall because of their content and shows the fallback: the username, or Operator when the username also breaks the rules, with the default avatar. A business listing instead goes back to the last approved personal name and avatar when there is one. The listing keeps its tier, place and badge. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"description": "Takes the approved name and avatar off the wall because of their content and shows the fallback: the word Operator with the default avatar. A business listing instead goes back to the last approved personal name and avatar when there is one. The listing keeps its tier, place and badge. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10734,7 +11815,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Hides a listing from the wall for now, or shows it again. Hiding needs a reason and the facts, sends a statement of reasons, stops serving the avatar and purges it from the CDN. Removal from the wall for good is a section 8 removal. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"description": "Hides a listing from the wall under section 3.1 of the Operator Pass terms while a report or possible breach is looked into, or shows it again. Hiding needs a reason and the facts, sends a statement of reasons, stops serving the avatar and purges it from the CDN. Removal from the wall for good is a section 8 removal. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -14671,10 +15752,6 @@
 						"allOf": [{"$ref": "#/components/schemas/OperatorPassWallDeclineReasonSchema"}]
 					},
 					"decline_note": {"nullable": true, "description": "The facts sent to the holder", "type": "string"},
-					"username_declined": {
-						"type": "boolean",
-						"description": "Whether the fallback shows Operator because the username breaks the rules"
-					},
 					"hidden": {"type": "boolean", "description": "Whether staff hid the listing for now"},
 					"legal_hold": {
 						"type": "boolean",
@@ -14754,7 +15831,6 @@
 					"declined_name",
 					"decline_reason",
 					"decline_note",
-					"username_declined",
 					"hidden",
 					"legal_hold",
 					"left_wall_at",
@@ -14776,10 +15852,6 @@
 						"minLength": 1,
 						"maxLength": 300,
 						"description": "The facts the decision relies on, shown to the holder"
-					},
-					"username_declined": {
-						"description": "Whether the username also breaks the rules, so the fallback shows Operator",
-						"type": "boolean"
 					}
 				},
 				"required": ["reason", "note"]
@@ -14966,6 +16038,11 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminOperatorPassWallEventResponse"},
 						"description": "Append-only history of deliveries, the wall name and release lists, oldest first"
+					},
+					"visionary_activation": {
+						"description": "The Visionary turn-on and email record, null when the account has none",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassVisionaryActivationResponse"}]
 					}
 				},
 				"required": [
@@ -15429,6 +16506,10 @@
 				"properties": {"bot": {"type": "boolean", "description": "Whether the user should be marked as a bot"}},
 				"required": ["bot"]
 			},
+			"BillingDocumentListResponse": {
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/BillingDocumentResponse"}
+			},
 			"AdminUserBanRequest": {
 				"type": "object",
 				"properties": {
@@ -15520,7 +16601,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -15654,6 +16735,9 @@
 					"message:delete",
 					"message:lookup",
 					"message:shred",
+					"operator_pass:preview",
+					"operator_pass:reset",
+					"operator_pass:visionary_notice",
 					"operator_pass:waitlist_stats",
 					"registration:review",
 					"report:delete",
@@ -16859,6 +17943,258 @@
 				"required": ["entries"],
 				"additionalProperties": false
 			},
+			"AdminOperatorPassVisionaryActivationsCsvResponse": {
+				"type": "string",
+				"format": "binary",
+				"description": "CSV of every Visionary turn-on with user_id, visionary_sequence, visionary_since, activated_at, terms_version, certificate_number, issued_at, ended_at and end_reason"
+			},
+			"AdminOperatorPassVisionaryNoticeResponse": {
+				"type": "object",
+				"properties": {
+					"recipients": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Accounts a run would email now"
+					},
+					"emailed": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Accounts already emailed by an earlier run"
+					},
+					"dm_sent": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Accounts that got the system DM"
+					},
+					"skipped": {
+						"type": "object",
+						"properties": {
+							"not_visionary": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "Listed in visionary_slots but without Visionary now"
+							},
+							"inactive": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "Deleted, disabled or flagged as spam"
+							},
+							"pending_deletion": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "Account deletion is pending"
+							},
+							"removed": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "The pass was removed permanently under section 8"
+							},
+							"turned_on": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "Already turned the pass on"
+							},
+							"no_email": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991,
+								"description": "No verified email or a bounced address, the DM still goes when asked"
+							}
+						},
+						"required": ["not_visionary", "inactive", "pending_deletion", "removed", "turned_on", "no_email"],
+						"additionalProperties": false,
+						"description": "Accounts no run emails, by reason"
+					},
+					"date_unknown": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Accounts with no Visionary payment or gift redemption on record, whose pass shows premium_since instead"
+					},
+					"running": {"type": "boolean", "description": "Whether a run is going right now"}
+				},
+				"required": ["recipients", "emailed", "dm_sent", "skipped", "date_unknown", "running"],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassVisionaryNoticeSendRequest": {
+				"type": "object",
+				"properties": {
+					"expected_recipients": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "The recipients count from the preview staff read. The send is refused when a fresh count differs"
+					},
+					"include_dm": {"type": "boolean", "description": "Whether every reached account also gets one system DM"}
+				},
+				"required": ["expected_recipients", "include_dm"]
+			},
+			"AdminOperatorPassVisionaryNoticeSendResponse": {
+				"type": "object",
+				"properties": {
+					"job_id": {"type": "string", "description": "The worker job that sends the emails"},
+					"recipients": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Accounts the run will email"
+					}
+				},
+				"required": ["job_id", "recipients"],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassResetRequest": {
+				"type": "object",
+				"properties": {"confirm": {"type": "string", "enum": ["RESET"], "description": "Must be RESET"}},
+				"required": ["confirm"]
+			},
+			"AdminOperatorPassResetResponse": {
+				"type": "object",
+				"properties": {
+					"removed": {
+						"properties": {
+							"allowed": {"type": "boolean", "description": "Whether the reset may run"},
+							"refused_reason": {
+								"nullable": true,
+								"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassResetRefusalSchema"}]
+							},
+							"preview_purchases": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Preview purchases the reset removes"
+							},
+							"non_preview_purchases": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Purchases not made through a preview entry, which block the reset"
+							},
+							"passes": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Passes of the preview purchases"
+							},
+							"certificate_numbers": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Certificate numbers the preview passes took"
+							},
+							"users": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Accounts that bought or hold preview passes"
+							}
+						},
+						"description": "What the reset found and removed",
+						"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassResetPlan"}]
+					},
+					"remaining": {
+						"properties": {
+							"allowed": {"type": "boolean", "description": "Whether the reset may run"},
+							"refused_reason": {
+								"nullable": true,
+								"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassResetRefusalSchema"}]
+							},
+							"preview_purchases": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Preview purchases the reset removes"
+							},
+							"non_preview_purchases": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Purchases not made through a preview entry, which block the reset"
+							},
+							"passes": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Passes of the preview purchases"
+							},
+							"certificate_numbers": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Certificate numbers the preview passes took"
+							},
+							"users": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"description": "Accounts that bought or hold preview passes"
+							}
+						},
+						"description": "What a fresh count finds after the reset",
+						"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassResetPlan"}]
+					}
+				},
+				"required": ["removed", "remaining"],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassResetPlan": {
+				"type": "object",
+				"properties": {
+					"allowed": {"type": "boolean", "description": "Whether the reset may run"},
+					"refused_reason": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassResetRefusalSchema"}]
+					},
+					"preview_purchases": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Preview purchases the reset removes"
+					},
+					"non_preview_purchases": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Purchases not made through a preview entry, which block the reset"
+					},
+					"passes": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Passes of the preview purchases"
+					},
+					"certificate_numbers": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Certificate numbers the preview passes took"
+					},
+					"users": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Accounts that bought or hold preview passes"
+					}
+				},
+				"required": [
+					"allowed",
+					"refused_reason",
+					"preview_purchases",
+					"non_preview_purchases",
+					"passes",
+					"certificate_numbers",
+					"users"
+				],
+				"additionalProperties": false
+			},
 			"AdminOperatorPassReleasePublishRequest": {
 				"type": "object",
 				"properties": {
@@ -16948,6 +18284,11 @@
 				"properties": {
 					"id": {"type": "string", "description": "Identifier of the purchase, the Stripe checkout session ID"},
 					"status": {"allOf": [{"$ref": "#/components/schemas/OperatorPassPurchaseStatusSchema"}]},
+					"order_number": {
+						"nullable": true,
+						"description": "Order number shown on the purchase confirmation and the withdrawal receipt, null when not known",
+						"type": "string"
+					},
 					"quantity": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -16970,14 +18311,14 @@
 					},
 					"delivered_at": {
 						"nullable": true,
-						"description": "When the passes were delivered, null while pending",
+						"description": "When the certificate was delivered, null while pending",
 						"type": "string",
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
 					"waiver_consent_at": {
 						"nullable": true,
-						"description": "When the buyer ticked the box at checkout",
+						"description": "When the buyer ticked the boxes at checkout",
 						"type": "string",
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -16989,17 +18330,21 @@
 					},
 					"withdrawal_ends_at": {
 						"nullable": true,
-						"description": "When the right of withdrawal ends, null when the purchase has none: delivered passes outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco",
+						"description": "When the right of withdrawal ends, null when the purchase has none: a delivered certificate outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco",
 						"type": "string",
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
 					"withdrawal_ends_on": {
-						"description": "The last day of the cancel window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
+						"description": "The last day the buyer can withdraw, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
 						"nullable": true,
 						"type": "string",
 						"format": "date",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+					},
+					"certificate_available": {
+						"type": "boolean",
+						"description": "Whether the purchase has at least one certificate page that is not cancelled"
 					},
 					"withdrawn_at": {
 						"nullable": true,
@@ -17008,15 +18353,52 @@
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
-					"has_donation": {"type": "boolean", "description": "Whether a monthly donation was added at checkout"},
+					"pages": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"pass_id": {"type": "string", "description": "ID of the pass the page belongs to"},
+								"name": {
+									"type": "string",
+									"description": "The name on the newest copy of this page, which is the name chosen at checkout unless the page was issued again with a new name"
+								},
+								"certificate_url": {
+									"nullable": true,
+									"description": "The private link of this page on the marketing site, which shows the page and opens its PDF. Null when the page has no link",
+									"type": "string"
+								}
+							},
+							"required": ["pass_id", "name", "certificate_url"],
+							"additionalProperties": false
+						},
+						"description": "Certificate pages of the purchase that are not cancelled, in page order. Empty before delivery"
+					},
 					"can_withdraw": {
 						"type": "boolean",
-						"description": "Whether the whole purchase can be withdrawn now, only while paid passes are not delivered yet"
+						"description": "Whether the withdraw button for the purchase is available now, before delivery or while a country rule keeps the right of withdrawal"
+					},
+					"refundable_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "What withdrawing from the whole purchase now refunds, in minor units, tax included. It leaves out passes already refunded or withdrawn, and is 0 when can_withdraw is false"
+					},
+					"certificate_emailed": {
+						"type": "boolean",
+						"description": "Whether the email with the certificate attached was sent"
+					},
+					"refusal_reason": {
+						"nullable": true,
+						"description": "Why the purchase was refunded before delivery, null when it was not refused. Only names_missing also sends the buyer an email that explains the refusal",
+						"type": "string",
+						"enum": ["removed", "names_missing", "email_undeliverable"]
 					}
 				},
 				"required": [
 					"id",
 					"status",
+					"order_number",
 					"quantity",
 					"amount_minor",
 					"currency",
@@ -17025,10 +18407,135 @@
 					"waiver_consent_at",
 					"withdrawal_country",
 					"withdrawal_ends_at",
+					"certificate_available",
 					"withdrawn_at",
-					"has_donation",
-					"can_withdraw"
+					"pages",
+					"can_withdraw",
+					"refundable_minor",
+					"certificate_emailed",
+					"refusal_reason"
 				],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassPreviewIpCreateRequest": {
+				"type": "object",
+				"properties": {
+					"value": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"description": "An IPv4 or IPv6 address, or a CIDR range"
+					},
+					"label": {"type": "string", "minLength": 1, "maxLength": 100, "description": "Who or what the entry is for"},
+					"expires_at": {
+						"description": "When the entry stops working",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					}
+				},
+				"required": ["value", "label"]
+			},
+			"AdminOperatorPassPreviewIpEntry": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "description": "The ID of the entry"},
+					"value": {"type": "string", "description": "The IP address or CIDR range, in canonical form"},
+					"label": {"type": "string", "description": "Who or what the entry is for"},
+					"expires_at": {
+						"nullable": true,
+						"description": "When the entry stops working, null when it never does",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the entry was added"
+					},
+					"created_by": {
+						"description": "Staff member who added the entry",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					}
+				},
+				"required": ["id", "value", "label", "expires_at", "created_at", "created_by"],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassPreviewResponse": {
+				"type": "object",
+				"properties": {
+					"entries": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/AdminOperatorPassPreviewIpEntry"},
+						"description": "The preview entries stored in the admin panel"
+					},
+					"config_values": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "The IP addresses and CIDR ranges in FLUXER_OPERATOR_PASS_PREVIEW_IPS, which the panel can not change"
+					},
+					"sale_open": {
+						"type": "boolean",
+						"description": "Whether the sale is open for everyone, which ends every preview"
+					},
+					"purchases": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/AdminOperatorPassPreviewPurchase"},
+						"description": "Every preview purchase, newest first"
+					}
+				},
+				"required": ["entries", "config_values", "sale_open", "purchases"],
+				"additionalProperties": false
+			},
+			"AdminOperatorPassDeliveriesCsvResponse": {
+				"type": "string",
+				"format": "binary",
+				"description": "CSV with one row per pass of every Operator Pass purchase delivered in the month, in the operator-pass-leveranser format the books read"
+			},
+			"AdminOperatorPassCertificateReissueRequest": {
+				"type": "object",
+				"properties": {
+					"holder_name": {
+						"description": "The name to print on the new copy",
+						"allOf": [{"$ref": "#/components/schemas/OperatorPassCertificateNameType"}]
+					},
+					"reason": {"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassCertificateReissueReasonSchema"}]}
+				},
+				"required": ["holder_name", "reason"]
+			},
+			"AdminOperatorPassCertificateReissueResponse": {
+				"type": "object",
+				"properties": {
+					"pass_id": {"type": "string", "description": "The pass ID"},
+					"number": {
+						"type": "integer",
+						"minimum": 0,
+						"exclusiveMinimum": true,
+						"maximum": 9007199254740991,
+						"description": "The certificate number, the same on every copy"
+					},
+					"version": {
+						"type": "integer",
+						"minimum": 0,
+						"exclusiveMinimum": true,
+						"maximum": 9007199254740991,
+						"description": "The version of the new copy"
+					},
+					"holder_name": {"type": "string", "description": "The name printed on the new copy"},
+					"issued_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the new copy was issued"
+					},
+					"reissue_reason": {
+						"allOf": [{"$ref": "#/components/schemas/AdminOperatorPassCertificateReissueReasonSchema"}]
+					}
+				},
+				"required": ["pass_id", "number", "version", "holder_name", "issued_at", "reissue_reason"],
 				"additionalProperties": false
 			},
 			"MessageShredStatusResponse": {
@@ -20123,6 +21630,153 @@
 				"required": ["items"],
 				"additionalProperties": false
 			},
+			"BillingDocumentFileResponse": {
+				"type": "string",
+				"format": "binary",
+				"description": "The stored PDF of the document, byte for byte as issued"
+			},
+			"AdminBillingDocumentReissueRequest": {
+				"type": "object",
+				"properties": {
+					"source_key": {
+						"type": "string",
+						"pattern": "^(cs|in|re|du):[A-Za-z0-9_]+$",
+						"description": "The Stripe source to issue the document for: cs:<checkout session>, in:<invoice>, re:<refund> or du:<lost dispute>"
+					},
+					"user_id": {
+						"description": "The account the document belongs to, when Stripe does not say. Defaults to the account Stripe or the original document names",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+					}
+				},
+				"required": ["source_key"]
+			},
+			"BillingDocumentResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The document ID", "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+					"number": {"type": "string", "description": "The document number, for example OP-000123"},
+					"kind": {"allOf": [{"$ref": "#/components/schemas/BillingDocumentKind"}]},
+					"flow": {
+						"type": "string",
+						"enum": ["operator_pass", "plutonium", "gift", "donation"],
+						"description": "What was bought or given"
+					},
+					"issued_at": {"type": "string", "description": "When the document was issued, in ISO 8601"},
+					"total": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Total in minor units of the currency, negative for credit and refund notes"
+					},
+					"currency": {"type": "string", "description": "Three-letter ISO currency code"},
+					"original_number": {
+						"nullable": true,
+						"description": "For a credit or refund note, the number of the document it corrects",
+						"type": "string"
+					}
+				},
+				"required": ["id", "number", "kind", "flow", "issued_at", "total", "currency", "original_number"],
+				"additionalProperties": false
+			},
+			"AdminBillingDocumentLegacyImportResponse": {
+				"type": "object",
+				"properties": {
+					"run": {"type": "string", "description": "When the run was started or last resumed, in ISO 8601"},
+					"before": {"type": "string", "description": "The cutover time of the run, in ISO 8601"},
+					"dry_run": {"type": "boolean", "description": "Whether the run only counts"},
+					"cursor": {
+						"nullable": true,
+						"description": "The last Stripe invoice the run has gone through",
+						"type": "string"
+					},
+					"done": {"type": "boolean", "description": "Whether the run has gone through every invoice"},
+					"updated_at": {"type": "string", "description": "When the run last finished a page, in ISO 8601"},
+					"scanned": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Paid Stripe invoices with a PDF the run has looked at"
+					},
+					"imported": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices stored as legacy documents by this run"
+					},
+					"already_imported": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices an earlier run already stored"
+					},
+					"would_import": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices a dry run would store"
+					},
+					"no_account": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices that belong to no Fluxer account, such as donations, left out"
+					},
+					"fluxer_document": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices Fluxer already issued its own document for, left out"
+					},
+					"failed": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Invoices that could not be imported; running the import again retries them"
+					}
+				},
+				"required": [
+					"run",
+					"before",
+					"dry_run",
+					"cursor",
+					"done",
+					"updated_at",
+					"scanned",
+					"imported",
+					"already_imported",
+					"would_import",
+					"no_account",
+					"fluxer_document",
+					"failed"
+				],
+				"additionalProperties": false
+			},
+			"AdminBillingDocumentLegacyImportRequest": {
+				"type": "object",
+				"properties": {
+					"before": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "The cutover time. Only Stripe invoices created before it are imported, so later Stripe invoices that Fluxer documents itself are left out"
+					},
+					"dry_run": {
+						"type": "boolean",
+						"description": "Count what would be imported without downloading or storing anything"
+					},
+					"resume": {
+						"default": false,
+						"description": "Continue the last run with the same before and dry_run from where it stopped instead of starting from the newest invoice",
+						"type": "boolean"
+					}
+				},
+				"required": ["before", "dry_run"]
+			},
+			"AdminBillingDocumentExportFileResponse": {
+				"type": "string",
+				"format": "binary",
+				"description": "A zip with fluxer-dokument-YYYY-MM.csv and pdf/<number>.pdf for every document issued in the month"
+			},
 			"UpdateCustomBadgeRequest": {
 				"type": "object",
 				"properties": {
@@ -20577,7 +22231,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -20595,7 +22249,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -20625,7 +22279,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -20646,7 +22300,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -20659,7 +22313,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 119,
+						"maxItems": 122,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -20856,6 +22510,11 @@
 				"type": "string",
 				"pattern": "^-?[0-9]{1,19}$",
 				"description": "Display position of the badge. Badges are shown in ascending order of this value"
+			},
+			"BillingDocumentKind": {
+				"type": "string",
+				"enum": ["invoice", "receipt", "donation_receipt", "credit_note", "refund_note", "stripe_invoice"],
+				"description": "What the document is. Credit and refund notes correct an earlier document. stripe_invoice is an invoice Stripe issued before Fluxer issued its own documents, kept read-only as Stripe issued it"
 			},
 			"BanProfileSubstringRequest": {
 				"type": "object",
@@ -24466,6 +26125,73 @@
 				],
 				"additionalProperties": false
 			},
+			"AdminOperatorPassCertificateReissueReasonSchema": {
+				"description": "Why a new copy of an Operator certificate page is issued",
+				"x-enumNames": ["NAME_CHANGE", "CORRECTION", "OBJECTION"],
+				"x-enumDescriptions": [
+					"The holder changed their name, offered under section 3 of the Operator Pass terms",
+					"A mistake on our side, fixed under section 6 of the Operator Pass terms",
+					"The person named on the page objected and the objection succeeded, so the name on every earlier copy and the earlier PDF files are erased"
+				],
+				"enum": ["name_change", "correction", "objection"],
+				"type": "string"
+			},
+			"OperatorPassCertificateNameType": {
+				"type": "string",
+				"minLength": 1,
+				"maxLength": 384,
+				"pattern": "^[^\\r\\n]*$",
+				"description": "Name printed on one page of the Operator certificate, 1 to 48 characters without line breaks. A character is a grapheme cluster, counted after Unicode NFC normalization"
+			},
+			"AdminOperatorPassPreviewPurchase": {
+				"type": "object",
+				"properties": {
+					"purchase_id": {"type": "string", "description": "The checkout session ID of the purchase"},
+					"purchaser_id": {
+						"description": "The account that bought the passes",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"label": {"type": "string", "description": "The label of the preview entry the purchase was made through"},
+					"status": {"allOf": [{"$ref": "#/components/schemas/OperatorPassPurchaseStatusSchema"}]},
+					"quantity": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "How many passes the purchase has"
+					},
+					"currency": {"allOf": [{"$ref": "#/components/schemas/OperatorPassCurrencySchema"}]},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the checkout was created"
+					},
+					"delivered_at": {
+						"nullable": true,
+						"description": "When the certificate was delivered",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"certificate_numbers": {
+						"type": "array",
+						"items": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+						"description": "The certificate numbers the passes took"
+					}
+				},
+				"required": [
+					"purchase_id",
+					"purchaser_id",
+					"label",
+					"status",
+					"quantity",
+					"currency",
+					"created_at",
+					"delivered_at",
+					"certificate_numbers"
+				],
+				"additionalProperties": false
+			},
 			"OperatorPassCurrencySchema": {
 				"type": "string",
 				"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
@@ -24560,6 +26286,31 @@
 					"erased_names"
 				],
 				"additionalProperties": false
+			},
+			"AdminOperatorPassResetRefusalSchema": {
+				"description": "Why the Operator Pass data can not be reset",
+				"x-enumNames": [
+					"NON_PREVIEW_PURCHASES",
+					"OTHER_HOLDERS",
+					"VISIONARY_ACTIVATIONS",
+					"OTHER_CERTIFICATES",
+					"BILLING_DOCUMENTS"
+				],
+				"x-enumDescriptions": [
+					"A purchase exists that was not made through a preview entry",
+					"An account holds passes that no preview purchase explains",
+					"A Visionary holder turned on the Operator Pass",
+					"A certificate number belongs to a pass outside the preview purchases",
+					"A preview purchase has a billing document"
+				],
+				"enum": [
+					"non_preview_purchases",
+					"other_holders",
+					"visionary_activations",
+					"other_certificates",
+					"billing_documents"
+				],
+				"type": "string"
 			},
 			"AdminOperatorPassWaitlistFollowupTextEntry": {
 				"type": "object",
@@ -24866,7 +26617,7 @@
 				"additionalProperties": false
 			},
 			"OperatorPassWallDeclineReasonSchema": {
-				"description": "Why staff declined a name or avatar on the Operators' wall, under section 2.1 of the Operator Pass terms",
+				"description": "Why staff declined a name or avatar on the Operators' wall, under section 3.1 of the Operator Pass terms",
 				"x-enumNames": ["GUIDELINES", "IMPERSONATION", "RIGHTS", "AGE_SUITABILITY"],
 				"x-enumDescriptions": [
 					"It breaks the community guidelines",
@@ -24914,7 +26665,7 @@
 				"x-enumDescriptions": [
 					"Waiting for a person to review it",
 					"Found justified, no action against the account",
-					"Found unjustified, the account was warned and is closed if the dispute ends with the money returned"
+					"Found unjustified, the account was warned and, if the dispute ends with the money returned, is closed for Plutonium or barred from the Operator Pass"
 				],
 				"enum": ["open", "justified", "unjustified"],
 				"type": "string"
@@ -25030,7 +26781,7 @@
 						"description": "The enforcement decision behind the current suspension or closure, null when none owns it",
 						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 					},
-					"acls": {"maxItems": 119, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 122, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdListResponse"}]},
 					"has_totp": {"type": "boolean"},
@@ -25321,6 +27072,100 @@
 					}
 				],
 				"description": "Why the action is taken"
+			},
+			"AdminOperatorPassVisionaryActivationResponse": {
+				"type": "object",
+				"properties": {
+					"visionary_since": {
+						"nullable": true,
+						"description": "The date the pass shows, copied at turn-on",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"visionary_sequence": {
+						"nullable": true,
+						"description": "The Visionary number at turn-on",
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"activated_at": {
+						"nullable": true,
+						"description": "When the account turned the pass on, null before",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"terms_version": {
+						"nullable": true,
+						"description": "The Operator Pass terms version the account accepted",
+						"type": "string"
+					},
+					"terms_box_text": {
+						"nullable": true,
+						"description": "The terms box text as shown, cleared on account deletion",
+						"type": "string"
+					},
+					"age_confirmed_at": {
+						"nullable": true,
+						"description": "When the account ticked the age box",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"pass_id": {"nullable": true, "description": "The pass, visionary:<user_id>:1", "type": "string"},
+					"certificate_number": {
+						"nullable": true,
+						"description": "Number of the certificate page",
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"ended_at": {
+						"nullable": true,
+						"description": "When the pass ended",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"end_reason": {"nullable": true, "description": "visionary_ended or deletion", "type": "string"},
+					"notice_emailed_at": {
+						"nullable": true,
+						"description": "When the Visionary email was handed to the email provider, which is not proof it arrived",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"notice_skip_reason": {
+						"nullable": true,
+						"description": "Why the last email run skipped the account",
+						"type": "string"
+					},
+					"notice_dm_sent_at": {
+						"nullable": true,
+						"description": "When the system DM about the pass was sent",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					}
+				},
+				"required": [
+					"visionary_since",
+					"visionary_sequence",
+					"activated_at",
+					"terms_version",
+					"terms_box_text",
+					"age_confirmed_at",
+					"pass_id",
+					"certificate_number",
+					"ended_at",
+					"end_reason",
+					"notice_emailed_at",
+					"notice_skip_reason",
+					"notice_dm_sent_at"
+				],
+				"additionalProperties": false
 			},
 			"AdminOperatorPassWallEventResponse": {
 				"type": "object",
@@ -25632,12 +27477,12 @@
 					},
 					"waiver_consent_ip": {
 						"nullable": true,
-						"description": "IP address the consent came from, for chargeback evidence",
+						"description": "IP address the consent came from, for chargeback evidence. Null unless the admin has USER_VIEW_IP",
 						"type": "string"
 					},
 					"waiver_user_agent": {
 						"nullable": true,
-						"description": "Browser or app that sent the consent",
+						"description": "Browser or app that sent the consent. Null unless the admin has USER_VIEW_IP",
 						"type": "string"
 					}
 				},
@@ -25688,13 +27533,14 @@
 			},
 			"OperatorPassHolderSourceSchema": {
 				"description": "How the Operator Pass was obtained",
-				"x-enumNames": ["PURCHASE", "TRANSFER", "ADMIN"],
+				"x-enumNames": ["PURCHASE", "TRANSFER", "VISIONARY", "ADMIN"],
 				"x-enumDescriptions": [
 					"Bought the pass",
 					"Received from another holder through Pass it on",
+					"Came with Visionary and was turned on by the account",
 					"Granted by staff"
 				],
-				"enum": ["purchase", "transfer", "admin"],
+				"enum": ["purchase", "transfer", "visionary", "admin"],
 				"type": "string"
 			},
 			"AdminOperatorPassRemovalEndReasonSchema": {
@@ -25719,7 +27565,7 @@
 					},
 					"kind": {
 						"type": "string",
-						"description": "purchased, country_rule, delivered, offer_created, offer_accepted, offer_declined, offer_withdrawn, offer_cancelled, transferred, paused, resumed, withdrawn or revoked"
+						"description": "purchased, visionary_turned_on, country_rule, delivered, offer_created, offer_accepted, offer_declined, offer_withdrawn, offer_cancelled, transferred, paused, resumed, withdrawn or revoked"
 					},
 					"payment_id": {"nullable": true, "description": "Stripe payment intent of the purchase", "type": "string"},
 					"purchase_id": {"nullable": true, "description": "The purchase that paid for the pass", "type": "string"},
@@ -25794,7 +27640,7 @@
 					"Staff reviewed the listed name and kept it, from before moderation states",
 					"Staff approved the name and the avatar on the wall",
 					"Staff declined the name or the avatar, see reason",
-					"The wall shows the username or Operator because no accepted name is left",
+					"The wall shows Operator because no accepted name is left",
 					"Staff kept the copies past the retention periods for an appeal or a legal hold",
 					"Staff released a legal hold",
 					"Staff made a technical adjustment to how the name is shown",
@@ -25849,7 +27695,7 @@
 				"x-enumNames": ["LIVE", "FALLBACK", "HIDDEN", "REMOVED"],
 				"x-enumDescriptions": [
 					"The wall shows the approved name and avatar",
-					"The wall shows the username, or Operator, with the default avatar until a name is approved",
+					"The wall shows Operator with the default avatar until a name is approved",
 					"Staff hid the listing for now",
 					"The listing is off the wall under section 8 of the Operator Pass terms"
 				],
@@ -26589,6 +28435,7 @@
 					"STORE_PURCHASE_SANDBOX_NOT_ENTITLED",
 					"STREAM_KEY_CHANNEL_MISMATCH",
 					"STREAM_KEY_SCOPE_MISMATCH",
+					"STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE",
 					"STRIPE_ERROR",
 					"STRIPE_GIFT_REDEMPTION_IN_PROGRESS",
 					"STRIPE_INVALID_PRODUCT",
@@ -26612,7 +28459,8 @@
 					"DONATION_MAGIC_LINK_EXPIRED",
 					"DONATION_MAGIC_LINK_INVALID",
 					"DONATION_MAGIC_LINK_USED",
-					"OPERATOR_PASS_WAIVER_REQUIRED",
+					"OPERATOR_PASS_DELIVERY_CONSENT_REQUIRED",
+					"OPERATOR_PASS_CERTIFICATE_NAME_REJECTED",
 					"OPERATOR_PASS_AGE_CONFIRMATION_REQUIRED",
 					"OPERATOR_PASS_OFFER_UNAVAILABLE",
 					"OPERATOR_PASS_OFFER_BUSY",
@@ -26621,8 +28469,8 @@
 					"OPERATOR_PASS_LAST_PASS_CONFIRMATION_REQUIRED",
 					"UNKNOWN_OPERATOR_PASS_OFFER",
 					"UNKNOWN_OPERATOR_PASS_UNIT",
-					"OPERATOR_PASS_COUNTRY_UNAVAILABLE",
 					"OPERATOR_PASS_WALL_NAME_REQUIRED",
+					"OPERATOR_PASS_WALL_NAME_REJECTED",
 					"OPERATOR_PASS_NOT_HELD",
 					"UNKNOWN_OPERATOR_PASS_WALL_ENTRY",
 					"OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED",
@@ -26637,8 +28485,10 @@
 					"OPERATOR_PASS_WAITLIST_TOKEN_INVALID",
 					"OPERATOR_PASS_REMOVAL_LIMITED_FIRST",
 					"OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED",
+					"OPERATOR_PASS_EMAIL_UNDELIVERABLE",
 					"OPERATOR_PASS_REMOVED",
 					"OPERATOR_PASS_TERMS_NOT_ACCEPTED",
+					"OPERATOR_PASS_VISIONARY_UNAVAILABLE",
 					"OPERATOR_PASS_WITHDRAWAL_UNAVAILABLE",
 					"PAYMENT_DISPUTE_EXEMPT",
 					"PAYMENT_DISPUTE_REVIEW_CLOSED",
@@ -26790,7 +28640,7 @@
 					"A connection of this type with this identifier already exists.",
 					"The connection initiation token is invalid or has expired.",
 					"The connection type is not supported.",
-					"You've reached the maximum number of connections ({limit}).",
+					"You can't have more than {limit} connections.",
 					"Unknown connection.",
 					"Connection verification failed. Make sure the verification token is correctly placed.",
 					"Conflict.",
@@ -26821,11 +28671,11 @@
 					"Email verification is required for this action.",
 					"Followed channels can only post into text channels.",
 					"This message has already been published.",
-					"This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
+					"This channel is at its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
 					"This message cannot be published.",
 					"Confirm your email address to use two-factor authentication or passkeys.",
 					"Email verification is required for this action.",
-					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
+					"This published message is at its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
@@ -26894,30 +28744,30 @@
 					"{reason, select, shown {{product_name} blocked access from this network because of activity that broke its rules.} other {{product_name} blocked access from this network.}} The block ends on {expiresAt}. If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off.{appealEmail, select, null {} other { If you think this block is a mistake, email {appealEmail} and include your IP address, {ipAddress}.}}",
 					"This IP address cannot be added to the blocklist.",
 					"This network block belongs to an enforcement decision. End the decision to remove it.",
-					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+					"You can't have more than {limit, plural, one {# application} other {# applications}}.",
 					"The limit is {count, plural, one {# badge} other {# badges}}.",
-					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
-					"This community has reached its active thread limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
-					"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
-					"You've reached the maximum of {count, plural, one {# saved media item} other {# saved media items}}.",
-					"You've reached the maximum of {count, plural, one {# friend} other {# friends}}.",
-					"This channel has reached its tag limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
-					"You've reached the maximum of {count, plural, one {# group DM} other {# group DMs}}.",
+					"You can't have more than {count, plural, one {# bookmark} other {# bookmarks}}.",
+					"This community is at its active thread limit of {count}.",
+					"You can't have more than {count, plural, one {# category channel} other {# category channels}}.",
+					"You can't have more than {count, plural, one {# emoji} other {# emojis}}.",
+					"You can't have more than {count, plural, one {# saved media item} other {# saved media items}}.",
+					"You can't have more than {count, plural, one {# friend} other {# friends}}.",
+					"This channel is at its tag limit of {count}.",
+					"You can't have more than {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
+					"You can't have more than {count, plural, one {# group DM} other {# group DMs}}.",
 					"One or more selected users can't be added to this group DM.",
 					"Not everyone in this group is eligible for mature content.",
-					"You've reached the maximum of {count, plural, one {# community channel} other {# community channels}}.",
-					"You've reached the maximum of {count, plural, one {# community member} other {# community members}}.",
-					"You've reached the maximum of {count, plural, one {# community role} other {# community roles}}.",
-					"You've reached the maximum of {count, plural, one {# community} other {# communities}}.",
-					"This channel has reached its pinned post limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
-					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
-					"You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}.",
-					"This thread has reached its member limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
-					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
+					"You can't have more than {count, plural, one {# community channel} other {# community channels}}.",
+					"You can't have more than {count, plural, one {# community member} other {# community members}}.",
+					"You can't have more than {count, plural, one {# community role} other {# community roles}}.",
+					"You can't have more than {count, plural, one {# community} other {# communities}}.",
+					"This channel is at its pinned post limit of {count}.",
+					"You can't have more than {count, plural, one {# invite} other {# invites}}.",
+					"You can't have more than {count, plural, one {# reaction} other {# reactions}}.",
+					"You can't have more than {count, plural, one {# sticker} other {# stickers}}.",
+					"This thread is at its member limit of {count}.",
+					"You can't have more than {count, plural, one {# webhook} other {# webhooks}} per channel.",
+					"You can't have more than {count, plural, one {# webhook} other {# webhooks}} per community.",
 					"Media metadata error.",
 					"Method not allowed.",
 					"You don't have access to this resource or feature.",
@@ -26955,7 +28805,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
-					"Your sign-in provider didn't answer. Try again in a moment.",
+					"Your sign-in provider didn't respond. Try again in a moment.",
 					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
@@ -26964,6 +28814,7 @@
 					"Test purchases cannot be applied to this account.",
 					"Stream key channel mismatch.",
 					"Stream key scope mismatch.",
+					"Subscriptions paid with Pix or UPI can't switch between monthly and yearly. Cancel your subscription, and when it ends, subscribe again on the plan you want.",
 					"{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}",
 					"Gift code redemption is in progress. Try again in a moment.",
 					"Invalid product selection.",
@@ -26987,8 +28838,9 @@
 					"Magic link has expired.",
 					"Magic link is invalid.",
 					"Magic link has already been used.",
-					"Confirm that you want the Operator Pass delivered right away.",
-					"To buy more than one pass, confirm that you are 18 or older, or that you have permission from a parent or guardian.",
+					"Confirm that you want your certificate delivered right away.",
+					"We can't print this name on a certificate. Please choose another one.",
+					"To buy a pass, confirm that you are 18 or older, or that you have permission from a parent or guardian.",
 					"This pass cannot be passed on to that account right now.",
 					"Another offer from your account is still being sent. Try again in a moment.",
 					"You can only pass this on to one of your friends on Fluxer.",
@@ -26996,8 +28848,8 @@
 					"This is your only pass. Confirm that passing it on removes your badge and your name on the Operators' wall.",
 					"Unknown Operator Pass offer.",
 					"Unknown Operator Pass.",
-					"You cannot buy the Operator Pass in your country right now.",
 					"Enter a name for the Operators' wall, or choose not to be listed.",
+					"We can't show this name on the Operators' wall. Please choose another one.",
 					"This account doesn't have the Operator Pass.",
 					"This account has no name on the Operators' wall.",
 					"This Operators list has already been published.",
@@ -27012,8 +28864,10 @@
 					"This waitlist link is invalid.",
 					"A permanent removal for a breach that is not serious needs an earlier removal for a limited time.",
 					"A permanent removal needs a notice sent at least 7 days earlier, unless the breach is serious.",
+					"Emails to the address on this account cannot be delivered. Change your email in your settings before you buy the Operator Pass, because the purchase confirmation goes there.",
 					"The Operator Pass was removed from this account, so it cannot be bought or redeemed again.",
 					"Accept the Operator Pass terms to get this pass.",
+					"This account can't turn on the Operator Pass that comes with Visionary right now.",
 					"This purchase can no longer be withdrawn from here.",
 					"Our terms rule out any action on this payment dispute.",
 					"This payment dispute has already closed.",
@@ -27094,7 +28948,7 @@
 					"No voice server has this API key.",
 					"Another voice server already uses this API key.",
 					"Another voice server already uses this ID.",
-					"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
+					"You can't have more than {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
 					"{need, select, add_email {{action, select, message {Add an email to your account to send messages.} typing {Add an email to your account to send messages.} reaction {Add an email to your account to add reactions.} direct_message {Add an email to your account to send direct messages.} direct_message_open {Add an email to your account to start direct messages.} group_dm {Add an email to your account to join group chats.} friend_request {Add an email to your account to send friend requests.} friend_accept {Add an email to your account to accept friend requests.} invite_create {Add an email to your account to create invites.} guild_join {Add an email to your account to join this community.} guild_create {Add an email to your account to create a community.} voice {Add an email to your account to join voice channels.} call {Add an email to your account to start calls.} group_call {Add an email to your account to join group calls.} thread_join {Add an email to your account to join threads.} channel_follow {Add an email to your account to follow channels.} ownership_transfer {This person needs to add an email to their account before they can own a community.} application_create {Add an email to your account to create applications.} gift_redeem {Add an email to your account to redeem gifts.} profile_customize {Add an email to your account to change your profile.} report {Add an email to your account to submit reports.} mfa {Add an email to your account to turn on two-factor authentication.} guild_verification {Add an email to your account to talk in this community.} other {Add an email to your account to do this.}}} confirm_email {{action, select, message {Confirm your email to send messages.} typing {Confirm your email to send messages.} reaction {Confirm your email to add reactions.} direct_message {Confirm your email to send direct messages.} direct_message_open {Confirm your email to start direct messages.} group_dm {Confirm your email to join group chats.} friend_request {Confirm your email to send friend requests.} friend_accept {Confirm your email to accept friend requests.} invite_create {Confirm your email to create invites.} guild_join {Confirm your email to join this community.} guild_create {Confirm your email to create a community.} voice {Confirm your email to join voice channels.} call {Confirm your email to start calls.} group_call {Confirm your email to join group calls.} thread_join {Confirm your email to join threads.} channel_follow {Confirm your email to follow channels.} ownership_transfer {This person needs to confirm their email before they can own a community.} application_create {Confirm your email to create applications.} gift_redeem {Confirm your email to redeem gifts.} profile_customize {Confirm your email to change your profile.} report {Confirm your email to submit reports.} mfa {Confirm your email to turn on two-factor authentication.} guild_verification {Confirm your email to talk in this community.} other {Confirm your email to do this.}}} password {{action, select, message {Set a password to send messages.} typing {Set a password to send messages.} reaction {Set a password to add reactions.} direct_message {Set a password to send direct messages.} direct_message_open {Set a password to start direct messages.} group_dm {Set a password to join group chats.} friend_request {Set a password to send friend requests.} friend_accept {Set a password to accept friend requests.} invite_create {Set a password to create invites.} guild_join {Set a password to join this community.} guild_create {Set a password to create a community.} voice {Set a password to join voice channels.} call {Set a password to start calls.} group_call {Set a password to join group calls.} thread_join {Set a password to join threads.} channel_follow {Set a password to follow channels.} ownership_transfer {This person needs to set a password before they can own a community.} application_create {Set a password to create applications.} gift_redeem {Set a password to redeem gifts.} profile_customize {Set a password to change your profile.} report {Set a password to submit reports.} mfa {Set a password to turn on two-factor authentication.} guild_verification {Set a password to talk in this community.} other {Set a password to do this.}}} other {{action, select, message {Claim your account to send messages.} typing {Claim your account to send messages.} reaction {Claim your account to add reactions.} direct_message {Claim your account to send direct messages.} direct_message_open {Claim your account to start direct messages.} group_dm {Claim your account to join group chats.} friend_request {Claim your account to send friend requests.} friend_accept {Claim your account to accept friend requests.} invite_create {Claim your account to create invites.} guild_join {Claim your account to join this community.} guild_create {Claim your account to create a community.} voice {Claim your account to join voice channels.} call {Claim your account to start calls.} group_call {Claim your account to join group calls.} thread_join {Claim your account to join threads.} channel_follow {Claim your account to follow channels.} ownership_transfer {This person needs to claim their account before they can own a community.} application_create {Claim your account to create applications.} gift_redeem {Claim your account to redeem gifts.} profile_customize {Claim your account to change your profile.} report {Claim your account to submit reports.} mfa {Claim your account to turn on two-factor authentication.} guild_verification {Claim your account to talk in this community.} other {Claim your account to do this.}}}}",
 					"Enter your date of birth to continue.",
 					"Your date of birth is already set.",

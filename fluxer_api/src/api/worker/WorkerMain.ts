@@ -35,6 +35,7 @@ import {
 	getInstanceConfigRepository,
 	getLimitConfigService,
 } from '@app/api/middleware/ServiceSingletons';
+import {getLabsOperatorsChannelId, isLabsAutoJoinConfigured} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {accountStateDepsFromContext} from '@app/api/user/services/AccountStateApplier';
@@ -113,7 +114,24 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		cron.upsert('operatorPassWaitlistCleanup', 'operatorPassWaitlistCleanup', {}, '0 20 * * * *', {ledger: false});
 		cron.upsert('operatorPassRemovalExpiry', 'operatorPassRemovalExpiry', {}, '0 */5 * * * *', {ledger: false});
 		cron.upsert('operatorPassWallRetention', 'operatorPassWallRetention', {}, '0 40 3 * * *', {ledger: false});
+		cron.upsert('operatorPassConsentRetention', 'operatorPassConsentRetention', {}, '0 50 3 * * *', {ledger: false});
+		cron.upsert('operatorPassLabsVisionaryRoleSync', 'operatorPassLabsVisionaryRoleSync', {}, '0 55 3 * * *', {
+			ledger: false,
+			enabled: () => Config.operatorPass.labsVisionaryRoleId !== null,
+		});
+		cron.upsert('operatorPassLabsGreeting', 'operatorPassLabsGreeting', {}, '15 */5 * * * *', {
+			ledger: false,
+			enabled: () => getLabsOperatorsChannelId() !== null,
+		});
+		cron.upsert('operatorPassLabsDelivery', 'operatorPassLabsDelivery', {}, '0 10 4 * * *', {
+			ledger: false,
+			enabled: isLabsAutoJoinConfigured,
+		});
 		cron.upsert('operatorPassOfferCompletion', 'operatorPassOfferCompletion', {}, '30 */5 * * * *', {ledger: false});
+		cron.upsert('operatorPassFulfilmentSweep', 'operatorPassFulfilmentSweep', {}, '45 */15 * * * *', {
+			ledger: false,
+			enabled: () => getStripeClient() !== null,
+		});
 	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});

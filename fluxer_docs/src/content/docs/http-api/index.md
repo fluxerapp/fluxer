@@ -69,7 +69,7 @@ Limits such as attachment counts differ between instances, and [instance discove
 
 ## Request format
 
-Send JSON bodies with `Content-Type: application/json`. Responses are UTF-8 JSON unless an operation says otherwise, and every `GET` route also answers `HEAD`.
+Send JSON bodies with `Content-Type: application/json`. Responses are UTF-8 JSON unless an operation says otherwise, and every `GET` route also responds to `HEAD`.
 
 Unknown paths, including a known path with a trailing slash, return 404 `NOT_FOUND`. An overloaded instance returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`.
 
@@ -124,13 +124,13 @@ Every route has its own bucket, and most routes also count against a global buck
 
 ## Conditional routes
 
-A self-hosted instance serves some routes only while its premium mode or billing is on, and answers the others with 404 `NOT_FOUND`. [Deployment availability](/http-api/deployment-availability/) lists them.
+A self-hosted instance serves some routes only while its premium mode or billing is on, and returns 404 `NOT_FOUND` for the others. [Deployment availability](/http-api/deployment-availability/) lists them.
 
 ## Cross-origin requests
 
 Only the instance's web app and marketing origins are allowed. A request from one of them gets `Access-Control-Allow-Origin` set to that origin and `Vary: Origin`. Browsers don't send cookies cross-origin, and you send your token in `Authorization`.
 
-[Get instance discovery](/http-api/instance/#get-instance-discovery), [Get OpenAPI document](/http-api/instance/#get-openapi-document) and [Get client geolocation](/http-api/instance/#get-client-geolocation) answer any origin with `*`. The webhook execution routes also allow any origin, with the exceptions under [Origin refusal](/http-api/webhooks/#origin-refusal).
+[Get instance discovery](/http-api/instance/#get-instance-discovery), [Get OpenAPI document](/http-api/instance/#get-openapi-document) and [Get client geolocation](/http-api/instance/#get-client-geolocation) allow any origin with `*`. The webhook execution routes also allow any origin, with the exceptions under [Origin refusal](/http-api/webhooks/#origin-refusal).
 
 Browser scripts can read only the `X-Fluxer-Version` and `ETag` response headers. Cross-origin requests can send the headers in [Standard request headers](#standard-request-headers) plus `X-Requested-With`, `If-None-Match`, `X-Captcha-ID` and the `X-Fluxer-*` client headers.
 

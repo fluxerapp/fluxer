@@ -46,6 +46,7 @@ import {
 	getReportRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OperatorPassDisputeServices} from '@app/api/operator_pass/OperatorPassDisputeBar';
 import {
 	PaymentDisputeEnforcementService,
 	queuePaymentDisputeClosures,
@@ -102,6 +103,7 @@ export class AdminService {
 		private readonly stripe: Stripe | null = null,
 		private readonly jobLedger: JobLedgerRepository,
 		private readonly storeEntitlementService: StoreEntitlementService,
+		private readonly operatorPassServices: OperatorPassDisputeServices | null = null,
 	) {
 		const {users, gateway, worker, snowflake} = this.apiContext.services;
 		this.auditService = new AdminAuditService(this.adminRepository, snowflake, {
@@ -205,6 +207,7 @@ export class AdminService {
 			oauth2Tokens: getOAuth2TokenRepository(),
 			systemDm,
 			enforcement: this.enforcementService,
+			operatorPass: this.operatorPassServices,
 		});
 		this.userService = new AdminUserService({
 			apiContext: this.apiContext,

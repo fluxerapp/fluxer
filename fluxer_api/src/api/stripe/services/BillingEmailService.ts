@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID} from '@app/api/BrandedTypes';
+import {alertSupport} from '@app/api/billing/BillingSupportAlert';
+import {
+	type BillingDocumentService,
+	billingDocumentAttachment,
+	billingDocumentContent,
+	billingDocumentTotals,
+} from '@app/api/billing_documents/BillingDocumentService';
 import {Config} from '@app/api/Config';
+import type {BillingDocumentRow} from '@app/api/database/types/BillingDocumentTypes';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
+import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {getEffectiveBillingConfig} from '@app/api/stripe/BillingConfigCache';
 import {type ProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
@@ -18,13 +26,12 @@ import {extractId} from '@app/api/stripe/StripeUtils';
 import {
 	billingSellerShown,
 	findChargedLine,
-	invoiceLinkUntil,
 	invoicePaidAt,
 	invoiceTotals,
 	isDonationInvoice,
-	isOperatorPassInvoice,
 	plainTotals,
 	plutoniumPurchaseTerms,
+	purchaseTermsFromMetadata,
 	subscriptionBillingProduct,
 	unixToDate,
 } from '@app/api/stripe/services/BillingInvoiceDetails';
@@ -51,12 +58,7 @@ import {getPaidPremiumAccessEndsAt} from '@app/api/user/UserHelpers';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {BillingPaymentProblem, PlutoniumPlan} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
-import type {
-	BillingEndedInvoiceStatus,
-	BillingInvoiceDocument,
-	EmailSendParams,
-	IEmailService,
-} from '@pkgs/email/src/IEmailService';
+import type {BillingEndedInvoiceStatus, EmailSendParams, IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms, seconds} from 'itty-time';
@@ -65,8 +67,6 @@ import {z} from 'zod';
 
 const SENT_TTL_SECONDS = seconds('400 days');
 const LOCK_TTL_SECONDS = seconds('5 minutes');
-const INVOICE_PDF_TIMEOUT_MS = ms('10 seconds');
-const INVOICE_PDF_MAX_BYTES = 5 * 1024 * 1024;
 const REFUND_BACKFILL_WINDOW_SECONDS = seconds('1 day');
 const YEARLY_PERIOD_MIN_MS = ms('60 days');
 const CLOSED_INVOICE_STATUSES = new Set(['paid', 'void', 'uncollectible', 'draft']);
@@ -74,7 +74,6 @@ const PAYMENT_PROBLEM_BILLING_REASONS = new Set(['subscription_cycle', 'subscrip
 const NOTICE_SCAN_HORIZON_SECONDS = seconds('41 days');
 const ENDED_INVOICE_STATUSES = new Set<string>(['void', 'uncollectible', 'open', 'paid']);
 const REFUND_CANCEL_WAIT_RETRIES = 4;
-const UPCOMING_INVOICE_STATUSES = new Set<string>(['active', 'trialing']);
 const ENDED_SUBSCRIPTION_STATUSES = new Set<string>(['canceled', 'incomplete_expired']);
 
 const PLAN_BY_PRODUCT_TYPE: Record<ProductType, PlutoniumPlan> = {
@@ -108,7 +107,21 @@ export const BillingEmailJobSchema = z.discriminatedUnion('kind', [
 	z.object({kind: z.literal('subscription_cancel_scheduled'), id: jobId, requestedAt: unixSeconds}),
 	z.object({kind: z.literal('subscription_ended_unpaid'), id: jobId}),
 	z.object({kind: z.literal('gift_applied'), id: jobId, trialEnd: unixSeconds}),
-	z.object({kind: z.literal('credit_note'), id: jobId}),
+	z.object({kind: z.literal('gift_paid'), id: jobId}),
+	z.object({
+		kind: z.literal('plutonium_withdrawal'),
+		id: jobId,
+		userId: z.string().regex(/^\d+$/),
+		name: z.string().min(1).max(200),
+		receivedAt: z.iso.datetime(),
+		purchasedAt: z.iso.datetime(),
+		gift: z.boolean(),
+		amountMinor: z.number().int().nonnegative(),
+		currency: z.string().min(1),
+		refund: z.enum(['started', 'manual']),
+		brazil: z.boolean(),
+		proRata: z.boolean().optional(),
+	}),
 ]);
 
 export type BillingEmailJob = z.infer<typeof BillingEmailJobSchema>;
@@ -147,11 +160,17 @@ export function billingEmailJobKey(job: BillingEmailJob): string {
 export async function enqueueBillingEmail(
 	workerService: IWorkerService<WorkerTaskName>,
 	job: BillingEmailJob,
+	later?: {keySuffix: string; runAt: Date},
 ): Promise<void> {
 	if (!getEffectiveBillingConfig().billingEmails) {
 		return;
 	}
-	await workerService.addJob('sendBillingEmail', {...job}, {jobKey: billingEmailJobKey(job)});
+	const jobKey = billingEmailJobKey(job);
+	await workerService.addJob(
+		'sendBillingEmail',
+		{...job},
+		later ? {jobKey: `${jobKey}:${later.keySuffix}`, runAt: later.runAt} : {jobKey},
+	);
 }
 
 export function isRecentRefund(refund: Stripe.Refund, eventCreated: number): boolean {
@@ -203,8 +222,9 @@ export class BillingEmailService {
 		private readonly cacheService: ICacheService,
 		private readonly productRegistry: ProductRegistry,
 		private readonly donationRepository: DonationRepository,
-		private readonly operatorPassRepository: OperatorPassRepository,
+		private readonly operatorPassFulfilment: OperatorPassFulfilmentService | null,
 		private readonly addJob: WorkerTaskHelpers['addJob'],
+		private readonly documents: BillingDocumentService | null,
 	) {}
 
 	async deliver(job: BillingEmailJob, attempt = 0): Promise<void> {
@@ -223,8 +243,10 @@ export class BillingEmailService {
 				return this.subscriptionEndedUnpaid(job.id);
 			case 'gift_applied':
 				return this.giftApplied(job);
-			case 'credit_note':
-				return this.creditNote(job.id);
+			case 'gift_paid':
+				return this.giftPaid(job.id);
+			case 'plutonium_withdrawal':
+				return this.plutoniumWithdrawal(job);
 		}
 	}
 
@@ -271,53 +293,97 @@ export class BillingEmailService {
 			return;
 		}
 		const line = findChargedLine(invoice, this.productRegistry);
-		if (line) {
-			const recipient = userRecipient(await this.resolveUser(invoice));
-			if (!recipient) {
-				Logger.warn({invoiceId}, 'No deliverable account email for a paid Plutonium invoice; receipt not sent');
+		if (!line && isDonationInvoice(invoice)) {
+			await this.donationInvoicePaid(invoice);
+			return;
+		}
+		if (!line && !extractId(invoice.parent?.subscription_details?.subscription ?? null)) {
+			if (!this.documents) {
 				return;
 			}
-			const {premiumName} = await getBillingBranding();
-			await this.sendOnce(`receipt:${invoiceId}`, recipient, 'plutonium_payment_receipt', {
-				premiumName,
-				plan: PLAN_BY_PRODUCT_TYPE[line.product.type],
-				invoiceNumber: invoice.number ?? null,
-				paidAt: invoicePaidAt(invoice),
-				period: line.product.isGift ? null : line.period,
-				totals: invoiceTotals(invoice),
-				invoice: await this.invoiceDocument(invoice),
-				purchase: plutoniumPurchaseTerms(invoice, line),
-				timeZone: recipient.timeZone,
+			Logger.error(
+				{billingDocumentAlert: true, invoiceId},
+				'A paid invoice is not a subscription, a donation or a registered product; no Fluxer document was issued',
+			);
+			await alertSupport({
+				dedupeKey: `unknown-invoice:${invoiceId}`,
+				subject: `Paid invoice ${invoiceId} has no Fluxer document`,
+				summary:
+					'A paid Stripe invoice is not a subscription, a donation or a registered product, so no Fluxer document was issued. Check what was sold and issue the document by hand.',
+				facts: {
+					invoiceId,
+					amountMinor: invoice.total,
+					currency: invoice.currency,
+					country: invoice.customer_address?.country ?? null,
+				},
 			});
 			return;
 		}
-		if (isOperatorPassInvoice(invoice)) {
-			await this.operatorPassInvoicePaid(invoice);
-			return;
-		}
-		if (isDonationInvoice(invoice)) {
-			await this.donationInvoicePaid(invoice);
-		}
-	}
-
-	private async operatorPassInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
-		const document = await this.invoiceDocument(invoice);
-		const recipient = await this.operatorPassPurchaser(invoice);
-		if (!document || !recipient) {
-			Logger.warn({invoiceId: invoice.id}, 'No invoice link or purchaser email for an Operator Pass invoice');
-			return;
-		}
-		await this.sendOnce(`op_invoice:${invoice.id}`, recipient, 'operator_pass_invoice', {
-			invoiceNumber: invoice.number ?? null,
-			paidAt: invoicePaidAt(invoice),
-			totals: invoiceTotals(invoice),
-			invoice: document,
-			timeZone: recipient.timeZone,
+		const user = await this.resolveUser(invoice);
+		const document = await this.documents?.issueForInvoice(invoiceId, {
+			userId: user?.id ?? null,
+			locale: user?.locale ?? null,
 		});
+		if (!line) {
+			if (!document) {
+				return;
+			}
+			Logger.error(
+				{billingDocumentAlert: true, invoiceId, number: document.display_number},
+				'A paid subscription invoice has no registered product; the document was issued but no receipt was emailed',
+			);
+			await alertSupport({
+				dedupeKey: `unregistered-product:${invoiceId}`,
+				subject: `No receipt sent for ${document.display_number}`,
+				summary:
+					'A paid subscription invoice has no registered product. The Fluxer document was issued, but no receipt was emailed to the buyer. Send the document to the buyer from the help desk.',
+				facts: {
+					invoiceId,
+					userId: user?.id ?? null,
+					documentNumber: document.display_number,
+					series: document.series,
+					amountMinor: invoice.total,
+					currency: invoice.currency,
+					country: invoice.customer_address?.country ?? null,
+				},
+			});
+			return;
+		}
+		const recipient = userRecipient(user);
+		if (!recipient) {
+			Logger.warn({invoiceId}, 'No deliverable account email for a paid Plutonium invoice; receipt not sent');
+			return;
+		}
+		const {premiumName} = await getBillingBranding();
+		await this.sendOnce(
+			`receipt:${invoiceId}`,
+			recipient,
+			'plutonium_payment_receipt',
+			{
+				premiumName,
+				plan: PLAN_BY_PRODUCT_TYPE[line.product.type],
+				invoiceNumber: document?.display_number ?? (this.documents ? null : (invoice.number ?? null)),
+				paidAt: invoicePaidAt(invoice),
+				period: line.product.isGift ? null : line.period,
+				totals: invoiceTotals(invoice),
+				document: document ? billingDocumentAttachment(document) : null,
+				business: document ? billingDocumentContent(document).buyer.business : false,
+				purchase: plutoniumPurchaseTerms(invoice, line),
+				timeZone: recipient.timeZone,
+			},
+			`in:${invoiceId}`,
+		);
 	}
 
 	private async donationInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
 		const recipient = await this.resolveDonor(invoice);
+		const document = invoice.id
+			? await this.documents?.issueForInvoice(invoice.id, {
+					userId: null,
+					locale: recipient?.locale ?? null,
+					donorEmail: recipient?.email ?? null,
+				})
+			: null;
 		if (!recipient) {
 			Logger.warn({invoiceId: invoice.id}, 'No donor email for a paid donation invoice; receipt not sent');
 			return;
@@ -327,15 +393,20 @@ export class BillingEmailService {
 		const end = unixToDate(firstLine?.period?.end);
 		const period = start && end && end > start ? {start, end} : null;
 		const interval = period && period.end.getTime() - period.start.getTime() > YEARLY_PERIOD_MIN_MS ? 'year' : 'month';
-		await this.sendOnce(`donation_receipt:${invoice.id}`, recipient, 'donation_receipt', {
-			interval,
-			invoiceNumber: invoice.number ?? null,
-			paidAt: invoicePaidAt(invoice),
-			period,
-			totals: invoiceTotals(invoice),
-			invoice: await this.invoiceDocument(invoice),
-			manageUrl: donationManageUrl(recipient.email),
-		});
+		await this.sendOnce(
+			`donation_receipt:${invoice.id}`,
+			recipient,
+			'donation_receipt',
+			{
+				interval,
+				paidAt: invoicePaidAt(invoice),
+				period,
+				totals: invoiceTotals(invoice),
+				document: document ? billingDocumentAttachment(document) : null,
+				manageUrl: donationManageUrl(recipient.email),
+			},
+			`in:${invoice.id}`,
+		);
 	}
 
 	private async invoicePaymentProblem(job: Extract<BillingEmailJob, {kind: 'invoice_payment_problem'}>) {
@@ -373,11 +444,9 @@ export class BillingEmailService {
 			await this.sendOnce(key, recipient, 'plutonium_payment_failed', {
 				premiumName,
 				reason,
-				invoiceNumber: invoice.number ?? null,
 				attemptedAt,
 				amountMinor: invoice.amount_remaining,
 				currency: invoice.currency,
-				invoiceUrl: invoice.hosted_invoice_url ?? null,
 				accessEndsAt: accessEndsAt && accessEndsAt.getTime() > Date.now() ? accessEndsAt : null,
 				reminder,
 				planChange,
@@ -396,11 +465,9 @@ export class BillingEmailService {
 		}
 		await this.sendOnce(`donation_${key}`, recipient, 'donation_payment_failed', {
 			reason,
-			invoiceNumber: invoice.number ?? null,
 			attemptedAt,
 			amountMinor: invoice.amount_remaining,
 			currency: invoice.currency,
-			invoiceUrl: invoice.hosted_invoice_url ?? null,
 			manageUrl: donationManageUrl(recipient.email),
 			reminder,
 		});
@@ -441,6 +508,9 @@ export class BillingEmailService {
 
 	private async refund(refundId: string, attempt: number): Promise<void> {
 		const refund = await this.stripe.refunds.retrieve(refundId, {expand: ['charge', 'payment_intent']});
+		if (refund.status === 'pending' || refund.status === 'requires_action') {
+			throw new BillingEmailRetryError(`Refund ${refundId} has not settled yet`);
+		}
 		if (refund.status !== 'succeeded' || refund.amount <= 0) {
 			return;
 		}
@@ -449,17 +519,37 @@ export class BillingEmailService {
 		if (!paymentIntentId) {
 			return;
 		}
-		const purchase = await this.operatorPassRepository.findPurchaseByPaymentIntent(paymentIntentId);
-		if (purchase) {
-			await this.operatorPassRefund(refund, charge, purchase);
+		const intent = typeof refund.payment_intent === 'object' ? refund.payment_intent : null;
+		const operatorPassPayment = intent?.metadata?.operator_pass === 'true';
+		const purchase = await this.operatorPassFulfilment?.findRefundedPurchase(paymentIntentId, operatorPassPayment);
+		if (!purchase && this.operatorPassFulfilment && operatorPassPayment) {
+			throw new BillingEmailRetryError(`The Operator Pass purchase of refund ${refundId} is not recorded yet`);
+		}
+		if (purchase && this.operatorPassFulfilment) {
+			const receipt = await this.operatorPassFulfilment.prepareRefundReceipt(purchase, refund);
+			if (receipt) {
+				await this.sendOnce(
+					`refund:${refund.id}`,
+					receipt.recipient,
+					'operator_pass_refund_receipt',
+					receipt.params,
+					`re:${refund.id}`,
+				);
+			}
 			return;
 		}
 		const invoice = await this.findPaidInvoice(paymentIntentId);
 		const line = invoice ? findChargedLine(invoice, this.productRegistry) : null;
-		if (invoice && line) {
-			const recipient = userRecipient(await this.resolveUser(invoice));
+		const gift = invoice ? null : await this.findGiftSession(paymentIntentId);
+		if ((invoice && line) || gift) {
+			const user = invoice ? await this.resolveUser(invoice) : await this.giftBuyer(gift);
+			const recipient = userRecipient(user);
+			const creditNote = await this.documents?.issueForRefund(refund, {
+				userId: user?.id ?? null,
+				locale: user?.locale ?? null,
+			});
 			if (!recipient) {
-				Logger.warn({refundId, invoiceId: invoice.id}, 'No deliverable account email for a Plutonium refund');
+				Logger.warn({refundId, invoiceId: invoice?.id}, 'No deliverable account email for a Plutonium refund');
 				return;
 			}
 			const endedSubscriptionId =
@@ -468,25 +558,32 @@ export class BillingEmailService {
 				? await this.refundEndedSubscription(refund.id, endedSubscriptionId, attempt)
 				: false;
 			const {premiumName} = await getBillingBranding();
-			await this.sendOnce(`refund:${refund.id}`, recipient, 'plutonium_refund_receipt', {
-				premiumName,
-				plan: PLAN_BY_PRODUCT_TYPE[line.product.type],
-				invoiceNumber: invoice.number ?? null,
-				refundedAt: new Date(refund.created * 1000),
-				amountMinor: refund.amount,
-				paidMinor: invoice.amount_paid,
-				paidAt: invoicePaidAt(invoice),
-				currency: refund.currency,
-				refundUrl: charge?.receipt_url ?? null,
-				subscriptionEnded:
-					subscriptionEnded && endedSubscriptionId
-						? {requestedAt: new Date(refund.created * 1000), reference: endedSubscriptionId}
-						: null,
-				timeZone: recipient.timeZone,
-			});
+			const giftProduct = gift?.metadata?.price_id ? this.productRegistry.getProduct(gift.metadata.price_id) : null;
+			const productType = line?.product.type ?? giftProduct?.type ?? ProductType.GIFT_1_MONTH;
+			await this.sendOnce(
+				`refund:${refund.id}`,
+				recipient,
+				'plutonium_refund_receipt',
+				{
+					premiumName,
+					plan: PLAN_BY_PRODUCT_TYPE[productType],
+					invoiceNumber: originalNumber(creditNote) ?? invoice?.number ?? null,
+					refundedAt: new Date(refund.created * 1000),
+					amountMinor: refund.amount,
+					paidMinor: invoice?.amount_paid ?? gift?.amount_total ?? refund.amount,
+					paidAt: invoice ? invoicePaidAt(invoice) : new Date((gift?.created ?? refund.created) * 1000),
+					currency: refund.currency,
+					creditNote: creditNote ? billingDocumentAttachment(creditNote) : null,
+					subscriptionEnded:
+						subscriptionEnded && endedSubscriptionId
+							? {requestedAt: new Date(refund.created * 1000), reference: endedSubscriptionId}
+							: null,
+					timeZone: recipient.timeZone,
+				},
+				`re:${refund.id}`,
+			);
 			return;
 		}
-		const intent = typeof refund.payment_intent === 'object' ? refund.payment_intent : null;
 		const recipient = invoice && isDonationInvoice(invoice) ? await this.resolveDonor(invoice) : null;
 		const oneTimeDonor =
 			!invoice && intent?.metadata?.is_donation === 'true' && intent.metadata.donation_email
@@ -498,8 +595,78 @@ export class BillingEmailService {
 				: null;
 		const donor = recipient ?? oneTimeDonor;
 		if (donor) {
-			await this.donationRefund(refund, charge, donor, invoice?.number ?? charge?.receipt_number ?? null);
+			const creditNote = await this.documents?.issueForRefund(refund, {
+				userId: null,
+				locale: donor.locale,
+				donorEmail: donor.email,
+			});
+			await this.sendOnce(
+				`refund:${refund.id}`,
+				donor,
+				'donation_refund_receipt',
+				{
+					reference: originalNumber(creditNote) ?? invoice?.number ?? charge?.receipt_number ?? null,
+					refundedAt: new Date(refund.created * 1000),
+					amountMinor: refund.amount,
+					currency: refund.currency,
+					creditNote: creditNote ? billingDocumentAttachment(creditNote) : null,
+				},
+				`re:${refund.id}`,
+			);
+			return;
 		}
+		const buyer = invoice ? await this.resolveUser(invoice) : await this.paymentIntentBuyer(intent);
+		await this.documents?.issueForRefund(refund, {userId: buyer?.id ?? null, locale: buyer?.locale ?? null});
+	}
+
+	private async plutoniumWithdrawal(job: JobOf<'plutonium_withdrawal'>): Promise<void> {
+		const user = await this.userRepository.findUnique(createUserID(BigInt(job.userId)));
+		const recipient = userRecipient(user);
+		if (!recipient) {
+			Logger.error(
+				{purchaseId: job.id, userId: job.userId},
+				'No deliverable account email for a Plutonium withdrawal receipt',
+			);
+			await alertSupport({
+				dedupeKey: `plutonium-withdrawal-receipt:${job.id}`,
+				subject: `No withdrawal receipt sent for ${job.id}`,
+				summary: `A buyer withdrew from a Plutonium purchase at ${job.receivedAt}, but the account has no email address we can send to. Send the buyer the withdrawal confirmation another way.`,
+				facts: {
+					...(job.id.startsWith('sub_') ? {subscriptionId: job.id} : {checkoutSessionId: job.id}),
+					userId: job.userId,
+					amountMinor: job.amountMinor,
+					currency: job.currency,
+				},
+			});
+			return;
+		}
+		const {premiumName} = await getBillingBranding();
+		await this.sendOnce(`plutonium_withdrawal:${job.id}`, recipient, 'plutonium_withdrawal_receipt', {
+			premiumName,
+			name: job.name,
+			receivedAt: new Date(job.receivedAt),
+			purchasedAt: new Date(job.purchasedAt),
+			gift: job.gift,
+			amountMinor: job.amountMinor,
+			currency: job.currency,
+			refund: job.refund,
+			brazil: job.brazil,
+			proRata: job.proRata === true,
+			reference: job.id,
+			timeZone: recipient.timeZone,
+		});
+	}
+
+	private async paymentIntentBuyer(intent: Stripe.PaymentIntent | null): Promise<User | null> {
+		const customerId = extractId(intent?.customer ?? null);
+		if (customerId) {
+			const user = await this.userRepository.findByStripeCustomerId(customerId);
+			if (user) {
+				return user;
+			}
+		}
+		const userId = intent?.metadata?.user_id ?? null;
+		return userId && /^\d+$/.test(userId) ? this.userRepository.findUnique(createUserID(BigInt(userId))) : null;
 	}
 
 	private async refundEndedSubscription(refundId: string, subscriptionId: string, attempt: number): Promise<boolean> {
@@ -658,16 +825,10 @@ export class BillingEmailService {
 		const item = getPrimarySubscriptionItem(subscription);
 		const scheduleEnd = schedule?.end_behavior === 'cancel' ? schedule.phases.at(-1)?.end_date : null;
 		const endsAt = subscription.cancel_at ?? scheduleEnd ?? item?.current_period_end ?? job.requestedAt;
-		const latest = typeof subscription.latest_invoice === 'object' ? subscription.latest_invoice : null;
-		const unpaid =
-			latest?.status === 'open' && latest.amount_remaining > 0
-				? plainTotals(latest.amount_remaining, latest.currency)
-				: null;
 		const params = {
 			receivedAt: new Date(job.requestedAt * 1000),
 			endsAt: new Date(endsAt * 1000),
 			reference: subscription.id,
-			unpaid,
 			seller: billingSellerShown(),
 			timeZone: recipient.timeZone,
 		};
@@ -679,11 +840,16 @@ export class BillingEmailService {
 			});
 			return;
 		}
+		const latest = typeof subscription.latest_invoice === 'object' ? subscription.latest_invoice : null;
 		const {premiumName} = await getBillingBranding();
 		await this.sendOnce(key, recipient, 'plutonium_cancellation_confirmation', {
 			...params,
 			premiumName,
 			plan: getSubscriptionBillingCycle(subscription) ?? 'monthly',
+			unpaid:
+				latest?.status === 'open' && latest.amount_remaining > 0
+					? plainTotals(latest.amount_remaining, latest.currency)
+					: null,
 		});
 	}
 
@@ -706,11 +872,9 @@ export class BillingEmailService {
 		const {premiumName} = await getBillingBranding();
 		await this.sendOnce(`ended_unpaid:${subscription.id}`, recipient, 'plutonium_ended_unpaid', {
 			premiumName,
-			invoiceNumber: invoice?.number ?? null,
 			invoiceStatus: status,
 			amountMinor: status === 'open' ? (invoice?.amount_remaining ?? 0) : (invoice?.total ?? 0),
 			currency: invoice?.currency ?? subscription.currency,
-			invoiceUrl: invoice?.hosted_invoice_url ?? null,
 			seller: billingSellerShown(),
 		});
 	}
@@ -764,115 +928,61 @@ export class BillingEmailService {
 		}
 	}
 
-	private async creditNote(creditNoteId: string): Promise<void> {
-		const note = await this.stripe.creditNotes.retrieve(creditNoteId, {
-			expand: ['invoice', 'customer_balance_transaction'],
+	private async giftPaid(sessionId: string): Promise<void> {
+		const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+		const product = session.metadata?.price_id ? this.productRegistry.getProduct(session.metadata.price_id) : null;
+		if (
+			session.mode !== 'payment' ||
+			session.payment_status !== 'paid' ||
+			(session.amount_total ?? 0) <= 0 ||
+			!product?.isGift ||
+			session.invoice
+		) {
+			return;
+		}
+		const user = await this.giftBuyer(session);
+		const document = await this.documents?.issueForCheckoutSession(session.id, {
+			userId: user?.id ?? null,
+			locale: user?.locale ?? null,
 		});
-		if (note.status === 'void' || !note.customer_balance_transaction) {
-			return;
-		}
-		const invoice = typeof note.invoice === 'string' ? await this.stripe.invoices.retrieve(note.invoice) : note.invoice;
-		const recipient = invoice ? await this.invoiceRecipient(invoice) : null;
+		const recipient = userRecipient(user);
 		if (!recipient) {
-			Logger.warn({creditNoteId}, 'No deliverable email for a credit note');
+			Logger.warn({sessionId}, 'No deliverable account email for a paid gift; receipt not sent');
 			return;
 		}
-		const balance = note.customer_balance_transaction;
-		const customerId = extractId(note.customer ?? invoice?.customer ?? null);
-		const params = {
-			amountMinor: typeof balance === 'object' ? Math.abs(balance.amount) : note.total,
-			currency: note.currency,
-			invoiceNumber: invoice?.number ?? null,
-			pdfUrl: note.pdf ?? null,
-			upcomingInvoice: customerId ? await this.hasUpcomingInvoice(customerId) : false,
-			seller: billingSellerShown(),
-		};
-		const key = `credit_note:${note.id}`;
+		const paidAt = document ? new Date(billingDocumentContent(document).payment?.at ?? document.issued_at) : new Date();
+		const {premiumName} = await getBillingBranding();
 		await this.sendOnce(
-			invoice && isDonationInvoice(invoice) ? `donation_${key}` : key,
+			`gift_receipt:${session.id}`,
 			recipient,
-			'billing_credit_note',
-			params,
+			'plutonium_payment_receipt',
+			{
+				premiumName,
+				plan: PLAN_BY_PRODUCT_TYPE[product.type],
+				invoiceNumber: document?.display_number ?? null,
+				paidAt,
+				period: null,
+				totals: document
+					? billingDocumentTotals(document)
+					: plainTotals(session.amount_total ?? 0, session.currency ?? product.currency),
+				document: document ? billingDocumentAttachment(document) : null,
+				business: false,
+				purchase: purchaseTermsFromMetadata(session.metadata ?? {}, paidAt, null),
+				timeZone: recipient.timeZone,
+			},
+			`cs:${session.id}`,
 		);
 	}
 
-	private async hasUpcomingInvoice(customerId: string): Promise<boolean> {
-		const subscriptions = await this.stripe.subscriptions.list({customer: customerId, status: 'all', limit: 20});
-		return subscriptions.data.some(
-			(subscription) =>
-				UPCOMING_INVOICE_STATUSES.has(subscription.status) && !subscriptionCancelling(subscription, null),
-		);
+	private async findGiftSession(paymentIntentId: string): Promise<Stripe.Checkout.Session | null> {
+		const sessions = await this.stripe.checkout.sessions.list({payment_intent: paymentIntentId, limit: 1});
+		const session = sessions.data[0];
+		return session?.metadata?.is_gift === 'true' ? session : null;
 	}
 
-	private async invoiceRecipient(invoice: Stripe.Invoice): Promise<Recipient | null> {
-		if (findChargedLine(invoice, this.productRegistry)) {
-			return userRecipient(await this.resolveUser(invoice));
-		}
-		if (isOperatorPassInvoice(invoice)) {
-			return this.operatorPassPurchaser(invoice);
-		}
-		return isDonationInvoice(invoice) ? this.resolveDonor(invoice) : null;
-	}
-
-	private async operatorPassPurchaser(invoice: Stripe.Invoice): Promise<Recipient | null> {
-		const purchaserId =
-			invoice.metadata?.operator_pass_purchaser_id ??
-			invoice.parent?.subscription_details?.metadata?.operator_pass_purchaser_id;
-		return purchaserId && /^\d+$/.test(purchaserId)
-			? userRecipient(await this.userRepository.findUnique(createUserID(BigInt(purchaserId))))
-			: null;
-	}
-
-	private async operatorPassRefund(
-		refund: Stripe.Refund,
-		charge: Stripe.Charge | null,
-		purchase: NonNullable<Awaited<ReturnType<OperatorPassRepository['findPurchaseByPaymentIntent']>>>,
-	): Promise<void> {
-		const fluxerWithdrawal =
-			refund.metadata?.checkout_session_id === purchase.checkout_session_id &&
-			(refund.metadata?.rejection_reason ?? '').startsWith('operator_pass_withdrawal');
-		if (fluxerWithdrawal) {
-			return;
-		}
-		const purchaser = await this.userRepository.findUnique(purchase.purchaser_id);
-		const recipient = userRecipient(purchaser);
-		if (!recipient) {
-			Logger.warn({refundId: refund.id}, 'No deliverable purchaser email for an Operator Pass refund');
-			return;
-		}
-		const donationAmount = charge ? Math.max(0, charge.amount - purchase.amount_minor) : 0;
-		const donationPart =
-			purchase.subscription_id != null &&
-			!refund.metadata?.checkout_session_id &&
-			(refund.metadata?.subscription_id === purchase.subscription_id || refund.amount === donationAmount);
-		if (donationPart) {
-			await this.donationRefund(refund, charge, recipient, purchase.invoice_number ?? null);
-			return;
-		}
-		await this.sendOnce(`refund:${refund.id}`, recipient, 'operator_pass_refund_receipt', {
-			invoiceNumber: purchase.invoice_number ?? null,
-			orderDate: purchase.purchased_at ?? purchase.created_at,
-			refundedAt: new Date(refund.created * 1000),
-			amountMinor: refund.amount,
-			currency: refund.currency,
-			full: Boolean(charge?.refunded) || (charge?.amount_refunded ?? 0) >= purchase.amount_minor,
-			timeZone: recipient.timeZone,
-		});
-	}
-
-	private async donationRefund(
-		refund: Stripe.Refund,
-		charge: Stripe.Charge | null,
-		recipient: Recipient,
-		reference: string | null,
-	): Promise<void> {
-		await this.sendOnce(`refund:${refund.id}`, recipient, 'donation_refund_receipt', {
-			reference,
-			refundedAt: new Date(refund.created * 1000),
-			amountMinor: refund.amount,
-			currency: refund.currency,
-			refundUrl: charge?.receipt_url ?? null,
-		});
+	private async giftBuyer(session: Stripe.Checkout.Session | null): Promise<User | null> {
+		const userId = session?.metadata?.user_id ?? session?.client_reference_id ?? null;
+		return userId && /^\d+$/.test(userId) ? this.userRepository.findUnique(createUserID(BigInt(userId))) : null;
 	}
 
 	private async findPaidInvoice(paymentIntentId: string): Promise<Stripe.Invoice | null> {
@@ -896,38 +1006,6 @@ export class BillingEmailService {
 			fallback ??= full;
 		}
 		return fallback;
-	}
-
-	private async invoiceDocument(invoice: Stripe.Invoice): Promise<BillingInvoiceDocument | null> {
-		if (!invoice.hosted_invoice_url) {
-			return null;
-		}
-		return {
-			url: invoice.hosted_invoice_url,
-			linkUntil: invoiceLinkUntil(invoice),
-			pdf: await this.fetchInvoicePdf(invoice),
-		};
-	}
-
-	private async fetchInvoicePdf(invoice: Stripe.Invoice): Promise<BillingInvoiceDocument['pdf']> {
-		if (!invoice.invoice_pdf) {
-			return null;
-		}
-		try {
-			const response = await fetch(invoice.invoice_pdf, {signal: AbortSignal.timeout(INVOICE_PDF_TIMEOUT_MS)});
-			if (!response.ok) {
-				throw new Error(`Invoice PDF request failed with ${response.status}`);
-			}
-			const content = new Uint8Array(await response.arrayBuffer());
-			if (content.byteLength === 0 || content.byteLength > INVOICE_PDF_MAX_BYTES) {
-				throw new Error(`Invoice PDF has an unexpected size of ${content.byteLength} bytes`);
-			}
-			const name = (invoice.number ?? invoice.id ?? 'invoice').replace(/[^\w-]/g, '');
-			return {filename: `Invoice-${name}.pdf`, content, contentType: 'application/pdf'};
-		} catch (error) {
-			Logger.warn({error, invoiceId: invoice.id}, 'Could not attach the invoice PDF; the email links to the invoice');
-			return null;
-		}
 	}
 
 	private async resolveUser(invoice: Stripe.Invoice): Promise<User | null> {
@@ -965,6 +1043,20 @@ export class BillingEmailService {
 		return `stripe:billing:email:sent:${key}`;
 	}
 
+	private async recordDocumentEmailed(documentSource: string | null): Promise<void> {
+		if (!documentSource || !this.documents) {
+			return;
+		}
+		try {
+			const document = await this.documents.repository.findDocumentBySource(documentSource);
+			if (document && document.emailed_at == null) {
+				await this.documents.repository.markEmailed(document.document_id, new Date());
+			}
+		} catch (error) {
+			Logger.error({error, documentSource}, 'Sent a billing document but could not record when it was emailed');
+		}
+	}
+
 	private async wasSent(key: string): Promise<boolean> {
 		return Boolean(await this.cacheService.get<boolean>(this.sentKey(key)));
 	}
@@ -974,6 +1066,7 @@ export class BillingEmailService {
 		recipient: Recipient,
 		templateKey: K,
 		params: EmailSendParams[K],
+		documentSource: string | null = null,
 	): Promise<boolean> {
 		const sentKey = this.sentKey(key);
 		if (await this.cacheService.get<boolean>(sentKey)) {
@@ -1001,9 +1094,14 @@ export class BillingEmailService {
 			} catch (error) {
 				Logger.error({error, key}, 'Sent a billing email but could not record it; a retry may send it again');
 			}
+			await this.recordDocumentEmailed(documentSource);
 			return true;
 		} finally {
 			await this.cacheService.releaseLock(lockKey, token);
 		}
 	}
+}
+
+function originalNumber(document: BillingDocumentRow | null | undefined): string | null {
+	return document ? (billingDocumentContent(document).original?.number ?? null) : null;
 }

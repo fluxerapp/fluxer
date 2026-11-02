@@ -22,6 +22,7 @@ export type OperatorPassPassRow =
 			passOn: OperatorPassUnitResponse | null;
 			lockEndsAt: string | null;
 			cancel: OperatorPassUnitResponse | null;
+			purchaseActions: boolean;
 	  }
 	| {kind: 'offered'; key: string; pass: OperatorPassUnitResponse; offer: OperatorPassOfferResponse}
 	| {kind: 'passed_on'; key: string; offer: OperatorPassOfferResponse};
@@ -50,7 +51,9 @@ export function buildOperatorPassPassRows(
 		if (offer.status === 'pending') rows.push({kind: 'incoming', key: `incoming:${offer.id}`, offer});
 	}
 	for (const purchase of purchases) {
-		if (purchase.can_withdraw) rows.push({kind: 'undelivered', key: `undelivered:${purchase.id}`, purchase});
+		if (purchase.can_withdraw && !purchase.delivered_at) {
+			rows.push({kind: 'undelivered', key: `undelivered:${purchase.id}`, purchase});
+		}
 	}
 	const groups = new Map<string, HeldPassGroup>();
 	const dated: Array<{date: string; row: OperatorPassPassRow}> = [];
@@ -86,6 +89,7 @@ export function buildOperatorPassPassRows(
 				passOn,
 				lockEndsAt,
 				cancel,
+				purchaseActions: !(key.endsWith(':paused') && groups.has(key.slice(0, -':paused'.length))),
 			},
 		});
 	}

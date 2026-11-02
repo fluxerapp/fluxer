@@ -31,15 +31,15 @@ import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 const RECORD_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Record shortcut',
+	message: 'Record keybind',
 	comment: 'Short label in the keyboard shortcuts keybind recorder. Keep it concise.',
 });
 const EDIT_KEYBOARD_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Edit keyboard shortcut',
+	message: 'Edit keybind',
 	comment: 'Button or menu action label in the keyboard shortcuts keybind recorder. Keep it concise.',
 });
 const NO_SHORTCUT_SET_DESCRIPTOR = msg({
-	message: 'No shortcut set',
+	message: 'No keybind set',
 	comment: 'Empty-state text in the keyboard shortcuts keybind recorder.',
 });
 
@@ -359,7 +359,7 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 	};
 	let recorderText: React.ReactNode;
 	if (recording) {
-		recorderText = <Trans>Press a shortcut…</Trans>;
+		recorderText = <Trans>Press a keybind…</Trans>;
 	} else if (currentHasValue) {
 		recorderText = displayValue;
 	} else {
@@ -369,7 +369,7 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 		<div className={styles.popout} data-flx="input.keybind-recorder.keybind-editor-popout.popout">
 			<div className={styles.popoutHeader} data-flx="input.keybind-recorder.keybind-editor-popout.popout-header">
 				<span className={styles.popoutTitle} data-flx="input.keybind-recorder.keybind-editor-popout.popout-title">
-					<Trans>Edit shortcut</Trans>
+					<Trans>Edit keybind</Trans>
 				</span>
 				<span className={styles.popoutHint} data-flx="input.keybind-recorder.keybind-editor-popout.popout-hint">
 					<Trans>Press a key, mouse button, or gamepad button to bind. Escape cancels.</Trans>

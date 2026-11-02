@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
-import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import Users from '@app/features/user/state/Users';
 import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
-import type {OperatorPassStateResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 
 const STORAGE_KEY = 'PremiumCheckoutReturnIntent';
 const INTENT_TTL_MS = 30 * 60 * 1000;
 
-export type PremiumCheckoutReturnSource = 'plutonium' | 'operator_pass';
-
 interface PremiumCheckoutReturnIntent {
 	id: string;
-	source: PremiumCheckoutReturnSource;
+	source: 'plutonium';
 	userId: string | null;
 	createdAt: number;
 	expiresAt: number;
 	startedComplete: boolean;
-	startedPassCount: number;
 }
 
 function getStorage(): Storage | null {
@@ -37,12 +32,11 @@ function parsePremiumCheckoutReturnIntent(raw: string): PremiumCheckoutReturnInt
 	}
 	if (
 		typeof parsed.id !== 'string' ||
-		(parsed.source !== 'plutonium' && parsed.source !== 'operator_pass') ||
+		parsed.source !== 'plutonium' ||
 		(typeof parsed.userId !== 'string' && parsed.userId !== null) ||
 		typeof parsed.createdAt !== 'number' ||
 		typeof parsed.expiresAt !== 'number' ||
-		typeof parsed.startedComplete !== 'boolean' ||
-		typeof parsed.startedPassCount !== 'number'
+		typeof parsed.startedComplete !== 'boolean'
 	) {
 		return null;
 	}
@@ -53,7 +47,6 @@ function parsePremiumCheckoutReturnIntent(raw: string): PremiumCheckoutReturnInt
 		createdAt: parsed.createdAt,
 		expiresAt: parsed.expiresAt,
 		startedComplete: parsed.startedComplete,
-		startedPassCount: parsed.startedPassCount,
 	};
 }
 
@@ -62,14 +55,6 @@ export function getCurrentPremiumActive(): boolean {
 	if (!currentUser) return false;
 	const premiumState = PremiumState.loadedForUserId === currentUser.id ? PremiumState.state : null;
 	return premiumState?.effective.is_premium ?? currentUser.isPremium();
-}
-
-export function getCurrentOperatorPassCount(): number {
-	return OperatorPassHoldings.count ?? (Users.currentUser?.operatorPassSince != null ? 1 : 0);
-}
-
-function isCheckoutReturnComplete(source: PremiumCheckoutReturnSource, startedPassCount: number): boolean {
-	return source === 'operator_pass' ? getCurrentOperatorPassCount() > startedPassCount : getCurrentPremiumActive();
 }
 
 function readIntent(): PremiumCheckoutReturnIntent | null {
@@ -94,15 +79,11 @@ function readIntent(): PremiumCheckoutReturnIntent | null {
 	}
 }
 
-export function recordPremiumCheckoutReturnIntent(
-	source: PremiumCheckoutReturnSource,
-	options: {passCount?: number} = {},
-): void {
+export function recordPremiumCheckoutReturnIntent(): void {
 	const storage = getStorage();
 	if (!storage) return;
 	const currentUser = Users.currentUser;
-	const startedPassCount = options.passCount ?? getCurrentOperatorPassCount();
-	const startedComplete = source === 'plutonium' && getCurrentPremiumActive();
+	const startedComplete = getCurrentPremiumActive();
 	if (startedComplete) {
 		storage.removeItem(STORAGE_KEY);
 		return;
@@ -110,12 +91,11 @@ export function recordPremiumCheckoutReturnIntent(
 	const now = Date.now();
 	const intent: PremiumCheckoutReturnIntent = {
 		id: generateIntentId(),
-		source,
+		source: 'plutonium',
 		userId: currentUser?.id ?? null,
 		createdAt: now,
 		expiresAt: now + INTENT_TTL_MS,
 		startedComplete,
-		startedPassCount,
 	};
 	storage.setItem(STORAGE_KEY, JSON.stringify(intent));
 }
@@ -133,17 +113,9 @@ export function getPendingPremiumCheckoutReturnIntent(): PremiumCheckoutReturnIn
 
 export function consumeCompletedPremiumCheckoutReturnIntent(): PremiumCheckoutReturnIntent | null {
 	const intent = getPendingPremiumCheckoutReturnIntent();
-	if (!intent || !isCheckoutReturnComplete(intent.source, intent.startedPassCount)) return null;
+	if (!intent || !getCurrentPremiumActive()) return null;
 	clearPremiumCheckoutReturnIntent();
 	return intent;
-}
-
-export function consumeOperatorPassCheckoutReturnIntent(state: OperatorPassStateResponse): boolean {
-	const intent = getPendingPremiumCheckoutReturnIntent();
-	if (intent?.source !== 'operator_pass') return false;
-	if ((state.holder?.count ?? 0) <= intent.startedPassCount) return false;
-	clearPremiumCheckoutReturnIntent();
-	return true;
 }
 
 function clearPremiumCheckoutReturnIntent(): void {

@@ -37,7 +37,7 @@ const SYSTEM_WIDE_NOT_ASSIGNED_DESCRIPTOR = msg({
 	comment: 'Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.',
 });
 const EXTRA_MODIFIERS_DESCRIPTOR = msg({
-	message: 'Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings.',
+	message: 'Holding Shift, Ctrl or Alt blocks this keybind. Add alternates in your system settings.',
 	comment:
 		'Hint under a system-wide hold shortcut such as push-to-talk on Linux. The desktop ignores the key while other modifier keys are held.',
 });

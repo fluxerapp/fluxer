@@ -19,18 +19,18 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 export const SYSTEM_WIDE_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'System-wide shortcuts',
+	message: 'System-wide keybinds',
 	comment: 'Settings subsection title for keyboard and mouse shortcuts that work outside the app.',
 });
 const NOT_SET_UP_DESCRIPTOR = msg({
 	message:
-		'{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys.',
+		'{productName} can ask your desktop to run its keybinds while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys.',
 	comment:
 		'Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.',
 });
 const HYPRLAND_NOT_SET_UP_DESCRIPTOR = msg({
 	message:
-		'{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config.',
+		'{productName} can register its keybinds with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config.',
 	comment:
 		'Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.',
 });
@@ -48,13 +48,13 @@ const RECONNECTING_DESCRIPTOR = msg({
 		'Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.',
 });
 const BOUND_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Your desktop runs these shortcuts even while {productName} is not focused.',
+	message: 'Your desktop runs these keybinds even while {productName} is not focused.',
 	comment:
 		'Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.',
 });
 const HYPRLAND_BOUND_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused.',
+		'{productName} registered its keybinds with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused.',
 	comment:
 		'Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.',
 });
@@ -70,7 +70,7 @@ const KEYS_RESERVED_DIRECT_INPUT_DESCRIPTOR = msg({
 		'Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.',
 });
 const ONE_ACTION_PER_KEY_DESCRIPTOR = msg({
-	message: 'Each key can run only one system-wide shortcut.',
+	message: 'Each key can run only one system-wide keybind.',
 	comment: 'Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.',
 });
 const NOT_ASSIGNED_DESCRIPTOR = msg({
@@ -93,12 +93,12 @@ const GNOME_INSTRUCTIONS_DESCRIPTOR = msg({
 });
 const HYPRLAND_INSTRUCTIONS_DESCRIPTOR = msg({
 	message:
-		'Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want.',
+		'Hyprland has no keybind dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want.',
 	comment:
 		'Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.',
 });
 const HYPRLAND_NO_APP_ID_DESCRIPTOR = msg({
-	message: 'Hyprland has no shortcut dialog. Bind the keys in your Hyprland config.',
+	message: 'Hyprland has no keybind dialog. Bind the keys in your Hyprland config.',
 	comment:
 		'Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.',
 });
@@ -129,7 +129,7 @@ const COPY_CONF_LINES_DESCRIPTOR = msg({
 		'Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.',
 });
 const DECLINED_DESCRIPTOR = msg({
-	message: "Your desktop didn't set up system-wide shortcuts.",
+	message: "Your desktop didn't set up system-wide keybinds.",
 	comment:
 		'Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.',
 });
@@ -139,15 +139,15 @@ const CHECK_AGAIN_DESCRIPTOR = msg({
 		'Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.',
 });
 const UNSUPPORTED_DESCRIPTOR = msg({
-	message: "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused.",
+	message: "This desktop doesn't offer system-wide keybinds. Keybinds still work while {productName} is focused.",
 	comment: 'Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.',
 });
 const ERROR_DESCRIPTOR = msg({
-	message: 'System-wide shortcuts could not be set up.',
+	message: 'System-wide keybinds could not be set up.',
 	comment: 'Linux settings text when setting up system-wide shortcuts failed.',
 });
 const UPDATE_DESCRIPTOR = msg({
-	message: 'Update {productName} to use system-wide shortcuts on Wayland.',
+	message: 'Update {productName} to use system-wide keybinds on Wayland.',
 	comment:
 		'Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.',
 });
@@ -162,22 +162,22 @@ const DIRECT_INPUT_DESCRIPTION_DESCRIPTOR = msg({
 });
 const DIRECT_INPUT_ENABLED_DESKTOP_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead.',
+		'Lets {productName} read your keyboard directly. Turn this off to set up keybinds through your desktop instead.',
 	comment:
 		'Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.',
 });
 const DIRECT_INPUT_UNAVAILABLE_DESCRIPTION_DESCRIPTOR = msg({
-	message: "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead.",
+	message: "{productName} can no longer read your keyboard, so your desktop's keybinds are used instead.",
 	comment:
 		'Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.',
 });
 const DIRECT_INPUT_UNAVAILABLE_X11_DESCRIPTION_DESCRIPTOR = msg({
-	message: '{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead.',
+	message: '{productName} can no longer read your keyboard, so it listens for keybinds through X11 instead.',
 	comment:
 		'Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.',
 });
 const DIRECT_INPUT_UNAVAILABLE_FOCUSED_DESCRIPTION_DESCRIPTOR = msg({
-	message: '{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused.',
+	message: '{productName} can no longer read your keyboard. Keybinds only work while {productName} is focused.',
 	comment:
 		'Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.',
 });
@@ -188,7 +188,7 @@ const DIRECT_INPUT_PUSH_TO_TALK_WARNING_DESCRIPTOR = msg({
 		'Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.',
 });
 const DIRECT_INPUT_ERROR_DESCRIPTOR = msg({
-	message: "Keyboard access couldn't start. Shortcuts only work while {productName} is focused.",
+	message: "Keyboard access couldn't start. Keybinds only work while {productName} is focused.",
 	comment:
 		'Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.',
 });
@@ -212,22 +212,22 @@ const GNOME_HOLD_WARNING_PRIORITY_DESCRIPTOR = msg({
 });
 const GNOME_HOLD_WARNING_GENERIC_DESCRIPTOR = msg({
 	message:
-		'For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active.',
+		'For this keybind, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the keybind can stay active.',
 	comment:
 		'Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.',
 });
 const PTT_NOT_SET_UP_DESCRIPTOR = msg({
-	message: 'Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts.',
+	message: 'Push-to-talk only works while {productName} is focused until you set up system-wide keybinds.',
 	comment: 'Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.',
 });
 const PTT_DECLINED_DESCRIPTOR = msg({
 	message:
-		"Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts.",
+		"Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide keybinds.",
 	comment:
 		'Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.',
 });
 const PTT_UNSUPPORTED_DESCRIPTOR = msg({
-	message: "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused.",
+	message: "This desktop doesn't offer system-wide keybinds. Push-to-talk only works while {productName} is focused.",
 	comment:
 		'Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.',
 });

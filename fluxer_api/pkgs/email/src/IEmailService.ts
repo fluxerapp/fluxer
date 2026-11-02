@@ -22,47 +22,57 @@ interface OperatorPassSaleOpenEmail {
 	unsubscribePageUrl: string;
 }
 
+export type {EmailAttachment};
+
 interface OperatorPassWelcomeEmail {
 	labsInviteUrl: string;
+	labsMember: boolean;
 	invoiceNumber: string | null;
 	deliveredAt: Date;
 	wallName: string | null;
 	passCount: number;
+	certificate: EmailAttachment | null;
 	timeZone?: string | null;
+	visionary: boolean;
 }
 
 interface OperatorPassPurchaseConfirmationEmail {
 	invoiceNumber: string | null;
 	orderDate: Date;
 	quantity: number;
-	amountMinor: number;
-	currency: string;
-	waiverConsentAt: Date | null;
-	countryConsent: boolean;
-	withdrawalDays: number | null;
+	totals: BillingTotals;
+	document: BillingDocumentAttachment | null;
+	business: boolean;
+	consentAt: Date | null;
 	withdrawalEndsOn: string | null;
+	withdrawalCountry: string | null;
 	wallName: string | null;
 	unitAmountMinor: number;
 	paymentMethod: string | null;
-	consentText: string | null;
+	deliveryBoxText: string | null;
+	termsVersion: string;
 	timeZone?: string | null;
 }
 
 interface OperatorPassWithdrawalReceiptEmail {
-	cancellation: boolean;
 	name: string;
 	receivedAt: Date;
 	invoiceNumber: string | null;
 	orderDate: Date;
 	amountMinor: number;
 	currency: string;
+	delivered: boolean;
+	passCount: number;
 	lastPass: boolean;
-	hasDonation: boolean;
-	refundViaDispute: boolean;
+	visionary: boolean;
+	refund: OperatorPassWithdrawalRefund;
+	creditNote: BillingDocumentAttachment | null;
 	timeZone?: string | null;
 }
 
-export type OperatorPassOfferEnd = 'withdrawn' | 'declined' | 'cancelled';
+export type OperatorPassWithdrawalRefund = 'started' | 'dispute' | 'already';
+
+export type OperatorPassOfferEnd = 'withdrawn' | 'declined' | 'cancelled' | 'unavailable';
 
 interface OperatorPassOfferReceivedEmail {
 	senderName: string;
@@ -73,6 +83,7 @@ interface OperatorPassOfferReceivedEmail {
 interface OperatorPassOfferAcceptedEmail {
 	recipientName: string;
 	remainingCount: number;
+	visionary: boolean;
 }
 
 interface OperatorPassOfferEndedEmail {
@@ -80,15 +91,33 @@ interface OperatorPassOfferEndedEmail {
 	ended: OperatorPassOfferEnd;
 }
 
+interface OperatorPassVisionaryNoticeEmail {
+	visionaryDate: Date;
+	labsMember: boolean;
+	turnOnUrl: string;
+}
+
+interface OperatorPassVisionaryTurnedOnEmail {
+	badgeShown: boolean;
+	wallName: string | null;
+	labsMember: boolean;
+	labsInviteUrl: string;
+	termsVersion: string;
+	certificate: EmailAttachment;
+	timeZone?: string | null;
+}
+
 interface OperatorPassRevokedEmail {
-	cause: 'refund' | 'dispute' | 'withdrawal';
+	cause: 'refund' | 'dispute' | 'withdrawal' | 'visionary';
 	lastPass: boolean;
+	visionary: boolean;
 }
 
 interface OperatorPassRemovalNoticeEmail {
 	rule: string;
 	facts: string;
 	replyBy: Date;
+	visionary: boolean;
 }
 
 interface OperatorPassPerksRemovedEmail {
@@ -96,6 +125,8 @@ interface OperatorPassPerksRemovedEmail {
 	rule: string;
 	facts: string;
 	automated: boolean;
+	visionary: boolean;
+	dispute: {id: string; deadline: Date} | null;
 }
 
 interface OperatorPassWallHiddenEmail {
@@ -105,7 +136,7 @@ interface OperatorPassWallHiddenEmail {
 
 interface OperatorPassWallNameReplacedEmail {
 	target: 'name' | 'avatar' | 'both';
-	shown: 'previous' | 'username' | 'operator';
+	shown: 'previous' | 'operator';
 	reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
 	note: string;
 }
@@ -133,6 +164,11 @@ interface PaymentDisputeReviewAlertEmail {
 	reviewUrl: string;
 }
 
+interface BillingSupportAlertEmail {
+	subject: string;
+	text: string;
+}
+
 export interface BillingTax {
 	amountMinor: number;
 	behavior: 'inclusive' | 'exclusive';
@@ -146,16 +182,18 @@ export interface BillingTotals {
 	reverseCharge: boolean;
 }
 
-export interface BillingInvoiceDocument {
-	url: string;
-	linkUntil: Date;
-	pdf: EmailAttachment | null;
+export interface BillingDocumentAttachment {
+	number: string;
+	issuedAt: Date;
+	pdf: EmailAttachment;
 }
 
 export interface PlutoniumPurchaseTerms {
 	renewal: {interval: 'month' | 'year'; amountMinor: number; tax: 'included' | 'added' | 'none'} | null;
 	consentAt: Date | null;
-	withdrawalEndsAt: Date | null;
+	withdrawalEndsOn: string | null;
+	withdrawalRule: 'eu' | 'uk' | 'brazil' | null;
+	withdrawalProRata: boolean;
 	seller: boolean;
 }
 
@@ -166,7 +204,8 @@ interface PlutoniumPaymentReceiptEmail {
 	paidAt: Date;
 	period: {start: Date; end: Date} | null;
 	totals: BillingTotals;
-	invoice: BillingInvoiceDocument | null;
+	document: BillingDocumentAttachment | null;
+	business: boolean;
 	purchase: PlutoniumPurchaseTerms | null;
 	timeZone?: string | null;
 }
@@ -180,19 +219,32 @@ interface PlutoniumRefundReceiptEmail {
 	paidMinor: number;
 	paidAt: Date;
 	currency: string;
-	refundUrl: string | null;
+	creditNote: BillingDocumentAttachment | null;
 	subscriptionEnded?: {requestedAt: Date; reference: string} | null;
+	timeZone?: string | null;
+}
+
+interface PlutoniumWithdrawalReceiptEmail {
+	premiumName: string;
+	name: string;
+	receivedAt: Date;
+	purchasedAt: Date;
+	gift: boolean;
+	amountMinor: number;
+	currency: string;
+	refund: 'started' | 'manual';
+	brazil: boolean;
+	proRata: boolean;
+	reference: string;
 	timeZone?: string | null;
 }
 
 interface PlutoniumPaymentFailedEmail {
 	premiumName: string;
 	reason: BillingPaymentProblem;
-	invoiceNumber: string | null;
 	attemptedAt: Date;
 	amountMinor: number;
 	currency: string;
-	invoiceUrl: string | null;
 	accessEndsAt: Date | null;
 	reminder?: boolean;
 	planChange?: boolean;
@@ -201,11 +253,10 @@ interface PlutoniumPaymentFailedEmail {
 
 interface DonationReceiptEmail {
 	interval: 'month' | 'year';
-	invoiceNumber: string | null;
 	paidAt: Date;
 	period: {start: Date; end: Date} | null;
 	totals: BillingTotals;
-	invoice: BillingInvoiceDocument | null;
+	document: BillingDocumentAttachment | null;
 	manageUrl: string;
 }
 
@@ -214,16 +265,14 @@ interface DonationRefundReceiptEmail {
 	refundedAt: Date;
 	amountMinor: number;
 	currency: string;
-	refundUrl: string | null;
+	creditNote: BillingDocumentAttachment | null;
 }
 
 interface DonationPaymentFailedEmail {
 	reason: BillingPaymentProblem;
-	invoiceNumber: string | null;
 	attemptedAt: Date;
 	amountMinor: number;
 	currency: string;
-	invoiceUrl: string | null;
 	manageUrl: string;
 	reminder?: boolean;
 }
@@ -283,7 +332,6 @@ interface CancellationConfirmation {
 	receivedAt: Date;
 	endsAt: Date;
 	reference: string;
-	unpaid: BillingTotals | null;
 	seller: boolean;
 	timeZone?: string | null;
 }
@@ -291,6 +339,7 @@ interface CancellationConfirmation {
 interface PlutoniumCancellationConfirmationEmail extends CancellationConfirmation {
 	premiumName: string;
 	plan: BillingRecurringPlan;
+	unpaid: BillingTotals | null;
 }
 
 interface DonationCancellationConfirmationEmail extends CancellationConfirmation {
@@ -301,11 +350,9 @@ export type BillingEndedInvoiceStatus = 'void' | 'uncollectible' | 'open' | 'pai
 
 interface PlutoniumEndedUnpaidEmail {
 	premiumName: string;
-	invoiceNumber: string | null;
 	invoiceStatus: BillingEndedInvoiceStatus;
 	amountMinor: number;
 	currency: string;
-	invoiceUrl: string | null;
 	seller: boolean;
 }
 
@@ -320,15 +367,6 @@ interface PlutoniumGiftAppliedEmail {
 	timeZone?: string | null;
 }
 
-interface BillingCreditNoteEmail {
-	amountMinor: number;
-	currency: string;
-	invoiceNumber: string | null;
-	pdfUrl: string | null;
-	upcomingInvoice: boolean;
-	seller: boolean;
-}
-
 interface GiftChargebackNotificationEmail {
 	billingResumed?: {premiumName: string; plan: BillingRecurringPlan} | null;
 }
@@ -340,15 +378,7 @@ interface DonationConfirmationEmail {
 	manageUrl: string;
 	paidAt?: Date | null;
 	reference?: string | null;
-	receiptUrl?: string | null;
-}
-
-interface OperatorPassInvoiceEmail {
-	invoiceNumber: string | null;
-	paidAt: Date;
-	totals: BillingTotals;
-	invoice: BillingInvoiceDocument;
-	timeZone?: string | null;
+	document?: BillingDocumentAttachment | null;
 }
 
 interface OperatorPassRefundReceiptEmail {
@@ -357,15 +387,19 @@ interface OperatorPassRefundReceiptEmail {
 	refundedAt: Date;
 	amountMinor: number;
 	currency: string;
-	full: boolean;
+	delivered: boolean;
+	passCount: number;
+	lastPass: boolean;
+	visionary: boolean;
+	creditNote: BillingDocumentAttachment | null;
 	timeZone?: string | null;
 }
 
 export interface IBulkEmailSession {
-	send(
-		templateKey: 'operator_pass_sale_open',
+	send<K extends 'operator_pass_sale_open' | 'operator_pass_visionary_notice'>(
+		templateKey: K,
 		email: string,
-		params: OperatorPassSaleOpenEmail,
+		params: EmailSendParams[K],
 		locale?: string | null,
 	): Promise<boolean>;
 	close(): Promise<void>;
@@ -414,19 +448,23 @@ export interface EmailSendParams {
 	operator_pass_purchase_confirmation: OperatorPassPurchaseConfirmationEmail;
 	operator_pass_withdrawal_receipt: OperatorPassWithdrawalReceiptEmail;
 	operator_pass_refund_receipt: OperatorPassRefundReceiptEmail;
-	operator_pass_invoice: OperatorPassInvoiceEmail;
 	operator_pass_offer_received: OperatorPassOfferReceivedEmail;
 	operator_pass_offer_accepted: OperatorPassOfferAcceptedEmail;
 	operator_pass_offer_ended: OperatorPassOfferEndedEmail;
 	operator_pass_revoked: OperatorPassRevokedEmail;
+	operator_pass_visionary_notice: OperatorPassVisionaryNoticeEmail;
+	operator_pass_visionary_turned_on: OperatorPassVisionaryTurnedOnEmail;
+	operator_pass_purchase_refused: {creditNote: BillingDocumentAttachment | null};
 	operator_pass_removal_notice: OperatorPassRemovalNoticeEmail;
 	operator_pass_wall_hidden: OperatorPassWallHiddenEmail;
 	operator_pass_wall_name_replaced: OperatorPassWallNameReplacedEmail;
 	operator_pass_perks_removed: OperatorPassPerksRemovedEmail;
 	payment_dispute_warning: PaymentDisputeWarningEmail;
 	payment_dispute_review_alert: PaymentDisputeReviewAlertEmail;
+	billing_support_alert: BillingSupportAlertEmail;
 	plutonium_payment_receipt: PlutoniumPaymentReceiptEmail;
 	plutonium_refund_receipt: PlutoniumRefundReceiptEmail;
+	plutonium_withdrawal_receipt: PlutoniumWithdrawalReceiptEmail;
 	plutonium_payment_failed: PlutoniumPaymentFailedEmail;
 	plutonium_renewal_notice: PlutoniumRenewalNoticeEmail;
 	donation_renewal_notice: DonationRenewalNoticeEmail;
@@ -436,7 +474,6 @@ export interface EmailSendParams {
 	donation_cancellation_confirmation: DonationCancellationConfirmationEmail;
 	plutonium_ended_unpaid: PlutoniumEndedUnpaidEmail;
 	plutonium_gift_applied: PlutoniumGiftAppliedEmail;
-	billing_credit_note: BillingCreditNoteEmail;
 	operator_pass_waitlist_verification: OperatorPassWaitlistVerificationEmail;
 	operator_pass_sale_open: OperatorPassSaleOpenEmail;
 }

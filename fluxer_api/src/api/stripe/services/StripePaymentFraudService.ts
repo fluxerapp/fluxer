@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import type {UserID} from '@app/api/BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
-import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
-import type {User} from '@app/api/models/User';
 import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -26,7 +23,6 @@ type RadarValueListItemType = RadarValueListCreateParams['item_type'];
 interface StripePaymentFraudServiceDeps {
 	stripe: Stripe | null;
 	userRepository: UserRepository;
-	gatewayService: IGatewayService;
 	donationRepository: DonationRepository;
 	cacheService: ICacheService;
 	auditService: AdminAuditService;
@@ -141,6 +137,9 @@ export class StripePaymentFraudService {
 			);
 			return;
 		}
+		if (userTarget.kind === 'direct_purchase' && paymentIntentId) {
+			await this.cancelSubscriptionPaidByIntent(paymentIntentId, userTarget.userId);
+		}
 		await this.limitPurchasesForFraudSignal({
 			userId: userTarget.userId,
 			source: 'early_fraud_warning',
@@ -190,12 +189,8 @@ export class StripePaymentFraudService {
 				if (!user) {
 					throw new StripeError('User not found for payment fraud action');
 				}
-				const cancelledUser = await this.cancelStripeSubscriptionImmediately(user);
 				const auditReason = this.getAuditReason(fraudType);
-				const metadata = new Map<string, string>([
-					['source', source],
-					['subscription_cancelled', cancelledUser ? 'true' : 'false'],
-				]);
+				const metadata = new Map<string, string>([['source', source]]);
 				if (chargeId) {
 					metadata.set('charge_id', chargeId);
 				}
@@ -212,7 +207,7 @@ export class StripePaymentFraudService {
 					metadata.set(key, value);
 				}
 				const decision = await this.deps.enforcement.recordAutomatedPurchaseLimit({
-					subject: cancelledUser ?? user,
+					subject: user,
 					reasonCode: DeletionReasons.PAYMENT_FRAUD,
 					paymentAt,
 					internalNote: [auditReason, ...[...metadata].map(([key, value]) => `${key}: ${value}`)].join('\n'),
@@ -251,6 +246,17 @@ export class StripePaymentFraudService {
 					paymentIntentId,
 					paymentAt: operatorPassPurchase.purchased_at ?? operatorPassPurchase.created_at,
 					userId: operatorPassPurchase.purchaser_id,
+				};
+			}
+			const purchaserId =
+				charge.metadata?.operator_pass === 'true' ? charge.metadata.operator_pass_purchaser_id : undefined;
+			if (purchaserId && /^\d+$/.test(purchaserId)) {
+				return {
+					customerId,
+					kind: 'operator_pass_purchase',
+					paymentIntentId,
+					paymentAt: chargeTime(charge),
+					userId: createUserID(BigInt(purchaserId)),
 				};
 			}
 			const giftCode = await this.deps.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);
@@ -461,40 +467,42 @@ export class StripePaymentFraudService {
 		);
 	}
 
-	private async cancelStripeSubscriptionImmediately(user: User): Promise<User | null> {
-		if (!user.stripeSubscriptionId) {
-			return null;
-		}
-		try {
-			await this.getStripe().subscriptions.cancel(
-				user.stripeSubscriptionId,
-				{invoice_now: false, prorate: false},
-				{idempotencyKey: `payment-fraud-cancel:${user.stripeSubscriptionId}`},
-			);
-		} catch (error: unknown) {
-			if (!isMissingOrCancelledSubscriptionError(error)) {
-				Logger.error(
-					{error, subscriptionId: user.stripeSubscriptionId, userId: user.id},
-					'Failed to cancel Stripe subscription during payment fraud enforcement',
+	private async cancelSubscriptionPaidByIntent(paymentIntentId: string, userId: UserID): Promise<void> {
+		const stripe = this.getStripe();
+		const payments = await stripe.invoicePayments.list({
+			payment: {type: 'payment_intent', payment_intent: paymentIntentId},
+			expand: ['data.invoice'],
+			limit: 10,
+		});
+		for (const payment of payments.data) {
+			const invoice = typeof payment.invoice === 'string' ? null : payment.invoice;
+			const subscriptionId =
+				invoice && !('deleted' in invoice && invoice.deleted)
+					? extractId((invoice as Stripe.Invoice).parent?.subscription_details?.subscription ?? null)
+					: null;
+			if (!subscriptionId) continue;
+			try {
+				const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+				if (extractId(subscription.latest_invoice) !== invoice?.id) {
+					Logger.info(
+						{paymentIntentId, subscriptionId, userId},
+						'Flagged payment did not pay for the current subscription period; leaving the subscription running',
+					);
+					continue;
+				}
+				await stripe.subscriptions.cancel(
+					subscriptionId,
+					{invoice_now: false, prorate: false},
+					{idempotencyKey: `payment-fraud-cancel:${subscriptionId}`},
 				);
-				throw error;
+				Logger.info(
+					{paymentIntentId, subscriptionId, userId},
+					'Cancelled the subscription paid by a payment with an early fraud warning',
+				);
+			} catch (error: unknown) {
+				if (!isMissingOrCancelledSubscriptionError(error)) throw error;
 			}
-			Logger.warn(
-				{subscriptionId: user.stripeSubscriptionId, userId: user.id},
-				'Stripe subscription was already unavailable during payment fraud enforcement; clearing local state',
-			);
 		}
-		const updatedUser = await this.deps.userRepository.patchUpsert(
-			user.id,
-			{
-				premium_billing_cycle: null,
-				premium_will_cancel: false,
-				stripe_subscription_id: null,
-			},
-			user.toRow(),
-		);
-		await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
-		return updatedUser;
 	}
 
 	private getAuditReason(fraudType: string | null): string {
