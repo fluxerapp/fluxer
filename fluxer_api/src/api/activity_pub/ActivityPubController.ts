@@ -22,7 +22,7 @@ export function ActivityPubController(app: HonoApp) {
 		if (publicKeyPem === null) {
 			return AppNotFoundHandler(ctx);
 		}
-		return ctx.body(JSON.stringify(buildActivityPubActor(Config.endpoints.apiPublic, publicKeyPem)), 200, {
+		return ctx.body(JSON.stringify(buildActivityPubActor(Config.endpoints.apiPublicDiscovery, publicKeyPem)), 200, {
 			'Content-Type': ACTIVITY_PUB_CONTENT_TYPE,
 			'Cache-Control': DOCUMENT_CACHE_CONTROL,
 		});
@@ -31,7 +31,7 @@ export function ActivityPubController(app: HonoApp) {
 		if ((await getUnfurlerService().activityPubPublicKey()) === null) {
 			return AppNotFoundHandler(ctx);
 		}
-		return ctx.body(JSON.stringify(buildActivityPubOutbox(Config.endpoints.apiPublic)), 200, {
+		return ctx.body(JSON.stringify(buildActivityPubOutbox(Config.endpoints.apiPublicDiscovery)), 200, {
 			'Content-Type': ACTIVITY_PUB_CONTENT_TYPE,
 		});
 	});
@@ -45,7 +45,7 @@ export function ActivityPubController(app: HonoApp) {
 		if ((await getUnfurlerService().activityPubPublicKey()) === null) {
 			return AppNotFoundHandler(ctx);
 		}
-		const document = buildWebFinger(Config.endpoints.apiPublic, ctx.req.query('resource'));
+		const document = buildWebFinger(Config.endpoints.apiPublicDiscovery, ctx.req.query('resource'));
 		if (document === null) {
 			return AppNotFoundHandler(ctx);
 		}

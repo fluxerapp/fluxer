@@ -48,6 +48,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	routes.use(PeerAddressMiddleware);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
+	routes.use('/.well-known/webfinger', cors({origins: '*'}));
 	routes.use(
 		'/.well-known/fluxer',
 		cors({
