@@ -15,7 +15,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useState} from 'react';
 
-const AUTOPLAY_MS = 6000;
+const AUTOPLAY_MS = 3500;
 
 const SHOWCASE_LABEL_DESCRIPTOR = msg({
 	message: 'What comes with the {operatorPassName}',
