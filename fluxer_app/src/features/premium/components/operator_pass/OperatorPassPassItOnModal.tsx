@@ -10,7 +10,6 @@ import {
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import {SEARCH_FRIENDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
-import styles from '@app/features/premium/components/operator_pass/OperatorPassPassItOnModal.module.css';
 import {OPERATOR_PASS_RECOGNITION_DESCRIPTOR} from '@app/features/premium/utils/OperatorPassRecognitionMessages';
 import {
 	getOperatorPassErrorCode,
@@ -168,7 +167,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 							ToastCommands.success(
 								i18n._(OFFER_SENT_DESCRIPTOR, {name: getOperatorPassOfferUserName(offer.recipient) || name}),
 							);
-							ModalCommands.popByType(OperatorPassPassItOnModal);
+							ModalCommands.popWithKey(PASS_IT_ON_MODAL_KEY);
 						} catch (error) {
 							if (
 								!lastPass &&
@@ -190,7 +189,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 		<Modal.Root
 			size="small"
 			centered
-			className={styles.root}
+			className={selectorStyles.selectorRoot}
 			data-flx="premium.operator-pass-pass-it-on-modal.modal-root"
 		>
 			<Modal.Header
@@ -241,8 +240,10 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 	);
 });
 
+const PASS_IT_ON_MODAL_KEY = 'operator-pass-pass-it-on';
+
 export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, onlyPass: boolean): void {
-	ModalCommands.push(
+	ModalCommands.pushWithKey(
 		modal(() => (
 			<OperatorPassPassItOnModal
 				pass={pass}
@@ -250,5 +251,6 @@ export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, on
 				data-flx="premium.operator-pass-pass-it-on-modal.open"
 			/>
 		)),
+		PASS_IT_ON_MODAL_KEY,
 	);
 }
