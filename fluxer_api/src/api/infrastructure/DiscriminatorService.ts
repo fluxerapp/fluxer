@@ -19,6 +19,7 @@ interface GenerateDiscriminatorParams {
 	username: string;
 	requestedDiscriminator?: number;
 	user?: User | null;
+	adminOverride?: boolean;
 }
 
 interface GenerateDiscriminatorResult {
@@ -76,7 +77,7 @@ export class DiscriminatorService {
 	}
 
 	async generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult> {
-		const {username, requestedDiscriminator, user} = params;
+		const {username, requestedDiscriminator, user, adminOverride} = params;
 		const usernameLower = username.toLowerCase();
 		const lockKey = `discrim-lock:${usernameLower}`;
 		const lockToken = await this.acquireLockWithRetry(lockKey);
@@ -84,7 +85,7 @@ export class DiscriminatorService {
 			return {discriminator: -1, available: false};
 		}
 		try {
-			const allowCustomDiscriminator = await this.canUseCustomDiscriminator(user);
+			const allowCustomDiscriminator = adminOverride === true || (await this.canUseCustomDiscriminator(user));
 			if (allowCustomDiscriminator && requestedDiscriminator !== undefined) {
 				const isAvailable = await this.isDiscriminatorAvailable(usernameLower, requestedDiscriminator);
 				if (isAvailable) {
