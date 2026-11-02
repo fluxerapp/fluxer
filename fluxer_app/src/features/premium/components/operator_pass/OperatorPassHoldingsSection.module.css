@@ -31,7 +31,7 @@
 .item {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	gap: 0.75rem;
 	padding: 0.625rem 0.75rem;
@@ -101,4 +101,20 @@
 	display: inline-flex;
 	flex-wrap: wrap;
 	column-gap: 0.75rem;
+}
+
+.pages {
+	display: grid;
+	grid-template-columns: minmax(0, max-content) repeat(3, max-content);
+	column-gap: 0.75rem;
+	row-gap: 0.125rem;
+	margin-block-start: 0.25rem;
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	overflow-wrap: anywhere;
+}
+
+.pages > .linkGroup {
+	display: contents;
 }

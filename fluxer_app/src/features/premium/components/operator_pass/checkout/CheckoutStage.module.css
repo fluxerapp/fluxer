@@ -86,34 +86,10 @@
 	gap: 0.5rem;
 }
 
-.pulse {
-	width: 0.625rem;
-	height: 0.625rem;
-	border-radius: 50%;
-	background-color: var(--brand-primary);
-	animation: pulse 1.6s ease-in-out infinite;
-}
-
 .waitingRow {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-}
-
-@keyframes pulse {
-	0%,
-	100% {
-		opacity: 0.35;
-		transform: scale(0.85);
-	}
-	50% {
-		opacity: 1;
-		transform: scale(1);
-	}
-}
-
-:global(html.reduced-motion) .pulse {
-	animation: none;
 }
 
 .srOnly {
