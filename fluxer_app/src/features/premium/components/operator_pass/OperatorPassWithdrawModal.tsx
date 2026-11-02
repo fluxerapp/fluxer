@@ -264,7 +264,7 @@ const OperatorPassWithdrawModal = observer(function OperatorPassWithdrawModal({
 				target.onWithdrawn();
 			}
 			ToastCommands.success(i18n._(WITHDRAWN_TOAST_DESCRIPTOR));
-			ModalCommands.popByType(OperatorPassWithdrawModal);
+			ModalCommands.popWithKey(WITHDRAW_MODAL_KEY);
 		} catch (error) {
 			logger.error('Operator Pass withdrawal failed', error);
 			const unavailable =
@@ -419,8 +419,11 @@ const OperatorPassWithdrawModal = observer(function OperatorPassWithdrawModal({
 	);
 });
 
+const WITHDRAW_MODAL_KEY = 'operator-pass-withdraw';
+
 export function openOperatorPassWithdrawModal(target: OperatorPassWithdrawTarget): void {
-	ModalCommands.push(
+	ModalCommands.pushWithKey(
 		modal(() => <OperatorPassWithdrawModal target={target} data-flx="premium.operator-pass-withdraw-modal.open" />),
+		WITHDRAW_MODAL_KEY,
 	);
 }

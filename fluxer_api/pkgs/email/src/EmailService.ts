@@ -968,7 +968,7 @@ export class EmailService implements IEmailService {
 			);
 		},
 		operator_pass_offer_received: async (email, params, locale) => {
-			const appUrl = `${this.config.appBaseUrl}/channels/@operator-pass`;
+			const appUrl = `${this.config.appBaseUrl}/channels/@operator-pass?view=passes`;
 			return this.sendTemplatedEmail(
 				email,
 				'operator_pass_offer_received',

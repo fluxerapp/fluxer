@@ -167,7 +167,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 							ToastCommands.success(
 								i18n._(OFFER_SENT_DESCRIPTOR, {name: getOperatorPassOfferUserName(offer.recipient) || name}),
 							);
-							ModalCommands.popByType(OperatorPassPassItOnModal);
+							ModalCommands.popWithKey(PASS_IT_ON_MODAL_KEY);
 						} catch (error) {
 							if (
 								!lastPass &&
@@ -240,8 +240,10 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 	);
 });
 
+const PASS_IT_ON_MODAL_KEY = 'operator-pass-pass-it-on';
+
 export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, onlyPass: boolean): void {
-	ModalCommands.push(
+	ModalCommands.pushWithKey(
 		modal(() => (
 			<OperatorPassPassItOnModal
 				pass={pass}
@@ -249,5 +251,6 @@ export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, on
 				data-flx="premium.operator-pass-pass-it-on-modal.open"
 			/>
 		)),
+		PASS_IT_ON_MODAL_KEY,
 	);
 }

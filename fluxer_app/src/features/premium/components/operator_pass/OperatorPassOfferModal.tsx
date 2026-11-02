@@ -211,7 +211,7 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 					? i18n._(ARRIVED_DESCRIPTOR)
 					: i18n._(ACCEPTED_DESCRIPTOR, {date: formatOperatorPassUnlockDay(result.arrives_at)}),
 			);
-			ModalCommands.popByType(OperatorPassOfferModal);
+			ModalCommands.popWithKey(`${OFFER_MODAL_KEY_PREFIX}${offerId}`);
 		} catch (error) {
 			handleError(error);
 		} finally {
@@ -225,7 +225,7 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 		try {
 			await OperatorPassCommands.declineOffer(offer.id);
 			ToastCommands.success(i18n._(DECLINED_DESCRIPTOR));
-			ModalCommands.popByType(OperatorPassOfferModal);
+			ModalCommands.popWithKey(`${OFFER_MODAL_KEY_PREFIX}${offerId}`);
 		} catch (error) {
 			handleError(error);
 		} finally {
