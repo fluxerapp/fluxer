@@ -416,7 +416,6 @@ export class UserAccountRequestService {
 			environment: badgeEnvironment,
 			restricted: restrictProfile,
 			profileHidden: hidden,
-			viewerIsSelf,
 		};
 		const profileBadges = buildProfileBadges(badgeInput);
 		const hiddenProfileBadgeCount = viewerIsSelf

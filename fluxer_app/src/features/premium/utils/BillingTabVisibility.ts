@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isOperatorPassBenefitsRemoved} from '@app/features/premium/utils/OperatorPassPassRows';
 import {getSubscriptionStatus} from '@app/features/premium/utils/SubscriptionStatus';
 import type {User} from '@app/features/user/models/User';
 import type {OperatorPassPassesResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
@@ -37,4 +38,18 @@ export function holdsOperatorPass(
 		holdings.visionary?.state === 'available' ||
 		holdings.visionary?.state === 'ended'
 	);
+}
+
+export function showsOperatorPassWallSettings(
+	user: Pick<User, 'operatorPassSince'> | null,
+	holdings: OperatorPassPassesResponse | null,
+): boolean {
+	return user?.operatorPassSince != null || (holdings != null && isOperatorPassBenefitsRemoved(holdings));
+}
+
+export function showsOperatorPassLabsSettings(
+	user: Pick<User, 'operatorPassSince'> | null,
+	holdings: OperatorPassPassesResponse | null,
+): boolean {
+	return holdings?.labs != null && user?.operatorPassSince != null;
 }
