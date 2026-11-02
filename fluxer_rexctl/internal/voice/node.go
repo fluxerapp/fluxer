@@ -443,11 +443,23 @@ func ConnectSrcAllows(policies []string, origin string) bool {
 				continue
 			}
 			for _, source := range fields[1:] {
-				if strings.TrimRight(source, "/") == origin {
+				if SourceCovers(strings.TrimRight(source, "/"), origin) {
 					return true
 				}
 			}
 		}
 	}
 	return false
+}
+
+func SourceCovers(source, origin string) bool {
+	if source == origin {
+		return true
+	}
+	scheme, suffix, ok := strings.Cut(source, "://*.")
+	if !ok {
+		return false
+	}
+	host, found := strings.CutPrefix(origin, scheme+"://")
+	return found && strings.HasSuffix(host, "."+suffix)
 }
