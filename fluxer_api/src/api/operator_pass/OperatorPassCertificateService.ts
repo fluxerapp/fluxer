@@ -4,7 +4,6 @@ import {createHash, randomBytes} from 'node:crypto';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {OperatorPassCertificateRow, OperatorPassPurchaseRow} from '@app/api/database/types/OperatorPassTypes';
 import {Logger} from '@app/api/Logger';
-import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {
 	isAcceptableOperatorPassCertificateName,
 	normalizeOperatorPassCertificateName,
@@ -67,8 +66,7 @@ export async function validateOperatorPassCertificateName(name: string, index?: 
 	const normalized = normalizeOperatorPassCertificateName(name);
 	if (
 		!isAcceptableOperatorPassCertificateName(normalized) ||
-		!(await canPrintOperatorPassCertificateName(normalized)) ||
-		profileSubstringBlocklistCache.containsBannedSubstring('global_name', normalized)
+		!(await canPrintOperatorPassCertificateName(normalized))
 	) {
 		throw new OperatorPassCertificateNameRejectedError(index);
 	}

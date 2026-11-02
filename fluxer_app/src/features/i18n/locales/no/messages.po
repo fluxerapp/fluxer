@@ -14371,16 +14371,6 @@ msgstr "Hver årlige liste over Operators som vi publiserer, havner i merknadene
 msgid "Early access to new features"
 msgstr "Tidlig tilgang til nye funksjoner"
 
-#. Note under the early bird Operator Pass price, saying the last day of the early bird price and the price after it. {date} is a date such as January 1, 2027, and {standardPrice} is the price with currency for the same number of passes after that date.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "Early bird price until {date}, then {standardPrice}."
-msgstr "Tidligpris til og med {date}, deretter {standardPrice}."
-
-#. Note under the early bird Operator Pass price, saying the last day of the early bird price. {date} is a date such as January 1, 2027.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "Early bird price until {date}."
-msgstr "Tidligpris til og med {date}."
-
 #. Heading of a slide in the Operator Pass checkout dialog about being invited to try new features before they are released. Plain, no hype. No trailing punctuation.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
 msgid "Early feature testing"
@@ -37479,6 +37469,16 @@ msgstr "Denne enheten eller sikkerhetsnøkkelen har allerede en passnøkkel for 
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "Dette ser ikke ut som et gyldig svar med maldata. Sørg for at du kopierte hele JSON-dokumentet."
+
+#. Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
+msgid "This early bird price is for purchases until {date}."
+msgstr "Denne tidligprisen gjelder for kjøp til og med {date}."
+
+#. Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
+msgid "This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}."
+msgstr "Denne tidligprisen gjelder for kjøp til og med {date}. Et pass som kjøpes etter det, koster {standardPrice}."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
