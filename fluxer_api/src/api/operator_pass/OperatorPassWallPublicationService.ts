@@ -66,11 +66,16 @@ export class OperatorPassWallPublicationService {
 	private async buildPublicEntry(
 		entry: OperatorPassWallEntryRow,
 		now: Date = operatorPassNow(),
+		{includePreview = false}: {includePreview?: boolean} = {},
 	): Promise<OperatorPassWallBlobEntry | null> {
-		return (await this.buildRankedEntry(entry, now))?.entry ?? null;
+		return (await this.buildRankedEntry(entry, now, {includePreview}))?.entry ?? null;
 	}
 
-	private async buildRankedEntry(entry: OperatorPassWallEntryRow, now: Date): Promise<RankedWallEntry | null> {
+	private async buildRankedEntry(
+		entry: OperatorPassWallEntryRow,
+		now: Date,
+		{includePreview = false}: {includePreview?: boolean} = {},
+	): Promise<RankedWallEntry | null> {
 		if (!isOperatorPassWallListed(entry) || entry.hidden) {
 			return null;
 		}
@@ -82,7 +87,7 @@ export class OperatorPassWallPublicationService {
 			return null;
 		}
 		const holder = resolveOperatorPassHolder(state, now);
-		if (!holder || (await this.holdsOnlyPreviewPassesBeforeSale(entry.user_id, now))) {
+		if (!holder || (!includePreview && (await this.holdsOnlyPreviewPassesBeforeSale(entry.user_id, now)))) {
 			return null;
 		}
 		return {
@@ -302,7 +307,10 @@ export class OperatorPassWallPublicationService {
 	async isAvatarServed(sha256: string): Promise<boolean> {
 		for (const userId of await this.repository.listWallAvatarRefs(sha256)) {
 			const entry = await this.repository.findWallEntry(userId);
-			if (entry?.live_avatar === sha256 && (await this.buildPublicEntry(entry)) !== null) {
+			if (
+				entry?.live_avatar === sha256 &&
+				(await this.buildPublicEntry(entry, operatorPassNow(), {includePreview: true})) !== null
+			) {
 				return true;
 			}
 		}
@@ -332,7 +340,7 @@ export class OperatorPassWallPublicationService {
 	}
 
 	async publishAvatarIfServed(entry: OperatorPassWallEntryRow): Promise<void> {
-		if (entry.live_avatar && (await this.buildPublicEntry(entry)) !== null) {
+		if (entry.live_avatar && (await this.buildPublicEntry(entry, operatorPassNow(), {includePreview: true})) !== null) {
 			await getOperatorPassWallInfrastructure().avatarStore.publish(entry.live_avatar);
 		}
 	}

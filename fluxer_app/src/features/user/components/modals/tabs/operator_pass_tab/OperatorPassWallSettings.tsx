@@ -158,18 +158,15 @@ function WallRow({
 }) {
 	return (
 		<div className={styles.row} data-flx={`user.operator-pass-tab.operator-pass-wall-settings.${flx}`}>
-			<span className={styles.rowLabel} data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-label">
-				{label}
-			</span>
-			<div className={styles.rowEntry} data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-entry">
-				{avatarUrl && (
-					<img
-						src={avatarUrl}
-						alt=""
-						className={styles.rowAvatar}
-						data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-avatar"
-					/>
-				)}
+			{avatarUrl && (
+				<img
+					src={avatarUrl}
+					alt=""
+					className={styles.rowAvatar}
+					data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-avatar"
+				/>
+			)}
+			<div className={styles.rowText} data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-entry">
 				<span
 					className={styles.rowName}
 					dir="auto"
@@ -177,14 +174,17 @@ function WallRow({
 				>
 					{name}
 				</span>
-				{trailing && (
-					<span
-						className={styles.rowTrailing}
-						data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-trailing"
-					>
-						{trailing}
-					</span>
-				)}
+				<span className={styles.rowMeta} data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-label">
+					{label}
+					{trailing && (
+						<>
+							<span aria-hidden="true" data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-separator">
+								{' · '}
+							</span>
+							<span data-flx="user.operator-pass-tab.operator-pass-wall-settings.row-trailing">{trailing}</span>
+						</>
+					)}
+				</span>
 			</div>
 		</div>
 	);
