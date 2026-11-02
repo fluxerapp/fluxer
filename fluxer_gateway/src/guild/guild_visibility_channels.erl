@@ -302,12 +302,9 @@ maybe_grant_virtual_access(UserId, ChannelId, State) ->
 add_created_channel_to_sessions(Channel, State) ->
     case channel_id(Channel) of
         ChannelId when is_integer(ChannelId) ->
-            Added = [Id || Id <- [ChannelId, channel_parent_id(Channel)], is_integer(Id)],
             {Sessions, _Visible} = maps:fold(
                 fun(SessionId, SessionData, {Acc, Memo}) ->
-                    add_created_channel(SessionId, SessionData, ChannelId, Added, State, {
-                        Acc, Memo
-                    })
+                    add_created_channel(SessionId, SessionData, ChannelId, State, {Acc, Memo})
                 end,
                 {maps:get(sessions, State, #{}), #{}},
                 maps:get(sessions, State, #{})
@@ -318,13 +315,12 @@ add_created_channel_to_sessions(Channel, State) ->
     end.
 
 -spec add_created_channel(
-    binary(), map(), channel_id(), [channel_id()], guild_state(), {map(), map()}
+    binary(), map(), channel_id(), guild_state(), {map(), map()}
 ) -> {map(), map()}.
 add_created_channel(
     SessionId,
     #{user_id := UserId, viewable_channels := Viewable} = SessionData,
     ChannelId,
-    Added,
     State,
     {Sessions, Memo}
 ) when is_integer(UserId), is_map(Viewable) ->
@@ -343,12 +339,14 @@ add_created_channel(
         end,
     case CanView of
         true ->
-            NewViewable = maps:merge(Viewable, maps:from_keys(Added, true)),
+            NewViewable = guild_visibility_roles:maybe_ensure_parent_category_visible(
+                ChannelId, Viewable#{ChannelId => true}, State, SessionData, maps:get(id, State)
+            ),
             {Sessions#{SessionId => SessionData#{viewable_channels => NewViewable}}, Memo1};
         false ->
             {Sessions, Memo1}
     end;
-add_created_channel(_SessionId, _SessionData, _ChannelId, _Added, _State, Acc) ->
+add_created_channel(_SessionId, _SessionData, _ChannelId, _State, Acc) ->
     Acc.
 
 -spec update_viewable_map_for_channel(map(), channel_id(), boolean()) -> map().
