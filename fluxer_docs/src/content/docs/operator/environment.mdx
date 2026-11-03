@@ -1152,6 +1152,10 @@ How long a client may take over a whole request to the API, in milliseconds from
 
 How many requests the API handles at once before it responds to new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`. With rexctl, use `rexctl config set FLUXER_API_MAX_INFLIGHT_REQUESTS`.
 
+### `FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS`
+
+How many attachment files sent as multipart form data the API streams to the object store at once, from 1 to 10000. Each one can use up to about 25 MiB of memory. A file that waits more than 10 seconds for a turn gets 503 with a Retry-After header. When it's empty, the API uses `16`. With rexctl, use `rexctl config set FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS`.
+
 ### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
 Whether Fluxer trusts the client address in the `FLUXER_CLIENT_IP_HEADER_NAME` header. Use `true` or `false`. The api, worker, admin and gateway services and the push relay use it. With `false`, they use the address of the connection, which behind the edge is the edge itself. Outside Docker Compose, the services use `false` when it's empty. The default is `true`. With rexctl, use `rexctl config set FLUXER_TRUST_CLIENT_IP_HEADER`.

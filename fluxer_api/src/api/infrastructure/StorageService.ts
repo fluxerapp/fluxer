@@ -37,6 +37,8 @@ import {temporaryFile} from 'tempy';
 
 const STREAM_UPLOAD_PART_BYTES = 8 * 1024 * 1024;
 const STREAM_UPLOAD_CONCURRENCY = 4;
+const READABLE_UPLOAD_PART_BYTES = 5 * 1024 * 1024;
+const READABLE_UPLOAD_QUEUE_SIZE = 1;
 
 interface PooledS3Options {
 	endpoint: string;
@@ -223,8 +225,8 @@ export class StorageService implements IStorageService {
 				ContentType: contentType,
 				Expires: expiresAt,
 			},
-			partSize: STREAM_UPLOAD_PART_BYTES,
-			queueSize: STREAM_UPLOAD_CONCURRENCY,
+			partSize: READABLE_UPLOAD_PART_BYTES,
+			queueSize: READABLE_UPLOAD_QUEUE_SIZE,
 			leavePartsOnError: false,
 		});
 		await upload.done();
