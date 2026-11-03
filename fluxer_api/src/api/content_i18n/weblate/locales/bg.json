@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "общ",
 	"guild.default_channel_voice": "Общ",
 	"operator_pass.labs_greeting": "{size, select, single {Добре дошли в #operators, {last}!} other {Добре дошли в #operators, {others} и {last}!}} Това е каналът за всички с Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Твоят Visionary идва с Operator Pass. Можеш да го включиш в настройките, в „Operator Pass“, когато пожелаеш, и не плащаш нищо повече за него.",
 	"profile_badge.bug_hunter": "Ловец на бъгове във {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# пропуск Operator Pass} other {# пропуска Operator Pass}}",

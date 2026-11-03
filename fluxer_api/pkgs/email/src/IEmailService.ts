@@ -10,18 +10,6 @@ import type {
 	ReportReference,
 } from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 
-export interface OperatorPassWaitlistVerificationEmail {
-	confirmUrl: string;
-}
-
-interface OperatorPassSaleOpenEmail {
-	checkoutUrl: string;
-	priceFormatted: string;
-	priceRisesAt: Date;
-	unsubscribeUrl: string;
-	unsubscribePageUrl: string;
-}
-
 export type {EmailAttachment};
 
 interface OperatorPassWelcomeEmail {
@@ -76,8 +64,6 @@ export type OperatorPassOfferEnd = 'withdrawn' | 'declined' | 'cancelled' | 'una
 
 interface OperatorPassOfferReceivedEmail {
 	senderName: string;
-	arrivesAt: Date | null;
-	timeZone?: string | null;
 }
 
 interface OperatorPassOfferAcceptedEmail {
@@ -89,12 +75,6 @@ interface OperatorPassOfferAcceptedEmail {
 interface OperatorPassOfferEndedEmail {
 	otherName: string;
 	ended: OperatorPassOfferEnd;
-}
-
-interface OperatorPassVisionaryNoticeEmail {
-	visionaryDate: Date;
-	labsMember: boolean;
-	turnOnUrl: string;
 }
 
 interface OperatorPassVisionaryTurnedOnEmail {
@@ -395,16 +375,6 @@ interface OperatorPassRefundReceiptEmail {
 	timeZone?: string | null;
 }
 
-export interface IBulkEmailSession {
-	send<K extends 'operator_pass_sale_open' | 'operator_pass_visionary_notice'>(
-		templateKey: K,
-		email: string,
-		params: EmailSendParams[K],
-		locale?: string | null,
-	): Promise<boolean>;
-	close(): Promise<void>;
-}
-
 interface EmailCodeRequester {
 	location: string;
 	device: string;
@@ -452,7 +422,6 @@ export interface EmailSendParams {
 	operator_pass_offer_accepted: OperatorPassOfferAcceptedEmail;
 	operator_pass_offer_ended: OperatorPassOfferEndedEmail;
 	operator_pass_revoked: OperatorPassRevokedEmail;
-	operator_pass_visionary_notice: OperatorPassVisionaryNoticeEmail;
 	operator_pass_visionary_turned_on: OperatorPassVisionaryTurnedOnEmail;
 	operator_pass_purchase_refused: {creditNote: BillingDocumentAttachment | null};
 	operator_pass_removal_notice: OperatorPassRemovalNoticeEmail;
@@ -474,8 +443,6 @@ export interface EmailSendParams {
 	donation_cancellation_confirmation: DonationCancellationConfirmationEmail;
 	plutonium_ended_unpaid: PlutoniumEndedUnpaidEmail;
 	plutonium_gift_applied: PlutoniumGiftAppliedEmail;
-	operator_pass_waitlist_verification: OperatorPassWaitlistVerificationEmail;
-	operator_pass_sale_open: OperatorPassSaleOpenEmail;
 }
 
 export interface IEmailService {
@@ -486,5 +453,4 @@ export interface IEmailService {
 		locale?: string | null,
 	): Promise<boolean>;
 	isEmailBounced(email: string): Promise<boolean>;
-	openBulkSession(): Promise<IBulkEmailSession>;
 }

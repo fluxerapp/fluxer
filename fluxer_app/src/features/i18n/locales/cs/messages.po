@@ -1360,6 +1360,11 @@ msgstr "{count, plural, one {# r.} few {# r.} many {# r.} other {# l.}}"
 msgid "{count, plural, one {+# more badge, show all} other {+# more badges, show all}}"
 msgstr "{count, plural, one {+# další odznak, zobrazit vše} few {+# další odznaky, zobrazit vše} many {+# dalšího odznaku, zobrazit vše} other {+# dalších odznaků, zobrazit vše}}"
 
+#. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
+#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
+msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
+msgstr "{count, plural, one {Certifikát č. {numbers}} other {Certifikáty č. {numbers}}}"
+
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
 msgstr "{count, plural, one {Sbalit (# řádek)} few {Sbalit (# řádky)} many {Sbalit (# řádku)} other {Sbalit (# řádků)}}"
@@ -3033,10 +3038,15 @@ msgstr "Přijmout pozvánku"
 msgid "Accept the friend request from {userName}?"
 msgstr "Přijmout žádost o přátelství od uživatele {userName}?"
 
-#. Toast after accepting an Operator Pass offer while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.
+#. Short muted line under an Operator Pass offer the other account accepted, while the pass moves to them. {name} is a display name.
+#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
+msgid "Accepted by {name}"
+msgstr "Přijal(a) {name}"
+
+#. Toast after accepting an Operator Pass offer when the pass could not move to your account right away, for example while a check on its payment is still open.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
-msgid "Accepted. It arrives on {date}, unless the sender takes the offer back first."
-msgstr "Přijato. Pass dorazí {date}, pokud odesílatel nabídku mezitím nevezme zpět."
+msgid "Accepted. The pass moves to you soon."
+msgstr "Přijato. Pass k vám brzy přejde."
 
 #. Short label in the notification utils helper. Keep it concise.
 #: src/features/notification/utils/NotificationUtils.ts
@@ -6673,11 +6683,6 @@ msgstr "Značka a akcenty"
 msgid "Branding"
 msgstr "Vizuální identita"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Breaks the community guidelines"
-msgstr "Porušuje pravidla komunity"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Brightness"
@@ -6872,11 +6877,6 @@ msgstr "Kupte dárkové předplatné {premiumProductName} na kartě {premiumProd
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "Buy gift"
 msgstr "Koupit dárek"
-
-#. Short muted text after a name waiting for review on the Operators' wall. {date} is the date our team aims to finish the review by, without a time.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "by {date}"
-msgstr "do {date}"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
@@ -12488,11 +12488,6 @@ msgstr "Odmítnout"
 msgid "Decline the incoming call"
 msgstr "Odmítnout příchozí hovor"
 
-#. Status in the Operators' wall settings when our team declined a new name or avatar. {name} is the declined name. {reason} is one of the short decline reasons, such as "Breaks the community guidelines".
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Declined: {name}. {reason}."
-msgstr "Zamítnuto: {name}. {reason}."
-
 #. Short label in the channel and chat personal notes welcome section. Keep it concise.
 #: src/features/channel/components/direct_message/PersonalNotesWelcomeSection.tsx
 msgid "Decorative divider"
@@ -13966,11 +13961,6 @@ msgstr "Žádné nemazat"
 msgid "Don't have an account?"
 msgstr "Nemáte účet?"
 
-#. Checkbox next to the Operators' wall name field. When checked, the person is not shown on the Operators' wall and the name field is disabled.
-#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "Don't list me"
-msgstr "Neuvádět mě"
-
 #. Link under the Weblate line in the language settings. It opens a help article on fluxer.com about suggesting a new language and helping translate the app. Keep it a short question.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "Don't see your language?"
@@ -15331,10 +15321,10 @@ msgstr "Zadejte zprávu a začněte konverzaci!"
 msgid "Enter a name between 1 and 80 characters."
 msgstr "Zadejte název o délce 1 až 80 znaků."
 
-#. Error under the Operators' wall name field when it is empty and the person did not choose to stay off the wall. Don't list me is the label of the checkbox under the field, use the same words as that label.
+#. Error under the Operators' wall name field when it is empty and the switch "Show me on the Operators' wall" is on. Use the same words as the label of that switch.
 #: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "Enter a name, or check Don't list me."
-msgstr "Zadejte jméno, nebo zaškrtněte „Neuvádět mě“."
+msgid "Enter a name, or turn off \"Show me on the Operators' wall\"."
+msgstr "Zadejte jméno, nebo vypněte „Zobrazit mě na zdi Operators“."
 
 #. Error under the SMTP port field.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -19170,11 +19160,6 @@ msgstr "Pokud vám někdo řekl, abyste sem něco vložili, je to podvod, který
 msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
 msgstr "Pokud odkaz otevře jinou aplikaci Fluxer, zvolte „Přihlašujete se na jiném zařízení?“ a zadejte kód v prohlížeči."
 
-#. Line in the dialog for an Operator Pass someone passed on to you, while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.
-#: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
-msgid "If you accept, it arrives on {date}, unless the sender takes the offer back first."
-msgstr "Když ho přijmete, dorazí {date}, pokud odesílatel nabídku mezitím nevezme zpět."
-
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "If you believe it is illegal, say which law and why."
@@ -19244,11 +19229,6 @@ msgstr "Pokud pole necháte prázdné, karta použije ikonu aplikace, a pokud ch
 msgid "If you leave it empty, those places show the Fluxer icon."
 msgstr "Pokud pole necháte prázdné, na těchto místech se zobrazí ikona Fluxeru."
 
-#. Short muted line under an Operator Pass during the waiting period after payment. The pass can be offered to another account at any time, but it only moves to them once this waiting period is over. {date} is a date without a time.
-#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
-msgid "If you pass it on, it moves on {date} at the earliest"
-msgstr "Pokud ho předáte, přejde nejdříve {date}"
-
 #. Help on the setup token screen for someone who installed Fluxer without rexctl. FLUXER_SETUP_TOKEN and rexctl must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
 msgid "If you run Fluxer without rexctl, set FLUXER_SETUP_TOKEN to a value of at least 32 characters that you choose, restart Fluxer, and enter that value here."
@@ -19291,10 +19271,10 @@ msgstr "Pokud si myslíte, že jsme udělali chybu, napište na <0>{email}</0> d
 msgid "If you want to export your data or delete your messages first, please visit {privacyDashboardPath} before proceeding."
 msgstr "Pokud si přejete exportovat svá data nebo nejprve smazat své zprávy, navštivte prosím {privacyDashboardPath}, než budete pokračovat."
 
-#. Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Until we check them, the spot shows the word Operator and the default avatar, never the username. Usually within 72 hours is a description of how it works today, not a promise. Never add a word that says how long the spot lasts.
+#. Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Never add a word that says how long the spot lasts.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
-msgid "If you'd like a spot, it goes up when you pay. Your name and avatar show once we check them, usually within 72 hours, and you can leave the wall or come back in your settings."
-msgstr "Pokud chcete místo, získáte ho po zaplacení. Vaše jméno a avatar se zobrazí, jakmile je zkontrolujeme, obvykle do 72 hodin, a ze zdi můžete kdykoli odejít nebo se vrátit ve svém nastavení."
+msgid "If you'd like a spot, it goes up with your name and avatar when you pay, and you can leave the wall or come back in your settings."
+msgstr "Pokud chcete místo, po zaplacení se na zdi objeví s vaším jménem a avatarem, a ze zdi můžete kdykoli odejít nebo se vrátit ve svém nastavení."
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
@@ -19589,11 +19569,6 @@ msgstr "V kanálu"
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx
 msgid "In channels I moderate"
 msgstr "V kanálech, které moderuji"
-
-#. Label in front of a new name and avatar for the Operators' wall that our team has not checked yet.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "In review"
-msgstr "Čeká na kontrolu"
 
 #. Last setup wizard screen, listing what else the admin panel has. Bluesky is a product name.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -20359,7 +20334,7 @@ msgstr "Irsko"
 msgid "Is this instance for one community or many?"
 msgstr "Je tato instance pro jednu komunitu, nebo pro mnoho?"
 
-#. Line in the dialog for an Operator Pass someone passed on to you, once the waiting period after payment has ended. It is the pass.
+#. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
 msgstr "Pass dorazí hned, jak ho přijmete."
@@ -20384,10 +20359,10 @@ msgstr "Možná byla položka smazána. Název byl obnoven na původní."
 msgid "It may have left Explore or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Komunita už možná není v sekci „Prozkoumat“ nebo nepřijímá nové členy. Obnovte stránku a už se vám nezobrazí."
 
-#. Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do even after they accept, until the pass moves. The waiting period is the time after payment before a pass can move.
+#. Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do until they accept.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
-msgid "It moves to them once they accept and any waiting period has ended. You can take the offer back until it moves."
-msgstr "Pass přejde na jeho účet, jakmile ho přijme a skončí případná čekací doba. Nabídku můžete vzít zpět, dokud pass nepřejde."
+msgid "It moves to them as soon as they accept. You can take the offer back until then."
+msgstr "Pass přejde na jeho účet, jakmile ho přijme. Do té doby můžete nabídku vzít zpět."
 
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx
@@ -20449,6 +20424,11 @@ msgstr "Připojit se k {communityName}"
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Připojte se ke komunitě {communityName}, povídejte si s týmem a sledujte novinky."
 
+#. Button in the Fluxer Labs section of the Operator Pass settings when the account is not a member of the community. It adds the account to the community and opens #operators. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Join {labsName}"
+msgstr "Připojit se k {labsName}"
+
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "Join a community"
@@ -20506,11 +20486,6 @@ msgstr "Připojit se k P2P hovorům bez potvrzení"
 #: src/features/channel/components/CallMessage.tsx
 msgid "Join the call"
 msgstr "Připojit se k hovoru"
-
-#. Button in the Operator Pass dialog before the pass can be bought. Opens the waitlist on the website.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "Join the waitlist"
-msgstr "Zapsat se do pořadníku"
 
 #. Notice above the composer when the user is not a member of the thread.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21532,7 +21507,7 @@ msgstr "Litevština"
 msgid "Live"
 msgstr "Živě"
 
-#. Status next to the name and avatar when they are approved and shown on the Operators' wall.
+#. Status next to the name and avatar the Operators' wall shows for this account.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
 msgctxt "operators-wall-status"
 msgid "Live"
@@ -23488,11 +23463,6 @@ msgstr "Role přesunuta výše v seznamu členů"
 msgid "Moved the role up in the role list"
 msgstr "Role přesunuta výše v seznamu rolí"
 
-#. Short muted line under an Operator Pass offer the other account accepted, before the pass moves to them. {name} is a display name, {date} a date without a time.
-#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
-msgid "Moves to {name} on {date}"
-msgstr "Přejde na účet {name} {date}"
-
 #. Category dropdown option in the "Explore" tab in community settings. "TV" is the abbreviation for television.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Movies & TV"
@@ -25155,11 +25125,6 @@ msgstr "Nenastaveno"
 msgid "Not set up"
 msgstr "Nenastaveno"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Not suitable for younger users"
-msgstr "Nevhodné pro mladší uživatele"
-
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -25480,11 +25445,6 @@ msgstr "Při kliknutí"
 msgctxt "code-editor"
 msgid "on line"
 msgstr "na řádku"
-
-#. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "On sale from {saleOpensAt}."
-msgstr "V prodeji od {saleOpensAt}."
 
 #. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
 #: src/features/theme_settings/components/QuickCssReference.tsx
@@ -27954,11 +27914,6 @@ msgstr "klepnutím přidáte reakci"
 #: src/features/channel/components/MessageReactions.tsx
 msgid "press to remove reaction"
 msgstr "klepnutím odeberete reakci"
-
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Pretends to be someone else"
-msgstr "Vydává se za někoho jiného"
 
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
 msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
@@ -32236,7 +32191,7 @@ msgstr "Posílat oznámení do mobilních aplikací Fluxer?"
 msgid "Send offer"
 msgstr "Odeslat nabídku"
 
-#. Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall after our team checks them.
+#. Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall right away.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
 msgid "Send profile changes to the wall"
 msgstr "Posílat změny profilu na zeď"
@@ -33378,6 +33333,11 @@ msgstr "Zobrazit nejvýše 5 (odznak +5)"
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
 msgid "Show me how"
 msgstr "Ukázat jak"
+
+#. Switch above the Operators' wall name field, on by default. When it is off, the person is not shown on the Operators' wall and the name field is hidden. The Operators' wall is the list of Operators on the homepage.
+#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
+msgid "Show me on the Operators' wall"
+msgstr "Zobrazit mě na zdi Operators"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -36126,11 +36086,6 @@ msgstr "Odznak na hlavním panelu"
 msgid "Teal"
 msgstr "Tyrkysová"
 
-#. Line in the Operators' wall settings with what our team wrote about a declined name or avatar. {note} is their text, in the language they wrote it.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Team note: {note}"
-msgstr "Poznámka týmu: {note}"
-
 #. Overlay label covering the whole voice call view while every participant is moved to a new voice region in place. Trailing ellipsis indicates in-progress.
 #: src/features/voice/components/VoiceRegionTeleportOverlay.tsx
 msgid "Teleporting you to another voice region..."
@@ -36332,11 +36287,6 @@ msgstr "Děkujeme"
 #: src/features/moderation/components/report/ReportStepComplete.tsx
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "Děkujeme, že pomáháte udržovat {productName} v bezpečí. Vaše nahlášení posoudíme co nejdříve."
-
-#. Text in the Operator Pass dialog when the account already has a pass and buying is not open. Backing means supporting the project. "{operatorPassName}" is the name of the settings tab that lists the passes, keep the quotes. Operator Pass is a product name and stays untranslated.
-#: src/features/premium/components/operator_pass/checkout/CheckoutNoticeStage.tsx
-msgid "Thanks for backing {productName}. Your passes are under \"{operatorPassName}\" in your settings."
-msgstr "Děkujeme, že podporujete {productName}. Své passy najdete v nastavení v části „{operatorPassName}“."
 
 #. Report flow: title of the final screen when the chosen answer does not lead to a report, so nothing was sent. Thanks the person for raising it.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
@@ -41038,11 +40988,6 @@ msgstr "Uživatelé"
 msgid "Uses"
 msgstr "Použití"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Uses a name or image without the rights to it"
-msgstr "Používá jméno nebo obrázek bez příslušných práv"
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open notification settings."
@@ -42246,11 +42191,6 @@ msgstr "Vytvoříme archiv ke stažení, který odpovídá níže uvedeným filt
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "We'll build a downloadable archive that matches the filters below. You can download it from this page when it's ready. The download expires after 7 days."
 msgstr "Vytvoříme archiv ke stažení, který bude odpovídat níže uvedeným filtrům. Až bude připraven, můžete si ho stáhnout z této stránky. Stahování vyprší po 7 dnech."
-
-#. Line in the Operator Pass dialog before the pass can be bought, under the button that opens the waitlist. It means the sale of the Operator Pass opens.
-#: src/features/premium/components/operator_pass/checkout/CheckoutNoticeStage.tsx
-msgid "We'll email you when it opens."
-msgstr "Napíšeme vám, až prodej začne."
 
 #. Success toast shown after a data export job is queued when no email can reach the account.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -43994,6 +43934,11 @@ msgstr "Jste v hlasovém kanálu"
 #: src/features/guild/commands/GuildVisitCommands.ts
 msgid "You're no longer previewing {community}."
 msgstr "Komunitu {community} už neprohlížíte v náhledu."
+
+#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name and Operator is the role name, keep both as is. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "You're not in {labsName}. Joining gives you the Operator role, which opens #operators, where you can talk about self-hosting, bots and the API."
+msgstr "Nejste v {labsName}. Když se připojíte, získáte roli Operator, která vám otevře #operators, kde můžete diskutovat o self-hostingu, botech a API."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx

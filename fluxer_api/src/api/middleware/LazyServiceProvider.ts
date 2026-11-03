@@ -30,8 +30,7 @@ type ExternallySetVariable =
 type ConfigurationDependentService =
 	| 'donationService'
 	| 'operatorPassCheckoutService'
-	| 'operatorPassEntitlementService'
-	| 'operatorPassWaitlistService';
+	| 'operatorPassEntitlementService';
 
 export type RequestScopedServices = Omit<
 	RequestVariables,

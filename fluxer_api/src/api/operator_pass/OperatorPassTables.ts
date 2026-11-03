@@ -29,7 +29,6 @@ import {
 	OPERATOR_PASS_WALL_DECISION_COLUMNS,
 	OPERATOR_PASS_WALL_ENTRY_COLUMNS,
 	OPERATOR_PASS_WALL_EVENT_COLUMNS,
-	OPERATOR_PASS_WALL_PENDING_COLUMNS,
 	OPERATOR_PASS_WALL_REVISION_COLUMNS,
 	OPERATOR_PASS_WALL_STATE_COLUMNS,
 	OPERATOR_PASS_WALL_TOMBSTONE_COLUMNS,
@@ -60,7 +59,6 @@ import {
 	type OperatorPassWallDecisionRow,
 	type OperatorPassWallEntryRow,
 	type OperatorPassWallEventRow,
-	type OperatorPassWallPendingRow,
 	type OperatorPassWallRevisionRow,
 	type OperatorPassWallStateRow,
 	type OperatorPassWallTombstoneRow,
@@ -253,13 +251,6 @@ export const OperatorPassWallAvatarRefs = defineTable<OperatorPassWallAvatarRefR
 	columns: OPERATOR_PASS_WALL_AVATAR_REF_COLUMNS,
 	primaryKey: ['avatar', 'user_id'],
 	partitionKey: ['avatar'],
-});
-
-export const OperatorPassWallPending = defineTable<OperatorPassWallPendingRow, 'bucket' | 'user_id', 'bucket'>({
-	name: 'operator_pass_wall_pending',
-	columns: OPERATOR_PASS_WALL_PENDING_COLUMNS,
-	primaryKey: ['bucket', 'user_id'],
-	partitionKey: ['bucket'],
 });
 
 export const OperatorPassWallAuditLogs = defineTable<OperatorPassWallAuditLogRow, 'user_id' | 'log_id', 'user_id'>({

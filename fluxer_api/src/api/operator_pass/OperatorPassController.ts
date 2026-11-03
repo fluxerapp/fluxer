@@ -3,17 +3,15 @@
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {getContentMessage, resolveContentLocale} from '@app/api/content_i18n/ContentI18n';
-import {Logger} from '@app/api/Logger';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {HostedOnlyRoute} from '@app/api/middleware/BillingRouteAvailability';
-import {CaptchaMiddleware, createCaptchaChallenge} from '@app/api/middleware/CaptchaMiddleware';
-import {
-	getTrustedForwardedClientIp,
-	RateLimitMiddleware,
-	shouldEnforceRateLimits,
-} from '@app/api/middleware/RateLimitMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
-import {getOperatorPassEntitlementService, getOperatorPassWallService} from '@app/api/middleware/ServiceSingletons';
+import {
+	getOperatorPassEntitlementService,
+	getOperatorPassRepository,
+	getOperatorPassWallService,
+} from '@app/api/middleware/ServiceSingletons';
 import type {OperatorPassCheckoutService} from '@app/api/operator_pass/OperatorPassCheckoutService';
 import {
 	isOperatorPassRemovalActive,
@@ -23,7 +21,10 @@ import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/Operato
 import {getLabsGuildId, getLabsOperatorsChannelId} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {mapOperatorPassPurchaseToResponse} from '@app/api/operator_pass/OperatorPassPurchaseRules';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
-import type {OperatorPassWaitlistService} from '@app/api/operator_pass/OperatorPassWaitlistService';
+import {
+	deleteOperatorPassWaitlistEntry,
+	verifyOperatorPassUnsubscribeToken,
+} from '@app/api/operator_pass/OperatorPassWaitlistUnsubscribe';
 import {
 	mapOperatorPassListing,
 	normalizeOperatorPassWallChoice,
@@ -63,14 +64,7 @@ import {
 	OperatorPassStateQuery,
 	OperatorPassStateResponse,
 	OperatorPassVisionaryTurnOnRequest,
-	OperatorPassWaitlistChallengeResponse,
-	OperatorPassWaitlistConfirmRequest,
-	OperatorPassWaitlistConfirmResponse,
-	OperatorPassWaitlistFollowupRequest,
-	OperatorPassWaitlistRequest,
-	OperatorPassWaitlistResponse,
 	OperatorPassWaitlistUnsubscribeQuery,
-	OperatorPassWaitlistUnsubscribeRequest,
 	OperatorPassWaitlistUnsubscribeResponse,
 	OperatorPassWallResponse,
 	OperatorPassWithdrawRequest,
@@ -97,42 +91,6 @@ function requireFulfilmentService(ctx: Context<HonoEnv>): OperatorPassFulfilment
 	return service;
 }
 
-function requireWaitlistService(ctx: Context<HonoEnv>): OperatorPassWaitlistService {
-	const service = ctx.get('operatorPassWaitlistService');
-	if (!service) {
-		throw new Error('Operator Pass waitlist service is not available');
-	}
-	return service;
-}
-
-async function lookupCountryCode(ip: string | null): Promise<string | null> {
-	if (!ip) return null;
-	try {
-		return (await lookupGeoip(ip)).countryCode;
-	} catch (error) {
-		Logger.warn({error}, 'Operator Pass waitlist GeoIP lookup failed');
-		return null;
-	}
-}
-
-async function readUnsubscribeBodyToken(ctx: Context<HonoEnv>): Promise<string | null> {
-	const text = await ctx.req.text();
-	if (text.trim().length === 0) return null;
-	const contentType = ctx.req.header('content-type')?.split(';', 1)[0].trim().toLowerCase();
-	if (contentType === 'application/x-www-form-urlencoded') {
-		return parseUnsubscribeToken(new URLSearchParams(text).get('token'));
-	}
-	if (contentType === 'application/json') {
-		try {
-			const parsed = OperatorPassWaitlistUnsubscribeRequest.safeParse(JSON.parse(text));
-			return parsed.success ? (parsed.data.token ?? null) : null;
-		} catch {
-			return null;
-		}
-	}
-	return null;
-}
-
 const PrivateCertificateHeaders = createMiddleware<HonoEnv>(async (ctx, next) => {
 	await next();
 	ctx.res.headers.set('Cache-Control', 'private, no-store');
@@ -147,11 +105,6 @@ function certificateFileResponse(file: {filename: string; bytes: Uint8Array}): R
 	return new Response(file.bytes, {status: 200, headers});
 }
 
-function parseUnsubscribeToken(value: string | null): string | null {
-	const parsed = OperatorPassWaitlistUnsubscribeRequest.shape.token.safeParse(value ?? undefined);
-	return parsed.success ? (parsed.data ?? null) : null;
-}
-
 export function OperatorPassController(app: HonoApp) {
 	app.get(
 		'/operator-pass/state',
@@ -160,7 +113,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'get_operator_pass_state',
 			summary: 'Get Operator Pass state',
 			description:
-				'Returns the sale phase, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.',
+				'Returns whether the early bird or the standard price applies, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.',
 			responseSchema: OperatorPassStateResponse,
 			statusCode: 200,
 			security: [],
@@ -175,9 +128,6 @@ export function OperatorPassController(app: HonoApp) {
 			const state = await requireOperatorPassCheckoutService(ctx).getState({
 				user,
 				countryCode: user ? (geoipCountryCode ?? countryCode ?? null) : (countryCode ?? geoipCountryCode),
-				clientIp:
-					getTrustedForwardedClientIp(ctx, OperatorPassRateLimitConfigs.OPERATOR_PASS_STATE.bucket) ??
-					getRequestClientIp(ctx),
 			});
 			ctx.header('Cache-Control', 'private, no-store');
 			return ctx.json(state);
@@ -374,118 +324,19 @@ export function OperatorPassController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/operator-pass/waitlist/challenge',
-		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_CHALLENGE),
-		OpenAPI({
-			operationId: 'get_operator_pass_waitlist_challenge',
-			summary: 'Get Operator Pass waitlist captcha challenge',
-			description: 'Returns the captcha challenge to solve before joining the Operator Pass waitlist.',
-			responseSchema: OperatorPassWaitlistChallengeResponse,
-			statusCode: 200,
-			security: [],
-			tags: TAG,
-		}),
-		async (ctx) => {
-			ctx.header('Cache-Control', 'no-store');
-			return ctx.json(await createCaptchaChallenge(ctx), 200);
-		},
-	);
-	app.post(
-		'/operator-pass/waitlist',
-		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST),
-		CaptchaMiddleware,
-		OpenAPI({
-			operationId: 'join_operator_pass_waitlist',
-			summary: 'Join Operator Pass waitlist',
-			description:
-				'Sends a confirmation email to the address and stores how the visitor feels about the early bird price they were shown, if the page asked. The response is the same whether or not the address is already on the waitlist, and always carries a followup_token for the follow-up question. Addresses are matched without plus tags, and Gmail addresses without dots. A later signup by the same pending address replaces the stored answer, a confirmed address keeps its first answer, a bounced address gets no email and an unsubscribed address gets at most one new confirmation email every 30 days. Requires a solved captcha challenge (X-Captcha-Token).',
-			responseSchema: OperatorPassWaitlistResponse,
-			statusCode: 202,
-			security: [],
-			tags: TAG,
-		}),
-		Validator('json', OperatorPassWaitlistRequest),
-		async (ctx) => {
-			const {email, country_code, price_feedback, currency} = ctx.req.valid('json');
-			const consentIp =
-				getTrustedForwardedClientIp(ctx, OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST.bucket) ??
-				getRequestClientIp(ctx);
-			const {followupToken} = await requireWaitlistService(ctx).join({
-				email,
-				meterRateLimits: shouldEnforceRateLimits(ctx),
-				countryCode: country_code ?? (await lookupCountryCode(consentIp)),
-				locale: ctx.get('requestLocale') ?? null,
-				consentIp,
-				priceFeedback: price_feedback ?? null,
-				currency: currency ?? null,
-			});
-			ctx.header('Cache-Control', 'no-store');
-			return ctx.json({status: 'pending' as const, followup_token: followupToken}, 202);
-		},
-	);
-	app.post(
-		'/operator-pass/waitlist/followup',
-		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_FOLLOWUP),
-		OpenAPI({
-			operationId: 'answer_operator_pass_waitlist_followup',
-			summary: 'Answer Operator Pass waitlist follow-up question',
-			description:
-				'Stores what is most important to the visitor about the Operator Pass and which descriptions fit them, with the followup_token from the waitlist signup response. A new answer replaces the stored one while the token is valid, for 30 minutes after the signup. An answer without about keeps the descriptions stored before. A token from a signup whose address was already on the waitlist is accepted and stores nothing, so the response never shows whether an address is on the waitlist. other_text is plain text and only goes with other in picks.',
-			responseSchema: null,
-			statusCode: 204,
-			security: [],
-			tags: TAG,
-		}),
-		Validator('json', OperatorPassWaitlistFollowupRequest),
-		async (ctx) => {
-			const {token, picks, about, other_text} = ctx.req.valid('json');
-			await requireWaitlistService(ctx).answerFollowup({
-				token,
-				picks,
-				about,
-				otherText: other_text,
-				meterRateLimits: shouldEnforceRateLimits(ctx),
-			});
-			return ctx.body(null, 204);
-		},
-	);
-	app.post(
-		'/operator-pass/waitlist/confirm',
-		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_CONFIRM),
-		OpenAPI({
-			operationId: 'confirm_operator_pass_waitlist',
-			summary: 'Confirm Operator Pass waitlist email',
-			description: 'Confirms a waitlist email address with the token from the confirmation email.',
-			responseSchema: OperatorPassWaitlistConfirmResponse,
-			statusCode: 200,
-			security: [],
-			tags: TAG,
-		}),
-		Validator('json', OperatorPassWaitlistConfirmRequest),
-		async (ctx) => {
-			await requireWaitlistService(ctx).confirm(ctx.req.valid('json').token);
-			return ctx.json({status: 'confirmed' as const}, 200);
-		},
-	);
-	app.get(
 		'/operator-pass/waitlist/unsubscribe',
 		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_UNSUBSCRIBE),
 		OpenAPI({
 			operationId: 'open_operator_pass_waitlist_unsubscribe',
 			summary: 'Open Operator Pass waitlist unsubscribe page',
 			description:
-				'Redirects a mail client that opens the unsubscribe link to the page where the address can leave the waitlist. Nothing changes until that page is submitted.',
+				'Redirects a mail client that opens the unsubscribe link of the Operator Pass launch email to the unsubscribe page. Nothing changes until a mail client sends the one-click POST.',
 			responseSchema: null,
 			statusCode: 302,
 			security: [],
 			tags: TAG,
 		}),
-		Validator('query', OperatorPassWaitlistUnsubscribeQuery),
-		(ctx) => {
-			const {token} = ctx.req.valid('query');
-			const query = token ? `?token=${encodeURIComponent(token)}` : '';
-			return ctx.redirect(`${Config.endpoints.marketing}/pass/unsubscribe${query}`, 302);
-		},
+		(ctx) => ctx.redirect(`${Config.endpoints.marketing}/pass/unsubscribe`, 302),
 	);
 	app.post(
 		'/operator-pass/waitlist/unsubscribe',
@@ -494,7 +345,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'unsubscribe_operator_pass_waitlist',
 			summary: 'Leave Operator Pass waitlist',
 			description:
-				'Removes an address from the waitlist with the token from a waitlist email. Supports one-click unsubscribe from mail clients.',
+				'Deletes the waitlist entry that the token from the Operator Pass launch email belongs to. Supports one-click unsubscribe from mail clients.',
 			responseSchema: OperatorPassWaitlistUnsubscribeResponse,
 			statusCode: 200,
 			security: [],
@@ -502,11 +353,12 @@ export function OperatorPassController(app: HonoApp) {
 		}),
 		Validator('query', OperatorPassWaitlistUnsubscribeQuery),
 		async (ctx) => {
-			const token = ctx.req.valid('query').token ?? (await readUnsubscribeBodyToken(ctx));
-			if (!token) {
+			const {token} = ctx.req.valid('query');
+			const entryId = token ? verifyOperatorPassUnsubscribeToken(token) : null;
+			if (!entryId) {
 				throw new OperatorPassWaitlistTokenInvalidError();
 			}
-			await requireWaitlistService(ctx).unsubscribe(token);
+			await deleteOperatorPassWaitlistEntry(getOperatorPassRepository(), entryId);
 			return ctx.json({status: 'unsubscribed' as const}, 200);
 		},
 	);
@@ -520,7 +372,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'get_operator_pass_listing',
 			summary: "Get Operators' wall listing",
 			description:
-				"Returns what the Operators' wall shows for the current account right now, the name it submitted, the review state, why staff declined a name or avatar, and how many passes the account holds. The review state and the reason are only for the holder, the public wall never shows them.",
+				"Returns what the Operators' wall shows for the current account right now, the name it chose and how many passes the account holds.",
 			responseSchema: OperatorPassListingResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -549,7 +401,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'update_operator_pass_listing',
 			summary: "Update Operators' wall listing",
 			description:
-				"Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is or release_list_opt_in. A new name, together with the current profile avatar, waits for review and the wall keeps showing the last approved version, or the fallback, until staff approve it. A declined name can be replaced at any time. An already listed holder can send only keep_as_is or release_list_opt_in.",
+				"Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is or release_list_opt_in. A new name goes on the wall at once, together with the current profile avatar. An already listed holder can send only keep_as_is or release_list_opt_in.",
 			responseSchema: OperatorPassListingResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -693,7 +545,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'create_operator_pass_offer',
 			summary: 'Pass an Operator Pass on',
 			description:
-				'Offers a pass the current account bought to another user. The offer stays pending until the recipient accepts or declines, and the sender can withdraw it until then. Once accepted, the pass moves when the transfer lock ends, and only while the payment has no early fraud warning, open dispute or refund. Passing on the last pass needs confirm_last_pass, because it removes the badge, the wall listing and #operators from the account.',
+				'Offers a pass the current account bought to another user. The offer stays pending until the recipient accepts or declines, and the sender can withdraw it until then. The pass moves as soon as the recipient accepts, and only while the payment has no early fraud warning, open dispute or refund. Passing on the last pass needs confirm_last_pass, because it removes the badge, the wall listing and #operators from the account.',
 			responseSchema: OperatorPassOfferResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -806,7 +658,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'accept_operator_pass_offer',
 			summary: 'Accept Pass it on offer',
 			description:
-				"Accepts an offer to the current account with the Operator Pass terms and a choice for the Operators' wall. The pass moves at arrives_at, at once when the transfer lock has already ended. Once it moves, the account is added to Fluxer Labs unless it left or was removed from Labs before, and is welcomed in #operators when labs_greeting allows. A received pass cannot be passed on again, and it ends if the payment for it is reversed.",
+				"Accepts an offer to the current account with the Operator Pass terms and a choice for the Operators' wall. The pass moves at once. Once it moves, the account is added to Fluxer Labs unless it left or was removed from Labs before, and is welcomed in #operators when labs_greeting allows. A received pass cannot be passed on again, and it ends if the payment for it is reversed.",
 			responseSchema: OperatorPassOfferResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -864,7 +716,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'get_operator_pass_wall',
 			summary: "Get Operators' wall",
 			description:
-				"Lists every Operator on the Operators' wall with the name and avatar the wall shows, the time the listing went up, the time of the first pass, how many passes the Operator holds and the size tier, with the highest tier first and the earliest first pass first within a tier. A declined name or avatar shows as the last accepted version, or as Operator with the default avatar. Review states and reasons are never included. Holders who chose not to be listed and paused or removed passes are left out. The response is cached for up to a minute.",
+				"Lists every Operator on the Operators' wall with the name and avatar the wall shows, the time the listing went up, the time of the first pass, how many passes the Operator holds and the size tier, with the highest tier first and the earliest first pass first within a tier. A listing whose name or avatar staff took off shows the holder's earlier name and avatar, or Operator with the default avatar. Holders who chose not to be listed and paused or removed passes are left out. The response is cached for up to a minute.",
 			responseSchema: OperatorPassWallResponse,
 			statusCode: 200,
 			security: [],

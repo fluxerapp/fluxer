@@ -9,10 +9,10 @@ use crate::{
             AdminOperatorPassRemovalStateSchema, AdminOperatorPassRowResponse,
             AdminOperatorPassStoredReleaseResponse, AdminOperatorPassUnitEventResponse,
             AdminOperatorPassUnitResponse, AdminOperatorPassUserResponse,
-            AdminOperatorPassWallAsOfResponse, AdminOperatorPassWallEntryResponse,
-            AdminOperatorPassWallStateResponse, OperatorPassPurchaseResponse,
-            OperatorPassPurchaseStatusSchema, OperatorPassWallDeclineReasonSchema,
-            OperatorPassWallDisplayStateSchema, OperatorPassWallReviewStateSchema,
+            AdminOperatorPassVisionaryActivationResponse, AdminOperatorPassWallAsOfResponse,
+            AdminOperatorPassWallEntryResponse, AdminOperatorPassWallStateResponse,
+            OperatorPassPurchaseResponse, OperatorPassPurchaseStatusSchema,
+            OperatorPassWallDeclineReasonSchema, OperatorPassWallDisplayStateSchema,
         },
         operator_pass::{WallTimeline, WallTimelineEvent},
         types::FlashMessage,
@@ -34,9 +34,7 @@ use crate::{
             },
         },
         layout::admin_layout,
-        pages::{
-            operator_pass_visionary::visionary_activation_card, payment_disputes::format_amount,
-        },
+        pages::payment_disputes::format_amount,
     },
     utils::timestamps::{format_admin_date, format_admin_timestamp},
 };
@@ -60,6 +58,8 @@ fn wall_table(headers: &[&str], rows: Markup) -> Markup {
 
 pub const WALL_PATH: &str = "/operator-pass-wall";
 pub const RELEASES_PATH: &str = "/operator-pass-releases";
+pub const VISIONARY_CSV_PATH: &str = "/operator-pass-wall/visionary-activations.csv";
+pub const DELIVERIES_CSV_PATH: &str = "/operator-pass-wall/deliveries.csv";
 
 pub fn format_time(at: Option<&DateTime<Utc>>) -> String {
     at.and_then(|at| serde_json::to_value(at).ok())
@@ -159,60 +159,32 @@ const REFRESH_TARGET: &str = "#operator-pass-wall";
 
 const LABEL_CLASS: &str = "font-semibold text-neutral-600 text-sm";
 
-const REVIEW_TARGET_HOURS: i64 = 72;
-
 const TIER_SCALES: [f64; 4] = [1.0, 1.25, 1.5, 2.0];
 
 const BASE_AVATAR_PX: f64 = 48.0;
 
 fn proxied_avatar(base: &str, api_route: Option<&str>) -> Option<String> {
-    let route = api_route?;
-    let rest = route.strip_prefix("/admin/users/")?;
-    let (user_id, tail) = rest.split_once('/')?;
-    let sha = tail.strip_prefix("operator-pass/wall/avatars/")?;
-    let valid_user = !user_id.is_empty() && user_id.bytes().all(|byte| byte.is_ascii_digit());
+    let sha = api_route?.strip_prefix("/admin/operator-pass/wall/avatars/")?;
     let valid_sha = sha.len() == 64 && sha.bytes().all(|byte| byte.is_ascii_hexdigit());
-    (valid_user && valid_sha).then(|| format!("{base}{WALL_PATH}/users/{user_id}/avatars/{sha}"))
+    valid_sha.then(|| format!("{base}{WALL_PATH}/avatars/{sha}"))
 }
 
-fn review_state_label(
+fn state_label(
     entry: &AdminOperatorPassWallEntryResponse,
     display: Option<OperatorPassWallDisplayStateSchema>,
-) -> String {
+) -> &'static str {
     if entry.wall_opt_out || entry.listed_at.is_none() {
-        return "Not listed".to_owned();
+        return "Not listed";
     }
-    let shows = match display {
+    match display {
         Some(OperatorPassWallDisplayStateSchema::Hidden) => "Hidden from the wall for now",
         Some(OperatorPassWallDisplayStateSchema::Removed) => "Off the wall under section 8",
         Some(OperatorPassWallDisplayStateSchema::Fallback) => {
             "The wall shows Operator with the default avatar"
         }
         Some(OperatorPassWallDisplayStateSchema::Live) | None => {
-            "The wall shows the approved version"
+            "The wall shows the name and avatar they chose"
         }
-    };
-    let review = match entry.review_state {
-        Some(OperatorPassWallReviewStateSchema::Pending) => "a change waits for review",
-        Some(OperatorPassWallReviewStateSchema::Declined) => "the latest change was declined",
-        Some(OperatorPassWallReviewStateSchema::Approved) => "approved",
-        None => "nothing submitted yet",
-    };
-    format!("{shows}, {review}")
-}
-
-fn waited_label(entry: &AdminOperatorPassWallEntryResponse, now: DateTime<Utc>) -> String {
-    let Some(since) = entry.pending_since else {
-        return String::new();
-    };
-    let hours = (now - since).num_hours().max(0);
-    if hours >= REVIEW_TARGET_HOURS {
-        format!("Waiting {hours} hours, past the {REVIEW_TARGET_HOURS} hour target")
-    } else {
-        format!(
-            "Waiting {hours} hours, {} left of the {REVIEW_TARGET_HOURS} hour target",
-            REVIEW_TARGET_HOURS - hours
-        )
     }
 }
 
@@ -221,30 +193,6 @@ fn avatar_img(src: Option<&str>, size_class: &str) -> Markup {
         @match src {
             Some(src) => { img src=(src) alt="" class={"shrink-0 rounded-full object-cover " (size_class)} loading="lazy"; }
             None => { span class={"inline-block shrink-0 rounded-full bg-neutral-300 " (size_class)} {} }
-        }
-    }
-}
-
-fn diff_cell(base: &str, entry: &AdminOperatorPassWallEntryResponse) -> Markup {
-    let live_avatar = proxied_avatar(base, entry.live_avatar_private_url.as_deref())
-        .or_else(|| entry.shown_avatar_url.clone());
-    let pending_avatar = proxied_avatar(base, entry.pending_avatar_url.as_deref());
-    html! {
-        div class="grid min-w-44 gap-3" {
-            div class="flex min-w-0 flex-col gap-1" {
-                span class={(LABEL_CLASS) " whitespace-nowrap"} { "On the wall now" }
-                div class="flex min-w-0 items-center gap-2" {
-                    (avatar_img(live_avatar.as_deref(), "h-12 w-12"))
-                    span class="min-w-0 [overflow-wrap:anywhere]" { (entry.shown_name.as_deref().unwrap_or("Not shown")) }
-                }
-            }
-            div class="flex min-w-0 flex-col gap-1" {
-                span class={(LABEL_CLASS) " whitespace-nowrap"} { "Waiting for review" }
-                div class="flex min-w-0 items-center gap-2" {
-                    (avatar_img(pending_avatar.as_deref(), "h-12 w-12"))
-                    span class="min-w-0 font-semibold [overflow-wrap:anywhere]" { (entry.pending_name.as_deref().unwrap_or("No name")) }
-                }
-            }
         }
     }
 }
@@ -311,149 +259,53 @@ fn post_form(action: &str, options: PostFormOptions<'_>, body: Markup) -> Markup
     }
 }
 
-fn review_actions(
-    base: &str,
-    csrf_token: &str,
-    entry: &AdminOperatorPassWallEntryResponse,
-    back: &str,
-) -> Markup {
-    let Some(revision_id) = entry.pending_revision_id.as_deref() else {
-        return html! {};
-    };
-    let action = |name: &str| format!("{base}{WALL_PATH}/users/{}/{name}", *entry.user_id);
-    let form_options = PostFormOptions {
-        csrf_token,
-        back,
-        class: None,
-        onsubmit: None,
-    };
-    html! {
-        div class="flex min-w-80 flex-col gap-3" {
-            (post_form(&action("approve"), form_options, html! {
-                input type="hidden" name="revision_id" value=(revision_id);
-                (submit_button("Approve"))
-            }))
-            (collapsed_form("Decline", post_form(&action("decline"), PostFormOptions {
-                class: Some("flex flex-col gap-2"),
-                onsubmit: Some("return confirm('Decline and email them a statement of reasons?')"),
-                ..form_options
-            }, html! {
-                input type="hidden" name="revision_id" value=(revision_id);
-                p class="text-sm text-neutral-600" { "Sends a statement of reasons." }
-                (reason_select())
-                (facts_field(true))
-                (danger_button("Decline and send the statement"))
-            })))
-        }
-    }
-}
-
-fn user_cell(base: &str, entry: &AdminOperatorPassWallEntryResponse) -> Markup {
-    let user_id: &str = &entry.user_id;
-    html! {
-        div class="flex min-w-36 items-center gap-2" {
-            @if let Some(avatar) = &entry.avatar_url {
-                img src=(avatar) alt="" class="h-8 w-8 rounded-full" loading="lazy";
-            }
-            (resource_link(base, ResourceType::User, user_id, html! {
-                span class="[overflow-wrap:anywhere]" { (entry.username.as_deref().unwrap_or(user_id)) }
-            }))
-        }
-    }
-}
-
-fn queue_table(
-    base: &str,
-    csrf_token: &str,
-    entries: &[AdminOperatorPassWallEntryResponse],
-    can_moderate: bool,
-    now: DateTime<Utc>,
-) -> Markup {
-    if entries.is_empty() {
-        return empty_state_full(
-            None,
-            "Nothing to review.",
-            Some(
-                "New names and avatars wait here until someone approves or declines them. The wall keeps the approved version or the fallback until then.",
-            ),
-        );
-    }
-    let headers: &[&str] = if can_moderate {
-        &["Select", "Account", "Change", "Waiting", "Actions"]
-    } else {
-        &["Account", "Change", "Waiting"]
-    };
-    let table = wall_table(
-        headers,
+fn books_card(base: &str) -> Markup {
+    card_with_header(
+        "For the books",
         html! {
-            @for entry in entries {
-                (table_row(html! {
-                    @if can_moderate {
-                        (table_cell(false, html! {
-                            @if let Some(revision_id) = entry.pending_revision_id.as_deref() {
-                                input type="checkbox" name="selected" form="wall-bulk"
-                                    value={(&*entry.user_id) ":" (revision_id)}
-                                    aria-label={"Select the change of " (entry.username.as_deref().unwrap_or(&entry.user_id))};
-                            }
-                        }))
+            div class="flex flex-col gap-4" {
+                a class="underline text-sm" href={(base) (VISIONARY_CSV_PATH)} hx-boost="false" download {
+                    "Download every Visionary turn-on as CSV"
+                }
+                form method="get" action={(base) (DELIVERIES_CSV_PATH)} hx-boost="false" class="flex flex-col gap-3" {
+                    p class="text-sm text-neutral-600" {
+                        "One row per pass for every purchase delivered in the month, in UTC. Save it as operator-pass-leveranser-YYYY-MM.csv in the books."
                     }
-                    (table_cell(false, html! {
-                        (user_cell(base, entry))
-                        a href={(base) (WALL_PATH) "/users/" (&*entry.user_id)} class="text-sm underline" { "Timeline" }
-                    }))
-                    (table_cell(false, diff_cell(base, entry)))
-                    (table_cell(true, html! {
-                        span class="block min-w-28" { (waited_label(entry, now)) }
-                        @if let Some(source) = entry.pending_source.as_deref() {
-                            span class="mt-1 block text-xs" { "From " (source) }
-                        }
-                    }))
-                    @if can_moderate {
-                        (table_cell(false, review_actions(base, csrf_token, entry, "queue")))
+                    label class="flex flex-col gap-1 text-sm" {
+                        "Month of delivery"
+                        input type="month" name="month" required pattern="[0-9]{4}-[0-9]{2}" class=(FORM_INPUT_CLASS);
                     }
-                }))
+                    div { (submit_button("Download deliveries as CSV")) }
+                }
             }
         },
-    );
+    )
+}
+
+fn visionary_activation_card(activation: &AdminOperatorPassVisionaryActivationResponse) -> Markup {
     html! {
-        (table)
-        @if can_moderate {
-            form id="wall-bulk" method="post" data-admin-refresh-on-success=(REFRESH_TARGET) action={(base) (WALL_PATH) "/bulk"}
-                class="mt-4 flex flex-col gap-2 rounded-lg border border-neutral-200 p-3"
-                onsubmit="return confirm('Apply this to every selected change?')" {
-                (csrf_input(csrf_token))
-                h3 class="font-semibold text-sm" { "Selected changes" }
-                div class="flex flex-wrap gap-2" {
-                    button type="submit" name="action" value="approve" class="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white" { "Approve selected" }
-                }
-                (collapsed_form("Decline selected", html! {
-                    div class="flex flex-col gap-2" {
-                        p class="text-sm text-neutral-600" { "Declining needs a reason and the facts, and emails each person a statement of reasons." }
-                        (reason_select())
-                        (facts_field(false))
-                        div {
-                            button type="submit" name="action" value="decline" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white" { "Decline selected" }
-                        }
-                    }
-                }))
-            }
-        }
+        (detail_row("Turned on", html! { (format_time(activation.activated_at.as_ref())) }))
+        (detail_row("Visionary date on the pass", html! { (format_time(activation.visionary_since.as_ref())) }))
+        (detail_row("Certificate number", html! {
+            @match activation.certificate_number { Some(number) => { (number) } None => { "Not set" } }
+        }))
+        (detail_row("Terms version", html! { (activation.terms_version.as_deref().unwrap_or("Not set")) }))
+        (detail_row("Ended", html! {
+            (format_time(activation.ended_at.as_ref()))
+            @if let Some(reason) = &activation.end_reason { ", " (reason) }
+        }))
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn operator_pass_wall_page(
     config: &AdminConfig,
     auth: &AuthContext,
-    csrf_token: &str,
     flash: Option<&FlashMessage>,
-    entries: Option<&[AdminOperatorPassWallEntryResponse]>,
-    can_moderate: bool,
-    now: DateTime<Utc>,
+    can_look_up: bool,
 ) -> Markup {
     let base = &config.base_path;
     let content = html! {
-        (page_header("Operators' Wall", Some("Review within 72h.")))
+        (page_header("Operators' Wall", None))
         div class="flex flex-col gap-6" {
             p class="flex flex-wrap gap-4 text-sm" {
                 a href={(base) (TOOLS_PATH)} class="underline" { "Wall tools: publishing, freeze and time travel" }
@@ -467,13 +319,8 @@ pub fn operator_pass_wall_page(
                     (secondary_button("Open"))
                 }
             }))
-            @match entries {
-                Some(entries) => {
-                    (card_with_header("Changes to review", queue_table(base, csrf_token, entries, can_moderate, now)))
-                }
-                None => {
-                    (error_alert("Could not load the review queue. The API request failed or this account lacks the user:lookup ACL."))
-                }
+            @if can_look_up {
+                (books_card(base))
             }
         }
     };
@@ -489,7 +336,7 @@ pub fn operator_pass_wall_page(
 
 fn decision_label(kind: &str) -> &str {
     match kind {
-        "approve" => "Approved",
+        "approve" => "Went live",
         "decline" => "Declined",
         "revert" => "Put back an earlier version",
         "force_fallback" => "Forced the fallback",
@@ -502,7 +349,7 @@ fn decision_label(kind: &str) -> &str {
 fn revision_status_label(status: &str) -> &str {
     match status {
         "pending" => "Waiting for review",
-        "approved" => "Approved",
+        "approved" => "Went live",
         "declined" => "Declined",
         "superseded" => "Replaced by a newer change",
         "reverted" => "Pulled",
@@ -638,11 +485,10 @@ fn listing_actions(
     };
     html! {
         div class="flex flex-col gap-4" {
-            (review_actions(base, csrf_token, entry, "user"))
             @if can_force_fallback(entry) {
                 (collapsed_form("Force the fallback", post_form(&action("force-fallback"), PostFormOptions {
                     class: Some("flex flex-col gap-2"),
-                    onsubmit: Some("return confirm('Take the approved name and avatar off the wall and email a statement of reasons?')"),
+                    onsubmit: Some("return confirm('Take the live name and avatar off the wall and email a statement of reasons?')"),
                     ..form_options
                 }, html! {
                     p class="text-sm text-neutral-600" { "Sends a statement of reasons. The listing keeps its size, place and badge, and shows Operator with the default avatar." }
@@ -1132,7 +978,7 @@ fn offers_table(base: &str, offers: &[AdminOperatorPassOfferResponse]) -> Markup
         return html! { p class="text-sm text-neutral-600" { "No offers made or received." } };
     }
     html! {
-        (data_table(&["Pass", "Sender", "Recipient", "Status", "Created", "Accepted", "Arrives", "Ended", "Terms version"], html! {
+        (data_table(&["Pass", "Sender", "Recipient", "Status", "Created", "Accepted", "Ended", "Terms version"], html! {
             @for offer in offers {
                 (table_row(html! {
                     (table_cell(false, html! { (offer.pass_id) }))
@@ -1141,7 +987,6 @@ fn offers_table(base: &str, offers: &[AdminOperatorPassOfferResponse]) -> Markup
                     (table_cell(false, html! { (offer_status_label(&offer.status)) }))
                     (table_cell(true, format_date(&offer.created_at)))
                     (table_cell(true, format_optional_date(offer.accepted_at.as_ref(), "")))
-                    (table_cell(true, format_optional_date(offer.arrives_at.as_ref(), "")))
                     (table_cell(true, format_optional_date(offer.ended_at.as_ref(), "")))
                     (table_cell(false, html! { (offer.terms_version.as_deref().unwrap_or("Not set")) }))
                 }))
@@ -1216,20 +1061,11 @@ fn entry_rows(
                 }
             }
         }))
-        (detail_row("State", html! { (review_state_label(entry, display)) }))
+        (detail_row("State", html! { (state_label(entry, display)) }))
         (detail_row("Business listing", html! { (if entry.business { "Yes, in the Companies group" } else { "No" }) }))
-        (detail_row("Latest submitted name", html! { (entry.wall_name.as_deref().unwrap_or("None")) }))
-        @if let Some(pending) = &entry.pending_name {
-            (detail_row("Waiting for review", html! {
-                (pending) ", from " (entry.pending_source.as_deref().unwrap_or("unknown"))
-                @if let Some(due) = entry.review_due_at.as_ref() { ", due " (format_date(due)) }
-            }))
-        }
-        @if let Some(declined) = &entry.declined_name {
-            (detail_row("Declined name", html! { (declined) }))
-        }
+        (detail_row("Chosen name", html! { (entry.wall_name.as_deref().unwrap_or("None")) }))
         @if let Some(reason) = &entry.decline_reason {
-            (detail_row("Decline reason", html! { (reason.label()) }))
+            (detail_row("Reason taken off", html! { (reason.label()) }))
         }
         @if let Some(note) = &entry.decline_note {
             (detail_row("Facts (sent to them)", html! { (note) }))
@@ -1240,7 +1076,6 @@ fn entry_rows(
         @if let Some(left) = entry.left_wall_at.as_ref() {
             (detail_row("Left the wall", format_date(left)))
         }
-        (detail_row("Reviewed", format_optional_date(entry.reviewed_at.as_ref(), "Not yet")))
         @if let Some(listed) = entry.listed_at.as_ref() {
             (detail_row("Listed", format_date(listed)))
         }
@@ -1331,7 +1166,7 @@ pub fn operator_pass_wall_user_page(
         p class="mb-4 text-sm" {
             (resource_link(base, ResourceType::User, user_id, html! { "Open account " (user_id) }))
             " | "
-            a href={(base) (WALL_PATH)} class="underline" { "Back to the review queue" }
+            a href={(base) (WALL_PATH)} class="underline" { "Back to the wall lookup" }
         }
         @match data {
             None => { (error_alert("Could not load the Operator Pass of this account.")) }
@@ -1451,7 +1286,7 @@ pub fn operator_pass_wall_tools_page(
     let content = html! {
         (page_header("Operators' Wall Tools", Some("Publishing state and time travel. Order and size come only from the number of passes and the first pass date, so staff cannot reorder or resize.")))
         div class="flex flex-col gap-6" {
-            p class="text-sm" { a href={(base) (WALL_PATH)} class="underline" { "Back to the review queue" } }
+            p class="text-sm" { a href={(base) (WALL_PATH)} class="underline" { "Back to the wall lookup" } }
             (card_with_header("Publishing", html! {
                 @match state {
                     None => { (error_alert("Could not load the wall state.")) }

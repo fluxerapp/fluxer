@@ -288,7 +288,7 @@
 		"cta": "申し出を見る",
 		"footer_reason": "このメールは、{product_name}でOperator Passの申し出を受けたため送信されました。",
 		"intro": "{senderName}さんが、Operator Passのうち1枚をあなたに譲ろうとしています。",
-		"lead": "{product_name}で受け取るか辞退するかを選んでください。受け取った場合、送り主がそれまでに申し出を取り下げない限り、パスは{arrivesAt, date, long}に届きます。",
+		"lead_v2": "{product_name}で受け取るか辞退するかを選んでください。受け取ると、パスはすぐに届きます。",
 		"signoff": "{product_name}チーム",
 		"subject": "{senderName}さんがOperator Passをあなたに譲ろうとしています"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name}チーム",
 		"subject": "{product_name}アカウントのOperator Passが終了しました"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Operatorバッジ、Operatorsウォールへの掲載、#operators、先行テストも付いてきます。",
-		"cta": "Operator Passを購入する",
-		"footer_reason": "このメールは、Operator Passのウェイトリストに登録されたため送信されました。パスに関するメールはこれが最後です。",
-		"intro": "Operator Passの販売開始時にお知らせするよう、ご依頼いただいていました。ただいま販売中です。",
-		"paid_for": "パスには、あなたの名前と支払いの日時が入った番号付きのOperator証明書が付いており、証明書は手元に保管できるPDFでお届けします。",
-		"price_label": "早割価格",
-		"price_value": "{priceFormatted}（買い切り、{priceEndsOn, date, long}まで）",
-		"signoff": "{product_name}チーム",
-		"subject": "{product_name} Operator Passの販売を開始しました",
-		"terms_link": "Operator Pass利用規約",
-		"unsubscribe": "配信停止"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "オンにすると、選んだ名前が記載された番号付きのOperator証明書が届きます。証明書にはVisionaryを入手した日である{visionaryDate, date, long}が記載され、Operatorバッジを表示する場合はバッジにも同じ日付が表示されます。",
-		"choices_line": "Operatorバッジは表示を選ぶまで非表示のままです。Operatorsウォールにも、選んだ場合にのみ掲載されます。",
-		"cta": "Operator Passをオンにする",
-		"footer_reason": "{product_name}でVisionaryをお持ちのため、このメールをお送りしています。",
-		"intro": "VisionaryにはOperator Passが付いてきます。設定からいつでもオンにできます。追加料金はかからず、Visionaryの内容も変わりません。",
-		"labs_line": "{member, select, yes {Fluxer Labsの#operatorsはVisionaryによりすでに利用できます。Operator PassをオンにするとFluxer LabsでOperatorロールも受け取れます。} other {Operator Passをオンにすると、このアカウントをOperatorロール付きでFluxer Labsに追加します。ただし、以前にFluxer Labsから退出したことや外されたことがある場合は追加しません。Fluxer Labsの#operatorsはVisionaryにより利用できます。}}",
-		"signoff": "{product_name}チーム",
-		"subject": "Visionaryに付属するOperator Passをオンにできます",
-		"terms_line": "Operator Pass利用規約にパスの仕組みが記載されており、第13条はVisionaryについてです。",
-		"terms_link": "Operator Pass利用規約"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operatorバッジはプロフィールに表示されています。<settings>設定</settings>で非表示にできます。} other {Operatorバッジは非表示です。<settings>設定</settings>で表示できます。}}",
 		"cta": "Fluxer Labsを開く",
@@ -423,15 +398,6 @@
 		"terms_attached": "同意いただいたOperator Pass利用規約（バージョン{termsVersion}）をPDFで添付しています。",
 		"terms_link": "Operator Pass利用規約",
 		"wall_line": "{wallOptOut, select, yes {Operatorsウォールに掲載しないことを選びました。<settings>設定</settings>で名前を追加できます。} other {Operatorsウォールに{wallName}として掲載されています。<settings>設定</settings>で変更したり、ウォールへの掲載をやめたりできます。}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "ウェイトリストに登録",
-		"expiry": "このリンクは48時間後に期限切れになります。",
-		"footer_reason": "このメールは、{product_name}のウェブサイトでこのアドレスがOperator Passのウェイトリストに入力されたため送信されました。",
-		"intro": "このメールアドレスを確認すると、Operator Passのウェイトリストに登録されます。パスの販売開始時に一度だけメールでお知らせします。",
-		"note": "リクエストしていない場合は、このメールを無視してください。今後ご連絡することはありません。",
-		"signoff": "{product_name}チーム",
-		"subject": "{product_name} Operator Passのウェイトリスト登録を確認してください"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {60日以内にこのメールに返信して、同意できない理由をお知らせください。異議申し立ては無料で、チームの担当者が内容を読んで判断します。} other {60日以内にこのインスタンスの管理者に連絡して、同意できない理由を伝えてください。}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "このメールは、{product_name}のOperatorsウォールにあるあなたの掲載に関する判断のためにお送りしています。",
 		"ground": "Operator Pass利用規約第3.1条",
 		"ground_label": "根拠",
-		"intro": "{target, select, avatar {Operatorsウォール用のアバターを承認しませんでした。} both {Operatorsウォール用の名前とアバターを承認しませんでした。} other {Operatorsウォール用の名前を承認しませんでした。}}{shown, select, previous {ウォールには最後に承認された内容が表示されます。} other {新しいものを送信するまで、ウォールには「Operator」という言葉とデフォルトのアバターが表示されます。}}ウォール上の枠とその大きさ、バッジはそのままで、ご購入にも影響はありません。",
+		"intro": "{target, select, avatar {Operatorsウォールからアバターを外しました。} both {Operatorsウォールから名前とアバターを外しました。} other {Operatorsウォールから名前を外しました。}}{shown, select, previous {ウォールには以前の名前とアバターが表示されます。} other {新しいものを送信するまで、ウォールには「Operator」という言葉とデフォルトのアバターが表示されます。}}ウォール上の枠とその大きさ、バッジはそのままで、ご購入にも影響はありません。",
 		"next": "<settings>設定</settings>から新しい名前やアバターを送ることができます。",
 		"reason_label": "理由",
 		"reason_value": "{reason, select, impersonation {他人になりすましている} rights {権利のない名前または画像を使用している} age_suitability {年少のユーザーにふさわしくない} other {コミュニティガイドラインに違反している}}",
 		"redress_v2": "裁判所に訴えることもできます。EUにお住まいの方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用できます。EUまたはEEAの消費者の方は、スウェーデン消費者紛争委員会（<arn>ARN</arn>、Box 174, 101 23 Stockholm, スウェーデン）に紛争を申し立てることもできます。",
 		"signoff": "{product_name}チーム",
-		"subject": "{product_name} Operatorsウォール用の名前またはアバターを承認しませんでした"
+		"subject": "{product_name} Operatorsウォールから名前またはアバターを外しました"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "バッジはプロフィールに表示されています。<settings>設定</settings>で非表示にできます。",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName}と{product_name}チーム",
 		"subject": "あなたの{product_name} Operator証明書",
 		"terms_link": "Operator Pass利用規約",
-		"wall_line": "{wallOptOut, select, yes {Operatorsウォールに掲載しないことを選びました。<settings>設定</settings>で名前を追加できます。} other {Operatorsウォールに{wallName}として掲載されます。名前とアバターは、私たちが確認した後に表示されます。<settings>設定</settings>で変更したり、ウォールへの掲載をやめたりできます。}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Operatorsウォールに掲載しないことを選びました。<settings>設定</settings>で名前を追加できます。} other {Operatorsウォールに{wallName}として掲載されます。<settings>設定</settings>で変更したり、ウォールへの掲載をやめたりできます。}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "この返金のクレジットノートをPDFでこのメールに添付しています。",

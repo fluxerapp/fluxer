@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "일반",
 	"guild.default_channel_voice": "일반",
 	"operator_pass.labs_greeting": "{size, select, single {#operators에 오신 것을 환영해요, {last}!} other {#operators에 오신 것을 환영해요, {others}, {last}!}} 여기는 Operator Pass를 가진 모든 분을 위한 채널이에요.",
-	"operator_pass.visionary_notice_dm_v2": "Visionary에는 Operator Pass가 함께 제공돼요. 설정의 'Operator Pass'에서 언제든지 켤 수 있고, 추가 비용은 없어요.",
 	"profile_badge.bug_hunter": "{product_name} 버그 헌터",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, other {Operator Pass #개}}",

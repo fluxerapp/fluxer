@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "chung",
 	"guild.default_channel_voice": "Chung",
 	"operator_pass.labs_greeting": "{size, select, single {Chào mừng {last} đến với #operators!} other {Chào mừng {others} và {last} đến với #operators!}} Đây là kênh dành cho mọi người có Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Visionary của bạn đi kèm một Operator Pass. Bạn có thể bật nó bất cứ lúc nào trong Cài đặt, mục \"Operator Pass\", và không phải trả thêm gì.",
 	"profile_badge.bug_hunter": "Người săn lỗi {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, other {# Operator Pass}}",

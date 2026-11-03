@@ -49,10 +49,7 @@ import operatorPassLabsGreeting from '@app/api/worker/tasks/OperatorPassLabsGree
 import operatorPassLabsVisionaryRoleSync from '@app/api/worker/tasks/OperatorPassLabsVisionaryRoleSync';
 import operatorPassOfferCompletion from '@app/api/worker/tasks/OperatorPassOfferCompletion';
 import operatorPassRemovalExpiry from '@app/api/worker/tasks/OperatorPassRemovalExpiry';
-import operatorPassSaleBroadcast from '@app/api/worker/tasks/OperatorPassSaleBroadcast';
-import operatorPassVisionaryNotice from '@app/api/worker/tasks/OperatorPassVisionaryNotice';
 import operatorPassWaitlistCleanup from '@app/api/worker/tasks/OperatorPassWaitlistCleanup';
-import operatorPassWallAutoApprove from '@app/api/worker/tasks/OperatorPassWallAutoApprove';
 import operatorPassWallRetention from '@app/api/worker/tasks/OperatorPassWallRetention';
 import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
 import pollGooglePlayVoidedPurchases from '@app/api/worker/tasks/PollGooglePlayVoidedPurchases';
@@ -141,7 +138,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	messageShred,
 	notifyRegistrationApprovers,
 	operatorPassOfferCompletion,
-	operatorPassWallAutoApprove,
 	operatorPassRemovalExpiry,
 	operatorPassWallRetention,
 	operatorPassConsentRetention,
@@ -149,8 +145,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	operatorPassLabsDelivery,
 	operatorPassLabsGreeting,
 	operatorPassLabsVisionaryRoleSync,
-	operatorPassSaleBroadcast,
-	operatorPassVisionaryNotice,
 	operatorPassWaitlistCleanup,
 	processAssetDeletionQueue,
 	processCachePurgeQueue,

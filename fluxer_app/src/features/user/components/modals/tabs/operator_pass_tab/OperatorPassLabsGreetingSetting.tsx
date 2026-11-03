@@ -31,6 +31,18 @@ const LABS_SECTION_DESCRIPTION_DESCRIPTOR = msg({
 		'Description of the Fluxer Labs section in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.',
 });
 
+const LABS_NOT_MEMBER_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"You're not in {labsName}. Joining gives you the Operator role, which opens #operators, where you can talk about self-hosting, bots and the API.",
+	comment:
+		'Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name and Operator is the role name, keep both as is. {labsName} is the name of the community, such as Fluxer Labs.',
+});
+const JOIN_LABS_DESCRIPTOR = msg({
+	message: 'Join {labsName}',
+	comment:
+		'Button in the Fluxer Labs section of the Operator Pass settings when the account is not a member of the community. It adds the account to the community and opens #operators. {labsName} is the name of the community, such as Fluxer Labs.',
+});
+
 export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLabsGreetingSetting() {
 	const {i18n} = useLingui();
 	const [saving, setSaving] = useState(false);
@@ -50,7 +62,9 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 		<SettingsSection
 			id="operator-pass-labs"
 			title={PRODUCT_LABS_COMMUNITY_NAME}
-			description={i18n._(LABS_SECTION_DESCRIPTION_DESCRIPTOR, {labsName: PRODUCT_LABS_COMMUNITY_NAME})}
+			description={i18n._(labs.member ? LABS_SECTION_DESCRIPTION_DESCRIPTOR : LABS_NOT_MEMBER_DESCRIPTION_DESCRIPTOR, {
+				labsName: PRODUCT_LABS_COMMUNITY_NAME,
+			})}
 			data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.section"
 		>
 			{asksOperatorPassLabsGreeting() && (
@@ -66,6 +80,7 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 			<div className={styles.actions} data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.actions">
 				<OpenOperatorsButton
 					variant="secondary"
+					label={labs.member ? undefined : i18n._(JOIN_LABS_DESCRIPTOR, {labsName: PRODUCT_LABS_COMMUNITY_NAME})}
 					data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.button.open-operators"
 				/>
 			</div>

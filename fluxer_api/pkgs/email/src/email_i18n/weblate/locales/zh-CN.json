@@ -288,7 +288,7 @@
 		"cta": "查看转交请求",
 		"footer_reason": "你收到此邮件是因为有人想在 {product_name} 上向你转交一张 Operator Pass。",
 		"intro": "{senderName} 想把自己的一张 Operator Pass 转交给你。",
-		"lead": "请在 {product_name} 中接受或拒绝。如果接受，通行证将于 {arrivesAt, date, long} 到达，除非发送者在此之前收回转交请求。",
+		"lead_v2": "请在 {product_name} 中接受或拒绝。如果接受，通行证会立即转移给你。",
 		"signoff": "{product_name} 团队",
 		"subject": "{senderName} 想把一张 Operator Pass 转交给你"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} 团队",
 		"subject": "你的 {product_name} 账号上的一张 Operator Pass 已终止"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Operator 徽章、Operators 墙上的一个位置、#operators 和抢先测试也随通行证提供。",
-		"cta": "获取 Operator Pass",
-		"footer_reason": "你收到此邮件是因为你加入了 Operator Pass 等候名单。这是我们关于通行证发送的最后一封邮件。",
-		"intro": "你曾让我们在 Operator Pass 开售时通知你。现在已经开售了。",
-		"paid_for": "通行证附带一份带编号的 Operator 证书，上面有你的名字以及付款的日期和时间，以 PDF 形式交付，由你自行保存。",
-		"price_label": "早鸟价",
-		"price_value": "{priceFormatted}，一次性付款，截至 {priceEndsOn, date, long}",
-		"signoff": "{product_name} 团队",
-		"subject": "{product_name} Operator Pass 已开售",
-		"terms_link": "Operator Pass 条款",
-		"unsubscribe": "退订"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "开启后，你会获得一份带编号、印有你所选名字的 Operator 证书。证书上显示 {visionaryDate, date, long}，即你获得 Visionary 的日期；如果你选择显示 Operator 徽章，徽章上也会显示这个日期。",
-		"choices_line": "在你选择显示之前，Operator 徽章会一直隐藏；只有你选择展示时，才会出现在 Operators 墙上。",
-		"cta": "开启你的 Operator Pass",
-		"footer_reason": "你收到这封邮件，是因为你在 {product_name} 上拥有 Visionary。",
-		"intro": "你的 Visionary 随附一个 Operator Pass，你可以随时在设置中开启它。你无需为它额外付费，你的 Visionary 也不会有任何变化。",
-		"labs_line": "{member, select, yes {你已经通过 Visionary 拥有 Fluxer Labs 中的 #operators。开启 Operator Pass 后，你还会在那里获得 Operator 身份组。} other {开启 Operator Pass 后，我们会把这个账号加入 Fluxer Labs 并给予 Operator 身份组，除非你以前离开过或被移出过 Fluxer Labs。你还会通过 Visionary 在那里拥有 #operators。}}",
-		"signoff": "{product_name} 团队",
-		"subject": "Visionary 附带的 Operator Pass 已可开启",
-		"terms_line": "Operator Pass 条款说明了通行证的运作方式，第 13 条与 Visionary 有关。",
-		"terms_link": "Operator Pass 条款"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {你的 Operator 徽章已显示在个人资料上。你可以在<settings>设置</settings>中隐藏它。} other {你的 Operator 徽章已隐藏。你可以在<settings>设置</settings>中显示它。}}",
 		"cta": "打开 Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "你所接受的 Operator Pass 条款（版本 {termsVersion}）已作为 PDF 附上。",
 		"terms_link": "Operator Pass 条款",
 		"wall_line": "{wallOptOut, select, yes {你选择了不在 Operators 墙上展示。你可以在<settings>设置</settings>中添加你的名字。} other {你在 Operators 墙上以 {wallName} 的名字展示。你可以在<settings>设置</settings>中更改名字或离开墙。}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "加入等候名单",
-		"expiry": "此链接将在 48 小时后过期。",
-		"footer_reason": "你收到此邮件是因为有人在 {product_name} 网站上用此地址登记了 Operator Pass 等候名单。",
-		"intro": "确认此邮箱地址即可加入 Operator Pass 等候名单。通行证开售时，我们会给你发一封邮件，仅此一次。",
-		"note": "如果你没有提出此请求，请忽略此邮件，我们不会再联系你。",
-		"signoff": "{product_name} 团队",
-		"subject": "确认加入 {product_name} Operator Pass 等候名单"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {请在 60 天内回复此邮件，告诉我们你不同意的理由。申诉是免费的，由我们团队的工作人员阅读并作出决定。} other {请在 60 天内联系此实例的管理员，告诉他们你不同意的理由。}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "你收到此邮件是因为我们对你在 {product_name} Operators 墙上的展示做出了一项决定。",
 		"ground": "Operator Pass 条款第 3.1 条",
 		"ground_label": "依据",
-		"intro": "{target, select, avatar {我们拒绝了你在 Operators 墙上的头像。} both {我们拒绝了你在 Operators 墙上的名字和头像。} other {我们拒绝了你在 Operators 墙上的名字。}}{shown, select, previous {墙上会保留你上次通过审核的版本。} other {在你提交新的之前，墙上会显示 Operator 一词和默认头像。}}你在墙上的位置、大小和徽章都保持不变，你的购买也不受影响。",
+		"intro": "{target, select, avatar {我们已从 Operators 墙上撤下你的头像。} both {我们已从 Operators 墙上撤下你的名字和头像。} other {我们已从 Operators 墙上撤下你的名字。}}{shown, select, previous {墙上会显示你之前的名字和头像。} other {在你提交新的之前，墙上会显示 Operator 一词和默认头像。}}你在墙上的位置、大小和徽章都保持不变，你的购买也不受影响。",
 		"next": "你可以在<settings>设置</settings>中提交新的名字或头像。",
 		"reason_label": "原因",
 		"reason_value": "{reason, select, impersonation {冒充他人} rights {未经授权使用名字或图片} age_suitability {不适合年龄较小的用户} other {违反社区准则}}",
 		"redress_v2": "你也可以向法院提起诉讼。如果你在欧盟，可以求助于经认证的<dsa>庭外争议解决机构</dsa>。如果你是欧盟或欧洲经济区的消费者，也可以将争议提交给瑞典国家消费者争议委员会（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
 		"signoff": "{product_name} 团队",
-		"subject": "我们拒绝了你在 {product_name} Operators 墙上的名字或头像"
+		"subject": "我们已从 {product_name} Operators 墙上撤下你的名字或头像"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "你的徽章已显示在个人资料上。你可以在<settings>设置</settings>中隐藏它。",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} 和 {product_name} 团队",
 		"subject": "你的 {product_name} Operator 证书",
 		"terms_link": "Operator Pass 条款",
-		"wall_line": "{wallOptOut, select, yes {你选择了不在 Operators 墙上展示。你可以在<settings>设置</settings>中添加你的名字。} other {你在 Operators 墙上以 {wallName} 的名字展示，我们审核后会显示你的名字和头像。你可以在<settings>设置</settings>中更改名字或离开墙。}}"
+		"wall_line_v2": "{wallOptOut, select, yes {你选择了不在 Operators 墙上展示。你可以在<settings>设置</settings>中添加你的名字。} other {你在 Operators 墙上以 {wallName} 的名字展示。你可以在<settings>设置</settings>中更改名字或离开墙。}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "此次退款的贷项通知单已作为 PDF 附在此邮件中。",

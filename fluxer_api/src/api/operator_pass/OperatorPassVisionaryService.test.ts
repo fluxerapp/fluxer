@@ -12,7 +12,6 @@ import {
 } from '@app/api/operator_pass/OperatorPassHoldingService';
 import {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
-import {runOperatorPassVisionaryNotice} from '@app/api/operator_pass/OperatorPassVisionaryNotice';
 import {
 	describeOperatorPassVisionary,
 	getOperatorPassVisionaryPassId,
@@ -30,19 +29,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const VISIONARY_SINCE = new Date('2025-03-14T09:30:00.000Z');
 
 let harness: ApiTestHarness;
-let saleOpensAt: Date | null;
 let priceRisesAt: Date | null;
 
 beforeAll(async () => {
 	harness = await createApiTestHarness();
-	saleOpensAt = Config.operatorPass.saleOpensAt;
 	priceRisesAt = Config.operatorPass.priceRisesAt;
-	Config.operatorPass.saleOpensAt = new Date(Date.now() - DAY_MS);
 	Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 });
 
 afterAll(async () => {
-	Config.operatorPass.saleOpensAt = saleOpensAt;
 	Config.operatorPass.priceRisesAt = priceRisesAt;
 	await harness.shutdown();
 });
@@ -164,7 +159,6 @@ test('a turn-on that fails partway stays available and a retry finishes it with 
 			activation: half,
 			removal: null,
 			labsMember: false,
-			now: new Date(),
 			certificateUrl: null,
 		})?.state,
 	).toBe('available');
@@ -258,34 +252,4 @@ test('deleting the account clears the name and PDF of the Visionary certificate 
 	expect(page?.pdf.length).toBe(0);
 	const activation = await repository.findVisionaryActivation(userId);
 	expect(activation).toMatchObject({consent_ip: null, consent_user_agent: null, end_reason: 'deletion'});
-});
-
-test('running the Visionary email twice emails each account once', async () => {
-	const userId = await createVisionary();
-	await getUserRepository().reserveVisionarySlot(900_000 + Number(userId % 1000n), userId);
-	const {repository} = createServices();
-	const emails = new TestEmailService();
-	const deps = {
-		kvClient: getKVClient(),
-		repository,
-		userRepository: getUserRepository(),
-		emailService: emails,
-		logger: {info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn()} as never,
-	};
-	const run = {
-		includeDm: false,
-		afterSlot: -1,
-		turnOnUrl: 'https://web.fluxer.test/x',
-		isLabsMember: async () => false,
-		sendDm: async () => true,
-	};
-	await runOperatorPassVisionaryNotice(deps, run);
-	await runOperatorPassVisionaryNotice(deps, run);
-
-	const user = await getUserRepository().findUniqueAssert(userId);
-	const sent = emails
-		.listSentEmails()
-		.filter((email) => email.type === 'operator_pass_visionary_notice' && email.to === user.email);
-	expect(sent).toHaveLength(1);
-	expect((await repository.findVisionaryActivation(userId))?.notice_emailed_at).not.toBeNull();
 });

@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "一般",
 	"guild.default_channel_voice": "一般",
 	"operator_pass.labs_greeting": "{size, select, single {歡迎來到 #operators，{last}！} other {歡迎來到 #operators，{others} 和 {last}！}} 這是所有 Operator Pass 持有者的頻道。",
-	"operator_pass.visionary_notice_dm_v2": "您的 Visionary 隨附一個 Operator Pass。您可以隨時在「設定」的「Operator Pass」中開啟它，不需額外付費。",
 	"profile_badge.bug_hunter": "{product_name} 錯誤獵人",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator，{count, plural, other {# 張 Operator Pass}}",

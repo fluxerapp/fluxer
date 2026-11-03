@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "umum",
 	"guild.default_channel_voice": "Umum",
 	"operator_pass.labs_greeting": "{size, select, single {Selamat datang di #operators, {last}!} other {Selamat datang di #operators, {others} dan {last}!}} Ini kanal untuk semua pemilik Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Visionary-mu disertai Operator Pass. Kamu bisa mengaktifkannya kapan saja di Pengaturan, di bagian \"Operator Pass\", dan kamu tidak membayar apa pun lagi untuk itu.",
 	"profile_badge.bug_hunter": "Pemburu Bug {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, other {# Operator Pass}}",

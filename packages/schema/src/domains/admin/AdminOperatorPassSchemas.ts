@@ -2,16 +2,10 @@
 
 import {
 	OperatorPassCertificateNameType,
-	OperatorPassCurrencySchema,
 	OperatorPassHolderResponse,
-	OperatorPassPriceFeedbackSchema,
 	OperatorPassPurchaseResponse,
-	OperatorPassPurchaseStatusSchema,
-	OperatorPassWaitlistAboutKeySchema,
-	OperatorPassWaitlistFollowupKeySchema,
 	OperatorPassWallDeclineReasonSchema,
 	OperatorPassWallDisplayStateSchema,
-	OperatorPassWallReviewStateSchema,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
 import {createNamedStringLiteralUnion, SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
@@ -99,7 +93,7 @@ export const AdminOperatorPassWallEventKindSchema = createNamedStringLiteralUnio
 		['taken_down', 'TAKEN_DOWN', "The name came off the Operators' wall, see cause"],
 		['shown_again', 'SHOWN_AGAIN', 'The name came back on the wall after a pause or a limited removal ended'],
 		['reviewed', 'REVIEWED', 'Staff reviewed the listed name and kept it, from before moderation states'],
-		['approved', 'APPROVED', 'Staff approved the name and the avatar on the wall'],
+		['approved', 'APPROVED', 'A name and avatar went on the wall through a staff approval or a revert'],
 		['declined', 'DECLINED', 'Staff declined the name or the avatar, see reason'],
 		['fallback', 'FALLBACK', 'The wall shows Operator because no accepted name is left'],
 		[
@@ -149,30 +143,21 @@ export const AdminOperatorPassWallEntryResponse = z.object({
 	user_id: SnowflakeStringType,
 	username: z.string().nullable().describe('Username of the account, null when it no longer exists'),
 	avatar_url: z.url().nullable().describe('Current profile avatar of the account'),
-	wall_name: z.string().nullable().describe('The latest name the holder submitted'),
+	wall_name: z.string().nullable().describe('The name the holder chose for the wall'),
 	wall_opt_out: z.boolean(),
 	keep_as_is: z.boolean().describe('Whether profile changes stay off the wall'),
 	release_list_opt_in: z.boolean().describe('Whether the holder chose to be in every yearly The Operators of list'),
 	display_state: OperatorPassWallDisplayStateSchema.nullable(),
-	review_state: OperatorPassWallReviewStateSchema.nullable(),
 	shown_name: z.string().nullable().describe('The name the wall shows now'),
-	shown_avatar_url: z.url().nullable().describe('The approved avatar the wall shows now, null for the default avatar'),
-	live_revision_id: SnowflakeStringType.nullable().describe('The approved revision the wall shows'),
-	pending_revision_id: SnowflakeStringType.nullable().describe('The revision waiting for review'),
-	pending_name: z.string().nullable(),
-	pending_avatar_url: z
-		.string()
+	shown_avatar_url: z
+		.url()
 		.nullable()
-		.describe('Admin route to the private copy of the pending avatar, null when the change has no avatar'),
+		.describe('The avatar the wall shows now, null for the default avatar or when the wall shows none'),
+	live_revision_id: SnowflakeStringType.nullable().describe('The revision the wall shows'),
 	live_avatar_private_url: z.string().nullable().describe('Admin route to the private copy of the live avatar'),
 	business: z
 		.boolean()
 		.describe('Whether the wall shows a business listing with a company name and logo, after the listings of people'),
-	pending_source: z.string().nullable().describe('checkout, profile, settings or admin'),
-	pending_since: z.iso.datetime().nullable(),
-	review_due_at: z.iso.datetime().nullable().describe('72 hours after the pending change was submitted'),
-	declined_revision_id: SnowflakeStringType.nullable(),
-	declined_name: z.string().nullable(),
 	decline_reason: OperatorPassWallDeclineReasonSchema.nullable(),
 	decline_note: z.string().nullable().describe('The facts sent to the holder'),
 	hidden: z.boolean().describe('Whether staff hid the listing for now'),
@@ -183,7 +168,6 @@ export const AdminOperatorPassWallEntryResponse = z.object({
 		.datetime()
 		.nullable()
 		.describe('When the holder left the wall, the copies are deleted 60 days later'),
-	reviewed_at: z.iso.datetime().nullable(),
 	listed_at: z.iso.datetime().nullable().describe('When the listing went on the wall'),
 	delivered_at: z.iso.datetime().nullable().describe('When the pass was delivered'),
 	release_published_year: z.number().int().nullable().describe('Year of the latest list the name was published in'),
@@ -247,27 +231,10 @@ export const AdminOperatorPassWallRevisionIdParam = z.object({
 });
 
 export const AdminOperatorPassWallAvatarParam = z.object({
-	user_id: SnowflakeStringType,
 	sha256: z
 		.string()
 		.regex(/^[0-9a-f]{64}$/u)
 		.describe('SHA-256 of the avatar snapshot'),
-});
-
-export const AdminOperatorPassWallBulkRequest = z.object({
-	action: z.enum(['approve', 'decline']),
-	revisions: z
-		.array(z.object({user_id: SnowflakeStringType, revision_id: SnowflakeStringType}))
-		.min(1)
-		.max(100)
-		.describe('Pending revisions to act on'),
-	reason: OperatorPassWallDeclineReasonSchema.optional().describe('Required to decline'),
-	note: z.string().trim().min(1).max(300).optional().describe('Required to decline'),
-});
-
-export const AdminOperatorPassWallBulkResponse = z.object({
-	done: z.array(SnowflakeStringType).describe('Revisions acted on'),
-	skipped: z.array(SnowflakeStringType).describe('Revisions that were no longer pending'),
 });
 
 export const AdminOperatorPassWallHideRequest = z.object({
@@ -320,14 +287,6 @@ export const AdminOperatorPassWallFreezeRequest = z.object({
 });
 
 export type AdminOperatorPassWallEntryResponse = z.infer<typeof AdminOperatorPassWallEntryResponse>;
-
-export const AdminOperatorPassWallQueueResponse = z.object({
-	entries: z
-		.array(AdminOperatorPassWallEntryResponse)
-		.describe('Listed names and avatars in the pending state, oldest first'),
-});
-
-export type AdminOperatorPassWallQueueResponse = z.infer<typeof AdminOperatorPassWallQueueResponse>;
 
 export const AdminOperatorPassReleaseYearParam = z.object({
 	year: z.coerce.number().int().min(2026).max(9999).describe('The year of the list'),
@@ -423,7 +382,6 @@ export const AdminOperatorPassOfferResponse = z.object({
 	recipient_id: SnowflakeStringType.describe('Who gets the pass'),
 	created_at: z.iso.datetime().describe('When the offer was made'),
 	accepted_at: z.iso.datetime().nullable().describe('When the recipient accepted'),
-	arrives_at: z.iso.datetime().nullable().describe('When the transfer lock ends'),
 	ended_at: z.iso.datetime().nullable().describe('When the offer completed or ended'),
 	terms_version: z.string().nullable().describe('Version of the terms the recipient accepted'),
 });
@@ -439,57 +397,9 @@ export const AdminOperatorPassVisionaryActivationResponse = z.object({
 	certificate_number: z.number().int().nullable().describe('Number of the certificate page'),
 	ended_at: z.iso.datetime().nullable().describe('When the pass ended'),
 	end_reason: z.string().nullable().describe('visionary_ended or deletion'),
-	notice_emailed_at: z.iso
-		.datetime()
-		.nullable()
-		.describe('When the Visionary email was handed to the email provider, which is not proof it arrived'),
-	notice_skip_reason: z.string().nullable().describe('Why the last email run skipped the account'),
-	notice_dm_sent_at: z.iso.datetime().nullable().describe('When the system DM about the pass was sent'),
 });
 
 export type AdminOperatorPassVisionaryActivationResponse = z.infer<typeof AdminOperatorPassVisionaryActivationResponse>;
-
-const VisionaryNoticeCount = z.number().int().min(0);
-
-export const AdminOperatorPassVisionaryNoticeResponse = z.object({
-	recipients: VisionaryNoticeCount.describe('Accounts a run would email now'),
-	emailed: VisionaryNoticeCount.describe('Accounts already emailed by an earlier run'),
-	dm_sent: VisionaryNoticeCount.describe('Accounts that got the system DM'),
-	skipped: z
-		.object({
-			not_visionary: VisionaryNoticeCount.describe('Listed in visionary_slots but without Visionary now'),
-			inactive: VisionaryNoticeCount.describe('Deleted, disabled or flagged as spam'),
-			pending_deletion: VisionaryNoticeCount.describe('Account deletion is pending'),
-			removed: VisionaryNoticeCount.describe('The pass was removed permanently under section 8'),
-			turned_on: VisionaryNoticeCount.describe('Already turned the pass on'),
-			no_email: VisionaryNoticeCount.describe('No verified email or a bounced address, the DM still goes when asked'),
-		})
-		.describe('Accounts no run emails, by reason'),
-	date_unknown: VisionaryNoticeCount.describe(
-		'Accounts with no Visionary payment or gift redemption on record, whose pass shows premium_since instead',
-	),
-	running: z.boolean().describe('Whether a run is going right now'),
-});
-
-export type AdminOperatorPassVisionaryNoticeResponse = z.infer<typeof AdminOperatorPassVisionaryNoticeResponse>;
-
-export const AdminOperatorPassVisionaryNoticeSendRequest = z.object({
-	expected_recipients: z
-		.number()
-		.int()
-		.min(0)
-		.describe('The recipients count from the preview staff read. The send is refused when a fresh count differs'),
-	include_dm: z.boolean().describe('Whether every reached account also gets one system DM'),
-});
-
-export type AdminOperatorPassVisionaryNoticeSendRequest = z.infer<typeof AdminOperatorPassVisionaryNoticeSendRequest>;
-
-export const AdminOperatorPassVisionaryNoticeSendResponse = z.object({
-	job_id: z.string().describe('The worker job that sends the emails'),
-	recipients: VisionaryNoticeCount.describe('Accounts the run will email'),
-});
-
-export type AdminOperatorPassVisionaryNoticeSendResponse = z.infer<typeof AdminOperatorPassVisionaryNoticeSendResponse>;
 
 export const AdminOperatorPassVisionaryActivationsCsvResponse = z
 	.file()
@@ -620,204 +530,3 @@ export const AdminOperatorPassCertificateReissueResponse = z.object({
 });
 
 export type AdminOperatorPassCertificateReissueResponse = z.infer<typeof AdminOperatorPassCertificateReissueResponse>;
-
-const WaitlistCount = z.number().int().nonnegative();
-
-export const AdminOperatorPassWaitlistStatusSchema = createNamedStringLiteralUnion(
-	[
-		['pending', 'PENDING', 'The email is not confirmed yet'],
-		['confirmed', 'CONFIRMED', 'The email is confirmed'],
-		['unsubscribed', 'UNSUBSCRIBED', 'The signup left the waitlist'],
-		['bounced', 'BOUNCED', 'The address bounced or complained'],
-	],
-	'Operator Pass waitlist signup status',
-);
-
-export const AdminOperatorPassWaitlistStatusCounts = z.object({
-	pending: WaitlistCount.describe('Signups that have not confirmed their email yet'),
-	confirmed: WaitlistCount.describe('Signups with a confirmed email'),
-	unsubscribed: WaitlistCount.describe('Signups that left the waitlist'),
-	bounced: WaitlistCount.describe('Signups whose address bounced or complained'),
-});
-
-export type AdminOperatorPassWaitlistStatusCounts = z.infer<typeof AdminOperatorPassWaitlistStatusCounts>;
-
-export const AdminOperatorPassPriceFeedbackCount = z.object({
-	feedback: OperatorPassPriceFeedbackSchema,
-	confirmed: WaitlistCount.describe('Confirmed signups that gave this answer'),
-	all: WaitlistCount.describe('Signups in any status that gave this answer'),
-});
-
-export type AdminOperatorPassPriceFeedbackCount = z.infer<typeof AdminOperatorPassPriceFeedbackCount>;
-
-export const AdminOperatorPassPriceFeedbackCurrency = z.object({
-	currency: OperatorPassCurrencySchema,
-	confirmed: WaitlistCount.describe('Confirmed signups that were shown the early bird price in this currency'),
-	all: WaitlistCount.describe('Signups in any status that were shown the early bird price in this currency'),
-	answers: z
-		.array(AdminOperatorPassPriceFeedbackCount)
-		.describe('Signups per answer, in the order the page lists them'),
-});
-
-export type AdminOperatorPassPriceFeedbackCurrency = z.infer<typeof AdminOperatorPassPriceFeedbackCurrency>;
-
-export const AdminOperatorPassWaitlistFollowupCount = z.object({
-	key: OperatorPassWaitlistFollowupKeySchema,
-	confirmed: WaitlistCount.describe('Confirmed signups that picked this option'),
-	all: WaitlistCount.describe('Signups in any status that picked this option'),
-});
-
-export type AdminOperatorPassWaitlistFollowupCount = z.infer<typeof AdminOperatorPassWaitlistFollowupCount>;
-
-export const AdminOperatorPassWaitlistAboutCount = z.object({
-	key: OperatorPassWaitlistAboutKeySchema,
-	confirmed: WaitlistCount.describe('Confirmed signups that picked this description'),
-	all: WaitlistCount.describe('Signups in any status that picked this description'),
-});
-
-export type AdminOperatorPassWaitlistAboutCount = z.infer<typeof AdminOperatorPassWaitlistAboutCount>;
-
-export const AdminOperatorPassWaitlistFollowupStats = z.object({
-	answered: z
-		.object({
-			confirmed: WaitlistCount.describe('Confirmed signups that answered the follow-up question'),
-			all: WaitlistCount.describe('Signups in any status that answered the follow-up question'),
-		})
-		.describe('Signups that answered the follow-up question, also with no option picked'),
-	picks: z
-		.array(AdminOperatorPassWaitlistFollowupCount)
-		.describe('Signups per option, in the order the page lists them'),
-	about: z
-		.array(AdminOperatorPassWaitlistAboutCount)
-		.describe('Signups per description they picked for themselves, in the order the page lists them'),
-	other_text: z
-		.object({
-			confirmed: WaitlistCount.describe('Confirmed signups that wrote their own answer'),
-			all: WaitlistCount.describe('Signups in any status that wrote their own answer'),
-		})
-		.describe('Signups that wrote their own answer under other'),
-});
-
-export type AdminOperatorPassWaitlistFollowupStats = z.infer<typeof AdminOperatorPassWaitlistFollowupStats>;
-
-export const AdminOperatorPassWaitlistStatsResponse = z.object({
-	total: WaitlistCount.describe('Waitlist rows in any status'),
-	by_status: AdminOperatorPassWaitlistStatusCounts,
-	unanswered: z
-		.object({
-			confirmed: WaitlistCount.describe('Confirmed signups without a price answer'),
-			all: WaitlistCount.describe('Signups in any status without a price answer'),
-		})
-		.describe('Signups stored without a price answer'),
-	price_feedback: z.array(AdminOperatorPassPriceFeedbackCurrency).describe('Price answers per currency'),
-	followup: AdminOperatorPassWaitlistFollowupStats,
-	standard_price_set: z
-		.boolean()
-		.describe('Whether a standard price is set. Without one, checkout keeps the early bird price after the price rise'),
-});
-
-export type AdminOperatorPassWaitlistStatsResponse = z.infer<typeof AdminOperatorPassWaitlistStatsResponse>;
-
-export const AdminOperatorPassWaitlistFollowupTextEntry = z.object({
-	other_text: z.string().describe('The answer as the visitor wrote it, plain text that must never be rendered as HTML'),
-	picks: z.array(OperatorPassWaitlistFollowupKeySchema).describe('Every option the visitor picked with it'),
-	about: z.array(OperatorPassWaitlistAboutKeySchema).describe('Every description the visitor picked for themselves'),
-	status: AdminOperatorPassWaitlistStatusSchema,
-	answered_at: z.iso.datetime().describe('When the visitor last saved the answer'),
-});
-
-export type AdminOperatorPassWaitlistFollowupTextEntry = z.infer<typeof AdminOperatorPassWaitlistFollowupTextEntry>;
-
-export const AdminOperatorPassWaitlistFollowupTextsResponse = z.object({
-	entries: z
-		.array(AdminOperatorPassWaitlistFollowupTextEntry)
-		.describe('Every written answer, newest first, without addresses or other contact details'),
-});
-
-export type AdminOperatorPassWaitlistFollowupTextsResponse = z.infer<
-	typeof AdminOperatorPassWaitlistFollowupTextsResponse
->;
-
-export const AdminOperatorPassPreviewIpEntry = z.object({
-	id: z.string().describe('The ID of the entry'),
-	value: z.string().describe('The IP address or CIDR range, in canonical form'),
-	label: z.string().describe('Who or what the entry is for'),
-	expires_at: z.iso.datetime().nullable().describe('When the entry stops working, null when it never does'),
-	created_at: z.iso.datetime().describe('When the entry was added'),
-	created_by: SnowflakeStringType.describe('Staff member who added the entry'),
-});
-
-export type AdminOperatorPassPreviewIpEntry = z.infer<typeof AdminOperatorPassPreviewIpEntry>;
-
-export const AdminOperatorPassPreviewPurchase = z.object({
-	purchase_id: z.string().describe('The checkout session ID of the purchase'),
-	purchaser_id: SnowflakeStringType.describe('The account that bought the passes'),
-	label: z.string().describe('The label of the preview entry the purchase was made through'),
-	status: OperatorPassPurchaseStatusSchema,
-	quantity: z.number().int().describe('How many passes the purchase has'),
-	currency: OperatorPassCurrencySchema,
-	created_at: z.iso.datetime().describe('When the checkout was created'),
-	delivered_at: z.iso.datetime().nullable().describe('When the certificate was delivered'),
-	certificate_numbers: z.array(z.number().int()).describe('The certificate numbers the passes took'),
-});
-
-export type AdminOperatorPassPreviewPurchase = z.infer<typeof AdminOperatorPassPreviewPurchase>;
-
-export const AdminOperatorPassPreviewResponse = z.object({
-	entries: z.array(AdminOperatorPassPreviewIpEntry).describe('The preview entries stored in the admin panel'),
-	config_values: z
-		.array(z.string())
-		.describe('The IP addresses and CIDR ranges in FLUXER_OPERATOR_PASS_PREVIEW_IPS, which the panel can not change'),
-	sale_open: z.boolean().describe('Whether the sale is open for everyone, which ends every preview'),
-	purchases: z.array(AdminOperatorPassPreviewPurchase).describe('Every preview purchase, newest first'),
-});
-
-export type AdminOperatorPassPreviewResponse = z.infer<typeof AdminOperatorPassPreviewResponse>;
-
-export const AdminOperatorPassPreviewIpCreateRequest = z.object({
-	value: z.string().trim().min(1).max(64).describe('An IPv4 or IPv6 address, or a CIDR range'),
-	label: z.string().trim().min(1).max(100).describe('Who or what the entry is for'),
-	expires_at: z.iso.datetime().nullish().describe('When the entry stops working'),
-});
-
-export type AdminOperatorPassPreviewIpCreateRequest = z.infer<typeof AdminOperatorPassPreviewIpCreateRequest>;
-
-export const AdminOperatorPassPreviewIpIdParam = z.object({
-	entry_id: z.string().trim().min(1).max(64).describe('The ID of the preview entry'),
-});
-
-export const AdminOperatorPassResetRefusalSchema = createNamedStringLiteralUnion(
-	[
-		['non_preview_purchases', 'NON_PREVIEW_PURCHASES', 'A purchase exists that was not made through a preview entry'],
-		['other_holders', 'OTHER_HOLDERS', 'An account holds passes that no preview purchase explains'],
-		['visionary_activations', 'VISIONARY_ACTIVATIONS', 'A Visionary holder turned on the Operator Pass'],
-		[
-			'other_certificates',
-			'OTHER_CERTIFICATES',
-			'A certificate number belongs to a pass outside the preview purchases',
-		],
-		['billing_documents', 'BILLING_DOCUMENTS', 'A preview purchase has a billing document'],
-	],
-	'Why the Operator Pass data can not be reset',
-);
-
-export const AdminOperatorPassResetPlan = z.object({
-	allowed: z.boolean().describe('Whether the reset may run'),
-	refused_reason: AdminOperatorPassResetRefusalSchema.nullable(),
-	preview_purchases: z.number().int().describe('Preview purchases the reset removes'),
-	non_preview_purchases: z.number().int().describe('Purchases not made through a preview entry, which block the reset'),
-	passes: z.number().int().describe('Passes of the preview purchases'),
-	certificate_numbers: z.number().int().describe('Certificate numbers the preview passes took'),
-	users: z.number().int().describe('Accounts that bought or hold preview passes'),
-});
-
-export type AdminOperatorPassResetPlan = z.infer<typeof AdminOperatorPassResetPlan>;
-
-export const AdminOperatorPassResetRequest = z.object({
-	confirm: z.literal('RESET').describe('Must be RESET'),
-});
-
-export const AdminOperatorPassResetResponse = z.object({
-	removed: AdminOperatorPassResetPlan.describe('What the reset found and removed'),
-	remaining: AdminOperatorPassResetPlan.describe('What a fresh count finds after the reset'),
-});

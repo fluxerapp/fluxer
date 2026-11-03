@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	BillingPaymentMethod,
-	BillingTotals,
-	EmailSendParams,
-	IBulkEmailSession,
-	IEmailService,
-} from '@pkgs/email/src/IEmailService';
+import type {BillingPaymentMethod, BillingTotals, EmailSendParams, IEmailService} from '@pkgs/email/src/IEmailService';
 
 export interface SentEmailRecord {
 	to: string;
@@ -50,13 +44,6 @@ export class TestEmailService implements IEmailService {
 
 	async isEmailBounced(email: string): Promise<boolean> {
 		return this.bouncedEmails.has(email);
-	}
-
-	async openBulkSession(): Promise<IBulkEmailSession> {
-		return {
-			send: (templateKey, email, params, locale) => this.send(templateKey, email, params, locale),
-			close: async () => {},
-		};
 	}
 
 	listSentEmails(): Array<SentEmailRecord> {
@@ -283,7 +270,6 @@ export class TestEmailService implements IEmailService {
 		operator_pass_offer_received: async (email, params) => {
 			return this.record(email, 'operator_pass_offer_received', {
 				sender_name: params.senderName,
-				arrives_at: params.arrivesAt?.toISOString() ?? '',
 			});
 		},
 		operator_pass_offer_accepted: async (email, params) => {
@@ -301,13 +287,6 @@ export class TestEmailService implements IEmailService {
 				cause: params.cause,
 				last_pass: params.lastPass ? 'yes' : 'no',
 				visionary: params.visionary ? 'yes' : 'no',
-			});
-		},
-		operator_pass_visionary_notice: async (email, params) => {
-			return this.record(email, 'operator_pass_visionary_notice', {
-				visionary_date: params.visionaryDate.toISOString(),
-				labs_member: params.labsMember ? 'yes' : 'no',
-				turn_on_url: params.turnOnUrl,
 			});
 		},
 		operator_pass_visionary_turned_on: async (email, params) => {
@@ -511,20 +490,6 @@ export class TestEmailService implements IEmailService {
 				visionary: String(params.visionary),
 				credit_note: params.creditNote?.number ?? '',
 				credit_note_pdf: params.creditNote?.pdf.filename ?? '',
-			});
-		},
-		operator_pass_waitlist_verification: async (email, params) => {
-			return this.record(email, 'operator_pass_waitlist_verification', {
-				confirm_url: params.confirmUrl,
-			});
-		},
-		operator_pass_sale_open: async (email, params) => {
-			return this.record(email, 'operator_pass_sale_open', {
-				checkout_url: params.checkoutUrl,
-				price_formatted: params.priceFormatted,
-				price_rises_at: params.priceRisesAt.toISOString(),
-				unsubscribe_url: params.unsubscribeUrl,
-				unsubscribe_page_url: params.unsubscribePageUrl,
 			});
 		},
 	};

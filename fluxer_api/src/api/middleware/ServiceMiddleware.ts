@@ -96,7 +96,6 @@ import {
 	getOAuth2TokenRepository,
 	getOperatorPassEntitlementService,
 	getOperatorPassRepository,
-	getOperatorPassWaitlistService,
 	getPasswordChangeRepository,
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
@@ -124,7 +123,6 @@ import {OAuth2RequestService} from '@app/api/oauth/OAuth2RequestService';
 import {OAuth2Service} from '@app/api/oauth/OAuth2Service';
 import {OperatorPassCheckoutService} from '@app/api/operator_pass/OperatorPassCheckoutService';
 import type {OperatorPassEntitlementService} from '@app/api/operator_pass/OperatorPassEntitlementService';
-import type {OperatorPassWaitlistService} from '@app/api/operator_pass/OperatorPassWaitlistService';
 import {ReportRequestService} from '@app/api/report/ReportRequestService';
 import {ReportService} from '@app/api/report/ReportService';
 import {RpcService} from '@app/api/rpc/RpcService';
@@ -854,13 +852,6 @@ class RequestServices implements RequestScopedServices {
 			return undefined;
 		}
 		return getOperatorPassEntitlementService();
-	}
-
-	get operatorPassWaitlistService(): OperatorPassWaitlistService | undefined {
-		if (Config.instance.selfHosted) {
-			return undefined;
-		}
-		return getOperatorPassWaitlistService();
 	}
 
 	get operatorPassCheckoutService(): OperatorPassCheckoutService | undefined {

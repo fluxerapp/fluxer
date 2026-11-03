@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "जनरल",
 	"guild.default_channel_voice": "जनरल",
 	"operator_pass.labs_greeting": "{size, select, single {#operators में आपका स्वागत है, {last}!} other {#operators में आप सभी का स्वागत है, {others} और {last}!}} यह Operator Pass वाले हर व्यक्ति का चैनल है।",
-	"operator_pass.visionary_notice_dm_v2": "आपके Visionary के साथ एक Operator Pass मिलता है। आप जब चाहें इसे सेटिंग्स में, \"Operator Pass\" के अंदर चालू कर सकते हैं, और इसके लिए आपको कुछ भी अतिरिक्त नहीं देना होता।",
 	"profile_badge.bug_hunter": "{product_name} बग हंटर",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

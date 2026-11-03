@@ -288,7 +288,7 @@
 		"cta": "Ver la propuesta",
 		"footer_reason": "Has recibido este correo porque alguien te ha propuesto un Operator Pass en {product_name}.",
 		"intro": "{senderName} quiere cederte uno de sus Operator Pass.",
-		"lead": "Acéptalo o recházalo en {product_name}. Si lo aceptas, llegará el {arrivesAt, date, long}, a menos que el remitente retire la propuesta antes.",
+		"lead_v2": "Acéptalo o recházalo en {product_name}. Si lo aceptas, se transfiere a tu cuenta de inmediato.",
 		"signoff": "El equipo de {product_name}",
 		"subject": "{senderName} quiere cederte un Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "El equipo de {product_name}",
 		"subject": "Ha finalizado un Operator Pass de tu cuenta de {product_name}"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "También vienen con él la insignia Operator, un sitio en el muro de Operators, #operators y las pruebas anticipadas.",
-		"cta": "Consigue el Operator Pass",
-		"footer_reason": "Has recibido este correo porque te apuntaste a la lista de espera del Operator Pass. Es el último correo que te enviamos sobre el pase.",
-		"intro": "Nos pediste que te avisáramos cuando el Operator Pass saliera a la venta. Ya está a la venta.",
-		"paid_for": "El pase viene con un certificado Operator numerado con tu nombre y la fecha y hora del pago, que recibes en un PDF que conservas.",
-		"price_label": "Precio de lanzamiento",
-		"price_value": "{priceFormatted}, pago único, hasta el {priceEndsOn, date, long}",
-		"signoff": "El equipo de {product_name}",
-		"subject": "El Operator Pass de {product_name} ya está a la venta",
-		"terms_link": "Condiciones del Operator Pass",
-		"unsubscribe": "Darse de baja"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Al activarlo, recibes un certificado Operator numerado con el nombre que elijas. Muestra el {visionaryDate, date, long}, la fecha en que obtuviste Visionary, y también la muestra la insignia Operator si decides mostrarla.",
-		"choices_line": "La insignia Operator se queda oculta hasta que decidas mostrarla, y solo apareces en el muro de Operators si así lo eliges.",
-		"cta": "Activar tu Operator Pass",
-		"footer_reason": "Recibes este correo porque tienes Visionary en {product_name}.",
-		"intro": "Tu Visionary viene con un Operator Pass, y puedes activarlo cuando quieras en tus ajustes. No pagas nada más por él y no cambia nada de tu Visionary.",
-		"labs_line": "{member, select, yes {Ya tienes #operators en Fluxer Labs gracias a tu Visionary. Cuando actives tu Operator Pass, también tendrás allí el rol Operator.} other {Cuando actives tu Operator Pass, añadiremos esta cuenta a Fluxer Labs con el rol Operator, salvo que ya hayas salido de Fluxer Labs o te hayan sacado de él. Tu Visionary también te da #operators allí.}}",
-		"signoff": "El equipo de {product_name}",
-		"subject": "Tu Operator Pass de Visionary está listo para activarlo",
-		"terms_line": "Las condiciones del Operator Pass explican cómo funciona el pase, y el apartado 13 trata sobre Visionary.",
-		"terms_link": "Condiciones del Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Tu insignia Operator está en tu perfil. Puedes ocultarla en tus <settings>ajustes</settings>.} other {Tu insignia Operator está oculta. Puedes mostrarla en tus <settings>ajustes</settings>.}}",
 		"cta": "Abrir Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Las condiciones del Operator Pass que aceptaste (versión {termsVersion}) van adjuntas en PDF.",
 		"terms_link": "Condiciones del Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Elegiste no aparecer en el muro de Operators. Puedes añadir tu nombre en tus <settings>ajustes</settings>.} other {Apareces en el muro de Operators como {wallName}. Puedes cambiarlo o salir del muro en tus <settings>ajustes</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Apuntarme a la lista de espera",
-		"expiry": "Este enlace caduca en 48 horas.",
-		"footer_reason": "Has recibido este correo electrónico porque esta dirección se introdujo en la lista de espera del Operator Pass en el sitio web de {product_name}.",
-		"intro": "Confirma esta dirección de correo para apuntarte a la lista de espera del Operator Pass. Te escribiremos una sola vez, cuando el pase salga a la venta.",
-		"note": "Si no lo has pedido tú, ignora este correo y no volveremos a escribirte.",
-		"signoff": "El equipo de {product_name}",
-		"subject": "Confirma tu inscripción en la lista de espera del Operator Pass de {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Responde a este correo en un plazo de 60 días y cuéntanos por qué no estás de acuerdo. Es gratis, y una persona de nuestro equipo lee tu apelación y decide sobre ella.} other {Contacta con los administradores de esta instancia en un plazo de 60 días y explícales por qué no estás de acuerdo.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Has recibido este correo electrónico debido a una decisión sobre tu entrada en el muro de Operators de {product_name}.",
 		"ground": "Sección 3.1 de las condiciones del Operator Pass",
 		"ground_label": "Fundamento",
-		"intro": "{target, select, avatar {Hemos rechazado tu avatar para el muro de Operators.} both {Hemos rechazado tu nombre y tu avatar para el muro de Operators.} other {Hemos rechazado tu nombre para el muro de Operators.}} {shown, select, previous {El muro mantiene tu última versión aprobada.} other {Hasta que envíes uno nuevo, el muro muestra la palabra Operator y el avatar predeterminado.}} Tu sitio en el muro, su tamaño y tu insignia se quedan como están, y tu compra no se ve afectada.",
+		"intro": "{target, select, avatar {Hemos quitado tu avatar del muro de Operators.} both {Hemos quitado tu nombre y tu avatar del muro de Operators.} other {Hemos quitado tu nombre del muro de Operators.}} {shown, select, previous {El muro muestra tu nombre y tu avatar anteriores.} other {Hasta que envíes uno nuevo, el muro muestra la palabra Operator y el avatar predeterminado.}} Tu sitio en el muro, su tamaño y tu insignia se quedan como están, y tu compra no se ve afectada.",
 		"next": "Puedes enviar un nuevo nombre o avatar en tus <settings>ajustes</settings>.",
 		"reason_label": "Motivo",
 		"reason_value": "{reason, select, impersonation {Se hace pasar por otra persona} rights {Usa un nombre o una imagen sin tener los derechos} age_suitability {No es adecuado para usuarios más jóvenes} other {Infringe las normas de la comunidad}}",
 		"redress_v2": "También puedes acudir a los tribunales. Si estás en la UE, puedes acudir a un <dsa>órgano de resolución extrajudicial de litigios</dsa> certificado. Si eres consumidor en la UE o el EEE, también puedes llevar el litigio a la Junta Nacional de Reclamaciones de los Consumidores de Suecia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suecia.",
 		"signoff": "El equipo de {product_name}",
-		"subject": "Hemos rechazado tu nombre o avatar para el muro de Operators de {product_name}"
+		"subject": "Hemos quitado tu nombre o avatar del muro de Operators de {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Tu insignia está en tu perfil. Puedes ocultarla en tus <settings>ajustes</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} y el equipo de {product_name}",
 		"subject": "Tu certificado Operator de {product_name}",
 		"terms_link": "Condiciones del Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Elegiste no aparecer en el muro de Operators. Puedes añadir tu nombre en tus <settings>ajustes</settings>.} other {Apareces en el muro de Operators como {wallName}, y tu nombre y tu avatar se muestran en cuanto los revisemos. Puedes cambiarlo o salir del muro en tus <settings>ajustes</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Elegiste no aparecer en el muro de Operators. Puedes añadir tu nombre en tus <settings>ajustes</settings>.} other {Apareces en el muro de Operators como {wallName}. Puedes cambiarlo o salir del muro en tus <settings>ajustes</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "La factura rectificativa de este reembolso va adjunta a este correo en PDF.",

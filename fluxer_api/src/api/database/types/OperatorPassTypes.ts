@@ -263,19 +263,11 @@ export interface OperatorPassWallEntryRow {
 	live_name: Nullish<string>;
 	live_avatar: Nullish<string>;
 	live_business: Nullish<boolean>;
-	pending_revision_id: Nullish<bigint>;
 	pending_name: Nullish<string>;
-	pending_avatar: Nullish<string>;
-	pending_source: Nullish<OperatorPassWallRevisionSource>;
-	pending_since: Nullish<Date>;
-	declined_revision_id: Nullish<bigint>;
 	declined_name: Nullish<string>;
-	declined_avatar: Nullish<string>;
 	decline_reason: Nullish<OperatorPassWallDeclineReason>;
 	decline_note: Nullish<string>;
 	decline_statement_id: Nullish<string>;
-	reviewed_at: Nullish<Date>;
-	reviewed_by: Nullish<UserID>;
 	listed_at: Nullish<Date>;
 	delivered_at: Nullish<Date>;
 	release_published_year: Nullish<number>;
@@ -326,11 +318,6 @@ export interface OperatorPassWallDecisionRow {
 
 export interface OperatorPassWallAvatarRefRow {
 	avatar: string;
-	user_id: UserID;
-}
-
-export interface OperatorPassWallPendingRow {
-	bucket: string;
 	user_id: UserID;
 }
 
@@ -387,14 +374,6 @@ export interface OperatorPassUnitRow {
 
 type OperatorPassVisionaryEndReason = 'visionary_ended' | 'deletion';
 
-export type OperatorPassVisionaryNoticeSkipReason =
-	| 'not_visionary'
-	| 'inactive'
-	| 'pending_deletion'
-	| 'removed'
-	| 'turned_on'
-	| 'no_email';
-
 export interface OperatorPassVisionaryActivationRow {
 	user_id: UserID;
 	visionary_since: Nullish<Date>;
@@ -411,7 +390,7 @@ export interface OperatorPassVisionaryActivationRow {
 	ended_at: Nullish<Date>;
 	end_reason: Nullish<OperatorPassVisionaryEndReason>;
 	notice_emailed_at: Nullish<Date>;
-	notice_skip_reason: Nullish<OperatorPassVisionaryNoticeSkipReason>;
+	notice_skip_reason: Nullish<string>;
 	notice_dm_sent_at: Nullish<Date>;
 	version: number;
 }
@@ -662,19 +641,11 @@ export const OPERATOR_PASS_WALL_ENTRY_COLUMNS = [
 	'live_name',
 	'live_avatar',
 	'live_business',
-	'pending_revision_id',
 	'pending_name',
-	'pending_avatar',
-	'pending_source',
-	'pending_since',
-	'declined_revision_id',
 	'declined_name',
-	'declined_avatar',
 	'decline_reason',
 	'decline_note',
 	'decline_statement_id',
-	'reviewed_at',
-	'reviewed_by',
 	'listed_at',
 	'delivered_at',
 	'release_published_year',
@@ -725,10 +696,6 @@ export const OPERATOR_PASS_WALL_DECISION_COLUMNS = [
 
 export const OPERATOR_PASS_WALL_AVATAR_REF_COLUMNS = ['avatar', 'user_id'] as const satisfies ReadonlyArray<
 	keyof OperatorPassWallAvatarRefRow
->;
-
-export const OPERATOR_PASS_WALL_PENDING_COLUMNS = ['bucket', 'user_id'] as const satisfies ReadonlyArray<
-	keyof OperatorPassWallPendingRow
 >;
 
 export const OPERATOR_PASS_WALL_AUDIT_LOG_COLUMNS = ['user_id', 'log_id'] as const satisfies ReadonlyArray<

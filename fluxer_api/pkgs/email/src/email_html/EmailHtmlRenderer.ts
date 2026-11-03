@@ -383,11 +383,7 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 		].filter(Boolean);
 		sections.push(`${title}\n${blocks.join('\n\n')}`);
 	}
-	const footer = textBlock(
-		textParagraphs(slots.footer_reason, slots, links),
-		textLink(slots.unsubscribe, slots.unsubscribe_url, links),
-		slots.legal_address,
-	);
+	const footer = textBlock(textParagraphs(slots.footer_reason, slots, links), slots.legal_address);
 	const text = [
 		slots.heading,
 		textParagraphs(slots.intro, slots, links),

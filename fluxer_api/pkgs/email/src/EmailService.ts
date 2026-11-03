@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import {formatMinorUnitPrice, formatMinorUnitPriceWithFraction} from '@fluxer/number_utils/src/PriceFormatting';
 import type {
 	EmailAttachment,
 	EmailConfig,
-	EmailListUnsubscribe,
 	IEmailProvider,
 	UserBouncedEmailChecker,
 } from '@pkgs/email/src/EmailProviderTypes';
@@ -28,12 +26,10 @@ import type {
 	BillingPaymentMethod,
 	BillingTotals,
 	EmailSendParams,
-	IBulkEmailSession,
 	IEmailService,
 	PaymentDisputeWarningEmail,
 	PlutoniumPurchaseTerms,
 } from '@pkgs/email/src/IEmailService';
-import {getOperatorPassUnlockDay} from '@pkgs/email/src/OperatorPassUnlockDay';
 import {
 	getOperatorPassSellerAddress,
 	getOperatorPassTermsUrl,
@@ -56,7 +52,6 @@ type EmailSlots = Record<string, string | null | undefined>;
 
 interface TemplatedEmailOptions {
 	slots?: (template: EmailTemplate) => EmailSlots;
-	listUnsubscribe?: EmailListUnsubscribe;
 	attachments?: ReadonlyArray<EmailAttachment>;
 	timeZone?: string | null;
 }
@@ -305,10 +300,7 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	operator_pass_removal_notice: 'appeals',
 	operator_pass_revoked: 'support',
 	operator_pass_purchase_refused: 'support',
-	operator_pass_sale_open: 'support',
-	operator_pass_visionary_notice: 'support',
 	operator_pass_visionary_turned_on: 'support',
-	operator_pass_waitlist_verification: 'support',
 	operator_pass_wall_hidden: 'appeals',
 	operator_pass_wall_name_replaced: 'appeals',
 	operator_pass_welcome: 'support',
@@ -843,7 +835,7 @@ export class EmailService implements IEmailService {
 						lead: template.certificate_line,
 						cta: null,
 						section_1_title: template.bonus_heading,
-						section_1_list: [template.wall_line, template.badge_line, template.labs_line_v2].join('\n'),
+						section_1_list: [template.wall_line_v2, template.badge_line, template.labs_line_v2].join('\n'),
 						section_1_link: params.labsMember ? template.cta : null,
 						section_1_link_url: params.labsMember ? params.labsInviteUrl : null,
 						end_link: template.terms_link,
@@ -973,11 +965,8 @@ export class EmailService implements IEmailService {
 				email,
 				'operator_pass_offer_received',
 				locale,
-				{
-					senderName: params.senderName,
-					arrivesAt: getOperatorPassUnlockDay(params.arrivesAt ?? new Date(), new Date(), params.timeZone),
-				},
-				{slots: () => ({cta_url: appUrl})},
+				{senderName: params.senderName},
+				{slots: (template) => ({lead: template.lead_v2, cta_url: appUrl})},
 			);
 		},
 		operator_pass_offer_accepted: async (email, params, locale) => {
@@ -999,23 +988,6 @@ export class EmailService implements IEmailService {
 				lastPass: params.lastPass ? 'yes' : 'no',
 				visionary: params.visionary ? 'yes' : 'no',
 			});
-		},
-		operator_pass_visionary_notice: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_visionary_notice',
-				locale,
-				{visionaryDate: params.visionaryDate, member: yesNo(params.labsMember)},
-				{
-					slots: (template) => ({
-						lead: [template.certificate_line, template.choices_line, template.labs_line].join('\n'),
-						cta_url: params.turnOnUrl,
-						note: template.terms_line,
-						end_link: template.terms_link,
-						end_link_url: `${getOperatorPassTermsUrl(this.config.marketingBaseUrl)}#13-visionary`,
-					}),
-				},
-			);
 		},
 		operator_pass_visionary_turned_on: async (email, params, locale) => {
 			const terms = await this.renderTermsAttachment(locale ?? null, null, params.termsVersion);
@@ -1561,38 +1533,6 @@ export class EmailService implements IEmailService {
 				},
 			);
 		},
-		operator_pass_waitlist_verification: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_waitlist_verification',
-				locale,
-				{},
-				{slots: () => ({cta_url: params.confirmUrl})},
-			);
-		},
-		operator_pass_sale_open: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_sale_open',
-				locale,
-				{
-					priceFormatted: params.priceFormatted,
-					priceEndsOn: getOperatorPassEarlyBirdEndsOn(params.priceRisesAt),
-				},
-				{
-					slots: (template) => ({
-						...facts([template.price_label, template.price_value]),
-						lead: template.paid_for,
-						cta_url: params.checkoutUrl,
-						text_1: template.bonus_v2,
-						end_link: template.terms_link,
-						end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
-						unsubscribe_url: params.unsubscribePageUrl,
-					}),
-					listUnsubscribe: {url: params.unsubscribeUrl, post: true},
-				},
-			);
-		},
 	};
 
 	private async renderTermsAttachment(
@@ -1634,21 +1574,6 @@ export class EmailService implements IEmailService {
 
 	async isEmailBounced(email: string): Promise<boolean> {
 		return (await this.bouncedEmailChecker?.isEmailBounced(email)) ?? false;
-	}
-
-	async openBulkSession(): Promise<IBulkEmailSession> {
-		const bulkProvider = this.config.enabled ? this.provider?.openBulk?.() : undefined;
-		if (!bulkProvider) {
-			return {
-				send: (templateKey, email, params, locale) => this.send(templateKey, email, params, locale),
-				close: async () => {},
-			};
-		}
-		const pooled = new EmailService(this.config, bulkProvider, this.bouncedEmailChecker);
-		return {
-			send: (templateKey, email, params, locale) => pooled.send(templateKey, email, params, locale),
-			close: () => bulkProvider.close(),
-		};
 	}
 
 	private async sendPlainEmail(email: string, subject: string, text: string): Promise<boolean> {
@@ -1773,7 +1698,6 @@ export class EmailService implements IEmailService {
 			subject,
 			text,
 			...(html ? {html} : {}),
-			...(options.listUnsubscribe ? {listUnsubscribe: options.listUnsubscribe} : {}),
 			...(attachments?.length ? {attachments} : {}),
 		});
 	}

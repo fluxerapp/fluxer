@@ -189,7 +189,6 @@ function withHostedOperatorPassSale(
 		instance: {...master.instance, self_hosted: false},
 		operator_pass: {
 			...master.operator_pass,
-			sale_opens_at: '2027-01-01T12:00:00Z',
 			price_rises_at: '2027-02-01T12:00:00Z',
 			labs_guild_id: '1',
 			labs_operator_role_id: '2',
@@ -254,10 +253,6 @@ describe('buildAPIConfigFromMaster trusted callers', () => {
 					'donation:checkout',
 					'operator_pass:state',
 					'operator_pass:certificate_link',
-					'operator_pass:waitlist_challenge',
-					'operator_pass:waitlist',
-					'operator_pass:waitlist_confirm',
-					'operator_pass:waitlist_followup',
 					'operator_pass:waitlist_unsubscribe',
 				],
 			},

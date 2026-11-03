@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "genel",
 	"guild.default_channel_voice": "Genel",
 	"operator_pass.labs_greeting": "{size, select, single {#operators kanalına hoş geldiniz, {last}!} other {#operators kanalına hoş geldiniz, {others} ve {last}!}} Burası Operator Pass sahibi herkesin kanalı.",
-	"operator_pass.visionary_notice_dm_v2": "Visionary'nizle birlikte bir Operator Pass gelir. Dilediğiniz zaman Ayarlar'da, \"Operator Pass\" altında açabilirsiniz ve bunun için ek bir ücret ödemezsiniz.",
 	"profile_badge.bug_hunter": "{product_name} Hata Avcısı",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

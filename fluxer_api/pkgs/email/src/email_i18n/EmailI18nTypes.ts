@@ -182,7 +182,6 @@ export interface EmailTemplateVariables {
 	};
 	operator_pass_offer_received: {
 		senderName: string;
-		arrivesAt: string;
 	};
 	operator_pass_perks_removed: {
 		scope: 'permanent' | 'temporary';
@@ -230,11 +229,6 @@ export interface EmailTemplateVariables {
 		visionary: 'yes' | 'no';
 	};
 	operator_pass_purchase_refused: Record<string, never>;
-	operator_pass_sale_open: {
-		priceFormatted: string;
-		priceEndsOn: string;
-	};
-	operator_pass_waitlist_verification: Record<string, never>;
 	operator_pass_wall_hidden: {
 		reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
 	};
@@ -242,10 +236,6 @@ export interface EmailTemplateVariables {
 		target: 'name' | 'avatar' | 'both';
 		shown: 'previous' | 'username' | 'operator';
 		reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
-	};
-	operator_pass_visionary_notice: {
-		visionaryDate: Date;
-		member: YesNo;
 	};
 	operator_pass_visionary_turned_on: {
 		badge: YesNo;

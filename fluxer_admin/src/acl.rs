@@ -77,10 +77,6 @@ pub const MESSAGE_DELETE_ALL: &str = "message:delete_all";
 pub const MESSAGE_DELETE: &str = "message:delete";
 pub const MESSAGE_LOOKUP: &str = "message:lookup";
 pub const MESSAGE_SHRED: &str = "message:shred";
-pub const OPERATOR_PASS_PREVIEW: &str = "operator_pass:preview";
-pub const OPERATOR_PASS_RESET: &str = "operator_pass:reset";
-pub const OPERATOR_PASS_VISIONARY_NOTICE: &str = "operator_pass:visionary_notice";
-pub const OPERATOR_PASS_WAITLIST_STATS: &str = "operator_pass:waitlist_stats";
 pub const REGISTRATION_REVIEW: &str = "registration:review";
 pub const REPORT_DELETE: &str = "report:delete";
 pub const REPORT_RESOLVE: &str = "report:resolve";
@@ -200,10 +196,6 @@ pub const ALL_ACLS: &[&str] = &[
     MESSAGE_DELETE,
     MESSAGE_LOOKUP,
     MESSAGE_SHRED,
-    OPERATOR_PASS_PREVIEW,
-    OPERATOR_PASS_RESET,
-    OPERATOR_PASS_VISIONARY_NOTICE,
-    OPERATOR_PASS_WAITLIST_STATS,
     REGISTRATION_REVIEW,
     REPORT_DELETE,
     REPORT_RESOLVE,

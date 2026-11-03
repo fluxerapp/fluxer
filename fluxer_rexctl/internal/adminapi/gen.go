@@ -178,10 +178,6 @@ const (
 	MessageDeleteAll              AdminAclType = "message:delete_all"
 	MessageLookup                 AdminAclType = "message:lookup"
 	MessageShred                  AdminAclType = "message:shred"
-	OperatorPassPreview           AdminAclType = "operator_pass:preview"
-	OperatorPassReset             AdminAclType = "operator_pass:reset"
-	OperatorPassVisionaryNotice   AdminAclType = "operator_pass:visionary_notice"
-	OperatorPassWaitlistStats     AdminAclType = "operator_pass:waitlist_stats"
 	RegistrationReview            AdminAclType = "registration:review"
 	ReportDelete                  AdminAclType = "report:delete"
 	ReportResolve                 AdminAclType = "report:resolve"
@@ -381,14 +377,6 @@ func (e AdminAclType) Valid() bool {
 	case MessageLookup:
 		return true
 	case MessageShred:
-		return true
-	case OperatorPassPreview:
-		return true
-	case OperatorPassReset:
-		return true
-	case OperatorPassVisionaryNotice:
-		return true
-	case OperatorPassWaitlistStats:
 		return true
 	case RegistrationReview:
 		return true

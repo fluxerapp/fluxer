@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import type {
 	OperatorPassOfferRow,
 	OperatorPassOfferStatus,
@@ -29,7 +28,6 @@ import {
 	resolveOperatorPassVisionarySince,
 } from '@app/api/operator_pass/OperatorPassVisionaryService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {UnknownOperatorPassOfferError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassOfferError';
 import type {
 	OperatorPassOfferResponse,
@@ -48,20 +46,6 @@ const OPEN_OFFER_STATUSES: ReadonlyArray<OperatorPassOfferStatus> = ['pending', 
 
 export function isOperatorPassOfferOpen(offer: OperatorPassOfferRow): boolean {
 	return OPEN_OFFER_STATUSES.includes(offer.status);
-}
-
-export function getOperatorPassTransferLockEndsAt(
-	purchase: OperatorPassPurchaseRow | null,
-	unit: OperatorPassUnitRow,
-): Date {
-	const paidAt = purchase?.purchased_at ?? unit.first_delivered_at;
-	if (Config.operatorPass.transferLockMs === 0) {
-		return paidAt;
-	}
-	const ruleMs = (unit.withdrawal_days ?? 0) * MS_PER_DAY;
-	const lockMs = paidAt.getTime() + Math.max(Config.operatorPass.transferLockMs, ruleMs);
-	const deadline = unit.withdrawal_days != null && purchase ? getOperatorPassWithdrawalDeadline(purchase) : null;
-	return new Date(Math.max(lockMs, deadline?.getTime() ?? 0));
 }
 
 function mapOperatorPassOfferUser(user: User | undefined): OperatorPassOfferResponse['sender'] {
@@ -88,10 +72,6 @@ function mapOperatorPassOffer(
 		recipient: mapOperatorPassOfferUser(users.get(offer.recipient_id)),
 		created_at: offer.created_at.toISOString(),
 		accepted_at: offer.accepted_at?.toISOString() ?? null,
-		arrives_at: (Config.operatorPass.transferLockMs === 0
-			? offer.created_at
-			: (offer.completes_at ?? offer.created_at)
-		).toISOString(),
 		ended_at: offer.ended_at?.toISOString() ?? null,
 	};
 }
@@ -131,7 +111,10 @@ export class OperatorPassHoldingQueryService {
 			purchases.set(purchaseId, await this.deps.findPurchase(purchaseId));
 		}
 		units.sort((left, right) => left.delivered_at.getTime() - right.delivered_at.getTime());
-		const passes: Array<OperatorPassUnitResponse> = units.map((unit) => {
+		const certificates = await Promise.all(
+			units.map((unit) => this.deps.repository.findLatestCertificateLink(unit.pass_id)),
+		);
+		const passes: Array<OperatorPassUnitResponse> = units.map((unit, index) => {
 			const purchase = unit.purchase_id ? (purchases.get(unit.purchase_id) ?? null) : null;
 			const canPassOn = unit.transferable && unit.source === 'purchase';
 			const withdrawable = purchase !== null && isOperatorPassSinglePassWithdrawable(purchase, unit, now);
@@ -151,7 +134,6 @@ export class OperatorPassHoldingQueryService {
 						: null,
 				paused: unit.paused_at != null,
 				can_pass_on: canPassOn,
-				transfer_lock_ends_at: canPassOn ? getOperatorPassTransferLockEndsAt(purchase, unit).toISOString() : null,
 				can_withdraw: withdrawable,
 				withdrawal_ends_at:
 					purchase?.withdrawal_days != null && unit.source === 'purchase'
@@ -163,6 +145,7 @@ export class OperatorPassHoldingQueryService {
 						: null,
 				offer: offer ? mapOperatorPassOffer(offer, users) : null,
 				received_from: received ? mapOperatorPassOfferUser(users.get(received.sender_id)) : null,
+				certificate_number: certificates[index]?.number ?? null,
 			};
 		});
 		const visionaryPage =
@@ -178,7 +161,6 @@ export class OperatorPassHoldingQueryService {
 						activation,
 						removal: state.removal,
 						labsMember,
-						now,
 						certificateUrl:
 							visionaryPage?.link_token && visionaryPage.cancelled_at == null
 								? getOperatorPassCertificateUrl(visionaryPage.link_token)

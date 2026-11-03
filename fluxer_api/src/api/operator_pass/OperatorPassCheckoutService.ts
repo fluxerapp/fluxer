@@ -4,7 +4,6 @@ import {Config} from '@app/api/Config';
 import {getContentMessage, resolveContentLocale} from '@app/api/content_i18n/ContentI18n';
 import type {OperatorPassPurchaseRow} from '@app/api/database/types/OperatorPassTypes';
 import {Logger} from '@app/api/Logger';
-import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {getPaymentDisputeRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {validateOperatorPassCertificateName} from '@app/api/operator_pass/OperatorPassCertificateService';
@@ -13,10 +12,6 @@ import {
 	type OperatorPassEntitlementService,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
-import {
-	type OperatorPassPreviewMatch,
-	resolveOperatorPassPreview,
-} from '@app/api/operator_pass/OperatorPassPreviewAccess';
 import {
 	OPERATOR_PASS_WITHDRAWAL_RULE_VERSION,
 	type OperatorPassWithdrawalRuleMatch,
@@ -29,7 +24,6 @@ import {
 	getOperatorPassSchedule,
 	getOperatorPassSessionExpiresAt,
 	issueOperatorPassQuote,
-	type OperatorPassSchedule,
 	operatorPassNow,
 	resolveOperatorPassCheckoutPrice,
 	resolveOperatorPassCurrency,
@@ -50,7 +44,6 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {OperatorPassAgeConfirmationRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassAgeConfirmationRequiredError';
 import {OperatorPassDeliveryConsentRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassDeliveryConsentRequiredError';
 import {OperatorPassEmailUndeliverableError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassEmailUndeliverableError';
-import {OperatorPassNotOnSaleError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassNotOnSaleError';
 import {OperatorPassPriceChangedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassPriceChangedError';
 import {OperatorPassRemovedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassRemovedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -74,18 +67,6 @@ type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutLineItem = NonNullable<CheckoutSessionCreateParams['line_items']>[number];
 
 const PASS_TAX_CODE = 'txcd_10000000';
-const PREVIEW_COUPON_NAME = 'Operator Pass preview';
-
-async function resolveSalePreview(
-	schedule: OperatorPassSchedule,
-	now: Date,
-	clientIp: string | null,
-): Promise<OperatorPassPreviewMatch | null> {
-	if (getOperatorPassPhase(now, schedule) !== 'waitlist') {
-		return null;
-	}
-	return resolveOperatorPassPreview(getKVClient(), clientIp, now);
-}
 
 function normalizeCountryCode(countryCode: string | null | undefined): string | null {
 	const normalized = countryCode?.trim().toUpperCase();
@@ -162,15 +143,11 @@ function assertOperatorPassEmailDeliverable(user: User): void {
 }
 
 function resolveOperatorPassPurchaseBlockedReason(params: {
-	phase: OperatorPassStateResponse['phase'];
 	user: User;
 	removed: boolean;
 	paymentDisputeOpen: boolean;
 }): OperatorPassPurchaseBlockedReason | null {
-	const {phase, user, removed, paymentDisputeOpen} = params;
-	if (phase === 'waitlist') {
-		return 'not_on_sale';
-	}
+	const {user, removed, paymentDisputeOpen} = params;
 	if (removed) {
 		return 'removed';
 	}
@@ -194,7 +171,6 @@ function resolveOperatorPassPurchaseBlockedReason(params: {
 interface OperatorPassStateParams {
 	user: User | null;
 	countryCode: string | null;
-	clientIp: string | null;
 }
 
 interface OperatorPassCheckoutParams {
@@ -212,11 +188,10 @@ export class OperatorPassCheckoutService {
 		private readonly entitlementService: OperatorPassEntitlementService,
 	) {}
 
-	async getState({user, countryCode, clientIp}: OperatorPassStateParams): Promise<OperatorPassStateResponse> {
+	async getState({user, countryCode}: OperatorPassStateParams): Promise<OperatorPassStateResponse> {
 		const schedule = getOperatorPassSchedule();
 		const now = operatorPassNow(schedule);
-		const preview = await resolveSalePreview(schedule, now, clientIp);
-		const phase = getOperatorPassPhase(now, schedule, preview !== null);
+		const phase = getOperatorPassPhase(now, schedule);
 		const country = normalizeCountryCode(countryCode);
 		const currency = resolveOperatorPassCurrency(country);
 		const rule = resolveCheckoutWithdrawalRule(country, currency);
@@ -227,7 +202,6 @@ export class OperatorPassCheckoutService {
 		return {
 			phase,
 			now: now.toISOString(),
-			sale_opens_at: schedule.saleOpensAt?.toISOString() ?? null,
 			price_rises_at: schedule.priceRisesAt?.toISOString() ?? null,
 			currency,
 			price_minor: priceMinor,
@@ -252,7 +226,6 @@ export class OperatorPassCheckoutService {
 				: null,
 			purchase_blocked_reason: user
 				? resolveOperatorPassPurchaseBlockedReason({
-						phase,
 						user,
 						removed: isOperatorPassPermanentlyRemoved(entitlement?.removal ?? null),
 						paymentDisputeOpen: await hasOpenPaymentDispute(getPaymentDisputeRepository(), user.id),
@@ -277,11 +250,6 @@ export class OperatorPassCheckoutService {
 		}
 		const schedule = getOperatorPassSchedule();
 		const now = operatorPassNow(schedule);
-		const preview = await resolveSalePreview(schedule, now, clientIp);
-		const phase = getOperatorPassPhase(now, schedule, preview !== null);
-		if (phase === 'waitlist') {
-			throw new OperatorPassNotOnSaleError();
-		}
 		assertUserCanPurchase(user);
 		assertOperatorPassEmailDeliverable(user);
 		await assertNoOpenPaymentDispute(getPaymentDisputeRepository(), user.id);
@@ -321,7 +289,6 @@ export class OperatorPassCheckoutService {
 			currency,
 			userId,
 			quote: request.quote,
-			previewUnlocked: preview !== null,
 		});
 		if (price.priceChanged) {
 			throw new OperatorPassPriceChangedError({
@@ -340,7 +307,7 @@ export class OperatorPassCheckoutService {
 		const locale = user.locale ?? null;
 		const branding = await getBillingBranding();
 		const consentAt = now;
-		const amountMinor = preview ? 0 : price.amountMinor * quantity;
+		const amountMinor = price.amountMinor * quantity;
 		const consentLocale = request.consent_locale ? resolveContentLocale(request.consent_locale) : locale;
 		const deliveryText = getOperatorPassDeliveryBoxText(consentLocale, quantity, rule, businessCnpj);
 		const consentVersion = getOperatorPassDeliveryBoxVersion(rule, businessCnpj);
@@ -359,7 +326,6 @@ export class OperatorPassCheckoutService {
 			operator_pass_age_confirmed: 'true',
 			...(rule ? {operator_pass_withdrawal_country: rule.country} : {}),
 			...(businessCnpj ? {operator_pass_cnpj: businessCnpj} : {}),
-			...(preview ? {operator_pass_preview: 'true', operator_pass_preview_label: preview.label} : {}),
 		};
 		if (wallChoice) {
 			metadata.operator_pass_wall_opt_out = wallChoice.optedOut ? 'true' : 'false';
@@ -383,7 +349,6 @@ export class OperatorPassCheckoutService {
 			quantity,
 		};
 		const expiresAt = getOperatorPassSessionExpiresAt(price.pricedPhase, now, schedule);
-		const previewCoupon = preview ? await this.createPreviewCoupon(this.stripe, metadata, expiresAt, userId) : null;
 		const email = user.email;
 		const checkoutParams: CheckoutSessionCreateParams = {
 			...(email ? {customer_email: email} : {}),
@@ -395,7 +360,7 @@ export class OperatorPassCheckoutService {
 			automatic_tax: {enabled: true},
 			tax_id_collection: {enabled: true},
 			billing_address_collection: request.is_business === true ? 'required' : 'auto',
-			...(previewCoupon ? {discounts: [{coupon: previewCoupon}]} : {allow_promotion_codes: false}),
+			allow_promotion_codes: false,
 			success_url: `${Config.endpoints.webApp}/premium-callback?status=success&product=operator_pass&session_id={CHECKOUT_SESSION_ID}`,
 			cancel_url: `${Config.endpoints.webApp}/channels/@operator-pass?status=cancel`,
 			expires_at: expiresAt,
@@ -409,10 +374,10 @@ export class OperatorPassCheckoutService {
 					}),
 				},
 			},
-			...(currency === 'BRL' && !preview ? {payment_method_options: {pix: {amount_includes_iof: 'always'}}} : {}),
+			...(currency === 'BRL' ? {payment_method_options: {pix: {amount_includes_iof: 'always'}}} : {}),
 			...(shouldDisableAdaptivePricing() ? {adaptive_pricing: {enabled: false}} : {}),
 			customer_creation: 'always',
-			...(preview ? {} : {payment_intent_data: {metadata}}),
+			payment_intent_data: {metadata},
 		};
 		let session: Stripe.Checkout.Session;
 		try {
@@ -479,42 +444,10 @@ export class OperatorPassCheckoutService {
 			business_buyer: null,
 			holder_had_pass: null,
 			labs_greeting: request.labs_greeting ?? null,
-			preview_label: preview?.label ?? null,
+			preview_label: null,
 			version: 1,
 		};
 		await this.repository.createPurchase(purchase);
-		if (preview) {
-			Logger.info(
-				{userId, sessionId: session.id, previewEntryId: preview.entryId},
-				'Created an Operator Pass preview checkout at no cost',
-			);
-		}
 		return {url: session.url, sessionId: session.id, expiresAt: new Date(expiresAt * 1000)};
-	}
-
-	private async createPreviewCoupon(
-		stripe: Stripe,
-		metadata: Record<string, string>,
-		expiresAt: number,
-		userId: string,
-	): Promise<string> {
-		try {
-			const coupon = await stripe.coupons.create({
-				percent_off: 100,
-				duration: 'once',
-				max_redemptions: 1,
-				redeem_by: expiresAt,
-				name: PREVIEW_COUPON_NAME,
-				metadata: {
-					operator_pass_preview: 'true',
-					operator_pass_preview_label: metadata.operator_pass_preview_label ?? '',
-					operator_pass_purchaser_id: userId,
-				},
-			});
-			return coupon.id;
-		} catch (error) {
-			Logger.error({error, userId}, 'Failed to create the Operator Pass preview coupon');
-			throw new StripeError(error instanceof Error ? error.message : 'Failed to create the preview coupon');
-		}
 	}
 }

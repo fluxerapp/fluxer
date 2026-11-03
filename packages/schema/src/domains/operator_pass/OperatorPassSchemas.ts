@@ -2,7 +2,6 @@
 
 import {PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
-import {CaptchaProviderSchema} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
 import {CnpjSchema} from '@fluxer/schema/src/domains/premium/Cnpj';
 import {
 	createNamedStringLiteralUnion,
@@ -13,13 +12,12 @@ import {
 import {DiscriminatorType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
 
-export const OPERATOR_PASS_PHASES = ['waitlist', 'early_bird', 'standard'] as const;
+export const OPERATOR_PASS_PHASES = ['early_bird', 'standard'] as const;
 
 export type OperatorPassPhase = (typeof OPERATOR_PASS_PHASES)[number];
 
 export const OperatorPassPhaseSchema = createNamedStringLiteralUnion(
 	[
-		['waitlist', 'WAITLIST', 'Sales have not opened yet, the waitlist is open'],
 		['early_bird', 'EARLY_BIRD', 'Sales are open at the early bird price'],
 		['standard', 'STANDARD', 'Sales are open at the standard price'],
 	],
@@ -31,19 +29,6 @@ export const OPERATOR_PASS_CURRENCIES = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK
 export type OperatorPassCurrency = (typeof OPERATOR_PASS_CURRENCIES)[number];
 
 export const OperatorPassCurrencySchema = z.enum(OPERATOR_PASS_CURRENCIES).describe('Operator Pass price currency');
-
-export const OPERATOR_PASS_PRICE_FEEDBACK = ['too_high', 'about_right', 'could_pay_more'] as const;
-
-export type OperatorPassPriceFeedback = (typeof OPERATOR_PASS_PRICE_FEEDBACK)[number];
-
-export const OperatorPassPriceFeedbackSchema = createNamedStringLiteralUnion(
-	[
-		['too_high', 'TOO_HIGH', 'The early bird price feels too high'],
-		['about_right', 'ABOUT_RIGHT', 'The early bird price feels about right'],
-		['could_pay_more', 'COULD_PAY_MORE', 'The visitor would pay more than the early bird price'],
-	],
-	'How the visitor feels about the early bird price they were shown',
-);
 
 export const OPERATOR_PASS_SOURCES = ['purchase', 'transfer', 'visionary', 'admin'] as const;
 
@@ -60,7 +45,6 @@ export const OperatorPassHolderSourceSchema = createNamedStringLiteralUnion(
 );
 
 const OperatorPassPurchaseBlockedReasons = {
-	NOT_ON_SALE: 'not_on_sale',
 	...PurchaseBlockedReasons,
 	PURCHASE_DISABLED: 'purchase_disabled',
 	PAYMENT_DISPUTE_OPEN: 'payment_dispute_open',
@@ -72,7 +56,6 @@ export type OperatorPassPurchaseBlockedReason = ValueOf<typeof OperatorPassPurch
 
 export const OperatorPassPurchaseBlockedReasonSchema = createNamedStringLiteralUnion(
 	[
-		[OperatorPassPurchaseBlockedReasons.NOT_ON_SALE, 'NOT_ON_SALE', 'Sales have not opened yet'],
 		[PurchaseBlockedReasons.EMAIL_UNVERIFIED, 'EMAIL_UNVERIFIED', 'The account email is not verified'],
 		[PurchaseBlockedReasons.UNCLAIMED, 'UNCLAIMED', 'The account is not claimed'],
 		[
@@ -174,16 +157,12 @@ export const OperatorPassWallDeclineReasonSchema = createNamedStringLiteralUnion
 		['rights', 'RIGHTS', 'It uses a name or image the holder has no right to use'],
 		['age_suitability', 'AGE_SUITABILITY', 'It is not suitable for the youngest people allowed to use Fluxer'],
 	],
-	"Why staff declined a name or avatar on the Operators' wall, under section 3.1 of the Operator Pass terms",
+	"Why staff took a name or avatar off the Operators' wall or hid a listing, under section 3.1 of the Operator Pass terms",
 );
 
 const OperatorPassCountryCode = createStringType(2, 2).describe(
 	'Two-letter country code used to pick the price currency. The request GeoIP country is used when omitted.',
 );
-
-const OperatorPassEmail = z.string().trim().toLowerCase().check(z.email()).max(254);
-
-const OperatorPassLinkToken = z.string().trim().min(1).max(256);
 
 export const OperatorPassStateQuery = z.object({
 	country_code: OperatorPassCountryCode.optional(),
@@ -225,7 +204,6 @@ export type OperatorPassHolderResponse = z.infer<typeof OperatorPassHolderRespon
 export const OperatorPassStateResponse = z.object({
 	phase: OperatorPassPhaseSchema,
 	now: z.iso.datetime().describe('The server time the state was computed at'),
-	sale_opens_at: z.iso.datetime().nullable().describe('When sales open, null while no sale date is set'),
 	price_rises_at: z.iso
 		.datetime()
 		.nullable()
@@ -318,152 +296,11 @@ export const OperatorPassCheckoutResponse = z.object({
 
 export type OperatorPassCheckoutResponse = z.infer<typeof OperatorPassCheckoutResponse>;
 
-export const OperatorPassAltchaChallenge = z.object({
-	parameters: z.looseObject({
-		algorithm: z.string(),
-		nonce: z.string(),
-		salt: z.string(),
-		cost: z.number().int(),
-		keyLength: z.number().int(),
-		keyPrefix: z.string(),
-		keySignature: z.string(),
-		expiresAt: z.number().int(),
-	}),
-	signature: z.string(),
-});
-
-export const OperatorPassWaitlistChallengeResponse = z.object({
-	captcha_provider: CaptchaProviderSchema.describe('Captcha provider the waitlist expects'),
-	altcha_challenge: OperatorPassAltchaChallenge.optional().describe(
-		'ALTCHA challenge to solve when the provider is altcha',
-	),
-});
-
-export type OperatorPassWaitlistChallengeResponse = z.infer<typeof OperatorPassWaitlistChallengeResponse>;
-
-export const OperatorPassWaitlistRequest = z.strictObject({
-	email: OperatorPassEmail.describe('Email address to put on the waitlist'),
-	country_code: OperatorPassCountryCode.optional(),
-	price_feedback: OperatorPassPriceFeedbackSchema.optional().describe(
-		'How the visitor feels about the early bird price. Left out where the pass is not on sale yet',
-	),
-	currency: OperatorPassCurrencySchema.optional().describe(
-		'Currency of the early bird price the visitor was shown. Left out with price_feedback',
-	),
-});
-
-export type OperatorPassWaitlistRequest = z.infer<typeof OperatorPassWaitlistRequest>;
-
-export const OperatorPassWaitlistResponse = z.object({
-	status: z.literal('pending').describe('A confirmation email is on its way when the address can join'),
-	followup_token: z
-		.string()
-		.describe(
-			'Signed token for the follow-up question, valid for 30 minutes. Every signup gets one of the same shape, and only one issued for a new waitlist entry stores an answer',
-		),
-});
-
-export type OperatorPassWaitlistResponse = z.infer<typeof OperatorPassWaitlistResponse>;
-
-export const OPERATOR_PASS_WAITLIST_FOLLOWUP_KEYS = [
-	'wall_spot',
-	'badge',
-	'operators_channel',
-	'early_testing',
-	'yearly_list',
-	'instance_mark',
-	'other',
-] as const;
-
-export type OperatorPassWaitlistFollowupKey = (typeof OPERATOR_PASS_WAITLIST_FOLLOWUP_KEYS)[number];
-
-export const OperatorPassWaitlistFollowupKeySchema = createNamedStringLiteralUnion(
-	[
-		['wall_spot', 'WALL_SPOT', "A spot on the Operators' wall"],
-		['badge', 'BADGE', 'The Operator badge'],
-		['operators_channel', 'OPERATORS_CHANNEL', 'The Operators channel'],
-		['early_testing', 'EARLY_TESTING', 'Testing new features early'],
-		['yearly_list', 'YEARLY_LIST', 'A name on the yearly Operators list'],
-		['instance_mark', 'INSTANCE_MARK', 'An Operator mark on your instance'],
-		['other', 'OTHER', "Something else, in the visitor's own words"],
-	],
-	'What is most important to a waitlist visitor about the Operator Pass',
-);
-
-export const OPERATOR_PASS_WAITLIST_ABOUT_KEYS = [
-	'self_hosting_new',
-	'self_hosting_experienced',
-	'bots_new',
-	'bots_experienced',
-	'support_fluxer',
-	'community_owner',
-] as const;
-
-export type OperatorPassWaitlistAboutKey = (typeof OPERATOR_PASS_WAITLIST_ABOUT_KEYS)[number];
-
-export const OperatorPassWaitlistAboutKeySchema = createNamedStringLiteralUnion(
-	[
-		['self_hosting_new', 'SELF_HOSTING_NEW', "I'm new to self-hosting"],
-		['self_hosting_experienced', 'SELF_HOSTING_EXPERIENCED', "I've self-hosted before"],
-		['bots_new', 'BOTS_NEW', "I'm new to building bots"],
-		['bots_experienced', 'BOTS_EXPERIENCED', "I've built bots before"],
-		['support_fluxer', 'SUPPORT_FLUXER', 'I mainly want to support Fluxer'],
-		['community_owner', 'COMMUNITY_OWNER', 'I run a community on Fluxer'],
-	],
-	'A description a waitlist visitor picked for themselves',
-);
-
-export const OPERATOR_PASS_WAITLIST_FOLLOWUP_OTHER_TEXT_MAX = 500;
-
-export const OperatorPassWaitlistFollowupRequest = z.strictObject({
-	token: OperatorPassLinkToken.describe('followup_token from the waitlist signup response'),
-	picks: z
-		.array(z.string().max(64))
-		.max(32)
-		.describe(
-			`What is most important, 0 to 7 unique keys out of ${OPERATOR_PASS_WAITLIST_FOLLOWUP_KEYS.join(', ')}. An unknown or repeated key returns OPERATOR_PASS_WAITLIST_FOLLOWUP_INVALID`,
-		),
-	about: z
-		.array(z.string().max(64))
-		.max(32)
-		.optional()
-		.describe(
-			`Which descriptions fit the visitor, 0 to 6 unique keys out of ${OPERATOR_PASS_WAITLIST_ABOUT_KEYS.join(', ')}. When omitted, the descriptions stored before stay as they are, and an empty array clears them. An unknown or repeated key returns OPERATOR_PASS_WAITLIST_FOLLOWUP_INVALID`,
-		),
-	other_text: z
-		.string()
-		.max(4000)
-		.nullish()
-		.describe(
-			'Plain text answer for other, only with other in picks. Trimmed, then 1 to 500 characters, without control characters other than line breaks and tabs',
-		),
-});
-
-export type OperatorPassWaitlistFollowupRequest = z.infer<typeof OperatorPassWaitlistFollowupRequest>;
-
-export const OperatorPassWaitlistConfirmRequest = z.object({
-	token: OperatorPassLinkToken.describe('Token from the confirmation email'),
-});
-
-export type OperatorPassWaitlistConfirmRequest = z.infer<typeof OperatorPassWaitlistConfirmRequest>;
-
-export const OperatorPassWaitlistConfirmResponse = z.object({
-	status: z.literal('confirmed'),
-});
-
-export type OperatorPassWaitlistConfirmResponse = z.infer<typeof OperatorPassWaitlistConfirmResponse>;
-
 export const OperatorPassWaitlistUnsubscribeQuery = z.object({
-	token: OperatorPassLinkToken.optional().describe('Unsubscribe token from the email'),
+	token: z.string().trim().min(1).max(256).optional().describe('Unsubscribe token from the email'),
 });
 
 export type OperatorPassWaitlistUnsubscribeQuery = z.infer<typeof OperatorPassWaitlistUnsubscribeQuery>;
-
-export const OperatorPassWaitlistUnsubscribeRequest = z.object({
-	token: OperatorPassLinkToken.optional().describe('Unsubscribe token from the email'),
-});
-
-export type OperatorPassWaitlistUnsubscribeRequest = z.infer<typeof OperatorPassWaitlistUnsubscribeRequest>;
 
 export const OperatorPassWaitlistUnsubscribeResponse = z.object({
 	status: z.literal('unsubscribed'),
@@ -672,7 +509,7 @@ export const OperatorPassUnitStatusSchema = createNamedStringLiteralUnion(
 export const OperatorPassOfferStatusSchema = createNamedStringLiteralUnion(
 	[
 		['pending', 'PENDING', 'Waiting for the recipient to accept or decline'],
-		['accepted', 'ACCEPTED', 'The recipient accepted, the pass moves at arrives_at'],
+		['accepted', 'ACCEPTED', 'The recipient accepted and the pass is about to move'],
 		['completed', 'COMPLETED', 'The pass moved to the recipient'],
 		['declined', 'DECLINED', 'The recipient declined'],
 		['withdrawn', 'WITHDRAWN', 'The sender withdrew the offer'],
@@ -696,9 +533,6 @@ export const OperatorPassOfferResponse = z.object({
 	recipient: OperatorPassOfferUserResponse.nullable().describe('Who gets the pass, null when the account is gone'),
 	created_at: z.iso.datetime().describe('When the sender made the offer'),
 	accepted_at: z.iso.datetime().nullable().describe('When the recipient accepted'),
-	arrives_at: z.iso
-		.datetime()
-		.describe('The earliest time the pass can move to the recipient once accepted, when the transfer lock ends'),
 	ended_at: z.iso.datetime().nullable().describe('When the offer completed or ended'),
 });
 
@@ -720,10 +554,6 @@ export const OperatorPassUnitResponse = z.object({
 		.describe('When the payment for the purchase settled, null when the account did not buy this pass itself'),
 	paused: z.boolean().describe('Whether the pass is paused while a payment dispute is open'),
 	can_pass_on: z.boolean().describe('Whether the pass can be passed on. Received and staff granted passes cannot'),
-	transfer_lock_ends_at: z.iso
-		.datetime()
-		.nullable()
-		.describe('The earliest time a passed on pass can move to the recipient, null when it cannot be passed on'),
 	can_withdraw: z.boolean().describe('Whether the withdraw button for this pass is available now'),
 	withdrawal_ends_at: z.iso
 		.datetime()
@@ -742,6 +572,11 @@ export const OperatorPassUnitResponse = z.object({
 	received_from: OperatorPassOfferUserResponse.nullable()
 		.optional()
 		.describe('Who passed this pass on to the account, null when the account bought it or that account is gone'),
+	certificate_number: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Number of the certificate page of this pass, null when the pass has no page'),
 });
 
 export type OperatorPassUnitResponse = z.infer<typeof OperatorPassUnitResponse>;
@@ -756,17 +591,11 @@ export const OperatorPassVisionaryStateSchema = createNamedStringLiteralUnion(
 	'State of the Operator Pass that comes with Visionary',
 );
 
-export const OperatorPassVisionaryUnavailableReasonSchema = createNamedStringLiteralUnion(
-	[
-		[
-			'removed',
-			'REMOVED',
-			'The pass was removed from the account permanently under section 8 of the Operator Pass terms',
-		],
-		['not_open', 'NOT_OPEN', 'Turning the pass on opens when Operator Pass sales open'],
-	],
-	'Why the account cannot turn on the Operator Pass that comes with Visionary',
-);
+export const OperatorPassVisionaryUnavailableReasonSchema = z
+	.literal('removed')
+	.describe(
+		'Why the account cannot turn on the Operator Pass that comes with Visionary. removed means the pass was removed from the account permanently under section 8 of the Operator Pass terms',
+	);
 
 export const OperatorPassVisionaryResponse = z.object({
 	state: OperatorPassVisionaryStateSchema,
@@ -949,47 +778,25 @@ export type OperatorPassOfferAcceptRequest = z.infer<typeof OperatorPassOfferAcc
 
 export const OperatorPassWallDisplayStateSchema = createNamedStringLiteralUnion(
 	[
-		['live', 'LIVE', 'The wall shows the approved name and avatar'],
-		['fallback', 'FALLBACK', 'The wall shows Operator with the default avatar until a name is approved'],
+		['live', 'LIVE', 'The wall shows the name and avatar the holder chose'],
+		['fallback', 'FALLBACK', 'The wall shows Operator with the default avatar after staff took the name or avatar off'],
 		['hidden', 'HIDDEN', 'Staff hid the listing for now'],
 		['removed', 'REMOVED', 'The listing is off the wall under section 8 of the Operator Pass terms'],
 	],
 	"What the Operators' wall shows for the listing",
 );
 
-export const OperatorPassWallReviewStateSchema = createNamedStringLiteralUnion(
-	[
-		['pending', 'PENDING', 'A new name or avatar waits for review, the wall keeps the last approved version'],
-		['approved', 'APPROVED', 'The latest name and avatar are approved'],
-		['declined', 'DECLINED', 'Staff declined the latest name or avatar, see decline_reason'],
-	],
-	'Review state of the latest name and avatar',
-);
-
 export const OperatorPassListingResponse = z.object({
-	wall_name: z.string().nullable().describe('The latest name the holder submitted, null when not listed'),
+	wall_name: z.string().nullable().describe('The name the holder chose for the wall, null when not listed'),
 	wall_opt_out: z.boolean().describe('Whether the holder chose not to be listed'),
-	keep_as_is: z
-		.boolean()
-		.describe('Whether profile name and avatar changes stay off the wall instead of becoming new pending changes'),
+	keep_as_is: z.boolean().describe('Whether profile name and avatar changes stay off the wall'),
 	release_list_opt_in: z
 		.boolean()
 		.describe('Whether the holder chose to have their wall name in every yearly The Operators of list. Off by default'),
 	status: OperatorPassListingStatusSchema,
 	display_state: OperatorPassWallDisplayStateSchema.nullable().describe('What the wall shows, null when not listed'),
-	review_state: OperatorPassWallReviewStateSchema.nullable().describe(
-		'Review state, null before anything was submitted',
-	),
 	shown_name: z.string().nullable().describe('The name the wall shows right now, null when not listed'),
 	shown_avatar_url: z.url().nullable().describe('The avatar the wall shows right now, null for the default avatar'),
-	pending_name: z.string().nullable().describe('The name waiting for review, null when nothing is pending'),
-	pending_since: z.iso.datetime().nullable().describe('When the pending change was submitted'),
-	review_due_at: z.iso.datetime().nullable().describe('When the review is due, 72 hours after submission'),
-	decline_reason: OperatorPassWallDeclineReasonSchema.nullable().describe(
-		'Why staff declined the latest change, null otherwise',
-	),
-	decline_note: z.string().nullable().describe('The facts staff gave for the decline, null otherwise'),
-	declined_name: z.string().nullable().describe('The declined name, null when none is'),
 	listed_at: z.iso.datetime().nullable().describe("When the listing went on the Operators' wall, null unless listed"),
 	release_year: z
 		.number()
@@ -1026,12 +833,9 @@ export type OperatorPassListingUpdateRequest = z.infer<typeof OperatorPassListin
 
 export const OperatorPassWallOperatorResponse = z.object({
 	id: z.string().describe('Stable public ID of the entry, not the user ID'),
-	name: z.string().describe('The name shown: the approved name, or Operator as fallback'),
-	avatar: z.string().nullable().describe('SHA-256 of the approved avatar snapshot, null for the default avatar'),
-	avatar_url: z
-		.url()
-		.nullable()
-		.describe('The approved avatar snapshot at the largest size, null for the default avatar'),
+	name: z.string().describe('The name shown: the name the holder chose, or Operator as fallback'),
+	avatar: z.string().nullable().describe('SHA-256 of the avatar snapshot, null for the default avatar'),
+	avatar_url: z.url().nullable().describe('The avatar snapshot at the largest size, null for the default avatar'),
 	count: z
 		.number()
 		.int()

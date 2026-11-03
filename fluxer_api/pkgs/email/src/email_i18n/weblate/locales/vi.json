@@ -288,7 +288,7 @@
 		"cta": "Xem lời đề nghị",
 		"footer_reason": "Bạn nhận được email này vì có người đề nghị chuyển cho bạn một Operator Pass trên {product_name}.",
 		"intro": "{senderName} muốn chuyển cho bạn một trong các Operator Pass của họ.",
-		"lead": "Hãy chấp nhận hoặc từ chối trên {product_name}. Nếu bạn chấp nhận, pass sẽ đến tài khoản của bạn vào {arrivesAt, date, long}, trừ khi người gửi rút lại lời đề nghị trước đó.",
+		"lead_v2": "Hãy chấp nhận hoặc từ chối trên {product_name}. Nếu bạn chấp nhận, pass sẽ được chuyển vào tài khoản của bạn ngay.",
 		"signoff": "Đội ngũ {product_name}",
 		"subject": "{senderName} muốn chuyển cho bạn một Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Đội ngũ {product_name}",
 		"subject": "Một Operator Pass trên tài khoản {product_name} của bạn đã kết thúc"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Huy hiệu Operator, một chỗ trên bức tường Operators, #operators và việc dùng thử sớm cũng đi kèm.",
-		"cta": "Mua Operator Pass",
-		"footer_reason": "Bạn nhận được email này vì bạn đã tham gia danh sách chờ Operator Pass. Đây là email cuối cùng chúng tôi gửi về pass này.",
-		"intro": "Bạn đã nhờ chúng tôi báo khi Operator Pass mở bán. Giờ pass đã mở bán.",
-		"paid_for": "Pass đi kèm một giấy chứng nhận Operator có đánh số, ghi tên bạn cùng ngày và giờ thanh toán, được gửi dưới dạng tệp PDF mà bạn giữ.",
-		"price_label": "Giá ưu đãi sớm",
-		"price_value": "{priceFormatted}, thanh toán một lần, đến {priceEndsOn, date, long}",
-		"signoff": "Đội ngũ {product_name}",
-		"subject": "Operator Pass {product_name} đã mở bán",
-		"terms_link": "Điều khoản Operator Pass",
-		"unsubscribe": "Hủy đăng ký"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Khi bật, bạn nhận được một giấy chứng nhận Operator có đánh số với tên bạn chọn. Giấy chứng nhận ghi {visionaryDate, date, long}, ngày bạn có Visionary, và huy hiệu Operator cũng hiện ngày này nếu bạn chọn hiển thị huy hiệu.",
-		"choices_line": "Huy hiệu Operator vẫn ẩn cho đến khi bạn chọn hiển thị, và bạn chỉ có tên trên bức tường Operators nếu bạn chọn như vậy.",
-		"cta": "Bật Operator Pass của bạn",
-		"footer_reason": "Bạn nhận được email này vì bạn có Visionary trên {product_name}.",
-		"intro": "Visionary của bạn đi kèm một Operator Pass, và bạn có thể bật nó trong phần cài đặt bất cứ lúc nào. Bạn không phải trả thêm gì, và Visionary của bạn không có gì thay đổi.",
-		"labs_line": "{member, select, yes {Bạn đã có quyền vào #operators trong Fluxer Labs nhờ Visionary của mình. Khi bật Operator Pass, bạn cũng nhận được vai trò Operator ở đó.} other {Khi bạn bật Operator Pass, chúng tôi sẽ thêm tài khoản này vào Fluxer Labs với vai trò Operator, trừ khi trước đây bạn đã rời hoặc bị xóa khỏi Fluxer Labs. Visionary của bạn cũng cho bạn quyền vào #operators ở đó.}}",
-		"signoff": "Đội ngũ {product_name}",
-		"subject": "Operator Pass đi kèm Visionary của bạn đã sẵn sàng để bật",
-		"terms_line": "Điều khoản Operator Pass giải thích cách pass hoạt động, và mục 13 nói về Visionary.",
-		"terms_link": "Điều khoản Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Huy hiệu Operator đã có trên hồ sơ của bạn. Bạn có thể ẩn nó trong phần <settings>cài đặt</settings>.} other {Huy hiệu Operator của bạn đang ẩn. Bạn có thể hiển thị nó trong phần <settings>cài đặt</settings>.}}",
 		"cta": "Mở Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Điều khoản Operator Pass bạn đã chấp nhận (phiên bản {termsVersion}) được đính kèm dưới dạng PDF.",
 		"terms_link": "Điều khoản Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Bạn đã chọn không có tên trên bức tường Operators. Bạn có thể thêm tên của mình trong <settings>cài đặt</settings>.} other {Bạn có tên trên bức tường Operators với tên {wallName}. Bạn có thể thay đổi tên đó hoặc rời khỏi bức tường trong <settings>cài đặt</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Tham gia danh sách chờ",
-		"expiry": "Liên kết này sẽ hết hạn sau 48 giờ.",
-		"footer_reason": "Bạn nhận được email này vì địa chỉ này đã được nhập vào danh sách chờ Operator Pass trên trang web của {product_name}.",
-		"intro": "Xác nhận địa chỉ email này để tham gia danh sách chờ Operator Pass. Chúng tôi sẽ gửi email cho bạn một lần, khi pass mở bán.",
-		"note": "Nếu bạn không yêu cầu việc này, hãy bỏ qua email này và chúng tôi sẽ không liên hệ với bạn nữa.",
-		"signoff": "Đội ngũ {product_name}",
-		"subject": "Xác nhận đăng ký danh sách chờ Operator Pass {product_name} của bạn"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Hãy trả lời email này trong vòng 60 ngày và cho chúng tôi biết lý do bạn không đồng ý. Việc này miễn phí, và một người trong đội ngũ của chúng tôi sẽ đọc và quyết định kháng nghị của bạn.} other {Hãy liên hệ quản trị viên của máy chủ này trong vòng 60 ngày và cho họ biết lý do bạn không đồng ý.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Bạn nhận được email này vì một quyết định về mục của bạn trên bức tường Operators của {product_name}.",
 		"ground": "Mục 3.1 của điều khoản Operator Pass",
 		"ground_label": "Căn cứ",
-		"intro": "{target, select, avatar {Chúng tôi đã từ chối ảnh đại diện của bạn cho bức tường Operators.} both {Chúng tôi đã từ chối tên và ảnh đại diện của bạn cho bức tường Operators.} other {Chúng tôi đã từ chối tên của bạn cho bức tường Operators.}} {shown, select, previous {Bức tường giữ phiên bản được duyệt gần nhất của bạn.} other {Cho đến khi bạn gửi bản mới, bức tường hiển thị chữ Operator và ảnh đại diện mặc định.}} Vị trí của bạn trên bức tường, kích thước của nó và huy hiệu của bạn vẫn giữ nguyên, và giao dịch mua của bạn không bị ảnh hưởng.",
+		"intro": "{target, select, avatar {Chúng tôi đã gỡ ảnh đại diện của bạn khỏi bức tường Operators.} both {Chúng tôi đã gỡ tên và ảnh đại diện của bạn khỏi bức tường Operators.} other {Chúng tôi đã gỡ tên của bạn khỏi bức tường Operators.}} {shown, select, previous {Bức tường hiển thị tên và ảnh đại diện trước đó của bạn.} other {Cho đến khi bạn gửi bản mới, bức tường hiển thị chữ Operator và ảnh đại diện mặc định.}} Vị trí của bạn trên bức tường, kích thước của nó và huy hiệu của bạn vẫn giữ nguyên, và giao dịch mua của bạn không bị ảnh hưởng.",
 		"next": "Bạn có thể gửi tên hoặc ảnh đại diện mới trong <settings>cài đặt</settings>.",
 		"reason_label": "Lý do",
 		"reason_value": "{reason, select, impersonation {Mạo danh người khác} rights {Dùng tên hoặc hình ảnh mà không có quyền sử dụng} age_suitability {Không phù hợp với người dùng nhỏ tuổi} other {Vi phạm nguyên tắc cộng đồng}}",
 		"redress_v2": "Bạn cũng có thể khởi kiện ra tòa. Nếu bạn ở EU, bạn có thể dùng một <dsa>cơ quan giải quyết tranh chấp ngoài tòa án</dsa> đã được chứng nhận. Nếu bạn là người tiêu dùng ở EU hoặc EEA, bạn cũng có thể đưa tranh chấp đến Hội đồng Quốc gia Thụy Điển về Tranh chấp Tiêu dùng (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Thụy Điển.",
 		"signoff": "Đội ngũ {product_name}",
-		"subject": "Chúng tôi đã từ chối tên hoặc ảnh đại diện của bạn cho bức tường Operators của {product_name}"
+		"subject": "Chúng tôi đã gỡ tên hoặc ảnh đại diện của bạn khỏi bức tường Operators của {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Huy hiệu đã có trên hồ sơ của bạn. Bạn có thể ẩn nó trong phần <settings>cài đặt</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} và đội ngũ {product_name}",
 		"subject": "Giấy chứng nhận Operator {product_name} của bạn",
 		"terms_link": "Điều khoản Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Bạn đã chọn không có tên trên bức tường Operators. Bạn có thể thêm tên của mình trong <settings>cài đặt</settings>.} other {Bạn có tên trên bức tường Operators với tên {wallName}, và tên cùng ảnh đại diện của bạn sẽ hiển thị khi chúng tôi đã kiểm tra chúng. Bạn có thể thay đổi tên đó hoặc rời khỏi bức tường trong <settings>cài đặt</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Bạn đã chọn không có tên trên bức tường Operators. Bạn có thể thêm tên của mình trong <settings>cài đặt</settings>.} other {Bạn có tên trên bức tường Operators với tên {wallName}. Bạn có thể thay đổi tên đó hoặc rời khỏi bức tường trong <settings>cài đặt</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Giấy báo có cho khoản hoàn tiền này được đính kèm trong email này dưới dạng PDF.",

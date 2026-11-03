@@ -3,7 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import {EmailVerificationAlert} from '@app/features/app/components/dialogs/components/EmailVerificationAlert';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {OPERATOR_PASS_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {OPERATOR_PASS_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openBouncedEmailChange} from '@app/features/auth/hooks/useVerifyEmailAction';
 import styles from '@app/features/premium/components/operator_pass/checkout/CheckoutStage.module.css';
@@ -18,11 +18,6 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-const WAITLIST_DESCRIPTION_DESCRIPTOR = msg({
-	message: "We'll email you when it opens.",
-	comment:
-		'Line in the Operator Pass dialog before the pass can be bought, under the button that opens the waitlist. It means the sale of the Operator Pass opens.',
-});
 const EMAIL_UNVERIFIED_NOTICE_DESCRIPTOR = msg({
 	message: 'Confirm your email to buy the {operatorPassName}.',
 	comment:
@@ -55,11 +50,6 @@ const PAYMENT_DISPUTE_NOTICE_DESCRIPTOR = msg({
 		'Purchases are paused while a payment dispute on your account is open, because a disputed payment can still be reversed.',
 	comment:
 		'Notice in the Operator Pass checkout dialog while a payment dispute this account made is open. A payment dispute is a chargeback filed with a bank or card company. Neutral tone, never suggest the person did something wrong.',
-});
-const OWNED_BODY_DESCRIPTOR = msg({
-	message: 'Thanks for backing {productName}. Your passes are under "{operatorPassName}" in your settings.',
-	comment:
-		'Text in the Operator Pass dialog when the account already has a pass and buying is not open. Backing means supporting the project. "{operatorPassName}" is the name of the settings tab that lists the passes, keep the quotes. Operator Pass is a product name and stays untranslated.',
 });
 
 const BlockingNoticeAlert = observer(function BlockingNoticeAlert({notice}: {notice: BlockingNotice}) {
@@ -145,41 +135,27 @@ const BlockingNoticeAlert = observer(function BlockingNoticeAlert({notice}: {not
 });
 
 interface CheckoutNoticeStageProps {
-	kind: 'notice' | 'waitlist' | 'owned';
-	notice: BlockingNotice | null;
+	notice: BlockingNotice;
 	state: OperatorPassStateResponse | null;
 	formatPrice: (amountMinor: number, currency: string) => string;
 }
 
-export function CheckoutNoticeStage({kind, notice, state, formatPrice}: CheckoutNoticeStageProps) {
-	const {i18n} = useLingui();
+export function CheckoutNoticeStage({notice, state, formatPrice}: CheckoutNoticeStageProps) {
 	return (
 		<div className={styles.stage} data-flx="premium.operator-pass-checkout.notice-stage">
-			{kind === 'notice' && notice && (
-				<div role="alert" data-flx="premium.operator-pass-checkout.notice-alert">
-					<BlockingNoticeAlert
-						notice={notice}
-						data-flx="premium.operator-pass.checkout.checkout-notice-stage.blocking-notice-alert"
-					/>
-				</div>
-			)}
-			{kind !== 'owned' && state && (
+			<div role="alert" data-flx="premium.operator-pass-checkout.notice-alert">
+				<BlockingNoticeAlert
+					notice={notice}
+					data-flx="premium.operator-pass.checkout.checkout-notice-stage.blocking-notice-alert"
+				/>
+			</div>
+			{state && (
 				<OperatorPassPriceBlock
 					state={state}
 					count={1}
 					formatPrice={formatPrice}
 					data-flx="premium.operator-pass.checkout.checkout-notice-stage.operator-pass-price-block"
 				/>
-			)}
-			{kind === 'waitlist' && (
-				<p className={styles.note} data-flx="premium.operator-pass-checkout.waitlist">
-					{i18n._(WAITLIST_DESCRIPTION_DESCRIPTOR)}
-				</p>
-			)}
-			{kind === 'owned' && (
-				<p className={styles.lead} data-flx="premium.operator-pass-checkout.owned-body">
-					{i18n._(OWNED_BODY_DESCRIPTOR, {productName: PRODUCT_NAME, operatorPassName: OPERATOR_PASS_NAME})}
-				</p>
 			)}
 		</div>
 	);

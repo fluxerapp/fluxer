@@ -76,9 +76,9 @@ export const OPERATOR_PASS_SHOWCASE_SLIDES: ReadonlyArray<OperatorPassShowcaseSl
 		}),
 		body: msg({
 			message:
-				"If you'd like a spot, it goes up when you pay. Your name and avatar show once we check them, usually within 72 hours, and you can leave the wall or come back in your settings.",
+				"If you'd like a spot, it goes up with your name and avatar when you pay, and you can leave the wall or come back in your settings.",
 			comment:
-				"Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Until we check them, the spot shows the word Operator and the default avatar, never the username. Usually within 72 hours is a description of how it works today, not a promise. Never add a word that says how long the spot lasts.",
+				"Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Never add a word that says how long the spot lasts.",
 		}),
 		alt: null,
 	},

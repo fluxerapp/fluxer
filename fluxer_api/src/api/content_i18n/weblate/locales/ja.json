@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "一般",
 	"guild.default_channel_voice": "一般",
 	"operator_pass.labs_greeting": "{size, select, single {#operators へようこそ、{last}！} other {#operators へようこそ、{others}、{last}！}} ここは Operator Pass を持つ皆さんのためのチャンネルです。",
-	"operator_pass.visionary_notice_dm_v2": "VisionaryにはOperator Passが付いてきます。設定の「Operator Pass」でいつでもオンにでき、追加料金はかかりません。",
 	"profile_badge.bug_hunter": "{product_name}バグハンター",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator、{count, plural, other {Operator Pass #枚}}",

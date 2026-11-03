@@ -288,7 +288,7 @@
 		"cta": "Zobacz propozycję",
 		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ ktoś zaproponował, że przekaże Ci Operator Pass w {product_name}.",
 		"intro": "Osoba {senderName} chce przekazać Ci jedną ze swoich przepustek Operator Pass.",
-		"lead": "Przyjmij lub odrzuć go w {product_name}. Jeśli go przyjmiesz, trafi do Ciebie {arrivesAt, date, long}, chyba że nadawca wcześniej wycofa propozycję.",
+		"lead_v2": "Przyjmij lub odrzuć go w {product_name}. Jeśli go przyjmiesz, od razu trafi do Ciebie.",
 		"signoff": "Zespół {product_name}",
 		"subject": "Osoba {senderName} chce przekazać Ci Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Zespół {product_name}",
 		"subject": "Operator Pass na Twoim koncie {product_name} wygasł"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Dostajesz z nią też odznakę Operator, miejsce na ścianie Operators, #operators i wczesne testowanie.",
-		"cta": "Kup Operator Pass",
-		"footer_reason": "Otrzymujesz tę wiadomość w związku z Twoim zapisem na listę oczekujących na Operator Pass. To ostatni e-mail, jaki wysyłamy w sprawie przepustki.",
-		"intro": "Zgodnie z Twoją prośbą dajemy znać, że Operator Pass trafił do sprzedaży. Możesz go już kupić.",
-		"paid_for": "Z przepustką dostajesz numerowany certyfikat Operator z Twoją nazwą oraz datą i godziną płatności, w postaci pliku PDF, który zostaje u Ciebie.",
-		"price_label": "Cena startowa",
-		"price_value": "{priceFormatted}, płatne jednorazowo, do {priceEndsOn, date, long} włącznie",
-		"signoff": "Zespół {product_name}",
-		"subject": "Operator Pass w {product_name} jest już w sprzedaży",
-		"terms_link": "Warunki Operator Pass",
-		"unsubscribe": "Wypisz się"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Po włączeniu dostajesz numerowany certyfikat Operator z wybraną przez Ciebie nazwą. Widnieje na nim {visionaryDate, date, long}, data otrzymania Visionary, i ta sama data widnieje na odznace Operator, jeśli zdecydujesz się ją pokazać.",
-		"choices_line": "Odznaka Operator pozostaje ukryta, dopóki nie zdecydujesz się jej pokazać, a na ścianie Operators pojawisz się tylko wtedy, gdy tak wybierzesz.",
-		"cta": "Włącz swój Operator Pass",
-		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ masz Visionary w {product_name}.",
-		"intro": "Do Twojego Visionary dołączony jest Operator Pass i możesz go włączyć w ustawieniach w dowolnym momencie. Nic dodatkowo za niego nie płacisz i nic nie zmienia się w Twoim Visionary.",
-		"labs_line": "{member, select, yes {Dostęp do #operators we Fluxer Labs masz już dzięki swojemu Visionary. Po włączeniu Operator Pass dostaniesz tam też rolę Operator.} other {Po włączeniu Operator Pass dodamy to konto do Fluxer Labs z rolą Operator, chyba że to konto wcześniej opuściło Fluxer Labs lub zostało z niego usunięte. Dzięki swojemu Visionary masz tam też dostęp do #operators.}}",
-		"signoff": "Zespół {product_name}",
-		"subject": "Twój Operator Pass z Visionary czeka na włączenie",
-		"terms_line": "Warunki Operator Pass opisują, jak działa pass, a punkt 13 dotyczy Visionary.",
-		"terms_link": "Warunki Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Twoja odznaka Operator jest widoczna w profilu. Możesz ją ukryć w <settings>ustawieniach</settings>.} other {Twoja odznaka Operator jest ukryta. Możesz ją pokazać w <settings>ustawieniach</settings>.}}",
 		"cta": "Otwórz Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Zaakceptowane przez Ciebie warunki Operator Pass (wersja {termsVersion}) są w załączniku w formacie PDF.",
 		"terms_link": "Warunki Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Zgodnie z Twoim wyborem nie ma Cię na ścianie Operators. Swoją nazwę możesz dodać w <settings>ustawieniach</settings>.} other {Widniejesz na ścianie Operators jako {wallName}. Możesz to zmienić lub opuścić ścianę w <settings>ustawieniach</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Dołącz do listy oczekujących",
-		"expiry": "Ten link wygaśnie za 48 godzin.",
-		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ ten adres został wpisany na listę oczekujących na Operator Pass na stronie {product_name}.",
-		"intro": "Potwierdź ten adres e-mail, aby dołączyć do listy oczekujących na Operator Pass. Napiszemy do Ciebie jeden raz, gdy przepustka trafi do sprzedaży.",
-		"note": "Jeśli ta prośba nie pochodzi od Ciebie, zignoruj tę wiadomość. Nie będziemy się już z Tobą kontaktować.",
-		"signoff": "Zespół {product_name}",
-		"subject": "Potwierdź zapis na listę oczekujących na Operator Pass w {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Odpowiedz na tę wiadomość w ciągu 60 dni i napisz, dlaczego się nie zgadzasz. To nic nie kosztuje, a odwołanie czyta i rozstrzyga osoba z naszego zespołu.} other {Skontaktuj się z administratorami tej instancji w ciągu 60 dni i napisz im, dlaczego się nie zgadzasz.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Otrzymujesz tę wiadomość z powodu decyzji dotyczącej Twojego wpisu na ścianie Operators w {product_name}.",
 		"ground": "Sekcja 3.1 warunków Operator Pass",
 		"ground_label": "Podstawa",
-		"intro": "{target, select, avatar {Odrzuciliśmy Twój awatar na ścianę Operators.} both {Odrzuciliśmy Twoją nazwę i awatar na ścianę Operators.} other {Odrzuciliśmy Twoją nazwę na ścianę Operators.}} {shown, select, previous {Ściana pokazuje ostatnią zatwierdzoną wersję.} other {Dopóki nie prześlesz nowej wersji, ściana pokazuje słowo Operator i domyślny awatar.}} Twoje miejsce na ścianie, jego rozmiar i odznaka pozostają bez zmian, a nie ma to wpływu na Twój zakup.",
+		"intro": "{target, select, avatar {Usunęliśmy Twój awatar ze ściany Operators.} both {Usunęliśmy Twoją nazwę i awatar ze ściany Operators.} other {Usunęliśmy Twoją nazwę ze ściany Operators.}} {shown, select, previous {Ściana pokazuje Twoją poprzednią nazwę i awatar.} other {Dopóki nie prześlesz nowej wersji, ściana pokazuje słowo Operator i domyślny awatar.}} Twoje miejsce na ścianie, jego rozmiar i odznaka pozostają bez zmian, a nie ma to wpływu na Twój zakup.",
 		"next": "Nową nazwę lub awatar możesz przesłać w <settings>ustawieniach</settings>.",
 		"reason_label": "Powód",
 		"reason_value": "{reason, select, impersonation {Podszywanie się pod kogoś innego} rights {Użycie nazwy lub obrazu bez praw do nich} age_suitability {Nieodpowiednie dla młodszych użytkowników} other {Naruszenie wytycznych społeczności}}",
 		"redress_v2": "Możesz też wystąpić do sądu. Jeśli jesteś w UE, możesz skorzystać z certyfikowanego <dsa>organu pozasądowego rozstrzygania sporów</dsa>. Jeśli jesteś konsumentem w UE lub EOG, możesz też skierować spór do szwedzkiej Krajowej Komisji ds. Sporów Konsumenckich (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Szwecja.",
 		"signoff": "Zespół {product_name}",
-		"subject": "Odrzuciliśmy Twoją nazwę lub awatar na ścianę Operators w {product_name}"
+		"subject": "Usunęliśmy Twoją nazwę lub awatar ze ściany Operators w {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Twoja odznaka jest widoczna w profilu. Możesz ją ukryć w <settings>ustawieniach</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} i zespół {product_name}",
 		"subject": "Twój certyfikat Operator w {product_name}",
 		"terms_link": "Warunki Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Zgodnie z Twoim wyborem nie ma Cię na ścianie Operators. Swoją nazwę możesz dodać w <settings>ustawieniach</settings>.} other {Widniejesz na ścianie Operators jako {wallName}, a Twoja nazwa i awatar pojawią się, gdy je sprawdzimy. Możesz to zmienić lub opuścić ścianę w <settings>ustawieniach</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Zgodnie z Twoim wyborem nie ma Cię na ścianie Operators. Swoją nazwę możesz dodać w <settings>ustawieniach</settings>.} other {Widniejesz na ścianie Operators jako {wallName}. Możesz to zmienić lub opuścić ścianę w <settings>ustawieniach</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Faktura korygująca do tego zwrotu jest załączona do tej wiadomości w pliku PDF.",
