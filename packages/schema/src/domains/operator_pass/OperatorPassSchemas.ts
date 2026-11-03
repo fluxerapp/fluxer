@@ -668,6 +668,11 @@ export const OperatorPassLabsResponse = z.object({
 		.describe(
 			'Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered. On unless the account turned it off',
 		),
+	show_operators: z
+		.boolean()
+		.describe(
+			'Whether the account gets the Fluxer Labs roles that open #operators. On unless the account turned it off. When off, no role update adds them back',
+		),
 	greeted: z.boolean().describe('Whether the account was already welcomed in #operators. Nobody is welcomed twice'),
 	left: z
 		.boolean()
@@ -704,6 +709,12 @@ export const OperatorPassLabsGreetingRequest = z.object({
 });
 
 export type OperatorPassLabsGreetingRequest = z.infer<typeof OperatorPassLabsGreetingRequest>;
+
+export const OperatorPassLabsOperatorsRequest = z.object({
+	show_operators: z.boolean().describe('Whether the account gets the Fluxer Labs roles that open #operators'),
+});
+
+export type OperatorPassLabsOperatorsRequest = z.infer<typeof OperatorPassLabsOperatorsRequest>;
 
 export const OperatorPassPassesResponse = z.object({
 	count: z.number().int().describe('How many passes the account holds now'),

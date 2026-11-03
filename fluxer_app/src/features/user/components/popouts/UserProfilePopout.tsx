@@ -108,7 +108,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 		const memberRoles =
 			profileMembership.kind === 'guildMember' && profileMembership.member === guildMember
 				? profileMembership.roles
-				: (guildMember?.getSortedRoles() ?? []);
+				: (guildMember?.getDisplayRoles() ?? []);
 		const canManageRoles = Permission.can(Permissions.MANAGE_ROLES, {guildId});
 		const isCurrentUser = user.id === Authentication.currentUserId;
 		const relationshipType = Relationships.getRelationship(user.id)?.type;

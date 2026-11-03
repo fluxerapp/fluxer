@@ -13794,6 +13794,63 @@
 				}
 			}
 		},
+		"/operator-pass/labs-operators": {
+			"put": {
+				"operationId": "update_operator_pass_labs_operators",
+				"summary": "Show or hide #operators",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassPassesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Turns the Fluxer Labs roles that open #operators on or off for the current account. These are the Operator role, the Visionary role and the access role. Turning it off removes them at once, and no later role update adds them back. Turning it on gives back the roles the account is entitled to at once. It does not change passes, badges, the Operators wall, Fluxer Labs membership or other roles.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassLabsOperatorsRequest"}}}
+				}
+			}
+		},
 		"/operator-pass/labs/join": {
 			"post": {
 				"operationId": "join_operator_pass_labs",
@@ -13843,7 +13900,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Adds the current account to Fluxer Labs with the Operator role, the same way a delivered pass does, and returns the IDs of the community and #operators. Needs at least one pass. An account that is already in Fluxer Labs gets the Operator role if it is missing. An account that left Fluxer Labs or was removed from it is never added again and gets status left, so it can join with the invite. A banned account gets status banned.",
+				"description": "Adds the current account to Fluxer Labs with the Operator role, the same way a delivered pass does, and returns the IDs of the community and #operators. Needs at least one pass. An account that is already in Fluxer Labs gets the Operator role if it is missing, unless it turned off #operators. An account that left Fluxer Labs or was removed from it is never added again and gets status left, so it can join with the invite. A banned account gets status banned.",
 				"security": [{"sessionToken": []}]
 			}
 		},
@@ -33731,6 +33788,16 @@
 				"required": ["status", "guild_id", "operators_channel_id"],
 				"additionalProperties": false
 			},
+			"OperatorPassLabsOperatorsRequest": {
+				"type": "object",
+				"properties": {
+					"show_operators": {
+						"type": "boolean",
+						"description": "Whether the account gets the Fluxer Labs roles that open #operators"
+					}
+				},
+				"required": ["show_operators"]
+			},
 			"OperatorPassLabsGreetingRequest": {
 				"type": "object",
 				"properties": {
@@ -38632,6 +38699,12 @@
 						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
 					},
 					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
+					"hidden_role_ids": {
+						"description": "IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
 					"voice_origins": {
 						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com",
 						"maxItems": 1000,
@@ -38656,6 +38729,7 @@
 				],
 				"additionalProperties": false
 			},
+			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"InstanceHiddenBuiltInGuildBadgesSchema": {
 				"maxItems": 3,
 				"type": "array",
@@ -39321,7 +39395,6 @@
 				"pattern": "^-?[0-9]{1,19}$",
 				"description": "Display position of the badge. Badges are shown in ascending order of this value"
 			},
-			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"BotFlags": {
 				"type": "integer",
 				"minimum": 0,
@@ -43600,6 +43673,10 @@
 						"type": "boolean",
 						"description": "Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered. On unless the account turned it off"
 					},
+					"show_operators": {
+						"type": "boolean",
+						"description": "Whether the account gets the Fluxer Labs roles that open #operators. On unless the account turned it off. When off, no role update adds them back"
+					},
 					"greeted": {
 						"type": "boolean",
 						"description": "Whether the account was already welcomed in #operators. Nobody is welcomed twice"
@@ -43618,7 +43695,7 @@
 						"description": "ID of the #operators channel in Fluxer Labs, null when it is not set up"
 					}
 				},
-				"required": ["greeting", "greeted", "left", "member", "guild_id", "operators_channel_id"],
+				"required": ["greeting", "show_operators", "greeted", "left", "member", "guild_id", "operators_channel_id"],
 				"additionalProperties": false
 			},
 			"OperatorPassVisionaryResponse": {

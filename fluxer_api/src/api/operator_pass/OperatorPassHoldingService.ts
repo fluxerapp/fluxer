@@ -47,7 +47,7 @@ import type {OperatorPassWallChoice} from '@app/api/operator_pass/OperatorPassWa
 import {invalidateOperatorPassPublicWall} from '@app/api/operator_pass/OperatorPassWallPublicationService';
 import type {OperatorPassWallService} from '@app/api/operator_pass/OperatorPassWallService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {OperatorPassLastPassConfirmationRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassLastPassConfirmationRequiredError';
 import {OperatorPassOfferUnavailableError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassOfferUnavailableError';
 import {OperatorPassPassNotTransferableError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassPassNotTransferableError';
@@ -268,6 +268,23 @@ export class OperatorPassHoldingService {
 			await this.deps.roleService.queueGreetingIfDue(user);
 		}
 		await this.dispatchPassesUpdate([user.id]);
+	}
+
+	async updateLabsOperatorsChannel(user: User, show: boolean): Promise<User> {
+		const current = (await this.deps.userRepository.findUnique(user.id)) ?? user;
+		const premiumFlags = show
+			? current.premiumFlags & ~PremiumFlags.OPERATORS_CHANNEL_HIDDEN
+			: current.premiumFlags | PremiumFlags.OPERATORS_CHANNEL_HIDDEN;
+		const updated =
+			premiumFlags === current.premiumFlags
+				? current
+				: await this.deps.userRepository.patchUpsert(current.id, {premium_flags: premiumFlags}, current.toRow());
+		await this.deps.roleService.resyncLabsRoles(updated);
+		if (show) {
+			await this.deps.roleService.queueGreetingIfDue(updated);
+		}
+		await this.dispatchPassesUpdate([updated.id]);
+		return updated;
 	}
 
 	async joinLabs(user: User): Promise<LabsJoinStatus> {

@@ -78,7 +78,7 @@ export function resolveProfileGuildMembership(
 		guildId,
 		guild,
 		member,
-		roles: member.getSortedRoles(),
+		roles: member.getDisplayRoles(),
 	};
 }
 

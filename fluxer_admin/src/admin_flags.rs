@@ -144,6 +144,7 @@ const RESTRICTION_USER_FLAGS: u64 = user_flag_bits::DISABLED
     | user_flag_bits::SPAMMER
     | user_flag_bits::REPORT_BANNED;
 const PURCHASE_DISABLED: i32 = 1 << 6;
+const OPERATORS_CHANNEL_HIDDEN: i32 = 1 << 13;
 
 pub fn user_flag_is_editable(flag: u64, current_flags: u64, suspended: bool) -> bool {
     let self_disabled = flag == user_flag_bits::DISABLED && current_flags & flag != 0 && !suspended;
@@ -151,7 +152,7 @@ pub fn user_flag_is_editable(flag: u64, current_flags: u64, suspended: bool) -> 
 }
 
 pub fn premium_flag_is_editable(flag: i32) -> bool {
-    flag & PURCHASE_DISABLED == 0
+    flag & (PURCHASE_DISABLED | OPERATORS_CHANNEL_HIDDEN) == 0
 }
 
 pub const PREMIUM_FLAGS: &[I32Flag] = &[
@@ -190,6 +191,10 @@ pub const PREMIUM_FLAGS: &[I32Flag] = &[
     I32Flag {
         name: "OPERATOR_PASS_BADGE_COUNT_HIDDEN",
         value: 1 << 12,
+    },
+    I32Flag {
+        name: "OPERATORS_CHANNEL_HIDDEN",
+        value: OPERATORS_CHANNEL_HIDDEN,
     },
 ];
 

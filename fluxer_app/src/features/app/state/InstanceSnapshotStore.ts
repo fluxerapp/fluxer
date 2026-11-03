@@ -125,6 +125,7 @@ export function runtimeSnapshotFromDiscovery(document: InstanceDiscoveryDocument
 		customBadgesVersion: discovery.customBadgesVersion,
 		builtInGuildBadgeImages: discovery.builtInGuildBadgeImages,
 		hiddenBuiltInGuildBadges: discovery.hiddenBuiltInGuildBadges,
+		hiddenRoleIds: discovery.hiddenRoleIds,
 	});
 }
 

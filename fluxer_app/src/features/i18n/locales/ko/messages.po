@@ -33072,6 +33072,11 @@ msgstr "내 프로필에 {badgeLabel} 표시"
 msgid "Show {title}"
 msgstr "{title} 보기"
 
+#. Switch label in the Fluxer Labs section of the Operator Pass settings. On by default. #operators is a channel in the Fluxer Labs community, keep it as is.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Show #operators"
+msgstr "#operators 표시"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -39131,6 +39136,11 @@ msgstr "범위 설정을 해제하면 앱이 제대로 작동하지 않을 수 �
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx
 msgid "Turning this off only hides your camera from your own view. Others in the call can still see your camera feed."
 msgstr "이 설정을 끄면 내 화면에서만 내 카메라가 숨겨집니다. 통화에 참여한 다른 사람들에게는 내 카메라 피드가 계속 표시됩니다."
+
+#. Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again."
+msgstr "끄면 {labsName}의 #operators를 여는 역할이 제거되고, 다시 켤 때까지 역할을 다시 추가하지 않아요."
 
 #. Help under the Klipy API key field in the setup wizard.
 #: src/features/app/components/setup/SetupServicesStep.tsx

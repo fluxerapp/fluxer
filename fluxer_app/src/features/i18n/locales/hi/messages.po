@@ -33072,6 +33072,11 @@ msgstr "अपनी प्रोफ़ाइल पर {badgeLabel} दिख�
 msgid "Show {title}"
 msgstr "{title} दिखाएँ"
 
+#. Switch label in the Fluxer Labs section of the Operator Pass settings. On by default. #operators is a channel in the Fluxer Labs community, keep it as is.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Show #operators"
+msgstr "#operators दिखाएँ"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -39131,6 +39136,11 @@ msgstr "स्कोप बंद करने से हो सकता है
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx
 msgid "Turning this off only hides your camera from your own view. Others in the call can still see your camera feed."
 msgstr "इसे बंद करने से आपका कैमरा सिर्फ़ आपको नहीं दिखेगा। कॉल में मौजूद दूसरे लोग आपका कैमरा फ़ीड अब भी देख पाएँगे।"
+
+#. Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again."
+msgstr "इसे बंद करने पर {labsName} में #operators खोलने वाली भूमिकाएँ हट जाती हैं, और जब तक आप इसे फिर से चालू नहीं करते, हम उन्हें वापस नहीं जोड़ेंगे।"
 
 #. Help under the Klipy API key field in the setup wizard.
 #: src/features/app/components/setup/SetupServicesStep.tsx

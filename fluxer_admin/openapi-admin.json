@@ -25271,6 +25271,11 @@
 						"name": "OPERATOR_PASS_BADGE_COUNT_HIDDEN",
 						"value": "4096",
 						"description": "User has hidden how many Operator Passes they hold"
+					},
+					{
+						"name": "OPERATORS_CHANNEL_HIDDEN",
+						"value": "8192",
+						"description": "User turned off the Fluxer Labs roles that open #operators"
 					}
 				]
 			},

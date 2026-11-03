@@ -19,8 +19,10 @@ import {
 	getCacheService,
 	getChannelRepository,
 	getGuildRepository,
+	getOperatorPassWallService,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {OperatorPassHoldingService} from '@app/api/operator_pass/OperatorPassHoldingService';
 import {
 	type OperatorPassLabsGreetingDeps,
 	runOperatorPassLabsGreeting,
@@ -36,8 +38,9 @@ import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserNotificationSettings} from '@fluxer/constants/src/UserConstants';
+import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import {afterAll, afterEach, beforeAll, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, expect, test, vi} from 'vitest';
 
 const DELIVERED_AT = new Date('2026-11-01T16:05:00.000Z');
 
@@ -297,4 +300,39 @@ test('a run welcomes everyone queued in that window, fifty people per message', 
 		operatorIds.map(String).sort(),
 	);
 	expect(await repository.listLabsGreetings()).toHaveLength(0);
+});
+
+test('turning #operators off keeps the Operator role away through every sync, and turning it on gives it back', async () => {
+	const {owner, labs, operatorRole, repository, roles} = await setUpLabs();
+	const operator = await createOperator(repository);
+	const holding = new OperatorPassHoldingService({
+		repository,
+		userRepository: getUserRepository(),
+		roleService: roles,
+		gatewayService: {dispatchPresence: vi.fn()} as unknown as ConstructorParameters<
+			typeof OperatorPassHoldingService
+		>[0]['gatewayService'],
+		emailService: new TestEmailService(),
+		wallService: getOperatorPassWallService(),
+		findPurchase: (purchaseId) => repository.findPurchase(purchaseId),
+	});
+	const roleIds = async () => (await getMember(harness, owner.token, labs.id, operator.account.userId)).roles;
+	await deliver(roles, operator.userId, null);
+	expect(await roleIds()).toContain(operatorRole.id);
+
+	const hidden = await holding.updateLabsOperatorsChannel(
+		await getUserRepository().findUniqueAssert(operator.userId),
+		false,
+	);
+	expect(await roleIds()).not.toContain(operatorRole.id);
+	expect((await holding.queries.describePasses(hidden)).labs.show_operators).toBe(false);
+
+	await roles.syncLabsRolesForMembers(getUserRepository(), 100);
+	await deliver(roles, operator.userId, null);
+	expect(await roles.joinFromCheckout(await getUserRepository().findUniqueAssert(operator.userId))).toBe('joined');
+	expect(await roleIds()).not.toContain(operatorRole.id);
+
+	const shown = await holding.updateLabsOperatorsChannel(hidden, true);
+	expect(await roleIds()).toContain(operatorRole.id);
+	expect((await holding.queries.describePasses(shown)).labs.show_operators).toBe(true);
 });

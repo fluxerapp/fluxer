@@ -13,7 +13,11 @@ import {
 	loadOperatorPassEntitlementState,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
-import {getLabsGuildId, getLabsOperatorsChannelId} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {
+	getLabsGuildId,
+	getLabsOperatorsChannelId,
+	hidesOperatorsChannel,
+} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {
 	getOperatorPassCertificateUrl,
 	getOperatorPassWithdrawalDeadline,
@@ -183,6 +187,7 @@ export class OperatorPassHoldingQueryService {
 				.map((offer) => mapOperatorPassOffer(offer, users)),
 			labs: {
 				greeting: labs?.greeting !== false,
+				show_operators: !hidesOperatorsChannel(user),
 				greeted: labs?.greeted_at != null,
 				left: labs?.left_at != null,
 				member: labsMember,
