@@ -342,13 +342,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 				}
 				const targetElement = event.target;
 				const ownerWindow = ownerDocument.defaultView;
-				if (!ownerWindow || !(targetElement instanceof ownerWindow.HTMLElement)) return;
+				if (!ownerWindow || !(targetElement instanceof ownerWindow.Element)) return;
 				if (target.contains(targetElement)) {
 					return;
 				}
 				if (
 					targetElement.closest('[role="dialog"][aria-modal="true"]') ||
-					targetElement.className.includes('backdrop') ||
+					(targetElement.getAttribute('class') ?? '').includes('backdrop') ||
 					targetElement.closest('.focusLock') ||
 					targetElement.closest('[data-native-titlebar]')
 				) {
