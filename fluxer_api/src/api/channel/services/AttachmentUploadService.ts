@@ -28,9 +28,8 @@ import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {resolveAttachmentMaxFileSize} from '@app/api/limits/AttachmentFileSizeLimit';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {Channel} from '@app/api/models/Channel';
@@ -40,8 +39,6 @@ import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunication
 import {Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {
-	ATTACHMENT_MAX_SIZE_BOT,
-	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	ATTACHMENT_UPLOAD_CHUNK_THRESHOLD,
 	ATTACHMENT_UPLOAD_MAX_CHUNKS,
 	resolveAttachmentUploadPartSize,
@@ -511,12 +508,10 @@ export class AttachmentUploadService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const fallbackMaxSize = ATTACHMENT_MAX_SIZE_NON_PREMIUM;
-		const ctx = createLimitMatchContext({user, guildFeatures: guild?.features ?? null});
-		const resolvedMaxFileSize = Math.floor(
-			resolveLimitSafe(this.limitConfigService.getConfigSnapshot(), ctx, 'max_attachment_file_size', fallbackMaxSize),
-		);
-		const maxFileSize = user.isBot ? Math.min(resolvedMaxFileSize, ATTACHMENT_MAX_SIZE_BOT) : resolvedMaxFileSize;
+		const maxFileSize = resolveAttachmentMaxFileSize(this.limitConfigService.getConfigSnapshot(), {
+			user,
+			guildFeatures: guild?.features ?? null,
+		});
 		return {maxFileSize, assertCanAttachFiles};
 	}
 

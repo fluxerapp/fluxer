@@ -32,9 +32,8 @@ import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {IMediaService, MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {resolveAttachmentMaxFileSize} from '@app/api/limits/AttachmentFileSizeLimit';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
@@ -42,7 +41,6 @@ import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
-import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -479,16 +477,10 @@ export class MessagePersistenceService {
 						'Attachment upload actor must be resolved before processing new attachments',
 					);
 					const uploader = await this.userRepository.findUnique(uploadUserId);
-					const guildFeatures = guild?.features ?? null;
-					const maxFileSize = Math.floor(
-						resolveLimitSafe(
-							this.limitConfigService.getConfigSnapshot(),
-							createLimitMatchContext({user: uploader, guildFeatures}),
-							'max_attachment_file_size',
-							ATTACHMENT_MAX_SIZE_NON_PREMIUM,
-							guildFeatures ? 'guild' : 'user',
-						),
-					);
+					const maxFileSize = resolveAttachmentMaxFileSize(this.limitConfigService.getConfigSnapshot(), {
+						user: uploader,
+						guildFeatures: guild?.features ?? null,
+					});
 					const uploadedSizes: Array<number> = [];
 					for (const [index, attachment] of newAttachments.entries()) {
 						const uploadedFile = await this.storageService.getObjectMetadata(

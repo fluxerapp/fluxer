@@ -4,6 +4,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {assertAttachmentFileSizesWithinLimit} from '@app/api/channel/services/message/MessageHelpers';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import {resolveAttachmentMaxFileSize} from '@app/api/limits/AttachmentFileSizeLimit';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -17,7 +18,6 @@ import {
 	SENDABLE_MESSAGE_FLAGS,
 } from '@fluxer/constants/src/ChannelConstants';
 import {
-	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	MAX_ATTACHMENTS_PER_MESSAGE,
 	MAX_EMBEDS_PER_MESSAGE,
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
@@ -161,18 +161,10 @@ export class MessageValidationService {
 		user: User,
 		guildFeatures?: Iterable<string> | null,
 	): void {
-		const ctx = createLimitMatchContext({user, guildFeatures});
-		const evaluationContext = guildFeatures ? 'guild' : 'user';
-		const fallbackMaxSize = ATTACHMENT_MAX_SIZE_NON_PREMIUM;
-		const maxFileSize = Math.floor(
-			resolveLimitSafe(
-				this.limitConfigService.getConfigSnapshot(),
-				ctx,
-				'max_attachment_file_size',
-				fallbackMaxSize,
-				evaluationContext,
-			),
-		);
+		const maxFileSize = resolveAttachmentMaxFileSize(this.limitConfigService.getConfigSnapshot(), {
+			user,
+			guildFeatures,
+		});
 		assertAttachmentFileSizesWithinLimit(
 			attachments.map(({size}) => size),
 			maxFileSize,
