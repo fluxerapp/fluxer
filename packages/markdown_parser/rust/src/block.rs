@@ -1023,7 +1023,11 @@ impl ListContext<'_> {
                             new_count += content_node_count;
                         }
                     }
-                    items.push(ListItem { children, ordinal, checked: item.checked });
+                    items.push(ListItem {
+                        children,
+                        ordinal,
+                        checked: item.checked,
+                    });
                 } else if item.indent_level == indent_level + 1 && depth < 9 {
                     let nested = self.parse_list(
                         index,
@@ -1125,18 +1129,22 @@ impl ListContext<'_> {
 
 fn match_checkbox(line: &str, flags: u32) -> (&str, Option<bool>) {
     if ParserFlags::has(flags, ParserFlags::ALLOW_CHECKBOX) {
-            let mut pos = 0;
-            while pos < line.len() && byte_at(line, pos) == b' ' {
-                pos += 1;
-            }
-            if pos < line.len() && byte_at(line, pos) == b'[' && byte_at(line, pos + 2) == b']' && byte_at(line, pos + 3) == b' ' {
-                return match byte_at(line, pos + 1) {
-            b'x' | b'X' => (&line[pos + 4..], Some(true)),
-            b' ' => (&line[pos + 4..], Some(false)),
-            _ => (line, None)
+        let mut pos = 0;
+        while pos < line.len() && byte_at(line, pos) == b' ' {
+            pos += 1;
         }
-            }
+        if pos < line.len()
+            && byte_at(line, pos) == b'['
+            && byte_at(line, pos + 2) == b']'
+            && byte_at(line, pos + 3) == b' '
+        {
+            return match byte_at(line, pos + 1) {
+                b'x' | b'X' => (&line[pos + 4..], Some(true)),
+                b' ' => (&line[pos + 4..], Some(false)),
+                _ => (line, None),
+            };
         }
+    }
     (line, None)
 }
 
@@ -1361,7 +1369,8 @@ pub(crate) fn is_block_start(line: &str, flags: u32) -> bool {
     starts_with(line, "#")
         || (ParserFlags::has(flags, ParserFlags::ALLOW_SUBTEXT) && starts_with(line, "-#"))
         || (ParserFlags::has(flags, ParserFlags::ALLOW_CODE_BLOCKS) && starts_with(line, "```"))
-        || (ParserFlags::has(flags, ParserFlags::ALLOW_LISTS) && match_list_item(line, flags).is_some())
+        || (ParserFlags::has(flags, ParserFlags::ALLOW_LISTS)
+            && match_list_item(line, flags).is_some())
         || is_blockquote_start(line, flags)
 }
 
@@ -1467,7 +1476,8 @@ fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) 
 }
 
 fn is_bullet_point_text(text: &str) -> bool {
-    if match_list_item(text, 0).is_some() { // it's probably not necessary for this to know if the current thing is a checkbox or not
+    if match_list_item(text, 0).is_some() {
+        // it's probably not necessary for this to know if the current thing is a checkbox or not
         return false;
     }
     let trimmed_text = trim_start(text);

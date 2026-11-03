@@ -31,5 +31,8 @@ fn unordered_list_checkbox() {
 
 #[test]
 fn no_checkbox() {
-    assert_eq!(encode("- [p] a"), [1, 1, 9, 0, 1, 0, 0, 1, 0, 5, b'[', b'p', b']', b' ', b'a']);
+    assert_eq!(
+        encode("- [p] a"),
+        [1, 1, 9, 0, 1, 0, 0, 1, 0, 5, b'[', b'p', b']', b' ', b'a']
+    );
 }

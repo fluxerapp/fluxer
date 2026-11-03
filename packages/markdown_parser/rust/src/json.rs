@@ -71,7 +71,15 @@ fn write_node(out: &mut String, node: &Node) {
             write_bool(out, *ordered);
             out.push_str(key!("items"));
             out.push('[');
-            for (index, ListItem { children, ordinal, checked }) in items.iter().enumerate() {
+            for (
+                index,
+                ListItem {
+                    children,
+                    ordinal,
+                    checked,
+                },
+            ) in items.iter().enumerate()
+            {
                 if index > 0 {
                     out.push(',');
                 }
