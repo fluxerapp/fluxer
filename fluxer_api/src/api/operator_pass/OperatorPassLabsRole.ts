@@ -99,7 +99,7 @@ type LabsAccount = Pick<
 
 type VisionaryAccount = Pick<User, 'id' | 'premiumType' | 'premiumFlags' | 'hiddenProfileBadges'>;
 
-export function showsVisionaryInLabs(user: Omit<VisionaryAccount, 'id'>): boolean {
+function showsVisionaryInLabs(user: Omit<VisionaryAccount, 'id'>): boolean {
 	return (
 		user.premiumType === UserPremiumTypes.LIFETIME &&
 		!user.hiddenProfileBadges.has('visionary') &&
