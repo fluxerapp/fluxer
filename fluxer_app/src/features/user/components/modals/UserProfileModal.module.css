@@ -96,6 +96,7 @@
 	font-size: 0.875rem;
 	color: var(--text-tertiary);
 	line-height: 1.125rem;
+	overflow-wrap: anywhere;
 }
 
 .srOnly {
