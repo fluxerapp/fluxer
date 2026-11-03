@@ -312,7 +312,11 @@ describe('FLUXER_PUBLIC_ORIGIN', () => {
 		expect(config.endpoints.media).toBe('https://chat.example.com:29080/media');
 		expect(config.services.media_proxy.upload_relay.endpoint).toBe('https://chat.example.com:29080/media');
 		expect(config.integrations.voice.url).toBe('https://chat.example.com:29080/livekit');
-		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://chat.example.com:29080']);
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual([
+			'https://chat.example.com:29080',
+			'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
+			'android:apk-key-hash:Ld4qnT0TfBeHMT3Yu2H0WTwqlxgFs-32uDmwqtLndsk',
+		]);
 	});
 
 	test('the origin port wins over a FLUXER_PUBLIC_PORT that disagrees', async () => {
