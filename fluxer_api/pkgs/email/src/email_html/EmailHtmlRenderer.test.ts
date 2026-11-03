@@ -464,21 +464,6 @@ const EMAILS: Array<[string, string | null, Send]> = [
 			),
 	],
 	[
-		'operator_pass_visionary_notice',
-		'https://web.example.com/channels/@operator-pass?view=visionary',
-		(service, locale) =>
-			service.send(
-				'operator_pass_visionary_notice',
-				USER,
-				{
-					visionaryDate: DATE,
-					labsMember: false,
-					turnOnUrl: 'https://web.example.com/channels/@operator-pass?view=visionary',
-				},
-				locale,
-			),
-	],
-	[
 		'plutonium_renewal_notice',
 		PREMIUM_URL,
 		(service, locale) =>

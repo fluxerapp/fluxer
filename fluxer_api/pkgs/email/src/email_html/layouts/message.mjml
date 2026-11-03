@@ -80,7 +80,6 @@
 					<tr>
 						<td dir="[[dir]]" class="x-muted x-rule" style="padding:16px 0 0;border-top:1px solid #e4e3ec;font-family:[[font]];font-size:13px;line-height:20px;color:#5b5a70;text-align:[[start]];direction:[[dir]]">
 							<div style="margin:0">%%footer_reason%%</div>
-							%%?unsubscribe%%<p style="margin:8px 0 0"><a href="%%unsubscribe_url%%" style="color:inherit;text-decoration:underline">%%unsubscribe%%</a></p>%%/unsubscribe%%
 							%%?legal_address%%<p dir="ltr" style="margin:8px 0 0;text-align:[[start]]">%%legal_address%%</p>%%/legal_address%%
 						</td>
 					</tr>

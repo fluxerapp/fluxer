@@ -56,10 +56,9 @@ const CONFIRM_TITLE_DESCRIPTOR = msg({
 		'Title of the confirmation before offering an Operator Pass to someone. {name} is the display name of that person.',
 });
 const CONFIRM_BODY_DESCRIPTOR = msg({
-	message:
-		'It moves to them once they accept and any waiting period has ended. You can take the offer back until it moves.',
+	message: 'It moves to them as soon as they accept. You can take the offer back until then.',
 	comment:
-		'Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do even after they accept, until the pass moves. The waiting period is the time after payment before a pass can move.',
+		'Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do until they accept.',
 });
 const CONFIRM_LAST_TITLE_DESCRIPTOR = msg({
 	message: 'Pass on your last pass?',

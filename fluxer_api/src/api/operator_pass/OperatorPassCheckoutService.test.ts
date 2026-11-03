@@ -50,22 +50,18 @@ function boxTextOf(params: Stripe.Checkout.SessionCreateParams): string | undefi
 
 describe('Operator Pass checkout session', () => {
 	let harness: ApiTestHarness;
-	let saleOpensAt: Date | null;
 	let priceRisesAt: Date | null;
 	let disabledCurrencies: ReadonlySet<OperatorPassCurrency>;
 
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
-		saleOpensAt = Config.operatorPass.saleOpensAt;
 		priceRisesAt = Config.operatorPass.priceRisesAt;
 		disabledCurrencies = Config.operatorPass.disabledCurrencies;
-		Config.operatorPass.saleOpensAt = new Date(Date.now() - DAY_MS);
 		Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 		Config.operatorPass.disabledCurrencies = new Set();
 	});
 
 	afterAll(async () => {
-		Config.operatorPass.saleOpensAt = saleOpensAt;
 		Config.operatorPass.priceRisesAt = priceRisesAt;
 		Config.operatorPass.disabledCurrencies = disabledCurrencies;
 		await harness.shutdown();
@@ -106,7 +102,7 @@ describe('Operator Pass checkout session', () => {
 	test('a visitor from Brazil gets the price in reais and the 7-day withdrawal rule', async () => {
 		const repository = new OperatorPassRepository();
 		const service = new OperatorPassCheckoutService(null, repository, new OperatorPassEntitlementService(repository));
-		const state = await service.getState({user: null, countryCode: 'BR', clientIp: null});
+		const state = await service.getState({user: null, countryCode: 'BR'});
 		expect(state).toMatchObject({currency: 'BRL', withdrawal_rule: {country: 'BR', days: 7}});
 	});
 

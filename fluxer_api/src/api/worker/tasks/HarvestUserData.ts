@@ -35,7 +35,7 @@ import type {OperatorPassCertificateRow, OperatorPassUnitRow} from '@app/api/dat
 import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
-import {getOperatorPassRepository, getOperatorPassWaitlistService} from '@app/api/middleware/ServiceSingletons';
+import {getOperatorPassRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Application} from '@app/api/models/Application';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {Channel} from '@app/api/models/Channel';
@@ -559,7 +559,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			storeEntitlementService.listStorePurchases(userId),
 			getOperatorPassRepository().findOperatorPass(userId),
 			getOperatorPassRepository().listPurchasesByPurchaser(userId),
-			user.email ? getOperatorPassWaitlistService().findEntryForAddress(user.email) : null,
+			user.email ? getOperatorPassRepository().findWaitlistEntryByEmail(user.email.trim().toLowerCase()) : null,
 			getOperatorPassRepository().findWallEntry(userId),
 			getOperatorPassRepository().listWallEvents(userId),
 			applicationRepository.listApplicationsByOwner(userId),

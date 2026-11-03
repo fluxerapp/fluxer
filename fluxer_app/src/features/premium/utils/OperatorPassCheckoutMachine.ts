@@ -19,8 +19,6 @@ export type CheckoutStage =
 	| {kind: 'loading'}
 	| {kind: 'failed'}
 	| {kind: 'notice'; notice: BlockingNotice}
-	| {kind: 'waitlist'}
-	| {kind: 'owned'}
 	| {kind: 'choose'}
 	| {kind: 'details'}
 	| {kind: 'agree'}
@@ -58,17 +56,14 @@ function blockingNotice(reason: OperatorPassPurchaseBlockedReason | null): Block
 }
 
 export function stageForState(state: OperatorPassStateResponse): CheckoutStage {
-	const reason = state.purchase_blocked_reason ?? null;
-	const onSale = state.phase !== 'waitlist' && reason !== 'not_on_sale';
-	if (!onSale) return state.holder ? {kind: 'owned'} : {kind: 'waitlist'};
-	const notice = blockingNotice(reason);
+	const notice = blockingNotice(state.purchase_blocked_reason ?? null);
 	return notice ? {kind: 'notice', notice} : {kind: 'choose'};
 }
 
 export function stageForCheckoutError(
 	code: string | null,
 	blockedReason: string | null,
-): CheckoutFormStage | {notice: BlockingNotice} | 'reload' | null {
+): CheckoutFormStage | {notice: BlockingNotice} | null {
 	switch (code) {
 		case APIErrorCodes.OPERATOR_PASS_CERTIFICATE_NAME_REJECTED:
 			return 'choose';
@@ -78,8 +73,6 @@ export function stageForCheckoutError(
 		case APIErrorCodes.OPERATOR_PASS_DELIVERY_CONSENT_REQUIRED:
 		case APIErrorCodes.OPERATOR_PASS_AGE_CONFIRMATION_REQUIRED:
 			return 'agree';
-		case APIErrorCodes.OPERATOR_PASS_NOT_ON_SALE:
-			return 'reload';
 		case APIErrorCodes.OPERATOR_PASS_REMOVED:
 			return {notice: 'removed'};
 		case APIErrorCodes.EMAIL_VERIFICATION_REQUIRED:

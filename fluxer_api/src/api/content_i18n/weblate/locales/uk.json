@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "загальний",
 	"guild.default_channel_voice": "Загальний",
 	"operator_pass.labs_greeting": "{size, select, single {Ласкаво просимо до #operators, {last}!} other {Ласкаво просимо до #operators, {others} і {last}!}} Це канал для всіх, хто має Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Разом із твоїм Visionary ти отримуєш Operator Pass. Увімкнути його можна будь-коли в налаштуваннях, у розділі «Operator Pass», і нічого додатково за нього платити не треба.",
 	"profile_badge.bug_hunter": "Мисливець за помилками {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# пропуск Operator Pass} few {# пропуски Operator Pass} many {# пропусків Operator Pass} other {# пропуску Operator Pass}}",

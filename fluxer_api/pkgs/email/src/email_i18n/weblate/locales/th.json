@@ -288,7 +288,7 @@
 		"cta": "ดูข้อเสนอ",
 		"footer_reason": "คุณได้รับอีเมลนี้เพราะมีคนเสนอส่งต่อ Operator Pass ให้คุณบน {product_name}",
 		"intro": "{senderName} ต้องการส่งต่อ Operator Pass ใบหนึ่งของตนให้คุณ",
-		"lead": "ยอมรับหรือปฏิเสธได้ใน {product_name} หากคุณยอมรับ พาสจะเข้าบัญชีของคุณในวันที่ {arrivesAt, date, long} เว้นแต่ผู้ส่งจะเรียกคืนข้อเสนอก่อน",
+		"lead_v2": "ยอมรับหรือปฏิเสธได้ใน {product_name} หากคุณยอมรับ พาสจะเข้าบัญชีของคุณทันที",
 		"signoff": "ทีม {product_name}",
 		"subject": "{senderName} ต้องการส่งต่อ Operator Pass ให้คุณ"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "ทีม {product_name}",
 		"subject": "Operator Pass ในบัญชี {product_name} ของคุณสิ้นสุดลงแล้ว"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "ป้าย Operator พื้นที่บนกำแพง Operators #operators และการทดลองฟีเจอร์ก่อนใครก็มาพร้อมกับพาสด้วย",
-		"cta": "รับ Operator Pass",
-		"footer_reason": "คุณได้รับอีเมลนี้เนื่องจากคุณลงชื่อรอคิว Operator Pass นี่เป็นอีเมลฉบับสุดท้ายที่เราจะส่งเกี่ยวกับพาสนี้",
-		"intro": "คุณขอให้เราแจ้งเมื่อ Operator Pass เปิดขาย ตอนนี้เปิดขายแล้ว",
-		"paid_for": "พาสนี้มาพร้อมใบรับรอง Operator ที่มีหมายเลขกำกับ พร้อมชื่อของคุณและวันที่และเวลาที่ชำระเงิน ซึ่งส่งให้เป็นไฟล์ PDF ที่คุณเก็บไว้ได้",
-		"price_label": "ราคาพิเศษช่วงแรก",
-		"price_value": "{priceFormatted} ชำระครั้งเดียว จนถึง {priceEndsOn, date, long}",
-		"signoff": "ทีม {product_name}",
-		"subject": "{product_name} Operator Pass เปิดขายแล้ว",
-		"terms_link": "ข้อกำหนด Operator Pass",
-		"unsubscribe": "ยกเลิกการรับอีเมล"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "เมื่อเปิดใช้ คุณจะได้รับใบรับรอง Operator แบบมีหมายเลขพร้อมชื่อที่คุณเลือก ใบรับรองจะแสดงวันที่ {visionaryDate, date, long} ซึ่งเป็นวันที่คุณได้รับ Visionary และป้าย Operator ก็จะแสดงวันที่นี้ด้วยหากคุณเลือกแสดงป้าย",
-		"choices_line": "ป้าย Operator จะซ่อนอยู่จนกว่าคุณจะเลือกแสดง และคุณจะมีชื่อบนกำแพง Operators ก็ต่อเมื่อคุณเลือกเท่านั้น",
-		"cta": "เปิดใช้ Operator Pass ของคุณ",
-		"footer_reason": "คุณได้รับอีเมลนี้เพราะคุณมี Visionary บน {product_name}",
-		"intro": "Visionary ของคุณมาพร้อมกับ Operator Pass และคุณเปิดใช้ได้ทุกเมื่อในการตั้งค่า คุณไม่ต้องจ่ายเพิ่ม และ Visionary ของคุณไม่มีอะไรเปลี่ยนแปลง",
-		"labs_line": "{member, select, yes {คุณเข้าถึง #operators ใน Fluxer Labs ได้อยู่แล้วผ่าน Visionary เมื่อเปิดใช้ Operator Pass คุณจะได้รับบทบาท Operator ที่นั่นด้วย} other {เมื่อคุณเปิดใช้ Operator Pass เราจะเพิ่มบัญชีนี้เข้า Fluxer Labs พร้อมบทบาท Operator เว้นแต่คุณเคยออกจากหรือถูกนำออกจาก Fluxer Labs มาก่อน และ Visionary ของคุณยังทำให้คุณเข้าถึง #operators ที่นั่นได้ด้วย}}",
-		"signoff": "ทีม {product_name}",
-		"subject": "Operator Pass ที่มาพร้อม Visionary ของคุณพร้อมเปิดใช้แล้ว",
-		"terms_line": "ข้อกำหนด Operator Pass อธิบายว่าพาสทำงานอย่างไร และข้อ 13 เป็นเรื่องเกี่ยวกับ Visionary",
-		"terms_link": "ข้อกำหนด Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {ป้าย Operator ของคุณแสดงอยู่บนโปรไฟล์ คุณซ่อนป้ายได้ใน<settings>การตั้งค่า</settings>} other {ป้าย Operator ของคุณถูกซ่อนอยู่ คุณแสดงป้ายได้ใน<settings>การตั้งค่า</settings>}}",
 		"cta": "เปิด Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "ข้อกำหนด Operator Pass ที่คุณยอมรับ (เวอร์ชัน {termsVersion}) แนบมาเป็นไฟล์ PDF",
 		"terms_link": "ข้อกำหนด Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {คุณเลือกที่จะไม่แสดงชื่อบนกำแพง Operators คุณเพิ่มชื่อได้ใน<settings>การตั้งค่า</settings>ของคุณ} other {คุณแสดงชื่อบนกำแพง Operators ในชื่อ {wallName} คุณเปลี่ยนชื่อหรือออกจากกำแพงได้ใน<settings>การตั้งค่า</settings>ของคุณ}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "ลงชื่อรอคิว",
-		"expiry": "ลิงก์นี้จะหมดอายุใน 48 ชั่วโมง",
-		"footer_reason": "คุณได้รับอีเมลนี้เนื่องจากมีการใช้ที่อยู่นี้ลงชื่อรอคิว Operator Pass บนเว็บไซต์ {product_name}",
-		"intro": "ยืนยันที่อยู่อีเมลนี้เพื่อลงชื่อรอคิว Operator Pass เราจะส่งอีเมลถึงคุณเพียงครั้งเดียวเมื่อพาสเปิดขาย",
-		"note": "หากคุณไม่ได้ขอเรื่องนี้ โปรดเพิกเฉยต่ออีเมลนี้ แล้วเราจะไม่ติดต่อคุณอีก",
-		"signoff": "ทีม {product_name}",
-		"subject": "ยืนยันการลงชื่อรอคิว {product_name} Operator Pass ของคุณ"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {โปรดตอบกลับอีเมลนี้ภายใน 60 วัน และบอกเราว่าทำไมคุณจึงไม่เห็นด้วย ไม่มีค่าใช้จ่าย และเจ้าหน้าที่ในทีมของเราจะอ่านและตัดสินคำอุทธรณ์ของคุณ} other {โปรดติดต่อผู้ดูแลของอินสแตนซ์นี้ภายใน 60 วัน และบอกพวกเขาว่าทำไมคุณจึงไม่เห็นด้วย}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "คุณได้รับอีเมลนี้เนื่องจากการตัดสินใจเกี่ยวกับรายการของคุณบนกำแพง Operators ของ {product_name}",
 		"ground": "ข้อ 3.1 ของข้อกำหนด Operator Pass",
 		"ground_label": "ข้อกำหนดที่อ้างอิง",
-		"intro": "{target, select, avatar {เราปฏิเสธรูปโปรไฟล์ของคุณสำหรับกำแพง Operators} both {เราปฏิเสธชื่อและรูปโปรไฟล์ของคุณสำหรับกำแพง Operators} other {เราปฏิเสธชื่อของคุณสำหรับกำแพง Operators}} {shown, select, previous {กำแพงจะแสดงเวอร์ชันล่าสุดที่อนุมัติแล้ว} other {จนกว่าคุณจะส่งใหม่ กำแพงจะแสดงคำว่า Operator และรูปโปรไฟล์เริ่มต้น}} ที่ของคุณบนกำแพง ขนาด และป้ายของคุณยังคงเหมือนเดิม และการซื้อของคุณไม่ได้รับผลกระทบ",
+		"intro": "{target, select, avatar {เรานำรูปโปรไฟล์ของคุณออกจากกำแพง Operators} both {เรานำชื่อและรูปโปรไฟล์ของคุณออกจากกำแพง Operators} other {เรานำชื่อของคุณออกจากกำแพง Operators}} {shown, select, previous {กำแพงจะแสดงชื่อและรูปโปรไฟล์ก่อนหน้าของคุณ} other {จนกว่าคุณจะส่งใหม่ กำแพงจะแสดงคำว่า Operator และรูปโปรไฟล์เริ่มต้น}} ที่ของคุณบนกำแพง ขนาด และป้ายของคุณยังคงเหมือนเดิม และการซื้อของคุณไม่ได้รับผลกระทบ",
 		"next": "คุณส่งชื่อหรืออวตารใหม่ได้ใน<settings>การตั้งค่า</settings>ของคุณ",
 		"reason_label": "เหตุผล",
 		"reason_value": "{reason, select, impersonation {แอบอ้างเป็นผู้อื่น} rights {ใช้ชื่อหรือรูปภาพโดยไม่มีสิทธิ์} age_suitability {ไม่เหมาะกับผู้ใช้ที่อายุน้อย} other {ละเมิดหลักเกณฑ์คอมมูนิตี้}}",
 		"redress_v2": "คุณยังสามารถฟ้องร้องต่อศาลได้ หากคุณอยู่ในสหภาพยุโรป คุณสามารถใช้<dsa>หน่วยงานระงับข้อพิพาทนอกศาล</dsa>ที่ได้รับการรับรองได้ หากคุณเป็นผู้บริโภคในสหภาพยุโรปหรือเขตเศรษฐกิจยุโรป คุณยังสามารถยื่นข้อพิพาทต่อคณะกรรมการแห่งชาติว่าด้วยข้อพิพาทผู้บริโภคของสวีเดน (<arn>ARN</arn>) ที่ Box 174, 101 23 Stockholm ประเทศสวีเดน ได้",
 		"signoff": "ทีม {product_name}",
-		"subject": "เราปฏิเสธชื่อหรือรูปโปรไฟล์ของคุณสำหรับกำแพง Operators ของ {product_name}"
+		"subject": "เรานำชื่อหรือรูปโปรไฟล์ของคุณออกจากกำแพง Operators ของ {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "ป้ายของคุณแสดงอยู่บนโปรไฟล์แล้ว คุณซ่อนป้ายได้ใน<settings>การตั้งค่า</settings>",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} และทีม {product_name}",
 		"subject": "ใบรับรอง Operator ของ {product_name} ของคุณ",
 		"terms_link": "ข้อกำหนด Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {คุณเลือกที่จะไม่แสดงชื่อบนกำแพง Operators คุณเพิ่มชื่อได้ใน<settings>การตั้งค่า</settings>ของคุณ} other {คุณแสดงชื่อบนกำแพง Operators ในชื่อ {wallName} และชื่อกับอวตารของคุณจะแสดงเมื่อเราตรวจสอบแล้ว คุณเปลี่ยนชื่อหรือออกจากกำแพงได้ใน<settings>การตั้งค่า</settings>ของคุณ}}"
+		"wall_line_v2": "{wallOptOut, select, yes {คุณเลือกที่จะไม่แสดงชื่อบนกำแพง Operators คุณเพิ่มชื่อได้ใน<settings>การตั้งค่า</settings>ของคุณ} other {คุณแสดงชื่อบนกำแพง Operators ในชื่อ {wallName} คุณเปลี่ยนชื่อหรือออกจากกำแพงได้ใน<settings>การตั้งค่า</settings>ของคุณ}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "ใบลดหนี้สำหรับการคืนเงินครั้งนี้แนบมากับอีเมลนี้เป็นไฟล์ PDF",

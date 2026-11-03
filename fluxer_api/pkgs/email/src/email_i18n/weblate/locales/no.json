@@ -288,7 +288,7 @@
 		"cta": "Se tilbudet",
 		"footer_reason": "Du mottok denne e-posten fordi noen tilbød deg et Operator Pass på {product_name}.",
 		"intro": "{senderName} vil gi et av sine Operator Pass videre til deg.",
-		"lead": "Godta eller avslå det i {product_name}. Hvis du godtar det, kommer det {arrivesAt, date, long}, med mindre avsenderen trekker tilbake tilbudet før det.",
+		"lead_v2": "Godta eller avslå det i {product_name}. Hvis du godtar det, flyttes det til deg med en gang.",
 		"signoff": "{product_name}-teamet",
 		"subject": "{senderName} vil gi et Operator Pass videre til deg"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name}-teamet",
 		"subject": "Et Operator Pass på {product_name}-kontoen din er avsluttet"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Operator-merket, en plass på Operators-veggen, #operators og tidlig testing følger også med.",
-		"cta": "Få Operator Pass",
-		"footer_reason": "Du mottok denne e-posten fordi du meldte deg på ventelisten for Operator Pass. Dette er den siste e-posten vi sender om passet.",
-		"intro": "Du ba oss si fra når Operator Pass kom i salg. Nå er det i salg.",
-		"paid_for": "Passet kommer med et nummerert Operator-sertifikat med navnet ditt og dato og klokkeslett for betalingen, levert som en PDF du beholder.",
-		"price_label": "Tidligpris",
-		"price_value": "{priceFormatted}, betales én gang, til og med {priceEndsOn, date, long}",
-		"signoff": "{product_name}-teamet",
-		"subject": "{product_name} Operator Pass er nå i salg",
-		"terms_link": "Vilkår for Operator Pass",
-		"unsubscribe": "Meld deg av"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Når du slår det på, får du et nummerert Operator-sertifikat med navnet du velger. Det viser {visionaryDate, date, long}, datoen du fikk Visionary, og det gjør også Operator-merket hvis du velger å vise det.",
-		"choices_line": "Operator-merket er skjult til du velger å vise det, og du står på Operators-veggen bare hvis du velger det.",
-		"cta": "Slå på Operator Pass",
-		"footer_reason": "Du mottar denne e-posten fordi du har Visionary på {product_name}.",
-		"intro": "Visionary-en din kommer med et Operator Pass, og du kan slå det på i innstillingene dine når du vil. Du betaler ikke noe ekstra for det, og ingenting endres med Visionary-en din.",
-		"labs_line": "{member, select, yes {#operators i Fluxer Labs har du allerede gjennom Visionary-en din. Når du slår på Operator Pass, får du Operator-rollen der også.} other {Når du slår på Operator Pass, legger vi til denne kontoen i Fluxer Labs med Operator-rollen, med mindre du tidligere har forlatt Fluxer Labs eller er blitt fjernet derfra. Visionary-en din gir deg også #operators der.}}",
-		"signoff": "{product_name}-teamet",
-		"subject": "Operator Pass fra Visionary er klart til å slås på",
-		"terms_line": "Vilkårene for Operator Pass forklarer hvordan passet fungerer, og punkt 13 handler om Visionary.",
-		"terms_link": "Vilkår for Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operator-merket ditt vises på profilen din. Du kan skjule det i <settings>innstillingene</settings> dine.} other {Operator-merket ditt er skjult. Du kan vise det i <settings>innstillingene</settings> dine.}}",
 		"cta": "Åpne Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Vilkårene for Operator Pass som du godtok (versjon {termsVersion}), er vedlagt som PDF.",
 		"terms_link": "Vilkår for Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Du valgte å ikke stå på Operators-veggen. Du kan legge til navnet ditt i <settings>innstillingene</settings> dine.} other {Du står på Operators-veggen som {wallName}. Du kan endre det eller forlate veggen i <settings>innstillingene</settings> dine.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Meld meg på ventelisten",
-		"expiry": "Denne lenken utløper om 48 timer.",
-		"footer_reason": "Du mottok denne e-posten fordi denne adressen ble lagt inn på ventelisten for Operator Pass på {product_name}-nettstedet.",
-		"intro": "Bekreft denne e-postadressen for å komme på ventelisten for Operator Pass. Vi sender deg én e-post når passet kommer i salg.",
-		"note": "Hvis du ikke ba om dette, kan du ignorere denne e-posten, så kontakter vi deg ikke igjen.",
-		"signoff": "{product_name}-teamet",
-		"subject": "Bekreft påmeldingen din til ventelisten for {product_name} Operator Pass"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Svar på denne e-posten innen 60 dager og fortell oss hvorfor du er uenig. Det er gratis, og en person i teamet vårt leser og avgjør klagen din.} other {Kontakt administratorene for denne instansen innen 60 dager og fortell dem hvorfor du er uenig.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om oppføringen din på Operators-veggen til {product_name}.",
 		"ground": "Paragraf 3.1 i vilkårene for Operator Pass",
 		"ground_label": "Grunnlag",
-		"intro": "{target, select, avatar {Vi avslo avataren din for Operators-veggen.} both {Vi avslo navnet og avataren din for Operators-veggen.} other {Vi avslo navnet ditt for Operators-veggen.}} {shown, select, previous {Veggen viser den sist godkjente versjonen din.} other {Til du sender et nytt, viser veggen ordet Operator og standardavataren.}} Plassen din på veggen, størrelsen på den og merket ditt forblir som de er, og kjøpet ditt påvirkes ikke.",
+		"intro": "{target, select, avatar {Vi fjernet avataren din fra Operators-veggen.} both {Vi fjernet navnet og avataren din fra Operators-veggen.} other {Vi fjernet navnet ditt fra Operators-veggen.}} {shown, select, previous {Veggen viser det tidligere navnet og den tidligere avataren din.} other {Til du sender et nytt, viser veggen ordet Operator og standardavataren.}} Plassen din på veggen, størrelsen på den og merket ditt forblir som de er, og kjøpet ditt påvirkes ikke.",
 		"next": "Du kan sende et nytt navn eller en ny avatar i <settings>innstillingene</settings> dine.",
 		"reason_label": "Begrunnelse",
 		"reason_value": "{reason, select, impersonation {Utgir seg for å være noen andre} rights {Bruker et navn eller bilde uten rettighetene til det} age_suitability {Passer ikke for yngre brukere} other {Bryter retningslinjene for fellesskapet}}",
 		"redress_v2": "Du kan også gå til domstolene. Hvis du er i EU, kan du bruke et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa>. Hvis du er forbruker i EU eller EØS, kan du også bringe tvisten inn for Sveriges nasjonale nemnd for forbrukertvister (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sverige.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi avslo navnet eller avataren din for Operators-veggen til {product_name}"
+		"subject": "Vi fjernet navnet eller avataren din fra Operators-veggen til {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Merket ditt vises på profilen din. Du kan skjule det i <settings>innstillingene</settings> dine.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} og {product_name}-teamet",
 		"subject": "Operator-sertifikatet ditt for {product_name}",
 		"terms_link": "Vilkår for Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Du valgte å ikke stå på Operators-veggen. Du kan legge til navnet ditt i <settings>innstillingene</settings> dine.} other {Du står på Operators-veggen som {wallName}, og navnet og avataren din vises når vi har sjekket dem. Du kan endre det eller forlate veggen i <settings>innstillingene</settings> dine.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Du valgte å ikke stå på Operators-veggen. Du kan legge til navnet ditt i <settings>innstillingene</settings> dine.} other {Du står på Operators-veggen som {wallName}. Du kan endre det eller forlate veggen i <settings>innstillingene</settings> dine.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Kreditnotaen for denne refusjonen er lagt ved denne e-posten som PDF.",

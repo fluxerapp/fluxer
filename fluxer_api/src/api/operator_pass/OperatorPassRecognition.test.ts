@@ -229,7 +229,6 @@ test('profile and holdings APIs expose separate recognition and ownership counts
 		const state = await checkout.getState({
 			user: await getUserRepository().findUniqueAssert(accountId),
 			countryCode: 'SE',
-			clientIp: null,
 		});
 		expect(state.holder).toMatchObject({count: 1, recognition_count: 10});
 	} finally {

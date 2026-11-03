@@ -150,23 +150,23 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'We check every name and avatar before it shows on the wall, and we usually check what you chose within 72 hours. Your listing goes up when you pay and shows the word "Operator" and the default avatar until we approve the name and avatar you chose.',
+			text: 'Your listing goes up when you pay and shows the name and avatar you chose. We can check any name or avatar on the wall at any time, and we can refuse a name when you choose it if it looks like the name of Fluxer, our team or another brand.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Unless you turn this off in your settings, your listing follows changes to your Fluxer display name and avatar, and we check each change in the same way. Until we approve a change, the wall keeps showing the last version that we approved, not your live profile. We keep copies of the names and avatars that you send us for the wall, together with their history, as the [Operator Pass privacy notice](/operator-pass-privacy) describes.',
+			text: 'Unless you turn this off in your settings, your listing follows changes to your Fluxer display name and avatar, and each change shows on the wall when you make it. We keep copies of the names and avatars that you send us for the wall, together with their history, as the [Operator Pass privacy notice](/operator-pass-privacy) describes.',
 		},
 		{
 			kind: 'paragraph',
-			text: "We can decline to show a name or avatar on the Operators' wall, or any change to one, if it breaks the [community guidelines](/guidelines), pretends to be someone else, uses a name or an image that you have no right to use, or is not suitable for the youngest people who are allowed to use Fluxer under section 1 of the [terms of service](/terms#1-agreement-and-eligibility).",
+			text: "We can take a name or avatar off the Operators' wall, or refuse a change to one, if it breaks the [community guidelines](/guidelines), pretends to be someone else, uses a name or an image that you have no right to use, or is not suitable for the youngest people who are allowed to use Fluxer under section 1 of the [terms of service](/terms#1-agreement-and-eligibility).",
 		},
 		{
 			kind: 'paragraph',
-			text: 'When we decline one, the wall keeps showing the last version that we approved, or "Operator" and the default avatar if there is no such version. You stay on the wall with the same size and place as before, and you keep your badge, every pass you have and everything else that comes with the pass, exactly as they were.',
+			text: 'When we take one off, the wall shows "Operator" and the default avatar instead. You stay on the wall with the same size and place as before, and you keep your badge, every pass you have and everything else that comes with the pass, exactly as they were.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Declining one never takes you off the wall for good, which we do only under [section 8](/operator-pass-terms#8-when-we-remove-the-bonus). We tell you what we did, why and how to appeal, as section 6.2 of the [terms of service](/terms#6-2-enforcement-by-fluxer) describes, and you can send us a new name or avatar.',
+			text: 'Taking a name or avatar off never takes you off the wall for good, which we do only under [section 8](/operator-pass-terms#8-when-we-remove-the-bonus). We tell you what we did, why and how to appeal, as section 6.2 of the [terms of service](/terms#6-2-enforcement-by-fluxer) describes, and you can choose a new name or avatar.',
 		},
 		{
 			kind: 'paragraph',
@@ -215,7 +215,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Section 3.1 applies to the company name and logo as it does to a name and avatar, including our check before anything shows, the reasons we can decline it and how we fit it to the wall. We can also decline a business listing, or end one later, if showing it could make people think we recommend the business or work with it.',
+			text: 'Section 3.1 applies to the company name and logo as it does to a name and avatar, including the reasons we can refuse them or take them off and how we fit them to the wall. We can also decline a business listing, or end one later, if showing it could make people think we recommend the business or work with it.',
 		},
 		{
 			kind: 'paragraph',
@@ -227,7 +227,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'If someone tells us that a name or logo on the wall infringes their rights, we can hide it from the wall while we look into the claim. While it\'s hidden, the listing shows the last name and avatar we approved, or the word "Operator" and the default avatar. Hiding it doesn\'t remove what comes with your pass. We tell you what we did and why, and you can reply to us or appeal the decision as section 3.1 describes.',
+			text: 'If someone tells us that a name or logo on the wall infringes their rights, we can hide it from the wall while we look into the claim. While it\'s hidden, the listing shows the word "Operator" and the default avatar until we decide what to do about the claim. Hiding it doesn\'t remove what comes with your pass. We tell you what we did and why, and you can reply to us or appeal the decision as section 3.1 describes.',
 		},
 		{
 			kind: 'paragraph',
@@ -235,7 +235,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: "If you change your wall name or avatar in your settings, the listing becomes a personal listing again once we approve the change. If we stop showing business listings, each one goes back to the account's listing with a name and avatar.",
+			text: "If you change your wall name or avatar in your settings, the listing becomes a personal listing again right away, with that name and avatar. If we stop showing business listings, each one goes back to the account's listing with a name and avatar.",
 		},
 		{kind: 'subheading', text: '3.3 The yearly Operators list'},
 		{
@@ -388,7 +388,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'If we terminate your Fluxer account because you broke our terms or the community guidelines, the pass ends with it. Section 2 says what happens to your certificate. We take you off the wall for good only when we permanently remove what comes with the pass, and never just because we declined a name or avatar under [section 3.1](/operator-pass-terms#3-1-your-listing).',
+			text: 'If we terminate your Fluxer account because you broke our terms or the community guidelines, the pass ends with it. Section 2 says what happens to your certificate. We take you off the wall for good only when we permanently remove what comes with the pass, and never just because we took a name or avatar off under [section 3.1](/operator-pass-terms#3-1-your-listing).',
 		},
 		{kind: 'paragraph', text: 'We remove what comes with the pass only for the reasons in these terms.'},
 		{
@@ -493,7 +493,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Until the pass moves, it stays yours and you can take the offer back, even after they accept. When they accept, they also accept these terms and choose a wall name or not to be listed. We then move the pass to their account after the waiting period below. Their badge turns on and their listing goes up, or their count goes up if they already have a pass, and from then on these terms apply to them for that pass.',
+			text: 'Until the pass moves, it stays yours and you can take the offer back. When they accept, they accept these terms and choose a wall name or not to be listed, and the pass moves to them. Their badge turns on and their listing goes up, or their count goes up if they already have a pass, and from then on these terms apply to them for that pass.',
 		},
 		{
 			kind: 'paragraph',
@@ -501,7 +501,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'To give fraud warnings time to arrive, and because a pass ends if its buyer withdraws, a pass moves only once 72 hours have passed since the payment for it, or after the time to withdraw under section 12 if that is longer, and only if that payment has no fraud warning, no open dispute and no refund. Until then, the pass stays on your account even after they accept, and the other person sees when it will arrive.',
+			text: 'We can keep a pass on your account after the other person accepts, or end the offer, while the payment for that pass has a fraud warning, an open dispute or a refund, or while we look into possible fraud involving that payment.',
 		},
 		{
 			kind: 'paragraph',
@@ -563,7 +563,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'The pass is part of your Visionary, so it ends if your Visionary ends, for example because your Visionary payment is refunded or reversed. Our records then show the certificate page for that pass as canceled, as section 2 of these terms describes.',
+			text: 'If your Visionary payment is refunded or reversed, or your Visionary ends for another reason, the pass in your Visionary ends too. Our records then show the certificate page for that pass as canceled, as section 2 of these terms describes.',
 		},
 		{kind: 'paragraph', text: "Until you turn on your pass, the rest of these terms don't apply to you."},
 		{kind: 'heading', text: '14. Changes and contact'},
@@ -730,23 +730,23 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Vi granskar varje namn och avatar innan de visas på väggen, och vi brukar granska det du har valt inom 72 timmar. Din plats kommer upp på väggen när du betalar och visar ordet "Operator" och standardavataren tills vi har godkänt det namn och den avatar som du har valt.',
+			text: 'Din plats kommer upp på väggen när du betalar och visar det namn och den avatar som du har valt. Vi får när som helst granska ett namn eller en avatar på väggen, och vi kan neka ett namn när du väljer det om det liknar namnet på Fluxer, vårt team eller ett annat varumärke.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om du inte stänger av det i dina inställningar följer din plats på väggen ändringar av ditt visningsnamn och din avatar på Fluxer, och vi granskar varje ändring på samma sätt. Tills vi har godkänt en ändring visar väggen den senaste version som vi har godkänt, inte din aktuella profil. Vi sparar kopior av de namn och avatarer du skickar oss för väggen och deras historik, som [integritetsmeddelandet för Operator Pass](/operator-pass-privacy) beskriver.',
+			text: 'Om du inte stänger av det i dina inställningar följer din plats på väggen ändringar av ditt visningsnamn och din avatar på Fluxer, och varje ändring visas på väggen när du gör den. Vi sparar kopior av de namn och avatarer du skickar oss för väggen och deras historik, som [integritetsmeddelandet för Operator Pass](/operator-pass-privacy) beskriver.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Vi kan avstå från att visa ett namn eller en avatar på Operators-väggen, eller någon ändring av dem, om det bryter mot [communityriktlinjerna](/guidelines), utger sig för att vara någon annan, använder ett namn eller en bild som du inte har rätt att använda, eller inte passar de yngsta som får använda Fluxer enligt avsnitt 1 i [användarvillkoren](/terms#1-agreement-and-eligibility).',
+			text: 'Vi kan ta bort ett namn eller en avatar från Operators-väggen, eller neka en ändring av dem, om det bryter mot [communityriktlinjerna](/guidelines), utger sig för att vara någon annan, använder ett namn eller en bild som du inte har rätt att använda, eller inte passar de yngsta som får använda Fluxer enligt avsnitt 1 i [användarvillkoren](/terms#1-agreement-and-eligibility).',
 		},
 		{
 			kind: 'paragraph',
-			text: 'När vi avstår från att visa något fortsätter väggen att visa den senaste version som vi har godkänt, eller "Operator" och standardavataren om det inte finns någon sådan version. Du står kvar på väggen med samma storlek och placering, och du behåller ditt märke, alla dina pass och allt annat som följer med passet, precis som förut.',
+			text: 'När vi tar bort något visar väggen "Operator" och standardavataren i stället. Du står kvar på väggen med samma storlek och placering, och du behåller ditt märke, alla dina pass och allt annat som följer med passet, precis som förut.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Att vi avstår från att visa något tar dig aldrig bort från väggen permanent, vilket vi bara gör enligt [avsnitt 8](/operator-pass-terms#8-when-we-remove-the-bonus). Vi berättar vad vi har gjort, varför och hur du överklagar, som avsnitt 6.2 i [användarvillkoren](/terms#6-2-enforcement-by-fluxer) beskriver, och du kan skicka ett nytt namn eller en ny avatar.',
+			text: 'Att vi tar bort ett namn eller en avatar tar dig aldrig bort från väggen permanent, vilket vi bara gör enligt [avsnitt 8](/operator-pass-terms#8-when-we-remove-the-bonus). Vi berättar vad vi har gjort, varför och hur du överklagar, som avsnitt 6.2 i [användarvillkoren](/terms#6-2-enforcement-by-fluxer) beskriver, och du kan välja ett nytt namn eller en ny avatar.',
 		},
 		{
 			kind: 'paragraph',
@@ -795,7 +795,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Avsnitt 3.1 gäller för företagets namn och logotyp på samma sätt som för ett namn och en avatar, bland annat vår granskning innan något visas, skälen till att vi kan avstå från att visa det och hur vi anpassar det till väggen. Vi kan också avstå från en företagsplats, eller avsluta en senare, om den kan få folk att tro att vi rekommenderar företaget eller samarbetar med det.',
+			text: 'Avsnitt 3.1 gäller för företagets namn och logotyp på samma sätt som för ett namn och en avatar, bland annat skälen till att vi kan neka dem eller ta bort dem och hur vi anpassar dem till väggen. Vi kan också avstå från en företagsplats, eller avsluta en senare, om den kan få folk att tro att vi rekommenderar företaget eller samarbetar med det.',
 		},
 		{
 			kind: 'paragraph',
@@ -807,7 +807,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om någon meddelar oss att ett namn eller en logotyp på väggen gör intrång i deras rättigheter kan vi dölja det medan vi utreder saken. Medan det är dolt visar platsen det senaste namn och den senaste avatar som vi har godkänt, eller ordet "Operator" och standardavataren. Att vi döljer det tar inte bort det som följer med ditt pass. Vi berättar vad vi har gjort och varför, och du kan svara oss eller överklaga som avsnitt 3.1 beskriver.',
+			text: 'Om någon meddelar oss att ett namn eller en logotyp på väggen gör intrång i deras rättigheter kan vi dölja det medan vi utreder saken. Medan det är dolt visar platsen ordet "Operator" och standardavataren tills vi har bestämt vad vi gör med anspråket. Att vi döljer det tar inte bort det som följer med ditt pass. Vi berättar vad vi har gjort och varför, och du kan svara oss eller överklaga som avsnitt 3.1 beskriver.',
 		},
 		{
 			kind: 'paragraph',
@@ -815,7 +815,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om du ändrar ditt namn eller din avatar för väggen i dina inställningar blir platsen en personlig plats igen när vi har godkänt ändringen. Om vi slutar visa företagsplatser går varje sådan plats tillbaka till kontots plats med ett namn och en avatar.',
+			text: 'Om du ändrar ditt namn eller din avatar för väggen i dina inställningar blir platsen en personlig plats igen direkt, med det namnet och den avataren. Om vi slutar visa företagsplatser går varje sådan plats tillbaka till kontots plats med ett namn och en avatar.',
 		},
 		{kind: 'subheading', text: '3.3 Den årliga Operators-listan'},
 		{
@@ -965,7 +965,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om vi avslutar ditt Fluxer-konto för att du har brutit mot våra villkor eller communityriktlinjerna upphör passet samtidigt. Avsnitt 2 anger vad som händer med ditt certifikat. Vi tar bara bort dig från Operators-väggen permanent när vi permanent tar bort det som följer med passet, och aldrig bara för att vi har avstått från att visa ett namn eller en avatar enligt [avsnitt 3.1](/operator-pass-terms#3-1-your-listing).',
+			text: 'Om vi avslutar ditt Fluxer-konto för att du har brutit mot våra villkor eller communityriktlinjerna upphör passet samtidigt. Avsnitt 2 anger vad som händer med ditt certifikat. Vi tar bara bort dig från Operators-väggen permanent när vi permanent tar bort det som följer med passet, och aldrig bara för att vi har tagit bort ett namn eller en avatar från väggen enligt [avsnitt 3.1](/operator-pass-terms#3-1-your-listing).',
 		},
 		{kind: 'paragraph', text: 'Vi tar bara bort det som följer med passet av de skäl som står i de här villkoren.'},
 		{
@@ -1070,7 +1070,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Tills passet flyttas till mottagarens konto är det fortfarande ditt, och du kan ta tillbaka erbjudandet, även efter att mottagaren har tackat ja. När mottagaren tackar ja godkänner hen också de här villkoren och väljer sitt namn för väggen, eller väljer att inte stå med. Därefter flyttar vi passet till mottagarens konto efter väntetiden nedan. Mottagarens märke slås på och platsen på väggen visas, eller mottagarens antal ökar om hen redan har ett pass, och från och med då gäller de här villkoren för hen för det passet.',
+			text: 'Tills passet flyttas till mottagarens konto är det fortfarande ditt, och du kan ta tillbaka erbjudandet. När mottagaren tackar ja godkänner hen också de här villkoren och väljer sitt namn för väggen, eller väljer att inte stå med, och passet flyttas till mottagaren. Mottagarens märke slås på och platsen på väggen visas, eller mottagarens antal ökar om hen redan har ett pass, och från och med då gäller de här villkoren för hen för det passet.',
 		},
 		{
 			kind: 'paragraph',
@@ -1078,7 +1078,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'För att varningar om bedrägeri ska hinna komma, och eftersom ett pass upphör om köparen ångrar köpet, flyttas ett pass först när 72 timmar har gått sedan betalningen för det, eller när tiden att ångra köpet enligt avsnitt 12 har gått om den är längre, och bara om betalningen inte har någon varning om bedrägeri, något pågående återkrav eller någon återbetalning. Fram till dess finns passet kvar på ditt konto även om mottagaren har tackat ja, och mottagaren ser i Fluxer när det kommer fram.',
+			text: 'Vi får behålla ett pass på ditt konto efter att mottagaren har tackat ja, eller avsluta erbjudandet, så länge betalningen för passet har en varning om bedrägeri, ett pågående återkrav eller en återbetalning, eller medan vi utreder misstänkt bedrägeri som gäller betalningen.',
 		},
 		{
 			kind: 'paragraph',
@@ -1140,7 +1140,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Passet är en del av din Visionary, så det upphör om din Visionary upphör, till exempel för att din betalning för Visionary återbetalas eller dras tillbaka. Våra register visar då certifikatsidan för passet som makulerad, som avsnitt 2 beskriver.',
+			text: 'Om din betalning för Visionary återbetalas eller dras tillbaka, eller om din Visionary upphör av något annat skäl, upphör även passet i din Visionary. Våra register visar då certifikatsidan för passet som makulerad, som avsnitt 2 beskriver.',
 		},
 		{kind: 'paragraph', text: 'Tills du slår på ditt pass gäller resten av de här villkoren inte för dig.'},
 		{kind: 'heading', text: '14. Ändringar och kontakt'},
@@ -1295,19 +1295,19 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Verificamos cada nome e avatar antes que apareçam no mural, e normalmente verificamos o que você escolheu em até 72 horas. Sua presença no mural começa quando você paga e mostra a palavra "Operator" e o avatar padrão até aprovarmos o nome e o avatar que você escolheu.',
+			text: 'Sua presença no mural começa quando você paga e mostra o nome e o avatar que você escolheu. Podemos verificar qualquer nome ou avatar do mural a qualquer momento, e podemos recusar um nome no momento em que você o escolhe se ele parecer o nome do Fluxer, da nossa equipe ou de outra marca.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'A menos que você desative isso nas suas configurações, a sua presença no mural acompanha as mudanças no seu nome de exibição e no seu avatar do Fluxer, e verificamos cada mudança da mesma forma. Até aprovarmos uma mudança, o mural continua mostrando a última versão que aprovamos, e não o seu perfil atual. Guardamos cópias dos nomes e avatares que você nos envia para o mural e o histórico deles, como descreve o [aviso de privacidade do Operator Pass](/operator-pass-privacy).',
+			text: 'A menos que você desative isso nas suas configurações, a sua presença no mural acompanha as mudanças no seu nome de exibição e no seu avatar do Fluxer, e cada mudança aparece no mural assim que você a faz. Guardamos cópias dos nomes e avatares que você nos envia para o mural e o histórico deles, como descreve o [aviso de privacidade do Operator Pass](/operator-pass-privacy).',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Podemos recusar a exibição de um nome ou avatar no mural de Operators, ou de qualquer mudança neles, se ele violar as [diretrizes da comunidade](/guidelines), se passar por outra pessoa, se usar um nome ou uma imagem que você não tem direito de usar ou se não for adequado para as pessoas mais novas que podem usar o Fluxer segundo a seção 1 dos [termos de serviço](/terms#1-agreement-and-eligibility).',
+			text: 'Podemos tirar um nome ou avatar do mural de Operators, ou recusar qualquer mudança neles, se ele violar as [diretrizes da comunidade](/guidelines), se passar por outra pessoa, se usar um nome ou uma imagem que você não tem direito de usar ou se não for adequado para as pessoas mais novas que podem usar o Fluxer segundo a seção 1 dos [termos de serviço](/terms#1-agreement-and-eligibility).',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Quando recusamos um nome ou avatar, o mural continua mostrando a última versão que aprovamos, ou "Operator" e o avatar padrão se não houver essa versão. Você continua no mural com o mesmo tamanho e posição de antes, e mantém o seu selo, todos os seus passes e tudo o mais que vem com o passe. Recusar um nome ou avatar nunca tira você do mural definitivamente, o que só fazemos com base na [seção 8](/operator-pass-terms#8-when-we-remove-the-bonus). Informamos o que fizemos, por que e como recorrer, como descreve a seção 6.2 dos [termos de serviço](/terms#6-2-enforcement-by-fluxer), e você pode nos enviar um novo nome ou avatar.',
+			text: 'Quando tiramos um nome ou avatar, o mural mostra "Operator" e o avatar padrão no lugar dele. Você continua no mural com o mesmo tamanho e posição de antes, e mantém o seu selo, todos os seus passes e tudo o mais que vem com o passe. Tirar um nome ou avatar nunca tira você do mural definitivamente, o que só fazemos com base na [seção 8](/operator-pass-terms#8-when-we-remove-the-bonus). Informamos o que fizemos, por que e como recorrer, como descreve a seção 6.2 dos [termos de serviço](/terms#6-2-enforcement-by-fluxer), e você pode escolher um novo nome ou avatar.',
 		},
 		{
 			kind: 'paragraph',
@@ -1360,7 +1360,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'A seção 3.1 vale para o nome e o logotipo da empresa da mesma forma que vale para um nome e um avatar, incluindo a nossa verificação antes que qualquer coisa apareça, os motivos pelos quais podemos recusar e a forma como ajustamos o conteúdo ao mural. Também podemos recusar a presença de uma empresa no mural, ou encerrá-la depois, se mostrá-la puder levar as pessoas a pensar que recomendamos a empresa ou trabalhamos com ela.',
+			text: 'A seção 3.1 vale para o nome e o logotipo da empresa da mesma forma que vale para um nome e um avatar, incluindo os motivos pelos quais podemos recusá-los ou tirá-los do mural e a forma como os ajustamos ao mural. Também podemos recusar a presença de uma empresa no mural, ou encerrá-la depois, se mostrá-la puder levar as pessoas a pensar que recomendamos a empresa ou trabalhamos com ela.',
 		},
 		{
 			kind: 'paragraph',
@@ -1372,7 +1372,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Se alguém nos disser que um nome ou logotipo no mural viola os direitos dessa pessoa, podemos ocultá-lo enquanto analisamos o caso. Enquanto o conteúdo estiver oculto, a presença mostra o último nome e avatar que aprovamos, ou a palavra "Operator" e o avatar padrão. Ocultá-lo não retira o que vem com o seu passe. Informamos o que fizemos e por que, e você pode responder ou recorrer como descreve a seção 3.1.',
+			text: 'Se alguém nos disser que um nome ou logotipo no mural viola os direitos dessa pessoa, podemos ocultá-lo enquanto analisamos o caso. Enquanto o conteúdo estiver oculto, a presença mostra a palavra "Operator" e o avatar padrão até decidirmos o que fazer com a reclamação. Ocultá-lo não retira o que vem com o seu passe. Informamos o que fizemos e por que, e você pode responder ou recorrer como descreve a seção 3.1.',
 		},
 		{
 			kind: 'paragraph',
@@ -1380,7 +1380,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Se você mudar o seu nome ou avatar no mural nas suas configurações, a presença volta a ser pessoal assim que aprovamos a mudança. Se deixarmos de mostrar empresas no mural, cada uma volta para a presença da conta com um nome e um avatar.',
+			text: 'Se você mudar o seu nome ou avatar no mural nas suas configurações, a presença volta a ser pessoal imediatamente, com esse nome e esse avatar. Se deixarmos de mostrar empresas no mural, cada uma volta para a presença da conta com um nome e um avatar.',
 		},
 		{kind: 'subheading', text: '3.3 A lista anual de Operators'},
 		{
@@ -1541,7 +1541,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Se encerrarmos a sua conta do Fluxer porque você violou os nossos termos ou as diretrizes da comunidade, o passe acaba junto. A seção 2 diz o que acontece com o seu certificado. Só tiramos você do mural de Operators definitivamente quando retiramos para sempre o que vem com o passe, e nunca apenas porque recusamos um nome ou avatar com base na [seção 3.1](/operator-pass-terms#3-1-your-listing).',
+			text: 'Se encerrarmos a sua conta do Fluxer porque você violou os nossos termos ou as diretrizes da comunidade, o passe acaba junto. A seção 2 diz o que acontece com o seu certificado. Só tiramos você do mural de Operators definitivamente quando retiramos para sempre o que vem com o passe, e nunca apenas porque tiramos um nome ou avatar do mural com base na [seção 3.1](/operator-pass-terms#3-1-your-listing).',
 		},
 		{kind: 'paragraph', text: 'Só retiramos o que vem com o passe pelos motivos previstos nestes termos.'},
 		{
@@ -1646,7 +1646,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Até o passe ser transferido para a conta da outra pessoa, ele continua sendo seu, e você pode cancelar a oferta, mesmo depois que ela aceitar. Quando ela aceita, também aceita estes termos e escolhe um nome no mural ou escolhe não aparecer nele. Então transferimos o passe para a conta dela depois do prazo de espera abaixo. O selo dela é ativado e a presença dela aparece no mural, ou a contagem dela aumenta se ela já tiver um passe, e a partir daí estes termos valem para ela em relação a esse passe.',
+			text: 'Até o passe ser transferido para a conta da outra pessoa, ele continua sendo seu, e você pode cancelar a oferta. Quando ela aceita, também aceita estes termos e escolhe um nome no mural ou escolhe não aparecer nele, e o passe é transferido para ela. O selo dela é ativado e a presença dela aparece no mural, ou a contagem dela aumenta se ela já tiver um passe, e a partir daí estes termos valem para ela em relação a esse passe.',
 		},
 		{
 			kind: 'paragraph',
@@ -1654,7 +1654,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Para dar tempo de chegarem alertas de fraude, e porque um passe termina se o comprador desistir da compra, **um passe só é transferido depois de 72 horas do pagamento dele, ou depois do fim do prazo para desistir com base na seção 12, se esse prazo for maior, e só se esse pagamento não tiver alerta de fraude, contestação aberta nem reembolso.** Até lá, o passe continua na sua conta, mesmo que a outra pessoa já tenha aceitado, e ela vê no Fluxer quando ele vai chegar.',
+			text: 'Podemos manter um passe na sua conta depois que a outra pessoa aceitar, ou encerrar a oferta, enquanto o pagamento desse passe tiver alerta de fraude, contestação aberta ou reembolso, ou enquanto analisamos uma suspeita de fraude relacionada a esse pagamento.',
 		},
 		{
 			kind: 'paragraph',
@@ -1720,7 +1720,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'O passe faz parte do seu Visionary, por isso ele acaba se o seu Visionary acabar, por exemplo, porque o pagamento do seu Visionary foi reembolsado ou estornado. Nossos registros passam então a mostrar a página do certificado dele como cancelada, como descreve a seção 2.',
+			text: 'Se o pagamento do seu Visionary for reembolsado ou estornado, ou se o seu Visionary acabar por outro motivo, o passe do seu Visionary também acaba. Nossos registros passam então a mostrar a página do certificado dele como cancelada, como descreve a seção 2.',
 		},
 		{kind: 'paragraph', text: 'Até você ativar o seu passe, o restante destes termos não vale para você.'},
 		{kind: 'heading', text: '14. Alterações e contato'},

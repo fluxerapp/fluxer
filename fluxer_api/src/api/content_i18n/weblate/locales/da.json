@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "generelt",
 	"guild.default_channel_voice": "Generelt",
 	"operator_pass.labs_greeting": "{size, select, single {Velkommen til #operators, {last}!} other {Velkommen til #operators, {others} og {last}!}} Det her er kanalen for alle med et Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Med din Visionary følger et Operator Pass. Du kan slå det til i Indstillinger under \"Operator Pass\", når du vil, og du betaler ikke noget ekstra for det.",
 	"profile_badge.bug_hunter": "Fejljæger hos {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "általános",
 	"guild.default_channel_voice": "Általános",
 	"operator_pass.labs_greeting": "{size, select, single {Üdv az #operators csatornán, {last}!} other {Üdv az #operators csatornán, {others} és {last}!}} Ez minden Operator Pass-tulajdonos csatornája.",
-	"operator_pass.visionary_notice_dm_v2": "A Visionaryd mellé Operator Pass is jár. Bármikor bekapcsolhatod a beállítások „Operator Pass” részén, és nem fizetsz érte többet.",
 	"profile_badge.bug_hunter": "{product_name} hibavadász",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

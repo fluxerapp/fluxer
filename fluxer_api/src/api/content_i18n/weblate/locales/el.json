@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "γενικό",
 	"guild.default_channel_voice": "Γενικό",
 	"operator_pass.labs_greeting": "{size, select, single {Καλώς ήρθες στο #operators, {last}!} other {Καλώς ήρθατε στο #operators, {others} και {last}!}} Αυτό είναι το κανάλι για όλους όσους έχουν Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Το Visionary σου συνοδεύεται από ένα Operator Pass. Μπορείς να το ενεργοποιήσεις όποτε θέλεις από τις ρυθμίσεις, στην ενότητα «Operator Pass», και δεν πληρώνεις τίποτα παραπάνω γι' αυτό.",
 	"profile_badge.bug_hunter": "Κυνηγός σφαλμάτων {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

@@ -4,12 +4,16 @@ import {
 	OPERATOR_PASS_TERMS_TEXT,
 	type OperatorPassTermsBlock,
 } from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText';
+import {OPERATOR_PASS_TERMS_TEXT_2026_11_01} from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText20261101';
 
-export const OPERATOR_PASS_TERMS_VERSION = '2026-11-01';
+export const OPERATOR_PASS_TERMS_VERSION = '2026-11-03';
 
 export type OperatorPassTermsLanguage = keyof typeof OPERATOR_PASS_TERMS_TEXT;
 
-const OPERATOR_PASS_TERMS_BY_VERSION: Readonly<Record<string, typeof OPERATOR_PASS_TERMS_TEXT>> = {
+const OPERATOR_PASS_TERMS_BY_VERSION: Readonly<
+	Record<string, Readonly<Record<OperatorPassTermsLanguage, ReadonlyArray<OperatorPassTermsBlock>>>>
+> = {
+	'2026-11-01': OPERATOR_PASS_TERMS_TEXT_2026_11_01,
 	[OPERATOR_PASS_TERMS_VERSION]: OPERATOR_PASS_TERMS_TEXT,
 };
 

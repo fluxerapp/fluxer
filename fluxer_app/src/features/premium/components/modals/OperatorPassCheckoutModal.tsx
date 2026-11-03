@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
@@ -142,10 +141,6 @@ const START_AGAIN_DESCRIPTOR = msg({
 	message: 'Start again',
 	comment:
 		'Primary button in the Operator Pass checkout dialog after the payment page expired. It goes back to the step with the checkboxes to open a new payment page.',
-});
-const JOIN_WAITLIST_DESCRIPTOR = msg({
-	message: 'Join the waitlist',
-	comment: 'Button in the Operator Pass dialog before the pass can be bought. Opens the waitlist on the website.',
 });
 const RETRY_DESCRIPTOR = msg({
 	message: 'Try again',
@@ -450,11 +445,6 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 			code,
 			error instanceof HttpError ? getPremiumPurchaseBlockedReason(error.body) : null,
 		);
-		if (target === 'reload') {
-			dispatch({type: 'retry'});
-			void load();
-			return;
-		}
 		if (target === null) {
 			setNotice(
 				error instanceof HttpError && error.status === HttpStatus.TOO_MANY_REQUESTS
@@ -710,12 +700,9 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 					</p>
 				);
 			case 'notice':
-			case 'waitlist':
-			case 'owned':
 				return (
 					<CheckoutNoticeStage
-						kind={stage.kind}
-						notice={stage.kind === 'notice' ? stage.notice : null}
+						notice={stage.notice}
 						state={state}
 						formatPrice={formatPrice}
 						data-flx="premium.operator-pass-checkout-modal.render-body.checkout-notice-stage"
@@ -750,24 +737,6 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 					>
 						{i18n._(RETRY_DESCRIPTOR)}
 					</Button>
-				);
-			case 'waitlist':
-				return (
-					<Button
-						variant="primary"
-						onClick={() => void openExternalUrl(`${Routes.operatorPassInfo()}#waitlist`)}
-						data-flx="premium.operator-pass-checkout-modal.button.waitlist"
-					>
-						{i18n._(JOIN_WAITLIST_DESCRIPTOR)}
-					</Button>
-				);
-			case 'owned':
-				return (
-					<OpenOperatorsButton
-						variant="primary"
-						onOpened={closeModal}
-						data-flx="premium.operator-pass-checkout-modal.button.operators"
-					/>
 				);
 			case 'choose':
 				return (

@@ -24,8 +24,6 @@ export type OperatorPassWithdrawalCountryTable = Readonly<Record<string, Operato
 
 export const OPERATOR_PASS_WITHDRAWAL_RULE_VERSION = 'withdrawal-countries-2026-10-27';
 
-const OPERATOR_PASS_DEFAULT_TRANSFER_LOCK_HOURS = 0;
-
 const DEFAULT_WITHDRAWAL_COUNTRIES: OperatorPassWithdrawalCountryTable = {BR: {days: 7, enabled: true}};
 
 const CURRENCY_WITHDRAWAL_COUNTRY: Readonly<Partial<Record<string, string>>> = {BRL: 'BR'};
@@ -131,16 +129,6 @@ export function getOperatorPassReleaseListWindow(
 	year: number,
 ): OperatorPassReleaseListWindow {
 	return table[year] ?? defaultReleaseListWindow(year);
-}
-
-export function parseOperatorPassTransferLockHours(value: number | undefined): number {
-	if (value === undefined) {
-		return OPERATOR_PASS_DEFAULT_TRANSFER_LOCK_HOURS;
-	}
-	if (!Number.isInteger(value) || value < 0 || value > 24 * 90) {
-		throw new Error('FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS must be a whole number of hours between 0 and 2160');
-	}
-	return value;
 }
 
 export function parseOperatorPassWithdrawalCountries(source: string | undefined): OperatorPassWithdrawalCountryTable {

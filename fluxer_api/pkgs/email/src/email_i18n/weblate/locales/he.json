@@ -288,7 +288,7 @@
 		"cta": "להצגת ההצעה",
 		"footer_reason": "קיבלתם את האימייל הזה כי מישהו הציע להעביר לכם Operator Pass ב-{product_name}.",
 		"intro": "{senderName} רוצה להעביר לכם אחד מה-Operator Pass שלו/ה.",
-		"lead": "אפשר לקבל או לדחות אותו ב-{product_name}. אם תקבלו אותו, הוא יגיע ב-{arrivesAt, date, long}, אלא אם השולח ימשוך את ההצעה לפני כן.",
+		"lead_v2": "אפשר לקבל או לדחות אותו ב-{product_name}. אם תקבלו אותו, הוא יעבור אליכם מיד.",
 		"signoff": "צוות {product_name}",
 		"subject": "{senderName} רוצה להעביר לכם Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "צוות {product_name}",
 		"subject": "Operator Pass בחשבון ה-{product_name} שלכם הסתיים"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "מגיעים איתו גם תג Operator, מקום בקיר ה-Operators, #operators וניסיון מוקדם של תכונות.",
-		"cta": "לרכישת ה-Operator Pass",
-		"footer_reason": "קיבלתם את האימייל הזה כי הצטרפתם לרשימת ההמתנה של Operator Pass. זה האימייל האחרון שנשלח לכם בנושא.",
-		"intro": "ביקשתם שנודיע לכם כשה-Operator Pass יהיה זמין לרכישה. הוא זמין עכשיו.",
-		"paid_for": "ה-Operator Pass מגיע עם תעודת Operator ממוספרת עם השם שלכם ותאריך ושעת התשלום, שמגיעה כקובץ PDF שנשאר אצלכם.",
-		"price_label": "מחיר מוקדם",
-		"price_value": "{priceFormatted}, תשלום חד-פעמי, עד {priceEndsOn, date, long}",
-		"signoff": "צוות {product_name}",
-		"subject": "ה-Operator Pass של {product_name} זמין לרכישה",
-		"terms_link": "תנאי ה-Operator Pass",
-		"unsubscribe": "ביטול הרשמה"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "כשתפעילו אותו, תקבלו תעודת Operator ממוספרת עם השם שתבחרו. מופיע בה {visionaryDate, date, long}, התאריך שבו קיבלתם את Visionary, ואותו תאריך יופיע גם בתג ה-Operator אם תבחרו להציג אותו.",
-		"choices_line": "תג ה-Operator נשאר מוסתר עד שתבחרו להציג אותו, ותופיעו בקיר ה-Operators רק אם תבחרו בכך.",
-		"cta": "הפעילו את ה-Operator Pass",
-		"footer_reason": "קיבלתם את האימייל הזה כי יש לכם Visionary ב-{product_name}.",
-		"intro": "עם ה-Visionary שלכם מגיע Operator Pass, ואפשר להפעיל אותו בהגדרות מתי שרוצים. לא משלמים עליו שום דבר נוסף, ושום דבר ב-Visionary שלכם לא משתנה.",
-		"labs_line": "{member, select, yes {הגישה ל-#operators ב-Fluxer Labs כבר קיימת אצלכם דרך ה-Visionary. אחרי שתפעילו את ה-Operator Pass, תקבלו שם גם את תפקיד Operator.} other {כשתפעילו את ה-Operator Pass, נוסיף את החשבון הזה ל-Fluxer Labs עם תפקיד Operator, אלא אם עזבתם את Fluxer Labs בעבר או שהוסרתם משם. ה-Visionary שלכם נותן לכם שם גם גישה ל-#operators.}}",
-		"signoff": "צוות {product_name}",
-		"subject": "ה-Operator Pass שמגיע עם Visionary מוכן להפעלה",
-		"terms_line": "תנאי ה-Operator Pass מסבירים איך הוא עובד, וסעיף 13 עוסק ב-Visionary.",
-		"terms_link": "תנאי ה-Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {תג ה-Operator שלכם מופיע בפרופיל. אפשר להסתיר אותו <settings>בהגדרות</settings>.} other {תג ה-Operator שלכם מוסתר. אפשר להציג אותו <settings>בהגדרות</settings>.}}",
 		"cta": "פתחו את Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "תנאי ה-Operator Pass שאישרתם (גרסה {termsVersion}) מצורפים כקובץ PDF.",
 		"terms_link": "תנאי ה-Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {בחרתם לא להופיע בקיר ה-Operators. אפשר להוסיף את השם שלכם <settings>בהגדרות</settings>.} other {השם שלכם מופיע בקיר ה-Operators בתור {wallName}. אפשר לשנות אותו או לצאת מהקיר <settings>בהגדרות</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "הצטרפות לרשימת ההמתנה",
-		"expiry": "הקישור הזה יפוג בעוד 48 שעות.",
-		"footer_reason": "קיבלתם את האימייל הזה כי הכתובת הוזנה ברשימת ההמתנה של Operator Pass באתר של {product_name}.",
-		"intro": "אשרו את כתובת האימייל הזו כדי להצטרף לרשימת ההמתנה של Operator Pass. נשלח לכם אימייל אחד בלבד, כשהוא יהיה זמין לרכישה.",
-		"note": "אם לא ביקשתם את זה, התעלמו מהאימייל הזה ולא ניצור איתכם קשר שוב.",
-		"signoff": "צוות {product_name}",
-		"subject": "אשרו את ההרשמה לרשימת ההמתנה של Operator Pass ב-{product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {השיבו לאימייל הזה תוך 60 יום וספרו לנו למה אתם לא מסכימים. זה בחינם, ואדם מהצוות שלנו קורא את הערעור ומחליט בו.} other {פנו למנהלי המופע הזה תוך 60 יום וספרו להם למה אתם לא מסכימים.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "קיבלתם את האימייל הזה בעקבות החלטה בנוגע לרישום שלכם בקיר ה-Operators של {product_name}.",
 		"ground": "סעיף 3.1 בתנאי ה-Operator Pass",
 		"ground_label": "בסיס",
-		"intro": "{target, select, avatar {דחינו את האווטאר שלכם לקיר ה-Operators.} both {דחינו את השם והאווטאר שלכם לקיר ה-Operators.} other {דחינו את השם שלכם לקיר ה-Operators.}} {shown, select, previous {הקיר מציג את הגרסה האחרונה שאושרה.} other {עד שתשלחו חדש, הקיר מציג את המילה Operator ואת אווטאר ברירת המחדל.}} המקום שלכם על הקיר, הגודל שלו והתג נשארים כפי שהם, והרכישה שלכם לא מושפעת.",
+		"intro": "{target, select, avatar {הסרנו את האווטאר שלכם מקיר ה-Operators.} both {הסרנו את השם והאווטאר שלכם מקיר ה-Operators.} other {הסרנו את השם שלכם מקיר ה-Operators.}} {shown, select, previous {הקיר מציג את השם והאווטאר הקודמים שלכם.} other {עד שתשלחו חדש, הקיר מציג את המילה Operator ואת אווטאר ברירת המחדל.}} המקום שלכם על הקיר, הגודל שלו והתג נשארים כפי שהם, והרכישה שלכם לא מושפעת.",
 		"next": "אפשר לשלוח שם או אוואטר חדשים <settings>בהגדרות</settings>.",
 		"reason_label": "סיבה",
 		"reason_value": "{reason, select, impersonation {מתחזה למישהו אחר} rights {משתמש בשם או בתמונה בלי זכויות עליהם} age_suitability {לא מתאים למשתמשים צעירים} other {מפר את הנחיות הקהילה}}",
 		"redress_v2": "אפשר גם לפנות לבית המשפט. אם אתם באיחוד האירופי, אפשר לפנות ל<dsa>גוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט</dsa>. אם אתם צרכנים באיחוד האירופי או באזור הכלכלי האירופי, אפשר גם להביא את הסכסוך בפני המועצה הלאומית השוודית לסכסוכי צרכנים (<arn>ARN</arn>), Box 174, 101 23 Stockholm, שוודיה.",
 		"signoff": "צוות {product_name}",
-		"subject": "דחינו את השם או האווטאר שלכם לקיר ה-Operators של {product_name}"
+		"subject": "הסרנו את השם או האווטאר שלכם מקיר ה-Operators של {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "התג שלכם מופיע בפרופיל. אפשר להסתיר אותו ב<settings>הגדרות</settings> שלכם.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} וצוות {product_name}",
 		"subject": "תעודת ה-Operator שלכם ב-{product_name}",
 		"terms_link": "תנאי ה-Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {בחרתם לא להופיע בקיר ה-Operators. אפשר להוסיף את השם שלכם <settings>בהגדרות</settings>.} other {השם שלכם מופיע בקיר ה-Operators בתור {wallName}, והשם והאוואטר שלכם יוצגו אחרי שנבדוק אותם. אפשר לשנות אותו או לצאת מהקיר <settings>בהגדרות</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {בחרתם לא להופיע בקיר ה-Operators. אפשר להוסיף את השם שלכם <settings>בהגדרות</settings>.} other {השם שלכם מופיע בקיר ה-Operators בתור {wallName}. אפשר לשנות אותו או לצאת מהקיר <settings>בהגדרות</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "חשבונית הזיכוי על ההחזר הזה מצורפת לאימייל הזה כקובץ PDF.",

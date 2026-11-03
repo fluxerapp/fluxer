@@ -288,7 +288,7 @@
 		"cta": "Aanbod bekijken",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat iemand je een Operator Pass wil doorgeven op {product_name}.",
 		"intro": "{senderName} wil je een van diens Operator Passes doorgeven.",
-		"lead": "Accepteer of wijs hem af in {product_name}. Als je hem accepteert, ontvang je hem op {arrivesAt, date, long}, tenzij de afzender het aanbod eerder intrekt.",
+		"lead_v2": "Accepteer of wijs hem af in {product_name}. Als je hem accepteert, gaat hij meteen naar je toe.",
 		"signoff": "Het team van {product_name}",
 		"subject": "{senderName} wil je een Operator Pass doorgeven"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Het team van {product_name}",
 		"subject": "Een Operator Pass op je {product_name}-account is beëindigd"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "De Operator-badge, een plek op de Operators-muur, #operators en vroeg testen krijg je er ook bij.",
-		"cta": "Koop de Operator Pass",
-		"footer_reason": "Je hebt deze e-mail ontvangen omdat je je hebt aangemeld voor de wachtlijst van de Operator Pass. Dit is de laatste e-mail die we je over de pass sturen.",
-		"intro": "Je vroeg ons om je te laten weten wanneer de Operator Pass te koop is. Dat is nu zo.",
-		"paid_for": "Bij de pass hoort een genummerd Operator-certificaat met je naam en de datum en tijd van betaling. Je krijgt het als pdf en mag het houden.",
-		"price_label": "Early-birdprijs",
-		"price_value": "{priceFormatted}, eenmalig betaald, tot en met {priceEndsOn, date, long}",
-		"signoff": "Het team van {product_name}",
-		"subject": "De {product_name} Operator Pass is nu te koop",
-		"terms_link": "Voorwaarden van de Operator Pass",
-		"unsubscribe": "Afmelden"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Als je hem aanzet, krijg je een genummerd Operator-certificaat met de naam die je kiest. Daarop staat {visionaryDate, date, long}, de datum waarop je Visionary kreeg, en die datum staat ook op de Operator-badge als je die laat zien.",
-		"choices_line": "De Operator-badge blijft verborgen tot je ervoor kiest hem te laten zien, en je staat alleen op de Operators-muur als je daarvoor kiest.",
-		"cta": "Zet je Operator Pass aan",
-		"footer_reason": "Je ontvangt deze e-mail omdat je Visionary hebt op {product_name}.",
-		"intro": "Bij je Visionary hoort een Operator Pass, en je kunt die aanzetten in je instellingen wanneer je wilt. Je betaalt er niets extra voor en er verandert niets aan je Visionary.",
-		"labs_line": "{member, select, yes {#operators in Fluxer Labs heb je al via je Visionary. Zodra je je Operator Pass aanzet, krijg je daar ook de Operator-rol.} other {Als je je Operator Pass aanzet, voegen we dit account met de Operator-rol toe aan Fluxer Labs, tenzij je Fluxer Labs eerder hebt verlaten of eruit bent verwijderd. Via je Visionary heb je daar ook #operators.}}",
-		"signoff": "Het team van {product_name}",
-		"subject": "Je Operator Pass via Visionary staat klaar om aan te zetten",
-		"terms_line": "De voorwaarden van de Operator Pass leggen uit hoe de pass werkt, en artikel 13 gaat over Visionary.",
-		"terms_link": "Voorwaarden van de Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Je Operator-badge staat op je profiel. Je kunt hem verbergen in je <settings>instellingen</settings>.} other {Je Operator-badge is verborgen. Je kunt hem laten zien via je <settings>instellingen</settings>.}}",
 		"cta": "Fluxer Labs openen",
@@ -423,15 +398,6 @@
 		"terms_attached": "De voorwaarden van de Operator Pass die je hebt geaccepteerd (versie {termsVersion}) zitten als pdf in de bijlage.",
 		"terms_link": "Voorwaarden van de Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Je hebt ervoor gekozen om niet op de Operators-muur vermeld te worden. Je kunt je naam toevoegen in je <settings>instellingen</settings>.} other {Je staat op de Operators-muur als {wallName}. Je kunt dat wijzigen of de muur verlaten in je <settings>instellingen</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Aanmelden voor de wachtlijst",
-		"expiry": "Deze link verloopt over 48 uur.",
-		"footer_reason": "Je hebt deze e-mail ontvangen omdat dit adres is ingevoerd op de wachtlijst voor de Operator Pass op de website van {product_name}.",
-		"intro": "Bevestig dit e-mailadres om op de wachtlijst van de Operator Pass te komen. We mailen je één keer, zodra de pass te koop is.",
-		"note": "Als je hier niet om hebt gevraagd, negeer deze e-mail dan. We nemen dan geen contact meer met je op.",
-		"signoff": "Het team van {product_name}",
-		"subject": "Bevestig je aanmelding voor de wachtlijst van de {product_name} Operator Pass"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Beantwoord deze e-mail binnen 60 dagen en vertel ons waarom je het er niet mee eens bent. Het is gratis, en iemand van ons team leest je bezwaar en beslist erover.} other {Neem binnen 60 dagen contact op met de beheerders van deze instantie en vertel hun waarom je het er niet mee eens bent.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Je hebt deze e-mail ontvangen vanwege een beslissing over je vermelding op de Operators-muur van {product_name}.",
 		"ground": "Artikel 3.1 van de voorwaarden van de Operator Pass",
 		"ground_label": "Grondslag",
-		"intro": "{target, select, avatar {We hebben je avatar voor de Operators-muur afgewezen.} both {We hebben je naam en avatar voor de Operators-muur afgewezen.} other {We hebben je naam voor de Operators-muur afgewezen.}} {shown, select, previous {De muur toont je laatst goedgekeurde versie.} other {Tot je een nieuwe instuurt, toont de muur het woord Operator en de standaardavatar.}} Je plek op de muur, de grootte ervan en je badge blijven zoals ze zijn, en je aankoop verandert niet.",
+		"intro": "{target, select, avatar {We hebben je avatar van de Operators-muur gehaald.} both {We hebben je naam en avatar van de Operators-muur gehaald.} other {We hebben je naam van de Operators-muur gehaald.}} {shown, select, previous {De muur toont je eerdere naam en avatar.} other {Tot je een nieuwe instuurt, toont de muur het woord Operator en de standaardavatar.}} Je plek op de muur, de grootte ervan en je badge blijven zoals ze zijn, en je aankoop verandert niet.",
 		"next": "Je kunt een nieuwe naam of avatar sturen in je <settings>instellingen</settings>.",
 		"reason_label": "Reden",
 		"reason_value": "{reason, select, impersonation {Doet zich voor als iemand anders} rights {Gebruikt een naam of afbeelding zonder de rechten daarop} age_suitability {Niet geschikt voor jongere gebruikers} other {Overtreedt de communityrichtlijnen}}",
 		"redress_v2": "Je kunt ook naar de rechter stappen. Als je in de EU bent, kun je naar een gecertificeerd <dsa>orgaan voor buitengerechtelijke geschillenbeslechting</dsa> gaan. Als consument in de EU of de EER kun je het geschil ook voorleggen aan de Zweedse Nationale Raad voor Consumentengeschillen (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Zweden.",
 		"signoff": "Het team van {product_name}",
-		"subject": "We hebben je naam of avatar voor de Operators-muur van {product_name} afgewezen"
+		"subject": "We hebben je naam of avatar van de Operators-muur van {product_name} gehaald"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Je badge staat op je profiel. Je kunt hem verbergen in je <settings>instellingen</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} en het team van {product_name}",
 		"subject": "Je {product_name} Operator-certificaat",
 		"terms_link": "Voorwaarden van de Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Je hebt ervoor gekozen om niet op de Operators-muur vermeld te worden. Je kunt je naam toevoegen in je <settings>instellingen</settings>.} other {Je staat op de Operators-muur als {wallName}, en je naam en avatar verschijnen zodra we ze hebben gecontroleerd. Je kunt dat wijzigen of de muur verlaten in je <settings>instellingen</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Je hebt ervoor gekozen om niet op de Operators-muur vermeld te worden. Je kunt je naam toevoegen in je <settings>instellingen</settings>.} other {Je staat op de Operators-muur als {wallName}. Je kunt dat wijzigen of de muur verlaten in je <settings>instellingen</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "De creditnota voor deze terugbetaling zit als pdf in de bijlage van deze e-mail.",

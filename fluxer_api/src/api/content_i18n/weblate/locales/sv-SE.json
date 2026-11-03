@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "allmänt",
 	"guild.default_channel_voice": "Allmänt",
 	"operator_pass.labs_greeting": "{size, select, single {Välkommen till #operators, {last}!} other {Välkomna till #operators, {others} och {last}!}} Det här är kanalen för alla som har ett Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Till din Visionary hör ett Operator Pass. Du kan slå på det när du vill i Inställningar, under ”Operator Pass”, och du betalar inget mer för det.",
 	"profile_badge.bug_hunter": "{product_name}-buggjägare",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",

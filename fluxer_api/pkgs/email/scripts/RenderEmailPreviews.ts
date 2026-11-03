@@ -3,7 +3,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {parseArgs} from 'node:util';
-import {formatMinorUnitPrice} from '@fluxer/number_utils/src/PriceFormatting';
 import type {EmailConfig, EmailMessage, IEmailProvider} from '@pkgs/email/src/EmailProviderTypes';
 import {EmailService} from '@pkgs/email/src/EmailService';
 import {EMAIL_I18N_LOCALE_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nLocales';
@@ -233,28 +232,6 @@ function noticeDate(date: Date, locale: string): string {
 }
 
 const previews: Record<string, Preview> = {
-	waitlist_verification: (locale) =>
-		service.send(
-			'operator_pass_waitlist_verification',
-			USER,
-			{confirmUrl: `https://fluxer.com/pass/confirm?token=${token}`},
-			locale,
-		),
-	sale_open: (locale) => {
-		const price = PRICES[locale] ?? USD;
-		return service.send(
-			'operator_pass_sale_open',
-			USER,
-			{
-				checkoutUrl: 'https://fluxer.com/channels/@operator-pass',
-				priceFormatted: formatMinorUnitPrice(price.earlyBird, price.currency, locale),
-				priceRisesAt: new Date('2027-01-02T12:00:00Z'),
-				unsubscribeUrl: `https://api.fluxer.app/v1/operator-pass/waitlist/unsubscribe?token=${token}`,
-				unsubscribePageUrl: `https://fluxer.com/pass/unsubscribe?token=${token}`,
-			},
-			locale,
-		);
-	},
 	welcome: (locale) =>
 		service.send(
 			'operator_pass_welcome',
@@ -614,13 +591,7 @@ const previews: Record<string, Preview> = {
 			locale,
 		);
 	},
-	offer_received: (locale) =>
-		service.send(
-			'operator_pass_offer_received',
-			USER,
-			{senderName: 'Maja Lind', arrivesAt: new Date(DATE.getTime() + 72 * 60 * 60 * 1000)},
-			locale,
-		),
+	offer_received: (locale) => service.send('operator_pass_offer_received', USER, {senderName: 'Maja Lind'}, locale),
 	offer_accepted: (locale) =>
 		service.send(
 			'operator_pass_offer_accepted',

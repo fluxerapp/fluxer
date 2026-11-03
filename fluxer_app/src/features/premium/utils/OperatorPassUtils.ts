@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {isolateBidi} from '@app/features/i18n/utils/BidiIsolate';
+import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
@@ -61,30 +62,16 @@ export function formatOperatorPassDate(iso: string, timeZone?: string): string {
 
 export const OPERATOR_PASS_VISIONARY_DATE_TIME_ZONE = 'UTC';
 
+export function formatOperatorPassCertificateNumbers(numbers: ReadonlyArray<number>): string {
+	return getCachedListFormat(getCurrentOrDetectedLocale(), {type: 'unit', style: 'short'}).format(
+		numbers.map((value) => String(value).padStart(6, '0')),
+	);
+}
+
 interface OperatorPassCalendarDay {
 	year: number;
 	month: number;
 	day: number;
-}
-
-function getZonedTime(at: number, timeZone?: string): OperatorPassCalendarDay & {startOfDay: boolean} {
-	const parts = new Intl.DateTimeFormat('en-US', {
-		timeZone,
-		hourCycle: 'h23',
-		year: 'numeric',
-		month: 'numeric',
-		day: 'numeric',
-		hour: 'numeric',
-		minute: 'numeric',
-		second: 'numeric',
-	}).formatToParts(new Date(at));
-	const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0);
-	return {
-		year: value('year'),
-		month: value('month'),
-		day: value('day'),
-		startOfDay: value('hour') === 0 && value('minute') === 0 && value('second') === 0 && at % 1000 === 0,
-	};
 }
 
 function formatCalendarDay(
@@ -107,19 +94,6 @@ export function formatOperatorPassCalendarDay(day: string): string {
 
 export function formatOperatorPassEarlyBirdEnd(priceRisesAt: string): string {
 	return formatCalendarDay(parseCalendarDay(getOperatorPassEarlyBirdEndsOn(priceRisesAt)), 'long');
-}
-
-export function formatOperatorPassUnlockDay(iso: string, timeZone?: string): string {
-	const zoned = getZonedTime(Date.parse(iso), timeZone);
-	if (zoned.startOfDay) return formatCalendarDay(zoned);
-	const next = new Date(Date.UTC(zoned.year, zoned.month - 1, zoned.day + 1));
-	return formatCalendarDay({year: next.getUTCFullYear(), month: next.getUTCMonth() + 1, day: next.getUTCDate()});
-}
-
-export function hasOperatorPassTimePassed(iso: string | null | undefined, now: number = Date.now()): boolean {
-	if (!iso) return true;
-	const at = Date.parse(iso);
-	return Number.isNaN(at) || at <= now;
 }
 
 export function formatOperatorPassSinceDate(iso: string | Date): string {

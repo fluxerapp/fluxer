@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "כללי",
 	"guild.default_channel_voice": "כללי",
 	"operator_pass.labs_greeting": "{size, select, single {ברוכים הבאים ל-#operators, {last}!} other {ברוכים הבאים ל-#operators, {others} ו-{last}!}} זה הערוץ לכל מי שמחזיק ב-Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "ה-Visionary שלכם מגיע עם Operator Pass. אפשר להפעיל אותו בהגדרות, תחת \"Operator Pass\", מתי שרוצים, ולא משלמים עליו שום דבר נוסף.",
 	"profile_badge.bug_hunter": "צייד באגים של {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {Operator Pass אחד} two {# Operator Pass} other {# Operator Pass}}",

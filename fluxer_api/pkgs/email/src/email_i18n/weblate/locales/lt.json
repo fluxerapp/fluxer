@@ -288,7 +288,7 @@
 		"cta": "Peržiūrėti pasiūlymą",
 		"footer_reason": "Gavai šį el. laišką, nes kažkas pasiūlė tau Operator Pass {product_name} platformoje.",
 		"intro": "{senderName} nori perduoti tau vieną iš savo Operator Pass leidimų.",
-		"lead": "Priimk arba atmesk jį {product_name} platformoje. Jei priimsi, jį gausi {arrivesAt, date, long}, nebent siuntėjas anksčiau atšauks pasiūlymą.",
+		"lead_v2": "Priimk arba atmesk jį {product_name} platformoje. Jei priimsi, jis iš karto pereis tau.",
 		"signoff": "{product_name} komanda",
 		"subject": "{senderName} nori perduoti tau Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} komanda",
 		"subject": "Tavo {product_name} paskyroje baigėsi Operator Pass"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Su juo taip pat gauni ženklelį Operator, vietą Operators sienoje, #operators ir ankstyvą funkcijų išbandymą.",
-		"cta": "Įsigyti Operator Pass",
-		"footer_reason": "Gavai šį el. laišką, nes užsirašei į Operator Pass laukiančiųjų sąrašą. Tai paskutinis mūsų el. laiškas apie šį leidimą.",
-		"intro": "Prašei pranešti, kai Operator Pass pradės būti parduodamas. Jis jau parduodamas.",
-		"paid_for": "Su leidimu gauni numeruotą Operator sertifikatą su tavo vardu ir mokėjimo data bei laiku. Jį gauni PDF failu, kurį pasilieki.",
-		"price_label": "Ankstyvojo pirkimo kaina",
-		"price_value": "{priceFormatted}, mokama vieną kartą, iki {priceEndsOn, date, long} imtinai",
-		"signoff": "{product_name} komanda",
-		"subject": "{product_name} Operator Pass jau parduodamas",
-		"terms_link": "Operator Pass sąlygos",
-		"unsubscribe": "Atsisakyti prenumeratos"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Jį įjungęs gausi numeruotą Operator sertifikatą su tavo pasirinktu vardu. Jame nurodyta {visionaryDate, date, long}, diena, kai gavai Visionary, ir tą pačią datą rodys Operator ženklelis, jei nuspręsi jį rodyti.",
-		"choices_line": "Operator ženklelis lieka paslėptas, kol nuspręsi jį rodyti, o Operators sienoje būsi rodomas tik jei pats to pasirinksi.",
-		"cta": "Įjungti Operator Pass",
-		"footer_reason": "Gavai šį el. laišką, nes turi Visionary {product_name} platformoje.",
-		"intro": "Su tavo Visionary gauni Operator Pass, ir gali jį įjungti savo nustatymuose bet kada. Už jį nieko papildomai nemoki, o tavo Visionary niekas nesikeičia.",
-		"labs_line": "{member, select, yes {Prieigą prie #operators Fluxer Labs bendruomenėje jau turi dėl savo Visionary. Įjungęs Operator Pass, ten gausi ir Operator vaidmenį.} other {Kai įjungsi Operator Pass, pridėsime šią paskyrą prie Fluxer Labs su Operator vaidmeniu, nebent ši paskyra anksčiau buvo išėjusi arba pašalinta iš Fluxer Labs. Dėl savo Visionary ten turi ir prieigą prie #operators.}}",
-		"signoff": "{product_name} komanda",
-		"subject": "Tavo Operator Pass iš Visionary paruoštas įjungti",
-		"terms_line": "Operator Pass sąlygose paaiškinta, kaip veikia pasas, o 13 skyrius skirtas Visionary.",
-		"terms_link": "Operator Pass sąlygos"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Tavo Operator ženklelis rodomas profilyje. Paslėpti jį gali <settings>nustatymuose</settings>.} other {Tavo Operator ženklelis paslėptas. Rodyti jį gali įjungti <settings>nustatymuose</settings>.}}",
 		"cta": "Atidaryti Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Tavo priimtos Operator Pass sąlygos (versija {termsVersion}) pridėtos PDF formatu.",
 		"terms_link": "Operator Pass sąlygos",
 		"wall_line": "{wallOptOut, select, yes {Pasirinkai nebūti rodomas Operators sienoje. Savo vardą gali pridėti savo <settings>nustatymuose</settings>.} other {Operators sienoje esi rodomas kaip {wallName}. Tai pakeisti arba pasitraukti iš sienos gali savo <settings>nustatymuose</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Užsirašyti į laukiančiųjų sąrašą",
-		"expiry": "Ši nuoroda galioja 48 valandas.",
-		"footer_reason": "Gavai šį el. laišką, nes šis adresas buvo įrašytas į Operator Pass laukiančiųjų sąrašą {product_name} svetainėje.",
-		"intro": "Patvirtink šį el. pašto adresą, kad užsirašytum į Operator Pass laukiančiųjų sąrašą. Parašysime tau vieną kartą, kai leidimas pradės būti parduodamas.",
-		"note": "Jei to neprašei, ignoruok šį el. laišką ir daugiau su tavimi nesusisieksime.",
-		"signoff": "{product_name} komanda",
-		"subject": "Patvirtink užsirašymą į {product_name} Operator Pass laukiančiųjų sąrašą"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Per 60 dienų atsakyk į šį el. laišką ir paaiškink, kodėl nesutinki. Tai nemokama, o tavo apeliaciją perskaito ir dėl jos sprendžia mūsų komandos žmogus.} other {Per 60 dienų susisiek su šios instancijos administratoriais ir paaiškink jiems, kodėl nesutinki.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Gavai šį el. laišką dėl sprendimo, susijusio su tavo įrašu {product_name} Operators sienoje.",
 		"ground": "Operator Pass sąlygų 3.1 skirsnis",
 		"ground_label": "Pagrindas",
-		"intro": "{target, select, avatar {Atmetėme tavo avatarą Operators sienai.} both {Atmetėme tavo vardą ir avatarą Operators sienai.} other {Atmetėme tavo vardą Operators sienai.}} {shown, select, previous {Sienoje lieka paskutinė patvirtinta versija.} other {Kol neatsiųsi naujo, sienoje rodomas žodis Operator ir numatytasis avataras.}} Tavo vieta ant sienos, jos dydis ir ženklelis lieka tokie, kokie buvo, o tavo pirkimui tai neturi įtakos.",
+		"intro": "{target, select, avatar {Pašalinome tavo avatarą iš Operators sienos.} both {Pašalinome tavo vardą ir avatarą iš Operators sienos.} other {Pašalinome tavo vardą iš Operators sienos.}} {shown, select, previous {Sienoje rodomas tavo ankstesnis vardas ir avataras.} other {Kol neatsiųsi naujo, sienoje rodomas žodis Operator ir numatytasis avataras.}} Tavo vieta ant sienos, jos dydis ir ženklelis lieka tokie, kokie buvo, o tavo pirkimui tai neturi įtakos.",
 		"next": "Naują vardą arba avatarą gali atsiųsti savo <settings>nustatymuose</settings>.",
 		"reason_label": "Priežastis",
 		"reason_value": "{reason, select, impersonation {Apsimetama kitu asmeniu} rights {Naudojamas vardas ar vaizdas neturint tam teisių} age_suitability {Netinka jaunesniems naudotojams} other {Pažeidžiamos bendruomenės gairės}}",
 		"redress_v2": "Taip pat gali kreiptis į teismą. Jei esi ES, gali kreiptis į sertifikuotą <dsa>neteisminio ginčų sprendimo įstaigą</dsa>. Jei esi vartotojas ES arba EEE, ginčą taip pat gali perduoti Švedijos nacionalinei vartotojų ginčų tarybai (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švedija.",
 		"signoff": "{product_name} komanda",
-		"subject": "Atmetėme tavo vardą arba avatarą {product_name} Operators sienai"
+		"subject": "Pašalinome tavo vardą arba avatarą iš {product_name} Operators sienos"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Tavo ženklelis jau rodomas profilyje. Paslėpti jį gali <settings>nustatymuose</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} ir {product_name} komanda",
 		"subject": "Tavo {product_name} Operator sertifikatas",
 		"terms_link": "Operator Pass sąlygos",
-		"wall_line": "{wallOptOut, select, yes {Pasirinkai nebūti rodomas Operators sienoje. Savo vardą gali pridėti savo <settings>nustatymuose</settings>.} other {Operators sienoje esi rodomas kaip {wallName}, o tavo vardas ir avataras bus rodomi, kai juos patikrinsime. Tai pakeisti arba pasitraukti iš sienos gali savo <settings>nustatymuose</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Pasirinkai nebūti rodomas Operators sienoje. Savo vardą gali pridėti savo <settings>nustatymuose</settings>.} other {Operators sienoje esi rodomas kaip {wallName}. Tai pakeisti arba pasitraukti iš sienos gali savo <settings>nustatymuose</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Šio grąžinimo kreditinė sąskaita faktūra pridėta prie šio el. laiško PDF formatu.",

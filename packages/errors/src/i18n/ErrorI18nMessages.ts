@@ -412,14 +412,7 @@ export const ERROR_I18N_MESSAGES = {
 	'operator_pass.release_already_published': 'This Operators list has already been published.',
 	'operator_pass.release_not_ready': 'This Operators list cannot be published before its cut-off date.',
 	'operator_pass.unknown_release_entry': 'This account is not in that published Operators list.',
-	'operator_pass.not_on_sale': 'You cannot buy the Operator Pass yet.',
 	'operator_pass.price_changed': 'The Operator Pass price has changed. Check the new price and try again.',
-	'operator_pass.waitlist_closed': 'The Operator Pass waitlist is closed because you can get the pass now.',
-	'operator_pass.waitlist_followup_invalid':
-		'Choose from the listed options. You can add your own answer only with "Other", in up to 500 characters.',
-	'operator_pass.waitlist_followup_token_invalid':
-		'This answer can no longer be saved. Your waitlist signup is not affected.',
-	'operator_pass.waitlist_token_expired': 'This waitlist link has expired.',
 	'operator_pass.waitlist_token_invalid': 'This waitlist link is invalid.',
 	'operator_pass.removal_limited_first':
 		'A permanent removal for a breach that is not serious needs an earlier removal for a limited time.',

@@ -21,7 +21,7 @@ import {
 } from '@app/api/operator_pass/OperatorPassLabsRole';
 import {operatorPassHolderLockKey, withOperatorPassLock} from '@app/api/operator_pass/OperatorPassLocks';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
-import {getOperatorPassSchedule, operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
+import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import {
 	normalizeOperatorPassWallChoice,
 	type OperatorPassWallChoice,
@@ -54,24 +54,17 @@ export function isOperatorPassVisionary(user: Pick<User, 'premiumType'>): boolea
 	return user.premiumType === UserPremiumTypes.LIFETIME;
 }
 
-export function isOperatorPassVisionaryAccountInactive(user: Pick<User, 'flags'>): boolean {
+function isOperatorPassVisionaryAccountInactive(user: Pick<User, 'flags'>): boolean {
 	return (user.flags & INACTIVE_FLAGS) !== 0n;
 }
 
-export function isOperatorPassVisionaryPendingDeletion(
-	user: Pick<User, 'pendingDeletionAt' | 'deletionStartedAt'>,
-): boolean {
+function isOperatorPassVisionaryPendingDeletion(user: Pick<User, 'pendingDeletionAt' | 'deletionStartedAt'>): boolean {
 	return user.pendingDeletionAt != null || user.deletionStartedAt != null;
-}
-
-export function isOperatorPassVisionaryOpen(now: Date = operatorPassNow()): boolean {
-	const {saleOpensAt} = getOperatorPassSchedule();
-	return saleOpensAt !== null && now.getTime() >= saleOpensAt.getTime();
 }
 
 type VisionaryPurchaseRecords = Pick<UserRepository, 'findGiftCodesByRedeemer' | 'findPaymentsByUserId'>;
 
-export async function findOperatorPassVisionaryPaidAt(
+async function findOperatorPassVisionaryPaidAt(
 	userRepository: VisionaryPurchaseRecords,
 	userId: UserID,
 ): Promise<Date | null> {
@@ -103,10 +96,9 @@ export function describeOperatorPassVisionary(params: {
 	activation: OperatorPassVisionaryActivationRow | null;
 	removal: OperatorPassRemovalRow | null;
 	labsMember: boolean;
-	now: Date;
 	certificateUrl: string | null;
 }): OperatorPassVisionaryResponse | undefined {
-	const {user, visionarySince, activation, removal, labsMember, now, certificateUrl} = params;
+	const {user, visionarySince, activation, removal, labsMember, certificateUrl} = params;
 	if (activation?.activated_at && (activation.completed_at || activation.ended_at)) {
 		return {
 			state: activation.ended_at ? 'ended' : 'on',
@@ -123,12 +115,7 @@ export function describeOperatorPassVisionary(params: {
 	if (!isOperatorPassVisionary(user) || !since) {
 		return undefined;
 	}
-	let reason: OperatorPassVisionaryResponse['reason'] = null;
-	if (isOperatorPassPermanentlyRemoved(removal)) {
-		reason = 'removed';
-	} else if (!isOperatorPassVisionaryOpen(now)) {
-		reason = 'not_open';
-	}
+	const reason: OperatorPassVisionaryResponse['reason'] = isOperatorPassPermanentlyRemoved(removal) ? 'removed' : null;
 	return {
 		state: reason ? 'unavailable' : 'available',
 		reason,
@@ -196,8 +183,7 @@ export class OperatorPassVisionaryService {
 			!user?.premiumSince ||
 			!isOperatorPassVisionary(user) ||
 			isOperatorPassVisionaryAccountInactive(user) ||
-			isOperatorPassVisionaryPendingDeletion(user) ||
-			!isOperatorPassVisionaryOpen(now)
+			isOperatorPassVisionaryPendingDeletion(user)
 		) {
 			throw new OperatorPassVisionaryUnavailableError();
 		}
@@ -490,7 +476,7 @@ export class OperatorPassVisionaryService {
 	}
 }
 
-export function emptyOperatorPassVisionaryActivation(userId: UserID): OperatorPassVisionaryActivationRow {
+function emptyOperatorPassVisionaryActivation(userId: UserID): OperatorPassVisionaryActivationRow {
 	return {
 		user_id: userId,
 		visionary_since: null,

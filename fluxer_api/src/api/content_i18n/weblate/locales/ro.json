@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "general",
 	"guild.default_channel_voice": "General",
 	"operator_pass.labs_greeting": "{size, select, single {Bun venit în #operators, {last}!} other {Bun venit în #operators, {others} și {last}!}} Acesta este canalul pentru toți cei care au un Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Visionary-ul tău vine cu un Operator Pass. Îl poți activa oricând din setări, la „Operator Pass”, și nu plătești nimic în plus pentru el.",
 	"profile_badge.bug_hunter": "Vânător de buguri {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} few {# Operator Pass-uri} other {# de Operator Pass-uri}}",

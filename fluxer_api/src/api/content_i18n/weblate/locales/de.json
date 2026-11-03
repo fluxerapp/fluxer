@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "allgemein",
 	"guild.default_channel_voice": "Allgemein",
 	"operator_pass.labs_greeting": "{size, select, single {Willkommen in #operators, {last}!} other {Willkommen in #operators, {others} und {last}!}} Das ist der Kanal für alle mit einem Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Zu deinem Visionary gehört ein Operator Pass. Du kannst ihn jederzeit in den Einstellungen unter „Operator Pass“ aktivieren und zahlst nichts extra dafür.",
 	"profile_badge.bug_hunter": "{product_name}-Fehlerjäger",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pässe}}",

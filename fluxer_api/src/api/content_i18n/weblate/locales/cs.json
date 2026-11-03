@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "obecný",
 	"guild.default_channel_voice": "Obecný",
 	"operator_pass.labs_greeting": "{size, select, single {Vítejte v #operators, {last}!} other {Vítejte v #operators, {others} a {last}!}} Tohle je kanál pro všechny, kdo mají Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "K vašemu Visionary patří Operator Pass. Zapnout ho můžete kdykoli v nastavení v části „Operator Pass“ a nic dalšího za něj neplatíte.",
 	"profile_badge.bug_hunter": "Lovec chyb {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} few {# Operator Passy} many {# Operator Passu} other {# Operator Passů}}",

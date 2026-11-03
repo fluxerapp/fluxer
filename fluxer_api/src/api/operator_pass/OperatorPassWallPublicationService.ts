@@ -66,16 +66,11 @@ export class OperatorPassWallPublicationService {
 	private async buildPublicEntry(
 		entry: OperatorPassWallEntryRow,
 		now: Date = operatorPassNow(),
-		{includePreview = false}: {includePreview?: boolean} = {},
 	): Promise<OperatorPassWallBlobEntry | null> {
-		return (await this.buildRankedEntry(entry, now, {includePreview}))?.entry ?? null;
+		return (await this.buildRankedEntry(entry, now))?.entry ?? null;
 	}
 
-	private async buildRankedEntry(
-		entry: OperatorPassWallEntryRow,
-		now: Date,
-		{includePreview = false}: {includePreview?: boolean} = {},
-	): Promise<RankedWallEntry | null> {
+	private async buildRankedEntry(entry: OperatorPassWallEntryRow, now: Date): Promise<RankedWallEntry | null> {
 		if (!isOperatorPassWallListed(entry) || entry.hidden) {
 			return null;
 		}
@@ -87,7 +82,7 @@ export class OperatorPassWallPublicationService {
 			return null;
 		}
 		const holder = resolveOperatorPassHolder(state, now);
-		if (!holder || (!includePreview && (await this.holdsOnlyPreviewPassesBeforeSale(entry.user_id, now)))) {
+		if (!holder) {
 			return null;
 		}
 		return {
@@ -101,24 +96,6 @@ export class OperatorPassWallPublicationService {
 			},
 			since: holder.since.getTime(),
 		};
-	}
-
-	private async holdsOnlyPreviewPassesBeforeSale(userId: UserID, now: Date): Promise<boolean> {
-		const {saleOpensAt} = Config.operatorPass;
-		if (!saleOpensAt || now.getTime() >= saleOpensAt.getTime()) {
-			return false;
-		}
-		const held = (await this.repository.listUnitsByHolder(userId)).filter((unit) => unit.status === 'held');
-		if (held.length === 0) {
-			return false;
-		}
-		for (const unit of held) {
-			const purchase = unit.purchase_id ? await this.repository.findPurchase(unit.purchase_id) : null;
-			if (purchase?.preview_label == null) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	async snapshot(): Promise<OperatorPassWallSnapshot> {
@@ -307,10 +284,7 @@ export class OperatorPassWallPublicationService {
 	async isAvatarServed(sha256: string): Promise<boolean> {
 		for (const userId of await this.repository.listWallAvatarRefs(sha256)) {
 			const entry = await this.repository.findWallEntry(userId);
-			if (
-				entry?.live_avatar === sha256 &&
-				(await this.buildPublicEntry(entry, operatorPassNow(), {includePreview: true})) !== null
-			) {
+			if (entry?.live_avatar === sha256 && (await this.buildPublicEntry(entry, operatorPassNow())) !== null) {
 				return true;
 			}
 		}
@@ -340,7 +314,7 @@ export class OperatorPassWallPublicationService {
 	}
 
 	async publishAvatarIfServed(entry: OperatorPassWallEntryRow): Promise<void> {
-		if (entry.live_avatar && (await this.buildPublicEntry(entry, operatorPassNow(), {includePreview: true})) !== null) {
+		if (entry.live_avatar && (await this.buildPublicEntry(entry, operatorPassNow())) !== null) {
 			await getOperatorPassWallInfrastructure().avatarStore.publish(entry.live_avatar);
 		}
 	}

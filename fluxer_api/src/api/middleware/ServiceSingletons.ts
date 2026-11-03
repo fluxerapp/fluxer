@@ -70,7 +70,6 @@ import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepo
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {OperatorPassEntitlementService} from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
-import {OperatorPassWaitlistService} from '@app/api/operator_pass/OperatorPassWaitlistService';
 import {OperatorPassWallAvatarStore} from '@app/api/operator_pass/OperatorPassWallAvatarStore';
 import {
 	type IOperatorPassWallPublisher,
@@ -392,24 +391,8 @@ export const getUserPermissionUtils = singleton(
 export const getContactChangeLogService = singleton(
 	() => new UserContactChangeLogService(getUserContactChangeLogRepository()),
 );
-export const getOperatorPassWaitlistService = singleton(
-	() =>
-		new OperatorPassWaitlistService(
-			getOperatorPassRepository(),
-			getEmailService(),
-			getEmailDnsValidationService(),
-			getAdminRepository(),
-			getKVClient(),
-			getRateLimitService(),
-		),
-);
 export const getSweegoWebhookService = singleton(
-	() =>
-		new SweegoWebhookService(
-			getUserRepository(),
-			getGatewayService(),
-			Config.instance.selfHosted ? null : getOperatorPassWaitlistService(),
-		),
+	() => new SweegoWebhookService(getUserRepository(), getGatewayService()),
 );
 export const getStreamPreviewService = singleton(
 	() => new StreamPreviewService(getStorageService(), getCacheService()),

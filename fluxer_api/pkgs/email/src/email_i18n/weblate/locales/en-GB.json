@@ -288,7 +288,7 @@
 		"cta": "View the offer",
 		"footer_reason": "You received this email because someone offered you an Operator Pass on {product_name}.",
 		"intro": "{senderName} wants to pass you one of their Operator Passes.",
-		"lead": "Accept or decline it in {product_name}. If you accept, it arrives on {arrivesAt, date, long}.",
+		"lead_v2": "Accept or decline it in {product_name}. If you accept, it moves to you right away.",
 		"signoff": "The {product_name} team",
 		"subject": "{senderName} wants to pass you an Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "The {product_name} team",
 		"subject": "An Operator Pass on your {product_name} account has ended"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "The Operator badge, a spot on the Operators' wall, #operators and early testing come with it too.",
-		"cta": "Get the Operator Pass",
-		"footer_reason": "You received this email because you joined the Operator Pass waitlist. This is the last email we send about the pass.",
-		"intro": "You asked us to tell you when the Operator Pass goes on sale. It's on sale now.",
-		"paid_for": "The pass comes with a numbered Operator certificate with your name and the date and time of payment, delivered as a PDF you keep.",
-		"price_label": "Early bird price",
-		"price_value": "{priceFormatted}, paid once, until {priceEndsOn, date, long}",
-		"signoff": "The {product_name} team",
-		"subject": "The {product_name} Operator Pass is on sale",
-		"terms_link": "Operator Pass terms",
-		"unsubscribe": "Unsubscribe"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "When you turn it on, you get a numbered Operator certificate with the name you choose. It shows {visionaryDate, date, long}, the date you got Visionary, and so does the Operator badge if you choose to show it.",
-		"choices_line": "The Operator badge stays hidden until you choose to show it, and you're on the Operators' wall only if you choose to be.",
-		"cta": "Turn on your Operator Pass",
-		"footer_reason": "You received this email because you have Visionary on {product_name}.",
-		"intro": "Your Visionary comes with an Operator Pass, and you can turn it on in your settings whenever you like. You pay nothing more for it, and nothing about your Visionary changes.",
-		"labs_line": "{member, select, yes {You already have #operators in Fluxer Labs through your Visionary. Once you turn on your Operator Pass, you also get the Operator role there.} other {When you turn on your Operator Pass, we add this account to Fluxer Labs with the Operator role, unless you left or were removed from Fluxer Labs before. Your Visionary also gives you #operators there.}}",
-		"signoff": "The {product_name} team",
-		"subject": "Your Operator Pass from Visionary is ready to turn on",
-		"terms_line": "The Operator Pass terms say how the pass works, and section 13 is about Visionary.",
-		"terms_link": "Operator Pass terms"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Your Operator badge is on your profile. You can hide it in your <settings>settings</settings>.} other {Your Operator badge is hidden. You can show it in your <settings>settings</settings>.}}",
 		"cta": "Open Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "The Operator Pass terms you accepted (version {termsVersion}) are attached as a PDF.",
 		"terms_link": "Operator Pass terms",
 		"wall_line": "{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}. You can change it or leave the wall in your <settings>settings</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Join the waitlist",
-		"expiry": "This link expires in 48 hours.",
-		"footer_reason": "You received this email because this address was entered on the Operator Pass waitlist on the {product_name} website.",
-		"intro": "Confirm this email address to join the Operator Pass waitlist. We'll email you once, when the pass goes on sale.",
-		"note": "If you didn't ask for this, ignore this email and we won't contact you again.",
-		"signoff": "The {product_name} team",
-		"subject": "Confirm your {product_name} Operator Pass waitlist signup"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Reply to this email within 60 days and tell us why you disagree. It's free, and a person on our team reads and decides your appeal.} other {Contact the admins of this instance within 60 days and tell them why you disagree.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "You received this email because of a decision about your listing on the {product_name} Operators' wall.",
 		"ground": "Section 3.1 of the Operator Pass terms",
 		"ground_label": "Ground",
-		"intro": "{target, select, avatar {We declined your avatar for the Operators' wall.} both {We declined your name and avatar for the Operators' wall.} other {We declined your name for the Operators' wall.}} {shown, select, previous {The wall keeps your last approved version.} other {Until you send a new one, the wall shows the word Operator and the default avatar.}} Your spot on the wall, its size and your badge stay as they are, and your purchase isn't affected.",
+		"intro": "{target, select, avatar {We took your avatar off the Operators' wall.} both {We took your name and avatar off the Operators' wall.} other {We took your name off the Operators' wall.}} {shown, select, previous {The wall shows your earlier name and avatar.} other {Until you send a new one, the wall shows the word Operator and the default avatar.}} Your spot on the wall, its size and your badge stay as they are, and your purchase isn't affected.",
 		"next": "You can send a new name or avatar in your <settings>settings</settings>.",
 		"reason_label": "Reason",
 		"reason_value": "{reason, select, impersonation {Pretends to be someone else} rights {Uses a name or image without the rights to it} age_suitability {Not suitable for younger users} other {Breaks the community guidelines}}",
 		"redress_v2": "You can also go to court. If you're in the EU, you can use a certified <dsa>out-of-court dispute settlement body</dsa>. If you're a consumer in the EU or the EEA, you can also take the dispute to the Swedish National Board for Consumer Disputes (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sweden.",
 		"signoff": "The {product_name} team",
-		"subject": "We declined your name or avatar for the {product_name} Operators' wall"
+		"subject": "We took your name or avatar off the {product_name} Operators' wall"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Your badge is on your profile. You can hide it in your <settings>settings</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} and the {product_name} team",
 		"subject": "Your {product_name} Operator certificate",
 		"terms_link": "Operator Pass terms",
-		"wall_line": "{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}, and your name and avatar show once we check them. You can change it or leave the wall in your <settings>settings</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}. You can change it or leave the wall in your <settings>settings</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "The credit note for this refund is attached to this email as a PDF.",

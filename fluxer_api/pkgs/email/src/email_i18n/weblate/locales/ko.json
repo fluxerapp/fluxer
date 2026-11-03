@@ -288,7 +288,7 @@
 		"cta": "제안 보기",
 		"footer_reason": "{product_name}에서 누군가 회원님에게 Operator Pass를 제안해서 이 이메일을 받으셨어요.",
 		"intro": "{senderName}님이 가진 Operator Pass 중 하나를 회원님에게 넘겨주려고 해요.",
-		"lead": "{product_name}에서 수락하거나 거절해 주세요. 수락하면 보낸 사람이 그 전에 제안을 철회하지 않는 한 {arrivesAt, date, long}에 도착해요.",
+		"lead_v2": "{product_name}에서 수락하거나 거절해 주세요. 수락하면 바로 옮겨져요.",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{senderName}님이 Operator Pass를 회원님에게 넘겨주려고 해요"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} 계정의 Operator Pass가 종료되었어요"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Operator 배지, Operators 벽의 자리, #operators, 새 기능 미리 체험도 함께 제공돼요.",
-		"cta": "Operator Pass 구매하기",
-		"footer_reason": "Operator Pass 대기자 명단에 등록하셔서 이 이메일을 받으셨어요. 패스에 관해 보내 드리는 마지막 이메일이에요.",
-		"intro": "Operator Pass 판매가 시작되면 알려 달라고 하셨죠. 지금 판매 중이에요.",
-		"paid_for": "패스에는 내 이름과 결제 날짜 및 시간이 적힌, 번호가 매겨진 Operator 인증서가 함께 제공되며, 인증서는 보관할 수 있는 PDF로 전달돼요.",
-		"price_label": "얼리버드 가격",
-		"price_value": "{priceFormatted}, 일회성 결제, {priceEndsOn, date, long}까지",
-		"signoff": "{product_name} 팀 드림",
-		"subject": "{product_name} Operator Pass 판매가 시작되었어요",
-		"terms_link": "Operator Pass 약관",
-		"unsubscribe": "수신 거부"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "켜면 직접 고른 이름이 적힌 번호가 매겨진 Operator 인증서를 받아요. 인증서에는 Visionary를 받은 날인 {visionaryDate, date, long}이 표시되고, Operator 배지를 표시하기로 하면 배지에도 같은 날짜가 표시돼요.",
-		"choices_line": "Operator 배지는 표시하기로 선택할 때까지 숨겨져 있고, Operators 벽에도 원할 때만 표시돼요.",
-		"cta": "Operator Pass 켜기",
-		"footer_reason": "{product_name}에서 Visionary를 이용하고 계셔서 이 이메일을 보내드려요.",
-		"intro": "Visionary에는 Operator Pass가 함께 제공되고, 설정에서 언제든지 켤 수 있어요. 추가 비용은 없고, Visionary는 그대로예요.",
-		"labs_line": "{member, select, yes {Fluxer Labs의 #operators는 Visionary를 통해 이미 이용할 수 있어요. Operator Pass를 켜면 그곳에서 Operator 역할도 받아요.} other {Operator Pass를 켜면 이 계정을 Operator 역할과 함께 Fluxer Labs에 추가해요. 단, 전에 Fluxer Labs에서 나갔거나 내보내진 적이 있다면 추가하지 않아요. Visionary를 통해 그곳의 #operators도 이용할 수 있어요.}}",
-		"signoff": "{product_name} 팀 드림",
-		"subject": "Visionary와 함께 제공되는 Operator Pass를 켤 수 있어요",
-		"terms_line": "Operator Pass 약관에서 패스가 어떻게 작동하는지 설명하고 있으며, 13조는 Visionary에 관한 내용이에요.",
-		"terms_link": "Operator Pass 약관"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operator 배지가 프로필에 표시돼요. <settings>설정</settings>에서 숨길 수 있어요.} other {Operator 배지가 숨겨져 있어요. <settings>설정</settings>에서 표시할 수 있어요.}}",
 		"cta": "Fluxer Labs 열기",
@@ -423,15 +398,6 @@
 		"terms_attached": "동의하신 Operator Pass 약관(버전 {termsVersion})을 PDF로 첨부했어요.",
 		"terms_link": "Operator Pass 약관",
 		"wall_line": "{wallOptOut, select, yes {Operators 벽에 표시되지 않도록 선택하셨어요. <settings>설정</settings>에서 이름을 추가할 수 있어요.} other {Operators 벽에 {wallName}(으)로 표시돼요. <settings>설정</settings>에서 이름을 바꾸거나 벽에서 나갈 수 있어요.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "대기자 명단 등록",
-		"expiry": "이 링크는 48시간 후에 만료돼요.",
-		"footer_reason": "{product_name} 웹사이트의 Operator Pass 대기자 명단에 이 주소가 입력되어 이 이메일을 받으셨어요.",
-		"intro": "Operator Pass 대기자 명단에 등록하려면 이 이메일 주소를 확인해 주세요. 패스 판매가 시작되면 한 번만 이메일을 보내 드려요.",
-		"note": "요청하지 않으셨다면 이 이메일을 무시해 주세요. 다시 연락드리지 않을게요.",
-		"signoff": "{product_name} 팀 드림",
-		"subject": "{product_name} Operator Pass 대기자 명단 등록을 확인해 주세요"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {60일 이내에 이 이메일에 회신해 동의하지 않는 이유를 알려 주세요. 이의 제기는 무료이며, 저희 팀의 담당자가 직접 읽고 결정해요.} other {60일 이내에 이 인스턴스의 관리자에게 문의해 동의하지 않는 이유를 알려 주세요.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "{product_name} Operators 벽 표시에 관한 결정 때문에 이 이메일을 받으셨어요.",
 		"ground": "Operator Pass 약관 제3.1조",
 		"ground_label": "근거",
-		"intro": "{target, select, avatar {Operators 벽에 쓸 회원님의 아바타를 거절했어요.} both {Operators 벽에 쓸 회원님의 이름과 아바타를 거절했어요.} other {Operators 벽에 쓸 회원님의 이름을 거절했어요.}} {shown, select, previous {벽에는 마지막으로 승인된 버전이 계속 표시돼요.} other {새로 보내 주실 때까지 벽에는 Operator라는 단어와 기본 아바타가 표시돼요.}} 벽의 자리와 그 크기, 배지는 그대로이며, 구매에도 영향이 없어요.",
+		"intro": "{target, select, avatar {Operators 벽에서 회원님의 아바타를 내렸어요.} both {Operators 벽에서 회원님의 이름과 아바타를 내렸어요.} other {Operators 벽에서 회원님의 이름을 내렸어요.}} {shown, select, previous {벽에는 이전 이름과 아바타가 표시돼요.} other {새로 보내 주실 때까지 벽에는 Operator라는 단어와 기본 아바타가 표시돼요.}} 벽의 자리와 그 크기, 배지는 그대로이며, 구매에도 영향이 없어요.",
 		"next": "<settings>설정</settings>에서 새 이름이나 아바타를 보낼 수 있어요.",
 		"reason_label": "사유",
 		"reason_value": "{reason, select, impersonation {다른 사람을 사칭함} rights {권리가 없는 이름이나 이미지를 사용함} age_suitability {어린 사용자에게 적합하지 않음} other {커뮤니티 가이드라인을 위반함}}",
 		"redress_v2": "법원에 소송을 제기할 수도 있어요. EU에 있다면 인증된 <dsa>법원 외 분쟁 해결 기관</dsa>을 이용할 수 있어요. EU 또는 EEA의 소비자라면 스웨덴 소비자분쟁위원회(<arn>ARN</arn>, Box 174, 101 23 Stockholm, 스웨덴)에 분쟁을 제기할 수도 있어요.",
 		"signoff": "{product_name} 팀 드림",
-		"subject": "{product_name} Operators 벽에 쓸 이름 또는 아바타를 거절했어요"
+		"subject": "{product_name} Operators 벽에서 이름 또는 아바타를 내렸어요"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "배지가 프로필에 표시되어 있어요. <settings>설정</settings>에서 숨길 수 있어요.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName}와 {product_name} 팀 드림",
 		"subject": "{product_name} Operator 인증서",
 		"terms_link": "Operator Pass 약관",
-		"wall_line": "{wallOptOut, select, yes {Operators 벽에 표시되지 않도록 선택하셨어요. <settings>설정</settings>에서 이름을 추가할 수 있어요.} other {Operators 벽에 {wallName}(으)로 표시되며, 이름과 아바타는 저희가 확인한 뒤 표시돼요. <settings>설정</settings>에서 이름을 바꾸거나 벽에서 나갈 수 있어요.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Operators 벽에 표시되지 않도록 선택하셨어요. <settings>설정</settings>에서 이름을 추가할 수 있어요.} other {Operators 벽에 {wallName}(으)로 표시돼요. <settings>설정</settings>에서 이름을 바꾸거나 벽에서 나갈 수 있어요.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "이번 환불의 크레딧 노트를 PDF로 이 이메일에 첨부했어요.",

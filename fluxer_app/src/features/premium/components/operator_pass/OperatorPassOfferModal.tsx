@@ -18,12 +18,9 @@ import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldin
 import {
 	focusFirstInvalidOperatorPassField,
 	focusOperatorPassField,
-	formatOperatorPassDateTime,
-	formatOperatorPassUnlockDay,
 	getOperatorPassErrorCode,
 	getOperatorPassOfferUserName,
 	getOperatorPassWallNameProblem,
-	hasOperatorPassTimePassed,
 	normalizeOperatorPassWallName,
 	type OperatorPassWallNameProblem,
 } from '@app/features/premium/utils/OperatorPassUtils';
@@ -54,15 +51,9 @@ const OFFER_TITLE_DESCRIPTOR = msg({
 	comment:
 		'Title of the dialog where you accept or decline an Operator Pass another person passed on to you. {senderName} is their display name. Operator Pass is a product name and stays untranslated.',
 });
-const OFFER_ARRIVES_DESCRIPTOR = msg({
-	message: 'If you accept, it arrives on {date}, unless the sender takes the offer back first.',
-	comment:
-		'Line in the dialog for an Operator Pass someone passed on to you, while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.',
-});
 const OFFER_ARRIVES_NOW_DESCRIPTOR = msg({
 	message: 'It arrives as soon as you accept.',
-	comment:
-		'Line in the dialog for an Operator Pass someone passed on to you, once the waiting period after payment has ended. It is the pass.',
+	comment: 'Line in the dialog for an Operator Pass someone passed on to you. It is the pass.',
 });
 const ACCEPT_DESCRIPTOR = msg({
 	message: 'Accept',
@@ -73,9 +64,9 @@ const DECLINE_DESCRIPTOR = msg({
 	comment: 'Button that declines an incoming Operator Pass offer.',
 });
 const ACCEPTED_DESCRIPTOR = msg({
-	message: 'Accepted. It arrives on {date}, unless the sender takes the offer back first.',
+	message: 'Accepted. The pass moves to you soon.',
 	comment:
-		'Toast after accepting an Operator Pass offer while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.',
+		'Toast after accepting an Operator Pass offer when the pass could not move to your account right away, for example while a check on its payment is still open.',
 });
 const ARRIVED_DESCRIPTOR = msg({
 	message: 'The pass is yours now.',
@@ -206,11 +197,7 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 					: {}),
 				...(asksLabsGreeting ? {labs_greeting: labsGreeting} : {}),
 			});
-			ToastCommands.success(
-				result.status === 'completed'
-					? i18n._(ARRIVED_DESCRIPTOR)
-					: i18n._(ACCEPTED_DESCRIPTOR, {date: formatOperatorPassUnlockDay(result.arrives_at)}),
-			);
+			ToastCommands.success(i18n._(result.status === 'completed' ? ARRIVED_DESCRIPTOR : ACCEPTED_DESCRIPTOR));
 			ModalCommands.popWithKey(`${OFFER_MODAL_KEY_PREFIX}${offerId}`);
 		} catch (error) {
 			handleError(error);
@@ -260,17 +247,8 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 					)}
 					{offer && (
 						<>
-							<Modal.Description
-								title={
-									hasOperatorPassTimePassed(offer.arrives_at) ? undefined : formatOperatorPassDateTime(offer.arrives_at)
-								}
-								data-flx="premium.operator-pass-offer-modal.body"
-							>
-								{`${isOperator ? '' : `${isolateChannelNames(i18n._(OPERATOR_PASS_OFFER_BONUS_DESCRIPTOR, {labsName: isolateBidi(PRODUCT_LABS_COMMUNITY_NAME)}))} `}${
-									hasOperatorPassTimePassed(offer.arrives_at)
-										? i18n._(OFFER_ARRIVES_NOW_DESCRIPTOR)
-										: i18n._(OFFER_ARRIVES_DESCRIPTOR, {date: formatOperatorPassUnlockDay(offer.arrives_at)})
-								}`}
+							<Modal.Description data-flx="premium.operator-pass-offer-modal.body">
+								{`${isOperator ? '' : `${isolateChannelNames(i18n._(OPERATOR_PASS_OFFER_BONUS_DESCRIPTOR, {labsName: isolateBidi(PRODUCT_LABS_COMMUNITY_NAME)}))} `}${i18n._(OFFER_ARRIVES_NOW_DESCRIPTOR)}`}
 							</Modal.Description>
 							{pending &&
 								(!asksWallChoice ? (

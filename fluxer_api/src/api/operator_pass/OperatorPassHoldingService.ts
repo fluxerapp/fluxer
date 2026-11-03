@@ -25,7 +25,6 @@ import {
 	loadOperatorPassEntitlementState,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {
-	getOperatorPassTransferLockEndsAt,
 	isOperatorPassOfferOpen,
 	OperatorPassHoldingQueryService,
 } from '@app/api/operator_pass/OperatorPassHoldingQueryService';
@@ -528,7 +527,7 @@ export class OperatorPassHoldingService {
 			status: 'pending',
 			created_at: now,
 			accepted_at: null,
-			completes_at: getOperatorPassTransferLockEndsAt(purchase, unit),
+			completes_at: null,
 			ended_at: null,
 			wall_name: null,
 			wall_opt_out: null,
@@ -550,11 +549,7 @@ export class OperatorPassHoldingService {
 			await this.deps.emailService.send(
 				'operator_pass_offer_received',
 				recipient.email,
-				{
-					senderName: sender.globalName ?? sender.username,
-					arrivesAt: offer.completes_at,
-					timeZone: recipient.timezone,
-				},
+				{senderName: sender.globalName ?? sender.username},
 				recipient.locale,
 			);
 		}
@@ -733,10 +728,6 @@ export class OperatorPassHoldingService {
 				return offer;
 			}
 			return this.endOffer(offer, 'cancelled', 'offer_cancelled', offer.recipient_id, 'cancelled');
-		}
-		const lockEndsAt = getOperatorPassTransferLockEndsAt(purchase, unit);
-		if (lockEndsAt.getTime() > now.getTime()) {
-			return offer;
 		}
 		if (!(await this.canReceivePass(offer.recipient_id))) {
 			return this.endOffer(offer, 'cancelled', 'offer_cancelled', offer.sender_id, 'unavailable');

@@ -29,7 +29,6 @@ export interface EmailMessage {
 	text: string;
 	html?: string;
 	headers?: Record<string, string>;
-	listUnsubscribe?: EmailListUnsubscribe;
 	attachments?: ReadonlyArray<EmailAttachment>;
 }
 
@@ -39,18 +38,8 @@ export interface EmailAttachment {
 	contentType: string;
 }
 
-export interface EmailListUnsubscribe {
-	url: string;
-	post: boolean;
-}
-
 export interface IEmailProvider {
 	sendEmail(message: EmailMessage): Promise<boolean>;
-	openBulk?(): IBulkEmailProvider;
-}
-
-export interface IBulkEmailProvider extends IEmailProvider {
-	close(): Promise<void>;
 }
 
 export interface UserBouncedEmailChecker {

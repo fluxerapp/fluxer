@@ -288,7 +288,7 @@
 		"cta": "Виж предложението",
 		"footer_reason": "Получи този имейл, защото някой ти предложи Operator Pass във {product_name}.",
 		"intro": "{senderName} иска да ти предаде един от своите пропуски Operator Pass.",
-		"lead": "Приеми го или го откажи във {product_name}. Ако го приемеш, ще го получиш на {arrivesAt, date, long}, освен ако подателят не оттегли предложението преди това.",
+		"lead_v2": "Приеми го или го откажи във {product_name}. Ако го приемеш, той веднага преминава при теб.",
 		"signoff": "Екипът на {product_name}",
 		"subject": "{senderName} иска да ти предаде Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Екипът на {product_name}",
 		"subject": "Operator Pass в акаунта ти във {product_name} беше прекратен"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "С него идват също значката Operator, място на стената Operators, #operators и ранното изпробване.",
-		"cta": "Вземи Operator Pass",
-		"footer_reason": "Получи този имейл, защото се записа в списъка с чакащи за Operator Pass. Това е последният имейл, който ти пращаме за пропуска.",
-		"intro": "Помоли ни да ти кажем, когато Operator Pass излезе в продажба. Вече се продава.",
-		"paid_for": "Пропускът идва с номериран сертификат Operator с твоето име и датата и часа на плащането, предоставен като PDF, който запазваш.",
-		"price_label": "Ранна цена",
-		"price_value": "{priceFormatted}, платена еднократно, до {priceEndsOn, date, long} включително",
-		"signoff": "Екипът на {product_name}",
-		"subject": "Operator Pass за {product_name} вече се продава",
-		"terms_link": "Условия за Operator Pass",
-		"unsubscribe": "Отписване"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Когато го включиш, получаваш номериран сертификат Operator с името, което избереш. На него е посочена датата {visionaryDate, date, long}, когато получи Visionary, и същата дата показва значката Operator, ако решиш да я показваш.",
-		"choices_line": "Значката Operator остава скрита, докато не решиш да я показваш, а на стената Operators се появяваш само ако го избереш.",
-		"cta": "Включи своя Operator Pass",
-		"footer_reason": "Получаваш този имейл, защото имаш Visionary в {product_name}.",
-		"intro": "Твоят Visionary идва с Operator Pass и можеш да го включиш в настройките си, когато пожелаеш. Не плащаш нищо повече за него и нищо в твоя Visionary не се променя.",
-		"labs_line": "{member, select, yes {#operators във Fluxer Labs вече имаш чрез своя Visionary. След като включиш своя Operator Pass, получаваш там и ролята Operator.} other {Когато включиш своя Operator Pass, добавяме този акаунт във Fluxer Labs с ролята Operator, освен ако този акаунт вече е напускал Fluxer Labs или е бил премахнат от него. Твоят Visionary ти дава и #operators там.}}",
-		"signoff": "Екипът на {product_name}",
-		"subject": "Твоят Operator Pass от Visionary е готов за включване",
-		"terms_line": "Условията за Operator Pass обясняват как работи пасът, а раздел 13 е за Visionary.",
-		"terms_link": "Условия за Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Значката ти Operator е в профила ти. Можеш да я скриеш в <settings>настройките</settings>.} other {Значката ти Operator е скрита. Можеш да я покажеш в <settings>настройките</settings>.}}",
 		"cta": "Отвори Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Условията за Operator Pass, които прие (версия {termsVersion}), са прикачени като PDF.",
 		"terms_link": "Условия за Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Избра името ти да не се показва на стената Operators. Можеш да добавиш името си в <settings>настройките</settings> си.} other {Името ти на стената Operators е {wallName}. Можеш да го промениш или да напуснеш стената в <settings>настройките</settings> си.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Запиши се в списъка",
-		"expiry": "Този линк изтича след 48 часа.",
-		"footer_reason": "Получи този имейл, защото този адрес беше въведен в списъка с чакащи за Operator Pass на уебсайта на {product_name}.",
-		"intro": "Потвърди този имейл адрес, за да се запишеш в списъка с чакащи за Operator Pass. Ще ти пишем веднъж, когато пропускът излезе в продажба.",
-		"note": "Ако не си поискал това, игнорирай този имейл и няма да се свързваме с теб отново.",
-		"signoff": "Екипът на {product_name}",
-		"subject": "Потвърди записването си в списъка с чакащи за Operator Pass във {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Отговори на този имейл в срок от 60 дни и ни кажи защо не си съгласен. Това е безплатно и човек от нашия екип прочита жалбата ти и решава по нея.} other {Свържи се с администраторите на тази инстанция в срок от 60 дни и им кажи защо не си съгласен.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Получи този имейл заради решение относно записа ти на стената Operators на {product_name}.",
 		"ground": "Раздел 3.1 от условията за Operator Pass",
 		"ground_label": "Основание",
-		"intro": "{target, select, avatar {Отхвърлихме аватара ти за стената Operators.} both {Отхвърлихме името и аватара ти за стената Operators.} other {Отхвърлихме името ти за стената Operators.}} {shown, select, previous {Стената запазва последната ти одобрена версия.} other {Докато не изпратиш ново, стената показва думата Operator и аватара по подразбиране.}} Мястото ти на стената, размерът му и значката ти остават същите, а покупката ти не се засяга.",
+		"intro": "{target, select, avatar {Премахнахме аватара ти от стената Operators.} both {Премахнахме името и аватара ти от стената Operators.} other {Премахнахме името ти от стената Operators.}} {shown, select, previous {Стената показва предишните ти име и аватар.} other {Докато не изпратиш ново, стената показва думата Operator и аватара по подразбиране.}} Мястото ти на стената, размерът му и значката ти остават същите, а покупката ти не се засяга.",
 		"next": "Можеш да изпратиш ново име или аватар в <settings>настройките</settings> си.",
 		"reason_label": "Причина",
 		"reason_value": "{reason, select, impersonation {Представя се за някой друг} rights {Използва име или изображение без права върху него} age_suitability {Не е подходящо за по-млади потребители} other {Нарушава насоките на общността}}",
 		"redress_v2": "Можеш също да се обърнеш към съда. Ако си в ЕС, можеш да се обърнеш към сертифициран <dsa>орган за извънсъдебно решаване на спорове</dsa>. Ако си потребител в ЕС или ЕИП, можеш също да отнесеш спора до Шведския национален съвет за потребителски спорове (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Швеция.",
 		"signoff": "Екипът на {product_name}",
-		"subject": "Отхвърлихме името или аватара ти за стената Operators на {product_name}"
+		"subject": "Премахнахме името или аватара ти от стената Operators на {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Значката ти вече е в профила ти. Можеш да я скриеш в <settings>настройките</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} и екипът на {product_name}",
 		"subject": "Твоят сертификат Operator за {product_name}",
 		"terms_link": "Условия за Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Избра името ти да не се показва на стената Operators. Можеш да добавиш името си в <settings>настройките</settings> си.} other {Името ти на стената Operators е {wallName}, а името и аватарът ти ще се покажат, след като ги проверим. Можеш да промениш името или да напуснеш стената в <settings>настройките</settings> си.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Избра името ти да не се показва на стената Operators. Можеш да добавиш името си в <settings>настройките</settings> си.} other {Името ти на стената Operators е {wallName}. Можеш да промениш името или да напуснеш стената в <settings>настройките</settings> си.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Кредитното известие за това възстановяване е приложено към този имейл като PDF.",

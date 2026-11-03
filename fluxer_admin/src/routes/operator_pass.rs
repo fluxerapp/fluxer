@@ -5,7 +5,7 @@ use crate::{
     api::{
         client::{AdminApiClient, ApiResultExt},
         generated::types::OperatorPassWallDeclineReasonSchema,
-        operator_pass::{PassWithdrawal, PerkRemoval, WallBulkAction, WallDecision},
+        operator_pass::{PassWithdrawal, PerkRemoval, WallDecision},
     },
     middleware::{
         auth::AuthContext,
@@ -15,13 +15,10 @@ use crate::{
     state::AppState,
     templates::{
         self,
-        pages::{
-            operator_pass_visionary::{DELIVERIES_CSV_PATH, VISIONARY_CSV_PATH, VISIONARY_PATH},
-            operator_pass_waitlist::{FOLLOWUP_CSV_PATH, followup_csv},
-            operator_pass_wall::{
-                BUSINESS_CHECKS, BUSINESS_LOGO_MAX_BYTES, BUSINESS_NAME_MAX_CHARS, REISSUE_REASONS,
-                RELEASES_PATH, TOOLS_PATH, WALL_PATH, WITHDRAWAL_CHANNELS,
-            },
+        pages::operator_pass_wall::{
+            BUSINESS_CHECKS, BUSINESS_LOGO_MAX_BYTES, BUSINESS_NAME_MAX_CHARS, DELIVERIES_CSV_PATH,
+            REISSUE_REASONS, RELEASES_PATH, TOOLS_PATH, VISIONARY_CSV_PATH, WALL_PATH,
+            WITHDRAWAL_CHANNELS,
         },
     },
     utils::snowflake::is_snowflake,
@@ -80,8 +77,6 @@ struct WallActionForm {
 }
 
 enum WallAction {
-    Approve,
-    Decline,
     Revert,
     ForceFallback,
     Hide,
@@ -100,8 +95,6 @@ impl TryFrom<&str> for WallAction {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "approve" => Ok(Self::Approve),
-            "decline" => Ok(Self::Decline),
             "revert" => Ok(Self::Revert),
             "force-fallback" => Ok(Self::ForceFallback),
             "hide" => Ok(Self::Hide),
@@ -115,19 +108,6 @@ impl TryFrom<&str> for WallAction {
             "reissue" => Ok(Self::Reissue),
             _ => Err(()),
         }
-    }
-}
-
-fn bulk_result_message(action: &WallBulkAction<'_>, done: usize, skipped: usize) -> String {
-    let verb = match action {
-        WallBulkAction::Approve => "Approved",
-        WallBulkAction::Decline { .. } => "Declined",
-    };
-    let noun = if done == 1 { "change" } else { "changes" };
-    match skipped {
-        0 => format!("{verb} {done} {noun}"),
-        1 => format!("{verb} {done} {noun}, 1 was no longer waiting"),
-        _ => format!("{verb} {done} {noun}, {skipped} were no longer waiting"),
     }
 }
 
@@ -185,15 +165,8 @@ struct EraseForm {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route(VISIONARY_PATH, get(operator_pass_visionary_page))
-        .route(
-            "/operator-pass-visionary/send",
-            post(operator_pass_visionary_send),
-        )
         .route(VISIONARY_CSV_PATH, get(operator_pass_visionary_csv))
         .route(DELIVERIES_CSV_PATH, get(operator_pass_deliveries_csv))
-        .route("/operator-pass-waitlist", get(operator_pass_waitlist_page))
-        .route(FOLLOWUP_CSV_PATH, get(operator_pass_waitlist_followup_csv))
         .route(WALL_PATH, get(operator_pass_wall_page))
         .route("/operator-pass-wall/users", get(operator_pass_wall_lookup))
         .route(
@@ -210,10 +183,9 @@ pub fn router() -> Router<AppState> {
                 .layer(DefaultBodyLimit::max(BUSINESS_LOGO_MAX_BYTES + 64 * 1024)),
         )
         .route(
-            "/operator-pass-wall/users/{user_id}/avatars/{sha256}",
+            "/operator-pass-wall/avatars/{sha256}",
             get(operator_pass_wall_avatar),
         )
-        .route("/operator-pass-wall/bulk", post(operator_pass_wall_bulk))
         .route(TOOLS_PATH, get(operator_pass_wall_tools_page))
         .route(
             "/operator-pass-wall/tools/{action}",
@@ -240,14 +212,6 @@ fn can_moderate(auth: &AuthContext) -> bool {
     auth.admin_user
         .as_ref()
         .is_some_and(|admin| acl::has_permission(&admin.acls, acl::USER_TEMP_BAN))
-}
-
-fn now_utc() -> DateTime<Utc> {
-    let seconds = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs() as i64)
-        .unwrap_or(0);
-    DateTime::<Utc>::from_timestamp(seconds, 0).unwrap_or_default()
 }
 
 fn iso(at: &DateTime<Utc>) -> String {
@@ -312,75 +276,6 @@ fn parse_time_travel(value: &str) -> Option<DateTime<Utc>> {
                 .ok()
                 .map(|at| at.and_utc())
         })
-}
-
-fn parse_selected(values: &[String]) -> Vec<(String, String)> {
-    values
-        .iter()
-        .filter_map(|value| value.split_once(':'))
-        .filter(|(user_id, revision_id)| is_snowflake(user_id) && is_snowflake(revision_id))
-        .map(|(user_id, revision_id)| (user_id.to_owned(), revision_id.to_owned()))
-        .collect()
-}
-
-#[derive(Deserialize)]
-struct VisionarySendForm {
-    #[serde(default)]
-    _csrf: Option<String>,
-    #[serde(default)]
-    expected_recipients: String,
-    #[serde(default)]
-    include_dm: Option<String>,
-}
-
-async fn operator_pass_visionary_page(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-    csrf: axum::Extension<CsrfToken>,
-    flash: Option<axum::Extension<FlashData>>,
-) -> Response {
-    let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let status = client
-        .get_operator_pass_visionary_notice_status()
-        .await
-        .log_error("load the Visionary Operator Pass email status");
-    let flash = flash.map(|flash| flash.0.to_flash_message());
-    let markup = templates::pages::operator_pass_visionary::operator_pass_visionary_page(
-        config,
-        &auth.0,
-        &csrf.0.0,
-        flash.as_ref(),
-        status.as_ref(),
-    );
-    Html(markup.into_string()).into_response()
-}
-
-async fn operator_pass_visionary_send(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-    Form(form): Form<VisionarySendForm>,
-) -> Response {
-    let config = state.config();
-    let back = format!("{}{VISIONARY_PATH}", config.base_path);
-    let Ok(expected) = form.expected_recipients.trim().parse::<u64>() else {
-        return flash::redirect_error(config, &back, "Type the number of accounts to email");
-    };
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let flash = match client
-        .send_operator_pass_visionary_notice(expected, form.include_dm.is_some())
-        .await
-    {
-        Ok(sent) => FlashData::success(format!(
-            "Queued the email to {} accounts as job {}",
-            sent.recipients, sent.job_id
-        )),
-        Err(error) => {
-            tracing::warn!(%error, "admin API request failed: send the Visionary Operator Pass email");
-            FlashData::error(error.refusal_message("The email was not sent"))
-        }
-    };
-    flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }
 
 async fn operator_pass_visionary_csv(
@@ -461,82 +356,18 @@ async fn operator_pass_deliveries_csv(
         .into_response()
 }
 
-async fn operator_pass_waitlist_page(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-) -> Response {
-    let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (stats, texts) = tokio::join!(
-        client.get_operator_pass_waitlist_stats(),
-        client.list_operator_pass_waitlist_followup_texts(),
-    );
-    let stats = stats.log_error("load Operator Pass waitlist stats");
-    let texts = texts.log_error("load Operator Pass waitlist follow-up answers");
-    let markup = templates::pages::operator_pass_waitlist::operator_pass_waitlist_page(
-        config,
-        &auth.0,
-        stats.as_ref(),
-        texts.as_ref().map(|texts| texts.entries.as_slice()),
-    );
-    Html(markup.into_string()).into_response()
-}
-
-async fn operator_pass_waitlist_followup_csv(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-) -> Response {
-    let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (stats, texts) = tokio::join!(
-        client.get_operator_pass_waitlist_stats(),
-        client.list_operator_pass_waitlist_followup_texts(),
-    );
-    let (Some(stats), Some(texts)) = (
-        stats.log_error("load Operator Pass waitlist stats"),
-        texts.log_error("load Operator Pass waitlist follow-up answers"),
-    ) else {
-        return (
-            StatusCode::BAD_GATEWAY,
-            "Could not load the waitlist follow-up answers.",
-        )
-            .into_response();
-    };
-    (
-        [
-            (header::CONTENT_TYPE, "text/csv; charset=utf-8"),
-            (
-                header::CONTENT_DISPOSITION,
-                "attachment; filename=\"operator-pass-waitlist-followup.csv\"",
-            ),
-            (header::CACHE_CONTROL, "private, no-store"),
-        ],
-        followup_csv(&stats, &texts.entries),
-    )
-        .into_response()
-}
-
 async fn operator_pass_wall_page(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
-    csrf: axum::Extension<CsrfToken>,
     flash: Option<axum::Extension<FlashData>>,
 ) -> Response {
     let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let queue = client
-        .list_operator_pass_wall_review_queue()
-        .await
-        .log_error("load Operators' wall review queue");
     let flash = flash.map(|flash| flash.0.to_flash_message());
     let markup = templates::pages::operator_pass_wall::operator_pass_wall_page(
         config,
         &auth.0,
-        &csrf.0.0,
         flash.as_ref(),
-        queue.as_ref().map(|queue| queue.entries.as_slice()),
-        can_moderate(&auth.0),
-        now_utc(),
+        can_look_up(&auth.0),
     );
     Html(markup.into_string()).into_response()
 }
@@ -654,19 +485,6 @@ async fn operator_pass_wall_action(
     });
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = match WallAction::try_from(action.as_str()) {
-        Ok(WallAction::Approve) if is_snowflake(revision_id) => client
-            .approve_operator_pass_wall_revision(&user_id, revision_id)
-            .await
-            .map(|_| "Approved, the change is on the wall".to_owned()),
-        Ok(WallAction::Decline)
-            if is_snowflake(revision_id)
-                && let Some(decision) = &decision =>
-        {
-            client
-                .decline_operator_pass_wall_revision(&user_id, revision_id, decision)
-                .await
-                .map(|_| "Declined and sent the statement of reasons".to_owned())
-        }
         Ok(WallAction::Revert) if is_snowflake(revision_id) => client
             .revert_operator_pass_wall_revision(&user_id, revision_id)
             .await
@@ -721,9 +539,7 @@ async fn operator_pass_wall_action(
             .reissue_operator_pass_certificate(pass_id, holder_name, &form.reissue_reason)
             .await
             .map(|()| "Issued a new copy of the certificate page".to_owned()),
-        Ok(WallAction::Approve)
-        | Ok(WallAction::Decline)
-        | Ok(WallAction::Revert)
+        Ok(WallAction::Revert)
         | Ok(WallAction::ForceFallback)
         | Ok(WallAction::Hide)
         | Ok(WallAction::RemovalNotice)
@@ -838,20 +654,17 @@ async fn operator_pass_wall_business(
 async fn operator_pass_wall_avatar(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
-    Path((user_id, sha256)): Path<(String, String)>,
+    Path(sha256): Path<String>,
 ) -> Response {
     if !can_look_up(&auth.0) {
         return (StatusCode::FORBIDDEN, "Forbidden").into_response();
     }
-    if !is_snowflake(&user_id) || !is_sha256(&sha256) {
+    if !is_sha256(&sha256) {
         return (StatusCode::NOT_FOUND, "Not found").into_response();
     }
     let config = state.config();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    match client
-        .get_operator_pass_wall_avatar(&user_id, &sha256)
-        .await
-    {
+    match client.get_operator_pass_wall_avatar(&sha256).await {
         Ok((content_type, body)) => (
             [
                 (header::CONTENT_TYPE, content_type),
@@ -861,77 +674,10 @@ async fn operator_pass_wall_avatar(
         )
             .into_response(),
         Err(error) => {
-            tracing::warn!(%error, user_id, "admin API request failed: Operators' wall avatar");
+            tracing::warn!(%error, "admin API request failed: Operators' wall avatar");
             (StatusCode::NOT_FOUND, "Not found").into_response()
         }
     }
-}
-
-async fn operator_pass_wall_bulk(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-    request: Request,
-) -> Response {
-    let config = state.config();
-    let back = format!("{}{WALL_PATH}", config.base_path);
-    let bytes = match axum::body::to_bytes(request.into_body(), 1024 * 1024).await {
-        Ok(bytes) => bytes,
-        Err(error) => {
-            tracing::warn!(%error, "failed to read Operators' wall bulk form");
-            return flash::redirect_error(config, &back, "Invalid form data");
-        }
-    };
-    let mut action = String::new();
-    let mut reason = String::new();
-    let mut note = String::new();
-    let mut selected = Vec::new();
-    for (key, value) in url::form_urlencoded::parse(&bytes) {
-        match key.as_ref() {
-            "action" => action = value.into_owned(),
-            "reason" => reason = value.into_owned(),
-            "note" => note = value.trim().to_owned(),
-            "selected" => selected.push(value.into_owned()),
-            _ => {}
-        }
-    }
-    let revisions = parse_selected(&selected);
-    if revisions.is_empty() {
-        return flash::redirect_error(config, &back, "Select at least one change");
-    }
-    let bulk_action = match WallAction::try_from(action.as_str()) {
-        Ok(WallAction::Approve) => WallBulkAction::Approve,
-        Ok(WallAction::Decline)
-            if let Ok(reason) = reason.parse::<OperatorPassWallDeclineReasonSchema>()
-                && !note.is_empty() =>
-        {
-            WallBulkAction::Decline {
-                reason,
-                note: &note,
-            }
-        }
-        Ok(WallAction::Decline) => {
-            return flash::redirect_error(config, &back, "Declining needs a reason and the facts");
-        }
-        _ => {
-            return flash::redirect_error(config, &back, "Unknown action");
-        }
-    };
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let result = client
-        .bulk_operator_pass_wall_revisions(&bulk_action, &revisions)
-        .await;
-    let flash = match result {
-        Ok(result) => FlashData::success(bulk_result_message(
-            &bulk_action,
-            result.done.len(),
-            result.skipped.len(),
-        )),
-        Err(error) => {
-            tracing::warn!(%error, "admin API request failed: Operators' wall bulk");
-            FlashData::error(error.refusal_message("The bulk action failed"))
-        }
-    };
-    flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }
 
 async fn operator_pass_wall_tools_page(
