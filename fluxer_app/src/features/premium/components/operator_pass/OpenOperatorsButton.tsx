@@ -6,6 +6,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {openOperatorsChannel} from '@app/features/premium/commands/OperatorPassLabsCommands';
 import {OPEN_OPERATORS_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {Button, type ButtonVariant} from '@app/features/ui/button/Button';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -37,6 +38,7 @@ export function OpenOperatorsButton({variant, onOpened, 'data-flx': flx}: OpenOp
 				return;
 			}
 			onOpened?.();
+			ModalCommands.popByModalType('user-settings');
 		} catch (error) {
 			logger.error('Failed to open #operators', error);
 			ToastCommands.error(i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
