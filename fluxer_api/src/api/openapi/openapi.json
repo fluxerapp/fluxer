@@ -39115,6 +39115,10 @@
 					"api": {"type": "string", "description": "Base URL for authenticated API requests"},
 					"api_client": {"type": "string", "description": "Base URL for client API requests"},
 					"api_public": {"type": "string", "description": "Base URL for public API requests"},
+					"api_transport": {
+						"description": "Base URL that official desktop clients send API requests to instead of api_client",
+						"type": "string"
+					},
 					"gateway": {"type": "string", "description": "WebSocket URL for the gateway"},
 					"media": {"type": "string", "description": "Base URL for the media proxy"},
 					"upload_relay": {"description": "Base URL for proxied attachment and preview uploads", "type": "string"},

@@ -175,6 +175,10 @@ export const InstanceEndpointsSchema = z
 		api: z.string().describe('Base URL for authenticated API requests'),
 		api_client: z.string().describe('Base URL for client API requests'),
 		api_public: z.string().describe('Base URL for public API requests'),
+		api_transport: z
+			.string()
+			.optional()
+			.describe('Base URL that official desktop clients send API requests to instead of api_client'),
 		gateway: z.string().describe('WebSocket URL for the gateway'),
 		media: z.string().describe('Base URL for the media proxy'),
 		upload_relay: z.string().optional().describe('Base URL for proxied attachment and preview uploads'),

@@ -114,6 +114,7 @@ function defaultConfig(): MasterConfig {
 				unfurl_ignored_hosts: [],
 				app_origin_aliases: [],
 				discovery_public_endpoint: '',
+				discovery_transport_endpoint: '',
 				storage_change_feed: {
 					enabled: false,
 					stream: 'STORAGE_CHANGES',

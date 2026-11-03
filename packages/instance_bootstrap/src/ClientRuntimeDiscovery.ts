@@ -5,6 +5,7 @@ import {
 	type InstanceGeneration,
 	InvalidInstanceDiscoveryDocumentError,
 } from '@fluxer/instance_bootstrap/src/Discovery';
+import {officialClientApiTransportEndpoint} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
 	InstanceAgePolicy,
 	InstanceAppPublic,
@@ -35,6 +36,7 @@ export interface ClientRuntimeDiscoveryEndpoints {
 	readonly discoveryApiEndpoint: string;
 	readonly apiEndpoint: string;
 	readonly apiPublicEndpoint: string;
+	readonly apiTransportEndpoint: string | null;
 	readonly gatewayEndpoint: string;
 	readonly mediaEndpoint: string;
 	readonly uploadRelayEndpoint: string | null;
@@ -101,6 +103,10 @@ function projectEndpoints(document: InstanceDiscoveryDocument): ClientRuntimeDis
 		discoveryApiEndpoint: endpoints.api,
 		apiEndpoint: requireValue(endpoints.api_client, 'endpoints.api_client'),
 		apiPublicEndpoint: requireValue(endpoints.api_public, 'endpoints.api_public'),
+		apiTransportEndpoint: vettedApiTransportEndpoint(
+			requireValue(endpoints.api_client, 'endpoints.api_client'),
+			endpoints.api_transport,
+		),
 		gatewayEndpoint: endpoints.gateway,
 		mediaEndpoint: requireValue(endpoints.media, 'endpoints.media'),
 		uploadRelayEndpoint: endpoints.upload_relay,
@@ -112,6 +118,12 @@ function projectEndpoints(document: InstanceDiscoveryDocument): ClientRuntimeDis
 		giftEndpoint: requireValue(endpoints.gift, 'endpoints.gift'),
 		webAppEndpoint: requireValue(endpoints.webapp, 'endpoints.webapp'),
 	};
+}
+
+function vettedApiTransportEndpoint(apiEndpoint: string, advertised: string | null): string | null {
+	if (advertised == null) return null;
+	const allowed = officialClientApiTransportEndpoint(apiEndpoint);
+	return allowed !== null && allowed === advertised ? allowed : null;
 }
 
 function projectFeatures(features: Readonly<Partial<InstanceFeatures>>): InstanceFeatures {

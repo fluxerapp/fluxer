@@ -113,6 +113,7 @@ interface InstanceDiscoveryEndpoints {
 	readonly gateway: string;
 	readonly api_client: string | null;
 	readonly api_public: string | null;
+	readonly api_transport: string | null;
 	readonly media: string | null;
 	readonly upload_relay: string | null;
 	readonly static_cdn: string | null;
@@ -543,6 +544,7 @@ function parseEndpoints(value: unknown): InstanceDiscoveryEndpoints {
 		gateway,
 		api_client: normalizeInstanceEndpoint(source.api_client, InstanceEndpointKind.SERVICE),
 		api_public: normalizeInstanceEndpoint(source.api_public, InstanceEndpointKind.SERVICE),
+		api_transport: normalizeInstanceEndpoint(source.api_transport, InstanceEndpointKind.SERVICE),
 		media: normalizeInstanceEndpoint(source.media, InstanceEndpointKind.SERVICE),
 		upload_relay: normalizeInstanceEndpoint(source.upload_relay, InstanceEndpointKind.SERVICE),
 		static_cdn: normalizeInstanceEndpoint(source.static_cdn, InstanceEndpointKind.SERVICE),

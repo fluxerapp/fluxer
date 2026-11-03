@@ -123,6 +123,7 @@ export interface MasterConfig {
 			unfurl_ignored_hosts: Array<string>;
 			app_origin_aliases: Array<string>;
 			discovery_public_endpoint: string;
+			discovery_transport_endpoint: string;
 			worker?: {
 				mode?: 'all_lanes' | 'single_lane' | 'single_task';
 				lane?: 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
