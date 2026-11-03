@@ -76,7 +76,7 @@ The shared secret for Erlang distribution in the gateway. Anyone who can connect
 
 ### `FLUXER_MEDIA_PROXY_SECRET_KEY`
 
-The key that signs media proxy URLs. The api, worker, media-proxy, gifs and unfurl services must have the same value. Keep it secret.
+The key that signs the `/external/` URLs for third-party media, such as link preview images and GIF results. The API also uses it to call the media proxy's internal endpoints. It doesn't sign uploaded attachments, which use `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. The api, worker, media-proxy, gifs and unfurl services must have the same value, so change it on all of them and restart them together. Changing it doesn't affect anything stored, but proxy URLs that were already handed out stop working, such as link preview images in clients that are already open, until they reload. Keep it secret.
 
 ### `FLUXER_ADMIN_SECRET_KEY_BASE`
 
