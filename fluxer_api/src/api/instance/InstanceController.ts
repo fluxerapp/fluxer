@@ -110,6 +110,7 @@ function buildDiscoveryStaticInput(
 			api: apiClientEndpoint,
 			api_client: apiClientEndpoint,
 			api_public: apiPublicEndpoint,
+			...(Config.endpoints.apiTransportDiscovery ? {api_transport: Config.endpoints.apiTransportDiscovery} : {}),
 			gateway: Config.endpoints.gateway,
 			media: Config.endpoints.media,
 			upload_relay: Config.mediaProxy.uploadRelay.endpoint,

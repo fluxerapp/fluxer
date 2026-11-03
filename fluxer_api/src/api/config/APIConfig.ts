@@ -158,6 +158,7 @@ export interface APIConfig {
 	endpoints: {
 		apiPublic: string;
 		apiPublicDiscovery: string;
+		apiTransportDiscovery: string | null;
 		apiClient: string;
 		webApp: string;
 		webAppOrigins: Array<string>;

@@ -105,6 +105,7 @@ Each value is an absolute URL. Use it exactly as published, including its scheme
 | api | string | Base URL of the client API, the same as `api_client` |
 | api_client | string | Base URL of the client API, used by the Fluxer apps |
 | api_public | string | Base URL of the public API, used by bots and other clients |
+| api_transport? | string | Base URL the official desktop app sends API requests to instead of `api_client`. Only Fluxer.app lists it, and the app ignores any address other than the matching fluxer.com one |
 | gateway | string | The [Gateway](/gateway/overview/) WebSocket URL, with a `ws` or `wss` scheme |
 | media | string | [Media Proxy](/media-proxy/overview/) base URL |
 | upload_relay? | string | Attachment [upload relay](/media-proxy/upload-relay/) base URL |
