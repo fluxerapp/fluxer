@@ -1170,7 +1170,7 @@ How often the API reloads its IP ban list, in milliseconds. When it's empty, the
 
 ### `FLUXER_API_DONATION_PROXY_KEY`
 
-An older way to add one trusted caller that may pass the client address for the donation and Operator Pass rate limits. Fluxer's marketing site uses it. It must be at least 32 characters. Your own instance can leave it empty. Keep it secret. With rexctl, use `rexctl config set FLUXER_API_DONATION_PROXY_KEY`.
+An older way to add one trusted caller that may pass the client address for the donation and purchase rate limits. Fluxer's marketing site uses it. It must be at least 32 characters. Your own instance can leave it empty. Keep it secret. With rexctl, use `rexctl config set FLUXER_API_DONATION_PROXY_KEY`.
 
 ### `FLUXER_API_TRUSTED_CALLERS`
 
@@ -2389,126 +2389,6 @@ The path to the Google Play service account JSON file.
 
 The OAuth token URL for Google Play.
 
-#### `FLUXER_LABS_GUILD_ID`
-
-The community Operator Pass holders join.
-
-#### `FLUXER_LABS_OPERATOR_ROLE_ID`
-
-The role Operator Pass holders get in that community.
-
-#### `FLUXER_LABS_VISIONARY_ROLE_ID`
-
-The role Visionary holders get in that community.
-
-#### `FLUXER_LABS_OPERATORS_CHANNEL_ID`
-
-The channel in that community where Fluxer greets new Operator Pass holders.
-
-#### `FLUXER_OPERATOR_PASS_GRACE_MINUTES`
-
-The grace period of the Operator Pass sale, in minutes.
-
-#### `FLUXER_OPERATOR_PASS_MAX_QUANTITY`
-
-The largest Operator Pass quantity in one purchase.
-
-#### `FLUXER_OPERATOR_PASS_PREVIEW_IPS`
-
-IP addresses and CIDR ranges, separated by commas, that see the Operator Pass sale open before it opens and buy at no cost, in addition to the list in the admin panel.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_BRL_ENABLED`
-
-Whether the Operator Pass is sold in BRL.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_DKK_ENABLED`
-
-Whether the Operator Pass is sold in DKK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_INR_ENABLED`
-
-Whether the Operator Pass is sold in INR.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_NOK_ENABLED`
-
-Whether the Operator Pass is sold in NOK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_PLN_ENABLED`
-
-Whether the Operator Pass is sold in PLN.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_RISES_AT`
-
-When the Operator Pass price rises.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_SEK_ENABLED`
-
-Whether the Operator Pass is sold in SEK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_TRY_ENABLED`
-
-Whether the Operator Pass is sold in TRY.
-
-#### `FLUXER_OPERATOR_PASS_RELEASE_LISTS`
-
-The release lists of the Operator Pass sale.
-
-#### `FLUXER_OPERATOR_PASS_SALE_OPENS_AT`
-
-When the Operator Pass sale opens.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_BRL`
-
-The standard Operator Pass price in BRL.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_DKK`
-
-The standard Operator Pass price in DKK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_EUR`
-
-The standard Operator Pass price in EUR.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_INR`
-
-The standard Operator Pass price in INR.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_NOK`
-
-The standard Operator Pass price in NOK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_PLN`
-
-The standard Operator Pass price in PLN.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_SEK`
-
-The standard Operator Pass price in SEK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_TRY`
-
-The standard Operator Pass price in TRY.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_USD`
-
-The standard Operator Pass price in USD.
-
-#### `FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS`
-
-How long an Operator Pass transfer stays locked, in hours. The default is 0, and with 0 a pass moves as soon as the recipient accepts it.
-
-#### `FLUXER_OPERATOR_PASS_WALL_AUTO_APPROVE`
-
-Whether a new name or avatar for the Operators' wall goes live as soon as an Operator changes it. The default is true.
-
-#### `FLUXER_OPERATOR_PASS_WALL_TIERS`
-
-The wall tiers of the Operator Pass sale.
-
-#### `FLUXER_OPERATOR_PASS_WITHDRAWAL_COUNTRIES`
-
-The Operator Pass withdrawal rules for each country.
-
 #### `FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT`
 
 When account closures for payment disputes take effect.
@@ -2840,10 +2720,6 @@ Only tests and development use these.
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
 Whether rate limits are off.
-
-#### `FLUXER_OPERATOR_PASS_NOW`
-
-A clock override for the Operator Pass sale.
 
 #### `FLUXER_OPERATOR_SOCKET`
 
