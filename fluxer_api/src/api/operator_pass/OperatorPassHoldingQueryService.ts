@@ -55,6 +55,9 @@ export function getOperatorPassTransferLockEndsAt(
 	unit: OperatorPassUnitRow,
 ): Date {
 	const paidAt = purchase?.purchased_at ?? unit.first_delivered_at;
+	if (Config.operatorPass.transferLockMs === 0) {
+		return paidAt;
+	}
 	const ruleMs = (unit.withdrawal_days ?? 0) * MS_PER_DAY;
 	const lockMs = paidAt.getTime() + Math.max(Config.operatorPass.transferLockMs, ruleMs);
 	const deadline = unit.withdrawal_days != null && purchase ? getOperatorPassWithdrawalDeadline(purchase) : null;
@@ -85,7 +88,10 @@ function mapOperatorPassOffer(
 		recipient: mapOperatorPassOfferUser(users.get(offer.recipient_id)),
 		created_at: offer.created_at.toISOString(),
 		accepted_at: offer.accepted_at?.toISOString() ?? null,
-		arrives_at: (offer.completes_at ?? offer.created_at).toISOString(),
+		arrives_at: (Config.operatorPass.transferLockMs === 0
+			? offer.created_at
+			: (offer.completes_at ?? offer.created_at)
+		).toISOString(),
 		ended_at: offer.ended_at?.toISOString() ?? null,
 	};
 }

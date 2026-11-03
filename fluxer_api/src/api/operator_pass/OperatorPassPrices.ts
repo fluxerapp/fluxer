@@ -24,7 +24,7 @@ export type OperatorPassWithdrawalCountryTable = Readonly<Record<string, Operato
 
 export const OPERATOR_PASS_WITHDRAWAL_RULE_VERSION = 'withdrawal-countries-2026-10-27';
 
-const OPERATOR_PASS_DEFAULT_TRANSFER_LOCK_HOURS = 72;
+const OPERATOR_PASS_DEFAULT_TRANSFER_LOCK_HOURS = 0;
 
 const DEFAULT_WITHDRAWAL_COUNTRIES: OperatorPassWithdrawalCountryTable = {BR: {days: 7, enabled: true}};
 

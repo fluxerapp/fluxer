@@ -353,6 +353,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	},
 	FLUXER_OPERATOR_PASS_RELEASE_LISTS: {path: ['operator_pass', 'release_lists']},
 	FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS: {path: ['operator_pass', 'transfer_lock_hours'], parse: parseInteger},
+	FLUXER_OPERATOR_PASS_WALL_AUTO_APPROVE: {path: ['operator_pass', 'wall_auto_approve'], parse: parseBoolean},
 	FLUXER_OPERATOR_PASS_WITHDRAWAL_COUNTRIES: {path: ['operator_pass', 'withdrawal_countries']},
 	FLUXER_OPERATOR_PASS_WALL_TIERS: {path: ['operator_pass', 'wall_tiers']},
 	FLUXER_OPERATOR_PASS_MAX_QUANTITY: {path: ['operator_pass', 'max_quantity'], parse: parseInteger},

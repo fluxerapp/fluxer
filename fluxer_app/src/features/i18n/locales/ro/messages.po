@@ -42042,11 +42042,6 @@ msgstr "Nu putem tipări acest nume pe un certificat. Alege altul."
 msgid "We can't show this name on the Operators' wall. Please choose another one."
 msgstr "Nu putem afișa acest nume pe peretele Operators. Alege altul."
 
-#. Hint under the Operators' wall name field. Go live means showing on the Operators' wall, the list of Operators on the homepage.
-#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "We check new names before they go live."
-msgstr "Verificăm numele noi înainte să apară."
-
 #. Plutonium page hero subtitle while a failed renewal is in its grace period.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "We could not renew your subscription. Update your payment method to keep your perks."
