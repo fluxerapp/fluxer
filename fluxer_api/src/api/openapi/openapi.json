@@ -1098,6 +1098,18 @@
 					}
 				},
 				"description": "Retrieve WebAuthn challenge and options for multi-factor authentication. Requires the MFA ticket from initial login.",
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaTicketRequest"}}}
@@ -2471,7 +2483,19 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys."
+				"description": "Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys.",
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				]
 			}
 		},
 		"/channels/messages/bulk": {
@@ -21941,6 +21965,18 @@
 				},
 				"description": "Generate challenge and options to register a new WebAuthn credential. Requires sudo mode verification.",
 				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				],
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
@@ -24588,7 +24624,19 @@
 					}
 				},
 				"description": "Generate WebAuthn challenge for sudo mode verification using a registered security key or biometric device.",
-				"security": [{"sessionToken": []}]
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				]
 			}
 		},
 		"/users/@me/terms-acceptance": {
