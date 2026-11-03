@@ -146,6 +146,15 @@ export async function hasStoredAccount(): Promise<boolean> {
 	return accounts.some((account) => Boolean(account.token));
 }
 
+export async function hasUsableStoredAccount(): Promise<boolean> {
+	if (readActiveSessionToken() !== null) {
+		return true;
+	}
+	const {default: accountStorage} = await import('@app/features/auth/state/AccountStorage');
+	const {records: accounts} = await accountStorage.getAllAccounts();
+	return accounts.some((account) => Boolean(account.token) && account.isValid !== false);
+}
+
 function openInBrowser(url: string): void {
 	window.open(url, '_blank', 'noopener');
 }
