@@ -2,6 +2,7 @@
 
 import {
 	hasStoredAccount,
+	hasUsableStoredAccount,
 	loadDomainMigrationDiscovery,
 	readActiveSessionToken,
 	readDomainMigrationDiscovery,
@@ -500,6 +501,9 @@ async function forwardFromSource(side: DomainMigrationSide): Promise<boolean> {
 	}
 	if (shouldForwardCompletedSource(discovery, readDomainMigrationMarker(getProtectedLocalStorage()), environment)) {
 		return forwardCompletedSource(side);
+	}
+	if (oneShotRoute) {
+		return (await hasUsableStoredAccount()) ? false : navigate(buildTargetUrl(side.target, pathname, search, hash));
 	}
 	if (
 		discovery !== null &&
