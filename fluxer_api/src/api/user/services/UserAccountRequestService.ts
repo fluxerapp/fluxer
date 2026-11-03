@@ -291,9 +291,10 @@ export class UserAccountRequestService {
 		if (
 			this.labsRoleService &&
 			(user.hiddenProfileBadges.has('visionary') !== updatedUser.hiddenProfileBadges.has('visionary') ||
+				user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||
 				userUpdateData.premium_badge_masked !== undefined)
 		) {
-			await this.labsRoleService.syncVisionaryRole(updatedUser);
+			await this.labsRoleService.resyncLabsRoles(updatedUser);
 		}
 		if (
 			(user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||

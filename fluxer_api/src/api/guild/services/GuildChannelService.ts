@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, type GuildID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createChannelID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
@@ -149,16 +149,6 @@ export class GuildChannelService {
 			clientFeatures: params.clientFeatures,
 			viewer: params.viewer,
 		});
-	}
-
-	async systemSetMemberAccess(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		mirrorRoleId: RoleID | null;
-		requestCache: RequestCache;
-	}): Promise<boolean> {
-		return this.channelOps.systemSetMemberAccess(params);
 	}
 
 	async sanitizeTextChannelNames(params: {guildId: GuildID; requestCache: RequestCache}): Promise<void> {

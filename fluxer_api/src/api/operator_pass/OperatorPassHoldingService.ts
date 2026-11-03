@@ -970,7 +970,7 @@ export class OperatorPassHoldingService {
 		const user = await this.deps.userRepository.findUnique(userId);
 		const entitled =
 			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.deps.repository, userId));
-		await this.deps.roleService.syncOperatorRole(userId, entitled);
+		await this.deps.roleService.syncLabsRoles(userId, user, entitled);
 		await this.dispatchPassesUpdate([userId]);
 		await dispatchOperatorPassUserUpdate(
 			{
