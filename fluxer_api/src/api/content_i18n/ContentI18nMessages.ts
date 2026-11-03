@@ -182,7 +182,7 @@ export const CONTENT_I18N_MESSAGES = {
 	'operator_pass.labs_greeting':
 		'{size, select, single {Welcome to #operators, {last}!} other {Welcome to #operators, {others} and {last}!}} This is the channel for everyone with an Operator Pass.',
 	'operator_pass.visionary_notice_dm_v2':
-		'Your Visionary comes with an Operator Pass. You can turn it on in Settings, under "Profile", whenever you like, and you pay nothing more for it.',
+		'Your Visionary comes with an Operator Pass. You can turn it on in Settings, under "Operator Pass", whenever you like, and you pay nothing more for it.',
 	'profile_badge.bug_hunter': '{product_name} Bug Hunter',
 	'profile_badge.operator_pass': 'Operator',
 	'profile_badge.operator_pass_accessible_count':
