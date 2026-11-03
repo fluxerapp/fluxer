@@ -31,6 +31,7 @@ import type {
 	OperatorPassUnitEventRow,
 	OperatorPassUnitRow,
 	OperatorPassVisionaryActivationRow,
+	OperatorPassWaitlistByEntryIdRow,
 	OperatorPassWaitlistRow,
 	OperatorPassWallDecisionRow,
 	OperatorPassWallEntryRow,
@@ -91,7 +92,7 @@ export type OperatorPassCertificatePageSummary = Pick<
 
 export type OperatorPassCertificateLinkSummary = Pick<
 	OperatorPassCertificateRow,
-	'pass_id' | 'link_token' | 'cancelled_at'
+	'pass_id' | 'number' | 'link_token' | 'cancelled_at'
 >;
 
 export interface OperatorPassScanPage<Row> {
@@ -106,6 +107,10 @@ export interface OperatorPassWaitlistPage {
 
 const FETCH_WAITLIST_BY_EMAIL = OperatorPassWaitlist.selectCql({
 	where: OperatorPassWaitlist.where.eq('email'),
+	limit: 1,
+});
+const FETCH_WAITLIST_EMAIL_BY_ENTRY_ID = OperatorPassWaitlistByEntryId.selectCql({
+	where: OperatorPassWaitlistByEntryId.where.eq('entry_id'),
 	limit: 1,
 });
 const SCAN_WAITLIST = OperatorPassWaitlist.selectCql();
@@ -177,7 +182,7 @@ const FETCH_CERTIFICATE_IDS_BY_PURCHASE = OperatorPassCertificatesByPurchase.sel
 	where: OperatorPassCertificatesByPurchase.where.eq('purchase_id'),
 });
 const FETCH_LATEST_CERTIFICATE_LINK = OperatorPassCertificates.selectCql({
-	columns: ['pass_id', 'version', 'link_token', 'cancelled_at'],
+	columns: ['pass_id', 'version', 'number', 'link_token', 'cancelled_at'],
 	where: OperatorPassCertificates.where.eq('pass_id'),
 	orderBy: {col: 'version', direction: 'DESC'},
 	limit: 1,
@@ -229,6 +234,17 @@ function withPatch<Row extends {version: number}>(current: Row, patch: object, v
 export class OperatorPassRepository {
 	async findWaitlistEntryByEmail(email: string): Promise<OperatorPassWaitlistRow | null> {
 		return fetchOne<OperatorPassWaitlistRow>(FETCH_WAITLIST_BY_EMAIL, {email});
+	}
+
+	async findWaitlistEntryByEntryId(entryId: string): Promise<OperatorPassWaitlistRow | null> {
+		const mapping = await fetchOne<OperatorPassWaitlistByEntryIdRow>(FETCH_WAITLIST_EMAIL_BY_ENTRY_ID, {
+			entry_id: entryId,
+		});
+		if (!mapping) {
+			return null;
+		}
+		const entry = await this.findWaitlistEntryByEmail(mapping.email);
+		return entry?.entry_id === entryId ? entry : null;
 	}
 
 	async deleteWaitlistEntry(entry: OperatorPassWaitlistRow): Promise<boolean> {

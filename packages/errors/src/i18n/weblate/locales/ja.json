@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "このアカウントは、公開済みのそのOperators一覧に含まれていません。",
 	"operator_pass.unknown_wall_entry": "このアカウントの名前はOperatorsウォールにありません。",
 	"operator_pass.visionary_unavailable": "このアカウントでは、現在Visionaryに付属するOperator Passをオンにできません。",
+	"operator_pass.waitlist_token_invalid": "このウェイトリストのリンクは無効です。",
 	"operator_pass.wall_name_rejected": "この名前はOperatorsウォールに表示できません。別の名前を選んでください。",
 	"operator_pass.wall_name_required": "Operatorsウォールに載せる名前を入力するか、掲載しないことを選んでください。",
 	"operator_pass.withdrawal_unavailable": "この購入は、ここからは撤回できなくなりました。",

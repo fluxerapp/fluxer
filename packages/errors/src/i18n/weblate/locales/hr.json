@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Ovaj račun nije na tom objavljenom popisu Operators.",
 	"operator_pass.unknown_wall_entry": "Ovaj račun nema ime na zidu Operators.",
 	"operator_pass.visionary_unavailable": "Ovaj račun trenutačno ne može uključiti Operator Pass koji dolazi uz Visionary.",
+	"operator_pass.waitlist_token_invalid": "Ova poveznica za popis čekanja nije valjana.",
 	"operator_pass.wall_name_rejected": "Ovo ime ne možemo prikazati na zidu Operators. Odaberite neko drugo.",
 	"operator_pass.wall_name_required": "Unesite ime za zid Operators ili odaberite da vas se ne prikazuje.",
 	"operator_pass.withdrawal_unavailable": "Od ove kupnje više ne možete odustati ovdje.",

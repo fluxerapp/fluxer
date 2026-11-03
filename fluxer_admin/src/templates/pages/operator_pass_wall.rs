@@ -164,13 +164,9 @@ const TIER_SCALES: [f64; 4] = [1.0, 1.25, 1.5, 2.0];
 const BASE_AVATAR_PX: f64 = 48.0;
 
 fn proxied_avatar(base: &str, api_route: Option<&str>) -> Option<String> {
-    let route = api_route?;
-    let rest = route.strip_prefix("/admin/users/")?;
-    let (user_id, tail) = rest.split_once('/')?;
-    let sha = tail.strip_prefix("operator-pass/wall/avatars/")?;
-    let valid_user = !user_id.is_empty() && user_id.bytes().all(|byte| byte.is_ascii_digit());
+    let sha = api_route?.strip_prefix("/admin/operator-pass/wall/avatars/")?;
     let valid_sha = sha.len() == 64 && sha.bytes().all(|byte| byte.is_ascii_hexdigit());
-    (valid_user && valid_sha).then(|| format!("{base}{WALL_PATH}/users/{user_id}/avatars/{sha}"))
+    valid_sha.then(|| format!("{base}{WALL_PATH}/avatars/{sha}"))
 }
 
 fn state_label(

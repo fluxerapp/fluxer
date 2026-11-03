@@ -1360,6 +1360,11 @@ msgstr "{count, plural, one {# साल} other {# साल}}"
 msgid "{count, plural, one {+# more badge, show all} other {+# more badges, show all}}"
 msgstr "{count, plural, one {+# और बैज, सभी दिखाएँ} other {+# और बैज, सभी दिखाएँ}}"
 
+#. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
+#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
+msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
+msgstr "{count, plural, one {प्रमाणपत्र सं. {numbers}} other {प्रमाणपत्र सं. {numbers}}}"
+
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
 msgstr "{count, plural, one {संक्षिप्त करें (# लाइन)} other {संक्षिप्त करें (# लाइनें)}}"
@@ -13956,11 +13961,6 @@ msgstr "कोई भी डिलीट न करें"
 msgid "Don't have an account?"
 msgstr "अकाउंट नहीं है?"
 
-#. Checkbox next to the Operators' wall name field. When checked, the person is not shown on the Operators' wall and the name field is disabled.
-#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "Don't list me"
-msgstr "मुझे सूची में न दिखाएँ"
-
 #. Link under the Weblate line in the language settings. It opens a help article on fluxer.com about suggesting a new language and helping translate the app. Keep it a short question.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "Don't see your language?"
@@ -15321,10 +15321,10 @@ msgstr "बातचीत शुरू करने के लिए एक स
 msgid "Enter a name between 1 and 80 characters."
 msgstr "1 से 80 अक्षरों का नाम डालें।"
 
-#. Error under the Operators' wall name field when it is empty and the person did not choose to stay off the wall. Don't list me is the label of the checkbox under the field, use the same words as that label.
+#. Error under the Operators' wall name field when it is empty and the switch "Show me on the Operators' wall" is on. Use the same words as the label of that switch.
 #: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "Enter a name, or check Don't list me."
-msgstr "नाम दर्ज करें, या “मुझे सूची में न दिखाएँ” चुनें।"
+msgid "Enter a name, or turn off \"Show me on the Operators' wall\"."
+msgstr "नाम दर्ज करें, या “मुझे Operators वॉल पर दिखाएँ” बंद करें।"
 
 #. Error under the SMTP port field.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -20423,6 +20423,11 @@ msgstr "{communityName} से जुड़ें"
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "टीम के साथ चैट करने और अप-टू-डेट रहने के लिए {communityName} से जुड़ें।"
+
+#. Button in the Fluxer Labs section of the Operator Pass settings when the account is not a member of the community. It adds the account to the community and opens #operators. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Join {labsName}"
+msgstr "{labsName} से जुड़ें"
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
@@ -33329,6 +33334,11 @@ msgstr "अधिकतम 5 दिखाएं (+5 बैज)"
 msgid "Show me how"
 msgstr "तरीका दिखाएँ"
 
+#. Switch above the Operators' wall name field, on by default. When it is off, the person is not shown on the Operators' wall and the name field is hidden. The Operators' wall is the list of Operators on the homepage.
+#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
+msgid "Show me on the Operators' wall"
+msgstr "मुझे Operators वॉल पर दिखाएँ"
+
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
@@ -43924,6 +43934,11 @@ msgstr "आप वॉइस चैनल में हैं"
 #: src/features/guild/commands/GuildVisitCommands.ts
 msgid "You're no longer previewing {community}."
 msgstr "अब आप {community} का प्रीव्यू नहीं देख रहे हैं।"
+
+#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name and Operator is the role name, keep both as is. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "You're not in {labsName}. Joining gives you the Operator role, which opens #operators, where you can talk about self-hosting, bots and the API."
+msgstr "आप {labsName} में नहीं हैं। जुड़ने पर आपको Operator भूमिका मिलती है, जो #operators खोलती है, जहाँ आप self-hosting, bots और API के बारे में बात कर सकते हैं।"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx

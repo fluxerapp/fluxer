@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Tento účet v tomto zveřejněném seznamu Operators není.",
 	"operator_pass.unknown_wall_entry": "Tento účet nemá na zdi Operators žádné jméno.",
 	"operator_pass.visionary_unavailable": "Tento účet teď nemůže zapnout Operator Pass, který patří k Visionary.",
+	"operator_pass.waitlist_token_invalid": "Tento odkaz do pořadníku je neplatný.",
 	"operator_pass.wall_name_rejected": "Toto jméno nemůžeme zobrazit na zdi Operators. Zvolte prosím jiné.",
 	"operator_pass.wall_name_required": "Zadejte jméno pro zeď Operators, nebo zvolte, že na ní nechcete být uvedeni.",
 	"operator_pass.withdrawal_unavailable": "Od tohoto nákupu už zde nelze odstoupit.",

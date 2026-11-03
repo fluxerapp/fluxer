@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "이 계정은 해당 게시된 Operators 목록에 없어요.",
 	"operator_pass.unknown_wall_entry": "이 계정은 Operators 벽에 이름이 없어요.",
 	"operator_pass.visionary_unavailable": "이 계정은 지금 Visionary에 포함된 Operator Pass를 켤 수 없어요.",
+	"operator_pass.waitlist_token_invalid": "이 대기자 명단 링크가 올바르지 않아요.",
 	"operator_pass.wall_name_rejected": "이 이름은 Operators 벽에 표시할 수 없습니다. 다른 이름을 선택해 주세요.",
 	"operator_pass.wall_name_required": "Operators 벽에 표시할 이름을 입력하거나, 목록에 표시하지 않기를 선택해 주세요.",
 	"operator_pass.withdrawal_unavailable": "이 구매는 더 이상 여기서 철회할 수 없어요.",

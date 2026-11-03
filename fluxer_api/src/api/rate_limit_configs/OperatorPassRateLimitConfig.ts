@@ -34,6 +34,11 @@ export const OperatorPassRateLimitConfigs = {
 		bucket: 'operator_pass:wall',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	OPERATOR_PASS_WAITLIST_UNSUBSCRIBE: {
+		bucket: 'operator_pass:waitlist_unsubscribe',
+		config: {limit: 600, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
 	OPERATOR_PASS_PASSES: {
 		bucket: 'operator_pass:passes',
 		config: {limit: 30, windowMs: ms('1 minute')},

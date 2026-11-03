@@ -272,13 +272,10 @@ impl AdminApiClient {
 
     pub async fn get_operator_pass_wall_avatar(
         &self,
-        user_id: &str,
         sha256: &str,
     ) -> ApiResult<(String, Vec<u8>)> {
-        self.get_bytes(&format!(
-            "/admin/users/{user_id}/operator-pass/wall/avatars/{sha256}"
-        ))
-        .await
+        self.get_bytes(&format!("/admin/operator-pass/wall/avatars/{sha256}"))
+            .await
     }
 
     pub async fn get_operator_pass_wall_as_of(

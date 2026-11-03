@@ -296,6 +296,18 @@ export const OperatorPassCheckoutResponse = z.object({
 
 export type OperatorPassCheckoutResponse = z.infer<typeof OperatorPassCheckoutResponse>;
 
+export const OperatorPassWaitlistUnsubscribeQuery = z.object({
+	token: z.string().trim().min(1).max(256).optional().describe('Unsubscribe token from the email'),
+});
+
+export type OperatorPassWaitlistUnsubscribeQuery = z.infer<typeof OperatorPassWaitlistUnsubscribeQuery>;
+
+export const OperatorPassWaitlistUnsubscribeResponse = z.object({
+	status: z.literal('unsubscribed'),
+});
+
+export type OperatorPassWaitlistUnsubscribeResponse = z.infer<typeof OperatorPassWaitlistUnsubscribeResponse>;
+
 export const OperatorPassPriceChangedErrorData = z.object({
 	phase: OperatorPassPhaseSchema,
 	currency: OperatorPassCurrencySchema,
@@ -560,6 +572,11 @@ export const OperatorPassUnitResponse = z.object({
 	received_from: OperatorPassOfferUserResponse.nullable()
 		.optional()
 		.describe('Who passed this pass on to the account, null when the account bought it or that account is gone'),
+	certificate_number: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Number of the certificate page of this pass, null when the pass has no page'),
 });
 
 export type OperatorPassUnitResponse = z.infer<typeof OperatorPassUnitResponse>;

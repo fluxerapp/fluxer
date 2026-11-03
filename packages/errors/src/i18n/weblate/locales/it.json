@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Questo account non è presente in quell'elenco degli Operators pubblicato.",
 	"operator_pass.unknown_wall_entry": "Questo account non ha un nome nella bacheca degli Operators.",
 	"operator_pass.visionary_unavailable": "Questo account non può attivare ora l'Operator Pass incluso con Visionary.",
+	"operator_pass.waitlist_token_invalid": "Questo link della lista d'attesa non è valido.",
 	"operator_pass.wall_name_rejected": "Non possiamo mostrare questo nome nella bacheca degli Operators. Scegline un altro.",
 	"operator_pass.wall_name_required": "Inserisci un nome per la bacheca degli Operators o scegli di non comparire.",
 	"operator_pass.withdrawal_unavailable": "Non è più possibile recedere da questo acquisto da qui.",

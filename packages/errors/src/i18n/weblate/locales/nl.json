@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Dit account staat niet in die gepubliceerde Operators-lijst.",
 	"operator_pass.unknown_wall_entry": "Dit account heeft geen naam op de Operators-muur.",
 	"operator_pass.visionary_unavailable": "Dit account kan de Operator Pass die bij Visionary hoort nu niet aanzetten.",
+	"operator_pass.waitlist_token_invalid": "Deze wachtlijstlink is ongeldig.",
 	"operator_pass.wall_name_rejected": "Deze naam kunnen we niet op de Operators-muur tonen. Kies een andere naam.",
 	"operator_pass.wall_name_required": "Voer een naam in voor de Operators-muur, of kies ervoor om niet vermeld te worden.",
 	"operator_pass.withdrawal_unavailable": "Deze aankoop kan hier niet meer worden herroepen.",

@@ -7146,6 +7146,65 @@
 				]
 			}
 		},
+		"/admin/operator-pass/wall/avatars/{sha256}": {
+			"get": {
+				"operationId": "get_admin_operator_pass_wall_avatar",
+				"summary": "Get private Operators' wall avatar",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {"description": "Success"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the private copy of a wall avatar snapshot, including ones the public wall no longer serves. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "sha256",
+						"in": "path",
+						"required": true,
+						"schema": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the avatar snapshot"},
+						"description": "SHA-256 of the avatar snapshot"
+					}
+				]
+			}
+		},
 		"/admin/operator-pass/wall/freeze": {
 			"post": {
 				"operationId": "freeze_admin_operator_pass_wall",
@@ -10813,71 +10872,6 @@
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassNoticeRequest"}}}
 				}
-			}
-		},
-		"/admin/users/{user_id}/operator-pass/wall/avatars/{sha256}": {
-			"get": {
-				"operationId": "get_admin_operator_pass_wall_avatar",
-				"summary": "Get private Operators' wall avatar",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {"description": "Success"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Returns the private copy of a wall avatar snapshot of a holder, including earlier ones that are no longer public. Only available on hosted instances. Requires USER_LOOKUP permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeStringType"}
-					},
-					{
-						"name": "sha256",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the avatar snapshot"},
-						"description": "SHA-256 of the avatar snapshot"
-					}
-				]
 			}
 		},
 		"/admin/users/{user_id}/operator-pass/wall/business": {
@@ -14810,7 +14804,7 @@
 					"shown_name": {"nullable": true, "description": "The name the wall shows now", "type": "string"},
 					"shown_avatar_url": {
 						"nullable": true,
-						"description": "The avatar the wall shows now, null for the default avatar",
+						"description": "The avatar the wall shows now, null for the default avatar or when the wall shows none",
 						"type": "string",
 						"format": "uri"
 					},
@@ -26717,6 +26711,7 @@
 					"OPERATOR_PASS_RELEASE_NOT_READY",
 					"UNKNOWN_OPERATOR_PASS_RELEASE_ENTRY",
 					"OPERATOR_PASS_PRICE_CHANGED",
+					"OPERATOR_PASS_WAITLIST_TOKEN_INVALID",
 					"OPERATOR_PASS_REMOVAL_LIMITED_FIRST",
 					"OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED",
 					"OPERATOR_PASS_EMAIL_UNDELIVERABLE",
@@ -27090,6 +27085,7 @@
 					"This Operators list cannot be published before its cut-off date.",
 					"This account is not in that published Operators list.",
 					"The Operator Pass price has changed. Check the new price and try again.",
+					"This waitlist link is invalid.",
 					"A permanent removal for a breach that is not serious needs an earlier removal for a limited time.",
 					"A permanent removal needs a notice sent at least 7 days earlier, unless the breach is serious.",
 					"Emails to the address on this account cannot be delivered. Change your email in your settings before you buy the Operator Pass, because the purchase confirmation goes there.",

@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Ez a fiók nem szerepel abban a közzétett Operators-listában.",
 	"operator_pass.unknown_wall_entry": "Ennek a fióknak nincs neve az Operators-falon.",
 	"operator_pass.visionary_unavailable": "Ez a fiók most nem tudja bekapcsolni a Visionaryhez járó Operator Passt.",
+	"operator_pass.waitlist_token_invalid": "Ez a várólista-link érvénytelen.",
 	"operator_pass.wall_name_rejected": "Ezt a nevet nem tudjuk megjeleníteni az Operators-falon. Válassz másikat.",
 	"operator_pass.wall_name_required": "Adj meg egy nevet az Operators-falhoz, vagy válaszd, hogy ne szerepelj rajta.",
 	"operator_pass.withdrawal_unavailable": "Ettől a vásárlástól innen már nem lehet elállni.",

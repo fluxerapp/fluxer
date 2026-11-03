@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Esta conta não está nessa lista de Operators publicada.",
 	"operator_pass.unknown_wall_entry": "Esta conta não tem nome no mural de Operators.",
 	"operator_pass.visionary_unavailable": "Esta conta não pode ativar agora o Operator Pass que vem com o Visionary.",
+	"operator_pass.waitlist_token_invalid": "Este link da lista de espera é inválido.",
 	"operator_pass.wall_name_rejected": "Não podemos mostrar este nome no mural de Operators. Escolha outro.",
 	"operator_pass.wall_name_required": "Digite um nome para o mural de Operators ou escolha não aparecer nele.",
 	"operator_pass.withdrawal_unavailable": "Não é mais possível desistir desta compra por aqui.",

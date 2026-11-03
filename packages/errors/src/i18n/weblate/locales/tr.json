@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Bu hesap, yayımlanan o Operators listesinde yer almıyor.",
 	"operator_pass.unknown_wall_entry": "Bu hesabın Operators duvarında bir adı yok.",
 	"operator_pass.visionary_unavailable": "Bu hesap şu anda Visionary ile gelen Operator Pass'i açamaz.",
+	"operator_pass.waitlist_token_invalid": "Bu bekleme listesi bağlantısı geçersiz.",
 	"operator_pass.wall_name_rejected": "Bu adı Operators duvarında gösteremiyoruz. Lütfen başka bir ad seçin.",
 	"operator_pass.wall_name_required": "Operators duvarı için bir ad girin veya listelenmemeyi seçin.",
 	"operator_pass.withdrawal_unavailable": "Bu satın alımdan artık buradan cayılamaz.",

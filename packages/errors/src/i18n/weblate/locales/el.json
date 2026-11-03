@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Αυτός ο λογαριασμός δεν περιλαμβάνεται σε αυτή τη δημοσιευμένη λίστα Operators.",
 	"operator_pass.unknown_wall_entry": "Αυτός ο λογαριασμός δεν έχει όνομα στον τοίχο Operators.",
 	"operator_pass.visionary_unavailable": "Αυτός ο λογαριασμός δεν μπορεί να ενεργοποιήσει τώρα το Operator Pass που έρχεται με το Visionary.",
+	"operator_pass.waitlist_token_invalid": "Αυτός ο σύνδεσμος λίστας αναμονής δεν είναι έγκυρος.",
 	"operator_pass.wall_name_rejected": "Δεν μπορούμε να δείξουμε αυτό το όνομα στον τοίχο Operators. Επιλέξτε άλλο.",
 	"operator_pass.wall_name_required": "Εισαγάγετε ένα όνομα για τον τοίχο Operators ή επιλέξτε να μην εμφανίζεστε.",
 	"operator_pass.withdrawal_unavailable": "Η υπαναχώρηση από αυτήν την αγορά δεν είναι πλέον δυνατή από εδώ.",

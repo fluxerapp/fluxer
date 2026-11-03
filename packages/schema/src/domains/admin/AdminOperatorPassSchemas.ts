@@ -149,7 +149,10 @@ export const AdminOperatorPassWallEntryResponse = z.object({
 	release_list_opt_in: z.boolean().describe('Whether the holder chose to be in every yearly The Operators of list'),
 	display_state: OperatorPassWallDisplayStateSchema.nullable(),
 	shown_name: z.string().nullable().describe('The name the wall shows now'),
-	shown_avatar_url: z.url().nullable().describe('The avatar the wall shows now, null for the default avatar'),
+	shown_avatar_url: z
+		.url()
+		.nullable()
+		.describe('The avatar the wall shows now, null for the default avatar or when the wall shows none'),
 	live_revision_id: SnowflakeStringType.nullable().describe('The revision the wall shows'),
 	live_avatar_private_url: z.string().nullable().describe('Admin route to the private copy of the live avatar'),
 	business: z
@@ -228,7 +231,6 @@ export const AdminOperatorPassWallRevisionIdParam = z.object({
 });
 
 export const AdminOperatorPassWallAvatarParam = z.object({
-	user_id: SnowflakeStringType,
 	sha256: z
 		.string()
 		.regex(/^[0-9a-f]{64}$/u)

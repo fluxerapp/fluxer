@@ -111,7 +111,10 @@ export class OperatorPassHoldingQueryService {
 			purchases.set(purchaseId, await this.deps.findPurchase(purchaseId));
 		}
 		units.sort((left, right) => left.delivered_at.getTime() - right.delivered_at.getTime());
-		const passes: Array<OperatorPassUnitResponse> = units.map((unit) => {
+		const certificates = await Promise.all(
+			units.map((unit) => this.deps.repository.findLatestCertificateLink(unit.pass_id)),
+		);
+		const passes: Array<OperatorPassUnitResponse> = units.map((unit, index) => {
 			const purchase = unit.purchase_id ? (purchases.get(unit.purchase_id) ?? null) : null;
 			const canPassOn = unit.transferable && unit.source === 'purchase';
 			const withdrawable = purchase !== null && isOperatorPassSinglePassWithdrawable(purchase, unit, now);
@@ -142,6 +145,7 @@ export class OperatorPassHoldingQueryService {
 						: null,
 				offer: offer ? mapOperatorPassOffer(offer, users) : null,
 				received_from: received ? mapOperatorPassOfferUser(users.get(received.sender_id)) : null,
+				certificate_number: certificates[index]?.number ?? null,
 			};
 		});
 		const visionaryPage =

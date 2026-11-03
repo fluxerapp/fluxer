@@ -22,11 +22,12 @@ const logger = new Logger('OpenOperatorsButton');
 
 interface OpenOperatorsButtonProps {
 	variant: ButtonVariant;
+	label?: string;
 	onOpened?: () => void;
 	'data-flx': string;
 }
 
-export function OpenOperatorsButton({variant, onOpened, 'data-flx': flx}: OpenOperatorsButtonProps) {
+export function OpenOperatorsButton({variant, label, onOpened, 'data-flx': flx}: OpenOperatorsButtonProps) {
 	const {i18n} = useLingui();
 	const [opening, setOpening] = useState(false);
 	const open = async () => {
@@ -48,7 +49,7 @@ export function OpenOperatorsButton({variant, onOpened, 'data-flx': flx}: OpenOp
 	};
 	return (
 		<Button variant={variant} onClick={() => void open()} submitting={opening} data-flx={flx}>
-			{i18n._(OPEN_OPERATORS_DESCRIPTOR)}
+			{label ?? i18n._(OPEN_OPERATORS_DESCRIPTOR)}
 		</Button>
 	);
 }

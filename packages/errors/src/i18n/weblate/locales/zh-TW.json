@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "此帳號不在該已發布的 Operators 名單中。",
 	"operator_pass.unknown_wall_entry": "此帳號在 Operators 牆上沒有名字。",
 	"operator_pass.visionary_unavailable": "此帳號目前無法開啟 Visionary 附帶的 Operator Pass。",
+	"operator_pass.waitlist_token_invalid": "此候補名單連結無效。",
 	"operator_pass.wall_name_rejected": "我們無法在 Operators 牆上顯示這個名字。請換一個名字。",
 	"operator_pass.wall_name_required": "請為 Operators 牆輸入一個名字，或選擇不展示。",
 	"operator_pass.withdrawal_unavailable": "此購買已無法在此處撤回。",

@@ -783,7 +783,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 				revisions: timeline.revisions.map(({revision, status}) => ({
 					id: revision.revision_id.toString(),
 					name: revision.name,
-					avatar_url: wallAvatarRoute(userId, revision.avatar),
+					avatar_url: wallAvatarRoute(revision.avatar),
 					business: revision.business ?? false,
 					source: revision.source,
 					status,
@@ -796,7 +796,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/admin/users/:user_id/operator-pass/wall/avatars/:sha256',
+		'/admin/operator-pass/wall/avatars/:sha256',
 		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.USER_LOOKUP),
@@ -809,28 +809,20 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Returns the private copy of a wall avatar snapshot of a holder, including earlier ones that are no longer public. Only available on hosted instances. Requires USER_LOOKUP permission.',
+				'Returns the private copy of a wall avatar snapshot, including ones the public wall no longer serves. Only available on hosted instances. Requires USER_LOOKUP permission.',
 		}),
 		async (ctx) => {
-			const {user_id: rawUserId, sha256} = ctx.req.valid('param');
-			const userId = createUserID(BigInt(rawUserId));
-			const revisions = await getOperatorPassRepository().listWallRevisions(userId);
-			if (!revisions.some((revision) => revision.avatar === sha256)) {
-				throw new UnknownOperatorPassWallEntryError();
-			}
+			const {sha256} = ctx.req.valid('param');
 			const body = await getOperatorPassWallInfrastructure().avatarStore.readPrivate(sha256);
 			if (!body) {
 				throw new UnknownOperatorPassWallEntryError();
 			}
-			await indexWallAudit(
-				userId,
-				recordAdminRead(ctx, {
-					targetType: 'user',
-					targetId: userId,
-					action: AdminAuditReadActions.GET_OPERATOR_PASS_WALL_AVATAR,
-					metadata: {sha256},
-				}),
-			);
+			await recordAdminRead(ctx, {
+				targetType: 'operator_pass_wall',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_OPERATOR_PASS_WALL_AVATAR,
+				metadata: {sha256},
+			});
 			return new Response(body, {
 				status: 200,
 				headers: {'content-type': 'image/webp', 'cache-control': 'private, no-store'},
@@ -867,7 +859,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 				entries: entries.map((entry) => ({
 					user_id: entry.deleted ? null : entry.userId.toString(),
 					name: entry.name,
-					avatar_url: entry.deleted ? null : wallAvatarRoute(entry.userId, entry.avatar),
+					avatar_url: entry.deleted ? null : wallAvatarRoute(entry.avatar),
 					count: entry.count,
 					tier: entry.tier,
 					first_pass_at: entry.firstPassAt.toISOString(),

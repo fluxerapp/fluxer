@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "هذا الحساب غير موجود في قائمة Operators المنشورة تلك.",
 	"operator_pass.unknown_wall_entry": "ليس لهذا الحساب اسم على جدار Operators.",
 	"operator_pass.visionary_unavailable": "لا يمكن لهذا الحساب تفعيل Operator Pass المرفق مع Visionary الآن.",
+	"operator_pass.waitlist_token_invalid": "رابط قائمة الانتظار هذا غير صالح.",
 	"operator_pass.wall_name_rejected": "لا يمكننا عرض هذا الاسم على جدار Operators. يُرجى اختيار اسم آخر.",
 	"operator_pass.wall_name_required": "أدخل اسمًا لجدار Operators، أو اختر عدم الظهور عليه.",
 	"operator_pass.withdrawal_unavailable": "لم يعد بالإمكان الانسحاب من هذا الشراء من هنا.",

@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Acest cont nu se află în lista Operators publicată.",
 	"operator_pass.unknown_wall_entry": "Acest cont nu are niciun nume pe peretele Operators.",
 	"operator_pass.visionary_unavailable": "Acest cont nu poate activa acum Operator Pass inclus în Visionary.",
+	"operator_pass.waitlist_token_invalid": "Acest link pentru lista de așteptare nu este valid.",
 	"operator_pass.wall_name_rejected": "Nu putem afișa acest nume pe peretele Operators. Alege altul.",
 	"operator_pass.wall_name_required": "Introdu un nume pentru peretele Operators sau alege să nu fii afișat.",
 	"operator_pass.withdrawal_unavailable": "De aici nu te mai poți retrage din această achiziție.",

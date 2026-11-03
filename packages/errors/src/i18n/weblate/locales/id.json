@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Akun ini tidak ada dalam daftar Operators yang telah diterbitkan tersebut.",
 	"operator_pass.unknown_wall_entry": "Akun ini tidak memiliki nama di dinding Operators.",
 	"operator_pass.visionary_unavailable": "Akun ini tidak dapat mengaktifkan Operator Pass yang disertakan dengan Visionary saat ini.",
+	"operator_pass.waitlist_token_invalid": "Tautan daftar tunggu ini tidak valid.",
 	"operator_pass.wall_name_rejected": "Kami tidak dapat menampilkan nama ini di dinding Operators. Pilih nama lain.",
 	"operator_pass.wall_name_required": "Masukkan nama untuk dinding Operators, atau pilih untuk tidak dicantumkan.",
 	"operator_pass.withdrawal_unavailable": "Penarikan diri dari pembelian ini tidak bisa dilakukan lagi di sini.",

@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Det här kontot finns inte med i den publicerade Operators-listan.",
 	"operator_pass.unknown_wall_entry": "Det här kontot har inget namn på Operators-väggen.",
 	"operator_pass.visionary_unavailable": "Det här kontot kan inte slå på Operator Pass som ingår i Visionary just nu.",
+	"operator_pass.waitlist_token_invalid": "Den här länken till väntelistan är ogiltig.",
 	"operator_pass.wall_name_rejected": "Vi kan inte visa det här namnet på Operators-väggen. Välj ett annat namn.",
 	"operator_pass.wall_name_required": "Ange ett namn för Operators-väggen, eller välj att inte stå med.",
 	"operator_pass.withdrawal_unavailable": "Det här köpet kan inte längre ångras härifrån.",

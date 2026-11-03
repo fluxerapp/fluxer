@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Цього облікового запису немає в цьому опублікованому списку Operators.",
 	"operator_pass.unknown_wall_entry": "Цей обліковий запис не має імені на стіні Operators.",
 	"operator_pass.visionary_unavailable": "Цей обліковий запис зараз не може ввімкнути Operator Pass, який входить до Visionary.",
+	"operator_pass.waitlist_token_invalid": "Це посилання для списку очікування недійсне.",
 	"operator_pass.wall_name_rejected": "Ми не можемо показати це ім'я на стіні Operators. Виберіть інше.",
 	"operator_pass.wall_name_required": "Введіть ім'я для стіни Operators або виберіть не показуватися на ній.",
 	"operator_pass.withdrawal_unavailable": "Від цієї покупки вже не можна відмовитися тут.",

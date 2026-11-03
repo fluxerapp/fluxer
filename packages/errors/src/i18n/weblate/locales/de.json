@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Dieser Account ist nicht in dieser veröffentlichten Operators-Liste.",
 	"operator_pass.unknown_wall_entry": "Dieser Account hat keinen Namen auf der Operators-Wand.",
 	"operator_pass.visionary_unavailable": "Dieser Account kann den Operator Pass, der zu Visionary gehört, gerade nicht aktivieren.",
+	"operator_pass.waitlist_token_invalid": "Dieser Link zur Warteliste ist ungültig.",
 	"operator_pass.wall_name_rejected": "Diesen Namen können wir nicht auf der Operators-Wand zeigen. Bitte wähle einen anderen.",
 	"operator_pass.wall_name_required": "Gib einen Namen für die Operators-Wand ein oder entscheide dich, nicht aufgeführt zu werden.",
 	"operator_pass.withdrawal_unavailable": "Dieser Kauf kann hier nicht mehr widerrufen werden.",

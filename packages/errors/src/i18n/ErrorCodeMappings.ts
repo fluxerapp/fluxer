@@ -321,6 +321,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.OPERATOR_PASS_RELEASE_NOT_READY]: 'operator_pass.release_not_ready',
 	[APIErrorCodes.UNKNOWN_OPERATOR_PASS_RELEASE_ENTRY]: 'operator_pass.unknown_release_entry',
 	[APIErrorCodes.OPERATOR_PASS_PRICE_CHANGED]: 'operator_pass.price_changed',
+	[APIErrorCodes.OPERATOR_PASS_WAITLIST_TOKEN_INVALID]: 'operator_pass.waitlist_token_invalid',
 	[APIErrorCodes.OPERATOR_PASS_REMOVAL_LIMITED_FIRST]: 'operator_pass.removal_limited_first',
 	[APIErrorCodes.OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED]: 'operator_pass.removal_notice_required',
 	[APIErrorCodes.OPERATOR_PASS_EMAIL_UNDELIVERABLE]: 'operator_pass.email_undeliverable',

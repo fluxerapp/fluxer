@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {
 	OperatorPassOfferRow,
@@ -157,8 +156,8 @@ export function mapOffer(offer: OperatorPassOfferRow): AdminOperatorPassUserResp
 	};
 }
 
-export function wallAvatarRoute(userId: UserID | string, sha256: string | null | undefined): string | null {
-	return sha256 ? `/admin/users/${userId}/operator-pass/wall/avatars/${sha256}` : null;
+export function wallAvatarRoute(sha256: string | null | undefined): string | null {
+	return sha256 ? `/admin/operator-pass/wall/avatars/${sha256}` : null;
 }
 
 export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null): AdminOperatorPassWallEntryResponse {
@@ -175,11 +174,12 @@ export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null)
 		release_list_opt_in: entry.release_list_opt_in ?? false,
 		display_state: listed ? operatorPassWallDisplayState(entry, {removed: false}) : null,
 		shown_name: listed ? operatorPassWallShownName(entry) : null,
-		shown_avatar_url: entry.live_avatar
-			? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))
-			: null,
+		shown_avatar_url:
+			listed && !entry.hidden && entry.live_avatar
+				? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))
+				: null,
 		live_revision_id: entry.live_revision_id?.toString() ?? null,
-		live_avatar_private_url: wallAvatarRoute(entry.user_id, entry.live_avatar),
+		live_avatar_private_url: wallAvatarRoute(entry.live_avatar),
 		business: entry.live_business ?? false,
 		decline_reason: entry.decline_reason ?? null,
 		decline_note: entry.decline_note ?? null,

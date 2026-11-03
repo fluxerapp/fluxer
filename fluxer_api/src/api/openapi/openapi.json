@@ -14726,6 +14726,105 @@
 				}
 			}
 		},
+		"/operator-pass/waitlist/unsubscribe": {
+			"get": {
+				"operationId": "open_operator_pass_waitlist_unsubscribe",
+				"summary": "Open Operator Pass waitlist unsubscribe page",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"302": {"description": "Success"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Redirects a mail client that opens the unsubscribe link of the Operator Pass launch email to the unsubscribe page. Nothing changes until a mail client sends the one-click POST."
+			},
+			"post": {
+				"operationId": "unsubscribe_operator_pass_waitlist",
+				"summary": "Leave Operator Pass waitlist",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistUnsubscribeResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes the waitlist entry that the token from the Operator Pass launch email belongs to. Supports one-click unsubscribe from mail clients.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Unsubscribe token from the email",
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 256
+						},
+						"description": "Unsubscribe token from the email"
+					}
+				]
+			}
+		},
 		"/operator-pass/wall": {
 			"get": {
 				"operationId": "get_operator_pass_wall",
@@ -33015,6 +33114,12 @@
 				"required": ["version", "operators"],
 				"additionalProperties": false
 			},
+			"OperatorPassWaitlistUnsubscribeResponse": {
+				"type": "object",
+				"properties": {"status": {"type": "string", "const": "unsubscribed"}},
+				"required": ["status"],
+				"additionalProperties": false
+			},
 			"OperatorPassVisionaryTurnOnRequest": {
 				"type": "object",
 				"properties": {
@@ -43577,6 +43682,10 @@
 					"received_from": {
 						"description": "Who passed this pass on to the account, null when the account bought it or that account is gone",
 						"anyOf": [{"$ref": "#/components/schemas/OperatorPassOfferUserResponse"}, {"type": "null"}]
+					},
+					"certificate_number": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "Number of the certificate page of this pass, null when the pass has no page"
 					}
 				},
 				"required": [
@@ -43589,7 +43698,8 @@
 					"can_pass_on",
 					"can_withdraw",
 					"withdrawal_ends_at",
-					"offer"
+					"offer",
+					"certificate_number"
 				],
 				"additionalProperties": false
 			},
@@ -46278,6 +46388,7 @@
 					"OPERATOR_PASS_RELEASE_NOT_READY",
 					"UNKNOWN_OPERATOR_PASS_RELEASE_ENTRY",
 					"OPERATOR_PASS_PRICE_CHANGED",
+					"OPERATOR_PASS_WAITLIST_TOKEN_INVALID",
 					"OPERATOR_PASS_REMOVAL_LIMITED_FIRST",
 					"OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED",
 					"OPERATOR_PASS_EMAIL_UNDELIVERABLE",
@@ -46651,6 +46762,7 @@
 					"This Operators list cannot be published before its cut-off date.",
 					"This account is not in that published Operators list.",
 					"The Operator Pass price has changed. Check the new price and try again.",
+					"This waitlist link is invalid.",
 					"A permanent removal for a breach that is not serious needs an earlier removal for a limited time.",
 					"A permanent removal needs a notice sent at least 7 days earlier, unless the breach is serious.",
 					"Emails to the address on this account cannot be delivered. Change your email in your settings before you buy the Operator Pass, because the purchase confirmation goes there.",

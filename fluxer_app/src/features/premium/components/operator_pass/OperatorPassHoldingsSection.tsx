@@ -44,6 +44,7 @@ import {
 } from '@app/features/premium/utils/OperatorPassRecognitionMessages';
 import {
 	formatOperatorPassCalendarDay,
+	formatOperatorPassCertificateNumbers,
 	formatOperatorPassDate,
 	formatOperatorPassLongDate,
 	getOperatorPassOfferUserName,
@@ -118,6 +119,11 @@ const VISIONARY_ENDED_DESCRIPTOR = msg({
 	message: 'This pass ended because your Visionary ended.',
 	comment:
 		'Muted line in the Operator Pass settings when the Operator Pass that came with Visionary ended because the account no longer has Visionary.',
+});
+const CERTIFICATE_NUMBERS_DESCRIPTOR = msg({
+	message: '{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}',
+	comment:
+		'Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.',
 });
 const PAUSED_PASS_DESCRIPTOR = msg({
 	message: 'Paused during a payment dispute',
@@ -343,6 +349,17 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 			{i18n._(BOUGHT_DESCRIPTOR, {count, date: formatOperatorPassDate(iso)})}
 		</DateTooltip>
 	);
+	const certificateNumbers = (passes: ReadonlyArray<OperatorPassUnitResponse>): Array<string> => {
+		const numbers = passes.flatMap((pass) => (pass.certificate_number != null ? [pass.certificate_number] : []));
+		if (numbers.length === 0) return [];
+		numbers.sort((left, right) => left - right);
+		return [
+			i18n._(CERTIFICATE_NUMBERS_DESCRIPTOR, {
+				count: numbers.length,
+				numbers: formatOperatorPassCertificateNumbers(numbers),
+			}),
+		];
+	};
 	const view = (row: Exclude<OperatorPassPassRow, {kind: 'incoming'}>): RowView => {
 		switch (row.kind) {
 			case 'undelivered':
@@ -413,7 +430,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				} else {
 					title = bought(row.passes.length, boughtAt(first, row.date));
 				}
-				const meta: Array<ReactNode> = [];
+				const meta: Array<ReactNode> = certificateNumbers(row.passes);
 				const links: Array<ReactNode> = [];
 				const pageLinks: Array<ReactNode> = [];
 				if (row.paused) meta.push(i18n._(PAUSED_PASS_DESCRIPTOR));
@@ -532,7 +549,10 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				const name = getOperatorPassOfferUserName(row.offer.recipient);
 				return {
 					title: bought(1, boughtAt(row.pass, row.pass.delivered_at)),
-					meta: [i18n._(row.offer.status === 'accepted' ? ACCEPTED_BY_DESCRIPTOR : OFFERED_TO_DESCRIPTOR, {name})],
+					meta: [
+						...certificateNumbers([row.pass]),
+						i18n._(row.offer.status === 'accepted' ? ACCEPTED_BY_DESCRIPTOR : OFFERED_TO_DESCRIPTOR, {name}),
+					],
 					links: passedOnPageLinks(row.pass.id),
 					action: takeBackButton(row.offer),
 				};

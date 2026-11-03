@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "यह अकाउंट उस प्रकाशित Operators सूची में नहीं है।",
 	"operator_pass.unknown_wall_entry": "इस अकाउंट का Operators वॉल पर कोई नाम नहीं है।",
 	"operator_pass.visionary_unavailable": "यह अकाउंट अभी Visionary के साथ आने वाला Operator Pass चालू नहीं कर सकता।",
+	"operator_pass.waitlist_token_invalid": "यह वेटलिस्ट लिंक अमान्य है।",
 	"operator_pass.wall_name_rejected": "हम यह नाम Operators वॉल पर नहीं दिखा सकते। कृपया कोई दूसरा नाम चुनें।",
 	"operator_pass.wall_name_required": "Operators वॉल के लिए कोई नाम डालें, या सूची में न दिखने का विकल्प चुनें।",
 	"operator_pass.withdrawal_unavailable": "इस खरीद से अब यहाँ से हटा नहीं जा सकता।",

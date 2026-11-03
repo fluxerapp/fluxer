@@ -413,6 +413,7 @@ export const ERROR_I18N_MESSAGES = {
 	'operator_pass.release_not_ready': 'This Operators list cannot be published before its cut-off date.',
 	'operator_pass.unknown_release_entry': 'This account is not in that published Operators list.',
 	'operator_pass.price_changed': 'The Operator Pass price has changed. Check the new price and try again.',
+	'operator_pass.waitlist_token_invalid': 'This waitlist link is invalid.',
 	'operator_pass.removal_limited_first':
 		'A permanent removal for a breach that is not serious needs an earlier removal for a limited time.',
 	'operator_pass.removal_notice_required':

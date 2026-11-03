@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Tài khoản này không có trong danh sách Operators đã công bố đó.",
 	"operator_pass.unknown_wall_entry": "Tài khoản này không có tên trên bức tường Operators.",
 	"operator_pass.visionary_unavailable": "Tài khoản này hiện không thể bật Operator Pass đi kèm Visionary.",
+	"operator_pass.waitlist_token_invalid": "Liên kết danh sách chờ này không hợp lệ.",
 	"operator_pass.wall_name_rejected": "Chúng tôi không thể hiển thị tên này trên bức tường Operators. Hãy chọn tên khác.",
 	"operator_pass.wall_name_required": "Nhập tên cho bức tường Operators, hoặc chọn không có tên trong danh sách.",
 	"operator_pass.withdrawal_unavailable": "Không thể rút khỏi hợp đồng mua này tại đây nữa.",

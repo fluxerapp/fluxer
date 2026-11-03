@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {isolateBidi} from '@app/features/i18n/utils/BidiIsolate';
+import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
@@ -60,6 +61,12 @@ export function formatOperatorPassDate(iso: string, timeZone?: string): string {
 }
 
 export const OPERATOR_PASS_VISIONARY_DATE_TIME_ZONE = 'UTC';
+
+export function formatOperatorPassCertificateNumbers(numbers: ReadonlyArray<number>): string {
+	return getCachedListFormat(getCurrentOrDetectedLocale(), {type: 'unit', style: 'short'}).format(
+		numbers.map((value) => String(value).padStart(6, '0')),
+	);
+}
 
 interface OperatorPassCalendarDay {
 	year: number;

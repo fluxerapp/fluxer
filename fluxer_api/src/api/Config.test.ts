@@ -253,6 +253,7 @@ describe('buildAPIConfigFromMaster trusted callers', () => {
 					'donation:checkout',
 					'operator_pass:state',
 					'operator_pass:certificate_link',
+					'operator_pass:waitlist_unsubscribe',
 				],
 			},
 		]);

@@ -563,7 +563,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'The pass is part of your Visionary, so it ends if your Visionary ends, for example because your Visionary payment is refunded or reversed. Our records then show the certificate page for that pass as canceled, as section 2 of these terms describes.',
+			text: 'If your Visionary payment is refunded or reversed, or your Visionary ends for another reason, the pass in your Visionary ends too. Our records then show the certificate page for that pass as canceled, as section 2 of these terms describes.',
 		},
 		{kind: 'paragraph', text: "Until you turn on your pass, the rest of these terms don't apply to you."},
 		{kind: 'heading', text: '14. Changes and contact'},
@@ -1140,7 +1140,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Passet är en del av din Visionary, så det upphör om din Visionary upphör, till exempel för att din betalning för Visionary återbetalas eller dras tillbaka. Våra register visar då certifikatsidan för passet som makulerad, som avsnitt 2 beskriver.',
+			text: 'Om din betalning för Visionary återbetalas eller dras tillbaka, eller om din Visionary upphör av något annat skäl, upphör även passet i din Visionary. Våra register visar då certifikatsidan för passet som makulerad, som avsnitt 2 beskriver.',
 		},
 		{kind: 'paragraph', text: 'Tills du slår på ditt pass gäller resten av de här villkoren inte för dig.'},
 		{kind: 'heading', text: '14. Ändringar och kontakt'},
@@ -1720,7 +1720,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'O passe faz parte do seu Visionary, por isso ele acaba se o seu Visionary acabar, por exemplo, porque o pagamento do seu Visionary foi reembolsado ou estornado. Nossos registros passam então a mostrar a página do certificado dele como cancelada, como descreve a seção 2.',
+			text: 'Se o pagamento do seu Visionary for reembolsado ou estornado, ou se o seu Visionary acabar por outro motivo, o passe do seu Visionary também acaba. Nossos registros passam então a mostrar a página do certificado dele como cancelada, como descreve a seção 2.',
 		},
 		{kind: 'paragraph', text: 'Até você ativar o seu passe, o restante destes termos não vale para você.'},
 		{kind: 'heading', text: '14. Alterações e contato'},

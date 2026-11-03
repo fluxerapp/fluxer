@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "บัญชีนี้ไม่อยู่ในรายชื่อ Operators ที่เผยแพร่นั้น",
 	"operator_pass.unknown_wall_entry": "บัญชีนี้ไม่มีชื่อบนกำแพง Operators",
 	"operator_pass.visionary_unavailable": "บัญชีนี้ยังเปิดใช้ Operator Pass ที่มาพร้อมกับ Visionary ไม่ได้ในตอนนี้",
+	"operator_pass.waitlist_token_invalid": "ลิงก์ลงชื่อรอคิวนี้ไม่ถูกต้อง",
 	"operator_pass.wall_name_rejected": "เราแสดงชื่อนี้บนกำแพง Operators ไม่ได้ โปรดเลือกชื่ออื่น",
 	"operator_pass.wall_name_required": "ใส่ชื่อสำหรับกำแพง Operators หรือเลือกไม่แสดงชื่อ",
 	"operator_pass.withdrawal_unavailable": "ไม่สามารถยกเลิกการซื้อนี้จากที่นี่ได้แล้ว",

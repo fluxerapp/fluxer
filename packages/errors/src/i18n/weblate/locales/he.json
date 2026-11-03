@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "החשבון הזה לא נמצא ברשימת ה-Operators שפורסמה.",
 	"operator_pass.unknown_wall_entry": "לחשבון זה אין שם בקיר ה-Operators.",
 	"operator_pass.visionary_unavailable": "החשבון הזה לא יכול להפעיל כרגע את ה-Operator Pass שמגיע עם Visionary.",
+	"operator_pass.waitlist_token_invalid": "קישור רשימת ההמתנה הזה לא תקין.",
 	"operator_pass.wall_name_rejected": "איננו יכולים להציג את השם הזה בקיר ה-Operators. בחרו שם אחר.",
 	"operator_pass.wall_name_required": "הזן שם לקיר ה-Operators, או בחר שלא להופיע בו.",
 	"operator_pass.withdrawal_unavailable": "כבר אי אפשר לבטל את הרכישה הזו מכאן.",

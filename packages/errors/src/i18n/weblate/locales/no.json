@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Denne kontoen er ikke med i den publiserte Operators-listen.",
 	"operator_pass.unknown_wall_entry": "Denne kontoen har ikke noe navn på Operators-veggen.",
 	"operator_pass.visionary_unavailable": "Denne kontoen kan ikke slå på Operator Pass som følger med Visionary akkurat nå.",
+	"operator_pass.waitlist_token_invalid": "Denne ventelistelenken er ugyldig.",
 	"operator_pass.wall_name_rejected": "Vi kan ikke vise dette navnet på Operators-veggen. Velg et annet.",
 	"operator_pass.wall_name_required": "Skriv inn et navn til Operators-veggen, eller velg å ikke bli vist.",
 	"operator_pass.withdrawal_unavailable": "Dette kjøpet kan ikke lenger angres herfra.",

@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Этого аккаунта нет в опубликованном списке Operators.",
 	"operator_pass.unknown_wall_entry": "У этого аккаунта нет имени на стене Operators.",
 	"operator_pass.visionary_unavailable": "Этот аккаунт сейчас не может включить Operator Pass, который входит в Visionary.",
+	"operator_pass.waitlist_token_invalid": "Эта ссылка листа ожидания недействительна.",
 	"operator_pass.wall_name_rejected": "Мы не можем показать это имя на стене Operators. Выберите другое.",
 	"operator_pass.wall_name_required": "Введите имя для стены Operators или выберите, чтобы вас не показывали.",
 	"operator_pass.withdrawal_unavailable": "Отказаться от этой покупки здесь уже нельзя.",

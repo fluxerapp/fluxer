@@ -183,7 +183,7 @@ pub fn router() -> Router<AppState> {
                 .layer(DefaultBodyLimit::max(BUSINESS_LOGO_MAX_BYTES + 64 * 1024)),
         )
         .route(
-            "/operator-pass-wall/users/{user_id}/avatars/{sha256}",
+            "/operator-pass-wall/avatars/{sha256}",
             get(operator_pass_wall_avatar),
         )
         .route(TOOLS_PATH, get(operator_pass_wall_tools_page))
@@ -654,20 +654,17 @@ async fn operator_pass_wall_business(
 async fn operator_pass_wall_avatar(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
-    Path((user_id, sha256)): Path<(String, String)>,
+    Path(sha256): Path<String>,
 ) -> Response {
     if !can_look_up(&auth.0) {
         return (StatusCode::FORBIDDEN, "Forbidden").into_response();
     }
-    if !is_snowflake(&user_id) || !is_sha256(&sha256) {
+    if !is_sha256(&sha256) {
         return (StatusCode::NOT_FOUND, "Not found").into_response();
     }
     let config = state.config();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    match client
-        .get_operator_pass_wall_avatar(&user_id, &sha256)
-        .await
-    {
+    match client.get_operator_pass_wall_avatar(&sha256).await {
         Ok((content_type, body)) => (
             [
                 (header::CONTENT_TYPE, content_type),
@@ -677,7 +674,7 @@ async fn operator_pass_wall_avatar(
         )
             .into_response(),
         Err(error) => {
-            tracing::warn!(%error, user_id, "admin API request failed: Operators' wall avatar");
+            tracing::warn!(%error, "admin API request failed: Operators' wall avatar");
             (StatusCode::NOT_FOUND, "Not found").into_response()
         }
     }

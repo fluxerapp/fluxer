@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {getContentMessage, resolveContentLocale} from '@app/api/content_i18n/ContentI18n';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {HostedOnlyRoute} from '@app/api/middleware/BillingRouteAvailability';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
-import {getOperatorPassEntitlementService, getOperatorPassWallService} from '@app/api/middleware/ServiceSingletons';
+import {
+	getOperatorPassEntitlementService,
+	getOperatorPassRepository,
+	getOperatorPassWallService,
+} from '@app/api/middleware/ServiceSingletons';
 import type {OperatorPassCheckoutService} from '@app/api/operator_pass/OperatorPassCheckoutService';
 import {
 	isOperatorPassRemovalActive,
@@ -16,6 +21,10 @@ import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/Operato
 import {getLabsGuildId, getLabsOperatorsChannelId} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {mapOperatorPassPurchaseToResponse} from '@app/api/operator_pass/OperatorPassPurchaseRules';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
+import {
+	deleteOperatorPassWaitlistEntry,
+	verifyOperatorPassUnsubscribeToken,
+} from '@app/api/operator_pass/OperatorPassWaitlistUnsubscribe';
 import {
 	mapOperatorPassListing,
 	normalizeOperatorPassWallChoice,
@@ -27,6 +36,7 @@ import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
 import {OperatorPassNotHeldError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassNotHeldError';
+import {OperatorPassWaitlistTokenInvalidError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWaitlistTokenInvalidError';
 import {UnknownOperatorPassUnitError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassUnitError';
 import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
 import {
@@ -54,6 +64,8 @@ import {
 	OperatorPassStateQuery,
 	OperatorPassStateResponse,
 	OperatorPassVisionaryTurnOnRequest,
+	OperatorPassWaitlistUnsubscribeQuery,
+	OperatorPassWaitlistUnsubscribeResponse,
 	OperatorPassWallResponse,
 	OperatorPassWithdrawRequest,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
@@ -309,6 +321,45 @@ export function OperatorPassController(app: HonoApp) {
 					await service.certificates.listPurchaseCertificateUrls(purchase),
 				),
 			);
+		},
+	);
+	app.get(
+		'/operator-pass/waitlist/unsubscribe',
+		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_UNSUBSCRIBE),
+		OpenAPI({
+			operationId: 'open_operator_pass_waitlist_unsubscribe',
+			summary: 'Open Operator Pass waitlist unsubscribe page',
+			description:
+				'Redirects a mail client that opens the unsubscribe link of the Operator Pass launch email to the unsubscribe page. Nothing changes until a mail client sends the one-click POST.',
+			responseSchema: null,
+			statusCode: 302,
+			security: [],
+			tags: TAG,
+		}),
+		(ctx) => ctx.redirect(`${Config.endpoints.marketing}/pass/unsubscribe`, 302),
+	);
+	app.post(
+		'/operator-pass/waitlist/unsubscribe',
+		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_WAITLIST_UNSUBSCRIBE),
+		OpenAPI({
+			operationId: 'unsubscribe_operator_pass_waitlist',
+			summary: 'Leave Operator Pass waitlist',
+			description:
+				'Deletes the waitlist entry that the token from the Operator Pass launch email belongs to. Supports one-click unsubscribe from mail clients.',
+			responseSchema: OperatorPassWaitlistUnsubscribeResponse,
+			statusCode: 200,
+			security: [],
+			tags: TAG,
+		}),
+		Validator('query', OperatorPassWaitlistUnsubscribeQuery),
+		async (ctx) => {
+			const {token} = ctx.req.valid('query');
+			const entryId = token ? verifyOperatorPassUnsubscribeToken(token) : null;
+			if (!entryId) {
+				throw new OperatorPassWaitlistTokenInvalidError();
+			}
+			await deleteOperatorPassWaitlistEntry(getOperatorPassRepository(), entryId);
+			return ctx.json({status: 'unsubscribed' as const}, 200);
 		},
 	);
 	app.get(

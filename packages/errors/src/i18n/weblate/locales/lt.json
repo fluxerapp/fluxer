@@ -485,6 +485,7 @@
 	"operator_pass.unknown_release_entry": "Šios paskyros paskelbtame Operators sąraše nėra.",
 	"operator_pass.unknown_wall_entry": "Šios paskyros vardo Operators sienoje nėra.",
 	"operator_pass.visionary_unavailable": "Ši paskyra šiuo metu negali įjungti su Visionary gaunamo Operator Pass.",
+	"operator_pass.waitlist_token_invalid": "Ši laukiančiųjų sąrašo nuoroda negalioja.",
 	"operator_pass.wall_name_rejected": "Šio vardo negalime rodyti Operators sienoje. Pasirinkite kitą.",
 	"operator_pass.wall_name_required": "Įveskite vardą Operators sienai arba pasirinkite, kad jūsų nerodytų.",
 	"operator_pass.withdrawal_unavailable": "Šio pirkinio iš čia atsisakyti nebegalima.",
