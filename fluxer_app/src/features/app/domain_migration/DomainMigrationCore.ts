@@ -118,6 +118,10 @@ export function isDomainMigrationOneShotRoute(pathname: string): boolean {
 	return ONE_SHOT_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+export function isForwardableOneShotRoute(pathname: string): boolean {
+	return pathname === '/oauth2/authorize' || pathname.startsWith('/oauth2/authorize/');
+}
+
 export function buildTargetUrl(target: string, pathname: string, search: string, hash: string): string {
 	return `${target}${sanitizeNextPath(`${pathname}${search}${hash}`)}`;
 }
