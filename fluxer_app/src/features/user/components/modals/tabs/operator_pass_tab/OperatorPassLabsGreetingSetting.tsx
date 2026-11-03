@@ -43,15 +43,27 @@ const JOIN_LABS_DESCRIPTOR = msg({
 		'Button in the Fluxer Labs section of the Operator Pass settings when the account is not a member of the community. It adds the account to the community and opens #operators. {labsName} is the name of the community, such as Fluxer Labs.',
 });
 
+const SHOW_OPERATORS_LABEL_DESCRIPTOR = msg({
+	message: 'Show #operators',
+	comment:
+		'Switch label in the Fluxer Labs section of the Operator Pass settings. On by default. #operators is a channel in the Fluxer Labs community, keep it as is.',
+});
+const SHOW_OPERATORS_HINT_DESCRIPTOR = msg({
+	message:
+		"Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again.",
+	comment:
+		'Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.',
+});
+
 export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLabsGreetingSetting() {
 	const {i18n} = useLingui();
 	const [saving, setSaving] = useState(false);
 	const labs = OperatorPassHoldings.passes?.labs;
 	if (!labs || !showsOperatorPassLabsSettings(Users.currentUser, OperatorPassHoldings.passes)) return null;
-	const handleChange = async (greeting: boolean) => {
+	const save = async (update: () => Promise<unknown>) => {
 		setSaving(true);
 		try {
-			await OperatorPassCommands.updateLabsGreeting(greeting);
+			await update();
 		} catch {
 			ToastCommands.error(i18n._(WALL_SAVE_FAILED_DESCRIPTOR));
 		} finally {
@@ -67,23 +79,33 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 			})}
 			data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.section"
 		>
+			<Switch
+				label={i18n._(SHOW_OPERATORS_LABEL_DESCRIPTOR)}
+				description={i18n._(SHOW_OPERATORS_HINT_DESCRIPTOR, {labsName: PRODUCT_LABS_COMMUNITY_NAME})}
+				value={labs.show_operators}
+				onChange={(value) => void save(() => OperatorPassCommands.updateLabsOperators(value))}
+				disabled={saving}
+				data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.switch.show-operators"
+			/>
 			{asksOperatorPassLabsGreeting() && (
 				<Switch
 					label={i18n._(LABS_GREETING_LABEL_DESCRIPTOR)}
 					description={i18n._(LABS_GREETING_SETTING_HINT_DESCRIPTOR)}
 					value={labs.greeting}
-					onChange={(value) => void handleChange(value)}
+					onChange={(value) => void save(() => OperatorPassCommands.updateLabsGreeting(value))}
 					disabled={saving}
 					data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.switch.greeting"
 				/>
 			)}
-			<div className={styles.actions} data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.actions">
-				<OpenOperatorsButton
-					variant="secondary"
-					label={labs.member ? undefined : i18n._(JOIN_LABS_DESCRIPTOR, {labsName: PRODUCT_LABS_COMMUNITY_NAME})}
-					data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.button.open-operators"
-				/>
-			</div>
+			{labs.show_operators && (
+				<div className={styles.actions} data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.actions">
+					<OpenOperatorsButton
+						variant="secondary"
+						label={labs.member ? undefined : i18n._(JOIN_LABS_DESCRIPTOR, {labsName: PRODUCT_LABS_COMMUNITY_NAME})}
+						data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.button.open-operators"
+					/>
+				</div>
+			)}
 		</SettingsSection>
 	);
 });

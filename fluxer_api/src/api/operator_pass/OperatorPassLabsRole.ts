@@ -204,13 +204,25 @@ function getLabsAccessRoleId(): RoleID | null {
 	return getLabsOperatorRole() && labsAccessRoleId != null ? createRoleID(labsAccessRoleId) : null;
 }
 
+export function listHiddenLabsRoleIds(): Array<string> {
+	const accessRoleId = getLabsAccessRoleId();
+	return accessRoleId === null ? [] : [accessRoleId.toString()];
+}
+
 interface LabsRoleWants {
 	operator: boolean;
 	visionary: boolean;
 	access: boolean;
 }
 
+export function hidesOperatorsChannel(user: Pick<User, 'premiumFlags'> | null): boolean {
+	return user !== null && (user.premiumFlags & PremiumFlags.OPERATORS_CHANNEL_HIDDEN) !== 0;
+}
+
 export function labsRolesFor(user: Omit<VisionaryAccount, 'id'> | null, entitled: boolean): LabsRoleWants {
+	if (hidesOperatorsChannel(user)) {
+		return {operator: false, visionary: false, access: false};
+	}
 	const lifetime = user?.premiumType === UserPremiumTypes.LIFETIME;
 	const split = getLabsAccessRoleId() !== null;
 	return {
@@ -344,7 +356,12 @@ export class OperatorPassLabsRoleService {
 				}
 				const member = await this.guildRepository.getMember(labs.guildId, user.id);
 				const accessRoleId = getLabsAccessRoleId();
-				if (member && (member.roleIds.has(labs.roleId) || (accessRoleId && member.roleIds.has(accessRoleId)))) {
+				if (
+					member &&
+					(hidesOperatorsChannel(user) ||
+						member.roleIds.has(labs.roleId) ||
+						(accessRoleId && member.roleIds.has(accessRoleId)))
+				) {
 					continue;
 				}
 				if (!isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id))) {
@@ -359,7 +376,12 @@ export class OperatorPassLabsRoleService {
 
 	async queueGreetingIfDue(user: LabsAccount, now: Date = new Date()): Promise<boolean> {
 		const labs = getLabsOperatorRole();
-		if (!labs || getLabsOperatorsChannelId() === null || isBlockedFromLabsAutoJoin(user, now)) {
+		if (
+			!labs ||
+			getLabsOperatorsChannelId() === null ||
+			hidesOperatorsChannel(user) ||
+			isBlockedFromLabsAutoJoin(user, now)
+		) {
 			return false;
 		}
 		const record = await labsRepository.findLabsMember(user.id);

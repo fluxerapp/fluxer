@@ -33072,6 +33072,11 @@ msgstr "Hiển thị {badgeLabel} trên hồ sơ của bạn"
 msgid "Show {title}"
 msgstr "Hiển thị {title}"
 
+#. Switch label in the Fluxer Labs section of the Operator Pass settings. On by default. #operators is a channel in the Fluxer Labs community, keep it as is.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Show #operators"
+msgstr "Hiển thị #operators"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -39131,6 +39136,11 @@ msgstr "Việc tắt các phạm vi có thể khiến ứng dụng không hoạt
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx
 msgid "Turning this off only hides your camera from your own view. Others in the call can still see your camera feed."
 msgstr "Tắt tính năng này chỉ ẩn camera của bạn khỏi chế độ xem của chính bạn. Những người khác trong cuộc gọi vẫn có thể thấy camera của bạn."
+
+#. Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again."
+msgstr "Khi tắt tùy chọn này, các vai trò mở #operators trong {labsName} sẽ bị gỡ, và chúng tôi sẽ không thêm lại cho đến khi bạn bật lại."
 
 #. Help under the Klipy API key field in the setup wizard.
 #: src/features/app/components/setup/SetupServicesStep.tsx

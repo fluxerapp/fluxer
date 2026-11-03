@@ -13,7 +13,11 @@ import {
 	isOperatorPassEntitled,
 	loadOperatorPassEntitlementState,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
-import {getLabsOperatorsChannelId, isBlockedFromLabsAutoJoin} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {
+	getLabsOperatorsChannelId,
+	hidesOperatorsChannel,
+	isBlockedFromLabsAutoJoin,
+} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {type OperatorPassLockLease, withOperatorPassLock} from '@app/api/operator_pass/OperatorPassLocks';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -146,7 +150,7 @@ class LabsGreetingRun {
 			return false;
 		}
 		const user = await this.deps.userRepository.findUnique(userId);
-		if (!user || isBlockedFromLabsAutoJoin(user, new Date())) {
+		if (!user || hidesOperatorsChannel(user) || isBlockedFromLabsAutoJoin(user, new Date())) {
 			return false;
 		}
 		if (!this.channel.guildId || !(await this.deps.guildRepository.getMember(this.channel.guildId, userId))) {

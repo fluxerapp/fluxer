@@ -171,6 +171,7 @@ export const Endpoints = {
 		`/operator-pass/purchases/${encodeURIComponent(purchaseId)}/withdraw`,
 	OPERATOR_PASS_PASSES: '/operator-pass/passes',
 	OPERATOR_PASS_LABS_GREETING: '/operator-pass/labs-greeting',
+	OPERATOR_PASS_LABS_OPERATORS: '/operator-pass/labs-operators',
 	OPERATOR_PASS_LABS_JOIN: '/operator-pass/labs/join',
 	OPERATOR_PASS_VISIONARY_TURN_ON: '/operator-pass/visionary/turn-on',
 	OPERATOR_PASS_PASS_OFFERS: (passId: string) => `/operator-pass/passes/${encodeURIComponent(passId)}/offers`,

@@ -65,3 +65,13 @@ test('without an access role, Operators and Visionaries keep their roles whether
 		access: false,
 	});
 });
+
+test('turning off #operators takes away every role that opens it, for Operators and Visionaries alike', () => {
+	const none = {operator: false, visionary: false, access: false};
+	const hidden = PremiumFlags.OPERATORS_CHANNEL_HIDDEN;
+	expect(labsRolesFor(account(null, [], hidden), true)).toEqual(none);
+	expect(labsRolesFor(account(UserPremiumTypes.LIFETIME, [], hidden), false)).toEqual(none);
+	expect(labsRolesFor(account(UserPremiumTypes.LIFETIME, [], hidden), true)).toEqual(none);
+	Config.operatorPass.labsAccessRoleId = null;
+	expect(labsRolesFor(account(UserPremiumTypes.LIFETIME, [], hidden), true)).toEqual(none);
+});

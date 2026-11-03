@@ -217,6 +217,20 @@ export async function updateLabsGreeting(greeting: boolean): Promise<OperatorPas
 	}
 }
 
+export async function updateLabsOperators(showOperators: boolean): Promise<OperatorPassPassesResponse> {
+	try {
+		const response = await http.put<OperatorPassPassesResponse>(Endpoints.OPERATOR_PASS_LABS_OPERATORS, {
+			body: {show_operators: showOperators},
+		});
+		logger.info('#operators visibility updated', {showOperators});
+		OperatorPassHoldings.setPasses(response.body);
+		return response.body;
+	} catch (error) {
+		logger.error('#operators visibility update failed', error);
+		throw error;
+	}
+}
+
 export async function joinLabs(): Promise<OperatorPassLabsJoinResponse> {
 	const response = await http.post<OperatorPassLabsJoinResponse>(Endpoints.OPERATOR_PASS_LABS_JOIN, {body: {}});
 	logger.info('Fluxer Labs join after Operator Pass', {status: response.body.status});

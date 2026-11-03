@@ -29,9 +29,13 @@ export function getStoredOperatorPassLabsGreeting(): boolean {
 	return OperatorPassHoldings.passes?.labs?.greeting ?? true;
 }
 
+export function showsOperatorsChannel(): boolean {
+	return OperatorPassHoldings.passes?.labs.show_operators !== false;
+}
+
 export function asksOperatorPassLabsGreeting(): boolean {
 	const labs = OperatorPassHoldings.passes?.labs;
-	return !labs?.greeted && !labs?.left;
+	return !labs?.greeted && !labs?.left && showsOperatorsChannel();
 }
 
 export const OperatorPassLabsGreetingField = observer(function OperatorPassLabsGreetingField({

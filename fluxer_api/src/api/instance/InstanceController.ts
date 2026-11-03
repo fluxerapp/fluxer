@@ -19,6 +19,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getVoiceTopology} from '@app/api/middleware/ServiceRegistry';
 import {getCustomBadgeCatalog} from '@app/api/middleware/ServiceSingletons';
+import {listHiddenLabsRoleIds} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {isBillingActive, isPremiumTieringActive, isStripeServiceable} from '@app/api/stripe/BillingConfigCache';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
@@ -349,6 +350,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				custom_badges_version: getCustomBadgeCatalog().clientVersion(badgeHead.version),
 				built_in_guild_badge_images: mapBuiltInGuildBadgeImagesForDiscovery(builtInBadgeImages),
 				hidden_built_in_guild_badges: mapHiddenBuiltInGuildBadgesForDiscovery(hiddenBuiltInBadges),
+				hidden_role_ids: listHiddenLabsRoleIds(),
 				voice_origins: listVoiceOrigins(),
 			};
 			discoveryValidators = nextDiscoveryValidators(response, discoveryValidators);

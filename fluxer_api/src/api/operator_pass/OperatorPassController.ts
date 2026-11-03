@@ -48,6 +48,7 @@ import {
 	OperatorPassCheckoutResponse,
 	OperatorPassLabsGreetingRequest,
 	OperatorPassLabsJoinResponse,
+	OperatorPassLabsOperatorsRequest,
 	OperatorPassLatestReleaseResponse,
 	OperatorPassListingResponse,
 	OperatorPassListingUpdateRequest,
@@ -472,6 +473,29 @@ export function OperatorPassController(app: HonoApp) {
 			return ctx.json(await holding.queries.describePasses(user));
 		},
 	);
+	app.put(
+		'/operator-pass/labs-operators',
+		HostedOnlyRoute,
+		RateLimitMiddleware(OperatorPassRateLimitConfigs.OPERATOR_PASS_LISTING),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'update_operator_pass_labs_operators',
+			summary: 'Show or hide #operators',
+			description:
+				'Turns the Fluxer Labs roles that open #operators on or off for the current account. These are the Operator role, the Visionary role and the access role. Turning it off removes them at once, and no later role update adds them back. Turning it on gives back the roles the account is entitled to at once. It does not change passes, badges, the Operators wall, Fluxer Labs membership or other roles.',
+			responseSchema: OperatorPassPassesResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: TAG,
+		}),
+		Validator('json', OperatorPassLabsOperatorsRequest),
+		async (ctx) => {
+			const holding = requireFulfilmentService(ctx).holdingService;
+			const user = await holding.updateLabsOperatorsChannel(ctx.get('user'), ctx.req.valid('json').show_operators);
+			return ctx.json(await holding.queries.describePasses(user));
+		},
+	);
 	app.post(
 		'/operator-pass/labs/join',
 		HostedOnlyRoute,
@@ -482,7 +506,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'join_operator_pass_labs',
 			summary: 'Join Fluxer Labs with the Operator Pass',
 			description:
-				'Adds the current account to Fluxer Labs with the Operator role, the same way a delivered pass does, and returns the IDs of the community and #operators. Needs at least one pass. An account that is already in Fluxer Labs gets the Operator role if it is missing. An account that left Fluxer Labs or was removed from it is never added again and gets status left, so it can join with the invite. A banned account gets status banned.',
+				'Adds the current account to Fluxer Labs with the Operator role, the same way a delivered pass does, and returns the IDs of the community and #operators. Needs at least one pass. An account that is already in Fluxer Labs gets the Operator role if it is missing, unless it turned off #operators. An account that left Fluxer Labs or was removed from it is never added again and gets status left, so it can join with the invite. A banned account gets status banned.',
 			responseSchema: OperatorPassLabsJoinResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
