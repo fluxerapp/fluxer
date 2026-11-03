@@ -19,7 +19,7 @@ export const ConnectionNoticeTone = Object.freeze({
 
 export type ConnectionNoticeTone = (typeof ConnectionNoticeTone)[keyof typeof ConnectionNoticeTone];
 
-export interface ConnectionNoticeAction {
+interface ConnectionNoticeAction {
 	readonly label: string;
 	readonly url: string;
 }

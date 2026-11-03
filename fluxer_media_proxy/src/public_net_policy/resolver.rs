@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::ip_tables::is_public_ip;
+use fluxer_common::public_ip::is_public_ip;
 use reqwest::dns::{Addrs, Name, Resolve, Resolving};
 use std::net::SocketAddr;
 use thiserror::Error;

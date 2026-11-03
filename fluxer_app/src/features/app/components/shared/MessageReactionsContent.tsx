@@ -123,7 +123,6 @@ interface MessageReactionsFiltersProps {
 	onSelectReaction: (reaction: MessageReaction) => void;
 	canManageMessages: boolean;
 	variant: 'modal' | 'sheet';
-	showScrollerTrack?: boolean;
 	onReactionLongPress?: (reaction: MessageReaction) => void;
 	onReactionContextMenu?: (reaction: MessageReaction, event: MouseEvent<HTMLButtonElement>) => void;
 }
@@ -135,7 +134,6 @@ export const MessageReactionsFilters = observer(
 		selectedReaction,
 		onSelectReaction,
 		variant,
-		showScrollerTrack = true,
 		onReactionLongPress,
 		onReactionContextMenu,
 	}: MessageReactionsFiltersProps) => {
@@ -156,7 +154,6 @@ export const MessageReactionsFilters = observer(
 				key="message-reactions-filter-scroller"
 				orientation={isHorizontal ? 'horizontal' : 'vertical'}
 				className={styles.filtersScroller}
-				showTrack={showScrollerTrack}
 				data-flx="app.message-reactions-content.message-reactions-filters.filters-scroller"
 			>
 				<div className={listClassName} data-flx="app.message-reactions-content.message-reactions-filters.div">
@@ -212,7 +209,6 @@ interface ReactorListItemProps {
 	avatarSize: number;
 	isFirst: boolean;
 	onRemoveReactor?: (reactor: User) => void;
-	onReactorLongPress?: (reactor: User) => void;
 }
 
 const ReactorListItem = observer(
@@ -225,7 +221,6 @@ const ReactorListItem = observer(
 		avatarSize,
 		isFirst,
 		onRemoveReactor,
-		onReactorLongPress,
 	}: ReactorListItemProps) => {
 		const {i18n} = useLingui();
 		const handleRemove = useCallback(() => {
@@ -270,19 +265,6 @@ const ReactorListItem = observer(
 				)}
 			</>
 		);
-		if (onReactorLongPress) {
-			return (
-				<LongPressable
-					className={itemClassName}
-					onLongPress={() => onReactorLongPress(reactor)}
-					data-user-id={reactor.id}
-					data-channel-id={channelId}
-					data-flx="app.message-reactions-content.reactor-list-item.long-pressable"
-				>
-					{content}
-				</LongPressable>
-			);
-		}
 		return (
 			<div
 				className={itemClassName}
@@ -310,9 +292,7 @@ interface MessageReactionsReactorsListProps {
 	loadingLabel?: string;
 	emptyLabel?: string;
 	showLoadingLabel?: boolean;
-	showScrollerTrack?: boolean;
 	onRemoveReactor?: (reactor: User) => void;
-	onReactorLongPress?: (reactor: User) => void;
 }
 
 export const MessageReactionsReactorsList = observer(
@@ -330,9 +310,7 @@ export const MessageReactionsReactorsList = observer(
 		loadingLabel,
 		emptyLabel,
 		showLoadingLabel = false,
-		showScrollerTrack = true,
 		onRemoveReactor,
-		onReactorLongPress,
 	}: MessageReactionsReactorsListProps) => {
 		const loadingLabelClassName = showLoadingLabel ? styles.loadingLabel : styles.srOnly;
 		const handleScroll = useCallback(
@@ -356,7 +334,6 @@ export const MessageReactionsReactorsList = observer(
 				<Scroller
 					className={styles.reactorScroller}
 					key={scrollerKey}
-					showTrack={showScrollerTrack}
 					onScroll={onLoadMore ? handleScroll : undefined}
 					data-flx="app.message-reactions-content.message-reactions-reactors-list.reactor-scroller"
 				>
@@ -371,7 +348,6 @@ export const MessageReactionsReactorsList = observer(
 							avatarSize={avatarSize}
 							isFirst={index === 0}
 							onRemoveReactor={onRemoveReactor}
-							onReactorLongPress={onReactorLongPress}
 							data-flx="app.message-reactions-content.message-reactions-reactors-list.reactor-list-item"
 						/>
 					))}

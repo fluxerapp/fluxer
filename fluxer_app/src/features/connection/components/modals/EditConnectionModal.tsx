@@ -31,7 +31,7 @@ export const EditConnectionModal = observer(({connection}: Props) => {
 	const [submitting, setSubmitting] = useState(false);
 	const hasFlag = useCallback((flag: number) => (visibilityFlags & flag) === flag, [visibilityFlags]);
 	const everyoneEnabled = (visibilityFlags & ConnectionVisibilityFlags.EVERYONE) === ConnectionVisibilityFlags.EVERYONE;
-	const profilePrivacy = UserSettings.getProfilePrivacy();
+	const profilePrivacy = UserSettings.profilePrivacy;
 	const profilePrivacyLimited =
 		profilePrivacy === ProfilePrivacyLevels.SMALL_GUILDS_ONLY || profilePrivacy === ProfilePrivacyLevels.FRIENDS_ONLY;
 	const handleToggle = useCallback(

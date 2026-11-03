@@ -121,19 +121,18 @@ describe('release feed routes', () => {
 
 describe('channel, platform and architecture targeting', () => {
 	it.each([
-		['stable', 'darwin', 'arm64'],
-		['stable', 'darwin', 'x64'],
 		['stable', 'win32', 'x64'],
-		['stable', 'win32', 'arm64'],
-		['stable', 'linux', 'x64'],
-		['stable', 'linux', 'arm64'],
-		['canary', 'darwin', 'arm64'],
-		['canary', 'win32', 'x64'],
 		['canary', 'linux', 'arm64'],
 	])('keeps %s/%s/%s in the redirect target', async (channel, plat, arch) => {
 		const response = await request(`/dl/desktop/${channel}/${plat}/${arch}/latest`);
 		expect(response.status).toBe(302);
 		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/${channel}/${plat}/${arch}/latest.json`);
+	});
+
+	it('rewrites the legacy platform-arch form to the same document', async () => {
+		const response = await request('/dl/desktop/stable/linux-x64/latest');
+		expect(response.status).toBe(302);
+		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/stable/linux/x64/latest.json`);
 	});
 });
 

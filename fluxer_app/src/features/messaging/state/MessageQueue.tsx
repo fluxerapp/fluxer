@@ -5,6 +5,7 @@ import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActi
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {describeAccountTierBlock, promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
@@ -55,6 +56,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
 import {Queue} from '@app/lib/list/ListQueue';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
@@ -125,23 +127,23 @@ interface SendMessagePayload extends BaseMessagePayload {
 	tts?: boolean;
 }
 
-export type MessageQueuePayload = SendMessagePayload;
+type MessageQueuePayload = SendMessagePayload;
 type MessageQueueCompletion<TResult> = {
 	retry: RetryError | null;
 	result?: TResult;
 	error?: unknown;
 };
 
-export interface RetryError {
+interface RetryError {
 	retryAfter?: number;
 }
 
-export interface ApiErrorBody {
+interface ApiErrorBody {
 	code?: number | string;
 	message?: string;
 }
 
-export interface PreparedSendAttachments {
+interface PreparedSendAttachments {
 	attachments?: Array<ApiAttachmentMetadata>;
 	files?: Array<File>;
 }
@@ -251,7 +253,7 @@ class PresignedUploadFallbackUnavailableError extends Error {
 	}
 }
 
-export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
+class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
 	private readonly maxSize: number;
 	private readonly abortControllers = new Map<string, AbortController>();
 	private readonly textareaAttachmentUploads = new Map<number, TextareaAttachmentUpload>();
@@ -1060,6 +1062,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR, {directMessagePrivacySettingsPath}),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			return;
+		}
+		const tierBlock = describeAccountTierBlock(error);
+		if (tierBlock !== null && promptForAccountTier(error)) {
+			const tierMessage = accountGateReason(i18n, tierBlock);
+			MessageCommands.createOptimistic(channelId, createSystemMessage(channelId, tierMessage).toJSON());
 			return;
 		}
 		const unclaimedErrorCode = getUnclaimedAccountErrorCode(error);

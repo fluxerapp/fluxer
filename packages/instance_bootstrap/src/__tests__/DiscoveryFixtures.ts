@@ -24,7 +24,13 @@ export const DEPLOYED_OFFICIAL_DOCUMENT = {
 		emails_enabled: true,
 	},
 	gif: {provider: 'klipy', display_name: 'Klipy', attribution_required: false},
-	sso: {enabled: false, enforced: false, display_name: null, redirect_uri: 'https://web.fluxer.app/sso/callback'},
+	sso: {
+		enabled: false,
+		enforced: false,
+		display_name: null,
+		button_label: null,
+		redirect_uri: 'https://web.fluxer.app/sso/callback',
+	},
 	registration: {mode: 'open', admin_registration_urls_enabled: true},
 	community: {single_community: false, single_community_guild_id: null, direct_messages_disabled: false},
 	services: {gif_enabled: true, youtube_enabled: true, bluesky_enabled: false},
@@ -78,7 +84,13 @@ export const SELF_HOSTED_API_TOPOLOGY_DOCUMENT = {
 		emails_enabled: false,
 	},
 	gif: {provider: 'klipy', display_name: 'Klipy', attribution_required: false},
-	sso: {enabled: false, enforced: false, display_name: null, redirect_uri: 'https://chat.example.test/sso/callback'},
+	sso: {
+		enabled: false,
+		enforced: false,
+		display_name: null,
+		button_label: null,
+		redirect_uri: 'https://chat.example.test/sso/callback',
+	},
 	registration: {mode: 'closed', admin_registration_urls_enabled: false},
 	community: {single_community: true, single_community_guild_id: '1', direct_messages_disabled: false},
 	services: {gif_enabled: false, youtube_enabled: false, bluesky_enabled: false},
@@ -97,37 +109,5 @@ export const SELF_HOSTED_API_TOPOLOGY_DOCUMENT = {
 		setup: {configured: true, admin_url: 'https://chat.example.test/admin'},
 		legal: {terms_url: null, privacy_url: null},
 		registration: {collect_date_of_birth: false},
-	},
-} as const;
-
-export const UPGRADED_DOCUMENT = {
-	codename: 'tungsten',
-	api_code_version: 1,
-	endpoints: {
-		...DEPLOYED_OFFICIAL_DOCUMENT.endpoints,
-		upload_relay: 'https://media.fluxer.app/upload',
-		docs: 'https://fluxer.app/docs',
-	},
-	captcha: DEPLOYED_OFFICIAL_DOCUMENT.captcha,
-	features: {...DEPLOYED_OFFICIAL_DOCUMENT.features, account_deletion_grace_period_hours: 720},
-	gif: DEPLOYED_OFFICIAL_DOCUMENT.gif,
-	sso: {...DEPLOYED_OFFICIAL_DOCUMENT.sso, available: true},
-	registration: DEPLOYED_OFFICIAL_DOCUMENT.registration,
-	community: DEPLOYED_OFFICIAL_DOCUMENT.community,
-	services: DEPLOYED_OFFICIAL_DOCUMENT.services,
-	limits: DEPLOYED_OFFICIAL_DOCUMENT.limits,
-	push: {
-		public_vapid_key: 'BPublicVapidKey',
-		delivery_mode: 'direct',
-		event_resolution_path: '/v1/push/events/{event_id}',
-		external_relay_url: null,
-		relay_signing_key_hashes: null,
-	},
-	app_public: DEPLOYED_OFFICIAL_DOCUMENT.app_public,
-	age_policy: {
-		geos: [
-			{country_code: 'GB', region_code: null, action: 'restrict', card_verification_available: false},
-			{country_code: 'US', region_code: 'MS', action: 'block', card_verification_available: false},
-		],
 	},
 } as const;

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::form::form_field_with_id as form_field;
+
 use crate::{
     api::types::{VoiceRegion, VoiceServer},
     config::AdminConfig,
@@ -10,7 +12,7 @@ use crate::{
             data_field::data_field_text,
             empty_state::empty_state_full,
             error_display::error_alert,
-            form::{checkbox, csrf_input},
+            form::{Checkbox, csrf_input},
             page_container::{card, page_header_with_actions},
             voice::{
                 voice_features_list, voice_guild_ids_list, voice_restriction_fields,
@@ -211,7 +213,13 @@ fn edit_region_form(config: &AdminConfig, region: &VoiceRegion, csrf_token: &str
                         (form_field("Latitude", "region-latitude", "latitude", "number", &lat, "Geographic latitude", false))
                         (form_field("Longitude", "region-longitude", "longitude", "number", &lng, "Geographic longitude", false))
                     }
-                    (checkbox("is_default", "true", "Set as default region", is_default, true))
+                    (Checkbox {
+                        name: "is_default",
+                        value: "true",
+                        label: "Set as default region",
+                        checked: is_default,
+                        enabled: true,
+                    }.render())
                     (voice_restriction_fields("edit", vip_only, &features_csv, &guild_ids_csv))
                     button type="submit"
                         class="inline-flex items-center justify-center gap-2 font-medium \
@@ -242,7 +250,13 @@ fn create_region_form(config: &AdminConfig, csrf_token: &str) -> Markup {
                         (form_field("Latitude", "new-region-latitude", "latitude", "number", "", "40.7128", true))
                         (form_field("Longitude", "new-region-longitude", "longitude", "number", "", "-74.0060", true))
                     }
-                    (checkbox("is_default", "true", "Set as default region", false, true))
+                    (Checkbox {
+                        name: "is_default",
+                        value: "true",
+                        label: "Set as default region",
+                        checked: false,
+                        enabled: true,
+                    }.render())
                     (voice_restriction_fields("create", false, "", ""))
                     button type="submit"
                         class="inline-flex items-center justify-center gap-2 font-medium \
@@ -256,29 +270,4 @@ fn create_region_form(config: &AdminConfig, csrf_token: &str) -> Markup {
             }
         }
     })
-}
-
-fn form_field(
-    label: &str,
-    id: &str,
-    name: &str,
-    input_type: &str,
-    value: &str,
-    placeholder: &str,
-    required: bool,
-) -> Markup {
-    html! {
-        div class="space-y-1" {
-            label for=(id) class="block text-sm font-medium text-neutral-700" {
-                (label)
-            }
-            input type=(input_type) id=(id) name=(name) value=(value)
-                placeholder=(placeholder) required[required]
-                step=[if input_type == "number" { Some("any") } else { None }]
-                class="block w-full rounded-md border border-neutral-300 \
-                       px-3 py-2 text-sm shadow-sm \
-                       focus:border-brand-primary focus:outline-none \
-                       focus:ring-1 focus:ring-brand-primary";
-        }
-    }
 }

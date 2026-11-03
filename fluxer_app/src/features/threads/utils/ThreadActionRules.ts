@@ -48,7 +48,7 @@ function actorFor(guildId: string | undefined, permissions: bigint): ThreadActor
 	};
 }
 
-export function getParentActor(parent: Channel): ThreadActor {
+function getParentActor(parent: Channel): ThreadActor {
 	return actorFor(parent.guildId, Permission.getChannelPermissions(parent.id) ?? 0n);
 }
 

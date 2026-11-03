@@ -9,7 +9,7 @@
     finalize_session_connect_batch/2,
     maybe_start_session_connect_workers/1,
     decrement_session_connect_inflight/1,
-    ensure_session_connect_queue/1
+    promote_visitor_session/2
 ]).
 
 -type session_id() :: binary().
@@ -23,13 +23,25 @@
 -define(SESSION_CONNECT_MAX_BATCH, 8).
 -define(SESSION_CONNECT_DEFAULT_MAX_QUEUE, 8192).
 
+-spec promote_visitor_session(map(), map()) -> {ok, map(), map()} | {error, map()}.
+promote_visitor_session(#{session_id := SessionId, session_pid := Pid} = Request, State) ->
+    GuildId = require_guild_id(maps:get(id, State)),
+    Computed = guild_connect_result:compute_session_connect(GuildId, Request, State),
+    case guild_connect_result:computed_result(Computed) of
+        {ok, GuildState} ->
+            {State1, Joined} = upsert_session(
+                SessionId, Pid, Request, Computed, State, {#{}, []}
+            ),
+            {ok, GuildState, finish_joined_users(Joined, State, State1)};
+        _ ->
+            {error, State}
+    end.
+
 -spec ensure_session_connect_queue(term()) -> queue:queue().
-ensure_session_connect_queue(Value) when is_list(Value) ->
-    queue:from_list(Value);
 ensure_session_connect_queue(Value) ->
-    case queue:is_queue(Value) of
-        true -> Value;
-        false -> queue:new()
+    case guild_sessions_connect_cleanup:normalize_connect_queue(Value) of
+        undefined -> queue:new();
+        Queue -> Queue
     end.
 
 -spec enqueue_session_connect_async(integer(), non_neg_integer(), map(), map(), map()) -> map().
@@ -56,7 +68,9 @@ enqueue_session_connect_async_for_session(GuildId, Attempt, Request, Msg, Sessio
             Queue0 = ensure_session_connect_queue(
                 maps:get(session_connect_queue, State, queue:new())
             ),
-            Filtered = drop_queued(SessionId, Queue0),
+            Filtered = guild_sessions_connect_cleanup:filter_session_from_queue(
+                SessionId, Queue0
+            ),
             do_enqueue(GuildId, Attempt, Request, Msg, SessionId, Pending0, Filtered, State);
         {enqueue, fresh} ->
             Queue0 = ensure_session_connect_queue(
@@ -75,7 +89,7 @@ enqueue_session_connect_async_for_session(GuildId, Attempt, Request, Msg, Sessio
 finalize_session_connect_async(SessionId, Attempt, Result0, Computed, State) ->
     finalize_session_connect_batch([{SessionId, Attempt, Result0, Computed}], State).
 
--spec finalize_session_connect_batch([connect_result()], map()) -> map().
+-spec finalize_session_connect_batch([term()], map()) -> map().
 finalize_session_connect_batch(Results, State) ->
     State1 = decrement_session_connect_inflight(State),
     {State2, Joined} = lists:foldl(fun finalize_result/2, {State1, {#{}, []}}, Results),
@@ -120,7 +134,7 @@ finalize_matched(SessionId, Attempt, Result0, Computed, State, Joined) ->
     session_id(), non_neg_integer(), term(), map(), map(), pid(), map(), joined()
 ) -> {map(), joined()}.
 finalize_with_pid(SessionId, Attempt, Result0, Computed, Request, SessionPid, State, Joined) ->
-    case resolve_guild_id(State, Computed) of
+    case guild_connect_result:resolve_guild_id(State, Computed) of
         GuildId when is_integer(GuildId), GuildId > 0 ->
             finalize_resolved(
                 GuildId,
@@ -152,13 +166,13 @@ finalize_resolved(
     Joined
 ) ->
     State1 = discard_pending_session(SessionId, Reason, State),
-    send_result(GuildId, Attempt, Result0, SessionPid),
+    guild_connect_result:send_result(GuildId, Attempt, Result0, SessionPid),
     {State1, Joined};
 finalize_resolved(
     GuildId, SessionId, Attempt, Result0, Computed, Request, SessionPid, State, Joined
 ) ->
     Acc = upsert_session(SessionId, SessionPid, Request, Computed, State, Joined),
-    send_result(GuildId, Attempt, Result0, SessionPid),
+    guild_connect_result:send_result(GuildId, Attempt, Result0, SessionPid),
     Acc.
 
 -spec finish_joined_users(joined(), map(), map()) -> map().
@@ -333,7 +347,7 @@ log_dropped_session_connect(Item, Queued, MaxQueue) ->
         " attempt=~p queued=~p max_queue=~p",
         [
             queued_guild_id(Item),
-            queued_session_id(Item),
+            guild_sessions_connect_cleanup:queued_session_id(Item),
             queued_attempt(Item),
             Queued,
             MaxQueue
@@ -355,7 +369,7 @@ notify_dropped_session_connect(Item) ->
 
 -spec cleanup_dropped_session_connect(term(), map()) -> map().
 cleanup_dropped_session_connect(Item, State) ->
-    case queued_session_id(Item) of
+    case guild_sessions_connect_cleanup:queued_session_id(Item) of
         SessionId when is_binary(SessionId) ->
             State1 = remove_pending_session_connect(SessionId, State),
             discard_pending_session(SessionId, overloaded, State1);
@@ -395,7 +409,9 @@ upsert_pending_session(S, U, P, Request, State) ->
                 bot => maps:get(bot, Request, false),
                 is_staff => maps:get(is_staff, Request, false),
                 pending_connect => true,
-                thread_capable => maps:get(thread_channels_capable, Request, false) =:= true,
+                thread_capable => type_conv:is_true(
+                    maps:get(thread_channels_capable, Request, false)
+                ),
                 thread_viewer => false
             },
             guild_sessions_connect:put_session_ref(S, MRef, State#{
@@ -413,24 +429,6 @@ mark_pending(Existing) ->
         undefined -> Existing#{pending_connect => true};
         _UserId -> Existing#{pending_connect => true, owns_connected_tracking => true}
     end.
-
--spec drop_queued(session_id(), queue:queue()) -> queue:queue().
-drop_queued(SessionId, Queue) ->
-    queue:filter(
-        fun(Item) ->
-            queued_session_id(Item) =/= SessionId
-        end,
-        Queue
-    ).
-
--spec queued_session_id(term()) -> session_id() | undefined.
-queued_session_id(#{request := Request}) when is_map(Request) ->
-    case maps:get(session_id, Request, undefined) of
-        SessionId when is_binary(SessionId) -> SessionId;
-        _ -> undefined
-    end;
-queued_session_id(_) ->
-    undefined.
 
 -spec queued_guild_id(term()) -> guild_id() | undefined.
 queued_guild_id(#{guild_id := GuildId}) when is_integer(GuildId) ->
@@ -456,121 +454,11 @@ queued_session_pid(_) ->
 start_worker(Items, State) ->
     Self = self(),
     Snapshot = guild_data:build_connect_snapshot(Items, State),
-    {_Pid, Ref} = spawn_monitor(fun() -> compute_and_send_done(Items, Self, Snapshot) end),
+    {_Pid, Ref} = spawn_monitor(fun() ->
+        guild_connect_result:compute_and_send_done(Items, Self, Snapshot)
+    end),
     WorkerRefs = maps:get(session_connect_worker_refs, State, #{}),
     State#{session_connect_worker_refs => WorkerRefs#{Ref => true}}.
-
--spec compute_and_send_done([map()], pid(), map()) -> ok.
-compute_and_send_done(Items, GuildPid, Snapshot) ->
-    Results = [compute_item(Item, Snapshot) || Item <- Items],
-    gen_server:cast(GuildPid, {session_connect_worker_batch_done, Results}),
-    ok.
-
--spec compute_item(map(), map()) -> connect_result().
-compute_item(Item, Snapshot) ->
-    Request = maps:get(request, Item, #{}),
-    {Result0, Computed0} = compute_connect_result(Snapshot, Item, Request),
-    {
-        maps:get(session_id, Request, undefined),
-        maps:get(attempt, Item, 0),
-        Result0,
-        maps:merge(Item, Computed0)
-    }.
-
--spec compute_connect_result(map(), map(), map()) ->
-    {{ok, map()} | {ok_unavailable, map()} | {error, term()}, map()}.
-compute_connect_result(Snapshot, Item, Request) ->
-    case resolve_guild_id(Snapshot, Item) of
-        GuildId when is_integer(GuildId), GuildId > 0 ->
-            safe_compute_connect(GuildId, Request, Snapshot);
-        _ ->
-            {{error, missing_guild_id}, #{}}
-    end.
-
--spec safe_compute_connect(integer(), map(), map()) ->
-    {{ok, map()} | {ok_unavailable, map()} | {error, term()}, map()}.
-safe_compute_connect(GuildId, Request, Snapshot) ->
-    try compute_session_connect(GuildId, Request, Snapshot) of
-        Tmp -> {computed_result(Tmp), Tmp}
-    catch
-        _:Reason ->
-            {{error, {session_connect_async_failed, Reason}}, #{}}
-    end.
-
--spec compute_session_connect(integer(), map(), map()) -> map().
-compute_session_connect(GuildId, #{user_id := UserId} = Request, State) when
-    is_integer(UserId)
-->
-    case guild_availability:is_guild_unavailable_for_user(UserId, State) of
-        true ->
-            #{
-                thread_viewer => maps:get(
-                    thread_viewer, guild_thread_gate:session_fields(Request, UserId, State)
-                ),
-                unavailable_response => #{
-                    <<"id">> => integer_to_binary(GuildId),
-                    <<"unavailable">> => true
-                }
-            };
-        false ->
-            compute_available_connect(GuildId, UserId, Request, State)
-    end;
-compute_session_connect(_GuildId, _Request, _State) ->
-    #{}.
-
--spec compute_available_connect(integer(), integer(), map(), map()) -> map().
-compute_available_connect(GuildId, UserId, Request, State) ->
-    case guild_data_members:find_member_by_user_id(UserId, State) of
-        undefined ->
-            #{not_member => true};
-        _Member ->
-            ThreadFields = guild_thread_gate:session_fields(Request, UserId, State),
-            GS = guild_data:get_guild_state(
-                UserId, State, guild_thread_gate:state_opts(maps:merge(Request, ThreadFields))
-            ),
-            #{
-                guild_state => GS,
-                thread_viewer => maps:get(thread_viewer, ThreadFields),
-                initial_last_message_ids => guild_sessions:build_initial_last_message_ids(GS),
-                initial_channel_versions => build_channel_versions(GS),
-                viewable_channels => build_viewable_map(
-                    guild_visibility:get_user_viewable_channels(UserId, State)
-                ),
-                user_roles => session_passive:get_user_roles_for_guild(UserId, State),
-                should_mark_guild_synced =>
-                    maps:get(initial_guild_id, Request, undefined) =:= GuildId
-            }
-    end.
-
--spec computed_result(map()) -> {ok, map()} | {ok_unavailable, map()} | {error, term()}.
-computed_result(Computed) ->
-    case maps:find(unavailable_response, Computed) of
-        {ok, U} when is_map(U) -> {ok_unavailable, U};
-        _ -> guild_state_or_not_member(Computed)
-    end.
-
--spec guild_state_or_not_member(map()) -> {ok, map()} | {error, term()}.
-guild_state_or_not_member(Computed) ->
-    case maps:get(not_member, Computed, false) of
-        true -> {error, not_member};
-        _ -> extract_guild_state_result(Computed)
-    end.
-
--spec extract_guild_state_result(map()) -> {ok, map()} | {error, term()}.
-extract_guild_state_result(Computed) ->
-    case maps:find(guild_state, Computed) of
-        {ok, GS} when is_map(GS) -> {ok, GS};
-        _ -> {error, invalid_guild_state}
-    end.
-
--spec resolve_guild_id(map(), map()) -> integer() | undefined.
-resolve_guild_id(State, Fallback) ->
-    case snowflake_id:parse_optional(maps:get(id, State, undefined)) of
-        GuildId when is_integer(GuildId), GuildId > 0 ->
-            GuildId;
-        _ ->
-            snowflake_id:parse_optional(maps:get(guild_id, Fallback, undefined))
-    end.
 
 -spec upsert_session(session_id(), pid(), map(), map(), map(), joined()) -> {map(), joined()}.
 upsert_session(SessionId, SessionPid, Request, Computed, State, Joined) ->
@@ -618,7 +506,7 @@ note_joined_user(UserId, State, {Joined, Fresh}) ->
 -spec build_session_data(session_id(), integer(), pid(), reference(), map(), map()) -> map().
 build_session_data(SessionId, UserId, SessionPid, MRef, Request, Computed) ->
     #{
-        thread_capable => maps:get(thread_channels_capable, Request, false) =:= true,
+        thread_capable => type_conv:is_true(maps:get(thread_channels_capable, Request, false)),
         thread_viewer => maps:get(thread_viewer, Computed, false),
         session_id => SessionId,
         user_id => UserId,
@@ -696,7 +584,9 @@ update_presence_subscription(UserId, Existing, State, Joined) ->
         undefined ->
             subscribe_joined_user(UserId, State, Joined);
         ExistingUserId ->
-            State1 = guild_sessions:unsubscribe_from_user_presence(ExistingUserId, State),
+            State1 = guild_sessions_presence:unsubscribe_from_user_presence(
+                ExistingUserId, State
+            ),
             subscribe_joined_user(UserId, State1, Joined)
     end.
 
@@ -744,166 +634,8 @@ remove_connected_user(UserId, State) ->
         end,
     State#{user_session_counts => NewCounts, connected_user_ids => NewConnected}.
 
--spec build_channel_versions(map()) -> #{binary() => integer()}.
-build_channel_versions(GuildState) ->
-    lists:foldl(fun add_channel_version/2, #{}, channels(GuildState)).
-
--spec channels(map()) -> [term()].
-channels(GuildState) ->
-    case maps:get(<<"channels">>, GuildState, []) of
-        Channels when is_list(Channels) -> Channels;
-        _ -> []
-    end.
-
--spec add_channel_version(term(), #{binary() => integer()}) -> #{binary() => integer()}.
-add_channel_version(Channel, Acc) when is_map(Channel) ->
-    case maps:find(<<"id">>, Channel) of
-        {ok, Id} when is_binary(Id) ->
-            Acc#{Id => require_integer(map_utils:get_integer(Channel, <<"version">>, 0))};
-        _ ->
-            Acc
-    end;
-add_channel_version(_Channel, Acc) ->
-    Acc.
-
 -spec require_guild_id(term()) -> guild_id().
 require_guild_id(GuildId) when is_integer(GuildId) ->
     GuildId;
 require_guild_id(_) ->
     error(badarg).
-
--spec require_integer(term()) -> integer().
-require_integer(Value) when is_integer(Value) ->
-    Value;
-require_integer(_) ->
-    error(badarg).
-
--spec build_viewable_map([integer()]) -> map().
-build_viewable_map(Ids) ->
-    maps:from_list([{Id, true} || Id <- Ids, is_integer(Id), Id > 0]).
-
--spec send_result(integer(), non_neg_integer(), term(), pid()) -> ok.
-send_result(GuildId, Attempt, Result0, SessionPid) ->
-    Reply =
-        case Result0 of
-            {ok, GS} -> {ok, self(), GS};
-            {ok_unavailable, U} -> {ok_unavailable, self(), U};
-            {error, R} -> {error, R}
-        end,
-    SessionPid ! {guild_connect_result, GuildId, Attempt, Reply},
-    ok.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-pending_connect_state(Sessions) ->
-    #{
-        id => 42,
-        sessions => Sessions,
-        session_connect_pending => #{},
-        session_connect_queue => queue:new(),
-        session_connect_inflight => ?SESSION_CONNECT_MAX_WORKERS,
-        session_connect_max_queue => ?SESSION_CONNECT_DEFAULT_MAX_QUEUE
-    }.
-
-pending_connect_request(SessionId, UserId) ->
-    #{
-        session_id => SessionId,
-        user_id => UserId,
-        session_pid => self(),
-        bot => false,
-        is_staff => false,
-        active_guilds => sets:new()
-    }.
-
-enqueued_session_entry(SessionId, UserId, State0) ->
-    State1 = enqueue_session_connect_async(
-        42, 1, pending_connect_request(SessionId, UserId), #{}, State0
-    ),
-    maps:get(SessionId, maps:get(sessions, State1)).
-
-enqueue_marks_existing_session_pending_connect_test() ->
-    SessionId = <<"s-existing">>,
-    UserId = 21,
-    MRef = make_ref(),
-    Existing = #{
-        session_id => SessionId,
-        user_id => UserId,
-        pid => self(),
-        mref => MRef,
-        pending_connect => false,
-        active_guilds => sets:new()
-    },
-    Entry = enqueued_session_entry(
-        SessionId, UserId, pending_connect_state(#{SessionId => Existing})
-    ),
-    ?assertEqual(true, maps:get(pending_connect, Entry)),
-    ?assertEqual(true, maps:get(owns_connected_tracking, Entry)),
-    ?assertEqual(MRef, maps:get(mref, Entry)),
-    ?assertEqual(UserId, maps:get(user_id, Entry)).
-
-enqueue_creates_pending_session_entry_test() ->
-    SessionId = <<"s-fresh">>,
-    UserId = 22,
-    Entry = enqueued_session_entry(SessionId, UserId, pending_connect_state(#{})),
-    demonitor(maps:get(mref, Entry), [flush]),
-    ?assertEqual(true, maps:get(pending_connect, Entry)),
-    ?assertNot(maps:is_key(owns_connected_tracking, Entry)),
-    ?assertEqual(UserId, maps:get(user_id, Entry)).
-
-unavailable_connect_of_a_thread_viewer_sends_no_guild_create_test() ->
-    Key = channel_threads_config,
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, (channel_threads_config:default_config())#{
-        enabled => true, included_users => #{<<"10">> => true}
-    }),
-    try
-        SessionId = <<"s-unavailable">>,
-        Request = (pending_connect_request(SessionId, 10))#{thread_channels_capable => true},
-        Data = #{
-            <<"guild">> => #{
-                <<"id">> => <<"42">>, <<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]
-            },
-            thread_gate => #{active => true, version => 1}
-        },
-        Snapshot = #{id => 42, data => Data, sessions => #{}},
-        Item = #{guild_id => 42, attempt => 1, request => Request},
-        {{ok_unavailable, _}, Computed} = compute_connect_result(Snapshot, Item, Request),
-        ?assertEqual(true, maps:get(thread_viewer, Computed)),
-        State0 = (pending_connect_state(#{}))#{
-            data => Data,
-            session_connect_pending => #{SessionId => 1},
-            session_connect_inflight => 1,
-            user_session_counts => #{},
-            connected_user_ids => sets:new(),
-            presence_subscriptions => #{},
-            member_presence => #{}
-        },
-        State1 = finalize_session_connect_async(
-            SessionId, 1, {ok_unavailable, #{}}, maps:merge(Item, Computed), State0
-        ),
-        Session = maps:get(SessionId, maps:get(sessions, State1)),
-        ?assert(maps:get(thread_viewer, Session)),
-        _ = guild_thread_flip:resend(SessionId, State1),
-        ?assertEqual([], unavailable_test_messages()),
-        receive
-            {guild_connect_result, 42, 1, _} -> ok
-        after 0 -> ok
-        end
-    after
-        case Previous of
-            undefined -> persistent_term:erase(Key);
-            _ -> persistent_term:put(Key, Previous)
-        end
-    end.
-
-unavailable_test_messages() ->
-    receive
-        {thread_flip_resend, _} = Resend ->
-            [Resend | unavailable_test_messages()];
-        {'$gen_cast', {dispatch, guild_create, _}} = Create ->
-            [Create | unavailable_test_messages()]
-    after 0 -> []
-    end.
-
--endif.

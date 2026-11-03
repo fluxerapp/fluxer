@@ -138,7 +138,6 @@
 		calc(min(var(--compact-call-width, 640px), var(--compact-call-content-height, 320px)) * 0.18),
 		88px
 	);
-	--avatar-voice-indicator-cutout-surface: #000;
 	--voice-participant-avatar-gap: clamp(8px, calc(var(--compact-call-height, 320px) * 0.024), 16px);
 }
 
@@ -161,16 +160,16 @@
 	box-sizing: border-box;
 	align-items: center;
 	justify-content: center;
-	padding-left: var(--voice-call-horizontal-padding);
-	padding-right: var(--voice-call-horizontal-padding);
+	padding-inline-start: var(--voice-call-horizontal-padding);
+	padding-inline-end: var(--voice-call-horizontal-padding);
 	overflow-x: hidden;
 	overflow-y: hidden;
 }
 
 .layoutHostFullHeightGrid {
 	--voice-call-horizontal-padding: 0px;
-	padding-left: 0;
-	padding-right: 0;
+	padding-inline-start: 0;
+	padding-inline-end: 0;
 	padding-top: var(--compact-call-content-safe-top);
 	padding-bottom: var(--compact-call-content-safe-bottom);
 }
@@ -178,14 +177,14 @@
 .layoutHostFullHeightFocus {
 	--voice-call-horizontal-padding: 0px;
 	--voice-participants-toggle-bottom: calc(var(--compact-call-control-reserve) + 0.5rem);
-	padding-left: 0;
-	padding-right: 0;
+	padding-inline-start: 0;
+	padding-inline-end: 0;
 }
 
 .controlBarSection {
 	position: absolute;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	display: flex;
 	justify-content: center;
@@ -208,6 +207,7 @@
 	position: absolute;
 	right: max(0.75rem, env(safe-area-inset-right, 0px));
 	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	margin-bottom: var(--voice-call-corner-lift, 0px);
 	z-index: 13;
 	display: flex;
 	align-items: center;
@@ -219,6 +219,7 @@
 	position: absolute;
 	left: max(0.75rem, env(safe-area-inset-left, 0px));
 	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	margin-bottom: var(--voice-call-corner-lift, 0px);
 	z-index: 13;
 	display: flex;
 	align-items: center;
@@ -294,7 +295,7 @@
 .heightToggleUnreadBadge {
 	position: absolute;
 	top: -0.4rem;
-	right: -0.4rem;
+	inset-inline-end: -0.4rem;
 	z-index: 2;
 	display: flex;
 	align-items: center;
@@ -315,8 +316,8 @@
 
 .resizeHandle {
 	position: absolute;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	height: 1rem;
 	display: flex;

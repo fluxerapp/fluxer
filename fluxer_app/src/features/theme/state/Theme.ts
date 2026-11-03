@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AppStorage from '@app/features/platform/state/PersistentStorage';
-import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
-import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import type {ThemeTarget} from '@app/features/theme/state/ThemeEditTarget';
+import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {LinuxAppearanceSnapshot} from '@app/types/electron.d';
-import type {ThemeType} from '@fluxer/constants/src/UserConstants';
-import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
+import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 type ExplicitTheme =
@@ -15,22 +14,11 @@ type ExplicitTheme =
 	| typeof ThemeTypes.LIGHT
 	| typeof ThemeTypes.COAL;
 
-export interface ThemePreferenceSnapshot {
-	syncAcrossDevices: boolean;
-	localTheme: ThemeType;
-	serverTheme: ThemeType;
-}
-
 const EXPLICIT_THEMES = new Set<string>([ThemeTypes.DARK, ThemeTypes.DARK_LEGACY, ThemeTypes.LIGHT, ThemeTypes.COAL]);
-const VALID_THEMES = new Set<string>(Object.values(ThemeTypes));
 const STORAGE_KEY = 'theme';
 
 function isExplicitTheme(theme: string | null | undefined): theme is ExplicitTheme {
 	return typeof theme === 'string' && EXPLICIT_THEMES.has(theme);
-}
-
-function isValidTheme(theme: string | null | undefined): theme is ThemeType {
-	return typeof theme === 'string' && VALID_THEMES.has(theme);
 }
 
 function loadThemeFromLocalStorage(): ExplicitTheme | null {
@@ -50,13 +38,12 @@ function persistThemeToLocalStorage(theme: string): void {
 	} catch {}
 }
 
+function reportPrebootTheme(theme: string): void {
+	getElectronAPI()?.setPrebootTheme?.(theme);
+}
+
 class Theme {
-	syncAcrossDevices = true;
-	localTheme: ThemeType = ThemeTypes.DARK;
-	serverTheme: ThemeType = ThemeTypes.DARK;
 	systemPrefersDark = false;
-	private _hydrated = false;
-	private _pendingServerTheme: ThemeType | null = null;
 	private mediaQuery: MediaQueryList | null = null;
 	private localStorageSyncDisposer: (() => void) | null = null;
 	private linuxPortalPrefersDark: boolean | null = null;
@@ -66,76 +53,37 @@ class Theme {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.initSystemThemeDetection();
 		this.initLinuxPortalThemeDetection();
-		initializeStore(this, () => this.initPersistence());
-	}
-
-	get isHydrated(): boolean {
-		return this._hydrated;
-	}
-
-	get themePreference(): ThemeType {
-		return this.syncAcrossDevices ? this.serverTheme : this.localTheme;
+		this.localStorageSyncDisposer = reaction(
+			() => (ThemeProfile.isReady ? this.effectiveTheme : null),
+			(theme) => {
+				if (theme !== null) {
+					persistThemeToLocalStorage(theme);
+					reportPrebootTheme(theme);
+				}
+			},
+			{fireImmediately: true},
+		);
 	}
 
 	get effectiveTheme(): ExplicitTheme {
-		if (!this._hydrated) {
+		if (!ThemeProfile.isReady) {
 			const earlyTheme = loadThemeFromLocalStorage();
 			if (earlyTheme) {
 				return earlyTheme;
 			}
 		}
-		const preference = this.themePreference;
+		return this.resolvePreference(ThemeProfile.themePreference);
+	}
+
+	themeFor(target: ThemeTarget): ExplicitTheme {
+		return this.resolvePreference(ThemeProfile.themePreferenceFor(target));
+	}
+
+	private resolvePreference(preference: ThemeType): ExplicitTheme {
 		if (preference === ThemeTypes.SYSTEM) {
 			return this.systemPrefersDark ? ThemeTypes.DARK : ThemeTypes.LIGHT;
 		}
 		return preference;
-	}
-
-	setTheme(theme: ThemeType): void {
-		if (!isValidTheme(theme)) {
-			return;
-		}
-		if (this.syncAcrossDevices) {
-			this.serverTheme = theme;
-		} else {
-			this.localTheme = theme;
-		}
-	}
-
-	setSyncAcrossDevices(sync: boolean): void {
-		if (sync === this.syncAcrossDevices) {
-			return;
-		}
-		if (sync) {
-			this.syncAcrossDevices = true;
-			this.localTheme = ThemeTypes.DARK;
-		} else {
-			const currentPreference = this.themePreference;
-			this.syncAcrossDevices = false;
-			this.localTheme = currentPreference;
-		}
-	}
-
-	getPreferenceSnapshot(): ThemePreferenceSnapshot {
-		return {
-			syncAcrossDevices: this.syncAcrossDevices,
-			localTheme: this.localTheme,
-			serverTheme: this.serverTheme,
-		};
-	}
-
-	applyPreferenceSnapshot(snapshot: ThemePreferenceSnapshot): void {
-		this.syncAcrossDevices = Boolean(snapshot.syncAcrossDevices);
-		this.localTheme = isValidTheme(snapshot.localTheme) ? snapshot.localTheme : ThemeTypes.DARK;
-		this.serverTheme = isValidTheme(snapshot.serverTheme) ? snapshot.serverTheme : ThemeTypes.DARK;
-	}
-
-	updateServerTheme(theme: string | null | undefined): void {
-		const normalized = isValidTheme(theme) ? theme : ThemeTypes.DARK;
-		this.serverTheme = normalized;
-		if (!this._hydrated) {
-			this._pendingServerTheme = normalized;
-		}
 	}
 
 	private initSystemThemeDetection(): void {
@@ -188,22 +136,6 @@ class Theme {
 				}
 			}
 		});
-	}
-
-	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'Theme', ['syncAcrossDevices', 'localTheme', 'serverTheme'], {syncAcrossTabs: true});
-		runInAction(() => {
-			if (this._pendingServerTheme !== null) {
-				this.serverTheme = this._pendingServerTheme;
-				this._pendingServerTheme = null;
-			}
-			this._hydrated = true;
-		});
-		this.localStorageSyncDisposer = reaction(
-			() => this.effectiveTheme,
-			(theme) => persistThemeToLocalStorage(theme),
-			{fireImmediately: true},
-		);
 	}
 
 	destroy(): void {

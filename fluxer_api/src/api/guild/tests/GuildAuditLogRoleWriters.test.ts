@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createGuild, createRole} from '@app/api/guild/tests/GuildTestUtils';
+import {createGuild, createRole, updateRole} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import sharp from 'sharp';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface AuditLogChange {
@@ -94,5 +95,30 @@ describe('Guild audit log role writers', () => {
 			key: 'permissions',
 			old_value: role.permissions,
 		});
+	});
+
+	test('records the emoji and icon changes when a role icon switches kind', async () => {
+		const role = await createRole(harness, owner.token, guild.id, {name: 'Mods', unicode_emoji: '🛡️'});
+		const created = (await listEntries(harness, owner.token, guild.id, AuditLogActionType.ROLE_CREATE)).find(
+			(log) => log.target_id === role.id,
+		);
+		expect(created?.changes?.find((change) => change.key === 'unicode_emoji')).toEqual({
+			key: 'unicode_emoji',
+			new_value: '🛡️',
+		});
+		const updated = await updateRole(harness, owner.token, guild.id, role.id, {
+			icon: `data:image/png;base64,${(
+				await sharp({create: {width: 64, height: 64, channels: 3, background: '#c83232'}})
+					.png()
+					.toBuffer()
+			).toString('base64')}`,
+		});
+		const entry = (await listEntries(harness, owner.token, guild.id, AuditLogActionType.ROLE_UPDATE)).find(
+			(log) => log.target_id === role.id,
+		);
+		expect(entry?.changes).toEqual([
+			{key: 'icon_hash', old_value: null, new_value: updated.icon},
+			{key: 'unicode_emoji', old_value: '🛡️', new_value: null},
+		]);
 	});
 });

@@ -603,11 +603,18 @@ const voiceMediaStateMachine = setup({
 			event.type === 'camera.success' ? {...context, camera: event.enabled ? 'enabled' : 'disabled'} : context,
 		),
 		failCamera: assign(({context, event}) => {
-			if (event.type !== 'camera.failure') return context;
-			return {
-				...context,
-				camera: event.permissionDenied ? 'permissionDenied' : event.actualEnabled ? 'enabled' : 'disabled',
-			};
+			if (event.type !== 'camera.failure') {
+				return context;
+			}
+			const nextContext = {...context};
+			if (event.permissionDenied) {
+				nextContext.camera = 'permissionDenied';
+			} else if (event.actualEnabled) {
+				nextContext.camera = 'enabled';
+			} else {
+				nextContext.camera = 'disabled';
+			}
+			return nextContext;
 		}),
 		reset: assign(() => initialContext()),
 		clearCommands: assign(({context}) =>

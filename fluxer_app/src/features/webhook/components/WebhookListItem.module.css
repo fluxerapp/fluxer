@@ -16,7 +16,7 @@
 	padding: 0 var(--input-container-padding);
 	background: transparent;
 	border: none;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	transition: background-color var(--transition-fast);
 }

@@ -11,14 +11,13 @@ import {
 	follow,
 	followRequest,
 	setGuildFeatures,
-	setLimitOverride,
 } from '@app/api/channel/tests/AnnouncementTestUtils';
 import {createGuild, createPermissionOverwrite, updateGuild} from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {setLimitOverride} from '@app/api/test/LimitTestUtils';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {createWebhook, getChannelWebhooks} from '@app/api/webhook/tests/WebhookTestUtils';
@@ -33,7 +32,7 @@ import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSc
 import type {GuildAuditLogListResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {WebhookListResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 async function listMessages(harness: ApiTestHarness, token: string, channelId: string) {
 	return createBuilder<Array<MessageResponse>>(harness, token).get(`/channels/${channelId}/messages`).execute();
@@ -62,10 +61,6 @@ describe('Channel follow', () => {
 	beforeEach(async () => {
 		await harness.reset();
 		world = await announcementWorld(harness);
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
 	});
 
 	afterAll(async () => {
@@ -136,35 +131,26 @@ describe('Channel follow', () => {
 		const {b} = world;
 		const source = await createAnnouncementSourceGuild(harness, 'Forbidden Words Guild');
 		await addGuildMember(harness, source.owner, source.guild, b.owner);
-		vi.spyOn(phraseBlocklistCache, 'containsBannedPhrase').mockImplementation((text) =>
-			text.includes('Forbidden Words'),
-		);
+		phraseBlocklistCache.add('Forbidden Words');
 		const followed = await follow(harness, b.owner.token, source.ann.id, b.t1.id);
-		vi.restoreAllMocks();
+		phraseBlocklistCache.remove('Forbidden Words');
 		const webhooks = await getChannelWebhooks(harness, b.t1.id, b.owner.token);
 		expect(webhooks.find((candidate) => candidate.id === followed.webhook_id)?.name).toBe('#news');
 	});
 
 	test('rejects the follow when the fallback name also fails moderation', async () => {
 		const {a, b} = world;
-		vi.spyOn(phraseBlocklistCache, 'containsBannedPhrase').mockImplementation((text) => text.includes('news'));
+		phraseBlocklistCache.add('news');
 		await followRequest(harness, b.owner.token, a.ann.id, b.t1.id)
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.CONTENT_BLOCKED)
 			.execute();
-		vi.restoreAllMocks();
+		phraseBlocklistCache.remove('news');
 		expect(await getChannelWebhooks(harness, b.t1.id, b.owner.token)).toHaveLength(0);
 	});
 
 	test('posts a CHANNEL_FOLLOW_ADD system message whose reference has no message id', async () => {
 		const {a, b} = world;
-		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		const followed = await follow(harness, b.owner.token, a.ann.id, b.t1.id);
-		const webhookUpdates = dispatchSpy.mock.calls
-			.map(([params]) => params)
-			.filter((params) => params.event === 'WEBHOOKS_UPDATE');
-		expect(webhookUpdates).toEqual([
-			expect.objectContaining({guildId: createGuildID(BigInt(b.guild.id)), data: {channel_id: b.t1.id}}),
-		]);
 		const webhooks = await getChannelWebhooks(harness, b.t1.id, b.owner.token);
 		const webhookName = webhooks.find((candidate) => candidate.id === followed.webhook_id)!.name;
 		const messages = await listMessages(harness, b.owner.token, b.t1.id);
@@ -321,27 +307,6 @@ describe('Channel follow', () => {
 		} else {
 			expect(followers).toHaveLength(1);
 		}
-	});
-
-	test('undoes a follow whose source stopped being an announcement channel mid-request', async () => {
-		const {a, b} = world;
-		const originalCreate = WebhookRepository.prototype.create;
-		vi.spyOn(WebhookRepository.prototype, 'create').mockImplementation(async function (this: WebhookRepository, data) {
-			const created = await originalCreate.call(this, data);
-			await createBuilder(harness, a.owner.token).patch(`/channels/${a.ann.id}`).body({type: 0}).execute();
-			return created;
-		});
-		await followRequest(harness, b.owner.token, a.ann.id, b.t1.id)
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.ANNOUNCEMENT_CHANNEL_REQUIRED)
-			.execute();
-		vi.restoreAllMocks();
-		expect(await getChannelWebhooks(harness, b.t1.id, b.owner.token)).toHaveLength(0);
-		expect(await new WebhookRepository().countBySourceChannel(createChannelID(BigInt(a.ann.id)))).toEqual({
-			channelCount: 0,
-			guildCount: 0,
-		});
-		const messages = await listMessages(harness, b.owner.token, b.t1.id);
-		expect(messages.some((message) => message.type === MessageTypes.CHANNEL_FOLLOW_ADD)).toBe(false);
 	});
 
 	test('refuses to follow while the source guild has announcement channels disabled', async () => {

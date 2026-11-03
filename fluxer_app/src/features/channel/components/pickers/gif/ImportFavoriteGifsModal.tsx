@@ -14,7 +14,7 @@ import {MAX_FAVORITE_GIFS} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useState} from 'react';
+import {type ReactNode, useCallback, useState} from 'react';
 
 const IMPORT_FAVORITE_GIFS_DESCRIPTOR = msg({
 	message: 'Import favorite GIFs',
@@ -26,7 +26,7 @@ const GIF_URLS_DESCRIPTOR = msg({
 });
 const IMPORT_COMPLETE_WITH_SKIPPED_DESCRIPTOR = msg({
 	message:
-		'Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or limit reached).',
+		'Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or over the limit).',
 	comment:
 		'Completion text in the favorite GIF import modal. importedCount is the number added; skippedCount is the number skipped.',
 });
@@ -77,6 +77,128 @@ export const ImportFavoriteGifsModal = observer(function ImportFavoriteGifsModal
 		setText('');
 	}, []);
 	const isAtLimit = FavoriteGif.totalCount >= MAX_FAVORITE_GIFS;
+	let body: ReactNode;
+	let footerActions: ReactNode;
+	if (FavoriteGifImport.isDone) {
+		body = (
+			<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body">
+				<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description">
+					{FavoriteGifImport.skippedCount > 0
+						? i18n._(IMPORT_COMPLETE_WITH_SKIPPED_DESCRIPTOR, {
+								importedCount: FavoriteGifImport.importedCount,
+								skippedCount: FavoriteGifImport.skippedCount,
+							})
+						: i18n._(IMPORT_COMPLETE_DESCRIPTOR, {
+								importedCount: FavoriteGifImport.importedCount,
+							})}
+				</p>
+			</div>
+		);
+		footerActions = (
+			<>
+				<Button
+					onClick={handleReset}
+					variant="secondary"
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.reset"
+				>
+					{i18n._(IMPORT_MORE_DESCRIPTOR)}
+				</Button>
+				<Button
+					onClick={handleClose}
+					variant="primary"
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close"
+				>
+					{i18n._(DONE_DESCRIPTOR)}
+				</Button>
+			</>
+		);
+	} else if (FavoriteGifImport.isRunning) {
+		body = (
+			<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body--2">
+				<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description--2">
+					{i18n._(IMPORT_PROGRESS_DESCRIPTOR, {
+						processedCount: FavoriteGifImport.processedCount,
+						totalCount: FavoriteGifImport.totalToImport,
+						importedCount: FavoriteGifImport.importedCount,
+					})}
+				</p>
+				<div className={styles.progressTrack} data-flx="channel.pickers.gif.import-favorite-gifs-modal.progress-track">
+					<div
+						className={styles.progressBar}
+						style={{width: `${Math.round(FavoriteGifImport.progress * 100)}%`}}
+						data-flx="channel.pickers.gif.import-favorite-gifs-modal.progress-bar"
+					/>
+				</div>
+				<p className={styles.muted} data-flx="channel.pickers.gif.import-favorite-gifs-modal.muted">
+					{i18n._(IMPORT_BACKGROUND_CONTINUES_DESCRIPTOR)}
+				</p>
+			</div>
+		);
+		footerActions = (
+			<>
+				<Button
+					onClick={handleClose}
+					variant="secondary"
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close--2"
+				>
+					{i18n._(CLOSE_DESCRIPTOR)}
+				</Button>
+				<Button
+					onClick={handleCancel}
+					variant="danger"
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.cancel"
+				>
+					{i18n._(CANCEL_IMPORT_DESCRIPTOR)}
+				</Button>
+			</>
+		);
+	} else {
+		body = (
+			<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body--3">
+				<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description--3">
+					{i18n._(PASTE_GIF_URLS_DESCRIPTOR)}
+				</p>
+				{isAtLimit ? (
+					<p className={styles.danger} data-flx="channel.pickers.gif.import-favorite-gifs-modal.danger">
+						{i18n._(FAVORITE_GIF_LIMIT_REACHED_DESCRIPTOR)}
+					</p>
+				) : (
+					<Textarea
+						label={i18n._(GIF_URLS_DESCRIPTOR)}
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+						placeholder={EXAMPLE_GIF_URLS}
+						minRows={8}
+						maxRows={14}
+						spellCheck={false}
+						autoCapitalize="off"
+						autoCorrect="off"
+						autoComplete="off"
+						data-flx="channel.pickers.gif.import-favorite-gifs-modal.textarea.set-text"
+					/>
+				)}
+			</div>
+		);
+		footerActions = (
+			<>
+				<Button
+					onClick={handleClose}
+					variant="secondary"
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close--3"
+				>
+					{i18n._(CANCEL_DESCRIPTOR)}
+				</Button>
+				<Button
+					onClick={handleImport}
+					variant="primary"
+					disabled={!text.trim() || isAtLimit}
+					data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.import"
+				>
+					{i18n._(IMPORT_DESCRIPTOR)}
+				</Button>
+			</>
+		);
+	}
 	return (
 		<Modal.Root size="small" data-flx="channel.pickers.gif.import-favorite-gifs-modal.modal-root">
 			<Modal.Header
@@ -84,124 +206,9 @@ export const ImportFavoriteGifsModal = observer(function ImportFavoriteGifsModal
 				onClose={handleClose}
 				data-flx="channel.pickers.gif.import-favorite-gifs-modal.modal-header"
 			/>
-			<Modal.Content data-flx="channel.pickers.gif.import-favorite-gifs-modal.modal-content">
-				{FavoriteGifImport.isDone ? (
-					<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body">
-						<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description">
-							{FavoriteGifImport.skippedCount > 0
-								? i18n._(IMPORT_COMPLETE_WITH_SKIPPED_DESCRIPTOR, {
-										importedCount: FavoriteGifImport.importedCount,
-										skippedCount: FavoriteGifImport.skippedCount,
-									})
-								: i18n._(IMPORT_COMPLETE_DESCRIPTOR, {
-										importedCount: FavoriteGifImport.importedCount,
-									})}
-						</p>
-					</div>
-				) : FavoriteGifImport.isRunning ? (
-					<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body--2">
-						<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description--2">
-							{i18n._(IMPORT_PROGRESS_DESCRIPTOR, {
-								processedCount: FavoriteGifImport.processedCount,
-								totalCount: FavoriteGifImport.totalToImport,
-								importedCount: FavoriteGifImport.importedCount,
-							})}
-						</p>
-						<div
-							className={styles.progressTrack}
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.progress-track"
-						>
-							<div
-								className={styles.progressBar}
-								style={{width: `${Math.round(FavoriteGifImport.progress * 100)}%`}}
-								data-flx="channel.pickers.gif.import-favorite-gifs-modal.progress-bar"
-							/>
-						</div>
-						<p className={styles.muted} data-flx="channel.pickers.gif.import-favorite-gifs-modal.muted">
-							{i18n._(IMPORT_BACKGROUND_CONTINUES_DESCRIPTOR)}
-						</p>
-					</div>
-				) : (
-					<div className={styles.body} data-flx="channel.pickers.gif.import-favorite-gifs-modal.body--3">
-						<p className={styles.description} data-flx="channel.pickers.gif.import-favorite-gifs-modal.description--3">
-							{i18n._(PASTE_GIF_URLS_DESCRIPTOR)}
-						</p>
-						{isAtLimit ? (
-							<p className={styles.danger} data-flx="channel.pickers.gif.import-favorite-gifs-modal.danger">
-								{i18n._(FAVORITE_GIF_LIMIT_REACHED_DESCRIPTOR)}
-							</p>
-						) : (
-							<Textarea
-								label={i18n._(GIF_URLS_DESCRIPTOR)}
-								value={text}
-								onChange={(e) => setText(e.target.value)}
-								placeholder={EXAMPLE_GIF_URLS}
-								minRows={8}
-								maxRows={14}
-								spellCheck={false}
-								autoCapitalize="off"
-								autoCorrect="off"
-								autoComplete="off"
-								data-flx="channel.pickers.gif.import-favorite-gifs-modal.textarea.set-text"
-							/>
-						)}
-					</div>
-				)}
-			</Modal.Content>
+			<Modal.Content data-flx="channel.pickers.gif.import-favorite-gifs-modal.modal-content">{body}</Modal.Content>
 			<Modal.Footer data-flx="channel.pickers.gif.import-favorite-gifs-modal.modal-footer">
-				{FavoriteGifImport.isDone ? (
-					<>
-						<Button
-							onClick={handleReset}
-							variant="secondary"
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.reset"
-						>
-							{i18n._(IMPORT_MORE_DESCRIPTOR)}
-						</Button>
-						<Button
-							onClick={handleClose}
-							variant="primary"
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close"
-						>
-							{i18n._(DONE_DESCRIPTOR)}
-						</Button>
-					</>
-				) : FavoriteGifImport.isRunning ? (
-					<>
-						<Button
-							onClick={handleClose}
-							variant="secondary"
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close--2"
-						>
-							{i18n._(CLOSE_DESCRIPTOR)}
-						</Button>
-						<Button
-							onClick={handleCancel}
-							variant="danger"
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.cancel"
-						>
-							{i18n._(CANCEL_IMPORT_DESCRIPTOR)}
-						</Button>
-					</>
-				) : (
-					<>
-						<Button
-							onClick={handleClose}
-							variant="secondary"
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.close--3"
-						>
-							{i18n._(CANCEL_DESCRIPTOR)}
-						</Button>
-						<Button
-							onClick={handleImport}
-							variant="primary"
-							disabled={!text.trim() || isAtLimit}
-							data-flx="channel.pickers.gif.import-favorite-gifs-modal.button.import"
-						>
-							{i18n._(IMPORT_DESCRIPTOR)}
-						</Button>
-					</>
-				)}
+				{footerActions}
 			</Modal.Footer>
 		</Modal.Root>
 	);

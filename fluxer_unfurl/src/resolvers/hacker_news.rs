@@ -82,9 +82,10 @@ impl Resolver for HackerNewsResolver {
             embed.url = Some(item_url);
             embed.color = Some(HN_COLOR);
 
-            if let Some(time) = item.time {
-                embed.timestamp = Some(format_unix_timestamp(time));
-            }
+            embed.timestamp = item
+                .time
+                .and_then(|time| i64::try_from(time).ok())
+                .and_then(format_timestamp);
 
             embed.footer = Some(hn_footer(ctx.self_hosted));
 
@@ -126,48 +127,8 @@ fn hn_footer(self_hosted: bool) -> EmbedFooter {
     }
 }
 
-fn format_unix_timestamp(secs: u64) -> String {
-    chrono_lite(secs)
-}
-
-fn chrono_lite(unix_secs: u64) -> String {
-    let secs_per_day: u64 = 86400;
-    let days = unix_secs / secs_per_day;
-    let remaining = unix_secs % secs_per_day;
-    let hours = remaining / 3600;
-    let minutes = (remaining % 3600) / 60;
-    let seconds = remaining % 60;
-
-    let (year, month, day) = days_to_ymd(days);
-
-    format!("{year:04}-{month:02}-{day:02}T{hours:02}:{minutes:02}:{seconds:02}Z")
-}
-
-fn days_to_ymd(days: u64) -> (u64, u64, u64) {
-    let z = days + 719468;
-    let era = z / 146097;
-    let doe = z - era * 146097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if m <= 2 { y + 1 } else { y };
-    (y, m, d)
-}
-
-fn parse_text(value: &str, max_len: usize) -> String {
-    text_limits::truncate(decode_html_entities(value).trim(), max_len)
-}
-
 fn html_to_markdown(html: &str) -> String {
-    crate::html_markdown::to_markdown(html, decode_html_entities)
+    crate::html_markdown::to_markdown(html, decode_html_text)
 }
 
-fn decode_html_entities(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
-        .root_element()
-        .text()
-        .collect()
-}
+use super::default_helpers::{decode_html_text, format_timestamp, parse_text};

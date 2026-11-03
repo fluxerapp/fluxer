@@ -8,11 +8,11 @@ import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/M
 import {parseAndRenderToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {inlineMentionedUserNames} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {
 	ChannelMention,
 	MessageAttachment,
-	MessageMention,
 	MessageSnapshot,
 	MessageStickerItem,
 	Message as WireMessage,
@@ -43,6 +43,7 @@ const STICKERS_NOTIFICATION_BODY_DESCRIPTOR = msg({
 interface MarkdownPreviewOptions {
 	channelId: string;
 	mentionChannels?: ReadonlyArray<ChannelMention>;
+	resolveFromStores?: boolean;
 	i18n: I18n;
 }
 
@@ -63,6 +64,7 @@ function renderMarkdownPreview(content: string | null | undefined, options: Mark
 		preserveMarkdown: true,
 		includeEmojiNames: true,
 		mentionChannels: options.mentionChannels,
+		resolveFromStores: options.resolveFromStores,
 		i18n: options.i18n,
 	});
 }
@@ -166,24 +168,14 @@ export function buildMessageNotificationBody(message: Message, i18n: I18n): stri
 	return '';
 }
 
-const USER_MENTION_PATTERN = /<@!?(\d+)>/g;
-
-function inlineUserMentions(content: string, mentions: ReadonlyArray<MessageMention> | undefined): string {
-	if (!content || !mentions?.length) return content;
-	return content.replace(USER_MENTION_PATTERN, (token, userId: string) => {
-		const user = mentions.find((mention) => mention.id === userId);
-		if (!user) return token;
-		return `@${user.member?.nick || user.global_name || user.username}`;
-	});
-}
-
 export function buildWireMessageNotificationBody(message: WireMessage, i18n: I18n): string {
 	const markdownOptions: MarkdownPreviewOptions = {
 		channelId: message.channel_id,
 		mentionChannels: message.mention_channels,
+		resolveFromStores: false,
 		i18n,
 	};
-	const userBody = renderMarkdownPreview(inlineUserMentions(message.content, message.mentions), markdownOptions);
+	const userBody = renderMarkdownPreview(inlineMentionedUserNames(message.content, message.mentions), markdownOptions);
 	if (userBody) return userBody;
 	const contentFallback = buildMessageContentFallbackPreview(
 		{

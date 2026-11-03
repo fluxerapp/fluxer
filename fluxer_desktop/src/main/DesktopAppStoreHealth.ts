@@ -3,8 +3,8 @@
 import {readFileSync, renameSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 
-export const DESKTOP_APP_STORE_STATE_FILE_NAME = 'account-store-state-v1.json';
-export const DESKTOP_APP_STORE_STATE_VERSION = 1;
+const DESKTOP_APP_STORE_STATE_FILE_NAME = 'account-store-state-v1.json';
+const DESKTOP_APP_STORE_STATE_VERSION = 1;
 
 export interface DesktopAppStoreState {
 	readonly version: number;

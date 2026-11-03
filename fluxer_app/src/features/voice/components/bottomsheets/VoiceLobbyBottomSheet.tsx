@@ -25,6 +25,7 @@ import {VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR} from '@app/features/voice/en
 import {useCameraUserCapBlocked} from '@app/features/voice/hooks/useCameraUserCapBlocked';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	getVoiceDeafenedByModeratorsStatusLabel,
 	VOICE_DEAFEN_DESCRIPTOR,
@@ -34,34 +35,28 @@ import {
 	VOICE_UNDEAFEN_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {isVoicePermissionMuteActive} from '@app/features/voice/utils/VoicePermissionUtils';
+import {
+	CAMERA_OFF_DESCRIPTOR,
+	CONNECTION_ID_DESCRIPTOR,
+	ENDPOINT_DESCRIPTOR,
+	JITTER_DESCRIPTOR,
+	MUTE_DESCRIPTOR,
+	OPEN_CALL_VIEW_DESCRIPTOR,
+	PACKET_LOSS_DESCRIPTOR,
+	PING_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
-const OPEN_CALL_VIEW_DESCRIPTOR = msg({
-	message: 'Open call view',
-	comment: 'Primary CTA in the mobile voice-channel lobby bottom sheet. Opens the full call UI when already connected.',
-});
 const CONNECT_TO_VOICE_DESCRIPTOR = msg({
 	message: 'Connect to voice',
 	comment: 'Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.',
 });
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	context: 'voice-control-action',
-	comment: 'Mic toggle button label in the mobile voice-channel lobby (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	context: 'voice-control-action',
-	comment: 'Mic toggle button label in the mobile voice-channel lobby (currently unmuted).',
-});
-const CAMERA_OFF_DESCRIPTOR = msg({
-	message: 'Camera off',
-	comment: 'Camera toggle button label in the mobile voice-channel lobby (currently on).',
-});
+
 const CONNECTED_TO_VOICE_DESCRIPTOR = msg({
 	message: 'Connected to voice',
 	comment: 'Section header in the mobile voice-channel lobby when connected. Groups in-call controls.',
@@ -70,26 +65,7 @@ const YOU_RE_IN_THE_VOICE_CHANNEL_DESCRIPTOR = msg({
 	message: "You're in the voice channel",
 	comment: 'Subtitle below the connected-to-voice header confirming the user is in the channel.',
 });
-const PING_DESCRIPTOR = msg({
-	message: 'Ping',
-	comment: 'Voice stats field label (mobile voice lobby). Shows current latency in ms.',
-});
-const ENDPOINT_DESCRIPTOR = msg({
-	message: 'Endpoint',
-	comment: 'Voice stats field label (mobile voice lobby). Shows the voice server endpoint hostname.',
-});
-const CONNECTION_ID_DESCRIPTOR = msg({
-	message: 'Connection ID',
-	comment: 'Voice stats field label (mobile voice lobby). Developer / debug surface.',
-});
-const PACKET_LOSS_DESCRIPTOR = msg({
-	message: 'Packet loss',
-	comment: 'Voice stats field label (mobile voice lobby). Shows packet loss percentage.',
-});
-const JITTER_DESCRIPTOR = msg({
-	message: 'Jitter',
-	comment: 'Voice stats field label (mobile voice lobby). Shows network jitter in ms.',
-});
+
 const logger = new Logger('VoiceLobbyBottomSheet');
 
 interface VoiceLobbyBottomSheetProps {
@@ -110,7 +86,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 	const connectedGuildId = MediaEngine.guildId;
 	const connectedChannelId = MediaEngine.channelId;
 	const voiceState = MediaEngine.getCurrentUserVoiceState(connectedGuildId);
-	const localSelfMute = LocalVoiceState.getSelfMute();
+	const localSelfMute = VoiceStateCommands.getCurrentSelfMute();
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const localSelfVideo = LocalVoiceState.getSelfVideo();
 	const currentLatency = MediaEngine.currentLatency;
@@ -121,8 +97,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 	const isPermissionMuted = isVoicePermissionMuteActive(voiceState, guild.id, channel.id);
 	const isGuildMuted = voiceState?.mute ?? false;
 	const isGuildDeafened = voiceState?.deaf ?? false;
-	const isMuted =
-		(voiceState ? voiceState.self_mute : localSelfMute) || isGuildMuted || isGuildDeafened || isPermissionMuted;
+	const isMuted = localSelfMute || isGuildMuted || isGuildDeafened || isPermissionMuted;
 	const isDeafened = (voiceState ? voiceState.self_deaf : localSelfDeaf) || isGuildDeafened;
 	const isCameraOn = voiceState ? Boolean(voiceState.self_video) : localSelfVideo;
 	const cameraCapBlocked = useCameraUserCapBlocked(isCameraOn);
@@ -281,7 +256,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 						}}
 						currentLatency={currentLatency}
 						voiceServerEndpoint={voiceServerEndpoint}
-						connectionId={connectionId}
+						connectionId={VoiceSettings.showVoiceConnectionId ? connectionId : null}
 						audioPacketLoss={voiceStats?.audioPacketLoss}
 						jitter={voiceStats?.jitter}
 					/>

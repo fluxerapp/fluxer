@@ -2,6 +2,7 @@
 
 import {promptForSecurityKeyPin} from '@app/features/auth/components/modals/PasskeyPinModal';
 import {writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
+import {PasskeysUnsupportedError} from '@app/features/auth/utils/PasskeyErrorMessages';
 import {parsePasskeyPinFailure} from '@app/features/auth/utils/PasskeyPinErrors';
 import {Platform} from '@app/features/platform/types/Platform';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -21,10 +22,24 @@ interface NativeCeremonyRequestContext {
 	instanceKey?: string;
 }
 
+const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError): /u;
+
+function withNativeCeremonyErrorName(error: unknown): unknown {
+	const name = error instanceof Error ? NATIVE_CEREMONY_ERROR_NAME.exec(error.message)?.[1] : undefined;
+	if (name !== undefined) {
+		(error as Error).name = name;
+	}
+	return error;
+}
+
 async function runNativeCeremonyWithPinSupport<T>(
 	instanceKey: string | null,
-	run: (requestContext?: NativeCeremonyRequestContext) => Promise<T>,
+	ceremony: (requestContext?: NativeCeremonyRequestContext) => Promise<T>,
 ): Promise<T> {
+	const run = (requestContext?: NativeCeremonyRequestContext) =>
+		ceremony(requestContext).catch((error: unknown) => {
+			throw withNativeCeremonyErrorName(error);
+		});
 	const baseContext = instanceKey == null ? undefined : {instanceKey};
 	try {
 		return await run(baseContext);
@@ -44,10 +59,6 @@ async function rememberMigratedPasskeyUse<T>(rpId: string | undefined, ceremony:
 	return result;
 }
 
-export function isBrowserWebAuthnSupported(): boolean {
-	return browserSupportsWebAuthn();
-}
-
 export async function isWebAuthnSupported(): Promise<boolean> {
 	if (Platform.isElectron) {
 		const electronApi = getElectronAPI();
@@ -58,7 +69,7 @@ export async function isWebAuthnSupported(): Promise<boolean> {
 
 export async function assertWebAuthnSupported(): Promise<void> {
 	if (!(await isWebAuthnSupported())) {
-		throw new Error('WebAuthn is not supported in this environment.');
+		throw new PasskeysUnsupportedError();
 	}
 }
 

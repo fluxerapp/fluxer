@@ -1,15 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {
+	calculateSwipeVelocity,
+	pushVelocitySample,
+	SWIPE_VELOCITY_THRESHOLD,
+	type VelocitySample,
+} from '@app/features/app/hooks/SwipeVelocity';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRenderUtils';
-import {MessageActionBar, MessageActionBarCore} from '@app/features/channel/components/MessageActionBar';
+import {MessageActionBar} from '@app/features/channel/components/MessageActionBar';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
-import {requestDeleteMessage} from '@app/features/channel/components/MessageActionUtils';
+import {
+	getMessagePermissions,
+	requestDeleteMessage,
+	requestMessageReply,
+	startMessageEdit,
+} from '@app/features/channel/components/MessageActionUtils';
 import {useMessageHoverState} from '@app/features/channel/components/MessageHoverState';
 import {MessageViewContextProvider} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {parse} from '@app/features/messaging/components/markdown/renderers';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
@@ -91,10 +103,11 @@ const isActivationKey = (key: string) => key === 'Enter' || key === ' ' || key =
 const MAX_ARIA_MESSAGE_TEXT_LENGTH = 220;
 const LONG_PRESS_DELAY = 500;
 const MOVEMENT_THRESHOLD = 10;
-const SWIPE_VELOCITY_THRESHOLD = 0.4;
 const HIGHLIGHT_DELAY = 100;
 const SUPPRESS_POST_LONG_PRESS_CLICK_MS = 750;
 const NESTED_LONG_PRESS_OWNER_SELECTOR = '[data-long-press-owner="true"]';
+const DOUBLE_CLICK_INTERACTIVE_TARGET_SELECTOR =
+	'a, button, input, textarea, select, video, audio, [role="button"], [contenteditable="true"]';
 const mobileLongPressScrollCancelHandlers = new Set<() => void>();
 
 let mobileLongPressScrollListenerAttached = false;
@@ -156,6 +169,8 @@ const getElementFromEventTarget = (target: EventTarget | null): Element | null =
 };
 const isNestedLongPressOwnerTarget = (target: EventTarget | null): boolean =>
 	getElementFromEventTarget(target)?.closest(NESTED_LONG_PRESS_OWNER_SELECTOR) != null;
+const isDoubleClickInteractiveTarget = (target: EventTarget | null): boolean =>
+	getElementFromEventTarget(target)?.closest(DOUBLE_CLICK_INTERACTIVE_TARGET_SELECTOR) != null;
 const normalizeAriaLabelText = (text: string): string => text.replace(/\s+/g, ' ').trim();
 const truncateAriaLabelText = (text: string): string => {
 	const normalized = normalizeAriaLabelText(text);
@@ -175,6 +190,7 @@ export type MessageBehaviorOverrides = Partial<{
 	contextMenuOpen: boolean;
 	disableContextMenu: boolean;
 	disableContextMenuTracking: boolean;
+	disableDoubleClick: boolean;
 }>;
 
 interface MessageProps {
@@ -187,10 +203,10 @@ interface MessageProps {
 	previewOverrides?: {
 		usernameColor?: string;
 		displayName?: string;
+		iconRole?: GuildRole | null;
 	};
 	removeTopSpacing?: boolean;
 	isJumpTarget?: boolean;
-	previewMode?: boolean;
 	behaviorOverrides?: MessageBehaviorOverrides;
 	compact?: boolean;
 	idPrefix?: string;
@@ -209,7 +225,6 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		previewOverrides,
 		removeTopSpacing = false,
 		isJumpTarget = false,
-		previewMode,
 		behaviorOverrides,
 		compact,
 		idPrefix = 'message',
@@ -302,6 +317,38 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		},
 		[message],
 	);
+	const handleDoubleClick = useCallback(
+		(event: React.MouseEvent) => {
+			if (
+				behaviorOverrides?.disableDoubleClick ||
+				!Accessibility.messageDoubleClickActions ||
+				mobileLayoutEnabled ||
+				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
+				message.state !== MessageStates.SENT ||
+				!message.isUserMessage() ||
+				isEditing ||
+				isDoubleClickInteractiveTarget(event.target)
+			) {
+				return;
+			}
+			const permissions = getMessagePermissions(message, channel);
+			if (!permissions?.canSendMessages) return;
+			if (permissions.canEditMessage && !message.messageSnapshots) {
+				startMessageEdit(message);
+				return;
+			}
+			if (!isReplying) requestMessageReply(message, {sourceChannel: channel});
+		},
+		[
+			previewContext,
+			message,
+			channel,
+			isEditing,
+			isReplying,
+			mobileLayoutEnabled,
+			behaviorOverrides?.disableDoubleClick,
+		],
+	);
 	const handleAltKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
 			handleAltKeyboardEvent(event, message);
@@ -355,7 +402,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		],
 	);
 	const touchStartPos = useRef<{x: number; y: number} | null>(null);
-	const velocitySamples = useRef<Array<{x: number; y: number; timestamp: number}>>([]);
+	const velocitySamples = useRef<Array<VelocitySample>>([]);
 	const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const suppressClickUntilRef = useRef(0);
 	const unsubscribeLongPressScrollCancel = useCallback(() => {
@@ -382,26 +429,6 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		},
 		[unsubscribeLongPressScrollCancel],
 	);
-	const calculateVelocity = useCallback((): number => {
-		const samples = velocitySamples.current;
-		if (samples.length < 2) return 0;
-		const now = performance.now();
-		let firstRecentIndex = samples.length - 1;
-		for (let i = samples.length - 1; i >= 0; i--) {
-			if (now - samples[i].timestamp >= 100) {
-				break;
-			}
-			firstRecentIndex = i;
-		}
-		if (samples.length - firstRecentIndex < 2) return 0;
-		const first = samples[firstRecentIndex];
-		const last = samples[samples.length - 1];
-		const dt = last.timestamp - first.timestamp;
-		if (dt === 0) return 0;
-		const dx = last.x - first.x;
-		const dy = last.y - first.y;
-		return Math.sqrt(dx * dx + dy * dy) / dt;
-	}, []);
 	const handleLongPressStart = useCallback(
 		(event: React.TouchEvent) => {
 			if (!mobileLayoutEnabled || previewContext || isNestedLongPressOwnerTarget(event.target)) {
@@ -445,22 +472,19 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			if (!touchStartPos.current) return;
 			const touch = event.touches[0];
 			if (!touch) return;
-			velocitySamples.current.push({x: touch.clientX, y: touch.clientY, timestamp: performance.now()});
-			if (velocitySamples.current.length > 10) {
-				velocitySamples.current.shift();
-			}
+			pushVelocitySample(velocitySamples.current, touch.clientX, touch.clientY);
 			const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
 			const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
 			if (deltaX > MOVEMENT_THRESHOLD || deltaY > MOVEMENT_THRESHOLD) {
 				clearLongPressState();
 				return;
 			}
-			const velocity = calculateVelocity();
+			const velocity = calculateSwipeVelocity(velocitySamples.current, performance.now());
 			if (velocity > SWIPE_VELOCITY_THRESHOLD) {
 				clearLongPressState();
 			}
 		},
-		[clearLongPressState, calculateVelocity],
+		[clearLongPressState],
 	);
 	const handleClickCapture = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>) => {
@@ -559,21 +583,6 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			messageDisplayCompact,
 			previewContext,
 			previewOverrides,
-			previewPermissions: previewMode
-				? {
-						isDM: false,
-						canSendMessages: true,
-						canAddReactions: true,
-						canEditMessage: true,
-						canDeleteMessage: true,
-						canDeleteAttachment: true,
-						canPinMessage: true,
-						canForwardMessage: true,
-						canCrosspostMessage: false,
-						canSuppressEmbeds: true,
-						shouldRenderSuppressEmbeds: false,
-					}
-				: undefined,
 			onPopoutToggle: handlePopoutToggle,
 			suppressMessageActions,
 			onHeadingActivate,
@@ -587,7 +596,6 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			messageDisplayCompact,
 			previewContext,
 			previewOverrides,
-			previewMode,
 			handlePopoutToggle,
 			suppressMessageActions,
 			onHeadingActivate,
@@ -599,7 +607,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		</MessageViewContextProvider>
 	);
 	const shouldHideContent =
-		UserSettings.getRenderEmbeds() &&
+		UserSettings.renderEmbeds &&
 		message.embeds.length > 0 &&
 		message.embeds.every(isMediaOnlyEmbed) &&
 		astNodes.length === 1 &&
@@ -672,8 +680,8 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		[previewContext, suppressMessageActions, message.state, isEditing, mobileLayoutEnabled],
 	);
 	const isActionBarForcedVisible = useMemo(
-		() => Boolean(previewMode || isKeyboardFocused || contextMenuOpen || isPopoutOpen),
-		[previewMode, isKeyboardFocused, contextMenuOpen, isPopoutOpen],
+		() => Boolean(isKeyboardFocused || contextMenuOpen || isPopoutOpen),
+		[isKeyboardFocused, contextMenuOpen, isPopoutOpen],
 	);
 	const isActionBarActive = isHovering || isActionBarForcedVisible;
 	const wasActionBarActivatedRef = useRef(false);
@@ -738,6 +746,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					ref={messageRef}
 					onClickCapture={handleClickCapture}
 					onClick={handleAltClick}
+					onDoubleClick={handleDoubleClick}
 					onKeyDown={handleAltKeyDown}
 					onFocus={handleFocusWithin}
 					onBlur={handleBlurWithin}
@@ -756,37 +765,16 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 						data-flx="channel.message.focus-ring-anchor"
 					/>
 					{messageComponent}
-					{shouldMountActionBar &&
-						(previewMode ? (
-							<MessageActionBarCore
-								message={message}
-								handleDelete={handleDelete}
-								permissions={{
-									channel,
-									canSendMessages: true,
-									canAddReactions: true,
-									canEditMessage: true,
-									canDeleteMessage: true,
-									canPinMessage: true,
-									canForwardMessage: true,
-									canCrosspostMessage: false,
-									shouldRenderSuppressEmbeds: true,
-								}}
-								developerMode={false}
-								isActive={isActionBarActive}
-								onPopoutToggle={handlePopoutToggle}
-								data-flx="channel.message.message-action-bar-core"
-							/>
-						) : (
-							<MessageActionBar
-								message={message}
-								handleDelete={handleDelete}
-								sourceChannel={channel}
-								isActive={isActionBarActive}
-								onPopoutToggle={handlePopoutToggle}
-								data-flx="channel.message.message-action-bar"
-							/>
-						))}
+					{shouldMountActionBar && (
+						<MessageActionBar
+							message={message}
+							handleDelete={handleDelete}
+							sourceChannel={channel}
+							isActive={isActionBarActive}
+							onPopoutToggle={handlePopoutToggle}
+							data-flx="channel.message.message-action-bar"
+						/>
+					)}
 				</div>
 			</FocusRing>
 			{shouldShowBottomSheet && (

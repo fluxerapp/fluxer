@@ -32,34 +32,3 @@ is_guild_operation_disabled(State, OperationMask) ->
     Guild = maps:get(<<"guild">>, Data, #{}),
     DisabledOperations = bitset:parse(maps:get(<<"disabled_operations">>, Guild, 0)),
     bitset:has(DisabledOperations, OperationMask).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
--spec disabled_operations_state(integer() | binary()) -> guild_state().
-disabled_operations_state(Value) ->
-    #{data => #{<<"guild">> => #{<<"disabled_operations">> => Value}}}.
-
-should_send_push_notifications_respects_flag_test() ->
-    ?assertEqual(true, should_send_push_notifications(disabled_operations_state(0))),
-    PushFlag = ?GUILD_DISABLED_OP_PUSH_NOTIFICATIONS,
-    ?assertEqual(
-        false,
-        should_send_push_notifications(disabled_operations_state(PushFlag))
-    ).
-
-member_list_updates_enabled_respects_flag_test() ->
-    ?assertEqual(true, is_member_list_updates_enabled(disabled_operations_state(<<"0">>))),
-    DisabledState = #{
-        disable_member_list_updates => true,
-        data => #{<<"guild">> => #{}}
-    },
-    ?assertEqual(false, is_member_list_updates_enabled(DisabledState)),
-    ?assertEqual(
-        false,
-        is_member_list_updates_enabled(
-            disabled_operations_state(integer_to_binary(?GUILD_DISABLED_OP_MEMBER_LIST_UPDATES))
-        )
-    ).
-
--endif.

@@ -14,6 +14,7 @@ import {observePopoutKeyboardDismiss, resolvePopoutReturnFocus} from '@app/featu
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import PopoutState from '@app/features/ui/state/Popout';
+import {toDocumentPlacement} from '@app/features/ui/utils/DocumentPlacement';
 import {isScrollbarDragActive} from '@app/features/ui/utils/ScrollbarDragState';
 import {canUseWindowFocusedHoverControls} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
@@ -192,14 +193,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			state,
 			style,
 			beginManualPositioning,
-		} = useAntiShiftFloating(positionReference, true, {
-			placement: position,
+		} = useAntiShiftFloating(positionReference, {
+			placement: toDocumentPlacement(position, target),
 			offsetMainAxis,
 			offsetCrossAxis,
 			shouldAutoUpdate: frozenTargetRect ? false : shouldAutoUpdate,
 			shouldObserveFloatingResize: !frozenTargetRect || !constrainHeight,
 			constrainHeight,
-			enableSmartBoundary: true,
 		});
 		const resizePositionController = useMemo(
 			() => ({begin: beginManualPositioning, placement: state.placement}),
@@ -342,13 +342,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 				}
 				const targetElement = event.target;
 				const ownerWindow = ownerDocument.defaultView;
-				if (!ownerWindow || !(targetElement instanceof ownerWindow.HTMLElement)) return;
+				if (!ownerWindow || !(targetElement instanceof ownerWindow.Element)) return;
 				if (target.contains(targetElement)) {
 					return;
 				}
 				if (
 					targetElement.closest('[role="dialog"][aria-modal="true"]') ||
-					targetElement.className.includes('backdrop') ||
+					(targetElement.getAttribute('class') ?? '').includes('backdrop') ||
 					targetElement.closest('.focusLock') ||
 					targetElement.closest('[data-native-titlebar]')
 				) {
@@ -476,7 +476,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 		const prevKeys = prevPopoutKeysRef.current;
 		currentKeys.forEach((key) => {
 			if (!prevKeys.has(key)) {
-				LayerManager.addLayer('popout', key);
+				LayerManager.addLayer('popout', key, undefined, scopeDocument);
 			}
 		});
 		prevKeys.forEach((key) => {
@@ -485,7 +485,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 			}
 		});
 		prevPopoutKeysRef.current = currentKeys;
-	}, [popouts]);
+	}, [popouts, scopeDocument]);
 	useEffect(() => {
 		return () => {
 			prevPopoutKeysRef.current.forEach((key) => {

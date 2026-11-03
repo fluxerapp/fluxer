@@ -42,6 +42,7 @@ import {
 	VIDEO_CODEC_NAMES,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
 import {
+	getRtcReceiverCodecSupport,
 	getScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
@@ -111,22 +112,6 @@ function createId(prefix: string): string {
 	return `${prefix}_${randomUuid()}`;
 }
 
-function hasReceiverCapability(codec: VideoCodec): boolean | null {
-	const receiver = (globalThis as Record<string, unknown>).RTCRtpReceiver as
-		| {getCapabilities?: (kind: 'video') => RTCRtpCapabilities | null}
-		| undefined;
-	const caps = receiver?.getCapabilities?.('video');
-	if (!caps) return null;
-	const expectedMime = `video/${codec}`.toLowerCase();
-	if (codec === 'av1') {
-		return caps.codecs.some((entry) => {
-			const mimeType = entry.mimeType.toLowerCase();
-			return mimeType === expectedMime || mimeType === 'video/av1x';
-		});
-	}
-	return caps.codecs.some((entry) => entry.mimeType.toLowerCase() === expectedMime);
-}
-
 function getLocalDecodeCapabilities(): Record<VideoCodec, boolean> {
 	const exclusions = new Set(getVideoDecoderExclusionsSync() ?? []);
 	for (const codec of getScreenShareDecodeFailures()) {
@@ -140,7 +125,7 @@ function getLocalDecodeCapabilities(): Record<VideoCodec, boolean> {
 		vp8: true,
 	};
 	for (const codec of CODEC_PREFERENCE) {
-		const advertised = hasReceiverCapability(codec);
+		const advertised = getRtcReceiverCodecSupport(codec);
 		result[codec] = (advertised === null ? result[codec] : advertised) && !exclusions.has(codec);
 	}
 	return result;

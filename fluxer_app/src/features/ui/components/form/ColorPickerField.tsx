@@ -149,7 +149,6 @@ interface ColorPickerFieldProps {
 	defaultValue?: number;
 	isDefaultValue?: boolean;
 	onReset?: () => void;
-	hideHelperText?: boolean;
 	descriptionClassName?: string;
 }
 
@@ -165,7 +164,6 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = observer((props
 		defaultValue,
 		isDefaultValue = false,
 		onReset,
-		hideHelperText,
 		descriptionClassName,
 	} = props;
 	const containerRef = useRef<HTMLFieldSetElement>(null);
@@ -181,6 +179,7 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = observer((props
 		if (!popoutOpen) {
 			const effectiveValue = getEffectiveValue();
 			setInputValue(numberToHex(effectiveValue));
+			setShowError(false);
 		}
 	}, [getEffectiveValue, popoutOpen]);
 	const commitFromText = useCallback(() => {
@@ -319,14 +318,14 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = observer((props
 							</Popover>
 						</DialogTrigger>
 					</div>
-					{(description || !hideHelperText) && (
+					{
 						<p
 							className={clsx(styles.description, descriptionClassName)}
 							data-flx="ui.form.color-picker-field.description"
 						>
 							{description ?? <Trans>Type a color (hex, rgb(), hsl(), or name) or use the picker.</Trans>}
 						</p>
-					)}
+					}
 					{showError && (
 						<p className={styles.errorText} data-flx="ui.form.color-picker-field.error-text">
 							<Trans>That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name.</Trans>

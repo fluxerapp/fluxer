@@ -4,6 +4,7 @@ import {MFA_CODE_DIGIT_COUNT} from '@app/features/app/config/I18nDisplayConstant
 import FormField from '@app/features/auth/flow/AuthFormField';
 import styles from '@app/features/auth/flow/MfaScreen.module.css';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
+import {type StepTitleChangeHandler, useReportStepTitle} from '@app/features/auth/flow/useReportStepTitle';
 import {useMfaController} from '@app/features/auth/hooks/useLoginFlow';
 import type {LoginSuccessPayload, MfaChallenge} from '@app/features/auth/state/AuthFlow';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
@@ -44,10 +45,13 @@ interface MfaScreenProps {
 	inviteCode?: string;
 	onSuccess: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onCancel: () => void;
+	onStepTitleChange?: StepTitleChangeHandler | null;
 }
 
-const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps) => {
+const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel, onStepTitleChange = null}: MfaScreenProps) => {
 	const {i18n} = useLingui();
+	const title = i18n._(TWO_FACTOR_AUTHENTICATION_DESCRIPTOR);
+	useReportStepTitle(onStepTitleChange, title);
 	const {form, isLoading, fieldErrors, handleWebAuthn, isWebAuthnLoading, supports} = useMfaController({
 		ticket: challenge.ticket,
 		methods: {totp: challenge.totp, webauthn: challenge.webauthn, backupCodes: challenge.backupCodes},
@@ -61,9 +65,11 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 	const isCodePrimary = supports.totp || !showWebAuthn;
 	return (
 		<div className={styles.container} data-flx="auth.flow.mfa-screen.container--2">
-			<h1 className={styles.title} data-flx="auth.flow.mfa-screen.title">
-				{i18n._(TWO_FACTOR_AUTHENTICATION_DESCRIPTOR)}
-			</h1>
+			{onStepTitleChange == null ? (
+				<h1 className={styles.title} data-flx="auth.flow.mfa-screen.title">
+					{title}
+				</h1>
+			) : null}
 			{showCodeForm && (
 				<p className={styles.description} data-flx="auth.flow.mfa-screen.description">
 					{backupCodeOnly

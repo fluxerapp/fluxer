@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	OperatorPassPriceTable,
+	OperatorPassReleaseListTable,
+	OperatorPassWithdrawalCountryTable,
+} from '@app/api/operator_pass/OperatorPassPrices';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
-import type {CachePurgeAdapterName, StoreProductSlotName} from '@fluxer/config/src/MasterConfig';
+import type {CachePurgeAdapterName, StoreProductSlotName, VoiceTurnServerConfig} from '@fluxer/config/src/MasterConfig';
 import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountIdentityConstants';
+import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
+import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
+import type {OperatorPassCurrency} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
@@ -12,19 +20,55 @@ export interface AppStoreAppConfig {
 	appAppleId: number;
 }
 
+export interface AgePolicyConfig {
+	restricted: Array<GeoEntry>;
+}
+
 export interface TrustedCallerConfig {
 	name: string;
 	key: string;
 	buckets: Array<string>;
 }
 
+interface SmtpConfig {
+	host: string;
+	port: number;
+	username: string;
+	password: string;
+	tlsMode: SmtpTlsMode | null;
+}
+
+interface APICachePurgeTarget {
+	endpoint: string;
+	token: string;
+	timeoutMs: number;
+}
+
+export interface OperatorPassConfig {
+	saleOpensAt: Date | null;
+	priceRisesAt: Date | null;
+	graceMs: number;
+	clockOffsetMs: number;
+	labsGuildId: bigint | null;
+	labsOperatorRoleId: bigint | null;
+	labsVisionaryRoleId: bigint | null;
+	labsAccessRoleId: bigint | null;
+	labsOperatorsChannelId: bigint | null;
+	standardPricesMinor: OperatorPassPriceTable | null;
+	releaseLists: OperatorPassReleaseListTable;
+	transferLockMs: number;
+	wallAutoApprove: boolean;
+	withdrawalCountries: OperatorPassWithdrawalCountryTable;
+	disabledCurrencies: ReadonlySet<OperatorPassCurrency>;
+	wallTierMinimums: ReadonlyArray<number>;
+	maxQuantity: number;
+	previewIps: ReadonlyArray<string>;
+}
+
 export interface APICachePurgeConfig {
 	adapter: CachePurgeAdapterName;
-	http: {
-		endpoint: string;
-		token: string;
-		timeoutMs: number;
-	};
+	http: APICachePurgeTarget;
+	controller: APICachePurgeTarget;
 }
 
 interface APIGeoipFilesystemConfig {
@@ -88,7 +132,7 @@ export interface APIConfig {
 		skipBuckets: Array<string>;
 	};
 	search: {
-		engine: 'elasticsearch' | 'meilisearch';
+		engine: 'elasticsearch' | 'meilisearch' | 'none';
 		url: string;
 		apiKey: string;
 		username: string;
@@ -117,6 +161,7 @@ export interface APIConfig {
 	};
 	endpoints: {
 		apiPublic: string;
+		apiPublicDiscovery: string;
 		apiClient: string;
 		webApp: string;
 		webAppOrigins: Array<string>;
@@ -157,13 +202,12 @@ export interface APIConfig {
 		fromEmail: string;
 		fromName: string;
 		replyToEmail: string;
+		supportAlertEmail: string | null;
 		appBaseUrl: string;
-		smtp?: {
-			host: string;
-			port: number;
-			username: string;
-			password: string;
-			secure: boolean;
+		smtp?: SmtpConfig;
+		fallback?: {
+			domains: Array<string>;
+			smtp: SmtpConfig & {headers?: Record<string, string>};
 		};
 	};
 	blocklistFeeds: {
@@ -178,6 +222,7 @@ export interface APIConfig {
 		apiSecret?: string;
 		url?: string;
 		internalUrl?: string;
+		bundled: boolean;
 		defaultRegion?: {
 			id: string;
 			name: string;
@@ -186,6 +231,9 @@ export interface APIConfig {
 			longitude: number;
 		};
 		p2pStunUrls?: Array<string>;
+		turnServers: Array<VoiceTurnServerConfig>;
+		joinAllowPrivateEndpoints: boolean;
+		healthIntervalMs: number;
 	};
 	stripe: {
 		enabled: boolean;
@@ -276,19 +324,27 @@ export interface APIConfig {
 			logoUrl?: string;
 			wordmarkUrl?: string;
 			faviconUrl?: string;
+			faviconDarkUrl?: string;
+			signInBackdropUrl?: string;
 			themeColor?: string;
 			statusPageUrl?: string;
 			statusPageIncidentHistoryUrl?: string;
 		};
 		setup: {
 			configured: boolean;
+			token: string | null;
 		};
 		accountIdentity: AccountIdentityMode | null;
 		tagStyle: TagStyle | null;
+		agePolicy: AgePolicyConfig;
 	};
 	discovery: {
 		enabled: boolean;
 		minMemberCount: number;
+	};
+	operatorPass: OperatorPassConfig;
+	paymentDisputes: {
+		closureEffectiveAt: Date | null;
 	};
 	dev: {
 		relaxRegistrationRateLimits: boolean;
@@ -303,7 +359,6 @@ export interface APIConfig {
 	deletionGracePeriodHours: number;
 	reportRetention: {
 		days: number;
-		resolvedDays: number | null;
 		dryRun: boolean;
 	};
 	inactivityDeletionThresholdDays?: number;
@@ -330,6 +385,7 @@ export interface APIConfig {
 		products: Record<string, StoreProductSlotName>;
 		pushAudience?: string;
 		pushServiceAccountEmail?: string;
+		selfServiceRefunds: boolean;
 	};
 	storeBilling: {
 		sandboxUserIds: Array<string>;
@@ -341,6 +397,7 @@ export interface APIConfig {
 		taskName?: WorkerTaskName;
 		enableCronScheduler?: boolean;
 		metricsPort?: number;
+		embedded: boolean;
 		laneConcurrencyOverrides: {
 			realtime?: number;
 			unfurl?: number;

@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	getExtendedDocument,
-	supportsMozRequestFullScreen,
-	supportsMsRequestFullscreen,
-	supportsWebkitRequestFullscreen,
-} from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
+import {
+	exitFullscreenAPI,
+	getFullscreenElement,
+	requestFullscreen,
+	supportsFullscreenAPI,
+} from '@app/features/platform/utils/FullscreenMediaUtils';
 import {setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import Modal from '@app/features/ui/state/Modal';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
-import type {ExtendedHTMLElement} from '@app/types/browser.d';
 import type {RefObject} from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -27,56 +25,6 @@ interface UseVoiceCallAppFullscreenReturn {
 	enterFullscreen: () => Promise<void>;
 	exitFullscreen: () => Promise<void>;
 	toggleFullscreen: () => Promise<void>;
-}
-
-function supportsFullscreenAPI(): boolean {
-	const doc = getExtendedDocument();
-	return !!(
-		document.fullscreenEnabled ||
-		doc.webkitFullscreenEnabled ||
-		doc.mozFullScreenEnabled ||
-		doc.msFullscreenEnabled
-	);
-}
-
-async function requestFullscreen(element: HTMLElement): Promise<void> {
-	if (element.requestFullscreen) {
-		await element.requestFullscreen();
-		return;
-	}
-	if (supportsWebkitRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.webkitRequestFullscreen!();
-		return;
-	}
-	if (supportsMozRequestFullScreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.mozRequestFullScreen!();
-		return;
-	}
-	if (supportsMsRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.msRequestFullscreen!();
-	}
-}
-
-async function exitFullscreenAPI(): Promise<void> {
-	const doc = getExtendedDocument();
-	if (document.exitFullscreen) {
-		await document.exitFullscreen();
-		return;
-	}
-	if (doc.webkitExitFullscreen) {
-		await doc.webkitExitFullscreen();
-		return;
-	}
-	if (doc.mozCancelFullScreen) {
-		await doc.mozCancelFullScreen();
-		return;
-	}
-	if (doc.msExitFullscreen) {
-		await doc.msExitFullscreen();
-	}
 }
 
 const VOICE_CALL_FULLSCREEN_ATTR = 'data-voice-call-fullscreen';

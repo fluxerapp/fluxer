@@ -19,11 +19,11 @@ get_members_cursor(Request, State) ->
     {reply, map(), guild_state()}.
 members_cursor(Limit, _AfterId, State) when Limit =< 0 ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     {reply, #{members => [], total => map_size(MemberMap)}, State};
 members_cursor(Limit, AfterId, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     Total = map_size(MemberMap),
     SortedIds = guild_data_index_members:sorted_member_ids(Data, MemberMap),
     FilteredIds = filter_ids_after(SortedIds, AfterId),

@@ -5,7 +5,7 @@
 	border: none;
 	background-color: transparent;
 	padding: 0 0.375rem;
-	text-align: left;
+	text-align: start;
 	font-weight: 600;
 	font-size: 0.875rem;
 	line-height: 1rem;
@@ -33,7 +33,7 @@
 }
 
 .icon {
-	margin-right: 0.5rem;
+	margin-inline-end: 0.5rem;
 	flex-shrink: 0;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .description {
-	margin-left: 1rem;
+	margin-inline-start: 1rem;
 	min-width: 10ch;
 	flex-shrink: 0;
 	flex-grow: 1;
@@ -65,7 +65,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	text-align: right;
+	text-align: end;
 	font-weight: 400;
 	color: var(--text-primary-muted);
 	font-size: 0.75rem;

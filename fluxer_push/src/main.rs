@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use clap::Parser;
-use fluxer_push::{cli, healthcheck, run};
+use fluxer_push::{cli, run};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
     let args = cli::Args::parse();
     if matches!(args.command, Some(cli::Command::Healthcheck)) {
-        return healthcheck::run(args.mode).await;
+        return fluxer_common::healthcheck::run(
+            "FLUXER_PUSH_SERVICE_HOST",
+            "FLUXER_PUSH_SERVICE_PORT",
+            args.mode.default_port(),
+        )
+        .await;
     }
 
     fluxer_svc::init_tracing();

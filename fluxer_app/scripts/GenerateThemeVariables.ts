@@ -34,7 +34,7 @@ const PRIORITY_CSS_SOURCES: ReadonlyArray<CssSource> = [
 	},
 ];
 const PRIORITY_SOURCE_INDEX = new Map(PRIORITY_CSS_SOURCES.map((source, index) => [source.file, index]));
-const IGNORED_SOURCE_PREFIXES = ['src/features/theme_studio/', 'src/theme/'];
+const IGNORED_SOURCE_PREFIXES = ['src/theme/'];
 
 const BUNDLED_FONT_VARIABLES_CSS = resolve(
 	import.meta.dirname,
@@ -448,9 +448,9 @@ ${renderStringArray(
 	definitions.map((definition) => definition.name),
 )}
 
-${renderValueMap('THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES', darkDefaults)}
+${renderValueMap('THEME_DARK_DEFAULT_VARIABLE_VALUES', darkDefaults)}
 
-${renderValueMap('THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES', lightDefaults)}
+${renderValueMap('THEME_LIGHT_DEFAULT_VARIABLE_VALUES', lightDefaults)}
 `;
 }
 

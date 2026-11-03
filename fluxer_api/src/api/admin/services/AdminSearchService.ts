@@ -6,11 +6,15 @@ import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isSyntheticUserId} from '@app/api/constants/Core';
-import {channelThreadsEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Logger} from '@app/api/Logger';
-import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {getGuildSearchService, getMessageSearchService, getUserSearchService} from '@app/api/SearchFactory';
+import {
+	claimSearchReindexAll,
+	finishSearchReindexAll,
+	INDEX_REFRESH_STATUS_TTL_SECONDS,
+	indexRefreshStatusKey,
+} from '@app/api/search/SearchReindexAllRun';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -23,21 +27,25 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 		| 'reports'
 		| 'audit_logs'
 		| 'channel_messages'
-		| 'favorite_memes'
 		| 'guild_members'
 		| 'discovery'
-		| 'threads';
+		| 'threads'
+		| 'all';
 	admin_user_id: string;
 	audit_log_reason: string | null;
 	job_id: string;
 	guild_id?: string;
-	user_id?: string;
 }
 
 interface AdminSearchServiceDeps {
 	apiContext: ApiContext;
 	guildRepository: GuildRepository;
 	auditService: AdminAuditService;
+}
+
+function compareUserIds(a: UserID, b: UserID): number {
+	if (a === b) return 0;
+	return a < b ? -1 : 1;
 }
 
 export class AdminSearchService {
@@ -96,10 +104,12 @@ export class AdminSearchService {
 			query?: string;
 			email?: string;
 			last_active_ip?: string;
+			acl?: string;
 			limit: number;
 			offset: number;
 		},
 		acls: ReadonlySet<string>,
+		locale?: string,
 	) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		const email = data.email?.trim();
@@ -108,26 +118,24 @@ export class AdminSearchService {
 			if (!user) {
 				return {users: [], total: 0};
 			}
-			const response = await mapUserToAdminResponse(user, cacheService, acls);
+			const response = await mapUserToAdminResponse(user, cacheService, acls, locale);
 			return {users: [response], total: 1};
 		}
 		const lastActiveIp = data.last_active_ip?.trim();
 		if (lastActiveIp) {
 			const {userIds, total} = await userRepository.listUserIdsByLastActiveIp(lastActiveIp, data.limit, data.offset);
-			const users = await userRepository.listUsers(userIds);
-			const usersById = new Map(users.map((user) => [user.id.toString(), user]));
-			const orderedUsers = [];
-			for (const userId of userIds) {
-				const user = usersById.get(userId.toString());
-				if (user) {
-					orderedUsers.push(user);
-				}
-			}
-			const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+			const response = await this.mapOrderedUsers(userIds, acls, locale);
 			return {
 				users: response,
 				total,
 			};
+		}
+		if (data.acl !== undefined) {
+			const userIds = (await userRepository.listUserIdsWithAcl(data.acl))
+				.filter((userId) => !isSyntheticUserId(userId))
+				.sort(compareUserIds);
+			const response = await this.mapOrderedUsers(userIds.slice(data.offset, data.offset + data.limit), acls, locale);
+			return {users: response, total: userIds.length};
 		}
 		const userSearchService = getUserSearchService();
 		if (!userSearchService) {
@@ -146,20 +154,11 @@ export class AdminSearchService {
 		]);
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
-		const users = await userRepository.listUsers(userIds);
-		const usersById = new Map(users.map((user) => [user.id.toString(), user]));
-		const orderedUsers = [];
-		for (const userId of userIds) {
-			const user = usersById.get(userId.toString());
-			if (user) {
-				orderedUsers.push(user);
-			}
-		}
-		const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+		const response = await this.mapOrderedUsers(userIds, acls, locale);
 		if (directUser && data.offset === 0) {
 			const directId = directUser.id.toString();
 			if (!response.some((u) => u.id === directId)) {
-				response.unshift(await mapUserToAdminResponse(directUser, cacheService, acls));
+				response.unshift(await mapUserToAdminResponse(directUser, cacheService, acls, locale));
 			}
 		}
 		return {
@@ -177,17 +176,16 @@ export class AdminSearchService {
 				| 'audit_logs'
 				| 'channel_messages'
 				| 'guild_members'
-				| 'favorite_memes'
 				| 'discovery'
-				| 'threads';
+				| 'threads'
+				| 'all';
 			guild_id?: bigint;
-			user_id?: bigint;
 		},
 		adminUserId: UserID,
 		auditLogReason: string | null,
 	) {
 		const {auditService} = this.deps;
-		const {worker: workerService, snowflake: snowflakeService} = this.deps.apiContext.services;
+		const {snowflake: snowflakeService} = this.deps.apiContext.services;
 		const jobId = (await snowflakeService.generate()).toString();
 		const payload: RefreshSearchIndexJobPayload = {
 			index_type: data.index_type,
@@ -202,9 +200,6 @@ export class AdminSearchService {
 			payload.guild_id = data.guild_id.toString();
 		}
 		if (data.index_type === 'threads') {
-			if (!channelThreadsEnabled()) {
-				throw InputValidationError.fromCode('index_name', ValidationErrorCodes.INVALID_FORMAT);
-			}
 			if (!data.guild_id) {
 				throw InputValidationError.create('guild_id', 'guild_id is required for the threads index type');
 			}
@@ -216,27 +211,22 @@ export class AdminSearchService {
 			}
 			payload.guild_id = data.guild_id.toString();
 		}
-		if (data.index_type === 'favorite_memes') {
-			if (!data.user_id) {
-				throw InputValidationError.create('user_id', 'user_id is required for the favorite_memes index type');
-			}
-			payload.user_id = data.user_id.toString();
+		let queuedJobId = jobId;
+		if (data.index_type === 'all') {
+			queuedJobId = await this.queueReindexAll(payload);
+		} else {
+			await this.queueRefresh(payload);
 		}
-		await workerService.addJob('refreshSearchIndex', payload, {
-			jobKey: `refreshSearchIndex_${data.index_type}_${jobId}`,
-			maxAttempts: 1,
-			requireLedger: true,
-		});
-		Logger.debug({index_type: data.index_type, job_id: jobId}, 'Queued search index refresh job');
+		Logger.debug({index_type: data.index_type, job_id: queuedJobId}, 'Queued search index refresh job');
 		const metadata = new Map([
 			['index_type', data.index_type],
-			['job_id', jobId],
+			['job_id', queuedJobId],
 		]);
+		if (queuedJobId !== jobId) {
+			metadata.set('already_running', 'true');
+		}
 		if (data.guild_id) {
 			metadata.set('guild_id', data.guild_id.toString());
-		}
-		if (data.user_id) {
-			metadata.set('user_id', data.user_id.toString());
 		}
 		await auditService.createAuditLog({
 			adminUserId,
@@ -248,28 +238,73 @@ export class AdminSearchService {
 		});
 		return {
 			success: true,
-			job_id: jobId,
+			job_id: queuedJobId,
 		};
+	}
+
+	private async queueRefresh(payload: RefreshSearchIndexJobPayload): Promise<void> {
+		await this.deps.apiContext.services.worker.addJob('refreshSearchIndex', payload, {
+			jobKey: `refreshSearchIndex_${payload.index_type}_${payload.job_id}`,
+			maxAttempts: 1,
+			requireLedger: true,
+		});
+	}
+
+	private async queueReindexAll(payload: RefreshSearchIndexJobPayload): Promise<string> {
+		if (!getMessageSearchService()) {
+			throw new FeatureTemporarilyDisabledError();
+		}
+		const {kv} = this.deps.apiContext.services;
+		const running = await claimSearchReindexAll(kv, payload.job_id);
+		if (running) {
+			return running;
+		}
+		const queued = {status: 'in_progress', index_type: 'all', phase: 'queued', started_at: new Date().toISOString()};
+		try {
+			await kv.set(
+				indexRefreshStatusKey(payload.job_id),
+				JSON.stringify(queued),
+				'EX',
+				INDEX_REFRESH_STATUS_TTL_SECONDS,
+			);
+			await this.queueRefresh(payload);
+		} catch (error) {
+			await finishSearchReindexAll(kv, payload.job_id);
+			throw error;
+		}
+		return payload.job_id;
 	}
 
 	async getIndexRefreshStatus(jobId: string) {
 		const {cache: cacheService} = this.deps.apiContext.services;
-		const statusKey = `index_refresh_status:${jobId}`;
 		const status = await cacheService.get<{
 			status: 'in_progress' | 'completed' | 'failed';
 			index_type: string;
+			phase?: string;
 			total?: number;
 			indexed?: number;
 			started_at?: string;
 			completed_at?: string;
 			failed_at?: string;
 			error?: string;
-		}>(statusKey);
+		}>(indexRefreshStatusKey(jobId));
 		if (!status) {
 			return {
 				status: 'not_found' as const,
 			};
 		}
 		return status;
+	}
+
+	private async mapOrderedUsers(userIds: Array<UserID>, acls: ReadonlySet<string>, locale?: string) {
+		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const users = await userRepository.listUsers(userIds);
+		const usersById = new Map(users.map((user) => [user.id.toString(), user]));
+		const orderedUsers = [];
+		for (const userId of userIds) {
+			const user = usersById.get(userId.toString());
+			if (user) orderedUsers.push(user);
+		}
+		return Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls, locale)));
 	}
 }

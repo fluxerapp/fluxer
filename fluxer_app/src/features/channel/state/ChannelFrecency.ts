@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Initialization from '@app/features/app/state/Initialization';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	type ChannelFrecencyEntry,
@@ -226,4 +227,8 @@ class ChannelFrecency {
 	}
 }
 
-export default new ChannelFrecency();
+const channelFrecency = new ChannelFrecency();
+
+ResettableStates.register(channelFrecency, () => channelFrecency.handleLogout());
+
+export default channelFrecency;

@@ -8,7 +8,7 @@ pub fn snowflake_to_timestamp_ms(snowflake: &str) -> Option<u64> {
     Some(timestamp_ms)
 }
 
-pub fn format_admin_timestamp(iso: &str) -> String {
+fn parse_admin_timestamp(iso: &str) -> Option<time::OffsetDateTime> {
     time::OffsetDateTime::parse(iso, &time::format_description::well_known::Rfc3339)
         .or_else(|_| {
             time::OffsetDateTime::parse(
@@ -16,12 +16,30 @@ pub fn format_admin_timestamp(iso: &str) -> String {
                 &time::format_description::well_known::Iso8601::DEFAULT,
             )
         })
-        .map_or_else(|_| iso.to_owned(), format_admin_datetime)
+        .ok()
 }
 
-fn format_admin_datetime(dt: time::OffsetDateTime) -> String {
-    let dt = dt.to_offset(time::UtcOffset::UTC);
-    let month = match dt.month() {
+pub fn format_admin_timestamp(iso: &str) -> String {
+    parse_admin_timestamp(iso).map_or_else(|| iso.to_owned(), format_admin_datetime)
+}
+
+pub fn format_admin_date(iso: &str) -> String {
+    parse_admin_timestamp(iso).map_or_else(
+        || iso.to_owned(),
+        |dt| {
+            let dt = dt.to_offset(time::UtcOffset::UTC);
+            format!(
+                "{} {}, {}",
+                month_abbreviation(dt.month()),
+                dt.day(),
+                dt.year()
+            )
+        },
+    )
+}
+
+fn month_abbreviation(month: time::Month) -> &'static str {
+    match month {
         time::Month::January => "Jan",
         time::Month::February => "Feb",
         time::Month::March => "Mar",
@@ -34,7 +52,12 @@ fn format_admin_datetime(dt: time::OffsetDateTime) -> String {
         time::Month::October => "Oct",
         time::Month::November => "Nov",
         time::Month::December => "Dec",
-    };
+    }
+}
+
+fn format_admin_datetime(dt: time::OffsetDateTime) -> String {
+    let dt = dt.to_offset(time::UtcOffset::UTC);
+    let month = month_abbreviation(dt.month());
     let day = dt.day();
     let year = dt.year();
     let hour_12 = match dt.hour() {

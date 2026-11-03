@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ApplicationFlags, BotFlags, BotFlagsDescriptions} from '@fluxer/constants/src/BotConstants';
-import {AVATAR_MAX_SIZE, MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
 import {PublicUserFlags, PublicUserFlagsDescriptions} from '@fluxer/constants/src/UserConstants';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	createBitflagInt32Type,
 	createNamedObject,
@@ -414,12 +414,8 @@ export type ApplicationUpdateRequest = z.infer<typeof ApplicationUpdateRequest>;
 export const BotProfileUpdateRequest = z.object({
 	username: UsernameType.optional().describe('The username of the bot'),
 	discriminator: DiscriminatorType.optional().describe('The discriminator of the bot'),
-	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('The avatar image as base64'),
-	banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('The banner image as base64'),
+	avatar: createBase64ImageType().nullish().describe('The avatar image as base64'),
+	banner: createBase64ImageType().nullish().describe('The banner image as base64'),
 	bio: createStringType(0, 1024).nullish().describe('The bio or description of the bot'),
 	bot_flags: createBitflagInt32Type(BotFlags, BotFlagsDescriptions, 'The bot user flags', 'BotFlags').optional(),
 });

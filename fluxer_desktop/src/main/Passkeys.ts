@@ -282,6 +282,40 @@ const eventCeremonyContext = (
 	pin: sanitizePin(requestContext),
 });
 
+const NOT_ALLOWED_NATIVE_ERRORS = [
+	/\(com\.apple\.AuthenticationServices\.AuthorizationError 1001\)/u,
+	/\bWebAuthn (?:authentication|registration) timed out\b/u,
+	/\bNotAllowed \(/u,
+	/\bTimeout \(/u,
+	/\(0x(?:80090036|800704C7|800705B4|80090035|80090011)\)/iu,
+];
+const INVALID_STATE_NATIVE_ERRORS = [
+	/\(com\.apple\.AuthenticationServices\.AuthorizationError 1006\)/u,
+	/\(0x8009000F\)/iu,
+];
+
+const webAuthnErrorName = (message: string): string | null => {
+	if (NOT_ALLOWED_NATIVE_ERRORS.some((pattern) => pattern.test(message))) {
+		return 'NotAllowedError';
+	}
+	if (INVALID_STATE_NATIVE_ERRORS.some((pattern) => pattern.test(message))) {
+		return 'InvalidStateError';
+	}
+	return null;
+};
+
+async function withWebAuthnErrorName<T>(ceremony: () => Promise<T>): Promise<T> {
+	try {
+		return await ceremony();
+	} catch (error) {
+		const name = error instanceof Error ? webAuthnErrorName(error.message) : null;
+		if (name !== null) {
+			(error as Error).name = name;
+		}
+		throw error;
+	}
+}
+
 export function registerPasskeyHandlers(): void {
 	ipcMain.handle('passkey-is-supported', (): Promise<boolean> => {
 		return getPasskeyProvider().isSupported();
@@ -293,7 +327,9 @@ export function registerPasskeyHandlers(): void {
 			options: PublicKeyCredentialRequestOptionsJSON,
 			requestContext?: PasskeyRequestContext,
 		): Promise<AuthenticationResponseJSON> => {
-			return getPasskeyProvider().authenticate(options, eventCeremonyContext(event, requestContext));
+			return withWebAuthnErrorName(() =>
+				getPasskeyProvider().authenticate(options, eventCeremonyContext(event, requestContext)),
+			);
 		},
 	);
 	ipcMain.handle(
@@ -303,7 +339,9 @@ export function registerPasskeyHandlers(): void {
 			options: PublicKeyCredentialCreationOptionsJSON,
 			requestContext?: PasskeyRequestContext,
 		): Promise<RegistrationResponseJSON> => {
-			return getPasskeyProvider().register(options, eventCeremonyContext(event, requestContext));
+			return withWebAuthnErrorName(() =>
+				getPasskeyProvider().register(options, eventCeremonyContext(event, requestContext)),
+			);
 		},
 	);
 }

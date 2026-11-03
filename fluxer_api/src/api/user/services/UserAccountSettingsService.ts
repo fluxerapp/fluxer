@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {
 	type ChannelID,
 	createChannelID,
@@ -22,9 +23,8 @@ import type {UserSettings} from '@app/api/models/UserSettings';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {controlUserGuildSettingsView} from '@app/api/user/UserGuildSettingsThreadView';
-import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate, mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {CHANNEL_OVERRIDE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
@@ -41,6 +41,7 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {SyncedPreferencesConflictError} from '@fluxer/errors/src/domains/user/SyncedPreferencesConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {ValidationError} from '@fluxer/errors/src/ValidationError';
 import {
@@ -57,8 +58,7 @@ import type {
 
 interface UserAccountSettingsServiceDeps {
 	userAccountRepository: UserRepository;
-	userSettingsRepository: UserRepository;
-	userRelationshipRepository: UserRepository;
+
 	updatePropagator: UserAccountUpdatePropagator;
 	gatewayService: IGatewayService;
 	userCacheService: UserCacheService;
@@ -78,7 +78,7 @@ export class UserAccountSettingsService {
 	}
 
 	async findSettings(userId: UserID): Promise<UserSettings> {
-		const userSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const userSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!userSettings) throw new UnknownUserError();
 		return userSettings;
 	}
@@ -90,7 +90,7 @@ export class UserAccountSettingsService {
 		flags?: bigint;
 	}): Promise<UserSettings> {
 		const {userId, data, dateOfBirth, flags = 0n} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) {
 			throw new UnknownUserError();
 		}
@@ -270,10 +270,18 @@ export class UserAccountSettingsService {
 			updatedRowData.staff_dm_access_user_ids = null;
 		}
 		if (data.synced_preferences !== undefined) {
+			if (
+				data.synced_preferences_base_hash !== undefined &&
+				data.synced_preferences_base_hash !== hashSyncedPreferencesSnapshot(currentSettings.syncedPreferences)
+			) {
+				throw new SyncedPreferencesConflictError();
+			}
 			updatedRowData.synced_preferences = normalizeSyncedPreferencesSnapshot(data.synced_preferences);
 		}
-		await this.deps.userSettingsRepository.upsertSettings(updatedRowData);
-		const updatedSettings = await this.findSettings(userId);
+		const updatedSettings = await this.deps.userAccountRepository.upsertSettings(
+			updatedRowData,
+			currentSettings.toRow(),
+		);
 		await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		if (localeChanged) {
 			const user = await this.deps.userAccountRepository.findUnique(userId);
@@ -283,14 +291,10 @@ export class UserAccountSettingsService {
 					{locale: data.locale},
 					user.toRow(),
 				);
-				await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
+				await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 			}
 		}
 		return updatedSettings;
-	}
-
-	async findGuildSettings(userId: UserID, guildId: GuildID | null): Promise<UserGuildSettings | null> {
-		return await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
 	}
 
 	async updateGuildSettings(params: {
@@ -300,7 +304,7 @@ export class UserAccountSettingsService {
 		viewer?: ThreadViewer;
 	}): Promise<UserGuildSettings> {
 		const {userId, guildId, data} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
+		const currentSettings = await this.deps.userAccountRepository.findGuildSettings(userId, guildId);
 		const resolvedGuildId = guildId ?? createGuildID(0n);
 		const baseRow: UserGuildSettingsRow = currentSettings
 			? {
@@ -344,11 +348,10 @@ export class UserAccountSettingsService {
 			const channelOverrides = new Map<ChannelID, ChannelOverride>();
 			for (const [channelIdStr, override] of Object.entries(data.channel_overrides ?? {})) {
 				const channelId = createChannelID(BigInt(channelIdStr));
-				const flags = flagsWritable
-					? override.flags !== undefined
+				const flags =
+					flagsWritable && override.flags !== undefined
 						? override.flags & CHANNEL_OVERRIDE_FLAG_MASK
-						: previousOverrides.get(channelId)?.flags
-					: previousOverrides.get(channelId)?.flags;
+						: previousOverrides.get(channelId)?.flags;
 				channelOverrides.set(channelId, {
 					collapsed: override.collapsed,
 					message_notifications: override.message_notifications,
@@ -371,7 +374,7 @@ export class UserAccountSettingsService {
 			}
 			updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
 		}
-		const updatedSettings = await this.deps.userSettingsRepository.upsertGuildSettings(updatedRowData);
+		const updatedSettings = await this.deps.userAccountRepository.upsertGuildSettings(updatedRowData);
 		await this.deps.updatePropagator.dispatchUserGuildSettingsUpdate({userId, settings: updatedSettings});
 		return updatedSettings;
 	}
@@ -419,8 +422,7 @@ export class UserAccountSettingsService {
 		requestCache: RequestCache;
 	}): Promise<User> {
 		const {userId, shareVoiceActivity, requestCache} = params;
-		const user = await this.deps.userAccountRepository.findUnique(userId);
-		if (!user) throw new UnknownUserError();
+		const user = await this.deps.userAccountRepository.findUniqueAssert(userId);
 		const lastChange = user.lastVoiceActivitySharingChangeAt;
 		const now = new Date();
 		if (lastChange != null) {
@@ -434,7 +436,7 @@ export class UserAccountSettingsService {
 				);
 			}
 		}
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) throw new UnknownUserError();
 		const settingsUnchanged = currentSettings.defaultShareVoiceActivity === shareVoiceActivity;
 		const updatedSettingsRow = {
@@ -442,24 +444,21 @@ export class UserAccountSettingsService {
 			user_id: userId,
 			default_share_voice_activity: shareVoiceActivity,
 		};
-		await this.deps.userSettingsRepository.upsertSettings(updatedSettingsRow);
-		const updatedSettings = await this.findSettings(userId);
-		const updatedFriendRows = await this.deps.userRelationshipRepository.bulkUpdateFriendShareVoiceActivity(
+		const updatedSettings = await this.deps.userAccountRepository.upsertSettings(
+			updatedSettingsRow,
+			currentSettings.toRow(),
+		);
+		const updatedFriendRows = await this.deps.userAccountRepository.bulkUpdateFriendShareVoiceActivity(
 			userId,
 			shareVoiceActivity,
 		);
-		const userPartialResolver = (id: UserID) =>
-			getCachedUserPartialResponse({
-				userId: id,
-				userCacheService: this.deps.userCacheService,
-				requestCache,
-			});
+		const userPartialResolver = (id: UserID) => this.deps.userCacheService.getUserPartialResponse(id, requestCache);
 		await Promise.all(
 			updatedFriendRows.flatMap((friendRel) => {
 				const dispatches: Array<Promise<unknown>> = [];
 				dispatches.push(
 					(async () => {
-						const inverse = await this.deps.userRelationshipRepository.getRelationship(
+						const inverse = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -477,12 +476,12 @@ export class UserAccountSettingsService {
 				);
 				dispatches.push(
 					(async () => {
-						const inverseForFriend = await this.deps.userRelationshipRepository.getRelationship(
+						const inverseForFriend = await this.deps.userAccountRepository.getRelationship(
 							userId,
 							friendRel.targetUserId,
 							RelationshipTypes.FRIEND,
 						);
-						const friendOwnRow = await this.deps.userRelationshipRepository.getRelationship(
+						const friendOwnRow = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -508,12 +507,16 @@ export class UserAccountSettingsService {
 			user.toRow(),
 		);
 		const finalUser = updatedUser ?? user;
-		await this.deps.updatePropagator.dispatchUserUpdate(finalUser);
+		await dispatchUserUpdate(this.deps.gatewayService, finalUser);
 		if (!settingsUnchanged) {
 			await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		}
 		return finalUser;
 	}
+}
+
+function hashSyncedPreferencesSnapshot(stored: string): string {
+	return createHash('sha256').update(Buffer.from(stored, 'base64')).digest('hex');
 }
 
 function normalizeSyncedPreferencesSnapshot(value: string | null | undefined): string | null {

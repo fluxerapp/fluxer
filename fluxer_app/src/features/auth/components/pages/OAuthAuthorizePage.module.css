@@ -9,14 +9,6 @@
 	margin: 0 auto;
 }
 
-.loadingContainer {
-	display: flex;
-	min-height: 100%;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
 .errorContainer {
 	display: flex;
 	min-height: 100%;
@@ -82,12 +74,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
-}
-
-.accountList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.45rem;
 }
 
 .sectionDivider {
@@ -328,9 +314,7 @@
 	align-items: center;
 	justify-content: center;
 	color: white;
-	font-weight: 700;
-	font-size: 0.9rem;
-	line-height: 1.75rem;
+	overflow: hidden;
 	border: 0.0625rem solid var(--background-modifier-accent);
 }
 
@@ -344,7 +328,7 @@
 }
 
 .guildOptionNotice {
-	margin-left: auto;
+	margin-inline-start: auto;
 	color: var(--text-tertiary);
 	font-size: 0.85rem;
 }
@@ -361,7 +345,7 @@
 	font-size: 0.85rem;
 	color: var(--text-secondary);
 	line-height: 1.35;
-	text-align: left;
+	text-align: start;
 	display: block;
 	width: 100%;
 	margin-top: 0.35rem;
@@ -378,4 +362,33 @@
 .actionButton {
 	flex: 1;
 	width: 100%;
+}
+
+.authorizingAccount {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-2);
+	max-width: 100%;
+	margin-top: var(--spacing-1);
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.authorizingAccountAvatar {
+	display: flex;
+	flex-shrink: 0;
+}
+
+.authorizingAccountText {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.authorizingAccountText strong {
+	color: var(--text-primary);
+	font-weight: 600;
 }

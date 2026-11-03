@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_FREE_LIMITS, DEFAULT_PREMIUM_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {resolveLimit, resolveLimits} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigSnapshot, LimitMatchContext} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, test} from 'vitest';
@@ -16,7 +16,7 @@ describe('LimitResolver', () => {
 			guildFeatures: new Set(),
 		};
 		const result = resolveLimits(snapshot, ctx);
-		expect(result.limits).toEqual(DEFAULT_FREE_LIMITS);
+		expect(result.limits).toEqual(DEFAULT_RESTRICTED_LIMITS);
 	});
 	test('resolveLimits applies premium limits for premium trait', () => {
 		const snapshot: LimitConfigSnapshot = {
@@ -24,12 +24,12 @@ describe('LimitResolver', () => {
 			rules: [
 				{
 					id: 'default',
-					limits: {...DEFAULT_FREE_LIMITS},
+					limits: {...DEFAULT_RESTRICTED_LIMITS},
 				},
 				{
 					id: 'premium',
 					filters: {traits: ['premium']},
-					limits: {...DEFAULT_PREMIUM_LIMITS},
+					limits: {...DEFAULT_STOCK_LIMITS},
 				},
 			],
 		};

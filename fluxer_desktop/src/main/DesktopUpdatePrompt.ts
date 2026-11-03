@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	checkDesktopUpdateNow,
@@ -8,8 +9,10 @@ import {
 	getDesktopUpdateState,
 	startDesktopUpdate,
 } from '@electron/main/DesktopUpdateGate';
+import {getFlatpakAppId, isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
+import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {findNewerManualShell} from '@electron/main/Updater';
 import {DOWNLOAD_PAGE_URL} from '@electron/main/UpdaterDownloads';
 import {app, BrowserWindow, dialog, type MessageBoxOptions} from 'electron';
@@ -36,15 +39,11 @@ async function ask(options: MessageBoxOptions): Promise<number> {
 	return result.response;
 }
 
-function describeError(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
-
 async function runUpdateCheck(): Promise<void> {
 	for (;;) {
 		let manualVersion: string | null = null;
 		try {
-			const state = await checkDesktopUpdateNow();
+			const state = await checkDesktopUpdateNow({manual: true});
 			if (state.updating === true) {
 				logger.info('A desktop update is already running, leaving it to finish');
 				return;
@@ -70,17 +69,7 @@ async function runUpdateCheck(): Promise<void> {
 			return;
 		}
 		if (manualVersion != null) {
-			const download = await ask({
-				type: 'info',
-				message: t('desktop.update.manualMessage', {version: manualVersion}),
-				detail: t('desktop.update.manualDetail'),
-				buttons: [t('desktop.update.download'), t('desktop.update.later')],
-				defaultId: UpdatePromptChoice.PRIMARY,
-				cancelId: UpdatePromptChoice.SECONDARY,
-			});
-			if (download === UpdatePromptChoice.PRIMARY) {
-				await openExternalDeduped(DOWNLOAD_PAGE_URL);
-			}
+			await offerManualUpdate(manualVersion);
 			return;
 		}
 		await ask({
@@ -91,6 +80,42 @@ async function runUpdateCheck(): Promise<void> {
 			defaultId: UpdatePromptChoice.PRIMARY,
 		});
 		return;
+	}
+}
+
+interface ManualUpdateOffer {
+	readonly detail: string;
+	readonly button: string;
+	readonly url: string;
+}
+
+function resolveManualUpdateOffer(): ManualUpdateOffer {
+	if (resolveShellUpdatePlan().capability !== ShellUpdateCapability.MANAGED_PACKAGE) {
+		return {detail: t('desktop.update.manualDetail'), button: t('desktop.update.download'), url: DOWNLOAD_PAGE_URL};
+	}
+	const flatpakAppId = isFlatpakRuntime() ? getFlatpakAppId() : null;
+	if (flatpakAppId != null) {
+		return {
+			detail: t('desktop.update.flatpakDetail'),
+			button: t('desktop.update.openSoftwareCenter'),
+			url: `appstream://${flatpakAppId}`,
+		};
+	}
+	return {detail: t('desktop.update.managedDetail'), button: t('desktop.update.download'), url: DOWNLOAD_PAGE_URL};
+}
+
+async function offerManualUpdate(version: string): Promise<void> {
+	const offer = resolveManualUpdateOffer();
+	const choice = await ask({
+		type: 'info',
+		message: t('desktop.update.manualMessage', {version}),
+		detail: offer.detail,
+		buttons: [offer.button, t('desktop.update.later')],
+		defaultId: UpdatePromptChoice.PRIMARY,
+		cancelId: UpdatePromptChoice.SECONDARY,
+	});
+	if (choice === UpdatePromptChoice.PRIMARY) {
+		await openExternalDeduped(offer.url);
 	}
 }
 
@@ -132,7 +157,7 @@ export function startDesktopUpdateFromShell(): void {
 
 export async function updateFromCommandLine(): Promise<void> {
 	try {
-		const state = await checkDesktopUpdateNow();
+		const state = await checkDesktopUpdateNow({manual: true});
 		if (!state.available) {
 			logger.info('The command line asked for an update and none is waiting');
 			return;

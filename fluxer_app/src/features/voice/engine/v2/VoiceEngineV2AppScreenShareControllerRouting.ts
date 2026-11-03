@@ -6,7 +6,7 @@ import type {VoiceEngineV2AppScreenShareExecutionAdapter} from '@app/features/vo
 import {logger} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {recordScreenShareStopped} from '@app/features/voice/utils/ScreenShareLifecycleLog';
-import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room, ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
 
 const SCREEN_SHARE_CONTROLLER_PUBLISH_WIDTH_DEFAULT = 1920;

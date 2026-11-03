@@ -5,12 +5,12 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .nagbarDismissible {
-	padding-right: 2.5rem;
+	padding-inline-end: 2.5rem;
 }
 
 .nagbarDesktop {
@@ -31,7 +31,7 @@
 .dismissButton {
 	position: absolute;
 	top: 50%;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	transform: translateY(-50%);
 	display: flex;
 	align-items: center;

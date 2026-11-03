@@ -6,7 +6,7 @@ import type {
 	VoiceEngineV2CommandResult,
 	VoiceEngineV2ExternalEventListener,
 	VoiceEngineV2Implementation,
-} from '@fluxer/voice_engine_v2/src/implementations';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {

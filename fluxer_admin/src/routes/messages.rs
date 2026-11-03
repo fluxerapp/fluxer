@@ -5,7 +5,7 @@ use crate::{
     api::client::{AdminApiClient, ApiResultExt},
     middleware::{auth::AuthContext, csrf::CsrfToken},
     state::AppState,
-    templates,
+    templates::{self, components::enforcement_fields::can_take_action},
 };
 use axum::{
     Router,
@@ -65,12 +65,7 @@ async fn messages_page(
     Query(query): Query<MessagesQuery>,
 ) -> Response {
     let config = state.config();
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let can_lookup = acl::has_permission(admin_acls, acl::MESSAGE_LOOKUP);
     let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
@@ -137,6 +132,7 @@ async fn messages_page(
             prefill_channel_id: channel_id,
             can_lookup,
             can_delete,
+            can_take_action: can_take_action(admin_acls),
             lookup_result: lookup_result.as_ref(),
             browse_result: browse_result.as_ref(),
             search_result: search_result.as_ref(),
@@ -201,13 +197,6 @@ async fn bulk_actions_page(
     csrf: axum::Extension<CsrfToken>,
 ) -> Response {
     let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let account_identity = state.account_identity(&client).await;
-    let markup = templates::pages::bulk_actions::bulk_actions_page(
-        config,
-        &auth.0,
-        &csrf.0.0,
-        account_identity.is_username(),
-    );
+    let markup = templates::pages::bulk_actions::bulk_actions_page(config, &auth.0, &csrf.0.0);
     Html(markup.into_string()).into_response()
 }

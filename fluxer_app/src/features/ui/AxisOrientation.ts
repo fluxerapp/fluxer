@@ -1,18 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const Axis = Object.freeze({
-	HORIZONTAL: 'horizontal',
-	VERTICAL: 'vertical',
-} as const);
-
-export const AxisOrientation = Object.freeze({
-	HORIZONTAL: Axis.HORIZONTAL,
-	VERTICAL: Axis.VERTICAL,
-	BOTH: 'both',
-} as const);
-
-export type AxisOrientation = (typeof AxisOrientation)[keyof typeof AxisOrientation];
-
 export const Edge = Object.freeze({
 	LEFT: 'left',
 	RIGHT: 'right',

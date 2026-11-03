@@ -175,7 +175,7 @@ impl CacheTelemetry {
 
     fn next_generation(&self) -> u64 {
         self.next_generation
-            .fetch_update(METRICS_ORDERING, METRICS_ORDERING, |generation| {
+            .try_update(METRICS_ORDERING, METRICS_ORDERING, |generation| {
                 generation.checked_add(1)
             })
             .expect("GIF cache generation exhausted")
@@ -596,7 +596,7 @@ impl GifsShard {
                 async move {
                     this.inner
                         .klipy
-                        .featured_gifs(&api_key, &locale, &country)
+                        .featured_gifs(&api_key, &locale, &country, "1")
                         .await
                 }
             },
@@ -643,7 +643,7 @@ impl GifsShard {
                     async move {
                         this.inner
                             .klipy
-                            .trending_gifs(&api_key, &locale, &country)
+                            .featured_gifs(&api_key, &locale, &country, "50")
                             .await
                     }
                 },
@@ -681,8 +681,6 @@ impl GifsShard {
         &self,
         api_key: String,
         url: String,
-        locale: String,
-        country: String,
     ) -> anyhow::Result<GifServiceResponse> {
         let key = format!("resolve:{}", resolve_cache_key(&url));
         let this = self.clone();
@@ -695,14 +693,7 @@ impl GifsShard {
                     let this = this.clone();
                     let api_key = api_key.clone();
                     let url = url.clone();
-                    let locale = locale.clone();
-                    let country = country.clone();
-                    async move {
-                        this.inner
-                            .klipy
-                            .resolve_by_url(&api_key, &url, &locale, &country)
-                            .await
-                    }
+                    async move { this.inner.klipy.resolve_by_url(&api_key, &url).await }
                 },
             )
             .await?;
@@ -853,14 +844,8 @@ impl ShardService for GifsShard {
                     .await?;
                 GifServiceResponse::Registered
             }
-            GifRequest::ResolveByUrl {
-                api_key,
-                url,
-                locale,
-                country,
-            } => {
-                self.handle_resolve_by_url(api_key, url, locale, country)
-                    .await?
+            GifRequest::ResolveByUrl { api_key, url, .. } => {
+                self.handle_resolve_by_url(api_key, url).await?
             }
         };
         Ok(response)

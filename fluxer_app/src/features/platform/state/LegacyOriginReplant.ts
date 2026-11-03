@@ -25,6 +25,7 @@ import {
 	DESKTOP_LEGACY_RAW_STORAGE_SEED_MARKER_KEY,
 	DESKTOP_LEGACY_RAW_STORAGE_SEED_MARKER_VALUE,
 } from '@fluxer/desktop_ipc/src/LegacyHarvestContract';
+import {isRecord as isPlainObject} from '@fluxer/record_utils/src/RecordGuards';
 
 const REPLANT_DATABASE_TIMEOUT_MS = 15_000;
 const MEDIA_DEVICE_TIMEOUT_MS = 5_000;
@@ -155,10 +156,6 @@ function abortReplantTransaction(transaction: IDBTransaction | null | undefined,
 	} catch (error) {
 		logger.warn(`The legacy replant could not abort ${context}`, error);
 	}
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function toValidKey(value: unknown): IDBValidKey | null {

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireOwnerWindow} from '@app/features/ui/utils/OwnerWindow';
+
 const SCROLLER_TRACK_BLOCK_END_INSET_VARIABLE = '--scroller-track-block-end-inset';
 const RESOLVED_LENGTH_VARIABLE = '--resolved-scroll-viewport-length';
 const CSS_PIXEL_VALUE_PATTERN = /^(-?(?:\d+(?:\.\d+)?|\.\d+))px$/;
@@ -12,16 +14,8 @@ export interface VisibleScrollViewportRect {
 	bottomInset: number;
 }
 
-function resolveOwnerWindow(element: HTMLElement): Window & typeof globalThis {
-	const ownerWindow = element.ownerDocument.defaultView;
-	if (ownerWindow == null) {
-		throw new Error('Scroll viewport element has no owner window');
-	}
-	return ownerWindow;
-}
-
 function resolveCSSPixelLength(element: HTMLElement, propertyName: string): number {
-	const ownerWindow = resolveOwnerWindow(element);
+	const ownerWindow = requireOwnerWindow(element, 'Scroll viewport element');
 	const computedStyle = ownerWindow.getComputedStyle(element);
 	const source = computedStyle.getPropertyValue(propertyName).trim();
 	const pixelMatch = CSS_PIXEL_VALUE_PATTERN.exec(source);

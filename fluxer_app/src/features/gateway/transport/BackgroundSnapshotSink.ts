@@ -19,6 +19,8 @@ export interface BackgroundMessageNotification {
 	readonly guildName: string | null;
 	readonly channelName: string | null;
 	readonly channelType: number | null;
+	readonly mentioned: boolean;
+	readonly gated: boolean;
 }
 
 export type ObserveMessageNotification = (notification: BackgroundMessageNotification) => void;
@@ -27,6 +29,7 @@ export interface BackgroundSnapshotSinkConfig {
 	readonly userId: string;
 	readonly observeMentionCounts: ObserveMentionCounts;
 	readonly observeMessageNotification: ObserveMessageNotification;
+	readonly observeMention?: ObserveMessageNotification;
 }
 
 export interface BackgroundSnapshotSink {

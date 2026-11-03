@@ -3,6 +3,7 @@
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/flow/IpAuthorizationScreen.module.css';
+import {type StepTitleChangeHandler, useReportStepTitle} from '@app/features/auth/flow/useReportStepTitle';
 import type {IpAuthorizationChallenge, LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
@@ -22,6 +23,7 @@ interface IpAuthorizationScreenProps {
 	runtimeSnapshot: RuntimeConfigSnapshot;
 	onAuthorized: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onBack?: () => void;
+	onStepTitleChange?: StepTitleChangeHandler | null;
 }
 
 const POLL_INTERVAL_MS = 2000;
@@ -30,12 +32,28 @@ const CHECK_INBOX_FOR_AUTHORIZATION_LINK_DESCRIPTOR = msg({
 	message: 'Check your inbox at {emailAddress} for the authorization link.',
 	comment: 'Instruction on the IP authorization screen. emailAddress is the address that received the login email.',
 });
+const CHECK_YOUR_EMAIL_DESCRIPTOR = msg({
+	message: 'Check your email',
+	comment: 'Heading of the IP authorization screen while it waits for the emailed authorization link.',
+});
+const CONNECTION_LOST_DESCRIPTOR = msg({
+	message: 'Connection lost',
+	comment: 'Heading of the IP authorization screen when it can no longer check whether the link was used.',
+});
 const logger = new Logger('IpAuthorizationScreen');
-const IpAuthorizationScreen = ({challenge, runtimeSnapshot, onAuthorized, onBack}: IpAuthorizationScreenProps) => {
+const IpAuthorizationScreen = ({
+	challenge,
+	runtimeSnapshot,
+	onAuthorized,
+	onBack,
+	onStepTitleChange = null,
+}: IpAuthorizationScreenProps) => {
 	const {i18n} = useLingui();
 	const [resendUsed, setResendUsed] = useState(false);
 	const [resendIn, setResendIn] = useState(challenge.resendAvailableIn);
 	const [pollingState, setPollingState] = useState<PollingState>('polling');
+	const title = i18n._(pollingState === 'error' ? CONNECTION_LOST_DESCRIPTOR : CHECK_YOUR_EMAIL_DESCRIPTOR);
+	useReportStepTitle(onStepTitleChange, title);
 	const onAuthorizedRef = useRef(onAuthorized);
 	onAuthorizedRef.current = onAuthorized;
 	useEffect(() => {
@@ -125,9 +143,11 @@ const IpAuthorizationScreen = ({challenge, runtimeSnapshot, onAuthorized, onBack
 					/>
 				)}
 			</div>
-			<h1 className={styles.title} data-flx="auth.flow.ip-authorization-screen.title">
-				{pollingState === 'error' ? <Trans>Connection lost</Trans> : <Trans>Check your email</Trans>}
-			</h1>
+			{onStepTitleChange == null ? (
+				<h1 className={styles.title} data-flx="auth.flow.ip-authorization-screen.title">
+					{title}
+				</h1>
+			) : null}
 			<p
 				className={styles.description}
 				role={pollingState === 'error' ? 'alert' : 'status'}

@@ -10,7 +10,7 @@ import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterEach, beforeEach, describe, it} from 'vitest';
 
-const TOKEN_ROUTE_SUFFIXES = ['', '/github', '/slack', '/instatus'];
+const TOKEN_ROUTE_SUFFIXES = ['', '/github', '/slack', '/instatus', '/libredesk'];
 
 describe('Webhook token routes and the web app origin', () => {
 	let harness: ApiTestHarness;

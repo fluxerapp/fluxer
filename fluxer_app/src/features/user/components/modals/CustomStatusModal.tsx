@@ -4,19 +4,10 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {
 	DEFAULT_TIME_WINDOW_KEY,
 	getTimeWindowKeyForExpiresAt,
-	getTimeWindowPresets,
-	TIME_WINDOW_LABEL_MESSAGES,
 	type TimeWindowKey,
-	type TimeWindowPreset,
 } from '@app/features/app/config/TimeWindowPresets';
-import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
-import Emoji from '@app/features/emoji/state/Emoji';
-import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
-import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
-import {getEmojiURL} from '@app/features/expressions/utils/EmojiUtils';
-import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import {Button} from '@app/features/ui/button/Button';
 import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/CharacterCountAnnouncer';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -25,14 +16,23 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {getRelativeDayLabelLower} from '@app/features/ui/utils/RelativeDayLabels';
-import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/CustomStatusModal.module.css';
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
-import {buildDraftStatus, type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
+import {
+	CustomStatusEmojiPreview,
+	hasCustomStatusEmojiPreview,
+	useCustomStatusDraft,
+} from '@app/features/user/hooks/useCustomStatusDraft';
+import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
-import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {
+	CHANGE_EMOJI_DESCRIPTOR,
+	CHOOSE_AN_EMOJI_DESCRIPTOR,
+	CLEAR_CUSTOM_STATUS_DESCRIPTOR,
+	WHAT_S_HAPPENING_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {getDaysBetween} from '@fluxer/date_utils/src/DateComparison';
 import {getFormattedShortDate, getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
 import type {I18n} from '@lingui/core';
@@ -48,22 +48,7 @@ const SET_YOUR_STATUS_DESCRIPTOR = msg({
 	message: 'Set your status',
 	comment: 'Short label in the custom status modal. Keep it concise.',
 });
-const WHAT_S_HAPPENING_DESCRIPTOR = msg({
-	message: "What's happening?",
-	comment: 'Placeholder question in the custom status text field.',
-});
-const CHANGE_EMOJI_DESCRIPTOR = msg({
-	message: 'Change emoji',
-	comment: 'Short label in the custom status modal. Keep it concise.',
-});
-const CHOOSE_AN_EMOJI_DESCRIPTOR = msg({
-	message: 'Choose an emoji',
-	comment: 'Button or menu action label in the custom status modal. Keep it concise.',
-});
-const CLEAR_CUSTOM_STATUS_DESCRIPTOR = msg({
-	message: 'Clear custom status',
-	comment: 'Button or menu action label in the custom status modal. Keep it concise.',
-});
+
 const MS_PER_MINUTE = 60 * 1000;
 const EXPIRATION_MENU_MAX_HEIGHT = 600;
 const EMPTY_PREVIEW_CUSTOM_STATUS: CustomStatus = {
@@ -134,22 +119,25 @@ export const CustomStatusModal = observer(() => {
 	const initialStatus = normalizeCustomStatus(UserSettings.customStatus);
 	const currentUser = Users.getCurrentUser();
 	const isDeveloper = DeveloperMode.isDeveloper;
-	const shouldAnimateEmojiPreview = useShouldAnimate({kind: 'emoji'});
-	const [statusText, setStatusText] = useState(initialStatus?.text ?? '');
-	const [emojiId, setEmojiId] = useState<string | null>(initialStatus?.emojiId ?? null);
-	const [emojiName, setEmojiName] = useState<string | null>(initialStatus?.emojiName ?? null);
+	const {
+		statusText,
+		setStatusText,
+		isSaving,
+		draftStatus,
+		handleEmojiSelect,
+		handleClearDraft,
+		handleSave,
+		expirationPresets,
+	} = useCustomStatusDraft({
+		initialStatus: initialStatus,
+		onSaved: () => ModalCommands.pop(),
+		getExpiresAt: () => getExpiresAtForSave(),
+	});
+
 	const mountedAt = useMemo(() => new Date(), []);
 	const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 	const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
-	const expirationPresets = useMemo(
-		() =>
-			getTimeWindowPresets({includeDeveloperOptions: isDeveloper}).map((preset: TimeWindowPreset) => ({
-				key: preset.key,
-				label: i18n._(TIME_WINDOW_LABEL_MESSAGES[preset.key]),
-				minutes: preset.minutes,
-			})),
-		[i18n.locale, isDeveloper],
-	);
+
 	const expirationOptions = useMemo<Array<ExpirationOption>>(
 		() =>
 			expirationPresets.map((preset: ExpirationPreset) => {
@@ -186,11 +174,7 @@ export const CustomStatusModal = observer(() => {
 				})
 			: DEFAULT_EXPIRATION_KEY,
 	);
-	const [isSaving, setIsSaving] = useState(false);
-	const draftStatus = useMemo(
-		() => buildDraftStatus({text: statusText.trim(), emojiId, emojiName, expiresAt: null}),
-		[statusText, emojiId, emojiName],
-	);
+
 	const previewCustomStatus = draftStatus ?? EMPTY_PREVIEW_CUSTOM_STATUS;
 	const getExpiresAtForSave = useCallback((): string | null => {
 		const option = expirationOptions.find((entry) => entry.key === selectedExpiration);
@@ -200,71 +184,13 @@ export const CustomStatusModal = observer(() => {
 	const handleExpirationChange = (value: TimeWindowKey) => {
 		setSelectedExpiration(value);
 	};
-	const handleEmojiSelect = useCallback((emoji: FlatEmoji) => {
-		if (emoji.id) {
-			setEmojiId(emoji.id);
-			setEmojiName(emoji.name);
-		} else {
-			setEmojiId(null);
-			setEmojiName(getSkinTonedSurrogate(emoji));
-		}
-	}, []);
-	const handleSave = async () => {
-		if (isSaving) return;
-		setIsSaving(true);
-		try {
-			const statusToSave = buildDraftStatus({
-				text: statusText.trim(),
-				emojiId,
-				emojiName,
-				expiresAt: getExpiresAtForSave(),
-			});
-			await UserSettingsCommands.update({customStatus: statusToSave});
-			ModalCommands.pop();
-		} catch (error) {
-			if (!handleAccountLimitedError(error)) throw error;
-		} finally {
-			setIsSaving(false);
-		}
-	};
-	const handleClearDraft = () => {
-		setStatusText('');
-		setEmojiId(null);
-		setEmojiName(null);
-	};
-	const renderEmojiPreview = (): React.ReactNode => {
-		if (!draftStatus) return null;
-		if (draftStatus.emojiId) {
-			const emoji = Emoji.getEmojiById(draftStatus.emojiId);
-			if (emoji) {
-				return (
-					<img
-						src={buildCustomEmojiURL({
-							id: draftStatus.emojiId,
-							animated: Boolean(emoji.animated) && shouldAnimateEmojiPreview,
-						})}
-						alt={emoji.name}
-						className={styles.emojiPreviewImage}
-						data-flx="user.custom-status-modal.render-emoji-preview.emoji-preview-image"
-					/>
-				);
-			}
-		}
-		if (draftStatus.emojiName) {
-			const twemojiUrl = getEmojiURL(draftStatus.emojiName);
-			if (!twemojiUrl) return null;
-			return (
-				<img
-					src={twemojiUrl}
-					alt={draftStatus.emojiName}
-					className={styles.emojiPreviewImage}
-					data-flx="user.custom-status-modal.render-emoji-preview.emoji-preview-image--2"
-				/>
-			);
-		}
-		return null;
-	};
-	const emojiPreview = renderEmojiPreview();
+	const emojiPreview = hasCustomStatusEmojiPreview(draftStatus) ? (
+		<CustomStatusEmojiPreview
+			status={draftStatus}
+			className={styles.emojiPreviewImage}
+			data-flx="user.custom-status-modal.emoji-preview-image"
+		/>
+	) : null;
 	return (
 		<Modal.Root
 			onClose={() => ModalCommands.pop()}

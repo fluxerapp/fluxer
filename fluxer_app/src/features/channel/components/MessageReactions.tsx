@@ -22,6 +22,7 @@ import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiName, getReactionKey, useEmojiURL} from '@app/features/messaging/utils/ReactionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -330,7 +331,7 @@ export const MessageReactions = observer(
 									onClick={handleEmojiPickerOpen}
 									data-flx="channel.message-reactions.add-reaction-button.emoji-picker-open"
 								>
-									<SmileyIcon size={20} weight="fill" data-flx="channel.message-reactions.smiley-icon" />
+									<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="channel.message-reactions.smiley-icon" />
 								</button>
 							</FocusRing>
 							<ExpressionPickerSheet
@@ -371,7 +372,7 @@ export const MessageReactions = observer(
 									data-action="message-add-reaction-button"
 									data-flx="channel.message-reactions.add-reaction-button"
 								>
-									<SmileyIcon size={20} weight="fill" data-flx="channel.message-reactions.smiley-icon--2" />
+									<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="channel.message-reactions.smiley-icon--2" />
 								</button>
 							</FocusRing>
 						</Popout>

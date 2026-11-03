@@ -4,6 +4,9 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Users from '@app/features/user/state/Users';
+import {type AccountGateResult, canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import type {TierGateDenial} from '@fluxer/constants/src/AccountTierRules';
 import {
 	GuildFeatures,
 	GuildOperations,
@@ -16,8 +19,7 @@ import {makeAutoObservable} from 'mobx';
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const TEN_MINUTES_MS = 10 * 60 * 1000;
 export const VerificationFailureReason = {
-	UNCLAIMED_ACCOUNT: 'UNCLAIMED_ACCOUNT',
-	UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
+	ACCOUNT_GATE: 'ACCOUNT_GATE',
 	ACCOUNT_TOO_NEW: 'ACCOUNT_TOO_NEW',
 	NOT_MEMBER_LONG_ENOUGH: 'NOT_MEMBER_LONG_ENOUGH',
 	SEND_MESSAGE_DISABLED: 'SEND_MESSAGE_DISABLED',
@@ -30,6 +32,12 @@ interface VerificationStatus {
 	canAccess: boolean;
 	reason?: VerificationFailureReason;
 	verificationEndsAt?: number;
+	accountGate?: TierGateDenial;
+}
+
+function accountGateStatus(gate: AccountGateResult): VerificationStatus | null {
+	if (gate.allowed) return null;
+	return {canAccess: false, reason: VerificationFailureReason.ACCOUNT_GATE, accountGate: gate};
 }
 
 class GuildVerification {
@@ -119,7 +127,7 @@ class GuildVerification {
 	private computeVerificationStatus(guild: Guild): VerificationStatus {
 		const user = Users.getCurrentUser();
 		if (!user) {
-			return {canAccess: false, reason: VerificationFailureReason.UNCLAIMED_ACCOUNT};
+			return accountGateStatus(canPerform(null, TierGatedActions.MESSAGE)) ?? {canAccess: false};
 		}
 		const member = GuildMembers.getMember(guild.id, user.id);
 		const now = Date.now();
@@ -136,6 +144,10 @@ class GuildVerification {
 		if ((guild.disabledOperations & GuildOperations.SEND_MESSAGE) !== 0) {
 			return {canAccess: false, reason: VerificationFailureReason.SEND_MESSAGE_DISABLED};
 		}
+		if (user.reportsAccountTier) {
+			const messageGate = accountGateStatus(canPerform(user, TierGatedActions.MESSAGE));
+			if (messageGate) return messageGate;
+		}
 		if (user.id === guild.ownerId) {
 			return {canAccess: true};
 		}
@@ -149,14 +161,8 @@ class GuildVerification {
 		if (member && member.roles.size > 0) {
 			return {canAccess: true};
 		}
-		if (!user.isClaimed()) {
-			return {canAccess: false, reason: VerificationFailureReason.UNCLAIMED_ACCOUNT};
-		}
-		if (verificationLevel >= GuildVerificationLevel.LOW) {
-			if (!user.verified) {
-				return {canAccess: false, reason: VerificationFailureReason.UNVERIFIED_EMAIL};
-			}
-		}
+		const verificationGate = accountGateStatus(canPerform(user, TierGatedActions.GUILD_VERIFICATION));
+		if (verificationGate) return verificationGate;
 		if (verificationLevel >= GuildVerificationLevel.MEDIUM) {
 			const verificationEndsAt = user.createdAt.getTime() + FIVE_MINUTES_MS;
 			if (verificationEndsAt > now) {

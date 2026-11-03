@@ -111,6 +111,11 @@ services:
         volume:
           nocopy: true
       - type: volume
+        source: package-number-utils-node-modules
+        target: /workspaces/fluxer/packages/number_utils/node_modules
+        volume:
+          nocopy: true
+      - type: volume
         source: package-openapi-node-modules
         target: /workspaces/fluxer/packages/openapi/node_modules
         volume:
@@ -166,11 +171,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-api-locale-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/locale/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-api-media-proxy-utils-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/media_proxy_utils/node_modules
         volume:
@@ -208,11 +208,6 @@ services:
       - type: volume
         source: fluxer-app-livekit-client-node-modules
         target: /workspaces/fluxer/fluxer_app/pkgs/livekit-client/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: fluxer-app-number-utils-node-modules
-        target: /workspaces/fluxer/fluxer_app/pkgs/number_utils/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -281,7 +276,7 @@ services:
       - "127.0.0.1:${FLUXER_DEV_VALKEY_PORT:-6379}:6379"
 
   nats:
-    image: nats:2.14.7-alpine
+    image: nats:2.14.8-alpine
     command: ["-js", "-sd", "/data", "-m", "8222"]
     volumes:
       - nats-data:/data
@@ -349,6 +344,7 @@ volumes:
   package-ip-utils-node-modules:
   package-limits-node-modules:
   package-logger-node-modules:
+  package-number-utils-node-modules:
   package-openapi-node-modules:
   package-schema-node-modules:
   package-snowflake-node-modules:
@@ -360,7 +356,6 @@ volumes:
   fluxer-api-geoip-node-modules:
   fluxer-api-http-client-node-modules:
   fluxer-api-kv-client-node-modules:
-  fluxer-api-locale-node-modules:
   fluxer-api-media-proxy-utils-node-modules:
   fluxer-api-mime-utils-node-modules:
   fluxer-api-nats-node-modules:
@@ -369,7 +364,6 @@ volumes:
   fluxer-api-worker-node-modules:
   fluxer-app-list-utils-node-modules:
   fluxer-app-livekit-client-node-modules:
-  fluxer-app-number-utils-node-modules:
   package-voice-engine-v2-node-modules:
   fluxer-api-postgres-node-modules:
   cargo-registry:

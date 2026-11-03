@@ -66,13 +66,10 @@ export interface PanZoomTransformSnapshot {
 
 export interface UsePanZoomSurfaceOptions {
 	zoomState?: ZoomState;
-	minScale?: number;
 	maxScale?: number;
 	zoomedScale?: number;
 	disabled?: boolean;
 	panDisabled?: boolean;
-	wheelEnabled?: boolean;
-	pinchEnabled?: boolean;
 	doubleClickEnabled?: boolean;
 	tapToToggleZoom?: boolean;
 	resetKey?: unknown;
@@ -158,13 +155,10 @@ function findMediaElement(content: HTMLElement): Element | null {
 export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSurfaceController {
 	const {
 		zoomState: controlledZoomState,
-		minScale = MIN_ZOOM_SCALE,
 		maxScale = MAX_ZOOM_SCALE,
 		zoomedScale = DEFAULT_ZOOM_SCALE,
 		disabled = false,
 		panDisabled = false,
-		wheelEnabled = true,
-		pinchEnabled = true,
 		doubleClickEnabled = true,
 		tapToToggleZoom = false,
 		resetKey,
@@ -177,8 +171,8 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const contentRef = useRef<HTMLDivElement>(null);
 	const x = useMotionValue(0);
 	const y = useMotionValue(0);
-	const scale = useMotionValue(minScale);
-	const requestedTransformRef = useRef({scale: minScale, x: 0, y: 0});
+	const scale = useMotionValue(MIN_ZOOM_SCALE);
+	const requestedTransformRef = useRef({scale: MIN_ZOOM_SCALE, x: 0, y: 0});
 	const prefersReducedMotion = useReducedMotion();
 	const [internalZoomState, setInternalZoomState] = useState<ZoomState>(controlledZoomState ?? 'fit');
 	const [isDragging, setIsDragging] = useState(false);
@@ -197,7 +191,6 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const onTapRef = useLatestRef(onTap);
 	const onBackdropTapRef = useLatestRef(onBackdropTap);
 	const activeZoomState = controlledZoomState ?? internalZoomState;
-	const minScaleRef = useLatestRef(minScale);
 	const maxScaleRef = useLatestRef(maxScale);
 	const zoomedScaleRef = useLatestRef(zoomedScale);
 	const disabledRef = useLatestRef(disabled);
@@ -252,8 +245,8 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	);
 	const canStepScale = useCallback(
 		(fromScale: number, factor: number) =>
-			clampScale(fromScale * factor, minScaleRef.current, maxScaleRef.current) !== fromScale,
-		[maxScaleRef, minScaleRef],
+			clampScale(fromScale * factor, MIN_ZOOM_SCALE, maxScaleRef.current) !== fromScale,
+		[maxScaleRef],
 	);
 	const getSnapshot = useCallback((): PanZoomTransformSnapshot => {
 		const requested = requestedTransformRef.current;
@@ -267,19 +260,19 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				scale: requested.scale,
 				x: requested.x,
 				y: requested.y,
-				minScale: minScaleRef.current,
+				minScale: MIN_ZOOM_SCALE,
 			}),
 			canZoomIn: canStepScale(requested.scale, ZOOM_STEP),
 			canZoomOut: canStepScale(requested.scale, 1 / ZOOM_STEP),
 		};
-	}, [canStepScale, minScaleRef]);
+	}, [canStepScale]);
 	const commitRequestedTransform = useCallback(
 		(next: {scale: number; x: number; y: number}) => {
 			requestedTransformRef.current = next;
-			commitZoomState(toZoomState(next.scale, minScaleRef.current));
+			commitZoomState(toZoomState(next.scale, MIN_ZOOM_SCALE));
 			onTransformChangeRef.current?.(getSnapshot());
 		},
-		[commitZoomState, getSnapshot, minScaleRef, onTransformChangeRef],
+		[commitZoomState, getSnapshot, onTransformChangeRef],
 	);
 	const clampPanToMetrics = useCallback(
 		(metrics: PanZoomMetrics | null) => {
@@ -338,8 +331,8 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		};
 	}, [clampPanToMetrics, measureMetrics, resetKey]);
 	const getZoomedScale = useCallback(
-		() => clampScale(zoomedScaleRef.current, minScaleRef.current, maxScaleRef.current),
-		[maxScaleRef, minScaleRef, zoomedScaleRef],
+		() => clampScale(zoomedScaleRef.current, MIN_ZOOM_SCALE, maxScaleRef.current),
+		[maxScaleRef, zoomedScaleRef],
 	);
 	const setTransform = useCallback(
 		(next: {scale: number; x: number; y: number}, animated: boolean) => {
@@ -378,7 +371,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		(nextZoomState: ZoomState, origin?: Point) => {
 			const metrics = measureMetrics();
 			if (!metrics) return;
-			const nextScale = nextZoomState === 'fit' ? minScaleRef.current : getZoomedScale();
+			const nextScale = nextZoomState === 'fit' ? MIN_ZOOM_SCALE : getZoomedScale();
 			const requested = requestedTransformRef.current;
 			const nextPoint =
 				nextZoomState === 'fit'
@@ -392,7 +385,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 						});
 			setTransform({scale: nextScale, x: nextPoint.x, y: nextPoint.y}, true);
 		},
-		[getZoomedScale, measureMetrics, minScaleRef, setTransform],
+		[getZoomedScale, measureMetrics, setTransform],
 	);
 	const zoomBy = useCallback(
 		(factor: number, origin?: Point) => {
@@ -400,7 +393,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			if (!metrics) return;
 			const requested = requestedTransformRef.current;
 			const currentScale = requested.scale;
-			const nextScale = clampScale(currentScale * factor, minScaleRef.current, maxScaleRef.current);
+			const nextScale = clampScale(currentScale * factor, MIN_ZOOM_SCALE, maxScaleRef.current);
 			if (nextScale === currentScale) return;
 			const nextPoint = getAnchoredZoomPoint({
 				origin: origin ?? {x: 0, y: 0},
@@ -411,13 +404,13 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			});
 			setTransform({scale: nextScale, x: nextPoint.x, y: nextPoint.y}, true);
 		},
-		[maxScaleRef, measureMetrics, minScaleRef, setTransform],
+		[maxScaleRef, measureMetrics, setTransform],
 	);
 	const zoomIn = useCallback((origin?: Point) => zoomBy(ZOOM_STEP, origin), [zoomBy]);
 	const zoomOut = useCallback((origin?: Point) => zoomBy(1 / ZOOM_STEP, origin), [zoomBy]);
 	const reset = useCallback(() => {
-		setTransform({scale: minScaleRef.current, x: 0, y: 0}, true);
-	}, [minScaleRef, setTransform]);
+		setTransform({scale: MIN_ZOOM_SCALE, x: 0, y: 0}, true);
+	}, [setTransform]);
 	useEffect(() => {
 		if (controlledZoomState === undefined) return;
 		if (lastCommittedZoomStateRef.current === controlledZoomState) return;
@@ -460,9 +453,9 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	);
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
-			if (disabledRef.current || !wheelEnabled || event.ctrlKey || panDisabledRef.current) return;
+			if (disabledRef.current || event.ctrlKey || panDisabledRef.current) return;
 			const currentScale = scale.get();
-			if (currentScale <= minScaleRef.current + ZOOM_STATE_EPSILON) return;
+			if (currentScale <= MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON) return;
 			const metrics = getMetrics();
 			if (!metrics) return;
 			event.preventDefault();
@@ -478,17 +471,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			commitRequestedTransform({scale: requested.scale, x: pannedPoint.x, y: pannedPoint.y});
 			scheduleMetricsRefresh();
 		},
-		[
-			commitRequestedTransform,
-			disabledRef,
-			getMetrics,
-			minScaleRef,
-			panDisabledRef,
-			scale,
-			scheduleMetricsRefresh,
-			stopAnimations,
-			wheelEnabled,
-		],
+		[commitRequestedTransform, disabledRef, getMetrics, panDisabledRef, scale, scheduleMetricsRefresh, stopAnimations],
 	);
 	useEffect(() => {
 		const viewport = viewportRef.current;
@@ -525,11 +508,11 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 					followsPinch: false,
 				};
 				updateDragging(
-					!disabledRef.current && !panDisabledRef.current && currentScale > minScaleRef.current + ZOOM_STATE_EPSILON,
+					!disabledRef.current && !panDisabledRef.current && currentScale > MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON,
 				);
 				return;
 			}
-			if (!pinchEnabled || disabledRef.current || pointerRecordsRef.current.size !== 2) return;
+			if (disabledRef.current || pointerRecordsRef.current.size !== 2) return;
 			const records = getPointerRecords(pointerRecordsRef.current);
 			const viewportRect = viewportRectRef.current;
 			if (!viewportRect || records.length !== 2) return;
@@ -546,19 +529,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			};
 			updateDragging(true);
 		},
-		[
-			disabledRef,
-			measureMetrics,
-			minScaleRef,
-			panDisabledRef,
-			pinchEnabled,
-			scale,
-			stopAnimations,
-			updateDragging,
-			updatePointerRecord,
-			x,
-			y,
-		],
+		[disabledRef, measureMetrics, panDisabledRef, scale, stopAnimations, updateDragging, updatePointerRecord, x, y],
 	);
 	const handlePointerMove = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
@@ -573,7 +544,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				const dy = event.clientY - gesture.startPointer.y;
 				const moved = Math.hypot(dx, dy) >= TAP_MOVE_THRESHOLD;
 				gesture.moved = gesture.moved || moved;
-				if (panDisabledRef.current || scale.get() <= minScaleRef.current + ZOOM_STATE_EPSILON) return;
+				if (panDisabledRef.current || scale.get() <= MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON) return;
 				const nextPoint = clampPanForScale(
 					{
 						x: gesture.startX + dx,
@@ -588,7 +559,6 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				updateDragging(true);
 				return;
 			}
-			if (!pinchEnabled) return;
 			const records = getPointerRecords(pointerRecordsRef.current);
 			if (records.length < 2) return;
 			const viewportRect = viewportRectRef.current;
@@ -599,7 +569,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			const distance = Math.max(1, getDistance(first, second));
 			const nextScale = Math.min(
 				maxScaleRef.current,
-				Math.max(minScaleRef.current, gesture.startScale * (distance / gesture.startDistance)),
+				Math.max(MIN_ZOOM_SCALE, gesture.startScale * (distance / gesture.startDistance)),
 			);
 			const localPoint = {
 				x: (gesture.startCentroid.x - gesture.startX) / gesture.startScale,
@@ -624,9 +594,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			disabledRef,
 			getMetrics,
 			maxScaleRef,
-			minScaleRef,
 			panDisabledRef,
-			pinchEnabled,
 			scale,
 			updateDragging,
 			updatePointerRecord,
@@ -672,7 +640,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 					startedOnBackdrop: false,
 					followsPinch: true,
 				};
-				updateDragging(scale.get() > minScaleRef.current + ZOOM_STATE_EPSILON);
+				updateDragging(scale.get() > MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON);
 				return;
 			}
 			if (pointerRecordsRef.current.size === 0) {
@@ -683,7 +651,6 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		[
 			disabledRef,
 			getViewportRelativePoint,
-			minScaleRef,
 			onBackdropTapRef,
 			onTapRef,
 			scale,

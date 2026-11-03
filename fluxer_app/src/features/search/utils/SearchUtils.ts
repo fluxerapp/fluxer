@@ -20,7 +20,7 @@ const NO_RESPONSE_BODY_RECEIVED_DESCRIPTOR = msg({
 		'Error thrown when a message search returns an empty HTTP body. Reaches the user as a toast or inline error.',
 });
 const STILL_INDEXING_DESCRIPTOR = msg({
-	message: 'Still indexing — check back in a moment',
+	message: 'Still indexing. Check back in a moment',
 	comment:
 		'Status message returned by search when results are unavailable because the server is still building the index.',
 });

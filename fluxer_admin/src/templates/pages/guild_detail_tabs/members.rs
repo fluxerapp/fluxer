@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager;
+
 use crate::utils::plural::count_noun;
 use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
         media::user_avatar_url,
         page_container::card_with_header,
     },
-    utils::{bigint::format_discriminator, user_tag::user_tag},
+    utils::{bigint::format_discriminator, user_tag::display_with_tag},
 };
 use maud::{Markup, html};
 
@@ -64,35 +66,7 @@ pub fn members_tab(
             }
 
             @if total_pages > 1 {
-                div class="mt-4 flex items-center justify-between border-t pt-4" {
-                    @if has_previous {
-                        a href={(base) "/guilds/" (guild.id) "?tab=members&page=" (page - 1)}
-                            class="inline-flex items-center rounded-md bg-brand-primary px-3 \
-                                   py-2 text-sm font-medium text-white hover:bg-brand-primary-dark" {
-                            "\u{2190} Previous"
-                        }
-                    } @else {
-                        span class="inline-flex items-center rounded-md border border-neutral-200 \
-                                    bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-400" {
-                            "\u{2190} Previous"
-                        }
-                    }
-                    p class="text-sm text-neutral-500" {
-                        "Page " (u64::from(page) + 1) " of " (total_pages)
-                    }
-                    @if let Some(next_page) = next_page {
-                        a href={(base) "/guilds/" (guild.id) "?tab=members&page=" (next_page)}
-                            class="inline-flex items-center rounded-md bg-brand-primary px-3 \
-                                   py-2 text-sm font-medium text-white hover:bg-brand-primary-dark" {
-                            "Next \u{2192}"
-                        }
-                    } @else {
-                        span class="inline-flex items-center rounded-md border border-neutral-200 \
-                                    bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-400" {
-                            "Next \u{2192}"
-                        }
-                    }
-                }
+                (pager(has_previous.then(|| format!("{base}/guilds/{}?tab=members&page={}", guild.id, page - 1)), Some(format!("Page {} of {total_pages}", u64::from(page) + 1)), next_page.map(|next| format!("{base}/guilds/{}?tab=members&page={next}", guild.id))))
             }
         }
     }
@@ -105,15 +79,12 @@ fn member_card(
     member: &GuildMember,
     csrf_token: &str,
 ) -> Markup {
-    let tag = user_tag(
+    let display = display_with_tag(
+        member.user.global_name.as_deref(),
         &member.user.username,
         &format_discriminator(&member.user.discriminator),
         member.user.bot,
     );
-    let display = match &member.user.global_name {
-        Some(gn) if !gn.trim().is_empty() => format!("{gn} ({tag})"),
-        _ => tag,
-    };
     let user_url = format!("{base}/users/{}", member.user.id);
     let avatar_url = user_avatar_url(
         config,

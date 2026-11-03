@@ -13,6 +13,7 @@ import {
 	SHELL_HINT_STORAGE_KEY,
 	ZOOM_PREBOOT_MIRROR_STORAGE_KEY,
 } from '@fluxer/desktop_ipc/src/StorageContract';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const LEGACY_SESSION_TOKEN_KEY = 'token';
 const LEGACY_SESSION_USER_ID_KEY = 'userId';
@@ -24,10 +25,6 @@ const ZOOM_PERCENT_MAX = 200;
 
 interface LegacyRawStorageSeedRenderer {
 	sendSync: (channel: string, ...args: Array<unknown>) => unknown;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseJSON(value: unknown): unknown {

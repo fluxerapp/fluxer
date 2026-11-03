@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
@@ -114,7 +114,6 @@ export const UnaddableRecipientsConfirmModal = observer(
 				<ConfirmModal
 					title={i18n._(SOME_USERS_CAN_T_BE_ADDED_DESCRIPTOR)}
 					description={description}
-					secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 					size="small"
 					data-flx="channel.unaddable-recipients-confirm-modal.confirm-modal"
 				/>

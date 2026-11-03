@@ -24,13 +24,12 @@ import {
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
-import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
+import {getReportFlowResponse} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {
@@ -49,9 +48,14 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ReportAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {ReportFlowSurface, ReportFlowTargetType} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import type {
+	ReportFlowStep,
+	ReportFlowSurface,
+	ReportFlowTargetType,
+} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import type {WebhookCreateResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import type {z} from 'zod';
 
@@ -90,14 +94,14 @@ const WEBHOOK_NAME = 'Harbor Bulletin';
 const WEBHOOK_USERNAME = 'Night Desk';
 const CREATOR_GLOBAL_NAME = 'Harbor Keeper';
 const KINDS: ReadonlyArray<AuthorKind> = ['user', 'bot', 'webhook'];
-const SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [{screen_id: 'root_message', option_id: 'spam'}];
-const CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const SPAM_WALK: ReadonlyArray<ReportFlowStep> = [{screen_id: 'root_message', option_id: 'spam'}];
+const CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
 	{screen_id: 'abuse', option_id: 'sexual'},
 	{screen_id: 'sexual', option_id: 'minor_sexual'},
 	{screen_id: 'minor_sexual', option_id: 'csam'},
 ];
-const HARASSMENT_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const HARASSMENT_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
 	{screen_id: 'abuse', option_id: 'harassment'},
 	{screen_id: 'harassment', option_id: 'harassment_direct'},
@@ -112,7 +116,7 @@ class CapturingPublisher implements ActivityPublisher {
 }
 
 function currentHash(target: ReportFlowTargetType, surface: ReportFlowSurface = 'in_app'): string {
-	return getReportFlowVariant(target, surface).revisionHash;
+	return getReportFlowResponse(target, surface, 'en-US').revision_hash;
 }
 
 async function readReport(reportId: string) {
@@ -128,7 +132,7 @@ async function countReports(): Promise<number> {
 }
 
 async function setJoinedAt(guildId: string, userId: string, joinedAt: Date): Promise<void> {
-	const repository = new GuildMemberRepository();
+	const repository = new GuildRepository();
 	const member = await repository.getMember(createGuildID(BigInt(guildId)), createUserID(BigInt(userId)));
 	if (!member) {
 		throw new Error(`Member ${userId} of guild ${guildId} was not stored`);
@@ -203,7 +207,7 @@ function submitFlow(
 	token: string,
 	channelId: string,
 	messageId: string,
-	steps: ReadonlyArray<ReportFlowStepInput> = SPAM_WALK,
+	steps: ReadonlyArray<ReportFlowStep> = SPAM_WALK,
 ) {
 	return createBuilder<ReportResponse>(harness, token)
 		.post('/reports/flows/message/submissions')
@@ -488,6 +492,7 @@ describe('Reports of webhook and bot messages', () => {
 		expect(event.data).toEqual({
 			report_id: result.report_id,
 			reporter_id: world.reporter.userId,
+			reporter_tier: 'verified',
 			category: 'spam',
 			target_type: 'message',
 			reported_user_id: null,

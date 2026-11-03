@@ -79,11 +79,12 @@ export function useActiveFriendVoiceStates(): ReadonlyArray<UserVoiceActivity> {
 				const channel = Channels.getChannel(channelId);
 				const guild = effectiveGuildId ? Guilds.getGuild(effectiveGuildId) : undefined;
 				const isStreaming = voiceState.self_stream === true;
-				const streamKey = isStreaming
-					? effectiveGuildId
-						? `${effectiveGuildId}:${channelId}:${connectionId}`
-						: `dm:${channelId}:${connectionId}`
-					: null;
+				let streamKey: string | null = null;
+				if (isStreaming && effectiveGuildId) {
+					streamKey = `${effectiveGuildId}:${channelId}:${connectionId}`;
+				} else if (isStreaming) {
+					streamKey = `dm:${channelId}:${connectionId}`;
+				}
 				const {participantUserIds, participantUsers} = collectParticipantUsers(channelStates);
 				activities.push({
 					voiceState,

@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 
-use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
 use pipewire as pw;
@@ -386,7 +385,6 @@ pub(crate) fn handle_direct_global_removed(
             replace_owned_link_snapshot(&runtime.owned_link_snapshot, Vec::new());
             *runtime.active_stream.borrow_mut() = None;
             *runtime.active_listener.borrow_mut() = None;
-            runtime.running.store(false, Ordering::Relaxed);
             changed = true;
         }
         if st.sink_input_fl == Some(id) {

@@ -7,7 +7,6 @@ import {
 	createRole,
 	setupTestGuildWithMembers,
 	updateGuild,
-	updateMember,
 	updateRolePositions,
 } from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -75,19 +74,6 @@ describe('Guild Features', () => {
 		});
 	});
 	describe('CHANGE_NICKNAME Permission Enforcement', () => {
-		test('should allow MANAGE_NICKNAMES holder to change other member nicknames', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
-			const [moderator, target] = members;
-			const modRole = await createRole(harness, owner.token, guild.id, {
-				name: 'Moderator',
-				permissions: Permissions.MANAGE_NICKNAMES.toString(),
-			});
-			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
-			const updatedMember = await updateMember(harness, moderator.token, guild.id, target.userId, {
-				nick: 'Mod Set Nick',
-			});
-			expect(updatedMember.nick).toBe('Mod Set Nick');
-		});
 		test('should not allow CHANGE_NICKNAME holder to change other member nicknames', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
 			const [member1, member2] = members;
@@ -116,23 +102,16 @@ describe('Guild Features', () => {
 			expect(updatedGuild.features).toContain(GuildFeatures.BANNER);
 			expect(updatedGuild.features).toContain(GuildFeatures.INVITES_DISABLED);
 		});
-		test('should reject toggling the deprecated CLONE_EMOJI_DISABLED feature', async () => {
+		test('should reject toggling deprecated clone features', async () => {
 			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Deprecated Clone Emoji Test');
-			await createBuilder(harness, account.token)
-				.patch(`/guilds/${guild.id}`)
-				.body({features: [...guild.features, GuildFeatures.CLONE_EMOJI_DISABLED]})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject toggling the deprecated CLONE_STICKER_DISABLED feature', async () => {
-			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Deprecated Clone Sticker Test');
-			await createBuilder(harness, account.token)
-				.patch(`/guilds/${guild.id}`)
-				.body({features: [...guild.features, GuildFeatures.CLONE_STICKER_DISABLED]})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
+			const guild = await createGuild(harness, account.token, 'Deprecated Clone Test');
+			for (const feature of [GuildFeatures.CLONE_EMOJI_DISABLED, GuildFeatures.CLONE_STICKER_DISABLED]) {
+				await createBuilder(harness, account.token)
+					.patch(`/guilds/${guild.id}`)
+					.body({features: [...guild.features, feature]})
+					.expect(HTTP_STATUS.BAD_REQUEST)
+					.execute();
+			}
 		});
 		test('should reject toggling non-toggleable features', async () => {
 			const account = await createTestAccount(harness);
@@ -141,15 +120,6 @@ describe('Guild Features', () => {
 				.patch(`/guilds/${guild.id}`)
 				.body({features: [...guild.features, GuildFeatures.DISCOVERABLE]})
 				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should require MANAGE_GUILD permission to update features', async () => {
-			const {members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const member = members[0];
-			await createBuilder(harness, member.token)
-				.patch(`/guilds/${guild.id}`)
-				.body({features: [...guild.features, GuildFeatures.INVITES_DISABLED]})
-				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
 	});

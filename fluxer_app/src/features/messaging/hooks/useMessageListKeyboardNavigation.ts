@@ -197,7 +197,12 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (!keyboardModeEnabled) return;
 			if (isEditableElement(document.activeElement)) return;
-			const delta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+			let delta = 0;
+			if (event.key === 'ArrowUp') {
+				delta = -1;
+			} else if (event.key === 'ArrowDown') {
+				delta = 1;
+			}
 			const isNavigationKey = delta !== 0;
 			if (isNavigationKey && hasShortcutModifier(event)) return;
 			if (!isNavigationKey && event.key !== 'Escape') return;

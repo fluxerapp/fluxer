@@ -80,10 +80,6 @@ export const IntegrationRateLimitConfigs = {
 		bucket: 'stripe:visionary:rejoin',
 		config: {limit: 5, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	AGE_VERIFICATION: {
-		bucket: 'age_verification',
-		config: {limit: 3, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
 	GIFT_CODE_GET: {
 		bucket: 'gift:get',
 		config: {limit: 60, windowMs: ms('10 seconds')},

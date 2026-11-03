@@ -1,56 +1,22 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {parseArgs} from 'node:util';
+import {STATIC_I18N_LOCALES, type StaticI18nLocale} from '@fluxer/i18n/src/runtime/StaticLocaleFiles';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
-const STATIC_I18N_LOCALES = [
-	'ar',
-	'bg',
-	'cs',
-	'da',
-	'de',
-	'el',
-	'en-GB',
-	'es-419',
-	'es-ES',
-	'fi',
-	'fr',
-	'he',
-	'hi',
-	'hr',
-	'hu',
-	'id',
-	'it',
-	'ja',
-	'ko',
-	'lt',
-	'nl',
-	'no',
-	'pl',
-	'pt-BR',
-	'ro',
-	'ru',
-	'sv-SE',
-	'th',
-	'tr',
-	'uk',
-	'vi',
-	'zh-CN',
-	'zh-TW',
-] as const;
-
-type StaticLocale = (typeof STATIC_I18N_LOCALES)[number];
 type FlatCatalog = Record<string, string>;
 
 interface EmailTemplate {
 	subject: string;
-	body: string;
+	intro: string;
+	[field: string]: string;
 }
 
 type EmailCatalog = Record<string, EmailTemplate>;
@@ -93,7 +59,7 @@ function ensureDir(dir: string): void {
 	fs.mkdirSync(dir, {recursive: true});
 }
 
-function jsonPath(config: StaticCatalogConfig, locale?: StaticLocale): string {
+function jsonPath(config: StaticCatalogConfig, locale?: StaticI18nLocale): string {
 	if (!locale) {
 		return path.join(config.weblateDir, 'messages.json');
 	}
@@ -124,6 +90,17 @@ function sortKeys<T>(record: Record<string, T>): Record<string, T> {
 	return sorted;
 }
 
+function sortCatalogForWeblate(config: StaticCatalogConfig, catalog: Catalog): Catalog {
+	if (config.kind !== 'email') {
+		return sortKeys(catalog as FlatCatalog);
+	}
+	const sorted: EmailCatalog = {};
+	for (const [key, template] of Object.entries(sortKeys(catalog as EmailCatalog))) {
+		sorted[key] = sortKeys(template) as EmailTemplate;
+	}
+	return sorted;
+}
+
 function writeJson(filePath: string, value: unknown): void {
 	ensureDir(path.dirname(filePath));
 	fs.writeFileSync(filePath, `${JSON.stringify(value, null, '\t')}\n`, 'utf8');
@@ -144,23 +121,16 @@ function normalizeEmailCatalog(source: EmailCatalog, existing: unknown): EmailCa
 	const next: EmailCatalog = {};
 	for (const key of Object.keys(source).sort()) {
 		const sourceTemplate = source[key];
-		const existingTemplate = existingRecord[key];
-		next[key] = {
-			subject:
-				isRecord(existingTemplate) && typeof existingTemplate.subject === 'string'
-					? existingTemplate.subject
-					: sourceTemplate.subject,
-			body:
-				isRecord(existingTemplate) && typeof existingTemplate.body === 'string'
-					? existingTemplate.body
-					: sourceTemplate.body,
-		};
+		const existingValue = existingRecord[key];
+		const existingTemplate = isRecord(existingValue) ? existingValue : {};
+		const template: Record<string, string> = {};
+		for (const field of Object.keys(sourceTemplate)) {
+			const value = existingTemplate[field];
+			template[field] = typeof value === 'string' ? value : sourceTemplate[field];
+		}
+		next[key] = template as EmailTemplate;
 	}
 	return next;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function validateCatalog(kind: CatalogKind, catalog: unknown, label: string): Catalog {
@@ -176,8 +146,13 @@ function validateCatalog(kind: CatalogKind, catalog: unknown, label: string): Ca
 		return catalog as FlatCatalog;
 	}
 	for (const [key, value] of Object.entries(catalog)) {
-		if (!isRecord(value) || typeof value.subject !== 'string' || typeof value.body !== 'string') {
-			throw new Error(`${label}.${key} must contain string subject and body fields`);
+		if (!isRecord(value) || typeof value.subject !== 'string' || typeof value.intro !== 'string') {
+			throw new Error(`${label}.${key} must contain string subject and intro fields`);
+		}
+		for (const [field, text] of Object.entries(value)) {
+			if (!/^[a-z][a-z0-9_]*$/.test(field) || typeof text !== 'string') {
+				throw new Error(`${label}.${key}.${field} must be a snake_case string field`);
+			}
 		}
 	}
 	return catalog as EmailCatalog;
@@ -199,7 +174,7 @@ async function extractCatalog(config: StaticCatalogConfig): Promise<void> {
 
 	for (const locale of STATIC_I18N_LOCALES) {
 		const next = normalizeCatalog(config, source, readJson<unknown>(jsonPath(config, locale)));
-		writeJson(jsonPath(config, locale), sortKeys<Catalog[string]>(next));
+		writeJson(jsonPath(config, locale), sortCatalogForWeblate(config, next));
 	}
 	console.log(`extracted static ${config.name} catalogs`);
 }

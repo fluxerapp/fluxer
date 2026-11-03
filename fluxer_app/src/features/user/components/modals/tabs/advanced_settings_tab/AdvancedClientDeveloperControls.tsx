@@ -3,14 +3,9 @@
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {msg} from '@lingui/core/macro';
+import {ENABLE_DEVELOPER_MODE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-
-const ENABLE_DEVELOPER_MODE_DESCRIPTOR = msg({
-	message: 'Enable developer mode',
-	comment: 'Short label for an advanced developer setting.',
-});
 
 export const DeveloperModeControl = observer(() => {
 	const {i18n} = useLingui();

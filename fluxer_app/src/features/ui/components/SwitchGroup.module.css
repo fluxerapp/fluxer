@@ -37,7 +37,7 @@
 	font-size: 0.875rem;
 	line-height: 1.35;
 	color: var(--text-primary);
-	text-align: left;
+	text-align: start;
 }
 
 .itemLabelInteractive,

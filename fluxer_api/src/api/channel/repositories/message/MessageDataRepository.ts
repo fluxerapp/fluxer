@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
-import type {ListMessagesOptions} from '@app/api/channel/repositories/MessageRepository';
 import {BucketScanDirection, scanBucketsWithIndex} from '@app/api/channel/repositories/message/BucketScanEngine';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	advanceRow,
+	BatchBuilder,
+	deleteOneOrMany,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db, type QueryTemplate} from '@app/api/database/CassandraTypes';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {ChannelMessageBucketRow, ChannelStateRow, MessageRow} from '@app/api/database/types/MessageTypes';
@@ -19,6 +25,7 @@ import {
 	Messages,
 	MessagesByAuthorV2,
 } from '@app/api/Tables';
+import {startEarly} from '@app/api/utils/ConcurrencyUtils';
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
@@ -115,7 +122,6 @@ export class MessageDataRepository {
 		beforeMessageId?: MessageID,
 		limit: number = DEFAULT_MESSAGE_LIMIT,
 		afterMessageId?: MessageID,
-		options?: ListMessagesOptions,
 	): Promise<Array<Message>> {
 		if (limit <= 0) return [];
 		getLogger().debug(
@@ -128,13 +134,13 @@ export class MessageDataRepository {
 			'listMessages start',
 		);
 		if (beforeMessageId && afterMessageId) {
-			return this.listMessagesBetween(channelId, afterMessageId, beforeMessageId, limit, options);
+			return this.listMessagesBetween(channelId, afterMessageId, beforeMessageId, limit);
 		}
 		if (beforeMessageId) {
-			return this.listMessagesBefore(channelId, beforeMessageId, limit, options);
+			return this.listMessagesBefore(channelId, beforeMessageId, limit);
 		}
 		if (afterMessageId) {
-			return this.listMessagesAfter(channelId, afterMessageId, limit, options);
+			return this.listMessagesAfter(channelId, afterMessageId, limit);
 		}
 		return this.listMessagesLatest(channelId, limit);
 	}
@@ -151,12 +157,7 @@ export class MessageDataRepository {
 		});
 	}
 
-	private async listMessagesBefore(
-		channelId: ChannelID,
-		before: MessageID,
-		limit: number,
-		options?: ListMessagesOptions,
-	): Promise<Array<Message>> {
+	private async listMessagesBefore(channelId: ChannelID, before: MessageID, limit: number): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const maxBucket = BucketUtils.makeBucket(before);
 		const minBucket = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
@@ -168,7 +169,6 @@ export class MessageDataRepository {
 				maxBucket,
 				minBucket,
 				stateCreatedBucket: state?.created_bucket ?? null,
-				restrictToBeforeBucket: options?.restrictToBeforeBucket ?? null,
 			},
 			'listMessagesBefore: computed bucket range',
 		);
@@ -177,16 +177,10 @@ export class MessageDataRepository {
 			minBucket,
 			maxBucket,
 			before,
-			restrictToBeforeBucket: options?.restrictToBeforeBucket,
 		});
 	}
 
-	private async listMessagesAfter(
-		channelId: ChannelID,
-		after: MessageID,
-		limit: number,
-		options?: ListMessagesOptions,
-	): Promise<Array<Message>> {
+	private async listMessagesAfter(channelId: ChannelID, after: MessageID, limit: number): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const afterBucket = BucketUtils.makeBucket(after);
 		const createdMin = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
@@ -201,7 +195,6 @@ export class MessageDataRepository {
 				minBucket,
 				maxBucket,
 				limit,
-				immediateAfter: options?.immediateAfter ?? false,
 			},
 			'listMessagesAfter parameters',
 		);
@@ -219,7 +212,6 @@ export class MessageDataRepository {
 		after: MessageID,
 		before: MessageID,
 		limit: number,
-		options?: ListMessagesOptions,
 	): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const afterBucket = BucketUtils.makeBucket(after);
@@ -247,7 +239,6 @@ export class MessageDataRepository {
 			maxBucket,
 			after,
 			before,
-			restrictToBeforeBucket: options?.restrictToBeforeBucket,
 		});
 	}
 
@@ -259,15 +250,10 @@ export class MessageDataRepository {
 			maxBucket: number;
 			before?: MessageID;
 			after?: MessageID;
-			restrictToBeforeBucket?: boolean;
 		},
 	): Promise<Array<Message>> {
 		const beforeBucket = opts.before ? BucketUtils.makeBucket(opts.before) : null;
 		const afterBucket = opts.after ? BucketUtils.makeBucket(opts.after) : null;
-		const stopAfterBucket =
-			opts.restrictToBeforeBucket === true && opts.before && !opts.after && beforeBucket !== null
-				? beforeBucket
-				: undefined;
 		getLogger().debug(
 			{
 				channelId: channelId.toString(),
@@ -275,8 +261,6 @@ export class MessageDataRepository {
 				maxBucket: opts.maxBucket,
 				beforeBucket,
 				afterBucket,
-				restrictToBeforeBucket: opts.restrictToBeforeBucket ?? null,
-				stopAfterBucket: stopAfterBucket ?? null,
 			},
 			'scanBucketsDescForMessages: starting scan',
 		);
@@ -305,21 +289,9 @@ export class MessageDataRepository {
 				maxBucket: opts.maxBucket,
 				direction: BucketScanDirection.Desc,
 				indexPageSize: DEFAULT_BUCKET_INDEX_PAGE_SIZE,
-				stopAfterBucket,
 			},
 		);
-		if (out.length === 0) return [];
-		let maxId: MessageID = out[0].message_id;
-		let maxBucketForId = out[0].bucket;
-		for (const row of out) {
-			if (row.message_id > maxId) {
-				maxId = row.message_id;
-				maxBucketForId = row.bucket;
-			}
-		}
-		await this.touchChannelHasMessages(channelId);
-		await this.advanceChannelStateLastMessageIfNewer(channelId, maxId, maxBucketForId);
-		return this.repairAndMapMessages(channelId, out);
+		return this.finishScan(channelId, out);
 	}
 
 	private async scanBucketsAscForMessages(
@@ -357,6 +329,10 @@ export class MessageDataRepository {
 				indexPageSize: DEFAULT_BUCKET_INDEX_PAGE_SIZE,
 			},
 		);
+		return this.finishScan(channelId, out);
+	}
+
+	private async finishScan(channelId: ChannelID, out: Array<MessageRow>): Promise<Array<Message>> {
 		if (out.length === 0) return [];
 		let maxId: MessageID = out[0].message_id;
 		let maxBucketForId = out[0].bucket;
@@ -528,19 +504,37 @@ export class MessageDataRepository {
 		newLastMessageId: MessageID,
 		newLastMessageBucket: number,
 	): Promise<void> {
-		const state = await this.getChannelState(channelId);
-		const prev = state?.last_message_id ?? null;
-		if (prev !== null && newLastMessageId <= prev) return;
-		await upsertOne(
-			ChannelState.patchByPk(
-				{channel_id: channelId},
-				{
-					has_messages: Db.set(true),
-					last_message_id: Db.set(newLastMessageId),
-					last_message_bucket: Db.set(newLastMessageBucket),
-					updated_at: Db.set(new Date()),
-				},
-			),
+		const set = {
+			has_messages: true,
+			last_message_id: newLastMessageId,
+			last_message_bucket: newLastMessageBucket,
+			updated_at: new Date(),
+		};
+		await advanceRow(
+			{
+				table: ChannelState,
+				pk: {channel_id: channelId},
+				guard: {col: 'last_message_id', value: newLastMessageId},
+				set,
+				insert: {channel_id: channelId, ...set},
+			},
+			async () => {
+				const state = await this.getChannelState(channelId);
+				const prev = state?.last_message_id ?? null;
+				if (prev !== null && newLastMessageId <= prev) return false;
+				await upsertOne(
+					ChannelState.patchByPk(
+						{channel_id: channelId},
+						{
+							has_messages: Db.set(set.has_messages),
+							last_message_id: Db.set(set.last_message_id),
+							last_message_bucket: Db.set(set.last_message_bucket),
+							updated_at: Db.set(set.updated_at),
+						},
+					),
+				);
+				return true;
+			},
 		);
 	}
 
@@ -549,20 +543,39 @@ export class MessageDataRepository {
 		messageId: MessageID,
 		messageBucket: number,
 	): Promise<void> {
-		const state = await this.getChannelState(channelId);
-		const prev = state?.last_message_id ?? null;
-		const patch = {
-			created_bucket: Db.set(BucketUtils.makeBucket(channelId)),
-			has_messages: Db.set(true),
-			updated_at: Db.set(new Date()),
+		const always = {
+			created_bucket: BucketUtils.makeBucket(channelId),
+			has_messages: true,
+			updated_at: new Date(),
 		};
-		await upsertOne(
-			ChannelState.patchByPk(
-				{channel_id: channelId},
-				prev !== null && messageId <= prev
-					? patch
-					: {...patch, last_message_id: Db.set(messageId), last_message_bucket: Db.set(messageBucket)},
-			),
+		const set = {last_message_id: messageId, last_message_bucket: messageBucket};
+		await advanceRow(
+			{
+				table: ChannelState,
+				pk: {channel_id: channelId},
+				guard: {col: 'last_message_id', value: messageId},
+				set,
+				always,
+				insert: {channel_id: channelId, ...always, ...set},
+			},
+			async () => {
+				const state = await this.getChannelState(channelId);
+				const prev = state?.last_message_id ?? null;
+				const patch = {
+					created_bucket: Db.set(always.created_bucket),
+					has_messages: Db.set(always.has_messages),
+					updated_at: Db.set(always.updated_at),
+				};
+				await upsertOne(
+					ChannelState.patchByPk(
+						{channel_id: channelId},
+						prev !== null && messageId <= prev
+							? patch
+							: {...patch, last_message_id: Db.set(messageId), last_message_bucket: Db.set(messageBucket)},
+					),
+				);
+				return true;
+			},
 		);
 	}
 
@@ -653,7 +666,11 @@ export class MessageDataRepository {
 		return repairedMessage;
 	}
 
-	async upsertMessage(data: MessageRow, oldData?: MessageRow | null): Promise<Message> {
+	async upsertMessage(
+		data: MessageRow,
+		oldData?: MessageRow | null,
+		alongsideChannelState?: () => Promise<void>,
+	): Promise<Message> {
 		const expectedBucket = BucketUtils.makeBucket(data.message_id);
 		if (data.bucket !== expectedBucket) {
 			throw new Error(
@@ -747,7 +764,12 @@ export class MessageDataRepository {
 			}),
 		);
 		await batch.execute(false);
-		await this.recordChannelStateForMessage(data.channel_id, data.message_id, data.bucket);
+		const channelStateTask = startEarly(
+			this.recordChannelStateForMessage(data.channel_id, data.message_id, data.bucket),
+		);
+		const alongsideTask = startEarly(alongsideChannelState ? alongsideChannelState() : Promise.resolve());
+		await channelStateTask;
+		await alongsideTask;
 		return new Message({...data, version: finalVersion});
 	}
 

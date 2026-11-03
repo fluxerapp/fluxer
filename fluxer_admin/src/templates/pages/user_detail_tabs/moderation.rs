@@ -1,24 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::{ENFORCEMENT_LIMITS, deletion_reason_label, user_flag_bits};
 use crate::utils::plural::{count_noun, noun_for};
 use crate::{
     acl,
     api::{
         client::{ApiError, ApiResult},
+        generated::types::{
+            EnforcementDecisionListResponse, EnforcementDecisionListResponseDecisionsItem,
+            EnforcementKindType, MessageShredPreviewResponse,
+            MessageShredPreviewResponseSkippedItemReason, NetworkBlockCandidatesResponse,
+        },
         types::{AdminUser, AuditLogEntry, MessageShredStatusResponse},
     },
     config::AdminConfig,
-    templates::components::{
-        form::{
-            checkbox, csrf_input, danger_button, form_actions, opt_out_checkbox, submit_button,
+    templates::{
+        components::{
+            enforcement_fields::{
+                BasisFields, DecisionFields, FIELD_HELP_CLASS, FIELD_INPUT_CLASS,
+                FIELD_LABEL_CLASS, basis_fields, deletion_days_field, enforcement_fields,
+                field_label, internal_note_field, network_block_fields, required_mark,
+            },
+            form::{Checkbox, csrf_input, danger_button, form_actions, submit_button},
+            page_container::card_with_header,
         },
-        page_container::card_with_header,
+        pages::enforcement_decision::{
+            EndDecisionForm, can_end, can_lift, decisions_table, end_decision_form, ends_label,
+            kind_label, suspension_label,
+        },
     },
     utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
-const TEMP_BAN_DURATIONS: &[(&str, &str)] = &[
+const REFRESH_TARGET: &str = "#user-tab-content";
+const REPORTS_LIMIT_DEFAULT_DAYS: i64 = 90;
+
+const CONTENT_BASIS_CHOICES: &[(&str, &str)] = &[
+    ("enforcement", "A rule was broken"),
+    ("holder_request", "The account holder asked"),
+    ("housekeeping", "Housekeeping"),
+];
+
+const SUSPENSION_DURATIONS: &[(&str, &str)] = &[
     ("1", "1 hour"),
     ("12", "12 hours"),
     ("24", "1 day"),
@@ -30,70 +54,36 @@ const TEMP_BAN_DURATIONS: &[(&str, &str)] = &[
     ("0", "Permanent"),
 ];
 
-const DELETION_REASONS: &[(&str, &str)] = &[
-    ("1", "User requested"),
-    ("2", "Other"),
-    ("3", "Spam"),
-    ("4", "Cheating or exploitation"),
-    ("5", "Coordinated raiding or manipulation"),
-    ("6", "Automation or self-bot usage"),
-    ("7", "Nonconsensual sexual content"),
-    ("8", "Scam or social engineering"),
-    ("9", "Child sexual content"),
-    ("10", "Privacy violation or doxxing"),
-    ("11", "Harassment or bullying"),
-    ("12", "Payment fraud"),
-    ("13", "Child safety violation"),
-    ("14", "Billing dispute or abuse"),
-    ("15", "Unsolicited explicit content"),
-    ("16", "Graphic violence"),
-    ("17", "Ban evasion"),
-    ("18", "Token or credential scam"),
-    ("19", "Inactivity"),
-    ("20", "Hate speech or extremist content"),
-    ("21", "Malicious links or malware distribution"),
-    ("22", "Impersonation or fake identity"),
-];
-
-pub struct CurrentBan<'a> {
+pub struct LegacySuspension<'a> {
     pub entry: &'a AuditLogEntry,
-    pub notes: Vec<&'a AuditLogEntry>,
+}
+
+#[derive(Default)]
+pub struct DecisionPrefill {
+    pub report_ids: Vec<String>,
+    pub messages: Vec<String>,
 }
 
 #[derive(Default)]
 pub struct ModerationContext<'a> {
     pub deletion_scheduler: Option<&'a AdminUser>,
-    pub current_ban: Option<CurrentBan<'a>>,
-    pub username_sign_in: bool,
+    pub legacy_suspension: Option<LegacySuspension<'a>>,
+    pub decisions: Option<&'a ApiResult<EnforcementDecisionListResponse>>,
+    pub network_candidates: Option<&'a ApiResult<NetworkBlockCandidatesResponse>>,
+    pub prefill: DecisionPrefill,
 }
 
-pub fn find_current_ban<'a>(user: &AdminUser, logs: &'a [AuditLogEntry]) -> Option<CurrentBan<'a>> {
+pub fn find_legacy_suspension<'a>(
+    user: &AdminUser,
+    logs: &'a [AuditLogEntry],
+) -> Option<LegacySuspension<'a>> {
     let banned_until = user.temp_banned_until.as_deref()?;
     let entry = logs.iter().find(|log| {
         log.action == "temp_ban"
             && log.target_id == user.id
             && log.metadata.get("banned_until").map(String::as_str) == Some(banned_until)
     })?;
-    let mut notes: Vec<&AuditLogEntry> = logs
-        .iter()
-        .filter(|log| {
-            log.action == "annotate_ban"
-                && log.metadata.get("ban_audit_log_id") == Some(&entry.log_id)
-        })
-        .collect();
-    notes.sort_by(|a, b| a.created_at.cmp(&b.created_at));
-    Some(CurrentBan { entry, notes })
-}
-
-fn deletion_reason_label(code: i32) -> String {
-    let value = code.to_string();
-    DELETION_REASONS
-        .iter()
-        .find(|(candidate, _)| *candidate == value)
-        .map_or_else(
-            || format!("Reason {code}"),
-            |(_, label)| (*label).to_owned(),
-        )
+    Some(LegacySuspension { entry })
 }
 
 fn admin_name(entry: &AuditLogEntry) -> String {
@@ -115,166 +105,259 @@ pub fn moderation_tab(
     delete_all_messages_dry_run: Option<(u64, u64)>,
 ) -> Markup {
     let base = &config.base_path;
+    let can_limit = !user.bot && acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
     let can_delete_all_messages = acl::has_permission(admin_acls, acl::MESSAGE_DELETE_ALL);
     let can_shred_messages = acl::has_permission(admin_acls, acl::MESSAGE_SHRED);
+    let decisions = context
+        .decisions
+        .and_then(|result| result.as_ref().ok())
+        .map(|response| response.decisions.as_slice())
+        .unwrap_or_default();
     html! {
         div class="space-y-6" {
+            (current_restriction_card(base, user, csrf_token, admin_acls, context, decisions))
             div class="grid grid-cols-1 gap-6 md:grid-cols-2" {
-                (ban_actions_card(base, user, csrf_token, context.current_ban.as_ref(), context.username_sign_in))
-                (deletion_card(base, user, csrf_token, context.deletion_scheduler, context.username_sign_in))
+                @if acl::has_permission(admin_acls, acl::USER_TEMP_BAN) {
+                    (suspend_card(base, user, csrf_token, context))
+                }
+                @if acl::has_permission(admin_acls, acl::USER_DELETE) && !deletion_complete(user) {
+                    (close_card(base, config.self_hosted, user, csrf_token, context))
+                }
+                @if can_limit {
+                    (limit_card(base, user, csrf_token, &context.prefill))
+                }
+                @if can_limit {
+                    (warn_card(base, user, csrf_token, &context.prefill))
+                }
+            }
+            @if let Some(result) = context.decisions {
+                (card_with_header("Decisions", html! {
+                    @match result {
+                        Ok(response) => { (decisions_table(base, &response.decisions)) }
+                        Err(_) => { p class="text-sm text-red-700" { "Failed to load decisions." } }
+                    }
+                }))
             }
             @if can_delete_all_messages {
-                (delete_all_messages_card(base, user, csrf_token, delete_all_messages_dry_run))
+                (delete_all_messages_card(base, user, csrf_token, &context.prefill, delete_all_messages_dry_run))
             }
             @if can_shred_messages {
-                (message_shred_card(base, user, csrf_token, message_shred_job_id, message_shred_status))
+                (message_shred_card(base, user, csrf_token, &context.prefill, message_shred_job_id, message_shred_status))
             }
         }
     }
 }
 
-fn notify_user_checkbox(username_sign_in: bool, label: &str) -> Markup {
-    if username_sign_in {
-        html! { input type="hidden" name="notify_user_present" value="1"; }
-    } else {
-        opt_out_checkbox("notify_user", label)
-    }
+fn deletion_complete(user: &AdminUser) -> bool {
+    user.flags & user_flag_bits::DELETED != 0 && user.pending_deletion_at.is_none()
 }
 
-fn ban_actions_card(
+fn current_restriction_card(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
-    current_ban: Option<&CurrentBan<'_>>,
-    username_sign_in: bool,
+    admin_acls: &[String],
+    context: &ModerationContext<'_>,
+    decisions: &[EnforcementDecisionListResponseDecisionsItem],
 ) -> Markup {
     html! {
-        (card_with_header("Ban Actions", html! {
-            @if user.temp_banned_until.is_some() {
-                (current_ban_details(base, user, csrf_token, current_ban))
-                form method="post"
-                    action={(base) "/users/" (user.id) "?action=unban&tab=moderation"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-3" {
-                        (form_label("Public Reason (optional, shown to the user)"))
-                        input type="text" name="public_reason"
-                            placeholder="Enter public unban reason..." maxlength="512"
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (form_label("Private Reason (optional, audit log)"))
-                        input type="text" name="private_reason"
-                            placeholder="Enter private unban reason (audit log)..."
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (notify_user_checkbox(username_sign_in, "Email the user that the suspension was lifted"))
-                        (form_actions(html! {
-                            (submit_button("Unban User"))
-                        }))
-                    }
-                }
-            } @else {
-                form method="post"
-                    action={(base) "/users/" (user.id) "?action=temp_ban&tab=moderation"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-3" {
-                        (form_label("Duration"))
-                        select name="duration"
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary" {
-                            @for &(value, label) in TEMP_BAN_DURATIONS {
-                                option value=(value) { (label) }
-                            }
-                        }
-                        (form_label("Public Reason (optional)"))
-                        input type="text" name="reason"
-                            placeholder="Enter public ban reason..." maxlength="512"
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (form_label("Private Reason (optional)"))
-                        input type="text" name="private_reason"
-                            placeholder="Enter private ban reason (audit log)..."
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (notify_user_checkbox(username_sign_in, "Email the user about this suspension (temporary bans only)"))
-                        (form_actions(html! {
-                            (submit_button("Ban/Suspend User"))
-                        }))
-                    }
+        (card_with_header("Current restriction", html! {
+            div data-current-restriction="" {
+                @if let Some(decision_id) = &user.enforcement_decision_id {
+                    (decision_restriction(base, user, csrf_token, admin_acls, decision_id, decisions))
+                } @else if let Some(until) = &user.temp_banned_until {
+                    (legacy_suspension_restriction(base, user, csrf_token, admin_acls, until, context.legacy_suspension.as_ref()))
+                } @else if let Some(pending) = &user.pending_deletion_at {
+                    (legacy_deletion_restriction(base, user, csrf_token, admin_acls, pending, context.deletion_scheduler))
+                } @else if deletion_complete(user) {
+                    p class="text-sm text-neutral-900" { "This account was deleted." }
+                } @else {
+                    p class="text-sm text-neutral-500" { "No current restriction." }
                 }
             }
         }))
     }
 }
 
-fn current_ban_details(
+fn decision_restriction(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
-    current_ban: Option<&CurrentBan<'_>>,
+    admin_acls: &[String],
+    decision_id: &str,
+    decisions: &[EnforcementDecisionListResponseDecisionsItem],
 ) -> Markup {
-    let Some(ban) = current_ban else {
+    let decision = decisions
+        .iter()
+        .find(|decision| decision.decision_id.as_str() == decision_id);
+    let state = match (decision, user.temp_banned_until.as_deref()) {
+        (Some(decision), _) => {
+            let ends = ends_label(
+                decision.kind,
+                decision.ends_at.as_deref(),
+                decision.deletion_at.as_deref(),
+            );
+            format!(
+                "{} for {}. {ends}",
+                kind_label(decision.kind),
+                deletion_reason_label(*decision.reason_code)
+            )
+        }
+        (None, Some(until)) => suspension_label(until),
+        (None, None) => "Restricted by a decision.".to_owned(),
+    };
+    html! {
+        div class="space-y-4" {
+            p class="text-sm text-neutral-900" {
+                (state.trim_end())
+                " "
+                a href={(base) "/decisions/" (decision_id)} class="text-blue-600 hover:underline" {
+                    "Decision " (decision_id)
+                }
+            }
+            @match decision {
+                Some(decision) if can_end(admin_acls, decision.kind, decision.removed_all_messages) => {
+                    (end_decision_form(&EndDecisionForm {
+                        base,
+                        decision_id,
+                        can_lift: can_lift(decision.kind),
+                        reason_code: *decision.reason_code,
+                        csrf_token,
+                        refresh_target: REFRESH_TARGET,
+                    }))
+                }
+                Some(_) => {}
+                None => {
+                    p class="text-sm text-neutral-500" { "Open the decision to see or end it." }
+                }
+            }
+        }
+    }
+}
+
+fn legacy_suspension_restriction(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    admin_acls: &[String],
+    until: &str,
+    legacy_suspension: Option<&LegacySuspension<'_>>,
+) -> Markup {
+    html! {
+        div class="space-y-4" {
+            p class="text-sm text-neutral-900" {
+                (suspension_label(until)) ". Recorded before decisions, so it has no decision."
+            }
+            (legacy_suspension_details(base, legacy_suspension))
+            @if acl::has_permission(admin_acls, acl::USER_TEMP_BAN) {
+                form method="post"
+                    action={(base) "/users/" (user.id) "?action=unban&tab=moderation"}
+                    data-admin-refresh-on-success=(REFRESH_TARGET) {
+                    (csrf_input(csrf_token))
+                    div class="space-y-3" {
+                        (internal_note_field("lift", "Staff only. Saved in the audit log."))
+                        p class=(FIELD_HELP_CLASS) { "The user is told by email that the suspension was lifted." }
+                        (form_actions(submit_button("Lift suspension")))
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn legacy_suspension_details(
+    base: &str,
+    legacy_suspension: Option<&LegacySuspension<'_>>,
+) -> Markup {
+    let Some(suspension) = legacy_suspension else {
         return html! {
-            p class="mb-4 text-sm text-neutral-500" {
-                "The audit log entry of this ban could not be loaded, so notes cannot be added here."
+            p class="text-sm text-neutral-500" {
+                "The audit log entry of this suspension could not be loaded."
             }
         };
     };
     html! {
-        div class="mb-4 space-y-3" {
-            dl class="space-y-1 text-sm text-neutral-700" {
-                div {
-                    dt class="inline font-medium" { "Banned by: " }
-                    dd class="inline" {
-                        a href={(base) "/users/" (ban.entry.admin_user_id)} class="underline" {
-                            (admin_name(ban.entry))
-                        }
-                        " on " (format_admin_timestamp(&ban.entry.created_at))
+        dl class="space-y-1 text-sm text-neutral-700" {
+            div {
+                dt class="inline font-medium" { "Suspended by: " }
+                dd class="inline" {
+                    a href={(base) "/users/" (suspension.entry.admin_user_id)} class="underline" {
+                        (admin_name(suspension.entry))
                     }
-                }
-                div {
-                    dt class="inline font-medium" { "Reason: " }
-                    dd class="inline" { (ban.entry.audit_log_reason.as_deref().unwrap_or("None recorded")) }
+                    " on " (format_admin_timestamp(&suspension.entry.created_at))
                 }
             }
-            @if !ban.notes.is_empty() {
-                ul class="space-y-1 text-sm text-neutral-700" {
-                    @for note in &ban.notes {
-                        li {
-                            span class="font-medium" { (admin_name(note)) }
-                            " (" (format_admin_timestamp(&note.created_at)) "): "
-                            (note.audit_log_reason.as_deref().unwrap_or(""))
-                        }
-                    }
-                }
-            }
-            form method="post"
-                action={(base) "/users/" (user.id) "?action=annotate_ban&tab=moderation"} {
-                (csrf_input(csrf_token))
-                input type="hidden" name="ban_audit_log_id" value=(ban.entry.log_id);
-                div class="space-y-3" {
-                    (form_label("Add a note to this ban"))
-                    textarea name="note" rows="2" required maxlength="512"
-                        placeholder="Appended to the ban. The original reason is kept."
-                        class="block w-full rounded-md border border-neutral-300 \
-                               px-3 py-2 text-sm shadow-sm \
-                               focus:border-brand-primary focus:outline-none \
-                               focus:ring-1 focus:ring-brand-primary" {}
-                    (form_actions(html! {
-                        (submit_button("Add Note"))
-                    }))
-                }
+            div {
+                dt class="inline font-medium" { "Internal note: " }
+                dd class="inline" { (suspension.entry.audit_log_reason.as_deref().unwrap_or("None recorded")) }
             }
         }
+    }
+}
+
+fn suspend_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    context: &ModerationContext<'_>,
+) -> Markup {
+    let prefill = &context.prefill;
+    html! {
+        (card_with_header("Suspend account", html! {
+            form method="post"
+                action={(base) "/users/" (user.id) "?action=suspend&tab=moderation"}
+                data-admin-refresh-on-success=(REFRESH_TARGET) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    div class="space-y-1" {
+                        (field_label("suspend-duration", "Duration"))
+                        select id="suspend-duration" name="duration_hours" required class=(FIELD_INPUT_CLASS) {
+                            @for &(value, label) in SUSPENSION_DURATIONS {
+                                option value=(value) { (label) }
+                            }
+                        }
+                    }
+                    (enforcement_fields(&DecisionFields {
+                        id_prefix: "suspend",
+                        kind: EnforcementKindType::Suspension,
+                        report_ids: &prefill.report_ids,
+                        messages: Some(&prefill.messages),
+                        user_flags: Some(user.flags),
+                        allow_restricted: true,
+                    }))
+                    (remove_evidence_field())
+                    @if let Some(candidates) = context.network_candidates {
+                        fieldset data-show-for-duration_hours="0" hidden disabled {
+                            (network_block_fields("suspend", candidates))
+                        }
+                    }
+                    (form_actions(submit_button("Suspend account")))
+                }
+            }
+        }))
+    }
+}
+
+fn warn_card(base: &str, user: &AdminUser, csrf_token: &str, prefill: &DecisionPrefill) -> Markup {
+    html! {
+        (card_with_header("Warn", html! {
+            form method="post"
+                action={(base) "/users/" (user.id) "?action=warn&tab=moderation"}
+                data-admin-refresh-on-success=(REFRESH_TARGET) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (enforcement_fields(&DecisionFields {
+                        id_prefix: "warn",
+                        kind: EnforcementKindType::Warning,
+                        report_ids: &prefill.report_ids,
+                        messages: Some(&prefill.messages),
+                        user_flags: Some(user.flags),
+                        allow_restricted: true,
+                    }))
+                    (form_actions(submit_button("Send warning")))
+                }
+            }
+        }))
     }
 }
 
@@ -298,7 +381,7 @@ fn pending_deletion_summary(
         .map(format_admin_timestamp)
         .unwrap_or_default();
     let markup = html! {
-        dl class="mb-4 space-y-1 text-sm text-neutral-700" {
+        dl class="space-y-1 text-sm text-neutral-700" {
             div {
                 dt class="inline font-medium" { "Scheduled by: " }
                 dd class="inline" {
@@ -341,81 +424,197 @@ fn pending_deletion_summary(
     )
 }
 
-fn deletion_card(
+fn legacy_deletion_restriction(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
+    admin_acls: &[String],
+    pending: &str,
     scheduler: Option<&AdminUser>,
-    username_sign_in: bool,
 ) -> Markup {
+    let (confirmation, summary) = pending_deletion_summary(base, user, scheduler);
     html! {
-        (card_with_header("Account Deletion", html! {
-            @if let Some(pending) = &user.pending_deletion_at {
-                @let (confirmation, summary) = pending_deletion_summary(base, user, scheduler);
-                (summary)
+        div class="space-y-4" {
+            p class="text-sm text-neutral-900" {
+                "Scheduled for deletion. No decision owns it, so it is cancelled here."
+            }
+            (summary)
+            @if acl::has_permission(admin_acls, acl::USER_DELETE) {
                 form method="post"
-                    action={(base) "/users/" (user.id) "?action=cancel_deletion&tab=moderation"} {
+                    action={(base) "/users/" (user.id) "?action=cancel_deletion&tab=moderation"}
+                    data-admin-refresh-on-success=(REFRESH_TARGET) {
                     (csrf_input(csrf_token))
                     input type="hidden" name="expected_pending_deletion_at" value=(pending);
                     div class="space-y-3" {
-                        (form_label("Private Reason"))
-                        input type="text" name="private_reason" required
-                            placeholder="Why this deletion is being canceled (audit log)..."
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        @if !username_sign_in {
-                            (checkbox("notify_user", "true", "Email the user that the deletion was canceled", false, true))
-                        }
-                        (checkbox("confirm", "true", &confirmation, false, true))
-                        (form_actions(html! {
-                            (danger_button("Cancel Deletion"))
-                        }))
+                        (internal_note_field("cancel-deletion", "Staff only. Saved in the audit log."))
+                        p class=(FIELD_HELP_CLASS) { "The user is told by email that the deletion was cancelled." }
+                        (Checkbox {
+                            name: "confirm",
+                            value: "true",
+                            label: &confirmation,
+                            checked: false,
+                            enabled: true,
+                        }.render())
+                        (form_actions(danger_button("Cancel deletion")))
                     }
                 }
-            } @else {
-                form method="post"
-                    action={(base) "/users/" (user.id) "?action=schedule_deletion&tab=moderation"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-3" {
-                        (form_label("Days until deletion"))
-                        input type="number" name="days_until_deletion" value="60"
-                            min="60" max="365"
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (form_label("Reason"))
-                        select name="reason_code" required
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary" {
-                            option value="" disabled selected { "Choose a reason" }
-                            @for &(value, label) in DELETION_REASONS {
-                                option value=(value) { (label) }
+            }
+        }
+    }
+}
+
+fn close_card(
+    base: &str,
+    self_hosted: bool,
+    user: &AdminUser,
+    csrf_token: &str,
+    context: &ModerationContext<'_>,
+) -> Markup {
+    let prefill = &context.prefill;
+    html! {
+        (card_with_header("Close account", html! {
+            form method="post"
+                action={(base) "/users/" (user.id) "?action=close&tab=moderation"}
+                data-admin-refresh-on-success=(REFRESH_TARGET) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (basis_fields(&BasisFields {
+                        decision: DecisionFields {
+                            id_prefix: "close",
+                            kind: EnforcementKindType::Closure,
+                            report_ids: &prefill.report_ids,
+                            messages: Some(&prefill.messages),
+                            user_flags: Some(user.flags),
+                            allow_restricted: true,
+                        },
+                        choices: &[
+                            ("enforcement", "A rule was broken"),
+                            ("holder_request", "The account holder asked"),
+                            ("housekeeping", "Inactivity"),
+                        ],
+                        plain_note_help: "Staff only. Saved in the audit log. The holder can cancel the deletion by signing in.",
+                        enforcement_extra: html! {
+                            (remove_evidence_field())
+                            @if let Some(candidates) = context.network_candidates {
+                                (network_block_fields("close", candidates))
+                            }
+                        },
+                    }))
+                    (deletion_days_field("close-days", self_hosted))
+                    @if self_hosted {
+                        (delete_immediately_fields())
+                    }
+                    @if let Some(pending) = &user.pending_deletion_at {
+                        input type="hidden" name="replace_pending_deletion_at" value=(pending);
+                        p class=(FIELD_HELP_CLASS) { "This replaces the deletion already scheduled." }
+                    }
+                    (form_actions(danger_button("Close account")))
+                }
+            }
+        }))
+    }
+}
+
+fn delete_immediately_fields() -> Markup {
+    html! {
+        div class="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3" {
+            (Checkbox {
+                name: "delete_immediately",
+                value: "true",
+                label: "Delete the account now instead",
+                checked: false,
+                enabled: true,
+            }.render())
+            p class=(FIELD_HELP_CLASS) {
+                "Skips the waiting period and sends no email. The account and its data are deleted \
+                 within a minute and cannot be restored."
+            }
+            div class="space-y-1" {
+                label for="close-delete-confirm" class=(FIELD_LABEL_CLASS) { "Type DELETE to confirm" }
+                input type="text" id="close-delete-confirm" name="delete_immediately_confirm"
+                    autocomplete="off" class=(FIELD_INPUT_CLASS);
+            }
+        }
+    }
+}
+
+fn remove_evidence_field() -> Markup {
+    html! {
+        div class="space-y-1" {
+            (Checkbox {
+                name: "remove_evidence",
+                value: "true",
+                label: "Remove these messages",
+                checked: false,
+                enabled: true,
+            }.render())
+            p class=(FIELD_HELP_CLASS) { "Removes the messages listed above after they are saved as evidence." }
+        }
+    }
+}
+
+fn content_basis_fields<'a>(
+    id_prefix: &'a str,
+    user: &'a AdminUser,
+    prefill: &'a DecisionPrefill,
+    snapshot_entries: bool,
+) -> BasisFields<'a> {
+    BasisFields {
+        decision: DecisionFields {
+            id_prefix,
+            kind: EnforcementKindType::ContentRemoval,
+            report_ids: &prefill.report_ids,
+            messages: (!snapshot_entries).then_some(prefill.messages.as_slice()),
+            user_flags: Some(user.flags),
+            allow_restricted: snapshot_entries,
+        },
+        choices: CONTENT_BASIS_CHOICES,
+        plain_note_help: "Staff only. Saved in the audit log.",
+        enforcement_extra: html! {},
+    }
+}
+
+fn limit_card(base: &str, user: &AdminUser, csrf_token: &str, prefill: &DecisionPrefill) -> Markup {
+    let reports_end = (time::OffsetDateTime::now_utc()
+        + time::Duration::days(REPORTS_LIMIT_DEFAULT_DAYS))
+    .date()
+    .to_string();
+    html! {
+        (card_with_header("Limit features", html! {
+            form method="post"
+                action={(base) "/users/" (user.id) "?action=limit_features&tab=moderation"}
+                data-admin-refresh-on-success=(REFRESH_TARGET) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (enforcement_fields(&DecisionFields {
+                        id_prefix: "limit",
+                        kind: EnforcementKindType::FeatureLimit,
+                        report_ids: &prefill.report_ids,
+                        messages: Some(&prefill.messages),
+                        user_flags: Some(user.flags),
+                        allow_restricted: true,
+                    }))
+                    fieldset class="space-y-1" {
+                        legend class=(FIELD_LABEL_CLASS) { "Limit" (required_mark()) }
+                        div class="flex flex-wrap gap-x-4 gap-y-1" {
+                            @for limit in ENFORCEMENT_LIMITS {
+                                @let id = format!("limit-{}", limit.value);
+                                @let codes = limit.codes.iter().map(ToString::to_string).collect::<Vec<_>>().join(" ");
+                                div class="flex items-center gap-2" data-show-for-codes=(codes) hidden {
+                                    input type="radio" id=(id) name="limit" value=(limit.value) required disabled
+                                        class="h-4 w-4 accent-neutral-900";
+                                    label for=(id) class="text-sm text-neutral-900" { (limit.label) }
+                                }
                             }
                         }
-                        (form_label("Public Reason (optional)"))
-                        input type="text" name="public_reason"
-                            placeholder="Enter public reason..." maxlength="512"
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (form_label("Private Reason (optional)"))
-                        input type="text" name="private_reason"
-                            placeholder="Enter private reason (audit log)..."
-                            class="block w-full rounded-md border border-neutral-300 \
-                                   px-3 py-2 text-sm shadow-sm \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-1 focus:ring-brand-primary";
-                        (notify_user_checkbox(username_sign_in, "Email the user about the scheduled deletion"))
-                        (form_actions(html! {
-                            (submit_button("Schedule Deletion"))
-                        }))
+                        p class=(FIELD_HELP_CLASS) { "Each reason offers only the limits it allows." }
                     }
+                    fieldset class="space-y-1" data-show-for-limit="reports" hidden disabled {
+                        (field_label("limit-ends-on", "Ends on"))
+                        input type="date" id="limit-ends-on" name="ends_on" value=(reports_end) required class=(FIELD_INPUT_CLASS);
+                        p class=(FIELD_HELP_CLASS) { "At most 365 days from now." }
+                    }
+                    (form_actions(submit_button("Limit features")))
                 }
             }
         }))
@@ -426,36 +625,34 @@ fn delete_all_messages_card(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
+    prefill: &DecisionPrefill,
     dry_run: Option<(u64, u64)>,
 ) -> Markup {
+    let action = format!(
+        "{base}/users/{}?action=delete_all_messages&tab=moderation",
+        user.id
+    );
     html! {
-        (card_with_header("Delete All Messages", html! {
+        (card_with_header("Delete all messages", html! {
             div class="space-y-4" {
                 p class="text-sm text-neutral-600" {
-                    "Locate every message this user has ever sent and permanently remove them. First run a dry run to see how many channels and messages will be affected."
+                    "Removes every message this user has sent. Preview the count first. Child safety and violent extremism reasons can't be used here, because the messages can't all be saved as evidence first. Use the message shredder with the messages instead."
                 }
-                form method="post"
-                    action={(base) "/users/" (user.id) "?action=delete_all_messages&tab=moderation"}
-                    data-admin-result-form="true" {
+                form method="post" action=(action) data-admin-result-form="true" {
                     (csrf_input(csrf_token))
                     input type="hidden" name="dry_run" value="true";
-                    (form_actions(html! {
-                        (submit_button("Preview Deletion"))
-                    }))
+                    (form_actions(submit_button("Preview deletion")))
                 }
                 @if let Some((channel_count, message_count)) = dry_run {
-                    div class="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4" {
+                    form method="post" action=(action)
+                        class="space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4" {
+                        (csrf_input(csrf_token))
+                        input type="hidden" name="dry_run" value="false";
                         p class="text-sm text-neutral-700" {
-                            "Channels: " (channel_count) " · Messages: " (message_count)
+                            (count_noun(message_count, "message", "messages")) " in " (count_noun(channel_count, "channel", "channels")) "."
                         }
-                        form method="post"
-                            action={(base) "/users/" (user.id) "?action=delete_all_messages&tab=moderation"} {
-                            (csrf_input(csrf_token))
-                            input type="hidden" name="dry_run" value="false";
-                            (form_actions(html! {
-                                (danger_button("Delete All Messages"))
-                            }))
-                        }
+                        (basis_fields(&content_basis_fields("delete-all", user, prefill, false)))
+                        (form_actions(danger_button("Delete all messages")))
                     }
                 }
             }
@@ -467,23 +664,26 @@ fn message_shred_card(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
+    prefill: &DecisionPrefill,
     job_id: Option<&str>,
     status: Option<&ApiResult<MessageShredStatusResponse>>,
 ) -> Markup {
     html! {
-        (card_with_header("Message Shredder", html! {
+        (card_with_header("Message shredder", html! {
             div class="space-y-4" {
                 p class="text-sm text-neutral-600" {
-                    "Upload a CSV file where each row includes the channel_id and message_id separated by a comma. Large files are chunked server-side automatically."
+                    "Upload a CSV file with one channel_id,message_id pair per row. You see exactly which messages will be deleted before anything is deleted. When a rule was broken, the first 50 messages are saved as evidence before they are removed, and every message for child safety and violent extremism reasons."
                 }
                 form method="post"
                     action={(base) "/users/" (user.id) "?action=message_shred&tab=moderation"}
+                    data-preview-action={(base) "/users/" (user.id) "?action=preview_message_shred&tab=moderation"}
                     id="message-shred-form" {
                     (csrf_input(csrf_token))
                     input type="hidden" name="csv_data" id="message-shred-csv-data";
-                    div class="space-y-3" {
+                    input type="hidden" name="preview_token" id="message-shred-preview-token";
+                    div class="space-y-4" {
                         div class="space-y-2" {
-                            (form_label("CSV File"))
+                            (field_label("message-shred-file", "CSV file"))
                             input id="message-shred-file" type="file" accept=".csv" class="hidden";
                             div class="flex items-center gap-2" {
                                 button type="button"
@@ -496,10 +696,12 @@ fn message_shred_card(
                                 }
                             }
                         }
+                        div id=(MESSAGE_SHRED_PREVIEW_ID) {}
+                        (basis_fields(&content_basis_fields("shred", user, prefill, true)))
                         button type="submit"
                             id="message-shred-submit"
                             class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-base font-medium text-white transition-all duration-150 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50" {
-                            span { "Shred Messages" }
+                            span { "Preview messages" }
                         }
                     }
                 }
@@ -507,6 +709,87 @@ fn message_shred_card(
                 (message_shred_form_script())
             }
         }))
+    }
+}
+
+pub const MESSAGE_SHRED_PREVIEW_ID: &str = "message-shred-preview";
+const MESSAGE_SHRED_PREVIEW_ROWS: usize = 200;
+
+pub fn message_shred_preview(preview: &MessageShredPreviewResponse) -> Markup {
+    let count = u64::try_from(*preview.message_count).unwrap_or_default();
+    let requested = u64::try_from(*preview.requested).unwrap_or_default();
+    let hidden = preview
+        .messages
+        .len()
+        .saturating_sub(MESSAGE_SHRED_PREVIEW_ROWS);
+    html! {
+        div class="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4"
+            data-preview-token=(preview.preview_token)
+            data-message-count=(count) {
+            p class="text-sm font-medium text-neutral-900" {
+                @if count == 0 {
+                    "None of the " (count_noun(requested, "entry", "entries")) " match a message this user sent. Nothing would be deleted."
+                } @else {
+                    (count_noun(count, "message", "messages")) " will be deleted. Nothing has been deleted yet."
+                }
+            }
+            @if !preview.messages.is_empty() {
+                div class="max-h-96 overflow-auto rounded border border-neutral-200 bg-white" {
+                    table class="w-full text-left text-xs" {
+                        thead class="bg-neutral-100 text-neutral-600" {
+                            tr {
+                                th class="px-2 py-1" { "Sent" }
+                                th class="px-2 py-1" { "Channel" }
+                                th class="px-2 py-1" { "Message" }
+                                th class="px-2 py-1" { "Content" }
+                            }
+                        }
+                        tbody {
+                            @for message in preview.messages.iter().take(MESSAGE_SHRED_PREVIEW_ROWS) {
+                                tr class="border-t border-neutral-100 align-top" {
+                                    td class="whitespace-nowrap px-2 py-1" { (format_admin_timestamp(&message.timestamp)) }
+                                    td class="px-2 py-1 font-mono" { (message.channel_id.as_str()) }
+                                    td class="px-2 py-1 font-mono" { (message.message_id.as_str()) }
+                                    td class="px-2 py-1 break-words" {
+                                        (message.content)
+                                        @let attachments = u64::try_from(*message.attachment_count).unwrap_or_default();
+                                        @if attachments > 0 {
+                                            span class="text-neutral-500" { " (" (count_noun(attachments, "attachment", "attachments")) ")" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                @if hidden > 0 {
+                    p class="text-xs text-neutral-500" { "And " (count_noun(hidden as u64, "more message", "more messages")) "." }
+                }
+            }
+            @if !preview.skipped.is_empty() {
+                details class="text-sm text-neutral-700" {
+                    summary class="cursor-pointer" {
+                        (count_noun(preview.skipped.len() as u64, "entry", "entries")) " will be left alone"
+                    }
+                    ul class="mt-2 space-y-1 text-xs" {
+                        @for entry in &preview.skipped {
+                            li class="font-mono" {
+                                (entry.channel_id.as_str()) "," (entry.message_id.as_str()) " "
+                                span class="font-sans text-neutral-500" { (skipped_reason_label(&entry.reason)) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn skipped_reason_label(reason: &MessageShredPreviewResponseSkippedItemReason) -> &'static str {
+    match reason {
+        MessageShredPreviewResponseSkippedItemReason::NotFound => "not found in that channel",
+        MessageShredPreviewResponseSkippedItemReason::OtherAuthor => "sent by someone else",
+        MessageShredPreviewResponseSkippedItemReason::Duplicate => "listed twice",
     }
 }
 
@@ -522,7 +805,7 @@ fn message_shred_status_section(
     html! {
         div class="space-y-3 rounded-lg border border-neutral-200 bg-white p-4" {
             div class="flex items-center justify-between gap-3" {
-                h3 class="text-sm font-medium text-neutral-900" { "Message Shred Status" }
+                h3 class="text-sm font-medium text-neutral-900" { "Message shred status" }
                 a href={(base) "/users/" (user.id) "?tab=moderation"}
                     class="text-sm text-neutral-500 hover:text-neutral-900" {
                     "Clear"
@@ -647,21 +930,17 @@ fn message_shred_form_script() -> Markup {
     }
 }
 
-fn form_label(text: &str) -> Markup {
-    maud::html! {
-        label class="block text-sm font-medium text-neutral-700" { (text) }
-    }
-}
-
 const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 (function () {
 	var form = document.getElementById('message-shred-form');
 	if (!form) return;
 	var file = document.getElementById('message-shred-file');
 	var csvInput = document.getElementById('message-shred-csv-data');
+	var tokenInput = document.getElementById('message-shred-preview-token');
+	var preview = document.getElementById('message-shred-preview');
 	var submitButton = document.getElementById('message-shred-submit');
 	var fileName = document.getElementById('message-shred-file-name');
-	if (!file || !csvInput || !submitButton) return;
+	if (!file || !csvInput || !tokenInput || !preview || !submitButton) return;
 	var processing = false;
 	function toast(level, message) {
 		document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
@@ -683,10 +962,16 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 		var input = form.querySelector('input[name="_csrf"]');
 		return input ? input.value || '' : '';
 	}
-	function resetSubmit(label) {
+	function setButton(label) {
 		processing = false;
 		submitButton.disabled = false;
-		submitButton.querySelector('span').textContent = label || 'Shred Messages';
+		submitButton.querySelector('span').textContent = label;
+	}
+	function clearPreview() {
+		tokenInput.value = '';
+		csvInput.value = '';
+		preview.innerHTML = '';
+		setButton('Preview messages');
 	}
 	file.addEventListener('change', function () {
 		if (fileName) {
@@ -694,124 +979,74 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 				? file.files[0].name
 				: 'No file chosen';
 		}
+		clearPreview();
 	});
 	form.addEventListener('submit', function (event) {
 		if (processing) {
 			event.preventDefault();
 			return;
 		}
-		var selected = file.files && file.files[0];
-		if (!selected) {
-			event.preventDefault();
-			toast('error', 'Please select a CSV file to continue.');
+		if (tokenInput.value && csvInput.value) {
+			processing = true;
+			submitButton.disabled = true;
+			submitButton.querySelector('span').textContent = 'Deleting...';
 			return;
 		}
 		event.preventDefault();
+		var selected = file.files && file.files[0];
+		if (!selected) {
+			toast('error', 'Please select a CSV file to continue.');
+			return;
+		}
 		processing = true;
 		submitButton.disabled = true;
-		submitButton.querySelector('span').textContent = 'Processing...';
+		submitButton.querySelector('span').textContent = 'Checking...';
 		var reader = new FileReader();
 		reader.onload = function () {
 			csvInput.value = reader.result || '';
-			toast('info', 'Queueing message shred...');
-			fetch(form.getAttribute('action') || window.location.href, {
+			var body = new URLSearchParams();
+			body.set('_csrf', csrfToken());
+			body.set('csv_data', csvInput.value);
+			fetch(form.getAttribute('data-preview-action'), {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 					'HX-Request': 'true',
-					'HX-Target': 'flash-container',
+					'HX-Target': 'message-shred-preview',
 					'X-CSRF-Token': csrfToken()
 				},
-				body: new URLSearchParams(new FormData(form)).toString()
+				body: body.toString()
 			}).then(function (response) {
 				var parsed = toastFromResponse(response);
-				if (!response.ok && !parsed) throw new Error('Failed to queue message shred.');
-				toast(
-					parsed ? parsed.level : response.ok ? 'success' : 'error',
-					parsed ? parsed.message : response.ok ? 'Message shred queued.' : 'Failed to queue message shred.'
-				);
-				resetSubmit();
-				if (response.ok) {
-					file.value = '';
-					if (fileName) fileName.textContent = 'No file chosen';
+				if (parsed) {
+					toast(parsed.level, parsed.message);
+					clearPreview();
+					return;
 				}
+				if (!response.ok) throw new Error('Failed to preview the messages.');
+				return response.text().then(function (html) {
+					preview.innerHTML = html;
+					var result = preview.firstElementChild;
+					var count = result ? Number(result.getAttribute('data-message-count')) || 0 : 0;
+					if (count > 0) {
+						tokenInput.value = result.getAttribute('data-preview-token') || '';
+						setButton(count === 1 ? 'Delete 1 message' : 'Delete ' + count + ' messages');
+					} else {
+						tokenInput.value = '';
+						setButton('Preview messages');
+					}
+				});
 			}).catch(function (error) {
-				toast('error', error && error.message ? error.message : 'Failed to queue message shred.');
-				resetSubmit();
+				toast('error', error && error.message ? error.message : 'Failed to preview the messages.');
+				clearPreview();
 			});
 		};
 		reader.onerror = function () {
-			resetSubmit();
+			clearPreview();
 			toast('error', 'Failed to read the CSV file. Please try again.');
 		};
 		reader.readAsText(selected);
 	});
 })();
 "#;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::{Value, json};
-
-    fn user(extra: Value) -> AdminUser {
-        let mut value =
-            json!({"id": "1500000000000000001", "username": "target", "discriminator": "0001"});
-        if let (Some(target), Some(fields)) = (value.as_object_mut(), extra.as_object()) {
-            target.extend(fields.clone());
-        }
-        serde_json::from_value(value).expect("valid admin user")
-    }
-
-    #[test]
-    fn schedule_form_emails_the_user_by_default() {
-        let markup = deletion_card("/admin", &user(json!({})), "csrf", None, false).into_string();
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn temp_ban_form_emails_the_user_by_default() {
-        let markup =
-            ban_actions_card("/admin", &user(json!({})), "csrf", None, false).into_string();
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn username_mode_offers_no_email_and_sends_none() {
-        let pending = user(json!({
-            "pending_deletion_at": "2026-10-30T17:40:29.690Z",
-            "deletion_reason_code": 3
-        }));
-        let banned = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
-        let forms = [
-            deletion_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
-            deletion_card("/admin", &pending, "csrf", None, true).into_string(),
-            ban_actions_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
-            ban_actions_card("/admin", &banned, "csrf", None, true).into_string(),
-        ];
-        for markup in &forms {
-            assert!(!markup.contains("Email the user"));
-            assert!(!markup.contains(r#"name="notify_user" value="true""#));
-        }
-        assert!(forms[0].contains(r#"name="notify_user_present" value="1""#));
-        assert!(!forms[1].contains("notify_user"));
-        assert!(forms[2].contains(r#"name="notify_user_present" value="1""#));
-        assert!(forms[3].contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn unban_form_separates_the_public_and_private_reasons() {
-        let target = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
-        let markup = ban_actions_card("/admin", &target, "csrf", None, false).into_string();
-        assert!(markup.contains("?action=unban&amp;tab=moderation"));
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-        assert!(markup.contains(
-            r#"name="public_reason" placeholder="Enter public unban reason..." maxlength="512""#
-        ));
-        assert!(markup.contains(r#"name="private_reason""#));
-    }
-}

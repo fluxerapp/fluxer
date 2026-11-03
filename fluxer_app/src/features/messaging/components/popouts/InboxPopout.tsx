@@ -8,6 +8,7 @@ import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescrip
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
 import styles from '@app/features/messaging/components/popouts/InboxPopout.module.css';
+import {OtherAccountsInboxSection} from '@app/features/messaging/components/popouts/inbox/OtherAccountsInboxSection';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
@@ -247,59 +248,62 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	return (
 		<FocusRingScope containerRef={containerRef} data-flx="messaging.inbox-popout.focus-ring-scope">
 			<div
-				className={clsx(styles.container, styles.containerWithSidebar)}
+				className={styles.container}
 				ref={containerRef}
 				style={{width: remFromPx(size.width), height: remFromPx(size.height)}}
 				data-flx="messaging.inbox-popout.container"
 			>
-				<nav
-					className={styles.sidebar}
-					aria-label={i18n._(INBOX_TABS_DESCRIPTOR)}
-					data-flx="messaging.inbox-popout.sidebar"
-				>
-					<div
-						className={styles.sidebarTabList}
-						role="tablist"
+				<OtherAccountsInboxSection data-flx="messaging.inbox-popout.other-accounts-inbox-section" />
+				<div className={styles.body} data-flx="messaging.inbox-popout.body">
+					<nav
+						className={styles.sidebar}
 						aria-label={i18n._(INBOX_TABS_DESCRIPTOR)}
-						aria-orientation="vertical"
-						data-flx="messaging.inbox-popout.sidebar-tab-list"
+						data-flx="messaging.inbox-popout.sidebar"
 					>
-						{tabs.map((tab) => renderTabButton(tab))}
+						<div
+							className={styles.sidebarTabList}
+							role="tablist"
+							aria-label={i18n._(INBOX_TABS_DESCRIPTOR)}
+							aria-orientation="vertical"
+							data-flx="messaging.inbox-popout.sidebar-tab-list"
+						>
+							{tabs.map((tab) => renderTabButton(tab))}
+						</div>
+						{normalizedActiveTab === 'mentions' && headerActions && (
+							<div className={styles.sidebarFooterActions} data-flx="messaging.inbox-popout.sidebar-footer-actions">
+								{headerActions}
+							</div>
+						)}
+						{normalizedActiveTab === 'unreadChannels' && (
+							<div className={styles.sidebarFooterActions} data-flx="messaging.inbox-popout.sidebar-footer-actions--2">
+								<Tooltip
+									text={i18n._(MARK_ALL_AS_READ_DESCRIPTOR)}
+									position="right"
+									data-flx="messaging.inbox-popout.tooltip"
+								>
+									<FocusRing offset={-2} data-flx="messaging.inbox-popout.focus-ring">
+										<button
+											type="button"
+											className={styles.sidebarActionButton}
+											onClick={handleMarkAllRead}
+											disabled={markableUnreadChannels.length === 0}
+											aria-label={i18n._(MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR)}
+											data-flx="messaging.inbox-popout.sidebar-action-button.mark-all-read"
+										>
+											<CheckIcon
+												weight="bold"
+												className={styles.iconSmall}
+												data-flx="messaging.inbox-popout.icon-small--5"
+											/>
+										</button>
+									</FocusRing>
+								</Tooltip>
+							</div>
+						)}
+					</nav>
+					<div className={styles.mainPanel} data-flx="messaging.inbox-popout.main-panel">
+						{content}
 					</div>
-					{normalizedActiveTab === 'mentions' && headerActions && (
-						<div className={styles.sidebarFooterActions} data-flx="messaging.inbox-popout.sidebar-footer-actions">
-							{headerActions}
-						</div>
-					)}
-					{normalizedActiveTab === 'unreadChannels' && (
-						<div className={styles.sidebarFooterActions} data-flx="messaging.inbox-popout.sidebar-footer-actions--2">
-							<Tooltip
-								text={i18n._(MARK_ALL_AS_READ_DESCRIPTOR)}
-								position="right"
-								data-flx="messaging.inbox-popout.tooltip"
-							>
-								<FocusRing offset={-2} data-flx="messaging.inbox-popout.focus-ring">
-									<button
-										type="button"
-										className={styles.sidebarActionButton}
-										onClick={handleMarkAllRead}
-										disabled={markableUnreadChannels.length === 0}
-										aria-label={i18n._(MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR)}
-										data-flx="messaging.inbox-popout.sidebar-action-button.mark-all-read"
-									>
-										<CheckIcon
-											weight="bold"
-											className={styles.iconSmall}
-											data-flx="messaging.inbox-popout.icon-small--5"
-										/>
-									</button>
-								</FocusRing>
-							</Tooltip>
-						</div>
-					)}
-				</nav>
-				<div className={styles.mainPanel} data-flx="messaging.inbox-popout.main-panel">
-					{content}
 				</div>
 				<ResizablePaneHandles
 					getHandleProps={getHandleProps}

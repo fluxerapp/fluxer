@@ -13,7 +13,7 @@ const GATEWAY_ORIGIN_REGISTRATIONS_PER_WINDOW = 8;
 const GATEWAY_ORIGIN_REGISTRATION_WINDOW_MS = 60 * 1000;
 const GATEWAY_ORIGIN_REGISTRATIONS_PER_DOCUMENT = 64;
 const GATEWAY_ORIGIN_REGISTRATION_MIN_INTERVAL_MS = 1000;
-const GATEWAY_ORIGIN_ANCHOR_LIMIT = 32;
+const GATEWAY_ORIGIN_ANCHOR_LIMIT = 1024;
 const GATEWAY_ORIGIN_RESOLUTION_CACHE_LIMIT = 256;
 
 type GatewayOriginResolver = (anchorOrigin: string, signal: AbortSignal | null) => Promise<string | null>;
@@ -22,6 +22,12 @@ interface GatewayOriginRegistryDependencies {
 	readonly resolveAnchorGatewayOrigin: GatewayOriginResolver;
 	readonly additionalAnchorOrigins?: () => Promise<ReadonlyArray<string>>;
 	readonly now?: () => number;
+}
+
+interface AnchoredGatewayOriginAdmissionRequest {
+	readonly url: string;
+	readonly anchor: string;
+	readonly signal?: AbortSignal | null;
 }
 
 interface GatewayOriginAdmissionRequest {
@@ -133,6 +139,26 @@ export class GatewayOriginRegistry {
 		});
 		state.inFlight.set(targetOrigin, admission);
 		return await admission;
+	}
+
+	public async admitAnchored({url, anchor, signal}: AnchoredGatewayOriginAdmissionRequest): Promise<string> {
+		const targetOrigin = websocketOrigin(url);
+		if (targetOrigin == null) {
+			throw new GatewayOriginNotAdmittedError('the target has no WebSocket origin');
+		}
+		const anchorValue = anchorOrigin(anchor);
+		if (anchorValue == null) {
+			throw new GatewayOriginNotAdmittedError('the account has no instance origin');
+		}
+		this.seedAnchorOrigin(anchorValue);
+		const gatewayOrigin = await this.resolveAnchor(anchorValue, signal ?? null);
+		if (gatewayOrigin == null) {
+			throw new GatewayOriginNotAdmittedError('could not reach the account instance to confirm its gateway');
+		}
+		if (gatewayOrigin !== targetOrigin) {
+			throw new GatewayOriginNotAdmittedError('the account instance does not advertise it as its gateway');
+		}
+		return targetOrigin;
 	}
 
 	private async resolveAdmission(

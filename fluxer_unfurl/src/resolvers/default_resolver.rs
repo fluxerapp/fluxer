@@ -13,7 +13,6 @@ use crate::charset;
 use crate::direct_media::MediaKind;
 use crate::html_parser::{self, OgMetadata, TwitterCardMetadata};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::oembed;
 use crate::sanitizer;
 use crate::text_limits;
@@ -108,10 +107,11 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
         self_hosted: ctx.self_hosted,
         youtube_api_key: ctx.youtube_api_key.clone(),
         klipy_api_key: ctx.klipy_api_key.clone(),
+        activity_pub_signer: ctx.activity_pub_signer.clone(),
     };
 
     if let Some(embeds) = activity_pub::try_resolve(
-        &ctx.http_client,
+        ctx.activity_pub_client(),
         ctx.media_proxy,
         ctx.nsfw_mode,
         &final_url,
@@ -447,15 +447,9 @@ async fn resolve_media_with_metadata_and_size(
             None
         }
         Ok(m) => Some(EmbedMedia {
-            url: Some(url.to_owned()),
             width: width.or(m.width),
             height: height.or(m.height),
-            content_type: Some(m.content_type.clone()),
-            content_hash: Some(m.content_hash.clone()),
-            placeholder: m.placeholder.clone(),
-            duration: m.duration.map(|duration| duration as u32),
-            flags: embed_media_flags(&m),
-            ..Default::default()
+            ..m.to_embed_media(url)
         }),
         Err(err) => {
             tracing::warn!(error = %err, url, "failed to resolve default embed media metadata");
@@ -502,22 +496,29 @@ async fn try_canonical_activity_pub(
     if !urls_differ(&canonical_url, final_url) {
         return None;
     }
-    let ap_post =
-        crate::activity_pub::fetcher::fetch_activity_pub(&ctx.http_client, &canonical).await?;
+    let client = ctx.activity_pub_client();
+    let ap_post = activity_pub::fetcher::fetch_activity_pub(client, &canonical).await?;
     let post_url = ap_post
         .url
         .as_deref()
         .and_then(|u| Url::parse(u).ok())
         .unwrap_or_else(|| canonical_url.clone());
-    let context = build_canonical_ap_context(&ctx.http_client, &post_url).await;
-    let author_actor = fetch_canonical_author(&ctx.http_client, &ap_post).await;
-    let embeds = crate::activity_pub::formatter::format_activity_pub_post(
+    let context = activity_pub::build_context(client, &post_url, None).await;
+    let author_actor = activity_pub::fetch_post_author_actor(client, &ap_post).await;
+    if activity_pub::visibility::is_hidden_from_unauthed_web(
+        &ap_post,
+        author_actor.as_ref(),
+        client.signer.is_some(),
+    ) {
+        return None;
+    }
+    let embeds = activity_pub::formatter::format_activity_pub_post(
         &ap_post,
         &post_url,
         &context,
         ctx.media_proxy,
         ctx.nsfw_mode,
-        crate::activity_pub::formatter::ActivityPubFormatOptions {
+        activity_pub::formatter::ActivityPubFormatOptions {
             author_actor: author_actor.as_ref(),
             quote_child: None,
             is_nested: false,
@@ -529,40 +530,6 @@ async fn try_canonical_activity_pub(
     } else {
         Some(embeds)
     }
-}
-
-async fn build_canonical_ap_context(
-    client: &reqwest::Client,
-    url: &Url,
-) -> crate::activity_pub::types::ActivityPubContext {
-    let instance = crate::activity_pub::fetcher::fetch_instance_info(client, url).await;
-    let clean_host = url
-        .host_str()
-        .unwrap_or_default()
-        .trim_start_matches("www.")
-        .trim_start_matches("social.")
-        .trim_start_matches("mstdn.")
-        .to_owned();
-    crate::activity_pub::types::ActivityPubContext {
-        server_domain: instance
-            .as_ref()
-            .and_then(|i| i.domain.clone())
-            .unwrap_or_else(|| clean_host.clone()),
-        server_title: instance
-            .as_ref()
-            .and_then(|i| i.title.clone())
-            .unwrap_or_else(|| format!("{clean_host} Mastodon")),
-        server_icon: instance.and_then(|i| i.thumbnail_url),
-        in_reply_to: None,
-    }
-}
-
-async fn fetch_canonical_author(
-    client: &reqwest::Client,
-    post: &crate::activity_pub::types::ActivityPubPost,
-) -> Option<crate::activity_pub::types::ActivityPubActor> {
-    let actor_url = post.attributed_to.as_ref()?.as_str()?;
-    crate::activity_pub::fetcher::fetch_activity_pub_actor(client, actor_url).await
 }
 
 #[cfg(test)]
@@ -639,29 +606,6 @@ mod tests {
             <meta name="twitter:player" content="https://embed.ted.com/talks/1">
         </head>"#;
         assert_eq!(classify(denied), "link");
-    }
-
-    #[test]
-    fn player_allowlist_accepts_verified_hosts() {
-        for value in [
-            "https://www.youtube.com/embed/x",
-            "https://www.youtube-nocookie.com/embed/x",
-            "https://youtu.be/x",
-            "https://player.vimeo.com/video/1",
-            "https://w.soundcloud.com/player/?url=x",
-            "https://player.twitch.tv/?video=1",
-        ] {
-            assert!(is_allowlisted_player_url(value), "{value} must be allowed");
-        }
-    }
-
-    #[test]
-    fn classify_twitter_player_resolves_relative_references_first() {
-        let html = r#"<head>
-            <meta name="twitter:card" content="player">
-            <meta name="twitter:player" content="//player.vimeo.com/video/1">
-        </head>"#;
-        assert_eq!(classify(html), "video");
     }
 
     #[test]

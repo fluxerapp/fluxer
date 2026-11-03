@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {emailCodesCanBeSent, getEmailCodeAvailability} from '@app/api/auth/services/SudoEmailCode';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
+import {EmailCodesUnavailableError} from '@fluxer/errors/src/domains/auth/EmailCodesUnavailableError';
 import {EmailUnavailableOnInstanceError} from '@fluxer/errors/src/domains/auth/EmailUnavailableOnInstanceError';
 import {UsernameSignInOnlyError} from '@fluxer/errors/src/domains/auth/UsernameSignInOnlyError';
 import type {Context} from 'hono';
@@ -12,6 +14,13 @@ export const RequireEmailAccountIdentity = createMiddleware<HonoEnv>(async (ctx,
 	const mode = await ctx.get('instanceConfigRepository').getAccountIdentityMode();
 	if (mode === AccountIdentityModes.USERNAME) {
 		throw new EmailUnavailableOnInstanceError();
+	}
+	await next();
+});
+
+export const RequireEmailCodesAvailable = createMiddleware<HonoEnv>(async (ctx, next) => {
+	if (!emailCodesCanBeSent(getEmailCodeAvailability(ctx.get('user')))) {
+		throw new EmailCodesUnavailableError();
 	}
 	await next();
 });

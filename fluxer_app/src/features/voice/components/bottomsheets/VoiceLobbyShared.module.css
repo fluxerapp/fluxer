@@ -54,6 +54,10 @@
 	color: white;
 }
 
+.iconContainerBrand .actionIcon {
+	color: var(--brand-primary-fill);
+}
+
 .actionIconSecondary {
 	color: var(--text-primary);
 }
@@ -123,7 +127,7 @@
 
 .statValue {
 	min-width: 0;
-	text-align: right;
+	text-align: end;
 	font-size: 0.75rem;
 }
 

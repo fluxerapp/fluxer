@@ -67,7 +67,7 @@ export interface InboundVideoDecodeSample {
 	powerEfficientDecoder: boolean | null;
 }
 
-export interface InboundVideoDecodeHealth {
+interface InboundVideoDecodeHealth {
 	codec: VideoCodec | null;
 	intervalMs: number;
 	decodedFps: number | null;

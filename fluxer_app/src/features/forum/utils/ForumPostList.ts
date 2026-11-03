@@ -15,11 +15,11 @@ export function isPinnedPost(post: Channel): boolean {
 	return (post.flags & ChannelFlags.PINNED) !== 0;
 }
 
-export function postSortKey(post: Channel, sortOrder: ForumSortOrderType): string {
+function postSortKey(post: Channel, sortOrder: ForumSortOrderType): string {
 	return sortOrder === ForumSortOrderTypes.CREATION_TIME ? post.id : lastActivityId(post);
 }
 
-export function matchesTagFilter(
+function matchesTagFilter(
 	appliedTags: ReadonlyArray<string>,
 	tagIds: ReadonlyArray<string>,
 	tagSetting: ForumTagSetting,

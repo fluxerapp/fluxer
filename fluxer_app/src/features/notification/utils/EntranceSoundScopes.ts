@@ -17,16 +17,9 @@ export type EntranceSoundScope =
 			guildId: string;
 	  };
 
-export interface ResolvedEntranceSound<T> {
-	scope: EntranceSoundScope;
-	sound: T;
-}
-
 export const GLOBAL_ENTRANCE_SOUND_SCOPE: EntranceSoundScope = {kind: 'global'};
 export const GUILDS_ENTRANCE_SOUND_SCOPE: EntranceSoundScope = {kind: 'guilds'};
 export const DMS_ENTRANCE_SOUND_SCOPE: EntranceSoundScope = {kind: 'dms'};
-const LEGACY_GLOBAL_ENTRANCE_SOUND_KEY = 'userEntranceSound';
-
 export function getEntranceSoundScopeId(scope: EntranceSoundScope): string {
 	switch (scope.kind) {
 		case 'global':
@@ -57,19 +50,6 @@ export function parseEntranceSoundScopeId(scopeId: string): EntranceSoundScope |
 	return null;
 }
 
-export function getEntranceSoundStorageKey(scope: EntranceSoundScope): string {
-	switch (scope.kind) {
-		case 'global':
-			return LEGACY_GLOBAL_ENTRANCE_SOUND_KEY;
-		case 'guilds':
-			return 'entranceSound:guilds';
-		case 'dms':
-			return 'entranceSound:dms';
-		case 'guild':
-			return `entranceSound:guild:${scope.guildId}`;
-	}
-}
-
 export function getVoiceContextEntranceSoundScope(guildId: string | null): EntranceSoundScope {
 	if (!guildId || guildId === ME) {
 		return DMS_ENTRANCE_SOUND_SCOPE;
@@ -91,21 +71,4 @@ export function getEntranceSoundFallbackScopes(scope: EntranceSoundScope): Array
 		case 'guild':
 			return [scope, GUILDS_ENTRANCE_SOUND_SCOPE, GLOBAL_ENTRANCE_SOUND_SCOPE];
 	}
-}
-
-export function resolveEntranceSoundFromMap<T>(
-	scope: EntranceSoundScope,
-	soundsByStorageKey: Record<string, T>,
-): ResolvedEntranceSound<T> | null {
-	for (const fallbackScope of getEntranceSoundFallbackScopes(scope)) {
-		const storageKey = getEntranceSoundStorageKey(fallbackScope);
-		const sound = soundsByStorageKey[storageKey];
-		if (sound) {
-			return {
-				scope: fallbackScope,
-				sound,
-			};
-		}
-	}
-	return null;
 }

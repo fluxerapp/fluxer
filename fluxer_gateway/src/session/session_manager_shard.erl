@@ -4,8 +4,6 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export_type([session_data/0, user_id/0]).
@@ -14,7 +12,6 @@
 -type user_id() :: integer().
 -type session_ref() :: {pid(), reference()}.
 -type status() :: online | offline | idle | dnd | invisible.
--type identify_timestamp() :: integer().
 
 -type identify_request() :: #{
     session_id := session_id(),
@@ -43,7 +40,6 @@
 
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    identify_attempts := [identify_timestamp()],
     pending_identifies := #{session_id() => pending_identify()},
     identify_workers := #{reference() => {session_id(), pid()}},
     shard_index := non_neg_integer(),
@@ -54,9 +50,11 @@
     request := identify_request(),
     socket_pid := pid(),
     froms := [gen_server:from()],
-    worker_ref := reference(),
+    worker_ref := reference() | undefined,
     worker_token := reference(),
     timeout_ref := reference(),
+    queued_at := integer(),
+    socket_ref => reference(),
     slot_held => boolean()
 }.
 
@@ -91,7 +89,6 @@ init(Args) ->
         #{
             sessions => #{},
             session_refs => #{},
-            identify_attempts => [],
             pending_identifies => #{},
             identify_workers => #{},
             shard_index => ShardIndex
@@ -176,12 +173,10 @@ handle_cast(_, State) ->
 -spec handle_info(Info, State) -> {noreply, state()} when
     Info :: {'DOWN', reference(), process, pid(), term()} | term(),
     State :: state().
-handle_info({identify_slot_acquired, SessionId, WorkerToken}, State) when
+handle_info({session_start_admitted, {SessionId, WorkerToken}}, State) when
     is_binary(SessionId), is_reference(WorkerToken)
 ->
-    session_manager_shard_lifecycle:note_identify_slot_acquired(
-        SessionId, WorkerToken, State
-    );
+    session_manager_shard_lifecycle:admit_identify_fetch(SessionId, WorkerToken, State);
 handle_info({identify_fetch_result, SessionId, WorkerToken, FetchResult}, State) when
     is_binary(SessionId), is_reference(WorkerToken)
 ->
@@ -190,10 +185,20 @@ handle_info({identify_fetch_result, SessionId, WorkerToken, FetchResult}, State)
     );
 handle_info({identify_fetch_result, SessionId, FetchResult}, State) when is_binary(SessionId) ->
     session_manager_shard_lifecycle:complete_identify_fetch(SessionId, FetchResult, State);
-handle_info({identify_fetch_timeout, SessionId, WorkerRef}, State) when
-    is_binary(SessionId), is_reference(WorkerRef)
+handle_info({identify_queue_timeout, SessionId, WorkerToken}, State) when
+    is_binary(SessionId), is_reference(WorkerToken)
 ->
-    session_manager_shard_lifecycle:handle_identify_fetch_timeout(SessionId, WorkerRef, State);
+    session_manager_shard_lifecycle:handle_identify_queue_timeout(
+        SessionId, WorkerToken, State
+    );
+handle_info(resubmit_session_starts, State) ->
+    session_manager_shard_lifecycle:resubmit_session_starts(State);
+handle_info({identify_fetch_timeout, SessionId, WorkerToken}, State) when
+    is_binary(SessionId), is_reference(WorkerToken)
+->
+    session_manager_shard_lifecycle:handle_identify_fetch_timeout(
+        SessionId, WorkerToken, State
+    );
 handle_info({'DOWN', Ref, process, Pid, Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     IdentifyWorkers = maps:get(identify_workers, State),
     case maps:take(Ref, IdentifyWorkers) of
@@ -203,7 +208,7 @@ handle_info({'DOWN', Ref, process, Pid, Reason}, State) when is_reference(Ref), 
                 SessionId, Ref, Reason, StateWithoutWorker
             );
         error ->
-            {noreply, session_manager_shard_session_index:cleanup_down(Ref, Pid, State)}
+            session_manager_shard_lifecycle:handle_other_down(Ref, Pid, State)
     end;
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     {noreply, State};

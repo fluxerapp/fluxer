@@ -2,12 +2,12 @@
 
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {enqueueCrosspostSourceRemoval} from '@app/api/channel/services/message/CrosspostPropagation';
-import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import type {Message} from '@app/api/models/Message';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
-import {createBulkDeleteDispatcher} from '@app/api/worker/tasks/utils/MessageDeletion';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
@@ -65,11 +65,6 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	await persistStatus('in_progress');
 	const authorId = createUserID(BigInt(data.target_user_id));
 	const seen = new Set<string>();
-	const bulkDeleteDispatcher = createBulkDeleteDispatcher({
-		channelRepository,
-		gatewayService,
-		batchSize: DELETION_CHUNK_SIZE,
-	});
 	const processSlice = async (
 		entriesSlice: Array<{
 			channel_id: string;
@@ -144,10 +139,23 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 					mode: 'purge',
 				});
 				await persistStatus('in_progress');
+				const messagesByChannel = new Map<ChannelID, Array<MessageID>>();
 				for (const {channelId, messageId} of deletionChunk) {
-					bulkDeleteDispatcher.track(channelId, messageId);
+					const ids = messagesByChannel.get(channelId) ?? [];
+					ids.push(messageId);
+					messagesByChannel.set(channelId, ids);
 				}
-				await bulkDeleteDispatcher.flush(true);
+				for (const [channelId, messageIds] of messagesByChannel) {
+					const channel = await channelRepository.channelData.findUnique(channelId);
+					if (!channel) continue;
+					await decrementThreadMessageCount(channelRepository, channel, messageIds);
+					await dispatchChannelEvent({
+						gatewayService,
+						channel,
+						event: 'MESSAGE_DELETE_BULK',
+						data: {channel_id: channelId.toString(), ids: messageIds.map((id) => id.toString())},
+					});
+				}
 			}
 		}
 	};
@@ -157,7 +165,6 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	await persistStatus('completed', {
 		completed_at: new Date().toISOString(),
 	});
-	await bulkDeleteDispatcher.flush(true);
 };
 
 export default messageShredTask;

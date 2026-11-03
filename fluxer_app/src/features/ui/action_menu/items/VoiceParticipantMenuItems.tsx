@@ -1,9 +1,9 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {LocalMuteIcon, SelfDeafenIcon, SelfMuteIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import styles from '@app/features/ui/action_menu/items/MenuItems.module.css';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import EntranceSoundListenerPrefs from '@app/features/voice/state/EntranceSoundListenerPrefs';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
@@ -35,10 +35,10 @@ interface SelfMuteMenuItemProps {
 export const SelfMuteMenuItem: React.FC<SelfMuteMenuItemProps> = observer(
 	({connectionId, isDeviceSpecific = false, label}) => {
 		const {i18n} = useLingui();
-		const voiceState = connectionId
-			? MediaEngine.getVoiceStateByConnectionId(connectionId)
-			: MediaEngine.getCurrentUserVoiceState();
-		const isSelfMuted = voiceState?.self_mute ?? false;
+		const isSelfMuted =
+			isDeviceSpecific && connectionId
+				? VoiceStateCommands.getSelfMuteForConnection(connectionId)
+				: VoiceStateCommands.getCurrentSelfMute();
 		const handleToggle = useCallback(() => {
 			if (isDeviceSpecific && connectionId) {
 				VoiceStateCommands.toggleSelfMuteForConnection(connectionId);

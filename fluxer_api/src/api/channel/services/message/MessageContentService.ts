@@ -2,6 +2,7 @@
 
 import type {GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -16,6 +17,14 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 export interface DmNsfwContext {
 	senderFilterLevel: number;
 	recipientFilterLevel: number;
+}
+
+interface NsfwScope {
+	channel?: Channel;
+	guild?: GuildResponse | null;
+	member?: GuildMemberResponse | null;
+	isBot?: boolean;
+	dmNsfwContext?: DmNsfwContext;
 }
 
 export class MessageContentService {
@@ -64,28 +73,9 @@ export class MessageContentService {
 		return {senderFilterLevel, recipientFilterLevel};
 	}
 
-	isNSFWContentAllowed(params: {
-		channel?: Channel;
-		guild?: GuildResponse | null;
-		member?: GuildMemberResponse | null;
-		isBot?: boolean;
-		dmNsfwContext?: DmNsfwContext;
-	}): boolean {
-		const {channel, guild, member, isBot, dmNsfwContext} = params;
-		if (isBot) {
-			return true;
-		}
-		if (
-			channel &&
-			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
-			channel.isNsfw
-		) {
-			return true;
-		}
-		if (channel?.type === ChannelTypes.DM_PERSONAL_NOTES) {
-			return true;
-		}
-		if (channel?.type === ChannelTypes.GROUP_DM && channel.isNsfw) {
+	isNSFWContentAllowed(params: NsfwScope): boolean {
+		const {guild, member, isBot, dmNsfwContext} = params;
+		if (isBot || this.isMatureContext(params)) {
 			return true;
 		}
 		if (!guild) {
@@ -96,10 +86,6 @@ export class MessageContentService {
 				return !eitherBlocks;
 			}
 			return false;
-		}
-		const guildMarkedNsfw = guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
-		if (guildMarkedNsfw) {
-			return true;
 		}
 		const features = new Set(guild.features ?? []);
 		if (features.has(GuildFeatures.DISCOVERABLE)) {
@@ -114,5 +100,29 @@ export class MessageContentService {
 			return !!hasRoles;
 		}
 		return false;
+	}
+
+	attachmentNsfwMode(params: NsfwScope): MediaProxyNsfwMode {
+		if (!this.isNSFWContentAllowed(params)) {
+			return 'block';
+		}
+		return this.isMatureContext(params) ? 'allow' : 'flag';
+	}
+
+	private isMatureContext({channel, guild}: NsfwScope): boolean {
+		if (
+			channel &&
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
+			channel.isNsfw
+		) {
+			return true;
+		}
+		if (channel?.type === ChannelTypes.DM_PERSONAL_NOTES) {
+			return true;
+		}
+		if (channel?.type === ChannelTypes.GROUP_DM && channel.isNsfw) {
+			return true;
+		}
+		return guild?.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
 	}
 }

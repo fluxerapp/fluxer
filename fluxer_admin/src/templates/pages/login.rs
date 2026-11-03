@@ -1,9 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::config::AdminConfig;
-use maud::{DOCTYPE, Markup, html};
+use crate::{
+    api::types::PremiumBranding,
+    config::AdminConfig,
+    templates::{
+        layout::{admin_title, favicon_links, product_name},
+        layout_scripts::THEME_INIT_SCRIPT,
+    },
+};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 
-pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
+pub fn login_page(
+    config: &AdminConfig,
+    branding: Option<&PremiumBranding>,
+    error_message: Option<&str>,
+) -> Markup {
     let base = &config.base_path;
     html! {
         (DOCTYPE)
@@ -11,10 +22,11 @@ pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
             head {
                 meta charset="UTF-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
-                title { "Login ~ Fluxer Admin" }
+                title { "Login ~ " (admin_title(branding)) }
+                script { (PreEscaped(THEME_INIT_SCRIPT)) }
                 link rel="stylesheet" href={(base) "/static/fonts/" (crate::fonts::STYLESHEET_FILE_NAME)};
                 link rel="stylesheet" href={(base) "/static/app.css"};
-                link rel="icon" type="image/x-icon" href={(config.static_cdn_endpoint) "/web/favicon.ico"};
+                (favicon_links(config, branding))
             }
             body class="flex min-h-[100dvh] items-center justify-center bg-neutral-50 p-4" {
                 main class="w-full max-w-sm" {
@@ -23,7 +35,7 @@ pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
                             div class="flex flex-col gap-8 items-center" {
                                 div class="flex flex-col gap-2 items-center" {
                                     h1 class="text-gray-900 tracking-tight text-xl" {
-                                        "Fluxer Admin"
+                                        (admin_title(branding))
                                     }
                                 }
                                 @if let Some(error) = error_message {
@@ -38,7 +50,7 @@ pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
                                            bg-neutral-900 text-white hover:bg-neutral-800 \
                                            px-4 py-2 text-base w-full sm:w-fit \
                                            focus:ring-offset-white" {
-                                    span { "Sign in with Fluxer" }
+                                    span { "Sign in with " (product_name(branding)) }
                                 }
                             }
                         }

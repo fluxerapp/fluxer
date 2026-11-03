@@ -45,7 +45,7 @@ function updateScreenRecordingPermissionStore(permission: NativePermissionResult
 
 export async function readScreenSharePickerScreenRecordingPermission(reason: string): Promise<NativePermissionResult> {
 	try {
-		const permission = await checkNativePermission('screen');
+		const permission = await checkNativePermission('screen', {liveProbe: true});
 		updateScreenRecordingPermissionStore(permission);
 		return permission;
 	} catch (error) {

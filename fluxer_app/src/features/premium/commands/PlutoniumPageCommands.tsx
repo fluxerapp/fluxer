@@ -6,9 +6,12 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {GiftPlutoniumModal} from '@app/features/premium/components/modals/GiftPlutoniumModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
+import type {UserSettingsTabType} from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
 
 export function openPlutoniumPage(): void {
 	ModalCommands.popAll();
+	PopoutCommands.closeAll();
 	RouterUtils.transitionTo(Routes.PLUTONIUM);
 }
 
@@ -18,13 +21,24 @@ export function openGiftPlutoniumModal(): void {
 	);
 }
 
-export function openGiftInventorySettings(): void {
+function openBillingSettings(tab: UserSettingsTabType): void {
 	ModalCommands.push(
-		modal(() => (
-			<UserSettingsModal
-				initialTab="gift_inventory"
-				data-flx="premium.plutonium-page-commands.open-gift-inventory-settings.user-settings-modal"
-			/>
-		)),
+		modal(
+			() => (
+				<UserSettingsModal
+					initialTab={tab}
+					data-flx="premium.plutonium-page-commands.open-billing-settings.user-settings-modal"
+				/>
+			),
+			'user-settings',
+		),
 	);
+}
+
+export function openGiftInventorySettings(): void {
+	openBillingSettings('gift_inventory');
+}
+
+export function openSubscriptionSettings(): void {
+	openBillingSettings('subscriptions');
 }

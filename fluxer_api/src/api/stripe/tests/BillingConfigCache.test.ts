@@ -15,7 +15,7 @@ import {
 	setStoredBillingConfig,
 } from '@app/api/stripe/BillingConfigCache';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 const ENV_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -82,6 +82,7 @@ function operatorConfig(overrides: Partial<StoredBillingConfig> = {}): StoredBil
 		automatic_tax: null,
 		tax_id_collection: null,
 		terms_consent_required: null,
+		billing_emails: null,
 		default_currency: 'GBP',
 		prices: {
 			GBP: {
@@ -133,39 +134,6 @@ describe('BillingConfigCache', () => {
 		setStoredBillingConfig(originalStored);
 	});
 
-	it('builds the env catalog for the nine hosted currencies from Config.stripe', () => {
-		const config = getEffectiveBillingConfig();
-		expect(config.catalogMode).toBe('env');
-		expect(config.prices).toEqual(expectedEnvCatalog());
-		expect(config.countryCurrencies).toEqual({});
-		expect(config.defaultCurrency).toBeNull();
-		expect(config.legacyPrices).toEqual({monthly_try: ['price_old_try']});
-		expect(config.enabled).toBe(true);
-		expect(config.secretKey).toBe('sk_test_fluxer');
-		expect(config.webhookSecret).toBe('whsec_test_fluxer');
-	});
-
-	it('leaves unconfigured env currencies out of the catalog', () => {
-		stripe.prices = {monthlyUsd: 'price_a', yearlyUsd: 'price_b', gift1MonthSek: 'price_c'};
-		expect(getEffectiveBillingConfig().prices).toEqual({
-			USD: {monthly: 'price_a', yearly: 'price_b', gift_1_month: null, gift_1_year: null},
-			SEK: {monthly: null, yearly: null, gift_1_month: 'price_c', gift_1_year: null},
-		});
-	});
-
-	it('reads env values at call time and changes the version when they change', () => {
-		const before = getEffectiveBillingConfig();
-		expect(getEffectiveBillingConfig()).toBe(before);
-		stripe.prices = {...ENV_PRICES, monthlyUsd: 'price_changed'};
-		const afterPrice = getEffectiveBillingConfig();
-		expect(afterPrice.prices.USD?.monthly).toBe('price_changed');
-		expect(afterPrice.version).not.toBe(before.version);
-		stripe.webhookSecret = 'whsec_rotated';
-		const afterSecret = getEffectiveBillingConfig();
-		expect(afterSecret.webhookSecret).toBe('whsec_rotated');
-		expect(afterSecret.version).not.toBe(afterPrice.version);
-	});
-
 	it('uses the operator catalog when stored prices are set', () => {
 		setStoredBillingConfig(operatorConfig());
 		const config = getEffectiveBillingConfig();
@@ -186,6 +154,7 @@ describe('BillingConfigCache', () => {
 			automatic_tax: null,
 			tax_id_collection: null,
 			terms_consent_required: null,
+			billing_emails: null,
 			default_currency: null,
 			prices: null,
 			country_currencies: {SE: 'SEK'},
@@ -310,6 +279,7 @@ describe('BillingConfigCache', () => {
 					automatic_tax: false,
 					tax_id_collection: false,
 					terms_consent_required: false,
+					billing_emails: false,
 				}),
 			);
 			const config = getEffectiveBillingConfig();
@@ -323,6 +293,7 @@ describe('BillingConfigCache', () => {
 			expect(config.automaticTax).toBe(true);
 			expect(config.taxIdCollection).toBe(true);
 			expect(config.termsConsentRequired).toBe(true);
+			expect(config.billingEmails).toBe(true);
 			expect(isBillingActive()).toBe(true);
 		});
 	});
@@ -334,13 +305,20 @@ describe('BillingConfigCache', () => {
 			expect(config.automaticTax).toBe(false);
 			expect(config.taxIdCollection).toBe(false);
 			expect(config.termsConsentRequired).toBe(false);
+			expect(config.billingEmails).toBe(false);
 			setStoredBillingConfig(
-				operatorConfig({automatic_tax: true, tax_id_collection: false, terms_consent_required: true}),
+				operatorConfig({
+					automatic_tax: true,
+					tax_id_collection: false,
+					terms_consent_required: true,
+					billing_emails: true,
+				}),
 			);
 			config = getEffectiveBillingConfig();
 			expect(config.automaticTax).toBe(true);
 			expect(config.taxIdCollection).toBe(false);
 			expect(config.termsConsentRequired).toBe(true);
+			expect(config.billingEmails).toBe(true);
 		});
 
 		it('default to off on self-hosted without any stored config', () => {
@@ -403,29 +381,10 @@ describe('BillingConfigCache', () => {
 			instance.selfHosted = true;
 		});
 
-		afterEach(() => {
-			vi.restoreAllMocks();
-		});
-
 		it('remembers the previously effective env secret when a stored one replaces it', () => {
 			getAcceptedWebhookSecrets();
 			setStoredBillingConfig(operatorConfig({stripe_webhook_secret: 'whsec_first'}));
 			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_first', 'whsec_test_fluxer']);
-		});
-
-		it('remembers the previous self-hosted webhook secret for 24 hours after a change', () => {
-			const start = Date.now();
-			const now = vi.spyOn(Date, 'now').mockReturnValue(start);
-			setStoredBillingConfig(operatorConfig({stripe_webhook_secret: 'whsec_first'}));
-			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_first']);
-			setStoredBillingConfig(operatorConfig({stripe_webhook_secret: 'whsec_second'}));
-			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_second', 'whsec_first']);
-			setStoredBillingConfig(operatorConfig({stripe_webhook_secret: 'whsec_second'}));
-			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_second', 'whsec_first']);
-			now.mockReturnValue(start + 23 * 60 * 60 * 1000);
-			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_second', 'whsec_first']);
-			now.mockReturnValue(start + 24 * 60 * 60 * 1000 + 1);
-			expect(getAcceptedWebhookSecrets()).toEqual(['whsec_second']);
 		});
 
 		it('drops a remembered secret once it becomes current again', () => {

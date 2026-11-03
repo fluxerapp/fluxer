@@ -37,11 +37,9 @@ export const MemberListContainer: React.FC<MemberListContainerProps> = observer(
 	const {i18n} = useLingui();
 	const navigationRef = useRovingFocusList<HTMLElement>({
 		focusableSelector: '[data-member-list-focus-item="true"]',
-		orientation: 'vertical',
-		loop: true,
+
 		enabled: KeyboardMode.keyboardModeEnabled,
 		restoreFocusOnWindowFocus: false,
-		manageTabIndex: true,
 	});
 	return (
 		<aside

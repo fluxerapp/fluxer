@@ -30,7 +30,7 @@ const SECRET_HEADER_PATTERN =
 const SECRET_QUERY_PATTERN = /([?&])([^=&#\s]+)=([^&#\s]*)/gu;
 const SECRET_USERINFO_PATTERN = /[^\s:@/]+:[^\s@/]+@/gu;
 
-export function redactDiagnosticText(value: string): string {
+function redactDiagnosticText(value: string): string {
 	return value
 		.replace(SECRET_HEADER_PATTERN, (_match, key: string) => `${key}=…`)
 		.replace(SECRET_QUERY_PATTERN, (_match, separator: string, key: string) => `${separator}${key}=…`)

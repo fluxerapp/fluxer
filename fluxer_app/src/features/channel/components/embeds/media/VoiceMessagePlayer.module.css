@@ -46,9 +46,13 @@
 	inset: -0.1875rem;
 	border-radius: var(--radius-full);
 	border: 0.125rem solid transparent;
-	border-top-color: var(--text-on-brand-primary);
+	border-top-color: var(--brand-primary-foreground);
 	animation: spin 0.8s linear infinite;
 	pointer-events: none;
+}
+
+.containerActive .loadingSpinner {
+	border-top-color: var(--text-on-brand-primary);
 }
 
 @keyframes spin {
@@ -84,7 +88,7 @@
 }
 
 :global(.theme-light) .waveformBarPast {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }
 
 .timestamp {

@@ -10,9 +10,9 @@ import type {
 } from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import type {MessageInteractionService} from '@app/api/channel/services/MessageInteractionService';
 import type {MessageService} from '@app/api/channel/services/MessageService';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {
 	assertAttachmentFileSizesWithinLimit,
-	getContentType,
 	isCrosspostCopy,
 	isMessageEmpty,
 	isOperationDisabled,
@@ -54,8 +54,8 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {ServiceUnavailableError} from '@fluxer/errors/src/HttpErrors';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {
 	CompleteMultipartAttachmentUploadItem,
@@ -63,6 +63,7 @@ import type {
 	PresignedAttachmentUploadRequestItem,
 	PresignedAttachmentUploadResponseItem,
 } from '@fluxer/schema/src/domains/message/AttachmentUploadSchemas';
+import {getContentTypeFromFilename} from '@pkgs/mime_utils/src/ContentTypeUtils';
 
 interface DeleteAttachmentParams {
 	userId: UserID;
@@ -147,7 +148,7 @@ export class AttachmentUploadService {
 			const uploadKey = crypto.randomUUID();
 			const arrayBuffer = await file.arrayBuffer();
 			const body = new Uint8Array(arrayBuffer);
-			const contentType = getContentType(filename);
+			const contentType = getContentTypeFromFilename(filename);
 			await runAttachmentStorageOperation(() =>
 				this.storageService.uploadObject({
 					bucket: Config.s3.buckets.uploads,
@@ -196,7 +197,7 @@ export class AttachmentUploadService {
 		return Promise.all(
 			attachments.map(async (attachment) => {
 				const uploadKey = crypto.randomUUID();
-				const derivedContentType = getContentType(attachment.filename);
+				const derivedContentType = getContentTypeFromFilename(attachment.filename);
 				const bucket = Config.s3.buckets.uploads;
 				const uploadMode: AttachmentUploadMode =
 					attachment.file_size <= ATTACHMENT_UPLOAD_CHUNK_THRESHOLD ? 'presigned_singlepart' : 'presigned_multipart';
@@ -436,7 +437,7 @@ export class AttachmentUploadService {
 			const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
 			await this.purgeQueue.addUrls([cdnUrl]);
 		}
-		await this.messageInteractionService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.gatewayService, channel, message: updatedMessage});
 		await this.messageService.crosspostPropagation.propagateEdit(updatedMessage);
 	}
 

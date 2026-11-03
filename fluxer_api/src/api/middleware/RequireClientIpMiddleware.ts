@@ -18,6 +18,7 @@ const defaultExemptPaths: Array<string> = [
 	'/internal',
 	'/webhooks/livekit',
 	'/test',
+	'/.well-known/fluxer',
 	'/connections/bluesky/client-metadata.json',
 	'/connections/bluesky/jwks.json',
 ];

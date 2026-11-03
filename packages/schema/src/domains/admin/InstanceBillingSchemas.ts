@@ -63,9 +63,11 @@ export const InstanceBillingResponse = z.object({
 	automatic_tax: z.boolean().nullable(),
 	tax_id_collection: z.boolean().nullable(),
 	terms_consent_required: z.boolean().nullable(),
+	billing_emails: z.boolean().nullable(),
 	effective_automatic_tax: z.boolean(),
 	effective_tax_id_collection: z.boolean(),
 	effective_terms_consent_required: z.boolean(),
+	effective_billing_emails: z.boolean(),
 	default_currency: PremiumCurrency.nullable(),
 	prices: z.record(z.string(), BillingPriceSetResponse).nullable(),
 	country_currencies: z.record(z.string(), z.string()).nullable(),
@@ -85,6 +87,7 @@ export const InstanceBillingUpdateRequest = z
 		automatic_tax: z.boolean().nullish(),
 		tax_id_collection: z.boolean().nullish(),
 		terms_consent_required: z.boolean().nullish(),
+		billing_emails: z.boolean().nullish(),
 		default_currency: PremiumCurrency.nullish(),
 		prices: BillingPricesSchema(BillingPriceSetUpdateRequest).nullish(),
 		country_currencies: BillingCountryCurrenciesSchema.nullish(),
@@ -110,6 +113,7 @@ export const StoredBillingConfigSchema = z.object({
 	automatic_tax: z.boolean().nullable().default(null),
 	tax_id_collection: z.boolean().nullable().default(null),
 	terms_consent_required: z.boolean().nullable().default(null),
+	billing_emails: z.boolean().nullable().default(null),
 	default_currency: PremiumCurrency.nullable().default(null),
 	prices: BillingPricesSchema(
 		z.object({

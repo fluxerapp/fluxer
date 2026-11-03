@@ -7,6 +7,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {tierContextFrom} from '@app/api/user/AccountTier';
 import {Validator} from '@app/api/Validator';
 import {ChannelIdParam, GuildIdParam, InviteCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
@@ -35,7 +36,7 @@ export function InviteController(app: HonoApp) {
 			const inviteCode = createInviteCode(ctx.req.valid('param').invite_code);
 			const inviteRequestService = ctx.get('inviteRequestService');
 			const requestCache = ctx.get('requestCache');
-			return ctx.json(await inviteRequestService.getInvite({inviteCode, requestCache}));
+			return ctx.json(await inviteRequestService.getInvite({inviteCode, requestCache, userId: ctx.get('user')?.id}));
 		},
 	);
 	app.post(
@@ -59,7 +60,12 @@ export function InviteController(app: HonoApp) {
 			const inviteCode = createInviteCode(ctx.req.valid('param').invite_code);
 			const inviteRequestService = ctx.get('inviteRequestService');
 			const requestCache = ctx.get('requestCache');
-			const invite = await inviteRequestService.acceptInvite({userId, inviteCode, requestCache});
+			const invite = await inviteRequestService.acceptInvite({
+				userId,
+				inviteCode,
+				requestCache,
+				tierContext: tierContextFrom(ctx),
+			});
 			return ctx.json(invite);
 		},
 	);

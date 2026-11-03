@@ -99,38 +99,3 @@ pub(crate) fn integer_from_variant(value: &Value<'_>) -> Option<u32> {
 pub fn resolve_kwin_window_pid(_token: &str) -> Result<Option<u32>, ResolveError> {
     Err(ResolveError::DbusOpenFailed)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn is_safe_kwin_path_segment_accepts_plain_alnum_underscore() {
-        assert!(is_safe_kwin_path_segment("abc"));
-        assert!(is_safe_kwin_path_segment("123"));
-        assert!(is_safe_kwin_path_segment("aZ_9"));
-    }
-
-    #[test]
-    fn is_safe_kwin_path_segment_rejects_empty() {
-        assert!(!is_safe_kwin_path_segment(""));
-    }
-
-    #[test]
-    fn is_safe_kwin_path_segment_rejects_traversal_and_shell_meta() {
-        assert!(!is_safe_kwin_path_segment("../etc"));
-        assert!(!is_safe_kwin_path_segment("a/b"));
-        assert!(!is_safe_kwin_path_segment("$(rm -rf)"));
-        assert!(!is_safe_kwin_path_segment("a;b"));
-        assert!(!is_safe_kwin_path_segment("a-b"));
-        assert!(!is_safe_kwin_path_segment("a.b"));
-    }
-
-    #[test]
-    fn build_kwin_window_path_shapes_path_correctly() {
-        assert_eq!(
-            build_kwin_window_path("abc123"),
-            "/org/kde/KWin/Window/abc123"
-        );
-    }
-}

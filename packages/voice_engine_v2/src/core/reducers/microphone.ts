@@ -139,23 +139,26 @@ function setLocalAudioDeafen(snapshot: VoiceEngineV2Snapshot, deafened: boolean)
 	assert.ok(snapshot != null, 'setLocalAudioDeafen snapshot must not be null');
 	assert.equal(typeof deafened, 'boolean', 'setLocalAudioDeafen deafened must be a boolean');
 	const current = snapshot.audioControls;
-	const controls: VoiceEngineV2AudioControls = deafened
-		? {
-				...current,
-				locallyMuted: true,
-				locallyDeafened: true,
-				hasUserSetDeaf: true,
-				shouldUnmuteOnUndeafen: !current.locallyMuted && !current.mutedByPermission,
-			}
-		: {
-				...current,
-				locallyMuted: current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.locallyMuted,
-				preferredLocallyMuted:
-					current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.preferredLocallyMuted,
-				locallyDeafened: false,
-				hasUserSetDeaf: true,
-				shouldUnmuteOnUndeafen: false,
-			};
+	let controls: VoiceEngineV2AudioControls;
+	if (deafened) {
+		controls = {
+			...current,
+			locallyMuted: true,
+			locallyDeafened: true,
+			hasUserSetDeaf: true,
+			shouldUnmuteOnUndeafen: !current.locallyMuted && !current.mutedByPermission,
+		};
+	} else {
+		controls = {
+			...current,
+			locallyMuted: current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.locallyMuted,
+			preferredLocallyMuted:
+				current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.preferredLocallyMuted,
+			locallyDeafened: false,
+			hasUserSetDeaf: true,
+			shouldUnmuteOnUndeafen: false,
+		};
+	}
 	return planMicrophoneEnabled({...snapshot, audioControls: controls});
 }
 

@@ -39,6 +39,20 @@ export const ReportStepEmail: React.FC<Props> = ({
 	const {i18n} = useLingui();
 	const normalizedEmail = email.trim();
 	const emailLooksValid = normalizedEmail.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+	const emailLabel = i18n._(EMAIL_ADDRESS_DESCRIPTOR);
+	let submitLabel: React.ReactNode;
+	if (verified) {
+		submitLabel = i18n._(CONTINUE_DESCRIPTOR);
+	} else if (resendCooldownSeconds > 0) {
+		submitLabel = (
+			<ResendCooldownLabel
+				resendCooldownSeconds={resendCooldownSeconds}
+				data-flx="moderation.report.report-step-email.resend-cooldown-label"
+			/>
+		);
+	} else {
+		submitLabel = <Trans>Send verification code</Trans>;
+	}
 	return (
 		<div className={styles.card} data-flx="moderation.report.report-step-email.card">
 			<header className={styles.cardHeader} data-flx="moderation.report.report-step-email.card-header">
@@ -46,7 +60,7 @@ export const ReportStepEmail: React.FC<Props> = ({
 					<Trans>Step 2</Trans>
 				</p>
 				<h1 className={styles.title} data-flx="moderation.report.report-step-email.title">
-					<Trans>Verify your email</Trans>
+					<Trans>Confirm your email</Trans>
 				</h1>
 				<p className={styles.description} data-flx="moderation.report.report-step-email.description">
 					<Trans>We'll send a short code to confirm you can receive updates about this report.</Trans>
@@ -72,7 +86,7 @@ export const ReportStepEmail: React.FC<Props> = ({
 					data-flx="moderation.report.report-step-email.form.prevent-default"
 				>
 					<Input
-						label={i18n._(EMAIL_ADDRESS_DESCRIPTOR)}
+						label={emailLabel}
 						type="email"
 						dir="ltr"
 						value={email}
@@ -90,16 +104,7 @@ export const ReportStepEmail: React.FC<Props> = ({
 							className={styles.actionButton}
 							data-flx="moderation.report.report-step-email.action-button.submit"
 						>
-							{verified ? (
-								i18n._(CONTINUE_DESCRIPTOR)
-							) : resendCooldownSeconds > 0 ? (
-								<ResendCooldownLabel
-									resendCooldownSeconds={resendCooldownSeconds}
-									data-flx="moderation.report.report-step-email.resend-cooldown-label"
-								/>
-							) : (
-								<Trans>Send verification code</Trans>
-							)}
+							{submitLabel}
 						</Button>
 						<Button
 							variant="secondary"

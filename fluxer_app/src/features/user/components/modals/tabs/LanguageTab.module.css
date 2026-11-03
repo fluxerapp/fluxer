@@ -14,6 +14,10 @@
 	line-height: 1.35;
 }
 
+.noticeText + .noticeText {
+	margin-top: var(--spacing-2);
+}
+
 .link {
 	color: var(--text-link);
 	text-decoration: underline;
@@ -219,7 +223,8 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 0.25rem;
-	padding: 0.25rem 0.5rem 0.25rem 0.625rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.625rem 0.5rem;
 	border-radius: 62.4375rem;
 	background: var(--background-modifier-accent);
 	color: var(--text-primary);

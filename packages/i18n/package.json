@@ -14,6 +14,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@fluxer/constants": "workspace:*",
+		"@fluxer/record_utils": "workspace:*",
 		"@messageformat/core": "catalog:",
 		"@messageformat/parser": "catalog:"
 	},

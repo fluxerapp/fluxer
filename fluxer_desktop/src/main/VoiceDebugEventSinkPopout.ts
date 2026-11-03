@@ -2,7 +2,8 @@
 
 import type {DesktopVoiceDebugEventSinkEntry} from '@electron/common/Types';
 import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
-import {focusWindow} from '@electron/main/Window';
+import {focusWindow, isAliveWindow} from '@electron/main/Window';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {BrowserWindow, ipcMain} from 'electron';
 import log from 'electron-log';
 
@@ -263,14 +264,6 @@ let eventSinkEntries: Array<DesktopVoiceDebugEventSinkEntry> = [];
 let eventSinkStatsHtml = '';
 let pendingPopoutEntries: Array<DesktopVoiceDebugEventSinkEntry> = [];
 let flushTimer: NodeJS.Timeout | null = null;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
-
-function isAliveWindow(window: BrowserWindow | null): window is BrowserWindow {
-	return Boolean(window && !window.isDestroyed());
-}
 
 function truncateLine(line: string): string {
 	if (line.length <= VOICE_DEBUG_EVENT_SINK_MAX_LINE_CHARS) return line;

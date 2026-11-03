@@ -92,10 +92,16 @@ function formatFileDiagnostic(diagnostic) {
 function directoryDiagnostic(dirPath) {
 	if (!dirPath) return {path: null, ok: false, error: 'not resolved', entries: [], total: 0, omitted: 0};
 	try {
-		const entries = readdirSync(dirPath, {withFileTypes: true}).map((entry) => ({
-			name: entry.name,
-			type: entry.isDirectory() ? 'directory' : entry.isFile() ? 'file' : 'other',
-		}));
+		const entries = readdirSync(dirPath, {withFileTypes: true}).map((entry) => {
+			const name = entry.name;
+			let type = 'other';
+			if (entry.isDirectory()) {
+				type = 'directory';
+			} else if (entry.isFile()) {
+				type = 'file';
+			}
+			return {name, type};
+		});
 		entries.sort((a, b) => a.name.localeCompare(b.name));
 		const visible = entries.slice(0, MAX_DIRECTORY_ENTRIES);
 		return {
@@ -306,13 +312,14 @@ function windowsImportProbe(nativePath) {
 function dependencyProbe(nativePath) {
 	if (!nativePath || !existsSync(nativePath)) return null;
 	if (process.platform === 'win32') return windowsImportProbe(nativePath);
-	const command =
-		process.platform === 'linux'
-			? ['ldd', nativePath]
-			: process.platform === 'darwin'
-				? ['otool', '-L', nativePath]
-				: null;
-	if (!command) return null;
+	let command;
+	if (process.platform === 'linux') {
+		command = ['ldd', nativePath];
+	} else if (process.platform === 'darwin') {
+		command = ['otool', '-L', nativePath];
+	} else {
+		return null;
+	}
 	const [bin, ...args] = command;
 	const result = spawnSync(bin, args, {
 		encoding: 'utf8',
@@ -342,11 +349,14 @@ function dependencyProbe(nativePath) {
 
 function formatDependencyProbe(diagnostic) {
 	if (!diagnostic) return null;
-	const status = diagnostic.error
-		? `error=${diagnostic.error}`
-		: diagnostic.signal
-			? `signal=${diagnostic.signal}`
-			: `status=${diagnostic.status}`;
+	let status;
+	if (diagnostic.error) {
+		status = `error=${diagnostic.error}`;
+	} else if (diagnostic.signal) {
+		status = `signal=${diagnostic.signal}`;
+	} else {
+		status = `status=${diagnostic.status}`;
+	}
 	return [
 		`$ ${diagnostic.command.join(' ')}`,
 		status,
@@ -462,10 +472,10 @@ function createNativeLoadError({
 	return error;
 }
 
-function resolveProbeTimeoutMs(explicitTimeoutMs) {
+function resolveProbeTimeoutMs() {
 	const configured = Number.parseInt(process.env[PROBE_TIMEOUT_ENV] ?? '', 10);
 	if (Number.isFinite(configured) && configured > 0) return configured;
-	return explicitTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS;
+	return DEFAULT_PROBE_TIMEOUT_MS;
 }
 
 function probeReachedRequire(result) {
@@ -552,7 +562,7 @@ function recordProbePass(nativePath) {
 	}
 }
 
-function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs}) {
+function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv}) {
 	if (!skipNativeProbeEnv || process.env[skipNativeProbeEnv] === '1') {
 		return null;
 	}
@@ -566,18 +576,21 @@ function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skip
 		env: {...process.env, ELECTRON_RUN_AS_NODE: '1', [skipNativeProbeEnv]: '1'},
 		encoding: 'utf8',
 		stdio: ['ignore', 'pipe', 'pipe'],
-		timeout: resolveProbeTimeoutMs(timeoutMs),
+		timeout: resolveProbeTimeoutMs(),
 	});
 	if (result.status === 0) {
 		recordProbePass(nativePath);
 		return null;
 	}
 	if (!probeReachedRequire(result)) return null;
-	const reason = result.error
-		? result.error.message
-		: result.signal
-			? `safety probe terminated by signal ${result.signal}`
-			: `safety probe exited with code ${result.status}`;
+	let reason;
+	if (result.error) {
+		reason = result.error.message;
+	} else if (result.signal) {
+		reason = `safety probe terminated by signal ${result.signal}`;
+	} else {
+		reason = `safety probe exited with code ${result.status}`;
+	}
 	const probeStdout = trimText(stripProbeMarker(result.stdout));
 	return createNativeLoadError({
 		moduleName,
@@ -633,11 +646,4 @@ function loadNativeBinding({moduleName, nativePath, nativeRoot, packageDir, skip
 	}
 }
 
-module.exports = {
-	collectNativeDiagnostics,
-	createNativeLoadError,
-	formatNativeDiagnostics,
-	isNativeLoadError,
-	loadNativeBinding,
-	probeNativeBinary,
-};
+module.exports = {createNativeLoadError, loadNativeBinding};

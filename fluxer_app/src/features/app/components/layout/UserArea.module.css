@@ -146,8 +146,8 @@
 	transform: translate3d(0, 107%, 0);
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 }
 
 .forceHover .defaultState {
@@ -198,7 +198,7 @@
 	align-items: center;
 	gap: var(--spacing-1);
 	flex-shrink: 0;
-	padding-left: var(--spacing-3);
+	padding-inline-start: var(--spacing-3);
 }
 
 .controlButton {

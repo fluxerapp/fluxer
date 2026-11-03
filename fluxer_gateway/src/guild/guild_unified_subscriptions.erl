@@ -1,13 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_unified_subscriptions).
+
 -typing([eqwalizer]).
 
 -export([handle_subscriptions/3, replay_guild_subscription/6]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -type session_state() :: map().
 -type session_id() :: binary() | undefined.
@@ -103,6 +100,33 @@ maybe_process_guild(GuildId, GuildSubData, Guilds, SessionId, SocketPid, Session
 ) ->
     ok.
 process_guild_sub_options(GuildId, GuildPid, GuildSubData, SessionId, SocketPid, SessionState) ->
+    case maps:is_key(GuildId, maps:get(visits, SessionState, #{})) of
+        true ->
+            process_visitor_focus(GuildSubData, GuildPid, SessionId);
+        false ->
+            process_member_sub_options(
+                GuildId, GuildPid, GuildSubData, SessionId, SocketPid, SessionState
+            )
+    end.
+
+-spec process_visitor_focus(map(), pid(), session_id()) -> ok.
+process_visitor_focus(GuildSubData, GuildPid, SessionId) when is_binary(SessionId) ->
+    case maps:find(<<"focused_channel_id">>, GuildSubData) of
+        {ok, Value} ->
+            ChannelId = snowflake_id:parse_maybe(Value),
+            _ = shard_utils:safe_cast(GuildPid, {visitor_focus, SessionId, ChannelId}),
+            ok;
+        error ->
+            ok
+    end;
+process_visitor_focus(_GuildSubData, _GuildPid, _SessionId) ->
+    ok.
+
+-spec process_member_sub_options(
+    integer(), pid(), map(), session_id(), pid() | undefined, session_state()
+) ->
+    ok.
+process_member_sub_options(GuildId, GuildPid, GuildSubData, SessionId, SocketPid, SessionState) ->
     WasActive = not session_passive:is_passive(GuildId, SessionState),
     ActiveChanged = process_active_flag(GuildSubData, GuildPid, SessionId, WasActive),
     process_sync_flag(GuildSubData, GuildId, GuildPid, SessionId, ActiveChanged),
@@ -116,9 +140,7 @@ process_guild_sub_options(GuildId, GuildPid, GuildSubData, SessionId, SocketPid,
 process_thread_subscriptions(GuildSubData, GuildPid, SessionId, SessionState) when
     is_binary(SessionId)
 ->
-    Capable =
-        maps:get(bot, SessionState, false) =:= true orelse
-            maps:get(thread_channels_capable, SessionState, false) =:= true,
+    Capable = session_thread_backstop:capable(SessionState),
     Threads =
         case maps:get(<<"threads">>, GuildSubData, undefined) of
             Flag when is_boolean(Flag) -> Flag;
@@ -290,40 +312,3 @@ process_typing_flag(GuildSubData, GuildPid, SessionId) ->
         _ ->
             ok
     end.
-
--ifdef(TEST).
-
-parse_ranges_invalid_test() ->
-    ?assertEqual([], parse_ranges([[100, 50]])),
-    ?assertEqual([], parse_ranges([[-1, 99]])),
-    ?assertEqual([], parse_ranges([[<<"0">>, 99]])),
-    ?assertEqual([], parse_ranges([[0, 100]])),
-    ?assertEqual([], parse_ranges([[0, 100001]])).
-
-parse_ranges_caps_at_max_test() ->
-    Ranges = [[I * 100, I * 100 + 99] || I <- lists:seq(0, 14)],
-    Parsed = parse_ranges(Ranges),
-    ?assertEqual(?MAX_RANGES_PER_CHANNEL, length(Parsed)).
-
-parse_ranges_under_cap_keeps_all_test() ->
-    Ranges = [[0, 99], [100, 199], [200, 299]],
-    Parsed = parse_ranges(Ranges),
-    ?assertEqual(3, length(Parsed)).
-
-thread_keys_are_forwarded_only_for_capable_sessions_test() ->
-    Sub = #{<<"threads">> => true, <<"thread_member_lists">> => [<<"5">>, <<"x">>]},
-    ok = process_thread_subscriptions(Sub, self(), <<"s">>, #{}),
-    ok = process_thread_subscriptions(Sub, self(), <<"s">>, #{thread_channels_capable => true}),
-    receive
-        {'$gen_cast', {thread_subscriptions, <<"s">>, Subs}} ->
-            ?assertEqual(#{threads => true, member_lists => [5]}, Subs)
-    after 1000 -> ?assert(false)
-    end,
-    ok = process_thread_subscriptions(#{<<"active">> => true}, self(), <<"s">>, #{bot => true}),
-    receive
-        {'$gen_cast', {thread_subscriptions, _, _}} = Unexpected ->
-            ?assertEqual(none, Unexpected)
-    after 100 -> ok
-    end.
-
--endif.

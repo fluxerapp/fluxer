@@ -54,8 +54,8 @@ message AccessibilitySettings {
   optional bool show_stickers_in_autocomplete = 40;
   optional bool show_memes_in_autocomplete = 41;
 
-  reserved 42, 43;
-  reserved "attachment_media_dimension_size", "embed_media_dimension_size";
+  reserved 42, 43, 65;
+  reserved "attachment_media_dimension_size", "embed_media_dimension_size", "double_click_message_actions";
 
   optional bool voice_channel_join_requires_double_click = 44;
   optional string custom_theme_css = 45;
@@ -78,6 +78,7 @@ message AccessibilitySettings {
   optional bool dim_strikethrough_text = 62;
   optional bool sequential_file_send = 63;
   optional bool mobile_splash_zoom_animation = 64;
+  optional bool message_double_click_actions = 66;
 }
 
 message AccessibilityOverrides {

@@ -3,7 +3,7 @@ import {lstat, opendir, readlink} from 'node:fs/promises';
 import path from 'node:path';
 import type {Readable} from 'node:stream';
 import {finished, pipeline} from 'node:stream/promises';
-import {type Archiver, type EntryData, ZipArchive} from 'archiver';
+import type {Archiver, EntryData} from 'archiver';
 
 export interface ArchiveEntryWriter {
 	append(source: Readable | Buffer | string, data: EntryData): Promise<void>;
@@ -27,6 +27,7 @@ export async function writeZipArchive(
 	filePath: string,
 	produce: (archive: ArchiveFileWriter) => void | Promise<void>,
 ): Promise<void> {
+	const {ZipArchive} = await import('archiver');
 	const archive: Archiver = new ZipArchive({zlib: {level: 6}});
 	const output = createWriteStream(filePath);
 	const outputClosed = new Promise<void>((resolve) => output.once('close', resolve));

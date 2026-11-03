@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
+import {compareText} from '@app/api/utils/StringComparison';
 import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface VoiceRegionPreference {
@@ -201,16 +202,6 @@ function hashSelectionKey(selectionKey: string): number {
 		hash = Math.imul(hash, 0x01000193);
 	}
 	return hash >>> 0;
-}
-
-function compareText(left: string, right: string): number {
-	if (left < right) {
-		return -1;
-	}
-	if (left > right) {
-		return 1;
-	}
-	return 0;
 }
 
 function compareVoiceServers(left: VoiceServerRecord, right: VoiceServerRecord): number {

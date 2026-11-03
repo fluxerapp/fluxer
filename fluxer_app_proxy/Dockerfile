@@ -40,6 +40,8 @@ COPY packages/desktop_ipc/package.json ./packages/desktop_ipc/
 COPY packages/geo_utils/package.json ./packages/geo_utils/
 COPY packages/instance_bootstrap/package.json ./packages/instance_bootstrap/
 COPY packages/limits/package.json ./packages/limits/
+COPY packages/number_utils/package.json ./packages/number_utils/
+COPY packages/record_utils/package.json ./packages/record_utils/
 COPY packages/schema/package.json ./packages/schema/
 COPY packages/snowflake/package.json ./packages/snowflake/
 COPY packages/voice_engine_v2/package.json ./packages/voice_engine_v2/
@@ -54,6 +56,8 @@ COPY packages/desktop_ipc/ ./packages/desktop_ipc/
 COPY packages/geo_utils/ ./packages/geo_utils/
 COPY packages/instance_bootstrap/ ./packages/instance_bootstrap/
 COPY packages/limits/ ./packages/limits/
+COPY packages/number_utils/ ./packages/number_utils/
+COPY packages/record_utils/ ./packages/record_utils/
 COPY packages/schema/ ./packages/schema/
 COPY packages/snowflake/ ./packages/snowflake/
 COPY packages/voice_engine_v2/ ./packages/voice_engine_v2/
@@ -149,8 +153,8 @@ LABEL org.opencontainers.image.title="fluxer-app-proxy"
 LABEL org.opencontainers.image.description="Fluxer web app and edge proxy"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 LABEL org.opencontainers.image.vendor="Fluxer"
-LABEL org.opencontainers.image.url="https://fluxer.app"
-LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.url="https://fluxer.com"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.com"
 LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
 LABEL org.opencontainers.image.revision="${SOURCE_SHA}"

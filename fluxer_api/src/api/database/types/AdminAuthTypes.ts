@@ -2,18 +2,16 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 
-type Nullish<T> = T | null;
-
 export interface AdminApiKeyRow {
 	key_id: bigint;
 	key_hash: string;
 	name: string;
 	created_by_user_id: UserID;
 	created_at: Date;
-	last_used_at: Nullish<Date>;
-	expires_at: Nullish<Date>;
+	last_used_at: Date | null;
+	expires_at: Date | null;
 	version: number;
-	acls: Nullish<Set<string>>;
+	acls: Set<string> | null;
 }
 
 export interface AdminApiKeyByCreatorRow {
@@ -21,10 +19,10 @@ export interface AdminApiKeyByCreatorRow {
 	key_id: bigint;
 	created_at: Date;
 	name: string;
-	expires_at: Nullish<Date>;
-	last_used_at: Nullish<Date>;
+	expires_at: Date | null;
+	last_used_at: Date | null;
 	version: number;
-	acls: Nullish<Set<string>>;
+	acls: Set<string> | null;
 }
 
 export const ADMIN_API_KEY_COLUMNS = [

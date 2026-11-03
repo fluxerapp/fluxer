@@ -40,27 +40,17 @@ export function AuditLogAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const {q, admin_user_id, target_type, target_id, access, sort_by, sort_order, limit, offset} =
 				ctx.req.valid('query');
-			const response =
-				q === undefined
-					? await adminService.auditService.listAuditLogs({
-							admin_user_id,
-							target_type,
-							target_id,
-							access,
-							limit,
-							offset,
-						})
-					: await adminService.auditService.searchAuditLogs({
-							query: q,
-							admin_user_id,
-							target_type,
-							target_id,
-							access,
-							sort_by,
-							sort_order,
-							limit,
-							offset,
-						});
+			const response = await adminService.auditService.searchAuditLogs({
+				query: q,
+				admin_user_id,
+				target_type,
+				target_id,
+				access,
+				sort_by: q === undefined ? undefined : sort_by,
+				sort_order: q === undefined ? undefined : sort_order,
+				limit,
+				offset,
+			});
 			await recordAdminRead(ctx, {
 				targetType: 'audit_log',
 				targetId: 0n,

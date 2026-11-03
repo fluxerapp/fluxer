@@ -3,12 +3,15 @@
 import {exceedsDispatchBufferCapacity} from '@app/features/gateway/transport/GatewayDispatchBufferBounds';
 import {
 	type GatewayDispatchDelivery,
+	type GatewayHandoffSeed,
 	type GatewaySocket,
 	MAX_GATEWAY_AUTH_TOKEN_LENGTH,
 } from '@app/features/gateway/transport/GatewaySocket';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
 const logger = new Logger('ForegroundDemotionHandover');
+
+export const GATEWAY_HANDOFF_CLOSE_CODE = 4901;
 
 interface ActiveForegroundDemotion {
 	readonly accountKey: string;
@@ -36,7 +39,7 @@ export interface ForegroundDemotionRestore {
 	readonly canRestore: boolean;
 }
 
-export interface ForegroundDemotionRetire {
+interface ForegroundDemotionRetire {
 	readonly outcome: 'retire';
 }
 
@@ -107,22 +110,22 @@ export class ForegroundDemotionHandover {
 		});
 	}
 
-	async consume(accountKey: string): Promise<boolean> {
+	async finish(accountKey: string): Promise<GatewayHandoffSeed | null> {
 		const active = this.activeForAccount(accountKey);
 		if (active === null) {
-			return false;
+			return null;
 		}
+		const seed = active.socket.closeForHandoff(GATEWAY_HANDOFF_CLOSE_CODE, 'handoff');
 		try {
 			await this.persistLatestRetiringToken(active);
 		} catch (error) {
-			active.socket.reset(true);
 			this.release(active);
 			logger.error('Failed to persist a foreground gateway token rotation during demotion', error);
-			return false;
+			return null;
 		}
-		if (!this.canContinue(active)) {
+		if (active.overflowed) {
 			this.release(active);
-			return false;
+			return null;
 		}
 		for (const delivery of active.deliveries) {
 			if (!active.socket.isDispatchActive(delivery.receipt)) {
@@ -131,14 +134,14 @@ export class ForegroundDemotionHandover {
 			try {
 				this.host.applySnapshotDispatch(active.accountKey, active.expectedUserId, delivery);
 			} catch (error) {
-				active.socket.failDispatchProcessing(delivery.receipt, error);
+				logger.warn('Failed to apply a buffered dispatch to the demoted snapshot', error);
 				this.release(active);
-				return false;
+				return null;
 			}
 			active.socket.completeDispatchProcessing(delivery.receipt);
 		}
 		this.release(active);
-		return this.canContinue(active);
+		return seed;
 	}
 
 	async rollback(accountKey: string): Promise<ForegroundDemotionRollback | null> {

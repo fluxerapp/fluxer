@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createHash, timingSafeEqual} from 'node:crypto';
+import {createHash} from 'node:crypto';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {Config} from '@app/api/Config';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
+import {constantTimeEquals} from '@app/api/utils/SecretHash';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {getSameIpDecisionKey, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
@@ -27,12 +28,11 @@ export interface RouteRateLimitConfig {
 }
 
 const TEST_ENABLE_RATE_LIMITS_HEADER = 'x-fluxer-test-enable-rate-limits';
-const TEST_GLOBAL_RATE_LIMIT_OVERRIDE_HEADER = 'x-fluxer-test-global-rate-limit';
 const INTERNAL_KEY_HEADER = 'x-fluxer-internal-key';
 const FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-client-ip';
 const LEGACY_FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-donor-ip';
 
-function shouldEnforceRateLimits(ctx: Context<HonoEnv>): boolean {
+export function shouldEnforceRateLimits(ctx: Context<HonoEnv>): boolean {
 	if (!Config.dev.testModeEnabled) {
 		return !Config.dev.disableRateLimits;
 	}
@@ -58,32 +58,29 @@ function shouldShowHeadersOnSuccess(accountType: AccountType): boolean {
 	return accountType === 'bot' || accountType === 'webhook';
 }
 
-function keysMatch(expectedKey: string, providedKey: string): boolean {
-	const expectedBuffer = Buffer.from(expectedKey);
-	const providedBuffer = Buffer.from(providedKey);
-	if (expectedBuffer.length !== providedBuffer.length) return false;
-	return timingSafeEqual(expectedBuffer, providedBuffer);
-}
-
 function isTrustedCallerForBucket(ctx: Context<HonoEnv>, bucket: string): boolean {
 	const providedKey = ctx.req.header(INTERNAL_KEY_HEADER);
 	if (!providedKey) return false;
 	let trusted = false;
 	for (const caller of Config.internal.trustedCallers) {
 		if (!caller.buckets.includes(bucket)) continue;
-		if (keysMatch(caller.key, providedKey)) trusted = true;
+		if (constantTimeEquals(caller.key, providedKey)) trusted = true;
 	}
 	return trusted;
 }
 
-function getForwardedClientIdentifier(ctx: Context<HonoEnv>, bucket: string): string | null {
+export function getTrustedForwardedClientIp(ctx: Context<HonoEnv>, bucket: string): string | null {
 	if (!isTrustedCallerForBucket(ctx, bucket)) return null;
 	const rawHeader = ctx.req.header(FORWARDED_CLIENT_IP_HEADER) ?? ctx.req.header(LEGACY_FORWARDED_CLIENT_IP_HEADER);
 	const headerValue = rawHeader?.split(',', 1)[0].trim();
 	if (!headerValue) return null;
-	const clientIp = parseIpAddress(headerValue);
+	return parseIpAddress(headerValue)?.normalized ?? null;
+}
+
+function getForwardedClientIdentifier(ctx: Context<HonoEnv>, bucket: string): string | null {
+	const clientIp = getTrustedForwardedClientIp(ctx, bucket);
 	if (!clientIp) return null;
-	return `ip:${getSameIpDecisionKey(clientIp.normalized) ?? clientIp.normalized}`;
+	return `ip:${getSameIpDecisionKey(clientIp) ?? clientIp}`;
 }
 
 function getClientIdentifier(ctx: Context<HonoEnv>, routeConfig: RouteRateLimitConfig): string {
@@ -115,15 +112,6 @@ async function getRequestEmailIdentifier(ctx: Context<HonoEnv>): Promise<string 
 }
 
 function getGlobalRateLimit(ctx: Context<HonoEnv>): number {
-	if (Config.dev.testModeEnabled) {
-		const override = ctx.req.header(TEST_GLOBAL_RATE_LIMIT_OVERRIDE_HEADER);
-		if (override) {
-			const parsed = Number.parseInt(override, 10);
-			if (Number.isFinite(parsed) && parsed > 0) {
-				return parsed;
-			}
-		}
-	}
 	const user = ctx.get('user');
 	if (user?.flags && (user.flags & UserFlags.HIGH_GLOBAL_RATE_LIMIT) !== 0n) {
 		return 1200;
@@ -218,11 +206,7 @@ export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): Middlewa
 			}
 		}
 		const bucket = resolveBucket(routeConfig.bucket, clientId, ctx);
-		const bucketConfigWithAlgorithm: BucketConfig = {
-			...routeConfig.config,
-			algorithm: 'leaky_bucket',
-		};
-		const bucketResult = await rateLimitService.checkBucketLimit(bucket, bucketConfigWithAlgorithm);
+		const bucketResult = await rateLimitService.checkBucketLimit(bucket, routeConfig.config);
 		if (!bucketResult.allowed) {
 			throw new RateLimitError({
 				retryAfter: getRetryAfterSeconds(bucketResult),
@@ -240,7 +224,7 @@ export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): Middlewa
 			if (emailIdentifier) {
 				const emailBucketResult = await rateLimitService.checkBucketLimit(
 					resolveBucket(emailBucketConfig.bucket, emailIdentifier, ctx),
-					{...emailBucketConfig.config, algorithm: 'leaky_bucket'},
+					emailBucketConfig.config,
 				);
 				if (!emailBucketResult.allowed) {
 					throw new RateLimitError({

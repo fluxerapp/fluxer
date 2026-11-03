@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import styles from '@app/features/voice/components/PiPOverlay.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 const BACK_TO_CALL_DESCRIPTOR = msg({

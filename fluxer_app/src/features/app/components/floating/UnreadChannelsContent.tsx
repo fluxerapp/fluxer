@@ -43,6 +43,7 @@ import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scrolle
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
@@ -410,6 +411,7 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 	const hasMoreUnreadThanShown =
 		oldestUnreadMessageId != null && unreadCount > 0 && unreadCount > previewMessages.length;
 	const spammerOverrideVersion = LocalUserSpamOverride.version;
+	const hideBlocked = AdvancedSettings.hideBlockedMessages;
 	useEffect(() => {
 		if (previewMessages.length === 0) return;
 		void ensureMembersForMessages(previewMessages);
@@ -425,8 +427,16 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 			messages: previewMessageState,
 			oldestUnreadMessageId,
 			treatSpam: true,
+			hideBlocked,
 		});
-	}, [channel, previewMessageState, previewMessages.length, oldestUnreadMessageId, spammerOverrideVersion]);
+	}, [
+		channel,
+		previewMessageState,
+		previewMessages.length,
+		oldestUnreadMessageId,
+		spammerOverrideVersion,
+		hideBlocked,
+	]);
 	const handleJumpToMessage = useCallback(
 		(messageId: string) => {
 			goToMessage(channel.id, messageId);

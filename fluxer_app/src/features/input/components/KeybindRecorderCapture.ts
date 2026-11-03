@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
 import type {GlobalKeyEvent, GlobalShortcutCaptureEvent, GlobalShortcutsApi} from '@app/types/electron.d';
 
 const GLOBAL_KEY_NAME_ALIASES: Readonly<Record<string, string>> = {
@@ -145,8 +146,6 @@ const NORMALIZED_CODE_NAMES = new Set([
 	'MetaRight',
 ]);
 
-const isMacPlatform = (): boolean => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-
 const normalizeGlobalKeyName = (rawKeyName: string): string | null => {
 	const raw = rawKeyName.trim();
 	if (!raw) return null;
@@ -184,7 +183,7 @@ const keyForGlobalCode = (code: string, shiftKey: boolean): string => {
 	return GLOBAL_CODE_TO_KEY[code] ?? code;
 };
 
-const modifierStateToCombo = (
+export const modifierStateToCombo = (
 	event: Pick<GlobalKeyEvent, 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'>,
 ): Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'> => {
 	const mac = isMacPlatform();

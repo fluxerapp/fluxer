@@ -27,26 +27,32 @@ import {
 	type TemplateCreateFormInputs,
 	type TemplateImportFormInputs,
 	type TemplateJsonFormInputs,
+	THE_OTHER_PLATFORM_TEMPLATE_NOT_FOUND_DESCRIPTOR,
+	THE_OTHER_PLATFORM_TEMPLATE_RATE_LIMITED_DESCRIPTOR,
+	THE_OTHER_PLATFORM_TEMPLATE_UNREADABLE_DESCRIPTOR,
 	THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
 import {CREATE_COMMUNITY_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
+import {OtherPlatformTemplateFetchFailure} from '@fluxer/desktop_ipc/src/OtherPlatformTemplateContract';
 import type {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useContext, useEffect, useId, useMemo, useState} from 'react';
+import {useCallback, useContext, useEffect, useId, useMemo, useRef, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import * as v from 'valibot';
 
@@ -71,7 +77,7 @@ const OverwriteType = v.pipe(
 		return value;
 	}),
 );
-const TemplateChannelSchema = v.object({
+const TemplateChannelSchema = v.looseObject({
 	id: TemplateEntityId,
 	type: v.number(),
 	name: v.nullish(v.string(), ''),
@@ -81,9 +87,9 @@ const TemplateChannelSchema = v.object({
 	bitrate: v.nullish(v.number()),
 	user_limit: v.nullish(v.number()),
 	voice_connection_limit: v.nullish(v.number()),
-	nsfw: v.optional(v.boolean()),
-	rate_limit_per_user: v.optional(v.number()),
-	permission_overwrites: v.optional(
+	nsfw: v.nullish(v.boolean()),
+	rate_limit_per_user: v.nullish(v.number()),
+	permission_overwrites: v.nullish(
 		v.array(v.object({id: TemplateEntityId, type: OverwriteType, allow: PermissionBitfield, deny: PermissionBitfield})),
 	),
 });
@@ -116,6 +122,9 @@ const GuildTemplateResponseSchema = v.object({
 });
 
 type TemplateImportStep = 'url' | 'json' | 'create';
+type TemplateResponseOutcome = 'applied' | 'invalid';
+
+const logger = new Logger('TemplateImportForm');
 
 const TEMPLATE_IMPORT_STEP_ORDER: ReadonlyArray<TemplateImportStep> = ['url', 'json', 'create'];
 const TEMPLATE_STATS_DESCRIPTOR = msg({
@@ -123,6 +132,18 @@ const TEMPLATE_STATS_DESCRIPTOR = msg({
 		'{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}',
 	comment:
 		'Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.',
+});
+const TEMPLATE_STATS_WITH_FORUMS_DESCRIPTOR = msg({
+	message:
+		'{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}',
+	comment:
+		'Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.',
+});
+const COULDN_T_LOAD_THE_TEMPLATE_AUTOMATICALLY_DESCRIPTOR = msg({
+	message:
+		"Couldn't load the template automatically. Open the link below in your browser, then copy the entire JSON response and paste it into the box.",
+	comment:
+		'Instructions in the desktop app import-template flow shown when looking up the template directly failed, so the user has to fetch the JSON in a browser and paste it instead. "JSON" must not be translated.',
 });
 const IMAGE_COULDN_T_BE_USED_DESCRIPTOR = msg({
 	message: "Image couldn't be used",
@@ -139,6 +160,9 @@ export const TemplateImportForm = observer(() => {
 	const [apiUrl, setApiUrl] = useState<string | null>(null);
 	const [templateData, setTemplateData] = useState<TemplateSerializedGuild | null>(null);
 	const [templateName, setTemplateName] = useState<string | null>(null);
+	const [loadedDirectly, setLoadedDirectly] = useState(false);
+	const [directLoadFailed, setDirectLoadFailed] = useState(false);
+	const lookupInFlightRef = useRef(false);
 	const urlForm = useForm<TemplateImportFormInputs>({defaultValues: {url: ''}});
 	const jsonForm = useForm<TemplateJsonFormInputs>({defaultValues: {json: ''}});
 	const createForm = useForm<TemplateCreateFormInputs>({defaultValues: {name: ''}});
@@ -146,23 +170,86 @@ export const TemplateImportForm = observer(() => {
 	const urlFormId = useId();
 	const jsonFormId = useId();
 	const createFormId = useId();
+	const applyTemplateResponse = useCallback(
+		(json: unknown): TemplateResponseOutcome => {
+			const parsed = v.safeParse(GuildTemplateResponseSchema, json);
+			if (!parsed.success) return 'invalid';
+			setTemplateData(parsed.output.serialized_source_guild);
+			setTemplateName(parsed.output.name);
+			createForm.setValue('name', parsed.output.serialized_source_guild.name);
+			return 'applied';
+		},
+		[createForm],
+	);
+	const fallBackToPaste = useCallback((code: string, directLoadAttempted: boolean) => {
+		setApiUrl(`https://discord.com/api/guilds/templates/${code}`);
+		setLoadedDirectly(false);
+		setDirectLoadFailed(directLoadAttempted);
+		setStep('json');
+	}, []);
 	const handleResolveUrl = useCallback(
-		(data: TemplateImportFormInputs) => {
+		async (data: TemplateImportFormInputs) => {
 			const code = parseTemplateCode(data.url);
+			const invalidCodeMessage = i18n._(PLEASE_ENTER_A_VALID_THE_OTHER_PLATFORM_TEMPLATE_URL_OR_DESCRIPTOR, {
+				theOtherPlatform: THE_OTHER_PLATFORM,
+			});
 			if (!code) {
-				urlForm.setError('url', {
-					message: i18n._(PLEASE_ENTER_A_VALID_THE_OTHER_PLATFORM_TEMPLATE_URL_OR_DESCRIPTOR, {
-						theOtherPlatform: THE_OTHER_PLATFORM,
-					}),
-				});
+				urlForm.setError('url', {message: invalidCodeMessage});
 				return;
 			}
-			setApiUrl(`https://discord.com/api/guilds/templates/${code}`);
-			setStep('json');
+			const templateApi = getElectronAPI()?.otherPlatformTemplate;
+			if (typeof templateApi?.fetch !== 'function') {
+				fallBackToPaste(code, false);
+				return;
+			}
+			if (lookupInFlightRef.current) return;
+			lookupInFlightRef.current = true;
+			let result: Awaited<ReturnType<typeof templateApi.fetch>>;
+			try {
+				result = await templateApi.fetch(code);
+			} catch (error) {
+				logger.warn('Direct template lookup failed, falling back to paste', error);
+				fallBackToPaste(code, true);
+				return;
+			} finally {
+				lookupInFlightRef.current = false;
+			}
+			if (result.ok) {
+				if (applyTemplateResponse(result.template) === 'invalid') {
+					urlForm.setError('url', {
+						message: i18n._(THE_OTHER_PLATFORM_TEMPLATE_UNREADABLE_DESCRIPTOR, {theOtherPlatform: THE_OTHER_PLATFORM}),
+					});
+					return;
+				}
+				setLoadedDirectly(true);
+				setStep('create');
+				return;
+			}
+			switch (result.failure) {
+				case OtherPlatformTemplateFetchFailure.INVALID_CODE:
+					urlForm.setError('url', {message: invalidCodeMessage});
+					return;
+				case OtherPlatformTemplateFetchFailure.NOT_FOUND:
+					urlForm.setError('url', {
+						message: i18n._(THE_OTHER_PLATFORM_TEMPLATE_NOT_FOUND_DESCRIPTOR, {theOtherPlatform: THE_OTHER_PLATFORM}),
+					});
+					return;
+				case OtherPlatformTemplateFetchFailure.RATE_LIMITED:
+					urlForm.setError('url', {
+						message: i18n._(THE_OTHER_PLATFORM_TEMPLATE_RATE_LIMITED_DESCRIPTOR, {
+							theOtherPlatform: THE_OTHER_PLATFORM,
+						}),
+					});
+					return;
+				case OtherPlatformTemplateFetchFailure.NETWORK:
+				case OtherPlatformTemplateFetchFailure.INVALID_RESPONSE:
+					fallBackToPaste(code, true);
+					return;
+			}
 		},
-		[urlForm, i18n],
+		[urlForm, i18n, applyTemplateResponse, fallBackToPaste],
 	);
-	const {handleSubmit: handleUrlSubmit} = useFormSubmit({
+	const {handleSubmit: handleUrlSubmit, isSubmitting: isResolvingUrl} = useFormSubmit({
 		form: urlForm,
 		onSubmit: handleResolveUrl,
 		defaultErrorField: 'url',
@@ -176,17 +263,13 @@ export const TemplateImportForm = observer(() => {
 				jsonForm.setError('json', {message: i18n._(INVALID_JSON_PLEASE_PASTE_THE_FULL_RESPONSE_FROM_DESCRIPTOR)});
 				return;
 			}
-			const parsed = v.safeParse(GuildTemplateResponseSchema, json);
-			if (!parsed.success) {
+			if (applyTemplateResponse(json) === 'invalid') {
 				jsonForm.setError('json', {message: i18n._(THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR)});
 				return;
 			}
-			setTemplateData(parsed.output.serialized_source_guild);
-			setTemplateName(parsed.output.name);
-			createForm.setValue('name', parsed.output.serialized_source_guild.name);
 			setStep('create');
 		},
-		[jsonForm, createForm, i18n],
+		[jsonForm, i18n, applyTemplateResponse],
 	);
 	const {handleSubmit: handleJsonSubmit} = useFormSubmit({
 		form: jsonForm,
@@ -231,13 +314,15 @@ export const TemplateImportForm = observer(() => {
 		const channelTypes = templateData.channels
 			.map((channel) => mapTemplateChannelTypeToFluxer(channel.type))
 			.filter((channelType): channelType is number => channelType !== null);
-		const textChannels = channelTypes.filter(
-			(channelType) => channelType === ChannelTypes.GUILD_TEXT || channelType === ChannelTypes.GUILD_ANNOUNCEMENT,
-		).length;
-		const voiceChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_VOICE).length;
-		const categories = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_CATEGORY).length;
-		const roles = templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length;
-		return {textChannels, voiceChannels, categories, roles};
+		const countOf = (...types: ReadonlyArray<number>) =>
+			channelTypes.filter((channelType) => types.includes(channelType)).length;
+		return {
+			textChannels: countOf(ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_ANNOUNCEMENT),
+			forumChannels: countOf(ChannelTypes.GUILD_FORUM, ChannelTypes.GUILD_MEDIA),
+			voiceChannels: countOf(ChannelTypes.GUILD_VOICE),
+			categories: countOf(ChannelTypes.GUILD_CATEGORY),
+			roles: templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length,
+		};
 	}, [templateData]);
 	const handleOpenApiUrl = useCallback(() => {
 		if (apiUrl) {
@@ -250,7 +335,7 @@ export const TemplateImportForm = observer(() => {
 			modalFooterContext?.setFooterContent(
 				<>
 					<Button
-						onClick={() => setStep('json')}
+						onClick={() => setStep(loadedDirectly ? 'url' : 'json')}
 						variant="secondary"
 						data-flx="guild.add-guild-modal.template-import-form.button.back-to-json"
 					>
@@ -299,6 +384,7 @@ export const TemplateImportForm = observer(() => {
 					</Button>
 					<Button
 						onClick={handleUrlSubmit}
+						submitting={isResolvingUrl}
 						disabled={isUrlEmpty}
 						data-flx="guild.add-guild-modal.template-import-form.button.url-submit"
 					>
@@ -314,12 +400,14 @@ export const TemplateImportForm = observer(() => {
 		handleJsonSubmit,
 		handleCreateSubmit,
 		isCreating,
+		isResolvingUrl,
+		loadedDirectly,
 		modalFooterContext,
 		nameValue,
 		urlValue,
 		jsonValue,
 	]);
-	const accountGate = renderGuildCreateAccountGate(i18n, 'guild.add-guild-modal.template-import-form');
+	const accountGate = renderGuildCreateAccountGate('guild.add-guild-modal.template-import-form');
 	if (accountGate) {
 		return accountGate;
 	}
@@ -344,6 +432,7 @@ export const TemplateImportForm = observer(() => {
 						label={i18n._(TEMPLATE_URL_DESCRIPTOR)}
 						name="url"
 						placeholder={THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL}
+						readOnly={isResolvingUrl}
 						required={true}
 						type="text"
 					/>
@@ -354,9 +443,13 @@ export const TemplateImportForm = observer(() => {
 	const renderJsonStep = (): React.ReactNode => (
 		<div className={styles.formContainer} data-flx="guild.add-guild-modal.template-import-form.form-container--4">
 			<Modal.Description data-flx="guild.add-guild-modal.template-import-form.modal-description--2">
-				<Trans>
-					Open the link below in your browser, then copy the entire JSON response and paste it into the box.
-				</Trans>
+				{directLoadFailed ? (
+					i18n._(COULDN_T_LOAD_THE_TEMPLATE_AUTOMATICALLY_DESCRIPTOR)
+				) : (
+					<Trans>
+						Open the link below in your browser, then copy the entire JSON response and paste it into the box.
+					</Trans>
+				)}
 			</Modal.Description>
 			<Button
 				variant="secondary"
@@ -412,12 +505,20 @@ export const TemplateImportForm = observer(() => {
 					{templateStats && (
 						<div className={styles.templateStats} data-flx="guild.add-guild-modal.template-import-form.template-stats">
 							<span data-flx="guild.add-guild-modal.template-import-form.span">
-								{i18n._(TEMPLATE_STATS_DESCRIPTOR, {
-									textChannelCount: templateStats.textChannels,
-									voiceChannelCount: templateStats.voiceChannels,
-									categoryCount: templateStats.categories,
-									roleCount: templateStats.roles,
-								})}
+								{templateStats.forumChannels > 0
+									? i18n._(TEMPLATE_STATS_WITH_FORUMS_DESCRIPTOR, {
+											textChannelCount: templateStats.textChannels,
+											forumChannelCount: templateStats.forumChannels,
+											voiceChannelCount: templateStats.voiceChannels,
+											categoryCount: templateStats.categories,
+											roleCount: templateStats.roles,
+										})
+									: i18n._(TEMPLATE_STATS_DESCRIPTOR, {
+											textChannelCount: templateStats.textChannels,
+											voiceChannelCount: templateStats.voiceChannels,
+											categoryCount: templateStats.categories,
+											roleCount: templateStats.roles,
+										})}
 							</span>
 						</div>
 					)}

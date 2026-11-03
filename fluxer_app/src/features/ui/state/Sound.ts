@@ -16,7 +16,7 @@ export interface SoundSettings {
 	soundOverrides: Partial<Record<SoundType, number>>;
 }
 
-export interface SoundPlayOptions {
+interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
 	ignoreGroupCooldown?: boolean;
 }

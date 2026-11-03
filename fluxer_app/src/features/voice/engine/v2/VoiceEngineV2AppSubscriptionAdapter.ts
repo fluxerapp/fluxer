@@ -13,7 +13,7 @@ import {isScreenShareAudioPublicationLike, VoiceTrackSource} from '@app/features
 import type {
 	VoiceEngineV2ParticipantVolumeOptions,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {RemoteTrackPublication, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppSubscriptionAdapter');

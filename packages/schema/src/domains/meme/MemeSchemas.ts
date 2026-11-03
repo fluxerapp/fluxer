@@ -14,6 +14,7 @@ const FavoriteMemeBase = z.object({
 	alt_text: createStringType(0, 500).nullish().describe('Alternative text description for accessibility'),
 	tags: z
 		.array(createStringType(1, 30))
+		.max(1000)
 		.nullish()
 		.default([])
 		.transform((tags) => (tags || []).filter((t) => t.trim().length > 0))
@@ -55,6 +56,7 @@ export const UpdateFavoriteMemeBodySchema = FavoriteMemeBase.partial()
 	.extend({
 		tags: z
 			.array(createStringType(1, 30))
+			.max(1000)
 			.nullish()
 			.transform((tags) => (tags ? tags.filter((t) => t.trim().length > 0) : undefined))
 			.describe('New tags for categorizing and searching the meme'),

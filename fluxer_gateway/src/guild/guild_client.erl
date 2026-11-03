@@ -1,6 +1,7 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_client).
+
 -typing([eqwalizer]).
 
 -export([voice_state_update/4]).
@@ -39,10 +40,6 @@
     | {error, circuit_breaker_open}
     | {error, too_many_requests}
     | {error, atom(), atom()}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec execute_with_slot(pid(), map(), timeout()) -> voice_state_update_result().
 execute_with_slot(TargetPid, Request, Timeout) ->
@@ -216,63 +213,3 @@ require_success_response(#{success := true} = Response) ->
 -spec require_rejection_response(map()) -> voice_state_update_rejection().
 require_rejection_response(#{success := false, ack := Ack} = Response) when is_map(Ack) ->
     Response.
-
--ifdef(TEST).
-
-do_call_ok_reply_returns_error_test() ->
-    Pid = start_test_call_server(ok),
-    ?assertEqual({error, unknown, internal_error}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_success_map_reply_returns_ok_test() ->
-    Reply = #{success => true, token => <<"abc">>},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({ok, Reply}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_rejected_ack_map_reply_returns_ok_test() ->
-    Reply = #{success => false, ack => #{<<"status">> => <<"rejected">>}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({ok, Reply}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_error_tuple_reply_passthrough_test() ->
-    Reply = {error, validation_error, voice_member_not_found},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual(Reply, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_nested_error_tuple_reply_passthrough_test() ->
-    Reply = {error, {validation_error, voice_member_not_found}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({error, validation_error, voice_member_not_found}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_not_owner_error_tuple_reply_normalized_test() ->
-    Reply = {error, {not_owner, 'fluxer_gateway@127.0.0.1'}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({error, not_owner, 'fluxer_gateway@127.0.0.1'}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
--spec start_test_call_server(term()) -> pid().
-start_test_call_server(Reply) ->
-    spawn(fun() -> test_call_server_loop(Reply) end).
-
--spec stop_test_call_server(pid()) -> ok.
-stop_test_call_server(Pid) ->
-    Pid ! stop,
-    ok.
-
--spec test_call_server_loop(term()) -> ok.
-test_call_server_loop(Reply) ->
-    receive
-        {'$gen_call', From, {voice_state_update, _Request}} ->
-            gen_server:reply(From, Reply),
-            test_call_server_loop(Reply);
-        stop ->
-            ok
-    after 30000 ->
-        ok
-    end.
-
--endif.

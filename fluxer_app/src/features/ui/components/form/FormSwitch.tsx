@@ -9,6 +9,7 @@ import type React from 'react';
 import {forwardRef, useCallback, useId, useMemo, useRef} from 'react';
 
 interface SwitchProps {
+	id?: string;
 	label?: React.ReactNode;
 	description?: React.ReactNode;
 	value: boolean;
@@ -23,13 +24,13 @@ interface SwitchProps {
 
 export const Switch = observer(
 	forwardRef<HTMLDivElement, SwitchProps>(function Switch(
-		{label, description, value, onChange, disabled, ariaLabel, ariaLabelledBy, ariaDescribedBy, className, compact},
+		{id, label, description, value, onChange, disabled, ariaLabel, ariaLabelledBy, ariaDescribedBy, className, compact},
 		forwardedRef,
 	) {
 		const baseId = useId();
 		const labelId = useMemo(() => `${baseId}-switch-label`, [baseId]);
 		const descriptionId = useMemo(() => `${baseId}-switch-description`, [baseId]);
-		const switchId = useMemo(() => `${baseId}-switch`, [baseId]);
+		const switchId = useMemo(() => id ?? `${baseId}-switch`, [id, baseId]);
 		const hasLabel = useMemo(
 			() => label !== undefined && label !== null && !(typeof label === 'string' && label.trim().length === 0),
 			[label],
@@ -67,13 +68,14 @@ export const Switch = observer(
 							<span
 								id={labelId}
 								className={clsx(styles.label, disabled && styles.disabled)}
+								dir="auto"
 								data-flx="ui.form.switch.label"
 							>
 								{label}
 							</span>
 						)}
 						{hasDescription && (
-							<span id={descriptionId} className={styles.description} data-flx="ui.form.switch.description">
+							<span id={descriptionId} className={styles.description} dir="auto" data-flx="ui.form.switch.description">
 								{description}
 							</span>
 						)}

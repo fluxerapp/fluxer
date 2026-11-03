@@ -53,6 +53,15 @@ pub struct WebpAnimLimits {
 }
 
 #[repr(C)]
+#[derive(Default)]
+pub struct FluxerAVAudioDurationOut {
+    pub frames_seconds: c_double,
+    pub frame_count: c_int,
+    pub stream_seconds: c_double,
+    pub format_seconds: c_double,
+}
+
+#[repr(C)]
 pub struct FluxerAVMetadataOut {
     pub has_video: c_int,
     pub has_audio: c_int,
@@ -130,15 +139,8 @@ unsafe extern "C" {
         width: *mut c_int,
         height: *mut c_int,
         pages: *mut c_int,
-    ) -> c_int;
-    pub fn fluxer_apng_probe(
-        buf: *const c_void,
-        len: size_t,
-        max_frames: c_int,
-        max_total_pixels: size_t,
-        width: *mut c_int,
-        height: *mut c_int,
-        frames: *mut c_int,
+        bands: *mut c_int,
+        format: *mut c_int,
     ) -> c_int;
     pub fn fluxer_vips_image_new_from_buffer(
         buf: *const c_void,
@@ -198,6 +200,8 @@ unsafe extern "C" {
         deadline_monotonic_ms: c_longlong,
         out: *mut *mut VipsImage,
     ) -> c_int;
+    pub fn fluxer_vips_srgb_without_alpha(input: *mut VipsImage, out: *mut *mut VipsImage)
+    -> c_int;
     pub fn fluxer_vips_extract_area(
         input: *mut VipsImage,
         out: *mut *mut VipsImage,
@@ -243,11 +247,6 @@ unsafe extern "C" {
     fn fluxer_av_free(mem: *mut c_void);
     fn fluxer_free_int_array(values: *mut c_int);
 
-    pub fn fluxer_heif_validate(
-        buf: *const c_void,
-        len: size_t,
-        deadline_monotonic_ms: c_longlong,
-    ) -> c_int;
     pub fn fluxer_heif_decode_primary_still(
         buf: *const c_void,
         len: size_t,
@@ -284,13 +283,6 @@ unsafe extern "C" {
         out_size: *mut size_t,
         out_capacity: *mut size_t,
     ) -> c_int;
-    pub fn fluxer_validate_gif_animation(
-        gif_data: *const c_void,
-        gif_len: size_t,
-        max_frames: c_int,
-        max_duration_ms: c_int,
-        max_total_pixels: size_t,
-    ) -> c_int;
     pub fn fluxer_ffmpeg_video_thumbnail_ex(
         media_data: *const c_void,
         media_len: size_t,
@@ -316,6 +308,21 @@ unsafe extern "C" {
         max_width: c_int,
         max_height: c_int,
         out: *mut FluxerAVMetadataOut,
+    ) -> c_int;
+    pub fn fluxer_av_strip_metadata(
+        media_data: *const c_void,
+        media_len: size_t,
+        demuxer: *const c_char,
+        muxer: *const c_char,
+        faststart: c_int,
+        output_path: *const c_char,
+        deadline_monotonic_ms: c_longlong,
+    ) -> c_int;
+    pub fn fluxer_av_audio_duration(
+        media_data: *const c_void,
+        media_len: size_t,
+        deadline_monotonic_ms: c_longlong,
+        out: *mut FluxerAVAudioDurationOut,
     ) -> c_int;
     pub fn fluxer_ffmpeg_extract_apng_frames_for_nsfw(
         apng_data: *const c_void,

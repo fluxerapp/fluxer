@@ -162,5 +162,6 @@ export async function completePasskeyMigration(
 		AuthMfa.storedRpId(ctx, verified.rpId),
 	);
 	await users.setWebAuthnCredentialSupersededBy(userId, legacy.credentialId, verified.credentialId);
+	await AuthMfa.syncPasskeyTrait(ctx, userId, true);
 	await AuthMfa.dispatchWebAuthnCredentialsUpdate(ctx, userId);
 }

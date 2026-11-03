@@ -8,7 +8,7 @@ import {createChildLogger} from '@electron/common/Logger';
 
 const logger = createChildLogger('DesktopTrustedCertificates');
 
-export type DesktopCertificateStore = 'default' | 'system';
+type DesktopCertificateStore = 'default' | 'system';
 export type DesktopCertificateSource = (store: DesktopCertificateStore) => ReadonlyArray<string>;
 
 function readStore(source: DesktopCertificateSource, store: DesktopCertificateStore): ReadonlyArray<string> {

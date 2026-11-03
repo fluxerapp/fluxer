@@ -4,7 +4,7 @@
 
 -typing([eqwalizer]).
 
--export([request_voice_token/8]).
+-export([request_voice_token/8, voice_error_for/1]).
 -export([request_voice_token/10]).
 
 -spec request_voice_token(
@@ -130,10 +130,10 @@ handle_sfu_token_success(GuildId, ChannelId, UserId, Data) ->
         token => maps:get(<<"token">>, Data),
         endpoint => maps:get(<<"endpoint">>, Data),
         connection_id => maps:get(<<"connectionId">>, Data),
-        region_id => guild_voice_connection_util:normalize_optional_binary(
+        region_id => guild_voice_connection_normalize:normalize_optional_binary(
             maps:get(<<"regionId">>, Data, undefined)
         ),
-        server_id => guild_voice_connection_util:normalize_optional_binary(
+        server_id => guild_voice_connection_normalize:normalize_optional_binary(
             maps:get(<<"serverId">>, Data, undefined)
         )
     }}.
@@ -143,15 +143,21 @@ token_success_log_message() ->
     "guild_voice_request_token_ok: guild_id=~p channel_id=~p "
     "user_id=~p connection_id=~p endpoint=~p".
 
+-spec voice_error_for(term()) ->
+    voice_unclaimed_account | voice_account_verification_required | voice_token_failed.
+voice_error_for(voice_unclaimed_account) -> voice_unclaimed_account;
+voice_error_for(voice_account_verification_required) -> voice_account_verification_required;
+voice_error_for(_) -> voice_token_failed.
+
 -spec handle_token_rpc_error(integer(), integer(), integer(), binary() | null, term(), term()) ->
     {error, atom()}.
 handle_token_rpc_error(GuildId, ChannelId, UserId, ConnectionId, Status, Body) ->
     log_token_failure(
         token_rpc_error_log_message(), GuildId, ChannelId, UserId, ConnectionId, [Status, Body]
     ),
-    case guild_voice_unclaimed_account_utils:parse_unclaimed_error(Body) of
-        true -> {error, voice_unclaimed_account};
-        false -> {error, voice_token_failed}
+    case guild_voice_unclaimed_account_utils:voice_account_error(Body) of
+        none -> {error, voice_token_failed};
+        AccountError -> {error, AccountError}
     end.
 
 -spec handle_token_error(integer(), integer(), integer(), binary() | null, term()) ->

@@ -92,13 +92,18 @@ class GuildList {
 		return this.computeOrganizedGuildList();
 	}
 
+	get visitingGuilds(): Array<Guild> {
+		return this.guilds.filter((guild) => guild.visiting && !guild.unavailable);
+	}
+
 	getOrganizedGuildList(): Array<OrganizedItem> {
 		return this.organizedGuildList;
 	}
 
 	private computeOrganizedGuildList(): Array<OrganizedItem> {
 		const guildFolders = UserSettings.guildFolders;
-		const guildMap = new Map(this.guilds.map((guild) => [guild.id, guild]));
+		const memberGuilds = this.guilds.filter((guild) => !guild.visiting);
+		const guildMap = new Map(memberGuilds.map((guild) => [guild.id, guild]));
 		const result: Array<OrganizedItem> = [];
 		const placedGuildIds = new Set<string>();
 		const emittedFolderIds = new Set<number | null>();
@@ -126,7 +131,7 @@ class GuildList {
 				result.push({type: 'folder', folder, guilds: folderGuilds});
 			}
 		}
-		const unplacedGuilds = this.guilds.filter((guild) => !placedGuildIds.has(guild.id) && !guild.unavailable);
+		const unplacedGuilds = memberGuilds.filter((guild) => !placedGuildIds.has(guild.id) && !guild.unavailable);
 		if (unplacedGuilds.length > 0) {
 			const prefix: Array<OrganizedItem> = new Array(unplacedGuilds.length);
 			for (let i = 0; i < unplacedGuilds.length; i++) {

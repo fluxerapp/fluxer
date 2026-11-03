@@ -7,16 +7,15 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import syncStripeCustomerEmail from '@app/api/worker/tasks/SyncStripeCustomerEmail';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -33,17 +32,6 @@ const MOCK_PRICE_SEEDS = {
 };
 
 const STALE_EMAIL = 'previous-address@example.com';
-
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 0n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 async function currentEmail(account: TestAccount): Promise<string> {
 	const user = await getUserRepository().findUnique(createUserID(BigInt(account.userId)));
@@ -85,7 +73,7 @@ describe('Stripe customer email sync', () => {
 	}
 
 	async function runTask(account: TestAccount): Promise<void> {
-		await syncStripeCustomerEmail({userId: account.userId}, createHelpers());
+		await syncStripeCustomerEmail({userId: account.userId}, createTestWorkerHelpers({jobId: 0n}));
 	}
 
 	function emailUpdatesFor(customerId: string): Array<unknown> {
@@ -173,7 +161,7 @@ describe('Stripe customer email sync', () => {
 			});
 			const account = await createCustomerAccount('cus_sync_reconcile');
 			await mirrorCustomer('cus_sync_reconcile', account, STALE_EMAIL);
-			await reconcileUserPayments({userId: account.userId}, createHelpers());
+			await reconcileUserPayments({userId: account.userId}, createTestWorkerHelpers({jobId: 0n}));
 			expect(emailUpdatesFor('cus_sync_reconcile')).toEqual([await currentEmail(account)]);
 		});
 
@@ -185,7 +173,7 @@ describe('Stripe customer email sync', () => {
 			});
 			const account = await createCustomerAccount('cus_sync_reconcile_current');
 			await mirrorCustomer('cus_sync_reconcile_current', account, await currentEmail(account));
-			await reconcileUserPayments({userId: account.userId}, createHelpers());
+			await reconcileUserPayments({userId: account.userId}, createTestWorkerHelpers({jobId: 0n}));
 			expect(emailUpdatesFor('cus_sync_reconcile_current')).toHaveLength(0);
 		});
 	});

@@ -40,7 +40,7 @@
 	align-items: center;
 	gap: 0.75rem;
 	padding: 1rem;
-	text-align: left;
+	text-align: start;
 	transition: background-color 0.15s;
 	cursor: pointer;
 }

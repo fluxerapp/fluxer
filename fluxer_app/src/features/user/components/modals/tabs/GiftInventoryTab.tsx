@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {GiftSendToFriendModal} from '@app/features/expressions/components/modals/GiftSendToFriendModal';
 import type {GiftMetadata} from '@app/features/gift/commands/GiftCommands';
 import * as GiftCommands from '@app/features/gift/commands/GiftCommands';
 import {getGiftDurationText} from '@app/features/gift/utils/GiftUtils';
 import {
-	CLAIM_ACCOUNT_DESCRIPTOR,
 	COPIED_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
 	TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR,
@@ -32,21 +31,16 @@ import {Spinner} from '@app/features/ui/components/Spinner';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/tabs/GiftInventoryTab.module.css';
 import Users from '@app/features/user/state/Users';
+import {AccountGateSlate} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
 import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
+
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {
-	CaretDownIcon,
-	CheckIcon,
-	CopyIcon,
-	GiftIcon,
-	NetworkSlashIcon,
-	ShareNetworkIcon,
-	WarningCircleIcon,
-} from '@phosphor-icons/react';
+import {CaretDownIcon, CheckIcon, CopyIcon, GiftIcon, NetworkSlashIcon, ShareNetworkIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -80,10 +74,6 @@ const GIFT_CODE_IS_TOO_LONG_DESCRIPTOR = msg({
 const GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR = msg({
 	message: 'Gift redeemed successfully. Enjoy your {premiumProductName}.',
 	comment: 'Toast shown after redeeming a premium gift code.',
-});
-const CLAIM_ACCOUNT_TO_MANAGE_GIFTS_DESCRIPTOR = msg({
-	message: 'Claim your account to redeem or manage {premiumProductName} gift codes.',
-	comment: 'Gift inventory empty-state text shown to unclaimed accounts.',
 });
 const ENTER_GIFT_CODE_TO_REDEEM_DESCRIPTOR = msg({
 	message: 'Enter a gift code to redeem {premiumProductName} for your account.',
@@ -144,7 +134,11 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 			setTimeout(() => setCopied(false), 2000);
 		} catch (error) {
 			logger.error('Failed to copy gift URL', error);
-			showUserErrorModal(i18n._(COULDN_T_COPY_GIFT_URL_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+			showGenericErrorModal({
+				title: i18n._(COULDN_T_COPY_GIFT_URL_DESCRIPTOR),
+				message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+			});
 		}
 	};
 	const handleRedeem = async () => {
@@ -297,7 +291,8 @@ const GiftInventoryTab: React.FC = observer(() => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
 	const [expandedGiftId, setExpandedGiftId] = useState<string | null>(null);
-	const isUnclaimed = !(Users.currentUser?.isClaimed() ?? false);
+	const giftRedeemGate = canPerform(Users.currentUser, TierGatedActions.GIFT_REDEEM);
+	const isGiftRedeemBlocked = !giftRedeemGate.allowed;
 	const giftCodeForm = useForm<GiftCodeFormInputs>({defaultValues: {code: ''}});
 	const handleGiftCodeSubmit = useCallback(
 		async (data: GiftCodeFormInputs) => {
@@ -314,7 +309,7 @@ const GiftInventoryTab: React.FC = observer(() => {
 		defaultErrorField: 'code',
 	});
 	const fetchGifts = useCallback(async () => {
-		if (isUnclaimed) {
+		if (isGiftRedeemBlocked) {
 			setLoading(false);
 			return;
 		}
@@ -328,7 +323,7 @@ const GiftInventoryTab: React.FC = observer(() => {
 			setError(true);
 			setLoading(false);
 		}
-	}, [isUnclaimed]);
+	}, [isGiftRedeemBlocked]);
 	useEffect(() => {
 		fetchGifts();
 	}, [fetchGifts]);
@@ -338,24 +333,8 @@ const GiftInventoryTab: React.FC = observer(() => {
 	const handleRedeemSuccess = () => {
 		fetchGifts();
 	};
-	if (isUnclaimed) {
-		return (
-			<StatusSlate
-				Icon={WarningCircleIcon}
-				title={<Trans>Claim your account</Trans>}
-				description={i18n._(CLAIM_ACCOUNT_TO_MANAGE_GIFTS_DESCRIPTOR, {
-					premiumProductName: getPremiumProductName(),
-				})}
-				actions={[
-					{
-						text: i18n._(CLAIM_ACCOUNT_DESCRIPTOR),
-						onClick: () => openClaimAccountModal({force: true}),
-						variant: 'primary',
-					},
-				]}
-				data-flx="user.gift-inventory-tab.status-slate"
-			/>
-		);
+	if (!giftRedeemGate.allowed) {
+		return <AccountGateSlate gate={giftRedeemGate} data-flx="user.gift-inventory-tab.account-gate-slate" />;
 	}
 	return (
 		<SettingsTabContainer data-flx="user.gift-inventory-tab.settings-tab-container">

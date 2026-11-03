@@ -6,35 +6,35 @@ import {DIRECT_MESSAGES_DESCRIPTOR, FAVORITES_DESCRIPTOR} from '@app/features/i1
 import Navigation from '@app/features/navigation/state/Navigation';
 import {isInternalChannelHost} from '@app/features/navigation/utils/DeepLinkUtils';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
+import {OFFICIAL_WEB_APP_HOSTS} from '@fluxer/instance_bootstrap/src/OfficialWebAppHosts';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {ChatsCircleIcon, CompassIcon, CrownIcon, type Icon, StarIcon} from '@phosphor-icons/react';
+import {AtomIcon, ChatsCircleIcon, CompassIcon, type Icon, StarIcon} from '@phosphor-icons/react';
 
 export type AppPageId = 'discovery' | 'plutonium' | 'favorites' | 'direct_messages';
 
 interface AppPageDefinition {
 	id: AppPageId;
-	path: string;
+	paths: ReadonlyArray<string>;
 	icon: Icon;
 	appHostOnly: boolean;
 }
 
 const DISCOVERY_PAGE_DESCRIPTOR = msg({
-	message: 'Discovery',
-	comment: 'Name of the Discovery page, shown in an inline chat link that opens it.',
+	message: 'Explore',
+	comment: 'Name of the Explore page, shown in an inline chat link that opens it.',
 });
 
 const APP_PAGES: ReadonlyArray<AppPageDefinition> = [
-	{id: 'discovery', path: Routes.DISCOVER, icon: CompassIcon, appHostOnly: false},
-	{id: 'plutonium', path: Routes.PLUTONIUM, icon: CrownIcon, appHostOnly: true},
-	{id: 'favorites', path: Routes.FAVORITES, icon: StarIcon, appHostOnly: false},
-	{id: 'direct_messages', path: Routes.ME, icon: ChatsCircleIcon, appHostOnly: false},
+	{id: 'discovery', paths: [Routes.DISCOVER, Routes.LEGACY_DISCOVER], icon: CompassIcon, appHostOnly: false},
+	{id: 'plutonium', paths: [Routes.PLUTONIUM], icon: AtomIcon, appHostOnly: true},
+	{id: 'favorites', paths: [Routes.FAVORITES], icon: StarIcon, appHostOnly: false},
+	{id: 'direct_messages', paths: [Routes.ME], icon: ChatsCircleIcon, appHostOnly: false},
 ];
 
-const OFFICIAL_WEB_APP_HOSTS = ['web.fluxer.app', 'web.canary.fluxer.app'];
+const OFFICIAL_APP_PAGE_HOSTS = new Set<string>(OFFICIAL_WEB_APP_HOSTS);
 
 function normalizePath(pathname: string): string {
 	const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
@@ -51,29 +51,27 @@ function isWebAppHost(host: string): boolean {
 	try {
 		if (normalized === new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase()) return true;
 	} catch {}
-	return OFFICIAL_WEB_APP_HOSTS.includes(normalized);
+	return !RuntimeConfig.isSelfHosted() && OFFICIAL_APP_PAGE_HOSTS.has(normalized);
 }
 
 function isPageAvailable(page: AppPageDefinition): boolean {
 	if (page.id === 'plutonium') return shouldShowPremiumFeatures();
-	if (page.id === 'discovery') return !RuntimeConfig.singleCommunityEnabled;
+	if (page.id === 'discovery') return RuntimeConfig.discoveryAvailable;
 	if (page.id === 'direct_messages') return !RuntimeConfig.directMessagesDisabled;
 	return true;
 }
 
 function findPageByPath(pathname: string): AppPageDefinition | null {
 	const path = normalizePath(pathname);
-	return APP_PAGES.find((page) => page.path === path && isPageAvailable(page)) ?? null;
+	return APP_PAGES.find((page) => page.paths.includes(path) && isPageAvailable(page)) ?? null;
 }
 
 export function parseAppPagePath(path: string): AppPageId | null {
-	if (!PlutoniumPageRollout.enabled) return null;
 	const pathname = path.split(/[?#]/, 1)[0] ?? '';
 	return findPageByPath(pathname)?.id ?? null;
 }
 
 export function parseAppPageLink(rawUrl: string): AppPageId | null {
-	if (!PlutoniumPageRollout.enabled) return null;
 	let parsed: URL;
 	try {
 		parsed = new URL(rawUrl);

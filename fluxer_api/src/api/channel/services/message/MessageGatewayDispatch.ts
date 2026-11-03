@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -110,5 +110,49 @@ export async function dispatchMessageUpdateBroadcast({
 		channel: params.channel,
 		event: 'MESSAGE_UPDATE',
 		data: await buildBroadcastMessageData(params),
+	});
+}
+
+export async function dispatchMessageDelete({
+	gatewayService,
+	channel,
+	messageId,
+	message,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageId: MessageID;
+	message: Message;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE',
+		data: {
+			channel_id: channel.id.toString(),
+			id: messageId.toString(),
+			content: message.content,
+			author_id: message.authorId?.toString(),
+		},
+	});
+}
+
+export async function dispatchMessageDeleteBulk({
+	gatewayService,
+	channel,
+	messageIds,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageIds: Array<MessageID>;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE_BULK',
+		data: {
+			channel_id: channel.id.toString(),
+			ids: messageIds.map((id) => id.toString()),
+		},
 	});
 }

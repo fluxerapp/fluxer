@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export function resolveURLFromRoot(input: string | URL, reference: string | URL): URL {
+function resolveURLFromRoot(input: string | URL, reference: string | URL): URL {
 	return new URL(input, new URL('/', reference));
 }
 

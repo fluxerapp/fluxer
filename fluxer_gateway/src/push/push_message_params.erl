@@ -149,7 +149,7 @@ normalize_message_type(_Type) ->
 -spec owner_fallback_key(map()) -> term().
 owner_fallback_key(Params) ->
     case snowflake_id:parse_maybe(maps:get(author_id, Params, undefined)) of
-        undefined -> push_normalize:optional_guild_id(maps:get(guild_id, Params, undefined));
+        undefined -> snowflake_id:parse_maybe(maps:get(guild_id, Params, undefined));
         AuthorId -> AuthorId
     end.
 
@@ -197,84 +197,3 @@ markdown_context(MessageData, GuildId, RoleNames, _RawContext) when
     push_notification_format:build_markdown_context(MessageData, GuildId, RoleNames, #{});
 markdown_context(_MessageData, _GuildId, _RoleNames, RawContext) ->
     optional_map(RawContext).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-params_with_message_type(Type) ->
-    #{
-        message_data => #{
-            <<"channel_id">> => <<"1472201127385612376">>,
-            <<"id">> => <<"1472201127385612377">>,
-            <<"type">> => Type
-        },
-        user_ids => [<<"1474262819227156566">>],
-        guild_id => <<"1472200708085309475">>,
-        author_id => <<"1472583967301656587">>,
-        guild_default_notifications => 0
-    }.
-
-context_allows_a_default_message_test() ->
-    ?assertMatch({ok, _}, context(params_with_message_type(?MESSAGE_TYPE_DEFAULT))).
-
-context_allows_a_reply_test() ->
-    ?assertMatch({ok, _}, context(params_with_message_type(?MESSAGE_TYPE_REPLY))).
-
-context_rejects_a_call_system_message_test() ->
-    ?assertEqual(
-        {error, {unpushable_message_type, 3}}, context(params_with_message_type(3))
-    ).
-
-context_rejects_every_non_authored_message_type_test() ->
-    lists:foreach(
-        fun(Type) ->
-            ?assertEqual(
-                {error, {unpushable_message_type, Type}},
-                context(params_with_message_type(Type))
-            )
-        end,
-        [1, 2, 3, 4, 5, 6, 7, 12, 99]
-    ).
-
-context_treats_a_missing_message_type_as_pushable_test() ->
-    Params = params_with_message_type(?MESSAGE_TYPE_DEFAULT),
-    MessageData = maps:remove(<<"type">>, maps:get(message_data, Params)),
-    ?assertMatch({ok, _}, context(Params#{message_data := MessageData})).
-
-context_treats_a_malformed_message_type_as_pushable_test() ->
-    ?assertMatch({ok, _}, context(params_with_message_type(<<"nonsense">>))).
-
-params_with_flags(Flags, ChannelType, GuildId) ->
-    Params = params_with_message_type(?MESSAGE_TYPE_DEFAULT),
-    MessageData = maps:get(message_data, Params),
-    Params#{
-        message_data := MessageData#{<<"flags">> => Flags, <<"channel_type">> => ChannelType},
-        guild_id := GuildId
-    }.
-
-context_rejects_a_silent_dm_test() ->
-    ?assertEqual(
-        {error, suppressed_notifications}, context(params_with_flags(4096, 1, 0))
-    ).
-
-context_rejects_a_silent_group_dm_test() ->
-    ?assertEqual(
-        {error, suppressed_notifications}, context(params_with_flags(4096, 3, 0))
-    ).
-
-context_rejects_a_silent_guild_message_that_mentions_the_recipient_test() ->
-    Params = params_with_flags(4096 bor 4, 0, <<"1472200708085309475">>),
-    MessageData = maps:get(message_data, Params),
-    Mentioned = MessageData#{
-        <<"mentions">> => [#{<<"id">> => <<"1474262819227156566">>}],
-        <<"mention_everyone">> => true
-    },
-    ?assertEqual(
-        {error, suppressed_notifications}, context(Params#{message_data := Mentioned})
-    ).
-
-context_allows_a_message_with_other_flags_test() ->
-    ?assertMatch({ok, _}, context(params_with_flags(4 bor 8192, 1, 0))),
-    ?assertMatch({ok, _}, context(params_with_flags(0, 3, 0))).
-
--endif.

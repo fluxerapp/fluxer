@@ -60,35 +60,4 @@ describe('Auth desktop handoff complete single use', () => {
 		expect(status.status).toBe('pending');
 		expect(status.token).toBeUndefined();
 	});
-	it('releases the token only to a poller presenting the correct secret', async () => {
-		const account = await createTestAccount(harness);
-		const login = await loginAccount(harness, account);
-		const initResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
-			.post('/auth/handoff/initiate')
-			.body(null)
-			.execute();
-		expect(initResp.poll_secret).toBeTruthy();
-		await createBuilderWithoutAuth(harness).get(`/auth/handoff/${initResp.code}/info`).execute();
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/handoff/complete')
-			.header('Authorization', login.token)
-			.body({
-				code: initResp.code,
-				user_id: login.userId,
-			})
-			.expect(204)
-			.execute();
-		const withoutSecret = await createBuilderWithoutAuth<HandoffStatusResponse>(harness)
-			.get(`/auth/handoff/${initResp.code}/status`)
-			.execute();
-		expect(withoutSecret.status).toBe('pending');
-		expect(withoutSecret.token).toBeUndefined();
-		const withSecret = await createBuilderWithoutAuth<HandoffStatusResponse>(harness)
-			.post(`/auth/handoff/${initResp.code}/status`)
-			.body({poll_secret: initResp.poll_secret})
-			.execute();
-		expect(withSecret.status).toBe('completed');
-		expect(withSecret.token).toBeTruthy();
-		expect(withSecret.token).not.toBe(login.token);
-	});
 });

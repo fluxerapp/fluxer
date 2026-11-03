@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import type {IStorageService, ProcessedStorageObjectMetadata} from '@app/api/infrastructure/IStorageService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {StorageChangeFeed, StorageChangeOp} from '@app/api/infrastructure/StorageChangeFeed';
 
 type Params<K extends keyof IStorageService> = Parameters<IStorageService[K]>;
@@ -79,28 +79,6 @@ export class ChangeFeedStorageService implements IStorageService {
 		this.emit(params.destinationBucket, params.destinationKey, 'put', {contentType: params.newContentType});
 	}
 
-	async copyObjectWithMetadataStripping(
-		params: Params<'copyObjectWithMetadataStripping'>[0],
-	): Promise<ProcessedStorageObjectMetadata | null> {
-		const processed = await this.inner.copyObjectWithMetadataStripping(params);
-		this.emit(params.destinationBucket, params.destinationKey, 'put', {
-			size: processed?.contentLength,
-			contentType: processed?.contentType ?? params.contentType,
-		});
-		return processed;
-	}
-
-	async moveObject(params: Params<'moveObject'>[0]): Promise<void> {
-		try {
-			await this.inner.moveObject(params);
-		} catch (error) {
-			this.emit(params.destinationBucket, params.destinationKey, 'put', {contentType: params.newContentType});
-			throw error;
-		}
-		this.emit(params.destinationBucket, params.destinationKey, 'put', {contentType: params.newContentType});
-		this.emit(params.sourceBucket, params.sourceKey, 'delete');
-	}
-
 	getPresignedDownloadURL(...args: Params<'getPresignedDownloadURL'>): Result<'getPresignedDownloadURL'> {
 		return this.inner.getPresignedDownloadURL(...args);
 	}
@@ -111,11 +89,6 @@ export class ChangeFeedStorageService implements IStorageService {
 
 	getPresignedUploadPartURL(...args: Params<'getPresignedUploadPartURL'>): Result<'getPresignedUploadPartURL'> {
 		return this.inner.getPresignedUploadPartURL(...args);
-	}
-
-	async purgeBucket(bucket: string): Promise<void> {
-		const objects = await this.inner.listObjects({bucket, prefix: ''});
-		await Promise.all(objects.map(({key}) => this.deleteObject(bucket, key)));
 	}
 
 	async uploadAvatar(params: Params<'uploadAvatar'>[0]): Promise<void> {
@@ -132,19 +105,8 @@ export class ChangeFeedStorageService implements IStorageService {
 		return this.inner.listObjects(...args);
 	}
 
-	async deleteObjects(params: Params<'deleteObjects'>[0]): Promise<void> {
-		await this.inner.deleteObjects(params);
-		for (const object of params.objects) {
-			this.emit(params.bucket, object.Key, 'delete');
-		}
-	}
-
 	createMultipartUpload(...args: Params<'createMultipartUpload'>): Result<'createMultipartUpload'> {
 		return this.inner.createMultipartUpload(...args);
-	}
-
-	uploadPart(...args: Params<'uploadPart'>): Result<'uploadPart'> {
-		return this.inner.uploadPart(...args);
 	}
 
 	listParts(...args: Params<'listParts'>): Result<'listParts'> {

@@ -2,13 +2,17 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {CANCEL_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {SafeMarkdown} from '@app/features/messaging/components/markdown';
+import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import Users from '@app/features/user/state/Users';
-import {ATTACHMENT_MAX_SIZE_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {ATTACHMENT_MAX_SIZE_NON_PREMIUM, ATTACHMENT_MAX_SIZE_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -46,6 +50,22 @@ const PREMIUM_FILE_SIZE_UPSELL_DESCRIPTOR = msg({
 		'Premium upsell sentence in the file-too-large alert. premiumProductName is the paid product name; fileSizeLimit is a localized file size.',
 });
 
+function withInstanceNote(description: string, note: string | null): React.ReactNode {
+	if (!note) return description;
+	return (
+		<>
+			<span data-flx="messaging.file-size-too-large-modal.description">{description}</span>
+			<div className={markupStyles.markup} data-flx="messaging.file-size-too-large-modal.instance-note">
+				<SafeMarkdown
+					content={note}
+					options={{context: MarkdownContext.RESTRICTED_EMBED_DESCRIPTION, disableEmojiInfoCard: true}}
+					data-flx="messaging.file-size-too-large-modal.instance-note-markdown"
+				/>
+			</div>
+		</>
+	);
+}
+
 interface FileSizeTooLargeModalProps {
 	oversizedFileCount?: number;
 }
@@ -54,38 +74,48 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 	const {i18n} = useLingui();
 	const user = Users.currentUser;
 	const showPremium = shouldShowPremiumFeatures();
-	const maxAttachmentFileSize = user?.maxAttachmentFileSize ?? 25 * 1024 * 1024;
-	const premiumMaxAttachmentFileSize = Limits.getPremiumValue('max_attachment_file_size', ATTACHMENT_MAX_SIZE_PREMIUM);
+	const maxAttachmentFileSize = user?.maxAttachmentFileSize ?? ATTACHMENT_MAX_SIZE_NON_PREMIUM;
+	const premiumMaxAttachmentFileSize = Limits.getStockValue('max_attachment_file_size', ATTACHMENT_MAX_SIZE_PREMIUM);
 	const canUpgradeAttachmentLimit = maxAttachmentFileSize < premiumMaxAttachmentFileSize;
 	const maxSizeFormatted = formatFileSize(i18n.locale, maxAttachmentFileSize);
 	const hasKnownOversizedFileCount = oversizedFileCount != null;
 	const hasMultipleOversizedFiles = (oversizedFileCount ?? 0) > 1;
+	const instanceNote = RuntimeConfig.appPublic.branding.upload_limit_message;
 	const handleGetPlutoniumClick = useCallback(() => {
 		window.setTimeout(() => {
 			PremiumModalCommands.open();
 		}, 0);
 	}, []);
-	const baseDescription = hasKnownOversizedFileCount
-		? hasMultipleOversizedFiles
-			? i18n._(SOME_FILES_YOU_RE_TRYING_TO_UPLOAD_EXCEED_DESCRIPTOR, {maxSizeFormatted})
-			: i18n._(THE_FILE_YOU_RE_TRYING_TO_UPLOAD_EXCEEDS_DESCRIPTOR, {maxSizeFormatted})
-		: i18n._(ONE_OR_MORE_FILES_YOU_RE_TRYING_TO_DESCRIPTOR, {maxSizeFormatted});
+	let baseDescription: string;
+	if (!hasKnownOversizedFileCount) {
+		baseDescription = i18n._(ONE_OR_MORE_FILES_YOU_RE_TRYING_TO_DESCRIPTOR, {maxSizeFormatted});
+	} else if (hasMultipleOversizedFiles) {
+		baseDescription = i18n._(SOME_FILES_YOU_RE_TRYING_TO_UPLOAD_EXCEED_DESCRIPTOR, {maxSizeFormatted});
+	} else {
+		baseDescription = i18n._(THE_FILE_YOU_RE_TRYING_TO_UPLOAD_EXCEEDS_DESCRIPTOR, {maxSizeFormatted});
+	}
 	if (!showPremium || !canUpgradeAttachmentLimit) {
+		const title = i18n._(FILE_SIZE_TOO_LARGE_DESCRIPTOR);
+		let message: React.ReactNode = baseDescription;
+		if (instanceNote) {
+			message = withInstanceNote(baseDescription, instanceNote);
+		} else if (!showPremium) {
+			message = `${baseDescription} ${i18n._(INSTANCE_ADMIN_LIMIT_DESCRIPTOR)}`;
+		}
 		return (
-			<GenericErrorModal
-				title={i18n._(FILE_SIZE_TOO_LARGE_DESCRIPTOR)}
-				message={!showPremium ? `${baseDescription} ${i18n._(INSTANCE_ADMIN_LIMIT_DESCRIPTOR)}` : baseDescription}
-				data-flx="messaging.file-size-too-large-modal.confirm-modal"
-			/>
+			<GenericErrorModal title={title} message={message} data-flx="messaging.file-size-too-large-modal.confirm-modal" />
 		);
 	}
 	return (
 		<ConfirmModal
 			title={i18n._(FILE_SIZE_LIMIT_EXCEEDED_DESCRIPTOR)}
-			description={`${baseDescription} ${i18n._(PREMIUM_FILE_SIZE_UPSELL_DESCRIPTOR, {
-				premiumProductName: getPremiumProductName(),
-				fileSizeLimit: formatFileSize(i18n.locale, premiumMaxAttachmentFileSize),
-			})}`}
+			description={withInstanceNote(
+				`${baseDescription} ${i18n._(PREMIUM_FILE_SIZE_UPSELL_DESCRIPTOR, {
+					premiumProductName: getPremiumProductName(),
+					fileSizeLimit: formatFileSize(i18n.locale, premiumMaxAttachmentFileSize),
+				})}`,
+				instanceNote,
+			)}
 			primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 			primaryVariant="primary"
 			onPrimary={handleGetPlutoniumClick}

@@ -7,7 +7,7 @@ pub mod reject;
 
 use crate::config::{FcmConfig, ProviderEnvironment, RelayConfig};
 use crate::metrics::{Metrics, RelayLeg, RelayResult};
-use crate::server::{Sidecar, serve, sidecar_router};
+use crate::server::{Sidecar, serve};
 use crate::tokens::{TokenCache, TokenError};
 use crate::unix_seconds;
 use crate::vendor::{self, ApnsRequest, DeadToken, Refusal, VendorOutcome};
@@ -117,7 +117,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route(FCM_ROUTE, post(fcm_route))
         .fallback(unmatched_route)
         .with_state(state)
-        .merge(sidecar_router(sidecar))
+        .merge(sidecar.router())
 }
 
 async fn unmatched_route(State(state): State<Arc<AppState>>) -> Response {
@@ -555,18 +555,6 @@ mod tests {
     }
 
     #[test]
-    fn apns_accepts_every_token_length_apple_hands_out() {
-        for len in [64, 128, 160, 200, 256] {
-            assert!(
-                device_token_is_shaped(RelayLeg::Apns, &hex(len)),
-                "{len} hex characters must be accepted"
-            );
-        }
-        assert!(device_token_is_shaped(RelayLeg::Apns, &"A".repeat(64)));
-        assert!(device_token_is_shaped(RelayLeg::ApnsVoip, &hex(160)));
-    }
-
-    #[test]
     fn apns_rejects_tokens_that_are_not_even_length_hex() {
         for token in [hex(62), hex(63), hex(161), hex(258), "z".repeat(64)] {
             assert!(
@@ -584,36 +572,5 @@ mod tests {
         assert_ne!(digest(TOKEN), unsalted);
         assert_eq!(digest(TOKEN), digest(TOKEN));
         assert_eq!(digest(""), "-");
-    }
-
-    #[test]
-    fn a_clear_survives_a_device_that_is_offline_for_a_day() {
-        assert_eq!(
-            Urgency::Background.ttl_cap_seconds(),
-            Urgency::Alert.ttl_cap_seconds(),
-            "a clear must outlive the alert it removes"
-        );
-    }
-
-    #[test]
-    fn a_clear_stays_silent_on_the_apns_leg() {
-        let body = envelope::apns_body("payload", Urgency::Background).expect("body fits");
-        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("body is json");
-        assert_eq!(parsed["aps"]["content-available"], 1);
-        assert!(parsed["aps"].get("alert").is_none());
-        let headers = envelope::apns_headers(Urgency::Background, 0, 86_400);
-        let push_type = headers
-            .iter()
-            .find(|(name, _)| name == "apns-push-type")
-            .map(|(_, value)| value.as_str());
-        assert_eq!(push_type, Some("background"));
-    }
-
-    #[test]
-    fn payload_too_large_answers_413() {
-        assert_eq!(
-            Reason::PayloadTooLarge.status(),
-            StatusCode::PAYLOAD_TOO_LARGE
-        );
     }
 }

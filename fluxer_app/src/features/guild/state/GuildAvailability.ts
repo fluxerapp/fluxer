@@ -62,6 +62,7 @@ class GuildAvailability {
 
 	hydrateFromSnapshot(guilds: ReadonlyArray<{readonly id: string; readonly unavailable: boolean}>): void {
 		this.unavailableGuilds.clear();
+		this.degradedGuilds.clear();
 		for (const guild of guilds) {
 			if (guild.unavailable) {
 				this.unavailableGuilds.add(guild.id);

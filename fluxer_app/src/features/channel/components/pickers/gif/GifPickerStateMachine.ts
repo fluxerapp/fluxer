@@ -52,10 +52,8 @@ interface GifPickerMachineContext {
 export interface GifPickerModel {
 	view: View;
 	searchTerm: string;
-	committedSearchTerm: string;
 	surface: GifPickerSurface;
 	isLoading: boolean;
-	isFeaturedLoading: boolean;
 	isResultsLoading: boolean;
 	shouldShowLoadingSkeleton: boolean;
 	initialFeaturedLoading: boolean;
@@ -65,9 +63,7 @@ export interface GifPickerModel {
 	isShowingResults: boolean;
 	shouldShowNoResults: boolean;
 	shouldShowError: boolean;
-	errorKind: GifPickerFetchErrorKind;
 	resultKind: GifPickerResultKind;
-	pendingSearchTerm: string | null;
 }
 
 export type GifPickerMachineEvent =
@@ -611,10 +607,8 @@ export function selectGifPickerModel(snapshot: GifPickerMachineSnapshot): GifPic
 	return {
 		view,
 		searchTerm: context.searchTerm,
-		committedSearchTerm: context.committedSearchTerm,
 		surface: context.surface,
 		isLoading,
-		isFeaturedLoading: context.isFeaturedLoading,
 		isResultsLoading: context.isResultsLoading,
 		shouldShowLoadingSkeleton,
 		initialFeaturedLoading: context.isFeaturedLoading && isShowingFeatured && !context.hasFeaturedContent,
@@ -624,8 +618,6 @@ export function selectGifPickerModel(snapshot: GifPickerMachineSnapshot): GifPic
 		isShowingResults,
 		shouldShowNoResults,
 		shouldShowError,
-		errorKind: context.errorKind,
 		resultKind: context.resultKind,
-		pendingSearchTerm: context.pendingSearchTerm,
 	};
 }

@@ -1,9 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {hostedImageUrl} from '@app/features/app/config/HostedMedia';
+import plutoniumAtomAvif from '@app/media/images/premium/plutonium-atom.avif';
+import plutoniumAtomWebp from '@app/media/images/premium/plutonium-atom.webp';
+import plutoniumAtomAvif2x from '@app/media/images/premium/plutonium-atom-960w.avif';
+import plutoniumAtomWebp2x from '@app/media/images/premium/plutonium-atom-960w.webp';
+import premiumCrownAvif from '@app/media/images/premium/premium-crown.avif';
+import premiumCrownWebp from '@app/media/images/premium/premium-crown.webp';
+import premiumCrownAvif2x from '@app/media/images/premium/premium-crown-960w.avif';
+import premiumCrownWebp2x from '@app/media/images/premium/premium-crown-960w.webp';
 
-export const CROWN_AVIF = hostedImageUrl('perks-plutonium-crown.4d0b72644330bf10.avif');
-export const CROWN_WEBP = hostedImageUrl('perks-plutonium-crown.3265aa6b4147b19b.webp');
+export interface HeroArt {
+	avifSrcSet: string;
+	webpSrcSet: string;
+	src: string;
+	width: number;
+	height: number;
+}
+
+function densitySrcSet(oneX: string, twoX: string): string {
+	return `${oneX} 1x, ${twoX} 2x`;
+}
+
+const PLUTONIUM_ATOM_ART: HeroArt = {
+	avifSrcSet: densitySrcSet(plutoniumAtomAvif, plutoniumAtomAvif2x),
+	webpSrcSet: densitySrcSet(plutoniumAtomWebp, plutoniumAtomWebp2x),
+	src: plutoniumAtomWebp,
+	width: 480,
+	height: 524,
+};
+
+const PREMIUM_CROWN_ART: HeroArt = {
+	avifSrcSet: densitySrcSet(premiumCrownAvif, premiumCrownAvif2x),
+	webpSrcSet: densitySrcSet(premiumCrownWebp, premiumCrownWebp2x),
+	src: premiumCrownWebp,
+	width: 480,
+	height: 415,
+};
+
+export function heroArtFor(selfHosted: boolean): HeroArt {
+	return selfHosted ? PREMIUM_CROWN_ART : PLUTONIUM_ATOM_ART;
+}
 
 export const AVATAR_LSF = hostedImageUrl('perks-avatar-lsf.0800cc17b7d31b5e.webp');
 export const BANNER_LSF = hostedImageUrl('perks-banner-lsf.05f2565afc72a167.webp');
@@ -41,14 +78,14 @@ export const EXPRESSIONS_SHOTS = shotFamily(
 
 export const PROFILE_SHOTS = shotFamily(
 	[
-		'screenshots-feature-perk-profile-640w.0df90fc828ae1bb4.avif',
-		'screenshots-feature-perk-profile-1120w.ca5e8d03c4f7eac7.avif',
-		'screenshots-feature-perk-profile-1600w.c790612e9d3295f7.avif',
+		'screenshots-feature-perk-profile-640w.2c3a1ece3b5c8f37.avif',
+		'screenshots-feature-perk-profile-1120w.d4b166dad6f99aaa.avif',
+		'screenshots-feature-perk-profile-1600w.c5097ad361bc1326.avif',
 	],
 	[
-		'screenshots-feature-perk-profile-640w.76efd2d804dc3c32.webp',
-		'screenshots-feature-perk-profile-1120w.799d04fb886684b2.webp',
-		'screenshots-feature-perk-profile-1600w.7459898617b3aa74.webp',
+		'screenshots-feature-perk-profile-640w.46700ee4bed25529.webp',
+		'screenshots-feature-perk-profile-1120w.7b4b789270977507.webp',
+		'screenshots-feature-perk-profile-1600w.7b2d691cea124f1b.webp',
 	],
 );
 

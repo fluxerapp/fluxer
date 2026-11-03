@@ -7,10 +7,6 @@ import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
 export function getGroupDMTitle(channel: Channel, unnamedGroupLabel: string): string {
-	return getChannelDisplayName(channel, unnamedGroupLabel);
-}
-
-function getChannelDisplayName(channel: Channel, unnamedGroupLabel: string): string {
 	const channelName = channel.name?.trim();
 	if (channelName && channelName.length > 0) {
 		return channelName;

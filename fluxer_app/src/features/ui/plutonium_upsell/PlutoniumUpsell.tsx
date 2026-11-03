@@ -7,7 +7,7 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import styles from '@app/features/ui/plutonium_upsell/PlutoniumUpsell.module.css';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {CrownIcon} from '@phosphor-icons/react';
+import {AtomIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 
@@ -35,7 +35,7 @@ export const PlutoniumUpsell: React.FC<PlutoniumUpsellProps> = ({
 	}
 	return (
 		<div className={clsx(styles.upsell, className)} data-flx="ui.plutonium-upsell.plutonium-upsell.upsell">
-			<CrownIcon
+			<AtomIcon
 				size={remFromPx(16)}
 				weight="fill"
 				className={styles.icon}

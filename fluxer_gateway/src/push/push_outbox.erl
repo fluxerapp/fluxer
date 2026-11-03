@@ -57,14 +57,16 @@
     | skipped_active
     | followup_clears
     | enqueued.
+-type reads() :: #{{integer(), integer()} => {integer(), integer()}}.
+-type active() :: #{integer() => {non_neg_integer(), integer()}}.
 -type state() :: #{
     jobs := gb_trees:tree(non_neg_integer(), entry()),
     ready := queue:queue(non_neg_integer()),
     inflight := #{pid() => {reference(), reference(), entry()}},
     followups => #{pid() => #{integer() => integer()}},
     next_seq := non_neg_integer(),
-    reads := #{{integer(), integer()} => {integer(), integer()}},
-    active := #{integer() => {non_neg_integer(), integer()}},
+    reads := reads(),
+    active := active(),
     counters := #{counter() => non_neg_integer()},
     dropped := #{{kind(), atom()} => pos_integer()},
     max_queue := pos_integer(),
@@ -133,7 +135,9 @@ init([]) ->
         max_inflight => env_pos_integer(push_outbox_max_inflight, ?DEFAULT_MAX_INFLIGHT),
         request_timeout_ms => request_timeout_ms(),
         max_age_ms => max_age_ms(),
-        retry_base_ms => app_pos_integer(push_outbox_retry_base_ms, ?DEFAULT_RETRY_BASE_MS)
+        retry_base_ms => push_utils:app_pos_integer(
+            push_outbox_retry_base_ms, ?DEFAULT_RETRY_BASE_MS
+        )
     }}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
@@ -145,7 +149,7 @@ handle_call({enqueue, Job}, _From, State) when
     is_map_key(channel_id, Job),
     is_map_key(message_id, Job)
 ->
-    {reply, ok, pump(admit(Job, State))};
+    {reply, ok, pump(admit(eqwalizer:dynamic_cast(Job), State))};
 handle_call(stats, _From, State) ->
     {reply, build_stats(State), State};
 handle_call(_Request, _From, State) ->
@@ -159,17 +163,17 @@ handle_cast({truncate_read, UserId, ChannelId, MessageId}, State) when
 handle_cast({session_active, UserId}, State) when is_integer(UserId) ->
     {noreply, record_active(UserId, State)};
 handle_cast({dropped, Kind, Reason}, State) when is_atom(Kind), is_atom(Reason) ->
-    {noreply, count_dropped(Kind, Reason, State)};
+    {noreply, count_dropped(eqwalizer:dynamic_cast(Kind), Reason, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({push_outbox_reply, Pid, Result}, State) when is_pid(Pid) ->
-    {noreply, pump(finish_worker(Pid, reply_result(Result), State))};
+    {noreply, pump(finish_worker(Pid, push_outbox_worker:reply_result(Result), State))};
 handle_info({'DOWN', _MRef, process, Pid, Reason}, State) when is_pid(Pid) ->
-    {noreply, pump(finish_worker(Pid, down_result(Reason), State))};
-handle_info({request_deadline, Pid}, State) when is_pid(Pid) ->
-    kill_expired_worker(Pid, State),
+    {noreply, pump(finish_worker(Pid, push_outbox_worker:down_result(Reason), State))};
+handle_info({request_deadline, Pid}, #{inflight := Inflight} = State) when is_pid(Pid) ->
+    push_outbox_worker:kill_expired(Pid, Inflight),
     {noreply, State};
 handle_info({retry, Seq}, State) when is_integer(Seq), Seq >= 0 ->
     {noreply, pump(make_ready(Seq, State))};
@@ -270,18 +274,14 @@ prepare(#{user_ids := UserIds} = Entry, #{reads := Reads, active := Active} = St
         _ -> {send, with_user_ids(Kept, Entry), State1}
     end.
 
--spec is_read(integer(), integer(), integer(), #{
-    {integer(), integer()} => {integer(), integer()}
-}) ->
-    boolean().
+-spec is_read(integer(), integer(), integer(), reads()) -> boolean().
 is_read(UserId, ChannelId, MessageId, Reads) ->
     case maps:find({UserId, ChannelId}, Reads) of
         {ok, {ReadMessageId, _At}} -> MessageId =< ReadMessageId;
         error -> false
     end.
 
--spec became_active(integer(), non_neg_integer(), #{integer() => {non_neg_integer(), integer()}}) ->
-    boolean().
+-spec became_active(integer(), non_neg_integer(), active()) -> boolean().
 became_active(UserId, Seq, Active) ->
     case maps:find(UserId, Active) of
         {ok, {ActiveSeq, _At}} -> ActiveSeq > Seq;
@@ -368,19 +368,19 @@ truncate_entry(_Seq, _Entry, _UserId, _ChannelId, _MessageId, State) ->
     State.
 
 -spec remove_reader(non_neg_integer(), entry(), integer(), state()) -> state().
-remove_reader(Seq, #{user_ids := UserIds} = Entry, UserId, #{jobs := Jobs} = State) ->
+remove_reader(Seq, #{user_ids := UserIds} = Entry, UserId, State) ->
     case lists:member(UserId, UserIds) of
         false ->
             State;
         true ->
-            State1 = bump(truncations, 1, State),
-            case lists:delete(UserId, UserIds) of
-                [] ->
-                    State1#{jobs := gb_trees:delete(Seq, Jobs)};
-                Remaining ->
-                    State1#{jobs := gb_trees:update(Seq, with_user_ids(Remaining, Entry), Jobs)}
-            end
+            drop_reader(Seq, lists:delete(UserId, UserIds), Entry, bump(truncations, 1, State))
     end.
+
+-spec drop_reader(non_neg_integer(), [integer()], entry(), state()) -> state().
+drop_reader(Seq, [], _Entry, #{jobs := Jobs} = State) ->
+    State#{jobs := gb_trees:delete(Seq, Jobs)};
+drop_reader(Seq, Remaining, Entry, #{jobs := Jobs} = State) ->
+    State#{jobs := gb_trees:update(Seq, with_user_ids(Remaining, Entry), Jobs)}.
 
 -spec record_active(integer(), state()) -> state().
 record_active(UserId, #{active := Active, next_seq := Seq} = State) ->
@@ -391,29 +391,10 @@ start_worker(Entry, #{inflight := Inflight, request_timeout_ms := Timeout} = Sta
     #{subject := Subject, body := Body} = Entry,
     Outbox = self(),
     {Pid, MRef} = spawn_monitor(fun() ->
-        Outbox ! {push_outbox_reply, self(), send(Subject, Body, Timeout)}
+        Outbox ! {push_outbox_reply, self(), push_outbox_worker:send(Subject, Body, Timeout)}
     end),
     TRef = erlang:send_after(Timeout, Outbox, {request_deadline, Pid}),
     State#{inflight := Inflight#{Pid => {MRef, TRef, Entry}}}.
-
--spec send(binary(), binary(), pos_integer()) -> ok | {error, term()}.
-send(Subject, Body, Timeout) ->
-    try push_job_publisher:request(Subject, Body, Timeout) of
-        ok -> ok;
-        {error, Reason} -> {error, Reason}
-    catch
-        Class:Reason -> {error, {Class, Reason}}
-    end.
-
--spec kill_expired_worker(pid(), state()) -> ok.
-kill_expired_worker(Pid, #{inflight := Inflight}) ->
-    case maps:is_key(Pid, Inflight) of
-        true ->
-            exit(Pid, kill),
-            ok;
-        false ->
-            ok
-    end.
 
 -spec finish_worker(pid(), ok | {error, term()}, state()) -> state().
 finish_worker(Pid, Result, #{inflight := Inflight} = State) ->
@@ -434,17 +415,19 @@ follow_up_clears(_Entry, Reads, State) when map_size(Reads) =:= 0 ->
     State;
 follow_up_clears(#{channel_id := ChannelId, message_id := AfterMessageId}, Reads, State) ->
     case push:clear_notifications_enabled() of
-        true ->
-            maps:fold(
-                fun(UserId, MessageId, Acc) ->
-                    follow_up_clear(UserId, ChannelId, MessageId, AfterMessageId, Acc)
-                end,
-                State,
-                Reads
-            );
-        false ->
-            State
+        true -> follow_up_each_clear(ChannelId, AfterMessageId, Reads, State);
+        false -> State
     end.
+
+-spec follow_up_each_clear(integer(), integer(), #{integer() => integer()}, state()) -> state().
+follow_up_each_clear(ChannelId, AfterMessageId, Reads, State) ->
+    maps:fold(
+        fun(UserId, MessageId, Acc) ->
+            follow_up_clear(UserId, ChannelId, MessageId, AfterMessageId, Acc)
+        end,
+        State,
+        Reads
+    ).
 
 -spec follow_up_clear(integer(), integer(), integer(), integer(), state()) -> state().
 follow_up_clear(UserId, ChannelId, MessageId, AfterMessageId, State) ->
@@ -477,15 +460,6 @@ inflight_channel(Pid, Inflight) ->
         {ok, {_MRef, _TRef, #{channel_id := ChannelId}}} -> {ok, ChannelId};
         error -> error
     end.
-
--spec reply_result(term()) -> ok | {error, term()}.
-reply_result(ok) -> ok;
-reply_result({error, Reason}) -> {error, Reason};
-reply_result(Other) -> {error, {invalid_worker_reply, Other}}.
-
--spec down_result(term()) -> {error, term()}.
-down_result(killed) -> {error, timeout};
-down_result(Reason) -> {error, {worker_down, Reason}}.
 
 -spec handle_result(ok | {error, term()}, entry(), state()) -> state().
 handle_result(ok, _Entry, State) ->
@@ -608,92 +582,3 @@ env_pos_integer(Key, Default) ->
         Value when is_integer(Value), Value > 0 -> Value;
         _ -> Default
     end.
-
--spec app_pos_integer(atom(), pos_integer()) -> pos_integer().
-app_pos_integer(Key, Default) ->
-    case application:get_env(fluxer_gateway, Key, undefined) of
-        Value when is_integer(Value), Value > 0 -> Value;
-        _ -> Default
-    end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-count(Counter, #{counters := Counters}) ->
-    maps:get(Counter, Counters, 0).
-
-an_expired_entry_is_dropped_without_the_users_who_read_it_test() ->
-    State = test_state(#{{7, 20} => {30, now_ms()}}),
-    Result = handle_result({error, timeout}, test_entry([7, 8]), State),
-    ?assertEqual(#{{message, expired} => 1}, maps:get(dropped, Result)),
-    ?assertEqual(1, count(truncations, Result)),
-    ?assertEqual(0, count(retries, Result)).
-
-an_expired_entry_every_recipient_read_is_not_counted_as_dropped_test() ->
-    State = test_state(#{{7, 20} => {30, now_ms()}, {8, 20} => {31, now_ms()}}),
-    Result = handle_result({error, timeout}, test_entry([7, 8]), State),
-    ?assertEqual(#{}, maps:get(dropped, Result)),
-    ?assertEqual(2, count(truncations, Result)).
-
-an_expired_clear_is_dropped_and_counted_by_kind_test() ->
-    State = test_state(#{{7, 20} => {30, now_ms()}, {8, 20} => {30, now_ms()}}),
-    Entry = (test_entry([7, 8]))#{kind := clear},
-    Result = handle_result({error, timeout}, Entry, State),
-    ?assertEqual(#{{clear, expired} => 1}, maps:get(dropped, Result)),
-    ?assertEqual(0, count(truncations, Result)).
-
-a_failed_entry_within_its_age_is_retried_test() ->
-    State = test_state(#{}),
-    Entry = (test_entry([7]))#{enqueued_at := now_ms()},
-    Result = handle_result({error, timeout}, Entry, State),
-    ?assertEqual(#{}, maps:get(dropped, Result)),
-    ?assertEqual(1, count(retries, Result)),
-    ?assertEqual({value, Entry#{attempts := 4}}, gb_trees:lookup(0, maps:get(jobs, Result))).
-
-an_entry_expired_at_dispatch_is_dropped_test() ->
-    Result = dispatch(test_entry([7]), test_state(#{})),
-    ?assertEqual(#{{message, expired} => 1}, maps:get(dropped, Result)),
-    ?assertEqual(0, map_size(maps:get(inflight, Result))).
-
-reported_drops_are_counted_by_kind_and_reason_test() ->
-    {noreply, State1} = handle_cast({dropped, message, payload_too_large}, test_state(#{})),
-    {noreply, State2} = handle_cast({dropped, message, payload_too_large}, State1),
-    {noreply, State3} = handle_cast({dropped, ring, outbox_unavailable}, State2),
-    ?assertEqual(
-        #{{message, payload_too_large} => 2, {ring, outbox_unavailable} => 1},
-        maps:get(dropped, build_stats(State3))
-    ).
-
-test_state(Reads) ->
-    #{
-        jobs => gb_trees:empty(),
-        ready => queue:new(),
-        inflight => #{},
-        followups => #{},
-        next_seq => 1,
-        reads => Reads,
-        active => #{},
-        counters => #{},
-        dropped => #{},
-        max_queue => ?DEFAULT_MAX_QUEUE,
-        max_inflight => ?DEFAULT_MAX_INFLIGHT,
-        request_timeout_ms => ?DEFAULT_REQUEST_TIMEOUT_MS,
-        max_age_ms => ?DEFAULT_MAX_AGE_MS,
-        retry_base_ms => ?DEFAULT_RETRY_BASE_MS
-    }.
-
-test_entry(UserIds) ->
-    #{
-        kind => message,
-        subject => <<"rpc.push.message">>,
-        job => #{<<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds]},
-        body => <<"{}">>,
-        user_ids => UserIds,
-        channel_id => 20,
-        message_id => 30,
-        seq => 0,
-        enqueued_at => now_ms() - ?DEFAULT_MAX_AGE_MS,
-        attempts => 3
-    }.
-
--endif.

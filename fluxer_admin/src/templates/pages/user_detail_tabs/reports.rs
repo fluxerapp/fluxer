@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
+use crate::templates::components::report_category::{report_status, report_type};
+
 use crate::{
     api::types::{ReportEntry, SearchReportsResponse},
     config::AdminConfig,
@@ -119,44 +123,10 @@ fn report_section(
                 }
 
                 @if has_previous || next_page.is_some() {
-                    div class="flex justify-center gap-2" {
-                        @if has_previous {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { current_page - 1 } else { sent_page }) "&reports_received_page=" (if kind == "received" { current_page - 1 } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Previous"
-                            }
-                        }
-                        @if let Some(next_page) = next_page {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { next_page } else { sent_page }) "&reports_received_page=" (if kind == "received" { next_page } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Next"
-                            }
-                        }
-                    }
+                    (pager_with_missing(has_previous.then(|| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {current_page - 1} else {sent_page}, if kind == "received" {current_page - 1} else {received_page})), None, next_page.map(|page| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {page} else {sent_page}, if kind == "received" {page} else {received_page})), true))
                 }
             }
         }))
-    }
-}
-
-fn format_report_type(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
-    }
-}
-
-pub(crate) fn format_status(status: i32) -> &'static str {
-    match status {
-        0 => "Pending",
-        1 => "Resolved",
-        _ => "Unknown",
     }
 }
 
@@ -252,7 +222,7 @@ fn type_and_category_lines(report: &ReportEntry) -> Markup {
         .zip(reason_label)
         .is_some_and(|(category, label)| reason_repeats_category(category, label));
     html! {
-        div class="text-neutral-500 text-xs" { (format_report_type(report.report_type)) }
+        div class="text-neutral-500 text-xs" { (report_type(report.report_type).0) }
         @if let Some(category) = &report.category {
             div class="break-words" data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
                 (report_category(category))
@@ -319,7 +289,7 @@ fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry
                 }
             }
             td class="whitespace-nowrap px-2 py-3 text-sm text-neutral-900 xl:px-4" {
-                (format_status(report.status))
+                (report_status(report.status).0)
             }
         }
     }

@@ -105,6 +105,8 @@ async fn voice_servers_page(
                     region_id: None,
                     region_name: None,
                     servers: None,
+                    regions: &[],
+                    join_tokens: None,
                     connection_counts: &HashMap::new(),
                     error: None,
                     csrf_token: &csrf_token,
@@ -117,16 +119,26 @@ async fn voice_servers_page(
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let connection_counts = load_server_connection_counts(&client).await;
 
-    let region_name = match client.get_voice_region(region_id, false).await {
-        Ok(resp) => resp
-            .region
-            .and_then(|r| r.name)
-            .unwrap_or_else(|| region_id.to_string()),
+    let regions = match client.list_voice_regions(false).await {
+        Ok(resp) => resp.regions,
         Err(error) => {
-            tracing::warn!(%error, region_id, "admin API request failed: load voice region");
-            region_id.to_string()
+            tracing::warn!(%error, "admin API request failed: load voice regions");
+            Vec::new()
         }
     };
+    let region_name = regions
+        .iter()
+        .find(|r| r.id == region_id)
+        .and_then(|r| r.name.clone())
+        .unwrap_or_else(|| region_id.to_string());
+    let join_tokens = client
+        .list_voice_join_tokens()
+        .await
+        .map(|resp| resp.tokens)
+        .inspect_err(
+            |error| tracing::warn!(%error, "admin API request failed: load voice join tokens"),
+        )
+        .ok();
 
     match client.list_voice_servers(region_id).await {
         Ok(resp) => {
@@ -137,6 +149,8 @@ async fn voice_servers_page(
                     region_id: Some(region_id),
                     region_name: Some(&region_name),
                     servers: Some(&resp.servers),
+                    regions: &regions,
+                    join_tokens: join_tokens.as_deref(),
                     connection_counts: &connection_counts,
                     error: None,
                     csrf_token: &csrf_token,
@@ -153,6 +167,8 @@ async fn voice_servers_page(
                     region_id: Some(region_id),
                     region_name: Some(&region_name),
                     servers: None,
+                    regions: &regions,
+                    join_tokens: join_tokens.as_deref(),
                     connection_counts: &connection_counts,
                     error: Some(&msg),
                     csrf_token: &csrf_token,

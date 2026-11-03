@@ -44,7 +44,6 @@ export interface VoiceCallLayoutPresentationModel {
 	readonly canShowParticipantsGridPanel: boolean;
 	readonly participantsGridExpanded: boolean;
 	readonly isParticipantsExpanded: boolean;
-	readonly isFullscreenFocusLayout: boolean;
 	readonly shouldRenderFocusFallbackGrid: boolean;
 	readonly shouldRenderFocusLayout: boolean;
 	readonly showMembersRow: boolean;
@@ -140,6 +139,11 @@ const voiceCallLayoutPresentationStateMachine = setup({
 	id: 'voiceCallLayoutPresentation',
 	context: ({input}) => createVoiceCallLayoutPresentationContext(input),
 	initial: 'routing',
+	on: {
+		'presentation.update': {target: '.routing', actions: 'applyInput'},
+		'participants.toggle': {target: '.routing', actions: 'toggleParticipantsGrid'},
+		'participants.collapse': {target: '.routing', actions: 'collapseParticipantsGrid'},
+	},
 	states: {
 		routing: {
 			always: [
@@ -149,34 +153,10 @@ const voiceCallLayoutPresentationStateMachine = setup({
 				{target: 'focusLayout'},
 			],
 		},
-		gridLayout: {
-			on: {
-				'presentation.update': {target: 'routing', actions: 'applyInput'},
-				'participants.toggle': {target: 'routing', actions: 'toggleParticipantsGrid'},
-				'participants.collapse': {target: 'routing', actions: 'collapseParticipantsGrid'},
-			},
-		},
-		focusFallbackGrid: {
-			on: {
-				'presentation.update': {target: 'routing', actions: 'applyInput'},
-				'participants.toggle': {target: 'routing', actions: 'toggleParticipantsGrid'},
-				'participants.collapse': {target: 'routing', actions: 'collapseParticipantsGrid'},
-			},
-		},
-		focusLayout: {
-			on: {
-				'presentation.update': {target: 'routing', actions: 'applyInput'},
-				'participants.toggle': {target: 'routing', actions: 'toggleParticipantsGrid'},
-				'participants.collapse': {target: 'routing', actions: 'collapseParticipantsGrid'},
-			},
-		},
-		focusParticipantsExpanded: {
-			on: {
-				'presentation.update': {target: 'routing', actions: 'applyInput'},
-				'participants.toggle': {target: 'routing', actions: 'toggleParticipantsGrid'},
-				'participants.collapse': {target: 'routing', actions: 'collapseParticipantsGrid'},
-			},
-		},
+		gridLayout: {},
+		focusFallbackGrid: {},
+		focusLayout: {},
+		focusParticipantsExpanded: {},
 	},
 });
 
@@ -217,7 +197,7 @@ export function selectVoiceCallLayoutPresentationModel(
 	const canShowParticipants = canShowParticipantsGridPanel(context);
 	const isParticipantsExpanded = stateValue === 'focusParticipantsExpanded';
 	const isFocusLayout = stateValue === 'focusLayout' || stateValue === 'focusParticipantsExpanded';
-	const isFullscreenFocusLayout = !context.compact && context.isVoiceCallAppFullscreen;
+	const fillsCallArea = isFocusLayout && !context.compact;
 	return {
 		stateValue,
 		mainLayout: stateValue === 'gridLayout' ? 'grid' : 'focus',
@@ -226,11 +206,10 @@ export function selectVoiceCallLayoutPresentationModel(
 		canShowParticipantsGridPanel: canShowParticipants,
 		participantsGridExpanded: context.participantsGridExpanded,
 		isParticipantsExpanded,
-		isFullscreenFocusLayout,
 		shouldRenderFocusFallbackGrid: stateValue === 'focusFallbackGrid',
 		shouldRenderFocusLayout: isFocusLayout,
-		showMembersRow: isFocusLayout && isFullscreenFocusLayout && hasMiniGrid && context.membersRowVisible,
-		showMembersToggle: isFocusLayout && isFullscreenFocusLayout && !isParticipantsExpanded && hasMiniGrid,
+		showMembersRow: fillsCallArea && hasMiniGrid && context.membersRowVisible,
+		showMembersToggle: fillsCallArea && !isParticipantsExpanded && hasMiniGrid,
 		shouldWrapScreenShareGrid: context.hasScreenShare,
 		focusScrollerOverflow: isParticipantsExpanded ? 'auto' : 'hidden',
 	};

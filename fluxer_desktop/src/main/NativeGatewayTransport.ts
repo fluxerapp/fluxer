@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {parseNativeGatewayTransportEvent} from '@electron/common/NativeGatewayTransportEvent';
 import {getDesktopOutboundHTTP} from '@electron/main/DesktopOutboundHTTP';
 import {isDirectProxyRoute} from '@electron/main/DesktopSessionHTTP';
 import type {GatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
@@ -8,7 +9,6 @@ import {
 	type GatewaySocketBoundary,
 	warmGatewaySocketTransport,
 } from '@electron/main/GatewaySocketNativeBoundary';
-import {parseNativeGatewayTransportEvent} from '@electron/main/NativeGatewayTransportEventParser';
 import {
 	requireNativeGatewayCloseRequest,
 	requireNativeGatewayConnectionId,
@@ -334,7 +334,7 @@ export class DesktopNativeGatewayTransport {
 		if (record == null || record.disposing) return;
 		let parsed: NativeGatewayTransportEvent;
 		try {
-			parsed = parseNativeGatewayTransportEvent(connectionId, nativeEvent);
+			parsed = parseNativeGatewayTransportEvent(nativeEvent, connectionId);
 		} catch (error) {
 			this.dependencies.logger.error('[NativeGateway] Rejected a malformed native gateway event', error);
 			this.failConnection(

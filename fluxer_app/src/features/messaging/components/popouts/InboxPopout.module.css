@@ -15,7 +15,11 @@
 	background-color: var(--form-surface-background);
 }
 
-.containerWithSidebar {
+.body {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
 	flex-direction: row;
 }
 

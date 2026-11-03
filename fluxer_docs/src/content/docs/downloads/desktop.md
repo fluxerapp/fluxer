@@ -1,49 +1,44 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Desktop builds
-description: Paths for desktop installers, checksums and the update feeds each platform reads.
+description: Download paths for Fluxer desktop builds, their SHA-256 checksums and the update feeds.
 ---
 
-Every desktop path below is served from `https://pkgs.fluxer.com` and is built from four coordinates.
+Desktop builds are on `https://pkgs.fluxer.com`, and you can download them without signing in. Each path has a channel (`stable` or `canary`), a platform, an architecture (`x64` or `arm64`) and, for a file, a format from the table below.
 
-| Coordinate | Values |
-| --- | --- |
-| `channel` | `stable`, `canary` |
-| `platform` | `darwin`, `linux`, `win32` |
-| `arch` | `x64`, `arm64` |
-| `format` | `dmg`, `zip`, `setup`, `portable`, `appimage`, `deb`, `rpm`, `tar_gz` |
+| Platform | Path value | Formats |
+| --- | --- | --- |
+| macOS | `darwin` | `dmg`, `zip` |
+| Windows | `win32` | `setup`, `portable` |
+| Linux | `linux` | `appimage`, `deb`, `rpm`, `tar_gz` |
 
-A format is only published for the platform it belongs to. `dmg` and `zip` are macOS, `setup` and `portable` are Windows, and the other four are Linux.
-
-## Release metadata
+## Latest version
 
 ```
 GET /desktop/{channel}/{platform}/{arch}/latest
 ```
 
-`latest` returns a JSON document naming the current version, its publication date, and a per-format URL and SHA256.
+Returns JSON with the current `version`, its `pub_date` and a `files` object that gives each format's `url` and `sha256`.
 
-## Artifacts
+## Downloads
 
 ```
 GET /desktop/{channel}/{platform}/{arch}/{version}/{format}
 GET /desktop/{channel}/{platform}/{arch}/{version}/{format}.sha256
-```
-
-`version` is either a published version or the literal `latest`, which resolves to the current one. The `.sha256` sibling holds the checksum for the artifact beside it.
-
-Linux AppImage builds also publish a zsync control file, so `AppImageUpdate`, `AppImageLauncher` and Gear Lever can fetch only the blocks that changed:
-
-```
 GET /desktop/{channel}/linux/{arch}/{version}/appimage.zsync
 ```
 
+`version` is a release version such as `2026.904.135113`, or `latest` for the newest one. Add `.sha256` to a download path to get the file's SHA-256 checksum. For example, `https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup` downloads the newest Windows installer.
+
+AppImage builds also have an `appimage.zsync` file, which AppImage update tools use to download only the blocks that changed.
+
 ## Update feeds
 
-Each platform's updater reads the feed its own framework expects, beside the artifacts:
+The macOS and Windows desktop apps check these files in `/desktop/{channel}/{platform}/{arch}/` for updates.
 
 | Platform | Feed |
 | --- | --- |
 | macOS | `RELEASES.json`, `releases.json` |
 | Windows | `RELEASES`, `releases.win.json`, `assets.win.json` |
-| All | `manifest.json`, `version.json`, `latest.json` |
+
+On Linux, the AppImage updates itself from `latest` when it's in a folder you can write to. Packages update through the [Linux repositories](/downloads/linux-repositories/), and the tar.gz doesn't update itself.

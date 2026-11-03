@@ -1,23 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 -name ${FLUXER_ERLANG_NODE_NAME}
 -setcookie ${FLUXER_ERLANG_COOKIE}
-+K true
-+A16
--env ERL_MAX_PORTS 4096
--env ERL_PROCESSES 262144
++A1
 +P 262144
 +Q 65536
-+S ${FLUXER_ERLANG_SCHEDULERS:-6}:${FLUXER_ERLANG_SCHEDULERS:-6}
-+SDcpu ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-4}:${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-4}
-+SDio 8
++S ${FLUXER_ERLANG_SCHEDULERS:-2}:${FLUXER_ERLANG_SCHEDULERS:-2}
++SDcpu ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}:${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}
++SDio ${FLUXER_ERLANG_DIRTY_IO_SCHEDULERS:-2}
 +sbwt none
 +sbwtdcpu none
 +sbwtdio none
 +zdbbl 32768
 +MBacul 0
 +MBramv true
-+hms 233
-+hmbs 46422
++MHas ageffcbf
++MBas ageffcbf
++MEas ageffcbf
++MHlmbcs 512
++MBlmbcs 512
++MElmbcs 512
 -kernel logger_level warning
 -kernel inet_dist_listen_min ${FLUXER_ERLANG_DIST_PORT}
 -kernel inet_dist_listen_max ${FLUXER_ERLANG_DIST_PORT}

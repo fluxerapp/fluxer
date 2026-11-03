@@ -119,6 +119,12 @@ export function runtimeSnapshotFromDiscovery(document: InstanceDiscoveryDocument
 		appPublic: discovery.appPublic,
 		agePolicy: discovery.agePolicy,
 		domainMigration: discovery.domainMigration,
+		notice: discovery.notice ?? null,
+		guildBadges: discovery.guildBadges,
+		guildBadgesPartial: discovery.guildBadgesPartial,
+		customBadgesVersion: discovery.customBadgesVersion,
+		builtInGuildBadgeImages: discovery.builtInGuildBadgeImages,
+		hiddenBuiltInGuildBadges: discovery.hiddenBuiltInGuildBadges,
 	});
 }
 
@@ -135,7 +141,7 @@ function endpointHostname(endpoint: string): string | null {
 }
 
 function bootstrapReleaseChannel(): OfficialReleaseChannel {
-	return Config.PUBLIC_RELEASE_CHANNEL === 'stable' ? 'stable' : 'canary';
+	return Config.RELEASE_CHANNEL === 'stable' ? 'stable' : 'canary';
 }
 
 const SAME_ORIGIN_API_META_SELECTOR = 'meta[name="fluxer-api-origin"][content="self"]';
@@ -156,9 +162,15 @@ function sameOriginApiEndpoint(origin: string): string {
 	return `${origin}${SAME_ORIGIN_API_PATH}`;
 }
 
-function adoptsDocumentOrigin(apiEndpoint: string): boolean {
+function adoptsDocumentOrigin(apiEndpoint: string): boolean | 'when-api-routed' {
 	const origin = browserDocumentOrigin();
-	return origin !== null && documentServesItsOwnApi() && apiEndpoint === sameOriginApiEndpoint(origin);
+	if (origin === null) {
+		return false;
+	}
+	if (documentServesItsOwnApi() && apiEndpoint === sameOriginApiEndpoint(origin)) {
+		return true;
+	}
+	return apiEndpoint === normalizeInstanceEndpoint(origin, InstanceEndpointKind.API) ? 'when-api-routed' : false;
 }
 
 export function resolveDiscoveryApiEndpoint(input: string): string {
@@ -444,22 +456,29 @@ class InstanceSnapshotStore {
 		return null;
 	}
 
-	private conditionalHeaders(apiEndpoint: string): Record<string, string> | undefined {
+	private revalidationSource(apiEndpoint: string): {instanceKey: string; entry: InstanceSnapshotEntry} | null {
 		if (!isReachableThroughDocumentTransport(apiEndpoint)) {
-			return undefined;
+			return null;
 		}
 		const found = this.findBy((entry) => entry.snapshot.apiEndpoint === apiEndpoint);
-		if (found == null) {
+		if (found == null || (found.entry.etag == null && found.entry.lastModified == null)) {
+			return null;
+		}
+		return found;
+	}
+
+	private conditionalHeaders(entry: InstanceSnapshotEntry | undefined): Record<string, string> | undefined {
+		if (entry === undefined) {
 			return undefined;
 		}
 		const headers: Record<string, string> = {};
-		if (found.entry.etag != null) {
-			headers[HttpHeader.IF_NONE_MATCH] = found.entry.etag;
+		if (entry.etag != null) {
+			headers[HttpHeader.IF_NONE_MATCH] = entry.etag;
 		}
-		if (found.entry.lastModified != null) {
-			headers[HttpHeader.IF_MODIFIED_SINCE] = found.entry.lastModified;
+		if (entry.lastModified != null) {
+			headers[HttpHeader.IF_MODIFIED_SINCE] = entry.lastModified;
 		}
-		return Object.keys(headers).length > 0 ? headers : undefined;
+		return headers;
 	}
 
 	private setEntry(instanceKey: string, entry: InstanceSnapshotEntry): void {
@@ -504,22 +523,22 @@ class InstanceSnapshotStore {
 		if (desktopApi != null) {
 			return await this.discoverThroughDesktopRuntime(desktopApi, apiEndpoint, signal);
 		}
+		const revalidated = this.revalidationSource(apiEndpoint);
 		const result = await fetchInstanceDiscovery({
 			input: apiEndpoint,
 			fetch: fetchDiscoveryWithPrebootHandoff,
 			signal: signal ?? undefined,
-			conditionalHeaders: this.conditionalHeaders(apiEndpoint),
+			conditionalHeaders: this.conditionalHeaders(revalidated?.entry),
 			adoptServingOrigin: adoptsDocumentOrigin(apiEndpoint),
 		});
 		if (result.kind === 'not-modified') {
-			const found = this.findBy((entry) => entry.discoveryUrl === result.url);
-			if (found == null) {
+			if (revalidated == null) {
 				throw new Error(`${result.url} responded 304 with no cached discovery document`);
 			}
 			runInAction(() => {
-				this.setEntry(found.instanceKey, {...found.entry, fetchedAt: Date.now()});
+				this.setEntry(revalidated.instanceKey, {...revalidated.entry, fetchedAt: Date.now()});
 			});
-			return this.toResolution(found.instanceKey, found.entry);
+			return this.toResolution(revalidated.instanceKey, revalidated.entry);
 		}
 		return this.storeSnapshot(runtimeSnapshotFromDiscovery(result.document), {
 			discoveryUrl: result.url,

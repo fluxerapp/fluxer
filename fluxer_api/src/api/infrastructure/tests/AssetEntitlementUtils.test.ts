@@ -12,13 +12,17 @@ import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigReposito
 import {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {User} from '@app/api/models/User';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 let originalSelfHosted = true;
 
 function ensureLimitConfigGlobal(): void {
-	new LimitConfigService(new InstanceConfigRepository(), new InMemoryProvider()).setAsGlobalInstance();
+	new LimitConfigService(
+		new InstanceConfigRepository(),
+		new KVCacheProvider({client: new MockKVProvider()}),
+	).setAsGlobalInstance();
 }
 
 function createUser(params: {

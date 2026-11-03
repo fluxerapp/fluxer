@@ -98,15 +98,23 @@ disconnect_connection_from_expected_channel(
 ) ->
     case maps:get(ConnId, VoiceStates, undefined) of
         undefined ->
-            State1 = guild_voice_disconnect_broadcast:clear_pending_voice_connection(
-                ConnId, State
-            ),
+            State1 = clear_pending_in_channel(ConnId, ExpectedChannelId, State),
             {reply, #{success => true, ignored => true, reason => <<"connection_not_found">>},
                 State1};
         VoiceState ->
             check_and_disconnect_connection(
                 UserId, ExpectedChannelId, ConnId, VoiceState, VoiceStates, State
             )
+    end.
+
+-spec clear_pending_in_channel(binary(), integer(), guild_state()) -> guild_state().
+clear_pending_in_channel(ConnId, ChannelId, State) ->
+    Pending = maps:get(pending_voice_connections, State, #{}),
+    case maps:get(ConnId, Pending, undefined) of
+        #{channel_id := ChannelId} ->
+            guild_voice_disconnect_broadcast:clear_pending_voice_connection(ConnId, State);
+        _ ->
+            State
     end.
 
 -spec check_and_disconnect_connection(

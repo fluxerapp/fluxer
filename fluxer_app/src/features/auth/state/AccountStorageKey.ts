@@ -2,8 +2,8 @@
 
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 
-export const ACCOUNT_STORAGE_KEY_SEPARATOR = '::';
-export const ACCOUNT_STORAGE_KEY_MAX_BYTES = 1024;
+const ACCOUNT_STORAGE_KEY_SEPARATOR = '::';
+const ACCOUNT_STORAGE_KEY_MAX_BYTES = 1024;
 
 const TEXT_ENCODER = new TextEncoder();
 

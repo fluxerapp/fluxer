@@ -10,44 +10,23 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {relaunchDesktopApp} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {useDesktopWindowBehaviorSettings} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
+import {
+	ENABLE_TEXT_SELECTION_DESCRIPTOR,
+	SMOOTH_SCROLLING_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	LATER_DESCRIPTOR,
+	RESTART_NOW_DESCRIPTOR,
+	RESTART_DESCRIPTOR as RESTART_PRODUCT_DESCRIPTOR,
+	VIDEO_SEEK_THUMBNAILS_DESCRIPTOR as SHOW_VIDEO_SEEK_PREVIEW_THUMBNAILS_DESCRIPTOR,
+	STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR,
+	USE_AUTOSCROLLING_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
-import {msg, ph} from '@lingui/core/macro';
+import {ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
-
-const ENABLE_TEXT_SELECTION_DESCRIPTOR = msg({
-	message: 'Enable text selection',
-	comment: 'Short label for an advanced app interaction toggle.',
-});
-const SHOW_VIDEO_SEEK_PREVIEW_THUMBNAILS_DESCRIPTOR = msg({
-	message: 'Enable video seek thumbnails',
-	comment: 'Short label for the advanced video seek preview toggle.',
-});
-const SMOOTH_SCROLLING_DESCRIPTOR = msg({
-	message: 'Smooth scrolling',
-	comment: 'Short label for an advanced desktop scrolling toggle.',
-});
-const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Stay fully interactive when unfocused',
-	comment: 'Short label for an advanced app interaction toggle.',
-});
-const USE_AUTOSCROLLING_DESCRIPTOR = msg({
-	message: 'Use autoscrolling',
-	comment: 'Short label for an advanced desktop scrolling toggle.',
-});
-const RESTART_NOW_DESCRIPTOR = msg({
-	message: 'Restart now',
-	comment: 'Short confirmation button label in advanced settings.',
-});
-const RESTART_PRODUCT_DESCRIPTOR = msg({
-	message: 'Restart {productName}?',
-	comment: 'Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.',
-});
-const LATER_DESCRIPTOR = msg({
-	message: 'Later',
-	comment: 'Short confirmation button label in advanced settings.',
-});
 
 function hasDesktopSmoothScrollingPendingRestart(settings: DesktopWindowBehaviorSettings | null): boolean {
 	return settings !== null && settings.smoothScrolling !== settings.activeSmoothScrolling;

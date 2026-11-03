@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ADMIN_AUDIT_READ_ACTIONS, getAdminAuditAccess} from '@app/api/admin/AdminAuditActions';
+import {withAdminAuditAttribution} from '@app/api/admin/AdminAuditAttribution';
 import type {AdminAuditLog, AdminRepository} from '@app/api/admin/AdminRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
@@ -46,7 +47,7 @@ export class AdminAuditService {
 		action,
 		auditLogReason,
 		metadata = new Map(),
-	}: CreateAdminAuditLogParams): Promise<void> {
+	}: CreateAdminAuditLogParams): Promise<bigint> {
 		const log = await this.adminRepository.createAuditLog({
 			log_id: await this.snowflakeService.generate(),
 			admin_user_id: adminUserId,
@@ -54,7 +55,7 @@ export class AdminAuditService {
 			target_id: targetId,
 			action,
 			audit_log_reason: auditLogReason ?? null,
-			metadata,
+			metadata: withAdminAuditAttribution(metadata),
 			created_at: new Date(),
 		});
 		const auditLogSearchService = getAuditLogSearchService();
@@ -63,10 +64,7 @@ export class AdminAuditService {
 				Logger.error({error, logId: log.logId}, 'Failed to index audit log to search');
 			});
 		}
-	}
-
-	async findAuditLog(logId: bigint): Promise<AdminAuditLog | null> {
-		return this.adminRepository.getAuditLog(logId);
+		return log.logId;
 	}
 
 	async getAuditLog(logId: bigint): Promise<AdminAuditLogResponse | null> {
@@ -76,48 +74,6 @@ export class AdminAuditService {
 		}
 		const [response] = await this.toResponses([log]);
 		return response;
-	}
-
-	async listAuditLogs(data: {
-		admin_user_id?: bigint;
-		target_type?: string;
-		target_id?: string;
-		access?: AdminAuditAccess;
-		limit?: number;
-		offset?: number;
-	}): Promise<AuditLogsListResponse> {
-		const auditLogSearchService = getAuditLogSearchService();
-		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService?.isAvailable()) {
-			return this.listAuditLogsFromDatabase({
-				adminUserId: data.admin_user_id,
-				targetType: data.target_type,
-				targetId: targetIdBigInt,
-				access: data.access,
-				limit: data.limit,
-				offset: data.offset,
-			});
-		}
-		const limit = data.limit || 50;
-		const filters: AuditLogSearchFilters = {...accessFilters(data.access)};
-		if (data.admin_user_id) {
-			filters.adminUserId = data.admin_user_id.toString();
-		}
-		if (data.target_type) {
-			filters.targetType = data.target_type;
-		}
-		if (data.target_id) {
-			filters.targetId = data.target_id;
-		}
-		const {hits, total} = await auditLogSearchService.searchAuditLogs('', filters, {
-			limit,
-			offset: data.offset || 0,
-		});
-		const orderedLogs = await this.loadLogsInSearchOrder(hits.map((hit) => BigInt(hit.logId)));
-		return {
-			logs: await this.toResponses(orderedLogs),
-			total,
-		};
 	}
 
 	async searchAuditLogs(data: {

@@ -155,7 +155,7 @@
 .customHint {
 	font-size: 0.75rem;
 	color: var(--text-primary-muted);
-	padding-left: 0.125rem;
+	padding-inline-start: 0.125rem;
 }
 
 .emptyState {

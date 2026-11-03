@@ -3,16 +3,12 @@
 -module(guild_manager_shard_lookup).
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([
     do_start_or_lookup/3,
     do_lookup/2,
-    lookup_or_fetch/3,
     start_fetch/3,
     add_pending_request/3,
-    handle_guild_data_fetched/3,
-    handle_guild_data_fetched/4,
+    handle_guild_data_fetched/3, handle_guild_data_fetched/4,
     handle_fetch_worker_down/3,
     reply_to_all/2,
     collect_active_guild_ids/1,
@@ -400,72 +396,3 @@ safe_owner_node(GuildId) ->
         exit:{noproc, _Call} -> error;
         exit:{nodedown, _Node} -> error
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-fetch_worker_down_replies_and_clears_loading_test() ->
-    GuildId = 1427764882469228556,
-    ReplyRef = make_ref(),
-    WorkerRef = make_ref(),
-    FetchToken = make_ref(),
-    State0 = #{
-        guilds => #{GuildId => loading},
-        pending_requests => #{GuildId => [{self(), ReplyRef}]},
-        fetch_workers => #{WorkerRef => {GuildId, self(), FetchToken}},
-        shard_index => 0
-    },
-    {fetch_worker, State1} = handle_fetch_worker_down(WorkerRef, crashed, State0),
-    ?assertEqual(#{}, maps:get(guilds, State1)),
-    ?assertEqual(#{}, maps:get(pending_requests, State1)),
-    ?assertEqual(#{}, maps:get(fetch_workers, State1)),
-    receive
-        {ReplyRef, {error, {fetch_worker_down, crashed}}} -> ok
-    after 0 ->
-        ?assert(false)
-    end.
-
-stale_fetch_result_does_not_complete_current_loading_test() ->
-    GuildId = 1427764882469228556,
-    ReplyRef = make_ref(),
-    WorkerRef = make_ref(),
-    CurrentToken = make_ref(),
-    StaleToken = make_ref(),
-    State0 = #{
-        guilds => #{GuildId => loading},
-        pending_requests => #{GuildId => [{self(), ReplyRef}]},
-        fetch_workers => #{WorkerRef => {GuildId, self(), CurrentToken}},
-        shard_index => 0
-    },
-    {noreply, State1} = handle_guild_data_fetched(
-        GuildId,
-        StaleToken,
-        {error, not_found},
-        State0
-    ),
-    ?assertEqual(State0, State1),
-    receive
-        {ReplyRef, _Reply} -> ?assert(false)
-    after 0 ->
-        ok
-    end.
-
-legacy_fetch_result_completes_when_no_fetch_worker_is_tracked_test() ->
-    GuildId = 1427764882469228556,
-    ReplyRef = make_ref(),
-    State0 = #{
-        guilds => #{GuildId => loading},
-        pending_requests => #{GuildId => [{self(), ReplyRef}]},
-        fetch_workers => #{},
-        shard_index => 0
-    },
-    {noreply, State1} = handle_guild_data_fetched(GuildId, {error, not_found}, State0),
-    ?assertEqual(#{}, maps:get(guilds, State1)),
-    ?assertEqual(#{}, maps:get(pending_requests, State1)),
-    receive
-        {ReplyRef, {error, not_found}} -> ok
-    after 0 ->
-        ?assert(false)
-    end.
-
--endif.

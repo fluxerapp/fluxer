@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import modalI18n from '@app/app/I18n';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {TemporaryInviteRequiresPresenceModal} from '@app/features/app/components/alerts/TemporaryInviteRequiresPresenceModal';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
-import {isAbortError} from '@app/features/auth/state/SudoPrompt';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
+import {openGuildWhenAvailable} from '@app/features/guild/commands/GuildVisitCommands';
 import {GuildAtCapacityModal} from '@app/features/guild/components/alerts/GuildAtCapacityModal';
 import {MaxGuildsModal} from '@app/features/guild/components/alerts/MaxGuildsModal';
-import {InviteAcceptFailedModal} from '@app/features/invite/components/alerts/InviteAcceptFailedModal';
+import Guilds from '@app/features/guild/state/Guilds';
+import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {InvitesDisabledModal} from '@app/features/invite/components/alerts/InvitesDisabledModal';
 import {InviteAcceptModal} from '@app/features/invite/components/modals/InviteAcceptModal';
 import Invites from '@app/features/invite/state/Invites';
 import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {UserBannedFromGuildModal} from '@app/features/moderation/components/alerts/UserBannedFromGuildModal';
-import {UserIpBannedFromGuildModal} from '@app/features/moderation/components/alerts/UserIpBannedFromGuildModal';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {type InstanceHTTPTarget, instanceRequest} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -31,30 +31,49 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import type {GuildVisitStartResponse} from '@fluxer/schema/src/domains/guild/GuildVisitSchemas';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-const ACCOUNT_VERIFICATION_REQUIRED_DESCRIPTOR = msg({
-	message: 'Account verification required',
-	comment:
-		'Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.',
+const InviteAcceptFailedModal_FAILED_TO_ACCEPT_INVITE_DESCRIPTOR = msg({
+	message: "Couldn't join community",
+	comment: 'Error modal title shown when accepting a community invite fails.',
 });
-const PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR = msg({
-	message: 'Add an email and password to your account first.',
-	comment:
-		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.',
+
+const UserIpBannedFromGuildModal_YOUR_IP_IS_BANNED_DESCRIPTOR = msg({
+	message: 'Your IP is banned',
+	comment: 'Label in the user ip banned from guild modal. Keep the tone plain and specific.',
 });
-const ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR = msg({
-	message: 'Add a username and password to your account first.',
-	comment:
-		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite on an instance where people sign in with a username.',
+
+const UserIpBannedFromGuildModal_YOUR_IP_ADDRESS_IS_BANNED_FROM_THIS_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Your IP address is banned from this community and you cannot join.',
+	comment: 'Error message in the user ip banned from guild modal. Keep the tone plain and specific.',
 });
+
+const UserBannedFromGuildModal_YOU_RE_BANNED_DESCRIPTOR = msg({
+	message: "You're banned",
+	comment: 'Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.',
+});
+
+const UserBannedFromGuildModal_YOU_ARE_BANNED_FROM_THIS_COMMUNITY_AND_CANNOT_DESCRIPTOR = msg({
+	message: 'You are banned from this community and cannot join.',
+	comment: 'Error message in the user banned from guild modal. Keep the tone plain and specific.',
+});
+
+const TemporaryInviteRequiresPresenceModal_GATEWAY_CONNECTION_REQUIRED_DESCRIPTOR = msg({
+	message: 'Gateway connection required',
+	comment: 'Short label in the temporary invite requires presence modal.',
+});
+
+const TemporaryInviteRequiresPresenceModal_YOU_MUST_BE_CONNECTED_TO_THE_GATEWAY_TO_DESCRIPTOR = msg({
+	message: 'Temporary invites need a live connection. Check yours and try again.',
+	comment:
+		'Modal body shown when the user tries to accept a temporary invite while the realtime connection is offline.',
+});
+
 const logger = new Logger('Invites');
 const ACCEPT_INVITE_BODY = {} as Invite;
-const isUnclaimedAccountInviteError = (code?: string): boolean => {
-	return code === APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS;
-};
 const shouldOpenInviteGuildChannel = (channelType: number): boolean =>
 	channelType !== ChannelTypes.GUILD_CATEGORY && channelType !== ChannelTypes.GUILD_LINK;
 
@@ -83,32 +102,39 @@ function removeInviteIfMissing(
 	}
 }
 
-function showUnclaimedAccountInviteModal(i18n: I18n): void {
-	ModalCommands.push(
-		modal(() => (
-			<GenericErrorModal
-				title={i18n._(ACCOUNT_VERIFICATION_REQUIRED_DESCRIPTOR)}
-				message={i18n._(
-					RuntimeConfig.usesUsernameSignIn
-						? ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR
-						: PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR,
-				)}
-				data-flx="invite.invite-commands.show-unclaimed-account-invite-modal.generic-error-modal"
-			/>
-		)),
-	);
+const ADULTS_ONLY_COMMUNITY_DESCRIPTOR = msg({
+	message: 'This community is for adults only.',
+	comment: 'Error dialog text when someone who is not an adult tries to open a community marked 18+.',
+});
+
+export function showGuildJoinRefusal(error: unknown): boolean {
+	const errorCode = failureCode(error);
+	if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
+		showAccountLimitedModal(failureMessage(error));
+	} else if (errorCode === APIErrorCodes.USER_BANNED_FROM_GUILD) {
+		showGenericErrorModal({
+			title: () => modalI18n._(UserBannedFromGuildModal_YOU_RE_BANNED_DESCRIPTOR),
+			message: () => modalI18n._(UserBannedFromGuildModal_YOU_ARE_BANNED_FROM_THIS_COMMUNITY_AND_CANNOT_DESCRIPTOR),
+			dataFlx: 'moderation.user-banned-from-guild-modal.confirm-modal',
+		});
+	} else if (errorCode === APIErrorCodes.USER_IP_BANNED_FROM_GUILD) {
+		showGenericErrorModal({
+			title: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_IS_BANNED_DESCRIPTOR),
+			message: () => modalI18n._(UserIpBannedFromGuildModal_YOUR_IP_ADDRESS_IS_BANNED_FROM_THIS_COMMUNITY_DESCRIPTOR),
+			dataFlx: 'moderation.user-ip-banned-from-guild-modal.confirm-modal',
+		});
+	} else {
+		return false;
+	}
+	return true;
 }
 
-function showGuildInviteAcceptFailure(
-	i18n: I18n,
-	invite: Invite | null,
-	errorCode: string | undefined,
-	responseErr: HttpError | null,
-): void {
+function showGuildInviteAcceptFailure(invite: Invite | null, error: unknown): void {
+	if (showGuildJoinRefusal(error)) return;
+	const errorCode = failureCode(error);
+	const responseErr = error instanceof HttpError ? error : null;
 	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
-	if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
-		showAccountLimitedModal(responseErr ? failureMessage(responseErr) : undefined);
-	} else if (errorCode === APIErrorCodes.INVITES_DISABLED) {
+	if (errorCode === APIErrorCodes.INVITES_DISABLED) {
 		ModalCommands.push(
 			modal(() => (
 				<InvitesDisabledModal
@@ -142,31 +168,24 @@ function showGuildInviteAcceptFailure(
 			);
 		}
 	} else if (errorCode === APIErrorCodes.TEMPORARY_INVITE_REQUIRES_PRESENCE) {
-		ModalCommands.push(
-			modal(() => (
-				<TemporaryInviteRequiresPresenceModal data-flx="invite.invite-commands.show-guild-invite-accept-failure.temporary-invite-requires-presence-modal" />
-			)),
-		);
-	} else if (errorCode === APIErrorCodes.USER_BANNED_FROM_GUILD) {
-		ModalCommands.push(
-			modal(() => (
-				<UserBannedFromGuildModal data-flx="invite.invite-commands.show-guild-invite-accept-failure.user-banned-from-guild-modal" />
-			)),
-		);
-	} else if (errorCode === APIErrorCodes.USER_IP_BANNED_FROM_GUILD) {
-		ModalCommands.push(
-			modal(() => (
-				<UserIpBannedFromGuildModal data-flx="invite.invite-commands.show-guild-invite-accept-failure.user-ip-banned-from-guild-modal" />
-			)),
-		);
-	} else if (isUnclaimedAccountInviteError(errorCode)) {
-		showUnclaimedAccountInviteModal(i18n);
+		showGenericErrorModal({
+			title: () => modalI18n._(TemporaryInviteRequiresPresenceModal_GATEWAY_CONNECTION_REQUIRED_DESCRIPTOR),
+			message: () =>
+				modalI18n._(TemporaryInviteRequiresPresenceModal_YOU_MUST_BE_CONNECTED_TO_THE_GATEWAY_TO_DESCRIPTOR),
+			dataFlx: 'app.temporary-invite-requires-presence-modal.confirm-modal',
+		});
+	} else if (errorCode === APIErrorCodes.GUILD_VISIT_AGE_RESTRICTED) {
+		showGenericErrorModal({
+			title: () => modalI18n._(InviteAcceptFailedModal_FAILED_TO_ACCEPT_INVITE_DESCRIPTOR),
+			message: () => modalI18n._(ADULTS_ONLY_COMMUNITY_DESCRIPTOR),
+			dataFlx: 'invite.invite-commands.show-guild-invite-accept-failure.adults-only-modal',
+		});
 	} else if (responseErr?.status && responseErr.status >= 400) {
-		ModalCommands.push(
-			modal(() => (
-				<InviteAcceptFailedModal data-flx="invite.invite-commands.show-guild-invite-accept-failure.invite-accept-failed-modal" />
-			)),
-		);
+		showGenericErrorModal({
+			title: () => modalI18n._(InviteAcceptFailedModal_FAILED_TO_ACCEPT_INVITE_DESCRIPTOR),
+			message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+			dataFlx: 'invite.invite-accept-failed-modal.generic-error-modal',
+		});
 	}
 }
 
@@ -239,6 +258,22 @@ export async function acceptAndTransitionToChannel(
 			NavigationCommands.selectChannel(guildId, targetChannelId);
 			return;
 		}
+		if (invite.guild.visits_enabled === true || Guilds.getGuild(guildId)?.visiting === true) {
+			logger.debug(`Visiting guild ${guildId} through invite ${code}`);
+			const visit = await instanceRequest<GuildVisitStartResponse>({
+				method: 'POST',
+				path: Endpoints.INVITE_VISIT(code),
+				target,
+				body: {},
+			}).catch((visitError: unknown) => {
+				if (failureCode(visitError) === APIErrorCodes.GUILD_VISITS_DISABLED) return null;
+				throw visitError;
+			});
+			if (visit !== null) {
+				await openGuildWhenAvailable(visit.body.guild_id, targetChannelId);
+				return;
+			}
+		}
 		logger.debug(`User not in guild ${guildId}, accepting invite ${code}`);
 		await accept(code, target);
 		logger.debug(
@@ -253,7 +288,9 @@ export async function acceptAndTransitionToChannel(
 		const errorCode = failureCode(error);
 		logger.error(`Failed to accept invite and transition for code ${code}:`, error);
 		removeInviteIfMissing(code, target, responseErr, errorCode);
-		showGuildInviteAcceptFailure(i18n, invite, errorCode, responseErr);
+		if (!promptForAccountTier(error, () => void acceptAndTransitionToChannel(code, i18n, target))) {
+			showGuildInviteAcceptFailure(invite, error);
+		}
 		throw error;
 	}
 }

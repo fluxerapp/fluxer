@@ -6,7 +6,6 @@ import {mapThreadMemberToResponse} from '@app/api/channel/services/thread/Thread
 import type {ThreadServiceContext} from '@app/api/channel/services/thread/ThreadServiceContext';
 import type {MuteConfig} from '@app/api/database/types/UserTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
-import type {ThreadMember} from '@app/api/models/ThreadMember';
 import {isValidThreadMemberSettingsFlags, ThreadMemberFlags} from '@fluxer/constants/src/ThreadConstants';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {InvalidThreadNotificationSettingsError} from '@fluxer/errors/src/domains/channel/InvalidThreadNotificationSettingsError';
@@ -18,7 +17,9 @@ import type {ThreadMemberSettingsRequest} from '@fluxer/schema/src/domains/user/
 const SETTINGS_CAS_ATTEMPTS = 3;
 
 function sameMuteConfig(a: MuteConfig | null, b: MuteConfig | null): boolean {
-	if (a === null || b === null) return a === b;
+	if (a === null || b === null) {
+		return a === b;
+	}
 	return (
 		(a.end_time?.getTime() ?? null) === (b.end_time?.getTime() ?? null) &&
 		a.selected_time_window === b.selected_time_window
@@ -44,40 +45,46 @@ export class ThreadMemberSettingsService {
 			viewer: params.viewer,
 			skipNsfwValidation: true,
 		});
-		if (!auth.thread) throw new InvalidChannelTypeError();
+		if (!auth.thread) {
+			throw new InvalidChannelTypeError();
+		}
 		const threadId = auth.thread.state.threadId;
 		for (let attempt = 0; attempt < SETTINGS_CAS_ATTEMPTS; attempt++) {
 			const member =
 				(attempt === 0 ? auth.thread.member : null) ??
 				(await this.ctx.channelRepository.threads.getMember(threadId, userId));
-			if (!member) throw new UnknownThreadMemberError();
+			if (!member) {
+				throw new UnknownThreadMemberError();
+			}
 			const flags =
 				data.flags === undefined ? member.flags : (member.flags & ThreadMemberFlags.HAS_INTERACTED) | data.flags;
 			const muted = data.muted ?? member.muted;
 			const current = member.muteConfig?.toMuteConfig() ?? null;
-			const muteConfig =
-				data.mute_config === undefined
-					? current
-					: data.mute_config === null
-						? null
-						: {
-								end_time: data.mute_config.end_time ?? null,
-								selected_time_window: data.mute_config.selected_time_window,
-							};
-			if (flags === member.flags && muted === member.muted && sameMuteConfig(muteConfig, current)) return null;
+			let muteConfig: MuteConfig | null;
+			if (data.mute_config === undefined) {
+				muteConfig = current;
+			} else if (data.mute_config === null) {
+				muteConfig = null;
+			} else {
+				muteConfig = {
+					end_time: data.mute_config.end_time ?? null,
+					selected_time_window: data.mute_config.selected_time_window,
+				};
+			}
+			if (flags === member.flags && muted === member.muted && sameMuteConfig(muteConfig, current)) {
+				return null;
+			}
 			const updated = await this.ctx.channelRepository.threads.updateMemberSettings(member, {
 				flags,
 				muted,
 				...(data.mute_config === undefined ? {} : {muteConfig}),
 			});
-			if (!updated) continue;
-			await this.dispatch(updated);
+			if (!updated) {
+				continue;
+			}
+			await dispatchThreadEvents(this.ctx.gatewayService, updated.guildId, [threadMemberUpdateEvent(updated)]);
 			return mapThreadMemberToResponse(updated, {self: true});
 		}
 		throw new ServiceUnavailableError();
-	}
-
-	private async dispatch(member: ThreadMember): Promise<void> {
-		await dispatchThreadEvents(this.ctx.gatewayService, member.guildId, [threadMemberUpdateEvent(member)]);
 	}
 }

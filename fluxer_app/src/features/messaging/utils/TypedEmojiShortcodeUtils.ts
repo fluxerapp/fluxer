@@ -9,6 +9,7 @@ import {
 	checkEmojiAvailabilityWithGuildFallback,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
+import {isExistingCustomEmojiMarkdown} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
 import {findUrlSpans, isInsideSpan, type TextSpan} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 import type {I18n} from '@lingui/core';
 
@@ -38,10 +39,6 @@ interface ResolveTypedEmojiShortcodesOptions {
 	channel: Channel | null;
 	guildIdFallback?: string | null;
 	i18n: I18n;
-}
-
-function isExistingCustomEmojiMarkdown(content: string, matchIndex: number): boolean {
-	return content[matchIndex - 1] === '<' || (content[matchIndex - 2] === '<' && content[matchIndex - 1] === 'a');
 }
 
 function isCustomEmoji(emoji: FlatEmoji): boolean {

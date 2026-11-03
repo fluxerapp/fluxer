@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID} from '@app/api/BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {BatchBuilder, fetchMany, fetchOne, fetchPage} from '@app/api/database/CassandraQueryExecution';
 import type {GuildDiscoveryByStatusRow, GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {GuildDiscovery, GuildDiscoveryByStatus} from '@app/api/Tables';
 import {DISCOVERY_DEFAULT_LANGUAGE, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 
 const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 	where: GuildDiscovery.where.eq('guild_id'),
@@ -12,6 +13,9 @@ const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 });
 const FETCH_DISCOVERY_BY_STATUS = GuildDiscoveryByStatus.selectCql({
 	where: GuildDiscoveryByStatus.where.eq('status'),
+});
+const SCAN_DISCOVERY = GuildDiscovery.selectCql({
+	columns: ['guild_id', 'status', 'applied_at'],
 });
 
 export class GuildDiscoveryRepository {
@@ -31,6 +35,30 @@ export class GuildDiscoveryRepository {
 		return fetchMany<GuildDiscoveryByStatusRow>(FETCH_DISCOVERY_BY_STATUS, {
 			status,
 		});
+	}
+
+	async scanStatuses(
+		pageState: string | null,
+		pageSize: number,
+	): Promise<{rows: Array<GuildDiscoveryByStatusRow>; pageState: string | null}> {
+		const result = await fetchPage<GuildDiscoveryByStatusRow>(
+			SCAN_DISCOVERY,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: result.rows, pageState: result.pageState};
+	}
+
+	async addStatusEntry(row: GuildDiscoveryByStatusRow): Promise<void> {
+		const batch = new BatchBuilder();
+		batch.addPrepared(
+			GuildDiscoveryByStatus.insert({
+				status: row.status,
+				applied_at: row.applied_at,
+				guild_id: row.guild_id,
+			}),
+		);
+		await batch.execute();
 	}
 
 	async listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>> {
@@ -88,13 +116,16 @@ export class GuildDiscoveryRepository {
 		updatedRow: GuildDiscoveryRow,
 	): Promise<void> {
 		const batch = new BatchBuilder();
-		batch.addPrepared(
-			GuildDiscoveryByStatus.deleteByPk({
-				status: oldStatus,
-				applied_at: oldAppliedAt,
-				guild_id: guildId,
-			}),
-		);
+		const sameEntry = oldStatus === updatedRow.status && oldAppliedAt.getTime() === updatedRow.applied_at.getTime();
+		if (!sameEntry) {
+			batch.addPrepared(
+				GuildDiscoveryByStatus.deleteByPk({
+					status: oldStatus,
+					applied_at: oldAppliedAt,
+					guild_id: guildId,
+				}),
+			);
+		}
 		batch.addPrepared(
 			GuildDiscovery.insert({
 				guild_id: updatedRow.guild_id,

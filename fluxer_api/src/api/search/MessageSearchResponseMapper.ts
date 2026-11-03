@@ -8,12 +8,7 @@ import {createMessageResponseDataService} from '@app/api/channel/services/messag
 import {maskThreadArtifactsByChannel} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {mapThreadMemberToResponse, mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {
-	everEnabled,
-	THREAD_CHANNEL_TYPES,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_CHANNEL_TYPES, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {maskChannelResponseThreadBits} from '@app/api/guild/services/ThreadPermissionBits';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -112,7 +107,6 @@ export class MessageSearchResponseMapper {
 		responses: Array<MessageSearchResultsResponse['channels'][number]>,
 		viewer: ThreadViewer,
 	): Promise<Array<MessageSearchResultsResponse['channels'][number]>> {
-		if (!everEnabled()) return responses;
 		const guildIds = new Map<string, GuildID>();
 		for (const channel of channels) {
 			if (channel.guildId) guildIds.set(channel.guildId.toString(), channel.guildId);

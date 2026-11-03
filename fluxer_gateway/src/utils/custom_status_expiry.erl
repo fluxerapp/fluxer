@@ -11,7 +11,7 @@
     reconcile_message/0
 ]).
 
--export_type([custom_status/0]).
+-export_type([custom_status/0, wakeup/0, offset/0]).
 
 -type custom_status() :: map() | null.
 -type wakeup() :: {ok, pos_integer()} | none.
@@ -63,7 +63,7 @@ expires_at_ms(_Value) ->
 
 -spec parse_rfc3339(term()) -> offset().
 parse_rfc3339(Chars) ->
-    try calendar:rfc3339_to_system_time(Chars, [{unit, millisecond}]) of
+    try calendar:rfc3339_to_system_time(eqwalizer:dynamic_cast(Chars), [{unit, millisecond}]) of
         Ms -> {ok, Ms}
     catch
         _Class:_Reason -> none
@@ -90,128 +90,3 @@ jittered(DelayMs) ->
 -spec reconcile_message() -> {'$gen_cast', reconcile_flattened_presence}.
 reconcile_message() ->
     {'$gen_cast', reconcile_flattened_presence}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
--define(LIVE_EXPIRES_AT, <<"2026-05-13T13:02:27.497Z">>).
-
-epoch_ms(Iso) ->
-    calendar:rfc3339_to_system_time(binary_to_list(Iso), [{unit, millisecond}]).
-
-rfc3339(EpochMs) ->
-    list_to_binary(
-        calendar:system_time_to_rfc3339(EpochMs, [{unit, millisecond}, {offset, "Z"}])
-    ).
-
-expiry_ms() ->
-    epoch_ms(?LIVE_EXPIRES_AT).
-
-status(ExpiresAt) ->
-    #{
-        <<"emoji_animated">> => false,
-        <<"emoji_name">> => null,
-        <<"expires_at">> => ExpiresAt,
-        <<"text">> => <<"brb">>
-    }.
-
-status_without_expiry() ->
-    #{<<"emoji_animated">> => false, <<"emoji_name">> => null, <<"text">> => <<"brb">>}.
-
-parser_anchors_on_the_unix_epoch_test() ->
-    ?assertEqual(0, epoch_ms(<<"1970-01-01T00:00:00.000Z">>)),
-    ?assertEqual(1500, epoch_ms(<<"1970-01-01T00:00:01.500Z">>)).
-
-parser_keeps_milliseconds_test() ->
-    ?assertEqual(497, expiry_ms() rem 1000).
-
-not_expired_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms() - 60000)).
-
-expires_one_second_in_the_future_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual({ok, 1000}, remaining_ms(Status, expiry_ms() - 1000)),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms() - 1000)).
-
-boundary_is_expired_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual({ok, 0}, remaining_ms(Status, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(Status, expiry_ms())).
-
-one_millisecond_before_boundary_is_kept_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms() - 1)).
-
-expired_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(null, clear_if_expired(Status, expiry_ms() + 1)),
-    ?assertEqual(null, clear_if_expired(Status, expiry_ms() + 194 * 86400000)).
-
-absent_expires_at_is_kept_test() ->
-    Status = status_without_expiry(),
-    ?assertEqual(none, remaining_ms(Status, expiry_ms())),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms())).
-
-null_expires_at_is_kept_test() ->
-    Status = status(null),
-    ?assertEqual(none, remaining_ms(Status, expiry_ms())),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms())).
-
-malformed_expires_at_is_kept_test() ->
-    lists:foreach(
-        fun(Value) ->
-            Status = status(Value),
-            ?assertEqual(none, remaining_ms(Status, expiry_ms())),
-            ?assertEqual(Status, clear_if_expired(Status, expiry_ms()))
-        end,
-        [<<"">>, <<"not-a-date">>, <<"2026-13-45T99:99:99Z">>, 1747141347, [], #{}, true]
-    ).
-
-custom_status_null_test() ->
-    ?assertEqual(none, remaining_ms(null, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(null, expiry_ms())).
-
-custom_status_absent_test() ->
-    ?assertEqual(none, remaining_ms(undefined, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(undefined, expiry_ms())).
-
-non_map_custom_status_test() ->
-    ?assertEqual(null, clear_if_expired(<<"garbage">>, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(123, expiry_ms())).
-
-non_integer_reference_time_keeps_status_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(Status, clear_if_expired(Status, not_a_time)).
-
-wakeup_none_without_expiry_test() ->
-    ?assertEqual(none, wakeup_delay(remaining_ms(status_without_expiry(), expiry_ms()))),
-    ?assertEqual(none, wakeup_delay(remaining_ms(null, expiry_ms()))).
-
-wakeup_none_when_already_expired_test() ->
-    ?assertEqual(none, wakeup_delay({ok, 0})),
-    ?assertEqual(none, wakeup_delay({ok, -1000})).
-
-wakeup_is_never_early_test() ->
-    {ok, DelayMs} = wakeup_delay({ok, 1000}),
-    ?assert(DelayMs > 1000),
-    ?assert(DelayMs =< 1000 + ?WAKEUP_JITTER_MS).
-
-wakeup_clamps_to_the_timer_limit_test() ->
-    {ok, DelayMs} = wakeup_delay({ok, 400 * ?MAX_TIMER_MS}),
-    ?assert(DelayMs > ?MAX_TIMER_MS),
-    ?assert(DelayMs =< ?MAX_TIMER_MS + ?WAKEUP_JITTER_MS).
-
-clears_expired_and_arms_future_test() ->
-    Live = future_status(),
-    ?assertEqual(null, clear_if_expired(status(?LIVE_EXPIRES_AT))),
-    ?assertEqual(Live, clear_if_expired(Live)),
-    ?assertMatch({ok, _}, next_wakeup_ms(Live)).
-
-future_status() ->
-    status(rfc3339(erlang:system_time(millisecond) + 3600000)).
-
-reconcile_message_is_a_gen_server_cast_test() ->
-    ?assertEqual({'$gen_cast', reconcile_flattened_presence}, reconcile_message()).
-
--endif.

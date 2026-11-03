@@ -6,6 +6,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.module.css';
+import {shouldShowDirectMessageSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
@@ -272,24 +273,28 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 				className={styles.rows}
 				data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.rows"
 			>
-				<SensitiveContentChoiceRow
-					label={i18n._(DIRECT_MESSAGES_FROM_FRIENDS_DESCRIPTOR)}
-					description={i18n._(FRIENDS_DESCRIPTION_DESCRIPTOR)}
-					value={friendDmFilter}
-					options={isMatureContentAllowed ? filterOptions : teenDmOptions}
-					onChange={setFriendDmFilter}
-					dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-friend-dm-filter"
-					data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-friend-dm-filter"
-				/>
-				<SensitiveContentChoiceRow
-					label={i18n._(DIRECT_MESSAGES_FROM_OTHERS_DESCRIPTOR)}
-					description={i18n._(OTHERS_DESCRIPTION_DESCRIPTOR)}
-					value={nonFriendDmFilter}
-					options={isMatureContentAllowed ? filterOptions : teenDmOptions}
-					onChange={setNonFriendDmFilter}
-					dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-non-friend-dm-filter"
-					data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-non-friend-dm-filter"
-				/>
+				{shouldShowDirectMessageSettings() && (
+					<>
+						<SensitiveContentChoiceRow
+							label={i18n._(DIRECT_MESSAGES_FROM_FRIENDS_DESCRIPTOR)}
+							description={i18n._(FRIENDS_DESCRIPTION_DESCRIPTOR)}
+							value={friendDmFilter}
+							options={isMatureContentAllowed ? filterOptions : teenDmOptions}
+							onChange={setFriendDmFilter}
+							dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-friend-dm-filter"
+							data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-friend-dm-filter"
+						/>
+						<SensitiveContentChoiceRow
+							label={i18n._(DIRECT_MESSAGES_FROM_OTHERS_DESCRIPTOR)}
+							description={i18n._(OTHERS_DESCRIPTION_DESCRIPTOR)}
+							value={nonFriendDmFilter}
+							options={isMatureContentAllowed ? filterOptions : teenDmOptions}
+							onChange={setNonFriendDmFilter}
+							dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-non-friend-dm-filter"
+							data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-non-friend-dm-filter"
+						/>
+					</>
+				)}
 				<SensitiveContentChoiceRow
 					label={i18n._(MESSAGES_IN_COMMUNITY_CHANNELS_DESCRIPTOR)}
 					description={i18n._(COMMUNITY_DESCRIPTION_DESCRIPTOR)}

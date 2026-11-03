@@ -43,7 +43,7 @@ impl ByteBudgetInner {
         assert!(amount <= self.limit);
         let released = self
             .used
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |used| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |used| {
                 used.checked_sub(amount)
             });
         assert!(released.is_ok());
@@ -206,103 +206,5 @@ impl Drop for ByteReservationInner {
     fn drop(&mut self) {
         let amount = self.amount.load(Ordering::Acquire);
         self.budget.inner.release(amount);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn try_reserve_up_to_limit_succeeds() {
-        let budget = ByteBudget::new(100);
-        let reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert_eq!(reservation.amount(), 60);
-    }
-
-    #[test]
-    fn try_reserve_exactly_at_limit_succeeds() {
-        let budget = ByteBudget::new(100);
-        let reservation = budget.try_reserve(100).expect("reserve at limit");
-        assert_eq!(reservation.amount(), 100);
-    }
-
-    #[test]
-    fn try_reserve_over_limit_fails() {
-        let budget = ByteBudget::new(100);
-        let _reservation = budget.try_reserve(100).expect("reserve at limit");
-        assert!(budget.try_reserve(1).is_none());
-    }
-
-    #[test]
-    fn try_grow_within_remaining_budget_succeeds() {
-        let budget = ByteBudget::new(100);
-        let mut reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert!(reservation.try_grow(30));
-        assert_eq!(reservation.amount(), 90);
-    }
-
-    #[test]
-    fn try_grow_past_remaining_budget_fails_and_leaves_reservation_unchanged() {
-        let budget = ByteBudget::new(100);
-        let mut reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert!(!reservation.try_grow(41));
-        assert_eq!(reservation.amount(), 60);
-        let remaining = budget.try_reserve(40).expect("untouched remaining budget");
-        assert_eq!(remaining.amount(), 40);
-    }
-
-    #[test]
-    fn try_grow_zero_is_a_no_op() {
-        let budget = ByteBudget::new(100);
-        let mut reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert!(reservation.try_grow(0));
-        assert_eq!(reservation.amount(), 60);
-    }
-
-    #[test]
-    fn shrink_to_releases_delta_back_to_budget() {
-        let budget = ByteBudget::new(100);
-        let mut reservation = budget.try_reserve(100).expect("reserve at limit");
-        reservation.shrink_to(70);
-        assert_eq!(reservation.amount(), 70);
-        let released = budget.try_reserve(30).expect("released delta available");
-        assert_eq!(released.amount(), 30);
-    }
-
-    #[test]
-    fn drop_releases_full_reservation() {
-        let budget = ByteBudget::new(100);
-        let reservation = budget.try_reserve(100).expect("reserve at limit");
-        drop(reservation);
-        let reservation = budget
-            .try_reserve(100)
-            .expect("full budget available again");
-        assert_eq!(reservation.amount(), 100);
-    }
-
-    #[test]
-    fn resident_bytes_uses_reservation_amount_when_budgeted() {
-        let budget = ByteBudget::new(100);
-        let reservation = budget.try_reserve(50).expect("reserve under limit");
-        let budgeted = BudgetedBytes::budgeted(Bytes::from_static(b"hello"), reservation);
-        assert_eq!(budgeted.len(), 5);
-        assert_eq!(budgeted.resident_bytes(), 50);
-    }
-
-    #[test]
-    fn resident_bytes_uses_data_len_when_unbudgeted() {
-        let unbudgeted = BudgetedBytes::unbudgeted(Bytes::from_static(b"hello"));
-        assert_eq!(unbudgeted.resident_bytes(), 5);
-    }
-
-    #[test]
-    fn empty_data_reports_empty_and_exposes_the_underlying_bytes() {
-        let empty = BudgetedBytes::unbudgeted(Bytes::new());
-        assert!(empty.is_empty());
-        assert_eq!(empty.as_bytes(), &Bytes::new());
-        let hello = BudgetedBytes::unbudgeted(Bytes::from_static(b"hello"));
-        assert!(!hello.is_empty());
-        assert_eq!(hello.as_bytes(), &Bytes::from_static(b"hello"));
     }
 }

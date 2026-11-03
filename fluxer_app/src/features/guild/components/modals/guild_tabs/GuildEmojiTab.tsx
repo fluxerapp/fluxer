@@ -2,7 +2,6 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {EmojiListHeader, EmojiListItem} from '@app/features/emoji/components/emojis/EmojiListItem';
 import {EmojiUploadModal} from '@app/features/emoji/components/modals/EmojiUploadModal';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
@@ -11,7 +10,7 @@ import {
 	seedGuildEmojiCache,
 	subscribeToGuildEmojiUpdates,
 } from '@app/features/expressions/state/GuildExpressionTabCache';
-import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import * as ImageCropUtils from '@app/features/expressions/utils/ImageCropUtils';
 import {isSvgFile} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {CloneAllowedToggle} from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle';
@@ -19,7 +18,6 @@ import styles from '@app/features/guild/components/modals/guild_tabs/GuildEmojiT
 import {UploadDropZone} from '@app/features/guild/components/UploadDropZone';
 import {UploadSlotInfo} from '@app/features/guild/components/UploadSlotInfo';
 import Guilds from '@app/features/guild/state/Guilds';
-import {OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -32,8 +30,9 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_EMOJIS} from '@fluxer/constants/src/LimitConstants';
+import {EMOJI_MAX_SIZE, MAX_GUILD_EMOJIS} from '@fluxer/constants/src/LimitConstants';
 import type {GuildEmojiWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -50,7 +49,7 @@ const NO_EMOJI_SLOTS_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the guild emoji tab.',
 });
 const EMOJI_SLOTS_FULL_DESCRIPTION_DESCRIPTOR = msg({
-	message: "You've reached the maximum number of emojis. Delete some existing emojis to make room.",
+	message: "You can't add more emojis. Delete some existing emojis to make room.",
 	comment: 'Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.',
 });
 const FAILED_TO_PREPARE_EMOJIS_DESCRIPTOR = msg({
@@ -179,7 +178,8 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 	}, [filteredEmojis]);
 	const maxEmojis = guild?.maxEmojis ?? MAX_GUILD_EMOJIS;
 	const currentEmojiCount = emojis.length;
-	const emojiMaxSizeLabel = formatFileSize(i18n.locale, GlobalLimits.getEmojiMaxSize());
+	const maxEmojiSize = guild?.maxEmojiSize ?? EMOJI_MAX_SIZE;
+	const emojiMaxSizeLabel = formatFileSize(i18n.locale, maxEmojiSize);
 	const canModifyEmoji = useCallback(
 		(emoji: GuildEmojiWithUser): boolean => {
 			if (canManageExpressions) return true;
@@ -272,9 +272,6 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 								<Trans>Unable to prepare any emojis for upload. The following errors occurred:</Trans>,
 								validationFailures,
 							)}
-							primaryText={i18n._(OKAY_DESCRIPTOR)}
-							primaryVariant="primary"
-							onPrimary={() => {}}
 							data-flx="guild.guild-tabs.guild-emoji-tab.handle-file-select.unsupported-files-confirm-modal"
 						/>
 					)),
@@ -291,7 +288,6 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 			);
 			const preparedEmojis: Array<{name: string; image: string; file: File}> = [];
 			const preparationFailures: Array<EmojiUploadFailure> = [];
-			const maxEmojiSize = GlobalLimits.getEmojiMaxSize();
 			const maxEmojiSizeLabel = formatFileSize(i18n.locale, maxEmojiSize);
 			for (const file of filesWithinSlots) {
 				try {
@@ -328,9 +324,6 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 								<Trans>Unable to prepare any emojis for upload. The following errors occurred:</Trans>,
 								preparationFailures,
 							)}
-							primaryText={i18n._(OKAY_DESCRIPTOR)}
-							primaryVariant="primary"
-							onPrimary={() => {}}
 							data-flx="guild.guild-tabs.guild-emoji-tab.handle-file-select.confirm-modal--2"
 						/>
 					)),
@@ -390,16 +383,13 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 								i18n._(SOME_EMOJIS_COULD_NOT_BE_ADDED_BODY_DESCRIPTOR),
 								failures,
 							)}
-							primaryText={i18n._(OKAY_DESCRIPTOR)}
-							primaryVariant="primary"
-							onPrimary={() => {}}
 							data-flx="guild.guild-tabs.guild-emoji-tab.handle-file-select.partial-failure-modal"
 						/>
 					)),
 				);
 			}
 		},
-		[guildId, fetchEmojis, maxEmojis, currentEmojiCount, i18n, renderEmojiFailureDescription],
+		[guildId, fetchEmojis, maxEmojis, maxEmojiSize, currentEmojiCount, i18n, renderEmojiFailureDescription],
 	);
 	const handleDrop = useCallback(
 		async (files: Array<File>) => {

@@ -5,6 +5,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import {resolveForgotPasswordRedirect} from '@app/features/auth/flow/AccountRecoveryRedirects';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import Authentication from '@app/features/auth/state/Authentication';
 import {safeRedirectTarget, safeRedirectTargetOrFallback} from '@app/features/auth/utils/SafeRedirect';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
@@ -13,6 +14,7 @@ import {Redirect, type RouteContext, type To} from '@app/features/platform/compo
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {when} from 'mobx';
 
 const logger = new Logger('AuthRouteRedirectPolicy');
 
@@ -86,6 +88,7 @@ export function whenAuthenticated(handler: AuthRouteEnterHandler): AuthRouteEnte
 
 export const requireAuthentication: AuthRouteEnterHandler = afterSessionInitialization((context) =>
 	Authentication.isAuthenticated ||
+	isAccountHandoffArrival(context.url.pathname) ||
 	RuntimeConfig.getSnapshotOrNull() === null ||
 	RuntimeConfig.requiresSelfHostedSetup()
 		? undefined
@@ -143,4 +146,35 @@ export function resolveForgotPasswordEntry(context: RouteContext): Redirect | un
 		return new Redirect(redirect);
 	}
 	return whenAuthenticated(resolveHomeEntry)(context);
+}
+
+function activeSnapshotUsesIdentifierFirst(): boolean {
+	const snapshot = RuntimeConfig.getSnapshotOrNull();
+	return snapshot?.features.identifier_first === true;
+}
+
+export function redirectRegisterToSignIn(
+	resolveSignInPath: (context: RouteContext) => string | null,
+	handler: AuthRouteEnterHandler | null = null,
+): AuthRouteEnterHandler {
+	const resolve = (context: RouteContext): Redirect | undefined => {
+		if (!activeSnapshotUsesIdentifierFirst()) {
+			return undefined;
+		}
+		const signInPath = resolveSignInPath(context);
+		return signInPath === null ? undefined : new Redirect(`${signInPath}${context.url.search}`);
+	};
+	return (context: RouteContext): Redirect | undefined => {
+		const handled = handler?.(context);
+		if (handled !== undefined) {
+			return handled;
+		}
+		if (RuntimeConfig.getSnapshotOrNull() === null) {
+			void when(() => RuntimeConfig.getSnapshotOrNull() !== null).then(() =>
+				applyDeferredSessionRedirect(context, resolve),
+			);
+			return undefined;
+		}
+		return resolve(context);
+	};
 }

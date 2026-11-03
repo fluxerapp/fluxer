@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::pages::instance_config::ConfigForm;
 use crate::{
     api::types::{
         AppBrandingConfigResponse, BillingCatalogMode, BillingPriceSet, InstanceBillingResponse,
@@ -8,8 +9,8 @@ use crate::{
     templates::components::{
         badge::{BadgeVariant, badge},
         form::{
-            FORM_INPUT_CLASS, FORM_SELECT_CLASS, checkbox, csrf_input, form_actions,
-            form_field_group, select_chevron, submit_button, text_input, textarea_input,
+            Checkbox, FORM_INPUT_CLASS, FORM_SELECT_CLASS, form_actions, form_field_group,
+            select_chevron, submit_button, text_input, textarea_input,
         },
         section_card::section_card_with_description,
     },
@@ -137,7 +138,13 @@ fn secret_field(
                 },
             ))
             @if is_stored {
-                (checkbox(clear_name, "true", "Clear the stored value", false, true))
+                (Checkbox {
+                    name: clear_name,
+                    value: "true",
+                    label: "Clear the stored value",
+                    checked: false,
+                    enabled: true,
+                }.render())
             }
         }
     }
@@ -200,10 +207,17 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
         "Buyers must accept your terms of service at checkout. Needs a terms of service URL in the Stripe dashboard public details. Currently {}.",
         on_off(billing.effective_terms_consent_required)
     );
+    let billing_emails = format!(
+        "Sends emails about payments, refunds and failed payments from this instance. This instance issues no \
+         invoices or receipt documents, so buyers get those from your own Stripe receipt settings. Stripe can also \
+         email buyers about the same events, so check your Stripe customer email settings if you don't want buyers \
+         to get both. The customer portal uses your Stripe Dashboard settings. Currently {}.",
+        on_off(billing.effective_billing_emails)
+    );
     html! {
         div class="space-y-4" {
             h4 class="text-sm font-medium text-neutral-900" { "Checkout options" }
-            div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
+            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                 (tri_state_select(
                     "billing_automatic_tax",
                     "Automatic tax",
@@ -224,6 +238,13 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
                     "Use default",
                     billing.terms_consent_required,
                     &terms,
+                ))
+                (tri_state_select(
+                    "billing_billing_emails",
+                    "Billing emails",
+                    "Use default",
+                    billing.billing_emails,
+                    &billing_emails,
                 ))
             }
             p class="text-xs text-neutral-500" {
@@ -321,9 +342,9 @@ fn legacy_prices_text(billing: &InstanceBillingResponse) -> String {
         .join("\n")
 }
 
-pub fn premium_billing_section(
+pub(crate) fn premium_billing_section(
     base: &str,
-    csrf_token: &str,
+    config_form: ConfigForm<'_>,
     branding: &AppBrandingConfigResponse,
     billing: &InstanceBillingResponse,
     premium_mode: PremiumMode,
@@ -339,7 +360,7 @@ pub fn premium_billing_section(
         html! {
             form method="post" action={(base) "/instance-config?action=update_billing"}
                 data-admin-result-form="true" {
-                (csrf_input(csrf_token))
+                (config_form.fields())
                 div class="space-y-8" {
                     div class="space-y-4" {
                         h3 class="text-sm font-semibold text-neutral-900" { "Premium tier" }
@@ -402,7 +423,11 @@ pub fn premium_billing_section(
                             "billing_webhook_url",
                             false,
                             None,
-                            Some("Add this endpoint in the Stripe dashboard, then paste its signing secret above."),
+                            Some(
+                                "Add this endpoint in the Stripe dashboard, then paste its signing secret above. \
+                                 Send it at least the checkout.session.*, customer.subscription.*, invoice.*, \
+                                 charge.refunded, charge.dispute.* and refund.* events.",
+                            ),
                             html! {
                                 input type="text" id="billing_webhook_url" value=(billing.webhook_url)
                                     readonly class=(FORM_INPUT_CLASS);

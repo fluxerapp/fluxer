@@ -4,8 +4,6 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -22,7 +20,9 @@
 
 -spec start_link(non_neg_integer()) -> {ok, pid()} | {error, term()}.
 start_link(ShardIndex) ->
-    normalize_start_link(gen_server:start_link(?MODULE, #{shard_index => ShardIndex}, [])).
+    shard_utils:normalize_start_link(
+        gen_server:start_link(?MODULE, #{shard_index => ShardIndex}, [])
+    ).
 
 -spec init(map()) -> {ok, state(), hibernate}.
 init(Args) ->
@@ -298,35 +298,3 @@ sanitize_presences(Presences) ->
         #{},
         Presences
     ).
-
--spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
-normalize_start_link({ok, Pid}) ->
-    {ok, Pid};
-normalize_start_link({error, Reason}) ->
-    {error, Reason};
-normalize_start_link(ignore) ->
-    {error, ignore}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-process_down_clears_the_pid_cache_test() ->
-    Pid = spawn(fun test_wait_for_stop/0),
-    UserId = 987654321,
-    Ref = make_ref(),
-    ok = presence_manager_cache:put_if_local(UserId, Pid),
-    ?assertEqual({hit, Pid}, presence_manager_cache:lookup(UserId)),
-    {noreply, _NewState} = handle_info(
-        {'DOWN', Ref, process, Pid, normal},
-        #{presences => #{UserId => {Pid, Ref}}, shard_index => 0}
-    ),
-    ?assertEqual([], ets:lookup(presence_pid_cache, UserId)),
-    Pid ! stop.
-
--spec test_wait_for_stop() -> ok.
-test_wait_for_stop() ->
-    receive
-        stop -> ok
-    after 5000 -> ok
-    end.
--endif.

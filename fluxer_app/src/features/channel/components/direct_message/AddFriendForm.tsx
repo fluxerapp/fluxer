@@ -1,26 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
-import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {EXAMPLE_FLUXER_TAG_FULL, EXAMPLE_USERNAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
-import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import {getSendFriendRequestErrorMessage} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
+import {AccountGateSlate} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
-import {EnvelopeSimpleIcon, WarningCircleIcon} from '@phosphor-icons/react';
+import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -59,52 +55,11 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [resultStatus, setResultStatus] = useState<'success' | 'error' | null>(null);
 	const [errorCode, setErrorCode] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const currentUser = Users.currentUser;
 	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
-	const isClaimed = currentUser?.isClaimed() ?? true;
-	if (!isClaimed) {
+	const friendRequestGate = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST);
+	if (!friendRequestGate.allowed) {
 		return (
-			<StatusSlate
-				Icon={WarningCircleIcon}
-				title={<Trans>Claim your account</Trans>}
-				description={<Trans>Claim your account to send friend requests.</Trans>}
-				actions={[
-					{
-						text: i18n._(CLAIM_ACCOUNT_DESCRIPTOR),
-						onClick: () => openClaimAccountModal({force: true}),
-						variant: 'primary',
-					},
-				]}
-				data-flx="channel.direct-message.add-friend-form.status-slate"
-			/>
-		);
-	}
-	if (currentUser?.verified === false) {
-		return (
-			<StatusSlate
-				Icon={EnvelopeSimpleIcon}
-				title={<Trans>Verify your email</Trans>}
-				description={<Trans>You need to verify your email address before you can send friend requests.</Trans>}
-				actions={[
-					{
-						text: i18n._(VERIFY_EMAIL_DESCRIPTOR),
-						onClick: () =>
-							ModalCommands.push(
-								modal(
-									() => (
-										<UserSettingsModal
-											initialTab="account_security"
-											data-flx="channel.direct-message.add-friend-form.on-click.user-settings-modal"
-										/>
-									),
-									'user-settings',
-								),
-							),
-						variant: 'primary',
-					},
-				]}
-				data-flx="channel.direct-message.add-friend-form.status-slate--2"
-			/>
+			<AccountGateSlate gate={friendRequestGate} data-flx="channel.direct-message.add-friend-form.account-gate-slate" />
 		);
 	}
 	const parseInput = (input: string): [string, string] => {

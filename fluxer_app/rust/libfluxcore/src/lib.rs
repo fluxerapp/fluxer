@@ -2,7 +2,6 @@
 
 mod formats;
 mod rgba;
-mod zstd_frame;
 mod zstd_stream;
 
 use formats::{is_animated_image_bytes, sniff_image_format_bytes};
@@ -40,11 +39,6 @@ pub fn crop_rotate_rgba_into_buffer(
         },
     )
     .map_err(|error| JsValue::from_str(error.message()))
-}
-
-#[wasm_bindgen]
-pub fn decompress_zstd_frame(input: &[u8]) -> Result<Vec<u8>, JsValue> {
-    zstd_frame::decompress(input).map_err(zstd_error_to_js)
 }
 
 #[wasm_bindgen]
@@ -113,7 +107,7 @@ pub fn sniff_image_format(input: &[u8]) -> u8 {
     sniff_image_format_bytes(input)
 }
 
-fn zstd_error_to_js(error: zstd_frame::ZstdError) -> JsValue {
+fn zstd_error_to_js(error: zstd_stream::ZstdError) -> JsValue {
     JsValue::from_str(error.message())
 }
 

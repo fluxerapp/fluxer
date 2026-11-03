@@ -23,9 +23,9 @@ export const AccountScopedWorkTransitionReason = Object.freeze({
 export type AccountScopedWorkTransitionReason =
 	(typeof AccountScopedWorkTransitionReason)[keyof typeof AccountScopedWorkTransitionReason];
 
-export type AccountScopedWorkCancellation = (reason: AccountScopedWorkTransitionReason) => void | Promise<void>;
+type AccountScopedWorkCancellation = (reason: AccountScopedWorkTransitionReason) => void | Promise<void>;
 
-export interface AccountScopedWorkTransitionHandler {
+interface AccountScopedWorkTransitionHandler {
 	suspend(reason: AccountScopedWorkTransitionReason): void | Promise<void>;
 	resume(reason: AccountScopedWorkTransitionReason): void | Promise<void>;
 	released?(reason: AccountScopedWorkTransitionReason): void | Promise<void>;

@@ -14,6 +14,7 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
+import type React from 'react';
 import {Controller} from 'react-hook-form';
 
 const ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
@@ -95,6 +96,38 @@ export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 		return null;
 	}
 	const placeholderName = channel ? ChannelUtils.getDMDisplayName(channel) : '';
+	let iconPreview: React.ReactNode;
+	if (previewIconUrl) {
+		iconPreview = (
+			<div
+				className={styles.iconPreview}
+				style={{
+					backgroundImage: `url(${previewIconUrl})`,
+				}}
+				data-flx="channel.edit-group-modal.icon-preview"
+			/>
+		);
+	} else if (iconPresentable) {
+		iconPreview = (
+			<div
+				className={styles.iconPreview}
+				style={{
+					backgroundImage: `url(${iconPresentable})`,
+				}}
+				data-flx="channel.edit-group-modal.icon-preview--2"
+			/>
+		);
+	} else {
+		iconPreview = (
+			<div className={styles.iconPlaceholder} data-flx="channel.edit-group-modal.icon-placeholder">
+				<PlusIcon
+					weight="regular"
+					className={styles.iconPlaceholderIcon}
+					data-flx="channel.edit-group-modal.icon-placeholder-icon"
+				/>
+			</div>
+		);
+	}
 	return (
 		<Modal.Root size="small" centered data-flx="channel.edit-group-modal.modal-root">
 			<Form form={form} onSubmit={handleSubmit} data-flx="channel.edit-group-modal.form.submit">
@@ -106,31 +139,7 @@ export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 								<Trans>Group icon</Trans>
 							</div>
 							<div className={styles.iconContainer} data-flx="channel.edit-group-modal.icon-container">
-								{previewIconUrl ? (
-									<div
-										className={styles.iconPreview}
-										style={{
-											backgroundImage: `url(${previewIconUrl})`,
-										}}
-										data-flx="channel.edit-group-modal.icon-preview"
-									/>
-								) : iconPresentable ? (
-									<div
-										className={styles.iconPreview}
-										style={{
-											backgroundImage: `url(${iconPresentable})`,
-										}}
-										data-flx="channel.edit-group-modal.icon-preview--2"
-									/>
-								) : (
-									<div className={styles.iconPlaceholder} data-flx="channel.edit-group-modal.icon-placeholder">
-										<PlusIcon
-											weight="regular"
-											className={styles.iconPlaceholderIcon}
-											data-flx="channel.edit-group-modal.icon-placeholder-icon"
-										/>
-									</div>
-								)}
+								{iconPreview}
 								<div className={styles.iconActions} data-flx="channel.edit-group-modal.icon-actions">
 									<div className={styles.iconButtonGroup} data-flx="channel.edit-group-modal.icon-button-group">
 										<Button

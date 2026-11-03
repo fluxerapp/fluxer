@@ -85,7 +85,7 @@ var {
 	--z-index-tooltip: 45000;
 	--z-index-toast: 50000;
 	--z-index-titlebar: 100000;
-	--native-titlebar-height: 2rem;
+	--native-titlebar-height: 32px;
 	--macos-traffic-light-inset: 78px;
 
 	--radius-sm: 0.25rem;
@@ -383,13 +383,13 @@ html.allow-transparency body {
 .fluxer-native-titlebar {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	height: var(--native-titlebar-height);
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-2);
-	padding: 0 0 0 calc(var(--spacing-3) + env(safe-area-inset-left));
+	gap: 8px;
+	padding: 0 0 0 calc(12px + env(safe-area-inset-left));
 	background: var(--background-secondary);
 	-webkit-app-region: drag;
 	z-index: var(--z-index-titlebar);
@@ -397,7 +397,7 @@ html.allow-transparency body {
 
 .fluxer-native-titlebar[data-platform='macos'] {
 	padding-left: calc(var(--macos-traffic-light-inset) + env(safe-area-inset-left));
-	padding-right: calc(var(--spacing-3) + env(safe-area-inset-right));
+	padding-right: calc(12px + env(safe-area-inset-right));
 }
 
 html.platform-native:not(.window-focused) .fluxer-native-titlebar,
@@ -408,14 +408,15 @@ html.platform-native.window-focus-activation-guard .fluxer-native-titlebar {
 .fluxer-native-titlebar__left {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-2);
+	gap: 8px;
 	color: var(--text-primary-muted);
 	opacity: 0.8;
 }
 
 .fluxer-native-titlebar__wordmark {
 	display: block;
-	height: 0.8125rem;
+	height: 13px;
+	font-size: 16px;
 	width: auto;
 	color: var(--text-primary-muted);
 	overflow: visible;
@@ -440,7 +441,7 @@ html.platform-native.window-focus-activation-guard .fluxer-native-titlebar {
 	border: 0;
 	background: transparent;
 	color: var(--text-secondary);
-	width: 3rem;
+	width: 48px;
 	height: 100%;
 	padding: 0;
 	border-radius: 0;
@@ -454,8 +455,8 @@ html.platform-native.window-focus-activation-guard .fluxer-native-titlebar {
 }
 
 .fluxer-native-titlebar__control svg {
-	width: 1.0625rem;
-	height: 1.0625rem;
+	width: 17px;
+	height: 17px;
 }
 
 .fluxer-native-titlebar__control:hover {
@@ -588,7 +589,7 @@ table {
 }
 
 table th {
-	text-align: left;
+	text-align: start;
 	font-weight: bold;
 }
 

@@ -2,7 +2,11 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	PAUSE_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -11,6 +15,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {AudioWaveform, computePeaks} from '@app/features/voice/components/AudioWaveform';
 import {LiveRecordingWaveform} from '@app/features/voice/components/LiveRecordingWaveform';
 import styles from '@app/features/voice/components/VoiceMessageComposerModal.module.css';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {encodeAudioBufferSliceToWav} from '@app/features/voice/utils/AudioWavEncode';
 import {computeVoiceWaveformFromAudioBuffer} from '@app/features/voice/utils/VoiceMessageRecordingUtils';
 import {sendVoiceMessage} from '@app/features/voice/utils/VoiceMessageSendUtils';
@@ -35,7 +40,7 @@ const COMPOSER_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the desktop voice message composer modal.',
 });
 const RECORDING_HINT_DESCRIPTOR = msg({
-	message: 'Speak now. Press Stop when you are done — you can trim afterwards.',
+	message: 'Speak now. Press Stop when you are done, and you can trim the recording afterwards.',
 	comment: 'Help text shown while recording a voice message on desktop.',
 });
 const REVIEW_HINT_DESCRIPTOR = msg({
@@ -78,17 +83,10 @@ const SEND_BUTTON_DESCRIPTOR = msg({
 	message: 'Send',
 	comment: 'Send-message button label in the voice message composer modal.',
 });
-const CANCEL_DESCRIPTOR = msg({
-	message: 'Cancel',
-	comment: 'Cancel button label in the voice message composer modal.',
-});
+
 const PLAY_DESCRIPTOR = msg({
 	message: 'Play',
 	comment: 'Play-preview button label in the voice message composer modal.',
-});
-const PAUSE_DESCRIPTOR = msg({
-	message: 'Pause',
-	comment: 'Pause-preview button label in the voice message composer modal.',
 });
 
 const logger = new Logger('VoiceMessageComposerModal');
@@ -280,9 +278,7 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({audio: true});
 			mediaStreamRef.current = stream;
-			const Ctor =
-				window.AudioContext ||
-				(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+			const Ctor = resolveAudioContextConstructor();
 			if (Ctor) {
 				const audioContext = new Ctor();
 				analyserAudioCtxRef.current = audioContext;
@@ -334,8 +330,7 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 	}, []);
 
 	const decodeBlob = useCallback(async (blob: Blob): Promise<AudioBuffer | null> => {
-		const Ctor =
-			window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+		const Ctor = resolveAudioContextConstructor();
 		if (!Ctor) return null;
 		const ctx = playbackCtxRef.current ?? new Ctor();
 		playbackCtxRef.current = ctx;
@@ -526,6 +521,56 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 		void startRecording();
 	}, [startRecording]);
 
+	let footerAction: React.ReactNode = null;
+	if (stage === 'recording') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void stopRecording()}
+				data-flx="voice.voice-message-composer-modal.stop-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--3">
+					<StopIcon size={remFromPx(14)} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
+					{i18n._(STOP_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	} else if (stage === 'reviewing') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void send()}
+				disabled={selectionDuration < MIN_DURATION_SECONDS}
+				data-flx="voice.voice-message-composer-modal.send-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--4">
+					<PaperPlaneRightIcon
+						size={remFromPx(14)}
+						weight="fill"
+						data-flx="voice.voice-message-composer-modal.paper-plane-right-icon"
+					/>
+					{i18n._(SEND_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	} else if (stage === 'permission_error') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void startRecording()}
+				data-flx="voice.voice-message-composer-modal.retry-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--5">
+					<MicrophoneIcon
+						size={remFromPx(14)}
+						weight="fill"
+						data-flx="voice.voice-message-composer-modal.microphone-icon"
+					/>
+					{i18n._(RECORD_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	}
 	return (
 		<Modal.Root size="small" centered data-flx="voice.voice-message-composer-modal.modal-root">
 			<Modal.Header
@@ -638,49 +683,7 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 				<Button variant="secondary" onClick={close} data-flx="voice.voice-message-composer-modal.cancel-button">
 					{i18n._(CANCEL_DESCRIPTOR)}
 				</Button>
-				{stage === 'recording' ? (
-					<Button
-						variant="primary"
-						onClick={() => void stopRecording()}
-						data-flx="voice.voice-message-composer-modal.stop-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--3">
-							<StopIcon size={remFromPx(14)} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
-							{i18n._(STOP_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : stage === 'reviewing' ? (
-					<Button
-						variant="primary"
-						onClick={() => void send()}
-						disabled={selectionDuration < MIN_DURATION_SECONDS}
-						data-flx="voice.voice-message-composer-modal.send-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--4">
-							<PaperPlaneRightIcon
-								size={remFromPx(14)}
-								weight="fill"
-								data-flx="voice.voice-message-composer-modal.paper-plane-right-icon"
-							/>
-							{i18n._(SEND_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : stage === 'permission_error' ? (
-					<Button
-						variant="primary"
-						onClick={() => void startRecording()}
-						data-flx="voice.voice-message-composer-modal.retry-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--5">
-							<MicrophoneIcon
-								size={remFromPx(14)}
-								weight="fill"
-								data-flx="voice.voice-message-composer-modal.microphone-icon"
-							/>
-							{i18n._(RECORD_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : null}
+				{footerAction}
 			</Modal.Footer>
 		</Modal.Root>
 	);

@@ -7,16 +7,19 @@ import RuntimeConfig, {
 	type PreparedRuntimeConfig,
 	type RuntimeConfigSnapshot,
 } from '@app/features/app/state/RuntimeConfig';
-import accountStorage, {
-	type AccountPresenceIntent,
-	type QualifiedStoredAccount,
-	type StoredAccount,
-	type StoredAccountInventory,
-	type StoredAccountInventoryReplacement,
-	type StoredAccountList,
-	type UserData,
-} from '@app/features/auth/state/AccountStorage';
+import accountStorage from '@app/features/auth/state/AccountStorage';
+import type {
+	AccountPresenceIntent,
+	QualifiedStoredAccount,
+	StoredAccount,
+	StoredAccountList,
+	UserData,
+} from '@app/features/auth/state/AccountStorageContract';
 import Sudo from '@app/features/auth/state/AuthSudo';
+import type {
+	StoredAccountInventory,
+	StoredAccountInventoryReplacement,
+} from '@app/features/auth/state/StoredAccountInventoryContract';
 import {
 	AccountScopedWork,
 	type AccountScopedWorkTransitionReason,
@@ -27,6 +30,7 @@ import {
 	type SessionCredentialMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
 import AppStorage, {
+	type AppStorageScopeActivation,
 	activateAppStorageScope,
 	deleteAppStorageScope,
 	getAppStorageScope,
@@ -55,9 +59,11 @@ export interface AuthSessionAccountStorage {
 	restoreAccountData(accountKey: string): Promise<StoredAccount | null>;
 	deleteAccount(accountKey: string): Promise<void>;
 	updateAccountValidity(accountKey: string, isValid: boolean, expectedToken?: string): Promise<void>;
+	updateAccountToken(accountKey: string, expectedToken: string, token: string): Promise<void>;
+	updateAccountSwitcherPositions(positions: ReadonlyMap<string, number>): Promise<void>;
 }
 
-export interface AuthSessionHttpOptions {
+interface AuthSessionHttpOptions {
 	readonly headers?: Record<string, string>;
 	readonly auth?: 'session' | 'none';
 	readonly target: InstanceHTTPTarget;
@@ -65,7 +71,7 @@ export interface AuthSessionHttpOptions {
 	readonly retries?: number;
 }
 
-export interface AuthSessionHttp {
+interface AuthSessionHttp {
 	get<T>(url: string, options: AuthSessionHttpOptions): Promise<{body: T}>;
 }
 
@@ -86,7 +92,7 @@ export interface AuthSessionDependencies {
 	readonly abortRuntimeSnapshot: (prepared: PreparedRuntimeConfig) => Promise<void>;
 	readonly deactivateRuntime: () => Promise<void>;
 	readonly allowsCrossInstanceSwitching: () => boolean;
-	readonly activateStorageScope: (accountKey: string | null) => Promise<void>;
+	readonly activateStorageScope: (accountKey: string | null) => Promise<AppStorageScopeActivation>;
 	readonly resetClientState: (options: ResetClientStateOptions, accountScope?: string) => Promise<void>;
 	readonly deleteAccountStorageScope: (accountKey: string) => Promise<void>;
 	readonly closeLayers: () => void | Promise<void>;
@@ -137,11 +143,11 @@ export function createDefaultAuthSessionDependencies(): AuthSessionDependencies 
 		},
 		clearSudoToken: () => Sudo.clearToken(),
 		sendInvisiblePresence: (reason) =>
-			import('@app/features/gateway/transport/GatewayConnection').then((module) => {
-				module.default.sendInvisiblePresenceForCurrentSession(reason);
+			import('@app/features/gateway/transport/GatewaySessionPool').then((module) => {
+				module.default.foregroundConnection.sendInvisiblePresenceForCurrentSession(reason);
 			}),
 		cleanupGatewaySession: (reason) =>
-			import('@app/features/gateway/transport/GatewayConnection').then((module) => {
+			import('@app/features/gateway/transport/GatewaySessionPool').then((module) => {
 				return module.default.retireForAccountTransition(reason);
 			}),
 		resetSyncedUserSettings: async () => {

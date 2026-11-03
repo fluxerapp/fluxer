@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isExistingNewer} from '@app/api/billing/repositories/BillingRepoHelpers';
-import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {hydrateByRefs, upsertMirrorRow} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {BillingPaymentByInvoiceRow, BillingPaymentRow} from '@app/api/database/types/BillingTypes';
 import {BillingPayments, BillingPaymentsByInvoice} from '@app/api/Tables';
 
@@ -22,12 +22,7 @@ export class BillingPaymentRepository {
 	}
 
 	async listByInvoice(invoiceId: string): Promise<Array<BillingPaymentRow>> {
-		const refs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_BY_INVOICE, {invoice_id: invoiceId});
-		if (refs.length === 0) return [];
-		const ids = refs.map((r) => r.provider_id);
-		return fetchMany<BillingPaymentRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		return hydrateByRefs<BillingPaymentRow>(FETCH_BY_INVOICE, {invoice_id: invoiceId}, FETCH_BY_PROVIDER_IDS);
 	}
 
 	async findPrimaryForInvoice(invoiceId: string): Promise<BillingPaymentRow | null> {
@@ -40,13 +35,8 @@ export class BillingPaymentRepository {
 		row: BillingPaymentRow;
 	}> {
 		const existing = await this.findById(mapped.primary.provider_id);
-		if (isExistingNewer(existing, mapped.primary)) {
-			return {changed: false, row: existing!};
-		}
-		await upsertOne(BillingPayments.upsertAll(mapped.primary));
-		if (mapped.byInvoice.invoice_id) {
-			await upsertOne(BillingPaymentsByInvoice.upsertAll(mapped.byInvoice));
-		}
-		return {changed: true, row: mapped.primary};
+		return upsertMirrorRow(BillingPayments, existing, mapped.primary, [
+			[BillingPaymentsByInvoice, mapped.byInvoice.invoice_id ? mapped.byInvoice : null],
+		]);
 	}
 }

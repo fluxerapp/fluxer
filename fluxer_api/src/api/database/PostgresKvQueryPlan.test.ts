@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import cassandra from 'cassandra-driver';
+import {LocalDate} from '@app/api/database/LocalDate';
 import {describe, expect, it} from 'vitest';
 import '@app/api/Tables';
 import {getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
@@ -51,7 +51,7 @@ function rangeBounds(plan: CandidatePlan): Array<[string, string]> {
 	return [];
 }
 
-function planAccepts(plan: CandidatePlan, rowKey: string, partitionKey: string): boolean {
+function planAccepts(plan: CandidatePlan, rowKey: string): boolean {
 	switch (plan.kind) {
 		case 'none':
 			return false;
@@ -62,8 +62,6 @@ function planAccepts(plan: CandidatePlan, rowKey: string, partitionKey: string):
 		case 'ranges':
 		case 'rangeGroups':
 			return rangeBounds(plan).some(([lower, upper]) => withinRange(rowKey, lower, upper));
-		case 'partitionKeys':
-			return plan.partitionKeys.includes(partitionKey);
 		case 'scan':
 			return true;
 	}
@@ -96,14 +94,13 @@ function planOf(query: PreparedQuery) {
 function checkQuery(query: PreparedQuery, rows: Array<Row>): CandidatePlan {
 	const {meta, plan} = planOf(query);
 	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
-	const partitionKey = meta.table.partitionKey as ReadonlyArray<string>;
 	const accepted: Array<Row> = [];
 	const matched: Array<Row> = [];
 	for (const row of rows) {
 		const rowKey = keyFromColumns(primaryKey, row);
 		expectKeyShape(rowKey, primaryKey.length - 1);
 		expect(matchingRangeCount(plan.candidates, rowKey)).toBeLessThanOrEqual(1);
-		if (planAccepts(plan.candidates, rowKey, keyFromColumns(partitionKey, row))) accepted.push(row);
+		if (planAccepts(plan.candidates, rowKey)) accepted.push(row);
 		if (matchesWhere(row, meta.where, query.params)) matched.push(row);
 	}
 	for (const row of matched) {
@@ -189,21 +186,6 @@ const wideRows: Array<Row> = ['a', 'a"b', '\u{1f600}'].flatMap((a) =>
 	),
 );
 
-interface PartitionedRow {
-	a: string;
-	b: string;
-	payload: string;
-}
-
-const PartitionedKey = defineTable<PartitionedRow, 'a' | 'b', 'b'>({
-	name: 'kv_plan_partitioned',
-	columns: ['a', 'b', 'payload'],
-	primaryKey: ['a', 'b'],
-	partitionKey: ['b'],
-});
-
-const partitionedRows: Array<Row> = TRICKY_STRINGS.flatMap((a) => TRICKY_STRINGS.map((b) => ({a, b, payload: 'p'})));
-
 describe('PostgresKvQueryExecutor candidate planner', () => {
 	it('pins a single-column primary key by equality', () => {
 		for (const a of TRICKY_STRINGS) {
@@ -287,20 +269,6 @@ describe('PostgresKvQueryExecutor candidate planner', () => {
 		expect(checkQuery(query, wideRows).kind).toBe('range');
 	});
 
-	it('uses the partition key when it is not a prefix of the primary key', () => {
-		for (const b of TRICKY_STRINGS) {
-			const query = PartitionedKey.select({where: PartitionedKey.where.eq('b')}).bind({b});
-			expect(checkQuery(query, partitionedRows).kind).toBe('partitionKeys');
-		}
-	});
-
-	it('uses the partition key for an IN on the partition column', () => {
-		const query = PartitionedKey.select({where: PartitionedKey.where.in('b', 'bs')}).bind({
-			bs: new Set(['a', 'a\u0001b', 'a\\b']),
-		});
-		expect(checkQuery(query, partitionedRows).kind).toBe('partitionKeys');
-	});
-
 	it('scans a table with no predicate', () => {
 		expect(checkQuery(SingleKey.select().bind({}), singleRows).kind).toBe('scan');
 	});
@@ -310,7 +278,6 @@ describe('PostgresKvQueryExecutor plan exactness', () => {
 	it('is exact when the key predicate consumes every clause', () => {
 		expect(planOf(PairKey.select({where: PairKey.where.eq('a')}).bind({a: 'a'})).plan.exact).toBe(true);
 		expect(planOf(SingleKey.select().bind({})).plan.exact).toBe(true);
-		expect(planOf(PartitionedKey.select({where: PartitionedKey.where.eq('b')}).bind({b: 'a'})).plan.exact).toBe(true);
 	});
 
 	it('is inexact when a clause is left for the JavaScript filter', () => {
@@ -472,8 +439,8 @@ describe('PostgresKvQueryExecutor key equality', () => {
 		['false', false],
 		['date', new Date('2020-01-01T00:00:00.000Z')],
 		['buffer', Buffer.from('2020-01-01')],
-		['local-date', cassandra.types.LocalDate.fromString('2020-01-01')],
-		['other-local-date', cassandra.types.LocalDate.fromString('2021-06-05')],
+		['local-date', LocalDate.fromString('2020-01-01')],
+		['other-local-date', LocalDate.fromString('2021-06-05')],
 	];
 
 	it('accepts an equality exactly when both sides share a row key', () => {
@@ -490,7 +457,7 @@ describe('PostgresKvQueryExecutor key equality', () => {
 	});
 
 	it('does not equate a LocalDate with its string rendering', () => {
-		const localDate = cassandra.types.LocalDate.fromString('2020-01-01');
+		const localDate = LocalDate.fromString('2020-01-01');
 		expect(matchesWhere({a: localDate}, eqWhere, {a: localDate} as CassandraParams)).toBe(true);
 		expect(matchesWhere({a: localDate}, eqWhere, {a: '2020-01-01'} as CassandraParams)).toBe(false);
 		expect(matchesWhere({a: '2020-01-01'}, eqWhere, {a: localDate} as CassandraParams)).toBe(false);

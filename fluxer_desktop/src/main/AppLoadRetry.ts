@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage} from '@electron/common/ErrorMessage';
+
 const INITIAL_RETRY_DELAY_MS = 1000;
 const MAX_RETRY_DELAY_MS = 30000;
 const FAILURES_BEFORE_PROMPT = 3;
 const ERR_ABORTED = -3;
 
-export interface AppLoadFailure {
+interface AppLoadFailure {
 	errorCode: number;
 	errorDescription: string;
 	url: string;
@@ -24,8 +26,6 @@ interface AppLoadRetryOptions {
 	isTrustedUrl: (url: string) => boolean;
 	onRepeatedFailure: (failure: AppLoadFailure) => void;
 	onCommitted: () => void;
-	setTimer?: (callback: () => void, delayMs: number) => ReturnType<typeof setTimeout>;
-	clearTimer?: (timer: ReturnType<typeof setTimeout>) => void;
 }
 
 export interface AppLoadRetry {
@@ -38,7 +38,7 @@ function isRetryableLoadError(errorCode: number): boolean {
 }
 
 function getLoadErrorCode(error: unknown): number | null {
-	const message = error instanceof Error ? error.message : String(error);
+	const message = errorMessage(error);
 	const match = /\(([-\d]+)\)/.exec(message);
 	if (!match) return null;
 	const value = Number.parseInt(match[1], 10);
@@ -47,14 +47,12 @@ function getLoadErrorCode(error: unknown): number | null {
 
 export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 	const {webContents, logger} = options;
-	const setTimer = options.setTimer ?? setTimeout;
-	const clearTimer = options.clearTimer ?? clearTimeout;
 	const appUrl = options.appUrl;
 	let attempt = 0;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	const cancelTimer = () => {
 		if (timer) {
-			clearTimer(timer);
+			clearTimeout(timer);
 			timer = null;
 		}
 	};
@@ -74,7 +72,7 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		const delay = Math.min(INITIAL_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
 		attempt += 1;
 		logger.warn('Scheduling app load retry', {reason, delay, attempt, ...detail});
-		timer = setTimer(() => {
+		timer = setTimeout(() => {
 			timer = null;
 			if (webContents.isDestroyed()) return;
 			if (webContents.isLoadingMainFrame()) {

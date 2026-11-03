@@ -1,0 +1,84 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.valkey }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "valkey" "component" "cache" "w" . }}
+{{- $args := list "valkey-server" "--appendonly" "yes" "--appendfsync" .appendfsync "--dir" "/data" "--save" "" "--maxmemory" .maxmemory "--maxmemory-policy" .maxmemoryPolicy "--requirepass" "$(REDISCLI_AUTH)" }}
+{{- $ping := dict "exec" (dict "command" (list "sh" "-c" "valkey-cli ping | grep -q PONG")) "periodSeconds" 10 "timeoutSeconds" 5 }}
+{{- $secrets := include "fluxer.secretData" $ | fromJson }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: valkey
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: valkey
+  podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ printf "%s\n%s" (toJson $args) (get $secrets "FLUXER_VALKEY_PASSWORD" | default "") | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 999 "gid" 1000) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: valkey
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          command:
+            {{- toYaml $args | nindent 12 }}
+          env:
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "REDISCLI_AUTH" "key" "FLUXER_VALKEY_PASSWORD") | nindent 12 }}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml (merge (dict "failureThreshold" 6 "initialDelaySeconds" 10) $ping) | nindent 12 }}
+          readinessProbe:
+            {{- toYaml (merge (dict "failureThreshold" 3) $ping) | nindent 12 }}
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    {{- include "fluxer.pvc" .persistence | nindent 4 }}
+{{- end }}
+{{- end }}

@@ -363,7 +363,7 @@ spawn_voice_token_fetch(ChId, UserId, SId, Params) ->
 
 -spec merge_dm_voice_state(#{term() => term()}, session_state()) -> session_state().
 merge_dm_voice_state(DmState, OrigState) when is_map(DmState) ->
-    maps:fold(
+    Merged = maps:fold(
         fun
             (session_pid, _V, Acc) -> Acc;
             (K, V, Acc) when is_atom(K) -> Acc#{K => V};
@@ -371,7 +371,8 @@ merge_dm_voice_state(DmState, OrigState) when is_map(DmState) ->
         end,
         OrigState,
         DmState
-    ).
+    ),
+    eqwalizer:dynamic_cast(Merged).
 
 -spec handle_guild_voice(
     guild_id(), channel_id() | null, map(), session_state()

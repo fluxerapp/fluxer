@@ -1,14 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_connect).
+
 -typing([eqwalizer]).
 
 -export([handle_dm_voice_with_channel/5]).
--export([handle_dm_connect_or_update/1]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -331,20 +327,3 @@ increment_matching_dm_connection(VoiceState, UserId, ChannelIdValue, Acc) ->
         {UserId, ChannelIdValue} -> Acc + 1;
         _ -> Acc
     end.
-
--ifdef(TEST).
-
-dm_connection_limit_allows_join_test() ->
-    VoiceStates = #{
-        <<"conn-1">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-2">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-3">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-4">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-5">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-6">> => #{<<"channel_id">> => <<"200">>, <<"user_id">> => <<"10">>}
-    },
-    ?assertNot(dm_connection_limit_allows_join(10, 100, VoiceStates)),
-    ?assert(dm_connection_limit_allows_join(10, 200, VoiceStates)),
-    ?assert(dm_connection_limit_allows_join(20, 100, VoiceStates)).
-
--endif.

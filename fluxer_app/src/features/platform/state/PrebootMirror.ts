@@ -113,7 +113,7 @@ export function writeRawStorageItem(name: string, value: string | null): void {
 	}
 }
 
-export function rawStorageLength(): number {
+function rawStorageLength(): number {
 	try {
 		return rawBinding.storage.length;
 	} catch (error) {
@@ -122,7 +122,7 @@ export function rawStorageLength(): number {
 	}
 }
 
-export function rawStorageKeyAt(index: number): string | null {
+function rawStorageKeyAt(index: number): string | null {
 	try {
 		return rawBinding.storage.key(index);
 	} catch (error) {

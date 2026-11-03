@@ -2,7 +2,7 @@
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 
 interface TypingStartPayload {
@@ -17,5 +17,5 @@ export function handleTypingStart(data: TypingStartPayload, _context: GatewayHan
 	if (data.guild_id && data.member) {
 		GuildMembers.hydrateIfMissing(data.guild_id, data.member);
 	}
-	TypingIndicator.startRemoteTyping(data.channel_id, data.user_id);
+	RollingTypingStore.start(data.channel_id, data.user_id, 'gateway');
 }

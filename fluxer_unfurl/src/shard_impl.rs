@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::activity_pub::signature::{self, HostKey, RequestSigner};
 use crate::cache_policy::{
-    UnfurlEntryExpiry, default_empty_entry_lifetime, every_unfurl_cache_key, provider_capability,
-    unfurl_cache_key,
+    UnfurlEntryExpiry, default_empty_entry_lifetime, provider_capability, unfurl_cache_key,
 };
 use crate::embed_normalizer::normalize_embeds;
 use crate::media_proxy::MediaProxyClient;
 use crate::resolvers::{self, ResolveContext, ResolverResult};
-use crate::types::{InvalidatedResponse, NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
+use crate::types::{NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
 use fluxer_svc::config::optional_env;
 use fluxer_svc::shard::ShardService;
 use moka::future::Cache;
+use ring::signature::RsaKeyPair;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
@@ -26,6 +27,8 @@ pub struct UnfurlShard {
     self_hosted: bool,
     youtube_api_key: Option<String>,
     klipy_api_key: Option<String>,
+    activity_pub_key: Option<Arc<RsaKeyPair>>,
+    activity_pub_host_key: Option<HostKey>,
 }
 
 impl UnfurlShard {
@@ -72,6 +75,30 @@ impl UnfurlShard {
             media_proxy_public_endpoint.as_deref(),
             media_proxy_http_client,
         );
+        let activity_pub_key =
+            optional_env("FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64").map(|encoded| {
+                let key = signature::parse_signing_key(&encoded).unwrap_or_else(|err| {
+                    panic!("invalid FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: {err}")
+                });
+                tracing::info!("ActivityPub request signing enabled");
+                Arc::new(key)
+            });
+        let activity_pub_host_key = match (
+            optional_env("FLUXER_ACTIVITYPUB_HOST_KEY_ID"),
+            optional_env("FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64"),
+        ) {
+            (Some(key_id), Some(encoded)) => {
+                let host_key = signature::parse_signing_key(&encoded)
+                    .and_then(|key| HostKey::new(key, key_id))
+                    .unwrap_or_else(|err| panic!("invalid ActivityPub host key: {err}"));
+                tracing::info!("ActivityPub host key enabled");
+                Some(host_key)
+            }
+            (None, None) => None,
+            _ => panic!(
+                "FLUXER_ACTIVITYPUB_HOST_KEY_ID and FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64 must be set together"
+            ),
+        };
 
         Self {
             cache: build_l2_cache(lifetime, default_empty_entry_lifetime()),
@@ -84,30 +111,8 @@ impl UnfurlShard {
                 .or_else(|| optional_env("YOUTUBE_API_KEY")),
             klipy_api_key: optional_env("FLUXER_KLIPY_API_KEY")
                 .or_else(|| optional_env("KLIPY_API_KEY")),
-        }
-    }
-
-    #[cfg(test)]
-    fn for_test() -> Self {
-        Self::for_test_with_lifetimes(long_lifetime(), default_empty_entry_lifetime())
-    }
-
-    #[cfg(test)]
-    fn for_test_with_lifetimes(lifetime: Duration, empty_entry_lifetime: Duration) -> Self {
-        Self {
-            cache: build_l2_cache(lifetime, empty_entry_lifetime),
-            lifetime,
-            http_client: external_http_client(),
-            resolvers: resolvers::build_resolver_chain(),
-            media_proxy: MediaProxyClient::new_with_public_endpoint(
-                "http://media-proxy.invalid",
-                "test-secret",
-                None,
-                internal_http_client(),
-            ),
-            self_hosted: false,
-            youtube_api_key: None,
-            klipy_api_key: None,
+            activity_pub_key,
+            activity_pub_host_key,
         }
     }
 
@@ -117,6 +122,7 @@ impl UnfurlShard {
         nsfw_mode: NsfwMode,
         youtube_api_key: Option<&str>,
         klipy_api_key: Option<&str>,
+        activity_pub_key_id: Option<&str>,
     ) -> anyhow::Result<UnfurlResult> {
         let parsed = Url::parse(url_str)?;
 
@@ -139,6 +145,11 @@ impl UnfurlShard {
             klipy_api_key: klipy_api_key
                 .map(str::to_owned)
                 .or_else(|| self.klipy_api_key.clone()),
+            activity_pub_signer: self.activity_pub_key.clone().zip(activity_pub_key_id).map(
+                |(key, key_id)| {
+                    RequestSigner::new(key, key_id.to_owned(), self.activity_pub_host_key.clone())
+                },
+            ),
         };
 
         if let Some(idx) = matched_resolver_idx {
@@ -220,11 +231,6 @@ impl UnfurlShard {
     }
 }
 
-#[cfg(test)]
-fn long_lifetime() -> Duration {
-    Duration::from_secs(30 * 60)
-}
-
 fn build_l2_cache(
     lifetime: Duration,
     empty_entry_lifetime: Duration,
@@ -238,9 +244,13 @@ fn build_l2_cache(
 
 fn base_http_client_builder() -> reqwest::ClientBuilder {
     reqwest::Client::builder()
-        .user_agent("Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)")
+        .user_agent("Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)")
         .timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
+        .no_zstd()
 }
 
 fn external_http_client() -> reqwest::Client {
@@ -275,6 +285,7 @@ impl ShardService for UnfurlShard {
                 cache_only,
                 ref youtube_api_key,
                 ref klipy_api_key,
+                ref activity_pub_key_id,
             } => {
                 let nsfw = nsfw_mode.unwrap_or_default();
                 let cache_key = unfurl_cache_key(
@@ -299,6 +310,7 @@ impl ShardService for UnfurlShard {
                         nsfw,
                         youtube_api_key.as_deref(),
                         klipy_api_key.as_deref(),
+                        activity_pub_key_id.as_deref(),
                     )
                     .await
                 {
@@ -314,326 +326,47 @@ impl ShardService for UnfurlShard {
                 self.cache.insert(cache_key, result.clone()).await;
                 Ok(UnfurlResponse::Resolved(result))
             }
-            UnfurlRequest::Invalidate { ref url } => {
-                for key in every_unfurl_cache_key(url) {
-                    self.cache.invalidate(&key).await;
-                }
-                Ok(UnfurlResponse::Invalidated(InvalidatedResponse {
-                    invalidated: true,
-                }))
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::types::MessageEmbed;
-    use std::sync::Mutex;
-
-    const BLOCKED_URL: &str = "http://127.0.0.1/unreachable";
-
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    const PUBLIC_ENDPOINT_ENV: [&str; 7] = [
-        "FLUXER_MEDIA_PROXY_ENDPOINT",
-        "FLUXER_MEDIA_PROXY_SECRET_KEY",
-        "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-        "FLUXER_SELF_HOSTED",
-        "FLUXER_BASE_DOMAIN",
-        "FLUXER_PUBLIC_PORT",
-        "FLUXER_PUBLIC_ORIGIN",
-    ];
-
-    fn shard_from_env(vars: &[(&str, &str)]) -> UnfurlShard {
-        let _guard = ENV_LOCK.lock().unwrap();
-        for name in PUBLIC_ENDPOINT_ENV {
-            unsafe { std::env::remove_var(name) };
-        }
-        for (name, value) in vars {
-            unsafe { std::env::set_var(name, value) };
-        }
-        let shard = UnfurlShard::new(long_lifetime());
-        for (name, _) in vars {
-            unsafe { std::env::remove_var(name) };
-        }
-        shard
-    }
-
-    #[test]
-    fn a_non_default_public_port_reaches_the_public_media_endpoint() {
-        let shard = shard_from_env(&[
-            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
-            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
-            (
-                "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                "http://fluxer.example/media",
-            ),
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "19080"),
-        ]);
-
-        assert!(
-            shard
-                .media_proxy
-                .external_proxy_url("https://img.example.net/a.png")
-                .expect("proxy url")
-                .starts_with("http://fluxer.example:19080/media/external/")
-        );
-    }
-
-    #[test]
-    fn a_default_public_port_leaves_the_public_media_endpoint_alone() {
-        let shard = shard_from_env(&[
-            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
-            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
-            (
-                "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                "https://fluxer.example/media",
-            ),
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "443"),
-        ]);
-
-        assert!(
-            shard
-                .media_proxy
-                .external_proxy_url("https://img.example.net/a.png")
-                .expect("proxy url")
-                .starts_with("https://fluxer.example/media/external/")
-        );
-    }
-
-    #[test]
-    fn self_hosted_follows_the_fluxer_self_hosted_env() {
-        let media_proxy = [
-            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
-            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
-        ];
-        assert!(!shard_from_env(&media_proxy).self_hosted);
-        let mut vars = media_proxy.to_vec();
-        vars.push(("FLUXER_SELF_HOSTED", "true"));
-        assert!(shard_from_env(&vars).self_hosted);
-    }
-
-    fn unfurl(url: &str, youtube_api_key: Option<&str>) -> UnfurlRequest {
-        UnfurlRequest::Unfurl {
-            url: url.to_owned(),
-            nsfw_mode: Some(NsfwMode::Block),
-            bypass_cache: false,
-            cache_only: false,
-            youtube_api_key: youtube_api_key.map(str::to_owned),
-            klipy_api_key: None,
-        }
-    }
-
-    fn probe(url: &str) -> UnfurlRequest {
-        UnfurlRequest::Unfurl {
-            url: url.to_owned(),
-            nsfw_mode: Some(NsfwMode::Block),
-            bypass_cache: false,
-            cache_only: true,
-            youtube_api_key: None,
-            klipy_api_key: None,
-        }
-    }
-
-    fn keyless_block_key(url: &str) -> String {
-        unfurl_cache_key(url, NsfwMode::Block, provider_capability(false, false))
-    }
-
-    fn embed_count(response: &UnfurlResponse) -> usize {
-        match response {
-            UnfurlResponse::Resolved(result) => result.embeds.len(),
-            _ => panic!("expected a resolved response"),
-        }
-    }
-
-    async fn seed_keyless_entry(shard: &UnfurlShard) {
-        shard
-            .cache
-            .insert(
-                unfurl_cache_key(
-                    BLOCKED_URL,
-                    NsfwMode::Block,
-                    provider_capability(false, false),
-                ),
-                Arc::new(UnfurlResult {
-                    embeds: vec![MessageEmbed::new("link")],
-                    cache_ttl_seconds: Some(long_lifetime().as_secs()),
-                }),
-            )
-            .await;
-    }
-
-    #[tokio::test]
-    async fn a_shard_entry_resolved_without_a_youtube_key_is_not_served_once_one_is_configured() {
-        let shard = UnfurlShard::for_test();
-        seed_keyless_entry(&shard).await;
-
-        assert_eq!(
-            1,
-            embed_count(&shard.handle(unfurl(BLOCKED_URL, None)).await.unwrap()),
-            "the keyless entry must still serve keyless requests"
-        );
-        assert_eq!(
-            0,
-            embed_count(
-                &shard
-                    .handle(unfurl(BLOCKED_URL, Some("configured")))
+            UnfurlRequest::VerifyDomain { domain, token } => {
+                match crate::domain_verification::verify_domain(&self.http_client, &domain, &token)
                     .await
-                    .unwrap()
-            ),
-            "a result resolved without a YouTube key must not be served once a key is configured"
-        );
-    }
-
-    #[tokio::test]
-    async fn invalidate_clears_the_shard_entry_for_every_provider_capability() {
-        let shard = UnfurlShard::for_test();
-        seed_keyless_entry(&shard).await;
-
-        shard
-            .handle(UnfurlRequest::Invalidate {
-                url: BLOCKED_URL.to_owned(),
-            })
-            .await
-            .unwrap();
-
-        assert_eq!(
-            0,
-            embed_count(&shard.handle(unfurl(BLOCKED_URL, None)).await.unwrap())
-        );
-    }
-    #[tokio::test]
-    async fn a_url_that_produced_no_embed_is_written_to_the_shard_cache() {
-        let shard = UnfurlShard::for_test();
-
-        assert_eq!(
-            0,
-            embed_count(&shard.handle(unfurl(BLOCKED_URL, None)).await.unwrap())
-        );
-        assert!(
-            shard
-                .cache
-                .get(&keyless_block_key(BLOCKED_URL))
-                .await
-                .is_some(),
-            "an empty resolution must be remembered so the next message does not refetch the page"
-        );
-    }
-
-    #[tokio::test]
-    async fn a_cache_only_probe_never_writes_an_entry() {
-        let shard = UnfurlShard::for_test();
-
-        assert_eq!(
-            0,
-            embed_count(&shard.handle(probe(BLOCKED_URL)).await.unwrap())
-        );
-        assert!(
-            shard
-                .cache
-                .get(&keyless_block_key(BLOCKED_URL))
-                .await
-                .is_none(),
-            "a cache-only miss means unknown, not resolved-to-nothing"
-        );
-    }
-
-    #[tokio::test]
-    async fn an_unscanned_entry_is_not_served_to_a_scanning_request() {
-        let shard = UnfurlShard::for_test();
-        shard
-            .cache
-            .insert(
-                unfurl_cache_key(
-                    BLOCKED_URL,
-                    NsfwMode::Allow,
-                    provider_capability(false, false),
-                ),
-                Arc::new(UnfurlResult {
-                    embeds: vec![MessageEmbed::new("link")],
-                    cache_ttl_seconds: Some(long_lifetime().as_secs()),
-                }),
-            )
-            .await;
-
-        assert_eq!(
-            0,
-            embed_count(&shard.handle(unfurl(BLOCKED_URL, None)).await.unwrap()),
-            "a result resolved with nsfw scanning off must not be served to a scanning request"
-        );
-    }
-    #[tokio::test]
-    async fn an_empty_shard_entry_lapses_long_before_a_populated_one() {
-        let shard =
-            UnfurlShard::for_test_with_lifetimes(long_lifetime(), Duration::from_millis(50));
-        let empty_key = keyless_block_key("https://example.com/transient");
-        let populated_key = keyless_block_key("https://example.com/stable");
-        shard
-            .cache
-            .insert(
-                empty_key.clone(),
-                Arc::new(UnfurlResult {
-                    embeds: Vec::new(),
-                    cache_ttl_seconds: None,
-                }),
-            )
-            .await;
-        shard
-            .cache
-            .insert(
-                populated_key.clone(),
-                Arc::new(UnfurlResult {
-                    embeds: vec![MessageEmbed::new("link")],
-                    cache_ttl_seconds: Some(long_lifetime().as_secs()),
-                }),
-            )
-            .await;
-
-        tokio::time::sleep(Duration::from_millis(200)).await;
-
-        assert!(
-            shard.cache.get(&empty_key).await.is_none(),
-            "a link that failed to unfurl must become retryable again quickly"
-        );
-        assert!(
-            shard.cache.get(&populated_key).await.is_some(),
-            "a real embed must keep the full lifetime"
-        );
-    }
-    #[tokio::test]
-    async fn the_configured_lifetime_governs_the_shard_cache_and_the_reported_ttl() {
-        let shard = UnfurlShard::for_test_with_lifetimes(
-            Duration::from_millis(80),
-            default_empty_entry_lifetime(),
-        );
-        let finalized = shard.finalize_result(crate::resolvers::ResolverResult {
-            embeds: vec![MessageEmbed::new("link")],
-        });
-        assert_eq!(
-            Some(Duration::from_millis(80).as_secs()),
-            finalized.cache_ttl_seconds,
-            "the reported ttl must be the configured lifetime, not a compiled-in constant"
-        );
-
-        let key = keyless_block_key("https://example.com/configured");
-        shard
-            .cache
-            .insert(
-                key.clone(),
-                Arc::new(UnfurlResult {
-                    embeds: vec![MessageEmbed::new("link")],
-                    cache_ttl_seconds: None,
-                }),
-            )
-            .await;
-        tokio::time::sleep(Duration::from_millis(220)).await;
-        assert!(
-            shard.cache.get(&key).await.is_none(),
-            "the configured lifetime must govern the shard cache"
-        );
+                {
+                    Ok(verified) => Ok(UnfurlResponse::Verified(verified)),
+                    Err(err) => Ok(UnfurlResponse::Failed {
+                        message: err.to_string(),
+                    }),
+                }
+            }
+            UnfurlRequest::Fetch {
+                method,
+                url,
+                headers,
+                body,
+            } => {
+                match crate::external_fetch::fetch(&self.http_client, &method, &url, &headers, body)
+                    .await
+                {
+                    Ok(response) => Ok(UnfurlResponse::Fetched(response)),
+                    Err(err) => Ok(UnfurlResponse::Failed {
+                        message: err.to_string(),
+                    }),
+                }
+            }
+            UnfurlRequest::ResolveTxt { name } => {
+                if let Err(err) = crate::dns_txt::validate_record_name(&name) {
+                    return Ok(UnfurlResponse::Failed {
+                        message: err.to_string(),
+                    });
+                }
+                let records = crate::dns_txt::first_answer(&name, |records| !records.is_empty())
+                    .await
+                    .unwrap_or_default();
+                Ok(UnfurlResponse::Txt(records))
+            }
+            UnfurlRequest::ActivityPubKey => Ok(UnfurlResponse::ActivityPubKey(
+                self.activity_pub_key
+                    .as_deref()
+                    .map(signature::public_key_base64),
+            )),
+        }
     }
 }

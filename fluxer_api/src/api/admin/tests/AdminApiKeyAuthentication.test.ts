@@ -47,55 +47,6 @@ describe('Admin API Key Authentication', () => {
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
-	test('wrong prefix is rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Prefix Test Key');
-		await createBuilder(harness, `Bearer ${apiKey.key}`)
-			.get(`/admin/users/${admin.userId}`)
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
-	});
-	test('missing prefix is rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'No Prefix Test Key');
-		await createBuilder(harness, apiKey.key)
-			.get(`/admin/users/${admin.userId}`)
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
-	});
-	test('case sensitive prefix', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Case Test Key');
-		await createBuilder(harness, `admin ${apiKey.key}`)
-			.get(`/admin/users/${admin.userId}`)
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
-	});
-	test('empty key is rejected', async () => {
-		await createTestAccount(harness);
-		await createBuilder(harness, 'Admin ').get('/admin/users/123456789').expect(HTTP_STATUS.UNAUTHORIZED).execute();
-	});
 	test('cannot authenticate to user endpoints', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, [

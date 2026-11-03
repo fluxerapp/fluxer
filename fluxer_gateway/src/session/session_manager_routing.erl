@@ -3,8 +3,6 @@
 -module(session_manager_routing).
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([
     call_shard/3,
     call_owner_manager/3,
@@ -13,8 +11,7 @@
     shard_pid_from_table/1,
     handle_owner_call/5,
     forward_call/4,
-    execute_owner_request/4,
-    start_call_with_drain_guard/4
+    execute_owner_request/4
 ]).
 
 -export_type([session_id/0, state/0]).

@@ -104,7 +104,6 @@ class VoiceGateProcessor extends AudioWorkletProcessor {
 		const thresholdRms = this.auto
 			? Math.min(this.maxRms, Math.max(this.minRms, floorRms * 3))
 			: this.manualThresholdRms;
-		const wasSpeaking = this.speaking;
 		if (this.auto && this.frame < this.seedUntilFrame) {
 			this.speaking = false;
 			this.silenceFrames = 0;
@@ -129,13 +128,12 @@ class VoiceGateProcessor extends AudioWorkletProcessor {
 			if (this.delayFrames > 0) this.delayIndex = (this.delayIndex + 1) % this.delayFrames;
 		}
 		this.frame += length;
-		if (wasSpeaking !== this.speaking || this.frame >= this.reportFrame) {
+		if (this.frame >= this.reportFrame) {
 			this.port.postMessage({
 				type: 'level',
 				rms,
 				floorRms,
 				thresholdRms,
-				speaking: this.speaking,
 				nonFinite: this.nonFinite,
 				frame: this.frame,
 				contextTime: currentTime,

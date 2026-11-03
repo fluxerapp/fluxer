@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {AVIF_FORMAT_LABEL} from '@app/features/app/config/I18nDisplayConstants';
 import {inspectImageBytes} from '@app/features/expressions/utils/AnimatedImageUtils';
 import type {AnimatedCropSourceFormat, CropParams} from '@app/features/expressions/workers/AnimatedImageCropMessages';
 import {CropPipelineError, cropAnimatedImage} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
-import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import styles from '@app/features/messaging/components/modals/ImageCropModal.module.css';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
@@ -764,7 +764,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 				const message = getCropErrorMessage(i18n, error, errorMessage, sizeLimitBytes);
 				if (message == null) return;
 				logger.error('Error cropping image:', error);
-				showMessagingErrorModal({
+				showGenericErrorModal({
 					title: i18n._(COULDN_T_CROP_IMAGE_DESCRIPTOR),
 					message,
 					dataFlx: 'messaging.image-crop-modal.crop-failed.generic-error-modal',

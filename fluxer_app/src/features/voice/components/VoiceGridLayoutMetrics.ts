@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 const VOICE_GRID_TILE_ASPECT_RATIO = 16 / 9;
 const VOICE_GRID_DEFAULT_GAP_PX = 12;
 const VOICE_GRID_DEFAULT_SIDE_PADDING_PX = 12;
@@ -24,7 +26,7 @@ interface VoiceGridLayoutMetricsInput {
 	edgeToEdge?: boolean;
 }
 
-export interface VoiceGridVisibleTileCapacityInput extends VoiceGridLayoutMetricsInput {
+interface VoiceGridVisibleTileCapacityInput extends VoiceGridLayoutMetricsInput {
 	minTileWidth?: number;
 	minTileHeight?: number;
 }
@@ -47,7 +49,7 @@ interface VoiceGridLayoutMetrics {
 	contentHeight: number;
 }
 
-export interface VoiceGridPackedLayoutMetrics extends VoiceGridLayoutMetrics {
+interface VoiceGridPackedLayoutMetrics extends VoiceGridLayoutMetrics {
 	visibleTileCount: number;
 }
 
@@ -93,10 +95,6 @@ function sanitizeCount(tileCount: number): number {
 function sanitizeDimension(value: number): number {
 	if (!Number.isFinite(value)) return 0;
 	return Math.max(0, value);
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
 }
 
 function getVoiceGridRowCount(tileCount: number, columnCount: number): number {
@@ -152,27 +150,27 @@ function getVoiceGridPadding({
 	}
 	const width = sanitizeDimension(containerWidth);
 	const height = sanitizeDimension(containerHeight);
-	const sidePadding = compact
-		? clamp(height * 0.02, 6, 12)
-		: width <= 419
-			? 6
-			: width <= 759
-				? 8
-				: VOICE_GRID_DEFAULT_SIDE_PADDING_PX;
-	const verticalPadding = compact
-		? clamp(height * 0.018, 5, 10)
-		: height <= 359
-			? 8
-			: height <= 519
-				? 10
-				: VOICE_GRID_DEFAULT_VERTICAL_PADDING_PX;
+	let sidePadding: number;
+	if (compact) {
+		sidePadding = clamp(height * 0.02, 6, 12);
+	} else if (width <= 419) {
+		sidePadding = 6;
+	} else if (width <= 759) {
+		sidePadding = 8;
+	} else {
+		sidePadding = VOICE_GRID_DEFAULT_SIDE_PADDING_PX;
+	}
+	let verticalPadding: number;
+	if (compact) {
+		verticalPadding = clamp(height * 0.018, 5, 10);
+	} else if (height <= 359) {
+		verticalPadding = 8;
+	} else if (height <= 519) {
+		verticalPadding = 10;
+	} else {
+		verticalPadding = VOICE_GRID_DEFAULT_VERTICAL_PADDING_PX;
+	}
 	return {sidePadding, verticalPadding};
-}
-
-function getVoiceGridMinTileSize(compact = false): {minTileWidth: number; minTileHeight: number} {
-	return compact
-		? {minTileWidth: VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_COMPACT_MIN_TILE_HEIGHT_PX}
-		: {minTileWidth: VOICE_GRID_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_MIN_TILE_HEIGHT_PX};
 }
 
 function resolveVoiceGridLayoutMetricsForColumns({
@@ -254,7 +252,9 @@ export function resolveVoiceGridPackedLayoutMetrics({
 			visibleTileCount: 0,
 		};
 	}
-	const minSize = getVoiceGridMinTileSize(compact);
+	const minSize = compact
+		? {minTileWidth: VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_COMPACT_MIN_TILE_HEIGHT_PX}
+		: {minTileWidth: VOICE_GRID_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_MIN_TILE_HEIGHT_PX};
 	const effectiveMinTileWidth = sanitizeDimension(minTileWidth ?? minSize.minTileWidth);
 	const effectiveMinTileHeight = sanitizeDimension(minTileHeight ?? minSize.minTileHeight);
 	for (let visibleCount = count; visibleCount >= 1; visibleCount--) {

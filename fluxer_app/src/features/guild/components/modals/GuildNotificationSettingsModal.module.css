@@ -74,11 +74,11 @@
 }
 
 .overridesHeaderCellLeft {
-	text-align: left;
+	text-align: start;
 }
 
 .overridesHeaderCellMute {
-	padding-left: 0.5rem;
+	padding-inline-start: 0.5rem;
 	text-align: center;
 }
 
@@ -217,7 +217,7 @@
 	.removeButton {
 		position: absolute;
 		top: 50%;
-		right: -0.75rem;
+		inset-inline-end: -0.75rem;
 		transform: translateY(-50%);
 		background-color: var(--status-danger);
 		color: white;

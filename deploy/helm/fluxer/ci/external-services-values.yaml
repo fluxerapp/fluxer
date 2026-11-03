@@ -1,0 +1,38 @@
+domain: chat.example.test
+postgres:
+  enabled: false
+  external:
+    host: db.example.test
+    ssl: "true"
+valkey:
+  enabled: false
+nats:
+  enabled: false
+  external:
+    url: nats://mq.example.test:4222
+meilisearch:
+  enabled: false
+  external:
+    url: https://search.example.test
+seaweedfs:
+  enabled: false
+s3:
+  endpoint: https://s3.example.test
+  publicEndpoint: https://cdn.example.test
+  region: eu-central-1
+  forcePathStyle: false
+livekit:
+  enabled: false
+  external:
+    url: http://livekit.voice.svc:7880
+    publicUrl: wss://livekit.example.test
+secrets:
+  values:
+    FLUXER_POSTGRES_PASSWORD: ci-postgres-password
+    FLUXER_SEARCH_API_KEY: ci-search-key
+    FLUXER_S3_SECRET_ACCESS_KEY: ci-s3-secret
+    FLUXER_NATS_AUTH_TOKEN: ci-nats-token
+    FLUXER_LIVEKIT_API_KEY: ci-livekit-key
+    FLUXER_LIVEKIT_API_SECRET: ci-livekit-secret-of-at-least-32-characters
+  extra:
+    FLUXER_KV_URL: redis://:ci-cache-password@cache.example.test:6379/0

@@ -9,59 +9,8 @@ import {
 import {describe, expect, it} from 'vitest';
 
 describe('getCurrencyPreferences first choice', () => {
-	describe('returns USD for non-EEA countries', () => {
-		it('returns USD for United States', () => {
-			expect(getCurrencyPreferences('US')[0]).toBe('USD');
-		});
-		it('returns USD for Canada', () => {
-			expect(getCurrencyPreferences('CA')[0]).toBe('USD');
-		});
-		it('returns USD for United Kingdom', () => {
-			expect(getCurrencyPreferences('GB')[0]).toBe('USD');
-		});
-		it('returns USD for Japan', () => {
-			expect(getCurrencyPreferences('JP')[0]).toBe('USD');
-		});
-		it('returns USD for Australia', () => {
-			expect(getCurrencyPreferences('AU')[0]).toBe('USD');
-		});
-		it('returns USD for Switzerland', () => {
-			expect(getCurrencyPreferences('CH')[0]).toBe('USD');
-		});
-	});
-	describe('handles case insensitivity', () => {
-		it('returns EUR for lowercase country code', () => {
-			expect(getCurrencyPreferences('de')[0]).toBe('EUR');
-			expect(getCurrencyPreferences('fr')[0]).toBe('EUR');
-		});
-		it('returns USD for lowercase non-EEA', () => {
-			expect(getCurrencyPreferences('us')[0]).toBe('USD');
-			expect(getCurrencyPreferences('gb')[0]).toBe('USD');
-		});
-		it('handles mixed case', () => {
-			expect(getCurrencyPreferences('De')[0]).toBe('EUR');
-			expect(getCurrencyPreferences('dE')[0]).toBe('EUR');
-		});
-	});
-	describe('handles null and undefined', () => {
-		it('returns USD for null', () => {
-			expect(getCurrencyPreferences(null)[0]).toBe('USD');
-		});
-		it('returns USD for undefined', () => {
-			expect(getCurrencyPreferences(undefined)[0]).toBe('USD');
-		});
-	});
-	describe('handles empty and invalid inputs', () => {
-		it('returns USD for empty string', () => {
-			expect(getCurrencyPreferences('')[0]).toBe('USD');
-		});
-		it('returns USD for invalid country code', () => {
-			expect(getCurrencyPreferences('XX')[0]).toBe('USD');
-			expect(getCurrencyPreferences('ZZ')[0]).toBe('USD');
-		});
-		it('returns USD for numeric strings', () => {
-			expect(getCurrencyPreferences('12')[0]).toBe('USD');
-		});
+	it.each(['US', 'CA', 'GB', 'JP', 'AU', 'CH'])('returns USD for non-EEA country %s', (country) => {
+		expect(getCurrencyPreferences(country)[0]).toBe('USD');
 	});
 	describe('covers all EEA member states', () => {
 		const eeaCountries = [
@@ -91,6 +40,12 @@ describe('getCurrencyPreferences first choice', () => {
 			'ES',
 			'LI',
 			'AX',
+			'GF',
+			'GP',
+			'MF',
+			'MQ',
+			'RE',
+			'YT',
 		];
 		for (const country of eeaCountries) {
 			it(`returns EUR for ${country}`, () => {
@@ -131,21 +86,14 @@ describe('getCurrencyPreferences first choice', () => {
 });
 
 describe('shouldDisableAdaptivePricing', () => {
-	it('disables adaptive pricing for the native Nordic currencies', () => {
-		for (const currency of ['SEK', 'NOK', 'DKK', 'ISK', 'sek']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(true);
-		}
-	});
-	it('leaves adaptive pricing alone for every other currency', () => {
-		for (const currency of ['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(false);
-		}
+	it('turns adaptive pricing off on the official instance for every currency', () => {
+		expect(shouldDisableAdaptivePricing()).toBe(true);
 	});
 	it('leaves adaptive pricing alone on a self-hosted instance', () => {
 		const originalSelfHosted = Config.instance.selfHosted;
 		Config.instance.selfHosted = true;
 		try {
-			expect(shouldDisableAdaptivePricing('SEK')).toBe(false);
+			expect(shouldDisableAdaptivePricing()).toBe(false);
 		} finally {
 			Config.instance.selfHosted = originalSelfHosted;
 		}

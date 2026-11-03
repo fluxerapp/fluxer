@@ -16,22 +16,25 @@ on:
         required: false
         default: ""
         type: string
-      allow_shell_drift:
-        description: Publish even though shell sources changed since the live shell was built. Only when the renderer does not depend on those changes.
-        required: false
-        default: false
-        type: boolean
+      shell_contract:
+        description: "Did the shell contract change since the oldest shell these modules still reach? unchanged refuses if it did. compatible keeps older shells on these modules because the renderer still works on them. raise stops sending these modules to shells without the new contract: Linux and managed shells keep their current renderer, Windows and macOS update their shell first."
+        required: true
+        type: choice
+        options:
+          - unchanged
+          - compatible
+          - raise
+        default: unchanged
 permissions:
   contents: write
   id-token: write
   actions: read
 
 concurrency:
-  group: desktop-modules-${{ inputs.channel }}
+  group: desktop-${{ inputs.channel }}
   cancel-in-progress: false
 
 env:
-  CHANNEL: ${{ inputs.channel }}
   BUILD_CHANNEL: ${{ inputs.channel == 'canary' && 'canary' || 'stable' }}
 
 jobs:
@@ -45,7 +48,6 @@ jobs:
     outputs:
       version: ${{ steps.meta.outputs.version }}
       pub_date: ${{ steps.meta.outputs.pub_date }}
-      channel: ${{ steps.meta.outputs.channel }}
       build_channel: ${{ steps.meta.outputs.build_channel }}
       source_sha: ${{ steps.meta.outputs.source_sha }}
     steps:
@@ -72,7 +74,7 @@ jobs:
         id: meta
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          FLUXER_BUILD_VERSION: ${{ inputs.build_version }}
+          BUILD_VERSION: ${{ inputs.build_version }}
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step set_metadata
@@ -88,13 +90,7 @@ jobs:
     permissions:
       contents: read
     env:
-      CHANNEL: ${{ needs.meta.outputs.channel }}
-      BUILD_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      RELEASE_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      PUBLIC_RELEASE_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
       BUILD_VERSION: ${{ needs.meta.outputs.version }}
-      PUBLIC_BUILD_VERSION: ${{ needs.meta.outputs.version }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
     steps:
       - name: Checkout CI helpers
@@ -229,8 +225,7 @@ jobs:
       actions: read
       contents: read
     env:
-      CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
+      BUILD_VERSION: ${{ needs.meta.outputs.version }}
       PUB_DATE: ${{ needs.meta.outputs.pub_date }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
     steps:
@@ -260,13 +255,14 @@ jobs:
           owner: fluxerapp
           repositories: fluxer
           permission-contents: read
-      - name: Check the live shell runs these modules
+      - name: Check which shells run these modules
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          ALLOW_SHELL_DRIFT: ${{ inputs.allow_shell_drift }}
+          SHELL_CONTRACT: ${{ inputs.shell_contract }}
+          DESKTOP_MODULES_ONLY_RELEASE: true
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step check_shell_drift
+          --step check_shell_contract
 
       - name: Build the modules-only manifests
         run: >-
@@ -299,8 +295,7 @@ jobs:
     permissions:
       contents: write
     env:
-      CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
+      BUILD_VERSION: ${{ needs.meta.outputs.version }}
     steps:
       - name: Checkout source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -330,21 +325,19 @@ jobs:
       - name: Publish GitHub modules-only release
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          CHANNEL: ${{ needs.meta.outputs.build_channel }}
-          VERSION: ${{ needs.meta.outputs.version }}
           SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
           RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
         run: |
           set -euo pipefail
           release_args=(
             release publish
-            --component "fluxer-desktop-${CHANNEL}"
-            --build-version "${VERSION}"
+            --component "fluxer-desktop-${BUILD_CHANNEL}"
+            --build-version "${BUILD_VERSION}"
             --source-sha "${SOURCE_SHA}"
             --previous-sha "${RELEASE_BASELINE_SHA}"
             --asset-dir release_assets
           )
-          if [[ "${CHANNEL}" == "canary" ]]; then
+          if [[ "${BUILD_CHANNEL}" == "canary" ]]; then
             release_args+=(--prerelease)
           fi
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- "${release_args[@]}"

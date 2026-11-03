@@ -8,15 +8,15 @@ import type {
 	StateSyncCursor,
 } from '@app/features/gateway/snapshot/SnapshotTypes';
 
-export const MAX_SNAPSHOT_ACCOUNTS = 7;
+const MAX_SNAPSHOT_ACCOUNTS = 1;
 export const MAX_SNAPSHOT_ACCOUNT_ENTRIES = 100_000;
-export const MAX_SNAPSHOT_ACCOUNT_BYTES = 128 * 1024 * 1024;
-export const MAX_SNAPSHOT_TOTAL_ENTRIES = MAX_SNAPSHOT_ACCOUNT_ENTRIES * MAX_SNAPSHOT_ACCOUNTS;
-export const MAX_SNAPSHOT_TOTAL_BYTES = MAX_SNAPSHOT_ACCOUNT_BYTES * MAX_SNAPSHOT_ACCOUNTS;
-export const MAX_SNAPSHOT_VALUE_BYTES = 256 * 1024;
-export const MAX_SNAPSHOT_KEY_BYTES = 4096;
-export const MAX_SNAPSHOT_STORAGE_KEY_BYTES = 4096;
-export const MAX_SNAPSHOT_CURSOR_SESSION_ID_BYTES = 4096;
+const MAX_SNAPSHOT_ACCOUNT_BYTES = 128 * 1024 * 1024;
+const MAX_SNAPSHOT_TOTAL_ENTRIES = MAX_SNAPSHOT_ACCOUNT_ENTRIES * MAX_SNAPSHOT_ACCOUNTS;
+const MAX_SNAPSHOT_TOTAL_BYTES = MAX_SNAPSHOT_ACCOUNT_BYTES * MAX_SNAPSHOT_ACCOUNTS;
+const MAX_SNAPSHOT_VALUE_BYTES = 256 * 1024;
+const MAX_SNAPSHOT_KEY_BYTES = 4096;
+const MAX_SNAPSHOT_STORAGE_KEY_BYTES = 4096;
+const MAX_SNAPSHOT_CURSOR_SESSION_ID_BYTES = 4096;
 export const MAX_SNAPSHOT_EVENT_OPERATIONS = 100_000;
 
 interface StoredSnapshotRow {
@@ -50,14 +50,14 @@ export class SnapshotCapacityError extends Error {
 	}
 }
 
-export class SnapshotDataError extends Error {
+class SnapshotDataError extends Error {
 	constructor(message: string) {
 		super(message);
 		this.name = 'SnapshotDataError';
 	}
 }
 
-export function snapshotStringByteSize(value: string): number {
+function snapshotStringByteSize(value: string): number {
 	let byteSize = 0;
 	let index = 0;
 	while (index < value.length) {
@@ -126,29 +126,6 @@ export function snapshotOperationEntryCount(op: SnapshotRowOp): number {
 		return 1;
 	}
 	return 0;
-}
-
-export function assertSnapshotEntriesCapacity(entries: StateSnapshotEntries): void {
-	let entryCount = 0;
-	let byteSize = 0;
-	for (const [entity, rows] of Object.entries(entries)) {
-		assertNonEmptyBoundedString(entity, 'Snapshot entity', 64);
-		for (const [key, value] of Object.entries(rows)) {
-			assertNonEmptyBoundedString(key, 'Snapshot row key', MAX_SNAPSHOT_KEY_BYTES);
-			const valueByteSize = snapshotStringByteSize(value);
-			if (valueByteSize > MAX_SNAPSHOT_VALUE_BYTES) {
-				throw new SnapshotCapacityError(`Snapshot value exceeded ${MAX_SNAPSHOT_VALUE_BYTES} bytes`);
-			}
-			entryCount += 1;
-			byteSize += snapshotStringByteSize(entity) + snapshotStringByteSize(key) + valueByteSize;
-			if (entryCount > MAX_SNAPSHOT_ACCOUNT_ENTRIES) {
-				throw new SnapshotCapacityError(`Snapshot entries exceeded ${MAX_SNAPSHOT_ACCOUNT_ENTRIES} rows`);
-			}
-			if (byteSize > MAX_SNAPSHOT_ACCOUNT_BYTES) {
-				throw new SnapshotCapacityError(`Snapshot entries exceeded ${MAX_SNAPSHOT_ACCOUNT_BYTES} bytes`);
-			}
-		}
-	}
 }
 
 export class InMemorySnapshotStore {
@@ -271,11 +248,40 @@ export class InMemorySnapshotStore {
 		this.assertAccounting();
 	}
 
-	prune(knownStorageKeys: ReadonlyArray<string>): void {
-		for (const storageKey of Array.from(this.accounts.keys())) {
-			if (!knownStorageKeys.includes(storageKey)) {
-				this.evict(storageKey);
+	load(storageKey: string, capture: StateSnapshotCapture): void {
+		this.evict(storageKey);
+		const account = this.ensureAccount(storageKey);
+		try {
+			for (const [entityName, rows] of Object.entries(capture.entries)) {
+				const entity = entityName as SnapshotEntity;
+				assertNonEmptyBoundedString(entity, 'Snapshot entity', 64);
+				const loaded = new Map<string, StoredSnapshotRow>();
+				let entityEntries = 0;
+				let entityBytes = 0;
+				for (const [key, value] of Object.entries(rows)) {
+					assertNonEmptyBoundedString(key, 'Snapshot row key', MAX_SNAPSHOT_KEY_BYTES);
+					if (typeof value !== 'string') {
+						throw new SnapshotDataError(`Snapshot row ${entity}/${key} is not serialized`);
+					}
+					const valueByteSize = snapshotStringByteSize(value);
+					if (valueByteSize > MAX_SNAPSHOT_VALUE_BYTES) {
+						throw new SnapshotCapacityError(`Snapshot value exceeded ${MAX_SNAPSHOT_VALUE_BYTES} bytes`);
+					}
+					const byteSize = snapshotRowByteSize(entity, key, valueByteSize);
+					loaded.set(key, {value, byteSize});
+					entityEntries += 1;
+					entityBytes += byteSize;
+				}
+				this.assertDelta(account, entityEntries, entityBytes);
+				if (loaded.size > 0) {
+					account.entities.set(entity, loaded);
+				}
+				this.commitDelta(account, entityEntries, entityBytes);
 			}
+			this.writeCursor(storageKey, capture.cursor);
+		} catch (error) {
+			this.evict(storageKey);
+			throw error;
 		}
 	}
 

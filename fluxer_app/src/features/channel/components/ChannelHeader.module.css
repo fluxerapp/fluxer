@@ -51,29 +51,15 @@
 	content: '';
 	position: absolute;
 	top: 0;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: -4.5rem;
-	left: 0;
+	inset-inline-start: 0;
 	background: var(
 		--voice-header-gradient,
 		linear-gradient(to bottom, rgb(0 0 0 / 0.96) 0%, rgb(0 0 0 / 0.86) 42%, rgb(0 0 0 / 0.58) 72%, transparent 100%)
 	);
 	pointer-events: none;
 	z-index: -1;
-}
-
-@keyframes callBannerRing {
-	0% {
-		transform: scale(0.9);
-		opacity: 0.7;
-	}
-	70% {
-		transform: scale(1.15);
-		opacity: 0;
-	}
-	100% {
-		opacity: 0;
-	}
 }
 
 @media (max-width: 767px) {
@@ -92,7 +78,7 @@
 }
 
 .backButton {
-	margin-right: var(--channel-header-back-button-gap);
+	margin-inline-end: var(--channel-header-back-button-gap);
 	flex-shrink: 0;
 	cursor: pointer;
 	-webkit-app-region: no-drag;
@@ -167,7 +153,7 @@
 	border: none;
 	background-color: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	-webkit-app-region: no-drag;
 }
@@ -220,7 +206,7 @@
 	color: var(--channel-header-text-muted);
 	flex-shrink: 0;
 	position: relative;
-	margin-left: var(--spacing-2);
+	margin-inline-start: var(--spacing-2);
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -230,7 +216,7 @@
 }
 
 .channelName {
-	margin-left: var(--channel-header-name-gap);
+	margin-inline-start: var(--channel-header-name-gap);
 	min-width: 0;
 	flex-shrink: 1;
 	font-weight: 500;
@@ -242,7 +228,7 @@
 }
 
 .groupDmChannelName {
-	margin-left: 0;
+	margin-inline-start: 0;
 }
 
 .dmNameWrapper {
@@ -255,7 +241,7 @@
 }
 
 .userTag {
-	margin-left: 0.25rem;
+	margin-inline-start: 0.25rem;
 }
 
 .channelIcon {
@@ -266,7 +252,7 @@
 }
 
 .caretRight {
-	margin-left: var(--channel-header-caret-gap);
+	margin-inline-start: var(--channel-header-caret-gap);
 	height: var(--channel-header-caret-size);
 	width: var(--channel-header-caret-size);
 	flex-shrink: 0;
@@ -283,7 +269,7 @@
 }
 
 .followButton {
-	margin-left: var(--channel-header-name-gap);
+	margin-inline-start: var(--channel-header-name-gap);
 	flex-shrink: 0;
 }
 
@@ -309,11 +295,11 @@
 	width: auto;
 	min-width: 0;
 	max-width: 100%;
-	padding-right: var(--spacing-5);
+	padding-inline-end: var(--spacing-5);
 	cursor: pointer;
 	border: none;
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	font-size: 0.8125rem !important;
 	line-height: 1.125rem !important;
 	max-height: 1.125rem;
@@ -490,6 +476,6 @@
 .unreadPinIndicator {
 	position: absolute;
 	bottom: 0.3rem;
-	right: 0.35rem;
+	inset-inline-end: 0.35rem;
 	box-shadow: 0 0 0 0.08rem var(--channel-header-background);
 }

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
-import {createReadStream} from 'node:fs';
 import path from 'node:path';
 import {Config} from '@app/api/Config';
+import {hashFileSha256} from '@app/api/infrastructure/StorageObjectHelpers';
 import {Logger} from '@app/api/Logger';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
@@ -29,25 +28,9 @@ export class VirusScanService implements IVirusScanService {
 
 	constructor(private cacheService: ICacheService) {}
 
-	async initialize(): Promise<void> {}
-
 	async scanFile(filePath: string): Promise<VirusScanResult> {
-		const hash = crypto.createHash('sha256');
-		const stream = createReadStream(filePath, {highWaterMark: 1024 * 1024});
-		try {
-			for await (const chunk of stream) {
-				hash.update(chunk as Buffer);
-			}
-		} catch (error) {
-			stream.destroy();
-			throw error;
-		}
-		return this.scan(hash.digest('hex'), path.basename(filePath), () => this.provider.scanFile(filePath));
-	}
-
-	async scanBuffer(buffer: Buffer, filename: string): Promise<VirusScanResult> {
-		const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
-		return this.scan(fileHash, filename, () => this.provider.scanBuffer(buffer));
+		const fileHash = await hashFileSha256(filePath);
+		return this.scan(fileHash, path.basename(filePath), () => this.provider.scanFile(filePath));
 	}
 
 	private async scan(

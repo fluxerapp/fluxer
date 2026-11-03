@@ -5,8 +5,6 @@
 
 -export([
     ensure_tables/0,
-    ensure_shard_table/0,
-    ensure_guild_pid_cache/0,
     delete_tables/0,
     stop_shards/1,
     sync_shard_table/1,

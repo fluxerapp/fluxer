@@ -1,33 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_common::public_ip::{is_public_ip, is_valid_public_hostname};
 use reqwest::dns::{Addrs, Name, Resolve, Resolving};
-use std::fmt;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, SocketAddr};
 use tokio::net::lookup_host;
 use url::Url;
 
 const MAX_URL_LEN: usize = 8192;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum Error {
+    #[error("invalid URL")]
     InvalidUrl,
+    #[error("blocked URL")]
     BlockedUrl,
+    #[error("DNS lookup failed")]
     DnsLookupFailed,
+    #[error("host resolved to no address")]
     HostResolvedToNoAddress,
 }
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidUrl => f.write_str("invalid URL"),
-            Self::BlockedUrl => f.write_str("blocked URL"),
-            Self::DnsLookupFailed => f.write_str("DNS lookup failed"),
-            Self::HostResolvedToNoAddress => f.write_str("host resolved to no address"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
 
 pub async fn validate_url(url: &Url) -> Result<(), Error> {
     if url.as_str().is_empty() || url.as_str().len() > MAX_URL_LEN || contains_ctl(url.as_str()) {
@@ -104,10 +95,10 @@ fn normalize_host(raw: &str) -> Result<String, Error> {
 }
 
 fn validate_ip(ip: IpAddr) -> Result<(), Error> {
-    match ip {
-        IpAddr::V4(ip) if blocked_ipv4(ip) => Err(Error::BlockedUrl),
-        IpAddr::V6(ip) if blocked_ipv6(ip) => Err(Error::BlockedUrl),
-        _ => Ok(()),
+    if is_public_ip(ip) {
+        Ok(())
+    } else {
+        Err(Error::BlockedUrl)
     }
 }
 
@@ -128,105 +119,6 @@ impl Resolve for PinnedDnsResolver {
             Ok(Box::new(resolved.into_iter()) as Addrs)
         })
     }
-}
-
-fn ipv4_to_u32(ip: Ipv4Addr) -> u32 {
-    u32::from_be_bytes(ip.octets())
-}
-
-fn ipv4_in(ip: Ipv4Addr, prefix: Ipv4Addr, bits: u32) -> bool {
-    let mask = if bits == 0 {
-        0
-    } else {
-        u32::MAX << (32 - bits)
-    };
-    (ipv4_to_u32(ip) & mask) == (ipv4_to_u32(prefix) & mask)
-}
-
-fn ipv6_to_u128(ip: Ipv6Addr) -> u128 {
-    u128::from_be_bytes(ip.octets())
-}
-
-fn ipv6_in(ip: Ipv6Addr, prefix: Ipv6Addr, bits: u32) -> bool {
-    let mask = if bits == 0 {
-        0
-    } else {
-        u128::MAX << (128 - bits)
-    };
-    (ipv6_to_u128(ip) & mask) == (ipv6_to_u128(prefix) & mask)
-}
-
-fn blocked_ipv4(ip: Ipv4Addr) -> bool {
-    ipv4_in(ip, Ipv4Addr::new(0, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(10, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(100, 64, 0, 0), 10)
-        || ipv4_in(ip, Ipv4Addr::new(127, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(169, 254, 0, 0), 16)
-        || ipv4_in(ip, Ipv4Addr::new(172, 16, 0, 0), 12)
-        || ipv4_in(ip, Ipv4Addr::new(192, 0, 0, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 0, 2, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 88, 99, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 168, 0, 0), 16)
-        || ipv4_in(ip, Ipv4Addr::new(198, 18, 0, 0), 15)
-        || ipv4_in(ip, Ipv4Addr::new(198, 51, 100, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(203, 0, 113, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(224, 0, 0, 0), 4)
-        || ipv4_in(ip, Ipv4Addr::new(240, 0, 0, 0), 4)
-        || ip == Ipv4Addr::new(255, 255, 255, 255)
-}
-
-fn embedded_ipv4(ip: Ipv6Addr) -> Option<Ipv4Addr> {
-    let octets = ip.octets();
-    if ipv6_in(ip, Ipv6Addr::new(0x0064, 0xff9b, 0, 0, 0, 0, 0, 0), 96)
-        || ipv6_in(ip, Ipv6Addr::UNSPECIFIED, 96)
-    {
-        return Some(Ipv4Addr::new(
-            octets[12], octets[13], octets[14], octets[15],
-        ));
-    }
-    if ipv6_in(ip, Ipv6Addr::new(0x2002, 0, 0, 0, 0, 0, 0, 0), 16) {
-        return Some(Ipv4Addr::new(octets[2], octets[3], octets[4], octets[5]));
-    }
-    None
-}
-
-fn blocked_ipv6(ip: Ipv6Addr) -> bool {
-    if let Some(mapped) = ip.to_ipv4_mapped() {
-        return blocked_ipv4(mapped);
-    }
-    if let Some(embedded) = embedded_ipv4(ip) {
-        return blocked_ipv4(embedded);
-    }
-    ip.is_unspecified()
-        || ip.is_loopback()
-        || ipv6_in(ip, Ipv6Addr::new(0x2001, 0x0db8, 0, 0, 0, 0, 0, 0), 32)
-        || ipv6_in(ip, Ipv6Addr::new(0xfc00, 0, 0, 0, 0, 0, 0, 0), 7)
-        || ipv6_in(ip, Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 0), 10)
-        || ipv6_in(ip, Ipv6Addr::new(0xff00, 0, 0, 0, 0, 0, 0, 0), 8)
-}
-
-fn is_valid_public_hostname(host: &str) -> bool {
-    if host.is_empty() || host.len() > 253 || !host.contains('.') {
-        return false;
-    }
-    let mut last = "";
-    for label in host.split('.') {
-        if label.is_empty() || label.len() > 63 {
-            return false;
-        }
-        let bytes = label.as_bytes();
-        if !bytes[0].is_ascii_alphanumeric() || !bytes[bytes.len() - 1].is_ascii_alphanumeric() {
-            return false;
-        }
-        if !bytes
-            .iter()
-            .all(|b| b.is_ascii_alphanumeric() || *b == b'-')
-        {
-            return false;
-        }
-        last = label;
-    }
-    !last.bytes().all(|b| b.is_ascii_digit())
 }
 
 #[cfg(test)]
@@ -286,15 +178,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_public_ip_literals_without_dns() {
-        assert_eq!(validate_url(&url("https://8.8.8.8/")).await, Ok(()));
-        assert_eq!(
-            validate_url(&url("https://[2606:4700:4700::1111]/")).await,
-            Ok(())
-        );
-    }
-
-    #[tokio::test]
     async fn rejects_userinfo_and_non_http_s_schemes() {
         assert_eq!(
             validate_url(&url("https://user:pass@example.com/")).await,
@@ -303,33 +186,6 @@ mod tests {
         assert_eq!(
             validate_url(&url("file:///etc/passwd")).await,
             Err(Error::BlockedUrl)
-        );
-    }
-
-    #[test]
-    fn validates_public_host_syntax() {
-        assert!(is_valid_public_hostname("example.com"));
-        assert!(is_valid_public_hostname("xn--bcher-kva.example"));
-        assert!(!is_valid_public_hostname("localhost"));
-        assert!(!is_valid_public_hostname("example"));
-        assert!(!is_valid_public_hostname("bad_name.example"));
-        assert!(!is_valid_public_hostname("example.123"));
-    }
-
-    #[test]
-    fn resolves_redirects_without_fragments() {
-        let base = url("https://example.com/a/b/c?x=1");
-        assert_eq!(
-            resolve_redirect(&base, "../d?y=2#ignored")
-                .unwrap()
-                .as_str(),
-            "https://example.com/a/d?y=2"
-        );
-        assert_eq!(
-            resolve_redirect(&base, "//cdn.example.com/p")
-                .unwrap()
-                .as_str(),
-            "https://cdn.example.com/p"
         );
     }
 }

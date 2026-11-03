@@ -2,6 +2,7 @@
 
 import {createRequire} from 'node:module';
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import type {NotificationOptions} from '@electron/common/Types';
 import {getNativeNotificationsMode} from '@electron/main/LaunchOptions';
@@ -9,6 +10,7 @@ import {getLinuxDesktopId} from '@electron/main/LinuxSandbox';
 import {t} from '@electron/main/MainI18n';
 import {resolveNotificationIcon} from '@electron/main/NotificationIcon';
 import {shouldPlayNotificationSound} from '@electron/main/NotificationState';
+import {NotificationTargets, readNotificationAccountKey, readNotificationUrl} from '@electron/main/NotificationTargets';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {type BrowserWindow, ipcMain, Notification, nativeImage} from 'electron';
 
@@ -60,7 +62,6 @@ type NativeNotificationsCtor = new (
 
 interface NativeNotificationsModule {
 	FreedesktopNotifications: NativeNotificationsCtor | null;
-	getServerInformation: (() => Promise<{name: string; vendor: string; version: string; specVersion: string}>) | null;
 	loadError: Error | null;
 }
 
@@ -135,7 +136,7 @@ function loadLinuxNotificationsModule(): NativeNotificationsModule | null {
 	} catch (error) {
 		throw new Error(
 			`@fluxer/linux-notifications failed to load on Linux — this is a packaging bug, not a runtime fallback case. ` +
-				`Original error: ${error instanceof Error ? error.message : String(error)}`,
+				`Original error: ${errorMessage(error)}`,
 		);
 	}
 	assertLinuxNotificationsModule(mod);
@@ -169,7 +170,17 @@ let linuxNativeClient: NativeNotificationClient | null = null;
 let linuxNativeWindowGetter: (() => BrowserWindow | null) | null = null;
 
 const linuxNativeIdToString = new Map<number, string>();
-const linuxNativeStringToOptions = new Map<string, NotificationOptions>();
+const notificationTargets = new NotificationTargets();
+
+function sendNotificationClick(getMainWindow: () => BrowserWindow | null, id: string): void {
+	const target = notificationTargets.take(id);
+	const mainWindow = getMainWindow();
+	if (!mainWindow) return;
+	if (mainWindow.isMinimized()) mainWindow.restore();
+	mainWindow.show();
+	mainWindow.focus();
+	mainWindow.webContents.send('notification-click', id, target?.url ?? null, target?.accountKey ?? null);
+}
 
 function getNotificationId(options: NotificationOptions): string {
 	return options.id && options.id.length > 0 ? options.id : `notification-${++notificationIdCounter}`;
@@ -199,14 +210,7 @@ function ensureLinuxNativeClient(getMainWindow: () => BrowserWindow | null): Nat
 			const stringId = linuxNativeIdToString.get(event.id);
 			if (event.kind === 'actionInvoked') {
 				if (!stringId) return;
-				const options = linuxNativeStringToOptions.get(stringId);
-				const mainWindow = linuxNativeWindowGetter ? linuxNativeWindowGetter() : null;
-				if (mainWindow) {
-					if (mainWindow.isMinimized()) mainWindow.restore();
-					mainWindow.show();
-					mainWindow.focus();
-					mainWindow.webContents.send('notification-click', stringId, options?.url);
-				}
+				sendNotificationClick(linuxNativeWindowGetter ?? (() => null), stringId);
 				cleanupLinuxNativeNotification(stringId, event.id);
 			} else if (event.kind === 'closed') {
 				if (stringId) cleanupLinuxNativeNotification(stringId, event.id);
@@ -227,7 +231,7 @@ function cleanupLinuxNativeNotification(stringId: string, nativeId: number): voi
 	const handle = activeNotifications.get(stringId);
 	if (handle?.type === 'linux-native' && handle.nativeId === nativeId) {
 		activeNotifications.delete(stringId);
-		linuxNativeStringToOptions.delete(stringId);
+		notificationTargets.forget(stringId);
 	}
 	linuxNativeIdToString.delete(nativeId);
 }
@@ -301,7 +305,6 @@ async function showLinuxNativeNotification(
 			linuxNativeIdToString.delete(replacesId);
 		}
 		linuxNativeIdToString.set(nativeId, id);
-		linuxNativeStringToOptions.set(id, options);
 		activeNotifications.set(id, {type: 'linux-native', nativeId});
 	} catch (error) {
 		throw new Error(
@@ -329,15 +332,21 @@ export function registerNotificationIpcHandlers(getMainWindow: () => BrowserWind
 		}> => {
 			requirePrivilegedRendererDocumentSender(event, 'show-notification');
 			const id = getNotificationId(options);
+			notificationTargets.remember(id, {
+				accountKey: readNotificationAccountKey(options.accountKey),
+				url: readNotificationUrl(options.url),
+			});
 			if (process.platform === 'linux') {
 				await showLinuxNativeNotification(id, options, getMainWindow);
 				return {id};
 			}
 			const previousHandle = activeNotifications.get(id);
 			if (previousHandle) {
-				closeNotificationHandle(id, previousHandle);
+				deleteActiveNotification(id, previousHandle);
+				if (previousHandle.type === 'electron') previousHandle.notification.close();
 			}
 			if (!Notification.isSupported()) {
+				notificationTargets.forget(id);
 				return {id};
 			}
 			const notificationOpts: Electron.NotificationConstructorOptions = {
@@ -360,19 +369,14 @@ export function registerNotificationIpcHandlers(getMainWindow: () => BrowserWind
 			const handle: NotificationHandle = {type: 'electron', notification};
 			activeNotifications.set(id, handle);
 			notification.on('click', () => {
-				const mainWindow = getMainWindow();
-				if (mainWindow) {
-					if (mainWindow.isMinimized()) {
-						mainWindow.restore();
-					}
-					mainWindow.show();
-					mainWindow.focus();
-					mainWindow.webContents.send('notification-click', id, options.url);
-				}
+				if (activeNotifications.get(id) !== handle) return;
 				deleteActiveNotification(id, handle);
+				sendNotificationClick(getMainWindow, id);
 			});
 			notification.on('close', () => {
+				if (activeNotifications.get(id) !== handle) return;
 				deleteActiveNotification(id, handle);
+				notificationTargets.forget(id);
 			});
 			notification.show();
 			return {id};
@@ -393,8 +397,9 @@ export function registerNotificationIpcHandlers(getMainWindow: () => BrowserWind
 
 function closeNotificationHandle(id: string, handle: ActiveNotificationHandle): void {
 	if (handle.type === 'electron') {
-		handle.notification.close();
 		deleteActiveNotification(id, handle);
+		notificationTargets.forget(id);
+		handle.notification.close();
 		return;
 	}
 	if (linuxNativeClient) {

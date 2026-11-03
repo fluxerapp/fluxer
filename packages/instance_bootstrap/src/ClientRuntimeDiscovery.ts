@@ -8,10 +8,14 @@ import {
 import type {
 	InstanceAgePolicy,
 	InstanceAppPublic,
+	InstanceBuiltInGuildBadgeImages,
 	InstanceCommunity,
 	InstanceDomainMigration,
 	InstanceFeatures,
 	InstanceGif,
+	InstanceGuildBadge,
+	InstanceHiddenBuiltInGuildBadges,
+	InstanceNotice,
 	InstancePush,
 	InstanceRegistration,
 	InstanceServices,
@@ -20,6 +24,12 @@ import type {
 import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
 
 const DEFAULT_PREMIUM_PRODUCT_NAME = 'Plutonium';
+
+export const NO_BUILT_IN_GUILD_BADGE_IMAGES: InstanceBuiltInGuildBadgeImages = {
+	verified: null,
+	partnered: null,
+	discoverable: null,
+};
 
 export interface ClientRuntimeDiscoveryEndpoints {
 	readonly discoveryApiEndpoint: string;
@@ -52,6 +62,12 @@ export interface ClientRuntimeDiscovery {
 	readonly appPublic: InstanceAppPublic;
 	readonly agePolicy: InstanceAgePolicy | null;
 	readonly domainMigration: InstanceDomainMigration | null;
+	readonly notice?: InstanceNotice | null;
+	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
+	readonly guildBadgesPartial: boolean;
+	readonly customBadgesVersion: string | null;
+	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
 }
 
 export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocument): ClientRuntimeDiscovery {
@@ -70,6 +86,12 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		appPublic: projectAppPublic(document.appPublic),
 		agePolicy: document.agePolicy,
 		domainMigration: document.domainMigration,
+		notice: document.notice ?? null,
+		guildBadges: document.guildBadges ?? [],
+		guildBadgesPartial: document.guildBadgesPartial ?? false,
+		customBadgesVersion: document.customBadgesVersion ?? null,
+		builtInGuildBadgeImages: document.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES,
+		hiddenBuiltInGuildBadges: document.hiddenBuiltInGuildBadges ?? [],
 	};
 }
 
@@ -126,13 +148,20 @@ function projectAppPublic(appPublic: InstanceDiscoveryDocument['appPublic']): In
 			logo_url: requireDefined(value.branding.logo_url, 'app_public.branding.logo_url'),
 			wordmark_url: requireDefined(value.branding.wordmark_url, 'app_public.branding.wordmark_url'),
 			favicon_url: requireDefined(value.branding.favicon_url, 'app_public.branding.favicon_url'),
+			favicon_dark_url: value.branding.favicon_dark_url ?? null,
 			theme_color: requireDefined(value.branding.theme_color, 'app_public.branding.theme_color'),
 			status_page_url: value.branding.status_page_url ?? null,
+			status_page_instatus: value.branding.status_page_instatus ?? false,
 			status_page_incident_history_url: value.branding.status_page_incident_history_url ?? null,
 			premium_product_name: value.branding.premium_product_name ?? DEFAULT_PREMIUM_PRODUCT_NAME,
 			premium_info_url: value.branding.premium_info_url ?? null,
+			sign_in_backdrop_url: value.branding.sign_in_backdrop_url ?? null,
+			custom_css: value.branding.custom_css ?? null,
+			upload_limit_message: value.branding.upload_limit_message ?? null,
+			trusted_domains: value.branding.trusted_domains ?? [],
 		},
 		setup: {
+			...value.setup,
 			configured: requireDefined(value.setup.configured, 'app_public.setup.configured'),
 			admin_url: requireDefined(value.setup.admin_url, 'app_public.setup.admin_url'),
 		},

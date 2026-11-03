@@ -14,8 +14,6 @@
 **/.env.*.local
 **/.env.local
 /config/env/local.env
-/deploy/self-hosting/.env.*
-!/deploy/self-hosting/.env.example
 
 **/*.css.d.ts
 **/*.tsbuildinfo
@@ -48,14 +46,10 @@
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
 /desktop-shared-assets/
 /desktop-modules/
-/s3_payload/
 /upload_staging/
 
 

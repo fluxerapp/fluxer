@@ -274,7 +274,13 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
+		const {
+			shouldBlur,
+			shouldBlock,
+			gateReason,
+			canReveal,
+			reveal: revealSensitiveMedia,
+		} = useMatureMedia(nsfw, channelId);
 		const shouldAnimateImage = useShouldAnimate({kind: 'gif', isAnimated: animated});
 		const {style: containerStyle, dimensions} = imageCalculator.calculate(
 			{width, height},
@@ -440,6 +446,9 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		const handleCloseMediaSheet = useCallback(() => {
 			setMediaSheetOpen(false);
 		}, []);
+		if (shouldBlock) {
+			return null;
+		}
 		if (shouldBlur) {
 			return (
 				<div

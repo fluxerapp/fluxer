@@ -229,7 +229,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 								autoComplete="off"
 								error={fieldErrors.messageLink}
 								footer={
-									!formValues.messageLink.trim() ? undefined : !messageLinkOk ? (
+									formValues.messageLink.trim() && !messageLinkOk ? (
 										<span className={styles.helperText} data-flx="moderation.report.report-step-details.helper-text">
 											<Trans>That doesn't look like a valid URL.</Trans>
 										</span>

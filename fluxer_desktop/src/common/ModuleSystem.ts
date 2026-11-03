@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-export const MODULE_SYSTEM_BUILD_ENABLED = process.env.FLUXER_MODULES === '1';
+const MODULE_SYSTEM_BUILD_ENABLED = process.env.FLUXER_MODULES === '1';
 
 const OFFLINE_RENDERER_DIRECTORY_SEGMENTS: ReadonlyArray<string> = Object.freeze(['..', 'renderer']);
 const OFFLINE_RENDERER_INDEX_NAME = 'index.html';
@@ -15,7 +15,7 @@ const MODULE_SYSTEM_ENV = 'FLUXER_MODULE_SYSTEM';
 const MODULE_SYSTEM_DISABLE_ARGUMENT = '--fluxer-no-module-system';
 const FALSY_VALUES: ReadonlySet<string> = new Set(['0', 'false', 'no', 'off']);
 
-export function readModuleSystemDisableRequest(
+function readModuleSystemDisableRequest(
 	argv: ReadonlyArray<string> = process.argv,
 	env: NodeJS.ProcessEnv = process.env,
 ): boolean {
@@ -26,13 +26,13 @@ export function readModuleSystemDisableRequest(
 	return value != null && FALSY_VALUES.has(value);
 }
 
-export const ModuleSystemDisableDecision = Object.freeze({
+const ModuleSystemDisableDecision = Object.freeze({
 	NOT_REQUESTED: 'not-requested',
 	HONOURED: 'honoured',
 	IGNORED_WITHOUT_OFFLINE_RENDERER: 'ignored-without-offline-renderer',
 } as const);
 
-export type ModuleSystemDisableDecision =
+type ModuleSystemDisableDecision =
 	| {readonly kind: typeof ModuleSystemDisableDecision.NOT_REQUESTED}
 	| {readonly kind: typeof ModuleSystemDisableDecision.HONOURED}
 	| {readonly kind: typeof ModuleSystemDisableDecision.IGNORED_WITHOUT_OFFLINE_RENDERER};
@@ -50,7 +50,7 @@ export type ModuleSystemLaunchDecision =
 	| {readonly kind: typeof ModuleSystemLaunchDecision.ENABLED}
 	| {readonly kind: typeof ModuleSystemLaunchDecision.ENABLED_WITH_IGNORED_DISABLE_REQUEST};
 
-export function decideModuleSystemDisableRequest(
+function decideModuleSystemDisableRequest(
 	requested: boolean,
 	hasOfflineRenderer: boolean,
 ): ModuleSystemDisableDecision {
@@ -98,7 +98,7 @@ export function resolveAsarUnpackedPath(target: string): string {
 	return fs.existsSync(unpacked) ? unpacked : target;
 }
 
-export function getOfflineRendererRoot(mainModuleUrl: string): string {
+function getOfflineRendererRoot(mainModuleUrl: string): string {
 	return resolveAsarUnpackedPath(
 		path.join(path.dirname(fileURLToPath(mainModuleUrl)), ...OFFLINE_RENDERER_DIRECTORY_SEGMENTS),
 	);

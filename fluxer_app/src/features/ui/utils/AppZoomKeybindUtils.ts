@@ -12,7 +12,6 @@ const ZOOM_RESET_KEYS = new Set(['0', ')', 'digit0', 'numpad0']);
 
 interface ZoomKeybindEnvironment {
 	isDesktop?: boolean;
-	isFirefoxBrowser?: boolean;
 }
 
 const normalizeKey = (rawKey: string | undefined): string => {

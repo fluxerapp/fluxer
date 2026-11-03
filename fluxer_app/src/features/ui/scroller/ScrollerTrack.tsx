@@ -42,7 +42,7 @@ export function ScrollerTrack({
 		[styles.visible]: isVisible,
 	});
 	const thumbClassName = clsx(styles.thumb, {[styles.active]: isDragging});
-	const trackPointerEvents = isTouchDevice ? 'none' : isVisible ? 'auto' : 'none';
+	const trackPointerEvents = !isTouchDevice && isVisible ? 'auto' : 'none';
 	return (
 		<div
 			ref={trackRef}

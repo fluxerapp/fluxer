@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -32,7 +33,7 @@ interface GuildMemberUpdateAction {
 	member: GuildMemberData;
 }
 
-export interface PendingJumpDispatch {
+interface PendingJumpDispatch {
 	messageId: string;
 	flash?: boolean;
 	offset?: number;
@@ -203,7 +204,7 @@ class Messages {
 	}
 
 	shouldPreloadLatestPage(channelId: string): boolean {
-		if (!GatewayConnection.isConnected || !Channels.getChannel(channelId)) {
+		if (!GatewaySessions.foregroundConnection.isConnected || !Channels.getChannel(channelId)) {
 			return false;
 		}
 		const messages = ChannelMessages.get(channelId);
@@ -340,14 +341,14 @@ class Messages {
 				flash: true,
 				jumpType: JumpTypes.INSTANT,
 			};
-			if (!GatewayConnection.isConnected) {
+			if (!GatewaySessions.foregroundConnection.isConnected) {
 				this.pendingJumpDispatches.set(channelId, dispatch);
 				return true;
 			}
 			MessageCommands.jumpToMessage({channelId, ...dispatch});
 			return false;
 		}
-		if (!GatewayConnection.isConnected || messages.loadingMore || this.hasLoadedPage(messages)) {
+		if (!GatewaySessions.foregroundConnection.isConnected || messages.loadingMore || this.hasLoadedPage(messages)) {
 			if (this.hasLoadedPage(messages) && Dimension.channelPinnedToEnd(channelId)) {
 				this.commitMessages(messages.trimOldest(MAX_MESSAGES_PER_CHANNEL));
 				this.notifyChange();
@@ -488,7 +489,7 @@ class Messages {
 	}
 
 	private refetchStaleWindow(channelId: string, stale: boolean, jump?: JumpOptions): void {
-		if (!stale || !GatewayConnection.isConnected || SelectedChannel.currentChannelId !== channelId) {
+		if (!stale || !GatewaySessions.foregroundConnection.isConnected || SelectedChannel.currentChannelId !== channelId) {
 			return;
 		}
 		const lastAttemptAt = staleWindowRefetchedAt.get(channelId) ?? 0;
@@ -623,6 +624,12 @@ class Messages {
 		return hasChanges;
 	}
 
+	forgetUnfocusedVisitChannel(channelId: string): void {
+		if (SelectedChannel.currentChannelId === channelId) return;
+		this.clearMessages(channelId);
+		this.notifyChange();
+	}
+
 	handleGuildThreadsPurged(guildId: string): void {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId)?.guildId === guildId) {
@@ -688,21 +695,13 @@ class Messages {
 		userId: string;
 		emoji: ReactionEmoji;
 		optimistic?: boolean;
-		skipReactionStore?: boolean;
 	}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
 		const currentUser = Users.getCurrentUser();
 		const isCurrentUser = currentUser?.id === action.userId;
 		if (action.optimistic && !isCurrentUser) return false;
-		const updated = existing.update(action.messageId, (message) => {
-			if (action.skipReactionStore) {
-				return message.withUpdates({});
-			}
-			return action.type === 'MESSAGE_REACTION_ADD'
-				? message.withReaction(action.emoji, true, isCurrentUser)
-				: message.withReaction(action.emoji, false, isCurrentUser);
-		});
+		const updated = existing.update(action.messageId, (message) => message.withUpdates({}));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;
@@ -754,11 +753,13 @@ class Messages {
 
 const messages = new Messages();
 
+ResettableStates.register(messages, () => messages.handleSessionInvalidated());
+
 AccountScopedWork.registerTransition({
 	suspend: () => {},
 	resume: () => {},
 	released: () => {
-		if (GatewayConnection.isReady) {
+		if (GatewaySessions.foregroundConnection.isReady) {
 			messages.handleGatewayReady();
 		}
 	},

@@ -16,10 +16,6 @@
 
 -export_type([session_state/0]).
 
--ifdef(TEST).
--export([prune_expired_entries/2]).
--endif.
-
 -define(REQUEST_MEMBERS_RATE_LIMIT_TABLE, guild_request_members_rate_limit).
 -define(REQUEST_MEMBERS_RATE_LIMIT_WINDOW_MS, 10000).
 -define(REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS, 12).
@@ -85,7 +81,7 @@ request_members_management_permission() ->
 
 -spec lookup_session_guild(integer(), session_state()) -> {ok, pid()} | {error, not_found}.
 lookup_session_guild(GuildId, SessionState) ->
-    Guilds = maps:get(guilds, SessionState, #{}),
+    Guilds = session_visits:member_guilds(SessionState),
     case maps:get(GuildId, Guilds, undefined) of
         {Pid, _Ref} when is_pid(Pid) -> {ok, Pid};
         _ -> {error, not_found}

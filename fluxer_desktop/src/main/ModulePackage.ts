@@ -39,7 +39,7 @@ const MODULE_BUILD_VERSION_PATTERN = /^\d+\.\d+\.\d+$/u;
 export const DESKTOP_MODULE_FILE_LIST_NAME = 'module.json';
 const DESKTOP_MODULE_FILES_PREFIX = 'files/';
 
-export interface DesktopSharedAssetFile {
+interface DesktopSharedAssetFile {
 	readonly path: string;
 	readonly sha256: string;
 	readonly bytes: number;
@@ -235,7 +235,7 @@ function assertSafeModuleRelativePath(relative: string): void {
 	}
 }
 
-function isPathInsideRoot(root: string, candidate: string): boolean {
+export function isPathInsideRoot(root: string, candidate: string): boolean {
 	const relative = path.relative(root, candidate);
 	return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
 }

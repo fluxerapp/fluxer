@@ -27,31 +27,39 @@ async fn main() -> anyhow::Result<()> {
             fluxer_svc::router::run_router(&config, router, transport).await
         }
         Mode::Shard => {
-            let shard = match config.database_backend {
-                DatabaseBackend::Postgres => {
-                    let postgres_config =
-                        fluxer_svc::postgres::PostgresConfig::from_service_config(&config);
-                    let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
-                    let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
-                    MessagesShard::new_postgres(kv, transport.clone())?
-                }
-                DatabaseBackend::Cassandra => {
-                    #[cfg(feature = "scylla")]
-                    {
-                        let scylla_config =
-                            fluxer_svc::scylla::ScyllaConfig::from_service_config(&config);
-                        let db = fluxer_svc::scylla::connect(&scylla_config).await?;
-                        MessagesShard::new_scylla(db, transport.clone()).await?
-                    }
-                    #[cfg(not(feature = "scylla"))]
-                    {
-                        anyhow::bail!(
-                            "FLUXER_DATABASE_BACKEND=cassandra requires the scylla feature"
-                        );
-                    }
-                }
-            };
+            let shard = build_shard(&config, &transport).await?;
             fluxer_svc::shard::run_shard(&config, shard, transport).await
+        }
+        Mode::Combined => {
+            let shard = build_shard(&config, &transport).await?;
+            let router = MessagesRouter::new();
+            fluxer_svc::combined::run_combined(&config, router, shard, transport).await
+        }
+    }
+}
+
+async fn build_shard(
+    config: &ServiceConfig,
+    transport: &NatsTransport,
+) -> anyhow::Result<MessagesShard<NatsTransport>> {
+    match config.database_backend {
+        DatabaseBackend::Postgres => {
+            let postgres_config = fluxer_svc::postgres::PostgresConfig::from_service_config(config);
+            let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
+            let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
+            MessagesShard::new_postgres(kv, transport.clone())
+        }
+        DatabaseBackend::Cassandra => {
+            #[cfg(feature = "scylla")]
+            {
+                let scylla_config = fluxer_svc::scylla::ScyllaConfig::from_service_config(config);
+                let db = fluxer_svc::scylla::connect(&scylla_config).await?;
+                MessagesShard::new_scylla(db, transport.clone()).await
+            }
+            #[cfg(not(feature = "scylla"))]
+            {
+                anyhow::bail!("FLUXER_DATABASE_BACKEND=cassandra requires the scylla feature");
+            }
         }
     }
 }

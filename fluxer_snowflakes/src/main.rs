@@ -25,10 +25,22 @@ async fn main() -> anyhow::Result<()> {
         "starting snowflakes service"
     );
     match config.mode {
-        Mode::Router => router_impl::run_round_robin_router(&config, transport).await,
+        Mode::Router => {
+            fluxer_svc::router::run_router(
+                &config,
+                router_impl::SnowflakesRouter::new(config.shard_count),
+                transport,
+            )
+            .await
+        }
         Mode::Shard => {
             let shard = SnowflakesShard::new(config.shard_id)?;
             fluxer_svc::shard::run_shard(&config, shard, transport).await
+        }
+        Mode::Combined => {
+            let router = router_impl::SnowflakesRouter::new(config.shard_count);
+            let shard = SnowflakesShard::new(config.shard_id)?;
+            fluxer_svc::combined::run_combined(&config, router, shard, transport).await
         }
     }
 }

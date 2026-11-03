@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {LiveBadge} from '@app/features/ui/components/LiveBadge';
-import type {TooltipPosition} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/StreamInfoPill.module.css';
 import type {StreamTrackInfo} from '@app/features/voice/components/useStreamTrackInfo';
 import type {ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
@@ -52,16 +51,9 @@ interface StreamInfoPillProps {
 	className?: string;
 	showLiveBadge?: boolean;
 	tone?: StreamInfoPillTone;
-	liveBadgeTooltipPosition?: TooltipPosition;
 }
 
-export function StreamInfoPill({
-	info,
-	className,
-	showLiveBadge = true,
-	tone = 'default',
-	liveBadgeTooltipPosition,
-}: StreamInfoPillProps) {
+export function StreamInfoPill({info, className, showLiveBadge = true, tone = 'default'}: StreamInfoPillProps) {
 	const {i18n} = useLingui();
 	const labelText = useMemo(() => {
 		if ('target' in info) {
@@ -85,13 +77,7 @@ export function StreamInfoPill({
 			>
 				{labelText}
 			</span>
-			{showLiveBadge && (
-				<LiveBadge
-					tone={tone}
-					tooltipPosition={liveBadgeTooltipPosition}
-					data-flx="voice.stream-info-pill.live-badge"
-				/>
-			)}
+			{showLiveBadge && <LiveBadge tone={tone} data-flx="voice.stream-info-pill.live-badge" />}
 		</div>
 	);
 }

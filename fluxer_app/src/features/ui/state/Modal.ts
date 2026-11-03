@@ -15,6 +15,7 @@ const HAVING_FUN_DESCRIPTOR = msg({
 	comment: 'Friendly tagline shown on a Fluxer-branded button or upsell.',
 });
 const logger = new Logger('Modal');
+const MAX_INERT_FOCUS_RETRY_FRAMES = 30;
 
 type KeyboardModeStateResolver = () => boolean;
 type KeyboardModeRestoreCallback = (showIntro: boolean) => void;
@@ -28,13 +29,6 @@ export function registerKeyboardModeStateResolver(resolver: KeyboardModeStateRes
 
 export function registerKeyboardModeRestoreCallback(callback: KeyboardModeRestoreCallback): void {
 	keyboardModeRestoreCallback = callback;
-}
-
-const BASE_Z_INDEX = 10000;
-const Z_INDEX_INCREMENT = 2;
-
-export function getZIndexForStack(stackIndex: number): number {
-	return BASE_Z_INDEX + stackIndex * Z_INDEX_INCREMENT;
 }
 
 interface ModalEntry {
@@ -282,23 +276,39 @@ class ModalState {
 	private scheduleFocus(target: HTMLElement | null, keyboardModeEnabled: boolean): void {
 		logger.debug(`Modal.scheduleFocus target=${target ? target.tagName : 'null'} keyboardMode=${keyboardModeEnabled}`);
 		if (!target) return;
-		queueMicrotask(() => {
-			if (!target.isConnected) {
-				logger.debug('Modal.scheduleFocus aborted: target disconnected');
+		queueMicrotask(() => this.restoreFocus(target, keyboardModeEnabled, 0));
+	}
+
+	private restoreFocus(target: HTMLElement, keyboardModeEnabled: boolean, frame: number): void {
+		if (!target.isConnected) {
+			logger.debug('Modal.scheduleFocus aborted: target disconnected');
+			return;
+		}
+		if (target.closest('[inert]') != null) {
+			if (frame >= MAX_INERT_FOCUS_RETRY_FRAMES) {
+				logger.debug('Modal.scheduleFocus aborted: target stayed inert');
 				return;
 			}
-			try {
-				target.focus({preventScroll: true});
-				logger.debug('Modal.scheduleFocus applied focus to target');
-			} catch (error) {
-				logger.error('Modal.scheduleFocus failed to focus target', error as Error);
-				return;
-			}
-			if (keyboardModeEnabled && keyboardModeRestoreCallback) {
-				logger.debug('Modal.scheduleFocus re-entering keyboard mode');
-				keyboardModeRestoreCallback(false);
-			}
-		});
+			const view = target.ownerDocument.defaultView ?? window;
+			view.requestAnimationFrame(() => this.restoreFocus(target, keyboardModeEnabled, frame + 1));
+			return;
+		}
+		const active = target.ownerDocument.activeElement;
+		if (frame > 0 && active != null && active !== target.ownerDocument.body && active !== target) {
+			logger.debug('Modal.scheduleFocus skipped: focus already moved');
+			return;
+		}
+		try {
+			target.focus({preventScroll: true});
+			logger.debug('Modal.scheduleFocus applied focus to target');
+		} catch (error) {
+			logger.error('Modal.scheduleFocus failed to focus target', error as Error);
+			return;
+		}
+		if (keyboardModeEnabled && keyboardModeRestoreCallback) {
+			logger.debug('Modal.scheduleFocus re-entering keyboard mode');
+			keyboardModeRestoreCallback(false);
+		}
 	}
 }
 

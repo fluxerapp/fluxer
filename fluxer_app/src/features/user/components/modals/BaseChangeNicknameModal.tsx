@@ -12,6 +12,7 @@ import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import styles from '@app/features/user/components/modals/BaseChangeNicknameModal.module.css';
+import {NICKNAME_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
@@ -28,10 +29,7 @@ const NICKNAME_MUST_NOT_EXCEED_32_CHARACTERS_DESCRIPTOR = msg({
 	message: 'Nickname must not exceed 32 characters',
 	comment: 'Label in the base change nickname modal.',
 });
-const NICKNAME_DESCRIPTOR = msg({
-	message: 'Nickname',
-	comment: 'Short label in the base change nickname modal. Keep it concise.',
-});
+
 const CLEAR_NICKNAME_DESCRIPTOR = msg({
 	message: 'Clear nickname',
 	comment: 'Button or menu action label in the base change nickname modal. Keep it concise.',

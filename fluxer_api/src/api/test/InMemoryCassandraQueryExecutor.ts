@@ -55,7 +55,8 @@ function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	if (!columns) return cloneRow(row);
 	const projected: Row = {};
 	for (const column of columns) {
-		projected[column] = cloneValue(row[column]);
+		// Cassandra returns null for selected columns that have never been written.
+		projected[column] = cloneValue(row[column] ?? null);
 	}
 	return projected;
 }
@@ -95,9 +96,14 @@ function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
 
 export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorForTesting {
 	private readonly tables = new Map<string, Map<string, Row>>();
+	readonly executed: Array<KvQueryMeta> = [];
+	countStatements(statement: string): number {
+		return this.executed.filter((meta) => `${meta.action}:${meta.table.name}` === statement).length;
+	}
 
 	reset(): void {
 		this.tables.clear();
+		this.executed.length = 0;
 	}
 
 	private table(meta: KvQueryMeta): Map<string, Row> {
@@ -119,6 +125,8 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	async executeQuery<T = Row>(query: PreparedQuery): Promise<Array<T>> {
 		const meta = this.meta(query);
+		const recordedMeta = query.kvMeta ?? getKvMeta(query.cql);
+		if (recordedMeta) this.executed.push(recordedMeta);
 		switch (meta.action) {
 			case 'select':
 				return this.select(meta, query.params) as Array<T>;
@@ -148,6 +156,17 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 				return [];
 		}
 		return [];
+	}
+
+	async executePagedQuery<T = Row>(
+		query: PreparedQuery,
+		options: {pageSize: number; pageState?: string | null},
+	): Promise<{rows: Array<T>; pageState: string | null}> {
+		const rows = await this.executeQuery<T>(query);
+		const offset = options.pageState ? Number.parseInt(options.pageState, 10) : 0;
+		const page = rows.slice(offset, offset + options.pageSize);
+		const nextOffset = offset + page.length;
+		return {rows: page, pageState: nextOffset < rows.length ? String(nextOffset) : null};
 	}
 
 	async executeBatch(

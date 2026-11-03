@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import {
@@ -120,6 +121,15 @@ class CallState {
 			}
 		}
 	}
+
+	reset(): void {
+		this.snapshot = createCallStateSnapshot();
+		this.calls.clear();
+	}
 }
 
-export default new CallState();
+const callState = new CallState();
+
+ResettableStates.register(callState, () => callState.reset());
+
+export default callState;

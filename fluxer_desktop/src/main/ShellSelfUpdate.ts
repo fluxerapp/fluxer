@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
+import {errorMessage as errorDetail} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	type AppImageTarget,
@@ -10,7 +11,7 @@ import {
 } from '@electron/main/AppImageUpdate';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {moduleNetworkFetch} from '@electron/main/ModuleNetworkFetch';
-import {compareModuleVersions, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {compareShellVersions} from '@electron/main/ModuleVersion';
 import {getUpdateBaseUrl} from '@electron/main/ShellDownloadFormats';
 import type {ShellUpdateCapability, ShellUpdatePlan} from '@electron/main/ShellUpdateCapability';
 import {
@@ -24,10 +25,10 @@ import type {UpdateInfo, VelopackAsset} from 'velopack';
 const requireModule = createRequire(import.meta.url);
 const logger = createChildLogger('ShellSelfUpdate');
 
-export const SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS = 30_000;
-export const SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS = 600_000;
+const SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS = 30_000;
+const SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS = 600_000;
 
-export function getElectronUpdateFeedUrl(): string {
+function getElectronUpdateFeedUrl(): string {
 	return `${getUpdateBaseUrl()}/RELEASES.json`;
 }
 
@@ -48,14 +49,6 @@ interface SelfUpdateControl {
 	readonly isSettled: () => boolean;
 	readonly clearCheckDeadline: () => void;
 	readonly addCleanup: (cleanup: () => void) => void;
-}
-
-function errorDetail(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
-
-function compareShellVersions(left: string, right: string): number {
-	return compareModuleVersions(parseModuleVersion(left, 'shell version'), parseModuleVersion(right, 'shell version'));
 }
 
 function feedUserAgent(): string {
@@ -357,12 +350,6 @@ function armElectronUpdateSession(): void {
 		}
 		publishElectronUpdateEvent({type: 'error', error, phase});
 	});
-}
-
-export function resetElectronUpdateSessionForTests(): void {
-	electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
-	electronUpdateSession.armed = false;
-	electronUpdateSession.observers.clear();
 }
 
 function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): void {

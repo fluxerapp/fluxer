@@ -2,12 +2,10 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
-import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
-import Users from '@app/features/user/state/Users';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 
 interface VoiceJoinEligibility {
 	canJoin: boolean;
@@ -26,22 +24,11 @@ export function useVoiceJoinEligibility({
 	if (!channel) return {canJoin: false};
 	const effectiveGuildId = guildId ?? channel.guildId ?? null;
 	const currentUserId = Authentication.currentUserId;
-	const currentUser = Users.getCurrentUser();
-	const isUnclaimed = !(currentUser?.isClaimed() ?? false);
 	if (effectiveGuildId && currentUserId) {
 		const member = GuildMembers.getMember(effectiveGuildId, currentUserId);
 		if (member?.isTimedOut()) return {canJoin: false};
 	}
 	if (effectiveGuildId && !Permission.can(Permissions.CONNECT, channel)) return {canJoin: false};
-	if (isUnclaimed) {
-		if (effectiveGuildId) {
-			const guild = Guilds.getGuild(effectiveGuildId);
-			const isOwner = guild?.isOwner(currentUserId) ?? false;
-			if (!isOwner) return {canJoin: false};
-		} else if (channel.type === ChannelTypes.DM) {
-			return {canJoin: false};
-		}
-	}
 	if (effectiveGuildId && channel.userLimit && channel.userLimit > 0 && currentUserId) {
 		const voiceStates = MediaEngine.getAllVoiceStatesInChannel(effectiveGuildId, channelId);
 		const currentConnectionId = MediaEngine.connectionId;

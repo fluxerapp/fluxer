@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Buffer} from 'node:buffer';
@@ -101,10 +102,6 @@ class DesktopHandoffResponseSchemaError extends Error {
 		super(`${context} response did not match the expected shape`);
 		this.name = 'DesktopHandoffResponseSchemaError';
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function boundedString(value: unknown, maxLength: number): string | null {

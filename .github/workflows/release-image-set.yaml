@@ -48,13 +48,16 @@ jobs:
         run: echo "Image set release approved."
 
   manifest:
-    name: resolve and publish the image set
+    name: resolve the image set
     needs: approve
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: write
       packages: read
+    outputs:
+      version: ${{ steps.vars.outputs.build_version }}
+      bundle_commit: ${{ steps.resolve.outputs.bundle_commit }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         env:
@@ -84,7 +87,7 @@ jobs:
         id: vars
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          FLUXER_BUILD_VERSION: ${{ inputs['build-version'] }}
+          BUILD_VERSION: ${{ inputs['build-version'] }}
         run: >-
           tools/ci/run.sh resolve-calver
           --github-output
@@ -121,10 +124,8 @@ jobs:
           tools/ci/run.sh image-set verify
           --manifest "release-out/fluxer-release-${VERSION}.json"
 
-      - name: Publish GitHub release
+      - name: check bundle commit
         env:
-          GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          VERSION: ${{ steps.vars.outputs.build_version }}
           BUNDLE_COMMIT: ${{ steps.resolve.outputs.bundle_commit }}
         run: |
           set -euo pipefail
@@ -132,11 +133,230 @@ jobs:
             echo "image-set resolve reported no bundle commit" >&2
             exit 1
           fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-out
+          path: release-out/
+          if-no-files-found: error
+          retention-days: 7
+
+  rexctl:
+    name: build rexctl
+    needs: manifest
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.manifest.outputs.version }}
+      BUNDLE_COMMIT: ${{ needs.manifest.outputs.bundle_commit }}
+      JSIGN_VERSION: "7.5"
+      JSIGN_SHA256: 602a51c3545a6dc4fb99bd2ea7152b26d1345916d0c93ddfbd5936cb735af91c
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.manifest.outputs.bundle_commit }}
+          persist-credentials: false
+
+      - name: check the bundle commit has rexctl
+        run: |
+          set -euo pipefail
+          if [ ! -f fluxer_rexctl/.goreleaser.yaml ]; then
+            echo "${BUNDLE_COMMIT} has no fluxer_rexctl/.goreleaser.yaml, so this image set cannot ship rexctl" >&2
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-out
+          path: release-out
+
+      - name: embed the image set
+        run: |
+          set -euo pipefail
+          python3 - <<'EOF'
+          import json, os, re, sys
+          version = os.environ["VERSION"]
+          manifest = json.load(open(f"release-out/fluxer-release-{version}.json"))
+          compose = open(f"release-out/fluxer-release-{version}.yml").read()
+          images = {c["component"]: f'{c["image"]}@{c["digest"]}' for c in manifest["components"]}
+          pattern = re.compile(r"^  ([a-z0-9-]+):\n    image: \S*/([a-z0-9-]+)@\$\{[A-Z0-9_]+:-(sha256:[0-9a-f]{64})\}$", re.M)
+          services = {}
+          for service, component, digest in pattern.findall(compose):
+              ref = images.get(component)
+              if ref is None or not ref.endswith("@" + digest):
+                  sys.exit(f"service {service} does not match component {component} in the manifest")
+              services[service] = ref
+          if not services or len(services) != compose.count("\n    image: "):
+              sys.exit("could not map every service in the compose override to an image")
+          with open("fluxer_rexctl/internal/stack/imageset.json", "w") as f:
+              json.dump({"release": version, "images": dict(sorted(services.items()))}, f, indent=2)
+              f.write("\n")
+          print(f"embedded {len(services)} service images for {version}")
+          EOF
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.x"
+          check-latest: true
+          cache-dependency-path: fluxer_rexctl/go.sum
+
+      - name: govulncheck
+        working-directory: fluxer_rexctl
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+        with:
+          cosign-release: v3.1.3
+
+      - uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26
+        with:
+          syft-version: v1.54.0
+
+      - name: Azure login for Artifact Signing
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: set up the Windows signer
+        run: |
+          set -euo pipefail
+          jar="${RUNNER_TEMP}/jsign-${JSIGN_VERSION}.jar"
+          curl -fsSL --retry 3 -o "${jar}" "https://github.com/ebourg/jsign/releases/download/${JSIGN_VERSION}/jsign-${JSIGN_VERSION}.jar"
+          echo "${JSIGN_SHA256}  ${jar}" | sha256sum -c -
+          signer="${RUNNER_TEMP}/sign-windows.sh"
+          cat > "${signer}" <<'EOF'
+          #!/bin/sh
+          set -eu
+          token="$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)"
+          exec java -jar "${JSIGN_JAR}" --storetype TRUSTEDSIGNING \
+            --keystore "${AZURE_ARTIFACT_SIGNING_ENDPOINT}" \
+            --storepass "${token}" \
+            --alias "${AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME}/${AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME}" \
+            --tsaurl http://timestamp.acs.microsoft.com --tsmode RFC3161 --alg SHA-256 \
+            "$1"
+          EOF
+          chmod +x "${signer}"
+          echo "JSIGN_JAR=${jar}" >> "${GITHUB_ENV}"
+          echo "REXCTL_WINDOWS_SIGNER=${signer}" >> "${GITHUB_ENV}"
+
+      - name: build, sign and check rexctl
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
+        with:
+          distribution: goreleaser
+          version: v2.18.3
+          workdir: fluxer_rexctl
+          args: release --clean --skip=publish,validate
+        env:
+          GORELEASER_CURRENT_TAG: v${{ needs.manifest.outputs.version }}
+          AZURE_ARTIFACT_SIGNING_ENDPOINT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+
+      - name: check the release files
+        working-directory: fluxer_rexctl/dist
+        env:
+          IDENTITY: ${{ github.server_url }}/${{ github.workflow_ref }}
+        run: |
+          set -euo pipefail
+          for target in linux_amd64.tar.gz linux_arm64.tar.gz darwin_amd64.tar.gz darwin_arm64.tar.gz windows_amd64.zip windows_arm64.zip; do
+            test -f "rexctl_${VERSION}_${target}"
+            test -f "rexctl_${VERSION}_${target}.spdx.json"
+          done
+          sha256sum -c checksums.txt
+          cosign verify-blob checksums.txt \
+            --bundle checksums.txt.sigstore.json \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          python3 - rexctl-windows_*/rexctl.exe <<'EOF'
+          import struct, sys
+          for path in sys.argv[1:]:
+              data = open(path, "rb").read()
+              pe = struct.unpack_from("<I", data, 0x3C)[0]
+              magic = struct.unpack_from("<H", data, pe + 24)[0]
+              directories = pe + 24 + (96 if magic == 0x10B else 112)
+              size = struct.unpack_from("<I", data, directories + 4 * 8 + 4)[0]
+              if size == 0:
+                  sys.exit(f"{path} is not signed")
+              print(f"{path} carries an Authenticode signature")
+          EOF
+          ./rexctl_linux_amd64_v1/rexctl version --json --dir "${RUNNER_TEMP}" | python3 -c '
+          import json, sys
+          v = json.load(sys.stdin)
+          json.dump({"min_from": "", "schema_changed": True, "min_podman": v["min_podman"], "min_docker": v["min_docker"], "state_schema": v["state_schema"]}, open("rexctl-release.json", "w"))
+          '
+          mkdir -p ../release
+          cp rexctl_"${VERSION}"_* checksums.txt checksums.txt.sigstore.json rexctl-release.json ../release/
+
+      - name: write the compose bundle
+        working-directory: fluxer_rexctl
+        run: |
+          set -euo pipefail
+          out="${RUNNER_TEMP}/fluxer-compose"
+          go run . bundle --out "${out}"
+          tar -czf "release/fluxer-compose-${VERSION}.tar.gz" -C "${out}" .
+          tar -tzf "release/fluxer-compose-${VERSION}.tar.gz"
+
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-checksums: fluxer_rexctl/dist/checksums.txt
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rexctl
+          path: fluxer_rexctl/release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: publish the image set
+    needs:
+      - manifest
+      - rexctl
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: write
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-out
+          path: release-out
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: rexctl
+          path: rexctl
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          VERSION: ${{ needs.manifest.outputs.version }}
+          BUNDLE_COMMIT: ${{ needs.manifest.outputs.bundle_commit }}
+        run: |
+          set -euo pipefail
           gh release create "fluxer-release@${VERSION}" \
             --repo fluxerapp/fluxer \
             --target "${BUNDLE_COMMIT}" \
             --title "fluxer-release ${VERSION}" \
             --latest=true \
-            --notes "Immutable image set for ${VERSION}. Every image in the set contains ${BUNDLE_COMMIT}, the commit this tag points at, so the bundle here is never newer than the images. Pin with: docker compose -f docker-compose.yml -f fluxer-release-${VERSION}.yml up -d" \
+            --notes "" \
             "release-out/fluxer-release-${VERSION}.json" \
-            "release-out/fluxer-release-${VERSION}.yml"
+            "release-out/fluxer-release-${VERSION}.yml" \
+            rexctl/*

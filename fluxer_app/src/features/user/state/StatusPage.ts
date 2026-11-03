@@ -8,7 +8,7 @@ type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved'
 type IncidentImpact = 'critical' | 'major' | 'minor' | 'maintenance';
 export type MaintenanceStatus = 'scheduled' | 'in_progress' | 'completed';
 
-export interface StatusPageIncident {
+interface StatusPageIncident {
 	id: string;
 	name: string;
 	status: IncidentStatus;
@@ -82,20 +82,45 @@ interface InstatusComponent {
 type InstatusComponentsResponse = Array<InstatusComponent> | {components?: Array<InstatusComponent>};
 
 const logger = new Logger('StatusPage');
-export const STATUS_PAGE_POLL_INTERVAL_MS = 60 * 1000;
-export const STATUS_PAGE_POLL_JITTER_MS = 15 * 1000;
+const STATUS_PAGE_POLL_INTERVAL_MS = 60 * 1000;
+const STATUS_PAGE_POLL_JITTER_MS = 15 * 1000;
 const POLL_ACTIVE_MAINTENANCE_INTERVAL_MS = 60 * 1000;
 const POLL_ACTIVE_MAINTENANCE_JITTER_MS = 15 * 1000;
 const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
 const STATUS_PAGE_FETCH_TIMEOUT_MS = 10 * 1000;
+const STATUS_PAGE_RETRY_DELAYS_MS = [60 * 1000, 5 * 60 * 1000, 15 * 60 * 1000, 30 * 60 * 1000];
 
 function statusPageFetchOptions(): RequestInit {
 	return {cache: 'no-store', signal: AbortSignal.timeout(STATUS_PAGE_FETCH_TIMEOUT_MS)};
 }
 
-export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isInstatusSummary(data: unknown): data is InstatusSummary {
+	return (
+		isRecord(data) &&
+		(isRecord(data.page) || Array.isArray(data.activeIncidents) || Array.isArray(data.activeMaintenances))
+	);
+}
+
+function isUnsupportedStatusPageResponse(response: Response): boolean {
+	return response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429;
+}
+
+function computeRetryDelay(consecutiveFailures: number): number {
+	const index = Math.min(consecutiveFailures, STATUS_PAGE_RETRY_DELAYS_MS.length) - 1;
+	return STATUS_PAGE_RETRY_DELAYS_MS[index];
+}
+
+function getIncidentStatusPageUrl(): string {
+	return RuntimeConfig.statusPageInstatus ? RuntimeConfig.statusPageUrl : '';
+}
+
+function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
 	if (scheduledMaintenance?.status === 'in_progress') {
 		return POLL_ACTIVE_MAINTENANCE_INTERVAL_MS + Math.random() * POLL_ACTIVE_MAINTENANCE_JITTER_MS;
 	}
@@ -114,7 +139,7 @@ export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | n
 	return STATUS_PAGE_POLL_INTERVAL_MS + Math.random() * STATUS_PAGE_POLL_JITTER_MS;
 }
 
-export function parseMaintenanceDurationMinutes(duration: string | number | null | undefined): number | null {
+function parseMaintenanceDurationMinutes(duration: string | number | null | undefined): number | null {
 	if (duration == null) {
 		return null;
 	}
@@ -156,7 +181,7 @@ function getMaintenanceStatusPriority(status: MaintenanceStatus): number {
 	}
 }
 
-export function selectActiveStatusPageMaintenance(
+function selectActiveStatusPageMaintenance(
 	maintenances: ReadonlyArray<InstatusMaintenance> | null | undefined,
 ): StatusPageMaintenance | null {
 	let selectedMaintenance: StatusPageMaintenance | null = null;
@@ -188,7 +213,7 @@ function extractComponentMaintenances(data: InstatusComponentsResponse): Array<I
 	return components.flatMap((component) => component.activeMaintenances ?? []);
 }
 
-export class StatusPage {
+class StatusPage {
 	incident: StatusPageIncident | null = null;
 	scheduledMaintenance: StatusPageMaintenance | null = null;
 	pollTimerId: NodeJS.Timeout | null = null;
@@ -197,11 +222,20 @@ export class StatusPage {
 	private lastCheckedAt = 0;
 	private pollingRequested = false;
 	private pollingStarted = false;
+	private unsupportedStatusPageUrl: string | null = null;
+	private consecutiveFailures = 0;
 
 	constructor() {
 		makeAutoObservable<
 			StatusPage,
-			'checkInFlight' | 'checkInFlightUrl' | 'lastCheckedAt' | 'pollingRequested' | 'pollingStarted' | 'pollTimerId'
+			| 'checkInFlight'
+			| 'checkInFlightUrl'
+			| 'lastCheckedAt'
+			| 'pollingRequested'
+			| 'pollingStarted'
+			| 'pollTimerId'
+			| 'unsupportedStatusPageUrl'
+			| 'consecutiveFailures'
 		>(
 			this,
 			{
@@ -211,11 +245,13 @@ export class StatusPage {
 				pollingRequested: false,
 				pollingStarted: false,
 				pollTimerId: false,
+				unsupportedStatusPageUrl: false,
+				consecutiveFailures: false,
 			},
 			{autoBind: true},
 		);
 		reaction(
-			() => RuntimeConfig.statusPageUrl,
+			() => getIncidentStatusPageUrl(),
 			() => this.handleStatusPageUrlChange(),
 		);
 	}
@@ -226,6 +262,8 @@ export class StatusPage {
 		this.checkInFlight = null;
 		this.checkInFlightUrl = null;
 		this.lastCheckedAt = 0;
+		this.unsupportedStatusPageUrl = null;
+		this.consecutiveFailures = 0;
 		this.stopActivePolling();
 		this.reconcilePolling();
 	}
@@ -241,7 +279,8 @@ export class StatusPage {
 	}
 
 	private reconcilePolling(): void {
-		if (!this.pollingRequested || !RuntimeConfig.statusPageUrl) {
+		const statusPageUrl = getIncidentStatusPageUrl();
+		if (!this.pollingRequested || !statusPageUrl || statusPageUrl === this.unsupportedStatusPageUrl) {
 			this.stopActivePolling();
 			return;
 		}
@@ -275,12 +314,19 @@ export class StatusPage {
 			} else {
 				this.schedulePoll();
 			}
-		}, computePollDelay(this.scheduledMaintenance));
+		}, this.computeNextDelay());
+	}
+
+	private computeNextDelay(): number {
+		if (this.consecutiveFailures > 0) {
+			return computeRetryDelay(this.consecutiveFailures);
+		}
+		return computePollDelay(this.scheduledMaintenance);
 	}
 
 	async checkIncidents(): Promise<void> {
-		const statusPageUrl = RuntimeConfig.statusPageUrl;
-		if (!statusPageUrl) {
+		const statusPageUrl = getIncidentStatusPageUrl();
+		if (!statusPageUrl || statusPageUrl === this.unsupportedStatusPageUrl) {
 			return;
 		}
 		if (this.checkInFlight !== null && this.checkInFlightUrl === statusPageUrl) {
@@ -304,18 +350,37 @@ export class StatusPage {
 		try {
 			const response = await fetch(`${statusPageUrl}/summary.json`, statusPageFetchOptions());
 			if (!response.ok) {
+				if (isUnsupportedStatusPageResponse(response)) {
+					this.markStatusPageUnsupported(statusPageUrl);
+				} else {
+					this.recordFailure(statusPageUrl);
+				}
 				return;
 			}
-			const data: InstatusSummary = await response.json();
+			let data: unknown;
+			try {
+				data = await response.json();
+			} catch (error) {
+				if (!(error instanceof SyntaxError)) {
+					throw error;
+				}
+				this.markStatusPageUnsupported(statusPageUrl);
+				return;
+			}
+			if (!isInstatusSummary(data)) {
+				this.markStatusPageUnsupported(statusPageUrl);
+				return;
+			}
 			const activeIncident = data.activeIncidents?.find((inc) => inc.status !== 'RESOLVED' && inc.resolved == null);
 			let activeMaintenance = selectActiveStatusPageMaintenance(data.activeMaintenances);
 			if (shouldFetchComponentMaintenances(data, activeMaintenance)) {
 				activeMaintenance = selectActiveStatusPageMaintenance(await this.fetchComponentMaintenances(statusPageUrl));
 			}
 			runInAction(() => {
-				if (statusPageUrl !== RuntimeConfig.statusPageUrl) {
+				if (statusPageUrl !== getIncidentStatusPageUrl()) {
 					return;
 				}
+				this.consecutiveFailures = 0;
 				if (activeIncident) {
 					this.incident = {
 						id: activeIncident.id,
@@ -340,8 +405,31 @@ export class StatusPage {
 				this.scheduledMaintenance = activeMaintenance;
 			});
 		} catch {
-			logger.warn('Failed to fetch status page');
+			this.recordFailure(statusPageUrl);
 		}
+	}
+
+	private recordFailure(statusPageUrl: string): void {
+		runInAction(() => {
+			if (statusPageUrl !== getIncidentStatusPageUrl()) {
+				return;
+			}
+			this.consecutiveFailures += 1;
+			logger.warn('Failed to fetch status page');
+		});
+	}
+
+	private markStatusPageUnsupported(statusPageUrl: string): void {
+		runInAction(() => {
+			if (statusPageUrl !== getIncidentStatusPageUrl()) {
+				return;
+			}
+			logger.warn('Stopped polling the status page because it is not an Instatus page');
+			this.unsupportedStatusPageUrl = statusPageUrl;
+			this.incident = null;
+			this.scheduledMaintenance = null;
+			this.stopActivePolling();
+		});
 	}
 
 	private async fetchComponentMaintenances(statusPageUrl: string): Promise<Array<InstatusMaintenance>> {
@@ -379,7 +467,9 @@ export class StatusPage {
 		if (document.visibilityState !== 'visible') {
 			return;
 		}
-		if (Date.now() - this.lastCheckedAt < POLL_RESUME_STALE_MS) {
+		const staleAfter =
+			this.consecutiveFailures > 0 ? computeRetryDelay(this.consecutiveFailures) : POLL_RESUME_STALE_MS;
+		if (Date.now() - this.lastCheckedAt < staleAfter) {
 			return;
 		}
 		this.refreshNow();

@@ -35,7 +35,7 @@ declare const SNAPSHOT_RELATIONSHIP_KEY_BRAND: unique symbol;
 declare const SNAPSHOT_USER_KEY_BRAND: unique symbol;
 declare const SNAPSHOT_PRESENCE_KEY_BRAND: unique symbol;
 
-export type SnapshotRowKey = string & {readonly [SNAPSHOT_ROW_KEY_BRAND]: true};
+type SnapshotRowKey = string & {readonly [SNAPSHOT_ROW_KEY_BRAND]: true};
 export type SnapshotRowKeyPrefix = string & {readonly [SNAPSHOT_ROW_KEY_PREFIX_BRAND]: true};
 export type SnapshotSingletonKey = SnapshotRowKey & {readonly [SNAPSHOT_SINGLETON_KEY_BRAND]: true};
 export type SnapshotGuildKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_KEY_BRAND]: true};
@@ -54,17 +54,17 @@ export type SnapshotPresenceKey = SnapshotRowKey & {readonly [SNAPSHOT_PRESENCE_
 
 export const SNAPSHOT_SINGLETON_KEY = snapshotSingletonKey('@me');
 
-export function snapshotRowKey(value: string): SnapshotRowKey {
+function snapshotRowKey(value: string): SnapshotRowKey {
 	requireNonEmpty(value, 'snapshot row key');
 	return value as SnapshotRowKey;
 }
 
-export function snapshotRowKeyPrefix(value: string): SnapshotRowKeyPrefix {
+function snapshotRowKeyPrefix(value: string): SnapshotRowKeyPrefix {
 	requireNonEmpty(value, 'snapshot row key prefix');
 	return value as SnapshotRowKeyPrefix;
 }
 
-export function snapshotSingletonKey(value: '@me'): SnapshotSingletonKey {
+function snapshotSingletonKey(value: '@me'): SnapshotSingletonKey {
 	return snapshotRowKey(value) as SnapshotSingletonKey;
 }
 
@@ -253,34 +253,34 @@ export interface SnapshotEntityKeyMap {
 
 export type SnapshotSingletonEntity = 'user_settings' | 'account_metadata' | 'user_connections';
 
-export interface SnapshotRowUpsertOpFor<E extends SnapshotEntity> {
+interface SnapshotRowUpsertOpFor<E extends SnapshotEntity> {
 	readonly kind: 'upsert';
 	readonly entity: E;
 	readonly key: SnapshotEntityKeyMap[E];
 	readonly value: SnapshotEntityRowMap[E];
 }
 
-export type SnapshotRowUpsertOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
+type SnapshotRowUpsertOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
 	? SnapshotRowUpsertOpFor<E>
 	: never;
 
-export interface SnapshotRowDeleteOpFor<E extends SnapshotEntity> {
+interface SnapshotRowDeleteOpFor<E extends SnapshotEntity> {
 	readonly kind: 'delete';
 	readonly entity: E;
 	readonly key: SnapshotEntityKeyMap[E];
 }
 
-export type SnapshotRowDeleteOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
+type SnapshotRowDeleteOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
 	? SnapshotRowDeleteOpFor<E>
 	: never;
 
-export interface SnapshotRowDeleteByPrefixOpFor<E extends SnapshotEntity> {
+interface SnapshotRowDeleteByPrefixOpFor<E extends SnapshotEntity> {
 	readonly kind: 'deleteByPrefix';
 	readonly entity: E;
 	readonly keyPrefix: SnapshotRowKeyPrefix;
 }
 
-export type SnapshotRowDeleteByPrefixOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
+type SnapshotRowDeleteByPrefixOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
 	? SnapshotRowDeleteByPrefixOpFor<E>
 	: never;
 
@@ -289,13 +289,13 @@ export interface SnapshotRowReplaceEntityEntry<E extends SnapshotEntity = Snapsh
 	readonly value: SnapshotEntityRowMap[E];
 }
 
-export interface SnapshotRowReplaceEntityOpFor<E extends SnapshotEntity> {
+interface SnapshotRowReplaceEntityOpFor<E extends SnapshotEntity> {
 	readonly kind: 'replaceEntity';
 	readonly entity: E;
 	readonly entries: ReadonlyArray<SnapshotRowReplaceEntityEntry<E>>;
 }
 
-export type SnapshotRowReplaceEntityOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
+type SnapshotRowReplaceEntityOp<E extends SnapshotEntity = SnapshotEntity> = E extends SnapshotEntity
 	? SnapshotRowReplaceEntityOpFor<E>
 	: never;
 
@@ -329,7 +329,7 @@ export function parseSnapshotSingleton<E extends SnapshotSingletonEntity>(
 	return parseSnapshotRow(entries, entity, SNAPSHOT_SINGLETON_KEY);
 }
 
-export function parseSnapshotRow<E extends SnapshotEntity>(
+function parseSnapshotRow<E extends SnapshotEntity>(
 	entries: StateSnapshotEntries,
 	entity: E,
 	key: SnapshotEntityKeyMap[E],

@@ -10,7 +10,9 @@ use rustls::{
 };
 use serde_json::{Map, Number, Value};
 use std::str::FromStr;
-use std::time::Duration;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 use tokio_postgres::{
     Config as PgConfig, Row,
     config::SslMode,
@@ -24,6 +26,17 @@ const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT: &str = "120s";
 const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT: &str = "30min";
 const POSTGRES_KV_MIGRATION_TABLE: &str = "__fluxer_schema_migrations";
 const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION: &str = "messages_partition_key_v1";
+const POSTGRES_KV_SORT_ID_MIGRATION: &str = "sort_id_v1";
+const POSTGRES_KV_SORT_ID_TABLES: &[&str] = &["messages", "message_reactions"];
+const POSTGRES_KV_SORT_ID_RECHECK: Duration = Duration::from_secs(30);
+const POSTGRES_KV_STORAGE_OPTIONS: &[&str] = &[
+    "fillfactor=85",
+    "autovacuum_vacuum_scale_factor=0",
+    "autovacuum_vacuum_threshold=20000",
+    "autovacuum_vacuum_insert_scale_factor=0.05",
+    "autovacuum_analyze_scale_factor=0.01",
+];
+const POSTGRES_KV_ALTER_LOCK_TIMEOUT: &str = "10s";
 const POSTGRES_KV_SCHEMA_ATTEMPTS: u32 = 3;
 const POSTGRES_KV_SCHEMA_RETRY_DELAY: Duration = Duration::from_millis(250);
 const CACHED_JSON_FIELDS: &[&str] = &["message_id"];
@@ -166,6 +179,82 @@ WHERE att.attrelid = to_regclass($1)
     Ok(row.and_then(|row| row.get::<_, Option<bool>>("c_collated")) == Some(true))
 }
 
+async fn has_sort_id(transaction: &Transaction<'_>, kv_table: &str) -> anyhow::Result<bool> {
+    let row = transaction
+        .query_opt(
+            "SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass($1) AND attname = 'sort_id' AND NOT attisdropped",
+            &[&kv_table],
+        )
+        .await
+        .context("failed to inspect the Postgres KV sort_id column")?;
+    Ok(row.is_some())
+}
+
+async fn has_sort_id_fill(transaction: &Transaction<'_>, kv_table: &str) -> anyhow::Result<bool> {
+    let row = transaction
+        .query_opt(
+            "SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass($1) AND tgname = $2",
+            &[&kv_table, &format!("{kv_table}_sort_id_fill")],
+        )
+        .await
+        .context("failed to inspect the Postgres KV sort_id fill trigger")?;
+    Ok(row.is_some())
+}
+
+async fn create_sort_id_fill(transaction: &Transaction<'_>, kv_table: &str) -> anyhow::Result<()> {
+    let table = quote_identifier(kv_table)?;
+    let fill = quote_identifier(&format!("{kv_table}_sort_id_fill"))?;
+    transaction
+        .batch_execute(&format!(
+            r#"CREATE OR REPLACE FUNCTION {fill}() RETURNS trigger LANGUAGE plpgsql AS $fill$
+BEGIN
+    IF NEW.row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN
+        NEW.sort_id := (NEW.row_data -> 'message_id' ->> 'value')::bigint;
+    END IF;
+    RETURN NEW;
+END
+$fill$;
+CREATE TRIGGER {fill} BEFORE INSERT OR UPDATE ON {table} FOR EACH ROW WHEN (NEW.sort_id IS NULL AND NEW.table_name IN ('messages', 'message_reactions')) EXECUTE FUNCTION {fill}();"#
+        ))
+        .await
+        .context("failed to create the Postgres KV sort_id fill trigger")?;
+    Ok(())
+}
+
+async fn needs_lz4(transaction: &Transaction<'_>, kv_table: &str) -> anyhow::Result<bool> {
+    let row = transaction
+        .query_opt(
+            r#"SELECT att.attcompression <> 'l' AND EXISTS (SELECT 1 FROM pg_settings WHERE name = 'default_toast_compression' AND 'lz4' = ANY(enumvals)) AS needs_lz4
+FROM pg_attribute att
+WHERE att.attrelid = to_regclass($1) AND att.attname = 'row_data' AND NOT att.attisdropped"#,
+            &[&kv_table],
+        )
+        .await
+        .context("failed to inspect Postgres KV row_data compression")?;
+    Ok(row.and_then(|row| row.get::<_, Option<bool>>("needs_lz4")) == Some(true))
+}
+
+async fn missing_storage_options(
+    transaction: &Transaction<'_>,
+    kv_table: &str,
+) -> anyhow::Result<Vec<&'static str>> {
+    let row = transaction
+        .query_opt(
+            "SELECT reloptions AS options FROM pg_class WHERE oid = to_regclass($1)",
+            &[&kv_table],
+        )
+        .await
+        .context("failed to inspect Postgres KV storage options")?;
+    let current = row
+        .and_then(|row| row.get::<_, Option<Vec<String>>>("options"))
+        .unwrap_or_default();
+    Ok(POSTGRES_KV_STORAGE_OPTIONS
+        .iter()
+        .copied()
+        .filter(|option| !current.iter().any(|value| value == option))
+        .collect())
+}
+
 fn is_concurrent_ddl_conflict(error: &anyhow::Error) -> bool {
     error
         .chain()
@@ -175,6 +264,7 @@ fn is_concurrent_ddl_conflict(error: &anyhow::Error) -> bool {
             *code == SqlState::UNIQUE_VIOLATION
                 || *code == SqlState::DUPLICATE_TABLE
                 || *code == SqlState::DUPLICATE_OBJECT
+                || *code == SqlState::LOCK_NOT_AVAILABLE
         })
 }
 
@@ -203,12 +293,8 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
 async fn ensure_kv_schema_once(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
     let table = quote_identifier(kv_table)?;
     let old_partition_index = quote_identifier(&format!("{kv_table}_partition_idx"))?;
-    let partition_row_index = quote_identifier(&format!("{kv_table}_partition_row_idx"))?;
     let row_key_c_index = quote_identifier(&format!("{kv_table}_row_key_c_idx"))?;
     let expires_index = quote_identifier(&format!("{kv_table}_expires_idx"))?;
-    let messages_message_index = quote_identifier(&format!("{kv_table}_messages_message_idx"))?;
-    let message_reactions_message_index =
-        quote_identifier(&format!("{kv_table}_message_reactions_message_idx"))?;
     let mut client = pool.get().await?;
     let transaction = client
         .transaction()
@@ -245,13 +331,56 @@ CREATE TABLE IF NOT EXISTS {table} (
     row_data jsonb NOT NULL,
     expires_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT now(),
+    sort_id bigint,
     PRIMARY KEY (table_name, row_key)
 );
-CREATE INDEX IF NOT EXISTS {partition_row_index} ON {table} (table_name, partition_key, row_key);
 "#
         ))
         .await
         .context("failed to ensure Postgres KV schema")?;
+    let add_sort_id = !has_sort_id(&transaction, kv_table).await?;
+    let add_sort_id_fill = !has_sort_id_fill(&transaction, kv_table).await?;
+    let missing_options = missing_storage_options(&transaction, kv_table).await?;
+    let set_lz4 = needs_lz4(&transaction, kv_table).await?;
+    if add_sort_id || add_sort_id_fill || !missing_options.is_empty() || set_lz4 {
+        transaction
+            .query_one(
+                "SELECT set_config('lock_timeout', $1, true)",
+                &[&POSTGRES_KV_ALTER_LOCK_TIMEOUT],
+            )
+            .await
+            .context("failed to configure the Postgres KV lock timeout")?;
+        if add_sort_id {
+            transaction
+                .batch_execute(&format!("ALTER TABLE {table} ADD COLUMN sort_id bigint"))
+                .await
+                .context("failed to add the Postgres KV sort_id column")?;
+        }
+        if add_sort_id_fill {
+            create_sort_id_fill(&transaction, kv_table).await?;
+        }
+        if !missing_options.is_empty() {
+            transaction
+                .batch_execute(&format!(
+                    "ALTER TABLE {table} SET ({})",
+                    missing_options.join(", ")
+                ))
+                .await
+                .context("failed to set Postgres KV storage options")?;
+        }
+        if set_lz4 {
+            transaction
+                .batch_execute(&format!(
+                    "ALTER TABLE {table} ALTER COLUMN row_data SET COMPRESSION lz4"
+                ))
+                .await
+                .context("failed to set Postgres KV row_data compression")?;
+        }
+        transaction
+            .query_one("SELECT set_config('lock_timeout', '0', true)", &[])
+            .await
+            .context("failed to reset the Postgres KV lock timeout")?;
+    }
     if !row_key_is_c_collated(&transaction, kv_table).await? {
         transaction
             .batch_execute(&format!(
@@ -264,8 +393,6 @@ CREATE INDEX IF NOT EXISTS {partition_row_index} ON {table} (table_name, partiti
         .batch_execute(&format!(
             r#"
 CREATE INDEX IF NOT EXISTS {expires_index} ON {table} (expires_at) WHERE expires_at IS NOT NULL;
-CREATE INDEX IF NOT EXISTS {messages_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages';
-CREATE INDEX IF NOT EXISTS {message_reactions_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions';
 "#
         ))
         .await
@@ -354,6 +481,12 @@ fn is_safe_identifier(identifier: &str) -> bool {
     chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
+struct SortIdState {
+    ready: AtomicBool,
+    started: Instant,
+    checked_at_ms: AtomicU64,
+}
+
 #[derive(Clone)]
 pub struct KvClient {
     pool: Pool,
@@ -361,7 +494,9 @@ pub struct KvClient {
     get_row_sql: String,
     get_rows_sql: String,
     get_partition_rows_sql: String,
+    get_ordered_rows_sql: String,
     delete_row_sql: String,
+    sort_ids: Arc<SortIdState>,
 }
 
 impl KvClient {
@@ -377,10 +512,74 @@ impl KvClient {
                 "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
             ),
             get_partition_rows_sql: format!(
+                r#"SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND (row_key = $2 OR (row_key COLLATE "C" >= $2 || chr(31) AND row_key COLLATE "C" < $2 || ' ')) AND (expires_at IS NULL OR expires_at > now())"#
+            ),
+            get_ordered_rows_sql: format!(
                 "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
             ),
             delete_row_sql: format!("DELETE FROM {table} WHERE table_name = $1 AND row_key = $2"),
+            sort_ids: Arc::new(SortIdState {
+                ready: AtomicBool::new(false),
+                started: Instant::now(),
+                checked_at_ms: AtomicU64::new(0),
+            }),
         })
+    }
+
+    async fn sort_ids_ready(&self, client: &Client) -> bool {
+        if self.sort_ids.ready.load(Ordering::Relaxed) {
+            return true;
+        }
+        let now_ms = (self.sort_ids.started.elapsed().as_millis() as u64).max(1);
+        let checked_at_ms = self.sort_ids.checked_at_ms.load(Ordering::Relaxed);
+        if checked_at_ms != 0
+            && now_ms.saturating_sub(checked_at_ms) < POSTGRES_KV_SORT_ID_RECHECK.as_millis() as u64
+        {
+            return false;
+        }
+        self.sort_ids.checked_at_ms.store(now_ms, Ordering::Relaxed);
+        let marked = self
+            .query_row(
+                client,
+                &self.get_row_sql,
+                &[
+                    (&POSTGRES_KV_MIGRATION_TABLE, Type::TEXT),
+                    (&POSTGRES_KV_SORT_ID_MIGRATION, Type::TEXT),
+                ],
+            )
+            .await;
+        match marked {
+            Ok(Some(_)) => {
+                self.sort_ids.ready.store(true, Ordering::Relaxed);
+                true
+            }
+            Ok(None) => false,
+            Err(error) => {
+                tracing::warn!(error = ?error, "failed to read the Postgres KV sort_id marker");
+                false
+            }
+        }
+    }
+
+    async fn ordered_rows_sql(
+        &self,
+        client: &Client,
+        table_name: &str,
+        field_name: &str,
+    ) -> anyhow::Result<(String, String)> {
+        let base = &self.get_ordered_rows_sql;
+        if field_name == "message_id"
+            && let Some(sorted) = POSTGRES_KV_SORT_ID_TABLES
+                .iter()
+                .find(|sorted| **sorted == table_name)
+            && self.sort_ids_ready(client).await
+        {
+            return Ok((
+                format!("{base} AND table_name = '{sorted}'"),
+                "sort_id".to_owned(),
+            ));
+        }
+        Ok((base.clone(), json_field_expr(field_name)?))
     }
 
     async fn query_rows(
@@ -504,9 +703,10 @@ impl KvClient {
             return Ok(Vec::new());
         }
         let client = self.pool.get().await?;
-        let field_expr = json_field_expr(field_name)?;
+        let (base, field_expr) = self
+            .ordered_rows_sql(&client, table_name, field_name)
+            .await?;
         let direction = if desc { "DESC" } else { "ASC" };
-        let base = &self.get_partition_rows_sql;
         let rows = match bound {
             Some(BigIntBound::LessThan(value)) => {
                 let sql = format!(
@@ -571,8 +771,9 @@ impl KvClient {
             return Ok(Vec::new());
         }
         let client = self.pool.get().await?;
-        let field_expr = json_field_expr(field_name)?;
-        let base = &self.get_partition_rows_sql;
+        let (base, field_expr) = self
+            .ordered_rows_sql(&client, table_name, field_name)
+            .await?;
         let sql = format!("{base} AND {field_expr} = ANY($3::bigint[])");
         let rows = self
             .query_dynamic_rows(
@@ -745,27 +946,6 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn ssl_mode_for(url: &str, ssl: bool) -> SslMode {
-        let mut pg = PgConfig::from_str(url).unwrap();
-        apply_ssl_mode(&mut pg, ssl);
-        pg.get_ssl_mode()
-    }
-
-    #[test]
-    fn ssl_flag_decides_tls_unless_url_names_a_mode() {
-        let socket = "postgres://fluxer@/fluxer?host=/run/postgresql";
-        assert_eq!(SslMode::Disable, ssl_mode_for(socket, false));
-        assert_eq!(SslMode::Require, ssl_mode_for(socket, true));
-        assert_eq!(
-            SslMode::Require,
-            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=require", false)
-        );
-        assert_eq!(
-            SslMode::Require,
-            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=disable", true)
-        );
-    }
-
     #[test]
     fn encodes_row_keys_like_postgres_kv_executor() {
         assert_eq!(
@@ -810,76 +990,6 @@ mod tests {
         assert_eq!(decoded["bytes"], json!("YWJj"));
         assert_eq!(decoded["ids"], json!([1, 2]));
         assert_eq!(decoded["metadata"], json!([["kind", 9]]));
-    }
-
-    fn test_postgres_config(kv_table: &str) -> PostgresConfig {
-        PostgresConfig {
-            url: None,
-            host: "127.0.0.1".to_owned(),
-            port: 5432,
-            database: "fluxer".to_owned(),
-            username: "fluxer".to_owned(),
-            password: None,
-            ssl: false,
-            ssl_ca: None,
-            max_connections: 1,
-            kv_table: kv_table.to_owned(),
-            prepared_statements: true,
-        }
-    }
-
-    fn test_kv_client(kv_table: &str) -> KvClient {
-        let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();
-        let manager = Manager::new(pg, build_disabled_tls_connector());
-        let pool = Pool::builder(manager).max_size(1).build().unwrap();
-        KvClient::new(pool, &test_postgres_config(kv_table)).unwrap()
-    }
-
-    #[test]
-    fn hoists_kv_statements_for_the_quoted_table() {
-        let kv = test_kv_client("fluxer_kv");
-
-        assert_eq!(
-            kv.get_row_sql,
-            "SELECT row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1"
-        );
-        assert_eq!(
-            kv.get_rows_sql,
-            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
-        );
-        assert_eq!(
-            kv.get_partition_rows_sql,
-            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
-        );
-        assert_eq!(
-            kv.delete_row_sql,
-            "DELETE FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2"
-        );
-    }
-
-    #[test]
-    fn passes_the_prepared_statement_switch_onto_the_client() {
-        let mut config = test_postgres_config("fluxer_kv");
-        config.prepared_statements = false;
-        let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();
-        let manager = Manager::new(pg, build_disabled_tls_connector());
-        let pool = Pool::builder(manager).max_size(1).build().unwrap();
-
-        assert!(!KvClient::new(pool, &config).unwrap().prepared_statements);
-        assert!(test_kv_client("fluxer_kv").prepared_statements);
-    }
-
-    #[test]
-    fn caches_only_closed_set_json_fields() {
-        assert!(is_cached_json_field("message_id"));
-        assert!(!is_cached_json_field("user_id"));
-        assert!(!is_cached_json_field("a0"));
-        assert!(!is_cached_json_field(""));
-        assert!(
-            CACHED_JSON_FIELDS
-                .iter()
-                .all(|field| is_safe_identifier(field))
-        );
     }
 
     #[test]

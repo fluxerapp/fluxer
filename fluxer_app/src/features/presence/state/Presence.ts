@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import type {SnapshotPresenceRow} from '@app/features/gateway/snapshot/SnapshotEntities';
@@ -628,4 +629,8 @@ class Presence {
 	}
 }
 
-export default new Presence();
+const presence = new Presence();
+
+ResettableStates.register(presence, () => presence.handleSessionInvalidated());
+
+export default presence;

@@ -17,7 +17,7 @@ import {NewMessagesBar} from '@app/features/channel/components/NewMessagesBar';
 import {usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import GuildVerification from '@app/features/guild/state/GuildVerification';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
@@ -59,6 +59,7 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MediaViewer from '@app/features/ui/state/MediaViewer';
 import Modal from '@app/features/ui/state/Modal';
 import type {User} from '@app/features/user/models/User';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import Window from '@app/features/window/state/Window';
@@ -124,7 +125,6 @@ interface MessagesStateSnapshot {
 
 interface MessagesProps {
 	channel: Channel;
-	onBottomBarVisibilityChange?: (visible: boolean) => void;
 	allowAutoAck?: boolean;
 }
 
@@ -162,11 +162,7 @@ function shallowEqual<T extends object>(a: T, b: T): boolean {
 	return true;
 }
 
-const CachedMessages = observer(function CachedMessages({
-	channel,
-	onBottomBarVisibilityChange,
-	allowAutoAck = true,
-}: MessagesProps) {
+const CachedMessages = observer(function CachedMessages({channel, allowAutoAck = true}: MessagesProps) {
 	const {i18n} = useLingui();
 	const scrollerInnerRef = useRef<HTMLDivElement | null>(null);
 	const scrollerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -188,7 +184,7 @@ const CachedMessages = observer(function CachedMessages({
 	const windowId = Window.windowId;
 	const isWindowFocused = Window.isFocused();
 	const isModalOpen = Modal.hasModalOpen();
-	const isGatewayConnected = GatewayConnection.isConnected;
+	const isGatewayConnected = GatewaySessions.foregroundConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
 	const openThreadPanelId = Navigation.threadId;
 	const placeholderSpecs = useMessageListPlaceholderSpecs({
@@ -434,7 +430,6 @@ const CachedMessages = observer(function CachedMessages({
 			}
 		};
 		const dispatchUnsubs = [
-			ComponentBus.subscribe('SCROLL_TO_PRESENT', onScrollToPresent),
 			ComponentBus.subscribe('MESSAGE_SENT', onMessageSent),
 			ComponentBus.subscribe('FORCE_JUMP_TO_PRESENT', onForceJumpToPresent),
 			ComponentBus.subscribe('ESCAPE_PRESSED', onEscapePressed),
@@ -545,6 +540,7 @@ const CachedMessages = observer(function CachedMessages({
 		};
 	}, [channel.id]);
 	const spammerOverrideVersion = LocalUserSpamOverride.version;
+	const hideBlocked = AdvancedSettings.hideBlockedMessages;
 	const channelStream = useMemo<Array<ChannelStreamItem>>(() => {
 		if (!state.messages) return [];
 		return createChannelStream({
@@ -552,8 +548,9 @@ const CachedMessages = observer(function CachedMessages({
 			messages: state.messages,
 			oldestUnreadMessageId: state.visualUnreadMessageId,
 			treatSpam: true,
+			hideBlocked,
 		});
-	}, [channel, state.messages, state.messageVersion, state.visualUnreadMessageId, spammerOverrideVersion]);
+	}, [channel, state.messages, state.messageVersion, state.visualUnreadMessageId, spammerOverrideVersion, hideBlocked]);
 	useEffect(() => {
 		const messages = state.messages;
 		if (!messages?.ready) {
@@ -615,30 +612,25 @@ const CachedMessages = observer(function CachedMessages({
 		onMessageEdit,
 		onReveal,
 	]);
-	const hasBottomBar = windowBar !== 'none';
-	useEffect(() => {
-		onBottomBarVisibilityChange?.(hasBottomBar);
-	}, [hasBottomBar, onBottomBarVisibilityChange]);
-	useEffect(() => {
-		return () => {
-			onBottomBarVisibilityChange?.(false);
-		};
-	}, [onBottomBarVisibilityChange]);
-	const bottomBar =
-		windowBar === 'retry' ? (
+	let bottomBar: React.ReactNode = null;
+	if (windowBar === 'retry') {
+		bottomBar = (
 			<LoadErrorBar
 				loading={safeMessages.loadingMore}
 				onRetry={onRetryLoadMessages}
 				data-flx="channel.messages.load-error-bar"
 			/>
-		) : windowBar === 'present' ? (
+		);
+	} else if (windowBar === 'present') {
+		bottomBar = (
 			<JumpToPresentBar
 				loadingMore={safeMessages.loadingMore}
 				landedAtLiveEdge={safeMessages.landedAtLiveEdge}
 				onJumpToPresent={onScrollToPresent}
 				data-flx="channel.messages.jump-to-present-bar"
 			/>
-		) : null;
+		);
+	}
 	const showNewMessagesBar = Boolean(windowStatus.phase === 'stream' && state.unreadCount > 0);
 	const unreadTimestampMessageId = state.oldestUnreadMessageId ?? state.ackMessageId;
 	const topBar = showNewMessagesBar ? (

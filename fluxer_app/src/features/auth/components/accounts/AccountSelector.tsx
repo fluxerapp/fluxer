@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AccountRow} from '@app/features/auth/components/accounts/AccountRow';
+import {AccountList} from '@app/features/auth/components/accounts/AccountList';
 import styles from '@app/features/auth/components/accounts/AccountSelector.module.css';
-import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {USE_ANOTHER_ACCOUNT_DESCRIPTOR} from '@app/features/auth/components/accounts/account_switcher_modal/AccountPickerShared';
 import type {Account} from '@app/features/platform/state/AuthSession';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
-import {Scroller} from '@app/features/ui/components/Scroller';
 import * as FormUtils from '@app/lib/forms';
 import type {I18n} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {PlusIcon} from '@phosphor-icons/react';
+import {UserPlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
@@ -20,10 +20,9 @@ interface AccountSelectorProps {
 	description?: React.ReactNode;
 	error?: unknown;
 	disabled?: boolean;
-	addButtonLabel?: React.ReactNode;
 	onSelectAccount: (account: Account) => void;
+	onSignOutAccount?: ((account: Account) => Promise<void>) | null;
 	onAddAccount?: () => void;
-	scrollerKey?: string;
 }
 
 function resolveAccountSelectorError(i18n: I18n, error: unknown): string | null {
@@ -39,72 +38,52 @@ function resolveAccountSelectorError(i18n: I18n, error: unknown): string | null 
 export const AccountSelector = observer(
 	({
 		accounts,
-		currentAccountKey,
+		currentAccountKey = null,
 		title,
 		description,
 		error,
 		disabled = false,
-		addButtonLabel,
 		onSelectAccount,
+		onSignOutAccount = null,
 		onAddAccount,
-		scrollerKey,
 	}: AccountSelectorProps) => {
 		const {i18n} = useLingui();
-		const defaultTitle = <Trans>Choose an account</Trans>;
-		const defaultDescription = <Trans>Select an account to continue, or add a different one.</Trans>;
 		const errorMessage = resolveAccountSelectorError(i18n, error);
 		return (
-			<div className={styles.container} aria-busy={disabled} data-flx="auth.accounts.account-selector.container">
-				<h1 className={styles.title} data-flx="auth.accounts.account-selector.title">
-					{title ?? defaultTitle}
-				</h1>
-				<p className={styles.description} data-flx="auth.accounts.account-selector.description">
-					{description ?? defaultDescription}
-				</p>
-				{errorMessage != null && (
-					<div className={styles.error} role="alert" data-flx="auth.accounts.account-selector.error">
-						{errorMessage}
-					</div>
-				)}
-				{accounts.length === 0 ? (
-					<div className={styles.noAccounts} data-flx="auth.accounts.account-selector.no-accounts">
-						<Trans>No accounts</Trans>
-					</div>
-				) : (
-					<Scroller
-						className={styles.scroller}
-						key={scrollerKey ?? 'account-selector-scroller'}
-						data-flx="auth.accounts.account-selector.scroller"
-					>
-						<div className={styles.accountList} data-flx="auth.accounts.account-selector.account-list">
-							{accounts.map((account) => {
-								const accountKey = getAccountKey(account);
-								return (
-									<AccountRow
-										key={accountKey}
-										account={account}
-										isCurrent={accountKey === currentAccountKey}
-										isExpired={account.isValid === false}
-										onClick={() => onSelectAccount(account)}
-										disabled={disabled}
-										showCaretIndicator
-										data-flx="auth.accounts.account-selector.account-row.select-account"
-									/>
-								);
-							})}
-						</div>
-					</Scroller>
-				)}
+			<div className={styles.container} data-flx="auth.accounts.account-selector.container">
+				<div className={styles.header} data-flx="auth.accounts.account-selector.header">
+					<h1 className={styles.title} data-flx="auth.accounts.account-selector.title">
+						{title ?? <Trans>Choose an account</Trans>}
+					</h1>
+					<p className={styles.description} data-flx="auth.accounts.account-selector.description">
+						{description ?? <Trans>Select an account to continue, or add a different one.</Trans>}
+					</p>
+				</div>
+				<AccountList
+					accounts={accounts}
+					currentAccountKey={currentAccountKey}
+					error={errorMessage}
+					disabled={disabled}
+					onSelect={onSelectAccount}
+					onSignOut={onSignOutAccount}
+					data-flx="auth.accounts.account-selector.account-list"
+				/>
 				{onAddAccount && (
 					<Button
 						variant="secondary"
-						leftIcon={<PlusIcon size={18} weight="bold" data-flx="auth.accounts.account-selector.plus-icon" />}
+						leftIcon={
+							<UserPlusIcon
+								size={remFromPx(18)}
+								weight="bold"
+								data-flx="auth.accounts.account-selector.user-plus-icon"
+							/>
+						}
 						onClick={onAddAccount}
 						disabled={disabled}
 						fitContainer
 						data-flx="auth.accounts.account-selector.button.add-account"
 					>
-						{addButtonLabel ?? <Trans>Add an account</Trans>}
+						{i18n._(USE_ANOTHER_ACCOUNT_DESCRIPTOR)}
 					</Button>
 				)}
 			</div>

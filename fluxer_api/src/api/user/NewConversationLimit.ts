@@ -12,7 +12,7 @@ import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
-export const NEW_CONVERSATION_LIMIT_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const NEW_CONVERSATION_LIMIT_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_PAGE = 100;
 const OPENING_PAGE = 50;
 
@@ -38,10 +38,6 @@ function nowOf(deps: NewConversationLimitDeps): number {
 
 function limitKey(userId: UserID | bigint | string): string {
 	return `user:new_conversation_limit:${userId.toString()}`;
-}
-
-export function isNewConversationLimitExempt(user: Pick<User, 'isBot' | 'isSystem' | 'flags'>): boolean {
-	return isAccountLimitExempt(user);
 }
 
 export async function getNewConversationLimit(
@@ -108,7 +104,7 @@ export async function assertMayStartConversation(
 	{user, targetId, users, messages, channel}: NewConversationCheck,
 	deps: NewConversationLimitDeps = {},
 ): Promise<void> {
-	if (isNewConversationLimitExempt(user)) return;
+	if (isAccountLimitExempt(user)) return;
 	const limit = await getNewConversationLimit(user.id, deps);
 	if (!limit) return;
 	const [friendship, target] = await Promise.all([

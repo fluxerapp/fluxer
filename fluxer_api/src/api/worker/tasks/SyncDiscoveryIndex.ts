@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID} from '@app/api/BrandedTypes';
 import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import {getGuildSearchService} from '@app/api/SearchFactory';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
@@ -7,8 +8,39 @@ import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
-const BATCH_SIZE = 200;
+const SCAN_PAGE_SIZE = 200;
 const UPDATE_CONCURRENCY = 25;
+
+async function listApprovedGuildIds(discoveryRepository: GuildDiscoveryRepository): Promise<{
+	approved: Array<GuildID>;
+	restored: number;
+}> {
+	const indexed = new Set(
+		(await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED)).map((row) => row.guild_id.toString()),
+	);
+	const approved: Array<GuildID> = [];
+	let restored = 0;
+	let pageState: string | null = null;
+	do {
+		const page = await discoveryRepository.scanStatuses(pageState, SCAN_PAGE_SIZE);
+		for (const row of page.rows) {
+			if (row.status !== DiscoveryApplicationStatus.APPROVED) continue;
+			approved.push(row.guild_id);
+			if (indexed.has(row.guild_id.toString())) continue;
+			const current = await discoveryRepository.findByGuildId(row.guild_id);
+			if (current?.status !== DiscoveryApplicationStatus.APPROVED) continue;
+			await discoveryRepository.addStatusEntry({
+				status: current.status,
+				applied_at: current.applied_at,
+				guild_id: current.guild_id,
+			});
+			restored++;
+		}
+		pageState = page.pageState;
+	} while (pageState);
+	return {approved, restored};
+}
+
 const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.info('Starting discovery index sync');
 	const guildSearchService = getGuildSearchService();
@@ -18,15 +50,17 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	}
 	const {guildRepository} = getWorkerDependencies();
 	const discoveryRepository = new GuildDiscoveryRepository();
-	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED);
-	if (approvedRows.length === 0) {
+	const {approved: guildIds, restored} = await listApprovedGuildIds(discoveryRepository);
+	if (restored > 0) {
+		helpers.logger.warn({restored}, 'Restored approved guilds missing from the discovery status index');
+	}
+	if (guildIds.length === 0) {
 		helpers.logger.info('No discoverable guilds to sync');
 		return;
 	}
-	const guildIds = approvedRows.map((row) => row.guild_id);
 	let synced = 0;
-	for (let i = 0; i < guildIds.length; i += BATCH_SIZE) {
-		const batch = guildIds.slice(i, i + BATCH_SIZE);
+	for (let i = 0; i < guildIds.length; i += SCAN_PAGE_SIZE) {
+		const batch = guildIds.slice(i, i + SCAN_PAGE_SIZE);
 		const [guilds, discoveryRows] = await Promise.all([
 			guildRepository.listGuilds(batch),
 			Promise.all(batch.map((guildId) => discoveryRepository.findByGuildId(guildId))),
@@ -51,7 +85,7 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 		);
 		synced += updates.length;
 	}
-	helpers.logger.info({synced, total: guildIds.length}, 'Discovery index sync completed');
+	helpers.logger.info({synced, total: guildIds.length, restored}, 'Discovery index sync completed');
 };
 
 export default syncDiscoveryIndex;

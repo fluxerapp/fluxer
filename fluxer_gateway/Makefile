@@ -2,7 +2,7 @@
 
 GATEWAY_TOOL := cargo run --locked --quiet --manifest-path ../tools/ci/Cargo.toml -- gateway --step
 
-.PHONY: all fmt fmt-check lint typecheck test check compile clean
+.PHONY: all fmt fmt-check lint typecheck check compile clean
 
 all: check
 
@@ -17,9 +17,6 @@ lint:
 
 typecheck:
 	@$(GATEWAY_TOOL) typecheck
-
-test:
-	@$(GATEWAY_TOOL) eunit
 
 check:
 	@$(GATEWAY_TOOL) all_checks

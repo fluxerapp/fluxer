@@ -33,7 +33,6 @@
 .callParticipantsRow {
 	--call-participant-avatar-size: 4rem;
 	--call-participant-gap: 0.75rem;
-	--avatar-voice-indicator-cutout-surface: #000;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -190,8 +189,8 @@
 
 .compactCallResizeHandle {
 	position: absolute;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	height: 1rem;
 	display: flex;

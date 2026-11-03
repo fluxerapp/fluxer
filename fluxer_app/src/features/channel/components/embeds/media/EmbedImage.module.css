@@ -7,7 +7,7 @@
 	border: 0;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	-webkit-touch-callout: none;
 	border-radius: var(--media-border-radius, 0px);

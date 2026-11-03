@@ -5,8 +5,9 @@ import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapsh
 import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
+import {resolveHandoffErrorMessage} from '@app/features/auth/flow/browser_handoff/HandoffErrorMessages';
 import {originOf} from '@app/features/auth/InstanceBranding';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FormUtils from '@app/lib/forms';
@@ -60,7 +61,7 @@ export interface DesktopHandoffRequest {
 	readonly identifier: string | null;
 }
 
-export function readDesktopHandoffRequest(search: string): DesktopHandoffRequest {
+function readDesktopHandoffRequest(search: string): DesktopHandoffRequest {
 	const params = new URLSearchParams(search);
 	const code = parseDesktopHandoffCode(params.get('code') ?? '');
 	return {
@@ -153,9 +154,10 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 			} catch (e) {
 				if (operationRevision !== operationRevisionRef.current) return;
 				failWith(
-					e && typeof e === 'object' && 'body' in e
-						? FormUtils.extractErrorMessage(i18n, e)
-						: i18n._(COULDN_T_VERIFY_THAT_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR),
+					resolveHandoffErrorMessage(i18n, e) ??
+						(e && typeof e === 'object' && 'body' in e
+							? FormUtils.extractErrorMessage(i18n, e)
+							: i18n._(COULDN_T_VERIFY_THAT_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR)),
 				);
 			}
 		},
@@ -220,9 +222,10 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 		} catch (e) {
 			if (operationRevision !== operationRevisionRef.current) return;
 			failWith(
-				e && typeof e === 'object' && 'body' in e
-					? FormUtils.extractErrorMessage(i18n, e)
-					: i18n._(COULDN_T_COMPLETE_SIGN_IN_PLEASE_TRY_AGAIN_DESCRIPTOR),
+				resolveHandoffErrorMessage(i18n, e) ??
+					(e && typeof e === 'object' && 'body' in e
+						? FormUtils.extractErrorMessage(i18n, e)
+						: i18n._(COULDN_T_COMPLETE_SIGN_IN_PLEASE_TRY_AGAIN_DESCRIPTOR)),
 			);
 		}
 	}, [failWith, handoffCode, i18n, returnMethod]);

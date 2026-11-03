@@ -58,7 +58,7 @@
 .streamInfoHud {
 	position: absolute;
 	top: 0.375rem;
-	right: 0.375rem;
+	inset-inline-end: 0.375rem;
 	z-index: 11;
 	pointer-events: none;
 }
@@ -135,11 +135,15 @@
 .focusOverlayIcon {
 	position: absolute;
 	top: 0.5rem;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	height: 1.5rem;
 	width: 1.5rem;
 	color: var(--voice-text-strong);
 	filter: drop-shadow(0 0.0625rem 0.125rem var(--voice-shadow-strong));
+}
+
+.mirroredVideo {
+	transform: scaleX(-1);
 }
 
 .videoDisabledOverlay {
@@ -215,7 +219,7 @@
 .previewPopover {
 	position: absolute;
 	top: 0;
-	right: -10rem;
+	inset-inline-end: -10rem;
 	width: 9.5rem;
 	height: 6rem;
 	background: var(--voice-surface-3);
@@ -310,7 +314,7 @@
 .focusedPlaceholderLiveBadge {
 	position: absolute;
 	top: 0.375rem;
-	right: 0.375rem;
+	inset-inline-end: 0.375rem;
 	z-index: 4;
 	pointer-events: none;
 }

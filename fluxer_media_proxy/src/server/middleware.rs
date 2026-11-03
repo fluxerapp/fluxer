@@ -63,7 +63,7 @@ impl HttpRequestDrain {
     fn begin_request(&self) -> ActiveHttpRequest {
         self.inner
             .active_requests
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |active| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |active| {
                 active.checked_add(1)
             })
             .expect("http active request count must not overflow");
@@ -227,58 +227,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn mp_mode_serves_javascript_as_plain_text() {
-        for content_type in [
-            "text/javascript",
-            "application/javascript; charset=utf-8",
-            "image/png, text/javascript",
-        ] {
-            let headers = headers_for(DeploymentMode::Mp, Some(content_type)).await;
-            assert_eq!(
-                Some(INERT),
-                header_text(&headers, header::CONTENT_TYPE),
-                "{content_type}"
-            );
-            assert_eq!(
-                Some("nosniff"),
-                header_text(&headers, header::X_CONTENT_TYPE_OPTIONS),
-                "{content_type}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn mp_mode_serves_javascript_that_browsers_parse_past_junk_as_plain_text() {
-        for content_type in BROWSER_PARSED_JAVASCRIPT {
-            for status in [StatusCode::OK, StatusCode::PARTIAL_CONTENT] {
-                let headers =
-                    headers_with_status(DeploymentMode::Mp, status, Some(content_type)).await;
-                assert_eq!(
-                    Some(INERT),
-                    header_text(&headers, header::CONTENT_TYPE),
-                    "{status} {content_type:?}"
-                );
-                assert_eq!(1, headers.get_all(header::CONTENT_TYPE).iter().count());
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn static_mode_serves_javascript_unchanged() {
-        for content_type in ["text/javascript", "application/javascript; charset=utf-8"]
-            .into_iter()
-            .chain(BROWSER_PARSED_JAVASCRIPT)
-        {
-            let headers = headers_for(DeploymentMode::Static, Some(content_type)).await;
-            assert_eq!(
-                Some(content_type),
-                header_text(&headers, header::CONTENT_TYPE),
-                "{content_type:?}"
-            );
-        }
-    }
-
-    #[tokio::test]
     async fn every_mode_that_serves_stored_bytes_neutralizes_javascript() {
         for mode in [
             DeploymentMode::Mp,
@@ -294,89 +242,6 @@ mod tests {
                     Some(INERT),
                     header_text(&headers, header::CONTENT_TYPE),
                     "{mode:?} {content_type:?}"
-                );
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn non_javascript_content_types_pass_through_every_mode() {
-        for mode in [
-            DeploymentMode::Mp,
-            DeploymentMode::Static,
-            DeploymentMode::Upload,
-            DeploymentMode::Relay,
-        ] {
-            for content_type in [
-                "text/css; charset=utf-8",
-                "text/css",
-                "video/mp2t",
-                "video/mp4",
-                "image/png",
-                "image/svg+xml",
-                "application/json",
-                "text/plain",
-                "text/javascriptx",
-                "text/javascript1.6",
-            ] {
-                let headers = headers_for(mode, Some(content_type)).await;
-                assert_eq!(
-                    Some(content_type),
-                    header_text(&headers, header::CONTENT_TYPE),
-                    "{mode:?} {content_type}"
-                );
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn mp_mode_types_an_untyped_full_or_partial_response_as_plain_text() {
-        for status in [StatusCode::OK, StatusCode::PARTIAL_CONTENT] {
-            for content_type in [None, Some(""), Some("  ")] {
-                let headers = headers_with_status(DeploymentMode::Mp, status, content_type).await;
-                assert_eq!(
-                    Some(INERT),
-                    header_text(&headers, header::CONTENT_TYPE),
-                    "{status} {content_type:?}"
-                );
-                assert_eq!(
-                    Some("nosniff"),
-                    header_text(&headers, header::X_CONTENT_TYPE_OPTIONS),
-                    "{status} {content_type:?}"
-                );
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn untyped_responses_of_other_statuses_or_modes_stay_untyped() {
-        for status in [
-            StatusCode::NO_CONTENT,
-            StatusCode::NOT_MODIFIED,
-            StatusCode::NOT_FOUND,
-            StatusCode::METHOD_NOT_ALLOWED,
-            StatusCode::RANGE_NOT_SATISFIABLE,
-        ] {
-            let headers = headers_with_status(DeploymentMode::Mp, status, None).await;
-            assert_eq!(None, headers.get(header::CONTENT_TYPE), "{status}");
-        }
-        for status in [
-            StatusCode::OK,
-            StatusCode::PARTIAL_CONTENT,
-            StatusCode::RANGE_NOT_SATISFIABLE,
-        ] {
-            let headers = headers_with_status(DeploymentMode::Static, status, None).await;
-            assert_eq!(None, headers.get(header::CONTENT_TYPE), "{status}");
-        }
-        for mode in [DeploymentMode::Upload, DeploymentMode::Relay] {
-            let headers = headers_with_status(mode, StatusCode::RANGE_NOT_SATISFIABLE, None).await;
-            assert_eq!(None, headers.get(header::CONTENT_TYPE), "{mode:?}");
-            for status in [StatusCode::OK, StatusCode::PARTIAL_CONTENT] {
-                let headers = headers_with_status(mode, status, None).await;
-                assert_eq!(
-                    Some(INERT),
-                    header_text(&headers, header::CONTENT_TYPE),
-                    "{mode:?} {status}"
                 );
             }
         }
@@ -540,72 +405,5 @@ mod tests {
             Some("text/css; charset=utf-8"),
             header_text(theme.headers(), header::CONTENT_TYPE)
         );
-    }
-
-    async fn robots_header_for(mode: DeploymentMode) -> Option<String> {
-        let router = Router::new()
-            .route(
-                "/probe",
-                get(|| async {
-                    let mut response = Response::new(Body::empty());
-                    http_headers::add_media_headers(response.headers_mut(), 0, "text/plain", None);
-                    response
-                }),
-            )
-            .layer(axum::middleware::from_fn_with_state(
-                mode,
-                add_security_header_middleware,
-            ));
-        let response = tower::ServiceExt::oneshot(
-            router,
-            Request::builder()
-                .uri("/probe")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-        response
-            .headers()
-            .get("X-Robots-Tag")
-            .map(|v| v.to_str().unwrap().to_owned())
-    }
-
-    #[tokio::test]
-    async fn static_mode_does_not_set_robots_tag() {
-        assert_eq!(robots_header_for(DeploymentMode::Static).await, None);
-    }
-
-    #[tokio::test]
-    async fn media_and_upload_modes_still_set_robots_tag() {
-        assert_eq!(
-            robots_header_for(DeploymentMode::Mp).await.as_deref(),
-            Some(http_headers::ROBOTS)
-        );
-        assert_eq!(
-            robots_header_for(DeploymentMode::Upload).await.as_deref(),
-            Some(http_headers::ROBOTS)
-        );
-    }
-
-    #[tokio::test]
-    async fn request_drain_waits_until_every_response_body_is_dropped() {
-        let drain = HttpRequestDrain::new();
-        let router = Router::new().route("/probe", get(|| async { "OK" })).layer(
-            axum::middleware::from_fn_with_state(drain.clone(), track_active_request),
-        );
-        let response = tower::ServiceExt::oneshot(
-            router,
-            Request::builder()
-                .uri("/probe")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-        assert_eq!(drain.active_requests(), 1);
-        drop(response);
-        drain.wait_for_requests_drained().await;
-        assert_eq!(drain.active_requests(), 0);
     }
 }

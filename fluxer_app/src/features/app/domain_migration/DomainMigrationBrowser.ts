@@ -49,13 +49,13 @@ function domainMigrationDiscoveryApiEndpoint(): string | null {
 	}
 }
 
-export async function loadDomainMigrationDiscovery(): Promise<void> {
+export async function loadDomainMigrationDiscovery(timeoutMs = DOMAIN_MIGRATION_DISCOVERY_TIMEOUT_MS): Promise<void> {
 	if (domainMigrationDiscoveryApiEndpoint() === null) {
 		return;
 	}
 	await InstanceSnapshotStore.resolve({
 		input: window.location.origin,
-		signal: AbortSignal.timeout(DOMAIN_MIGRATION_DISCOVERY_TIMEOUT_MS),
+		signal: AbortSignal.timeout(timeoutMs),
 	});
 }
 

@@ -21,7 +21,7 @@ import {PushPinSimpleIcon, PushPinSimpleSlashIcon, TagIcon} from '@phosphor-icon
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-export function openForumPostTagsModal(post: Channel): void {
+function openForumPostTagsModal(post: Channel): void {
 	ModalCommands.push(
 		modal(() => (
 			<ForumPostTagsModal

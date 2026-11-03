@@ -30,11 +30,9 @@
     | {disconnect_user_if_in_channel, integer(), integer(), binary() | undefined}
     | {leave, binary()}
     | {update_voice_state, integer(), map()}
-    | {get_sessions}
-    | {get_pending_connections}.
+    | {get_sessions}.
 -type cast_request() ::
-    {join_async, integer(), map(), binary(), pid()}
-    | {set_caller, map()}
+    {set_caller, map()}
     | {voice_signal, binary(), binary(), map()}.
 -type info_message() ::
     {'DOWN', reference(), process, pid(), term()}
@@ -150,9 +148,7 @@ handle_call_request({leave, SessionId}, State) ->
 handle_call_request({update_voice_state, UserId, VoiceState}, State) ->
     handle_update_voice_state(UserId, VoiceState, State);
 handle_call_request({get_sessions}, State) ->
-    handle_get_sessions(State);
-handle_call_request({get_pending_connections}, State) ->
-    handle_get_pending_connections(State).
+    handle_get_sessions(State).
 
 -spec handle_join_request(
     integer(), map(), binary(), pid(), binary() | undefined, pos_integer() | undefined, map()
@@ -170,8 +166,6 @@ handle_join_request(
 -spec handle_cast(term(), map()) -> {noreply, map()}.
 handle_cast(Request, State) ->
     case decode_cast_request(Request) of
-        {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}} ->
-            call_voice:handle_join_async(UserId, VoiceState, SessionId, SessionPid, State);
         {ok, {set_caller, Caller}} ->
             {noreply, call_state:put_caller(Caller, State)};
         {ok, {voice_signal, SessionId, To, Data}} ->
@@ -304,8 +298,6 @@ decode_session_call_request({update_voice_state, UserId, VoiceState}) when
     {ok, {update_voice_state, UserId, VoiceState}};
 decode_session_call_request({get_sessions}) ->
     {ok, {get_sessions}};
-decode_session_call_request({get_pending_connections}) ->
-    {ok, {get_pending_connections}};
 decode_session_call_request(_) ->
     error.
 
@@ -338,10 +330,6 @@ decode_integer_list([_Value | _Rest], _Acc) ->
     error.
 
 -spec decode_cast_request(term()) -> {ok, cast_request()} | error.
-decode_cast_request({join_async, UserId, VoiceState, SessionId, SessionPid}) when
-    is_integer(UserId), is_map(VoiceState), is_binary(SessionId), is_pid(SessionPid)
-->
-    {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}};
 decode_cast_request({set_caller, Caller}) when is_map(Caller) ->
     {ok, {set_caller, Caller}};
 decode_cast_request({voice_signal, SessionId, To, Data}) when
@@ -444,13 +432,6 @@ handle_get_sessions(State) ->
         voice_states => maps:get(voice_states, State)
     },
     {reply, StateMap, State}.
-
--spec handle_get_pending_connections(map()) -> {reply, map(), map()}.
-handle_get_pending_connections(State) ->
-    PendingJoins = call_state:format_pending_connections(
-        maps:get(pending_connections, State)
-    ),
-    {reply, #{pending_joins => PendingJoins}, State}.
 
 -spec handle_pending_timeout(binary(), map()) -> {noreply, map()}.
 handle_pending_timeout(ConnectionId, State) ->

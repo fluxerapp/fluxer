@@ -17,6 +17,7 @@ import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/Med
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import {canViewStreamPreview} from '@app/features/voice/utils/StreamPreviewPermissionUtils';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {WATCHING_STREAM_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {Placement} from '@floating-ui/react';
 import {
 	autoUpdate,
@@ -43,10 +44,6 @@ import {Children, cloneElement, useCallback, useEffect, useMemo, useState} from 
 const YOU_RE_STREAMING_DESCRIPTOR = msg({
 	message: "You're streaming!",
 	comment: 'Status text on the screen-share hover popout shown to the local streamer. Lightly playful tone.',
-});
-const WATCHING_STREAM_DESCRIPTOR = msg({
-	message: 'Watching stream',
-	comment: 'Status label on the screen-share hover popout when the local user is watching the stream.',
 });
 
 interface StreamWatchHoverPopoutProps extends HTMLAttributes<HTMLElement> {

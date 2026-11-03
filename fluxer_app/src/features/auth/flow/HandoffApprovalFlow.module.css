@@ -28,7 +28,7 @@
 .codeInputSection {
 	margin-bottom: 0.75rem;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 }
 
 .codeInput {
@@ -114,7 +114,7 @@
 	border: 0.125rem solid var(--background-modifier-accent);
 	border-radius: 0.625rem;
 	margin: 0.75rem 0 1rem;
-	text-align: left;
+	text-align: start;
 }
 
 .deviceRow {
@@ -136,7 +136,7 @@
 	font-size: 0.875rem;
 	color: var(--text-primary);
 	font-weight: 500;
-	text-align: right;
+	text-align: end;
 	overflow-wrap: anywhere;
 }
 

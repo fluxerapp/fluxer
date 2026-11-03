@@ -3,6 +3,7 @@
 import {createGuildID, createStickerID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -57,6 +58,7 @@ export function GuildStickerController(app: HonoApp) {
 	);
 	app.post(
 		'/guilds/:guild_id/stickers/bulk',
+		RequestBodyLimit(jsonAssetBodyLimit({sticker: 50})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_BULK_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),

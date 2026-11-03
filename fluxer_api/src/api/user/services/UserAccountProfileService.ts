@@ -8,11 +8,19 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {getCustomBadgeCatalog} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
+import {
+	dropUndefinedCustomBadgeKeys,
+	hiddenCustomBadgeIds,
+	resolveHiddenProfileBadges,
+} from '@app/api/user/profile_badges/HiddenProfileBadges';
+import {applyProfileBadgeSettings} from '@app/api/user/profile_badges/PremiumBadgeMasking';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
+import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {PremiumFlags, ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -39,14 +47,6 @@ interface UserAccountProfileServiceDeps {
 	rateLimitService: IRateLimitService;
 	limitConfigService: LimitConfigService;
 }
-
-const PREMIUM_BADGE_FIELDS = [
-	{field: 'premium_badge_hidden', flag: PremiumFlags.BADGE_HIDDEN},
-	{field: 'premium_badge_masked', flag: PremiumFlags.BADGE_MASKED},
-	{field: 'premium_badge_timestamp_hidden', flag: PremiumFlags.BADGE_TIMESTAMP_HIDDEN},
-	{field: 'premium_badge_sequence_hidden', flag: PremiumFlags.BADGE_SEQUENCE_HIDDEN},
-	{field: 'premium_enabled_override', flag: PremiumFlags.ENABLED_OVERRIDE},
-] as const;
 
 export class UserAccountProfileService {
 	constructor(private readonly deps: UserAccountProfileServiceDeps) {}
@@ -97,6 +97,7 @@ export class UserAccountProfileService {
 		}
 		if (!user.isBot) {
 			this.processPremiumBadgeFlags({user, data, updates});
+			await this.processHiddenProfileBadges({user, data, updates});
 		}
 		if (data.avatar !== undefined) {
 			preparedAvatarUpload = await this.processAvatarUpdate({user, avatar: data.avatar, updates});
@@ -287,6 +288,7 @@ export class UserAccountProfileService {
 			previousHash: user.avatarHash,
 			base64Image: avatar,
 			errorPath: 'avatar',
+			uploader: user,
 		});
 		const ctx = createLimitMatchContext({user});
 		const hasAnimatedAvatar = resolveLimitSafe(
@@ -347,6 +349,7 @@ export class UserAccountProfileService {
 			previousHash: user.bannerHash,
 			base64Image: banner,
 			errorPath: 'banner',
+			uploader: user,
 		});
 		if (prepared.isAnimated && hasAnimatedBanner === 0) {
 			await this.deps.entityAssetService.rollbackAssetUpload(prepared);
@@ -370,12 +373,32 @@ export class UserAccountProfileService {
 		if (data.premium_enabled_override !== undefined && !(user.flags & UserFlags.STAFF)) {
 			throw new MissingAccessError();
 		}
-		for (const {field, flag} of PREMIUM_BADGE_FIELDS) {
-			const enabled = data[field];
-			if (enabled === undefined) continue;
-			const flags = updates.premium_flags ?? user.premiumFlags;
-			updates.premium_flags = enabled ? flags | flag : flags & ~flag;
+		const current = updates.premium_flags ?? user.premiumFlags;
+		let flags = applyProfileBadgeSettings(current, data);
+		if (data.premium_enabled_override !== undefined) {
+			flags = data.premium_enabled_override
+				? flags | PremiumFlags.ENABLED_OVERRIDE
+				: flags & ~PremiumFlags.ENABLED_OVERRIDE;
 		}
+		if (flags !== current) {
+			updates.premium_flags = flags;
+		}
+	}
+
+	private async processHiddenProfileBadges(params: {
+		user: User;
+		data: UserUpdateRequest;
+		updates: UserFieldUpdates;
+	}): Promise<void> {
+		const {user, data, updates} = params;
+		const requested = resolveHiddenProfileBadges(user.hiddenProfileBadges, data);
+		if (!requested) return;
+		const known = await getCustomBadgeCatalog().getByIds(hiddenCustomBadgeIds(requested), CustomBadgeTypes.USER);
+		const next = dropUndefinedCustomBadgeKeys(requested, new Set(known.map((badge) => badge.id)));
+		if (next.size === user.hiddenProfileBadges.size && [...next].every((key) => user.hiddenProfileBadges.has(key))) {
+			return;
+		}
+		updates.hidden_profile_badges = next.size > 0 ? next : null;
 	}
 
 	private processPremiumOnboardingDismissal(params: {data: UserUpdateRequest; updates: UserFieldUpdates}): void {

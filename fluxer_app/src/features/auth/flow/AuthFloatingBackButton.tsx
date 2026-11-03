@@ -3,7 +3,7 @@
 import styles from '@app/features/auth/flow/AuthFloatingBackButton.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {ArrowLeftIcon} from '@phosphor-icons/react';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import type React from 'react';
 
 interface AuthFloatingBackButtonProps {

@@ -4,10 +4,9 @@ use super::types::{
     ActivityPubActor, ActivityPubCollectionCount, ActivityPubContext, ActivityPubPost,
     MastodonMediaAttachment, MastodonPost,
 };
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::{MediaMetadata, MediaProxyClient};
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedField, EmbedFooter, EmbedMedia, MessageEmbed, NsfwMode};
-use chrono::{DateTime, SecondsFormat, Utc};
 use url::Url;
 
 const AP_COLOR: u32 = 0x6364FF;
@@ -402,20 +401,14 @@ fn build_media_from_metadata(
     description: Option<&str>,
 ) -> EmbedMedia {
     EmbedMedia {
-        url: Some(url.to_owned()),
-        content_type: Some(metadata.content_type.clone()),
-        content_hash: Some(metadata.content_hash.clone()),
         width,
         height,
-        duration: metadata.duration.map(|duration| duration as u32),
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
         description: description
             .filter(|description| !description.is_empty())
             .map(|description| {
                 text_limits::truncate(description, text_limits::MEDIA_DESCRIPTION_MAX)
             }),
-        ..Default::default()
+        ..metadata.to_embed_media(url)
     }
 }
 
@@ -662,15 +655,6 @@ fn decode_html_entities(input: &str) -> String {
         .into_owned()
 }
 
-fn sanitize_optional_absolute_url(value: &str) -> Option<String> {
-    Url::parse(value.trim()).ok().map(|url| url.to_string())
-}
-
-fn normalize_timestamp(value: &str) -> String {
-    DateTime::parse_from_rfc3339(value)
-        .map(|dt| {
-            dt.with_timezone(&Utc)
-                .to_rfc3339_opts(SecondsFormat::Millis, true)
-        })
-        .unwrap_or_else(|_| value.to_owned())
-}
+use crate::resolvers::default_helpers::{
+    normalize_timestamp, sanitize_absolute_url as sanitize_optional_absolute_url,
+};

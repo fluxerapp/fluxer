@@ -9,8 +9,9 @@ import {
 	type RoleID,
 	type UserID,
 } from '@app/api/BrandedTypes';
-import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -94,13 +95,14 @@ export class MessageMentionService {
 			mentionsEveryone = false;
 			mentionsHere = false;
 		}
+		const referencedAuthorId = referencedMessage?.authorId;
 		const shouldAddReferencedUser =
-			referencedMessage?.authorId &&
-			referencedMessage.authorId !== message.authorId &&
+			referencedAuthorId &&
+			referencedAuthorId !== message.authorId &&
 			!isDMChannel &&
 			allowedMentions?.replied_user !== false;
 		if (shouldAddReferencedUser) {
-			userMentions.add(referencedMessage!.authorId!);
+			userMentions.add(referencedAuthorId);
 		}
 		const sendableFlags = message.flags & SENDABLE_MESSAGE_FLAGS;
 		let flags = message.flags & ~SENDABLE_MESSAGE_FLAGS;
@@ -220,9 +222,10 @@ export class MessageMentionService {
 			allowedMentions.roles === undefined &&
 			allowedMentions.replied_user === undefined;
 		const hasExplicitLists = allowedMentions.users !== undefined || allowedMentions.roles !== undefined;
-		const parse = isExplicitlyEmptyObject
-			? []
-			: (allowedMentions.parse ?? (hasExplicitLists ? [] : ALLOWED_MENTIONS_PARSE));
+		let parse: Readonly<NonNullable<AllowedMentionsRequest['parse']>> = [];
+		if (!isExplicitlyEmptyObject) {
+			parse = allowedMentions.parse ?? (hasExplicitLists ? [] : ALLOWED_MENTIONS_PARSE);
+		}
 		const users = allowedMentions.users ?? [];
 		const roles = allowedMentions.roles ?? [];
 		const hasExplicitParse = allowedMentions.parse !== undefined;
@@ -483,7 +486,7 @@ export class MessageMentionService {
 		mentionHere?: boolean;
 	}): Promise<void> {
 		const {guildId, message, authorId, mentionHere = false} = params;
-		if (isPersonalNotesChannel({userId: authorId, channelId: message.channelId})) return;
+		if (isPersonalNotesChannelId({userId: authorId, channelId: message.channelId})) return;
 		const mentionUserIds = Array.from(message.mentionedUserIds ?? []);
 		const mentionRoleIds = Array.from(message.mentionedRoleIds ?? []);
 		const mentionEveryone = message.mentionEveryone && !mentionHere;

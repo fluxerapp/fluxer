@@ -6,8 +6,9 @@ import {ConnectionService} from '@app/api/connection/ConnectionService';
 import {ConnectionLimitReachedError} from '@app/api/connection/errors/ConnectionLimitReachedError';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
-import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {NoopUnfurlerService} from '@app/api/test/mocks/NoopUnfurlerService';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
 	ConnectionTypes,
@@ -53,7 +54,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(repository, {} as unknown as IGatewayService);
+		const service = new ConnectionService(repository, new NoopGatewayService(), new NoopUnfurlerService());
 
 		const error = await service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'over-the-limit.example').then(
 			() => null,
@@ -73,7 +74,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER - 1; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(repository, {} as unknown as IGatewayService);
+		const service = new ConnectionService(repository, new NoopGatewayService(), new NoopUnfurlerService());
 
 		await expect(
 			service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'under-the-limit.example'),

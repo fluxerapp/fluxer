@@ -30,6 +30,7 @@ const METHOD_NOT_ALLOWED_HEADERS: Readonly<Record<string, string>> = Object.free
 
 export interface LocalAppIndexContext {
 	readonly prebootTheme: string | null;
+	readonly productName: string | null;
 	readonly cleartextInstanceOrigins?: ReadonlyArray<string>;
 }
 
@@ -146,6 +147,7 @@ export class DesktopLocalAppFileRequestHandler {
 			html: file.contents.toString('utf8'),
 			nonce,
 			prebootTheme: context.prebootTheme,
+			productName: context.productName,
 		});
 		headers.set(
 			'Content-Security-Policy',

@@ -1,0 +1,875 @@
+[
+  {
+    "key": "accounts.date_of_birth",
+    "type": "string",
+    "help": "Whether the instance asks for a date of birth, and who must enter one",
+    "options": [
+      "off",
+      "ask",
+      "require_new_accounts",
+      "require_all"
+    ]
+  },
+  {
+    "key": "accounts.dob_missing_cleanup.inactive_days",
+    "type": "integer",
+    "help": "Days without use before such an account is deleted"
+  },
+  {
+    "key": "accounts.dob_missing_cleanup.mode",
+    "type": "string",
+    "help": "Whether accounts that were created without a date of birth and never entered one are deleted",
+    "options": [
+      "off",
+      "after_inactivity"
+    ]
+  },
+  {
+    "key": "accounts.guild_join_gate",
+    "type": "string",
+    "help": "When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities",
+    "options": [
+      "off",
+      "visits_capable",
+      "always"
+    ]
+  },
+  {
+    "key": "accounts.inactivity_deletion.inactive_days",
+    "type": "integer",
+    "help": "Days without use before the warning email is sent"
+  },
+  {
+    "key": "accounts.inactivity_deletion.mode",
+    "type": "string",
+    "help": "Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it",
+    "options": [
+      "off",
+      "after_inactivity"
+    ]
+  },
+  {
+    "key": "accounts.inactivity_deletion.warning_lead_days",
+    "type": "integer",
+    "help": "Days between the warning email and the deletion"
+  },
+  {
+    "key": "accounts.interaction_tier",
+    "type": "string",
+    "help": "Which limits apply to accounts that have not finished setting up",
+    "options": [
+      "legacy",
+      "enforced"
+    ]
+  },
+  {
+    "key": "accounts.unclaimed_account_cleanup.inactive_days",
+    "type": "integer",
+    "help": "Days without use before such an account is deleted"
+  },
+  {
+    "key": "accounts.unclaimed_account_cleanup.mode",
+    "type": "string",
+    "help": "Whether accounts that can never be signed in to again are deleted",
+    "options": [
+      "off",
+      "after_inactivity"
+    ]
+  },
+  {
+    "key": "accounts.unclaimed_account_cleanup.on_last_session_end",
+    "type": "string",
+    "help": "What happens when an account with no way back in signs out of its last session",
+    "options": [
+      "off",
+      "after_grace"
+    ]
+  },
+  {
+    "key": "accounts.verification_basis",
+    "type": "string",
+    "help": "What an account needs to finish setting up",
+    "options": [
+      "auto",
+      "confirmed_email",
+      "local_credential"
+    ]
+  },
+  {
+    "key": "app_public.branding.custom_css",
+    "type": "string",
+    "help": "Branding custom CSS",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.favicon_dark_url",
+    "type": "string",
+    "help": "Branding favicon dark URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.favicon_url",
+    "type": "string",
+    "help": "Branding favicon URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.icon_url",
+    "type": "string",
+    "help": "Branding icon URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.logo_url",
+    "type": "string",
+    "help": "Branding logo URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.premium_info_url",
+    "type": "string",
+    "help": "Branding premium info URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.premium_product_name",
+    "type": "string",
+    "help": "Branding premium product name",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.product_name",
+    "type": "string",
+    "help": "Branding product name"
+  },
+  {
+    "key": "app_public.branding.sign_in_backdrop_url",
+    "type": "string",
+    "help": "Branding sign in backdrop URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.status_page_incident_history_url",
+    "type": "string",
+    "help": "Branding status page incident history URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.status_page_url",
+    "type": "string",
+    "help": "Branding status page URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.symbol_url",
+    "type": "string",
+    "help": "Branding symbol URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.theme_color",
+    "type": "string",
+    "help": "Branding theme color",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.trusted_domains",
+    "type": "list",
+    "help": "Branding trusted domains",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.upload_limit_message",
+    "type": "string",
+    "help": "Branding upload limit message",
+    "nullable": true
+  },
+  {
+    "key": "app_public.branding.wordmark_url",
+    "type": "string",
+    "help": "Branding wordmark URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.legal.guidelines_url",
+    "type": "string",
+    "help": "Legal guidelines URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.legal.privacy_url",
+    "type": "string",
+    "help": "Legal privacy URL",
+    "nullable": true
+  },
+  {
+    "key": "app_public.legal.terms_url",
+    "type": "string",
+    "help": "Legal terms URL",
+    "nullable": true
+  },
+  {
+    "key": "auth.identifier_first",
+    "type": "string",
+    "help": "Whether clients show the single sign-in entry that starts with an email",
+    "options": [
+      "auto",
+      "on",
+      "off"
+    ]
+  },
+  {
+    "key": "auth.instant_accounts.enabled",
+    "type": "boolean",
+    "help": "Whether accounts can be created from just a display name. Needs the captcha to be on"
+  },
+  {
+    "key": "auth.instant_accounts.pow_escalation_per_hour",
+    "type": "integer",
+    "help": "Every this many accounts created from a display name in the current hour doubles the captcha cost"
+  },
+  {
+    "key": "billing.automatic_tax",
+    "type": "boolean",
+    "help": "Billing automatic tax",
+    "nullable": true
+  },
+  {
+    "key": "billing.billing_emails",
+    "type": "boolean",
+    "help": "Billing billing emails",
+    "nullable": true
+  },
+  {
+    "key": "billing.country_currencies",
+    "type": "json",
+    "help": "Billing country currencies",
+    "nullable": true
+  },
+  {
+    "key": "billing.default_currency",
+    "type": "string",
+    "help": "Billing default currency",
+    "nullable": true
+  },
+  {
+    "key": "billing.enabled",
+    "type": "boolean",
+    "help": "Billing enabled",
+    "nullable": true
+  },
+  {
+    "key": "billing.legacy_prices",
+    "type": "json",
+    "help": "Billing legacy prices",
+    "nullable": true
+  },
+  {
+    "key": "billing.prices",
+    "type": "json",
+    "help": "Billing prices",
+    "nullable": true
+  },
+  {
+    "key": "billing.stripe_secret_key",
+    "type": "secret",
+    "help": "Billing stripe secret key",
+    "secret_set": "billing.stripe_secret_key_set",
+    "nullable": true
+  },
+  {
+    "key": "billing.stripe_webhook_secret",
+    "type": "secret",
+    "help": "Billing stripe webhook secret",
+    "secret_set": "billing.stripe_webhook_secret_set",
+    "nullable": true
+  },
+  {
+    "key": "billing.tax_id_collection",
+    "type": "boolean",
+    "help": "Billing tax ID collection",
+    "nullable": true
+  },
+  {
+    "key": "billing.terms_consent_required",
+    "type": "boolean",
+    "help": "Billing terms consent required",
+    "nullable": true
+  },
+  {
+    "key": "captcha.cost",
+    "type": "integer",
+    "help": "Captcha cost"
+  },
+  {
+    "key": "captcha.max_counter",
+    "type": "integer",
+    "help": "Captcha max counter"
+  },
+  {
+    "key": "captcha.provider",
+    "type": "string",
+    "help": "Captcha the instance asks for",
+    "options": [
+      "none",
+      "altcha"
+    ]
+  },
+  {
+    "key": "domain_migration.anonymous_rollout_basis_points",
+    "type": "integer",
+    "help": "Domain migration anonymous rollout basis points"
+  },
+  {
+    "key": "domain_migration.enabled",
+    "type": "boolean",
+    "help": "Domain migration enabled"
+  },
+  {
+    "key": "domain_migration.excluded_user_ids",
+    "type": "list",
+    "help": "Domain migration excluded user IDs"
+  },
+  {
+    "key": "domain_migration.include_premium_users",
+    "type": "boolean",
+    "help": "Domain migration include premium users"
+  },
+  {
+    "key": "domain_migration.included_guild_ids",
+    "type": "list",
+    "help": "Domain migration included guild IDs"
+  },
+  {
+    "key": "domain_migration.included_user_ids",
+    "type": "list",
+    "help": "Domain migration included user IDs"
+  },
+  {
+    "key": "domain_migration.rollout_basis_points",
+    "type": "integer",
+    "help": "Domain migration rollout basis points"
+  },
+  {
+    "key": "domain_migration.rollout_country_codes",
+    "type": "list",
+    "help": "Domain migration rollout country codes"
+  },
+  {
+    "key": "domain_migration.rollout_salt",
+    "type": "string",
+    "help": "Domain migration rollout salt"
+  },
+  {
+    "key": "domain_migration.standalone_forwarding",
+    "type": "boolean",
+    "help": "Domain migration standalone forwarding"
+  },
+  {
+    "key": "experiment_delivery.poll_interval_seconds",
+    "type": "integer",
+    "help": "Experiment delivery poll interval seconds"
+  },
+  {
+    "key": "experiment_delivery.poll_jitter_percent",
+    "type": "integer",
+    "help": "Experiment delivery poll jitter percent"
+  },
+  {
+    "key": "gateway_rollout.gateway_dispatch_relay_max_queue",
+    "type": "integer",
+    "help": "Gateway rollout gateway dispatch relay max queue"
+  },
+  {
+    "key": "gateway_rollout.gateway_dispatch_relay_shards",
+    "type": "integer",
+    "help": "Gateway rollout gateway dispatch relay shards"
+  },
+  {
+    "key": "gateway_rollout.guild_rollout_percentage",
+    "type": "number",
+    "help": "Gateway rollout guild rollout percentage"
+  },
+  {
+    "key": "gateway_rollout.max_concurrent_guild_starts",
+    "type": "integer",
+    "help": "Gateway rollout max concurrent guild starts"
+  },
+  {
+    "key": "gateway_rollout.max_concurrent_session_starts",
+    "type": "integer",
+    "help": "Gateway rollout max concurrent session starts"
+  },
+  {
+    "key": "gateway_rollout.rpc_request_timeout_ms",
+    "type": "integer",
+    "help": "Gateway rollout RPC request timeout ms"
+  },
+  {
+    "key": "gateway_rollout.session_rollout_mode",
+    "type": "string",
+    "help": "Gateway rollout session rollout mode",
+    "options": [
+      "modulo",
+      "random"
+    ]
+  },
+  {
+    "key": "gateway_rollout.session_rollout_percentage",
+    "type": "number",
+    "help": "Gateway rollout session rollout percentage"
+  },
+  {
+    "key": "gateway_rollout.voice_e2ee_scope",
+    "type": "string",
+    "help": "Gateway rollout voice E2EE scope",
+    "options": [
+      "guild_feature_only",
+      "platform_wide"
+    ]
+  },
+  {
+    "key": "guild_visits.enabled",
+    "type": "boolean",
+    "help": "Kill switch for visiting communities without joining"
+  },
+  {
+    "key": "guild_visits.excluded_user_ids",
+    "type": "list",
+    "help": "People never assigned, checked before the included list"
+  },
+  {
+    "key": "guild_visits.included_user_ids",
+    "type": "list",
+    "help": "People always assigned"
+  },
+  {
+    "key": "guild_visits.user_basis_points",
+    "type": "integer",
+    "help": "Share of people assigned, in basis points"
+  },
+  {
+    "key": "guild_visits.user_salt",
+    "type": "string",
+    "help": "Salt for the assignment bucket"
+  },
+  {
+    "key": "integrations.bluesky.client_name",
+    "type": "string",
+    "help": "Bluesky client name",
+    "nullable": true
+  },
+  {
+    "key": "integrations.bluesky.client_uri",
+    "type": "string",
+    "help": "Bluesky client URI",
+    "nullable": true
+  },
+  {
+    "key": "integrations.bluesky.enabled",
+    "type": "boolean",
+    "help": "Bluesky enabled",
+    "nullable": true
+  },
+  {
+    "key": "integrations.bluesky.keys",
+    "type": "json",
+    "help": "Bluesky keys"
+  },
+  {
+    "key": "integrations.bluesky.logo_uri",
+    "type": "string",
+    "help": "Bluesky logo URI",
+    "nullable": true
+  },
+  {
+    "key": "integrations.bluesky.policy_uri",
+    "type": "string",
+    "help": "Bluesky policy URI",
+    "nullable": true
+  },
+  {
+    "key": "integrations.bluesky.tos_uri",
+    "type": "string",
+    "help": "Bluesky terms URI",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.delivery",
+    "type": "string",
+    "help": "How the instance sends email, or null to use the environment",
+    "options": [
+      "off",
+      "smtp"
+    ],
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.disable_new_ip_authorization",
+    "type": "boolean",
+    "help": "Email disable new IP authorization",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.from_email",
+    "type": "string",
+    "help": "Email from email",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.from_name",
+    "type": "string",
+    "help": "Email from name",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.smtp.host",
+    "type": "string",
+    "help": "SMTP host",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.smtp.password",
+    "type": "secret",
+    "help": "SMTP password",
+    "secret_set": "integrations.email.smtp.password_set",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.smtp.port",
+    "type": "integer",
+    "help": "SMTP port",
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.smtp.tls_mode",
+    "type": "string",
+    "help": "How the SMTP connection is encrypted",
+    "options": [
+      "implicit",
+      "starttls",
+      "opportunistic",
+      "none"
+    ],
+    "nullable": true
+  },
+  {
+    "key": "integrations.email.smtp.username",
+    "type": "string",
+    "help": "SMTP username",
+    "nullable": true
+  },
+  {
+    "key": "integrations.gif.klipy_api_key",
+    "type": "secret",
+    "help": "GIF klipy API key",
+    "secret_set": "integrations.gif.klipy_api_key_set",
+    "nullable": true
+  },
+  {
+    "key": "integrations.youtube.api_key",
+    "type": "secret",
+    "help": "Youtube API key",
+    "secret_set": "integrations.youtube.api_key_set",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.curve",
+    "type": "number",
+    "help": "Attachment decay curve",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.enabled",
+    "type": "boolean",
+    "help": "Attachment decay enabled",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.max_eligible_size_mb",
+    "type": "number",
+    "help": "Attachment decay max eligible size MB",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.max_lifetime_days",
+    "type": "integer",
+    "help": "Attachment decay max lifetime days",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.max_size_mb",
+    "type": "number",
+    "help": "Attachment decay max size MB",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.min_lifetime_days",
+    "type": "integer",
+    "help": "Attachment decay min lifetime days",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.min_size_mb",
+    "type": "number",
+    "help": "Attachment decay min size MB",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.renew_threshold_days",
+    "type": "integer",
+    "help": "Attachment decay renew threshold days",
+    "nullable": true
+  },
+  {
+    "key": "media.attachment_decay.renew_window_days",
+    "type": "integer",
+    "help": "Attachment decay renew window days",
+    "nullable": true
+  },
+  {
+    "key": "notice",
+    "type": "json",
+    "help": "Notice shown to everyone on the instance, such as planned maintenance",
+    "nullable": true
+  },
+  {
+    "key": "policy.direct_messages_disabled",
+    "type": "boolean",
+    "help": "Policy direct messages disabled"
+  },
+  {
+    "key": "policy.direct_messages_locked",
+    "type": "boolean",
+    "help": "Policy direct messages locked"
+  },
+  {
+    "key": "policy.friends_disabled",
+    "type": "boolean",
+    "help": "Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value"
+  },
+  {
+    "key": "policy.guild_create_access",
+    "type": "boolean",
+    "help": "Policy guild create access"
+  },
+  {
+    "key": "policy.personal_notes_enabled",
+    "type": "boolean",
+    "help": "Whether people can use personal notes. Off by default on self-hosted instances"
+  },
+  {
+    "key": "policy.premium_mode",
+    "type": "string",
+    "help": "Policy premium mode",
+    "options": [
+      "mirror",
+      "everyone"
+    ]
+  },
+  {
+    "key": "policy.services.bluesky_enabled",
+    "type": "boolean",
+    "help": "Services bluesky enabled",
+    "nullable": true
+  },
+  {
+    "key": "policy.services.gif_enabled",
+    "type": "boolean",
+    "help": "Services GIF enabled",
+    "nullable": true
+  },
+  {
+    "key": "policy.services.youtube_enabled",
+    "type": "boolean",
+    "help": "Services youtube enabled",
+    "nullable": true
+  },
+  {
+    "key": "policy.single_community_add_members",
+    "type": "boolean",
+    "help": "Also add every existing account to the single community in the background"
+  },
+  {
+    "key": "policy.single_community_enabled",
+    "type": "boolean",
+    "help": "Policy single community enabled"
+  },
+  {
+    "key": "policy.single_community_guild_id",
+    "type": "string",
+    "help": "ID of an existing community to use as the single community. Turns the mode on with that community, or moves it there while the mode is on"
+  },
+  {
+    "key": "policy.single_community_name",
+    "type": "string",
+    "help": "Policy single community name"
+  },
+  {
+    "key": "push_relay.relay_consent_accepted",
+    "type": "boolean",
+    "help": "Push relay relay consent accepted"
+  },
+  {
+    "key": "registration.admin_registration_urls_enabled",
+    "type": "boolean",
+    "help": "Registration admin registration URLs enabled"
+  },
+  {
+    "key": "registration.allowed_email_domains",
+    "type": "list",
+    "help": "Email domains that public sign-ups and email changes must use. Empty allows any domain"
+  },
+  {
+    "key": "registration.mode",
+    "type": "string",
+    "help": "Registration mode",
+    "options": [
+      "open",
+      "approval",
+      "closed"
+    ]
+  },
+  {
+    "key": "sso.allowed_domains",
+    "type": "list",
+    "help": "SSO allowed domains"
+  },
+  {
+    "key": "sso.authorization_url",
+    "type": "string",
+    "help": "SSO authorization URL",
+    "nullable": true
+  },
+  {
+    "key": "sso.auto_provision",
+    "type": "boolean",
+    "help": "SSO auto provision"
+  },
+  {
+    "key": "sso.button_label",
+    "type": "string",
+    "help": "Text for the sign-in button. Trimmed, then up to 64 UTF-16 code units with at least one visible character and no control characters, line breaks or bidirectional formatting characters. Empty or null uses the default label",
+    "nullable": true
+  },
+  {
+    "key": "sso.client_id",
+    "type": "string",
+    "help": "SSO client ID",
+    "nullable": true
+  },
+  {
+    "key": "sso.client_secret",
+    "type": "secret",
+    "help": "SSO client secret",
+    "secret_set": "sso.client_secret_set",
+    "nullable": true
+  },
+  {
+    "key": "sso.display_name",
+    "type": "string",
+    "help": "SSO display name",
+    "nullable": true
+  },
+  {
+    "key": "sso.enabled",
+    "type": "boolean",
+    "help": "SSO enabled"
+  },
+  {
+    "key": "sso.enforced",
+    "type": "boolean",
+    "help": "SSO enforced"
+  },
+  {
+    "key": "sso.group_role_mappings",
+    "type": "json",
+    "help": "Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in"
+  },
+  {
+    "key": "sso.groups_claim",
+    "type": "string",
+    "help": "The claim that lists the groups of a member. Empty or null uses `groups`",
+    "nullable": true
+  },
+  {
+    "key": "sso.issuer",
+    "type": "string",
+    "help": "SSO issuer",
+    "nullable": true
+  },
+  {
+    "key": "sso.jwks_url",
+    "type": "string",
+    "help": "SSO JWKS URL",
+    "nullable": true
+  },
+  {
+    "key": "sso.scope",
+    "type": "string",
+    "help": "SSO scope",
+    "nullable": true
+  },
+  {
+    "key": "sso.token_url",
+    "type": "string",
+    "help": "SSO token URL",
+    "nullable": true
+  },
+  {
+    "key": "sso.userinfo_url",
+    "type": "string",
+    "help": "SSO userinfo URL",
+    "nullable": true
+  },
+  {
+    "key": "sso.username_from_provider",
+    "type": "boolean",
+    "help": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+  },
+  {
+    "key": "voice_p2p.enabled",
+    "type": "boolean",
+    "help": "Voice P2P enabled"
+  },
+  {
+    "key": "voice_p2p.excluded_user_ids",
+    "type": "list",
+    "help": "Voice P2P excluded user IDs"
+  },
+  {
+    "key": "voice_p2p.include_premium_users",
+    "type": "boolean",
+    "help": "Voice P2P include premium users"
+  },
+  {
+    "key": "voice_p2p.included_guild_ids",
+    "type": "list",
+    "help": "Voice P2P included guild IDs"
+  },
+  {
+    "key": "voice_p2p.included_user_ids",
+    "type": "list",
+    "help": "Voice P2P included user IDs"
+  },
+  {
+    "key": "voice_p2p.max_participants",
+    "type": "integer",
+    "help": "Voice P2P max participants"
+  },
+  {
+    "key": "voice_p2p.rollout_basis_points",
+    "type": "integer",
+    "help": "Voice P2P rollout basis points"
+  },
+  {
+    "key": "voice_p2p.rollout_country_codes",
+    "type": "list",
+    "help": "Voice P2P rollout country codes"
+  },
+  {
+    "key": "voice_p2p.rollout_salt",
+    "type": "string",
+    "help": "Voice P2P rollout salt"
+  }
+]

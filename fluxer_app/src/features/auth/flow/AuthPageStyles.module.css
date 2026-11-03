@@ -53,6 +53,10 @@
 	flex-direction: column;
 }
 
+.loginHeader {
+	margin-bottom: 1.25rem;
+}
+
 .entityHeader {
 	display: flex;
 	flex-direction: column;
@@ -157,7 +161,7 @@ img.entityIcon {
 .themeIcon {
 	height: 2.5rem;
 	width: 2.5rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .form {
@@ -181,7 +185,7 @@ img.entityIcon {
 
 .bottomLink {
 	margin-top: 1rem;
-	text-align: left;
+	text-align: start;
 }
 
 .bottomLinkText {
@@ -229,20 +233,20 @@ img.entityIcon {
 	margin-top: 0.25rem;
 	display: block;
 	font-size: 0.75rem;
-	color: var(--status-danger);
+	color: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 }
 
-.consentRow {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.5rem;
-}
-
-.consentLabel {
-	padding-top: 0.125rem;
+.legalNotice {
+	margin: 0;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.legalNotice .policyLink {
+	text-decoration: underline;
+	text-underline-offset: 0.125rem;
 }
 
 .policyLink {
@@ -326,4 +330,12 @@ img.entityIcon {
 	font-size: 0.875rem;
 	line-height: 1.5;
 	color: var(--text-tertiary);
+}
+
+.consentLine {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	text-align: center;
 }

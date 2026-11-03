@@ -89,6 +89,7 @@ export class ChannelDataService {
 			channelRepository,
 			userRepository,
 			gatewayService,
+			userCacheService,
 			this.auth,
 			this.utils,
 			voiceRoomStore,
@@ -120,6 +121,7 @@ export class ChannelDataService {
 			snowflakeService,
 			this.utils,
 			messagePersistenceService,
+			gatewayService,
 		);
 	}
 
@@ -168,7 +170,6 @@ export class ChannelDataService {
 				authChannel,
 				userId,
 				data: data as Omit<ChannelUpdateThreadRequest, 'type'>,
-				requestCache,
 				auditLogReason,
 			});
 		}

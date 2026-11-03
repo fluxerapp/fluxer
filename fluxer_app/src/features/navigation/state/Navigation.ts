@@ -18,7 +18,6 @@ class Navigation {
 	threadId: string | null = null;
 	threadMessageId: string | null = null;
 	private router: Router | null = null;
-	private unsubscribe: (() => void) | null = null;
 	currentLocation: URL | null = null;
 
 	constructor() {
@@ -28,7 +27,7 @@ class Navigation {
 	initialize(router: Router): void {
 		this.router = router;
 		this.updateFromRouter();
-		this.unsubscribe = this.router.subscribe(() => {
+		this.router.subscribe(() => {
 			this.updateFromRouter();
 		});
 	}
@@ -138,14 +137,6 @@ class Navigation {
 		} else {
 			RouterUtils.transitionTo(path);
 		}
-	}
-
-	destroy(): void {
-		if (this.unsubscribe) {
-			this.unsubscribe();
-			this.unsubscribe = null;
-		}
-		this.router = null;
 	}
 }
 

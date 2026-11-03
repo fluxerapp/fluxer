@@ -20,6 +20,7 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	canSelectManualAudioSources,
+	canSelectWindowsDesktopAudioSource,
 	manualAudioSourcesGovernShare,
 	resolveWindowShareAudioScope,
 	type ScreenShareAudioSourceMode,
@@ -76,6 +77,7 @@ interface StreamSettingsAudioControlViewState {
 export interface StreamSettingsAudioMenuViewState {
 	control: StreamSettingsAudioControlViewState;
 	showManualAudioSources: boolean;
+	showWindowsAudioSourceMenu: boolean;
 	showDeviceAudioMenu: boolean;
 }
 
@@ -204,6 +206,14 @@ export function selectStreamSettingsAudioMenuState(
 				platform: signals.platform,
 				nativeAudioAvailability: signals.nativeAudioAvailability,
 			}),
+		showWindowsAudioSourceMenu:
+			signals.supportsStreamAudio &&
+			signals.captureAudioEnabled &&
+			canSelectWindowsDesktopAudioSource({
+				platform: signals.platform,
+				shareContext: signals.shareContext,
+				nativeAudioAvailability: signals.nativeAudioAvailability,
+			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,
 	};
 }
@@ -213,14 +223,14 @@ export type StreamSettingsQualityWrite =
 	| {kind: 'premium'}
 	| {kind: 'write'; patch: ScreenShareQualityPatch};
 
-export interface StreamSettingsQualitySignals {
+interface StreamSettingsQualitySignals {
 	quality: ScreenShareQualityInput;
 	pick: ScreenShareQualityPick;
 	premiumOption: boolean;
 	showPremiumFeatures: boolean;
 }
 
-export function selectStreamSettingsQualityWrite(signals: StreamSettingsQualitySignals): StreamSettingsQualityWrite {
+function selectStreamSettingsQualityWrite(signals: StreamSettingsQualitySignals): StreamSettingsQualityWrite {
 	if (signals.premiumOption && !signals.quality.entitled) {
 		return signals.showPremiumFeatures ? {kind: 'premium'} : {kind: 'none'};
 	}

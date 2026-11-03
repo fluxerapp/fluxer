@@ -12,7 +12,7 @@
 .icon {
 	flex-shrink: 0;
 	margin-top: 0.125rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .content {
@@ -25,7 +25,7 @@
 
 .text {
 	font-size: 0.8125rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	margin: 0;
 	line-height: 1.4;
 }
@@ -40,7 +40,7 @@
 
 .dismissLink {
 	font-size: 0.75rem;
-	color: rgba(255, 255, 255, 0.7);
+	color: color-mix(in srgb, var(--brand-primary-fill) 70%, transparent);
 	background: none;
 	border: none;
 	padding: 0;
@@ -49,6 +49,6 @@
 }
 
 .dismissLink:hover {
-	color: white;
+	color: var(--brand-primary-fill);
 	text-decoration: underline;
 }

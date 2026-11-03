@@ -40,7 +40,7 @@ import {
 	UserAccountRepository,
 	type UserDeletionScheduleUpdate,
 } from '@app/api/user/repositories/account/UserAccountRepository';
-import {UserDeletionRepository} from '@app/api/user/repositories/account/UserDeletionRepository';
+
 import {UserGuildRepository} from '@app/api/user/repositories/account/UserGuildRepository';
 import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
@@ -67,7 +67,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 export class UserRepository {
 	private accountRepo: UserAccountRepository;
 	private lookupRepo: UserLookupRepository;
-	private deletionRepo = new UserDeletionRepository();
+
 	private guildRepo = new UserGuildRepository();
 	private tokenRepo = new TokenRepository();
 	private settingsRepo = new UserSettingsRepository();
@@ -95,16 +95,16 @@ export class UserRepository {
 		return this.accountRepo.create(data);
 	}
 
-	async upsert(data: UserRow, oldData?: UserRow | null): Promise<User> {
-		return this.accountRepo.upsert(data, oldData);
-	}
-
 	async patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User> {
 		return this.accountRepo.patchUpsert(userId, patchData, oldData);
 	}
 
 	async compareAndSetFlags(user: User, flags: bigint): Promise<User | null> {
 		return this.accountRepo.compareAndSetFlags(user, flags);
+	}
+
+	async moveLegacyBadgeHideBits(userId: UserID, options: {mergeIntoHiddenList: boolean}): Promise<User | null> {
+		return this.accountRepo.moveLegacyBadgeHideBits(userId, options);
 	}
 
 	async updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null> {
@@ -125,6 +125,10 @@ export class UserRepository {
 
 	async completeDeletion(user: User): Promise<void> {
 		return this.accountRepo.completeDeletion(user);
+	}
+
+	async scrubDeletedUser(user: User): Promise<boolean> {
+		return this.accountRepo.scrubDeletedUser(user);
 	}
 
 	async findUnique(userId: UserID): Promise<User | null> {
@@ -157,6 +161,10 @@ export class UserRepository {
 
 	async findByStripeCustomerId(stripeCustomerId: string): Promise<User | null> {
 		return this.lookupRepo.findByStripeCustomerId(stripeCustomerId);
+	}
+
+	async listUserIdsWithAcl(acl: string): Promise<Array<UserID>> {
+		return this.lookupRepo.listUserIdsWithAcl(acl);
 	}
 
 	async listUserIdsByLastActiveIp(
@@ -196,25 +204,8 @@ export class UserRepository {
 		return result ?? {last_active_at: null, last_active_ip: null};
 	}
 
-	async addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void> {
-		return this.deletionRepo.addPendingDeletion(userId, pendingDeletionAt, deletionReasonCode);
-	}
-
-	async removePendingDeletion(userId: UserID, pendingDeletionAt: Date): Promise<void> {
-		return this.deletionRepo.removePendingDeletion(userId, pendingDeletionAt);
-	}
-
-	async findUsersPendingDeletionByDate(deletionDate: string): Promise<
-		Array<{
-			user_id: bigint;
-			deletion_reason_code: number;
-		}>
-	> {
-		return this.deletionRepo.findUsersPendingDeletionByDate(deletionDate);
-	}
-
-	async scheduleDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void> {
-		return this.deletionRepo.scheduleDeletion(userId, pendingDeletionAt, deletionReasonCode);
+	async indexUserAcls(user: User): Promise<void> {
+		return this.accountRepo.indexUserAcls(user);
 	}
 
 	async deleteUserSecondaryIndices(userId: UserID): Promise<void> {
@@ -223,10 +214,6 @@ export class UserRepository {
 
 	async removeFromAllGuilds(userId: UserID): Promise<void> {
 		return this.guildRepo.removeFromAllGuilds(userId);
-	}
-
-	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<void> {
-		return this.accountRepo.updateLastActiveAt(params);
 	}
 
 	async updateSubscriptionStatus(
@@ -246,8 +233,8 @@ export class UserRepository {
 		return this.settingsRepo.findSettings(userId);
 	}
 
-	async upsertSettings(settings: UserSettingsRow): Promise<UserSettings> {
-		return this.settingsRepo.upsertSettings(settings);
+	async upsertSettings(settings: UserSettingsRow, base?: UserSettingsRow): Promise<UserSettings> {
+		return this.settingsRepo.upsertSettings(settings, base);
 	}
 
 	async deleteUserSettings(userId: UserID): Promise<void> {
@@ -278,6 +265,14 @@ export class UserRepository {
 		return this.authSessionRepository.listAuthSessions(userId);
 	}
 
+	async listAuthSessionsByAppChannel(params: {
+		platform: string;
+		releaseChannel: string;
+		after: Buffer | null;
+	}): Promise<{sessions: Array<AuthSession>; nextCursor: Buffer | null}> {
+		return this.authSessionRepository.listAuthSessionsByAppChannel(params);
+	}
+
 	async listAuthSessionTombstones(userId: UserID): Promise<Array<AuthSessionTombstone>> {
 		return this.authSessionRepository.listAuthSessionTombstones(userId);
 	}
@@ -288,12 +283,6 @@ export class UserRepository {
 
 	async createAuthSession(sessionData: AuthSessionRow): Promise<AuthSession> {
 		return this.authSessionRepository.createAuthSession(sessionData);
-	}
-
-	async updateAuthSessionLastUsed(sessionIdHash: Buffer): Promise<void> {
-		const session = await this.authSessionRepository.getAuthSessionByToken(sessionIdHash);
-		if (!session) return;
-		await this.authSessionRepository.updateAuthSessionLastUsed(sessionIdHash);
 	}
 
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {
@@ -518,16 +507,8 @@ export class UserRepository {
 		return this.channelRepo.listHistoricalDmChannelsPaginated(userId, options);
 	}
 
-	async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
-		return this.channelRepo.recordHistoricalDmChannel(userId, channelId, isGroupDm);
-	}
-
 	async listPrivateChannelSummaries(userId: UserID): Promise<Array<PrivateChannelSummary>> {
 		return this.channelRepo.listPrivateChannelSummaries(userId);
-	}
-
-	async deleteAllPrivateChannels(userId: UserID): Promise<void> {
-		return this.channelRepo.deleteAllPrivateChannels(userId);
 	}
 
 	async findExistingDmState(user1Id: UserID, user2Id: UserID): Promise<Channel | null> {
@@ -544,10 +525,6 @@ export class UserRepository {
 
 	async isDmChannelOpen(userId: UserID, channelId: ChannelID): Promise<boolean> {
 		return this.channelRepo.isDmChannelOpen(userId, channelId);
-	}
-
-	async openDmForUser(userId: UserID, channelId: ChannelID, isGroupDm?: boolean): Promise<void> {
-		return this.channelRepo.openDmForUser(userId, channelId, isGroupDm);
 	}
 
 	async openPrivateChannelForUser(userId: UserID, channel: Channel): Promise<void> {
@@ -721,21 +698,7 @@ export class UserRepository {
 		return this.pushSubscriptionRepository.deleteAllPushSubscriptions(userId);
 	}
 
-	async createPayment(data: {
-		checkout_session_id: string;
-		user_id: UserID;
-		price_id: string;
-		product_type: string;
-		status: string;
-		is_gift: boolean;
-		created_at: Date;
-		purchase_geoip_country_code?: string | null;
-		purchase_client_country_code?: string | null;
-		eu_withdrawal_waiver_required?: boolean;
-		eu_withdrawal_waiver_accepted?: boolean;
-		eu_withdrawal_waiver_accepted_at?: Date | null;
-		eu_withdrawal_waiver_text_version?: string | null;
-	}): Promise<void> {
+	async createPayment(data: Parameters<PaymentRepository['createPayment']>[0]): Promise<void> {
 		return this.paymentRepository.createPayment(data);
 	}
 

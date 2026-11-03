@@ -5,12 +5,13 @@ import path from 'node:path';
 import {getDesktopWindowBehaviorSettings, loadDesktopConfig} from '@electron/common/DesktopConfig';
 import {
 	DESKTOP_APP_NAME,
-	LINUX_DESKTOP_ENTRY_ID,
 	WINDOWS_APP_USER_MODEL_ID,
 	WINDOWS_TOAST_ACTIVATOR_CLSID,
 } from '@electron/common/DesktopIdentity';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {writeLogFilesUnder} from '@electron/common/Logger';
 import {configureUserDataPath} from '@electron/common/UserDataPath';
+import {startAccountEngine, stopAccountEngine} from '@electron/main/AccountEngineIpc';
 import {
 	APP_STORE_ADDON_PACKAGE,
 	createAppStoreBoundary,
@@ -73,7 +74,7 @@ import {
 	registerIpcHandlers,
 } from '@electron/main/IpcHandlers';
 import {initializeJumpList} from '@electron/main/JumpList';
-import {describeLaunchDiagnosticOptions} from '@electron/main/LaunchOptions';
+import {describeLaunchDiagnosticOptions, shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {cleanupLegacyHarvestHandlers, registerLegacyHarvestHandlers} from '@electron/main/LegacyHarvestIpc';
 import {initializeLegacyOriginHarvest} from '@electron/main/LegacyOriginHarvest';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
@@ -84,6 +85,7 @@ import {createApplicationMenu} from '@electron/main/Menu';
 import {
 	armOpenUrlForwarding,
 	armSecondInstanceForwarding,
+	hasQuitStarted,
 	setMainWindowFactory,
 	setOpenUrlSink,
 	setSecondInstanceSink,
@@ -96,6 +98,7 @@ import {
 import {type NativeModulePreflightResult, runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
 import {armNativeProbeCache} from '@electron/main/NativeProbeCache';
 import {applyPreReadyChromiumConfiguration} from '@electron/main/PreReadyChromium';
+import {settleShutdownCleanups} from '@electron/main/ShutdownCleanup';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {
 	clearSavedWindowBounds,
@@ -264,7 +267,7 @@ if (launchConfigurationError) {
 			writeCliAndExit(process.stdout, formatDesktopDebugInfo(info), 0);
 		})
 		.catch((error: unknown) => {
-			const message = error instanceof Error ? error.message : String(error);
+			const message = errorMessage(error);
 			log.error('Failed to collect desktop debug info:', error);
 			writeCliAndExit(process.stderr, `Failed to collect Fluxer desktop debug info: ${message}`, 1);
 		});
@@ -331,7 +334,7 @@ if (launchConfigurationError) {
 	try {
 		nativeModulePreflight = runStartupPhase('native-module-preflight', runNativeModulePreflight);
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = errorMessage(error);
 		log.error('[NativeModulePreflight] Fatal native module preflight failure:', error);
 		console.error(message);
 		try {
@@ -382,12 +385,16 @@ if (launchConfigurationError) {
 		});
 		armOpenUrlForwarding();
 		setOpenUrlSink(handleOpenUrl);
+		const stopStartupIfQuitting = (): void => {
+			if (hasQuitStarted()) throw new Error('The app started quitting during startup');
+		};
 		(app.isReady()
 			? Promise.resolve()
 			: runStartupPhaseAsync('gpu-driver-workarounds', appendWindowsGpuDriverWorkaroundSwitches)
 		)
 			.then(() => app.whenReady())
 			.then(async () => {
+				stopStartupIfQuitting();
 				log.info('App ready, initializing...');
 				try {
 					runStartupPhase('host-resolver', () => app.configureHostResolver({enableAdditionalDnsQueryTypes: false}));
@@ -395,6 +402,7 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to configure the host resolver:', error);
 				}
 				await runStartupPhaseAsync('launch-net-log', startLaunchNetLog);
+				stopStartupIfQuitting();
 				try {
 					runStartupPhase('system-trust', () => installDesktopSystemTrustVerifier(session.defaultSession));
 				} catch (error) {
@@ -407,12 +415,9 @@ if (launchConfigurationError) {
 				} catch (error) {
 					log.error('[DebugInfo] Failed to collect desktop debug info:', error);
 				}
+				stopStartupIfQuitting();
 				try {
-					runStartupPhase('linux-desktop-entry', () => {
-						if (ensureLinuxDesktopEntry()) {
-							process.env.FLUXER_LINUX_PORTAL_APP_ID = LINUX_DESKTOP_ENTRY_ID;
-						}
-					});
+					runStartupPhase('linux-desktop-entry', ensureLinuxDesktopEntry);
 				} catch (error) {
 					log.error('[Init] Failed to ensure the Linux desktop entry:', error);
 				}
@@ -488,6 +493,7 @@ if (launchConfigurationError) {
 				} catch (error) {
 					log.error('[AppStore] Desktop app store recovery failed:', error);
 				}
+				stopStartupIfQuitting();
 				try {
 					runStartupPhase('app-store-ipc', registerDesktopAppStorageHandlers);
 				} catch (error) {
@@ -497,6 +503,11 @@ if (launchConfigurationError) {
 					runStartupPhase('gateway-transport-ipc', registerGatewayTransportHandlers);
 				} catch (error) {
 					log.error('[NativeGateway] Failed to register native gateway transport IPC handlers:', error);
+				}
+				try {
+					runStartupPhase('account-engine', () => startAccountEngine(userDataConfig.base));
+				} catch (error) {
+					log.error('[AccountEngine] Failed to start the account engine:', error);
 				}
 				try {
 					runStartupPhase('ipc-handlers', registerIpcHandlers);
@@ -562,6 +573,7 @@ if (launchConfigurationError) {
 				} catch (error: unknown) {
 					log.error('[LegacyHarvest] Legacy origin harvest failed:', error);
 				}
+				stopStartupIfQuitting();
 				try {
 					runStartupPhase('runtime-config-ipc', registerDesktopRuntimeConfigHandlers);
 				} catch (error: unknown) {
@@ -600,11 +612,13 @@ if (launchConfigurationError) {
 						showWindow,
 					});
 				});
-				if (process.env.FLUXER_OFFLINE !== '1') {
+				if (process.env.FLUXER_OFFLINE !== '1' && !shouldDisableModuleUpdatesForLaunch()) {
 					const {registerUpdater} = await import('@electron/main/Updater');
+					stopStartupIfQuitting();
 					registerUpdater(getMainWindow);
 				}
 				app.on('activate', () => {
+					if (hasQuitStarted()) return;
 					const mainWindow = getMainWindow();
 					if ((mainWindow === null || mainWindow.isDestroyed()) && !isMainWindowTakenOver()) {
 						createWindow();
@@ -616,6 +630,10 @@ if (launchConfigurationError) {
 			})
 			.catch((error: unknown) => {
 				startupWindowsPending = false;
+				if (hasQuitStarted()) {
+					log.info('[Startup] Stopped startup because the app is quitting');
+					return;
+				}
 				log.error('[Startup] whenReady chain rejected:', error);
 			});
 		app.on('window-all-closed', () => {
@@ -635,6 +653,7 @@ if (launchConfigurationError) {
 			}
 		});
 		const QUIT_WATCHDOG_MS = 15000;
+		const QUIT_CLEANUP_DEADLINE_MS = 5000;
 		let quitWatchdog: NodeJS.Timeout | null = null;
 		function armQuitWatchdog(reason: string): void {
 			if (quitWatchdog) return;
@@ -688,19 +707,14 @@ if (launchConfigurationError) {
 			cleanupNativeHardwareEncoderHandlers();
 			cleanupVirtmic();
 			destroyDesktopTray();
-			const asyncCleanups: Array<Promise<unknown>> = [
-				cleanupDesktopLocalAppProtocol().catch((error: unknown) => {
-					log.error('[Shutdown] Failed to shut down the local app protocol:', error);
-				}),
+			const asyncCleanups = [
+				{name: 'local-app-protocol', run: cleanupDesktopLocalAppProtocol},
+				{name: 'account-engine', run: stopAccountEngine},
 			];
 			if (netLog.currentlyLogging) {
-				asyncCleanups.push(
-					netLog.stopLogging().catch((error) => {
-						log.warn('[DebugInfo] Failed to stop Chromium net log:', error);
-					}),
-				);
+				asyncCleanups.push({name: 'net-log', run: () => netLog.stopLogging()});
 			}
-			void Promise.allSettled(asyncCleanups).finally(() => {
+			void settleShutdownCleanups(asyncCleanups, QUIT_CLEANUP_DEADLINE_MS).finally(() => {
 				log.info('[Shutdown] will-quit cleanup complete; exiting');
 				app.exit(0);
 			});

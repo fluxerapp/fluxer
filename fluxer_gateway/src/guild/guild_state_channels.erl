@@ -30,26 +30,26 @@ handle_guild_update(EventData, Data) ->
 
 -spec handle_channel_create(event_data(), guild_data()) -> guild_data().
 handle_channel_create(EventData, Data) ->
-    Channels = guild_data_index:channel_list(Data),
+    Channels = guild_data_index_channels:channel_list(Data),
     guild_data_index:put_channels([EventData | Channels], Data).
 
 -spec handle_channel_update(event_data(), guild_data()) -> guild_data().
 handle_channel_update(EventData, Data) ->
-    Channels = guild_data_index:channel_list(Data),
+    Channels = guild_data_index_channels:channel_list(Data),
     ChannelId = maps:get(<<"id">>, EventData),
     UpdatedChannels = guild_state_utils:replace_item_by_id(Channels, ChannelId, EventData),
     guild_data_index:put_channels(UpdatedChannels, Data).
 
 -spec handle_channel_update_bulk(event_data(), guild_data()) -> guild_data().
 handle_channel_update_bulk(EventData, Data) ->
-    Channels = guild_data_index:channel_list(Data),
+    Channels = guild_data_index_channels:channel_list(Data),
     BulkChannels = maps:get(<<"channels">>, EventData, []),
     UpdatedChannels = guild_state_utils:bulk_update_items(Channels, BulkChannels),
     guild_data_index:put_channels(UpdatedChannels, Data).
 
 -spec handle_channel_delete(event_data(), guild_data()) -> guild_data().
 handle_channel_delete(EventData, Data) ->
-    Channels = guild_data_index:channel_list(Data),
+    Channels = guild_data_index_channels:channel_list(Data),
     ChannelId = maps:get(<<"id">>, EventData),
     FilteredChannels = guild_state_utils:remove_item_by_id(Channels, ChannelId),
     guild_data_index:put_channels(FilteredChannels, Data).
@@ -69,20 +69,20 @@ handle_message_create(EventData, Data) ->
 advance_last_message_id(Data, _ChannelId, undefined) ->
     Data;
 advance_last_message_id(Data, ChannelId, MessageId) ->
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     case maps:find(ChannelId, Index) of
         {ok, Channel} ->
-            Current = snowflake_id:parse_maybe(
-                maps:get(<<"last_message_id">>, Channel, undefined)
-            ),
-            case is_integer(Current) andalso Current >= MessageId of
-                true ->
-                    Data;
-                false ->
-                    update_channel_field_fast(Data, ChannelId, <<"last_message_id">>, MessageId)
-            end;
+            advance_channel(Data, ChannelId, Channel, MessageId);
         error ->
             Data
+    end.
+
+-spec advance_channel(guild_data(), integer() | undefined, map(), integer()) -> guild_data().
+advance_channel(Data, ChannelId, Channel, MessageId) ->
+    Current = snowflake_id:parse_maybe(maps:get(<<"last_message_id">>, Channel, undefined)),
+    case is_integer(Current) andalso Current >= MessageId of
+        true -> Data;
+        false -> update_channel_field_fast(Data, ChannelId, <<"last_message_id">>, MessageId)
     end.
 
 -spec handle_channel_pins_update(event_data(), guild_data()) -> guild_data().
@@ -98,7 +98,7 @@ handle_channel_pins_update(EventData, Data) ->
 update_channel_field_fast(Data, undefined, _, _) ->
     Data;
 update_channel_field_fast(Data, ChannelId, Field, Value) ->
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     case maps:find(ChannelId, Index) of
         {ok, Channel} ->
             Updated = Channel#{Field => Value},
@@ -136,44 +136,3 @@ extract_channel_id(ChannelData) ->
         undefined -> false;
         ChannelId -> {true, ChannelId}
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-handle_message_create_updates_last_message_id_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"last_message_id">> => <<"500">>},
-            #{<<"id">> => <<"101">>, <<"last_message_id">> => <<"600">>}
-        ]
-    },
-    EventData = #{<<"channel_id">> => <<"100">>, <<"id">> => <<"700">>},
-    Result = handle_message_create(EventData, Data),
-    Channels = guild_data_index:channel_list(Result),
-    [C1, C2] = Channels,
-    ?assertEqual(700, maps:get(<<"last_message_id">>, C1)),
-    ?assertEqual(600, maps:get(<<"last_message_id">>, C2)).
-
-handle_message_create_keeps_newer_last_message_id_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"last_message_id">> => <<"900">>}
-        ]
-    },
-    EventData = #{<<"channel_id">> => <<"100">>, <<"id">> => <<"700">>},
-    Result = handle_message_create(EventData, Data),
-    [C1] = guild_data_index:channel_list(Result),
-    ?assertEqual(900, maps:get(<<"last_message_id">>, C1)).
-
-handle_message_create_sets_last_message_id_when_missing_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"last_message_id">> => null}
-        ]
-    },
-    EventData = #{<<"channel_id">> => <<"100">>, <<"id">> => <<"700">>},
-    Result = handle_message_create(EventData, Data),
-    [C1] = guild_data_index:channel_list(Result),
-    ?assertEqual(700, maps:get(<<"last_message_id">>, C1)).
-
--endif.

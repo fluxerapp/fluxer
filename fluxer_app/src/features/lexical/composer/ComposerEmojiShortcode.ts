@@ -61,6 +61,12 @@ function findNextEmojiToken(text: string, startIndex: number): EmojiToken | null
 	return surrogate.start < shortcode.start ? {...surrogate, surrogate: true} : {...shortcode, surrogate: false};
 }
 
+interface EmojiTokenEdit {
+	start: number;
+	end: number;
+	replacement: ResolvedTypedEmoji | string;
+}
+
 function isEscapedAt(text: string, index: number): boolean {
 	let backslashes = 0;
 	let cursor = index - 1;
@@ -80,30 +86,27 @@ function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver):
 		return;
 	}
 	const text = node.getTextContent();
+	const edits: Array<EmojiTokenEdit> = [];
 	let searchFrom = 0;
+	let backticks = 0;
 	while (true) {
 		const match = findNextEmojiToken(text, searchFrom);
 		if (match == null) {
-			return;
+			break;
 		}
-		const codeMarkers = text.slice(0, match.start).match(/`/g);
-		if ((codeMarkers == null ? 0 : codeMarkers.length) % 2 === 1) {
-			return;
+		for (let index = searchFrom; index < match.start; index++) {
+			if (text[index] === '`') {
+				backticks += 1;
+			}
+		}
+		searchFrom = match.end;
+		if (backticks % 2 === 1) {
+			continue;
 		}
 		if (isEscapedAt(text, match.start)) {
 			if (match.surrogate) {
-				const shortcodeText = `:${match.name}:`;
-				const selection = $captureSelectionOffsets();
-				const nodeDisplayStart = $getComposerNodeDisplayStart(node);
-				const replaced = `${text.slice(0, match.start)}${shortcodeText}${text.slice(match.end)}`;
-				node.setTextContent(replaced);
-				if (selection != null) {
-					const adjusted = $adjustEmbedCaret(selection, nodeDisplayStart, match.start, match.end, shortcodeText.length);
-					$selectComposerRange(adjusted.anchor, adjusted.focus);
-				}
-				return;
+				edits.push({start: match.start, end: match.end, replacement: `:${match.name}:`});
 			}
-			searchFrom = match.end;
 			continue;
 		}
 		const previous = match.start === 0 ? node.getPreviousSibling() : null;
@@ -143,27 +146,47 @@ function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver):
 			}
 		}
 		const resolved = resolve(match.name);
-		if (resolved == null) {
-			searchFrom = match.end;
-			continue;
+		if (resolved != null) {
+			edits.push({start: match.start, end: match.end, replacement: resolved});
 		}
-		const selection = $captureSelectionOffsets();
-		const nodeDisplayStart = $getComposerNodeDisplayStart(node);
-		const emojiNode =
-			resolved.kind === 'standard'
-				? $createComposerStandardEmojiNode(resolved.name, resolved.surrogate, resolved.url, resolved.display)
-				: $createComposerCustomEmojiNode(resolved.emojiId, resolved.animated, resolved.display, resolved.wire);
-		const segments = node.splitText(match.start, match.end);
-		const target = segments[match.start > 0 ? 1 : 0];
-		if (target == null) {
-			return;
-		}
-		target.replace(emojiNode);
-		if (selection != null) {
-			const adjusted = $adjustEmbedCaret(selection, nodeDisplayStart, match.start, match.end, resolved.display.length);
-			$selectComposerRange(adjusted.anchor, adjusted.focus);
-		}
+	}
+	if (edits.length === 0) {
 		return;
+	}
+	let selection = $captureSelectionOffsets();
+	const nodeDisplayStart = $getComposerNodeDisplayStart(node);
+	for (let index = edits.length - 1; index >= 0; index--) {
+		const {start, end, replacement} = edits[index]!;
+		if (typeof replacement === 'string') {
+			node.spliceText(start, end - start, replacement);
+		} else {
+			const emojiNode =
+				replacement.kind === 'standard'
+					? $createComposerStandardEmojiNode(
+							replacement.name,
+							replacement.surrogate,
+							replacement.url,
+							replacement.display,
+						)
+					: $createComposerCustomEmojiNode(
+							replacement.emojiId,
+							replacement.animated,
+							replacement.display,
+							replacement.wire,
+						);
+			const target = node.splitText(start, end)[start > 0 ? 1 : 0];
+			if (target == null) {
+				break;
+			}
+			target.replace(emojiNode);
+		}
+		if (selection != null) {
+			const newLen = typeof replacement === 'string' ? replacement.length : replacement.display.length;
+			selection = $adjustEmbedCaret(selection, nodeDisplayStart, start, end, newLen);
+		}
+	}
+	if (selection != null) {
+		$selectComposerRange(selection.anchor, selection.focus);
 	}
 }
 

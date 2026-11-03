@@ -129,8 +129,14 @@ async function readRouteStatus(
 	path: string,
 ): Promise<{status: number; code: string | undefined}> {
 	const builder = token === null ? createBuilderWithoutAuth(harness) : createBuilder(harness, token);
-	const request =
-		method === 'GET' ? builder.get(path) : method === 'DELETE' ? builder.delete(path) : builder.post(path).body({});
+	let request: typeof builder;
+	if (method === 'GET') {
+		request = builder.get(path);
+	} else if (method === 'DELETE') {
+		request = builder.delete(path);
+	} else {
+		request = builder.post(path).body({});
+	}
 	const {response, json} = await request.executeRaw();
 	return {status: response.status, code: (json as {code?: string} | undefined)?.code};
 }
@@ -162,7 +168,6 @@ const GIFT_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 ];
 
 const HOSTED_ONLY_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
-	['POST', '/users/@me/age-verification'],
 	['GET', '/premium/refund-eligibility'],
 	['POST', '/premium/refund-latest'],
 	['POST', '/premium/switch-to-list-price'],
@@ -193,6 +198,7 @@ describe('self-hosted premium routes', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
+		await getInstanceConfigRepository().setAppPublicConfig({setup: {configured: true}});
 		setStoredBillingConfig(null);
 		setCachedInstancePremiumMode('everyone');
 	});
@@ -436,9 +442,7 @@ describe('hosted premium routes', () => {
 	test('keeps every Stripe and gift route registered regardless of premium mode', async () => {
 		setCachedInstancePremiumMode('everyone');
 		const account = await createTestAccount(harness);
-		const routes = [...BILLING_ROUTES, ...GIFT_ROUTES, ...HOSTED_ONLY_ROUTES, ...STORE_BILLING_ROUTES].filter(
-			([, path]) => path !== '/users/@me/age-verification',
-		);
+		const routes = [...BILLING_ROUTES, ...GIFT_ROUTES, ...HOSTED_ONLY_ROUTES, ...STORE_BILLING_ROUTES];
 		for (const [method, path] of routes) {
 			const result = await readRouteStatus(harness, account.token, method, path);
 			expect({path, code: result.code}).not.toEqual({path, code: APIErrorCodes.NOT_FOUND});

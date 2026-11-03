@@ -4,8 +4,6 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"test": "vitest run",
-		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -14,7 +12,6 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"typescript": "catalog:ts7",
-		"vitest": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

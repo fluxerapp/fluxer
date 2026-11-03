@@ -215,7 +215,6 @@ SOURCES: dict[str, Source] = {
     "plex-sans-arabic": NpmSource("@ibm/plex-sans-arabic", "1.1.0"),
     "plex-sans-devanagari": NpmSource("@ibm/plex-sans-devanagari", "1.1.0"),
     "plex-sans-hebrew": NpmSource("@ibm/plex-sans-hebrew", "1.1.0"),
-    "plex-sans-thai": NpmSource("@ibm/plex-sans-thai", "1.1.0"),
     "plex-sans-thai-looped": NpmSource("@ibm/plex-sans-thai-looped", "1.1.0"),
     "plex-sans-jp": NpmSource("@ibm/plex-sans-jp", "3.0.0"),
     "plex-sans-sc": NpmSource("@ibm/plex-sans-sc", "1.1.0"),
@@ -308,17 +307,6 @@ FAMILIES: tuple[Family, ...] = (
         PLEX_GASP,
         "Fluxer Sans Hebrew",
         "script-hebrew.css",
-    ),
-    Family(
-        "FluxerSansThai",
-        "IBMPlexSansThai",
-        UPRIGHT_WEIGHTS,
-        "plex-sans-thai",
-        PLEX_WOFF2,
-        REBUILD,
-        PLEX_GASP,
-        "Fluxer Sans Thai",
-        "script-thai.css",
     ),
     Family(
         "FluxerSansThaiLooped",
@@ -418,7 +406,6 @@ SCRIPT_FAMILY_ORDER: tuple[str, ...] = (
 
 GENERIC_UI_FACES: tuple[str, ...] = ("system-ui", "-apple-system", "BlinkMacSystemFont")
 
-UNCHAINED_SCRIPT_FAMILIES: tuple[str, ...] = ("Fluxer Sans Thai",)
 
 LOCALE_FALLBACKS: tuple[tuple[tuple[str, ...], str, tuple[str, ...]], ...] = (
     (
@@ -623,7 +610,7 @@ def subset_options() -> SubsetOptions:
     options.legacy_kern = True
     options.layout_features = ["*"]  # CJK needs vert/vrt2/halt/palt/trad/smpl
     options.layout_scripts = ["*"]
-    options.name_IDs = ["*"]  # the OFL rename lives in the name table
+    options.name_IDs = ["*"]  # the OFL rename is in the name table
     options.name_legacy = True
     options.name_languages = ["*"]
     options.notdef_outline = True
@@ -1521,8 +1508,6 @@ def verify() -> int:
             value = base_chain.group("value")
             for family in FAMILIES:
                 if family.stylesheet in LATIN_CORE_STYLESHEETS:
-                    continue
-                if family.css_family in UNCHAINED_SCRIPT_FAMILIES:
                     continue
                 if f"'{family.css_family}'" not in value:
                     failures.append(

@@ -2,7 +2,6 @@
 
 import type {ReadyPayload} from '@app/features/gateway/events/GatewayReady';
 import {
-	type InMemorySnapshotStore,
 	MAX_SNAPSHOT_ACCOUNT_ENTRIES,
 	MAX_SNAPSHOT_EVENT_OPERATIONS,
 	SnapshotCapacityError,
@@ -22,6 +21,7 @@ import {
 import {SnapshotReducer} from '@app/features/gateway/snapshot/SnapshotReducer';
 import type {SnapshotReducerBacking} from '@app/features/gateway/snapshot/SnapshotReducerBacking';
 import type {SnapshotReducerShellState} from '@app/features/gateway/snapshot/SnapshotReducerShellState';
+import type {SnapshotRowStore} from '@app/features/gateway/snapshot/SnapshotRowStore';
 import type {StateSnapshotEntry} from '@app/features/gateway/snapshot/SnapshotTypes';
 import type {SnapshotWriter} from '@app/features/gateway/snapshot/SnapshotWriter';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
@@ -394,7 +394,7 @@ class WorkingSet {
 		return {missed, needsFull, isEmpty: missed.size === 0 && needsFull.length === 0};
 	}
 
-	loadFaults(store: InMemorySnapshotStore, storageKey: string, faults: CollectedFaults): void {
+	loadFaults(store: SnapshotRowStore, storageKey: string, faults: CollectedFaults): void {
 		for (const [entity, keys] of faults.missed) {
 			this.loadFaultRows(store, storageKey, entity, keys);
 		}
@@ -403,7 +403,7 @@ class WorkingSet {
 		}
 	}
 
-	loadAll(store: InMemorySnapshotStore, storageKey: string): void {
+	loadAll(store: SnapshotRowStore, storageKey: string): void {
 		if (!store.has(storageKey)) {
 			throw new Error(`Snapshot ${storageKey} is unavailable during full fault recovery`);
 		}
@@ -419,7 +419,7 @@ class WorkingSet {
 	}
 
 	private loadFaultRows(
-		store: InMemorySnapshotStore,
+		store: SnapshotRowStore,
 		storageKey: string,
 		entity: HeavyEntity,
 		keys: ReadonlyArray<string>,
@@ -429,7 +429,7 @@ class WorkingSet {
 		}
 	}
 
-	private loadFullEntity(store: InMemorySnapshotStore, storageKey: string, entity: HeavyEntity): void {
+	private loadFullEntity(store: SnapshotRowStore, storageKey: string, entity: HeavyEntity): void {
 		this.entities[entity].applyFullLoad(store.entriesByPrefix(storageKey, entity, ''));
 	}
 }
@@ -452,7 +452,7 @@ class SnapshotOperationCollector {
 
 export interface DiskBackedSnapshotReducerOptions {
 	readonly storageKey: string;
-	readonly store: InMemorySnapshotStore;
+	readonly store: SnapshotRowStore;
 	readonly writer: SnapshotWriter;
 	readonly onInvalid: (error: Error) => void;
 }
@@ -466,7 +466,7 @@ function snapshotReducerError(error: unknown): Error {
 
 export class DiskBackedSnapshotReducer {
 	private readonly storageKey: string;
-	private readonly store: InMemorySnapshotStore;
+	private readonly store: SnapshotRowStore;
 	private readonly writer: SnapshotWriter;
 	private readonly onInvalid: (error: Error) => void;
 	private readonly workingSet = new WorkingSet();
@@ -484,10 +484,6 @@ export class DiskBackedSnapshotReducer {
 
 	setShellState(state: SnapshotReducerShellState): void {
 		this.reducer.importShellState(state);
-	}
-
-	takeShellState(): SnapshotReducerShellState {
-		return this.reducer.exportShellState();
 	}
 
 	applyReady(data: ReadyPayload): void {

@@ -1,3 +1,5 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
@@ -6,6 +8,7 @@ import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import type {
 	ClipboardWriteFileMediaType,
@@ -59,7 +62,7 @@ function loadWinClipboardModule(): WinClipboardModule {
 	} catch (error) {
 		throw new Error(
 			`@fluxer/win-clipboard failed to load on Windows — this is a packaging bug, not a runtime fallback case. ` +
-				`Original error: ${error instanceof Error ? error.message : String(error)}`,
+				`Original error: ${errorMessage(error)}`,
 		);
 	}
 	if (!mod.writeFileReferenceToClipboard) {
@@ -123,10 +126,6 @@ function sanitizeFilename(rawName: string | undefined, mediaType: ClipboardWrite
 
 function isClipboardWriteFileMediaType(value: unknown): value is ClipboardWriteFileMediaType {
 	return value === 'image' || value === 'gif' || value === 'video' || value === 'audio';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 export function parseClipboardWriteFileOptions(value: unknown): ClipboardWriteFileOptions {

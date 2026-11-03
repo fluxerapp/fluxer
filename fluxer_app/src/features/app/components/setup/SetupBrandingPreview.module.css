@@ -1,0 +1,726 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.hotspot {
+	appearance: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: inherit;
+	cursor: pointer;
+}
+
+.hotspot:hover:not(.highlighted) {
+	outline: calc(2 * var(--u, 1px)) solid color-mix(in srgb, var(--brand-primary-light, #a5a2ff) 45%, transparent);
+	outline-offset: calc(4 * var(--u, 1px));
+}
+
+.highlighted {
+	outline: calc(2 * var(--u, 1px)) dashed var(--brand-primary-light, #a5a2ff);
+	outline-offset: calc(4 * var(--u, 1px));
+}
+
+.preview {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.tabsScroller {
+	flex: 0 0 auto;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.tabsScroller::-webkit-scrollbar {
+	display: none;
+}
+
+.tabsScroller .tabs {
+	min-width: max-content;
+	padding: 0;
+}
+
+.tabs button {
+	white-space: nowrap;
+}
+
+.stage {
+	container-type: size;
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: center;
+	height: var(--preview-stage-height, auto);
+	min-height: 0;
+	overflow: hidden;
+	padding: clamp(0.75rem, 2.5cqw, 2rem);
+	border-radius: 0.75rem;
+	background: color-mix(in srgb, var(--background-tertiary) 55%, transparent);
+}
+
+.scene {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.caption {
+	display: var(--preview-caption-display, block);
+	flex: 0 0 auto;
+	min-height: calc(1.45em * 3);
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	line-height: 1.45;
+}
+
+.caption p {
+	margin: 0;
+}
+
+.caption p + p {
+	margin-block-start: 0.25rem;
+	color: var(--text-tertiary);
+}
+
+.computerFrame {
+	--u: calc(100cqw / 1280);
+	container-type: inline-size;
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	width: min(100cqw, calc(100cqh * 1280 / 808));
+	overflow: hidden;
+	border: 0.0625rem solid rgb(255 255 255 / 0.12);
+	border-radius: 0.625rem;
+	background: #202024;
+	box-shadow: 0 1rem 3rem -1rem rgb(0 0 0 / 0.6);
+}
+
+.browserChrome {
+	display: flex;
+	flex-direction: column;
+	background: #202024;
+	color: #e3e3e8;
+}
+
+.browserTabs {
+	display: flex;
+	align-items: flex-end;
+	height: calc(40 * var(--u));
+	padding-inline: calc(84 * var(--u)) calc(16 * var(--u));
+}
+
+.browserTab {
+	display: flex;
+	align-items: center;
+	gap: calc(10 * var(--u));
+	width: calc(260 * var(--u));
+	height: calc(32 * var(--u));
+	padding-inline: calc(12 * var(--u));
+	border-radius: calc(10 * var(--u)) calc(10 * var(--u)) 0 0;
+	background: #35353b;
+	font-size: calc(13 * var(--u));
+}
+
+.favicon {
+	display: flex;
+	flex: 0 0 auto;
+	width: calc(16 * var(--u));
+	height: calc(16 * var(--u));
+}
+
+.favicon img,
+.favicon svg {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.browserTabTitle {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.browserTabClose {
+	flex: 0 0 auto;
+	width: calc(12 * var(--u));
+	height: calc(12 * var(--u));
+	opacity: 0.7;
+}
+
+.addressBar {
+	display: flex;
+	align-items: center;
+	gap: calc(8 * var(--u));
+	height: calc(30 * var(--u));
+	margin: calc(6 * var(--u)) calc(12 * var(--u)) calc(8 * var(--u));
+	padding-inline: calc(14 * var(--u));
+	border-radius: calc(15 * var(--u));
+	background: #35353b;
+	color: #c8c8d0;
+	font-size: calc(13 * var(--u));
+}
+
+.addressIcon {
+	width: calc(12 * var(--u));
+	height: calc(12 * var(--u));
+}
+
+.computerPage {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: calc(720 * var(--u));
+	overflow: hidden;
+}
+
+.pageBackground {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	display: block;
+	background:
+		radial-gradient(circle at 18% 22%, rgb(226 218 255 / 0.5) 0 0.06rem, transparent 0.07rem),
+		radial-gradient(circle at 72% 14%, rgb(255 255 255 / 0.45) 0 0.05rem, transparent 0.06rem),
+		radial-gradient(circle at 86% 68%, rgb(213 202 255 / 0.4) 0 0.06rem, transparent 0.07rem),
+		radial-gradient(circle at 34% 82%, rgb(255 255 255 / 0.35) 0 0.05rem, transparent 0.06rem),
+		radial-gradient(circle at 58% 48%, rgb(237 231 255 / 0.3) 0 0.05rem, transparent 0.06rem),
+		linear-gradient(145deg, #05040d 0%, #080616 48%, #0d0a1c 100%);
+}
+
+.pageBackground.highlighted,
+.pageBackground.hotspot:hover {
+	outline-offset: calc(-6 * var(--u));
+}
+
+.backdropImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.backdropScrim {
+	position: absolute;
+	inset: 0;
+	background-color: rgb(5 4 13 / 0.55);
+}
+
+.backdropScrimPhone {
+	background-color: rgb(5 4 13 / 0.75);
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	width: calc(512 * var(--u));
+	overflow: hidden;
+	border: calc(1 * var(--u)) solid rgb(255 255 255 / 0.08);
+	border-radius: calc(8 * var(--u));
+	background: var(--background-secondary);
+	box-shadow: 0 calc(20 * var(--u)) calc(64 * var(--u)) calc(-24 * var(--u)) rgb(0 0 0 / 0.7);
+}
+
+.cardSplit {
+	flex-direction: row;
+	width: calc(800 * var(--u));
+	min-height: calc(448 * var(--u));
+}
+
+.cardBrand {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: calc(10 * var(--u));
+	padding: calc(40 * var(--u)) calc(56 * var(--u)) 0;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.cardSplit .cardBrand {
+	flex: 0 0 calc(288 * var(--u));
+	gap: calc(24 * var(--u));
+	padding: calc(40 * var(--u)) calc(24 * var(--u));
+	border-inline-end: calc(1 * var(--u)) solid var(--background-modifier-accent);
+}
+
+.cardLogoBox {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.cardLogo {
+	display: block;
+	width: auto;
+	max-width: calc(208 * var(--u));
+	height: calc(128 * var(--u));
+	object-fit: contain;
+}
+
+.cardWordmarkBox {
+	display: flex;
+	justify-content: center;
+	max-width: calc(208 * var(--u));
+}
+
+.cardWordmark {
+	display: block;
+	max-width: 100%;
+	height: calc(32 * var(--u));
+	font-size: calc(24 * var(--u));
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+	object-fit: contain;
+}
+
+span.cardWordmark,
+span.phoneWordmark,
+span.titlebarWordmark {
+	height: auto;
+}
+
+.cardHost {
+	margin-block-start: calc(-12 * var(--u));
+	color: var(--text-tertiary);
+	font-size: calc(13 * var(--u));
+}
+
+.card:not(.cardSplit) .cardHost {
+	margin-block-start: 0;
+}
+
+.cardForm {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	justify-content: center;
+	padding: calc(40 * var(--u));
+}
+
+.formSkeleton {
+	display: flex;
+	flex-direction: column;
+	gap: calc(14 * var(--u));
+}
+
+.skeletonTitle,
+.skeletonLine,
+.skeletonInput,
+.skeletonButton {
+	border-radius: calc(6 * var(--u));
+}
+
+.skeletonTitle {
+	width: 55%;
+	height: calc(22 * var(--u));
+	background: color-mix(in srgb, var(--text-primary) 22%, transparent);
+}
+
+.skeletonLine {
+	width: 80%;
+	height: calc(12 * var(--u));
+	margin-block-end: calc(8 * var(--u));
+	background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+}
+
+.skeletonInput {
+	height: calc(40 * var(--u));
+	border: calc(1 * var(--u)) solid var(--background-modifier-accent);
+	background: var(--background-tertiary);
+}
+
+.skeletonButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: calc(40 * var(--u));
+	margin-block-start: calc(6 * var(--u));
+	background: var(--brand-primary, #4641d9);
+}
+
+.skeletonButtonText {
+	width: calc(64 * var(--u));
+	height: calc(10 * var(--u));
+	border-radius: calc(5 * var(--u));
+	background: #fff;
+}
+
+.phoneFrame {
+	--u: calc(100cqw / 390);
+	container-type: inline-size;
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	width: min(100cqw, calc((100cqh - 0.75rem) * 390 / 844), 26rem);
+	overflow: hidden;
+	border: 0.375rem solid #232327;
+	border-radius: 1.75rem;
+	background: #080616;
+	box-shadow: 0 1rem 3rem -1rem rgb(0 0 0 / 0.6);
+}
+
+.phoneToolbar {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	height: calc(92 * var(--u));
+	padding-block-end: calc(10 * var(--u));
+	background: #18171f;
+}
+
+.phoneToolbar.highlighted,
+.phoneToolbar.hotspot:hover {
+	outline-offset: calc(-4 * var(--u));
+}
+
+.phoneAddress {
+	padding: calc(6 * var(--u)) calc(18 * var(--u));
+	border-radius: calc(16 * var(--u));
+	background: color-mix(in srgb, currentColor 14%, transparent);
+	font-size: calc(14 * var(--u));
+}
+
+.phonePage {
+	position: relative;
+	isolation: isolate;
+	height: calc(752 * var(--u));
+	overflow: hidden;
+}
+
+.phoneContent {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	padding: calc(40 * var(--u)) calc(24 * var(--u));
+	color: var(--text-primary);
+}
+
+.phoneIdentity {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(10 * var(--u));
+}
+
+.phoneLogoBox {
+	display: flex;
+}
+
+.phoneLogo {
+	display: block;
+	width: auto;
+	max-width: calc(64 * var(--u));
+	height: calc(28 * var(--u));
+	object-fit: contain;
+}
+
+.phoneWordmarkBox {
+	display: flex;
+	justify-content: center;
+	max-width: calc(224 * var(--u));
+}
+
+.phoneWordmark {
+	display: block;
+	max-width: 100%;
+	height: calc(32 * var(--u));
+	font-size: calc(24 * var(--u));
+	line-height: 1.1;
+	object-fit: contain;
+}
+
+.phoneHost {
+	margin-block: calc(6 * var(--u)) calc(32 * var(--u));
+	color: var(--text-tertiary);
+	font-size: calc(13 * var(--u));
+	text-align: center;
+}
+
+.phoneContent .formSkeleton {
+	padding: calc(4 * var(--u));
+}
+
+.desktopScene {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	width: min(100cqw, calc((100cqh - 7.5rem) * 2.4));
+}
+
+@container (max-height: 16rem) {
+	.desktopScene {
+		gap: 0.5rem;
+		width: min(100cqw, calc((100cqh - 3.5rem) * 2.4));
+	}
+
+	.windows {
+		gap: 0.5rem;
+	}
+
+	.titlebarLabel {
+		display: none;
+	}
+}
+
+.desktopScene .platformTabs {
+	width: min(100%, 22rem);
+	padding: 0;
+}
+
+.windows {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	width: 100%;
+}
+
+.titlebarFigure {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	min-width: 0;
+	margin: 0;
+}
+
+.titlebarLabel {
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+}
+
+.window {
+	--u: calc(100cqw / 720);
+	container-type: inline-size;
+	overflow: hidden;
+	border: 0.0625rem solid rgb(255 255 255 / 0.12);
+	border-radius: 0.5rem;
+}
+
+.windowDark {
+	--titlebar-bg: #121214;
+	--titlebar-fg: #b9b9c4;
+	--window-rail: #0c0c0e;
+	--window-sidebar: #18181b;
+	--window-body: #1f1f23;
+	--window-line: rgb(255 255 255 / 0.08);
+}
+
+.windowLight {
+	--titlebar-bg: #e3e5e8;
+	--titlebar-fg: #4e5058;
+	--window-rail: #d7d9dc;
+	--window-sidebar: #f2f3f5;
+	--window-body: #ffffff;
+	--window-line: rgb(0 0 0 / 0.08);
+	border-color: rgb(0 0 0 / 0.12);
+}
+
+.titlebar {
+	display: flex;
+	align-items: center;
+	gap: calc(8 * var(--u));
+	height: calc(32 * var(--u));
+	padding-inline: calc(12 * var(--u)) 0;
+	background: var(--titlebar-bg);
+	color: var(--titlebar-fg);
+}
+
+.titlebarBrand {
+	display: flex;
+	align-items: center;
+	color: var(--titlebar-fg);
+	opacity: 0.8;
+}
+
+.titlebarMacos {
+	direction: ltr;
+	padding-inline: calc(12 * var(--u));
+}
+
+.titlebarWordmark {
+	display: block;
+	width: auto;
+	max-width: calc(200 * var(--u));
+	height: calc(13 * var(--u));
+	color: var(--titlebar-fg);
+	font-size: calc(13 * var(--u));
+	line-height: 1;
+	object-fit: contain;
+}
+
+.titlebarSpacer {
+	flex: 1 1 auto;
+}
+
+.trafficLights {
+	display: flex;
+	gap: calc(8 * var(--u));
+}
+
+.trafficLights > span {
+	width: calc(12 * var(--u));
+	height: calc(12 * var(--u));
+	border-radius: 50%;
+	background: #ff5f57;
+}
+
+.trafficLights > span:nth-child(2) {
+	background: #febc2e;
+}
+
+.trafficLights > span:nth-child(3) {
+	background: #28c840;
+}
+
+.windowControls {
+	display: flex;
+	align-self: stretch;
+}
+
+.windowControls > svg {
+	box-sizing: content-box;
+	width: calc(14 * var(--u));
+	height: calc(14 * var(--u));
+	padding: calc(9 * var(--u)) calc(17 * var(--u));
+}
+
+.windowBody {
+	display: flex;
+	height: calc(112 * var(--u));
+	background: var(--window-body);
+}
+
+.windowRail {
+	width: calc(56 * var(--u));
+	background: var(--window-rail);
+}
+
+.windowSidebar {
+	width: calc(160 * var(--u));
+	background: var(--window-sidebar);
+}
+
+.windowMain {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: calc(10 * var(--u));
+	padding: calc(18 * var(--u));
+}
+
+.windowLine,
+.windowLineShort {
+	height: calc(10 * var(--u));
+	border-radius: calc(5 * var(--u));
+	background: var(--window-line);
+}
+
+.windowLine {
+	width: 70%;
+}
+
+.windowLineShort {
+	width: 40%;
+}
+
+.instanceStage {
+	--u: calc(100cqw / 360);
+	container-type: inline-size;
+	display: flex;
+	flex-direction: column;
+	gap: calc(4 * var(--u));
+	width: min(100cqw, 30rem);
+	padding: calc(8 * var(--u));
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.75rem;
+	background: var(--background-secondary);
+	box-shadow: 0 1rem 3rem -1rem rgb(0 0 0 / 0.6);
+}
+
+.instanceRow {
+	display: flex;
+	align-items: center;
+	gap: calc(12 * var(--u));
+	padding: calc(10 * var(--u)) calc(12 * var(--u));
+	border-radius: calc(6 * var(--u));
+	background: var(--background-modifier-hover);
+}
+
+.instanceRowOther {
+	background: none;
+	opacity: 0.6;
+}
+
+.instanceMark {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: calc(36 * var(--u));
+	height: calc(36 * var(--u));
+	border-radius: calc(8 * var(--u));
+	background: var(--background-tertiary);
+	color: var(--text-secondary);
+}
+
+.instanceMark img,
+.instanceMark svg {
+	width: calc(20 * var(--u));
+	height: calc(20 * var(--u));
+	object-fit: contain;
+}
+
+.instanceMeta {
+	display: flex;
+	flex-direction: column;
+	gap: calc(4 * var(--u));
+	min-width: 0;
+}
+
+.instanceName {
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: calc(15 * var(--u));
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.instanceHost {
+	color: var(--text-tertiary);
+	font-size: calc(13 * var(--u));
+}
+
+.instanceNameSkeleton,
+.instanceHostSkeleton {
+	height: calc(10 * var(--u));
+	border-radius: calc(5 * var(--u));
+	background: color-mix(in srgb, var(--text-primary) 14%, transparent);
+}
+
+.instanceNameSkeleton {
+	width: calc(120 * var(--u));
+}
+
+.instanceHostSkeleton {
+	width: calc(84 * var(--u));
+	opacity: 0.7;
+}

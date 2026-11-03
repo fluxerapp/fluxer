@@ -99,6 +99,12 @@ function describeStreamRejection(error: unknown): string | null {
 	return error.apiError().description || 'stream rejected the publish';
 }
 
+function isSameInstant(a: string, b: string): boolean {
+	if (a === b) return true;
+	const parsedA = Date.parse(a);
+	return Number.isFinite(parsedA) && parsedA === Date.parse(b);
+}
+
 export class JetStreamWorkerQueue {
 	private readonly connectionManager: JetStreamConnectionManager;
 	private streamReady = false;
@@ -415,8 +421,20 @@ export class JetStreamWorkerQueue {
 		const updated = await jsm.consumers.update(STREAM_NAME, lane.consumerName, config);
 		this.requireConsumerConfiguration(updated, lane.consumerName);
 		const current = await this.readConsumer(jsm, lane.consumerName);
-		if (current?.created !== existing.created) {
-			throw new Error(`Worker consumer ${lane.consumerName} was replaced during startup`);
+		if (current === null) {
+			throw new Error(`Worker consumer ${lane.consumerName} was deleted during startup`);
+		}
+		if (!isSameInstant(current.created, existing.created)) {
+			this.requireConsumerConfiguration(current, lane.consumerName);
+			this.requireConsumerConfiguration(
+				await jsm.consumers.update(STREAM_NAME, lane.consumerName, config),
+				lane.consumerName,
+			);
+			Logger.warn(
+				{lane: lane.name, consumer: lane.consumerName, previous: existing.created, current: current.created},
+				'Consumer was recreated by another worker during startup, using the current one',
+			);
+			return;
 		}
 		Logger.info({lane: lane.name, consumer: lane.consumerName}, 'Consumer updated without resetting delivery state');
 	}
@@ -465,8 +483,6 @@ export class JetStreamWorkerQueue {
 		payload: WorkerJobPayload,
 		options?: {
 			runAt?: Date;
-			maxAttempts?: number;
-			priority?: number;
 			jobKey?: string;
 		},
 	): Promise<{seq: string; duplicate: boolean}> {
@@ -475,8 +491,6 @@ export class JetStreamWorkerQueue {
 		const body = JSON.stringify({
 			payload,
 			run_at: options?.runAt?.toISOString(),
-			max_attempts: options?.maxAttempts ?? 5,
-			priority: options?.priority ?? 0,
 			created_at: new Date().toISOString(),
 		});
 		const msgID = options?.jobKey ? `${taskType}:${options.jobKey}` : randomUUID();

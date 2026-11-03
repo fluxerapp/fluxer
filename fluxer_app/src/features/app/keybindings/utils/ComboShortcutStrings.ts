@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
+import {shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 const codeKeyForCombokeys: Record<string, string> = {
 	Space: 'space',
@@ -67,7 +67,7 @@ const comboToCombokeysString = (combo: KeyCombo, source: 'key' | 'code' = 'key')
 };
 export const comboToCombokeysStrings = (combo: KeyCombo): Array<string> => {
 	const shortcuts = [comboToCombokeysString(combo)];
-	if (combo.code && !shouldPreferLayoutKeyForShortcut(combo)) {
+	if (combo.code && !shouldPreferLayoutKey(combo)) {
 		shortcuts.push(comboToCombokeysString(combo, 'code'));
 	}
 	return [...new Set(shortcuts.filter((shortcut): shortcut is string => !!shortcut))];

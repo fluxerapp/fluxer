@@ -2,27 +2,21 @@
 
 import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
 import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
-import {ERROR_I18N_MESSAGES, type ErrorI18nCatalog, type ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
-import {identityLocale} from '@fluxer/i18n/src/normalization/IdentityLocale';
+import {ERROR_I18N_MESSAGES, type ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 import {compileMessage} from '@fluxer/i18n/src/runtime/CompileMessage';
 import {createStaticI18n} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
-import type {MessageArgsForTemplate} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 import {validateMessageTemplateVariables} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 
 const DEFAULT_LOCALE = 'en-US';
 
 type ErrorI18nRuntimeVariables = Record<string, unknown>;
-type ErrorI18nResultArgs<TKey extends ErrorI18nKey> = TKey extends ErrorI18nKey
-	? MessageArgsForTemplate<ErrorI18nCatalog[TKey]>
-	: never;
 
 const errorI18n = createStaticI18n<ErrorI18nKey, string, ErrorI18nRuntimeVariables>(
 	{
 		defaultLocale: DEFAULT_LOCALE,
 		defaultMessages: ERROR_I18N_MESSAGES,
 		localeMessages: ERROR_I18N_LOCALE_MESSAGES,
-		normalizeLocale: (locale) => identityLocale(locale),
 		onWarning: (message) => {
 			console.warn(message);
 		},
@@ -54,17 +48,6 @@ function getErrorMessageResultUnsafe(
 	variables: ErrorI18nRuntimeVariables | undefined,
 ): I18nResult<ErrorI18nKey, string> {
 	return errorI18n.getTemplate(key, locale ?? null, variables ?? {});
-}
-
-export function getErrorMessageResult<TKey extends ErrorI18nKey>(
-	key: TKey,
-	locale: string | null | undefined,
-	...args: ErrorI18nResultArgs<TKey>
-): I18nResult<TKey, string> {
-	return getErrorMessageResultUnsafe(key, locale, args[0] as ErrorI18nRuntimeVariables | undefined) as I18nResult<
-		TKey,
-		string
-	>;
 }
 
 function getResolvedErrorMessage(

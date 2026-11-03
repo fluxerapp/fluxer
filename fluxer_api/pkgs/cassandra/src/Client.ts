@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import cassandra from 'cassandra-driver';
+import type cassandra from 'cassandra-driver';
 
-const distance = cassandra.types.distance;
+type CassandraDriver = typeof cassandra;
 
 const MAX_REQUESTS_PER_CONNECTION = 2048;
 const CONNECT_TIMEOUT_MS = 5000;
@@ -28,6 +28,12 @@ const defaultClientState: DefaultClientState = {
 	client: null,
 };
 
+let loadedDriver: CassandraDriver | null = null;
+
+export function getLoadedCassandraDriver(): CassandraDriver | null {
+	return loadedDriver;
+}
+
 class CassandraClient {
 	private readonly config: CassandraConfig;
 	private client: cassandra.Client | null;
@@ -49,10 +55,13 @@ class CassandraClient {
 		if (this.client !== null) {
 			return;
 		}
+		const {default: driver} = await import('cassandra-driver');
+		loadedDriver = driver;
+		const distance = driver.types.distance;
 		const authProvider = this.config.username
-			? new cassandra.auth.PlainTextAuthProvider(this.config.username, this.config.password ?? '')
+			? new driver.auth.PlainTextAuthProvider(this.config.username, this.config.password ?? '')
 			: undefined;
-		const client = new cassandra.Client({
+		const client = new driver.Client({
 			contactPoints: this.config.hosts,
 			keyspace: this.config.keyspace,
 			localDataCenter: this.config.localDc,

@@ -15,11 +15,10 @@ interface UploadSlotInfoProps {
 	description: React.ReactNode;
 	uploadButtonText: React.ReactNode;
 	onUploadClick: () => void;
-	additionalSlots?: React.ReactNode;
 }
 
 export const UploadSlotInfo: React.FC<UploadSlotInfoProps> = observer(
-	({title, currentCount, maxCount, description, uploadButtonText, onUploadClick, additionalSlots}) => {
+	({title, currentCount, maxCount, description, uploadButtonText, onUploadClick}) => {
 		const {i18n} = useLingui();
 		const numberFormat = getCachedNumberFormat(i18n.locale);
 		const maxSlotCount = maxCount === Number.POSITIVE_INFINITY ? '∞' : numberFormat.format(maxCount);
@@ -31,11 +30,9 @@ export const UploadSlotInfo: React.FC<UploadSlotInfoProps> = observer(
 							{title}
 						</h3>
 						<div className={styles.stats} data-flx="guild.upload-slot-info.stats">
-							{additionalSlots || (
-								<span data-flx="guild.upload-slot-info.span">
-									{numberFormat.format(currentCount)} / {maxSlotCount}
-								</span>
-							)}
+							<span data-flx="guild.upload-slot-info.span">
+								{numberFormat.format(currentCount)} / {maxSlotCount}
+							</span>
 						</div>
 					</div>
 					<div className={styles.uploadButtonDesktop} data-flx="guild.upload-slot-info.upload-button-desktop">

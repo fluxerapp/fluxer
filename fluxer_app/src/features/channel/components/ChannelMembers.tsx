@@ -13,6 +13,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/ChannelMembers.module.css';
 import {hasVisibleCompactMemberCustomStatus} from '@app/features/channel/components/CompactMemberCustomStatus';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
+import {MemberListGroupHeader} from '@app/features/channel/components/MemberListGroupHeader';
 import {MemberListItem} from '@app/features/channel/components/MemberListItem';
 import {
 	MEMBER_LIST_GROUP_HEADER_HEIGHT_PX,
@@ -30,7 +31,6 @@ import {MemberListUnavailableFallback} from '@app/features/channel/components/sh
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import {resolveMemberListViewportModel} from '@app/features/member/state/MemberListViewportStateMachine';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
@@ -53,7 +53,6 @@ import * as MemberListUtils from '@app/features/member/utils/MemberListUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Presence from '@app/features/presence/state/Presence';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
-import {openRoleContextMenu, openRoleContextMenuForElement} from '@app/features/ui/action_menu/RoleContextMenu';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
@@ -137,37 +136,6 @@ function useGroupHeadingWidthTracking(): GroupHeadingWidthTracking {
 	return trackingRef.current;
 }
 
-interface MemberListGroupHeaderContentProps {
-	name: string;
-	count: number;
-}
-
-function MemberListGroupHeaderContent({name, count}: MemberListGroupHeaderContentProps) {
-	const {i18n} = useLingui();
-	return (
-		<>
-			<span
-				className={styles.groupHeaderLabel}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-label"
-			>
-				{name}
-			</span>
-			<span
-				className={styles.groupHeaderSeparator}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-separator"
-			>
-				{'—'}
-			</span>
-			<span
-				className={styles.groupHeaderCount}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-count"
-			>
-				{getCachedNumberFormat(i18n.locale).format(count)}
-			</span>
-		</>
-	);
-}
-
 interface GroupDMMemberListGroupProps {
 	group: GroupDMMemberGroup;
 	channelId: string;
@@ -177,18 +145,15 @@ interface GroupDMMemberListGroupProps {
 
 const GroupDMMemberListGroup = observer(({group, channelId, ownerId, onHeadingRef}: GroupDMMemberListGroupProps) => (
 	<div className={styles.groupContainer} data-flx="channel.channel-members.group-dm-member-list-group.group-container">
-		<div
+		<MemberListGroupHeader
 			ref={onHeadingRef}
-			data-member-group-id={group.id}
+			groupId={group.id}
+			guildRole={null}
+			name={group.displayName}
+			count={group.count}
 			className={styles.groupHeader}
 			data-flx="channel.channel-members.group-dm-member-list-group.group-header"
-		>
-			<MemberListGroupHeaderContent
-				name={group.displayName}
-				count={group.count}
-				data-flx="channel.channel-members.group-dm-member-list-group.member-list-group-header-content"
-			/>
-		</div>
+		/>
 		<div className={styles.membersList} data-flx="channel.channel-members.group-dm-member-list-group.members-list">
 			{group.users.map((user) => {
 				const status = Presence.getStatus(user.id);
@@ -459,114 +424,31 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		for (let rowIndex = firstRow; rowIndex <= lastRow; rowIndex += 1) {
 			const rowTop = rowOffsets != null ? rowOffsets[rowIndex]! : rowIndex * scaledMemberItemHeight;
 			const rowStyle = {transform: `translateY(${rowTop}px)`};
-			if (layouts.length === 0) {
-				const item = memberListState.items.get(rowIndex);
-				if (!item) {
+
+			if (layouts.length > 0) {
+				const layout = getGroupLayoutForRow(layouts, rowIndex);
+				if (!layout) {
+					continue;
+				}
+				if (rowIndex === layout.headerRowIndex) {
+					const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
+					const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
 					virtualRows.push(
-						<div
-							key={`member-skeleton-${rowIndex}`}
-							className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.skeleton"
-						>
-							<MemberListSkeletonRow
-								index={rowIndex}
-								variant={MemberListSkeletonVariant.GUILD}
-								data-flx="channel.channel-members.lazy-member-list.member-list-skeleton-row"
-							/>
-						</div>,
-					);
-					continue;
-				}
-				const member = MemberSidebar.materializeItemMember(guild.id, item);
-				if (!member) {
-					continue;
-				}
-				const user = member.user;
-				if (renderedMemberIds.has(user.id)) {
-					continue;
-				}
-				renderedMemberIds.add(user.id);
-				const displayName = member.nick
-					? NicknameUtils.formatNicknameForStreamerMode(member.nick)
-					: NicknameUtils.getNickname(user, guild.id);
-				const roleColor = member.getColorString?.() ?? undefined;
-				virtualRows.push(
-					<div
-						key={`member-${user.id}`}
-						className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-						style={rowStyle}
-						data-flx="channel.channel-members.lazy-member-list.virtual-row.member"
-					>
-						<MemberListItem
-							user={user}
-							channelId={channel.id}
-							guildId={guild.id}
-							guildMember={member}
-							isOwner={guild.isOwner(user.id)}
-							roleColor={roleColor}
-							displayName={displayName}
-							disableBackdrop={true}
-							avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item"
-						/>
-					</div>,
-				);
-				continue;
-			}
-			const layout = getGroupLayoutForRow(layouts, rowIndex);
-			if (!layout) {
-				continue;
-			}
-			if (rowIndex === layout.headerRowIndex) {
-				const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
-				const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
-				const groupName = getGroupName(group.id);
-				const groupRowContent = (
-					<MemberListGroupHeaderContent
-						name={groupName}
-						count={group.count}
-						data-flx="channel.channel-members.lazy-member-list.member-list-group-header-content"
-					/>
-				);
-				if (role) {
-					virtualRows.push(
-						<div
+						<MemberListGroupHeader
 							key={`group-${group.id}`}
 							ref={registerGroupHeading}
-							data-member-group-id={group.id}
+							groupId={group.id}
+							guildRole={role}
+							name={getGroupName(group.id)}
+							count={group.count}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
 							style={rowStyle}
-							role="button"
-							tabIndex={0}
-							onContextMenu={(event) => openRoleContextMenu(event, role.id)}
-							onKeyDown={(event) => {
-								if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
-								event.preventDefault();
-								event.stopPropagation();
-								openRoleContextMenuForElement(event.currentTarget, role.id);
-							}}
-							data-member-list-focus-item="true"
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
-						>
-							{groupRowContent}
-						</div>,
+							data-flx="channel.channel-members.lazy-member-list.virtual-row"
+						/>,
 					);
-				} else {
-					virtualRows.push(
-						<div
-							key={`group-${group.id}`}
-							ref={registerGroupHeading}
-							data-member-group-id={group.id}
-							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
-						>
-							{groupRowContent}
-						</div>,
-					);
+
+					continue;
 				}
-				continue;
 			}
 			const item = memberListState.items.get(rowIndex);
 			if (!item) {
@@ -698,7 +580,11 @@ export const ChannelMembers = observer(function ChannelMembers({guild = null, ch
 	const frameSides = guild ? {left: false} : undefined;
 	return (
 		<OutlineFrame hideTopBorder sides={frameSides} data-flx="channel.channel-members.outline-frame--2">
-			<LazyMemberList guild={guild} channel={channel} data-flx="channel.channel-members.lazy-member-list" />
+			{guild.visiting ? (
+				<MemberListUnavailableFallback variant="visiting" data-flx="channel.channel-members.visiting-fallback" />
+			) : (
+				<LazyMemberList guild={guild} channel={channel} data-flx="channel.channel-members.lazy-member-list" />
+			)}
 		</OutlineFrame>
 	);
 });

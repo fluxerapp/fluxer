@@ -21,7 +21,7 @@
 }
 
 :global(.theme-light) .tile {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .title {

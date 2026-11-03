@@ -20,7 +20,7 @@ Every file went through the same mechanical steps, so a fresh upstream tree can 
 
 ## Added seams
 
-`InternalRoomOptions.createEngine` lets a caller build the engine, and `Room` uses it in place of `new RTCEngine`. The index exports `RTCEngine`, `SignalClient`, `SignalConnectionState`, `PCTransportState`, `selectPublisherCodecPreferences` and the protocol messages a substitute engine has to build. The P2P mesh engine in `fluxer_app/src/features/voice/engine/mesh` depends on all of them. `room/Room.test.ts` covers the option.
+`InternalRoomOptions.createEngine` lets a caller build the engine, and `Room` uses it in place of `new RTCEngine`. The index exports `RTCEngine`, `SignalClient`, `SignalConnectionState`, `PCTransportState`, `selectPublisherCodecPreferences` and the protocol messages a substitute engine has to build. The P2P mesh engine in `fluxer_app/src/features/voice/engine/mesh` depends on all of them.
 
 ## Updating from upstream
 
@@ -29,4 +29,4 @@ Every file went through the same mechanical steps, so a fresh upstream tree can 
 3. Strip blank lines from the base, this tree and the new tree, run `git merge-file --diff3 --diff-algorithm=histogram` per file, and put blank lines back from the new tree. Blank-line drift between the trees otherwise turns into conflicts.
 4. Resolve conflicts by starting from the upstream function and reapplying whatever this tree changed.
 5. Diff the result against the transformed new tag after compiling both to JavaScript without types. Review every hunk.
-6. Run `tsgo --noEmit` under the app tsconfig, `biome check`, `knip` and `pnpm --filter livekit-client test`, then update the version in `package.json` and this file.
+6. Run `tsgo --noEmit` under the app tsconfig, `biome check` and `knip`, then update the version in `package.json` and this file.

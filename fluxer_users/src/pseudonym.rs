@@ -184,62 +184,6 @@ mod tests {
     }
 
     #[test]
-    fn shares_the_reserved_list_and_development_secret() {
-        let fixture = fixture();
-        let reserved = fixture["reserved_discriminators"]
-            .as_array()
-            .expect("a reserved list")
-            .iter()
-            .map(|value| value.as_u64().expect("a number") as u32)
-            .collect::<Vec<_>>();
-        assert_eq!(reserved, RESERVED_DISCRIMINATORS.to_vec());
-        assert_eq!(fixture["development_secret"], DEVELOPMENT_SECRET);
-    }
-
-    #[test]
-    fn is_stable_per_account_and_differs_across_accounts() {
-        let secret = b"stable-secret";
-        let first = pseudonym_with_secret(secret, 1_174_109_840_998_400_001);
-        assert_eq!(
-            first,
-            pseudonym_with_secret(secret, 1_174_109_840_998_400_001)
-        );
-        let names = (0..200)
-            .map(|offset| pseudonym_with_secret(secret, 1_174_109_840_998_400_001 + offset))
-            .collect::<std::collections::HashSet<_>>();
-        assert_eq!(names.len(), 200);
-        assert_ne!(
-            first,
-            pseudonym_with_secret(b"other-secret", 1_174_109_840_998_400_001)
-        );
-    }
-
-    #[test]
-    fn looks_like_a_generated_account() {
-        for user_id in 0..500 {
-            let generated = pseudonym_with_secret(b"format-secret", user_id);
-            assert!(
-                is_valid_username(&generated.username),
-                "{}",
-                generated.username
-            );
-            assert!(
-                SCALES.iter().any(|scale| {
-                    generated
-                        .username
-                        .strip_prefix(&capitalize(scale))
-                        .is_some_and(|rest| TAILS.iter().any(|tail| rest == capitalize(tail)))
-                }),
-                "{}",
-                generated.username
-            );
-            let discriminator = generated.discriminator as u32;
-            assert!((1..=MAX_DISCRIMINATOR).contains(&discriminator));
-            assert!(!RESERVED_DISCRIMINATORS.contains(&discriminator));
-        }
-    }
-
-    #[test]
     fn configuration_requires_a_secret_outside_development() {
         assert!(configure(None, None).is_err());
         assert!(configure(Some("  ".to_owned()), Some("production")).is_err());

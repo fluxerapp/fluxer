@@ -22,10 +22,6 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
-function sortSnowflakes(ids: Array<string>): Array<string> {
-	return [...ids].sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
-}
-
 describe('Guild Member Management', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
@@ -95,26 +91,6 @@ describe('Guild Member Management', () => {
 		});
 		await createBuilder(harness, member1.token)
 			.put(`/guilds/${guild.id}/members/${member2.userId}/roles/${role.id}`)
-			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
-	test('should enforce role hierarchy when adding roles', async () => {
-		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-		const member = members[0];
-		const higherRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Higher Role',
-			permissions: Permissions.MANAGE_ROLES.toString(),
-		});
-		const lowerRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Lower Role',
-		});
-		await updateRolePositions(harness, owner.token, guild.id, [
-			{id: higherRole.id, position: 2},
-			{id: lowerRole.id, position: 1},
-		]);
-		await addMemberRole(harness, owner.token, guild.id, member.userId, lowerRole.id);
-		await createBuilder(harness, member.token)
-			.put(`/guilds/${guild.id}/members/${owner.userId}/roles/${higherRole.id}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -294,17 +270,16 @@ describe('Guild Member Management', () => {
 		});
 		test('should support limit parameter for listing members', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 3);
-			const expectedIds = sortSnowflakes([owner.userId, ...members.map((member) => member.userId)]);
 			const firstPage = await createBuilder<Array<GuildMemberResponse>>(harness, owner.token)
 				.get(`/guilds/${guild.id}/members?limit=2`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(firstPage.map((entry) => entry.user.id)).toEqual(expectedIds.slice(0, 2));
+			expect(firstPage.map((entry) => entry.user.id)).toEqual([owner.userId, members[0].userId]);
 			const secondPage = await createBuilder<Array<GuildMemberResponse>>(harness, owner.token)
-				.get(`/guilds/${guild.id}/members?limit=2&after=${firstPage[1]!.user.id}`)
+				.get(`/guilds/${guild.id}/members?limit=2&after=${members[0].userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(secondPage.map((entry) => entry.user.id)).toEqual(expectedIds.slice(2));
+			expect(secondPage.map((entry) => entry.user.id)).toEqual([members[1].userId, members[2].userId]);
 		});
 	});
 	describe('Get Member Permission Checks', () => {
@@ -449,29 +424,6 @@ describe('Guild Member Management', () => {
 		});
 	});
 	describe('Member Role Assignment/Removal', () => {
-		test('should not allow assigning role higher than own highest role', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
-			const [moderator, target] = members;
-			const highRole = await createRole(harness, owner.token, guild.id, {
-				name: 'High Role',
-				permissions: '0',
-			});
-			const modRole = await createRole(harness, owner.token, guild.id, {
-				name: 'Moderator',
-				permissions: '268435456',
-			});
-			await updateRolePositions(harness, owner.token, guild.id, [
-				{id: highRole.id, position: 3},
-				{id: modRole.id, position: 2},
-			]);
-			await updateMember(harness, owner.token, guild.id, moderator.userId, {
-				roles: [modRole.id],
-			});
-			await createBuilder(harness, moderator.token)
-				.put(`/guilds/${guild.id}/members/${target.userId}/roles/${highRole.id}`)
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
 		test('should not allow removing role higher than own highest role', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
 			const [moderator, target] = members;

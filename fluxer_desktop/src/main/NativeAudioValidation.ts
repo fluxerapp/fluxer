@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {NativeAudioStartOptions, VirtmicNode} from '@electron/common/Types';
+import {isPlainRecord as isPlainObject} from '@electron/common/PlainRecord';
+
+import type {NativeAudioAvailability, NativeAudioStartOptions, VirtmicNode} from '@electron/common/Types';
 
 interface InternalAudioFrame {
 	samples: Float32Array;
@@ -18,15 +20,14 @@ const MAX_LINUX_RULE_KEYS_PER_PATTERN = 32;
 const MAX_LINUX_RULE_KEY_LENGTH = 128;
 const MAX_LINUX_RULE_VALUE_LENGTH = 512;
 const MAX_UINT32 = 0xffffffff;
+const DEFAULT_WIN_ENDPOINT = 'default';
+const MAX_WIN_ENDPOINTS = 16;
+const MAX_WIN_ENDPOINT_ID_LENGTH = 512;
+
+type WindowsCaptureScope = NonNullable<NativeAudioStartOptions['winCaptureScope']>;
 
 export function isValidTargetPid(pid: unknown): pid is number {
 	return typeof pid === 'number' && Number.isSafeInteger(pid) && pid > 0 && pid <= MAX_UINT32;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
 }
 
 function isBooleanOrUndefined(value: unknown): boolean {
@@ -79,6 +80,38 @@ export function isValidLinuxRule(
 		isBooleanOrUndefined(rule.onlySpeakers) &&
 		isBooleanOrUndefined(rule.onlyDefaultSpeakers)
 	);
+}
+
+function isValidWinEndpoint(value: unknown): value is string {
+	if (typeof value !== 'string') return false;
+	if (value === DEFAULT_WIN_ENDPOINT) return true;
+	return value.length <= MAX_WIN_ENDPOINT_ID_LENGTH && !value.includes('\0') && value.startsWith('{');
+}
+
+export function isValidWinEndpoints(value: unknown): value is Array<string> {
+	return (
+		Array.isArray(value) && value.length > 0 && value.length <= MAX_WIN_ENDPOINTS && value.every(isValidWinEndpoint)
+	);
+}
+
+export function resolveWindowsCaptureScope(
+	requested: WindowsCaptureScope,
+	winEndpoints: Array<string> | undefined,
+	capabilities: NativeAudioAvailability['capabilities'],
+): {captureScope: WindowsCaptureScope; endpoints?: Array<string>} {
+	if (winEndpoints) {
+		if (requested !== 'session-mixer') {
+			throw new Error('Windows playback device selection requires the session-mixer scope');
+		}
+		if (capabilities?.endpointSelect !== true) {
+			throw new Error('Windows playback device selection is unavailable');
+		}
+		return {captureScope: 'session-mixer', endpoints: winEndpoints};
+	}
+	if (requested === 'system' && capabilities?.processExclude === false && capabilities?.sessionMixer === true) {
+		return {captureScope: 'session-mixer'};
+	}
+	return {captureScope: requested};
 }
 
 export function normalizeTimestampUs(timestampUs: number | bigint): number {

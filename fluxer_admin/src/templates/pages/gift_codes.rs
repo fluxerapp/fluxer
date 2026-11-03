@@ -49,8 +49,7 @@ pub fn gift_codes_page(
     let base = &config.base_path;
     let codes_value = generated_codes.map(|c| c.join("\n")).unwrap_or_default();
     let description = format!(
-        "Create one-use {} gift URLs with a fixed positive duration. \
-         Lifetime gifts cannot be generated here.",
+        "Create one-use {} gift URLs that last for a set time or for life.",
         premium.name
     );
 
@@ -101,8 +100,8 @@ pub fn gift_codes_page(
                             (form_field_group(
                                 "Duration unit", "gift-duration-type",
                                 true, None,
-                                Some("Days, weeks, months, or years. \
-                                      No lifetime option is available."),
+                                Some("Days, weeks, months, years, or lifetime. \
+                                      Lifetime ignores the quantity."),
                                 html! {
                                     select id="gift-duration-type" name="duration_type"
                                         required class=(FORM_SELECT_CLASS) {
@@ -110,6 +109,7 @@ pub fn gift_codes_page(
                                         option value="weeks" { "Weeks" }
                                         option value="months" selected { "Months" }
                                         option value="years" { "Years" }
+                                        option value="lifetime" { "Lifetime" }
                                     }
                                 },
                             ))

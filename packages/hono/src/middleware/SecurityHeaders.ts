@@ -24,7 +24,6 @@ interface SecurityHeadersOptions {
 	strictTransportSecurity?: string | false;
 	xContentTypeOptions?: string | false;
 	xFrameOptions?: string | false;
-	overwrite?: boolean;
 }
 
 function resolveHeaderValue(
@@ -34,18 +33,17 @@ function resolveHeaderValue(
 	return typeof value === 'function' ? value(ctx) : value;
 }
 
-function setHeader(headers: Headers, name: string, value: string | false | undefined, overwrite: boolean): void {
+function setHeader(headers: Headers, name: string, value: string | false | undefined): void {
 	if (value === false || value === undefined || value.length === 0) {
 		return;
 	}
-	if (!overwrite && headers.has(name)) {
+	if (headers.has(name)) {
 		return;
 	}
 	headers.set(name, value);
 }
 
 export function securityHeaders(options: SecurityHeadersOptions = {}): MiddlewareHandler {
-	const overwrite = options.overwrite ?? false;
 	return async (ctx, next) => {
 		await next();
 		const headers = ctx.res.headers;
@@ -53,22 +51,11 @@ export function securityHeaders(options: SecurityHeadersOptions = {}): Middlewar
 			headers,
 			'Strict-Transport-Security',
 			options.strictTransportSecurity ?? STRICT_TRANSPORT_SECURITY_PRELOAD,
-			overwrite,
 		);
-		setHeader(
-			headers,
-			'X-Content-Type-Options',
-			options.xContentTypeOptions ?? X_CONTENT_TYPE_OPTIONS_NOSNIFF,
-			overwrite,
-		);
-		setHeader(headers, 'X-Frame-Options', options.xFrameOptions ?? X_FRAME_OPTIONS_DENY, overwrite);
-		setHeader(
-			headers,
-			'Referrer-Policy',
-			options.referrerPolicy ?? REFERRER_POLICY_STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-			overwrite,
-		);
-		setHeader(headers, 'Permissions-Policy', options.permissionsPolicy ?? LOCKED_DOWN_PERMISSIONS_POLICY, overwrite);
-		setHeader(headers, 'Content-Security-Policy', resolveHeaderValue(options.contentSecurityPolicy, ctx), overwrite);
+		setHeader(headers, 'X-Content-Type-Options', options.xContentTypeOptions ?? X_CONTENT_TYPE_OPTIONS_NOSNIFF);
+		setHeader(headers, 'X-Frame-Options', options.xFrameOptions ?? X_FRAME_OPTIONS_DENY);
+		setHeader(headers, 'Referrer-Policy', options.referrerPolicy ?? REFERRER_POLICY_STRICT_ORIGIN_WHEN_CROSS_ORIGIN);
+		setHeader(headers, 'Permissions-Policy', options.permissionsPolicy ?? LOCKED_DOWN_PERMISSIONS_POLICY);
+		setHeader(headers, 'Content-Security-Policy', resolveHeaderValue(options.contentSecurityPolicy, ctx));
 	};
 }

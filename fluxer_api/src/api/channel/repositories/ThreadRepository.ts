@@ -708,13 +708,9 @@ export class ThreadRepository {
 		return rows.map((row) => new ThreadMember(row));
 	}
 
-	async addMembers(
-		threadId: ChannelID,
-		members: Array<CreateThreadMember>,
-		opts?: {joinTimestamp?: Date},
-	): Promise<ThreadMemberAddResult | null> {
+	async addMembers(threadId: ChannelID, members: Array<CreateThreadMember>): Promise<ThreadMemberAddResult | null> {
 		const unique = [...new Map(members.map((member) => [member.userId, member])).values()];
-		const joinTimestamp = opts?.joinTimestamp ?? new Date();
+		const joinTimestamp = new Date();
 		for (let attempt = 0; attempt < STATE_CAS_ATTEMPTS; attempt++) {
 			const state = await this.getState(threadId);
 			if (!state) return null;

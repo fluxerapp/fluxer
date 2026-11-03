@@ -84,20 +84,33 @@ disconnect_user_if_in_channel(
         undefined ->
             {not_found, VoiceStates, Sessions};
         VoiceState ->
-            case connection_matches(VoiceState, ExpectedConnectionId) of
-                false ->
-                    {not_found, VoiceStates, Sessions};
-                true ->
-                    disconnect_matching_channel(
-                        UserId,
-                        ExpectedChannelId,
-                        VoiceState,
-                        VoiceStates,
-                        Sessions,
-                        CleanupFun
-                    )
-            end
+            disconnect_matching_connection(
+                connection_matches(VoiceState, ExpectedConnectionId),
+                UserId,
+                ExpectedChannelId,
+                VoiceState,
+                VoiceStates,
+                Sessions,
+                CleanupFun
+            )
     end.
+
+-spec disconnect_matching_connection(
+    boolean(), user_id(), integer(), map(), voice_states_map(), sessions_map(), cleanup_fun()
+) ->
+    {ok, voice_states_map(), sessions_map()}
+    | {not_found, voice_states_map(), sessions_map()}
+    | {channel_mismatch, voice_states_map(), sessions_map()}.
+disconnect_matching_connection(
+    false, _UserId, _ChannelId, _VoiceState, VoiceStates, Sessions, _
+) ->
+    {not_found, VoiceStates, Sessions};
+disconnect_matching_connection(
+    true, UserId, ExpectedChannelId, VoiceState, VoiceStates, Sessions, CleanupFun
+) ->
+    disconnect_matching_channel(
+        UserId, ExpectedChannelId, VoiceState, VoiceStates, Sessions, CleanupFun
+    ).
 
 -spec connection_matches(map(), binary() | undefined) -> boolean().
 connection_matches(_VoiceState, undefined) ->

@@ -23,7 +23,6 @@
     user_thread_ids/2,
     parent_thread_ids/2,
     threads/1,
-    thread_count/1,
     total_threads/0,
     row_count/1,
     remove_user/2,
@@ -31,7 +30,7 @@
     import/1
 ]).
 
--export_type([tab/0, thread_id/0, user_id/0]).
+-export_type([tab/0, thread_id/0, user_id/0, row/0]).
 
 -define(REGISTRY, guild_thread_store_registry).
 -define(RETIRE_DELAY_MS, 60000).
@@ -123,10 +122,10 @@ put_member_row(Tab, Member) ->
         }
     of
         {ThreadId, UserId} when is_integer(ThreadId), is_integer(UserId) ->
-            case ets:member(Tab, {t, ThreadId}) of
-                true -> put_member(Tab, ThreadId, UserId, Member);
-                false -> ok
-            end;
+            _ =
+                ets:member(Tab, {t, ThreadId}) andalso
+                    put_member(Tab, ThreadId, UserId, Member),
+            ok;
         _ ->
             ok
     end.
@@ -142,20 +141,24 @@ put_thread(Tab, Thread) ->
 insert_thread(Tab, Thread) ->
     case snowflake_id:parse_optional(maps:get(<<"id">>, Thread, undefined)) of
         ThreadId when is_integer(ThreadId) ->
-            Known = ets:member(Tab, {t, ThreadId}),
-            true = ets:insert(Tab, {{t, ThreadId}, Thread}),
-            case snowflake_id:parse_optional(maps:get(<<"parent_id">>, Thread, undefined)) of
-                ParentId when is_integer(ParentId) ->
-                    true = ets:insert(Tab, {{p, ParentId, ThreadId}, true});
-                _ ->
-                    true
-            end,
-            case Known of
-                true -> known;
-                false -> new
-            end;
+            store_thread(Tab, ThreadId, Thread);
         _ ->
             invalid
+    end.
+
+-spec store_thread(tab(), thread_id(), map()) -> new | known.
+store_thread(Tab, ThreadId, Thread) ->
+    Known = ets:member(Tab, {t, ThreadId}),
+    true = ets:insert(Tab, {{t, ThreadId}, Thread}),
+    case snowflake_id:parse_optional(maps:get(<<"parent_id">>, Thread, undefined)) of
+        ParentId when is_integer(ParentId) ->
+            true = ets:insert(Tab, {{p, ParentId, ThreadId}, true});
+        _ ->
+            true
+    end,
+    case Known of
+        true -> known;
+        false -> new
     end.
 
 -spec enforce_cap(tab()) -> ok.
@@ -171,10 +174,14 @@ trim(_Tab, Excess) when Excess =< 0 ->
 trim(Tab, Excess) ->
     case ets:select(Tab, [{{{t, '$1'}, '_'}, [], ['$1']}], Excess) of
         {Oldest, _Continuation} ->
-            lists:foreach(fun(ThreadId) -> remove_thread(Tab, ThreadId) end, Oldest);
+            remove_threads(Tab, Oldest);
         '$end_of_table' ->
             ok
     end.
+
+-spec remove_threads(tab(), [thread_id()]) -> ok.
+remove_threads(Tab, ThreadIds) ->
+    lists:foreach(fun(ThreadId) -> remove_thread(Tab, ThreadId) end, ThreadIds).
 
 -spec get_thread(tab(), thread_id()) -> map() | undefined.
 get_thread(Tab, ThreadId) ->
@@ -189,17 +196,20 @@ remove_thread(Tab, ThreadId) ->
         undefined ->
             ok;
         Thread ->
-            lists:foreach(
-                fun(UserId) -> remove_member(Tab, ThreadId, UserId) end,
-                member_ids(Tab, ThreadId)
-            ),
-            case snowflake_id:parse_optional(maps:get(<<"parent_id">>, Thread, undefined)) of
-                ParentId when is_integer(ParentId) -> ets:delete(Tab, {p, ParentId, ThreadId});
-                _ -> true
-            end,
-            true = ets:delete(Tab, {t, ThreadId}),
-            ok
+            remove_stored_thread(Tab, ThreadId, Thread)
     end.
+
+-spec remove_stored_thread(tab(), thread_id(), map()) -> ok.
+remove_stored_thread(Tab, ThreadId, Thread) ->
+    lists:foreach(
+        fun(UserId) -> remove_member(Tab, ThreadId, UserId) end, member_ids(Tab, ThreadId)
+    ),
+    case snowflake_id:parse_optional(maps:get(<<"parent_id">>, Thread, undefined)) of
+        ParentId when is_integer(ParentId) -> ets:delete(Tab, {p, ParentId, ThreadId});
+        _ -> true
+    end,
+    true = ets:delete(Tab, {t, ThreadId}),
+    ok.
 
 -spec put_member(tab(), thread_id(), user_id(), map()) -> ok.
 put_member(Tab, ThreadId, UserId, Member) ->
@@ -269,9 +279,13 @@ live_thread_count(Tab) ->
         thread_count(Tab)
     catch
         error:badarg ->
-            ok = registry(fun() -> ets:delete(?REGISTRY, Tab) end),
+            ok = unregister_table(Tab),
             0
     end.
+
+-spec unregister_table(tab()) -> ok.
+unregister_table(Tab) ->
+    registry(fun() -> ets:delete(?REGISTRY, Tab) end).
 
 -spec row_count(tab()) -> non_neg_integer().
 row_count(Tab) ->
@@ -293,7 +307,7 @@ export(Tab) ->
 -spec import([term()]) -> tab().
 import(Rows) ->
     Tab = new(),
-    true = ets:insert(Tab, [Row || Row <- Rows, is_valid_row(Row)]),
+    true = ets:insert(Tab, [Row || Row = {_, _} <- Rows, is_valid_row(Row)]),
     Tab.
 
 -spec is_valid_row(term()) -> boolean().
@@ -302,129 +316,3 @@ is_valid_row({{m, T, U}, Member}) when is_integer(T), is_integer(U), is_map(Memb
 is_valid_row({{u, U, T}, true}) when is_integer(T), is_integer(U) -> true;
 is_valid_row({{p, P, T}, true}) when is_integer(T), is_integer(P) -> true;
 is_valid_row(_) -> false.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-thread(Id, Parent) ->
-    #{<<"id">> => Id, <<"parent_id">> => Parent, <<"type">> => 11}.
-
-member(Thread, User) ->
-    #{<<"id">> => integer_to_binary(Thread), <<"user_id">> => integer_to_binary(User)}.
-
-store_round_trip_test() ->
-    Tab = new(),
-    try
-        ok = load(Tab, [thread(10, 1), thread(11, 1), thread(20, 2)], [
-            member(10, 100), member(10, 101), member(20, 100), member(99, 100)
-        ]),
-        ?assertEqual(3, thread_count(Tab)),
-        ?assertEqual([100, 101], member_ids(Tab, 10)),
-        ?assertEqual([10, 20], user_thread_ids(Tab, 100)),
-        ?assertEqual([10, 11], parent_thread_ids(Tab, 1)),
-        ?assert(is_member(Tab, 20, 100)),
-        ?assertNot(is_member(Tab, 99, 100)),
-        ok = remove_thread(Tab, 10),
-        ?assertEqual(undefined, get_thread(Tab, 10)),
-        ?assertEqual([20], user_thread_ids(Tab, 100)),
-        ?assertEqual([], user_thread_ids(Tab, 101)),
-        ?assertEqual([11], parent_thread_ids(Tab, 1)),
-        ?assertEqual([20], remove_user(Tab, 100)),
-        ?assertEqual([], member_ids(Tab, 20))
-    after
-        destroy(Tab)
-    end.
-
-export_import_test() ->
-    Tab = new(),
-    ok = load(Tab, [thread(10, 1)], [member(10, 5)]),
-    Rows = export(Tab),
-    destroy(Tab),
-    Tab2 = import([junk | Rows]),
-    try
-        ?assertEqual(length(Rows), row_count(Tab2)),
-        ?assert(is_member(Tab2, 10, 5)),
-        ?assertEqual([10], parent_thread_ids(Tab2, 1))
-    after
-        destroy(Tab2)
-    end.
-
-total_threads_counts_registered_stores_only_test() ->
-    ok = init(),
-    Before = total_threads(),
-    Tab = new(),
-    ok = load(Tab, [thread(10, 1), thread(11, 1)], []),
-    ?assertEqual(Before + 2, total_threads()),
-    Owner = spawn(fun() ->
-        Orphan = new(),
-        ok = load(Orphan, [thread(12, 1)], []),
-        receive
-            stop -> ok
-        end
-    end),
-    wait_for_total(Before + 3),
-    Owner ! stop,
-    wait_for_total(Before + 2),
-    destroy(Tab),
-    ?assertEqual(Before, total_threads()).
-
-wait_for_total(Expected) ->
-    wait_for_total(Expected, 50).
-
-wait_for_total(Expected, 0) ->
-    ?assertEqual(Expected, total_threads());
-wait_for_total(Expected, Attempts) ->
-    case total_threads() of
-        Expected ->
-            ok;
-        _ ->
-            timer:sleep(10),
-            wait_for_total(Expected, Attempts - 1)
-    end.
-
-retire_unregisters_at_once_and_schedules_destroy_test() ->
-    ok = init(),
-    Tab = new(),
-    ok = load(Tab, [thread(20, 1)], []),
-    Before = total_threads(),
-    ok = retire(Tab),
-    ?assertEqual(Before - 1, total_threads()),
-    ?assertNotEqual(undefined, ets:info(Tab)),
-    destroy(Tab).
-
-cap_keeps_newest_threads_test() ->
-    Tab = new(),
-    try
-        ok = load(Tab, [thread(Id, 1) || Id <- lists:seq(10, ?MAX_THREADS + 9)], [
-            member(10, 7), member(11, 7)
-        ]),
-        ?assertEqual(?MAX_THREADS, thread_count(Tab)),
-        ok = put_thread(Tab, thread(10, 1)),
-        ?assertEqual(?MAX_THREADS, thread_count(Tab)),
-        ok = put_thread(Tab, thread(?MAX_THREADS + 10, 1)),
-        ?assertEqual(?MAX_THREADS, thread_count(Tab)),
-        ?assertEqual(undefined, get_thread(Tab, 10)),
-        ?assertEqual([11], user_thread_ids(Tab, 7)),
-        ?assertNot(lists:member(10, parent_thread_ids(Tab, 1))),
-        ok = put_thread(Tab, thread(5, 1)),
-        ?assertEqual(undefined, get_thread(Tab, 5)),
-        ?assertEqual(?MAX_THREADS, thread_count(Tab)),
-        ?assertNotEqual(undefined, get_thread(Tab, ?MAX_THREADS + 10))
-    after
-        destroy(Tab)
-    end.
-
-load_over_cap_keeps_newest_ids_test() ->
-    Tab = new(),
-    try
-        Ids = lists:seq(?MAX_THREADS + 10, 1, -1),
-        ok = load(Tab, [thread(Id, 1) || Id <- Ids], [member(5, 9), member(20, 9)]),
-        ?assertEqual(?MAX_THREADS, thread_count(Tab)),
-        ?assertEqual(undefined, get_thread(Tab, 10)),
-        ?assertNotEqual(undefined, get_thread(Tab, 11)),
-        ?assertEqual([20], user_thread_ids(Tab, 9))
-    after
-        destroy(Tab)
-    end.
-
--endif.

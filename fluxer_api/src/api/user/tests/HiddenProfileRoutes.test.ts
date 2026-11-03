@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
 import {getMember, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {profilePseudonym} from '@app/api/user/ProfileVisibility';
 import {fetchUser, fetchUserMe, fetchUserProfile} from '@app/api/user/tests/UserTestUtils';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const PROFILE_HIDDEN_BIT = Number(UserFlags.PROFILE_HIDDEN);
 
@@ -21,6 +20,7 @@ interface AdminUser {
 	bio: string | null;
 	pronouns: string | null;
 	pending_deletion_at: string | null;
+	enforcement_decision_id: string | null;
 }
 
 describe('hidden profiles', () => {
@@ -40,6 +40,7 @@ describe('hidden profiles', () => {
 			'user:temp_ban',
 			'user:delete',
 			'user:update:flags',
+			'enforcement:view',
 		]);
 		const setup = await setupTestGuildWithMembers(harness, 1);
 		viewer = setup.owner;
@@ -60,7 +61,6 @@ describe('hidden profiles', () => {
 	});
 
 	afterEach(async () => {
-		vi.restoreAllMocks();
 		await harness?.shutdown();
 	});
 
@@ -95,81 +95,68 @@ describe('hidden profiles', () => {
 		expect(users[0]).toMatchObject({username: targetName, global_name: 'Shown Name', bio: 'shown bio'});
 	}
 
-	function memberUpdates(): Array<GuildMemberResponse> {
-		const dispatch = vi.mocked(NoopGatewayService.prototype.dispatchGuild);
-		return dispatch.mock.calls
-			.map(([params]) => params)
-			.filter((params) => params.event === 'GUILD_MEMBER_UPDATE' && params.guildId.toString() === guildId)
-			.map((params) => params.data as GuildMemberResponse)
-			.filter((member) => member.user.id === target.userId);
-	}
-
-	test('a normal account shows its stored profile', async () => {
-		await expectShown();
-	});
-
-	test('a staff ban hides the profile until the unban restores it, and clients are told both ways', async () => {
-		vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-		const presence = vi.spyOn(NoopGatewayService.prototype, 'dispatchPresence');
-		await createBuilder(harness, admin.token)
+	test('a staff ban hides the profile until the unban restores it', async () => {
+		const {user: suspended} = await createBuilder<{user: {enforcement_decision_id: string}}>(harness, admin.token)
 			.put(`/admin/users/${target.userId}/ban`)
-			.body({duration_hours: 24, notify_user: false})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await expectHidden();
-		await expectStaffSeeStoredProfile();
-		expect(memberUpdates().map((member) => [member.user.username, member.user.discriminator, member.nick])).toEqual([
-			[pseudonym.username, pseudonym.discriminator, null],
-		]);
-		const ownUpdates = presence.mock.calls
-			.map(([params]) => params)
-			.filter((params) => params.event === 'USER_UPDATE' && params.userId.toString() === target.userId)
-			.map((params) => params.data as {username: string});
-		expect(ownUpdates.length).toBeGreaterThan(0);
-		expect(ownUpdates.every((update) => update.username === targetName)).toBe(true);
-		await createBuilder(harness, admin.token)
-			.delete(`/admin/users/${target.userId}/ban`)
-			.body({notify_user: false})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await expectShown();
-		expect(memberUpdates().map((member) => [member.user.username, member.nick])).toEqual([
-			[pseudonym.username, null],
-			[targetName, 'Shown Nick'],
-		]);
-	});
-
-	test('the spammer flag hides the profile and clearing it restores it', async () => {
-		const flags = (body: Record<string, Array<string>>) =>
-			createBuilder(harness, admin.token)
-				.patch(`/admin/users/${target.userId}/flags`)
-				.body(body)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		await flags({add_flags: [UserFlags.SPAMMER.toString()]});
-		await expectHidden();
-		await expectStaffSeeStoredProfile();
-		await flags({remove_flags: [UserFlags.SPAMMER.toString()]});
-		await expectShown();
-	});
-
-	test('a pending deletion for abuse hides the profile and cancelling it restores it', async () => {
-		const {user} = await createBuilder<{user: AdminUser}>(harness, admin.token)
-			.put(`/admin/users/${target.userId}/deletion`)
+			.header('X-Audit-Log-Reason', 'Test suspension')
 			.body({
-				reason_code: DeletionReasons.HATE_SPEECH_OR_EXTREMIST_CONTENT,
-				days_until_deletion: 30,
-				notify_user: false,
+				duration_hours: 24,
+				decision: decisionBody(),
 			})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		await expectHidden();
 		await expectStaffSeeStoredProfile();
 		await createBuilder(harness, admin.token)
-			.delete(`/admin/users/${target.userId}/deletion`)
-			.body({expected_pending_deletion_at: user.pending_deletion_at})
+			.post(`/admin/enforcement-decisions/${suspended.enforcement_decision_id}/end`)
+			.body({outcome: 'lifted'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
+		await expectShown();
+	});
+
+	async function endDecision(decisionId: string) {
+		await createBuilder(harness, admin.token)
+			.post(`/admin/enforcement-decisions/${decisionId}/end`)
+			.header('X-Audit-Log-Reason', 'Checked again')
+			.body({outcome: 'reversed'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+	}
+
+	test('a direct message limit hides the profile and ending it restores it', async () => {
+		await createBuilder(harness, admin.token)
+			.put(`/admin/users/${target.userId}/feature-limits`)
+			.header('X-Audit-Log-Reason', 'Spam review')
+			.body({limit: 'direct_messages', decision: decisionBody()})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await expectHidden();
+		await expectStaffSeeStoredProfile();
+		const {decisions} = await createBuilder<{decisions: Array<{decision_id: string}>}>(harness, admin.token)
+			.get(`/admin/enforcement-decisions?subject_type=user&subject_id=${target.userId}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await endDecision(decisions[0]!.decision_id);
+		await expectShown();
+	});
+
+	test('a closure for abuse hides the profile and ending it restores it', async () => {
+		const {user} = await createBuilder<{user: AdminUser}>(harness, admin.token)
+			.put(`/admin/users/${target.userId}/deletion`)
+			.header('X-Audit-Log-Reason', 'Hate review')
+			.body({
+				days_until_deletion: 74,
+				basis: {
+					type: 'enforcement',
+					decision: decisionBody({reason_code: DeletionReasons.HATE_SPEECH_OR_EXTREMIST_CONTENT}),
+				},
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await expectHidden();
+		await expectStaffSeeStoredProfile();
+		await endDecision(user.enforcement_decision_id!);
 		await expectShown();
 	});
 

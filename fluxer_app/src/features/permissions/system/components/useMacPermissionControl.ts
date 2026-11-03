@@ -94,13 +94,13 @@ export function useMacPermissionControl(kind: MacPermissionKind): MacPermissionC
 		setBusy(true);
 		void action(kind).finally(() => setBusy(false));
 	}, [kind, status]);
+	let actionDescriptor: MessageDescriptor | null = null;
+	if (needsAction) {
+		actionDescriptor = status === 'not-determined' ? ALLOW_DESCRIPTOR : OPEN_SYSTEM_SETTINGS_DESCRIPTOR;
+	}
 	return {
 		status,
-		actionDescriptor: needsAction
-			? status === 'not-determined'
-				? ALLOW_DESCRIPTOR
-				: OPEN_SYSTEM_SETTINGS_DESCRIPTOR
-			: null,
+		actionDescriptor,
 		busy,
 		relaunchMayHelp: relaunchMayHelp(kind, status),
 		quitPromptAdvice: MacPermissions.showsQuitPromptAdvice(kind),

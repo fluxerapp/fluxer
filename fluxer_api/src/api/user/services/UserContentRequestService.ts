@@ -3,8 +3,6 @@
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import type {SavedMessageEntry, UserContentService} from '@app/api/user/services/UserContentService';
 import type {MessageListResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -29,7 +27,6 @@ interface UserMentionsParams {
 	everyone: boolean;
 	guilds: boolean;
 	before?: MessageID;
-	requestCache: RequestCache;
 }
 
 interface UserMentionDeleteParams {
@@ -47,7 +44,6 @@ interface SavedMessagesParams {
 	viewer: ThreadViewer;
 	limit: number;
 	before?: MessageID;
-	requestCache: RequestCache;
 }
 
 interface SaveMessageParams {
@@ -55,7 +51,6 @@ interface SaveMessageParams {
 	viewer: ThreadViewer;
 	channelId: ChannelID;
 	messageId: MessageID;
-	requestCache: RequestCache;
 }
 
 interface UnsaveMessageParams {
@@ -84,10 +79,7 @@ interface HarvestDownloadParams {
 }
 
 export class UserContentRequestService {
-	constructor(
-		private readonly userContentService: UserContentService,
-		private readonly userCacheService: UserCacheService,
-	) {}
+	constructor(private readonly userContentService: UserContentService) {}
 
 	async listMentions(params: UserMentionsParams): Promise<MessageListResponse> {
 		const messages = await this.userContentService.getRecentMentions({
@@ -135,8 +127,6 @@ export class UserContentRequestService {
 			viewer: params.viewer,
 			channelId: params.channelId,
 			messageId: params.messageId,
-			userCacheService: this.userCacheService,
-			requestCache: params.requestCache,
 		});
 	}
 

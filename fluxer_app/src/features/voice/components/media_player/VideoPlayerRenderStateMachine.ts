@@ -3,11 +3,11 @@
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
-export type VideoPlayerPlayPauseIndicator = 'play' | 'pause';
+type VideoPlayerPlayPauseIndicator = 'play' | 'pause';
 
 type VideoPlayerPreloadAttribute = 'none' | 'metadata' | undefined;
 
-export interface VideoPlayerRenderSignals {
+interface VideoPlayerRenderSignals {
 	autoPlay: boolean;
 	hasPlayed: boolean;
 	wantsMetadata: boolean;
@@ -17,7 +17,7 @@ export interface VideoPlayerRenderSignals {
 	hasError: boolean;
 }
 
-export interface VideoPlayerRenderModel {
+interface VideoPlayerRenderModel {
 	renderState: VideoPlayerRenderState;
 	shouldAttachSource: boolean;
 	preloadAttribute: VideoPlayerPreloadAttribute;
@@ -31,7 +31,7 @@ interface VideoPlayerPlaybackSignals {
 	isPlaying: boolean;
 }
 
-export type VideoPlayerRenderEvent =
+type VideoPlayerRenderEvent =
 	| {type: 'video.evaluateRender'; signals: VideoPlayerRenderSignals}
 	| {type: 'video.observePlayback'; signals: VideoPlayerPlaybackSignals};
 
@@ -63,10 +63,19 @@ function selectRenderState(signals: VideoPlayerRenderSignals): VideoPlayerRender
 
 function createRenderModel(signals: VideoPlayerRenderSignals): VideoPlayerRenderModel {
 	const renderState = selectRenderState(signals);
+	const shouldAttachSource = signals.hasPlayed || signals.wantsMetadata;
+	let preloadAttribute: VideoPlayerPreloadAttribute;
+	if (signals.hasPlayed) {
+		preloadAttribute = undefined;
+	} else if (signals.wantsMetadata) {
+		preloadAttribute = 'metadata';
+	} else {
+		preloadAttribute = 'none';
+	}
 	return {
 		renderState,
-		shouldAttachSource: signals.hasPlayed || signals.wantsMetadata,
-		preloadAttribute: signals.hasPlayed ? undefined : signals.wantsMetadata ? 'metadata' : 'none',
+		shouldAttachSource,
+		preloadAttribute,
 		shouldHideVideo: !signals.hasPlayed,
 		shouldShowPosterOverlay: !signals.hasPlayed && !signals.autoPlay,
 		shouldShowControlsOverlay: signals.hasPlayed || signals.autoPlay,
@@ -124,7 +133,7 @@ const videoPlayerRenderStateMachine = setup({
 	},
 });
 
-export type VideoPlayerRenderSnapshot = SnapshotFrom<typeof videoPlayerRenderStateMachine>;
+type VideoPlayerRenderSnapshot = SnapshotFrom<typeof videoPlayerRenderStateMachine>;
 
 export function createVideoPlayerRenderSnapshot(): VideoPlayerRenderSnapshot {
 	return initialTransition(videoPlayerRenderStateMachine)[0];

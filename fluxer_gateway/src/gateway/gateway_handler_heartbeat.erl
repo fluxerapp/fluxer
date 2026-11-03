@@ -4,9 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
-    handle_heartbeat_check/1,
-    handle_heartbeat_check/2,
-    handle_legacy_heartbeat_check/1,
+    handle_heartbeat_check/1, handle_heartbeat_check/2,
     handle_heartbeat/2,
     schedule_heartbeat_check/1,
     cancel_heartbeat_timer/1
@@ -37,13 +35,6 @@ handle_heartbeat_check(#{heartbeat_state := HeartbeatState} = State) ->
     Timeout = constants:heartbeat_timeout(),
     Interval = constants:heartbeat_interval(),
     evaluate_heartbeat(State, Now, LastAck, WaitingForAck, Timeout, Interval).
-
--spec handle_legacy_heartbeat_check(state()) -> ws_result().
-handle_legacy_heartbeat_check(State) ->
-    case maps:get(heartbeat_timer, State, undefined) of
-        undefined -> handle_heartbeat_check(State);
-        _Timer -> {ok, State}
-    end.
 
 -spec evaluate_heartbeat(state(), integer(), integer(), boolean(), integer(), integer()) ->
     ws_result().

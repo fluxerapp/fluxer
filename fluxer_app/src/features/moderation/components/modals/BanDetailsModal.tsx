@@ -120,7 +120,7 @@ export const BanDetailsModal: React.FC<BanDetailsModalProps> = observer(({ban, o
 					</div>
 				</Modal.ContentLayout>
 			</Modal.Content>
-			{onRevoke && (
+			{onRevoke ? (
 				<Modal.Footer data-flx="moderation.ban-details-modal.modal-footer">
 					<Button
 						variant="secondary"
@@ -138,6 +138,8 @@ export const BanDetailsModal: React.FC<BanDetailsModalProps> = observer(({ban, o
 						<Trans>Revoke ban</Trans>
 					</Button>
 				</Modal.Footer>
+			) : (
+				<Modal.DismissFooter data-flx="moderation.ban-details-modal.dismiss-footer" />
 			)}
 		</Modal.Root>
 	);

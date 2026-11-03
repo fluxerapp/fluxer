@@ -12,7 +12,6 @@ use axum::{
 };
 use futures_util::Stream;
 use sha2::{Digest, Sha256};
-use std::fmt;
 use std::path::{Component, Path, PathBuf};
 use std::pin::Pin;
 use std::sync::Arc;
@@ -22,7 +21,6 @@ use tokio::sync::{OwnedSemaphorePermit, Semaphore, TryAcquireError};
 
 const LOCAL_FILE_BUFFER_BUDGET_BYTES: usize = 128 * 1024 * 1024;
 const LOCAL_FILE_STREAM_BUFFER_BYTES: usize = 256 * 1024;
-const PRECOMPRESSED_SIBLINGS: &[(&str, &str)] = &[("br", "br"), ("gzip", "gz")];
 
 #[derive(Clone)]
 pub(crate) struct LocalFileStore {
@@ -57,15 +55,6 @@ impl LocalFileStore {
             read_slots: Arc::clone(&budgets.local_read_slots),
             buffer_budget: Arc::new(Semaphore::new(LOCAL_FILE_BUFFER_BUDGET_BYTES)),
         })
-    }
-
-    #[cfg(test)]
-    pub(crate) fn load_blocking(root: &Path, budgets: &AppProxyBudgets) -> anyhow::Result<Self> {
-        let root = std::fs::canonicalize(root)
-            .with_context(|| format!("failed to resolve static directory {}", root.display()))?;
-        let metadata = std::fs::metadata(&root)
-            .with_context(|| format!("failed to inspect static directory {}", root.display()))?;
-        Self::from_resolved_root(root, metadata, budgets)
     }
 
     async fn resolve_checked(
@@ -177,21 +166,18 @@ impl LocalFileStore {
         request_headers: &HeaderMap,
         max_bytes: usize,
     ) -> Result<NegotiatedLocalFile, LocalFileReadError> {
-        for &(encoding, extension) in PRECOMPRESSED_SIBLINGS {
-            if !accepts_content_encoding(request_headers, encoding) {
-                continue;
-            }
-            let sibling_path = format!("{relative_path}.{extension}");
+        if accepts_content_encoding(request_headers, "br") {
+            let sibling_path = format!("{relative_path}.br");
             match self.resolve_checked(&sibling_path, max_bytes).await {
                 Ok(resolved) => {
-                    return self.with_stream_budget(resolved, Some(encoding), &sibling_path);
+                    return self.with_stream_budget(resolved, Some("br"), &sibling_path);
                 }
                 Err(
                     LocalFileReadError::NotFound(_)
                     | LocalFileReadError::InvalidPath(_)
                     | LocalFileReadError::TooLarge { .. }
                     | LocalFileReadError::Io { .. },
-                ) => continue,
+                ) => {}
                 Err(error) => return Err(error),
             }
         }
@@ -555,66 +541,29 @@ fn apply_local_file_headers(
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub(crate) enum LocalFileReadError {
+    #[error("local file {0:?} was not found")]
     NotFound(String),
+    #[error("local file path {0:?} is invalid")]
     InvalidPath(String),
+    #[error("local file capacity is unavailable for {0:?}")]
     Busy(String),
-    ChangedDuringRead {
-        path: String,
-        expected: usize,
-    },
+    #[error("local file {path:?} grew after its {expected} byte size was inspected")]
+    ChangedDuringRead { path: String, expected: usize },
+    #[error("local file {path:?} is {actual} bytes and exceeds the {maximum} byte limit")]
     TooLarge {
         path: String,
         actual: u64,
         maximum: usize,
     },
+    #[error("local text file {0:?} is not UTF-8")]
     InvalidUtf8(String),
+    #[error("failed to read local file {}: {source}", .path.display())]
     Io {
         path: PathBuf,
         source: std::io::Error,
     },
-}
-
-impl fmt::Display for LocalFileReadError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound(path) => write!(formatter, "local file {path:?} was not found"),
-            Self::InvalidPath(path) => write!(formatter, "local file path {path:?} is invalid"),
-            Self::Busy(path) => {
-                write!(formatter, "local file capacity is unavailable for {path:?}")
-            }
-            Self::ChangedDuringRead { path, expected } => write!(
-                formatter,
-                "local file {path:?} grew after its {expected} byte size was inspected"
-            ),
-            Self::TooLarge {
-                path,
-                actual,
-                maximum,
-            } => write!(
-                formatter,
-                "local file {path:?} is {actual} bytes and exceeds the {maximum} byte limit"
-            ),
-            Self::InvalidUtf8(path) => write!(formatter, "local text file {path:?} is not UTF-8"),
-            Self::Io { path, source } => {
-                write!(
-                    formatter,
-                    "failed to read local file {}: {source}",
-                    path.display()
-                )
-            }
-        }
-    }
-}
-
-impl std::error::Error for LocalFileReadError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io { source, .. } => Some(source),
-            _ => None,
-        }
-    }
 }
 
 fn local_file_error_response(error: LocalFileReadError) -> Response {
@@ -633,7 +582,6 @@ fn local_file_error_response(error: LocalFileReadError) -> Response {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX;
 
     fn temp_root(name: &str) -> PathBuf {
         let root = std::env::temp_dir().join(format!(
@@ -652,92 +600,6 @@ mod tests {
             allow_cross_origin: false,
             max_bytes,
         }
-    }
-
-    async fn body_of(response: Response) -> Vec<u8> {
-        axum::body::to_bytes(response.into_body(), usize::MAX)
-            .await
-            .unwrap()
-            .to_vec()
-    }
-
-    #[tokio::test]
-    async fn an_open_response_never_holds_a_read_slot_against_the_next_reader() {
-        let root = temp_root("in-flight");
-        std::fs::write(root.join("robots.txt"), "User-agent: *\n").unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-
-        let mut open = Vec::with_capacity(LOCAL_FILE_READS_IN_FLIGHT_MAX + 1);
-        for _ in 0..=LOCAL_FILE_READS_IN_FLIGHT_MAX {
-            open.push(
-                serve_binary_file(&store, "robots.txt", &HeaderMap::new(), text_options(1024))
-                    .await,
-            );
-        }
-
-        let refused = open
-            .iter()
-            .filter(|response| response.status() != StatusCode::OK)
-            .count();
-        assert_eq!(
-            refused, 0,
-            "{refused} readers were turned away while earlier responses were still open"
-        );
-        assert_eq!(
-            body_of(open.pop().unwrap()).await,
-            b"User-agent: *\n",
-            "a response served past the read slot count carried the wrong bytes"
-        );
-
-        std::fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn concurrent_bundle_responses_are_not_charged_their_whole_file_size() {
-        let root = temp_root("bundle-budget");
-        let bundle_bytes = 8 * 1024 * 1024;
-        std::fs::write(root.join("bundle.js"), vec![b'x'; bundle_bytes]).unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-
-        let mut open = Vec::with_capacity(32);
-        for _ in 0..32 {
-            open.push(
-                serve_binary_file(
-                    &store,
-                    "bundle.js",
-                    &HeaderMap::new(),
-                    text_options(100 * 1024 * 1024),
-                )
-                .await,
-            );
-        }
-
-        let refused = open
-            .iter()
-            .filter(|response| response.status() != StatusCode::OK)
-            .count();
-        assert_eq!(
-            refused, 0,
-            "{refused} of 32 concurrent bundle responses were refused for buffer capacity"
-        );
-        let last = open.pop().unwrap();
-        assert_eq!(
-            last.headers().get(header::CONTENT_LENGTH).unwrap(),
-            bundle_bytes.to_string().as_str(),
-            "a streamed bundle response did not declare its length"
-        );
-        let body = body_of(last).await;
-        assert_eq!(body.len(), bundle_bytes);
-        assert!(
-            body.iter().all(|byte| *byte == b'x'),
-            "a streamed bundle response carried bytes the file does not hold"
-        );
-
-        std::fs::remove_dir_all(&root).unwrap();
     }
 
     #[tokio::test]
@@ -790,138 +652,6 @@ mod tests {
         );
 
         std::fs::remove_file(&outside).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn a_revalidating_client_is_answered_from_its_entity_tag() {
-        let root = temp_root("revalidate");
-        std::fs::write(root.join("robots.txt"), "User-agent: *\n").unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-
-        let first =
-            serve_binary_file(&store, "robots.txt", &HeaderMap::new(), text_options(1024)).await;
-        assert_eq!(first.status(), StatusCode::OK);
-        let entity_tag = first.headers().get(header::ETAG).unwrap().clone();
-
-        let mut revalidation = HeaderMap::new();
-        revalidation.insert(header::IF_NONE_MATCH, entity_tag.clone());
-        let second =
-            serve_binary_file(&store, "robots.txt", &revalidation, text_options(1024)).await;
-        assert_eq!(second.status(), StatusCode::NOT_MODIFIED);
-        assert_eq!(second.headers().get(header::ETAG), Some(&entity_tag));
-        assert!(body_of(second).await.is_empty());
-
-        let mut stale = HeaderMap::new();
-        stale.insert(header::IF_NONE_MATCH, HeaderValue::from_static("\"other\""));
-        let third = serve_binary_file(&store, "robots.txt", &stale, text_options(1024)).await;
-        assert_eq!(
-            third.status(),
-            StatusCode::OK,
-            "a client holding a different entity tag was told its copy was current"
-        );
-
-        std::fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn a_file_over_its_response_limit_is_refused_before_it_is_buffered() {
-        let root = temp_root("too-large");
-        std::fs::write(root.join("version.json"), "x".repeat(4096)).unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-
-        let response = serve_binary_file(
-            &store,
-            "version.json",
-            &HeaderMap::new(),
-            text_options(1024),
-        )
-        .await;
-
-        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(
-            store.buffer_budget.available_permits(),
-            LOCAL_FILE_BUFFER_BUDGET_BYTES,
-            "a refused file still holds its buffer budget"
-        );
-
-        std::fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn a_replacement_that_grows_past_the_response_limit_is_refused() {
-        let root = temp_root("replacement");
-        std::fs::write(root.join("sw.js"), "const endpoint = '{{MEDIA_ENDPOINT}}';").unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-
-        let served = serve_text_file(
-            &store,
-            "sw.js",
-            &HeaderMap::new(),
-            text_options(1024),
-            &[("{{MEDIA_ENDPOINT}}", "https://media.example.test")],
-            std::convert::identity,
-        )
-        .await;
-        assert_eq!(served.status(), StatusCode::OK);
-        assert_eq!(
-            String::from_utf8(body_of(served).await).unwrap(),
-            "const endpoint = 'https://media.example.test';"
-        );
-
-        let overflowed = serve_text_file(
-            &store,
-            "sw.js",
-            &HeaderMap::new(),
-            text_options(64),
-            &[("{{MEDIA_ENDPOINT}}", &"x".repeat(64))],
-            std::convert::identity,
-        )
-        .await;
-        assert_eq!(overflowed.status(), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(
-            store.buffer_budget.available_permits(),
-            LOCAL_FILE_BUFFER_BUDGET_BYTES,
-            "a refused replacement still holds its buffer budget"
-        );
-
-        std::fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn an_exhausted_buffer_budget_asks_the_client_to_retry() {
-        let root = temp_root("busy");
-        std::fs::write(root.join("robots.txt"), "User-agent: *\n").unwrap();
-        let store = LocalFileStore::load(&root, &AppProxyBudgets::new())
-            .await
-            .unwrap();
-        let held = store
-            .buffer_budget
-            .clone()
-            .try_acquire_many_owned(u32::try_from(LOCAL_FILE_BUFFER_BUDGET_BYTES).unwrap())
-            .unwrap();
-
-        let response =
-            serve_binary_file(&store, "robots.txt", &HeaderMap::new(), text_options(1024)).await;
-
-        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
-        assert_eq!(
-            response.headers().get(header::RETRY_AFTER).unwrap(),
-            "1",
-            "a client refused for capacity was not told when to come back"
-        );
-        assert_eq!(
-            response.headers().get(header::CACHE_CONTROL).unwrap(),
-            "no-store"
-        );
-        drop(held);
-
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

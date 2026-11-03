@@ -79,13 +79,12 @@ async function storedObjectKeys(storageService: IStorageService, report: IARSubm
 	return keys;
 }
 
-export async function deleteReportWithEvidence(
-	deps: ReportDeletionDeps,
+async function deleteReportEvidence(
+	storageService: IStorageService,
 	report: IARSubmission,
 	ledger: ReportEvidenceLedger,
 	options: {now: Date; dryRun: boolean},
 ): Promise<ReportDeletionResult> {
-	const {reportRepository, storageService, reportSearchService} = deps;
 	const result: ReportDeletionResult = {objectsDeleted: 0, sharedObjectsKept: 0};
 	for (const key of await storedObjectKeys(storageService, report)) {
 		if (ledger.retainedKeys.has(key)) {
@@ -105,9 +104,39 @@ export async function deleteReportWithEvidence(
 		ledger.deletedKeys.add(key);
 		result.objectsDeleted++;
 	}
+	return result;
+}
+
+export async function deleteReportWithEvidence(
+	deps: ReportDeletionDeps,
+	report: IARSubmission,
+	ledger: ReportEvidenceLedger,
+	options: {now: Date; dryRun: boolean},
+): Promise<ReportDeletionResult> {
+	const {reportRepository, storageService, reportSearchService} = deps;
+	const result = await deleteReportEvidence(storageService, report, ledger, options);
 	if (!options.dryRun) {
 		await reportSearchService?.deleteReport(report.reportId);
 		await reportRepository.deleteReport(report.reportId);
+	}
+	return result;
+}
+
+export async function clearCopiedContextWithEvidence(
+	deps: ReportDeletionDeps,
+	report: IARSubmission,
+	ledger: ReportEvidenceLedger,
+	options: {now: Date; dryRun: boolean},
+): Promise<ReportDeletionResult> {
+	const {reportRepository, storageService, reportSearchService} = deps;
+	const result = await deleteReportEvidence(storageService, report, ledger, options);
+	if (!options.dryRun && (await reportRepository.clearCopiedContext(report.reportId, report.reportType))) {
+		await reportSearchService?.updateReport({
+			...report,
+			messageContext: null,
+			reportedProfileSnapshot: null,
+			additionalInfo: null,
+		});
 	}
 	return result;
 }

@@ -6,20 +6,15 @@
 -export([
     init/0,
     get_user_guild_settings/2,
-    put_user_guild_settings/3,
-    put_user_guild_settings/4,
-    delete_user_guild_settings/2,
+    put_user_guild_settings/3, put_user_guild_settings/4,
     reserve_user_guild_settings/2,
     get_blocked_ids/1,
-    put_blocked_ids/2,
     put_blocked_ids_fetched/3,
     reserve_blocked_ids/1,
     release/1,
     rebalance/0,
-    rebalance_async/0,
     cache_stats/0,
-    evict_tables/1,
-    table_size/1
+    evict_tables/1
 ]).
 
 -export_type([fill/0]).
@@ -64,10 +59,6 @@ put_user_guild_settings(UserId, GuildId, Settings) ->
 put_user_guild_settings(UserId, GuildId, Settings, {?USER_GUILD_SETTINGS, _, _} = Fill) ->
     fill(Fill, {{UserId, GuildId}, Settings}).
 
--spec delete_user_guild_settings(integer(), integer()) -> ok.
-delete_user_guild_settings(UserId, GuildId) ->
-    safe_delete(?USER_GUILD_SETTINGS, {UserId, GuildId}).
-
 -spec reserve_user_guild_settings([integer()], integer()) -> fill().
 reserve_user_guild_settings(UserIds, GuildId) ->
     reserve(?USER_GUILD_SETTINGS, [{UserId, GuildId} || UserId <- UserIds]).
@@ -94,10 +85,6 @@ live_fetched_blocked_ids(BlockedIds, ExpiresAt) ->
         false -> undefined
     end.
 
--spec put_blocked_ids(integer(), [integer()]) -> ok.
-put_blocked_ids(UserId, BlockedIds) ->
-    write(?BLOCKED_IDS, {UserId, BlockedIds, infinity}).
-
 -spec put_blocked_ids_fetched(integer(), [integer()], fill()) -> ok.
 put_blocked_ids_fetched(UserId, BlockedIds, {?BLOCKED_IDS, _, _} = Fill) ->
     ExpiresAt = erlang:system_time(second) + blocked_ids_ttl_seconds(),
@@ -109,15 +96,10 @@ reserve_blocked_ids(UserIds) ->
 
 -spec blocked_ids_ttl_seconds() -> pos_integer().
 blocked_ids_ttl_seconds() ->
-    Value = app_pos_integer(push_blocked_ids_cache_ttl_seconds, ?DEFAULT_BLOCKED_IDS_TTL),
+    Value = push_utils:app_pos_integer(
+        push_blocked_ids_cache_ttl_seconds, ?DEFAULT_BLOCKED_IDS_TTL
+    ),
     min(max(Value, ?MIN_BLOCKED_IDS_TTL), ?MAX_BLOCKED_IDS_TTL).
-
--spec app_pos_integer(atom(), pos_integer()) -> pos_integer().
-app_pos_integer(Key, Default) ->
-    case application:get_env(fluxer_gateway, Key, undefined) of
-        Value when is_integer(Value), Value > 0 -> Value;
-        _ -> Default
-    end.
 
 -spec write(atom(), tuple()) -> ok.
 write(Table, Row) ->
@@ -168,11 +150,6 @@ release({Table, Token, Keys}) ->
         fun(Key) -> select_delete(Table, [{{Key, pending, Token, '_'}, [], [true]}]) end,
         Keys
     ).
-
--spec rebalance_async() -> ok.
-rebalance_async() ->
-    _ = spawn(fun rebalance/0),
-    ok.
 
 -spec rebalance() -> ok.
 rebalance() ->
@@ -357,67 +334,3 @@ user_id_from_key(UserId) when is_integer(UserId) ->
     UserId;
 user_id_from_key(_) ->
     undefined.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-synced_blocked_ids_are_stored_without_an_expiry_test() ->
-    init(),
-    try
-        ok = put_blocked_ids(4001, [4002]),
-        ?assertEqual([{4001, [4002], infinity}], ets:lookup(?BLOCKED_IDS, 4001))
-    after
-        safe_delete(?BLOCKED_IDS, 4001)
-    end.
-
-synced_blocked_ids_never_expire_test() ->
-    init(),
-    try
-        ok = put_blocked_ids(4002, [4003]),
-        ?assertEqual([4003], get_blocked_ids(4002)),
-        ok = evict_tables(#{}),
-        ?assertEqual([4003], get_blocked_ids(4002))
-    after
-        safe_delete(?BLOCKED_IDS, 4002)
-    end.
-
-fetched_blocked_ids_expire_and_are_reclaimed_test() ->
-    init(),
-    try
-        ok = put_blocked_ids_fetched(4004, [4005], reserve_blocked_ids([4004])),
-        ?assertEqual([4005], get_blocked_ids(4004)),
-        Stale = erlang:system_time(second) - 1,
-        true = ets:insert(?BLOCKED_IDS, {4004, [4005], Stale}),
-        ?assertEqual(undefined, get_blocked_ids(4004)),
-        ok = evict_tables(#{}),
-        ?assertEqual([], ets:lookup(?BLOCKED_IDS, 4004))
-    after
-        safe_delete(?BLOCKED_IDS, 4004)
-    end.
-
-untimed_blocked_ids_are_still_honoured_test() ->
-    init(),
-    try
-        true = ets:insert(?BLOCKED_IDS, {4008, [4009]}),
-        ?assertEqual([4009], get_blocked_ids(4008)),
-        ok = evict_tables(#{}),
-        ?assertEqual([4009], get_blocked_ids(4008))
-    after
-        safe_delete(?BLOCKED_IDS, 4008)
-    end.
-
-blocked_ids_ttl_is_clamped_test() ->
-    ?assertEqual(?DEFAULT_BLOCKED_IDS_TTL, blocked_ids_ttl_seconds()),
-    ?assertEqual(?MIN_BLOCKED_IDS_TTL, with_ttl_env(1, fun blocked_ids_ttl_seconds/0)),
-    ?assertEqual(?MAX_BLOCKED_IDS_TTL, with_ttl_env(999999, fun blocked_ids_ttl_seconds/0)),
-    ?assertEqual(?DEFAULT_BLOCKED_IDS_TTL, with_ttl_env(0, fun blocked_ids_ttl_seconds/0)).
-
-with_ttl_env(Value, Fun) ->
-    application:set_env(fluxer_gateway, push_blocked_ids_cache_ttl_seconds, Value),
-    try
-        Fun()
-    after
-        application:unset_env(fluxer_gateway, push_blocked_ids_cache_ttl_seconds)
-    end.
-
--endif.

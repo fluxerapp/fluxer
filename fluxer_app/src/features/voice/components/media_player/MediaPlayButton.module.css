@@ -56,7 +56,7 @@
 	background-color: rgba(0, 0, 0, 0.6);
 	border-radius: 50%;
 	padding: 1rem;
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	transition:
 		background-color 150ms ease,
 		transform 150ms ease;

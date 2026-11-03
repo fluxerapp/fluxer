@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isIP} from 'node:net';
-import type {IpAddressFamily} from '@fluxer/ip_utils/src/IpAddress';
-import {normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
+import {type IpAddressFamily, ipToBytes, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
 
 interface ParsedBase {
 	canonical: string;
@@ -101,26 +100,11 @@ function parseSingle(value: string): ParsedIpSingle | null {
 function parseIP(value: string): ParsedIP | null {
 	const ipWithoutZone = value.split('%', 1)[0].trim();
 	if (!ipWithoutZone) return null;
-	const family = isIP(ipWithoutZone);
-	if (!family) return null;
-	if (family === 4) {
-		const bytes = parseIPv4(ipWithoutZone);
-		if (!bytes) return null;
-		return {family: 'ipv4', bytes, mappedIpv4Bytes: null};
-	}
-	let ipv6Address = ipWithoutZone;
-	if (ipWithoutZone.includes('.')) {
-		const converted = convertEmbeddedIpv4(ipWithoutZone);
-		if (!converted) return null;
-		ipv6Address = converted;
-	}
-	const bytes = parseIPv6(ipv6Address);
-	if (!bytes) return null;
-	return {
-		family: 'ipv6',
-		bytes,
-		mappedIpv4Bytes: extractMappedIpv4(bytes),
-	};
+	if (!isIP(ipWithoutZone)) return null;
+	const parsed = ipToBytes(ipWithoutZone);
+	if (!parsed) return null;
+	const bytes = Buffer.from(parsed.bytes);
+	return {family: parsed.family, bytes, mappedIpv4Bytes: parsed.family === 'ipv6' ? extractMappedIpv4(bytes) : null};
 }
 
 function resolveMappedIpv4(parsed: ParsedIP): {
@@ -140,73 +124,6 @@ function extractMappedIpv4(bytes: Buffer): Buffer | null {
 	}
 	if (bytes[10] !== 0xff || bytes[11] !== 0xff) return null;
 	return Buffer.from(bytes.subarray(12, 16));
-}
-
-function convertEmbeddedIpv4(value: string): string | null {
-	const lastColon = value.lastIndexOf(':');
-	if (lastColon === -1) return null;
-	const ipv4Part = value.slice(lastColon + 1);
-	const ipv4Bytes = parseIPv4(ipv4Part);
-	if (!ipv4Bytes) return null;
-	const high = ((ipv4Bytes[0] << 8) | ipv4Bytes[1]).toString(16);
-	const low = ((ipv4Bytes[2] << 8) | ipv4Bytes[3]).toString(16);
-	return `${value.slice(0, lastColon + 1)}${high}:${low}`;
-}
-
-function parseIPv4(ip: string): Buffer | null {
-	const parts = ip.split('.');
-	if (parts.length !== 4) return null;
-	const bytes = Buffer.alloc(4);
-	for (let i = 0; i < 4; i++) {
-		const part = parts[i];
-		if (!/^\d+$/.test(part)) return null;
-		const octet = Number(part);
-		if (!Number.isInteger(octet) || octet < 0 || octet > 255) return null;
-		bytes[i] = octet;
-	}
-	return bytes;
-}
-
-function parseIPv6(ip: string): Buffer | null {
-	const addr = ip.trim();
-	const doubleColonIndex = addr.indexOf('::');
-	let headPart = '';
-	let tailPart = '';
-	if (doubleColonIndex !== -1) {
-		const parts = addr.split('::');
-		if (parts.length !== 2) return null;
-		[headPart, tailPart] = parts;
-	} else {
-		headPart = addr;
-		tailPart = '';
-	}
-	const headGroups = headPart ? headPart.split(':').filter((g) => g.length > 0) : [];
-	const tailGroups = tailPart ? tailPart.split(':').filter((g) => g.length > 0) : [];
-	if (doubleColonIndex === -1 && headGroups.length !== 8) return null;
-	const totalGroups = headGroups.length + tailGroups.length;
-	if (totalGroups > 8) return null;
-	const zerosToInsert = 8 - totalGroups;
-	const groups: Array<number> = [];
-	for (const group of headGroups) {
-		const value = parseInt(group, 16);
-		if (!Number.isFinite(value) || value < 0 || value > 0xffff) return null;
-		groups.push(value);
-	}
-	for (let i = 0; i < zerosToInsert; i++) {
-		groups.push(0);
-	}
-	for (const group of tailGroups) {
-		const value = parseInt(group, 16);
-		if (!Number.isFinite(value) || value < 0 || value > 0xffff) return null;
-		groups.push(value);
-	}
-	if (groups.length !== 8) return null;
-	const bytes = Buffer.alloc(16);
-	for (let i = 0; i < 8; i++) {
-		bytes[i * 2] = (groups[i] >> 8) & 0xff;
-		bytes[i * 2 + 1] = groups[i] & 0xff;
-	}
-	return bytes;
 }
 
 function parseCIDR(cidr: string): ParsedCIDR | null {

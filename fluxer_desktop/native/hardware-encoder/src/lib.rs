@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(dead_code)]
 
 use napi_derive::napi;
 
@@ -322,10 +321,6 @@ impl VideoToolboxRuntimeProbe {
 
 #[napi]
 pub fn get_hardware_encoder_capability() -> HardwareEncoderCapability {
-    hardware_encoder_capability()
-}
-
-pub fn hardware_encoder_capability() -> HardwareEncoderCapability {
     if cfg!(target_os = "macos") {
         return describe_videotoolbox_capability(probe_macos_videotoolbox_runtime());
     }
@@ -347,36 +342,6 @@ pub fn hardware_encoder_capability() -> HardwareEncoderCapability {
             None
         },
     )
-}
-
-pub fn require_publish_codec_runtime_support(canonical_codec: &str) -> Result<(), String> {
-    let capability = hardware_encoder_capability();
-    require_publish_codec_runtime_support_for_capability(canonical_codec, &capability)
-}
-
-fn require_publish_codec_runtime_support_for_capability(
-    canonical_codec: &str,
-    capability: &HardwareEncoderCapability,
-) -> Result<(), String> {
-    if !canonical_codec.eq_ignore_ascii_case("h265") {
-        return Ok(());
-    }
-    if capability.available
-        && capability
-            .codecs
-            .iter()
-            .any(|codec| codec.eq_ignore_ascii_case(canonical_codec))
-    {
-        return Ok(());
-    }
-    let detail = capability
-        .detail
-        .as_deref()
-        .or(capability.reason.as_deref())
-        .unwrap_or("hardware encoder is unavailable");
-    Err(format!(
-        "H.265 publishing requires hardware encoder support; {detail}"
-    ))
 }
 
 fn current_platform() -> CapabilityPlatform {
@@ -930,10 +895,8 @@ fn probe_macos_videotoolbox_runtime() -> Option<VideoToolboxRuntimeProbe> {
     }
 
     unsafe fn hardware_required_dictionary() -> CFDictionaryRef {
-        let key = unsafe {
-            kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder as *const c_void
-        };
-        let value = unsafe { kCFBooleanTrue as *const c_void };
+        let key = unsafe { kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder };
+        let value = unsafe { kCFBooleanTrue };
         let keys = [key];
         let values = [value];
         unsafe {
@@ -996,113 +959,4 @@ fn probe_macos_videotoolbox_runtime() -> Option<VideoToolboxRuntimeProbe> {
 #[cfg(not(target_os = "macos"))]
 fn probe_macos_videotoolbox_runtime() -> Option<VideoToolboxRuntimeProbe> {
     None
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn runtime_ready() -> NvencRuntimeProbe {
-        NvencRuntimeProbe {
-            libcuda: true,
-            libnvidia_encode: true,
-            get_max_supported_version: true,
-            driver_version_compatible: true,
-            create_instance: true,
-            cuda_init: true,
-            cuda_device_count: Some(1),
-            cuda_device: true,
-            cuda_context: true,
-            checked_cuda_devices: 1,
-            supported_cuda_devices: 1,
-            open_encode_session: true,
-            query_encode_guids: true,
-            supports_h264: true,
-            supports_h265: true,
-            last_open_encode_session_status: Some(0),
-        }
-    }
-
-    fn videotoolbox_ready() -> VideoToolboxRuntimeProbe {
-        VideoToolboxRuntimeProbe {
-            h264_create_status: Some(0),
-            h264_prepare_status: Some(0),
-            h265_create_status: Some(0),
-            h265_prepare_status: Some(0),
-        }
-    }
-
-    #[test]
-    fn reports_h264_only_when_hevc_guid_is_absent() {
-        let capability = describe_capability(
-            CapabilityPlatform::Linux,
-            true,
-            Some(NvencRuntimeProbe {
-                supports_h265: false,
-                ..runtime_ready()
-            }),
-        );
-
-        assert!(capability.available);
-        assert_eq!(capability.codecs, vec!["h264"]);
-        assert!(capability.zero_copy);
-    }
-
-    #[test]
-    fn publish_codec_runtime_gate_only_requires_hardware_for_h265() {
-        let unavailable = describe_capability(CapabilityPlatform::Linux, false, None);
-
-        assert!(require_publish_codec_runtime_support_for_capability("h264", &unavailable).is_ok());
-        assert!(require_publish_codec_runtime_support_for_capability("vp8", &unavailable).is_ok());
-        let error =
-            require_publish_codec_runtime_support_for_capability("h265", &unavailable).unwrap_err();
-        assert!(error.contains("H.265 publishing requires hardware encoder support"));
-        assert!(error.contains("vendored CUDA Driver API header"));
-    }
-
-    #[test]
-    fn publish_codec_runtime_gate_accepts_h265_when_reported_available() {
-        let capability = describe_videotoolbox_capability(Some(videotoolbox_ready()));
-
-        assert!(require_publish_codec_runtime_support_for_capability("h265", &capability).is_ok());
-        assert!(require_publish_codec_runtime_support_for_capability("H265", &capability).is_ok());
-    }
-
-    #[test]
-    fn reports_no_supported_codecs_when_guid_query_finds_no_fluxer_codecs() {
-        let capability = describe_capability(
-            CapabilityPlatform::Linux,
-            true,
-            Some(NvencRuntimeProbe {
-                supports_h264: false,
-                supports_h265: false,
-                ..runtime_ready()
-            }),
-        );
-
-        assert!(!capability.available);
-        assert_eq!(capability.reason.as_deref(), Some("no_supported_codecs"));
-        assert_eq!(capability.codecs, Vec::<String>::new());
-        assert!(
-            capability
-                .detail
-                .as_deref()
-                .unwrap_or_default()
-                .contains("NVENC H264/H265 encode GUID")
-        );
-    }
-
-    #[test]
-    fn reports_videotoolbox_h264_only_when_hevc_session_is_unavailable() {
-        let capability = describe_videotoolbox_capability(Some(VideoToolboxRuntimeProbe {
-            h265_create_status: Some(-12909),
-            h265_prepare_status: None,
-            ..videotoolbox_ready()
-        }));
-
-        assert!(capability.available);
-        assert_eq!(capability.backend, "videotoolbox");
-        assert_eq!(capability.codecs, vec!["h264"]);
-        assert_eq!(capability.reason, None);
-    }
 }

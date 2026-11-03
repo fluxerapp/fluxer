@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {subscribeAppStorageScope} from '@app/features/platform/state/PersistentStorage';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {makeAutoObservable} from 'mobx';
 
 interface CompactVoiceCallHeightState {
@@ -12,10 +13,6 @@ interface CompactVoiceCallHeightState {
 const COMPACT_VOICE_CALL_HEIGHT_STORAGE_KEY = 'compact_voice_call_heights';
 const COMPACT_VOICE_CALL_HEIGHT_MIN = 320;
 const COMPACT_VOICE_CALL_HEIGHT_MAX = 1049;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
-}
 
 function clampCompactVoiceCallHeight(value: number): number {
 	return Math.max(COMPACT_VOICE_CALL_HEIGHT_MIN, Math.min(Math.round(value), COMPACT_VOICE_CALL_HEIGHT_MAX));
@@ -80,6 +77,10 @@ class CompactVoiceCallHeight {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
+		this.reload();
+	}
+
+	reload(): void {
 		const initialState = getInitialState();
 		this.defaultHeight = initialState.defaultHeight;
 		this.heightsByKey = initialState.heightsByKey;
@@ -136,4 +137,8 @@ export function getCompactVoiceCallExpansionKey(channelId: string, callMessageId
 
 export {COMPACT_VOICE_CALL_HEIGHT_MAX, COMPACT_VOICE_CALL_HEIGHT_MIN};
 
-export default new CompactVoiceCallHeight();
+const compactVoiceCallHeight = new CompactVoiceCallHeight();
+
+subscribeAppStorageScope(compactVoiceCallHeight.reload);
+
+export default compactVoiceCallHeight;

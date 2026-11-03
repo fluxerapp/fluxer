@@ -31,14 +31,6 @@ export const SUBMIT_REPORT_DESCRIPTOR = msg({
 	message: 'Send report',
 	comment: 'Report flow: footer button on the summary screen that sends the report to the safety team.',
 });
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Report flow: footer button that returns to the previous question.',
-});
-export const DONE_DESCRIPTOR = msg({
-	message: 'Done',
-	comment: 'Report flow: footer button on the last screen. Closes the report window.',
-});
 export const THANK_YOU_TITLE_DESCRIPTOR = msg({
 	message: 'Report sent',
 	comment: 'Report flow: title of the final screen after a report was sent to the safety team.',
@@ -120,15 +112,6 @@ export const OPENS_IN_NEW_TAB_DESCRIPTOR = msg({
 export const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 	message: 'Finish account setup first',
 	comment: 'Report flow: title of the notice on the summary screen when the account cannot send reports yet.',
-});
-export const CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR = msg({
-	message: 'Claim your account and verify your email to send reports.',
-	comment: 'Report flow: body of the notice on the summary screen when the account cannot send reports yet.',
-});
-export const CLAIM_TO_REPORT_DESCRIPTOR = msg({
-	message: 'Claim your account to send reports.',
-	comment:
-		'Report flow: body of the notice on the summary screen when the account cannot send reports yet, on an instance where people sign in with a username.',
 });
 export const FINISH_ACCOUNT_SETUP_DESCRIPTOR = msg({
 	message: 'Finish account setup',

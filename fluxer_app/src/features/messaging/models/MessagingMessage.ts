@@ -304,7 +304,7 @@ export class Message {
 
 	withUpdates(updates: Partial<WireMessage>): Message {
 		if ('reactions' in updates) {
-			MessageReactions.replaceMessageReactions(this.id, updates.reactions ?? []);
+			MessageReactions.hydrateMessageReactions(this.id, updates.reactions ?? []);
 		}
 		return new Message(
 			{
@@ -340,34 +340,6 @@ export class Message {
 			},
 			{skipUserCache: true, instanceId: this.instanceId},
 		);
-	}
-
-	withReaction(emoji: ReactionEmoji, add = true, me = false): Message {
-		const existing = this.getReaction(emoji);
-		let newReactions: Array<MessageReaction>;
-		if (add) {
-			if (!existing) {
-				newReactions = [...this.reactions, {emoji, count: 1, me: me ? true : undefined}];
-			} else if (me && existing.me) {
-				return this;
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: r.count + 1, me: me || r.me ? true : undefined} : r,
-				);
-			}
-		} else {
-			if (!existing) return this;
-			if (me && !existing.me) return this;
-			const nextCount = Math.max(0, existing.count - 1);
-			if (nextCount === 0) {
-				newReactions = this.reactions.filter((r) => !emojiEquals(r.emoji, emoji));
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: nextCount, me: me ? undefined : r.me} : r,
-				);
-			}
-		}
-		return this.withUpdates({reactions: newReactions});
 	}
 
 	withoutReactionEmoji(emoji: ReactionEmoji): Message {

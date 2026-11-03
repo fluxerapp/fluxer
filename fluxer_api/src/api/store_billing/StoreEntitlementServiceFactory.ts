@@ -7,6 +7,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {
 	getAppStoreServerApiClient,
 	getGooglePlayDeveloperApiClient,
+	getPaymentDisputeRepository,
 	getStoreBillingRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -38,5 +39,6 @@ export function createStoreEntitlementService(params: StoreEntitlementServiceFac
 			params.gatewayService,
 			params.premiumStateReconciliationQueueService,
 		),
+		paymentDisputeRepository: getPaymentDisputeRepository(),
 	});
 }

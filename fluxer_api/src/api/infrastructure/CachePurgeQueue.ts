@@ -12,6 +12,7 @@ const QUEUE_KEY = 'cache_purge:queue';
 const BUDGET_KEY = 'cache_purge:budget';
 const REJECTED_KEY = 'cache_purge:rejected';
 const MAX_TOKENS = 120;
+const MAX_PREFIXES_PER_REQUEST = 100;
 const REFILL_RATE = 5;
 const REFILL_INTERVAL_MS = 1000;
 
@@ -46,7 +47,7 @@ export class CachePurgeQueue implements IPurgeQueue {
 		const batch = await this.kvClient.dequeuePurgeBatch(
 			QUEUE_KEY,
 			BUDGET_KEY,
-			MAX_TOKENS,
+			MAX_PREFIXES_PER_REQUEST,
 			MAX_TOKENS,
 			REFILL_RATE,
 			REFILL_INTERVAL_MS,

@@ -17,6 +17,13 @@ const STILL_WORKING_DESCRIPTOR = msg({
 		'Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.',
 });
 
+const INSECURE_CONTEXT_DESCRIPTOR = msg({
+	message:
+		'This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost.',
+	comment:
+		'Error shown when signing in or signing up on a self-hosted instance opened over plain HTTP or a bare IP address, where the browser blocks the automatic background check. HTTPS and localhost are technical terms, keep them as is.',
+});
+
 const logger = new Logger('CaptchaInterceptor');
 
 const MAX_SOLVES = 2;
@@ -49,7 +56,16 @@ class CaptchaInterceptor {
 	): Promise<RestResponse | undefined> | undefined {
 		const challenge = readCaptchaChallenge(reply.status, reply.body);
 		if (!challenge) return undefined;
+		if (!window.isSecureContext) {
+			this.explainInsecureContext(reply);
+			return undefined;
+		}
 		return this.solveAndRetry(challenge, retry);
+	}
+
+	private explainInsecureContext(reply: RestResponse): void {
+		if (!this.i18n || typeof reply.body !== 'object' || reply.body === null) return;
+		(reply.body as Record<string, unknown>).message = this.i18n._(INSECURE_CONTEXT_DESCRIPTOR);
 	}
 
 	private async solveAndRetry(

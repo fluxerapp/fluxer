@@ -5,7 +5,7 @@ import {ContentBlocklistCategory, ContentBlocklistSeverity} from '@app/api/const
 import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
 import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, describe, expect, it} from 'vitest';
 
 const SEVERITIES = [
 	['allow', ContentBlocklistSeverity.ALLOW],
@@ -28,19 +28,15 @@ const rowMeta = {
 
 describe('blocklist severity is a stored label', () => {
 	afterEach(() => {
-		vi.restoreAllMocks();
 		urlBlocklistCache.resetForTesting();
 		fileShaCache.resetForTesting();
 		bannedAvatarHashCache.resetForTesting();
 	});
 
 	it.each(SEVERITIES)('a %s url row and url domain row still block', async (_label, severity) => {
-		vi.spyOn(AdminRepository.prototype, 'loadAllBannedUrls').mockResolvedValue([
-			{...rowMeta, url_canonical: 'https://blocked.example/path', severity},
-		]);
-		vi.spyOn(AdminRepository.prototype, 'loadAllBannedUrlDomains').mockResolvedValue([
-			{...rowMeta, domain: 'blocked-domain.example', match_subdomains: true, severity},
-		]);
+		const repository = new AdminRepository();
+		await repository.banUrl({...rowMeta, url_canonical: 'https://blocked.example/path', severity});
+		await repository.banUrlDomain({...rowMeta, domain: 'blocked-domain.example', match_subdomains: true, severity});
 		await urlBlocklistCache.refresh();
 		expect(urlBlocklistCache.size.urls).toBe(1);
 		expect(urlBlocklistCache.isUrlBanned('https://blocked.example/path')).toBe(true);
@@ -50,9 +46,12 @@ describe('blocklist severity is a stored label', () => {
 	});
 
 	it.each(SEVERITIES)('a %s file sha row still blocks', async (_label, severity) => {
-		vi.spyOn(AdminRepository.prototype, 'loadAllBannedFileShas').mockResolvedValue([
-			{...rowMeta, sha256_hex: FILE_SHA.toUpperCase(), content_type: 'image/png', severity},
-		]);
+		await new AdminRepository().banFileSha({
+			...rowMeta,
+			sha256_hex: FILE_SHA.toUpperCase(),
+			content_type: 'image/png',
+			severity,
+		});
 		await fileShaCache.refresh();
 		expect(fileShaCache.size).toBe(1);
 		expect(fileShaCache.isBanned(FILE_SHA)).toBe(true);
@@ -60,13 +59,11 @@ describe('blocklist severity is a stored label', () => {
 	});
 
 	it.each(SEVERITIES)('a %s avatar hash row still blocks', async (_label, severity) => {
-		vi.spyOn(AdminRepository.prototype, 'loadAllBannedAvatarHashes').mockResolvedValue([
-			{...rowMeta, hash_short: AVATAR_HASH, severity},
-		]);
+		await new AdminRepository().banAvatarHash({...rowMeta, hash_short: AVATAR_HASH, severity});
 		await bannedAvatarHashCache.refresh();
 		expect(bannedAvatarHashCache.size).toBe(1);
-		expect(bannedAvatarHashCache.contains(AVATAR_HASH)).toBe(true);
-		expect(bannedAvatarHashCache.contains(`a_${AVATAR_HASH}`)).toBe(true);
-		expect(bannedAvatarHashCache.contains('c'.repeat(8))).toBe(false);
+		expect(bannedAvatarHashCache.isBanned(AVATAR_HASH)).toBe(true);
+		expect(bannedAvatarHashCache.isBanned(`a_${AVATAR_HASH}`)).toBe(true);
+		expect(bannedAvatarHashCache.isBanned('c'.repeat(8))).toBe(false);
 	});
 });

@@ -7,12 +7,9 @@
     init/0,
     build_process_key/2,
     registry_whereis/1,
-    registry_unregister/1,
     register_and_monitor/3,
     lookup_or_monitor/3,
-    safe_unregister/1,
-    safe_unregister/2,
-    cleanup_on_down/2,
+    safe_unregister/1, safe_unregister/2,
     cleanup_on_down/3,
     get_count/1,
     force_stop_process/1
@@ -181,18 +178,6 @@ safe_unregister(Key, Pid) when is_pid(Pid) ->
     registry_unregister_if_pid(Key, Pid);
 safe_unregister(Key, _Pid) ->
     registry_unregister(Key).
-
--spec cleanup_on_down(pid(), process_map()) -> process_map().
-cleanup_on_down(DeadPid, ProcessMap) ->
-    maps:filter(
-        fun
-            (_Key, loading) ->
-                true;
-            (_Key, {Pid, _Ref}) ->
-                Pid =/= DeadPid
-        end,
-        ProcessMap
-    ).
 
 -spec cleanup_on_down(process_prefix(), pid(), process_map()) -> process_map().
 cleanup_on_down(Prefix, DeadPid, ProcessMap) ->

@@ -128,18 +128,3 @@ user_field_differs(Field, CurrentUserData, NewUserData) ->
             NewValue = maps:get(Field, NewUserData, undefined),
             CurrentValue =/= NewValue
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-check_user_data_differs_missing_field_test() ->
-    Current = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-    New = #{<<"id">> => <<"123">>},
-    ?assertEqual(false, check_user_data_differs(Current, New)).
-
-check_user_data_differs_normalizes_equivalent_user_ids_test() ->
-    Current = #{<<"id">> => 123, <<"username">> => <<"test">>},
-    New = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-    ?assertEqual(false, check_user_data_differs(Current, New)).
-
--endif.

@@ -18,7 +18,7 @@ type AuthRuntimeTargetPolicy =
 			readonly initialSnapshot: RuntimeConfigSnapshot | null;
 	  }
 	| {
-			readonly kind: 'browser-document';
+			readonly kind: 'fixed-instance';
 			readonly snapshot: RuntimeConfigSnapshot;
 			readonly instanceKey: string;
 	  };
@@ -47,9 +47,9 @@ export class AuthRuntimeTarget {
 		return new AuthRuntimeTarget({kind: 'instance-selection', initialSnapshot: snapshot});
 	}
 
-	static forBrowserDocument(snapshot: RuntimeConfigSnapshot): AuthRuntimeTarget {
+	static forFixedInstance(snapshot: RuntimeConfigSnapshot): AuthRuntimeTarget {
 		return new AuthRuntimeTarget({
-			kind: 'browser-document',
+			kind: 'fixed-instance',
 			snapshot,
 			instanceKey: requireAuthRuntimeInstanceKey(snapshot),
 		});
@@ -57,12 +57,16 @@ export class AuthRuntimeTarget {
 
 	select(snapshot: RuntimeConfigSnapshot): void {
 		const instanceKey = requireAuthRuntimeInstanceKey(snapshot);
-		if (this.policy.kind === 'browser-document' && instanceKey !== this.policy.instanceKey) {
+		if (this.policy.kind === 'fixed-instance' && instanceKey !== this.policy.instanceKey) {
 			throw new Error(
-				`Browser authentication cannot target instance "${instanceKey}" from document instance "${this.policy.instanceKey}"`,
+				`Authentication fixed to instance "${this.policy.instanceKey}" cannot target instance "${instanceKey}"`,
 			);
 		}
 		this.snapshot = snapshot;
+	}
+
+	get canChangeInstance(): boolean {
+		return this.policy.kind === 'instance-selection';
 	}
 
 	reset(): void {

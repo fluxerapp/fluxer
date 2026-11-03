@@ -3,19 +3,17 @@
 use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT};
 use crate::proc::{
     AwaitOutcome, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, await_or_shutdown,
-    configure_process_group, force_kill_process_group, format_command, merged_env,
-    pending_shutdown, prefix_output, process_group_running, restart_budget_exceeded,
-    run_command_interruptible, stop_process_group, terminate_process_group,
+    can_bind_tcp_port, cleanup_orphaned_process_groups, configure_process_group,
+    force_kill_process_group, format_command, merged_env, pending_shutdown, prefix_output,
+    process_group_running, restart_budget_exceeded, run_command_interruptible, stop_process_group,
+    terminate_process_group,
 };
 use anyhow::{Context, Result, bail};
 use sha2::{Digest, Sha256};
-#[cfg(target_os = "linux")]
-use std::collections::BTreeSet;
 use std::collections::VecDeque;
 use std::env;
 use std::fs;
 use std::io::Read;
-use std::net::{SocketAddr, TcpListener};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
@@ -325,17 +323,7 @@ fn gateway_dependency_stamp() -> Result<String> {
         hasher.update(metadata.len().to_le_bytes());
         hasher.update(&bytes);
     }
-    Ok(bytes_to_lower_hex(&hasher.finalize()))
-}
-
-fn bytes_to_lower_hex(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut output = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        output.push(HEX[(byte >> 4) as usize] as char);
-        output.push(HEX[(byte & 0x0f) as usize] as char);
-    }
-    output
+    Ok(hex::encode(hasher.finalize()))
 }
 
 fn gateway_dependency_stamp_matches(expected: &str) -> Result<bool> {
@@ -516,200 +504,23 @@ async fn wait_for_ports_available_until(nodes: &[GatewayNode], deadline: Instant
     }
 }
 
-fn can_bind_tcp_port(port: u16) -> bool {
-    TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], port))).is_ok()
-}
-
-#[cfg(target_os = "linux")]
 async fn cleanup_orphaned_gateway_processes(
     node_names: &std::collections::HashSet<String>,
 ) -> Result<()> {
-    let leaders = orphaned_gateway_leaders(node_names)?;
-    if leaders.is_empty() {
-        return Ok(());
-    }
-    let pids = leaders.iter().map(|leader| leader.pid).collect::<Vec<_>>();
-
-    println!(
-        "Stopping orphaned gateway process group(s): {}",
-        format_pids(&pids)
-    );
-    let term_failed = signal_process_groups(&leaders, libc::SIGTERM);
-    if !term_failed.is_empty() {
-        println!(
-            "SIGTERM delivery failed for orphaned gateway pid(s): {}",
-            format_pids(&term_failed)
-        );
-    }
-
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        let remaining = surviving_gateway_group_pids(&leaders)?;
-        if remaining.is_empty() {
-            return Ok(());
-        }
-        if Instant::now() >= deadline {
-            let remaining_leaders = leaders
-                .iter()
-                .filter(|leader| remaining.contains(&leader.pid))
-                .cloned()
-                .collect::<Vec<_>>();
-            let kill_failed = signal_process_groups(&remaining_leaders, libc::SIGKILL);
-            sleep(Duration::from_millis(200)).await;
-            let survivors = surviving_gateway_group_pids(&leaders)?;
-            if survivors.is_empty() {
-                return Ok(());
-            }
-            let delivery_failed = kill_failed
-                .into_iter()
-                .filter(|pid| survivors.contains(pid))
-                .collect::<Vec<_>>();
-            if delivery_failed.is_empty() {
-                bail!(
-                    "orphaned gateway node process(es) survived SIGKILL: {}",
-                    format_pids(&survivors)
-                );
-            }
-            bail!(
-                "orphaned gateway node process(es) survived SIGKILL: {} (signal delivery failed for: {})",
-                format_pids(&survivors),
-                format_pids(&delivery_failed)
-            );
-        }
-        sleep(Duration::from_millis(200)).await;
-    }
+    cleanup_orphaned_process_groups(
+        "gateway node",
+        |process, args| {
+            (cmdline_has_gateway_node(args, node_names) || cmdline_has_managed_gateway_config(args))
+                && fs::read_link(format!("/proc/{}/cwd", process.pid))
+                    .ok()
+                    .as_deref()
+                    == Some(gateway_dir().as_path())
+        },
+        cmdline_is_gateway_supervisor,
+    )
+    .await
 }
 
-#[cfg(target_os = "linux")]
-fn format_pids(pids: &[i32]) -> String {
-    if pids.is_empty() {
-        return "none".to_owned();
-    }
-    pids.iter()
-        .map(i32::to_string)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-#[cfg(not(target_os = "linux"))]
-async fn cleanup_orphaned_gateway_processes(
-    _node_names: &std::collections::HashSet<String>,
-) -> Result<()> {
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct GatewayLeader {
-    pid: i32,
-    members: Vec<GatewayProcessIdentity>,
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct GatewayProcessIdentity {
-    pid: i32,
-    starttime: u64,
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct GatewayProcess {
-    pid: i32,
-    ppid: i32,
-    pgid: i32,
-    state: char,
-    starttime: u64,
-}
-
-#[cfg(target_os = "linux")]
-fn orphaned_gateway_leaders(
-    node_names: &std::collections::HashSet<String>,
-) -> Result<Vec<GatewayLeader>> {
-    let current_exe = std::env::current_exe().context("failed to resolve fluxer-dev executable")?;
-    let processes = gateway_process_snapshot()?;
-    let mut owned_pids = BTreeSet::new();
-    for process in &processes {
-        if process.ppid != 1 || proc_stat_state_is_dead(process.state) {
-            continue;
-        }
-        let args = proc_cmdline(process.pid);
-        let orphaned_supervisor = cmdline_is_gateway_supervisor(&args, &current_exe);
-        let orphaned_node = (cmdline_has_gateway_node(&args, node_names)
-            || cmdline_has_managed_gateway_config(&args))
-            && fs::read_link(format!("/proc/{}/cwd", process.pid))
-                .ok()
-                .as_deref()
-                == Some(gateway_dir().as_path());
-        if orphaned_supervisor || orphaned_node {
-            owned_pids.insert(process.pid);
-        }
-    }
-    loop {
-        let previous_count = owned_pids.len();
-        for process in &processes {
-            if owned_pids.contains(&process.ppid) {
-                owned_pids.insert(process.pid);
-            }
-        }
-        if owned_pids.len() == previous_count {
-            break;
-        }
-    }
-    let group_pids = processes
-        .iter()
-        .filter(|process| owned_pids.contains(&process.pid) && process.pgid > 1)
-        .map(|process| process.pgid)
-        .collect::<BTreeSet<_>>();
-    let leaders = group_pids
-        .into_iter()
-        .map(|pid| GatewayLeader {
-            pid,
-            members: processes
-                .iter()
-                .filter(|process| owned_pids.contains(&process.pid) && process.pgid == pid)
-                .map(|process| GatewayProcessIdentity {
-                    pid: process.pid,
-                    starttime: process.starttime,
-                })
-                .collect(),
-        })
-        .collect::<Vec<_>>();
-    Ok(leaders)
-}
-
-#[cfg(target_os = "linux")]
-fn gateway_process_snapshot() -> Result<Vec<GatewayProcess>> {
-    let mut processes = Vec::new();
-    for entry in fs::read_dir("/proc").context("failed to read /proc")? {
-        let Ok(entry) = entry else {
-            continue;
-        };
-        let Some(pid) = entry
-            .file_name()
-            .to_str()
-            .and_then(|name| name.parse::<i32>().ok())
-        else {
-            continue;
-        };
-        let Ok(stat) = fs::read_to_string(format!("/proc/{pid}/stat")) else {
-            continue;
-        };
-        let Some((state, ppid, pgid, starttime)) = parse_proc_stat_process(&stat) else {
-            continue;
-        };
-        processes.push(GatewayProcess {
-            pid,
-            ppid,
-            pgid,
-            state,
-            starttime,
-        });
-    }
-    Ok(processes)
-}
-
-#[cfg(target_os = "linux")]
 fn cmdline_is_gateway_supervisor(args: &[String], current_exe: &Path) -> bool {
     args.first().map(Path::new) == Some(current_exe)
         && args.get(1).map(String::as_str) == Some("gateway")
@@ -719,7 +530,6 @@ fn cmdline_is_gateway_supervisor(args: &[String], current_exe: &Path) -> bool {
         }
 }
 
-#[cfg(target_os = "linux")]
 fn cmdline_has_managed_gateway_config(args: &[String]) -> bool {
     args.windows(2).any(|pair| {
         matches!(pair[0].as_str(), "-config" | "-args_file")
@@ -727,98 +537,12 @@ fn cmdline_has_managed_gateway_config(args: &[String]) -> bool {
     })
 }
 
-#[cfg(target_os = "linux")]
 fn cmdline_has_gateway_node(
     args: &[String],
     node_names: &std::collections::HashSet<String>,
 ) -> bool {
     args.windows(2)
         .any(|pair| pair[0] == "-name" && node_names.contains(&pair[1]))
-}
-
-#[cfg(target_os = "linux")]
-fn proc_cmdline(pid: i32) -> Vec<String> {
-    fs::read(format!("/proc/{pid}/cmdline"))
-        .unwrap_or_default()
-        .split(|byte| *byte == 0)
-        .filter(|arg| !arg.is_empty())
-        .map(|arg| String::from_utf8_lossy(arg).into_owned())
-        .collect()
-}
-
-#[cfg(target_os = "linux")]
-fn parse_proc_stat_state_and_pgid(stat: &str) -> Option<(char, i32)> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    let mut fields = after_comm.split_ascii_whitespace();
-    let state = fields.next()?.chars().next()?;
-    let _ppid: i32 = fields.next()?.parse().ok()?;
-    let pgid: i32 = fields.next()?.parse().ok()?;
-    Some((state, pgid))
-}
-
-#[cfg(target_os = "linux")]
-fn parse_proc_stat_process(stat: &str) -> Option<(char, i32, i32, u64)> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    let mut fields = after_comm.split_ascii_whitespace();
-    let state = fields.next()?.chars().next()?;
-    let ppid = fields.next()?.parse().ok()?;
-    let pgid = fields.next()?.parse().ok()?;
-    Some((state, ppid, pgid, parse_proc_stat_starttime(stat)?))
-}
-
-#[cfg(target_os = "linux")]
-fn parse_proc_stat_starttime(stat: &str) -> Option<u64> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    after_comm.split_ascii_whitespace().nth(19)?.parse().ok()
-}
-
-#[cfg(target_os = "linux")]
-fn proc_stat_state_is_dead(state: char) -> bool {
-    state == 'Z' || state == 'X' || state == 'x'
-}
-
-#[cfg(target_os = "linux")]
-fn surviving_gateway_group_pids(leaders: &[GatewayLeader]) -> Result<Vec<i32>> {
-    Ok(leaders
-        .iter()
-        .filter(|leader| gateway_group_has_owned_member(leader))
-        .map(|leader| leader.pid)
-        .collect())
-}
-
-#[cfg(target_os = "linux")]
-fn gateway_group_has_owned_member(leader: &GatewayLeader) -> bool {
-    leader.members.iter().any(|member| {
-        let Ok(stat) = fs::read_to_string(format!("/proc/{}/stat", member.pid)) else {
-            return false;
-        };
-        let Some((state, pgid)) = parse_proc_stat_state_and_pgid(&stat) else {
-            return false;
-        };
-        !proc_stat_state_is_dead(state)
-            && pgid == leader.pid
-            && parse_proc_stat_starttime(&stat) == Some(member.starttime)
-    })
-}
-
-#[cfg(target_os = "linux")]
-fn signal_process_groups(leaders: &[GatewayLeader], signal: i32) -> Vec<i32> {
-    assert!(signal == libc::SIGTERM || signal == libc::SIGKILL);
-    let mut failed = Vec::with_capacity(leaders.len());
-    for leader in leaders {
-        assert!(leader.pid > 1);
-        if !gateway_group_has_owned_member(leader) {
-            continue;
-        }
-        let group_result = unsafe { libc::kill(-leader.pid, signal) };
-        if group_result == 0 {
-            continue;
-        }
-        if gateway_group_has_owned_member(leader) {
-            failed.push(leader.pid);
-        }
-    }
-    failed
 }
 
 fn setup_gateway_cluster_config(nodes: &[GatewayNode]) -> Result<()> {

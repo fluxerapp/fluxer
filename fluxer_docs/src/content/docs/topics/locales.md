@@ -1,14 +1,14 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Locales
-description: The supported locale registry and how Fluxer resolves a response locale.
+description: The supported locales and how the API picks one for a request.
 ---
 
-A locale tells Fluxer which language to write human-readable text in. Each one is a BCP 47 tag from the registry below, either a bare language subtag such as `de`, or one joined to a region or numeric subtag by a hyphen, such as `en-GB`, `pt-BR`, and `es-419`.
+A locale is a BCP 47 tag that sets the language of human-readable text, such as the `message` in an [error response](/http-api/#error-response). Everything else in a response is the same in every locale.
 
 ## Supported locales
 
-The registry below is the complete set for every Fluxer surface. Wherever Fluxer stores a locale, such as in [user settings](/http-api/users/settings/), it requires an exact value from this table.
+A `locale` field in a request, such as the one in [user settings](/http-api/users/settings/), has to be one of these values exactly, with the same case.
 
 | Value | Description |
 | --- | --- |
@@ -19,7 +19,7 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 | de | German |
 | el | Greek |
 | en-GB | English (United Kingdom) |
-| en-US<sup>1</sup> | English (United States) |
+| en-US | English (United States) |
 | es-ES | Spanish (Spain) |
 | es-419 | Spanish (Latin America) |
 | fi | Finnish |
@@ -39,7 +39,7 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 | pt-BR | Portuguese (Brazil) |
 | ro | Romanian |
 | ru | Russian |
-| sv-SE<sup>2</sup> | Swedish |
+| sv-SE | Swedish |
 | th | Thai |
 | tr | Turkish |
 | uk | Ukrainian |
@@ -47,32 +47,18 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 | zh-CN | Chinese (Simplified) |
 | zh-TW | Chinese (Traditional) |
 
-<sup>1</sup> [Negotiation](#negotiation) resolves to this value whenever it selects no other registry value. The bare tag `en` is a registered alias for it during negotiation and is not itself a storable value
-
-<sup>2</sup> The bare tag `sv` is a registered alias for it during negotiation and is not itself a storable value
-
 ## Negotiation
 
-An authenticated user's saved locale takes precedence over `Accept-Language`. Otherwise, Fluxer negotiates that header against the [supported locales](#supported-locales), falling back to `en-US` when none matches.
+When you're signed in and your account has a saved locale, the API uses it. Otherwise the API picks a locale from the `Accept-Language` header and uses `en-US` when the header is missing or nothing in it matches.
 
-Set the account locale through [user settings](/http-api/users/settings/) to make the choice persistent.
+The API sorts the `Accept-Language` tags by `q` weight and makes two passes over them. Matching ignores case and accepts `_` in place of `-`.
 
-Matching ignores case and accepts underscores in place of hyphens. Fluxer first looks for an exact supported tag, or the alias `en` or `sv`, anywhere in the header. It uses a regional fallback only when the header has none. In each of those two passes, Fluxer takes the tag with the highest quality weight, and header order breaks ties.
+1. The first tag that is a supported locale wins. `sv` counts as `sv-SE`, and `nb` and `nn` count as `no`.
+2. If no tag matched, the first tag whose language subtag has a locale wins, and `fr-CA` picks `fr`. A Chinese tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`. The language subtags below pick a set locale.
 
-An unsupported tag such as `fr-CA` or `de-AT` matches no locale. An unsupported tag whose language subtag is in this table selects the locale beside it:
-
-| Language subtag | Selected locale |
+| Language subtag | Locale |
 | --- | --- |
 | `en` | `en-US` |
 | `es` | `es-ES` |
 | `pt` | `pt-BR` |
 | `zh` | `zh-CN` |
-| `sv` | `sv-SE` |
-
-For example, `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A weight of 0 does not exclude a language, and `*` matches no locale. Send an explicit supported tag for a predictable result.
-
-The resolved locale selects the localised `message` in an [error response](/http-api/#error-response) and in each element of a validation `errors` array.
-
-:::note[Locale selection changes human-readable text only]
-A field name, an enumeration value, an error `code`, a [snowflake](/snowflakes/), and a timestamp representation are identical under every locale.
-:::

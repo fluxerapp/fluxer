@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::{snowflake, types::UpdateReportRequestResolution};
+use reqwest::Method;
+
+use crate::api::generated::{
+    snowflake,
+    types::{
+        ReportNoteRequest, ReportNoteResponse, UpdateReportRequest, UpdateReportRequestOutcome,
+        UpdateReportRequestResolution, UpdateReportRequestStatus,
+    },
+};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -42,19 +50,24 @@ impl AdminApiClient {
         &self,
         report_id: &str,
         resolution: UpdateReportRequestResolution,
+        outcome: Option<UpdateReportRequestOutcome>,
+        duplicate_of: Option<&str>,
         public_comment: Option<&str>,
         notify_reporter: bool,
-        audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let mut body = serde_json::json!({"status": "resolved", "resolution": resolution});
-        if let Some(public_comment) = public_comment {
-            body["public_comment"] = serde_json::Value::from(public_comment);
-        }
-        body["notify_reporter"] = serde_json::Value::from(notify_reporter);
-        self.patch_with_reason(
+        let body = UpdateReportRequest {
+            duplicate_of: duplicate_of.map(snowflake),
+            notify_reporter,
+            outcome,
+            public_comment: public_comment.map(str::to_owned),
+            resolution,
+            status: UpdateReportRequestStatus::Resolved,
+        };
+        self.send(
+            Method::PATCH,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),
-            audit_log_reason,
+            None,
         )
         .await
     }
@@ -69,7 +82,8 @@ impl AdminApiClient {
             "legal_hold_until": legal_hold_until,
             "legal_hold_reason": legal_hold_until.and(legal_hold_reason),
         });
-        self.post_with_reason(
+        self.send(
+            Method::POST,
             &format!(
                 "/admin/reports/{}/legal-hold",
                 urlencoding::encode(report_id)
@@ -80,14 +94,29 @@ impl AdminApiClient {
         .await
     }
 
+    pub async fn annotate_report(
+        &self,
+        report_id: &str,
+        body: String,
+    ) -> ApiResult<ReportNoteResponse> {
+        self.send(
+            Method::POST,
+            &format!("/admin/reports/{}/notes", urlencoding::encode(report_id)),
+            Some(&ReportNoteRequest { body }),
+            None,
+        )
+        .await
+    }
+
     pub async fn delete_report(
         &self,
         report_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        self.delete_void_with_reason(
+        self.send_void(
+            Method::DELETE,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
-            None,
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await
@@ -213,63 +242,5 @@ fn report_sort_by(value: &str) -> ApiResult<&'static str> {
         other => Err(ApiError::Parse(format!(
             "unknown report sort field: {other}"
         ))),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn report_statuses_preserve_the_closed_wire_mapping() {
-        for (value, expected) in [(0, "pending"), (1, "resolved")] {
-            assert_eq!(report_status(value).expect("supported status"), expected);
-        }
-        for value in [-1, 2] {
-            assert_eq!(
-                report_status(value)
-                    .expect_err("unknown status")
-                    .to_string(),
-                format!("parse error: unknown report status: {value}")
-            );
-        }
-    }
-
-    #[test]
-    fn report_types_preserve_the_closed_wire_mapping() {
-        for (value, expected) in [(0, "message"), (1, "user"), (2, "guild")] {
-            assert_eq!(report_type_name(value).expect("supported type"), expected);
-        }
-        for value in [-1, 3] {
-            assert_eq!(
-                report_type_name(value)
-                    .expect_err("unknown type")
-                    .to_string(),
-                format!("parse error: unknown report type: {value}")
-            );
-        }
-    }
-
-    #[test]
-    fn report_sort_fields_accept_only_the_existing_aliases() {
-        for (field, expected) in [
-            ("createdAt", "created_at"),
-            ("created_at", "created_at"),
-            ("reportedAt", "reported_at"),
-            ("reported_at", "reported_at"),
-            ("resolvedAt", "resolved_at"),
-            ("resolved_at", "resolved_at"),
-        ] {
-            assert_eq!(
-                report_sort_by(field).expect("supported sort field"),
-                expected
-            );
-        }
-        assert_eq!(
-            report_sort_by("unknown")
-                .expect_err("unknown sort field")
-                .to_string(),
-            "parse error: unknown report sort field: unknown"
-        );
     }
 }

@@ -8,17 +8,21 @@ import {
 import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
 import {
-	classifyVoiceEngineV2TrackStats,
 	selectVoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2PerTrackStats,
-	type VoiceEngineV2Stats,
 	type VoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2StatsSample,
+} from '@fluxer/voice_engine_v2/src/core/selectors';
+import {
+	classifyVoiceEngineV2TrackStats,
 	type VoiceEngineV2StatsTrackClassificationInput,
 	type VoiceEngineV2StatsTrackRoleSelection,
-	type VoiceEngineV2TransportInfo,
-	type VoiceEngineV2VoiceStats,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/policies/voiceStats';
+import type {
+	VoiceEngineV2PerTrackStats,
+	VoiceEngineV2Stats,
+	VoiceEngineV2StatsSample,
+	VoiceEngineV2TransportInfo,
+	VoiceEngineV2VoiceStats,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Track} from 'livekit-client';
 
 export interface ScreenShareAudioPublicationDiagnostic {

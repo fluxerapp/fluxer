@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {LocalDate} from '@app/api/database/LocalDate';
 import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
+import {isPlausibleDateOfBirth} from '@fluxer/constants/src/RegionalMinimumAge';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+
+export function parseDateOfBirth(value: string, now: Date = new Date()): LocalDate {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+	const birth = match ? {year: Number(match[1]), month: Number(match[2]), day: Number(match[3])} : null;
+	const today = {year: now.getUTCFullYear(), month: now.getUTCMonth() + 1, day: now.getUTCDate()};
+	if (birth === null || !isPlausibleDateOfBirth(birth, today)) {
+		throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
+	}
+	return new LocalDate(birth.year, birth.month, birth.day);
+}
 
 export function calculateAge(
 	dateOfBirth:
@@ -10,18 +24,18 @@ export function calculateAge(
 				day: number;
 		  }
 		| string,
+	today: Date = new Date(),
 ): number {
-	const today = new Date();
-	let birthDate: Date;
+	let birth: {year: number; month: number; day: number};
 	if (typeof dateOfBirth === 'string') {
 		const [year, month, day] = dateOfBirth.split('-').map(Number);
-		birthDate = new Date(year, month - 1, day);
+		birth = {year, month, day};
 	} else {
-		birthDate = new Date(dateOfBirth.year, dateOfBirth.month - 1, dateOfBirth.day);
+		birth = dateOfBirth;
 	}
-	const age = today.getFullYear() - birthDate.getFullYear();
-	const monthDiff = today.getMonth() - birthDate.getMonth();
-	const dayDiff = today.getDate() - birthDate.getDate();
+	const age = today.getUTCFullYear() - birth.year;
+	const monthDiff = today.getUTCMonth() + 1 - birth.month;
+	const dayDiff = today.getUTCDate() - birth.day;
 	return monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
 }
 

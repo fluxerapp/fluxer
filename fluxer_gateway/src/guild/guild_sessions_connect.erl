@@ -7,18 +7,22 @@
     handle_session_connect/3,
     resection_connected_user/4,
     build_initial_last_message_ids/1,
-    build_initial_channel_versions/1,
     handle_session_down/3,
     find_session_by_ref/2,
     put_session_ref/3,
     remove_session_ref/2,
     build_session_ref_index/1,
     remove_session/2,
-    counts_as_connected/1,
-    invalidate_viewable_channels_cache/1
+    counts_as_connected/1
 ]).
 
--type guild_state() :: #{viewable_channels_cache => ets:tid(), term() => term()}.
+-type guild_state() :: #{
+    sessions => #{binary() => map()},
+    guild_session_refs => #{reference() => binary()},
+    connected_user_ids => sets:set(integer()),
+    viewable_channels_cache => ets:tid(),
+    term() => term()
+}.
 -type session_id() :: binary().
 -type user_id() :: integer().
 -type guild_id() :: integer().
@@ -30,12 +34,21 @@
     | {error, too_many_sessions}
     | {error, not_member}.
 
--export_type([guild_state/0, session_id/0, user_id/0, connect_reply/0]).
-
 -define(MAX_SESSIONS_PER_USER_PER_GUILD, 100).
 
--spec handle_session_connect(map(), pid(), guild_state()) ->
-    {reply, connect_reply(), guild_state()}.
+-spec handle_session_connect(map(), pid(), #{
+    sessions => #{binary() => map()},
+    guild_session_refs => #{reference() => binary()},
+    connected_user_ids => sets:set(integer()),
+    viewable_channels_cache => ets:tid(),
+    term() => term()
+}) ->
+    {reply,
+        {ok, map()}
+        | {ok, unavailable, map()}
+        | {error, too_many_sessions}
+        | {error, not_member},
+        #{viewable_channels_cache => ets:tid(), term() => term()}}.
 handle_session_connect(Request, Pid, State) ->
     #{session_id := SessionId, user_id := UserId} = Request,
     Sessions = maps:get(sessions, State, #{}),
@@ -98,7 +111,7 @@ admit_session_connect(UserId, State) ->
 
 -spec admit_existing_member_connect(user_id(), guild_state()) -> admit | reject_not_member.
 admit_existing_member_connect(UserId, State) ->
-    case guild_data_members:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> reject_not_member;
         _Member -> admit
     end.
@@ -167,7 +180,7 @@ build_session_data(Request, Pid, UserId, SessionId, State) ->
         user_roles => UserRoles,
         bot => maps:get(bot, Request, false),
         is_staff => maps:get(is_staff, Request, false),
-        viewable_channels => get_viewable_channels_cached(UserId, UserRoles, State),
+        viewable_channels => guild_viewable_channels_cache:get(UserId, UserRoles, State),
         thread_capable => Capable,
         thread_viewer => Viewer
     }.
@@ -205,7 +218,7 @@ finalize_connect(SessionId, UserId, GuildId, InitialGuildId, State, CachedGuildS
 build_unavailable_reply(GuildId, State) ->
     Base = #{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true},
     Response =
-        case guild_availability:is_unavailable_hidden_enabled(State) of
+        case guild_availability_check:is_unavailable_hidden_enabled(State) of
             true -> Base#{<<"unavailable_hidden">> => true};
             false -> Base
         end,
@@ -253,9 +266,21 @@ add_channel_version(_, Acc) ->
     Acc.
 
 -spec handle_session_down(
-    reference(), {session_id() | undefined, session_data() | undefined}, guild_state()
+    reference(), {binary() | undefined, map() | undefined}, #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }
 ) ->
-    {noreply, guild_state()}.
+    {noreply, #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }}.
 handle_session_down(Ref, {DisconnectingSessionId, DisconnectingSession}, State) ->
     Sessions = maps:get(sessions, State, #{}),
     DisconnectUserId = disconnect_user_id(DisconnectingSession),
@@ -293,7 +318,20 @@ maybe_resection_on_disconnect(#{user_id := UserIdDown}, OldState, NewState) when
 maybe_resection_on_disconnect(_, _OldState, NewState) ->
     NewState.
 
--spec remove_session(session_id(), guild_state()) -> guild_state().
+-spec remove_session(binary(), #{
+    sessions => #{binary() => map()},
+    guild_session_refs => #{reference() => binary()},
+    connected_user_ids => sets:set(integer()),
+    viewable_channels_cache => ets:tid(),
+    term() => term()
+}) ->
+    #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }.
 remove_session(SessionId, State) ->
     Sessions = maps:get(sessions, State, #{}),
     case maps:get(SessionId, Sessions, undefined) of
@@ -325,9 +363,11 @@ cleanup_removed_session(Session, State) ->
             cleanup_session_subscriptions(Session, State)
     end.
 
--spec counts_as_connected(session_data()) -> boolean().
-counts_as_connected(#{pending_connect := true} = Session) ->
-    maps:get(owns_connected_tracking, Session, false) =:= true;
+-spec counts_as_connected(map()) -> boolean().
+counts_as_connected(#{pending_connect := true, owns_connected_tracking := true}) ->
+    true;
+counts_as_connected(#{pending_connect := true}) ->
+    false;
 counts_as_connected(_Session) ->
     true.
 
@@ -342,8 +382,14 @@ maybe_demonitor_session(Session) ->
             ok
     end.
 
--spec find_session_by_ref(reference(), guild_state()) ->
-    {session_id() | undefined, session_data() | undefined}.
+-spec find_session_by_ref(reference(), #{
+    sessions => #{binary() => map()},
+    guild_session_refs => #{reference() => binary()},
+    connected_user_ids => sets:set(integer()),
+    viewable_channels_cache => ets:tid(),
+    term() => term()
+}) ->
+    {binary() | undefined, map() | undefined}.
 find_session_by_ref(Ref, State) ->
     Sessions = maps:get(sessions, State, #{}),
     SessionId = maps:get(Ref, maps:get(guild_session_refs, State, #{}), undefined),
@@ -372,7 +418,20 @@ remove_session_id(SessionId, Sessions) when is_binary(SessionId) ->
 remove_session_id(undefined, Sessions) ->
     Sessions.
 
--spec put_session_ref(session_id(), term(), guild_state()) -> guild_state().
+-spec put_session_ref(binary(), term(), #{
+    sessions => #{binary() => map()},
+    guild_session_refs => #{reference() => binary()},
+    connected_user_ids => sets:set(integer()),
+    viewable_channels_cache => ets:tid(),
+    term() => term()
+}) ->
+    #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }.
 put_session_ref(SessionId, Ref, State) when is_reference(Ref) ->
     ok = guild_health:put_session(SessionId, State),
     Refs = maps:get(guild_session_refs, State, #{}),
@@ -380,7 +439,7 @@ put_session_ref(SessionId, Ref, State) when is_reference(Ref) ->
 put_session_ref(_SessionId, _Ref, State) ->
     State.
 
--spec remove_session_ref(term(), guild_state()) -> guild_state().
+-spec remove_session_ref(term(), map()) -> map().
 remove_session_ref(Ref, State) when is_reference(Ref) ->
     Refs = maps:get(guild_session_refs, State, #{}),
     ok = guild_health:remove_session(maps:get(Ref, Refs, undefined), State),
@@ -388,7 +447,7 @@ remove_session_ref(Ref, State) when is_reference(Ref) ->
 remove_session_ref(_Ref, State) ->
     State.
 
--spec build_session_ref_index(sessions_map()) -> #{reference() => session_id()}.
+-spec build_session_ref_index(#{binary() => map()}) -> #{reference() => binary()}.
 build_session_ref_index(Sessions) ->
     maps:fold(
         fun
@@ -424,7 +483,7 @@ cleanup_session_subscriptions(Session, State) ->
     SessionId = maps:get(session_id, Session),
     GuildId = require_guild_id(maps:get(id, State)),
     passive_sync_registry:delete(SessionId, GuildId),
-    State1 = guild_member_list:unsubscribe_session(SessionId, State),
+    State1 = guild_member_list_subscribe:unsubscribe_session(SessionId, State),
     MemberSubs = maps:get(member_subscriptions, State1, guild_subscriptions:init_state()),
     NewMemberSubs = guild_subscriptions:unsubscribe_session(SessionId, MemberSubs),
     State2 = State1#{member_subscriptions => NewMemberSubs},
@@ -435,21 +494,41 @@ cleanup_session_subscriptions(Session, State) ->
 ) -> guild_state().
 maybe_resection_disconnected_user(UserId, OldState, NewState) ->
     case became_disconnected(UserId, OldState, NewState) of
-        true -> resection_user_after_connection_change(UserId, OldState, NewState);
+        true -> resection_user_after_connection_change(UserId, NewState);
         false -> NewState
     end.
 
 -spec resection_connected_user(
-    user_id() | undefined, map() | undefined, guild_state(), guild_state()
-) -> guild_state().
+    integer() | undefined,
+    map() | undefined,
+    #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    },
+    #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }
+) ->
+    #{
+        sessions => #{binary() => map()},
+        guild_session_refs => #{reference() => binary()},
+        connected_user_ids => sets:set(integer()),
+        viewable_channels_cache => ets:tid(),
+        term() => term()
+    }.
 resection_connected_user(UserId, PresenceBefore, OldState, NewState) when
     is_integer(UserId), UserId > 0
 ->
     case became_connected(UserId, OldState, NewState) of
         true ->
-            ResectionedState = resection_after_connect(
-                UserId, PresenceBefore, OldState, NewState
-            ),
+            ResectionedState = resection_after_connect(UserId, PresenceBefore, NewState),
             _ = guild_presence_reconcile:maybe_schedule_user_repair(UserId, ResectionedState),
             ResectionedState;
         false ->
@@ -458,13 +537,11 @@ resection_connected_user(UserId, PresenceBefore, OldState, NewState) when
 resection_connected_user(_UserId, _PresenceBefore, _OldState, NewState) ->
     NewState.
 
--spec resection_after_connect(
-    user_id(), map() | undefined, guild_state(), guild_state()
-) -> guild_state().
-resection_after_connect(UserId, PresenceBefore, OldState, NewState) ->
+-spec resection_after_connect(user_id(), map() | undefined, guild_state()) -> guild_state().
+resection_after_connect(UserId, PresenceBefore, NewState) ->
     case presence_resynced_lists(UserId, PresenceBefore, NewState) of
         true -> resection_user_already_synced(UserId, NewState);
-        false -> resection_user_after_connection_change(UserId, OldState, NewState)
+        false -> resection_user_after_connection_change(UserId, NewState)
     end.
 
 -spec presence_resynced_lists(user_id(), map() | undefined, guild_state()) -> boolean().
@@ -491,10 +568,8 @@ became_disconnected(UserId, OldState, NewState) ->
 user_connected(UserId, State) ->
     sets:is_element(UserId, guild_member_list_connected:connected_session_user_ids(State)).
 
--spec resection_user_after_connection_change(
-    user_id(), guild_state(), guild_state()
-) -> guild_state().
-resection_user_after_connection_change(UserId, _OldState, NewState) ->
+-spec resection_user_after_connection_change(user_id(), guild_state()) -> guild_state().
+resection_user_after_connection_change(UserId, NewState) ->
     _ = guild_presence:sync_online_status(UserId, NewState),
     guild_member_list_write:broadcast_channel_engine_connection_change(UserId, NewState).
 
@@ -502,7 +577,11 @@ resection_user_after_connection_change(UserId, _OldState, NewState) ->
     session_id(), guild_id(), guild_id() | undefined, guild_state()
 ) -> guild_state().
 maybe_auto_sync_initial_guild(SessionId, GuildId, GuildId, State) ->
-    Sessions = require_map(maps:get(sessions, State, #{})),
+    Sessions =
+        case maps:get(sessions, State, #{}) of
+            SessionMap when is_map(SessionMap) -> SessionMap;
+            _ -> #{}
+        end,
     case maps:get(SessionId, Sessions, undefined) of
         undefined ->
             State;
@@ -523,7 +602,11 @@ track_connected_user(UserId, _Delta, State) when
 ->
     State;
 track_connected_user(UserId, Delta, State) ->
-    Counts = require_map(maps:get(user_session_counts, State, #{})),
+    Counts =
+        case maps:get(user_session_counts, State, #{}) of
+            CountMap when is_map(CountMap) -> CountMap;
+            _ -> #{}
+        end,
     Connected = maps:get(connected_user_ids, State, sets:new()),
     OldCount = require_non_neg(maps:get(UserId, Counts, 0)),
     NewCount = max(0, OldCount + Delta),
@@ -539,55 +622,6 @@ apply_count_change(UserId, 0, Counts, Connected) ->
     {maps:remove(UserId, Counts), sets:del_element(UserId, Connected)};
 apply_count_change(UserId, NewCount, Counts, Connected) ->
     {Counts#{UserId => NewCount}, sets:add_element(UserId, Connected)}.
-
--spec get_viewable_channels_cached(
-    user_id(), [integer()], guild_state()
-) -> map().
-get_viewable_channels_cached(UserId, UserRoles, State) ->
-    RoleKey = list_to_tuple(lists:sort(UserRoles)),
-    CacheTab = viewable_channels_cache_table(State),
-    lookup_or_compute_viewable(UserId, RoleKey, CacheTab, State).
-
--spec lookup_or_compute_viewable(
-    user_id(), tuple(), ets:tid() | undefined, guild_state()
-) -> map().
-lookup_or_compute_viewable(UserId, _RoleKey, undefined, State) ->
-    compute_viewable_channel_map(UserId, State);
-lookup_or_compute_viewable(UserId, RoleKey, CacheTab, State) ->
-    case ets:lookup(CacheTab, RoleKey) of
-        [{_, Map}] ->
-            Map;
-        [] ->
-            Map = compute_viewable_channel_map(UserId, State),
-            ets:insert(CacheTab, {RoleKey, Map}),
-            Map
-    end.
-
--spec compute_viewable_channel_map(user_id(), guild_state()) -> map().
-compute_viewable_channel_map(UserId, State) ->
-    guild_sessions:build_viewable_channel_map(
-        guild_visibility:get_user_viewable_channels(UserId, State)
-    ).
-
--spec invalidate_viewable_channels_cache(guild_state()) -> ok.
-invalidate_viewable_channels_cache(State) ->
-    case viewable_channels_cache_table(State) of
-        CacheTab when is_reference(CacheTab) ->
-            ets:delete_all_objects(CacheTab),
-            ok;
-        undefined ->
-            ok
-    end.
-
--spec viewable_channels_cache_table(guild_state()) -> ets:tid() | undefined.
-viewable_channels_cache_table(#{viewable_channels_cache := CacheTab}) ->
-    CacheTab;
-viewable_channels_cache_table(_) ->
-    undefined.
-
--spec require_map(term()) -> #{term() => term()}.
-require_map(M) when is_map(M) -> M;
-require_map(_) -> #{}.
 
 -spec require_guild_id(term()) -> guild_id().
 require_guild_id(Id) when is_integer(Id), Id > 0 -> Id;
@@ -607,14 +641,3 @@ snowflake_binary(FieldName, Value) ->
         {ok, Id} -> integer_to_binary(Id);
         {error, _, _} -> undefined
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-presence_resynced_lists_needs_a_list_visible_change_test() ->
-    State = #{member_presence => #{42 => #{<<"status">> => <<"online">>}}},
-    ?assertNot(presence_resynced_lists(42, undefined, State)),
-    ?assert(presence_resynced_lists(42, #{}, State)),
-    ?assertNot(presence_resynced_lists(42, #{<<"status">> => <<"online">>}, State)).
-
--endif.

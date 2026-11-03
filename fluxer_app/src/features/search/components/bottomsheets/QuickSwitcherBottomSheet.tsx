@@ -16,10 +16,10 @@ import {
 	getQuickSwitcherResultAccessibilityMetadata,
 	getQuickSwitcherTabs,
 	getResultKey,
-	getViewContext,
 	handleContextMenu,
 	type QuickSwitcherSection,
 	renderIcon,
+	renderSectionHeaderContent,
 	useQuickSwitcherInputFocus,
 } from '@app/features/search/utils/QuickSwitcherModalUtils';
 import {CloseIcon, SearchIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -146,10 +146,10 @@ const ResultRow = observer(
 			return (
 				<div
 					key={getResultKey(result)}
-					className={styles.sectionHeader}
+					className={clsx(styles.sectionHeader, result.accountKey != null && styles.sectionHeaderAccount)}
 					data-flx="search.quick-switcher-bottom-sheet.result-row.section-header"
 				>
-					{result.title}
+					{renderSectionHeaderContent(result, styles.sectionHeaderAccountName)}
 				</div>
 			);
 		}
@@ -165,10 +165,21 @@ const ResultRow = observer(
 			onConfirm(executableResult);
 		};
 		const iconRendered = renderIcon(executableResult, isHighlight, styles.optionIcon, styles.optionIconHighlight);
-		const iconContent: React.ReactElement = iconRendered.content;
-		const key = getViewContext(executableResult)
-			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
-			: `${executableResult.type}-${executableResult.id}`;
+		let iconContent: React.ReactElement = iconRendered.content;
+		const key = `${executableResult.type}-${executableResult.id}`;
+		if (iconRendered.type === 'avatar') {
+			iconContent = (
+				<div className={styles.avatar} data-flx="search.quick-switcher-bottom-sheet.result-row.avatar">
+					{iconContent}
+				</div>
+			);
+		} else if (iconRendered.type === 'guild') {
+			iconContent = (
+				<div className={styles.guildIcon} data-flx="search.quick-switcher-bottom-sheet.result-row.guild-icon">
+					{iconContent}
+				</div>
+			);
+		}
 		return (
 			<FocusRing offset={-2} enabled={false} data-flx="search.quick-switcher-bottom-sheet.result-row.focus-ring">
 				<button
@@ -193,17 +204,7 @@ const ResultRow = observer(
 					data-flx="search.quick-switcher-bottom-sheet.result-row.option.click.button"
 				>
 					<div className={styles.optionContent} data-flx="search.quick-switcher-bottom-sheet.result-row.option-content">
-						{iconRendered.type === 'avatar' ? (
-							<div className={styles.avatar} data-flx="search.quick-switcher-bottom-sheet.result-row.avatar">
-								{iconContent}
-							</div>
-						) : iconRendered.type === 'guild' ? (
-							<div className={styles.guildIcon} data-flx="search.quick-switcher-bottom-sheet.result-row.guild-icon">
-								{iconContent}
-							</div>
-						) : (
-							iconContent
-						)}
+						{iconContent}
 						<div
 							className={clsx(styles.optionText, isHighlight && styles.optionHighlight)}
 							data-flx="search.quick-switcher-bottom-sheet.result-row.option-text"
@@ -258,8 +259,7 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 		setSelectedIndex: setKeyboardIndex,
 	} = useListNavigation({
 		itemCount: results.length,
-		initialIndex: selectedIndex >= 0 ? selectedIndex : 0,
-		loop: true,
+		initialIndex: Math.max(selectedIndex, 0),
 	});
 	if (rowRefs.current.length !== results.length) {
 		rowRefs.current = Array(results.length).fill(null);
@@ -383,15 +383,16 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 		isSearchTab && keyboardFocusIndex >= 0 && results[keyboardFocusIndex]?.type !== QuickSwitcherResultTypes.HEADER
 			? getQuickSwitcherOptionId(listboxId, keyboardFocusIndex)
 			: undefined;
-	const resultStatus = QuickSwitcher.isLoadingMemberResults
-		? i18n._(SEARCHING_PEOPLE_DESCRIPTOR)
-		: resultCount === 0
-			? hasSearchIntent
-				? i18n._(NO_MATCHES_FOUND_DESCRIPTOR)
-				: ''
-			: resultCount === 1
-				? i18n._(MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR)
-				: i18n._(RESULTS_AVAILABLE_DESCRIPTOR, {resultCount});
+	let resultStatus = '';
+	if (QuickSwitcher.isLoadingMemberResults) {
+		resultStatus = i18n._(SEARCHING_PEOPLE_DESCRIPTOR);
+	} else if (resultCount === 0) {
+		if (hasSearchIntent) resultStatus = i18n._(NO_MATCHES_FOUND_DESCRIPTOR);
+	} else if (resultCount === 1) {
+		resultStatus = i18n._(MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR);
+	} else {
+		resultStatus = i18n._(RESULTS_AVAILABLE_DESCRIPTOR, {resultCount});
+	}
 	const activeSuggestionStatus = useMemo(() => {
 		if (!isSearchTab) {
 			return '';
@@ -582,10 +583,13 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 														{section.header && (
 															<div
 																id={`${listboxId}-${section.key}`}
-																className={styles.sectionHeader}
+																className={clsx(
+																	styles.sectionHeader,
+																	section.header.accountKey != null && styles.sectionHeaderAccount,
+																)}
 																data-flx="search.quick-switcher-bottom-sheet.section-header"
 															>
-																{section.header.title}
+																{renderSectionHeaderContent(section.header, styles.sectionHeaderAccountName)}
 															</div>
 														)}
 														<div

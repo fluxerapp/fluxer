@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import NATIVE_MODULE_PREFLIGHT_MODULES from '@electron/main/NativeModulePreflightModules.json';
 import {app} from 'electron';
 import log from 'electron-log';
@@ -208,7 +209,7 @@ function resolveSpecs(): {resolved: Array<ResolvedSpec>; failures: Array<NativeM
 			failures.push({
 				name: spec.name,
 				severity: spec.severity,
-				reason: `failed to resolve module: ${error instanceof Error ? error.message : String(error)}`,
+				reason: `failed to resolve module: ${errorMessage(error)}`,
 			});
 		}
 	}
@@ -265,15 +266,17 @@ function probeAllModules(resolved: Array<ResolvedSpec>): ProbeOutcome {
 				(_, j) => !(byIndex.get(j) ?? []).some((r) => r.phase === 'start'),
 			);
 			if (earlierMissing) continue;
+			let reason = 'child process did not start probe';
+			if (result.signal) {
+				reason = `child process terminated by signal ${result.signal} before this probe ran`;
+			} else if (result.status !== null && result.status !== 0) {
+				reason = `child process exited with code ${result.status} before this probe ran`;
+			}
 			failures.push({
 				name: spec.name,
 				severity: spec.severity,
 				modulePath,
-				reason: result.signal
-					? `child process terminated by signal ${result.signal} before this probe ran`
-					: result.status !== null && result.status !== 0
-						? `child process exited with code ${result.status} before this probe ran`
-						: 'child process did not start probe',
+				reason,
 				stdout: trimOutput(stdout),
 				stderr: trimOutput(stderr),
 			});

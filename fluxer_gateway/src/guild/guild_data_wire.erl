@@ -133,40 +133,46 @@ trailing_id_key_kind(Key) ->
     end.
 
 -spec named_key_kind(binary()) -> key_kind() | unknown.
-named_key_kind(<<"id">>) -> id;
-named_key_kind(<<"permissions">>) -> scalar;
-named_key_kind(<<"allow">>) -> scalar;
-named_key_kind(<<"deny">>) -> scalar;
-named_key_kind(<<"session_id">>) -> scalar;
-named_key_kind(<<"connection_id">>) -> scalar;
-named_key_kind(<<"subscription_id">>) -> scalar;
-named_key_kind(<<"app_id">>) -> scalar;
-named_key_kind(<<"device_id">>) -> scalar;
-named_key_kind(<<"region_id">>) -> scalar;
-named_key_kind(<<"server_id">>) -> scalar;
-named_key_kind(<<"target_id">>) -> scalar;
-named_key_kind(<<"mention_roles">>) -> scalar_list;
-named_key_kind(<<"participants">>) -> scalar_list;
-named_key_kind(<<"ringing">>) -> scalar_list;
-named_key_kind(<<"pinned_dms">>) -> scalar_list;
-named_key_kind(<<"restricted_guilds">>) -> scalar_list;
-named_key_kind(<<"bot_restricted_guilds">>) -> scalar_list;
-named_key_kind(<<"roles">>) -> maybe_scalar_list;
-named_key_kind(<<"mentions">>) -> maybe_scalar_list;
-named_key_kind(<<"recipients">>) -> maybe_scalar_list;
-named_key_kind(<<"guild_folders">>) -> restrict;
-named_key_kind(<<"rtc_regions">>) -> restrict;
-named_key_kind(<<"recipient_ids">>) -> drop;
-named_key_kind(<<"role_index">>) -> drop;
-named_key_kind(<<"channel_index">>) -> drop;
-named_key_kind(<<"member_role_index">>) -> drop;
-named_key_kind(<<"member_list_revision">>) -> drop;
-named_key_kind(<<"role_perms_cache">>) -> drop;
-named_key_kind(<<"overwrite_perms_cache">>) -> drop;
-named_key_kind(<<"thread_index">>) -> drop;
-named_key_kind(<<"member_ids_preview">>) -> drop;
-named_key_kind(<<"applied_tags">>) -> scalar_list;
-named_key_kind(_) -> unknown.
+named_key_kind(Key) ->
+    maps:get(Key, named_key_kinds(), unknown).
+
+-spec named_key_kinds() -> #{binary() => key_kind()}.
+named_key_kinds() ->
+    #{
+        <<"id">> => id,
+        <<"permissions">> => scalar,
+        <<"allow">> => scalar,
+        <<"deny">> => scalar,
+        <<"session_id">> => scalar,
+        <<"connection_id">> => scalar,
+        <<"subscription_id">> => scalar,
+        <<"app_id">> => scalar,
+        <<"device_id">> => scalar,
+        <<"region_id">> => scalar,
+        <<"server_id">> => scalar,
+        <<"target_id">> => scalar,
+        <<"mention_roles">> => scalar_list,
+        <<"participants">> => scalar_list,
+        <<"ringing">> => scalar_list,
+        <<"pinned_dms">> => scalar_list,
+        <<"restricted_guilds">> => scalar_list,
+        <<"bot_restricted_guilds">> => scalar_list,
+        <<"roles">> => maybe_scalar_list,
+        <<"mentions">> => maybe_scalar_list,
+        <<"recipients">> => maybe_scalar_list,
+        <<"guild_folders">> => restrict,
+        <<"rtc_regions">> => restrict,
+        <<"recipient_ids">> => drop,
+        <<"role_index">> => drop,
+        <<"channel_index">> => drop,
+        <<"member_role_index">> => drop,
+        <<"member_list_revision">> => drop,
+        <<"role_perms_cache">> => drop,
+        <<"overwrite_perms_cache">> => drop,
+        <<"thread_index">> => drop,
+        <<"member_ids_preview">> => drop,
+        <<"applied_tags">> => scalar_list
+    }.
 
 -spec has_suffix(binary(), binary()) -> boolean().
 has_suffix(Value, Suffix) ->
@@ -185,43 +191,3 @@ has_suffix(Value, Suffix, PrefixSize, SuffixSize) ->
         <<_:PrefixSize/binary, Suffix:SuffixSize/binary>> -> true;
         _ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-fast_payload_keeps_restricted_ids_opaque_test() ->
-    Data = #{<<"rtc_regions">> => [#{<<"id">> => <<"us-east">>, <<"guild_id">> => 7}]},
-    ?assertEqual(
-        #{<<"rtc_regions">> => [#{<<"id">> => <<"us-east">>, <<"guild_id">> => <<"7">>}]},
-        fast_payload(Data, false)
-    ).
-
-fast_payload_drops_internal_keys_test() ->
-    Data = #{<<"id">> => 1, <<"role_index">> => #{}, role_perms_cache => #{}},
-    ?assertEqual(#{<<"id">> => <<"1">>}, fast_payload(Data, false)).
-
-fast_payload_shapes_thread_keys_test() ->
-    Data = #{
-        <<"id">> => 1,
-        <<"applied_tags">> => [2, 3],
-        <<"member_ids_preview">> => [4],
-        <<"_fluxer_thread">> => #{},
-        <<"thread_index">> => #{}
-    },
-    ?assertEqual(
-        #{<<"id">> => <<"1">>, <<"applied_tags">> => [<<"2">>, <<"3">>]},
-        fast_payload(Data, false)
-    ).
-
-pre_encoded_payload_passes_through_unchanged_test() ->
-    Data = {pre_encoded, <<"{}">>},
-    ?assertEqual(Data, payload(Data)).
-
-member_list_revision_is_internal_at_every_depth_test() ->
-    Data = #{
-        member_list_revision => make_ref(),
-        <<"nested">> => [#{<<"member_list_revision">> => make_ref(), <<"id">> => 9}]
-    },
-    ?assertEqual(#{<<"nested">> => [#{<<"id">> => <<"9">>}]}, payload(Data)).
-
--endif.

@@ -18,7 +18,7 @@ export class Payment {
 	readonly isGift: boolean;
 	readonly giftCode: string | null;
 	readonly purchaseGeoipCountryCode: string | null;
-	readonly purchaseClientCountryCode: string | null;
+	private readonly purchaseClientCountryCode: string | null;
 	readonly euWithdrawalWaiverRequired: boolean;
 	readonly euWithdrawalWaiverAccepted: boolean;
 	readonly euWithdrawalWaiverAcceptedAt: Date | null;

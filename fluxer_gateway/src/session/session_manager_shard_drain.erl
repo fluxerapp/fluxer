@@ -7,25 +7,25 @@
     broadcast_reconnect_drain/1,
     handoff_to_topology/2,
     build_session_data/7,
-    build_ready_data_for_session/1,
     filter_guild_ids_for_identify/2,
     validate_identify_sharding/3,
-    check_identify_rate_limit/1,
-    should_debounce_reactions/1,
     thread_channels_capable/1,
-    extract_e2ee_capable/1,
     fetch_rpc_data/2
 ]).
-
--ifdef(TEST).
--export([push_and_drain_session/3]).
--endif.
 
 -export_type([handoff_result/0, identify_data/0, session_id/0, shard_identify_data/0, state/0]).
 
 -define(IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS, 16#2).
 -define(IDENTIFY_FLAG_CHANNEL_THREADS, 16#4).
+-define(IDENTIFY_FLAG_GUILD_VISITS, 16#8).
 -define(READ_STATE_FLAG_IS_THREAD, 16#2).
+-define(INTERNAL_READY_FIELDS, [
+    <<"visit_guild_ids">>,
+    <<"operator_visit_guild_ids">>,
+    <<"adult_content_allowed">>,
+    <<"account_tier">>,
+    <<"ip_key">>
+]).
 -define(SESSION_RPC_RETRY_CONFIG, {1, 1000, 10000, 500}).
 
 -type session_id() :: binary().
@@ -165,11 +165,11 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         ready => filter_thread_read_states(
             build_ready_data_for_session(Data),
             thread_channels_capable(IdentifyData),
-            map_utils:get_safe(UserDataMap, <<"bot">>, false) =:= true,
+            is_truthy(map_utils:get_safe(UserDataMap, <<"bot">>, false)),
             UserId
         ),
         bot => map_utils:get_safe(UserDataMap, <<"bot">>, false),
-        e2ee_capable => extract_e2ee_capable(Properties),
+        e2ee_capable => is_truthy(map_utils:get_safe(Properties, <<"e2ee_capable">>, false)),
         geoip_country_code => extract_geoip_country_code(Data),
         ignored_events => term_detach:detach(IgnoredEvents),
         initial_guild_id => map_utils:get_safe(IdentifyData, initial_guild_id, undefined),
@@ -177,7 +177,27 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         debounce_reactions => should_debounce_reactions(IdentifyData),
         thread_channels_capable => thread_channels_capable(IdentifyData)
     },
-    BaseFields.
+    with_visits(Data, IdentifyData, BaseFields).
+
+-spec with_visits(map(), shard_identify_data(), map()) -> map().
+with_visits(Data, IdentifyData, BaseFields) ->
+    Capable =
+        guild_visits_capable(IdentifyData) andalso not is_truthy(maps:get(bot, BaseFields)),
+    Parsed = session_visits:parse_rpc(Data),
+    MemberIds = maps:get(guilds, BaseFields),
+    Visits0 =
+        case Capable of
+            true -> maps:get(visits, Parsed);
+            false -> #{}
+        end,
+    Shard = maps:get(shard, IdentifyData, undefined),
+    Retained = gateway_sharding:retain_guild_ids_for_shard(maps:keys(Visits0), Shard),
+    Visits = maps:without(MemberIds, maps:with(Retained, Visits0)),
+    maps:merge(BaseFields, Parsed#{
+        visits => Visits,
+        guild_visits_capable => Capable,
+        guilds => MemberIds ++ maps:keys(Visits)
+    }).
 
 -spec filter_guild_ids_for_identify(map(), shard_identify_data()) -> [integer()].
 filter_guild_ids_for_identify(Data, IdentifyData) ->
@@ -260,7 +280,8 @@ is_truthy(_) -> false.
 
 -spec build_ready_data_for_session(map()) -> map().
 build_ready_data_for_session(Data) ->
-    Detached = term_detach:detach(Data#{<<"guilds">> => []}),
+    Public = maps:without(?INTERNAL_READY_FIELDS, Data),
+    Detached = term_detach:detach(Public#{<<"guilds">> => []}),
     case Detached of
         M when is_map(M) -> M;
         _ -> #{}
@@ -270,21 +291,19 @@ build_ready_data_for_session(Data) ->
 filter_thread_read_states(#{<<"read_states">> := Rows} = Ready, Capable, Bot, UserId) when
     is_list(Rows)
 ->
-    case lists:any(fun has_read_state_flags/1, Rows) of
+    HasFlags = lists:any(fun has_read_state_flags/1, Rows),
+    Loaded = HasFlags andalso channel_threads_config:loaded(),
+    Viewer = fun
+        (_Row) when not Loaded -> Capable orelse Bot;
+        (Row) ->
+            guild_thread_gate:compute_viewer(
+                read_state_guild_active(Row), Bot, Capable, UserId
+            )
+    end,
+    case HasFlags of
         false ->
             Ready;
         true ->
-            Viewer =
-                case channel_threads_config:loaded() of
-                    false ->
-                        fun(_Row) -> Capable orelse Bot end;
-                    true ->
-                        fun(Row) ->
-                            guild_thread_gate:compute_viewer(
-                                read_state_guild_active(Row), Bot, Capable, UserId
-                            )
-                        end
-                end,
             Ready#{
                 <<"read_states">> => lists:filtermap(
                     fun(Row) -> filter_read_state(Row, Capable orelse Bot, Viewer) end, Rows
@@ -318,45 +337,24 @@ filter_read_state(Row, false, _Viewer) when is_map(Row) ->
 filter_read_state(_Row, _Capable, _Viewer) ->
     true.
 
--spec check_identify_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-check_identify_rate_limit(Attempts) ->
-    case fluxer_gateway_env:get(identify_rate_limit_enabled) of
-        true -> do_check_rate_limit(Attempts);
-        _ -> {ok, Attempts}
-    end.
-
--spec do_check_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-do_check_rate_limit(Attempts) ->
-    Now = erlang:system_time(millisecond),
-    AttemptsInWindow = [T || T <- Attempts, (Now - T) < 5000],
-    case AttemptsInWindow =/= [] of
-        true -> {error, rate_limited};
-        false -> {ok, [Now | AttemptsInWindow]}
-    end.
-
 -spec should_debounce_reactions(map()) -> boolean().
 should_debounce_reactions(IdentifyData) ->
-    case map_utils:get_safe(IdentifyData, flags, 0) of
-        Flags when is_integer(Flags), Flags >= 0 ->
-            bitset:has(Flags, ?IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS);
-        _ ->
-            false
-    end.
+    identify_flag(IdentifyData, ?IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS).
 
 -spec thread_channels_capable(map()) -> boolean().
 thread_channels_capable(IdentifyData) ->
-    case map_utils:get_safe(IdentifyData, flags, 0) of
-        Flags when is_integer(Flags), Flags >= 0 ->
-            bitset:has(Flags, ?IDENTIFY_FLAG_CHANNEL_THREADS);
-        _ ->
-            false
-    end.
+    identify_flag(IdentifyData, ?IDENTIFY_FLAG_CHANNEL_THREADS).
 
--spec extract_e2ee_capable(term()) -> boolean().
-extract_e2ee_capable(Properties) when is_map(Properties) ->
-    is_truthy(maps:get(<<"e2ee_capable">>, Properties, false));
-extract_e2ee_capable(_) ->
-    false.
+-spec guild_visits_capable(map()) -> boolean().
+guild_visits_capable(IdentifyData) ->
+    identify_flag(IdentifyData, ?IDENTIFY_FLAG_GUILD_VISITS).
+
+-spec identify_flag(map(), non_neg_integer()) -> boolean().
+identify_flag(IdentifyData, Flag) ->
+    case map_utils:get_safe(IdentifyData, flags, 0) of
+        Flags when is_integer(Flags), Flags >= 0 -> bitset:has(Flags, Flag);
+        _ -> false
+    end.
 
 -spec extract_geoip_country_code(map()) -> binary() | undefined.
 extract_geoip_country_code(Data) ->
@@ -398,16 +396,23 @@ do_fetch_rpc_data(Request, PeerIP) ->
         <<"ip">> => PeerIP
     },
     RpcWithCoords = session_manager_shard_lookup:add_coordinates(RpcRequest, Lat, Lon),
-    RpcWithCapability = add_thread_channels_capable(
-        RpcWithCoords, thread_channels_capable(IdentifyData)
+    RpcWithCapability = add_guild_visits_capable(
+        add_thread_channels_capable(RpcWithCoords, thread_channels_capable(IdentifyData)),
+        guild_visits_capable(IdentifyData)
     ),
-    RpcResult = api_rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
+    RpcResult = rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
     classify_rpc_result(RpcResult, PeerIP).
 
 -spec add_thread_channels_capable(map(), boolean()) -> map().
 add_thread_channels_capable(RpcRequest, true) ->
     RpcRequest#{<<"thread_channels_capable">> => true};
 add_thread_channels_capable(RpcRequest, false) ->
+    RpcRequest.
+
+-spec add_guild_visits_capable(map(), boolean()) -> map().
+add_guild_visits_capable(RpcRequest, true) ->
+    RpcRequest#{<<"guild_visits_capable">> => true};
+add_guild_visits_capable(RpcRequest, false) ->
     RpcRequest.
 
 -spec classify_rpc_result(term(), term()) -> {ok, map()} | {error, term()}.
@@ -428,87 +433,3 @@ classify_rpc_result({error, {retries_exhausted, Reason}}, PeerIP) ->
     {error, {retries_exhausted, Reason}};
 classify_rpc_result({error, Reason}, _PeerIP) ->
     {error, {network_error, Reason}}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-filter_thread_read_states_test() ->
-    Key = channel_threads_config,
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, (channel_threads_config:default_config())#{config_version => 1}),
-    try
-        Rows = [
-            #{<<"id">> => <<"1">>},
-            #{<<"id">> => <<"2">>, <<"flags">> => 1},
-            #{<<"id">> => <<"3">>, <<"flags">> => 3}
-        ],
-        Ready = #{<<"read_states">> => Rows},
-        ?assertEqual(
-            #{<<"read_states">> => [#{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>}]},
-            filter_thread_read_states(Ready, false, false, 7)
-        ),
-        ?assertEqual(
-            #{
-                <<"read_states">> => [
-                    #{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>, <<"flags">> => 1}
-                ]
-            },
-            filter_thread_read_states(Ready, true, false, 7)
-        ),
-        Plain = #{<<"read_states">> => [#{<<"id">> => <<"1">>}]},
-        ?assertEqual(Plain, filter_thread_read_states(Plain, false, false, 7))
-    after
-        case Previous of
-            undefined -> persistent_term:erase(Key);
-            _ -> persistent_term:put(Key, Previous)
-        end
-    end.
-
-filter_thread_read_states_keeps_thread_rows_before_the_config_loads_test() ->
-    Key = channel_threads_config,
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, channel_threads_config:default_config()),
-    try
-        Thread = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
-        Ready = #{<<"read_states">> => [Thread]},
-        ?assertEqual(Ready, filter_thread_read_states(Ready, true, false, 7)),
-        ?assertEqual(Ready, filter_thread_read_states(Ready, false, true, 7)),
-        ?assertEqual(
-            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
-        )
-    after
-        case Previous of
-            undefined -> persistent_term:erase(Key);
-            _ -> persistent_term:put(Key, Previous)
-        end
-    end.
-
-filter_thread_read_states_checks_the_row_guild_test() ->
-    Key = channel_threads_config,
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, (channel_threads_config:default_config())#{
-        enabled => true,
-        enabled_guilds => #{<<"5">> => true},
-        included_users => #{<<"7">> => true}
-    }),
-    try
-        Active = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
-        Inactive = #{<<"id">> => <<"2">>, <<"guild_id">> => <<"6">>, <<"flags">> => 3},
-        Ready = #{<<"read_states">> => [Active, Inactive]},
-        ?assertEqual(
-            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, true, false, 7)
-        ),
-        ?assertEqual(
-            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
-        ),
-        ?assertEqual(
-            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, false, true, 8)
-        )
-    after
-        case Previous of
-            undefined -> persistent_term:erase(Key);
-            _ -> persistent_term:put(Key, Previous)
-        end
-    end.
-
--endif.

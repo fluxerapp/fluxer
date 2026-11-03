@@ -5,7 +5,6 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as MfaCommands from '@app/features/auth/commands/MfaCommands';
 import styles from '@app/features/auth/components/modals/RecoveryKitModal.module.css';
-import {isAbortError} from '@app/features/auth/state/SudoPrompt';
 import {
 	buildRecoveryKitPdf,
 	createRecoveryKitQrDataUrl,
@@ -15,6 +14,7 @@ import {USERNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescrip
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {downloadBlob} from '@app/features/platform/utils/DownloadFile';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -229,7 +229,7 @@ const RecoveryKitModal = observer(
 		const recoverPageUrl = `${RuntimeConfig.webAppBaseUrl}${Routes.RECOVER_ACCOUNT}`;
 		const recoverUrl = `${recoverPageUrl}#username=${encodeURIComponent(accountTag)}&key=${encodeURIComponent(recoveryKey)}`;
 		const locale = getCurrentLocale();
-		const timeFormat = UserSettings.getTimeFormat();
+		const timeFormat = UserSettings.timeFormat;
 		const sheet = useMemo<RecoveryKitSheet>(() => {
 			const productName = RuntimeConfig.productName;
 			const createdDate = new Date(createdAt);
@@ -348,12 +348,13 @@ const RecoveryKitModal = observer(
 			ModalCommands.popWithKey(RECOVERY_KIT_MODAL_KEY);
 			onDone?.();
 		}, [acknowledged, onDone]);
-		const description =
-			reason === 'recovered'
-				? i18n._(RECOVERY_KIT_RECOVERED_DESCRIPTOR)
-				: reason === 'replaced'
-					? i18n._(RECOVERY_KIT_REPLACED_DESCRIPTOR)
-					: i18n._(RECOVERY_KIT_CREATED_DESCRIPTOR);
+		let descriptionDescriptor = RECOVERY_KIT_CREATED_DESCRIPTOR;
+		if (reason === 'recovered') {
+			descriptionDescriptor = RECOVERY_KIT_RECOVERED_DESCRIPTOR;
+		} else if (reason === 'replaced') {
+			descriptionDescriptor = RECOVERY_KIT_REPLACED_DESCRIPTOR;
+		}
+		const description = i18n._(descriptionDescriptor);
 		const optionsBusy = loadingBackupCodes || buildingPdf;
 		return (
 			<Modal.Root size="small" centered onClose={handleDone} data-flx="auth.recovery-kit-modal.modal-root">

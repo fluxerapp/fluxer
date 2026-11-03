@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import Navigation from '@app/features/navigation/state/Navigation';
@@ -57,6 +58,12 @@ class NavigationSideEffects {
 		Notification.handleChannelSelect({channelId});
 	}
 
+	reset(): void {
+		this.lastChannelId = null;
+		this.lastMessageId = null;
+		this.lastThreadKey = null;
+	}
+
 	handleGatewayReady(): void {
 		const {guildId, threadId, threadMessageId} = Navigation;
 		if (threadId == null || Channels.getChannel(threadId)) return;
@@ -77,4 +84,8 @@ class NavigationSideEffects {
 	}
 }
 
-export default new NavigationSideEffects();
+const navigationSideEffects = new NavigationSideEffects();
+
+ResettableStates.register(navigationSideEffects, () => navigationSideEffects.reset());
+
+export default navigationSideEffects;

@@ -11,7 +11,6 @@ members = [
 	"fluxer_snowflakes",
 	"tools/ci",
 	"tools/dev",
-	"tools/i18n_auto",
 	"fluxer_users",
 	"fluxer_unfurl",
 	"packages/markdown_parser/rust",

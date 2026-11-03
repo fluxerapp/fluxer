@@ -14,9 +14,10 @@ import type {LoginIdentifierField} from '@app/features/auth/utils/AccountSignInI
 import {CHANGE_INSTANCE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, BrowserIcon, EnvelopeSimpleIcon, KeyIcon, UserIcon, UserPlusIcon} from '@phosphor-icons/react';
+import {BrowserIcon, EnvelopeSimpleIcon, KeyIcon, UserIcon, UserPlusIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {cloneElement, type ReactElement, type ReactNode} from 'react';
 
@@ -39,7 +40,7 @@ export interface AuthLoginSsoAction {
 	readonly onStart: () => void;
 }
 
-export function resolveShowPasskeyAction(showPasskeyOption: boolean, passkeyAvailableForInstance: boolean): boolean {
+function resolveShowPasskeyAction(showPasskeyOption: boolean, passkeyAvailableForInstance: boolean): boolean {
 	return showPasskeyOption && passkeyAvailableForInstance;
 }
 

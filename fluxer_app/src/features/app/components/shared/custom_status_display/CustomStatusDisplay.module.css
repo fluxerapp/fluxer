@@ -120,7 +120,7 @@ img.statusEmoji {
 	border: none;
 	background: transparent;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 .editableWrapper .content {

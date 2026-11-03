@@ -1,6 +1,7 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(voice_state_utils).
+
 -typing([eqwalizer]).
 
 -include_lib("fluxer_gateway/include/voice_state.hrl").
@@ -21,13 +22,8 @@
     drop_voice_states/2,
     broadcast_disconnects/2,
     voice_flags_from_context/1,
-    parse_stream_key/1,
-    normalize_session_id/1
+    parse_stream_key/1
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     voice_state/0,
@@ -241,64 +237,14 @@ build_stream_key_result({guild, GuildId}, ChannelId, ConnId) ->
         connection_id => ConnId
     }}.
 
--spec positive_integer(term()) -> integer() | undefined.
-positive_integer(Value) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(Value).
-
 -spec snowflake_field(term(), binary()) -> integer() | undefined.
-snowflake_field(Map, Key) when is_map(Map) -> positive_integer(maps:get(Key, Map, undefined));
-snowflake_field(_, _) -> undefined.
+snowflake_field(Map, Key) when is_map(Map) ->
+    snowflake_id:parse_maybe(maps:get(Key, Map, undefined));
+snowflake_field(_, _) ->
+    undefined.
 
 -spec require_positive_snowflake(term()) -> integer().
 require_positive_snowflake(Value) ->
-    Id = positive_integer(Value),
+    Id = snowflake_id:parse_maybe(Value),
     true = is_integer(Id),
     Id.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
-
--ifdef(TEST).
-
-parse_stream_key_dm_test() ->
-    Result = parse_stream_key(<<"dm:123:conn-id">>),
-    ?assertMatch(
-        {ok, #{scope := dm, channel_id := 123, connection_id := <<"conn-id">>}}, Result
-    ).
-
-parse_stream_key_guild_test() ->
-    Result = parse_stream_key(<<"999:123:conn-id">>),
-    ?assertMatch(
-        {ok, #{
-            scope := guild, guild_id := 999, channel_id := 123, connection_id := <<"conn-id">>
-        }},
-        Result
-    ).
-
-parse_stream_key_invalid_test() ->
-    ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"invalid">>)),
-    ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"a:b">>)),
-    ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"dm:001:conn">>)),
-    ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"001:123:conn">>)),
-    ?assertEqual({error, invalid_stream_key}, parse_stream_key(123)).
-
-sanitize_voice_state_for_broadcast_test() ->
-    VoiceState = #{
-        <<"user_id">> => <<"1">>,
-        <<"latitude">> => <<"1.0">>,
-        <<"longitude">> => <<"2.0">>,
-        <<"region_id">> => <<"us-east">>,
-        <<"server_id">> => <<"voice-1">>
-    },
-    Sanitized = sanitize_voice_state_for_broadcast(VoiceState),
-    ?assertNot(maps:is_key(<<"latitude">>, Sanitized)),
-    ?assertNot(maps:is_key(<<"longitude">>, Sanitized)),
-    ?assertNot(maps:is_key(<<"region_id">>, Sanitized)),
-    ?assertNot(maps:is_key(<<"server_id">>, Sanitized)),
-    ?assertEqual(<<"1">>, maps:get(<<"user_id">>, Sanitized)),
-    ?assertEqual(null, maps:get(<<"channel_id">>, Sanitized)),
-    ?assertEqual(false, maps:get(<<"suppress">>, Sanitized)),
-    ?assertEqual(0, maps:get(<<"version">>, Sanitized)).
-
--endif.

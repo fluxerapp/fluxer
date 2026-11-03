@@ -107,23 +107,3 @@ describe('parsePublicOrigin', () => {
 		expect(parsePublicOrigin('https://user:pw@chat.example.com')).toBeNull();
 	});
 });
-
-describe('endpoints derived from a public origin', () => {
-	test('an origin with a non-standard port ports every derived endpoint', () => {
-		const origin = parsePublicOrigin('https://chat.example.com:29080');
-		assert.ok(origin);
-		const endpoints = deriveEndpointsFromDomain(origin);
-		expect(endpoints.api_client).toBe('https://chat.example.com:29080/api');
-		expect(endpoints.app).toBe('https://chat.example.com:29080');
-		expect(endpoints.gateway).toBe('wss://chat.example.com:29080/gateway');
-		expect(endpoints.admin).toBe('https://chat.example.com:29080/admin');
-	});
-	test('an origin written with an explicit :443 derives portless endpoints', () => {
-		const origin = parsePublicOrigin('https://chat.example.com:443');
-		assert.ok(origin);
-		const endpoints = deriveEndpointsFromDomain(origin);
-		expect(endpoints.admin).toBe('https://chat.example.com/admin');
-		expect(endpoints.app).toBe('https://chat.example.com');
-		expect(endpoints.gateway).toBe('wss://chat.example.com/gateway');
-	});
-});

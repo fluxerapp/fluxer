@@ -10,7 +10,6 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureOptions,
@@ -36,28 +35,6 @@ export interface VoiceEngineV2EventSourcePort {
 export interface GatewayPort {
 	writeVoiceState(options: VoiceEngineV2GatewayVoiceStateWrite): Promise<void>;
 	clearVoiceState(guildId: string | null): Promise<void>;
-}
-
-export interface LiveKitPort {
-	prewarm(): Promise<void>;
-	connect(options: VoiceEngineV2ConnectOptions): Promise<void>;
-	disconnect(reason: VoiceEngineV2DisconnectReason): Promise<void>;
-	publishMicrophone(options: VoiceEngineV2MicrophoneOptions): Promise<void>;
-	unpublishMicrophone(): Promise<void>;
-	setMicrophoneEnabled(enabled: boolean): Promise<void>;
-	publishCamera(options: VoiceEngineV2CameraOptions): Promise<void>;
-	updateCameraEncoding(options: VoiceEngineV2CameraEncodingOptions): Promise<void>;
-	unpublishCamera(options?: VoiceEngineV2CameraOptions): Promise<void>;
-	publishScreen(options: VoiceEngineV2ScreenOptions): Promise<void>;
-	updateScreenEncoding(options: VoiceEngineV2ScreenEncodingOptions): Promise<void>;
-	unpublishScreen(): Promise<void>;
-	publishScreenAudio(options: VoiceEngineV2ScreenAudioOptions): Promise<void>;
-	unpublishScreenAudio(): Promise<void>;
-	setOutputDevice(options: VoiceEngineV2OutputDeviceOptions): Promise<void>;
-	setParticipantVolume(options: VoiceEngineV2ParticipantVolumeOptions): Promise<void>;
-	setRemoteTrackSubscription(options: VoiceEngineV2RemoteTrackSubscriptionOptions): Promise<void>;
-	publishData(options: VoiceEngineV2DataOptions): Promise<void>;
-	collectStats(): Promise<VoiceEngineV2Stats>;
 }
 
 export interface LiveKitMediaPort {
@@ -109,10 +86,6 @@ export interface DevicePort {
 	selectCamera(deviceId: string | null): Promise<void>;
 }
 
-export interface CapabilitiesPort {
-	getHardwareEncoderCapabilities(): Promise<VoiceEngineV2HardwareEncoderCapabilities>;
-}
-
 export interface PermissionPort {
 	checkPermission(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult>;
 	requestPermission(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult>;
@@ -129,14 +102,12 @@ export interface DiagnosticsPort {
 
 export interface VoiceEngineV2HostPorts {
 	gateway?: GatewayPort;
-	liveKit?: LiveKitPort;
 	media?: LiveKitMediaPort;
 	subscriptions?: SubscriptionPort;
 	stats?: StatsPort;
 	voiceState?: VoiceStateIngestionPort;
 	participantProjection?: ParticipantProjectionIngestionPort;
 	nativeMedia?: NativeMediaPort;
-	capabilities?: CapabilitiesPort;
 	devices?: DevicePort;
 	permissions?: PermissionPort;
 	timers?: TimerPort;

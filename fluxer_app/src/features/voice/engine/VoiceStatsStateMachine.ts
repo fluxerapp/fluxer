@@ -2,7 +2,6 @@
 
 import {
 	createVoiceLatencySnapshot,
-	type LatencyDataPoint,
 	observeVoiceLatencyGap,
 	recordVoiceLatencySample,
 	resetVoiceLatencySnapshot,
@@ -11,11 +10,12 @@ import {
 	type VoiceLatencySnapshot,
 } from '@app/features/voice/engine/VoiceLatencyTracker';
 import type {
+	VoiceEngineV2LatencyDataPoint as LatencyDataPoint,
 	VoiceEngineV2PerTrackStats as PerTrackStats,
 	VoiceEngineV2TransportInfo as TransportInfo,
 	VoiceEngineV2VoiceStats as VoiceStats,
 	VoiceEngineV2StatsSample as VoiceStatsSample,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 const MAX_LATENCY_HISTORY = 60;
@@ -416,6 +416,22 @@ const voiceStatsStateMachine = setup({
 	id: 'voiceStats',
 	context: () => initialContext(),
 	initial: 'routing',
+	on: {
+		'room.set': {target: '.routing', actions: 'setRoom'},
+		'latency.start': {target: '.routing', actions: 'startLatency'},
+		'latency.stop': {target: '.routing', actions: 'stopLatency'},
+		'latency.sample': {target: '.routing', actions: 'recordLatencySample'},
+		'latency.gap': {target: '.routing', actions: 'recordLatencyGap'},
+		'stats.start': {target: '.routing', actions: 'startStats'},
+		'stats.stop': {target: '.routing', actions: 'stopStats'},
+		'stats.tick': {target: '.routing', actions: 'tickStats'},
+		'stats.collectionStarted': {target: '.routing', actions: 'startCollection'},
+		'stats.collectionSucceeded': {target: '.routing', actions: 'applyCollectionResult'},
+		'stats.collectionFinished': {target: '.routing', actions: 'finishCollection'},
+		'reconnection.increment': {target: '.routing', actions: 'incrementReconnectionCount'},
+		'stats.reset': {target: '.routing', actions: 'reset'},
+		'stats.cleanup': {target: '.routing', actions: 'reset'},
+	},
 	states: {
 		routing: {
 			always: [
@@ -425,78 +441,10 @@ const voiceStatsStateMachine = setup({
 				{target: 'idle'},
 			],
 		},
-		idle: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingLatency: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingStats: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingBoth: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
+		idle: {},
+		trackingLatency: {},
+		trackingStats: {},
+		trackingBoth: {},
 	},
 });
 

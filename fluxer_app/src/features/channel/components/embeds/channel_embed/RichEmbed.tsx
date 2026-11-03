@@ -10,6 +10,7 @@ import {
 	getBorderColor,
 	getUrlHostname,
 	isValidMedia,
+	useFreshGalleryImages,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {
 	EmbedMediaRenderer,
@@ -43,9 +44,10 @@ export const RichEmbed: FC<EmbedProps> = observer(
 		const hasImage = isValidMedia(embed.image);
 		const hasThumbnail = isValidMedia(embed.thumbnail);
 		const hasAnyMedia = hasVideo || hasImage || hasThumbnail;
-		const galleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
+		const rawGalleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
 			return collectGalleryImages({embed, embedIndex, embedList});
 		}, [embed, embedIndex, embedList]);
+		const galleryImages = useFreshGalleryImages(rawGalleryImages);
 		const showGallery = galleryImages.length > 1 || (!hasAnyMedia && galleryImages.length > 0);
 		const galleryAttachments = useMemo(
 			() => (showGallery ? buildGalleryAttachments(galleryImages, embed, embedIndex) : undefined),

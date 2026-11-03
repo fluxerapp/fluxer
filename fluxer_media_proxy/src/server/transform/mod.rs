@@ -4,8 +4,6 @@ pub(in crate::server) mod cache;
 pub mod cache_key;
 pub(in crate::server) mod execution;
 pub mod parameters;
-#[cfg(test)]
-mod tests;
 
 use crate::{
     byte_budget::ByteBudget,
@@ -16,7 +14,7 @@ use crate::{
     image_quality::ImageQuality,
     image_transform::{AnimationLimits, AnimationMode, ImageOptions, ResizeMode},
     media_limits::MediaLimits,
-    media_process::MediaBytes,
+    media_process::{MediaBytes, MediaError},
     metrics::{self, transform::TransformMetrics},
     mime,
     output_format::OutputFormat,
@@ -24,20 +22,21 @@ use crate::{
         format_policy::{
             OriginalImageRequest, content_type_is_trustworthy, default_transform_quality,
             effective_animated_image_output_format, extension_from_mime,
-            external_default_output_extension, image_extension_from_filename, is_svg_content_type,
+            external_default_output_extension, image_extension_from_filename,
+            is_browser_displayable_image, is_svg_content_type, is_untransformed_fallback_image,
             same_format_loaded_image_request_can_use_original_with_sniff, source_image_format,
             transform_response_content_type, transform_static_quality_default,
         },
         native_task_executor::{NativeTaskExecutor, NativeTaskExecutorSettings},
         response::{
-            MediaResponse, content_disposition_header,
+            GeneratedMediaResponse, MediaResponse, content_disposition_header,
             error::{text_with_reason, text_with_source},
-            media_response,
+            generated_media_response, media_response,
         },
         transform::{
             cache::{
                 CachedTransformRequest, cached_transform, cached_transform_hit,
-                coalescer_failure_response,
+                coalescer_error_is_transient, coalescer_failure_response, forbid_storing,
             },
             cache_key::{TransformCacheKeyInput, transform_cache_key},
             execution::{
@@ -92,12 +91,13 @@ impl TransformRuntime {
         cfg: &Config,
         metrics: &Arc<metrics::Metrics>,
     ) -> anyhow::Result<Self> {
-        let limits = MediaLimits::default_from_config();
         let memory_limit_bytes = process_memory_limit_bytes();
         let memory_budget_bytes = native_memory_budget_bytes(
             memory_limit_bytes,
             cfg.media.transform_cache_capacity_bytes,
         );
+        let limits =
+            MediaLimits::default_from_config().with_native_memory_budget(memory_budget_bytes);
         tracing::info!(
             memory_limit_bytes,
             transform_cache_bytes = cfg.media.transform_cache_capacity_bytes,
@@ -310,6 +310,68 @@ fn original_bytes_response(request: OriginalBytes<'_>) -> Response {
     })
 }
 
+struct VideoTransformPlan {
+    format: OutputFormat,
+    quality: ImageQuality,
+    cache_key: String,
+}
+
+fn video_transform_plan(
+    route: TransformRoute,
+    cache_identity: &str,
+    transform: &ValidatedTransformParameters,
+    requested_format: AssetExtension,
+) -> VideoTransformPlan {
+    let format = OutputFormat::coerce_from_extension(requested_format);
+    let quality = transform.quality.unwrap_or(ImageQuality::High);
+    VideoTransformPlan {
+        format,
+        quality,
+        cache_key: transform_cache_key(TransformCacheKeyInput {
+            route,
+            asset_kind: None,
+            cache_identity,
+            width: transform.width,
+            height: transform.height,
+            format,
+            quality: Some(quality),
+            animated: transform.animated,
+            effort: None,
+            resize_mode: None,
+        }),
+    }
+}
+
+pub(in crate::server) struct CachedVideoTransformRequest<'a> {
+    pub(in crate::server) method: Method,
+    pub(in crate::server) cache_identity: &'a str,
+    pub(in crate::server) filename: &'a str,
+    pub(in crate::server) route: TransformRoute,
+    pub(in crate::server) params: &'a HashMap<String, String>,
+}
+
+pub(in crate::server) fn cached_video_transform_response(
+    runtime: &TransformRuntime,
+    request: CachedVideoTransformRequest<'_>,
+) -> Option<Response> {
+    let transform =
+        validate_transform_parameters(request.params, &runtime.limits(), request.route).ok()?;
+    let plan = video_transform_plan(
+        request.route,
+        request.cache_identity,
+        &transform,
+        transform.explicit_format?,
+    );
+    let hit = cached_transform_hit(runtime, &plan.cache_key)?;
+    Some(transformed_response(TransformedBytes {
+        method: request.method,
+        data: hit.data.as_bytes().clone(),
+        content_type: hit.format.mime(),
+        filename: request.filename,
+        requested_download: transform.requested_download,
+    }))
+}
+
 struct VideoTransformRequest<'a> {
     method: Method,
     data: Bytes,
@@ -352,27 +414,17 @@ async fn serve_video_transform(
             requested_download: transform.requested_download,
         });
     };
-    let format = OutputFormat::coerce_from_extension(requested_format);
-    let quality = transform.quality.unwrap_or(ImageQuality::High);
-    let cache_key = transform_cache_key(TransformCacheKeyInput {
-        route,
-        asset_kind: None,
-        cache_identity,
-        width: transform.width,
-        height: transform.height,
+    let VideoTransformPlan {
         format,
-        quality: Some(quality),
-        animated: transform.animated,
-        effort: None,
-        resize_mode: None,
-    });
+        quality,
+        cache_key,
+    } = video_transform_plan(route, cache_identity, &transform, requested_format);
     if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
         return transformed_response(TransformedBytes {
             method,
             data: hit.data.as_bytes().clone(),
             content_type: hit.format.mime(),
             filename,
-            range_header,
             requested_download: transform.requested_download,
         });
     }
@@ -426,7 +478,6 @@ async fn serve_video_transform(
         data: transformed,
         content_type: format.mime(),
         filename,
-        range_header,
         requested_download: transform.requested_download,
     })
 }
@@ -511,24 +562,61 @@ async fn serve_image_transform(
             data: hit.data.as_bytes().clone(),
             content_type: response_content_type,
             filename,
-            range_header,
             requested_download: transform.requested_download,
         });
     }
+    let can_serve_original = ((transform.width.is_none() && transform.height.is_none())
+        || options.is_animated())
+        && is_browser_displayable_image(sniffed.mime);
+    let fallback_original =
+        is_untransformed_fallback_image(sniffed.mime, source_format).then(|| data.clone());
+    let mut too_large_original = None;
+    let leader_original = &mut too_large_original;
     let transformed = match cached_transform(CachedTransformRequest {
         runtime,
         cache_key,
         format: options.format,
         deadline: deadline_instant(options.deadline_ms),
         work: move || async move {
-            coalesced_work_result(run_transform(runtime, data, options).await)
-                .map(|media| MediaBytes::from(media.bytes))
+            let original = can_serve_original.then(|| data.clone());
+            let result = coalesced_work_result(run_transform(runtime, data, options).await);
+            if result
+                .as_ref()
+                .is_err_and(|error| error.downcast_ref() == Some(&MediaError::TooLargeToProcess))
+            {
+                *leader_original = original;
+            }
+            result.map(|media| MediaBytes::from(media.bytes))
         },
     })
     .await
     {
         Ok(bytes) => bytes.as_bytes().clone(),
         Err(error) => {
+            if let Some(original) = too_large_original {
+                return original_bytes_response(OriginalBytes {
+                    method,
+                    data: original,
+                    content_type: sniffed.mime,
+                    filename,
+                    range_header,
+                    requested_download: transform.requested_download,
+                });
+            }
+            if coalescer_error_is_transient(error)
+                && let Some(original) = fallback_original
+            {
+                let mut response = original_bytes_response(OriginalBytes {
+                    method,
+                    data: original,
+                    content_type: sniffed.mime,
+                    filename,
+                    range_header,
+                    requested_download: transform.requested_download,
+                });
+                forbid_storing(&mut response);
+                return response;
+            }
             if let Some(response) = coalescer_failure_response(error, "coalescer_timeout_image") {
                 return response;
             }
@@ -554,7 +642,6 @@ async fn serve_image_transform(
         data: transformed,
         content_type: response_content_type,
         filename,
-        range_header,
         requested_download: transform.requested_download,
     })
 }
@@ -643,7 +730,6 @@ pub(in crate::server) struct CachedTransformProbe<'a> {
     pub(in crate::server) filename: &'a str,
     pub(in crate::server) route: TransformRoute,
     pub(in crate::server) params: &'a HashMap<String, String>,
-    pub(in crate::server) headers: &'a HeaderMap,
 }
 
 // Answers a repeat transform from the cache without the caller fetching the source
@@ -660,7 +746,6 @@ pub(in crate::server) fn cached_transform_response(
         filename,
         route,
         params,
-        headers,
     } = probe;
     let transform = validate_transform_parameters(params, &runtime.limits(), route).ok()?;
     let source_is_svg = is_svg_content_type(content_type)
@@ -705,7 +790,6 @@ pub(in crate::server) fn cached_transform_response(
         data: hit.data.as_bytes().clone(),
         content_type: &response_content_type,
         filename,
-        range_header: headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
         requested_download: transform.requested_download,
     }))
 }
@@ -715,7 +799,6 @@ struct TransformedBytes<'a> {
     data: Bytes,
     content_type: &'a str,
     filename: &'a str,
-    range_header: Option<&'a str>,
     requested_download: bool,
 }
 
@@ -725,11 +808,10 @@ fn transformed_response(request: TransformedBytes<'_>) -> Response {
         request.requested_download,
         Some(request.filename),
     ));
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method: request.method,
         data: request.data.into(),
         content_type: request.content_type,
-        range_header: request.range_header,
         disposition,
     })
 }

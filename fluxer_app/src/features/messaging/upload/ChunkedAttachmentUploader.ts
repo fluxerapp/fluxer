@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {wrapDesktopLocalUploadURL} from '@app/features/messaging/utils/DesktopResourceUrl';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {ExponentialBackoff} from '@app/features/platform/utils/RetryScheduler';
 
 const logger = new Logger('ChunkedAttachmentUploader');
@@ -30,10 +32,6 @@ export interface ChunkedUploadHooks {
 	onProgress?: (uploadedBytes: number, totalBytes: number) => void;
 }
 
-function isAbortError(error: unknown): boolean {
-	return error instanceof DOMException && error.name === 'AbortError';
-}
-
 function isTransientError(error: unknown): boolean {
 	if (error instanceof DOMException && error.name === 'TimeoutError') return true;
 	if (error instanceof HttpError) {
@@ -43,21 +41,6 @@ function isTransientError(error: unknown): boolean {
 	}
 	if (error instanceof Error && error.message === 'Network error during request') return true;
 	return false;
-}
-
-function parseRetryAfterMs(error: unknown): number | null {
-	if (!(error instanceof HttpError)) return null;
-	const raw = error.responseHeaders['retry-after'] ?? error.responseHeaders['Retry-After'];
-	if (!raw) return null;
-	const seconds = Number(raw);
-	if (Number.isFinite(seconds) && seconds >= 0) {
-		return Math.min(seconds * 1000, PART_RETRY_HARD_CAP_MS);
-	}
-	const dateMs = Date.parse(raw);
-	if (!Number.isNaN(dateMs)) {
-		return Math.max(0, Math.min(dateMs - Date.now(), PART_RETRY_HARD_CAP_MS));
-	}
-	return null;
 }
 
 interface PartAttemptResult {
@@ -123,8 +106,6 @@ export async function uploadFileInChunks(plan: ChunkedUploadPlan, hooks: Chunked
 					const backoff = new ExponentialBackoff({
 						minDelay: PART_RETRY_MIN_DELAY_MS,
 						maxDelay: PART_RETRY_MAX_DELAY_MS,
-						maxNumOfAttempts: PART_MAX_ATTEMPTS,
-						jitter: true,
 					});
 					let attempt = 0;
 					while (true) {
@@ -160,7 +141,8 @@ export async function uploadFileInChunks(plan: ChunkedUploadPlan, hooks: Chunked
 								throw error;
 							}
 							const backoffDelay = backoff.next();
-							const retryAfter = parseRetryAfterMs(error);
+							const hinted = error instanceof HttpError ? resolveRetryAfterMs(error) : null;
+							const retryAfter = hinted === null ? null : Math.min(hinted, PART_RETRY_HARD_CAP_MS);
 							const delay = retryAfter !== null ? Math.max(retryAfter, backoffDelay) : backoffDelay;
 							logger.info(
 								`Part ${part.partNumber} attempt ${attempt} failed, retrying in ${Math.round(delay)}ms${

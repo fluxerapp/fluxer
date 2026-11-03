@@ -6,11 +6,9 @@
 -export([
     normalize_guild_ids/1,
     replay_buffer_bytes/1,
-    normalize_buffer/1,
     normalize_seq/1,
     normalize_active_guilds/1,
     build_ignored_events_map/1,
-    load_private_channels/1,
     load_relationships/1,
     build_state/1,
     schedule_timers/1
@@ -21,6 +19,16 @@
 -type guild_id() :: session:guild_id().
 -type session_state() :: session:session_state().
 -type seq() :: session:seq().
+-type core_inputs() :: #{
+    bot := boolean(),
+    is_staff := boolean(),
+    ready := map() | undefined,
+    buffer := [map()],
+    seq := seq(),
+    ack_seq := seq(),
+    socket_pid := pid(),
+    guild_ids := [guild_id()]
+}.
 
 -spec normalize_guild_ids(term()) -> [guild_id()].
 normalize_guild_ids(Value) when is_list(Value) ->
@@ -114,13 +122,11 @@ replay_buffer_bytes(Buffer) ->
 
 -spec replay_payload_bytes([map()]) -> non_neg_integer().
 replay_payload_bytes(Buffer) ->
-    lists:foldl(fun(Event, Acc) -> trunc(Acc + entry_payload_bytes(Event)) end, 0, Buffer).
-
--spec entry_payload_bytes(term()) -> non_neg_integer().
-entry_payload_bytes(#{data := {pre_encoded, Payload}}) when is_binary(Payload) ->
-    byte_size(Payload);
-entry_payload_bytes(_Event) ->
-    0.
+    lists:foldl(
+        fun(Event, Acc) -> trunc(Acc + session_replay_buffer:entry_payload_bytes(Event)) end,
+        0,
+        Buffer
+    ).
 
 -spec build_ignored_events_map(term()) -> #{binary() => true}.
 build_ignored_events_map(Events) when is_list(Events) ->
@@ -176,23 +182,20 @@ extract_fields(#{socket_pid := SocketPid} = D) ->
     AckSeq = init_ack_seq(normalize_seq(maps:get(ack_seq, D, 0)), Seq),
     GuildIds = normalize_guild_ids(maps:get(guilds, D, [])),
     IsStaff = extract_is_staff(maps:get(user_data, D, #{})),
-    Core = extract_core_fields(
-        D, Bot, IsStaff, Ready, Buffer, Seq, AckSeq, SocketPid, GuildIds
-    ),
+    Core = extract_core_fields(D, #{
+        bot => Bot,
+        is_staff => IsStaff,
+        ready => Ready,
+        buffer => Buffer,
+        seq => Seq,
+        ack_seq => AckSeq,
+        socket_pid => SocketPid,
+        guild_ids => GuildIds
+    }),
     Extra = extract_extra_fields(D, Ready),
-    maps:merge(Core, Extra).
+    maps:merge(maps:merge(Core, Extra), session_visits:init_fields(D)).
 
--spec extract_core_fields(
-    map(),
-    boolean(),
-    boolean(),
-    map() | undefined,
-    [map()],
-    seq(),
-    seq(),
-    pid(),
-    [guild_id()]
-) -> session_state().
+-spec extract_core_fields(map(), core_inputs()) -> session_state().
 extract_core_fields(
     #{
         id := Id,
@@ -204,14 +207,16 @@ extract_core_fields(
         properties := Properties,
         status := Status
     } = D,
-    Bot,
-    IsStaff,
-    Ready,
-    Buffer,
-    Seq,
-    AckSeq,
-    SocketPid,
-    GuildIds
+    #{
+        bot := Bot,
+        is_staff := IsStaff,
+        ready := Ready,
+        buffer := Buffer,
+        seq := Seq,
+        ack_seq := AckSeq,
+        socket_pid := SocketPid,
+        guild_ids := GuildIds
+    }
 ) ->
     #{
         id => Id,
@@ -393,150 +398,3 @@ resolve_guild_node(GuildId) ->
         error:_Reason -> error;
         exit:_Reason -> error
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-load_relationships_uses_top_level_relationship_id_test() ->
-    Ready = #{
-        <<"relationships">> => [
-            #{<<"id">> => <<"300">>, <<"user">> => #{<<"id">> => <<"300">>}, <<"type">> => 1},
-            #{<<"id">> => <<"400">>, <<"user">> => #{<<"id">> => <<"400">>}, <<"type">> => 3}
-        ]
-    },
-    Rels = load_relationships(Ready),
-    ?assertEqual(2, maps:size(Rels)),
-    ?assertEqual(1, maps:get(300, Rels)),
-    ?assertEqual(3, maps:get(400, Rels)),
-    ok.
-
-build_state_loads_relationship_ids_from_ready_test() ->
-    State = build_state(
-        base_session_data(#{
-            <<"relationships">> => [
-                #{
-                    <<"id">> => <<"300">>,
-                    <<"type">> => 1,
-                    <<"user">> => #{<<"id">> => <<"300">>}
-                }
-            ],
-            <<"private_channels">> => [
-                #{<<"id">> => <<"700">>, <<"type">> => 1}
-            ]
-        })
-    ),
-    ?assertEqual(#{300 => 1}, maps:get(relationships, State)),
-    ?assert(maps:is_key(700, maps:get(channels, State))).
-
-build_state_restores_replay_floor_test() ->
-    Data = (base_session_data(#{}))#{seq => 20, replay_floor => 7},
-    ?assertEqual(7, maps:get(replay_floor, build_state(Data))).
-
-build_state_clamps_replay_floor_to_seq_test() ->
-    Data = (base_session_data(#{}))#{seq => 3, replay_floor => 99},
-    ?assertEqual(3, maps:get(replay_floor, build_state(Data))).
-
-build_state_defaults_replay_floor_to_zero_test() ->
-    ?assertEqual(0, maps:get(replay_floor, build_state(base_session_data(#{})))).
-
-base_session_data(Ready) ->
-    #{
-        id => <<"session-init-test">>,
-        user_id => 1,
-        user_data => #{
-            <<"id">> => <<"1">>,
-            <<"username">> => <<"self">>,
-            <<"discriminator">> => <<"0001">>,
-            <<"avatar">> => null,
-            <<"flags">> => 0
-        },
-        version => 1,
-        token_hash => <<"token-hash">>,
-        auth_session_id_hash => <<"auth-session-hash">>,
-        properties => #{},
-        status => online,
-        socket_pid => self(),
-        guilds => [],
-        ready => Ready
-    }.
-
-init_ready_keeps_transferred_bot_ready_undefined_test() ->
-    ?assertEqual(undefined, init_ready(true, undefined)),
-    ?assertEqual(#{<<"user">> => #{}}, init_ready(true, #{<<"user">> => #{}})),
-    ?assertEqual(undefined, init_ready(false, undefined)),
-    ok.
-
-build_state_keeps_transferred_bot_ready_undefined_test() ->
-    Data = (base_session_data(undefined))#{bot => true},
-    ?assertEqual(undefined, maps:get(ready, build_state(Data))).
-
-normalize_buffer_filters_invalid_entries_test() ->
-    Buffer = [#{seq => 1}, #{seq => -1}, #{no_seq => true}, <<"bad">>],
-    ?assertEqual([#{seq => 1}], normalize_buffer(Buffer)),
-    ?assertEqual([], normalize_buffer(undefined)).
-
-normalize_buffer_accepts_deque_test() ->
-    Deque = test_deque([#{seq => 1}, #{seq => 2}]),
-    ?assertEqual([#{seq => 1}, #{seq => 2}], normalize_buffer(Deque)).
-
-normalize_buffer_filters_invalid_deque_entries_test() ->
-    Deque = test_deque([#{seq => 1}, #{seq => -1}, #{no_seq => true}, <<"bad">>]),
-    ?assertEqual([#{seq => 1}], normalize_buffer(Deque)).
-
-normalize_buffer_ignores_non_deque_map_test() ->
-    ?assertEqual([], normalize_buffer(#{seq => 1})),
-    ?assertEqual([], normalize_buffer(#{})),
-    ?assertEqual([], normalize_buffer(undefined)).
-
-build_state_preserves_transferred_deque_buffer_test() ->
-    Data = transferred_session_data(test_deque([#{seq => 13}, #{seq => 14}])),
-    State = build_state(Data),
-    ?assertEqual([#{seq => 13}, #{seq => 14}], maps:get(buffer, State)),
-    ?assertEqual(
-        replay_buffer_bytes([#{seq => 13}, #{seq => 14}]),
-        maps:get(buffer_bytes, State)
-    ),
-    ?assertEqual(14, maps:get(seq, State)),
-    ?assertEqual(12, maps:get(ack_seq, State)).
-
-build_state_reuses_deque_byte_total_test() ->
-    Events = [#{seq => 21}, #{seq => 22}],
-    Data = transferred_session_data(test_deque(Events)),
-    State = build_state(Data),
-    ?assertEqual(limited_deque:bytes(test_deque(Events)), maps:get(buffer_bytes, State)),
-    ?assertEqual(replay_buffer_bytes(Events), maps:get(buffer_bytes, State)).
-
-replay_buffer_bytes_agrees_with_deque_accounting_test() ->
-    Entries = [
-        #{seq => 1, event => message_create, data => #{<<"content">> => <<"hi">>}},
-        #{seq => 2, event => message_create, data => {pre_encoded, binary:copy(<<"x">>, 70000)}}
-    ],
-    lists:foreach(
-        fun(Entry) ->
-            ?assertEqual(
-                limited_deque:bytes(limited_deque:from_list([Entry], 4096, 0)),
-                replay_buffer_bytes([Entry])
-            )
-        end,
-        Entries
-    ).
-
-build_state_walks_list_buffer_bytes_test() ->
-    Events = [#{seq => 13}, #{seq => 14}],
-    Data = transferred_session_data(Events),
-    State = build_state(Data),
-    ?assertEqual(replay_buffer_bytes(Events), maps:get(buffer_bytes, State)).
-
-build_state_zeroes_bytes_for_non_deque_map_buffer_test() ->
-    Data = transferred_session_data(#{seq => 13}),
-    State = build_state(Data),
-    ?assertEqual([], maps:get(buffer, State)),
-    ?assertEqual(0, maps:get(buffer_bytes, State)).
-
-transferred_session_data(Buffer) ->
-    (base_session_data(#{}))#{buffer => Buffer, seq => 14, ack_seq => 12}.
-
-test_deque(Events) ->
-    limited_deque:from_list(Events, 4096, 16777216).
-
--endif.

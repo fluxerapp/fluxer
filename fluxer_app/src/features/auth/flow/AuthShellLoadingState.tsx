@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveLayoutAuthBrand} from '@app/features/app/components/layout/AuthShell';
 import {welcomeTextForLocale} from '@app/features/app/components/setup/SetupWizardWelcomeRotation';
 import {
 	AuthShellHintKind,
 	type AuthShellPlaceholder,
+	BRAND_ROW_CARD_PX,
+	BRAND_ROW_MOBILE_PX,
 	readAuthShellPlaceholderEnvironment,
 	resolveAuthShellPlaceholder,
 	resolveAuthShellRowCount,
 } from '@app/features/app/components/skeleton/AuthShellHint';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
+import {authBrandHasLogo} from '@app/features/auth/InstanceBranding';
 import {AuthLayoutContentMode, useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
@@ -34,7 +39,12 @@ function remFromPx(px: number): string {
 
 function resolveModel(pathname: string): AuthShellLoadingModel {
 	const mobile = isMobileExperienceEnabled();
-	const placeholder = resolveAuthShellPlaceholder(pathname, readAuthShellPlaceholderEnvironment(mobile));
+	const environment = readAuthShellPlaceholderEnvironment(mobile);
+	const brand = resolveLayoutAuthBrand(RuntimeConfig.getSnapshotOrNull());
+	const placeholder = resolveAuthShellPlaceholder(
+		pathname,
+		brand == null ? environment : {...environment, narrowBrand: !authBrandHasLogo(brand)},
+	);
 	return {
 		mobile,
 		placeholder,
@@ -87,8 +97,8 @@ export function AuthShellLoadingState(): JSX.Element {
 		);
 	}
 	const height = model.mobile
-		? remFromPx(placeholder.heightPx)
-		: `calc(${remFromPx(placeholder.heightPx)} - ${CARD_CHROME})`;
+		? remFromPx(placeholder.heightPx - BRAND_ROW_MOBILE_PX)
+		: `calc(${remFromPx(placeholder.heightPx - (placeholder.split ? 0 : BRAND_ROW_CARD_PX))} - ${CARD_CHROME})`;
 	return (
 		<div
 			className="fluxer-boot-auth-load"

@@ -4,7 +4,7 @@
 	--profile-skeleton-bg: var(--background-primary);
 	--profile-skeleton-fill: var(--background-secondary-alt);
 	--profile-skeleton-fill-strong: var(--background-tertiary);
-	--profile-skeleton-border-color: var(--brand-primary);
+	--profile-skeleton-border-color: var(--brand-primary-foreground);
 	--profile-skeleton-radius: 0.375rem;
 	--profile-skeleton-border-width: 0px;
 	--profile-skeleton-width: 100%;
@@ -94,8 +94,8 @@
 
 .modal .banner {
 	aspect-ratio: var(--profile-skeleton-banner-aspect);
-	border-top-left-radius: var(--profile-modal-inner-radius, 0.25rem);
-	border-top-right-radius: var(--profile-modal-inner-radius, 0.25rem);
+	border-start-start-radius: var(--profile-modal-inner-radius, 0.25rem);
+	border-start-end-radius: var(--profile-modal-inner-radius, 0.25rem);
 	clip-path: inset(0 round var(--profile-modal-inner-radius, 0.25rem) var(--profile-modal-inner-radius, 0.25rem) 0 0);
 }
 
@@ -132,7 +132,7 @@
 .avatar {
 	position: absolute;
 	top: var(--profile-skeleton-avatar-top);
-	left: var(--profile-skeleton-avatar-left);
+	inset-inline-start: var(--profile-skeleton-avatar-left);
 	box-sizing: content-box;
 	width: var(--profile-skeleton-avatar-size);
 	height: var(--profile-skeleton-avatar-size);
@@ -144,7 +144,7 @@
 .popoutAvatarSlot {
 	position: absolute;
 	top: var(--profile-skeleton-avatar-top);
-	left: var(--profile-skeleton-avatar-left);
+	inset-inline-start: var(--profile-skeleton-avatar-left);
 	z-index: 1;
 	box-sizing: content-box;
 	width: var(--profile-skeleton-avatar-size);
@@ -157,7 +157,7 @@
 .popoutAvatarStatus {
 	position: absolute;
 	top: calc(var(--profile-skeleton-avatar-top) + var(--profile-skeleton-avatar-size) - 1.125rem);
-	left: calc(var(--profile-skeleton-avatar-left) + var(--profile-skeleton-avatar-size) - 1.125rem);
+	inset-inline-start: calc(var(--profile-skeleton-avatar-left) + var(--profile-skeleton-avatar-size) - 1.125rem);
 	z-index: 2;
 	width: 1.5rem;
 	height: 1.5rem;
@@ -292,7 +292,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
-	padding-left: 0.75rem;
+	padding-inline-start: 0.75rem;
 }
 
 .modalNameLine {

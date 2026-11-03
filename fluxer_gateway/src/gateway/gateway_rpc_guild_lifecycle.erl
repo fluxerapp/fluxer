@@ -113,10 +113,14 @@ read_guild(GuildId, Request) ->
         {ok, Reply} ->
             Reply;
         miss ->
-            gateway_rpc_guild_infra:with_guild(GuildId, fun(Pid) ->
-                guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT)
-            end)
+            call_guild(GuildId, Request)
     end.
+
+-spec call_guild(integer(), {atom(), map()}) -> term().
+call_guild(GuildId, Request) ->
+    gateway_rpc_guild_infra:with_guild(GuildId, fun(Pid) ->
+        guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT)
+    end).
 
 -spec handle_start(map()) -> true.
 handle_start(#{<<"guild_id">> := GuildIdBin}) ->

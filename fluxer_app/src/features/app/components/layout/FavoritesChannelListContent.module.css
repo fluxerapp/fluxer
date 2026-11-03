@@ -13,7 +13,7 @@
 }
 
 :global(.theme-light) .channelBadgeSelectedIcon {
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .favoriteItemContainer {
@@ -22,8 +22,8 @@
 
 .favoriteItem {
 	position: relative;
-	margin-left: 0.5rem;
-	margin-right: 0.5rem;
+	margin-inline-start: 0.5rem;
+	margin-inline-end: 0.5rem;
 	display: flex;
 	min-width: 0;
 	flex: 1;
@@ -85,7 +85,7 @@
 	align-items: center;
 	justify-content: center;
 	border-radius: 624.9375rem;
-	background-color: white;
+	background-color: var(--brand-primary-fill);
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--brand-primary);
@@ -94,7 +94,7 @@
 .channelBadge {
 	position: absolute;
 	bottom: -0.125rem;
-	right: -0.125rem;
+	inset-inline-end: -0.125rem;
 	display: flex;
 	height: 0.875rem;
 	width: 0.875rem;
@@ -123,7 +123,7 @@
 }
 
 .actionsContainer {
-	margin-left: auto;
+	margin-inline-start: auto;
 	display: flex;
 	align-items: center;
 	gap: 0.25rem;
@@ -131,8 +131,8 @@
 
 .categoryItem {
 	position: relative;
-	margin-left: 0.5rem;
-	margin-right: 0.5rem;
+	margin-inline-start: 0.5rem;
+	margin-inline-end: 0.5rem;
 	margin-top: 0.25rem;
 	display: flex;
 	min-width: 0;
@@ -183,7 +183,7 @@
 }
 
 .categoryActions {
-	margin-left: auto;
+	margin-inline-start: auto;
 	display: flex;
 	align-items: center;
 	gap: 0.25rem;

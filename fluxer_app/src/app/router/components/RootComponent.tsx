@@ -15,10 +15,12 @@ import {
 import {isClientBooting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {AccountHandoffArrival} from '@app/features/auth/components/AccountHandoffArrival';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {endAccountHandoffArrival, isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {useLastLocationPersistence} from '@app/features/navigation/hooks/useLastLocationPersistence';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -59,10 +61,12 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	const hasStartedRestoreRef = useRef(false);
 	const pathname = location.pathname;
 	const isHandoff = isHandoffRequest(location.searchParams);
+	const isHandoffArrival = isAccountHandoffArrival(pathname);
 	const isAutoRedirectExemptRoute = isAutoRedirectExemptPath(pathname);
 	const shouldSkipAutoRedirect = isAutoRedirectExemptRoute || (pathname === Routes.LOGIN && isHandoff);
 	const isStandaloneRoute = useMemo(() => {
 		return (
+			isHandoffArrival ||
 			pathname.startsWith(Routes.LOGIN) ||
 			pathname.startsWith(Routes.REGISTER) ||
 			pathname.startsWith(Routes.FORGOT_PASSWORD) ||
@@ -75,17 +79,16 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			pathname.startsWith(Routes.SSO_CALLBACK) ||
 			pathname.startsWith(Routes.REPORT) ||
 			pathname.startsWith(Routes.PREMIUM_CALLBACK) ||
-			pathname.startsWith(Routes.AGE_VERIFICATION_CALLBACK) ||
 			pathname.startsWith(Routes.CONNECTION_CALLBACK) ||
 			pathname === '/__notfound' ||
 			pathname.startsWith('/invite/') ||
 			pathname.startsWith('/gift/') ||
 			pathname.startsWith('/theme/')
 		);
-	}, [pathname]);
+	}, [isHandoffArrival, pathname]);
 	const shouldShowSelfHostedSetup = requiresSelfHostedSetup && !isStandaloneRoute;
 	const shouldBypassGateway = requiresSelfHostedSetup || isStandaloneRoute;
-	const authToken = Authentication.authToken;
+	const authToken = SessionManager.token;
 	const shouldShowLoadingSkeleton = getShouldShowLoadingSkeleton({
 		booting: isClientBooting(),
 		isAuthenticated,
@@ -168,8 +171,12 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 				}
 				return;
 			}
-			if (GatewayConnection.isConnected || GatewayConnection.isConnecting || GatewayConnection.socket) {
-				GatewayConnection.logout();
+			if (
+				GatewaySessions.foregroundConnection.isConnected ||
+				GatewaySessions.foregroundConnection.isConnecting ||
+				GatewaySessions.foregroundConnection.socket
+			) {
+				GatewaySessions.foregroundConnection.logout();
 			}
 			return;
 		}
@@ -186,8 +193,8 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		authToken,
 		Accounts.isSwitching,
 		Authentication.isAuthenticated,
-		GatewayConnection.isConnected,
-		GatewayConnection.isConnecting,
+		GatewaySessions.foregroundConnection.isConnected,
+		GatewaySessions.foregroundConnection.isConnecting,
 		shouldBypassGateway,
 		shouldSkipAutoRedirect,
 		pendingRedirectRef,
@@ -203,7 +210,11 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		pendingRedirectRef.current = null;
 	}, [Authentication.isAuthenticated, location.pathname]);
 	useEffect(() => {
+		if (pathname !== Routes.ME) endAccountHandoffArrival();
+	}, [pathname]);
+	useEffect(() => {
 		if (
+			isHandoffArrival ||
 			!isAuthenticated ||
 			hasRestoredLocation ||
 			hasStartedRestoreRef.current ||
@@ -228,6 +239,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			}
 		}
 	}, [
+		isHandoffArrival,
 		isAuthenticated,
 		hasRestoredLocation,
 		mobileLayoutState.enabled,
@@ -235,7 +247,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		canNavigateToProtectedRoutes,
 		location.pathname,
 	]);
-	useLastLocationPersistence(location.pathname);
+	useLastLocationPersistence(isHandoffArrival ? null : location.pathname);
 	useEffect(() => {
 		if (!isAuthenticated || !hasRestoredLocation) return;
 		const previousMobileLayoutState = previousMobileLayoutStateRef.current;
@@ -353,10 +365,12 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		navigateWithHistoryStack,
 		normalizeInternalUrl,
 	]);
-	const showBottomNav = shouldShowMobileBottomNav({
-		mobileLayoutEnabled: mobileLayoutState.enabled,
-		pathname,
-	});
+	const showBottomNav =
+		!isHandoffArrival &&
+		shouldShowMobileBottomNav({
+			mobileLayoutEnabled: mobileLayoutState.enabled,
+			pathname,
+		});
 	if (shouldShowSelfHostedSetup) {
 		return <SelfHostedSetupWizardGate data-flx="app.router.root-component.self-hosted-setup-wizard-gate" />;
 	}
@@ -365,7 +379,11 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			{!shouldShowLoadingSkeleton && (
 				<>
 					<KeyboardModeListener data-flx="app.router.root-component.keyboard-mode-listener" />
-					{children}
+					{isHandoffArrival ? (
+						<AccountHandoffArrival data-flx="app.router.root-component.account-handoff-arrival" />
+					) : (
+						children
+					)}
 					{showBottomNav && currentUser && (
 						<MobileBottomNav currentUser={currentUser} data-flx="app.router.root-component.mobile-bottom-nav" />
 					)}

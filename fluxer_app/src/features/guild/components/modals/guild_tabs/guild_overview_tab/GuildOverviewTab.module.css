@@ -78,7 +78,7 @@
 .messageHistoryAccordionChevron {
 	width: 0.625rem;
 	height: 0.625rem;
-	border-right: 0.125rem solid var(--text-tertiary);
+	border-inline-end: 0.125rem solid var(--text-tertiary);
 	border-bottom: 0.125rem solid var(--text-tertiary);
 	margin-top: 0.125rem;
 }
@@ -89,7 +89,7 @@
 
 .messageHistoryList {
 	margin: 0;
-	padding-left: 1.25rem;
+	padding-inline-start: 1.25rem;
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-2);
@@ -178,12 +178,12 @@
 	display: flex;
 	justify-content: flex-end;
 	align-items: flex-start;
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .imagePreviewColumn > * {
 	width: min(22.5rem, 100%);
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .dateTimePickerField {

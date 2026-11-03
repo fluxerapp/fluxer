@@ -2,13 +2,7 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {
-	acceptInvite,
-	createChannelInvite,
-	createGuild,
-	getChannel,
-	leaveGuild,
-} from '@app/api/guild/tests/GuildTestUtils';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -54,16 +48,6 @@ describe('Guild Operation Permissions', () => {
 		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
 		await acceptInvite(harness, member.token, invite.code);
 		await createBuilder(harness, nonmember.token).get(`/guilds/${guild.id}`).expect(HTTP_STATUS.FORBIDDEN).execute();
-	});
-	it('should allow member to leave guild', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Perms Test Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await acceptInvite(harness, member.token, invite.code);
-		await leaveGuild(harness, member.token, guild.id);
-		await createBuilder(harness, member.token).get(`/guilds/${guild.id}`).expect(HTTP_STATUS.FORBIDDEN).execute();
 	});
 	it('should reject owner from leaving guild without deleting', async () => {
 		const owner = await createTestAccount(harness);

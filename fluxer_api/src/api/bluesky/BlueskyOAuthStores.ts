@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID} from '@app/api/BrandedTypes';
+import {
+	BlueskyOAuthStateInvalidError,
+	BlueskyOAuthStoreError,
+	type BlueskyOAuthStoreKind,
+} from '@app/api/bluesky/BlueskyOAuthErrors';
 import type {BlueskyOAuthGrantOwner} from '@app/api/bluesky/IBlueskyOAuthService';
 import type {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
 import {
@@ -59,23 +64,6 @@ const SavedSessionSchema: z.ZodType<NodeSavedSession> = z.strictObject({
 		expires_at: z.iso.datetime().optional(),
 	}),
 });
-
-type BlueskyOAuthStoreKind = 'state' | 'session';
-
-export class BlueskyOAuthStateInvalidError extends Error {
-	constructor() {
-		super('Bluesky OAuth state is invalid');
-	}
-}
-
-export class BlueskyOAuthStoreError extends Error {
-	constructor(
-		readonly kind: BlueskyOAuthStoreKind,
-		message: string,
-	) {
-		super(message);
-	}
-}
 
 function parseBlueskyGrantOwner(state: string | null | undefined): BlueskyOAuthGrantOwner {
 	if (typeof state !== 'string' || state.length > 128) throw new BlueskyOAuthStateInvalidError();

@@ -8,9 +8,9 @@ import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGa
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {useAuthTokenVerification} from '@app/features/auth/flow/useAuthTokenVerification';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {type VerificationError, VerificationErrorType} from '@app/features/auth/types/VerificationError';
 import {VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -36,7 +36,7 @@ interface VerifyEmailPageContentProps {
 const VerifyEmailPageContent = observer(function VerifyEmailPageContent({
 	runtimeSnapshot,
 }: VerifyEmailPageContentProps) {
-	const requestTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const requestTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
 	const verify = useCallback(
 		(token: string) => AuthenticationCommands.verifyEmail(token, requestTarget),
 		[requestTarget],

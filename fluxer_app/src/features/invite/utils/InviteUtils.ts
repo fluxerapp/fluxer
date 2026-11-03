@@ -123,11 +123,9 @@ function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
 	return (everyoneOverwrite.deny & Permissions.VIEW_CHANNEL) === 0n;
 }
 
-export interface InviteCapability {
-	canInvite: boolean;
-	useVanityUrl: boolean;
-	vanityUrlCode: string | null;
-}
+export type InviteCapability =
+	| {canInvite: boolean; useVanityUrl: false; vanityUrlCode: null}
+	| {canInvite: true; useVanityUrl: true; vanityUrlCode: string};
 
 export function getInviteCapability(channelId: string | undefined, guildId: string | undefined): InviteCapability {
 	if (!channelId || !guildId || isSyncExcludedChannelId(channelId)) {

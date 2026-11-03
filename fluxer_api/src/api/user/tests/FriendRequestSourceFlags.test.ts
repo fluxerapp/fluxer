@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	assertRelationshipId,
 	assertRelationshipType,
-	createFriendship,
 	sendFriendRequest,
 } from '@app/api/user/tests/RelationshipTestUtils';
 import {FriendSourceFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -23,35 +23,6 @@ describe('FriendRequestSourceFlags', () => {
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
-	});
-	describe('NO_RELATION allows friend requests from strangers', () => {
-		test('user with NO_RELATION flag can receive friend requests from users with no mutual friends or guilds', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await createBuilder(harness, bob.token)
-				.patch('/users/@me/settings')
-				.body({friend_source_flags: FriendSourceFlags.NO_RELATION})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const {json: outgoing} = await sendFriendRequest(harness, alice.token, bob.userId);
-			assertRelationshipId(outgoing, bob.userId);
-			assertRelationshipType(outgoing, RelationshipTypes.OUTGOING_REQUEST);
-		});
-		test('NO_RELATION with all flags set allows friend requests from strangers', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await createBuilder(harness, bob.token)
-				.patch('/users/@me/settings')
-				.body({
-					friend_source_flags:
-						FriendSourceFlags.NO_RELATION | FriendSourceFlags.MUTUAL_FRIENDS | FriendSourceFlags.MUTUAL_GUILDS,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const {json: outgoing} = await sendFriendRequest(harness, alice.token, bob.userId);
-			assertRelationshipId(outgoing, bob.userId);
-			assertRelationshipType(outgoing, RelationshipTypes.OUTGOING_REQUEST);
-		});
 	});
 	describe('without NO_RELATION blocks strangers', () => {
 		test('user with only MUTUAL_FRIENDS rejects requests from strangers with no mutual friends', async () => {

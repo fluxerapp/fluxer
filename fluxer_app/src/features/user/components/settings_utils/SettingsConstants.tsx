@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {OPERATOR_PASS_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
+import PremiumState from '@app/features/premium/state/PremiumState';
+import {
+	hasPaymentHistory,
+	hasSubscriptionToManage,
+	holdsOperatorPass,
+} from '@app/features/premium/utils/BillingTabVisibility';
+import {isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {guessPlatform, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
@@ -18,15 +27,36 @@ import {
 	type SettingsSectionId,
 	type UserSettingsTabType,
 } from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
+import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
+import {
+	ACCESSIBILITY_DESCRIPTOR,
+	ACCOUNT_DESCRIPTOR as ACCOUNT_SECURITY_DESCRIPTOR,
+	APPLICATIONS_DESCRIPTOR,
+	AUTHORIZED_APPS_DESCRIPTOR,
+	BLOCKED_USERS_DESCRIPTOR,
+	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR as DESKTOP_SETTINGS_DESCRIPTOR,
+	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR,
+	EMBED_DEBUGGER_DESCRIPTOR,
+	KEYBINDS_DESCRIPTOR,
+	LANGUAGE_DESCRIPTOR as LANGUAGE_AND_TIME_DESCRIPTOR,
+	DEVICES_DESCRIPTOR as LINKED_DEVICES_DESCRIPTOR,
+	PRIVACY_DESCRIPTOR as PRIVACY_SAFETY_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import Users from '@app/features/user/state/Users';
+import {
+	GIFTS_DESCRIPTOR as GIFTS_AND_CODES_DESCRIPTOR,
+	LOOK_AND_FEEL_DESCRIPTOR,
+	MESSAGES_AND_MEDIA_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
 import {
+	ArrowsClockwiseIcon,
+	AtomIcon,
 	BellIcon,
 	ChatCircleIcon,
 	CodeIcon,
-	CrownIcon,
 	DesktopIcon,
 	DevicesIcon,
 	EyeSlashIcon,
@@ -40,30 +70,17 @@ import {
 	PaletteIcon,
 	PersonSimpleCircleIcon,
 	ProhibitIcon,
+	ReceiptIcon,
 	RobotIcon,
 	ShieldIcon,
+	SwatchesIcon,
+	TicketIcon,
 	TranslateIcon,
 	UserIcon,
 	UserListIcon,
 } from '@phosphor-icons/react';
 import type React from 'react';
 
-const BLOCKED_USERS_DESCRIPTOR = msg({
-	message: 'Blocked users',
-	comment: 'User settings tab listing accounts the current user has blocked.',
-});
-const LINKED_DEVICES_DESCRIPTOR = msg({
-	message: 'Devices',
-	comment: 'User settings tab for managing devices linked to the current account.',
-});
-const ACCESSIBILITY_DESCRIPTOR = msg({
-	message: 'Accessibility',
-	comment: 'User settings tab for accessibility preferences (visual, motion, screen reader, etc.).',
-});
-const APPLICATIONS_DESCRIPTOR = msg({
-	message: 'Applications',
-	comment: 'Developer settings tab for managing the current user developer applications and bots.',
-});
 const WINDOWS_SETTINGS_DESCRIPTOR = msg({
 	message: 'Windows app',
 	comment: 'User settings tab label shown on Windows desktop builds. Refers to the Microsoft Windows OS.',
@@ -76,72 +93,44 @@ const MACOS_SETTINGS_DESCRIPTOR = msg({
 	message: 'macOS app',
 	comment: 'User settings tab label shown on macOS desktop builds.',
 });
-const DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR = msg({
-	message: 'Desktop app',
-	comment:
-		'User settings tab label shown on desktop builds when the OS could not be identified (fallback for the per-OS labels).',
-});
 const PROFILE_DESCRIPTOR = msg({
 	message: 'Profile',
 	comment: 'User settings tab for editing the current user profile.',
 });
-const ACCOUNT_SECURITY_DESCRIPTOR = msg({
-	message: 'Account',
-	comment: 'User settings tab for account login, password, MFA, and security.',
+
+const SUBSCRIPTIONS_DESCRIPTOR = msg({
+	message: 'Subscriptions',
+	comment:
+		'User settings tab under Billing where the user manages a Plutonium subscription, its renewal and cancellation.',
 });
-const GIFTS_AND_CODES_DESCRIPTOR = msg({
-	message: 'Gifts',
-	comment: 'User settings tab for gift inventory and redemption codes.',
+const PAYMENTS_DESCRIPTOR = msg({
+	message: 'Payments',
+	comment:
+		'User settings tab under Billing that holds the payment methods on file, refunds and the receipts for past payments.',
 });
-const PRIVACY_SAFETY_DESCRIPTOR = msg({
-	message: 'Privacy',
-	comment: 'User settings tab for privacy and safety controls.',
-});
-const AUTHORIZED_APPS_DESCRIPTOR = msg({
-	message: 'Authorized apps',
-	comment: 'User settings tab for OAuth or connected apps authorized by the user.',
-});
+
 const CONNECTIONS_DESCRIPTOR = msg({
 	message: 'Connections',
 	context: 'user-settings-tab',
 	comment: 'User settings tab for linked external accounts.',
 });
-const LOOK_AND_FEEL_DESCRIPTOR = msg({
-	message: 'Appearance',
-	comment: 'User settings tab for app appearance and layout options.',
-});
-const MESSAGES_AND_MEDIA_DESCRIPTOR = msg({
-	message: 'Chat',
-	comment: 'User settings tab for chat message, media, and input behavior.',
-});
+
 const AUDIO_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice & video',
 	comment: 'User settings tab for microphone, speaker, camera, and call stats.',
-});
-const SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Shortcuts',
-	comment: 'User settings tab for keyboard shortcuts and custom bindings.',
 });
 const NOTIFICATIONS_DESCRIPTOR = msg({
 	message: 'Notifications',
 	context: 'user-settings-tab',
 	comment: 'User settings tab for notification and alert sound controls.',
 });
-const LANGUAGE_AND_TIME_DESCRIPTOR = msg({
-	message: 'Language',
-	comment: 'User settings tab for language, locale, and time display preferences.',
-});
-const DESKTOP_SETTINGS_DESCRIPTOR = msg({
-	message: 'Desktop app',
-	comment: 'User settings tab for desktop app integration and platform settings.',
-});
 const ADVANCED_SETTINGS_DESCRIPTOR = msg({
 	message: 'Advanced',
 	comment: 'User settings tab for power-user and experimental application preferences.',
 });
-const EMBED_DEBUGGER_DESCRIPTOR = msg({
-	message: 'Embed debugger',
-	comment: 'Developer settings tab for testing URL unfurls and rendered embeds.',
+const THEMES_DESCRIPTOR = msg({
+	message: 'Themes',
+	comment: 'User settings tab for the base theme, theme files, colors, fonts and quick CSS.',
 });
 const DESIGN_SYSTEM_DESCRIPTOR = msg({
 	message: 'Design system',
@@ -166,6 +155,7 @@ interface SettingsTabDescriptor {
 	label: SettingsTabLabel;
 	icon: Icon;
 	iconWeight?: IconWeight;
+	isVisible?: () => boolean;
 }
 
 export function getCategoryLabel(category: UserSettingsTabCategories): React.ReactElement {
@@ -187,6 +177,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		category: 'user_settings',
 		label: PROFILE_DESCRIPTOR,
 		icon: UserIcon,
+		isVisible: shouldShowClaimedAccountSettings,
 	},
 	{
 		type: 'account_security',
@@ -205,6 +196,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		category: 'user_settings',
 		label: CONNECTIONS_DESCRIPTOR,
 		icon: UserListIcon,
+		isVisible: shouldShowClaimedAccountSettings,
 	},
 	{
 		type: 'authorized_apps',
@@ -228,19 +220,48 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		type: 'plutonium',
 		category: 'billing',
 		label: getPremiumProductFullName,
-		icon: CrownIcon,
+		icon: AtomIcon,
+		isVisible: shouldShowPremiumFeatures,
+	},
+	{
+		type: 'subscriptions',
+		category: 'billing',
+		label: SUBSCRIPTIONS_DESCRIPTOR,
+		icon: ArrowsClockwiseIcon,
+		isVisible: () => shouldShowPremiumFeatures() && hasSubscriptionToManage(PremiumState, Users.currentUser),
+	},
+	{
+		type: 'operator_pass',
+		category: 'billing',
+		label: OPERATOR_PASS_NAME,
+		icon: TicketIcon,
+		isVisible: () => isOperatorPassAvailable() && holdsOperatorPass(Users.currentUser, OperatorPassHoldings.passes),
 	},
 	{
 		type: 'gift_inventory',
 		category: 'billing',
 		label: GIFTS_AND_CODES_DESCRIPTOR,
 		icon: GiftIcon,
+		isVisible: shouldShowPremiumFeatures,
+	},
+	{
+		type: 'payments',
+		category: 'billing',
+		label: PAYMENTS_DESCRIPTOR,
+		icon: ReceiptIcon,
+		isVisible: () => shouldShowPremiumFeatures() && hasPaymentHistory(PremiumState, Users.currentUser),
 	},
 	{
 		type: 'appearance',
 		category: 'app_settings',
 		label: LOOK_AND_FEEL_DESCRIPTOR,
 		icon: PaintBrushIcon,
+	},
+	{
+		type: 'themes',
+		category: 'app_settings',
+		label: THEMES_DESCRIPTOR,
+		icon: SwatchesIcon,
 	},
 	{
 		type: 'notifications',
@@ -276,7 +297,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 	{
 		type: 'keybinds',
 		category: 'app_settings',
-		label: SHORTCUTS_DESCRIPTOR,
+		label: KEYBINDS_DESCRIPTOR,
 		icon: KeyboardIcon,
 	},
 	{
@@ -284,6 +305,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		category: 'app_settings',
 		label: DESKTOP_SETTINGS_DESCRIPTOR,
 		icon: DesktopIcon,
+		isVisible: isDesktop,
 	},
 	{
 		type: 'advanced_settings',
@@ -374,38 +396,21 @@ export function formatUserSettingsPath(
 	return parts.filter(Boolean).join(' > ');
 }
 
-export const getSettingsTabs = (i18n: I18n): Array<SettingsTab> => {
-	const allTabs = ALL_TABS_DESCRIPTORS.map((tab) => ({
-		...tab,
+export const getSettingsTabs = (i18n: I18n): Array<SettingsTab> =>
+	ALL_TABS_DESCRIPTORS.filter(
+		(tab) => !ACCOUNT_NESTED_TAB_TYPES.some((tabType) => tabType === tab.type) && (tab.isVisible?.() ?? true),
+	).map((tab) => ({
+		type: tab.type,
+		category: tab.category,
 		label: getUserSettingsTabLabel(i18n, tab.type),
+		icon: tab.icon,
+		iconWeight: tab.iconWeight,
 	}));
-	const showPremium = shouldShowPremiumFeatures();
-	const showClaimedAccountUi = shouldShowClaimedAccountUi();
-	return allTabs.filter((tab) => {
-		if (!showClaimedAccountUi && (tab.type === 'my_profile' || tab.type === 'linked_accounts')) {
-			return false;
-		}
-		if (ACCOUNT_NESTED_TAB_TYPES.some((tabType) => tabType === tab.type)) {
-			return false;
-		}
-		if (!showPremium && (tab.type === 'plutonium' || tab.type === 'gift_inventory')) {
-			return false;
-		}
-		if (tab.type === 'desktop_settings' && !isDesktop()) {
-			return false;
-		}
-		return true;
-	});
-};
 
 export interface SettingsSubtab {
 	type: UserSettingsSubtabType;
 	parentTab: UserSettingsTabType;
 	label: string;
-}
-
-function shouldShowClaimedAccountUi(): boolean {
-	return Users.getCurrentUser()?.isClaimed() ?? true;
 }
 
 function getDesktopSettingsTabLabel(i18n: I18n): string {
@@ -422,17 +427,8 @@ function getDesktopSettingsTabLabel(i18n: I18n): string {
 }
 
 export const getSettingsSubtabs = (i18n: I18n): Array<SettingsSubtab> => {
-	const showClaimedAccountUi = shouldShowClaimedAccountUi();
 	return registryGetAllSectionDefinitions()
-		.filter((section) => {
-			if (!showClaimedAccountUi && (section.id === 'account' || section.id === 'security')) {
-				return false;
-			}
-			if ('isVisible' in section && section.isVisible && !section.isVisible()) {
-				return false;
-			}
-			return true;
-		})
+		.filter((section) => !('isVisible' in section && section.isVisible && !section.isVisible()))
 		.map((section) => ({
 			type: section.id,
 			parentTab: section.tabType,

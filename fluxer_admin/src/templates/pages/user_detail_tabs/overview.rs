@@ -2,12 +2,19 @@
 
 use crate::{
     acl, admin_flags,
-    api::types::{AdminUser, LimitConfigResponse, ListUserChangeLogResponse},
+    api::types::{
+        AdminUser, BadgeAssignment, CustomBadgeType, LimitConfigResponse,
+        ListUserChangeLogResponse, account_tier_label,
+    },
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
-        form::{checkbox, csrf_input, form_actions, submit_button},
+        form::{Checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
+    },
+    templates::pages::{
+        badges::{BadgeAssignmentTargets, custom_badge_assignment},
+        enforcement_decision::suspension_label,
     },
     utils::{
         bigint::format_discriminator,
@@ -17,6 +24,13 @@ use crate::{
 };
 use maud::{Markup, html};
 
+#[derive(Default)]
+pub struct OverviewSources<'a> {
+    pub change_log: Option<&'a ListUserChangeLogResponse>,
+    pub limit_config: Option<&'a LimitConfigResponse>,
+    pub custom_badges: Option<&'a BadgeAssignment>,
+}
+
 pub fn overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
@@ -24,19 +38,19 @@ pub fn overview_tab(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
 ) -> Markup {
-    render_overview_tab(
-        config, user, admin_acls, csrf_token, change_log, None, false, false,
-    )
+    let sources = OverviewSources {
+        change_log,
+        ..OverviewSources::default()
+    };
+    render_overview_tab(config, user, admin_acls, csrf_token, &sources, false, false)
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn overview_tab_with_limit_config(
+pub fn overview_tab_with_sources(
     config: &AdminConfig,
     user: &AdminUser,
     admin_acls: &[String],
     csrf_token: &str,
-    change_log: Option<&ListUserChangeLogResponse>,
-    limit_config: Option<&LimitConfigResponse>,
+    sources: &OverviewSources,
     username_sign_in: bool,
 ) -> Markup {
     render_overview_tab(
@@ -44,32 +58,30 @@ pub fn overview_tab_with_limit_config(
         user,
         admin_acls,
         csrf_token,
-        change_log,
-        limit_config,
+        sources,
         true,
         username_sign_in,
     )
 }
 
-#[allow(clippy::too_many_arguments)]
 fn render_overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
     admin_acls: &[String],
     csrf_token: &str,
-    change_log: Option<&ListUserChangeLogResponse>,
-    limit_config: Option<&LimitConfigResponse>,
+    sources: &OverviewSources,
     show_traits: bool,
     username_sign_in: bool,
 ) -> Markup {
+    let OverviewSources {
+        change_log,
+        limit_config,
+        custom_badges,
+    } = *sources;
     html! {
         div class="space-y-6" {
-            @if let Some(until) = &user.temp_banned_until {
-                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" {
-                    "Temporarily banned until " (format_admin_timestamp(until))
-                }
-            }
-            @if user.temp_banned_until.is_none() {
+            (restriction_banner(config, user))
+            @if user.temp_banned_until.is_none() && user.enforcement_decision_id.is_none() {
                 @if let Some(pending) = &user.pending_deletion_at {
                     div class="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900" {
                         div class="font-medium" { "Scheduled for deletion: " (format_admin_timestamp(pending)) }
@@ -143,6 +155,24 @@ fn render_overview_tab(
                             } @else {
                                 span class="text-neutral-400" { "Not set" }
                             }
+                        }))
+                    }
+                    @if let Some(tier) = user.account_tier {
+                        (detail_row("Account Tier", html! {
+                            (account_tier_label(tier))
+                        }))
+                    }
+                    (detail_row("Sign-in", html! {
+                        @if user.claimed {
+                            "Can sign in from another device"
+                        } @else {
+                            span class="text-orange-600" { "Unclaimed, no way back in after sign-out" }
+                        }
+                        @if !user.has_password { span class="ml-1 text-neutral-500" { "(no password)" } }
+                    }))
+                    @if user.date_of_birth_required {
+                        (detail_row("Date of Birth Step", html! {
+                            span class="text-orange-600" { "Waiting for a date of birth" }
                         }))
                     }
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_DOB) {
@@ -227,6 +257,9 @@ fn render_overview_tab(
             (acls_card(config, user, admin_acls, csrf_token))
             @if show_traits {
                 (traits_card(config, user, admin_acls, csrf_token, limit_config))
+                @if let Some(badges) = custom_badges {
+                    (custom_badges_card(config, user, admin_acls, csrf_token, badges))
+                }
             }
             @if acl::has_permission(admin_acls, acl::USER_VIEW_CONTACT_LOG) {
                 (card_with_header("Contact Change Log", html! {
@@ -262,6 +295,30 @@ fn render_overview_tab(
     }
 }
 
+fn restriction_banner(config: &AdminConfig, user: &AdminUser) -> Markup {
+    let base = &config.base_path;
+    html! {
+        @match (&user.enforcement_decision_id, &user.temp_banned_until) {
+            (Some(decision_id), until) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    @match (until, &user.pending_deletion_at) {
+                        (Some(until), _) => { (suspension_label(until)) ". " }
+                        (None, Some(pending)) => { "Scheduled for deletion on " (format_admin_timestamp(pending)) ". " }
+                        (None, None) => { "Restricted by a decision. " }
+                    }
+                    a href={(base) "/decisions/" (decision_id)} class="underline" { "Decision " (decision_id) }
+                }
+            }
+            (None, Some(until)) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    (suspension_label(until)) ". Recorded before decisions, so it has no decision."
+                }
+            }
+            (None, None) => {}
+        }
+    }
+}
+
 fn flags_card(
     config: &AdminConfig,
     user: &AdminUser,
@@ -269,118 +326,61 @@ fn flags_card(
     csrf_token: &str,
 ) -> Markup {
     let can_update_flags = acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
+    let suspended = user.temp_banned_until.is_some();
     html! {
         div class="space-y-6" {
-            (u64_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "User Flags",
+                "User flags",
                 "update_flags",
-                "flags[]",
-                user.flags,
-                admin_flags::USER_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
+                html! {
+                    @for flag in admin_flags::USER_FLAGS {
+                        div class="space-y-0.5" {
+                            (Checkbox {
+                                name: "flags[]",
+                                value: &flag.value.to_string(),
+                                label: flag.name,
+                                checked: user.flags & flag.value != 0,
+                                enabled: can_update_flags && admin_flags::user_flag_is_editable(flag.value, user.flags, suspended),
+                            }.render())
+                            p class="pl-6 text-xs text-neutral-500" { (flag.help) }
+                        }
+                    }
+                },
             ))
-            (i32_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "Premium Flags",
+                "Premium flags",
                 "update_premium_flags",
-                "flags[]",
-                user.premium_flags,
-                admin_flags::PREMIUM_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
+                html! {
+                    @for flag in admin_flags::PREMIUM_FLAGS {
+                        (Checkbox {
+                            name: "flags[]",
+                            value: &flag.value.to_string(),
+                            label: flag.name,
+                            checked: user.premium_flags & flag.value != 0,
+                            enabled: can_update_flags && admin_flags::premium_flag_is_editable(flag.value),
+                        }.render())
+                    }
+                },
             ))
         }
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn u64_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: u64,
-    flags: &[admin_flags::U64Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-fn i32_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: i32,
-    flags: &[admin_flags::I32Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
 fn flag_form_shell(
     config: &AdminConfig,
     user_id: &str,
     title: &str,
     action: &str,
-    _raw_value: String,
     csrf_token: &str,
     can_edit: bool,
-    required_acl: Option<&str>,
     checkboxes: Markup,
 ) -> Markup {
     card_with_header(
@@ -392,29 +392,20 @@ fn flag_form_shell(
                     (checkboxes)
                 }
                 @if can_edit {
+                    p class="text-xs text-neutral-500" {
+                        "Restriction flags are read-only. Use the moderation tab."
+                    }
                     (form_actions(html! {
                         (submit_button("Save"))
                     }))
                 } @else {
-                    @if let Some(required) = required_acl {
-                        p class="text-xs text-neutral-500" {
-                            "Read-only \u{2014} " (required) " permission required."
-                        }
+                    p class="text-xs text-neutral-500" {
+                        "Read-only. Needs the " (acl::USER_UPDATE_FLAGS) " permission."
                     }
                 }
             }
         },
     )
-}
-
-fn flag_checkbox(
-    input_name: &str,
-    value: String,
-    label: &str,
-    checked: bool,
-    can_edit: bool,
-) -> Markup {
-    checkbox(input_name, &value, label, checked, can_edit)
 }
 
 fn acls_card(
@@ -434,7 +425,13 @@ fn acls_card(
                         div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
                             @for item in acl::ALL_ACLS {
                                 @let checked = user.acls.iter().any(|value| value == item);
-                                (flag_checkbox("acls[]", item.to_string(), item, checked, true))
+                                (Checkbox {
+                                    name: "acls[]",
+                                    value: item,
+                                    label: item,
+                                    checked,
+                                    enabled: true,
+                                }.render())
                             }
                         }
                         @for item in &user.acls {
@@ -465,6 +462,38 @@ fn acls_card(
     )
 }
 
+fn custom_badges_card(
+    config: &AdminConfig,
+    user: &AdminUser,
+    admin_acls: &[String],
+    csrf_token: &str,
+    assignment: &BadgeAssignment,
+) -> Markup {
+    let can_edit = acl::has_permission(admin_acls, acl::USER_UPDATE_BADGES);
+    let search_action = format!("{}/users/{}", config.base_path, user.id);
+    let save_action = format!(
+        "{}/users/{}?action=update_badges&tab=overview",
+        config.base_path, user.id
+    );
+    card_with_header(
+        "Badges",
+        custom_badge_assignment(
+            config,
+            assignment,
+            &BadgeAssignmentTargets {
+                badge_type: CustomBadgeType::User,
+                noun: "user badges",
+                tab: "overview",
+                search_action: &search_action,
+                save_action: &save_action,
+                permission_note: "You need the user badges permission to change these.",
+            },
+            can_edit,
+            csrf_token,
+        ),
+    )
+}
+
 fn traits_card(
     config: &AdminConfig,
     user: &AdminUser,
@@ -472,8 +501,8 @@ fn traits_card(
     csrf_token: &str,
     limit_config: Option<&LimitConfigResponse>,
 ) -> Markup {
-    let trait_definitions = parse_trait_definitions(limit_config);
-    let custom_traits = custom_traits(user, &trait_definitions);
+    let trait_definitions = parse_trait_definitions(limit_config, config.self_hosted);
+    let custom_traits = custom_traits(user, &trait_definitions, config.self_hosted);
     let can_edit = acl::has_permission(admin_acls, acl::USER_UPDATE_TRAITS);
     card_with_header(
         "Traits",
@@ -490,7 +519,7 @@ fn traits_card(
                     (assigned_traits(&user.traits))
                     p class="text-sm text-red-700" { "Failed to load limit configuration." }
                 }
-                @if trait_definitions.is_empty() {
+                @if trait_definitions.iter().all(|definition| *definition == PREMIUM_TRAIT) {
                     p class="text-neutral-500 text-xs" {
                         "No trait definitions declared. "
                         a href={(config.base_path) "/instance-config"} class="text-blue-600 underline" {
@@ -531,13 +560,13 @@ fn traits_form(
                 @if !trait_definitions.is_empty() {
                     div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
                         @for definition in trait_definitions {
-                            (flag_checkbox(
-                                "traits[]",
-                                definition.to_string(),
-                                definition,
-                                user.traits.iter().any(|t| t == definition),
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "traits[]",
+                                value: definition,
+                                label: definition,
+                                checked: user.traits.iter().any(|t| t == definition),
+                                enabled: true,
+                            }.render())
                         }
                     }
                 }
@@ -550,6 +579,15 @@ fn traits_form(
                         class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20" {
                         (custom_traits.join("\n"))
                     }
+                    p class="text-neutral-500 text-xs" {
+                        @if config.self_hosted {
+                            "The premium trait gives this account premium limits. Accounts with a \
+                             subscription or gift get them without it."
+                        } @else {
+                            "The premium trait follows each member's subscription or gift and cannot be \
+                             assigned here."
+                        }
+                    }
                 }
                 (form_actions(html! {
                     (submit_button("Save Traits"))
@@ -559,28 +597,48 @@ fn traits_form(
     }
 }
 
-const DERIVED_TRAITS: [&str; 1] = ["premium"];
+const PREMIUM_TRAIT: &str = "premium";
 
-fn parse_trait_definitions(limit_config: Option<&LimitConfigResponse>) -> Vec<&str> {
-    limit_config
-        .map(|response| {
-            response
-                .limit_config
-                .trait_definitions
-                .iter()
-                .map(|value| value.trim())
-                .filter(|value| !value.is_empty())
-                .filter(|value| !DERIVED_TRAITS.contains(value))
-                .collect()
-        })
-        .unwrap_or_default()
+fn parse_trait_definitions(
+    limit_config: Option<&LimitConfigResponse>,
+    self_hosted: bool,
+) -> Vec<&str> {
+    let Some(response) = limit_config else {
+        return Vec::new();
+    };
+    assignable_trait_definitions(
+        response
+            .limit_config
+            .trait_definitions
+            .iter()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty()),
+        self_hosted,
+    )
 }
 
-fn custom_traits<'a>(user: &'a AdminUser, trait_definitions: &[&str]) -> Vec<&'a str> {
+fn assignable_trait_definitions<'a>(
+    definitions: impl Iterator<Item = &'a str>,
+    self_hosted: bool,
+) -> Vec<&'a str> {
+    let mut assignable: Vec<&str> = definitions
+        .filter(|value| self_hosted || *value != PREMIUM_TRAIT)
+        .collect();
+    if self_hosted && !assignable.contains(&PREMIUM_TRAIT) {
+        assignable.insert(0, PREMIUM_TRAIT);
+    }
+    assignable
+}
+
+fn custom_traits<'a>(
+    user: &'a AdminUser,
+    trait_definitions: &[&str],
+    self_hosted: bool,
+) -> Vec<&'a str> {
     user.traits
         .iter()
         .map(String::as_str)
         .filter(|trait_name| !trait_definitions.contains(trait_name))
-        .filter(|trait_name| !DERIVED_TRAITS.contains(trait_name))
+        .filter(|trait_name| self_hosted || *trait_name != PREMIUM_TRAIT)
         .collect()
 }

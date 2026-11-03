@@ -9,7 +9,7 @@ import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessE
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {CommunicationDisabledError} from '@fluxer/errors/src/domains/moderation/CommunicationDisabledError';
 
-export function threadDenialError(denial: ThreadDenial): Error {
+function threadDenialError(denial: ThreadDenial): Error {
 	switch (denial) {
 		case APIErrorCodes.MISSING_ACCESS:
 			return new MissingAccessError();

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {PaymentDisputeReviewRow} from '@app/api/database/types/PaymentDisputeTypes';
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import {
 	getGatewayService,
@@ -9,6 +10,7 @@ import {
 	setInjectedWorkerService,
 } from '@app/api/middleware/ServiceRegistry';
 import {
+	getPaymentDisputeRepository,
 	getPremiumStateReconciliationQueueService,
 	getStoreBillingRepository,
 	getUserCacheService,
@@ -115,6 +117,56 @@ export async function seedStorePurchase(
 		throw new Error(`Store purchase ${row.store_key} already exists`);
 	}
 	return row;
+}
+
+export async function seedOpenPaymentDisputeReview(
+	purchaserId: UserID,
+	disputeId: string,
+): Promise<PaymentDisputeReviewRow> {
+	const now = new Date();
+	const review: PaymentDisputeReviewRow = {
+		dispute_id: disputeId,
+		product: 'plutonium',
+		order_id: `cs_${disputeId}`,
+		invoice_number: null,
+		purchaser_id: purchaserId,
+		is_gift: false,
+		reason: 'general',
+		payment_intent_id: `pi_${disputeId}`,
+		charge_id: `ch_${disputeId}`,
+		amount_minor: 499,
+		currency: 'USD',
+		evidence_submitted: false,
+		evidence_due_by: new Date(now.getTime() + ms('10 days')),
+		disputed_at: now,
+		closed_at: null,
+		outcome: null,
+		purchased_at: new Date(now.getTime() - ms('30 days')),
+		perks_started_at: new Date(now.getTime() - ms('30 days')),
+		withdrawal_ends_at: new Date(now.getTime() - ms('16 days')),
+		withdrawn_at: null,
+		refunded_at: null,
+		perks_removed_at: null,
+		status: 'open',
+		created_at: now,
+		decided_at: null,
+		decided_by: null,
+		decision_note: null,
+		warning_deadline: null,
+		warned_at: null,
+		warning_email_sent_at: null,
+		warning_dm_sent_at: null,
+		enforcement_decision_id: null,
+		reversed_at: null,
+		reversed_by: null,
+		reversal_note: null,
+		dispute_purchase_at: null,
+		version: 1,
+	};
+	if (!(await getPaymentDisputeRepository().createReview(review))) {
+		throw new Error(`Payment dispute review ${disputeId} already exists`);
+	}
+	return review;
 }
 
 export async function findUser(userId: string): Promise<User> {

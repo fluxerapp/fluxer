@@ -3,8 +3,8 @@
 .topDragRegion {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	height: var(--layout-header-height);
 	z-index: var(--z-index-titlebar);
 	pointer-events: none;
@@ -17,8 +17,8 @@
 .nagbarHost {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	z-index: var(--z-index-titlebar);
 }
 
@@ -26,9 +26,7 @@
 	position: fixed;
 	inset: 0;
 	display: flex;
-	background:
-		radial-gradient(ellipse 54rem 30rem at 50% -8%, rgb(138 98 209 / 0.18), transparent 68%),
-		linear-gradient(145deg, #05040d 0%, #080616 48%, #0d0a1c 100%);
+	background: linear-gradient(145deg, #05040d 0%, #080616 48%, #0d0a1c 100%);
 }
 
 .container {
@@ -52,17 +50,6 @@
 	min-height: 100svh;
 	overflow: auto;
 	width: 100%;
-}
-
-.rightSplit {
-	bottom: 0;
-	inset-inline-end: 0;
-	opacity: 1;
-	pointer-events: none;
-	position: fixed;
-	transition: opacity 0.4s ease;
-	width: auto;
-	z-index: 0;
 }
 
 .leftSplit {
@@ -126,10 +113,9 @@
 	visibility: hidden;
 }
 
-.splashImage {
+.splashBackdrop {
 	position: fixed;
-	right: 0;
-	bottom: 0;
+	inset: 0;
 	pointer-events: none;
 	overflow: hidden;
 	z-index: 0;
@@ -141,15 +127,47 @@
 	inset: 0;
 }
 
-.patternHost {
-	position: fixed;
+.operatorBackdrop {
+	z-index: 1;
+}
+
+.backdropLayer {
+	position: absolute;
 	inset: 0;
-	opacity: 0.06;
-	pointer-events: none;
-	z-index: 0;
-	background-repeat: repeat;
-	background-size: 16.25rem 16.25rem;
-	filter: invert(1);
+	opacity: 0;
+	transition: opacity 240ms ease;
+}
+
+.backdropLayerReady {
+	opacity: 1;
+}
+
+.backdropImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.backdropScrim {
+	position: absolute;
+	inset: 0;
+	background-color: rgb(5 4 13 / 0.55);
+}
+
+.backdropScrimMobile {
+	background-color: rgb(5 4 13 / 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.backdropLayer {
+		transition: none;
+	}
+}
+
+:global(html.reduced-motion) .backdropLayer {
+	transition: none;
 }
 
 .cardContainer {
@@ -169,11 +187,12 @@
 	flex: 0 1 auto;
 	min-height: 0;
 	padding: 0;
-	width: min(100%, 38rem);
+	width: min(100%, 50rem);
 	max-width: 100%;
 }
 
 .card {
+	--auth-card-padding: clamp(2rem, 4vw, 2.75rem);
 	position: relative;
 	margin: 0;
 	display: flex;
@@ -192,36 +211,56 @@
 }
 
 .cardStandard {
+	--auth-card-padding: 2.5rem;
 	max-width: 32rem;
 }
 
 .cardCompact {
+	--auth-card-padding: 2rem;
 	max-width: 27rem;
 }
 
-.cardWide {
-	max-width: 38rem;
+.cardBranded {
+	flex-direction: column;
 }
 
 .formSide {
 	display: flex;
 	width: 100%;
+	min-width: 0;
+	flex: 1 1 auto;
 	flex-direction: column;
 	justify-content: center;
-	padding: clamp(2rem, 4vw, 2.75rem);
+	padding: var(--auth-card-padding);
 	background: var(--background-secondary);
 }
 
-.formSideStandard {
-	padding: 2.5rem;
+.cardBranded .formSide {
+	padding-block-start: 1.25rem;
 }
 
-.formSideCompact {
-	padding: 2rem;
+@media (min-width: 55rem) {
+	.cardSplit {
+		flex-direction: row;
+		max-width: 50rem;
+		min-height: 28rem;
+	}
+
+	.cardSplit.cardCompact {
+		max-width: 45rem;
+	}
+
+	.cardSplit .formSide {
+		position: relative;
+		width: auto;
+		padding-block-start: var(--auth-card-padding);
+	}
 }
 
-.formSideWide {
-	padding: 2.5rem;
+@media (min-width: 55rem) and (max-height: 40rem) {
+	.cardSplit {
+		min-height: auto;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -239,14 +278,8 @@
 		padding: 1rem;
 	}
 
-	.formSide {
-		padding: 1.5rem;
-	}
-
-	.formSideStandard,
-	.formSideCompact,
-	.formSideWide {
-		padding: 1.5rem;
+	.card {
+		--auth-card-padding: 1.5rem;
 	}
 }
 
@@ -254,10 +287,7 @@
 	composes: starfield from '@app/features/ui/space_background/SpaceBackground.module.css';
 	--starfield-position: fixed;
 	min-height: 100dvh;
-	background:
-		radial-gradient(ellipse 28rem 18rem at 32% 0%, rgb(122 87 191 / 0.16), transparent 74%),
-		radial-gradient(ellipse 22rem 18rem at 88% 92%, rgb(91 65 151 / 0.12), transparent 72%),
-		linear-gradient(145deg, #05040d 0%, #080616 46%, #0d0a1c 100%);
+	background: linear-gradient(145deg, #05040d 0%, #080616 46%, #0d0a1c 100%);
 	padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -267,8 +297,8 @@
 .mobileContent {
 	position: relative;
 	z-index: 1;
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 	width: 100%;
 	max-width: 28rem;
 }
@@ -304,6 +334,26 @@
 	.alignRight .leftSplitAnimated,
 	.alignRight .cardContainer {
 		justify-content: flex-end;
+	}
+
+	:global(html[dir='rtl']) .leftSplit.alignLeft {
+		align-items: flex-end;
+	}
+
+	:global(html[dir='rtl']) .alignLeft .leftSplitWrapper,
+	:global(html[dir='rtl']) .alignLeft .leftSplitAnimated,
+	:global(html[dir='rtl']) .alignLeft .cardContainer {
+		justify-content: flex-end;
+	}
+
+	:global(html[dir='rtl']) .leftSplit.alignRight {
+		align-items: flex-start;
+	}
+
+	:global(html[dir='rtl']) .alignRight .leftSplitWrapper,
+	:global(html[dir='rtl']) .alignRight .leftSplitAnimated,
+	:global(html[dir='rtl']) .alignRight .cardContainer {
+		justify-content: flex-start;
 	}
 }
 

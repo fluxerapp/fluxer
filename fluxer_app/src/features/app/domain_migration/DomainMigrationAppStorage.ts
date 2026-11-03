@@ -3,9 +3,10 @@
 import {
 	type DomainMigrationAppStorageEntry,
 	isExportableLocalStorageKey,
+	type StorageLike,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey, deriveAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {LEGACY_APP_STORAGE_KEY_MAP} from '@app/features/platform/state/LegacyAppStorageKeyMap';
@@ -13,7 +14,7 @@ import {
 	LEGACY_APP_STORAGE_MIGRATION_MARKER_KEY,
 	LEGACY_APP_STORAGE_UNCLASSIFIED_KEYS_KEY,
 } from '@app/features/platform/state/LegacyAppStorageMigration';
-import {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/PersistentStorage';
+import {GLOBAL_APP_STORAGE_SCOPE, RAW_MIRROR_SCOPE_PREFIX} from '@app/features/platform/state/PersistentStorage';
 import type {AppStorageWrite, PersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 
 export interface DomainMigrationAppStorageExport {
@@ -26,7 +27,7 @@ const DENIED_APP_STORAGE_KEYS: ReadonlySet<string> = new Set([
 	LEGACY_APP_STORAGE_UNCLASSIFIED_KEYS_KEY,
 ]);
 
-export function isExportableAppStorageKey(key: string): boolean {
+function isExportableAppStorageKey(key: string): boolean {
 	return !DENIED_APP_STORAGE_KEYS.has(key) && isExportableLocalStorageKey(key);
 }
 
@@ -131,5 +132,84 @@ export async function writeImportedAppStorage(
 	}
 	if (writes.length > 0) {
 		await backend.setMany(writes);
+	}
+}
+
+export function rewriteImportedAccount(record: StoredAccount, instance: RuntimeConfigSnapshot): StoredAccount {
+	const managed = Object.fromEntries(
+		Object.entries(record.managedStorageData ?? record.localStorageData ?? {}).filter(([key]) =>
+			isExportableLocalStorageKey(key),
+		),
+	);
+	return {
+		...record,
+		localStorageData: managed,
+		managedStorageData: managed,
+		instance,
+		storageKey: accountStorageKey(record.userId, instance) ?? undefined,
+	};
+}
+
+export function importedAccountKeyMoves(
+	accounts: ReadonlyArray<StoredAccount>,
+	instance: RuntimeConfigSnapshot,
+): Map<string, string> {
+	const moves = new Map<string, string>();
+	for (const account of accounts) {
+		const from = deriveAccountStorageKey(account);
+		const to = accountStorageKey(account.userId, instance);
+		if (from !== null && to !== null && from !== to) {
+			moves.set(from, to);
+		}
+	}
+	return moves;
+}
+
+function movedRawMirrorName(name: string, moves: ReadonlyMap<string, string>): string | null {
+	for (const [from, to] of moves) {
+		const prefix = `${RAW_MIRROR_SCOPE_PREFIX}${from}::`;
+		if (name.startsWith(prefix)) {
+			return `${RAW_MIRROR_SCOPE_PREFIX}${to}::${name.slice(prefix.length)}`;
+		}
+	}
+	return null;
+}
+
+export async function retargetAccountKeys(
+	backend: PersistentStorageBackend,
+	storage: StorageLike | null,
+	moves: ReadonlyMap<string, string>,
+): Promise<void> {
+	if (moves.size === 0) {
+		return;
+	}
+	if (storage) {
+		const pointer = moves.get(storage.getItem(AppStorageKey.AUTH_ACCOUNT_KEY) ?? '');
+		if (pointer !== undefined) {
+			storage.setItem(AppStorageKey.AUTH_ACCOUNT_KEY, pointer);
+		}
+		const names: Array<string> = [];
+		for (let index = 0; index < storage.length; index++) {
+			const name = storage.key(index);
+			if (name !== null) {
+				names.push(name);
+			}
+		}
+		for (const name of names) {
+			const moved = movedRawMirrorName(name, moves);
+			const value = moved === null ? null : storage.getItem(name);
+			if (moved === null || value === null) {
+				continue;
+			}
+			try {
+				storage.setItem(moved, value);
+				storage.removeItem(name);
+			} catch {}
+		}
+	}
+	const global = await backend.load(GLOBAL_APP_STORAGE_SCOPE);
+	const pointer = moves.get(global.get(AppStorageKey.AUTH_ACCOUNT_KEY)?.value ?? '');
+	if (pointer !== undefined) {
+		await backend.setMany([{scope: GLOBAL_APP_STORAGE_SCOPE, key: AppStorageKey.AUTH_ACCOUNT_KEY, value: pointer}]);
 	}
 }

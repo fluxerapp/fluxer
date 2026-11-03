@@ -5,7 +5,6 @@ import type {
 	AuditLogDomainResult,
 	AuditLogPlaceholder,
 	AuditLogSentence,
-	AuditLogTone,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	ROLE_COLOR_CHANGE_ROW,
@@ -46,15 +45,18 @@ import {
 import {
 	actorPlaceholder,
 	diffBitfields,
+	namePlaceholder,
 	permissionFlagsIn,
 	readBitfield,
 	readBoolean,
 	readChange,
+	readColor,
 	readNumber,
 	readOption,
 	readSnowflake,
 	readString,
 	readStringArray,
+	row,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
@@ -73,7 +75,6 @@ interface PermissionChanges {
 	removed: Array<bigint>;
 }
 
-const MAX_ROLE_COLOR = 0xffffff;
 const PERMISSION_FLAGS_BY_NAME: ReadonlyMap<string, bigint> = new Map(Object.entries(Permissions));
 
 const ROLE_LIST_MOVE_SUMMARIES: Record<ListDirection, MessageDescriptor> = {
@@ -97,25 +98,12 @@ const MEMBER_LIST_POSITION_ROWS: Record<MemberListPositionChange, MessageDescrip
 	down: ROLE_HOIST_POSITION_DOWN_ROW,
 };
 
-function row(
-	id: string,
-	tone: AuditLogTone,
-	descriptor: MessageDescriptor,
-	values: AuditLogSentence['values'] = {},
-): AuditLogDetailRow {
-	return {id, tone, sentence: {descriptor, values}};
-}
-
 function summaryOnly(descriptor: MessageDescriptor, values: AuditLogSentence['values']): AuditLogDomainResult {
 	return {summary: {descriptor, values}, rows: [], blocks: []};
 }
 
 function rolePlaceholder(entry: GuildAuditLogEntryResponse, recordedName: string | null): AuditLogPlaceholder {
 	return {kind: 'role', id: readSnowflake(entry.target_id) ?? '', recordedName};
-}
-
-function nameValue(value: string): AuditLogPlaceholder {
-	return {kind: 'name', value};
 }
 
 function colorValue(value: number): AuditLogPlaceholder {
@@ -132,11 +120,6 @@ function readNewValue(entry: GuildAuditLogEntryResponse, key: string): unknown {
 
 function readOldValue(entry: GuildAuditLogEntryResponse, key: string): unknown {
 	return readChange(entry, key)?.oldValue ?? null;
-}
-
-function readColor(value: unknown): number | null {
-	const color = readNumber(value);
-	return color !== null && Number.isInteger(color) && color >= 0 && color <= MAX_ROLE_COLOR ? color : null;
 }
 
 function isNullableString(value: unknown): value is string | null {
@@ -230,10 +213,10 @@ function colorRow({previous, next}: ValueChange<number>): AuditLogDetailRow {
 
 function emojiRow({previous, next}: ValueChange<string | null>): AuditLogDetailRow {
 	if (next === null) return row('unicode-emoji', 'remove', ROLE_EMOJI_REMOVE_ROW);
-	if (previous === null) return row('unicode-emoji', 'add', ROLE_EMOJI_SET_ROW, {emoji: nameValue(next)});
+	if (previous === null) return row('unicode-emoji', 'add', ROLE_EMOJI_SET_ROW, {emoji: namePlaceholder(next)});
 	return row('unicode-emoji', 'neutral', ROLE_EMOJI_CHANGE_ROW, {
-		oldEmoji: nameValue(previous),
-		newEmoji: nameValue(next),
+		oldEmoji: namePlaceholder(previous),
+		newEmoji: namePlaceholder(next),
 	});
 }
 
@@ -263,7 +246,7 @@ export function presentRoleCreate(entry: GuildAuditLogEntryResponse): AuditLogDo
 		rows.push(row('mentionable', 'add', ROLE_MENTIONABLE_ALLOW_ROW));
 	}
 	if (emoji !== null) {
-		rows.push(row('unicode-emoji', 'add', ROLE_EMOJI_SET_ROW, {emoji: nameValue(emoji)}));
+		rows.push(row('unicode-emoji', 'add', ROLE_EMOJI_SET_ROW, {emoji: namePlaceholder(emoji)}));
 	}
 	if (readString(readNewValue(entry, 'icon_hash')) !== null) {
 		rows.push(row('icon-hash', 'add', ROLE_ICON_SET_ROW));
@@ -315,13 +298,20 @@ export function presentRoleUpdate(entry: GuildAuditLogEntryResponse): AuditLogDo
 		return summaryOnly(MEMBER_LIST_POSITION_SUMMARIES[memberListPosition], {actor, role});
 	}
 	if (changeCount === 1 && name !== null) {
-		return summaryOnly(ROLE_RENAME_SUMMARY, {actor, oldName: nameValue(name.previous), newName: nameValue(name.next)});
+		return summaryOnly(ROLE_RENAME_SUMMARY, {
+			actor,
+			oldName: namePlaceholder(name.previous),
+			newName: namePlaceholder(name.next),
+		});
 	}
 
 	const rows: Array<AuditLogDetailRow> = [];
 	if (name !== null) {
 		rows.push(
-			row('name', 'neutral', ROLE_NAME_CHANGE_ROW, {oldName: nameValue(name.previous), newName: nameValue(name.next)}),
+			row('name', 'neutral', ROLE_NAME_CHANGE_ROW, {
+				oldName: namePlaceholder(name.previous),
+				newName: namePlaceholder(name.next),
+			}),
 		);
 	}
 	if (permissions !== null && permissions.added.length > 0) {

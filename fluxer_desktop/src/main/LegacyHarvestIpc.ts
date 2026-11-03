@@ -1,3 +1,4 @@
+import {isRecord as isPlainObject} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChildLogger} from '@electron/common/Logger';
@@ -10,7 +11,10 @@ import {
 	readStagedHarvestLocalStorageSync,
 	type StagedLegacyHarvest,
 } from '@electron/main/LegacyOriginHarvestStore';
-import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
+import {
+	isPrivilegedRendererDocumentSender,
+	requirePrivilegedRendererDocumentSender,
+} from '@electron/main/PrivilegedRendererDocuments';
 import type {
 	DesktopLegacyHarvestRecord,
 	DesktopLegacyHarvestStore,
@@ -26,17 +30,13 @@ import {
 	DesktopLegacyImportPhase,
 	readDesktopLegacyImportPhase,
 } from '@fluxer/desktop_ipc/src/StorageContract';
-import {type IpcMainEvent, ipcMain} from 'electron';
+import {ipcMain} from 'electron';
 
 const logger = createChildLogger('LegacyHarvest');
 
 type BlobReader = (blobId: string) => Promise<Uint8Array | null>;
 
 let handlersRegistered = false;
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function readBlobId(value: unknown): string | null {
 	if (!isPlainObject(value)) return null;
@@ -113,15 +113,6 @@ function readPrebootLocalStorage(): Readonly<Record<string, string>> | null {
 	return readStagedHarvestLocalStorageSync();
 }
 
-function isPrivilegedHarvestSender(event: IpcMainEvent, channel: string): boolean {
-	try {
-		requirePrivilegedRendererDocumentSender(event, channel);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
 export function registerLegacyHarvestHandlers(): void {
 	if (handlersRegistered) return;
 	handlersRegistered = true;
@@ -138,9 +129,7 @@ export function registerLegacyHarvestHandlers(): void {
 		return discardHarvestWhenComplete();
 	});
 	ipcMain.on(DESKTOP_LEGACY_HARVEST_CHANNELS.readRawSync, (event) => {
-		event.returnValue = isPrivilegedHarvestSender(event, DESKTOP_LEGACY_HARVEST_CHANNELS.readRawSync)
-			? readPrebootLocalStorage()
-			: null;
+		event.returnValue = isPrivilegedRendererDocumentSender(event) ? readPrebootLocalStorage() : null;
 	});
 }
 

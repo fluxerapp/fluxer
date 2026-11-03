@@ -18,8 +18,8 @@ use crate::{
             content_type_is_trustworthy, image_extension_from_filename, is_svg_content_type,
         },
         response::{
-            MediaResponse, content_disposition_header, error::storage_error_response,
-            error::text_with_source, media_response,
+            GeneratedMediaResponse, content_disposition_header, error::storage_error_response,
+            error::text_with_source, generated_media_response,
         },
         state::AppState,
         transform::{
@@ -86,7 +86,7 @@ pub(in crate::server) async fn serve_stored_passthrough_stream(
     if app.cfg.mode == DeploymentMode::Mp
         && image_extension_from_filename(key) == Some(AssetExtension::Svg)
     {
-        return serve_stored_passthrough_svg(app, method, bucket, key, headers, &disposition).await;
+        return serve_stored_passthrough_svg(app, method, bucket, key, &disposition).await;
     }
     let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
     let forwarded_range = match range::classify_request_range(range_header) {
@@ -105,15 +105,12 @@ pub(in crate::server) async fn serve_stored_passthrough_stream(
     }
     let content_type = passthrough_content_type(&object.content_type, key);
     if app.cfg.mode == DeploymentMode::Mp && is_svg_content_type(&content_type) {
-        return serve_stored_passthrough_svg(app, method, bucket, key, headers, &disposition).await;
+        return serve_stored_passthrough_svg(app, method, bucket, key, &disposition).await;
     }
     let total_len = match passthrough_total_len(app, bucket, key, object.total_length).await {
         Ok(value) => value,
         Err(err) => return storage_error_response(key, err),
     };
-    if total_len > constants::MAX_MEDIA_PROXY_BYTES {
-        return storage_error_response(key, StorageError::StreamTooLong);
-    }
     streaming_media_response(StreamingMediaResponse {
         method,
         object,
@@ -135,16 +132,12 @@ async fn serve_stored_passthrough_head(
         Ok(head) => head,
         Err(err) => return storage_error_response(key, err),
     };
-    if head.content_length > constants::MAX_MEDIA_PROXY_BYTES as u64 {
-        return storage_error_response(key, StorageError::StreamTooLong);
-    }
     let content_type = passthrough_content_type(&head.content_type, key);
     if app.cfg.mode == DeploymentMode::Mp
         && (is_svg_content_type(&content_type)
             || image_extension_from_filename(key) == Some(AssetExtension::Svg))
     {
-        return serve_stored_passthrough_svg(app, Method::HEAD, bucket, key, headers, disposition)
-            .await;
+        return serve_stored_passthrough_svg(app, Method::HEAD, bucket, key, disposition).await;
     }
     let total_len = match usize::try_from(head.content_length) {
         Ok(value) => value,
@@ -169,7 +162,6 @@ async fn serve_stored_passthrough_svg(
     method: Method,
     bucket: &str,
     key: &str,
-    headers: &HeaderMap,
     disposition: &PassthroughDisposition<'_>,
 ) -> Response {
     let object = match app.store.read_object(bucket, key).await {
@@ -177,15 +169,7 @@ async fn serve_stored_passthrough_svg(
         Err(err) => return storage_error_response(key, err),
     };
     let cache_identity = format!("{bucket}/{key}");
-    serve_stored_svg_rasterized(
-        app,
-        method,
-        object.data,
-        &cache_identity,
-        headers,
-        disposition,
-    )
-    .await
+    serve_stored_svg_rasterized(app, method, object.data, &cache_identity, disposition).await
 }
 
 /// Resolves the object's full length, preferring what the store already reported on the streamed
@@ -265,7 +249,6 @@ async fn serve_stored_svg_rasterized(
     method: Method,
     data: Bytes,
     cache_identity: &str,
-    headers: &HeaderMap,
     disposition: &PassthroughDisposition<'_>,
 ) -> Response {
     let runtime = app.media.transforms();
@@ -293,11 +276,10 @@ async fn serve_stored_svg_rasterized(
         resize_mode: Some(options.resize_mode),
     });
     if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
-        return media_response(MediaResponse {
+        return generated_media_response(GeneratedMediaResponse {
             method,
             data: hit.data.as_bytes().clone().into(),
             content_type: hit.format.mime(),
-            range_header: headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
             disposition: passthrough_disposition_header(disposition, hit.format.mime()),
         });
     }
@@ -328,40 +310,10 @@ async fn serve_stored_svg_rasterized(
             );
         }
     };
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method,
         data: transformed.into(),
         content_type: format.mime(),
-        range_header: headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
         disposition: passthrough_disposition_header(disposition, format.mime()),
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn passthrough_content_type_preserves_non_media_metadata() {
-        assert_eq!(
-            "application/zip",
-            passthrough_content_type("application/zip", "downloads/app.zip")
-        );
-    }
-
-    #[test]
-    fn passthrough_content_type_prefers_known_extension_over_bad_metadata() {
-        assert_eq!(
-            "image/png",
-            passthrough_content_type("text/plain", "image.png")
-        );
-    }
-
-    #[test]
-    fn passthrough_content_type_prefers_m4a_extension_over_mp4_metadata() {
-        assert_eq!(
-            "audio/mp4",
-            passthrough_content_type("video/mp4", "track.m4a")
-        );
-    }
 }

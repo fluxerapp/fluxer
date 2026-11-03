@@ -11,10 +11,9 @@ import FormField from '@app/features/auth/flow/AuthFormField';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
-import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
+import {resolveAuthBannerError, useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {resetPassword as resetPasswordFlow} from '@app/features/auth/state/AuthFlow';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {
 	checkResetPasswordToken,
 	peekSettledResetPasswordTokenCheck,
@@ -27,6 +26,7 @@ import {
 	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {msg} from '@lingui/core/macro';
@@ -47,24 +47,6 @@ type TokenStatus = 'validating' | 'valid' | 'invalid';
 
 const API_RENDERED_FIELDS = new Set(['password']);
 
-function resolveBannerError(
-	error: string | null,
-	fieldErrors: ReadonlyMap<string, string> | null | undefined,
-): string | null {
-	if (error != null) {
-		return error;
-	}
-	if (fieldErrors == null) {
-		return null;
-	}
-	for (const [fieldName, message] of fieldErrors) {
-		if (!API_RENDERED_FIELDS.has(fieldName)) {
-			return message;
-		}
-	}
-	return null;
-}
-
 interface ResetPasswordPageContentProps {
 	readonly runtimeSnapshot: RuntimeConfigSnapshot;
 }
@@ -76,7 +58,7 @@ const ResetPasswordPageContent = observer(function ResetPasswordPageContent({
 	const passwordId = useId();
 	const confirmPasswordId = useId();
 	const token = useHashParam('token');
-	const requestTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const requestTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
 	const [tokenStatus, setTokenStatus] = useState<TokenStatus>(() =>
 		token === null ? 'validating' : (peekSettledResetPasswordTokenCheck(token, requestTarget) ?? 'validating'),
 	);
@@ -131,7 +113,7 @@ const ResetPasswordPageContent = observer(function ResetPasswordPageContent({
 			cancelled = true;
 		};
 	}, [token, requestTarget, runtimeSnapshot]);
-	const bannerError = resolveBannerError(error, fieldErrors);
+	const bannerError = resolveAuthBannerError(error, fieldErrors, API_RENDERED_FIELDS);
 	if (!token) {
 		return null;
 	}

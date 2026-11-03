@@ -18,8 +18,10 @@ import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {findPersonByLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
+import {secretMatchesHash, sha256Hex} from '@app/api/utils/SecretHash';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {
 	generateRecoveryKey,
@@ -39,7 +41,7 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms, seconds} from 'itty-time';
 
-const DUMMY_SECRET_HASH = crypto.createHash('sha256').update('fluxer-recovery-kit-dummy').digest('hex');
+const DUMMY_SECRET_HASH = sha256Hex('fluxer-recovery-kit-dummy');
 
 const recoveryKits = new RecoveryKitRepository();
 const DUMMY_KIT_USER_ID = createUserID(0n);
@@ -63,19 +65,9 @@ export interface RecoverAccountResult {
 	createdAt: Date;
 }
 
-function hashRecoveryKey(normalizedKey: string): string {
-	return crypto.createHash('sha256').update(normalizedKey).digest('hex');
-}
-
-function secretHashesMatch(left: string, right: string): boolean {
-	const leftBuffer = Buffer.from(left, 'hex');
-	const rightBuffer = Buffer.from(right, 'hex');
-	return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
-}
-
 function issueRecoveryKey(): {formatted: string; secretHash: string; createdAt: Date} {
 	const {key, formatted} = generateRecoveryKey(new Uint8Array(crypto.randomBytes(RECOVERY_KEY_BYTE_LENGTH)));
-	return {formatted, secretHash: hashRecoveryKey(key), createdAt: new Date()};
+	return {formatted, secretHash: sha256Hex(key), createdAt: new Date()};
 }
 
 function pendingRecoveryKey(ticket: string): string {
@@ -161,14 +153,13 @@ export async function recoverAccount(
 	const handle = parseLoginHandle(data.login);
 	await checkRecoverRateLimits(ctx, handle?.username ?? null, request);
 	const normalizedKey = normalizeRecoveryKey(data.recovery_key);
-	const providedHash = hashRecoveryKey(normalizedKey ?? data.recovery_key);
 	const user = handle ? await findPersonByLoginHandle(ctx.services.users, handle) : null;
 	const kit = await recoveryKits.find(user ? user.id : DUMMY_KIT_USER_ID);
-	const keyMatches = secretHashesMatch(providedHash, kit?.secret_hash ?? DUMMY_SECRET_HASH);
+	const keyMatches = secretMatchesHash(normalizedKey ?? data.recovery_key, kit?.secret_hash ?? DUMMY_SECRET_HASH);
 	if (!user || !kit || normalizedKey === null || !keyMatches) {
 		throw invalidRecoveryKeyError();
 	}
-	const currentUser = await AuthUtility.handleBanStatus(ctx, user);
+	const currentUser = await AuthUtility.assertSignInAllowed(ctx, user);
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {
 		throw new RegistrationPendingApprovalError();
 	}
@@ -186,7 +177,7 @@ export async function recoverAccount(
 			expectedSecretHash: kit.secret_hash,
 			secretHash: issued.secretHash,
 			createdAt: issued.createdAt.toISOString(),
-			passwordHash: await AuthPassword.hashPassword(ctx, data.password),
+			passwordHash: await hashPassword(data.password),
 		};
 		const challenge = await createMfaTicketResponse(ctx, currentUser, webauthnIsSecondFactor);
 		try {

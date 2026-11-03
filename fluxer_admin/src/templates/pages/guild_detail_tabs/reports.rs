@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::report_category::report_status;
+
 use crate::{
     api::types::{GuildInfo, ReportEntry},
     config::AdminConfig,
     templates::{
         components::page_container::card_with_header,
         pages::user_detail_tabs::reports::{
-            format_status, report_tab_table, reported_at_cell, reporter_label,
-            type_and_category_cell,
+            report_tab_table, reported_at_cell, reporter_label, type_and_category_cell,
         },
     },
 };
@@ -94,11 +95,11 @@ fn report_row(base: &str, report: &ReportEntry) -> Markup {
                 }
             }
             td class="hidden whitespace-nowrap px-4 py-3 text-sm text-neutral-900 xl:table-cell" {
-                (format_status(report.status))
+                (report_status(report.status).0)
             }
             td class="whitespace-nowrap px-2 py-3 text-sm xl:px-4" {
                 div class="mb-1 text-neutral-900 xl:hidden" data-status-compact=(report.report_id) {
-                    (format_status(report.status))
+                    (report_status(report.status).0)
                 }
                 a href={(base) "/reports/" (report.report_id)}
                     class="inline-flex items-center rounded-md border border-neutral-300 \

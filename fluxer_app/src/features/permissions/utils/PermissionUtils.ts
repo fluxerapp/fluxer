@@ -19,6 +19,7 @@ import {
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {GUILD_VISITOR_PERMISSIONS_MASK} from '@fluxer/constants/src/GuildVisitConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {RoleId, UserId} from '@fluxer/schema/src/branded/WireIds';
@@ -125,10 +126,21 @@ export function computePermissions(
 	if (guild == null) {
 		return NONE;
 	}
+	roles = roles != null && guildRoles ? {...guildRoles, ...roles} : (guildRoles ?? roles ?? {});
+	if (userId === Authentication.currentUserId && Guilds.getGuild(guild.id)?.visiting === true) {
+		const everyone = roles?.[guild.id as keyof typeof roles];
+		let visitorPermissions =
+			(everyone != null ? everyone.permissions : DEFAULT_PERMISSIONS) & ~Permissions.ADMINISTRATOR;
+		const overwriteEveryone = overwrites?.[guild.id];
+		if (overwriteEveryone != null) {
+			visitorPermissions &= ~overwriteEveryone.deny;
+			visitorPermissions |= overwriteEveryone.allow;
+		}
+		return visitorPermissions & GUILD_VISITOR_PERMISSIONS_MASK;
+	}
 	if (guild.owner_id === userId) {
 		return calculateElevatedPermissions(ALL_PERMISSIONS, guild, userId, checkElevated);
 	}
-	roles = roles != null && guildRoles ? {...guildRoles, ...roles} : (guildRoles ?? roles ?? {});
 	const member = GuildMembers.getMember(guild.id, userId);
 	const roleEveryone = roles?.[guild.id as keyof typeof roles];
 	let permissions = roleEveryone != null ? roleEveryone.permissions : DEFAULT_PERMISSIONS;
@@ -477,7 +489,7 @@ export function generatePermissionSpec(i18n: I18n, {threads = false}: {threads?:
 	];
 }
 
-export type PermissionKey = keyof typeof Permissions | keyof typeof ThreadPermissionFlags;
+type PermissionKey = keyof typeof Permissions | keyof typeof ThreadPermissionFlags;
 
 export interface BotPermissionOption {
 	id: PermissionKey;

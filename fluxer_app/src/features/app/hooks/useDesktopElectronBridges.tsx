@@ -7,7 +7,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {initializeDesktopTrayBridge} from '@app/features/platform/utils/DesktopTrayBridge';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
-import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {startLiveResizeTracking} from '@app/features/window/state/LiveResize';
@@ -25,9 +24,8 @@ export function useDesktopElectronBridges(): void {
 		});
 		const electronApi = getElectronAPI();
 		if (!electronApi) return;
-		const disposeLinkedFileSync = ThemeLibrary.startLinkedFileSync({
-			onThemesChanged: () => broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision}),
-		});
+		const disposeLinkedFileSync = ThemeLibrary.startLinkedFileSync();
+		const disposeFolderSync = ThemeLibrary.startFolderSync();
 		const adjustZoom = (direction: 1 | -1) => {
 			void Accessibility.adjustZoom(direction).catch((error: unknown) => {
 				logger.error('Failed to adjust the zoom level', error);
@@ -61,6 +59,7 @@ export function useDesktopElectronBridges(): void {
 			unsubOpenSettings?.();
 			disposeTrayBridge?.();
 			disposeLinkedFileSync();
+			disposeFolderSync();
 		};
 	}, []);
 }

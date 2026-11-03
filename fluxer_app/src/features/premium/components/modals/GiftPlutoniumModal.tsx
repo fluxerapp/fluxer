@@ -5,17 +5,34 @@ import {useCheckoutActions} from '@app/features/app/components/dialogs/component
 import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import GeoIP from '@app/features/app/state/GeoIP';
-import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	ONE_MONTH_DURATION_DESCRIPTOR as ONE_MONTH_DESCRIPTOR,
+	SAVE_PERCENT_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import {
+	BusinessPurchaseField,
+	businessPurchaseCnpj,
+	CNPJ_INVALID_DESCRIPTOR,
+} from '@app/features/premium/components/BusinessPurchaseField';
 import styles from '@app/features/premium/components/modals/GiftPlutoniumModal.module.css';
+import {usePurchaseAccountGate} from '@app/features/premium/hooks/usePurchaseAccountGate';
 import PremiumState from '@app/features/premium/state/PremiumState';
-import {BUY_GIFT_DESCRIPTOR, GIFT_PREMIUM_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {
+	BUY_GIFT_DESCRIPTOR,
+	GIFT_PREMIUM_DESCRIPTOR,
+	PAYMENT_DISPUTE_OPEN_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {yearlySavingsPercent} from '@app/features/premium/utils/PremiumSavings';
 import {areGiftPurchasesAvailable, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
+import {type PurchaseBlockedReason, PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -27,17 +44,10 @@ const GIFT_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Pay once and get a gift link to share. Gifts never renew.',
 	comment: 'Description at the top of the gift purchase dialog.',
 });
-const ONE_MONTH_DESCRIPTOR = msg({
-	message: '1 month',
-	comment: 'Gift purchase dialog option for a one-month gift.',
-});
+
 const ONE_YEAR_DESCRIPTOR = msg({
 	message: '1 year',
 	comment: 'Gift purchase dialog option for a one-year gift.',
-});
-const SAVE_PERCENT_DESCRIPTOR = msg({
-	message: 'Save {percent}%',
-	comment: 'Badge on the one-year option in the gift purchase dialog. percent is a whole number such as 17.',
 });
 const GIFT_PLAN_LABEL_DESCRIPTOR = msg({
 	message: 'Gift length',
@@ -52,17 +62,15 @@ const CLAIM_TO_GIFT_DESCRIPTOR = msg({
 	comment: 'Note in the gift purchase dialog for unclaimed accounts.',
 });
 const VERIFY_TO_GIFT_DESCRIPTOR = msg({
-	message: 'Verify your email to buy gifts.',
+	message: 'Confirm your email to buy gifts.',
 	comment: 'Note in the gift purchase dialog for accounts without a verified email.',
 });
+const BLOCKED_NOTES: Readonly<Record<PurchaseBlockedReason, MessageDescriptor>> = {
+	[PurchaseBlockedReasons.UNCLAIMED]: CLAIM_TO_GIFT_DESCRIPTOR,
+	[PurchaseBlockedReasons.EMAIL_UNVERIFIED]: VERIFY_TO_GIFT_DESCRIPTOR,
+};
 
 const PRICE_PLACEHOLDER = '...';
-
-function savingsPercent(monthlyMinor: number | null | undefined, yearlyMinor: number | null | undefined) {
-	if (monthlyMinor == null || yearlyMinor == null || monthlyMinor <= 0) return null;
-	const percent = Math.round((1 - yearlyMinor / (monthlyMinor * 12)) * 100);
-	return percent > 0 ? percent : null;
-}
 
 export const GiftPlutoniumModal = observer(() => {
 	const {i18n} = useLingui();
@@ -72,21 +80,32 @@ export const GiftPlutoniumModal = observer(() => {
 	const {priceIds, giftMonthlyPrice, giftYearlyPrice} = usePremiumData({premiumState});
 	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, MobileLayout.enabled);
 	const [plan, setPlan] = useState<GiftPlan>('gift_1_year');
+	const [isBusiness, setIsBusiness] = useState(false);
+	const [cnpj, setCnpj] = useState('');
+	const [cnpjError, setCnpjError] = useState<string | null>(null);
+	const brazil = countryCode?.toUpperCase() === 'BR' || priceIds?.currency === 'BRL';
 	useEffect(() => {
 		if (!currentUser?.id) return;
 		void PremiumCommands.refreshPremiumState(countryCode ?? undefined);
 	}, [countryCode, currentUser?.id]);
-	const isClaimed = currentUser?.isClaimed() ?? false;
-	const isEmailVerified = currentUser?.verified === true;
+	const accountGate = usePurchaseAccountGate();
+	const buy = () => {
+		const companyCnpj = businessPurchaseCnpj(isBusiness, brazil, cnpj);
+		if (companyCnpj === null) {
+			setCnpjError(i18n._(CNPJ_INVALID_DESCRIPTOR));
+			return;
+		}
+		accountGate.start(() => void handleSelectPlan(plan, {isBusiness, cnpj: companyCnpj}));
+	};
 	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
 	const giftsAvailable = areGiftPurchasesAvailable(priceIds, userPurchaseDisabled);
-	const blockedNote = !isClaimed
-		? i18n._(CLAIM_TO_GIFT_DESCRIPTOR)
-		: !isEmailVerified
-			? i18n._(VERIFY_TO_GIFT_DESCRIPTOR)
-			: null;
+	const accountBlockedNote =
+		accountGate.blockedReason !== null ? i18n._(BLOCKED_NOTES[accountGate.blockedReason]) : null;
+	const blockedNote =
+		accountBlockedNote ??
+		(premiumState?.effective.payment_dispute_open === true ? i18n._(PAYMENT_DISPUTE_OPEN_DESCRIPTOR) : null);
 	const pricesLoaded = giftMonthlyPrice !== PRICE_PLACEHOLDER && giftYearlyPrice !== PRICE_PLACEHOLDER;
-	const percent = savingsPercent(priceIds?.gift_1_month_amount_minor, priceIds?.gift_1_year_amount_minor);
+	const percent = yearlySavingsPercent(priceIds?.gift_1_month_amount_minor, priceIds?.gift_1_year_amount_minor);
 	const options = useMemo<ReadonlyArray<RadioOption<GiftPlan>>>(
 		() => [
 			{value: 'gift_1_year', name: i18n._(ONE_YEAR_DESCRIPTOR), desc: giftYearlyPrice},
@@ -116,7 +135,7 @@ export const GiftPlutoniumModal = observer(() => {
 										<span className={styles.optionName} data-flx="premium.gift-plutonium-modal.option-name">
 											<span data-flx="premium.gift-plutonium-modal.span">{option.name}</span>
 											{option.value === 'gift_1_year' && percent != null && (
-												<span className={styles.badge} data-flx="premium.gift-plutonium-modal.badge">
+												<span className={styles.saving} data-flx="premium.gift-plutonium-modal.saving">
 													{i18n._(SAVE_PERCENT_DESCRIPTOR, {percent})}
 												</span>
 											)}
@@ -127,6 +146,24 @@ export const GiftPlutoniumModal = observer(() => {
 									</div>
 								)}
 								data-flx="premium.gift-plutonium-modal.radio-group.set-plan"
+							/>
+							<BusinessPurchaseField
+								checked={isBusiness}
+								disabled={loadingCheckout}
+								onChange={setIsBusiness}
+								cnpj={
+									brazil
+										? {
+												value: cnpj,
+												error: cnpjError,
+												onChange: (value) => {
+													setCnpj(value);
+													setCnpjError(null);
+												},
+											}
+										: undefined
+								}
+								data-flx="premium.gift-plutonium-modal.business-purchase-field"
 							/>
 							{blockedNote && (
 								<p className={styles.note} role="note" data-flx="premium.gift-plutonium-modal.blocked-note">
@@ -142,13 +179,13 @@ export const GiftPlutoniumModal = observer(() => {
 					)}
 				</Modal.ContentLayout>
 			</Modal.Content>
-			<Modal.Footer data-flx="premium.gift-plutonium-modal.modal-footer">
-				<Button onClick={ModalCommands.pop} variant="secondary" data-flx="premium.gift-plutonium-modal.button.cancel">
-					{i18n._(CANCEL_DESCRIPTOR)}
-				</Button>
-				{giftsAvailable && (
+			{giftsAvailable ? (
+				<Modal.Footer data-flx="premium.gift-plutonium-modal.modal-footer">
+					<Button onClick={ModalCommands.pop} variant="secondary" data-flx="premium.gift-plutonium-modal.button.cancel">
+						{i18n._(CANCEL_DESCRIPTOR)}
+					</Button>
 					<Button
-						onClick={() => void handleSelectPlan(plan)}
+						onClick={buy}
 						submitting={loadingCheckout}
 						disabled={blockedNote != null || !pricesLoaded}
 						variant="primary"
@@ -156,8 +193,10 @@ export const GiftPlutoniumModal = observer(() => {
 					>
 						{i18n._(BUY_GIFT_DESCRIPTOR)}
 					</Button>
-				)}
-			</Modal.Footer>
+				</Modal.Footer>
+			) : (
+				<Modal.DismissFooter data-flx="premium.gift-plutonium-modal.dismiss-footer" />
+			)}
 		</Modal.Root>
 	);
 });

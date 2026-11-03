@@ -3,7 +3,7 @@
 .clearButton {
 	position: absolute;
 	top: 50%;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	transform: translateY(-50%);
 	padding: 0.25rem;
 	color: var(--text-tertiary);

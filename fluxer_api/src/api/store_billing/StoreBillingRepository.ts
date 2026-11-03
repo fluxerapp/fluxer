@@ -90,10 +90,6 @@ export class StoreBillingRepository {
 		return next;
 	}
 
-	async bindPurchase(current: StorePurchaseRow, userId: UserID, boundAt: Date): Promise<StorePurchaseRow | null> {
-		return this.updatePurchase(current, {user_id: userId, bound_at: boundAt});
-	}
-
 	async unbindPurchase(current: StorePurchaseRow): Promise<StorePurchaseRow | null> {
 		return this.updatePurchase(current, {user_id: null, bound_at: null});
 	}

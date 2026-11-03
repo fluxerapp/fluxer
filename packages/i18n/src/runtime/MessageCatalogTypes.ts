@@ -25,18 +25,17 @@ type PlaceholderName<T extends string> = ValidPlaceholderName<PlaceholderHead<T>
 type PlaceholderNameAfterOpen<T extends string> = T extends `${infer Placeholder}}${string}`
 	? PlaceholderName<Placeholder>
 	: never;
-type RestAfterPlaceholder<T extends string> = T extends `${string}}${infer Rest}` ? Rest : '';
 type NumericPlaceholderNameAfterOpen<T extends string> = T extends `${infer Name}, plural,${string}`
-	? PlaceholderName<Name>
+	? ValidPlaceholderName<Trim<Name>>
 	: T extends `${infer Name}, selectordinal,${string}`
-		? PlaceholderName<Name>
+		? ValidPlaceholderName<Trim<Name>>
 		: never;
-type TemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
-	? PlaceholderNameAfterOpen<AfterOpen> | TemplatePlaceholderNames<RestAfterPlaceholder<AfterOpen>>
-	: never;
-type NumericTemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
-	? NumericPlaceholderNameAfterOpen<AfterOpen> | NumericTemplatePlaceholderNames<RestAfterPlaceholder<AfterOpen>>
-	: never;
+type TemplatePlaceholderNames<T extends string, Found = never> = T extends `${string}{${infer AfterOpen}`
+	? TemplatePlaceholderNames<AfterOpen, Found | PlaceholderNameAfterOpen<AfterOpen>>
+	: Found;
+type NumericTemplatePlaceholderNames<T extends string, Found = never> = T extends `${string}{${infer AfterOpen}`
+	? NumericTemplatePlaceholderNames<AfterOpen, Found | NumericPlaceholderNameAfterOpen<AfterOpen>>
+	: Found;
 export type MessageVariablesForTemplate<T extends string> = [TemplatePlaceholderNames<T>] extends [never]
 	? never
 	: {

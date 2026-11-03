@@ -34,14 +34,18 @@ export const ReportFlowThankYou: React.FC<ReportFlowThankYouProps> = observer(
 		const {i18n} = useLingui();
 		const isBlocked = blockTarget !== null && Relationships.isBlocked(blockTarget.id);
 		const blockTargetName = blockTarget !== null ? NicknameUtils.getNickname(blockTarget, guildId, channelId) : '';
+		let body: string;
+		if (reportSent) {
+			body = i18n._(THANK_YOU_BODY_DESCRIPTOR, {productName});
+		} else if (endedOnStart) {
+			body = i18n._(THANK_YOU_NO_REPORT_BODY_DESCRIPTOR);
+		} else {
+			body = i18n._(THANK_YOU_NO_REPORT_SHORT_BODY_DESCRIPTOR);
+		}
 		return (
 			<div className={styles.container} data-flx="moderation.report-flow.report-flow-thank-you.container">
 				<p className={styles.body} data-flx="moderation.report-flow.report-flow-thank-you.body">
-					{reportSent
-						? i18n._(THANK_YOU_BODY_DESCRIPTOR, {productName})
-						: endedOnStart
-							? i18n._(THANK_YOU_NO_REPORT_BODY_DESCRIPTOR)
-							: i18n._(THANK_YOU_NO_REPORT_SHORT_BODY_DESCRIPTOR)}
+					{body}
 				</p>
 				{blockTarget !== null && (
 					<section className={styles.section} data-flx="moderation.report-flow.report-flow-thank-you.section">

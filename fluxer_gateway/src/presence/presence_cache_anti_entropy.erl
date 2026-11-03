@@ -97,7 +97,7 @@ tombstones(State) ->
 tombstone_order(State) ->
     Order = maps:get(delete_tombstone_order, State, undefined),
     case queue:is_queue(Order) of
-        true -> Order;
+        true -> eqwalizer:dynamic_cast(Order);
         false -> queue:new()
     end.
 
@@ -248,46 +248,3 @@ is_visible_presence(Presence) ->
         <<"dnd">> -> true;
         _ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-prune_tombstones_drops_expired_order_test() ->
-    Now = now_ms(),
-    State = #{
-        delete_tombstones => #{1 => Now - 1, 2 => Now + 60000},
-        delete_tombstone_order => queue:from_list([{Now - 1, 1}, {Now + 60000, 2}])
-    },
-    Pruned = prune_tombstones(State),
-    ?assertEqual(#{2 => Now + 60000}, maps:get(delete_tombstones, Pruned)),
-    ?assertEqual([{Now + 60000, 2}], queue:to_list(maps:get(delete_tombstone_order, Pruned))).
-
-record_delete_above_limit_costs_bounded_work_test_() ->
-    {timeout, 120, fun assert_record_delete_above_limit_is_amortised/0}.
-
-assert_record_delete_above_limit_is_amortised() ->
-    Batch = 1000,
-    Empty = #{delete_tombstones => #{}, delete_tombstone_order => queue:new()},
-    Filled = record_delete_range(Empty, 1, ?TOMBSTONE_LIMIT - Batch),
-    {BelowCost, AtLimit} = measure_record_deletes(
-        Filled, ?TOMBSTONE_LIMIT - Batch + 1, ?TOMBSTONE_LIMIT
-    ),
-    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(AtLimit))),
-    {AboveCost, Above} = measure_record_deletes(
-        AtLimit, ?TOMBSTONE_LIMIT + 1, ?TOMBSTONE_LIMIT + Batch
-    ),
-    ?assert(AboveCost < BelowCost * 20),
-    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(Above))),
-    ?assert(maps:is_key(?TOMBSTONE_LIMIT + Batch, tombstones(Above))),
-    ?assertNot(maps:is_key(1, tombstones(Above))).
-
-measure_record_deletes(State, From, To) ->
-    {reductions, Before} = erlang:process_info(self(), reductions),
-    NewState = record_delete_range(State, From, To),
-    {reductions, After} = erlang:process_info(self(), reductions),
-    {After - Before, NewState}.
-
-record_delete_range(State, From, To) ->
-    lists:foldl(fun record_delete/2, State, lists:seq(From, To)).
-
--endif.

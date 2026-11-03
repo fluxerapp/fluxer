@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const MAIN_WINDOW_CONTENT_GRACE_MS = 6000;
-export const MAIN_WINDOW_HARD_FALLBACK_MS = 10000;
+const MAIN_WINDOW_CONTENT_GRACE_MS = 6000;
+const MAIN_WINDOW_HARD_FALLBACK_MS = 10000;
 
 export const MainWindowRevealReason = Object.freeze({
 	CONTENT_PAINTED: 'content-painted',
@@ -15,28 +15,16 @@ type RevealTimer = ReturnType<typeof setTimeout>;
 
 interface MainWindowRevealGateOptions {
 	readonly onReveal: (reason: MainWindowRevealReason) => void;
-	readonly contentGraceMs?: number;
-	readonly hardFallbackMs?: number;
-	readonly setTimer?: (callback: () => void, delayMs: number) => RevealTimer;
-	readonly clearTimer?: (timer: RevealTimer) => void;
 }
 
 export class MainWindowRevealGate {
 	private readonly onReveal: (reason: MainWindowRevealReason) => void;
-	private readonly contentGraceMs: number;
-	private readonly hardFallbackMs: number;
-	private readonly setTimer: (callback: () => void, delayMs: number) => RevealTimer;
-	private readonly clearTimer: (timer: RevealTimer) => void;
 	private graceTimer: RevealTimer | null = null;
 	private hardTimer: RevealTimer | null = null;
 	private settled = false;
 
 	public constructor(options: MainWindowRevealGateOptions) {
 		this.onReveal = options.onReveal;
-		this.contentGraceMs = options.contentGraceMs ?? MAIN_WINDOW_CONTENT_GRACE_MS;
-		this.hardFallbackMs = options.hardFallbackMs ?? MAIN_WINDOW_HARD_FALLBACK_MS;
-		this.setTimer = options.setTimer ?? setTimeout;
-		this.clearTimer = options.clearTimer ?? clearTimeout;
 	}
 
 	public get revealed(): boolean {
@@ -45,18 +33,18 @@ export class MainWindowRevealGate {
 
 	public start(): void {
 		if (this.settled || this.hardTimer != null) return;
-		this.hardTimer = this.setTimer(() => {
+		this.hardTimer = setTimeout(() => {
 			this.hardTimer = null;
 			this.reveal(MainWindowRevealReason.HARD_FALLBACK);
-		}, this.hardFallbackMs);
+		}, MAIN_WINDOW_HARD_FALLBACK_MS);
 	}
 
 	public markReadyToShow(): void {
 		if (this.settled || this.graceTimer != null) return;
-		this.graceTimer = this.setTimer(() => {
+		this.graceTimer = setTimeout(() => {
 			this.graceTimer = null;
 			this.reveal(MainWindowRevealReason.CONTENT_GRACE_EXPIRED);
-		}, this.contentGraceMs);
+		}, MAIN_WINDOW_CONTENT_GRACE_MS);
 	}
 
 	public markContentPainted(): void {
@@ -77,11 +65,11 @@ export class MainWindowRevealGate {
 
 	private cancelTimers(): void {
 		if (this.graceTimer != null) {
-			this.clearTimer(this.graceTimer);
+			clearTimeout(this.graceTimer);
 			this.graceTimer = null;
 		}
 		if (this.hardTimer != null) {
-			this.clearTimer(this.hardTimer);
+			clearTimeout(this.hardTimer);
 			this.hardTimer = null;
 		}
 	}

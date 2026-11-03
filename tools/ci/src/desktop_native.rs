@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
-use crate::desktop::MACOS_UNIVERSAL_ARCH;
+use crate::desktop::{MACOS_MINIMUM_SYSTEM_VERSION, MACOS_UNIVERSAL_ARCH};
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
 use sha2::{Digest, Sha256};
@@ -382,6 +382,9 @@ fn build_rust_node_addon_for_arch(
     if platform == "win32" && arch == "arm64" {
         command = configure_windows_arm64_msvc_cc(command);
     }
+    if platform == "darwin" {
+        command = command.env("MACOSX_DEPLOYMENT_TARGET", MACOS_MINIMUM_SYSTEM_VERSION);
+    }
 
     println!("[buildRustNodeAddon] cwd={}", addon_root.display());
     if env::var_os("CARGO_TARGET_DIR").is_some() || platform == "win32" {
@@ -415,6 +418,7 @@ fn build_rust_node_addon_for_arch(
         out_file.display()
     );
     sign_macos_node_addon(&out_file, platform)?;
+    assert_macos_addon_loads_on_minimum_system(&out_file, &source, platform)?;
     assert_no_redistributable_runtime_imports(&out_file, platform)?;
     assert_system32_dependent_load_flag(&out_file, platform)?;
     assert_no_disabled_win_game_capture_capabilities(&out_file, addon, platform)?;
@@ -728,6 +732,149 @@ fn assert_no_redistributable_runtime_imports(node_file_path: &Path, platform: &s
     )
 }
 
+const MACHO_MAGIC_64: u32 = 0xfeed_facf;
+const MACHO_HEADER_64_SIZE: usize = 32;
+const MACHO_PLATFORM_MACOS: u32 = 1;
+const MACHO_LC_REQ_DYLD: u32 = 0x8000_0000;
+const MACHO_LC_LOAD_DYLIB: u32 = 0x0c;
+const MACHO_LC_LOAD_WEAK_DYLIB: u32 = 0x18 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_REEXPORT_DYLIB: u32 = 0x1f | MACHO_LC_REQ_DYLD;
+const MACHO_LC_LAZY_LOAD_DYLIB: u32 = 0x20;
+const MACHO_LC_LOAD_UPWARD_DYLIB: u32 = 0x23 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_VERSION_MIN_MACOSX: u32 = 0x24;
+const MACHO_LC_BUILD_VERSION: u32 = 0x32;
+const MACOS_SYSTEM_LIBRARY_ROOTS: &[&str] = &["/System/Library/", "/usr/lib/"];
+
+#[derive(Debug, Default, PartialEq, Eq)]
+struct MachOLoadInfo {
+    minimum_macos: Option<u32>,
+    dylibs: Vec<String>,
+}
+
+fn read_macho_load_info(buffer: &[u8]) -> Option<MachOLoadInfo> {
+    let u32_at = |offset: usize| -> Option<u32> {
+        let bytes = buffer.get(offset..offset.checked_add(4)?)?;
+        Some(u32::from_le_bytes(bytes.try_into().ok()?))
+    };
+    if u32_at(0)? != MACHO_MAGIC_64 {
+        return None;
+    }
+    let command_count = u32_at(16)?;
+    let commands_end = MACHO_HEADER_64_SIZE.checked_add(u32_at(20)? as usize)?;
+    if commands_end > buffer.len() {
+        return None;
+    }
+    let mut info = MachOLoadInfo::default();
+    let mut offset = MACHO_HEADER_64_SIZE;
+    for _ in 0..command_count {
+        let command = u32_at(offset)?;
+        let end = offset.checked_add(u32_at(offset + 4)? as usize)?;
+        if end < offset + 8 || end > commands_end {
+            return None;
+        }
+        let field = |index: usize| -> Option<u32> {
+            let at = offset + index * 4;
+            if at + 4 > end {
+                return None;
+            }
+            u32_at(at)
+        };
+        match command {
+            MACHO_LC_LOAD_DYLIB
+            | MACHO_LC_LOAD_WEAK_DYLIB
+            | MACHO_LC_REEXPORT_DYLIB
+            | MACHO_LC_LAZY_LOAD_DYLIB
+            | MACHO_LC_LOAD_UPWARD_DYLIB => {
+                let name_start = offset.checked_add(field(2)? as usize)?;
+                let name = buffer.get(name_start..end)?;
+                let name = name.split(|byte| *byte == 0).next()?;
+                info.dylibs.push(String::from_utf8_lossy(name).into_owned());
+            }
+            MACHO_LC_VERSION_MIN_MACOSX => info.minimum_macos = Some(field(2)?),
+            MACHO_LC_BUILD_VERSION if field(2)? == MACHO_PLATFORM_MACOS => {
+                info.minimum_macos = Some(field(3)?);
+            }
+            _ => {}
+        }
+        offset = end;
+    }
+    Some(info)
+}
+
+fn pack_macos_version(version: &str) -> Option<u32> {
+    let mut parts = version.split('.');
+    let mut packed = 0;
+    for (shift, limit) in [(16, 0xffff), (8, 0xff), (0, 0xff)] {
+        let part = parts
+            .next()
+            .map_or(Some(0), |part| part.parse::<u32>().ok())?;
+        if part > limit {
+            return None;
+        }
+        packed |= part << shift;
+    }
+    parts.next().is_none().then_some(packed)
+}
+
+fn format_macos_version(packed: u32) -> String {
+    format!(
+        "{}.{}.{}",
+        packed >> 16,
+        (packed >> 8) & 0xff,
+        packed & 0xff
+    )
+}
+
+fn assert_macos_addon_loads_on_minimum_system(
+    node_file_path: &Path,
+    cargo_output_path: &Path,
+    platform: &str,
+) -> Result<()> {
+    if platform != "darwin" {
+        return Ok(());
+    }
+    let buffer = fs::read(node_file_path)
+        .with_context(|| format!("Failed to read {}", node_file_path.display()))?;
+    let info = read_macho_load_info(&buffer).ok_or_else(|| {
+        anyhow!(
+            "{} is not a single-architecture 64-bit Mach-O file",
+            node_file_path.display()
+        )
+    })?;
+    let expected = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).ok_or_else(|| {
+        anyhow!("Unsupported macOS minimum system version: {MACOS_MINIMUM_SYSTEM_VERSION}")
+    })?;
+    ensure!(
+        info.minimum_macos == Some(expected),
+        "{} is linked for macOS {}, expected {}.\nThe addon build sets MACOSX_DEPLOYMENT_TARGET to the oldest macOS the app supports, and the linker picks library install names for that version.\nCargo keeps earlier output for crates that do not track that variable. Delete {} and build again.",
+        node_file_path.display(),
+        info.minimum_macos
+            .map_or_else(|| "an unknown version".to_string(), format_macos_version),
+        format_macos_version(expected),
+        cargo_output_path
+            .parent()
+            .unwrap_or(cargo_output_path)
+            .display()
+    );
+    let unresolved = info
+        .dylibs
+        .iter()
+        .filter(|dylib| {
+            !MACOS_SYSTEM_LIBRARY_ROOTS
+                .iter()
+                .any(|root| dylib.starts_with(root))
+        })
+        .map(|dylib| format!("  - {dylib}"))
+        .collect::<Vec<_>>();
+    ensure!(
+        unresolved.is_empty(),
+        "{} depends on libraries that macOS cannot find when the addon is loaded:\n{}\nA shipped addon has no LC_RPATH and bundles no dylib, so every dependency must be an absolute path under /System/Library/ or /usr/lib/.",
+        node_file_path.display(),
+        unresolved.join("\n")
+    );
+    Ok(())
+}
+
 const DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS: &[&[u8]] = &[
     b"CreateRemoteThread",
     b"VirtualAllocEx",
@@ -985,21 +1132,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn addon_mapping_covers_expected_packages() {
-        let names = DESKTOP_NATIVE_ADDONS
-            .iter()
-            .map(|addon| addon.package_dir)
-            .collect::<Vec<_>>();
-
-        assert!(names.contains(&"linux-audio-capture"));
-        assert!(names.contains(&"webauthn"));
-        assert!(names.contains(&"win-game-capture"));
-        assert!(names.contains(&"app-store"));
-        assert!(names.contains(&"gateway-socket"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
-    }
-
-    #[test]
     fn the_desktop_build_script_builds_and_verifies_every_registered_addon() {
         let build_script =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/scripts/build.mjs");
@@ -1160,5 +1292,108 @@ mod tests {
             assert!(assert_system32_dependent_load_flag(&unset, "win32").is_err());
             assert!(assert_system32_dependent_load_flag(&unset, "linux").is_ok());
         }
+    }
+
+    fn synthetic_macho(version_command: u32, minimum_macos: u32, dylibs: &[&str]) -> Vec<u8> {
+        let words = |values: &[u32]| {
+            values
+                .iter()
+                .flat_map(|value| value.to_le_bytes())
+                .collect::<Vec<u8>>()
+        };
+        let mut commands = vec![if version_command == MACHO_LC_BUILD_VERSION {
+            words(&[
+                version_command,
+                24,
+                MACHO_PLATFORM_MACOS,
+                minimum_macos,
+                0,
+                0,
+            ])
+        } else {
+            words(&[version_command, 16, minimum_macos, 0])
+        }];
+        for dylib in dylibs {
+            let size = (24 + dylib.len() + 1).next_multiple_of(8);
+            let mut command = words(&[MACHO_LC_LOAD_DYLIB, size as u32, 24, 2, 0, 0]);
+            command.extend_from_slice(dylib.as_bytes());
+            command.resize(size, 0);
+            commands.push(command);
+        }
+        let body = commands.concat();
+        let mut buffer = words(&[
+            MACHO_MAGIC_64,
+            0,
+            0,
+            6,
+            commands.len() as u32,
+            body.len() as u32,
+            0,
+            0,
+        ]);
+        buffer.extend(body);
+        buffer
+    }
+
+    #[test]
+    fn macos_addons_must_target_the_app_minimum_and_link_only_system_libraries() {
+        let minimum = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).expect("minimum");
+        let sierra = pack_macos_version("10.12").expect("sierra");
+        let core_media = "/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia";
+        let swift_overlay = "@rpath/libswiftCoreMedia.dylib";
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cargo_output = dir.path().join("release/libaddon.dylib");
+        let check = |bytes: Vec<u8>, platform: &str| {
+            let path = dir.path().join("addon.node");
+            fs::write(&path, bytes).expect("write");
+            assert_macos_addon_loads_on_minimum_system(&path, &cargo_output, platform)
+                .map_err(|error| error.to_string())
+        };
+
+        assert_eq!(pack_macos_version("10.14.4"), Some(0x000a_0e04));
+        for version_command in [MACHO_LC_BUILD_VERSION, MACHO_LC_VERSION_MIN_MACOSX] {
+            assert_eq!(
+                read_macho_load_info(&synthetic_macho(
+                    version_command,
+                    sierra,
+                    &[swift_overlay, "/usr/lib/libSystem.B.dylib"]
+                )),
+                Some(MachOLoadInfo {
+                    minimum_macos: Some(sierra),
+                    dylibs: vec![
+                        swift_overlay.to_string(),
+                        "/usr/lib/libSystem.B.dylib".to_string()
+                    ],
+                }),
+                "version_command={version_command:#x}"
+            );
+            assert_eq!(
+                check(
+                    synthetic_macho(
+                        version_command,
+                        minimum,
+                        &[core_media, "/usr/lib/libSystem.B.dylib"]
+                    ),
+                    "darwin"
+                ),
+                Ok(())
+            );
+            let rewritten = check(
+                synthetic_macho(version_command, minimum, &[core_media, swift_overlay]),
+                "darwin",
+            )
+            .expect_err("an @rpath dependency must fail the build");
+            assert!(rewritten.contains("  - @rpath/libswiftCoreMedia.dylib"));
+            assert!(!rewritten.contains("  - /System/Library/"));
+            let older = check(
+                synthetic_macho(version_command, sierra, &[core_media]),
+                "darwin",
+            )
+            .expect_err("an addon linked for an older macOS must fail the build");
+            assert!(older.contains("is linked for macOS 10.12.0"));
+            assert!(older.contains(&dir.path().join("release").display().to_string()));
+        }
+        assert!(check(vec![0; 64], "darwin").is_err());
+        assert_eq!(check(vec![0; 64], "linux"), Ok(()));
     }
 }

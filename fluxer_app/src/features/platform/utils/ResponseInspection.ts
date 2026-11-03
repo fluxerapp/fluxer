@@ -3,6 +3,7 @@
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const DEFAULT_IP_AUTHORIZATION_RESEND_SECONDS = 30;
 
@@ -58,6 +59,14 @@ export function failureMessage(error: unknown): string | undefined {
 	return failureResponse(error)?.message;
 }
 
+export function failureContext(error: unknown): Record<string, unknown> | undefined {
+	return failureResponse(error)?.context;
+}
+
+export function failureRetryAfterSeconds(error: unknown): number | undefined {
+	return failureResponse(error)?.retryAfterSeconds;
+}
+
 export function failureValidationErrors(error: unknown): ReadonlyArray<ValidationFault> | undefined {
 	return failureResponse(error)?.fields;
 }
@@ -109,10 +118,6 @@ function readValidationFaults(value: unknown): ReadonlyArray<ValidationFault> | 
 		faults.push(code == null ? {path, message} : {path, code, message});
 	}
 	return faults.length > 0 ? faults : undefined;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
 }
 
 function readString(value: unknown, key: string): string | undefined {

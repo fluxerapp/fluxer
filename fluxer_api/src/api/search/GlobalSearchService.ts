@@ -14,27 +14,23 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import {getMessageSearchService} from '@app/api/SearchFactory';
-import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
-import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/ChannelIndexingUtils';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
-import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification} from '@app/api/search/SearchNsfwUtils';
+import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
+import {channelRequiresAgeVerification, getCanUserAccessNsfw} from '@app/api/search/SearchNsfwUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 const CHANNEL_INDEX_CHECK_CONCURRENCY = 32;
-const CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY = 16;
 
 export class GlobalSearchService {
 	private readonly responseMapper: MessageSearchResponseMapper;
@@ -75,15 +71,7 @@ export class GlobalSearchService {
 		});
 		const finalChannelIds = this.filterRequestedChannelIds(dmChannelIds, params.requestedChannelIds);
 		if (finalChannelIds.length === 0) {
-			const hitsPerPage = params.searchParams.hits_per_page ?? 25;
-			const page = params.searchParams.page ?? 1;
-			return {
-				channels: [],
-				messages: [],
-				total: 0,
-				hits_per_page: hitsPerPage,
-				page,
-			};
+			return emptyMessageSearchResponse(params.searchParams);
 		}
 		const needsIndexing = await this.ensureChannelsIndexed(finalChannelIds);
 		if (needsIndexing) {
@@ -107,7 +95,7 @@ export class GlobalSearchService {
 		]);
 		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents} = guildAccess;
 		if (unindexedChannelIds.size > 0) {
-			await this.queueIndexingChannels(unindexedChannelIds);
+			await queueIndexingChannels(this.workerService, unindexedChannelIds);
 			return {indexing: true};
 		}
 		const guildChannelIds = [...accessibleChannels.keys(), ...threadParents.keys()];
@@ -125,7 +113,7 @@ export class GlobalSearchService {
 		const includeNsfwRequested = params.searchParams.include_nsfw ?? false;
 		let canIncludeNsfw = false;
 		if (includeNsfwRequested) {
-			canIncludeNsfw = await this.getCanUserAccessNsfw(params.userId);
+			canIncludeNsfw = await getCanUserAccessNsfw(this.userRepository, params.userId);
 		}
 		const finalChannelIds = validatedChannelIds.filter((channelIdStr) => {
 			const channel = accessibleChannels.get(channelIdStr) ?? threadParents.get(channelIdStr);
@@ -143,15 +131,7 @@ export class GlobalSearchService {
 			return true;
 		});
 		if (finalChannelIds.length === 0) {
-			const hitsPerPage = params.searchParams.hits_per_page ?? 25;
-			const page = params.searchParams.page ?? 1;
-			return {
-				channels: [],
-				messages: [],
-				total: 0,
-				hits_per_page: hitsPerPage,
-				page,
-			};
+			return emptyMessageSearchResponse(params.searchParams);
 		}
 		const needsIndexing = await this.ensureChannelsIndexed(
 			threadParents.size > 0 ? finalChannelIds.filter((id) => !threadParents.has(id)) : finalChannelIds,
@@ -220,21 +200,8 @@ export class GlobalSearchService {
 		if (unindexed.size === 0) {
 			return false;
 		}
-		await this.queueIndexingChannels(unindexed);
+		await queueIndexingChannels(this.workerService, unindexed);
 		return true;
-	}
-
-	private async queueIndexingChannels(channelIds: Iterable<string>): Promise<void> {
-		await mapWithConcurrency(Array.from(channelIds), CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY, async (channelId) => {
-			await this.workerService.addJob(
-				'indexChannelMessages',
-				{channelId},
-				{
-					jobKey: `indexChannelMessages-${channelId}`,
-					maxAttempts: 3,
-				},
-			);
-		});
 	}
 
 	private async runSearch(
@@ -244,43 +211,16 @@ export class GlobalSearchService {
 		searchParams: MessageSearchRequest,
 		requestCache: RequestCache,
 	): Promise<MessageSearchResponse> {
-		const searchService = this.getMessageSearchService();
-		const normalizedSearchParams = {...searchParams, channel_id: undefined};
-		const filters = buildMessageSearchFilters(normalizedSearchParams, channelIds);
-		const hitsPerPage = searchParams.hits_per_page ?? 25;
-		const page = searchParams.page ?? 1;
-		const cursor = searchParams.cursor;
-		const result = await searchExistingMessages({
-			searchService,
+		return runMessageSearch({
+			searchService: this.getMessageSearchService(),
 			messageRepository: this.channelRepository,
-			query: searchParams.content ?? '',
-			filters,
-			hitsPerPage,
-			page,
-			cursor,
-		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(
-			result.messages,
+			responseMapper: this.responseMapper,
+			filterParams: {...searchParams, channel_id: undefined},
+			searchParams,
+			channelIds,
 			userId,
 			viewer,
 			requestCache,
-		);
-		return {
-			messages: mappedResponses.messages,
-			channels: mappedResponses.channels,
-			total: result.total,
-			hits_per_page: hitsPerPage,
-			page,
-			cursor: result.cursor,
-			...(mappedResponses.threads ? {threads: mappedResponses.threads, members: mappedResponses.members} : {}),
-		};
-	}
-
-	private async getCanUserAccessNsfw(userId: UserID): Promise<boolean> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		return canUserAccessNsfwContent(user);
+		});
 	}
 }

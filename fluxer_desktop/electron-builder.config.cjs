@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const {execFile} = require('node:child_process');
+const {readFileSync} = require('node:fs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -62,7 +63,25 @@ if (!channel) {
 
 const isCanary = buildChannel === 'canary';
 const isStable = buildChannel === 'stable';
-const isLinuxBuild = process.argv.includes('--linux');
+const platformArguments = new Set(process.argv.map((argument) => argument.split('=', 1)[0]));
+const linuxRequested = ['--linux', '-l'].some((selector) => platformArguments.has(selector));
+const macRequested = ['--mac', '--macos', '-m', '-o'].some((selector) => platformArguments.has(selector));
+const windowsRequested = ['--win', '--windows', '-w'].some((selector) => platformArguments.has(selector));
+let targetPlatform;
+if (linuxRequested) {
+	targetPlatform = 'linux';
+} else if (macRequested) {
+	targetPlatform = 'darwin';
+} else if (windowsRequested) {
+	targetPlatform = 'win32';
+} else {
+	targetPlatform = process.platform;
+}
+const isLinuxBuild = targetPlatform === 'linux';
+const customLinuxElectron =
+	isLinuxBuild && process.env.FLUXER_ELECTRON_DIST?.trim() ? require('./scripts/custom-electron.cjs') : null;
+const linuxElectronDist = customLinuxElectron?.resolveLinuxElectronDist() ?? null;
+const verifiedLinuxElectronArtifacts = new Map();
 const productName = channel.productName;
 const linuxOptDirName = channel.linuxOptDirName;
 const installedProductName = isLinuxBuild ? linuxOptDirName : productName;
@@ -98,10 +117,11 @@ const legacyLinuxCanaryOptDir = '/opt/Fluxer Canary';
 const legacyLinuxOptDirSweepScript = path.resolve(__dirname, 'packaging/linux/rpm-post-transaction.sh');
 const legacyLinuxOptDirRpmFpmArgs = isCanary ? ['--rpm-posttrans', legacyLinuxOptDirSweepScript] : [];
 const macOSMinimumSystemVersion = '13.0';
-const isMacBuild = process.argv.includes('--mac');
-const isWindowsBuild = process.argv.includes('--win');
-const targetPlatform = isLinuxBuild ? 'linux' : isMacBuild ? 'darwin' : isWindowsBuild ? 'win32' : process.platform;
 const metadataName = isLinuxBuild ? linuxPackageName : packageName;
+if (process.env.VERSION && !process.env.BUILD_VERSION) {
+	throw new Error('The desktop packaging no longer reads VERSION. Set BUILD_VERSION instead.');
+}
+const shellVersion = process.env.BUILD_VERSION || readBundledRendererVersion();
 const supportedTargetArchs = ['x64', 'arm64'];
 const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;
@@ -278,7 +298,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/linux-input-hook/*.node',
 	'node_modules/@fluxer/platform-info/package.json',
 	'node_modules/@fluxer/platform-info/index.js',
-	'node_modules/@fluxer/platform-info/pure.cjs',
 	'node_modules/@fluxer/platform-info/loader-diagnostics.cjs',
 	'node_modules/@fluxer/platform-info/*.node',
 	'node_modules/@fluxer/webauthn/package.json',
@@ -294,12 +313,10 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/hardware-encoder/*.node',
 	'node_modules/@fluxer/app-store/package.json',
 	'node_modules/@fluxer/app-store/index.js',
-	'node_modules/@fluxer/app-store/pure.cjs',
 	'node_modules/@fluxer/app-store/loader-diagnostics.cjs',
 	'node_modules/@fluxer/app-store/*.node',
 	'node_modules/@fluxer/gateway-socket/package.json',
 	'node_modules/@fluxer/gateway-socket/index.js',
-	'node_modules/@fluxer/gateway-socket/pure.cjs',
 	'node_modules/@fluxer/gateway-socket/loader-diagnostics.cjs',
 	'node_modules/@fluxer/gateway-socket/*.node',
 	'node_modules/.pnpm/@fluxer+*/node_modules/@fluxer/*/loader-diagnostics.cjs',
@@ -647,6 +664,15 @@ function packagePathParts(packageName) {
 	return [packageName];
 }
 
+function readBundledRendererVersion() {
+	try {
+		const {version} = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'renderer', 'version.json'), 'utf8'));
+		return typeof version === 'string' && /^\d+\.\d+\.\d+$/u.test(version) ? version : null;
+	} catch {
+		return null;
+	}
+}
+
 function isNonEmptyString(value) {
 	return typeof value === 'string' && value.length > 0;
 }
@@ -787,6 +813,34 @@ async function verifyNativePackageInputs(context) {
 		);
 	}
 	await verifyDarwinNativeArchitectures(platform, arch, entries, 'before packaging');
+}
+
+async function beforePack(context) {
+	if (linuxElectronDist && context.electronPlatformName !== 'linux') {
+		throw new Error(
+			'The patched Linux Electron distribution cannot package other platforms. Use separate electron-builder invocations for Linux and macOS or Windows.',
+		);
+	}
+	if (context.electronPlatformName === 'linux') {
+		if (!linuxElectronDist) {
+			throw new Error(
+				'Linux packaging requires patched Electron. Set FLUXER_ELECTRON_DIST to the directory containing its ZIP and build manifest.',
+			);
+		}
+		let arch;
+		if (context.arch === 1) {
+			arch = 'x64';
+		} else if (context.arch === 3) {
+			arch = 'arm64';
+		} else {
+			arch = context.arch;
+		}
+		verifiedLinuxElectronArtifacts.set(
+			arch,
+			await customLinuxElectron.verifyLinuxElectronArchive(linuxElectronDist, arch),
+		);
+	}
+	await verifyNativePackageInputs(context);
 }
 
 async function verifyPackagedNativeArtifacts(context) {
@@ -1139,6 +1193,15 @@ async function readAsarEntry(asarPath, entryPath) {
 }
 
 async function afterPack(context) {
+	if (context.electronPlatformName === 'linux') {
+		if (!customLinuxElectron) {
+			throw new Error('Custom Electron was not configured before Linux packaging.');
+		}
+		await customLinuxElectron.verifyPackagedLinuxElectron(
+			path.join(context.appOutDir, linuxPackageName),
+			verifiedLinuxElectronArtifacts.get(normalizeArch(context.arch)),
+		);
+	}
 	await copyMissingPackagedNativeArtifacts(context);
 	await cleanupNativeBuildIntermediates(context);
 	await addLinuxLegacyBinarySymlink(context);
@@ -1481,13 +1544,14 @@ async function verifyRpmArtifactsSweepTheRenamedInstallDirectory(buildResult) {
 	const violations = [];
 	for (const artifactPath of rpmArtifacts) {
 		const scriptlet = await readRpmPostTransactionScriptlet(artifactPath);
-		const detail = !scriptlet.includes(legacyLinuxCanaryOptDir)
-			? `does not reference ${legacyLinuxCanaryOptDir}`
-			: !scriptlet.includes('rmdir')
-				? 'does not sweep the directory with rmdir'
-				: /\brm\s+-[a-zA-Z]*[rf]/.test(scriptlet)
-					? 'removes files rather than only empty directories'
-					: null;
+		let detail = null;
+		if (!scriptlet.includes(legacyLinuxCanaryOptDir)) {
+			detail = `does not reference ${legacyLinuxCanaryOptDir}`;
+		} else if (!scriptlet.includes('rmdir')) {
+			detail = 'does not sweep the directory with rmdir';
+		} else if (/\brm\s+-[a-zA-Z]*[rf]/.test(scriptlet)) {
+			detail = 'removes files rather than only empty directories';
+		}
 		if (detail !== null) {
 			violations.push({artifactPath, detail});
 		}
@@ -1605,6 +1669,9 @@ async function verifyLinuxArtifactContracts(buildResult) {
 }
 
 module.exports = {
+	...(customLinuxElectron
+		? {electronVersion: customLinuxElectron.expectedElectronVersion, electronDist: linuxElectronDist}
+		: {}),
 	appId,
 	productName: installedProductName,
 	copyright: 'Copyright © 2026 Fluxer Platform AB',
@@ -1626,7 +1693,7 @@ module.exports = {
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
-		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
+		...(shellVersion ? {version: shellVersion} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxDesktopId}.desktop`} : {}),
 	},
 	extraResources: [
@@ -1724,7 +1791,7 @@ module.exports = {
 			schemes: [channel.protocolScheme],
 		},
 	],
-	beforePack: verifyNativePackageInputs,
+	beforePack,
 	afterPack,
 	afterAllArtifactBuild: verifyLinuxArtifactContracts,
 	toolsets: {

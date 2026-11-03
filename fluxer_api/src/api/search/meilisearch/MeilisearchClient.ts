@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {trimTrailingSlash} from '@app/api/utils/UrlUtils';
 export interface MeilisearchClientConfig {
 	host: string;
 	apiKey?: string;
@@ -34,10 +35,6 @@ export interface MeilisearchClient {
 
 const TASK_POLL_INTERVAL_MS = 50;
 const TASK_TIMEOUT_MS = 30_000;
-
-function trimTrailingSlash(url: string): string {
-	return url.replace(/\/+$/u, '');
-}
 
 function isAbortError(error: unknown): boolean {
 	return error instanceof Error && error.name === 'AbortError';

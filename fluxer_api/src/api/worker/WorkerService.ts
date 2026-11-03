@@ -52,8 +52,6 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 		try {
 			const {seq, duplicate} = await this.queue.enqueue(taskType, enrichedPayload, {
 				...(options?.runAt !== undefined && {runAt: options.runAt}),
-				...(options?.maxAttempts !== undefined && {maxAttempts: options.maxAttempts}),
-				...(options?.priority !== undefined && {priority: options.priority}),
 				...(options?.jobKey !== undefined && {jobKey: options.jobKey}),
 			});
 			if (ledgerCreatedAt !== null && duplicate) {

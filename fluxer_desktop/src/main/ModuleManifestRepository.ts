@@ -3,17 +3,20 @@
 import {Buffer} from 'node:buffer';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {
 	type DesktopModuleManifestTarget,
 	type DesktopModuleUpdateManifest,
 	parseModuleUpdateManifest,
 } from '@electron/main/ModuleManifest';
-import {type ModuleStore, writeFileAtomically} from '@electron/main/ModuleStore';
+import type {ModuleStore} from '@electron/main/ModuleStore';
+import {type ModuleVersion, parseModuleVersion} from '@electron/main/ModuleVersion';
 
 const CHANNEL_MANIFEST_CACHE_FILE_NAME = 'manifest.json';
 const MODULE_MANIFEST_TIMEOUT_MS = 15000;
 const MODULE_MANIFEST_MEMO_TTL_MS = 60000;
 const MODULE_MANIFEST_MAX_BYTES = 1024 * 1024;
+const SHELL_FEED_MAX_BYTES = 64 * 1024;
 const MODULE_CACHE_FILE_MODE = 0o644;
 
 export interface ModuleManifestDocument {
@@ -92,6 +95,8 @@ export class ModuleManifestRepository {
 	private memo: {readonly expiresAt: number; readonly document: ModuleManifestDocument} | null = null;
 	private inFlight: Promise<ModuleManifestDocument> | null = null;
 	private memoEpoch = 0;
+	private validated: ModuleManifestDocument | null = null;
+	private shellFeed: {readonly etag: string; readonly version: ModuleVersion} | null = null;
 
 	public constructor(options: ModuleManifestRepositoryOptions) {
 		this.store = options.store;
@@ -157,9 +162,45 @@ export class ModuleManifestRepository {
 		await writeFileAtomically(this.manifestCachePath, document.bytes, MODULE_CACHE_FILE_MODE);
 	}
 
+	public async fetchShellLatestVersion(): Promise<ModuleVersion> {
+		const url = this.shellFeedUrl();
+		const known = this.shellFeed;
+		const headers: Record<string, string> = {accept: 'application/json'};
+		if (known != null) {
+			headers['if-none-match'] = known.etag;
+		}
+		let response: Response;
+		try {
+			response = await this.fetchImplementation(url, {
+				headers,
+				signal: AbortSignal.timeout(MODULE_MANIFEST_TIMEOUT_MS),
+			});
+		} catch (error) {
+			throw new ModuleManifestFetchError(`failed to reach ${url}`, null, {cause: error});
+		}
+		if (response.status === 304 && known != null) {
+			return known.version;
+		}
+		if (!response.ok) {
+			throw new ModuleManifestFetchError(`shell feed request returned ${response.status}`, response.status);
+		}
+		const bytes = await this.readBoundedBody(response, SHELL_FEED_MAX_BYTES, 'shell feed');
+		const payload = JSON.parse(bytes.toString('utf8')) as {version?: unknown};
+		if (typeof payload.version !== 'string') {
+			throw new ModuleManifestFetchError('shell feed is missing its version', response.status);
+		}
+		const version = parseModuleVersion(payload.version, 'shell feed version');
+		const etag = response.headers.get('etag');
+		this.shellFeed = etag == null ? null : {etag, version};
+		return version;
+	}
+
 	private async readLatestDocument(): Promise<ModuleManifestDocument> {
-		const etag = this.store.getState().last_manifest_etag;
-		const first = await this.requestManifest(etag);
+		const validated = this.validated;
+		if (validated != null) {
+			return (await this.requestManifest(validated.etag)) ?? validated;
+		}
+		const first = await this.requestManifest(this.store.getState().last_manifest_etag);
 		if (first != null) {
 			return first;
 		}
@@ -174,10 +215,18 @@ export class ModuleManifestRepository {
 		return refetched;
 	}
 
-	private manifestUrl(): string {
+	private feedUrl(fileName: string): string {
 		return new URL(
-			`${this.packageOrigin}/desktop/${this.target.releaseChannel}/${this.target.platform}/${this.target.arch}/modules.json`,
+			`${this.packageOrigin}/desktop/${this.target.releaseChannel}/${this.target.platform}/${this.target.arch}/${fileName}`,
 		).toString();
+	}
+
+	private manifestUrl(): string {
+		return this.feedUrl('modules.json');
+	}
+
+	private shellFeedUrl(): string {
+		return this.feedUrl('latest.json');
 	}
 
 	private async requestManifest(ifNoneMatch: string | null): Promise<ModuleManifestDocument | null> {
@@ -203,7 +252,9 @@ export class ModuleManifestRepository {
 		}
 		const bytes = await this.readBoundedBody(response, MODULE_MANIFEST_MAX_BYTES, 'manifest');
 		parseModuleUpdateManifest(bytes, this.target);
-		return {bytes, etag: response.headers.get('etag'), fromCache: false};
+		const document = {bytes, etag: response.headers.get('etag'), fromCache: false};
+		this.validated = document.etag == null ? null : document;
+		return document;
 	}
 
 	private async readBoundedBody(response: Response, limit: number, description: string): Promise<Buffer> {

@@ -4,6 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
+    is_true/1,
     to_integer/1,
     to_binary/1,
     ensure_binary/1,
@@ -12,15 +13,9 @@
     extract_id/2
 ]).
 
--export_type([
-    convertible_to_integer/0,
-    convertible_to_binary/0,
-    convertible_to_list/0
-]).
-
--type convertible_to_integer() :: integer() | binary() | list() | atom().
--type convertible_to_binary() :: binary() | integer() | list() | atom().
--type convertible_to_list() :: list() | binary() | atom().
+-spec is_true(term()) -> boolean().
+is_true(true) -> true;
+is_true(_) -> false.
 
 -spec to_integer(term()) -> integer() | undefined.
 to_integer(undefined) ->

@@ -61,6 +61,14 @@ export const PermissionEditorPanel: React.FC<PermissionEditorPanelProps> = ({
 	getPermissionWarning,
 }) => {
 	const {i18n} = useLingui();
+	let subtleText: React.ReactNode;
+	if (isEveryoneSelected) {
+		subtleText = <Trans>Configure base access for this channel</Trans>;
+	} else if (selectedOverwrite?.type === 0) {
+		subtleText = <Trans>Configure overrides for this role</Trans>;
+	} else {
+		subtleText = <Trans>Configure overrides for this member</Trans>;
+	}
 	return (
 		<>
 			{isMobile && (
@@ -81,13 +89,7 @@ export const PermissionEditorPanel: React.FC<PermissionEditorPanelProps> = ({
 						<Trans>Edit access for {getOverwriteName(selectedOverwrite)}</Trans>
 					</h2>
 					<p className={styles.subtleText} data-flx="channel.channel-tabs.channel-permissions-tab.subtle-text">
-						{isEveryoneSelected ? (
-							<Trans>Configure base access for this channel</Trans>
-						) : selectedOverwrite?.type === 0 ? (
-							<Trans>Configure overrides for this role</Trans>
-						) : (
-							<Trans>Configure overrides for this member</Trans>
-						)}
+						{subtleText}
 					</p>
 				</div>
 				{!isEveryoneSelected && (

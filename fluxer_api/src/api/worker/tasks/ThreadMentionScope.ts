@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {
 	CreateThreadMember,
@@ -11,17 +11,10 @@ import {buildBroadcastMessageData} from '@app/api/channel/services/message/Messa
 import {dispatchThreadEvents, threadMembersUpdateEvent} from '@app/api/channel/services/thread/ThreadDispatch';
 import {loadThreadView} from '@app/api/channel/services/thread/ThreadViews';
 import {threadMemberAutojoinTotal, threadRoleMentionCappedTotal} from '@app/api/channel/threads/ThreadMetrics';
-import {
-	guildActive,
-	recipientActive,
-	THREAD_CHANNEL_TYPES,
-	userActive,
-	userExcluded,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_CHANNEL_TYPES} from '@app/api/experiment/ChannelThreadsGate';
 import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadState} from '@app/api/models/ThreadState';
-import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	MAX_ROLE_MENTION_THREAD_ADDS,
 	MAX_THREAD_MEMBERS,
@@ -32,22 +25,6 @@ import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThrea
 export interface ThreadMentionScopeDeps {
 	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
-	userRepository: UserRepository;
-}
-
-export async function threadRecipients(
-	userRepository: UserRepository,
-	guildId: GuildID,
-	userIds: Array<UserID>,
-): Promise<Set<UserID>> {
-	const active = new Set(userIds.filter((userId) => recipientActive(guildId, userId, false)));
-	const maybeBots = userIds.filter((userId) => !active.has(userId) && !userActive(userId) && !userExcluded(userId));
-	if (maybeBots.length > 0) {
-		for (const user of await userRepository.listUsers(maybeBots)) {
-			if (user.isBot && recipientActive(guildId, user.id, true)) active.add(user.id);
-		}
-	}
-	return active;
 }
 
 export async function addThreadMembersWithinCap(
@@ -82,15 +59,14 @@ export class ThreadMentionScope {
 		messageId: MessageID,
 	): Promise<ThreadMentionScope | null> {
 		if (channel.guildId === null || !THREAD_CHANNEL_TYPES.has(channel.type)) return null;
-		const state = guildActive(channel.guildId) ? await deps.channelRepository.threads.getState(channel.id) : null;
+		const state = await deps.channelRepository.threads.getState(channel.id);
 		return new ThreadMentionScope(deps, channel, state, messageId);
 	}
 
 	async filter(entries: Array<GatewayMentionSourceEntry>): Promise<Array<GatewayMentionSourceEntry>> {
 		const {state} = this;
 		if (state === null || entries.length === 0) return [];
-		const recipients = await this.recipients(entries.map((entry) => entry.userId));
-		const candidates = entries.filter((entry) => recipients.has(entry.userId));
+		const candidates = entries;
 		const members = new Set(
 			(
 				await this.deps.channelRepository.threads.getMembers(
@@ -141,10 +117,6 @@ export class ThreadMentionScope {
 				data: await buildBroadcastMessageData({channel: this.channel, message: updated}),
 			},
 		]);
-	}
-
-	private recipients(userIds: Array<UserID>): Promise<Set<UserID>> {
-		return threadRecipients(this.deps.userRepository, this.channel.guildId!, userIds);
 	}
 
 	private async addRoleMembers(state: ThreadState, userIds: Array<UserID>): Promise<Set<UserID>> {

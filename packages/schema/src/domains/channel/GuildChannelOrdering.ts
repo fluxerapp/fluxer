@@ -150,27 +150,6 @@ function findCategorySpanInOrderedList<Id extends string | bigint, Channel exten
 	return {start, end};
 }
 
-export function computePrecedingSiblingIdFromPosition<
-	Id extends string | bigint,
-	Channel extends ChannelOrderingChannel<Id>,
->({
-	channels,
-	targetId,
-	desiredParentId,
-	position,
-}: {
-	channels: ReadonlyArray<Channel>;
-	targetId: Id;
-	desiredParentId: Id | null;
-	position: number;
-}): Id | null {
-	const siblings = sortChannelsForOrdering(channels).filter((ch) => (ch.parentId ?? null) === desiredParentId);
-	const blockIds = computeChannelMoveBlockIds({channels, targetId});
-	const siblingsWithoutBlock = siblings.filter((ch) => !blockIds.has(ch.id));
-	const clamped = Math.min(Math.max(position, 0), siblingsWithoutBlock.length);
-	return clamped === 0 ? null : siblingsWithoutBlock[clamped - 1]!.id;
-}
-
 export function computePositionFromPrecedingSiblingId<
 	Id extends string | bigint,
 	Channel extends ChannelOrderingChannel<Id>,
@@ -216,12 +195,10 @@ export function computeGuildChannelReorderPlan<Id extends string | bigint, Chann
 		return {ok: false, code: 'TARGET_CHANNEL_NOT_FOUND'};
 	}
 	const requestedParentId = operation.parentId;
-	const desiredParentId =
-		targetChannel.type === ChannelTypes.GUILD_CATEGORY
-			? null
-			: requestedParentId !== undefined
-				? requestedParentId
-				: (targetChannel.parentId ?? null);
+	let desiredParentId: Id | null = null;
+	if (targetChannel.type !== ChannelTypes.GUILD_CATEGORY) {
+		desiredParentId = requestedParentId !== undefined ? requestedParentId : (targetChannel.parentId ?? null);
+	}
 	if (targetChannel.type === ChannelTypes.GUILD_CATEGORY && operation.parentId) {
 		return {ok: false, code: 'CATEGORIES_CANNOT_HAVE_PARENTS'};
 	}
@@ -235,7 +212,8 @@ export function computeGuildChannelReorderPlan<Id extends string | bigint, Chann
 		}
 	}
 	const precedingId = operation.precedingSiblingId ?? null;
-	if (precedingId && !channelById.has(precedingId)) {
+	const precedingChannel = precedingId ? channelById.get(precedingId) : undefined;
+	if (precedingId && !precedingChannel) {
 		return {ok: false, code: 'PRECEDING_CHANNEL_NOT_FOUND'};
 	}
 	const blockIds = computeChannelMoveBlockIds({channels: orderedChannels, targetId: targetChannel.id});
@@ -245,20 +223,18 @@ export function computeGuildChannelReorderPlan<Id extends string | bigint, Chann
 	const remainingChannels = orderedChannels.filter((ch) => !blockIds.has(ch.id));
 	const blockChannels = orderedChannels.filter((ch) => blockIds.has(ch.id));
 	const expectedParent = desiredParentId ?? null;
-	if (precedingId) {
-		const precedingChannel = channelById.get(precedingId)!;
+	if (precedingChannel) {
 		const precedingParent = precedingChannel.parentId ?? null;
 		if (precedingParent !== expectedParent) {
 			return {ok: false, code: 'PRECEDING_PARENT_MISMATCH'};
 		}
 	}
 	let insertIndex = 0;
-	if (precedingId) {
+	if (precedingChannel) {
 		const precedingIndex = remainingChannels.findIndex((ch) => ch.id === precedingId);
 		if (precedingIndex === -1) {
 			return {ok: false, code: 'PRECEDING_NOT_IN_GUILD_LIST'};
 		}
-		const precedingChannel = channelById.get(precedingId)!;
 		if (precedingChannel.type === ChannelTypes.GUILD_CATEGORY) {
 			const span = findCategorySpanInOrderedList(remainingChannels, precedingChannel.id);
 			insertIndex = span.end;

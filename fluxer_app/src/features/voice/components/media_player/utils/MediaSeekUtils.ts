@@ -155,14 +155,10 @@ export function detachMediaElementSource(media: HTMLMediaElement | null | undefi
 export function resolveDoubleTapSeekDirection(
 	previousTap: SeekTapPoint | null,
 	currentTap: SeekTapPoint,
-	options: {
-		maxIntervalMs?: number;
-		sideZoneRatio?: number;
-	} = {},
 ): SeekDirection | null {
-	const {maxIntervalMs = 360, sideZoneRatio = 0.42} = options;
+	const sideZoneRatio = 0.42;
 	if (!previousTap) return null;
-	if (currentTap.time - previousTap.time > maxIntervalMs) return null;
+	if (currentTap.time - previousTap.time > 360) return null;
 	if (currentTap.width <= 0 || previousTap.width <= 0) return null;
 
 	const currentRatio = currentTap.x / currentTap.width;

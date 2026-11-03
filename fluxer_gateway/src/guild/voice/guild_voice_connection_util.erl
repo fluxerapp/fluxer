@@ -17,8 +17,6 @@
     maybe_attach_geolocation/3,
     maybe_attach_voice_routing_metadata/3,
     maybe_attach_e2ee_key_to_reply/2,
-    normalize_session_id/1,
-    normalize_optional_binary/1,
     maybe_error_reply/5,
     p2p_agreed/1,
     clear_virtual_access_flags/2
@@ -82,7 +80,7 @@ voice_flags_for_permissions(Context, VoicePermissions) ->
 resolve_guild_identity(State) ->
     Data = guild_data(State),
     DataGuildIdBin = maps:get(<<"id">>, Data, undefined),
-    StateGuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
+    StateGuildId = snowflake_id:parse_maybe(
         maps:get(id, State, undefined)
     ),
     GuildMeta = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
@@ -159,14 +157,6 @@ maybe_attach_e2ee_key_to_reply(Reply, undefined) ->
     Reply;
 maybe_attach_e2ee_key_to_reply(Reply, Key) when is_binary(Key) ->
     Reply#{e2ee_key => Key}.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
-
--spec normalize_optional_binary(term()) -> binary() | undefined.
-normalize_optional_binary(Value) ->
-    guild_voice_connection_normalize:normalize_optional_binary(Value).
 
 -spec maybe_error_reply(context(), voice_state(), guild_state(), integer(), atom()) ->
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.

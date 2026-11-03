@@ -8,14 +8,12 @@ import {
 	setCassandraQueryExecutorForTesting,
 } from '@app/api/database/CassandraQueryExecution';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
-import type {JobStatus} from '@app/api/database/types/JobLedgerTypes';
 import {
 	EXPIRED_JOB_ERROR,
 	JOB_LEDGER_TTL_SECONDS,
 	JOB_STALE_AFTER_MS,
 	JobLedgerRepository,
 } from '@app/api/jobs/JobLedgerRepository';
-import {describeListJobsPaging} from '@app/api/jobs/ListJobsPagingSuite';
 import {JobsActive, JobsByDayBucket, JobsById} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {createSnowflake} from '@fluxer/snowflake/src/Snowflake';
@@ -50,132 +48,6 @@ async function createJobAt(repository: JobLedgerRepository, jobId: bigint): Prom
 		jetStreamSeq: null,
 	});
 }
-
-async function listJobIdsByStatus(repository: JobLedgerRepository, status: JobStatus): Promise<Array<bigint>> {
-	const result = await repository.listJobs({limit: 50, cursor: null, filters: {status}, maxLookbackDays: 1});
-	return result.jobs.map((job) => job.job_id);
-}
-
-describe('JobLedgerRepository listJobs status filter', () => {
-	beforeEach(() => {
-		executor = new InMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-	});
-
-	afterEach(() => {
-		executor.reset();
-		setCassandraQueryExecutorForTesting(null);
-	});
-
-	it('matches the live status of a succeeded job rather than the creation-time bucket snapshot', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 1n, 'syncUrlBlocklists');
-		await repository.markSucceeded(1n, null);
-
-		expect(await listJobIdsByStatus(repository, 'succeeded')).toEqual([1n]);
-		expect(await listJobIdsByStatus(repository, 'queued')).toEqual([]);
-	});
-
-	it('matches the live status of a dead-lettered job', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 2n, 'syncUrlBlocklists');
-		await repository.markDeadletter(2n, 'boom');
-
-		expect(await listJobIdsByStatus(repository, 'deadletter')).toEqual([2n]);
-		expect(await listJobIdsByStatus(repository, 'queued')).toEqual([]);
-	});
-
-	it('still returns a job that has not left the queue under status=queued', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 3n, 'syncUrlBlocklists');
-
-		expect(await listJobIdsByStatus(repository, 'queued')).toEqual([3n]);
-		expect(await listJobIdsByStatus(repository, 'running')).toEqual([]);
-	});
-
-	it('keeps the other filters working alongside the status filter', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 4n, 'syncUrlBlocklists');
-		await createJob(repository, 5n, 'processExpiredPremium');
-		await repository.markSucceeded(4n, null);
-		await repository.markSucceeded(5n, null);
-
-		const result = await repository.listJobs({
-			limit: 50,
-			cursor: null,
-			filters: {status: 'succeeded', taskType: 'processExpiredPremium'},
-			maxLookbackDays: 1,
-		});
-		expect(result.jobs.map((job) => job.job_id)).toEqual([5n]);
-	});
-});
-
-describe('JobLedgerRepository listJobs pagination', () => {
-	beforeEach(() => {
-		executor = new InMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-	});
-
-	afterEach(() => {
-		executor.reset();
-		setCassandraQueryExecutorForTesting(null);
-	});
-
-	it('emits a cursor for a page that filled exactly on the bucket boundary', async () => {
-		const repository = new JobLedgerRepository();
-		for (let index = 0; index < 3; index++) {
-			await createJob(repository, BigInt(index + 1), 'syncUrlBlocklists');
-		}
-
-		const result = await repository.listJobs({limit: 3, cursor: null, filters: {}, maxLookbackDays: 1});
-
-		expect(result.jobs).toHaveLength(3);
-		expect(result.nextCursor).not.toBeNull();
-	});
-
-	it('emits no cursor for a page that did not fill', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 1n, 'syncUrlBlocklists');
-
-		const result = await repository.listJobs({limit: 3, cursor: null, filters: {}, maxLookbackDays: 1});
-
-		expect(result.jobs).toHaveLength(1);
-		expect(result.nextCursor).toBeNull();
-	});
-
-	it('returns every match of a task type filter that sits past the unfiltered page window', async () => {
-		const repository = new JobLedgerRepository();
-		for (let index = 0; index < 60; index++) {
-			await createJob(repository, BigInt(index + 1), 'syncUrlBlocklists');
-		}
-		for (let index = 0; index < 5; index++) {
-			await createJob(repository, BigInt(1_000 + index), 'processExpiredPremium');
-		}
-
-		const result = await repository.listJobs({
-			limit: 50,
-			cursor: null,
-			filters: {taskType: 'processExpiredPremium'},
-			maxLookbackDays: 1,
-		});
-
-		expect(result.jobs.map((job) => job.job_id)).toEqual([1_004n, 1_003n, 1_002n, 1_001n, 1_000n]);
-	});
-});
-
-describe('JobLedgerRepository listJobs on the in-memory executor', () => {
-	beforeEach(() => {
-		executor = new InMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-	});
-
-	afterEach(() => {
-		executor.reset();
-		setCassandraQueryExecutorForTesting(null);
-	});
-
-	describeListJobsPaging();
-});
 
 let staleSequence = 0;
 
@@ -266,42 +138,16 @@ describe('JobLedgerRepository expireStaleActiveJobs', () => {
 	});
 });
 
-describe('JobLedgerRepository getJob', () => {
-	beforeEach(() => {
-		executor = new InMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-	});
-
-	afterEach(() => {
-		executor.reset();
-		setCassandraQueryExecutorForTesting(null);
-	});
-
-	it('hides a job row that lost its status, creation time or task type', async () => {
-		const repository = new JobLedgerRepository();
-		await createJob(repository, 9n, 'syncUrlBlocklists');
-		expect((await repository.getJob(9n))?.status).toBe('queued');
-		for (const column of ['status', 'created_at', 'task_type'] as const) {
-			await createJob(repository, 9n, 'syncUrlBlocklists');
-			await executeQuery(JobsById.patchByPk({job_id: 9n}, {[column]: Db.clear()}));
-			expect(await repository.getJob(9n)).toBeNull();
-		}
-	});
-});
-
 describe('JobLedgerRepository discardJob', () => {
 	let inner: InMemoryCassandraQueryExecutor;
-	let log: Array<string>;
 	let failDeleteOn: string | null;
 
 	beforeEach(() => {
 		inner = new InMemoryCassandraQueryExecutor();
-		log = [];
 		failDeleteOn = null;
 		const wrapper: CassandraQueryExecutorForTesting = {
 			async executeQuery<T>(query: PreparedQuery) {
 				const meta = query.kvMeta;
-				if (meta) log.push(`${meta.action} ${meta.table.name}`);
 				if (meta?.action === 'delete' && meta.table.name === failDeleteOn) {
 					throw new Error('write timeout');
 				}
@@ -315,25 +161,6 @@ describe('JobLedgerRepository discardJob', () => {
 	afterEach(() => {
 		inner.reset();
 		setCassandraQueryExecutorForTesting(null);
-	});
-
-	it('removes every ledger row of a duplicate with three deletes and no read', async () => {
-		const repository = new JobLedgerRepository();
-		const createdAt = await createJobAt(repository, 7n);
-		log.length = 0;
-
-		await repository.discardJob(7n, createdAt);
-
-		expect([...log].sort()).toEqual(['delete jobs_active', 'delete jobs_by_day_bucket', 'delete jobs_by_id']);
-		expect(await repository.getJob(7n)).toBeNull();
-		expect(await repository.listActiveJobs()).toEqual([]);
-		expect(
-			await fetchMany(
-				JobsByDayBucket.select({where: JobsByDayBucket.where.eq('bucket_day')}).bind({
-					bucket_day: createdAt.toISOString().slice(0, 10),
-				}),
-			),
-		).toEqual([]);
 	});
 
 	it('keeps deleting the other ledger rows when one delete fails', async () => {

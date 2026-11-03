@@ -4,6 +4,7 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import type {DomainMigrationMediaDeviceKind} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {remapMigratedDeviceIds} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isAccountSwitcherModalOpen} from '@app/features/auth/commands/AccountSwitcherModalCommands';
 import styles from '@app/features/auth/state/NewDeviceMonitoring.module.css';
 import {
 	getNewDevicePromptCandidates,
@@ -20,7 +21,7 @@ import type {VoiceDeviceState} from '@app/features/voice/utils/VoiceDeviceManage
 import type {I18n} from '@lingui/core';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable, runInAction, when} from 'mobx';
 import type React from 'react';
 
 const NEW_AUDIO_DEVICE_DETECTED_DESCRIPTOR = msg({
@@ -43,8 +44,6 @@ const logger = new Logger('NewDeviceMonitoring');
 interface IgnoreDeviceLinkProps {
 	deviceName: string;
 	onClick: () => void;
-	checked?: boolean;
-	onChange?: (checked: boolean) => void;
 }
 
 const IgnoreDeviceLink: React.FC<IgnoreDeviceLinkProps> = ({deviceName, onClick}) => (
@@ -67,10 +66,15 @@ class NewDeviceMonitoring {
 	private startPromise: Promise<void> | null = null;
 	private startEpoch = 0;
 	private unsubscribe: (() => void) | null = null;
+	private disposeDeferredPrompt: (() => void) | null = null;
 	private i18n: I18n | null = null;
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
+		makeAutoObservable<NewDeviceMonitoring, 'disposeDeferredPrompt'>(
+			this,
+			{disposeDeferredPrompt: false},
+			{autoBind: true},
+		);
 	}
 
 	setI18n(i18n: I18n): void {
@@ -177,8 +181,19 @@ class NewDeviceMonitoring {
 		if (promptCandidates.length === 0 || promptCandidates.length > MAX_PROMPTABLE_NEW_DEVICE_GROUPS) {
 			return;
 		}
-		this.showNewDeviceModal(
-			promptCandidates.find((prompt) => prompt.inputDeviceId !== undefined) ?? promptCandidates[0],
+		const prompt = promptCandidates.find((candidate) => candidate.inputDeviceId !== undefined) ?? promptCandidates[0];
+		this.disposeDeferredPrompt?.();
+		this.disposeDeferredPrompt = null;
+		if (!isAccountSwitcherModalOpen()) {
+			this.showNewDeviceModal(prompt);
+			return;
+		}
+		this.disposeDeferredPrompt = when(
+			() => !isAccountSwitcherModalOpen(),
+			() => {
+				this.disposeDeferredPrompt = null;
+				this.showNewDeviceModal(prompt);
+			},
 		);
 	}
 
@@ -189,62 +204,71 @@ class NewDeviceMonitoring {
 		const i18n = this.i18n;
 		const {deviceIds, deviceName, deviceType, inputDeviceId, outputDeviceId} = prompt;
 		ModalCommands.pushWithKey(
-			modal(() => (
-				<ConfirmModal
-					title={i18n._(NEW_AUDIO_DEVICE_DETECTED_DESCRIPTOR)}
-					description={
-						deviceType === 'input' ? (
-							<Trans>
-								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio input device named{' '}
-								<strong data-flx="auth.new-device-monitoring.strong">{deviceName}</strong>. Do you want to switch to it?
-							</Trans>
-						) : deviceType === 'output' ? (
-							<Trans>
-								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio output device named{' '}
-								<strong data-flx="auth.new-device-monitoring.strong--2">{deviceName}</strong>. Do you want to switch to
-								it?
-							</Trans>
-						) : (
-							<Trans>
-								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio device named{' '}
-								<strong data-flx="auth.new-device-monitoring.strong--3">{deviceName}</strong>. Do you want to switch to
-								it?
-							</Trans>
-						)
-					}
-					primaryText={i18n._(SWITCH_DEVICE_DESCRIPTOR)}
-					primaryVariant="primary"
-					secondaryText={i18n._(NOT_NOW_DESCRIPTOR)}
-					checkboxContent={
-						<IgnoreDeviceLink
-							deviceName={deviceName}
-							onClick={() => {
+			modal(() => {
+				const title = i18n._(NEW_AUDIO_DEVICE_DETECTED_DESCRIPTOR);
+				let description: React.ReactNode;
+				if (deviceType === 'input') {
+					description = (
+						<Trans>
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio input device called{' '}
+							<strong data-flx="auth.new-device-monitoring.strong">{deviceName}</strong>. Do you want to switch to it?
+						</Trans>
+					);
+				} else if (deviceType === 'output') {
+					description = (
+						<Trans>
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio output device called{' '}
+							<strong data-flx="auth.new-device-monitoring.strong--2">{deviceName}</strong>. Do you want to switch to
+							it?
+						</Trans>
+					);
+				} else {
+					description = (
+						<Trans>
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio device called{' '}
+							<strong data-flx="auth.new-device-monitoring.strong--3">{deviceName}</strong>. Do you want to switch to
+							it?
+						</Trans>
+					);
+				}
+				return (
+					<ConfirmModal
+						title={title}
+						description={description}
+						primaryText={i18n._(SWITCH_DEVICE_DESCRIPTOR)}
+						primaryVariant="primary"
+						secondaryText={i18n._(NOT_NOW_DESCRIPTOR)}
+						checkboxContent={
+							<IgnoreDeviceLink
+								deviceName={deviceName}
+								onClick={() => {
+									this.addToIgnored(deviceIds);
+									ModalCommands.popWithKey(NEW_DEVICE_MODAL_KEY);
+								}}
+								data-flx="auth.new-device-monitoring.ignore-device-link.add-to-ignored"
+							/>
+						}
+						onPrimary={(dontAskAgain) => {
+							if (inputDeviceId !== undefined && outputDeviceId !== undefined) {
+								VoiceSettings.updateSettings({inputDeviceId, outputDeviceId});
+							} else if (inputDeviceId !== undefined) {
+								VoiceSettings.updateSettings({inputDeviceId});
+							} else if (outputDeviceId !== undefined) {
+								VoiceSettings.updateSettings({outputDeviceId});
+							}
+							if (dontAskAgain) {
 								this.addToIgnored(deviceIds);
-								ModalCommands.popWithKey(NEW_DEVICE_MODAL_KEY);
-							}}
-							data-flx="auth.new-device-monitoring.ignore-device-link.add-to-ignored"
-						/>
-					}
-					onPrimary={(dontAskAgain) => {
-						if (inputDeviceId !== undefined && outputDeviceId !== undefined) {
-							VoiceSettings.updateSettings({inputDeviceId, outputDeviceId});
-						} else if (inputDeviceId !== undefined) {
-							VoiceSettings.updateSettings({inputDeviceId});
-						} else if (outputDeviceId !== undefined) {
-							VoiceSettings.updateSettings({outputDeviceId});
-						}
-						if (dontAskAgain) {
-							this.addToIgnored(deviceIds);
-						}
-					}}
-					onSecondary={(dontAskAgain) => {
-						if (dontAskAgain) {
-							this.addToIgnored(deviceIds);
-						}
-					}}
-					data-flx="auth.new-device-monitoring.confirm-modal"
-				/>
-			)),
+							}
+						}}
+						onSecondary={(dontAskAgain) => {
+							if (dontAskAgain) {
+								this.addToIgnored(deviceIds);
+							}
+						}}
+						data-flx="auth.new-device-monitoring.confirm-modal"
+					/>
+				);
+			}),
 			NEW_DEVICE_MODAL_KEY,
 		);
 	}
@@ -278,6 +302,8 @@ class NewDeviceMonitoring {
 		this.isStarted = false;
 		this.startPromise = null;
 		this.startEpoch++;
+		this.disposeDeferredPrompt?.();
+		this.disposeDeferredPrompt = null;
 		if (this.unsubscribe) {
 			this.unsubscribe();
 			this.unsubscribe = null;

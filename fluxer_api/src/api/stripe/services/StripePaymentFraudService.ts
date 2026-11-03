@@ -1,26 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
-import type {UserID} from '@app/api/BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
-import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
-import type {User} from '@app/api/models/User';
-import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
-import {extractId} from '@app/api/stripe/StripeUtils';
+import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms, seconds} from 'itty-time';
 import type Stripe from 'stripe';
 
@@ -30,32 +23,33 @@ type RadarValueListItemType = RadarValueListCreateParams['item_type'];
 interface StripePaymentFraudServiceDeps {
 	stripe: Stripe | null;
 	userRepository: UserRepository;
-	userCacheService: UserCacheService;
-	sessionTerminator: ISessionTerminator;
-	emailService: IEmailService;
-	gatewayService: IGatewayService;
 	donationRepository: DonationRepository;
 	cacheService: ICacheService;
 	auditService: AdminAuditService;
-	kvDeletionQueue: KVAccountDeletionQueueService;
-	oauth2Tokens: Pick<OAuth2TokenRepository, 'deleteAllAccessTokensForUser' | 'deleteAllRefreshTokensForUser'>;
+	enforcement: EnforcementDecisionService;
+	operatorPassFulfilment?: Pick<
+		OperatorPassFulfilmentService,
+		'findPurchaseByPaymentIntent' | 'markFraudWarning'
+	> | null;
 }
 
-interface FraudAccountActionParams {
+interface FraudSignalParams {
 	userId: UserID;
-	source: 'chargeback' | 'early_fraud_warning';
+	source: 'early_fraud_warning';
 	signalId: string;
 	chargeId: string | null;
 	paymentIntentId: string | null;
 	customerId: string | null;
 	fraudType: string | null;
+	paymentAt: Date;
 	extraMetadata?: Map<string, string>;
 }
 
 interface ResolvedFraudUserTarget {
 	customerId: string | null;
-	kind: 'direct_purchase' | 'donation' | 'gift_purchase' | 'unknown';
+	kind: 'direct_purchase' | 'donation' | 'gift_purchase' | 'operator_pass_purchase' | 'unknown';
 	paymentIntentId: string | null;
+	paymentAt: Date;
 	userId: UserID | null;
 }
 
@@ -65,35 +59,20 @@ interface RadarValueListConfig {
 	name: string;
 }
 
-const FRAUD_DELETION_DELAY_MS = ms('60 days');
 const OPERATION_COMPLETION_TTL_SECONDS = seconds('30 days');
 const OPERATION_LOCK_TTL_SECONDS = seconds('2 minutes');
 const OPERATION_LOCK_MAX_WAIT_MS = ms('20 seconds');
 const OPERATION_LOCK_RETRY_DELAY_MS = 100;
 const EARLY_FRAUD_WARNING_REASON = 'Payment fraud - Stripe early fraud warning';
-const CHARGEBACK_REASON = 'Payment fraud - Stripe chargeback filed';
-const RADAR_VALUE_LISTS: Record<'cardFingerprint' | 'customerId' | 'email' | 'ipAddress', RadarValueListConfig> = {
-	cardFingerprint: {
-		alias: 'card_fingerprint_blocklist',
-		itemType: 'card_fingerprint',
-		name: 'Card fingerprint block list',
-	},
-	customerId: {
-		alias: 'customer_id_blocklist',
-		itemType: 'customer_id',
-		name: 'Customer ID block list',
-	},
-	email: {
-		alias: 'email_blocklist',
-		itemType: 'email',
-		name: 'Email block list',
-	},
-	ipAddress: {
-		alias: 'client_ip_address_blocklist',
-		itemType: 'ip_address',
-		name: 'Client IP address block list',
-	},
+const CARD_FINGERPRINT_VALUE_LIST: RadarValueListConfig = {
+	alias: 'card_fingerprint_blocklist',
+	itemType: 'card_fingerprint',
+	name: 'Card fingerprint block list',
 };
+
+function chargeTime(charge: Stripe.Charge): Date {
+	return new Date(charge.created * 1000);
+}
 
 export class StripePaymentFraudService {
 	constructor(private readonly deps: StripePaymentFraudServiceDeps) {}
@@ -112,10 +91,7 @@ export class StripePaymentFraudService {
 		}
 		const charge = await this.retrieveCharge(chargeId);
 		await this.ensureChargeReportedAsFraud(chargeId);
-		await this.ensureRadarBlocksForCharge(charge, {
-			additionalEmails: [dispute.evidence.customer_email_address ?? null],
-			ipAddress: dispute.evidence.customer_purchase_ip ?? null,
-		});
+		await this.ensurePaymentMethodBlocked(charge);
 	}
 
 	async handleEarlyFraudWarning(warning: Stripe.Radar.EarlyFraudWarning): Promise<void> {
@@ -130,14 +106,24 @@ export class StripePaymentFraudService {
 		const charge = await this.retrieveCharge(chargeId);
 		const paymentIntentId = extractId(warning.payment_intent) ?? extractId(charge.payment_intent);
 		const customerId = extractId(charge.customer);
-		await this.ensureChargeReportedAsFraud(charge.id);
-		await this.ensureFraudulentRefund(charge, warning.id);
-		await this.ensureRadarBlocksForCharge(charge);
 		const userTarget = await this.resolveFraudUserTarget({
 			charge,
 			paymentIntentId,
 			customerId,
 		});
+		if (userTarget.kind === 'operator_pass_purchase' && paymentIntentId) {
+			await this.deps.operatorPassFulfilment?.markFraudWarning(paymentIntentId);
+		}
+		await this.ensureChargeReportedAsFraud(charge.id);
+		await this.ensureFraudulentRefund(charge, warning.id);
+		await this.ensurePaymentMethodBlocked(charge);
+		if (userTarget.kind === 'operator_pass_purchase') {
+			Logger.info(
+				{chargeId, paymentIntentId, warningId: warning.id},
+				'Stripe early fraud warning on an Operator Pass payment; refunded with no account action',
+			);
+			return;
+		}
 		if (!userTarget.userId) {
 			Logger.warn(
 				{
@@ -151,7 +137,10 @@ export class StripePaymentFraudService {
 			);
 			return;
 		}
-		await this.enforceAccountFraudAction({
+		if (userTarget.kind === 'direct_purchase' && paymentIntentId) {
+			await this.cancelSubscriptionPaidByIntent(paymentIntentId, userTarget.userId);
+		}
+		await this.limitPurchasesForFraudSignal({
 			userId: userTarget.userId,
 			source: 'early_fraud_warning',
 			signalId: warning.id,
@@ -159,11 +148,18 @@ export class StripePaymentFraudService {
 			paymentIntentId: userTarget.paymentIntentId,
 			customerId: userTarget.customerId,
 			fraudType: warning.fraud_type,
+			paymentAt: userTarget.paymentAt,
 			extraMetadata: new Map([['target_kind', userTarget.kind]]),
 		});
 	}
 
-	async enforceAccountFraudAction({
+	private async resolvePaymentTime(paymentIntentId: string | null, fallback: Date): Promise<Date> {
+		if (!paymentIntentId) return fallback;
+		const payment = await this.deps.userRepository.getPaymentByPaymentIntent(paymentIntentId);
+		return payment?.createdAt ?? fallback;
+	}
+
+	private async limitPurchasesForFraudSignal({
 		userId,
 		source,
 		signalId,
@@ -171,8 +167,9 @@ export class StripePaymentFraudService {
 		paymentIntentId,
 		customerId,
 		fraudType,
+		paymentAt,
 		extraMetadata,
-	}: FraudAccountActionParams): Promise<void> {
+	}: FraudSignalParams): Promise<void> {
 		const actionId = paymentIntentId ?? chargeId ?? `${source}:${signalId}`;
 		await this.runOnce(
 			'stripe:payment_fraud:account_action',
@@ -192,39 +189,8 @@ export class StripePaymentFraudService {
 				if (!user) {
 					throw new StripeError('User not found for payment fraud action');
 				}
-				const pendingDeletionAt = new Date(Date.now() + FRAUD_DELETION_DELAY_MS);
-				const cancelledUser = await this.cancelStripeSubscriptionImmediately(user);
-				const subscriptionCancelled = cancelledUser !== null;
-				const currentUser = cancelledUser ?? user;
-				const auditReason = this.getAuditReason({source, fraudType});
-				const updatedUser = await this.deps.userRepository.updateDeletionSchedule(currentUser, {
-					flags: (currentUser.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
-					pending_deletion_at: pendingDeletionAt,
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					deletion_public_reason: 'Payment fraud',
-					deletion_audit_log_reason: auditReason,
-					deletion_scheduled_by: SYSTEM_USER_ID,
-					deletion_scheduled_at: new Date(),
-				});
-				await reschedulePendingDeletion({
-					userId,
-					currentPendingDeletionAt: currentUser.pendingDeletionAt,
-					nextPendingDeletionAt: pendingDeletionAt,
-					deletionReasonCode: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					userRepository: this.deps.userRepository,
-					deletionQueue: this.deps.kvDeletionQueue,
-				});
-				await this.deps.sessionTerminator.terminateAllUserSessions(userId);
-				await this.deps.oauth2Tokens.deleteAllAccessTokensForUser(userId);
-				await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(userId);
-				await this.deps.userCacheService.setUserPartialResponseFromUser(updatedUser);
-				await this.dispatchUser(updatedUser);
-				const metadata = new Map<string, string>([
-					['days', '60'],
-					['source', source],
-					['scheduled_for', pendingDeletionAt.toISOString()],
-					['subscription_cancelled', subscriptionCancelled ? 'true' : 'false'],
-				]);
+				const auditReason = this.getAuditReason(fraudType);
+				const metadata = new Map<string, string>([['source', source]]);
 				if (chargeId) {
 					metadata.set('charge_id', chargeId);
 				}
@@ -237,45 +203,26 @@ export class StripePaymentFraudService {
 				if (fraudType) {
 					metadata.set('fraud_type', fraudType);
 				}
-				if (extraMetadata) {
-					for (const [key, value] of extraMetadata) {
-						metadata.set(key, value);
-					}
+				for (const [key, value] of extraMetadata ?? []) {
+					metadata.set(key, value);
 				}
+				const decision = await this.deps.enforcement.recordAutomatedPurchaseLimit({
+					subject: user,
+					reasonCode: DeletionReasons.PAYMENT_FRAUD,
+					paymentAt,
+					internalNote: [auditReason, ...[...metadata].map(([key, value]) => `${key}: ${value}`)].join('\n'),
+				});
 				await this.deps.auditService.createAuditLog({
 					adminUserId: SYSTEM_USER_ID,
 					targetType: 'user',
 					targetId: BigInt(userId),
-					action: 'schedule_deletion',
+					action: 'limit_features',
 					auditLogReason: auditReason,
-					metadata,
+					metadata: new Map([...metadata, ['limit', 'purchases'], ...decisionAuditMetadata(decision)]),
 				});
-				if (updatedUser.email) {
-					try {
-						await this.deps.emailService.sendScheduledDeletionNotification(
-							updatedUser.email,
-							updatedUser.username,
-							pendingDeletionAt,
-							updatedUser.deletionPublicReason ?? null,
-							updatedUser.locale,
-						);
-					} catch (error) {
-						Logger.warn({error, userId: userId.toString()}, 'Failed to send payment fraud deletion email');
-					}
-				}
 				Logger.info(
-					{
-						chargeId,
-						customerId,
-						fraudType,
-						paymentIntentId,
-						pendingDeletionAt,
-						signalId,
-						source,
-						subscriptionCancelled,
-						userId,
-					},
-					'Applied payment fraud account enforcement',
+					{chargeId, customerId, fraudType, paymentIntentId, signalId, source, userId},
+					'Limited purchases after a payment fraud signal pending review',
 				);
 			},
 		);
@@ -291,12 +238,34 @@ export class StripePaymentFraudService {
 		paymentIntentId: string | null;
 	}): Promise<ResolvedFraudUserTarget> {
 		if (paymentIntentId) {
+			const operatorPassPurchase = await this.deps.operatorPassFulfilment?.findPurchaseByPaymentIntent(paymentIntentId);
+			if (operatorPassPurchase) {
+				return {
+					customerId,
+					kind: 'operator_pass_purchase',
+					paymentIntentId,
+					paymentAt: operatorPassPurchase.purchased_at ?? operatorPassPurchase.created_at,
+					userId: operatorPassPurchase.purchaser_id,
+				};
+			}
+			const purchaserId =
+				charge.metadata?.operator_pass === 'true' ? charge.metadata.operator_pass_purchaser_id : undefined;
+			if (purchaserId && /^\d+$/.test(purchaserId)) {
+				return {
+					customerId,
+					kind: 'operator_pass_purchase',
+					paymentIntentId,
+					paymentAt: chargeTime(charge),
+					userId: createUserID(BigInt(purchaserId)),
+				};
+			}
 			const giftCode = await this.deps.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);
 			if (giftCode) {
 				return {
 					customerId,
 					kind: 'gift_purchase',
 					paymentIntentId,
+					paymentAt: await this.resolvePaymentTime(paymentIntentId, giftCode.createdAt),
 					userId: giftCode.createdByUserId,
 				};
 			}
@@ -306,6 +275,7 @@ export class StripePaymentFraudService {
 					customerId: customerId ?? payment.stripeCustomerId,
 					kind: 'direct_purchase',
 					paymentIntentId,
+					paymentAt: payment.createdAt,
 					userId: payment.userId,
 				};
 			}
@@ -317,6 +287,7 @@ export class StripePaymentFraudService {
 					customerId,
 					kind: 'donation',
 					paymentIntentId,
+					paymentAt: chargeTime(charge),
 					userId: null,
 				};
 			}
@@ -326,6 +297,7 @@ export class StripePaymentFraudService {
 					customerId,
 					kind: 'direct_purchase',
 					paymentIntentId,
+					paymentAt: chargeTime(charge),
 					userId: user.id,
 				};
 			}
@@ -343,6 +315,7 @@ export class StripePaymentFraudService {
 			customerId,
 			kind: 'unknown',
 			paymentIntentId,
+			paymentAt: chargeTime(charge),
 			userId: null,
 		};
 	}
@@ -359,6 +332,7 @@ export class StripePaymentFraudService {
 					{
 						charge: charge.id,
 						metadata: {
+							rejection_reason: 'stripe_early_fraud_warning',
 							source: 'stripe_early_fraud_warning',
 							warning_id: warningId,
 						},
@@ -366,16 +340,14 @@ export class StripePaymentFraudService {
 					},
 					{idempotencyKey: `payment-fraud-refund:${charge.id}`},
 				);
-				try {
-					await getBillingRepository().refunds.upsertFromStripe(refund, {
-						customerId: extractId(charge.customer) ?? undefined,
-					});
-				} catch (mirrorErr) {
-					Logger.error(
-						{mirrorErr, refundId: refund.id},
-						'Mirror upsert failed after Stripe write; reconciler will heal',
-					);
-				}
+				await mirrorBestEffort(
+					() =>
+						getBillingRepository().refunds.upsertFromStripe(refund, {
+							customerId: extractId(charge.customer) ?? undefined,
+						}),
+					{refundId: refund.id},
+					'Mirror upsert failed after Stripe write; reconciler will heal',
+				);
 				Logger.info({chargeId: charge.id, warningId}, 'Created fraudulent refund for Stripe early fraud warning');
 			} catch (error: unknown) {
 				const refreshedCharge = await this.retrieveCharge(charge.id);
@@ -400,14 +372,11 @@ export class StripePaymentFraudService {
 						user_report: 'fraudulent',
 					},
 				});
-				try {
-					await getBillingRepository().charges.upsertFromStripe(updatedCharge);
-				} catch (mirrorErr) {
-					Logger.error(
-						{mirrorErr, chargeId: updatedCharge.id},
-						'Mirror upsert failed after Stripe write; reconciler will heal',
-					);
-				}
+				await mirrorBestEffort(
+					() => getBillingRepository().charges.upsertFromStripe(updatedCharge),
+					{chargeId: updatedCharge.id},
+					'Mirror upsert failed after Stripe write; reconciler will heal',
+				);
 				Logger.info({chargeId}, 'Reported Stripe charge as fraudulent');
 			} catch (error: unknown) {
 				Logger.warn({chargeId, error}, 'Failed to mark Stripe charge as fraudulent; continuing');
@@ -415,45 +384,18 @@ export class StripePaymentFraudService {
 		});
 	}
 
-	private async ensureRadarBlocksForCharge(
-		charge: Stripe.Charge,
-		{
-			additionalEmails = [],
-			ipAddress = null,
-		}: {
-			additionalEmails?: Array<string | null>;
-			ipAddress?: string | null;
-		} = {},
-	): Promise<void> {
+	private async ensurePaymentMethodBlocked(charge: Stripe.Charge): Promise<void> {
 		await this.runOnce('stripe:payment_fraud:radar_blocks', charge.id, {chargeId: charge.id}, async () => {
-			const customerId = extractId(charge.customer);
-			const billingEmail = await this.resolveChargeEmail(charge, customerId);
 			const cardFingerprint = this.getChargeFingerprint(charge);
-			const emails = new Set([billingEmail, ...additionalEmails].filter((value): value is string => Boolean(value)));
+			if (!cardFingerprint) {
+				return;
+			}
 			try {
-				if (customerId) {
-					await this.ensureRadarValueListed(RADAR_VALUE_LISTS.customerId, customerId);
-				}
-				for (const email of emails) {
-					await this.ensureRadarValueListed(RADAR_VALUE_LISTS.email, email);
-				}
-				if (cardFingerprint) {
-					await this.ensureRadarValueListed(RADAR_VALUE_LISTS.cardFingerprint, cardFingerprint);
-				}
-				if (ipAddress) {
-					await this.ensureRadarValueListed(RADAR_VALUE_LISTS.ipAddress, ipAddress);
-				}
+				await this.ensureRadarValueListed(CARD_FINGERPRINT_VALUE_LIST, cardFingerprint);
 			} catch (error: unknown) {
 				Logger.warn(
-					{
-						cardFingerprint,
-						chargeId: charge.id,
-						customerId,
-						emails: Array.from(emails),
-						error,
-						ipAddress,
-					},
-					'Failed to update Stripe Radar value lists; continuing with account enforcement',
+					{cardFingerprint, chargeId: charge.id, error},
+					'Failed to update the Stripe Radar card fingerprint list, continuing',
 				);
 			}
 		});
@@ -512,25 +454,6 @@ export class StripePaymentFraudService {
 		});
 	}
 
-	private async resolveChargeEmail(charge: Stripe.Charge, customerId: string | null): Promise<string | null> {
-		const directEmail = charge.billing_details.email ?? charge.receipt_email;
-		if (directEmail) {
-			return directEmail;
-		}
-		if (!customerId) {
-			return null;
-		}
-		try {
-			const customer = await this.getStripe().customers.retrieve(customerId);
-			if (customer && !customer.deleted) {
-				return customer.email ?? null;
-			}
-		} catch (error: unknown) {
-			Logger.warn({customerId, error}, 'Failed to load Stripe customer email for Radar blocking');
-		}
-		return null;
-	}
-
 	private getChargeFingerprint(charge: Stripe.Charge): string | null {
 		const paymentMethodDetails = charge.payment_method_details;
 		if (!paymentMethodDetails) {
@@ -544,68 +467,46 @@ export class StripePaymentFraudService {
 		);
 	}
 
-	private async cancelStripeSubscriptionImmediately(user: User): Promise<User | null> {
-		if (!user.stripeSubscriptionId) {
-			return null;
-		}
-		try {
-			await this.getStripe().subscriptions.cancel(
-				user.stripeSubscriptionId,
-				{invoice_now: false, prorate: false},
-				{idempotencyKey: `payment-fraud-cancel:${user.stripeSubscriptionId}`},
-			);
-		} catch (error: unknown) {
-			if (!this.isMissingOrCancelledSubscriptionError(error)) {
-				Logger.error(
-					{error, subscriptionId: user.stripeSubscriptionId, userId: user.id},
-					'Failed to cancel Stripe subscription during payment fraud enforcement',
+	private async cancelSubscriptionPaidByIntent(paymentIntentId: string, userId: UserID): Promise<void> {
+		const stripe = this.getStripe();
+		const payments = await stripe.invoicePayments.list({
+			payment: {type: 'payment_intent', payment_intent: paymentIntentId},
+			expand: ['data.invoice'],
+			limit: 10,
+		});
+		for (const payment of payments.data) {
+			const invoice = typeof payment.invoice === 'string' ? null : payment.invoice;
+			const subscriptionId =
+				invoice && !('deleted' in invoice && invoice.deleted)
+					? extractId((invoice as Stripe.Invoice).parent?.subscription_details?.subscription ?? null)
+					: null;
+			if (!subscriptionId) continue;
+			try {
+				const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+				if (extractId(subscription.latest_invoice) !== invoice?.id) {
+					Logger.info(
+						{paymentIntentId, subscriptionId, userId},
+						'Flagged payment did not pay for the current subscription period; leaving the subscription running',
+					);
+					continue;
+				}
+				await stripe.subscriptions.cancel(
+					subscriptionId,
+					{invoice_now: false, prorate: false},
+					{idempotencyKey: `payment-fraud-cancel:${subscriptionId}`},
 				);
-				throw error;
+				Logger.info(
+					{paymentIntentId, subscriptionId, userId},
+					'Cancelled the subscription paid by a payment with an early fraud warning',
+				);
+			} catch (error: unknown) {
+				if (!isMissingOrCancelledSubscriptionError(error)) throw error;
 			}
-			Logger.warn(
-				{subscriptionId: user.stripeSubscriptionId, userId: user.id},
-				'Stripe subscription was already unavailable during payment fraud enforcement; clearing local state',
-			);
 		}
-		const updatedUser = await this.deps.userRepository.patchUpsert(
-			user.id,
-			{
-				premium_billing_cycle: null,
-				premium_will_cancel: false,
-				stripe_subscription_id: null,
-			},
-			user.toRow(),
-		);
-		await this.dispatchUser(updatedUser);
-		return updatedUser;
 	}
 
-	private isMissingOrCancelledSubscriptionError(error: unknown): boolean {
-		if (!(error instanceof Error)) {
-			return false;
-		}
-		const normalisedMessage = error.message.toLowerCase();
-		return (
-			normalisedMessage.includes('no such subscription') ||
-			normalisedMessage.includes('cannot cancel a canceled subscription') ||
-			normalisedMessage.includes('cannot cancel a cancelled subscription') ||
-			normalisedMessage.includes('subscription is canceled') ||
-			normalisedMessage.includes('subscription is cancelled')
-		);
-	}
-
-	private getAuditReason({
-		source,
-		fraudType,
-	}: {
-		fraudType: string | null;
-		source: 'chargeback' | 'early_fraud_warning';
-	}): string {
-		const baseReason = source === 'early_fraud_warning' ? EARLY_FRAUD_WARNING_REASON : CHARGEBACK_REASON;
-		if (!fraudType) {
-			return baseReason;
-		}
-		return `${baseReason} (${fraudType})`;
+	private getAuditReason(fraudType: string | null): string {
+		return fraudType ? `${EARLY_FRAUD_WARNING_REASON} (${fraudType})` : EARLY_FRAUD_WARNING_REASON;
 	}
 
 	private isChargeFullyRefunded(charge: Stripe.Charge): boolean {
@@ -625,14 +526,6 @@ export class StripePaymentFraudService {
 			throw new StripeError('Stripe client not available for payment fraud handling');
 		}
 		return this.deps.stripe;
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.deps.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
 	}
 
 	private async runOnce(

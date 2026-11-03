@@ -10,20 +10,6 @@ type RemoteFormIdentityKey = string | number | boolean | null | undefined;
 type RemoteFormAutomaticResetReason = 'initial' | 'identity-change' | 'remote-clean';
 export type RemoteFormResetReason = RemoteFormAutomaticResetReason | 'commit' | 'explicit-reset';
 
-interface RemoteFormResetOptions {
-	readonly keepDefaultValues?: boolean;
-	readonly keepDirty?: boolean;
-	readonly keepDirtyValues?: boolean;
-	readonly keepErrors?: boolean;
-	readonly keepIsSubmitted?: boolean;
-	readonly keepIsSubmitSuccessful?: boolean;
-	readonly keepIsValid?: boolean;
-	readonly keepIsValidating?: boolean;
-	readonly keepSubmitCount?: boolean;
-	readonly keepTouched?: boolean;
-	readonly keepValues?: boolean;
-}
-
 interface RemoteFormResetDecision {
 	readonly shouldReset: boolean;
 	readonly reason?: RemoteFormResetReason;
@@ -126,10 +112,7 @@ interface UseRemoteFormResetBaseOptions<TFormValues extends FieldValues, TRemote
 	readonly form: UseFormReturn<TFormValues>;
 	readonly identityKey: RemoteFormIdentityKey;
 	readonly remoteValues: TRemoteValues | null | undefined;
-	readonly enabled?: boolean;
 	readonly isDirty?: boolean;
-	readonly resetOptions?: RemoteFormResetOptions;
-	readonly areRemoteValuesEqual?: (left: TRemoteValues, right: TRemoteValues) => boolean;
 	readonly onApply?: (remoteValues: TRemoteValues, reason: RemoteFormResetReason) => void;
 }
 
@@ -160,18 +143,13 @@ export function useRemoteFormReset<TFormValues extends FieldValues, TRemoteValue
 	form,
 	identityKey,
 	remoteValues,
-	enabled = true,
 	isDirty,
-	resetOptions,
 	getFormValues,
-	areRemoteValuesEqual = isEqual,
 	onApply,
 }: UseRemoteFormResetOptions<TFormValues, TRemoteValues>): UseRemoteFormResetResult<TRemoteValues> {
 	const latestRemoteValuesRef = useRef<TRemoteValues | null | undefined>(remoteValues);
 	const latestIdentityKeyRef = useRef<RemoteFormIdentityKey>(identityKey);
-	const latestResetOptionsRef = useRef(resetOptions);
 	const latestGetFormValuesRef = useRef(resolveFormValueMapper(getFormValues));
-	const latestAreRemoteValuesEqualRef = useRef(areRemoteValuesEqual);
 	const latestOnApplyRef = useRef(onApply);
 	const resetMachineSnapshotRef = useRef(createRemoteFormResetMachineSnapshot());
 	const lastAppliedIdentityKeyRef = useRef<RemoteFormIdentityKey>(undefined);
@@ -181,9 +159,7 @@ export function useRemoteFormReset<TFormValues extends FieldValues, TRemoteValue
 
 	latestRemoteValuesRef.current = remoteValues;
 	latestIdentityKeyRef.current = identityKey;
-	latestResetOptionsRef.current = resetOptions;
 	latestGetFormValuesRef.current = resolveFormValueMapper(getFormValues);
-	latestAreRemoteValuesEqualRef.current = areRemoteValuesEqual;
 	latestOnApplyRef.current = onApply;
 
 	const applyRemoteValues = useCallback(
@@ -193,7 +169,7 @@ export function useRemoteFormReset<TFormValues extends FieldValues, TRemoteValue
 					type: reason === 'explicit-reset' ? 'remote.explicitReset' : 'remote.commit',
 				});
 			}
-			form.reset(latestGetFormValuesRef.current(values), latestResetOptionsRef.current);
+			form.reset(latestGetFormValuesRef.current(values));
 			lastAppliedIdentityKeyRef.current = latestIdentityKeyRef.current;
 			lastAppliedRemoteValuesRef.current = values;
 			latestOnApplyRef.current?.(values, reason);
@@ -202,13 +178,13 @@ export function useRemoteFormReset<TFormValues extends FieldValues, TRemoteValue
 	);
 
 	useLayoutEffect(() => {
-		if (!enabled || remoteValues == null) return;
+		if (remoteValues == null) return;
 		const identityChanged = !Object.is(lastAppliedIdentityKeyRef.current, identityKey);
 		const lastAppliedRemoteValues = lastAppliedRemoteValuesRef.current;
 		const remoteValuesChanged =
 			getRemoteFormResetMachineStateValue(resetMachineSnapshotRef.current) === 'unhydrated' ||
 			lastAppliedRemoteValues == null ||
-			!latestAreRemoteValuesEqualRef.current(lastAppliedRemoteValues, remoteValues);
+			!isEqual(lastAppliedRemoteValues, remoteValues);
 		const snapshot = transitionRemoteFormResetSnapshot(resetMachineSnapshotRef.current, {
 			type: 'remote.inspect',
 			identityChanged,
@@ -220,7 +196,7 @@ export function useRemoteFormReset<TFormValues extends FieldValues, TRemoteValue
 		if (decision.shouldReset && decision.reason) {
 			applyRemoteValues(remoteValues, decision.reason, false);
 		}
-	}, [applyRemoteValues, enabled, identityKey, remoteValues, resolvedIsDirty]);
+	}, [applyRemoteValues, identityKey, remoteValues, resolvedIsDirty]);
 
 	const resetToRemoteValues = useCallback(() => {
 		const latestRemoteValues = latestRemoteValuesRef.current;

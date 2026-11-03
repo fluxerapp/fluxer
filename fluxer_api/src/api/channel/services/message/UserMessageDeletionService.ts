@@ -3,6 +3,7 @@
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	type CrosspostWorkerService,
 	enqueueCrosspostSourceRemoval,
@@ -22,7 +23,6 @@ import {Logger} from '@app/api/Logger';
 import type {Message} from '@app/api/models/Message';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
-import {ChannelEventDispatcher} from '@app/api/worker/services/ChannelEventDispatcher';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 interface UserMessageDeletionServiceDeps {
@@ -58,25 +58,18 @@ interface MessageWithChannel {
 }
 
 export class UserMessageDeletionService {
-	private readonly eventDispatcher: ChannelEventDispatcher;
 	private readonly FETCH_BATCH_SIZE = 100;
 	private readonly DELETE_BATCH_SIZE = 100;
 
-	constructor(private readonly deps: UserMessageDeletionServiceDeps) {
-		this.eventDispatcher = new ChannelEventDispatcher({gatewayService: deps.gatewayService});
-	}
+	constructor(private readonly deps: UserMessageDeletionServiceDeps) {}
 
-	async deleteUserMessagesInScope(
-		userId: UserID,
-		scope: DeleteUserMessagesScope,
-		options: Omit<BulkDeleteUserMessagesOptions, 'channelIdAllowlist'> = {},
-	): Promise<number> {
+	async deleteUserMessagesInScope(userId: UserID, scope: DeleteUserMessagesScope): Promise<number> {
 		const channelIdAllowlist = await this.resolveChannelAllowlist(scope);
 		if (channelIdAllowlist.size === 0) {
 			Logger.debug({userId: userId.toString()}, 'No channels in scope for bulk user message deletion');
 			return 0;
 		}
-		return this.deleteUserMessagesBulk(userId, {...options, channelIdAllowlist});
+		return this.deleteUserMessagesBulk(userId, {channelIdAllowlist});
 	}
 
 	async deleteUserMessagesBulk(userId: UserID, options: BulkDeleteUserMessagesOptions = {}): Promise<number> {
@@ -167,6 +160,16 @@ export class UserMessageDeletionService {
 			for (const channelId of scope.channelIds) {
 				allowlist.add(channelId.toString());
 			}
+			const channels = await this.deps.channelRepository.channelData.listChannels([...scope.channelIds]);
+			for (const channel of channels) {
+				if (!channel.guildId) continue;
+				const threadIds = await this.deps.channelRepository.threads.listGuildThreadIds(channel.guildId, {
+					parents: [channel],
+				});
+				for (const threadId of threadIds) {
+					allowlist.add(threadId.toString());
+				}
+			}
 		}
 		if (scope.guildId) {
 			const channels = await this.deps.channelRepository.channelData.listGuildChannels(scope.guildId, 'complete');
@@ -243,7 +246,12 @@ export class UserMessageDeletionService {
 			);
 			await this.deps.channelRepository.messages.bulkDeleteMessages(channelId, messageIds);
 			await decrementThreadMessageCount(this.deps.channelRepository, channel, messageIds);
-			await this.eventDispatcher.dispatchBulkDelete(channel, messageIds);
+			await dispatchChannelEvent({
+				gatewayService: this.deps.gatewayService,
+				channel,
+				event: 'MESSAGE_DELETE_BULK',
+				data: {channel_id: channel.id.toString(), ids: messageIds.map((id) => id.toString())},
+			});
 			await enqueueCrosspostSourceRemoval(this.deps.workerService, {
 				messages: messageObjects,
 				mode: 'source_deleted',

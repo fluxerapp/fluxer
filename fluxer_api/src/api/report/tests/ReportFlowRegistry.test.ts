@@ -8,25 +8,32 @@ import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {setCachedProductName} from '@app/api/instance/ProductName';
 import {
 	assertValidReportFlowLibrary,
-	buildReportFlowLedger,
 	buildReportFlowVariant,
-	describeReportFlowAnswers,
-	getReportFlowResponse,
-	getReportFlowVariant,
-	parseReportFlowSteps,
-	REPORT_FLOW_LIBRARY,
 	type ReportFlowInstance,
 	type ReportFlowLibrary,
-	type ReportFlowStepInput,
 	type ReportFlowVariant,
+} from '@app/api/report/flows/ReportFlowCompiler';
+import {REPORT_FLOWS} from '@app/api/report/flows/ReportFlowDefinitions';
+import {
+	describeReportFlowAnswers,
+	getReportFlowResponse,
+	parseReportFlowSteps,
 	resolveReportFlowAnswers,
 } from '@app/api/report/flows/ReportFlowRegistry';
-import type {ReportFlowOptionDef, ReportFlowScreenDef} from '@app/api/report/flows/ReportFlowScreens';
+import {
+	REPORT_FLOW_NOTICES,
+	REPORT_FLOW_SCREENS,
+	type ReportFlowOptionDef,
+	type ReportFlowOutcomeDef,
+	type ReportFlowScreenDef,
+} from '@app/api/report/flows/ReportFlowScreens';
 import {getLegacyCategory, listReportReasons, REPORT_REASONS} from '@app/api/report/flows/ReportReasonCatalog';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {
 	ReportFlowResponse,
+	type ReportFlowStep,
 	type ReportFlowSurface,
 	type ReportFlowTargetType,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
@@ -36,25 +43,86 @@ import {
 	ReportUserRequest,
 } from '@fluxer/schema/src/domains/report/ReportSchemas';
 import {afterEach, describe, expect, test} from 'vitest';
+import {z} from 'zod';
+
+const REPORT_FLOW_LIBRARY: ReportFlowLibrary = {
+	flows: REPORT_FLOWS,
+	screens: REPORT_FLOW_SCREENS,
+	notices: REPORT_FLOW_NOTICES,
+};
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const LEDGER_PATH = path.join(THIS_DIR, '../flows/ReportFlowIds.snapshot.json');
 
-const VARIANTS: ReadonlyArray<[ReportFlowTargetType, ReportFlowSurface]> = [
-	['message', 'in_app'],
-	['message', 'dsa'],
-	['user', 'in_app'],
-	['user', 'dsa'],
-	['guild', 'dsa'],
+const VARIANTS: ReadonlyArray<[ReportFlowTargetType, ReportFlowSurface, 'choice' | 'checklist' | 'info']> = [
+	['message', 'in_app', 'choice'],
+	['message', 'dsa', 'choice'],
+	['user', 'in_app', 'info'],
+	['user', 'dsa', 'checklist'],
+	['guild', 'dsa', 'checklist'],
 ];
 
-interface Ledger {
-	active: Record<string, string>;
-	retired: Record<string, string>;
-}
+const LedgerSchema = z.object({
+	active: z.record(z.string(), z.string()),
+	retired: z.record(z.string(), z.string()),
+});
+type Ledger = z.infer<typeof LedgerSchema>;
 
 function readLedger(): Ledger {
-	return JSON.parse(fs.readFileSync(LEDGER_PATH, 'utf8')) as Ledger;
+	const value: unknown = JSON.parse(fs.readFileSync(LEDGER_PATH, 'utf8'));
+	return LedgerSchema.parse(value);
+}
+
+function canonicalOutcome(outcome: ReportFlowOutcomeDef): string {
+	switch (outcome.type) {
+		case 'screen':
+			return `screen:${outcome.screenId}`;
+		case 'submit':
+			return `submit:${outcome.reason}`;
+		case 'end':
+			return outcome.noticeId === undefined ? 'end' : `end:${outcome.noticeId}`;
+		case 'link':
+			return `link:${outcome.link}`;
+	}
+}
+
+function buildReportFlowLedger(library: ReportFlowLibrary): Record<string, string> {
+	const ledger: Record<string, string> = {};
+	const variants = (['message', 'user', 'guild'] as const).flatMap((target) =>
+		(['in_app', 'dsa'] as const).map((surface) => ({target, surface})),
+	);
+	for (const {target, surface} of variants) {
+		const variant = buildReportFlowVariant(library, target, surface, HOSTED);
+		if (!variant) {
+			continue;
+		}
+		for (const screen of variant.screens.values()) {
+			const prefix = `${target}/${screen.def.id}`;
+			for (const option of screen.options) {
+				ledger[`${prefix}/${option.id}`] = canonicalOutcome(option.outcome);
+			}
+			if (screen.def.checklist) {
+				for (const item of screen.def.checklist.items) {
+					ledger[`${prefix}/${item.id}`] = item.reason === undefined ? 'item' : `item:${item.reason}`;
+				}
+				ledger[`${prefix}/#next`] = canonicalOutcome(screen.def.checklist.outcome);
+			}
+			if (screen.def.nextScreenId !== undefined) {
+				ledger[`${prefix}/#next`] = `screen:${screen.def.nextScreenId}`;
+			}
+		}
+	}
+	return Object.fromEntries(
+		Object.entries(ledger).sort(([a], [b]) => {
+			if (a < b) {
+				return -1;
+			}
+			if (a > b) {
+				return 1;
+			}
+			return 0;
+		}),
+	);
 }
 
 function findLedgerViolations(ledger: Ledger, current: Record<string, string>): Array<string> {
@@ -130,17 +198,11 @@ function variantReasons(variant: ReportFlowVariant): Set<string> {
 	return reasons;
 }
 
-function optionIds(variant: ReportFlowVariant, screenId: string): Array<string> {
-	const screen = variant.screens.get(screenId);
-	expect(screen).toBeDefined();
-	return screen!.options.map((option) => option.id);
-}
-
-function resolve(target: ReportFlowTargetType, surface: ReportFlowSurface, steps: ReadonlyArray<ReportFlowStepInput>) {
+function resolve(target: ReportFlowTargetType, surface: ReportFlowSurface, steps: ReadonlyArray<ReportFlowStep>) {
 	return resolveReportFlowAnswers({
 		target,
 		surface,
-		revisionHash: getReportFlowVariant(target, surface).revisionHash,
+		revisionHash: getReportFlowResponse(target, surface, 'en-US').revision_hash,
 		steps,
 	});
 }
@@ -160,12 +222,12 @@ function captureError(run: () => unknown): FluxerError {
 function expectInvalidStep(
 	target: ReportFlowTargetType,
 	surface: ReportFlowSurface,
-	steps: ReadonlyArray<ReportFlowStepInput>,
+	steps: ReadonlyArray<ReportFlowStep>,
 	stepIndex: number,
 ) {
 	const error = captureError(() => resolve(target, surface, steps));
 	expect(error.code).toBe(APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS);
-	expect(error.status).toBe(400);
+	expect(error.status).toBe(HttpStatus.BAD_REQUEST);
 	expect(error.data).toEqual({step_index: stepIndex});
 }
 
@@ -184,33 +246,37 @@ describe('report flow definitions', () => {
 	test('the shipped library passes every rule on every variant', () => {
 		expect(() => assertValidReportFlowLibrary(REPORT_FLOW_LIBRARY)).not.toThrow();
 		for (const instance of [HOSTED, SELF_HOSTED, SELF_HOSTED_WITH_GUIDELINES]) {
-			for (const [target, surface] of VARIANTS) {
+			for (const [target, surface, expectedStartKind] of VARIANTS) {
 				const variant = variantOf(target, surface, REPORT_FLOW_LIBRARY, instance);
-				for (const screen of variant.screens.values()) {
-					const hasOptions = (screen.def.options ?? []).length > 0;
-					if (screen.kind === 'checklist') {
-						expect(hasOptions || screen.def.nextScreenId !== undefined).toBe(false);
-					}
-					if (screen.kind === 'info') {
-						expect(screen.options.every((option) => option.outcome.type === 'link')).toBe(true);
-					}
-					if (screen.kind === 'choice') {
-						expect(screen.options.some((option) => option.outcome.type !== 'link')).toBe(true);
-					}
-					for (const option of screen.options) {
-						expect(option.id).toMatch(/^[a-z0-9_]{1,48}$/);
-						if (surface === 'dsa') {
-							expect(option.surface).not.toBe('in_app');
-							expect(option.outcome.type === 'end' && option.outcome.noticeId === undefined).toBe(false);
-						}
-					}
+				const screens = [...variant.screens.values()];
+				for (const screen of screens.filter(({kind}) => kind === 'checklist')) {
+					expect((screen.def.options ?? []).length > 0 || screen.def.nextScreenId !== undefined).toBe(false);
 				}
-				expect(variant.screens.get(variant.startScreenId)?.kind === 'info').toBe(
-					target === 'user' && surface === 'in_app',
-				);
+				for (const screen of screens.filter(({kind}) => kind === 'info')) {
+					expect(screen.options.every((option) => option.outcome.type === 'link')).toBe(true);
+				}
+				for (const screen of screens.filter(({kind}) => kind === 'choice')) {
+					expect(screen.options.some((option) => option.outcome.type !== 'link')).toBe(true);
+				}
+				for (const option of screens.flatMap((screen) => screen.options)) {
+					expect(option.id).toMatch(/^[a-z0-9_]{1,48}$/);
+				}
+				expect(variant.screens.get(variant.startScreenId)?.kind).toBe(expectedStartKind);
 			}
 		}
 		expect(buildReportFlowVariant(REPORT_FLOW_LIBRARY, 'guild', 'in_app', HOSTED)).toBeNull();
+	});
+
+	test('DSA variants omit in-app options and no-report outcomes', () => {
+		for (const instance of [HOSTED, SELF_HOSTED, SELF_HOSTED_WITH_GUIDELINES]) {
+			for (const [target, surface] of VARIANTS.filter(([, surface]) => surface === 'dsa')) {
+				const variant = variantOf(target, surface, REPORT_FLOW_LIBRARY, instance);
+				for (const option of [...variant.screens.values()].flatMap((screen) => screen.options)) {
+					expect(option.surface).not.toBe('in_app');
+					expect(option.outcome.type === 'end' && option.outcome.noticeId === undefined).toBe(false);
+				}
+			}
+		}
 	});
 
 	test('every screen in the library is used by a variant', () => {
@@ -358,7 +424,7 @@ describe('report flow walks', () => {
 		name: string;
 		target: ReportFlowTargetType;
 		surface?: ReportFlowSurface;
-		steps: ReadonlyArray<ReportFlowStepInput>;
+		steps: ReadonlyArray<ReportFlowStep>;
 		reason: string;
 		category: string;
 	}> = [
@@ -724,7 +790,7 @@ describe('report flow walks', () => {
 		});
 		expect(stale.reason).toBe('spam');
 		expect(stale.isCurrentRevision).toBe(false);
-		expect(stale.currentRevisionHash).toBe(getReportFlowVariant('message', 'in_app').revisionHash);
+		expect(stale.currentRevisionHash).toBe(getReportFlowResponse('message', 'in_app', 'en-US').revision_hash);
 		const outdated = captureError(() =>
 			resolveReportFlowAnswers({
 				target: 'message',
@@ -734,14 +800,13 @@ describe('report flow walks', () => {
 			}),
 		);
 		expect(outdated.code).toBe(APIErrorCodes.REPORT_FLOW_OUTDATED);
-		expect(outdated.status).toBe(409);
+		expect(outdated.status).toBe(HttpStatus.CONFLICT);
 	});
 
 	test('a flow without a variant for the surface is a validation error on surface', () => {
-		const error = captureError(() => getReportFlowVariant('guild', 'in_app'));
+		const error = captureError(() => getReportFlowResponse('guild', 'in_app', 'en-US'));
 		expect(error.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
 		expect(JSON.stringify(error.data)).toContain('"path":"surface"');
-		expect(() => getReportFlowResponse('guild', 'in_app', 'en-US')).toThrow(FluxerError);
 	});
 });
 
@@ -764,11 +829,10 @@ describe('report reasons and legacy categories', () => {
 	});
 
 	test('child reasons are child_safety for every target', () => {
-		for (const key of Object.keys(REPORT_REASONS) as Array<keyof typeof REPORT_REASONS>) {
-			if (key.startsWith('minor_') || key === 'csam') {
-				for (const target of ['message', 'user', 'guild'] as const) {
-					expect(getLegacyCategory(key, target), key).toBe('child_safety');
-				}
+		const childReasons = listReportReasons().filter(({key}) => key.startsWith('minor_') || key === 'csam');
+		for (const {key} of childReasons) {
+			for (const target of ['message', 'user', 'guild'] as const) {
+				expect(getLegacyCategory(key, target), key).toBe('child_safety');
 			}
 		}
 	});
@@ -826,7 +890,7 @@ describe('report flow rendering', () => {
 		for (const [target, surface] of VARIANTS) {
 			const response = getReportFlowResponse(target, surface, 'en-US');
 			expect(ReportFlowResponse.parse(response)).toEqual(response);
-			const variant = getReportFlowVariant(target, surface);
+			const variant = variantOf(target, surface);
 			expect(response.start_screen_id).toBe(variant.startScreenId);
 			expect(response.screens.map((screen) => screen.id).sort()).toEqual([...variant.screens.keys()].sort());
 			expect(response.screens[0].id).toBe(response.start_screen_id);
@@ -836,40 +900,6 @@ describe('report flow rendering', () => {
 		expect(getReportFlowResponse('user', 'in_app', 'en-US').start_screen_id).toBe('profile_intro');
 		expect(getReportFlowResponse('user', 'dsa', 'en-US').start_screen_id).toBe('profile_parts');
 		expect(getReportFlowResponse('guild', 'dsa', 'en-US').start_screen_id).toBe('community_parts');
-	});
-
-	test('the DSA variants drop app-only rows and add the copyright notice', () => {
-		const messageDsa = variantOf('message', 'dsa');
-		expect(optionIds(messageDsa, 'root_message')).toEqual([
-			'abuse',
-			'private_info',
-			'violence_misinfo',
-			'spam',
-			'something_else',
-		]);
-		expect(optionIds(messageDsa, 'abuse')).not.toContain('rude_language');
-		expect(optionIds(messageDsa, 'self_harm')).not.toContain('worried_self_harm');
-		expect(optionIds(messageDsa, 'self_harm')).not.toContain('worried_suicide');
-		expect(optionIds(messageDsa, 'something_else_message')).toContain('copyright_notice');
-		expect(optionIds(messageDsa, 'something_else_message')).not.toContain('copyright');
-		expect(optionIds(variantOf('message', 'in_app'), 'something_else_message')).not.toContain('copyright_notice');
-		const userDsa = variantOf('user', 'dsa');
-		expect(userDsa.screens.has('profile_intro')).toBe(false);
-		expect(optionIds(userDsa, 'root_user')).not.toContain('dsa');
-		expect(optionIds(userDsa, 'self_harm_profile')).not.toContain('worried');
-	});
-
-	test('the in-app copyright rows open the copyright help page', () => {
-		const url = 'https://fluxer.app/help/copyright';
-		const copyrightUrl = (target: ReportFlowTargetType, screenId: string) =>
-			getReportFlowResponse(target, 'in_app', 'en-US')
-				.screens.find((screen) => screen.id === screenId)
-				?.options.find((option) => option.id === 'copyright')?.outcome.url;
-		expect(copyrightUrl('message', 'something_else_message')).toBe(url);
-		expect(copyrightUrl('user', 'something_else_user')).toBe(url);
-		getConfig().instance.selfHosted = true;
-		expect(copyrightUrl('message', 'something_else_message')).toBeUndefined();
-		expect(copyrightUrl('user', 'something_else_user')).toBeUndefined();
 	});
 
 	test('a copyright link row that is not limited to the app throws', () => {
@@ -935,7 +965,6 @@ describe('report flow rendering', () => {
 		expect(intro.options[0].outcome.url).toBe('https://rules.example.org/community');
 		const userScreens = new Map(user.screens.map((screen) => [screen.id, screen]));
 		expect(userScreens.get('root_user')?.options.map((option) => option.id)).not.toContain('dsa');
-		expect(getReportFlowVariant('user', 'in_app').revisionHash).toBe(user.revision_hash);
 		resolveReportFlowAnswers({
 			target: 'user',
 			surface: 'in_app',
@@ -956,17 +985,6 @@ describe('report flow rendering', () => {
 		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(unconfigured);
 	});
 
-	test('a configured guidelines URL replaces the hosted default', () => {
-		const hostedUser = getReportFlowResponse('user', 'in_app', 'en-US');
-		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/community'});
-		const user = getReportFlowResponse('user', 'in_app', 'en-US');
-		expect(user.guidelines_url).toBe('https://rules.example.org/community');
-		expect(user.screens[0].options[0].outcome.url).toBe('https://rules.example.org/community');
-		expect(user.revision_hash).toBe(hostedUser.revision_hash);
-		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
-		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(hostedUser);
-	});
-
 	test('the revision hash does not depend on the product name or the locale', () => {
 		for (const [target, surface] of VARIANTS) {
 			setCachedProductName(null);
@@ -974,7 +992,6 @@ describe('report flow rendering', () => {
 			setCachedProductName('Renamed Chat');
 			expect(getReportFlowResponse(target, surface, 'en-US').revision_hash).toBe(hosted);
 			expect(getReportFlowResponse(target, surface, 'de').revision_hash).toBe(hosted);
-			expect(getReportFlowVariant(target, surface).revisionHash).toBe(hosted);
 		}
 	});
 });

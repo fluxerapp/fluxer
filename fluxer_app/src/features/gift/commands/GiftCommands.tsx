@@ -2,6 +2,7 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {GiftAcceptModal} from '@app/features/expressions/components/modals/GiftAcceptModal';
 import {GiftSendToFriendModal} from '@app/features/expressions/components/modals/GiftSendToFriendModal';
@@ -226,8 +227,12 @@ export async function openAcceptModal(rawCode: string, target: InstanceHTTPTarge
 		modal(() => (
 			<GiftAcceptModal code={code} target={target} data-flx="gift.gift-commands.open-accept-modal.gift-accept-modal" />
 		)),
-		`gift-accept-${code}`,
+		giftAcceptModalKey(code),
 	);
+}
+
+function giftAcceptModalKey(code: string): string {
+	return `gift-accept-${code}`;
 }
 
 export async function redeem(i18n: I18n, rawCode: string, target: InstanceHTTPTarget): Promise<void> {
@@ -236,13 +241,17 @@ export async function redeem(i18n: I18n, rawCode: string, target: InstanceHTTPTa
 		await instanceRequest({method: 'POST', path: Endpoints.GIFT_REDEEM(code), target});
 		logger.info('Gift redeemed', {code});
 		Gifts.markAsRedeemed(code, target);
+		ModalCommands.popWithKey(giftAcceptModalKey(code));
 		ToastCommands.success(i18n._(GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR));
 	} catch (error) {
 		logger.error('Gift redeem failed', error);
-		if (error instanceof HttpError) {
-			handleRedeemFailure(i18n, code, target, error);
-		} else {
-			fallbackRedeemFailure(i18n);
+		const retry = () => void redeem(i18n, rawCode, target).catch(() => {});
+		if (!promptForAccountTier(error, retry)) {
+			if (error instanceof HttpError) {
+				handleRedeemFailure(i18n, code, target, error);
+			} else {
+				fallbackRedeemFailure(i18n);
+			}
 		}
 		throw error;
 	}

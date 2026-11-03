@@ -45,12 +45,8 @@ export function gamepadSourceIdForKeybind(keybind: {id: string | null; action: K
 	return `gamepad:${keybind.id}`;
 }
 
-function hasTriggerInput(combo: KeyCombo): boolean {
-	return keyComboHasTriggerInput(combo);
-}
-
 function isEnabledDefaultCombo(combo: KeyCombo): boolean {
-	return (combo.enabled ?? true) !== false && hasTriggerInput(combo);
+	return (combo.enabled ?? true) !== false && keyComboHasTriggerInput(combo);
 }
 
 export function buildDefaultRuntimeKeybinds(

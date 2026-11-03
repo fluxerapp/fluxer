@@ -46,7 +46,7 @@ maybe_handle_custom_status(Request, State) ->
 -spec handle_user_settings_update(map(), state()) -> state().
 handle_user_settings_update(Data, State) ->
     State1 = maybe_update_custom_status(Data, State),
-    maybe_force_invisible_status(Data, State1).
+    update_settings_invisible(Data, State1).
 
 -spec maybe_update_custom_status(map(), state()) -> state().
 maybe_update_custom_status(Data, State) ->
@@ -58,15 +58,11 @@ maybe_update_custom_status(Data, State) ->
             State#{custom_status := Normalized}
     end.
 
--spec maybe_force_invisible_status(map(), state()) -> state().
-maybe_force_invisible_status(Data, State) ->
+-spec update_settings_invisible(map(), state()) -> state().
+update_settings_invisible(Data, State) ->
     case user_settings_presence_status(Data) of
-        invisible ->
-            update_all_session_statuses(invisible, State);
-        Status when Status =:= online; Status =:= idle; Status =:= dnd ->
-            maybe_clear_forced_invisible_status(Status, State);
-        undefined ->
-            State
+        undefined -> State;
+        Status -> State#{settings_invisible => Status =:= invisible}
     end.
 
 -spec user_settings_presence_status(map()) -> online | idle | dnd | invisible | undefined.
@@ -88,34 +84,6 @@ normalize_user_settings_status(dnd) -> dnd;
 normalize_user_settings_status(invisible) -> invisible;
 normalize_user_settings_status(offline) -> invisible;
 normalize_user_settings_status(_) -> undefined.
-
--spec maybe_clear_forced_invisible_status(online | idle | dnd, state()) -> state().
-maybe_clear_forced_invisible_status(Status, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    case has_invisible_session(Sessions) of
-        true -> update_all_session_statuses(Status, State);
-        false -> State
-    end.
-
--spec has_invisible_session(map()) -> boolean().
-has_invisible_session(Sessions) ->
-    lists:any(
-        fun(Session) ->
-            maps:get(status, Session, offline) =:= invisible
-        end,
-        maps:values(Sessions)
-    ).
-
--spec update_all_session_statuses(online | idle | dnd | invisible, state()) -> state().
-update_all_session_statuses(Status, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    UpdatedSessions = maps:map(
-        fun(_SessionId, Session) ->
-            Session#{status => Status}
-        end,
-        Sessions
-    ),
-    State#{sessions => UpdatedSessions}.
 
 -spec handle_user_update_event(map(), state()) -> state().
 handle_user_update_event(Data, State) ->
@@ -175,7 +143,7 @@ flush_push_buffer(#{push_buffer := Buffer} = State) ->
 entry_buffered_at(#{buffered_at := BufferedAt}) ->
     BufferedAt;
 entry_buffered_at(#{message_id := MessageId}) ->
-    snowflake_util:extract_timestamp(MessageId).
+    snowflake_id:extract_timestamp(MessageId).
 
 -spec maybe_update_push_eligibility(state()) -> state().
 maybe_update_push_eligibility(State) ->
@@ -440,179 +408,3 @@ session_holds_push(Session) ->
 -spec extract_snowflake(binary(), map()) -> integer() | undefined.
 extract_snowflake(FieldName, Data) ->
     guild_dispatch_decorate:parse_snowflake(FieldName, maps:get(FieldName, Data, undefined)).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-no_session_holds_push_test() ->
-    ?assertEqual(true, no_session_holds_push(#{})),
-    ?assertEqual(false, no_session_holds_push(#{<<"s1">> => #{mobile => true, afk => false}})),
-    ?assertEqual(true, no_session_holds_push(#{<<"s1">> => #{mobile => true, afk => true}})),
-    ?assertEqual(true, no_session_holds_push(#{<<"s1">> => #{mobile => false, afk => true}})),
-    ?assertEqual(false, no_session_holds_push(#{<<"s1">> => #{mobile => false, afk => false}})),
-    ?assertEqual(
-        true, no_session_holds_push(#{<<"s1">> => #{afk => false, status => offline}})
-    ),
-    ?assertEqual(
-        false,
-        no_session_holds_push(#{
-            <<"s1">> => #{afk => true},
-            <<"s2">> => #{afk => false, status => online}
-        })
-    ).
-
-handle_user_settings_update_forces_invisible_status_test() ->
-    State = #{
-        custom_status => null,
-        sessions => #{
-            <<"s1">> => #{status => online, afk => false, mobile => false},
-            <<"s2">> => #{status => idle, afk => false, mobile => false}
-        }
-    },
-    Updated = handle_user_settings_update(#{<<"status">> => <<"invisible">>}, State),
-    ?assertEqual(
-        #{
-            <<"s1">> => #{status => invisible, afk => false, mobile => false},
-            <<"s2">> => #{status => invisible, afk => false, mobile => false}
-        },
-        maps:get(sessions, Updated)
-    ).
-
-handle_user_settings_update_does_not_force_online_status_test() ->
-    State = #{
-        custom_status => null,
-        sessions => #{
-            <<"s1">> => #{status => idle, afk => true, mobile => false}
-        }
-    },
-    Updated = handle_user_settings_update(#{<<"status">> => <<"online">>}, State),
-    ?assertEqual(maps:get(sessions, State), maps:get(sessions, Updated)).
-
-handle_user_settings_update_visible_status_clears_forced_invisible_test() ->
-    State = #{
-        custom_status => null,
-        sessions => #{
-            <<"s1">> => #{status => invisible, afk => true, mobile => false},
-            <<"s2">> => #{status => dnd, afk => false, mobile => false}
-        }
-    },
-    Updated = handle_user_settings_update(#{<<"status">> => <<"dnd">>}, State),
-    ?assertEqual(
-        #{
-            <<"s1">> => #{status => dnd, afk => true, mobile => false},
-            <<"s2">> => #{status => dnd, afk => false, mobile => false}
-        },
-        maps:get(sessions, Updated)
-    ).
-
-buffer_push_notification_caps_entries_test() ->
-    with_gateway_config(
-        #{presence_push_buffer_max_entries => 2, presence_push_buffer_max_bytes => 0},
-        fun() ->
-            State0 = #{push_buffer => []},
-            State1 = buffer_push_notification(push_params(1, 1), State0),
-            State2 = buffer_push_notification(push_params(1, 2), State1),
-            State3 = buffer_push_notification(push_params(1, 3), State2),
-            MessageIds = [
-                maps:get(message_id, Entry)
-             || Entry <- maps:get(push_buffer, State3)
-            ],
-            ?assertEqual([3, 2], MessageIds)
-        end
-    ).
-
-buffer_push_notification_caps_bytes_test() ->
-    with_gateway_config(
-        #{presence_push_buffer_max_entries => 10, presence_push_buffer_max_bytes => 1},
-        fun() ->
-            State = buffer_push_notification(push_params(1, 1), #{push_buffer => []}),
-            ?assertEqual([], maps:get(push_buffer, State))
-        end
-    ).
-
-private_message(MessageId, ChannelType, Flags) ->
-    #{
-        <<"id">> => integer_to_binary(MessageId),
-        <<"channel_id">> => <<"5">>,
-        <<"channel_type">> => ChannelType,
-        <<"flags">> => Flags,
-        <<"author">> => #{<<"id">> => <<"20">>}
-    }.
-
-pushed_private_message_ids(Sessions, Messages) ->
-    Self = self(),
-    ok = meck:new(push, [passthrough, no_link]),
-    try
-        ok = meck:expect(push, handle_message_create, fun(Params) ->
-            Self ! {pushed, maps:get(<<"id">>, maps:get(message_data, Params))},
-            ok
-        end),
-        State = lists:foldl(
-            fun(Message, Acc) -> handle_message_create_event(Message, Acc) end,
-            #{user_id => 10, sessions => Sessions, push_buffer => []},
-            Messages
-        ),
-        Buffered = [maps:get(message_id, Entry) || Entry <- maps:get(push_buffer, State)],
-        {pushed_ids(), lists:sort(Buffered)}
-    after
-        meck:unload(push)
-    end.
-
-pushed_ids() ->
-    receive
-        {pushed, Id} -> [binary_to_integer(Id) | pushed_ids()]
-    after 0 -> []
-    end.
-
-silent_dms_and_group_dms_are_not_pushed_test() ->
-    Messages = [
-        private_message(1, 1, 4096),
-        private_message(2, 3, 4096 bor 4),
-        private_message(3, 1, 0),
-        private_message(4, 3, 4)
-    ],
-    ?assertEqual({[3, 4], []}, pushed_private_message_ids(#{}, Messages)).
-
-silent_dms_and_group_dms_are_not_buffered_behind_an_active_desktop_test() ->
-    Desktop = #{<<"desktop">> => #{status => online, afk => false, mobile => false}},
-    Messages = [
-        private_message(1, 1, 4096),
-        private_message(2, 3, 4096),
-        private_message(3, 1, 0),
-        private_message(4, 3, 0)
-    ],
-    with_gateway_config(#{}, fun() ->
-        ?assertEqual({[], [3, 4]}, pushed_private_message_ids(Desktop, Messages))
-    end).
-
-push_params(ChannelId, MessageId) ->
-    #{
-        message_data => #{
-            <<"channel_id">> => integer_to_binary(ChannelId),
-            <<"id">> => integer_to_binary(MessageId)
-        },
-        user_ids => [10],
-        guild_id => 0,
-        author_id => 20
-    }.
-
-with_gateway_config(Config, Fun) ->
-    Key = {fluxer_gateway, runtime_config},
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, Config),
-    try
-        Fun()
-    after
-        restore_gateway_config(Key, Previous)
-    end.
-
-restore_gateway_config(Key, undefined) ->
-    try persistent_term:erase(Key) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end;
-restore_gateway_config(Key, Previous) ->
-    persistent_term:put(Key, Previous).
-
--endif.

@@ -140,7 +140,7 @@
 .inlineMuteButton {
 	position: absolute;
 	bottom: 0.5rem;
-	left: 0.5rem;
+	inset-inline-start: 0.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -149,7 +149,7 @@
 	border: none;
 	border-radius: var(--radius-full);
 	background-color: rgba(0, 0, 0, 0.6);
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	cursor: pointer;
 	z-index: 2;
 	transition: background-color 150ms ease;

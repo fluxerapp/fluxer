@@ -173,10 +173,16 @@ function mentionPresentationStyle(presentation: ComposerMentionPresentationForma
 	}
 	const underline = (presentation & ComposerMentionPresentation.underline) !== 0;
 	const strike = (presentation & ComposerMentionPresentation.strike) !== 0;
+	const textDecorations: Array<string> = [];
+	if (underline) {
+		textDecorations.push('underline');
+	}
+	if (strike) {
+		textDecorations.push('line-through');
+	}
 	return {
 		fontStyle: (presentation & ComposerMentionPresentation.italic) !== 0 ? 'italic' : undefined,
-		textDecorationLine:
-			underline && strike ? 'underline line-through' : underline ? 'underline' : strike ? 'line-through' : undefined,
+		textDecorationLine: textDecorations.length > 0 ? textDecorations.join(' ') : undefined,
 		fontSize: (presentation & ComposerMentionPresentation.subtext) !== 0 ? '0.85em' : undefined,
 		color:
 			(presentation & ComposerMentionPresentation.subtext) !== 0

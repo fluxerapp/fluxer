@@ -20,6 +20,7 @@ import {
 import {createTrackProcessor} from '@app/features/voice/utils/camera-effects/MediaStreamTrackProcessorPolyfill';
 import {detectWebCameraSegmentationCapability} from '@app/features/voice/utils/camera-effects/WebCameraBackgroundSupport';
 import {
+	isValidUpdateRequestId,
 	isWebCameraEffectShutdownReason,
 	validateCameraEffectFrameDimensions,
 	WEB_CAMERA_EFFECT_UPDATE_REQUEST_ID_MAX,
@@ -183,16 +184,6 @@ function parseOptionalErrorDiagnostic(value: unknown): ErrorDiagnostic | null {
 		throw new Error('Camera effect worker emitted an invalid stop diagnostic');
 	}
 	return {errorType: value.errorType, message: value.message, stack: value.stack};
-}
-
-function isValidUpdateRequestId(value: unknown): value is number {
-	if (!Number.isSafeInteger(value)) {
-		return false;
-	}
-	if ((value as number) <= 0) {
-		return false;
-	}
-	return (value as number) <= WEB_CAMERA_EFFECT_UPDATE_REQUEST_ID_MAX;
 }
 
 function createWorkerReportedError(event: ErrorDiagnostic, context: string): Error {

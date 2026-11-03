@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -15,6 +14,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -53,7 +53,7 @@ export function GuildBaseController(app: HonoApp) {
 			operationId: 'create_guild',
 			summary: 'Create guild',
 			description:
-				'Only claimed, email-verified non-bot users can create guilds. A self-hosted instance can restrict creation to admins and users granted the feature_guild_create limit.',
+				'Only verified accounts that are not bots can create guilds. A self-hosted instance can restrict creation to admins and users granted the feature_guild_create limit.',
 			responseSchema: GuildResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -65,9 +65,6 @@ export function GuildBaseController(app: HonoApp) {
 			const policy = await ctx.get('instanceConfigRepository').getInstancePolicyConfig();
 			if (policy.single_community_enabled) {
 				throw new SingleCommunityCannotCreateGuildsError();
-			}
-			if (!user.isUnclaimedAccount()) {
-				requireEmailVerified(user, 'guild_creation');
 			}
 			assertAccountNotLimited(user);
 			if (Config.instance.selfHosted && !policy.guild_create_access) {
@@ -194,7 +191,7 @@ export function GuildBaseController(app: HonoApp) {
 			operationId: 'get_guild',
 			summary: 'Get guild information',
 			description:
-				'User must be a member of the guild to access this endpoint. Requires guilds OAuth scope if using bearer token.',
+				'User must be a member of the guild, or visiting it, to access this endpoint. Someone visiting gets channels that @everyone can see, without members, and visiting set to true. Requires guilds OAuth scope if using bearer token.',
 			responseSchema: GuildResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
@@ -203,12 +200,17 @@ export function GuildBaseController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
-			const guild = await ctx.get('guildService').data.operations.getGuild({userId, guildId});
-			return ctx.json(await maskGuildResponseThreadBits(guildId, viewerFromCtx(ctx), guild));
+			const viewer = viewerFromCtx(ctx);
+			const visitorGuild = await ctx
+				.get('guildVisitService')
+				.getGuildForVisitor({userId, guildId, viewer, requestCache: ctx.get('requestCache')});
+			const guild = visitorGuild ?? (await ctx.get('guildService').data.operations.getGuild({userId, guildId}));
+			return ctx.json(await maskGuildResponseThreadBits(guildId, viewer, guild));
 		},
 	);
 	app.patch(
 		'/guilds/:guild_id',
+		RequestBodyLimit(jsonAssetBodyLimit({guild_icon: 1, banner: 1, splash: 1, embed_splash: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),

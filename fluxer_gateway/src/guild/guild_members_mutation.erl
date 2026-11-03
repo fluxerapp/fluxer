@@ -3,97 +3,21 @@
 -module(guild_members_mutation).
 -typing([eqwalizer]).
 
--export([
-    resolve_all_mentions/2,
-    resolve_mention_sources/2,
-    resolve_mention_sources_page/2,
-    resolve_channel_mentions/2
-]).
+-export([resolve_mention_sources_page/2, resolve_channel_mentions/2]).
 
 -export_type([guild_state/0, guild_reply/1]).
 
 -type guild_state() :: map().
 -type guild_reply(T) :: {reply, T, guild_state()}.
--type member() :: map().
 -type user_id() :: integer().
 -type channel_id() :: integer().
 -type role_id() :: integer().
-
--spec resolve_all_mentions(map(), guild_state()) -> guild_reply(map()).
-resolve_all_mentions(Request, State) ->
-    #{mention_everyone := MentionEveryone} = Request,
-    Members = guild_members_common:guild_members(State),
-    MemberMap = guild_data_index:member_map(guild_members_common:guild_data(State)),
-    Context = request_mention_context(Request, State),
-    UserIds =
-        case MentionEveryone of
-            true ->
-                resolve_mentions(thread_universe_members(Members, Context), Context);
-            false ->
-                CandidateUserIds = candidate_user_ids(Context),
-                resolve_mentions_for_ids(CandidateUserIds, MemberMap, Context)
-        end,
-    {reply, #{user_ids => UserIds}, State}.
-
--spec resolve_mention_sources(map(), guild_state()) -> guild_reply(map()).
-resolve_mention_sources(Request, State) ->
-    #{
-        channel_id := ChannelId,
-        author_id := AuthorId,
-        mention_everyone := MentionEveryone,
-        mention_here := MentionHere,
-        role_ids := RoleIds,
-        user_ids := DirectUserIds
-    } = Request,
-    RoleUserIds = collect_role_user_ids(RoleIds, AuthorId, ChannelId, State),
-    DirectMentionedUserIds = collect_direct_user_ids(DirectUserIds, AuthorId, ChannelId, State),
-    EveryoneUserIds =
-        case MentionEveryone orelse MentionHere of
-            true ->
-                MassMentionRequest = Request#{role_ids => [], user_ids => []},
-                {reply, #{user_ids := MassUserIds}, _} =
-                    resolve_all_mentions(MassMentionRequest, State),
-                MassUserIds;
-            false ->
-                []
-        end,
-    {reply,
-        #{
-            direct_user_ids => DirectMentionedUserIds,
-            role_user_ids => RoleUserIds,
-            everyone_user_ids => EveryoneUserIds
-        },
-        State}.
-
--spec collect_role_user_ids(term(), user_id(), channel_id(), guild_state()) -> [user_id()].
-collect_role_user_ids(RoleIds, AuthorId, ChannelId, State) ->
-    case guild_members_common:normalize_int_list(RoleIds) of
-        [] ->
-            [];
-        RoleIdList ->
-            Candidates = guild_members_roles:user_ids_for_any_role(RoleIdList, State),
-            collect_user_mentions(Candidates, AuthorId, ChannelId, State)
-    end.
-
--spec collect_direct_user_ids(term(), user_id(), channel_id(), guild_state()) -> [user_id()].
-collect_direct_user_ids(DirectUserIds, AuthorId, ChannelId, State) ->
-    case guild_members_common:normalize_int_list(DirectUserIds) of
-        [] -> [];
-        TargetIds -> collect_user_mentions(TargetIds, AuthorId, ChannelId, State)
-    end.
-
--spec collect_user_mentions([user_id()], user_id(), channel_id(), guild_state()) -> [user_id()].
-collect_user_mentions(UserIds, AuthorId, ChannelId, State) ->
-    ThreadRecipient = guild_thread_gate:recipient_active(ChannelId, State),
-    guild_members_common:collect_mentions_for_user_ids(
-        UserIds, AuthorId, ChannelId, State, fun(UserId, _Member) -> ThreadRecipient(UserId) end
-    ).
 
 -spec resolve_mention_sources_page(map(), guild_state()) -> guild_reply(map()).
 resolve_mention_sources_page(Request, State) ->
     #{limit := Limit, cursor := Cursor} = Request,
     Context = request_mention_context(Request, State),
-    MemberMap = guild_data_index:member_map(guild_members_common:guild_data(State)),
+    MemberMap = guild_data_index_members:member_map(guild_members_common:guild_data(State)),
     CandidateUserIds = paged_candidates(Context, MemberMap),
     CandidatesAfterCursor = drop_candidates_after_cursor(Cursor, CandidateUserIds),
     {Entries, NextCursor} = guild_members_search:take_mention_source_page(
@@ -156,16 +80,6 @@ build_mention_context(
         state => State
     }.
 
--spec thread_universe_members([member()], map()) -> [member()].
-thread_universe_members(Members, #{thread_universe := Universe}) when is_map(Universe) ->
-    [
-        Member
-     || Member <- Members,
-        maps:is_key(guild_members_common:member_user_id(Member), Universe)
-    ];
-thread_universe_members(Members, _Context) ->
-    Members.
-
 -spec thread_here_set(gb_sets:set(user_id()), map()) -> gb_sets:set(user_id()).
 thread_here_set(HereSet, #{thread_universe := Universe}) when is_map(Universe) ->
     gb_sets:filter(fun(UserId) -> maps:is_key(UserId, Universe) end, HereSet);
@@ -190,66 +104,6 @@ thread_recipient_set(UserIdSet, #{thread_universe := Universe} = Context) when
     gb_sets:from_list(thread_recipients(gb_sets:to_list(UserIdSet), Context));
 thread_recipient_set(UserIdSet, _Context) ->
     UserIdSet.
-
--spec resolve_mentions([member()], map()) -> [user_id()].
-resolve_mentions(Members, Context) ->
-    #{author_id := AuthorId} = Context,
-    lists:filtermap(
-        fun(Member) ->
-            resolve_member_mention(Member, AuthorId, Context)
-        end,
-        Members
-    ).
-
--spec resolve_member_mention(member(), user_id(), map()) -> {true, user_id()} | false.
-resolve_member_mention(Member, AuthorId, Context) ->
-    case guild_members_common:member_user_id(Member) of
-        undefined -> false;
-        AuthorId -> false;
-        UserId -> check_member_mention(UserId, Member, Context)
-    end.
-
--spec check_member_mention(user_id(), member(), map()) -> {true, user_id()} | false.
-check_member_mention(UserId, Member, Context) ->
-    case guild_members_common:is_member_bot(Member) of
-        true -> false;
-        false -> maybe_visible_member_mention(UserId, Member, Context)
-    end.
-
--spec maybe_visible_member_mention(user_id(), member(), map()) -> {true, user_id()} | false.
-maybe_visible_member_mention(UserId, Member, Context) ->
-    #{channel_id := ChannelId, state := State} = Context,
-    ShouldMention = guild_members_common:check_should_mention(UserId, Member, Context),
-    CanView = guild_members_common:member_can_view_channel(UserId, ChannelId, Member, State),
-    case ShouldMention andalso CanView of
-        true -> {true, UserId};
-        false -> false
-    end.
-
--spec resolve_mentions_for_ids([user_id()], #{user_id() => member()}, map()) -> [user_id()].
-resolve_mentions_for_ids(CandidateUserIds, MemberMap, Context) ->
-    #{author_id := AuthorId} = Context,
-    lists:filtermap(
-        fun(UserId) ->
-            resolve_candidate_mention(UserId, AuthorId, MemberMap, Context)
-        end,
-        lists:usort(CandidateUserIds)
-    ).
-
--spec resolve_candidate_mention(user_id(), user_id(), #{user_id() => member()}, map()) ->
-    {true, user_id()} | false.
-resolve_candidate_mention(UserId, UserId, _MemberMap, _Context) ->
-    false;
-resolve_candidate_mention(UserId, _AuthorId, MemberMap, Context) ->
-    check_candidate_mention(UserId, MemberMap, Context).
-
--spec check_candidate_mention(user_id(), #{user_id() => member()}, map()) ->
-    {true, user_id()} | false.
-check_candidate_mention(UserId, MemberMap, Context) ->
-    case maps:get(UserId, MemberMap, undefined) of
-        undefined -> false;
-        Member -> check_member_mention(UserId, Member, Context)
-    end.
 
 -spec candidate_user_ids(map()) -> [user_id()].
 candidate_user_ids(Context) ->
@@ -300,12 +154,12 @@ paged_candidates(Context, _MemberMap) ->
 
 -spec everyone_can_view(map(), role_id(), integer()) -> boolean().
 everyone_can_view(Channel, GuildId, BasePerms) ->
-    case permission_bits:has(BasePerms, constants:administrator_permission()) of
+    case bitset:has(BasePerms, constants:administrator_permission()) of
         true ->
             true;
         false ->
             Perms = apply_everyone_overwrites(BasePerms, Channel, GuildId),
-            permission_bits:has(Perms, constants:view_channel_permission())
+            bitset:has(Perms, constants:view_channel_permission())
     end.
 
 -spec build_channel_mention(map()) -> {true, map()} | false.
@@ -322,9 +176,9 @@ build_channel_mention(Channel) ->
 
 -spec resolve_channel_mentions_for_guild(term(), role_id(), map()) -> [map()].
 resolve_channel_mentions_for_guild(ChannelIds, GuildId, Data) ->
-    Roles = guild_data_index:role_index(Data),
+    Roles = guild_data_index_roles:role_index(Data),
     BasePerms = role_permissions_for_id(Roles, GuildId),
-    ChannelIndex = guild_data_index:channel_index(Data),
+    ChannelIndex = guild_data_index_channels:channel_index(Data),
     lists:filtermap(
         fun(ChannelId) ->
             maybe_channel_mention(ChannelId, ChannelIndex, GuildId, BasePerms)
@@ -360,9 +214,9 @@ maybe_channel_mention_for_channel(Channel, GuildId, BasePerms) ->
 
 -spec role_permissions_for_id(map(), role_id()) -> integer().
 role_permissions_for_id(Roles, GuildId) ->
-    case guild_permissions:find_role_by_id(GuildId, Roles) of
+    case guild_permissions_check:find_role_by_id(GuildId, Roles) of
         undefined -> 0;
-        Role -> permission_bits:parse(maps:get(<<"permissions">>, Role, undefined))
+        Role -> bitset:parse(maps:get(<<"permissions">>, Role, undefined))
     end.
 
 -spec apply_everyone_overwrites(integer(), map(), role_id()) -> integer().
@@ -385,7 +239,7 @@ apply_everyone_overwrite(Overwrite, GuildId, Acc) when is_map(Overwrite) ->
         }
     of
         {GuildId, 0, Allow, Deny} when is_integer(Allow), is_integer(Deny) ->
-            permission_bits:apply_allow_deny(Acc, Allow, Deny);
+            bitset:apply_allow_deny(Acc, Allow, Deny);
         _ ->
             Acc
     end;
@@ -411,8 +265,8 @@ overwrite_type(Overwrite) ->
 
 -spec overwrite_allow(map()) -> integer() | undefined.
 overwrite_allow(Overwrite) ->
-    permission_bits:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)).
+    bitset:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)).
 
 -spec overwrite_deny(map()) -> integer() | undefined.
 overwrite_deny(Overwrite) ->
-    permission_bits:parse_optional(maps:get(<<"deny">>, Overwrite, undefined)).
+    bitset:parse_optional(maps:get(<<"deny">>, Overwrite, undefined)).

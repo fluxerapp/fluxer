@@ -59,9 +59,7 @@ export type MediaEngineFacadeConnectRequestDecision =
 export interface MediaEngineFacadeConnectPreflightInput {
 	targetAvailable: boolean;
 	isTimedOut: boolean;
-	isUnclaimed: boolean;
-	isGuildOwner: boolean;
-	isDirectMessage: boolean;
+	accountGateDenied: boolean;
 	hasGatewaySocket: boolean;
 	blockedByMatureGate: boolean;
 	channelLimitAllowed: boolean;
@@ -69,7 +67,7 @@ export interface MediaEngineFacadeConnectPreflightInput {
 
 export type MediaEngineFacadeConnectPreflightDecision =
 	| {type: 'cleanup-unavailable-target'; showToast: true}
-	| {type: 'toast'; reason: 'timed-out' | 'claim-account-guild' | 'claim-account-direct'}
+	| {type: 'toast'; reason: 'timed-out' | 'account-gate'}
 	| {type: 'abort'; reason: 'missing-gateway-socket' | 'channel-limit'}
 	| {type: 'navigate-channel-gate'}
 	| {type: 'proceed'};
@@ -379,14 +377,8 @@ export function selectMediaEngineConnectPreflightDecision(
 	if (input.isTimedOut) {
 		return {type: 'toast', reason: 'timed-out'};
 	}
-	if (input.isUnclaimed && input.isDirectMessage) {
-		return {type: 'toast', reason: 'claim-account-direct'};
-	}
-	if (input.isUnclaimed && !input.isGuildOwner) {
-		return {
-			type: 'toast',
-			reason: 'claim-account-guild',
-		};
+	if (input.accountGateDenied) {
+		return {type: 'toast', reason: 'account-gate'};
 	}
 	if (!input.hasGatewaySocket) {
 		return {type: 'abort', reason: 'missing-gateway-socket'};
@@ -416,6 +408,7 @@ const voiceGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
 	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
 	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
+	GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED,
 ]);
 
 const unavailableGatewayErrorCodes = new Set<GatewayErrorCode>([
@@ -437,6 +430,7 @@ const preConnectAbortGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
 	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
 	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
+	GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED,
 ]);
 
 const p2pRefusalsByGatewayErrorCode = new Map<GatewayErrorCode, MediaEngineFacadeP2pRefusal>([
@@ -482,7 +476,10 @@ export function selectMediaEngineGatewayErrorDecision(
 		toast = 'timed-out';
 	} else if (input.code === GatewayErrorCodes.VOICE_CONNECTION_LIMIT_REACHED) {
 		toast = 'connection-limit';
-	} else if (input.code === GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT) {
+	} else if (
+		input.code === GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT ||
+		input.code === GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED
+	) {
 		toast = 'unclaimed-account';
 	}
 

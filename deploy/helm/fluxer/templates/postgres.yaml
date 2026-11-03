@@ -1,0 +1,147 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.postgres }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "postgres" "component" "database" "w" . }}
+{{- $args := list }}
+{{- range $k := keys .parameters | sortAlpha }}
+{{- $args = concat $args (list "-c" (printf "%s=%s" $k (include "fluxer.string" (get $.Values.postgres.parameters $k)))) }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: postgres
+  podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ toJson $args | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" (.runAsUser | int)) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      initContainers:
+        - name: version-guard
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              want=$(postgres --version | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+              if [ -s "$PGDATA/PG_VERSION" ]; then
+                have=$(cat "$PGDATA/PG_VERSION")
+                if [ "$have" != "$want" ]; then
+                  echo "The data directory was created by Postgres $have and this image runs Postgres $want. Set postgres.image.tag back to the $have image, or dump the database and restore it into a fresh volume. See the Kubernetes page of the operator docs." >&2
+                  exit 1
+                fi
+              fi
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      containers:
+        - name: postgres
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          args:
+            {{- toYaml $args | nindent 12 }}
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_DB
+              value: {{ .database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .username | quote }}
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "POSTGRES_PASSWORD" "key" "FLUXER_POSTGRES_PASSWORD") | nindent 12 }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: shm
+              mountPath: /dev/shm
+            - name: run
+              mountPath: /var/run/postgresql
+      volumes:
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .shmSize }}
+        - name: run
+          emptyDir: {}
+  volumeClaimTemplates:
+    {{- include "fluxer.pvc" .persistence | nindent 4 }}
+{{- end }}
+{{- end }}

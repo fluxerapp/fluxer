@@ -67,7 +67,7 @@ async function currentUserHasRecoveryKit(userId: string | null): Promise<boolean
 	}
 }
 
-export async function createAndShowRecoveryKit(): Promise<void> {
+export async function createAndShowRecoveryKit(onDone?: () => void): Promise<void> {
 	const userId = Users.currentUserId;
 	const replacing = await currentUserHasRecoveryKit(userId);
 	const kit = await createRecoveryKit(userId, {});
@@ -75,6 +75,7 @@ export async function createAndShowRecoveryKit(): Promise<void> {
 		recoveryKey: kit.recovery_key,
 		createdAt: kit.created_at,
 		reason: replacing ? 'replaced' : 'created',
+		onDone,
 	});
 }
 
@@ -83,15 +84,17 @@ export async function createRecoveryKitWithPasswordAndOpen({
 	password,
 	username,
 	discriminator,
+	onDone,
 }: {
 	userId: string;
 	password: string;
 	username?: string;
 	discriminator?: string;
+	onDone?: () => void;
 }): Promise<boolean> {
 	try {
 		const kit = await createRecoveryKit(userId, {password});
-		openRecoveryKitModal({recoveryKey: kit.recovery_key, createdAt: kit.created_at, username, discriminator});
+		openRecoveryKitModal({recoveryKey: kit.recovery_key, createdAt: kit.created_at, username, discriminator, onDone});
 		return true;
 	} catch {
 		ToastCommands.error(i18nGlobal._(RECOVERY_KIT_CREATE_FAILED_DESCRIPTOR));

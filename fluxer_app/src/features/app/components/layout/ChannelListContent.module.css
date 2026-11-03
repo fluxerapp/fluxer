@@ -34,7 +34,7 @@
 	width: 100%;
 	min-width: 0;
 	min-height: 100%;
-	padding-right: var(--spacing-2);
+	padding-inline-end: var(--spacing-2);
 }
 
 .topDropZone {

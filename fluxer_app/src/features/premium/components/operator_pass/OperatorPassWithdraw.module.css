@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.note {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.error {
+	margin: 0;
+	color: var(--status-danger);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

@@ -768,7 +768,7 @@ const ComposerInner = ({
 							onContextMenu={handleEditableContextMenu}
 							onFocus={onFocus}
 							onBlur={onBlur}
-							aria-label={ariaLabelledBy == null ? (ariaLabel == null ? placeholder : ariaLabel) : undefined}
+							aria-label={ariaLabelledBy == null ? (ariaLabel ?? placeholder) : undefined}
 							aria-labelledby={ariaLabelledBy}
 							aria-describedby={ariaDescribedBy}
 							aria-errormessage={ariaErrorMessage}

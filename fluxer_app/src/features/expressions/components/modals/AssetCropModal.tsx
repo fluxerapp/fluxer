@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {
 	getAspectRatioRange,
 	type ImageDimensions,
 	isOriginalImageWithinAssetBounds,
 } from '@app/features/expressions/utils/AssetImageGeometry';
 import {ImageCropModal} from '@app/features/messaging/components/modals/ImageCropModal';
+import {getPolicy} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -36,6 +38,10 @@ const CROP_AVATAR_TITLE_DESCRIPTOR = msg({
 const CROP_COMMUNITY_ICON_TITLE_DESCRIPTOR = msg({
 	message: 'Crop community icon',
 	comment: 'Modal title for cropping a community icon before upload.',
+});
+const CROP_ROLE_ICON_TITLE_DESCRIPTOR = msg({
+	message: 'Crop role icon',
+	comment: 'Modal title for cropping a role icon before upload.',
 });
 const CROP_GROUP_ICON_TITLE_DESCRIPTOR = msg({
 	message: 'Crop group icon',
@@ -68,6 +74,12 @@ const COMMUNITY_ICON_CROP_DESCRIPTION_DESCRIPTOR = msg({
 		'Drag to reposition your community icon and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels.',
 	comment:
 		'Description in the community icon crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.',
+});
+const ROLE_ICON_CROP_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Drag to reposition your role icon and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels.',
+	comment:
+		'Description in the role icon crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.',
 });
 const GROUP_ICON_CROP_DESCRIPTION_DESCRIPTOR = msg({
 	message:
@@ -123,6 +135,7 @@ export const AssetType = {
 	PROFILE_BANNER: 'profile_banner',
 	SPLASH: 'splash',
 	EMBED_SPLASH: 'embed_splash',
+	ROLE_ICON: 'role_icon',
 } as const;
 
 export type AssetType = ValueOf<typeof AssetType>;
@@ -134,7 +147,6 @@ interface AssetConfig {
 	maxHeight: number;
 	minWidth: number;
 	minHeight: number;
-	sizeLimitBytes: number;
 	minHeightRatio?: number;
 	maxHeightRatio?: number;
 }
@@ -147,7 +159,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.GUILD_ICON]: {
 		aspectRatio: 1,
@@ -156,7 +167,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.CHANNEL_ICON]: {
 		aspectRatio: 1,
@@ -165,7 +175,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.GUILD_BANNER]: {
 		aspectRatio: 16 / 9,
@@ -174,7 +183,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
 	},
@@ -185,7 +193,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 723,
 		minWidth: 680,
 		minHeight: 240,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.SPLASH]: {
 		aspectRatio: 16 / 9,
@@ -194,7 +201,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
 	},
@@ -205,9 +211,16 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
+	},
+	[AssetType.ROLE_ICON]: {
+		aspectRatio: 1,
+		cropShape: 'rect',
+		maxWidth: 256,
+		maxHeight: 256,
+		minWidth: 64,
+		minHeight: 64,
 	},
 };
 export const getAssetConfig = (type: AssetType): AssetConfig => ASSET_CONFIGS[type];
@@ -217,6 +230,9 @@ const getAssetAspectRatioRange = (type: AssetType) => {
 };
 const canSkipOriginalAssetImage = (type: AssetType, dimensions: ImageDimensions): boolean => {
 	const config = getAssetConfig(type);
+	if (type === AssetType.ROLE_ICON && (dimensions.width < config.minWidth || dimensions.height < config.minHeight)) {
+		return false;
+	}
 	return isOriginalImageWithinAssetBounds(
 		dimensions,
 		getAssetAspectRatioRange(type),
@@ -240,6 +256,8 @@ const getTitle = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(CROP_INVITE_BACKGROUND_TITLE_DESCRIPTOR);
 		case AssetType.EMBED_SPLASH:
 			return i18n._(CROP_CHAT_EMBED_BACKGROUND_TITLE_DESCRIPTOR);
+		case AssetType.ROLE_ICON:
+			return i18n._(CROP_ROLE_ICON_TITLE_DESCRIPTOR);
 	}
 };
 const getDescription = (i18n: I18n, assetType: AssetType): string => {
@@ -260,6 +278,8 @@ const getDescription = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(INVITE_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
 		case AssetType.EMBED_SPLASH:
 			return i18n._(CHAT_EMBED_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
+		case AssetType.ROLE_ICON:
+			return i18n._(ROLE_ICON_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
 	}
 };
 const getSaveButtonLabel = (i18n: I18n, assetType: AssetType): string => {
@@ -268,6 +288,7 @@ const getSaveButtonLabel = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(SAVE_AVATAR_DESCRIPTOR);
 		case AssetType.GUILD_ICON:
 		case AssetType.CHANNEL_ICON:
+		case AssetType.ROLE_ICON:
 			return i18n._(SAVE_ICON_DESCRIPTOR);
 		case AssetType.GUILD_BANNER:
 		case AssetType.PROFILE_BANNER:
@@ -283,6 +304,7 @@ const getErrorMessage = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(FAILED_TO_CROP_AVATAR_PLEASE_TRY_AGAIN_DESCRIPTOR);
 		case AssetType.GUILD_ICON:
 		case AssetType.CHANNEL_ICON:
+		case AssetType.ROLE_ICON:
 			return i18n._(FAILED_TO_CROP_ICON_PLEASE_TRY_AGAIN_DESCRIPTOR);
 		case AssetType.GUILD_BANNER:
 		case AssetType.PROFILE_BANNER:
@@ -317,7 +339,9 @@ export const AssetCropModal: React.FC<AssetCropModalProps> = observer(
 				cropShape={config.cropShape}
 				maxWidth={config.maxWidth}
 				maxHeight={config.maxHeight}
-				sizeLimitBytes={config.sizeLimitBytes}
+				sizeLimitBytes={
+					assetType === AssetType.ROLE_ICON ? getPolicy('role_icon').maxBytes : GlobalLimits.getAvatarMaxSize()
+				}
 				minHeightRatio={config.minHeightRatio}
 				maxHeightRatio={config.maxHeightRatio}
 				canSkipOriginal={(dimensions) => canSkipOriginalAssetImage(assetType, dimensions)}

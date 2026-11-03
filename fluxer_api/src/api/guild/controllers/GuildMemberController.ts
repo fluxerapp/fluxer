@@ -4,6 +4,7 @@ import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -49,14 +50,12 @@ export function GuildMemberController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const {limit, after} = ctx.req.valid('query');
-			const requestCache = ctx.get('requestCache');
 			return ctx.json(
 				await ctx.get('guildService').members.getMembers({
 					userId,
 					guildId,
 					limit,
 					after: after != null ? createUserID(after) : undefined,
-					requestCache,
 				}),
 			);
 		},
@@ -111,6 +110,7 @@ export function GuildMemberController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/members/@me',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -138,6 +138,7 @@ export function GuildMemberController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/members/:user_id',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdUserIdParam),

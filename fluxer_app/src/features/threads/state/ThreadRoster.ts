@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {
 	type CustomStatus,
@@ -97,13 +98,13 @@ class ThreadRoster {
 		this.rosters.set(payload.thread_id, members);
 	}
 
-	clearThread(threadId: string): void {
-		this.rosters.delete(threadId);
-	}
-
 	reset(): void {
 		this.rosters.clear();
 	}
 }
 
-export default new ThreadRoster();
+const threadRoster = new ThreadRoster();
+
+ResettableStates.register(threadRoster, () => threadRoster.reset());
+
+export default threadRoster;

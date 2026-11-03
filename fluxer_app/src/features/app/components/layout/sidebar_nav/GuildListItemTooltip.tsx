@@ -187,6 +187,8 @@ export function GuildListItemTooltip({
 			>
 				<GuildBadge
 					features={guild.features}
+					badgeIds={guild.badgeIds}
+					visibleCustomBadges={2}
 					showTooltip={false}
 					onLightSurface
 					data-flx="app.sidebar-nav.guild-list-item-tooltip.guild-badge"

@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    get_member_user_id/1,
     get_member_display_name/1,
     normalize_name/1,
     casefold_binary/1,
@@ -12,14 +11,6 @@
     connected_session_user_ids/1,
     unicode_chardata_to_binary/1
 ]).
-
--spec get_member_user_id(map()) -> integer() | undefined.
-get_member_user_id(Member) ->
-    User = maps:get(<<"user">>, Member, #{}),
-    case snowflake_id:parse_maybe(maps:get(<<"id">>, User, undefined)) of
-        UserId when is_integer(UserId), UserId > 0 -> UserId;
-        _ -> undefined
-    end.
 
 -spec normalize_name(term()) -> binary().
 normalize_name(undefined) ->
@@ -61,10 +52,14 @@ casefold_binary(Value) ->
         {ok, Folded} ->
             Folded;
         not_ascii ->
-            case unicode_chardata_to_binary(string:casefold(Bin)) of
-                {ok, Folded} -> Folded;
-                error -> Bin
-            end
+            unicode_casefold(Bin)
+    end.
+
+-spec unicode_casefold(binary()) -> binary().
+unicode_casefold(Bin) ->
+    case unicode_chardata_to_binary(string:casefold(Bin)) of
+        {ok, Folded} -> Folded;
+        error -> Bin
     end.
 
 %% Case folding a pure-ASCII binary is exactly A-Z -> a-z, so a byte pass is

@@ -23,6 +23,26 @@ pub struct MissingAttachment {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct EmbedField {
+    pub name: String,
+    pub value: String,
+    pub inline: bool,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Embed {
+    pub title: Option<String>,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub author_name: Option<String>,
+    pub fields: Vec<EmbedField>,
+    pub footer_text: Option<String>,
+    pub image_url: Option<String>,
+    pub thumbnail_url: Option<String>,
+    pub nsfw: bool,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Message {
     pub id: String,
     pub content: String,
@@ -38,9 +58,11 @@ pub struct Message {
     pub channel_nsfw: Option<bool>,
     pub channel_content_warning_level: Option<i32>,
     pub channel_content_warning_text: Option<String>,
+    pub guild_id: Option<String>,
     pub guild_nsfw: Option<bool>,
     pub attachments: Vec<Attachment>,
     pub missing_attachments: Vec<MissingAttachment>,
+    pub embeds: Vec<Embed>,
 }
 
 pub fn ordered_messages(values: &[Value]) -> Vec<Message> {
@@ -61,6 +83,12 @@ fn message_from_value(value: &Value) -> Message {
         .into_iter()
         .flatten()
         .map(missing_attachment_from_value)
+        .collect();
+    let embeds = value["embeds"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(embed_from_value)
         .collect();
     Message {
         id: value_id(&value["id"]).unwrap_or_default(),
@@ -85,10 +113,46 @@ fn message_from_value(value: &Value) -> Message {
         channel_content_warning_text: value["channel_content_warning_text"]
             .as_str()
             .map(ToOwned::to_owned),
+        guild_id: value_id(&value["guild_id"]),
         guild_nsfw: value["guild_nsfw"].as_bool(),
         attachments,
         missing_attachments,
+        embeds,
     }
+}
+
+fn embed_from_value(value: &Value) -> Embed {
+    Embed {
+        title: non_empty_str(&value["title"]),
+        url: non_empty_str(&value["url"]),
+        description: non_empty_str(&value["description"]),
+        author_name: non_empty_str(&value["author"]["name"]),
+        fields: value["fields"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|field| EmbedField {
+                name: field["name"].as_str().unwrap_or("").to_owned(),
+                value: field["value"].as_str().unwrap_or("").to_owned(),
+                inline: field["inline"].as_bool().unwrap_or(false),
+            })
+            .collect(),
+        footer_text: non_empty_str(&value["footer"]["text"]),
+        image_url: embed_media_url(&value["image"]),
+        thumbnail_url: embed_media_url(&value["thumbnail"]),
+        nsfw: value["nsfw"].as_bool().unwrap_or(false),
+    }
+}
+
+fn embed_media_url(value: &Value) -> Option<String> {
+    non_empty_str(&value["proxy_url"]).or_else(|| non_empty_str(&value["url"]))
+}
+
+fn non_empty_str(value: &Value) -> Option<String> {
+    value
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn missing_attachment_from_value(value: &Value) -> MissingAttachment {

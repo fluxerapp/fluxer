@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
-import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
-import type {Guild} from '@app/api/models/Guild';
-import type {GuildMember} from '@app/api/models/GuildMember';
-import type {Message} from '@app/api/models/Message';
-import type {User} from '@app/api/models/User';
-import type {IARSubmission} from '@app/api/report/ReportModels';
-import {convertToSearchableAuditLog} from '@app/api/search/auditlog/AuditLogSearchSerializer';
-import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
-import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSerializer';
-import {convertToSearchableGuildMember} from '@app/api/search/guild_member/GuildMemberSearchSerializer';
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
 import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
 import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
@@ -19,9 +9,15 @@ import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
 import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
-import {convertToSearchableMessage} from '@app/api/search/message/MessageSearchSerializer';
-import {convertToSearchableReport} from '@app/api/search/report/ReportSearchSerializer';
-import {convertToSearchableUser} from '@app/api/search/user/UserSearchSerializer';
+import {
+	AuditLogSearchService,
+	GuildMemberSearchService,
+	GuildSearchService,
+	MessageSearchService,
+	ReportSearchService,
+	UserSearchService,
+} from '@app/api/search/SearchServices';
+import {ThreadSearchIndex} from '@app/api/search/thread/ThreadSearchIndex';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {
 	AuditLogSearchFilters,
@@ -106,7 +102,7 @@ function relevanceScore(values: Array<string | null>, query: string): number {
 	return score;
 }
 
-class InMemorySearchServiceBase<TFilters, TDocument extends SearchableDocument> {
+class InMemorySearchAdapter<TFilters, TDocument extends SearchableDocument> {
 	private readonly docs = new Map<string, TDocument>();
 
 	constructor(
@@ -146,6 +142,12 @@ class InMemorySearchServiceBase<TFilters, TDocument extends SearchableDocument> 
 	async deleteDocuments(ids: Array<string>): Promise<void> {
 		for (const id of ids) {
 			this.docs.delete(id);
+		}
+	}
+
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		for (const [id, doc] of this.docs) {
+			if ((doc as unknown as Record<string, unknown>)[field] === value) this.docs.delete(id);
 		}
 	}
 
@@ -283,50 +285,6 @@ function sortMessageDocs(
 	return Number(BigInt(right.id) - BigInt(left.id));
 }
 
-class InMemoryMessageSearchService
-	extends InMemorySearchServiceBase<MessageSearchFilters, SearchableMessage>
-	implements IMessageSearchService
-{
-	constructor() {
-		super(matchesMessageFilters, collectMessageText, sortMessageDocs);
-	}
-
-	async indexMessage(message: Message, authorIsBot?: boolean): Promise<void> {
-		await this.indexDocument(convertToSearchableMessage(message, authorIsBot));
-	}
-
-	async indexMessages(messages: Array<Message>, authorBotMap?: Map<UserID, boolean>): Promise<void> {
-		await this.indexDocuments(
-			messages.map((message) => convertToSearchableMessage(message, authorBotMap?.get(message.authorId!))),
-		);
-	}
-
-	async updateMessage(message: Message, authorIsBot?: boolean): Promise<void> {
-		await this.updateDocument(convertToSearchableMessage(message, authorIsBot));
-	}
-
-	async deleteMessages(messageIds: Array<MessageID>): Promise<void> {
-		await this.deleteDocuments(messageIds.map((id) => id.toString()));
-	}
-
-	async bulkIndexMessages(messages: Array<Message>, authorBotMap?: Map<UserID, boolean>): Promise<void> {
-		await this.indexMessages(messages, authorBotMap);
-	}
-
-	async deleteChannelMessages(channelId: ChannelID): Promise<void> {
-		const result = await this.search('', {channelId: channelId.toString()}, {limit: Number.MAX_SAFE_INTEGER});
-		await this.deleteDocuments(result.hits.map((hit) => hit.id));
-	}
-
-	searchMessages(
-		query: string,
-		filters: MessageSearchFilters,
-		options?: {hitsPerPage?: number; page?: number; cursor?: Array<string>},
-	): Promise<SearchResult<SearchableMessage>> {
-		return this.search(query, filters, options);
-	}
-}
-
 function matchesUserFilters(doc: SearchableUser, filters: UserSearchFilters): boolean {
 	if (filters.isBot !== undefined && doc.isBot !== filters.isBot) return false;
 	if (filters.isSystem !== undefined && doc.isSystem !== filters.isSystem) return false;
@@ -375,31 +333,6 @@ function collectObjectText(doc: SearchableDocument): Array<string | null> {
 		.filter((value): value is string => typeof value === 'string');
 }
 
-class InMemoryUserSearchService
-	extends InMemorySearchServiceBase<UserSearchFilters, SearchableUser>
-	implements IUserSearchService
-{
-	constructor() {
-		super(matchesUserFilters, collectUserText, sortNumericField<SearchableUser, UserSearchFilters>('createdAt', 'asc'));
-	}
-
-	async indexUser(user: User): Promise<void> {
-		await this.indexDocument(convertToSearchableUser(user));
-	}
-
-	async indexUsers(users: Array<User>): Promise<void> {
-		await this.indexDocuments(users.map(convertToSearchableUser));
-	}
-
-	async updateUser(user: User): Promise<void> {
-		await this.updateDocument(convertToSearchableUser(user));
-	}
-
-	searchUsers(query: string, filters: UserSearchFilters, options?: {limit?: number; offset?: number}) {
-		return this.search(query, filters, options);
-	}
-}
-
 function matchesGuildFilters(doc: SearchableGuild, filters: GuildSearchFilters): boolean {
 	if (filters.ownerId !== undefined && doc.ownerId !== filters.ownerId) return false;
 	if (filters.verificationLevel !== undefined && doc.verificationLevel !== filters.verificationLevel) return false;
@@ -435,35 +368,6 @@ function sortGuilds(left: SearchableGuild, right: SearchableGuild, filters: Guil
 	return leftId > rightId ? -1 : 1;
 }
 
-class InMemoryGuildSearchService
-	extends InMemorySearchServiceBase<GuildSearchFilters, SearchableGuild>
-	implements IGuildSearchService
-{
-	constructor() {
-		super(matchesGuildFilters, collectGuildText, sortGuilds);
-	}
-
-	async indexGuild(guild: Guild, discovery?: GuildDiscoveryContext): Promise<void> {
-		await this.indexDocument(convertToSearchableGuild(guild, discovery));
-	}
-
-	async indexGuilds(guilds: Array<Guild>): Promise<void> {
-		await this.indexDocuments(guilds.map((guild) => convertToSearchableGuild(guild)));
-	}
-
-	async updateGuild(guild: Guild, discovery?: GuildDiscoveryContext): Promise<void> {
-		await this.updateDocument(convertToSearchableGuild(guild, discovery));
-	}
-
-	async deleteGuild(guildId: GuildID): Promise<void> {
-		await this.deleteDocument(guildId.toString());
-	}
-
-	searchGuilds(query: string, filters: GuildSearchFilters, options?: SearchOptions) {
-		return this.search(query, filters, options);
-	}
-}
-
 function matchesReportFilters(doc: SearchableReport, filters: ReportSearchFilters): boolean {
 	if (filters.reporterId !== undefined && doc.reporterId !== filters.reporterId) return false;
 	if (filters.status !== undefined && doc.status !== filters.status) return false;
@@ -496,43 +400,6 @@ function collectReportText(doc: SearchableReport): Array<string | null> {
 	];
 }
 
-class InMemoryReportSearchService
-	extends InMemorySearchServiceBase<ReportSearchFilters, SearchableReport>
-	implements IReportSearchService
-{
-	constructor() {
-		super(
-			matchesReportFilters,
-			collectReportText,
-			sortNumericField<SearchableReport, ReportSearchFilters>('createdAt', 'desc'),
-		);
-	}
-
-	async indexReport(report: IARSubmission): Promise<void> {
-		await this.indexDocument(convertToSearchableReport(report));
-	}
-
-	async indexReports(reports: Array<IARSubmission>): Promise<void> {
-		await this.indexDocuments(reports.map(convertToSearchableReport));
-	}
-
-	async updateReport(report: IARSubmission): Promise<void> {
-		await this.updateDocument(convertToSearchableReport(report));
-	}
-
-	async deleteReport(reportId: ReportID): Promise<void> {
-		await this.deleteDocument(reportId.toString());
-	}
-
-	searchReports(query: string, filters: ReportSearchFilters, options?: {limit?: number; offset?: number}) {
-		return this.search(query, filters, options);
-	}
-
-	listReportsByStatus(status: number, limit?: number, offset?: number) {
-		return this.searchReports('', {status}, {limit, offset});
-	}
-}
-
 function matchesAuditLogFilters(doc: SearchableAuditLog, filters: AuditLogSearchFilters): boolean {
 	if (filters.adminUserId !== undefined && doc.adminUserId !== filters.adminUserId) return false;
 	if (filters.targetType !== undefined && doc.targetType !== filters.targetType) return false;
@@ -545,31 +412,6 @@ function matchesAuditLogFilters(doc: SearchableAuditLog, filters: AuditLogSearch
 
 function collectAuditLogText(doc: SearchableAuditLog): Array<string | null> {
 	return [doc.id, doc.adminUserId, doc.targetType, doc.targetId, doc.action, doc.auditLogReason];
-}
-
-class InMemoryAuditLogSearchService
-	extends InMemorySearchServiceBase<AuditLogSearchFilters, SearchableAuditLog>
-	implements IAuditLogSearchService
-{
-	constructor() {
-		super(
-			matchesAuditLogFilters,
-			collectAuditLogText,
-			sortNumericField<SearchableAuditLog, AuditLogSearchFilters>('createdAt', 'desc'),
-		);
-	}
-
-	async indexAuditLog(log: AdminAuditLog): Promise<void> {
-		await this.indexDocument(convertToSearchableAuditLog(log));
-	}
-
-	async indexAuditLogs(logs: Array<AdminAuditLog>): Promise<void> {
-		await this.indexDocuments(logs.map(convertToSearchableAuditLog));
-	}
-
-	searchAuditLogs(query: string, filters: AuditLogSearchFilters, options?: {limit?: number; offset?: number}) {
-		return this.search(query, filters, options);
-	}
 }
 
 function matchesGuildMemberFilters(doc: SearchableGuildMember, filters: GuildMemberSearchFilters): boolean {
@@ -604,40 +446,6 @@ function sortGuildMemberDocs(
 	}
 	const direction = filters.sortOrder === 'asc' ? 1 : -1;
 	return (left.joinedAt - right.joinedAt) * direction;
-}
-
-class InMemoryGuildMemberSearchService
-	extends InMemorySearchServiceBase<GuildMemberSearchFilters, SearchableGuildMember>
-	implements IGuildMemberSearchService
-{
-	constructor() {
-		super(matchesGuildMemberFilters, collectGuildMemberText, sortGuildMemberDocs);
-	}
-
-	async indexMember(member: GuildMember, user: User): Promise<void> {
-		await this.indexDocument(convertToSearchableGuildMember(member, user));
-	}
-
-	async indexMembers(members: Array<{member: GuildMember; user: User}>): Promise<void> {
-		await this.indexDocuments(members.map(({member, user}) => convertToSearchableGuildMember(member, user)));
-	}
-
-	async updateMember(member: GuildMember, user: User): Promise<void> {
-		await this.updateDocument(convertToSearchableGuildMember(member, user));
-	}
-
-	async deleteMember(guildId: GuildID, userId: UserID): Promise<void> {
-		await this.deleteDocument(`${guildId}_${userId}`);
-	}
-
-	async deleteGuildMembers(guildId: GuildID): Promise<void> {
-		const result = await this.search('', {guildId: guildId.toString()}, {limit: Number.MAX_SAFE_INTEGER});
-		await this.deleteDocuments(result.hits.map((hit) => hit.id));
-	}
-
-	searchMembers(query: string, filters: GuildMemberSearchFilters, options?: {limit?: number; offset?: number}) {
-		return this.search(query, filters, options);
-	}
 }
 
 function compareThreadCursor(doc: SearchableThread, cursor: ThreadSearchCursor): number {
@@ -683,25 +491,53 @@ function sortThreadDocs(
 	return (left[field] - right[field] || Number(BigInt(left.id) - BigInt(right.id))) * direction;
 }
 
-class InMemoryThreadSearchService
-	extends InMemorySearchServiceBase<ThreadSearchFilters, SearchableThread>
-	implements IThreadSearchService
-{
-	constructor() {
-		super(matchesThreadFilters, (doc) => [doc.name], sortThreadDocs);
-	}
-
-	async ready(): Promise<void> {}
-}
-
 export class InMemorySearchProvider implements ISearchProvider {
-	private readonly messages = new InMemoryMessageSearchService();
-	private readonly guilds = new InMemoryGuildSearchService();
-	private readonly users = new InMemoryUserSearchService();
-	private readonly reports = new InMemoryReportSearchService();
-	private readonly auditLogs = new InMemoryAuditLogSearchService();
-	private readonly guildMembers = new InMemoryGuildMemberSearchService();
-	private readonly threads = new InMemoryThreadSearchService();
+	private readonly messages = new MessageSearchService(
+		new InMemorySearchAdapter<MessageSearchFilters, SearchableMessage>(
+			matchesMessageFilters,
+			collectMessageText,
+			sortMessageDocs,
+		),
+	);
+	private readonly guilds = new GuildSearchService(
+		new InMemorySearchAdapter<GuildSearchFilters, SearchableGuild>(matchesGuildFilters, collectGuildText, sortGuilds),
+		new GuildDiscoveryRepository(),
+	);
+	private readonly users = new UserSearchService(
+		new InMemorySearchAdapter<UserSearchFilters, SearchableUser>(
+			matchesUserFilters,
+			collectUserText,
+			sortNumericField<SearchableUser, UserSearchFilters>('createdAt', 'asc'),
+		),
+	);
+	private readonly reports = new ReportSearchService(
+		new InMemorySearchAdapter<ReportSearchFilters, SearchableReport>(
+			matchesReportFilters,
+			collectReportText,
+			sortNumericField<SearchableReport, ReportSearchFilters>('createdAt', 'desc'),
+		),
+	);
+	private readonly auditLogs = new AuditLogSearchService(
+		new InMemorySearchAdapter<AuditLogSearchFilters, SearchableAuditLog>(
+			matchesAuditLogFilters,
+			collectAuditLogText,
+			sortNumericField<SearchableAuditLog, AuditLogSearchFilters>('createdAt', 'desc'),
+		),
+	);
+	private readonly guildMembers = new GuildMemberSearchService(
+		new InMemorySearchAdapter<GuildMemberSearchFilters, SearchableGuildMember>(
+			matchesGuildMemberFilters,
+			collectGuildMemberText,
+			sortGuildMemberDocs,
+		),
+	);
+	private readonly threads = new ThreadSearchIndex(
+		new InMemorySearchAdapter<ThreadSearchFilters, SearchableThread>(
+			matchesThreadFilters,
+			(doc) => [doc.name],
+			sortThreadDocs,
+		),
+	);
 
 	async initialize(): Promise<void> {
 		await Promise.all([

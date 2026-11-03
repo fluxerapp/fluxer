@@ -23,10 +23,12 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'premium_lifetime_sequence',
 	'premium_grace_ends_at',
 	'premium_discriminator',
-	'premium_badge_hidden',
+	'hidden_profile_badges',
 	'premium_badge_masked',
 	'premium_badge_timestamp_hidden',
-	'premium_badge_sequence_hidden',
+	'operator_pass_badge_timestamp_hidden',
+	'operator_pass_badge_count_hidden',
+	'operator_pass_since',
 	'premium_purchase_disabled',
 	'premium_enabled_override',
 	'premium_perks_disabled',
@@ -129,18 +131,6 @@ class Users {
 		this.userCount = 1;
 		this.hydratedAccountKey = accountKey;
 		this.viewAccountKey = accountKey;
-		if (!userRecord.isClaimed()) {
-			setTimeout(async () => {
-				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
-					return;
-				}
-				const {openClaimAccountModal} = await import('@app/features/auth/components/modals/ClaimAccountModal');
-				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
-					return;
-				}
-				openClaimAccountModal();
-			}, 1000);
-		}
 	}
 
 	hydrateFromSnapshot(accountKey: string, currentUser: UserPrivate, users: ReadonlyArray<WireUser>): void {
@@ -224,16 +214,6 @@ class Users {
 		if (SessionManager.currentAccountKey !== accountKey || SessionManager.userId !== userId) {
 			throw new CurrentUserHydrationMismatchError(accountKey, userId);
 		}
-	}
-
-	private isActiveUnclaimedAccount(accountKey: string, userId: string): boolean {
-		const currentUser = this.currentUser;
-		return (
-			this.hydratedAccountKey === accountKey &&
-			SessionManager.currentAccountKey === accountKey &&
-			currentUser?.id === userId &&
-			!currentUser.isClaimed()
-		);
 	}
 }
 

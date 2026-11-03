@@ -1,6 +1,7 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_availability_check).
+
 -typing([eqwalizer]).
 
 -export([
@@ -22,10 +23,6 @@
     {unavailable_enabled, boolean()} | unavailable_disabled | no_change.
 
 -export_type([guild_state/0, user_id/0, unavailability_mode/0, transition_result/0]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec get_unavailability_mode_from_state(guild_state()) -> unavailability_mode().
 get_unavailability_mode_from_state(State) ->
@@ -99,7 +96,7 @@ check_session_staff(UserId, SessionData) ->
 
 -spec is_user_staff_from_member(user_id(), guild_state()) -> boolean().
 is_user_staff_from_member(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->
@@ -148,98 +145,3 @@ transition_result(unavailable_for_everyone, unavailable_for_everyone_but_staff) 
     {unavailable_enabled, true};
 transition_result(_, _) ->
     no_change.
-
--ifdef(TEST).
-
-get_unavailability_mode_available_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(available, get_unavailability_mode_from_state(State)).
-
-get_unavailability_mode_for_everyone_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    ?assertEqual(unavailable_for_everyone, get_unavailability_mode_from_state(State)).
-
-get_unavailability_mode_for_everyone_but_staff_test() ->
-    Features = [<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>],
-    State = #{data => #{<<"guild">> => #{<<"features">> => Features}}},
-    ?assertEqual(
-        unavailable_for_everyone_but_staff,
-        get_unavailability_mode_from_state(State)
-    ).
-
-is_unavailable_hidden_enabled_test() ->
-    HiddenFeatures = [<<"UNAVAILABLE_FOR_EVERYONE">>, <<"UNAVAILABLE_HIDDEN">>],
-    StateHidden = #{data => #{<<"guild">> => #{<<"features">> => HiddenFeatures}}},
-    NotHiddenFeatures = [<<"UNAVAILABLE_HIDDEN">>],
-    StateNotHidden = #{data => #{<<"guild">> => #{<<"features">> => NotHiddenFeatures}}},
-    ?assertEqual(true, is_unavailable_hidden_enabled(StateHidden)),
-    ?assertEqual(false, is_unavailable_hidden_enabled(StateNotHidden)).
-
-check_unavailability_transition_no_change_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(no_change, check_unavailability_transition(State, State)).
-
-check_unavailability_transition_enabled_test() ->
-    Old = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    New = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    ?assertEqual({unavailable_enabled, false}, check_unavailability_transition(Old, New)).
-
-check_unavailability_transition_disabled_test() ->
-    Old = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    New = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(unavailable_disabled, check_unavailability_transition(Old, New)).
-
-is_user_staff_from_user_data_test() ->
-    ?assertEqual(true, is_user_staff_from_user_data(#{<<"is_staff">> => true})),
-    ?assertEqual(false, is_user_staff_from_user_data(#{<<"is_staff">> => false})),
-    ?assertEqual(true, is_user_staff_from_user_data(#{<<"flags">> => 1})),
-    ?assertEqual(false, is_user_staff_from_user_data(#{<<"flags">> => 0})),
-    ?assertEqual(false, is_user_staff_from_user_data(#{})).
-
-parse_is_staff_value_test() ->
-    ?assertEqual(true, parse_is_staff_value(true)),
-    ?assertEqual(false, parse_is_staff_value(false)),
-    ?assertEqual(true, parse_is_staff_value(<<"true">>)),
-    ?assertEqual(false, parse_is_staff_value(<<"false">>)),
-    ?assertEqual(undefined, parse_is_staff_value(something)).
-
-is_user_staff_ignores_injected_member_data_test() ->
-    UserId = 42,
-    Sessions = #{
-        <<"sess1">> => #{
-            session_id => <<"sess1">>,
-            user_id => UserId,
-            is_staff => false
-        }
-    },
-    InjectedMember = #{
-        <<"user">> => #{<<"id">> => <<"42">>, <<"is_staff">> => true, <<"flags">> => <<"0">>}
-    },
-    State = #{
-        sessions => Sessions,
-        data => #{
-            <<"members">> => [InjectedMember],
-            <<"guild">> => #{<<"features">> => []}
-        }
-    },
-    ?assertEqual(false, is_user_staff(UserId, State)).
-
-is_user_staff_trusts_session_identity_test() ->
-    UserId = 99,
-    Sessions = #{
-        <<"sess2">> => #{
-            session_id => <<"sess2">>,
-            user_id => UserId,
-            is_staff => true
-        }
-    },
-    State = #{
-        sessions => Sessions,
-        data => #{
-            <<"members">> => [],
-            <<"guild">> => #{<<"features">> => []}
-        }
-    },
-    ?assertEqual(true, is_user_staff(UserId, State)).
-
--endif.

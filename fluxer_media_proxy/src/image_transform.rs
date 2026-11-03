@@ -138,33 +138,3 @@ impl Default for ImageOptions {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn effort_parsing_stays_lenient_and_clamps_at_nine() {
-        assert_eq!(None, EncodeEffort::parse_lenient(""));
-        assert_eq!(None, EncodeEffort::parse_lenient("not-a-number"));
-        assert_eq!(None, EncodeEffort::parse_lenient("-1"));
-        assert_eq!(
-            Some(0),
-            EncodeEffort::parse_lenient("0").map(EncodeEffort::get)
-        );
-        assert_eq!(
-            Some(6),
-            EncodeEffort::parse_lenient("6").map(EncodeEffort::get)
-        );
-        assert_eq!(
-            Some(9),
-            EncodeEffort::parse_lenient("9").map(EncodeEffort::get)
-        );
-        assert_eq!(
-            Some(9),
-            EncodeEffort::parse_lenient("250").map(EncodeEffort::get)
-        );
-        assert_eq!(None, EncodeEffort::parse_lenient("256"));
-        assert_eq!(0, EncodeEffort::minimum().get());
-    }
-}

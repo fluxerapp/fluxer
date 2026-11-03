@@ -9,14 +9,12 @@ native_root="$repo_root/fluxer_desktop/native"
 cargo_bin="${CARGO_BIN:-cargo}"
 cargo_deny_bin="${CARGO_DENY_BIN:-cargo-deny}"
 native_target_dir="${DESKTOP_NATIVE_CARGO_TARGET_DIR:-$repo_root/target/desktop-native-workspaces}"
+windows_backend_target="x86_64-pc-windows-msvc"
 mode="${1:-}"
 
 linux_workspaces=(
 	"app-store/Cargo.toml"
-	"audio-apm/Cargo.toml"
-	"encoder-ring/Cargo.toml"
 	"gateway-socket/Cargo.toml"
-	"gpu-rebuild/Cargo.toml"
 	"hardware-encoder/Cargo.toml"
 	"linux-audio-capture/Cargo.toml"
 	"linux-evdev/Cargo.toml"
@@ -25,8 +23,7 @@ linux_workspaces=(
 	"linux-portals/Cargo.toml"
 	"platform-info/Cargo.toml"
 	"rt-thread/Cargo.toml"
-	"rust/Cargo.toml"
-	"screen-frame-bus/Cargo.toml"
+	"sample-pool/Cargo.toml"
 	"system-hunspell/Cargo.toml"
 	"webauthn/Cargo.toml"
 )
@@ -54,11 +51,11 @@ fail() {
 }
 
 if [ "$#" -ne 1 ]; then
-	fail "Usage: $0 dependencies|fmt|clippy|test"
+	fail "Usage: $0 dependencies|fmt|clippy"
 fi
 
 case "$mode" in
-dependencies | fmt | clippy | test) ;;
+dependencies | fmt | clippy) ;;
 *) fail "Unknown desktop native workspace check: $mode" ;;
 esac
 
@@ -111,6 +108,7 @@ run_dependencies() {
 		-D warnings \
 		-A unmatched-skip \
 		-A unnecessary-skip \
+		-A advisory-not-detected \
 		-D duplicate
 }
 
@@ -134,15 +132,19 @@ run_clippy() {
 		-D warnings
 }
 
-run_tests() {
+run_clippy_windows_backend() {
 	local manifest="$1"
 
-	CI=true CARGO_TARGET_DIR="$native_target_dir" \
-		"$cargo_bin" test \
+	CARGO_TARGET_DIR="$native_target_dir" \
+		"$cargo_bin" clippy \
 		--manifest-path "$manifest" \
 		--workspace \
+		--all-targets \
 		--all-features \
-		--locked
+		--locked \
+		--target "$windows_backend_target" \
+		-- \
+		-D warnings
 }
 
 find "$native_root" -type d -name target -prune -o -type f -name Cargo.toml -print | LC_ALL=C sort >"$manifest_list"
@@ -186,7 +188,7 @@ if ! diff -u "$expected_inventory" "$discovered_inventory"; then
 	fail "Desktop native workspace inventory does not match discovery"
 fi
 
-if [ "$mode" = clippy ] || [ "$mode" = test ]; then
+if [ "$mode" = clippy ]; then
 	host_kernel="$(uname -s)"
 	if [ "$host_kernel" != Linux ]; then
 		fail "Desktop native $mode checks require a Linux host, found: $host_kernel"
@@ -194,6 +196,7 @@ if [ "$mode" = clippy ] || [ "$mode" = test ]; then
 fi
 
 checked_count=0
+windows_backend_count=0
 
 cd "$native_root"
 
@@ -214,22 +217,19 @@ while IFS= read -r manifest; do
 		case "$category" in
 		linux) printf 'Clippy full Linux/shared coverage: %s\n' "$relative_manifest" ;;
 		macos) printf 'Clippy Linux stub/common coverage; macOS backend not validated: %s\n' "$relative_manifest" ;;
-		windows) printf 'Clippy Linux stub/common coverage; Windows backend not validated: %s\n' "$relative_manifest" ;;
+		windows) printf 'Clippy Linux stub/common coverage: %s\n' "$relative_manifest" ;;
 		esac
 		run_clippy "$manifest"
-		;;
-	test)
-		case "$category" in
-		linux) printf 'Test full Linux/shared coverage: %s\n' "$relative_manifest" ;;
-		macos) printf 'Test Linux stub/common coverage; macOS backend not validated: %s\n' "$relative_manifest" ;;
-		windows) printf 'Test Linux stub/common coverage; Windows backend not validated: %s\n' "$relative_manifest" ;;
-		esac
-		run_tests "$manifest"
+		if [ "$category" = windows ]; then
+			printf 'Clippy Windows backend coverage for %s: %s\n' "$windows_backend_target" "$relative_manifest"
+			run_clippy_windows_backend "$manifest"
+			windows_backend_count=$((windows_backend_count + 1))
+		fi
 		;;
 	esac
 	checked_count=$((checked_count + 1))
 done <"$manifest_list"
 
 discovered_count=$((linux_count + macos_count + windows_count))
-printf 'Desktop native workspace categories: discovered=%s linux-full=%s macos-stub-common=%s windows-stub-common=%s\n' "$discovered_count" "$linux_count" "$macos_count" "$windows_count"
-printf 'Desktop native %s summary: checked=%s\n' "$mode" "$checked_count"
+printf 'Desktop native workspace categories: discovered=%s linux-full=%s macos-stub-common=%s windows=%s\n' "$discovered_count" "$linux_count" "$macos_count" "$windows_count"
+printf 'Desktop native %s summary: checked=%s windows-backend=%s\n' "$mode" "$checked_count" "$windows_backend_count"

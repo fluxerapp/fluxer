@@ -143,9 +143,9 @@
 }
 
 .dropIndicatorTop {
-	border-top: 0.125rem solid var(--brand-primary);
+	border-top: 0.125rem solid var(--brand-primary-foreground);
 }
 
 .dropIndicatorBottom {
-	border-bottom: 0.125rem solid var(--brand-primary);
+	border-bottom: 0.125rem solid var(--brand-primary-foreground);
 }

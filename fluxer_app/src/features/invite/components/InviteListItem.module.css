@@ -117,7 +117,7 @@
 .revokeButton {
 	position: absolute;
 	top: -0.5rem;
-	right: -0.5rem;
+	inset-inline-end: -0.5rem;
 	border-radius: 50%;
 	border: 0.0625rem solid var(--background-header-secondary);
 	background-color: var(--background-primary);

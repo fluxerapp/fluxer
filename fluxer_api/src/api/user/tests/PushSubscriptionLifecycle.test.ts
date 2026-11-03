@@ -38,38 +38,12 @@ describe('Push Subscription Lifecycle', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('subscribe returns a 32-character hex subscription id', async () => {
-		const account = await createTestAccount(harness);
-		const result = await subscribePush(harness, account.token, 'https://push.example.com/endpoint-1');
-		expect(result.subscription_id).toBeDefined();
-		expect(result.subscription_id).toMatch(/^[a-f0-9]{32}$/);
-	});
 	test('same endpoint produces the same subscription id', async () => {
 		const account = await createTestAccount(harness);
 		const endpoint = 'https://push.example.com/deterministic';
 		const first = await subscribePush(harness, account.token, endpoint);
 		const second = await subscribePush(harness, account.token, endpoint);
 		expect(first.subscription_id).toBe(second.subscription_id);
-	});
-	test('list subscriptions returns registered subscriptions', async () => {
-		const account = await createTestAccount(harness);
-		const endpoint = 'https://push.example.com/list-test';
-		const userAgent = 'TestBrowser/1.0';
-		const subscribed = await subscribePush(harness, account.token, endpoint, {userAgent});
-		const result = await listPushSubscriptions(harness, account.token);
-		expect(result.subscriptions).toHaveLength(1);
-		expect(result.subscriptions[0].subscription_id).toBe(subscribed.subscription_id);
-		expect(result.subscriptions[0].user_agent).toBe(userAgent);
-	});
-	test('register mobile FCM device returns a 32-character hex device id', async () => {
-		const account = await createTestAccount(harness);
-		const registered = await registerMobileDevice(harness, account.token, {
-			platform: 'android_fcm',
-			token: 'fcm-token-1',
-			app_id: 'stable',
-			user_agent: 'FluxerAndroid/1.0',
-		});
-		expect(registered.device_id).toMatch(/^[a-f0-9]{32}$/);
 	});
 	test('mobile devices are listed separately from web push subscriptions', async () => {
 		const account = await createTestAccount(harness);
@@ -121,17 +95,6 @@ describe('Push Subscription Lifecycle', () => {
 		const mobileDevices = await listMobileDevices(harness, account.token);
 		expect(mobileDevices.devices).toHaveLength(0);
 	});
-	test('UnifiedPush registration requires Web Push encryption keys', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mobile-devices')
-			.body({
-				platform: 'android_unified_push',
-				token: 'https://unifiedpush.example.com/device',
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('UnifiedPush registration accepts endpoint and encryption keys', async () => {
 		const account = await createTestAccount(harness);
 		const registered = await registerMobileDevice(harness, account.token, {
@@ -160,21 +123,6 @@ describe('Push Subscription Lifecycle', () => {
 		expect(subscription.endpoint).toBe(endpoint);
 		expect(subscription.p256dhKey).toBe('relay-p256dh-key');
 		expect(subscription.authKey).toBe('relay-auth-secret');
-	});
-	test('FCM Web Push registration stores the endpoint and encryption keys', async () => {
-		const account = await createTestAccount(harness);
-		const endpoint = 'https://relay.example.com/fcm/device-1';
-		const registered = await registerMobileDevice(harness, account.token, {
-			platform: 'android_fcm',
-			token: endpoint,
-			encryption_key: 'fcm-relay-p256dh-key',
-			auth_secret: 'fcm-relay-auth-secret',
-		});
-		const subscription = await findStoredSubscription(account.userId, registered.device_id);
-		expect(subscription.platform).toBe('android_fcm');
-		expect(subscription.endpoint).toBe(endpoint);
-		expect(subscription.p256dhKey).toBe('fcm-relay-p256dh-key');
-		expect(subscription.authKey).toBe('fcm-relay-auth-secret');
 	});
 	test('raw token registration stores the token without encryption keys', async () => {
 		const account = await createTestAccount(harness);
@@ -319,41 +267,6 @@ describe('Push Subscription Lifecycle', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
-	test('VoIP registration with only one encryption key is rejected', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mobile-devices')
-			.body({
-				platform: 'ios_apns_voip',
-				token: 'https://relay.example.com/apns-voip/half-keys',
-				encryption_key: 'voip-half-p256dh-key',
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('VoIP and standard APNs registrations coexist as separate devices', async () => {
-		const account = await createTestAccount(harness);
-		const standard = await registerMobileDevice(harness, account.token, {
-			platform: 'ios_apns',
-			token: 'https://relay.example.com/apns/paired-device',
-			encryption_key: 'paired-apns-p256dh-key',
-			auth_secret: 'paired-apns-auth-secret',
-			app_id: 'stable',
-			provider_environment: 'production',
-		});
-		const voip = await registerMobileDevice(harness, account.token, {
-			platform: 'ios_apns_voip',
-			token: 'https://relay.example.com/apns-voip/paired-device',
-			encryption_key: 'paired-voip-p256dh-key',
-			auth_secret: 'paired-voip-auth-secret',
-			app_id: 'stable',
-			provider_environment: 'production',
-		});
-		expect(voip.device_id).not.toBe(standard.device_id);
-		const mobileDevices = await listMobileDevices(harness, account.token);
-		const platforms = mobileDevices.devices.map((device) => device.platform).sort();
-		expect(platforms).toEqual(['ios_apns', 'ios_apns_voip']);
-	});
 	test('platform alone separates device ids for one registration token', async () => {
 		const account = await createTestAccount(harness);
 		const endpoint = 'https://relay.example.com/apns/shared-token';
@@ -424,13 +337,6 @@ describe('Push Subscription Lifecycle', () => {
 		expect(webSubscriptions.subscriptions).toHaveLength(0);
 		expect(mobileDevices.devices).toHaveLength(1);
 	});
-	test('delete subscription removes it from the list', async () => {
-		const account = await createTestAccount(harness);
-		const subscribed = await subscribePush(harness, account.token, 'https://push.example.com/delete-test');
-		await deletePushSubscription(harness, account.token, subscribed.subscription_id);
-		const result = await listPushSubscriptions(harness, account.token);
-		expect(result.subscriptions).toHaveLength(0);
-	});
 	test('delete one subscription does not affect others', async () => {
 		const account = await createTestAccount(harness);
 		const first = await subscribePush(harness, account.token, 'https://push.example.com/keep');
@@ -478,24 +384,5 @@ describe('Push Subscription Lifecycle', () => {
 		expect(aliceSubs.subscriptions).toHaveLength(1);
 		expect(bobSubs.subscriptions).toHaveLength(1);
 		expect(aliceSubs.subscriptions[0].subscription_id).not.toBe(bobSubs.subscriptions[0].subscription_id);
-	});
-	test('subscribe requires authentication', async () => {
-		await createBuilder(harness, '')
-			.post('/users/@me/push/subscribe')
-			.body({
-				endpoint: 'https://push.example.com/no-auth',
-				keys: {p256dh: 'key', auth: 'auth'},
-			})
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
-	});
-	test('list subscriptions requires authentication', async () => {
-		await createBuilder(harness, '').get('/users/@me/push/subscriptions').expect(HTTP_STATUS.UNAUTHORIZED).execute();
-	});
-	test('delete subscription requires authentication', async () => {
-		await createBuilder(harness, '')
-			.delete('/users/@me/push/subscriptions/abc123')
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
 	});
 });

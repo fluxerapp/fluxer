@@ -76,21 +76,20 @@ export interface ReadyPayload {
 	user_settings?: UserSettingsResponse;
 	user_guild_settings?: Array<GatewayGuildSettings>;
 	read_states?: Array<GatewayReadState>;
-	read_state_proto?: string;
 	presences?: Array<PresenceRecord>;
 	auth_session_id_hash?: string;
 	rtc_regions?: Array<RtcRegionResponse>;
 	webauthn_credentials?: Array<WebAuthnCredential>;
 }
 
-export class GatewayReadyIdentityMismatchError extends Error {
+class GatewayReadyIdentityMismatchError extends Error {
 	constructor(expectedUserId: string, receivedUserId: string) {
 		super(`READY user mismatch: expected ${expectedUserId}, received ${receivedUserId}`);
 		this.name = 'GatewayReadyIdentityMismatchError';
 	}
 }
 
-export class GatewayReadyAccountContextMissingError extends Error {
+class GatewayReadyAccountContextMissingError extends Error {
 	constructor() {
 		super('Gateway READY has no account context');
 		this.name = 'GatewayReadyAccountContextMissingError';
@@ -180,7 +179,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	WebAuthnCredentials.handleGatewayReady(data.webauthn_credentials);
 	ReadStates.handleGatewayReady({
 		readState: data.read_states ?? [],
-		readStateProto: data.read_state_proto,
 		channels,
 	});
 	GuildReadState.handleGatewayReady();

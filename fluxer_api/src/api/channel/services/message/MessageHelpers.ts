@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
+import type {AttachmentDecayPayload} from '@app/api/attachment/AttachmentDecayService';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createAttachmentID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {forEachEmbedMedia} from '@app/api/channel/services/message/CrosspostEmbedObjects';
@@ -24,15 +25,16 @@ import type {Message} from '@app/api/models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import {S3ServiceException} from '@aws-sdk/client-s3';
-import {MessageFlags, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, SENDABLE_MESSAGE_FLAGS, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {getContentTypeFromFilename, isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 
 export const MESSAGE_NONCE_TTL = seconds('5 minutes');
@@ -53,11 +55,12 @@ function selectForwardAttachments(
 	if (!hasForwardMediaSelection(selection)) {
 		return [...attachments];
 	}
-	if (!selection?.attachmentIds?.size) {
+	const attachmentIds = selection?.attachmentIds;
+	if (!attachmentIds?.size) {
 		return [];
 	}
-	const selected = attachments.filter((attachment) => selection.attachmentIds!.has(attachment.id));
-	if (selected.length !== selection.attachmentIds.size) {
+	const selected = attachments.filter((attachment) => attachmentIds.has(attachment.id));
+	if (selected.length !== attachmentIds.size) {
 		throw InputValidationError.fromCode(
 			'message_reference.attachment_ids',
 			ValidationErrorCodes.REFERENCED_ATTACHMENT_NOT_FOUND,
@@ -84,18 +87,6 @@ function selectForwardEmbeds<T>(embeds: ReadonlyArray<T>, selection?: ForwardMed
 		selected.push(embeds[embedIndex]);
 	}
 	return selected;
-}
-
-export function isMediaFile(contentType: string): boolean {
-	return isSupportedMediaContentType(contentType);
-}
-
-export function isPersonalNotesChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
-	return userIdToChannelId(userId) === channelId;
-}
-
-export function getContentType(filename: string): string {
-	return getContentTypeFromFilename(filename);
 }
 
 export function validateAttachmentIds(
@@ -319,19 +310,12 @@ export async function createMessageSnapshotsForForward(
 		content: isMediaOnlyForward ? null : referencedMessage.content,
 		timestamp: snowflakeToDate(referencedMessage.id),
 		edited_timestamp: isMediaOnlyForward ? null : referencedMessage.editedTimestamp,
-		mention_users: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedUserIds.size > 0
-				? referencedMessage.mentionedUserIds
-				: null,
-		mention_roles: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedRoleIds.size > 0
-				? referencedMessage.mentionedRoleIds
-				: null,
-		mention_channels: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedChannelIds.size > 0
+		mention_users:
+			!isMediaOnlyForward && referencedMessage.mentionedUserIds.size > 0 ? referencedMessage.mentionedUserIds : null,
+		mention_roles:
+			!isMediaOnlyForward && referencedMessage.mentionedRoleIds.size > 0 ? referencedMessage.mentionedRoleIds : null,
+		mention_channels:
+			!isMediaOnlyForward && referencedMessage.mentionedChannelIds.size > 0
 				? referencedMessage.mentionedChannelIds
 				: null,
 		attachments: clonedAttachments.length > 0 ? clonedAttachments : null,
@@ -472,7 +456,23 @@ export function collectMessageAttachments(message: Message): Array<Attachment> {
 	return [...message.attachments, ...message.messageSnapshots.flatMap((snapshot) => snapshot.attachments)];
 }
 
-export function countedThreadMessages(channel: Channel, messageIds: Array<MessageID>): number {
+export function attachmentDecayPayloadsForMessage(message: Message): Array<AttachmentDecayPayload> {
+	const attachments = collectMessageAttachments(message);
+	if (attachments.length === 0) return [];
+	const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
+	const uploadedAt = snowflakeToDate(ownerMessageId);
+	const storageChannelId = attachmentStorageChannelId(message);
+	return attachments.map((attachment) => ({
+		attachmentId: attachment.id,
+		channelId: storageChannelId,
+		messageId: ownerMessageId,
+		filename: attachment.filename,
+		sizeBytes: attachment.size,
+		uploadedAt,
+	}));
+}
+
+function countedThreadMessages(channel: Channel, messageIds: Array<MessageID>): number {
 	if (!channel.isThread()) return 0;
 	const starterId = channel.id.toString();
 	return messageIds.filter((messageId) => messageId.toString() !== starterId).length;
@@ -486,4 +486,9 @@ export async function decrementThreadMessageCount(
 	if (!channel) return;
 	const count = countedThreadMessages(channel, messageIds);
 	if (count > 0) await channelRepository.threads.adjustMessageCount(channel.id, -count);
+}
+
+export function ensureTextChannel(channel: Channel): void {
+	if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type))
+		throw new CannotSendMessageToNonTextChannelError();
 }

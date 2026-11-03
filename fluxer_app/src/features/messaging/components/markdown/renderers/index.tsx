@@ -43,6 +43,7 @@ import React from 'react';
 
 const logger = new Logger('MarkdownRenderers');
 export const parse = parseMarkdownContent;
+const MAX_INTERACTIVE_EMOJI_COUNT = 100;
 
 const renderers = {
 	[NodeType.Sequence]: SequenceRenderer,
@@ -87,10 +88,40 @@ function renderNode(node: Node, id: string, options: MarkdownRenderOptions): Rea
 	});
 }
 
+function childNodesOf(node: Node): ReadonlyArray<Node> {
+	switch (node.type) {
+		case NodeType.List:
+			return node.items.flatMap((item) => item.children);
+		case NodeType.Table:
+			return [node.header, ...node.rows].flatMap((row) => row.cells.flatMap((cell) => cell.children));
+		case NodeType.Link:
+			return node.text ? [node.text] : [];
+		default:
+			return 'children' in node ? node.children : [];
+	}
+}
+
+function exceedsEmojiCount(nodes: ReadonlyArray<Node>, limit: number): boolean {
+	let count = 0;
+	const stack: Array<Node> = [...nodes];
+	while (stack.length > 0) {
+		const node = stack.pop()!;
+		if (node.type === NodeType.Emoji) {
+			count++;
+			if (count > limit) return true;
+			continue;
+		}
+		stack.push(...childNodesOf(node));
+	}
+	return false;
+}
+
 export function render(nodes: Array<Node>, options: MarkdownParseOptions): React.ReactNode {
 	const shouldJumboEmojis = options.context === MarkdownContext.STANDARD_WITH_JUMBO && shouldRenderAsJumboEmojis(nodes);
 	const renderOptions: MarkdownRenderOptions = {
 		...options,
+		disableEmojiInteractions:
+			options.disableEmojiInteractions === true || exceedsEmojiCount(nodes, MAX_INTERACTIVE_EMOJI_COUNT),
 		shouldJumboEmojis,
 		i18n,
 	};

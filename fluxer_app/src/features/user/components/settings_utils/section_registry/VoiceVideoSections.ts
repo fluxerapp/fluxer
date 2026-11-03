@@ -1,12 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	AUDIO_2_DESCRIPTOR,
+	KEYBIND_DESCRIPTOR,
 	PREMIUM_PRODUCT_NAME_KEYWORD,
+	PUSH_TO_TALK_DESCRIPTOR,
+	STREAMING_DESCRIPTOR as SCREEN_SHARING_DESCRIPTOR,
+	SHORTCUT_DESCRIPTOR,
+	VIDEO_DESCRIPTOR as VIDEO_2_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
 	VOLUME_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	SCREEN_SHARE_BITRATE_DESCRIPTOR as BITRATE_DESCRIPTOR,
+	CAMERA_QUALITY_DESCRIPTOR,
+	ENTRANCE_SOUND_DESCRIPTOR,
+	MIC_TEST_DESCRIPTOR,
+	RELEASE_DELAY_DESCRIPTOR,
+	SCREEN_SHARE_DESCRIPTOR,
+	SCREEN_SHARE_QUALITY_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
 	VOICE_ECHO_CANCELLATION_DESCRIPTOR,
@@ -83,18 +98,12 @@ const BOOST_DESCRIPTOR = msg({
 	message: 'Boost',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const PUSH_TO_TALK_DESCRIPTOR = msg({
-	message: 'Push to talk',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const PTT_DESCRIPTOR = msg({
 	message: 'PTT',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const RELEASE_DELAY_DESCRIPTOR = msg({
-	message: 'Release delay',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const VOICE_ACTIVATION_DESCRIPTOR = msg({
 	message: 'Voice activation',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -107,10 +116,7 @@ const AUTO_SENSITIVITY_DESCRIPTOR = msg({
 	message: 'Auto sensitivity',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SHORTCUT_DESCRIPTOR = msg({
-	message: 'Shortcut',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const NOISE_DESCRIPTOR = msg({
 	message: 'Noise',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -139,18 +145,12 @@ const CUSTOM_PROFILE_DESCRIPTOR = msg({
 	message: 'Custom profile',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MIC_TEST_DESCRIPTOR = msg({
-	message: 'Mic test',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const MICROPHONE_TEST_DESCRIPTOR = msg({
 	message: 'Microphone test',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const ENTRANCE_SOUND_DESCRIPTOR = msg({
-	message: 'Entrance sound',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const VOICE_ENTRANCE_SOUND_DESCRIPTOR = msg({
 	message: 'Voice entrance sound',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -159,16 +159,9 @@ const CONFIGURE_YOUR_CAMERA_SCREEN_SHARING_QUALITY_PREVIEWS_AND_DESCRIPTOR = msg
 	message: 'Configure your camera, screen sharing quality, previews, and frame rate.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
-const CAMERA_DESCRIPTOR = msg({
-	message: 'Camera',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const WEBCAM_DESCRIPTOR = msg({
 	message: 'Webcam',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const VIDEO_2_DESCRIPTOR = msg({
-	message: 'Video',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const VIDEO_INPUT_DESCRIPTOR = msg({
@@ -199,10 +192,7 @@ const BACKGROUND_EFFECTS_DESCRIPTOR = msg({
 	message: 'Background effects',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const CAMERA_QUALITY_DESCRIPTOR = msg({
-	message: 'Camera quality',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const RESOLUTION_DESCRIPTOR = msg({
 	message: 'Resolution',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -211,18 +201,7 @@ const SCREEN_SHARING_QUALITY_DESCRIPTOR = msg({
 	message: 'Screen sharing quality',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SCREEN_SHARE_QUALITY_DESCRIPTOR = msg({
-	message: 'Screen share quality',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SCREEN_SHARING_DESCRIPTOR = msg({
-	message: 'Screen sharing',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SCREEN_SHARE_DESCRIPTOR = msg({
-	message: 'Screen share',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const STREAMING_DESCRIPTOR = msg({
 	message: 'Streaming',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -296,6 +275,7 @@ export const voiceVideoSections = [
 			VOICE_ACTIVATION_DESCRIPTOR,
 			ACTIVITY_THRESHOLD_DESCRIPTOR,
 			AUTO_SENSITIVITY_DESCRIPTOR,
+			KEYBIND_DESCRIPTOR,
 			SHORTCUT_DESCRIPTOR,
 			NOISE_DESCRIPTOR,
 			SUPPRESSION_DESCRIPTOR,
@@ -342,6 +322,7 @@ export const voiceVideoSections = [
 			STREAMING_DESCRIPTOR,
 			FRAME_RATE_DESCRIPTOR,
 			FPS_DESCRIPTOR,
+			BITRATE_DESCRIPTOR,
 			HD_DESCRIPTOR,
 			MESSAGE_1080P_DESCRIPTOR,
 			MESSAGE_1440P_DESCRIPTOR,

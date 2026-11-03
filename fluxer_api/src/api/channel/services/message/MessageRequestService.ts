@@ -5,16 +5,17 @@ import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/Messag
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
-import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {carriesThreadArtifact, maskThreadArtifactsFor} from '@app/api/channel/services/message/ThreadMessageResponses';
-import {everEnabled, isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
-import {UnclaimedAccountCannotSendMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendMessagesError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import type {CrosspostSourceResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
 import type {
@@ -58,6 +59,7 @@ export class MessageRequestService {
 			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
+			access: 'visitor_read',
 		});
 		if (authChannel.channel.isThreadOnly()) throw new InvalidChannelTypeError();
 		const request = {
@@ -77,6 +79,7 @@ export class MessageRequestService {
 			viewer: params.viewer,
 			userId: params.userId,
 			authChannel,
+			access,
 			responses,
 			requestCache: params.requestCache,
 			query: params.query,
@@ -88,7 +91,7 @@ export class MessageRequestService {
 		guildId: GuildID | null,
 		responses: Array<MessageResponse>,
 	): Promise<boolean> {
-		if (guildId === null || !everEnabled() || viewerActive(viewer, guildId)) return false;
+		if (guildId === null || viewerActive(viewer, guildId)) return false;
 		if (!responses.some(carriesMaskableThreadData)) return false;
 		return isTainted(guildId);
 	}
@@ -133,11 +136,13 @@ export class MessageRequestService {
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: params.messageId,
+			access: 'visitor_read',
 		});
 		const starter = await retrieval.threadResponses.getStarter({
 			viewer: params.viewer,
 			userId: params.userId,
 			authChannel,
+			access,
 			messageId: params.messageId,
 			requestCache: params.requestCache,
 		});
@@ -159,6 +164,7 @@ export class MessageRequestService {
 			viewer: params.viewer,
 			userId: params.userId,
 			authChannel,
+			access,
 			responses: [response],
 			requestCache: params.requestCache,
 		});
@@ -186,11 +192,8 @@ export class MessageRequestService {
 		data: MessageRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse> {
-		if (
-			params.user.isUnclaimedAccount() &&
-			!isPersonalNotesChannel({userId: params.user.id, channelId: params.channelId})
-		) {
-			throw new UnclaimedAccountCannotSendMessagesError();
+		if (!isPersonalNotesChannelId({userId: params.user.id, channelId: params.channelId})) {
+			assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 		}
 		const {message, authChannel} = await this.channelService.messages.send.sendMessage({
 			viewer: params.viewer,
@@ -241,6 +244,7 @@ export class MessageRequestService {
 			viewer: params.viewer,
 			userId: params.userId,
 			authChannel,
+			access,
 			responses: [response],
 			requestCache: params.requestCache,
 		});
@@ -252,7 +256,7 @@ export class MessageRequestService {
 		parentAuth: AuthenticatedChannel;
 		data: MessageRequest;
 	}): Promise<void> {
-		if (params.user.isUnclaimedAccount()) throw new UnclaimedAccountCannotSendMessagesError();
+		assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 		await this.channelService.messages.send.validateForumStarter(params);
 	}
 
@@ -264,7 +268,7 @@ export class MessageRequestService {
 		data: MessageRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse> {
-		if (params.user.isUnclaimedAccount()) throw new UnclaimedAccountCannotSendMessagesError();
+		assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 		const {message, authChannel} = await this.channelService.messages.send.sendMessage({
 			viewer: params.viewer,
 			user: params.user,

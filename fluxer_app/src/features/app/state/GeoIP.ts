@@ -3,14 +3,13 @@
 import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {AGE_BLOCKED_GEOS, AGE_RESTRICTED_GEOS} from '@fluxer/instance_bootstrap/src/AgeGeos';
 import type {GeoEntry, GeolocationResponse, InstanceAgePolicy} from '@fluxer/instance_bootstrap/src/Types';
 import {compareStructural, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('GeoIP');
 const RESOLVE_TIMEOUT_MS = 5000;
 
-export type GeoIPResolution = 'pending' | 'resolved' | 'unavailable';
+type GeoIPResolution = 'pending' | 'resolved' | 'unavailable';
 
 interface ConnectionGeo {
 	countryCode: string | null;
@@ -21,7 +20,6 @@ interface ConnectionGeo {
 
 interface AgeTables {
 	restricted: ReadonlyArray<GeoEntry>;
-	blocked: ReadonlyArray<GeoEntry>;
 }
 
 interface ActiveRuntimeContext {
@@ -31,20 +29,11 @@ interface ActiveRuntimeContext {
 }
 
 function ageTablesFor(policy: InstanceAgePolicy | null): AgeTables {
-	if (policy == null) {
-		return {restricted: AGE_RESTRICTED_GEOS, blocked: AGE_BLOCKED_GEOS};
-	}
 	const restricted: Array<GeoEntry> = [];
-	const blocked: Array<GeoEntry> = [];
-	for (const geo of policy.geos) {
-		const entry: GeoEntry = {countryCode: geo.country_code, regionCode: geo.region_code};
-		if (geo.action === 'block') {
-			blocked.push(entry);
-		} else {
-			restricted.push(entry);
-		}
+	for (const geo of policy?.geos ?? []) {
+		restricted.push({countryCode: geo.country_code, regionCode: geo.region_code});
 	}
-	return {restricted, blocked};
+	return {restricted};
 }
 
 function activeRuntimeContext(): ActiveRuntimeContext | null {
@@ -85,8 +74,7 @@ class GeoIP {
 	regionCode: string | null = null;
 	latitude: string | null = null;
 	longitude: string | null = null;
-	ageRestrictedGeos: ReadonlyArray<GeoEntry> = AGE_RESTRICTED_GEOS;
-	ageBlockedGeos: ReadonlyArray<GeoEntry> = AGE_BLOCKED_GEOS;
+	ageRestrictedGeos: ReadonlyArray<GeoEntry> = [];
 	resolution: GeoIPResolution = 'pending';
 	private generation = 0;
 	private instanceKey: string | null = null;
@@ -173,7 +161,6 @@ class GeoIP {
 
 	private applyAgeTables(tables: AgeTables): void {
 		this.ageRestrictedGeos = tables.restricted;
-		this.ageBlockedGeos = tables.blocked;
 	}
 
 	private async resolve(): Promise<void> {

@@ -1,41 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {installerChecksumLine, installerDigest} from '@/installer/InstallerDigest';
+import {createHash} from 'node:crypto';
 import powershellInstallerSource from '@/installer/install.ps1?raw';
 import shellInstallerSource from '@/installer/install.sh?raw';
 
-const CONTENT_TYPE = 'text/plain; charset=utf-8';
-const CACHE_CONTROL = 'no-store';
-
 interface InstallerScript {
-	readonly name: string;
 	readonly source: string;
 	readonly digest: string;
 	readonly checksumLine: string;
 }
 
-function plainTextResponse(body: string, etag: string): Response {
+function digestOf(text: string): string {
+	return createHash('sha256').update(new TextEncoder().encode(text)).digest('hex');
+}
+
+function installerScript(name: string, source: string): InstallerScript {
+	const digest = digestOf(source);
+	return {source, digest, checksumLine: `${digest}  ${name}\n`};
+}
+
+function plainText(body: string): Response {
 	const bytes = new TextEncoder().encode(body);
 	return new Response(bytes, {
 		headers: {
-			'cache-control': CACHE_CONTROL,
+			'cache-control': 'no-store',
 			'content-length': bytes.byteLength.toString(),
-			'content-type': CONTENT_TYPE,
-			etag: `"${etag}"`,
+			'content-type': 'text/plain; charset=utf-8',
+			etag: `"${digestOf(body)}"`,
 		},
 	});
 }
 
-function installerScript(name: string, source: string): InstallerScript {
-	return {name, source, digest: installerDigest(source), checksumLine: installerChecksumLine(name, source)};
-}
-
 export function installerScriptResponse(script: InstallerScript): Response {
-	return plainTextResponse(script.source, script.digest);
+	return plainText(script.source);
 }
 
 export function installerChecksumResponse(script: InstallerScript): Response {
-	return plainTextResponse(script.checksumLine, installerDigest(script.checksumLine));
+	return plainText(script.checksumLine);
 }
 
 export const shellInstaller = installerScript('install.sh', shellInstallerSource);

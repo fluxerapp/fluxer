@@ -78,11 +78,11 @@ export interface SnapshotVoiceStateUpdatePayload extends Omit<VoiceState, 'guild
 	readonly connection_id?: string;
 }
 
-export interface SnapshotRelationshipRemovePayload {
+interface SnapshotRelationshipRemovePayload {
 	readonly id: string;
 }
 
-export interface SnapshotDispatchDataMap {
+interface SnapshotDispatchDataMap {
 	readonly GUILD_CREATE: GuildReadyData;
 	readonly GUILD_SYNC: GuildReadyData;
 	readonly GUILD_UPDATE: WireGuild;
@@ -134,7 +134,7 @@ export interface SnapshotDispatchDataMap {
 	readonly THREAD_MEMBERS_UPDATE: SnapshotThreadMembersUpdatePayload;
 }
 
-export const SnapshotDispatchEvent = Object.freeze({
+const SnapshotDispatchEvent = Object.freeze({
 	GUILD_CREATE: 'GUILD_CREATE',
 	GUILD_SYNC: 'GUILD_SYNC',
 	GUILD_UPDATE: 'GUILD_UPDATE',
@@ -186,7 +186,7 @@ export const SnapshotDispatchEvent = Object.freeze({
 	THREAD_MEMBERS_UPDATE: 'THREAD_MEMBERS_UPDATE',
 } as const);
 
-export type SnapshotDispatchType = (typeof SnapshotDispatchEvent)[keyof typeof SnapshotDispatchEvent];
+type SnapshotDispatchType = (typeof SnapshotDispatchEvent)[keyof typeof SnapshotDispatchEvent];
 
 export type SnapshotDispatch = {
 	readonly [Type in SnapshotDispatchType]: {
@@ -204,7 +204,7 @@ const SNAPSHOT_ARRAY_DISPATCH_TYPES: ReadonlySet<SnapshotDispatchType> = new Set
 	'WEBAUTHN_CREDENTIALS_UPDATE',
 ]);
 
-export function isSnapshotDispatchType(type: string): type is SnapshotDispatchType {
+function isSnapshotDispatchType(type: string): type is SnapshotDispatchType {
 	return SNAPSHOT_DISPATCH_TYPES.has(type);
 }
 

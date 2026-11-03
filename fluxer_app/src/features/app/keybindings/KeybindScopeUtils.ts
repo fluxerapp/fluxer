@@ -5,6 +5,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 const VOICE_CALL_FULLSCREEN_ALLOWED_ACTIONS = new Set<KeybindCommand>([
 	'system_open_theme_studio_popout',
+	'system_toggle_custom_css',
 	'voice_toggle_mute',
 	'voice_toggle_deafen',
 	'voice_push_to_talk',

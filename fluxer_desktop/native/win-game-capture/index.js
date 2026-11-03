@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const {EventEmitter} = require('node:events');
 const {existsSync} = require('node:fs');
 const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
@@ -59,226 +58,6 @@ if (process.platform === 'win32') {
 	});
 }
 
-class ScreenCapture extends EventEmitter {
-	constructor(options = {}) {
-		super();
-		if (!binding) {
-			throw loadError || new Error(`${MODULE_NAME} binding unavailable`);
-		}
-		this.sourceId = options.sourceId;
-		this.sourceKind = options.sourceKind ?? 'window';
-		this.width = options.width ?? 0;
-		this.height = options.height ?? 0;
-		this.frameRate = options.frameRate ?? 30;
-		this.captureId = typeof options.captureId === 'string' ? options.captureId : undefined;
-		this.colorRange = options.colorRange;
-		this.colorSpace = options.colorSpace;
-		this.showCursorClicks = options.showCursorClicks === true;
-		this.captureRect = options.captureRect;
-		this.frameSinkHandle = options.frameSinkHandle;
-		this.nativeFrameSinkRequired = options.nativeFrameSinkRequired === true;
-		this.started = false;
-		this.stopped = false;
-		this.closedEmitted = false;
-
-		this.native = new binding.ScreenCapture();
-
-		this.native.setLifecycleCallback((...lifecycleArgs) => {
-			const [type, message] =
-				lifecycleArgs.length === 1 && Array.isArray(lifecycleArgs[0]) ? lifecycleArgs[0] : lifecycleArgs;
-			if (type === 'stalled') {
-				if (this.stopped) return;
-				this.emit('stalled', message);
-				return;
-			}
-			if (type === 'diagnostic') {
-				if (this.stopped) return;
-				this.emit('diagnostic', message);
-				return;
-			}
-			if (type === 'error') {
-				this.emit('error', new Error(message || 'DXGI capture error'));
-				return;
-			}
-			if (type === 'closed') {
-				if (this.stopped) {
-					this._emitClosedOnce();
-					return;
-				}
-				this.stopped = true;
-				try {
-					this.native.stop();
-				} catch {}
-				this._emitClosedOnce();
-			}
-		});
-	}
-
-	async start() {
-		if (this.started || this.stopped) return undefined;
-		this.started = true;
-		try {
-			if (this.frameSinkHandle != null) {
-				if (typeof this.native.setFrameSinkHandle !== 'function') {
-					throw new Error(`${MODULE_NAME} native binding does not support native frame sink handles`);
-				}
-				this.native.setFrameSinkHandle(this.frameSinkHandle);
-			} else if (this.nativeFrameSinkRequired) {
-				throw new Error('Native frame sink handle is required for Windows screen capture');
-			}
-			const result = this.native.start(
-				this.sourceId,
-				this.sourceKind,
-				this.width || undefined,
-				this.height || undefined,
-				this.frameRate || undefined,
-				this.captureId,
-				{
-					colorRange: this.colorRange,
-					colorSpace: this.colorSpace,
-					showCursorClicks: this.showCursorClicks,
-					captureRect: this.captureRect,
-				},
-			);
-			return result
-				? {
-						width: result.width,
-						height: result.height,
-						frameRate: result.frameRate,
-						pixelFormat: result.pixelFormat,
-					}
-				: undefined;
-		} catch (error) {
-			this.stopped = true;
-			this.emit('error', error instanceof Error ? error : new Error(String(error)));
-			throw error;
-		}
-	}
-
-	async stop() {
-		if (this.stopped) return;
-		this.stopped = true;
-		try {
-			this.native.stop();
-		} finally {
-			this._emitClosedOnce();
-		}
-	}
-
-	getDiagnostics() {
-		if (!this.native || typeof this.native.getDiagnostics !== 'function') return null;
-		try {
-			return this.native.getDiagnostics() ?? null;
-		} catch (error) {
-			console.warn('[win-game-capture] getDiagnostics failed:', error?.message || error);
-			return null;
-		}
-	}
-
-	attachEncoder(width, height) {
-		if (!this.native || typeof this.native.attachEncoder !== 'function') {
-			throw new Error(`${MODULE_NAME} native binding does not support encoder attachment`);
-		}
-		this.native.attachEncoder(width, height);
-	}
-
-	detachEncoder() {
-		if (!this.native || typeof this.native.detachEncoder !== 'function') return;
-		this.native.detachEncoder();
-	}
-
-	isEncoderAttached() {
-		if (!this.native || typeof this.native.isEncoderAttached !== 'function') return false;
-		return Boolean(this.native.isEncoderAttached());
-	}
-
-	encoderRingFullCount() {
-		if (!this.native || typeof this.native.encoderRingFullCount !== 'function') return 0;
-		const count = this.native.encoderRingFullCount();
-		return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
-	}
-
-	getEncoderAttachDiagnostics() {
-		if (!this.native || typeof this.native.getEncoderAttachDiagnostics !== 'function') return null;
-		try {
-			return this.native.getEncoderAttachDiagnostics() ?? null;
-		} catch (error) {
-			console.warn('[win-game-capture] getEncoderAttachDiagnostics failed:', error?.message || error);
-			return null;
-		}
-	}
-
-	getFrameSinkDiagnostics() {
-		if (!this.native || typeof this.native.getFrameSinkDiagnostics !== 'function') {
-			return {
-				accepted: 0,
-				coalesced: 0,
-				rejected: 0,
-				mediaFramesDroppedWithoutSink: 0,
-				cpuFallbackFramesDropped: 0,
-			};
-		}
-		try {
-			return this.native.getFrameSinkDiagnostics();
-		} catch (error) {
-			console.warn('[win-game-capture] getFrameSinkDiagnostics failed:', error?.message || error);
-			return {
-				accepted: 0,
-				coalesced: 0,
-				rejected: 0,
-				mediaFramesDroppedWithoutSink: 0,
-				cpuFallbackFramesDropped: 0,
-			};
-		}
-	}
-
-	_emitClosedOnce() {
-		if (this.closedEmitted) return;
-		this.closedEmitted = true;
-		queueMicrotask(() => this.emit('closed'));
-	}
-}
-
-async function listSources() {
-	if (!binding || typeof binding.listSources !== 'function') return [];
-	try {
-		const sources = await binding.listSources();
-		if (!Array.isArray(sources)) return [];
-		return sources
-			.filter((source) => {
-				return (
-					source &&
-					(source.kind === 'screen' || source.kind === 'window' || source.kind === 'game') &&
-					typeof source.id === 'string' &&
-					source.id.length > 0
-				);
-			})
-			.map((source) => ({
-				kind: source.kind,
-				id: source.id,
-				name: typeof source.name === 'string' && source.name.length > 0 ? source.name : source.id,
-				width: Number.isFinite(source.width) ? Math.max(0, Math.floor(source.width)) : 0,
-				height: Number.isFinite(source.height) ? Math.max(0, Math.floor(source.height)) : 0,
-				targetPid: Number.isFinite(source.targetPid) && source.targetPid > 0 ? Math.floor(source.targetPid) : undefined,
-			}));
-	} catch (error) {
-		console.warn('[win-game-capture] listSources failed:', error?.message || error);
-		return [];
-	}
-}
-
-function isSupported() {
-	if (!binding) return false;
-	return binding.isSupported();
-}
-
-function getAvailability() {
-	if (!binding) {
-		return {available: false, backend: 'windows-game-capture', reason: 'load-failed'};
-	}
-	return binding.getAvailability();
-}
-
 function normalizeProcessId(processId) {
 	if (processId === undefined || processId === null) return undefined;
 	if (Number.isInteger(processId) && processId > 0) return processId;
@@ -315,13 +94,27 @@ function restoreGpuSchedulingPriority(processId) {
 	}
 }
 
+function reuseWindowCaptureItems() {
+	if (!binding) return false;
+	try {
+		binding.reuseWindowCaptureItems();
+		return true;
+	} catch (error) {
+		console.warn('[win-game-capture] reuseWindowCaptureItems failed:', error?.message || error);
+		return false;
+	}
+}
+
+function windowCaptureItemCalls() {
+	if (!binding) return null;
+	return binding.windowCaptureItemCalls();
+}
+
 module.exports = {
-	isSupported,
-	getAvailability,
-	listSources,
-	ScreenCapture,
 	elevateGpuSchedulingPriority,
 	restoreGpuSchedulingPriority,
+	reuseWindowCaptureItems,
+	windowCaptureItemCalls,
 	get loadError() {
 		return loadError;
 	},

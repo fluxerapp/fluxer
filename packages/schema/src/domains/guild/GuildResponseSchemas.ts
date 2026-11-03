@@ -8,6 +8,7 @@ import {
 	SystemChannelFlags,
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
+import {CustomBadgeIdListResponse} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {GuildEmojiResponse, GuildStickerResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
@@ -114,6 +115,11 @@ export const GuildFeatureSchema = withOpenApiType(
 				'ANNOUNCEMENT_CHANNELS_DISABLED',
 				'Guild cannot publish announcement messages or gain new followers',
 			],
+			[
+				GuildFeatures.VISITS_ENABLED,
+				'VISITS_ENABLED',
+				'People with an invite or a discovery listing can read channels that @everyone can see without joining',
+			],
 		],
 		'A guild feature flag',
 	),
@@ -150,6 +156,9 @@ export const GuildResponse = z.object({
 	afk_channel_id: SnowflakeStringType.nullish().describe('The ID of the AFK voice channel'),
 	afk_timeout: Int32Type.describe('AFK timeout in seconds before moving users to the AFK channel'),
 	features: GuildFeatureListSchema,
+	badge_ids: CustomBadgeIdListResponse.describe(
+		'IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return',
+	),
 	verification_level: withFieldDescription(
 		GuildVerificationLevelSchema,
 		'Required verification level for members to participate',
@@ -208,6 +217,10 @@ export const GuildResponse = z.object({
 			),
 		{experiment: 'channel_threads'},
 	).optional(),
+	visiting: withSchemaMetadata(
+		z.literal(true).describe('Present and true when the requesting user is visiting the guild without being a member'),
+		{experiment: 'guild_visits'},
+	).optional(),
 });
 
 export type GuildResponse = z.infer<typeof GuildResponse>;
@@ -227,6 +240,16 @@ export const GuildPartialResponse = GuildResponse.pick({
 	embed_splash_width: true,
 	embed_splash_height: true,
 	features: true,
+	badge_ids: true,
+}).extend({
+	visits_enabled: withSchemaMetadata(
+		z
+			.boolean()
+			.describe(
+				'Whether opening this invite starts a visit instead of a join for the requesting user. Omitted for a caller outside the guild visits experiment',
+			),
+		{experiment: 'guild_visits'},
+	).optional(),
 });
 
 export type GuildPartialResponse = z.infer<typeof GuildPartialResponse>;
@@ -260,6 +283,7 @@ export interface Guild {
 	readonly afk_channel_id?: string | null;
 	readonly afk_timeout?: number;
 	readonly features: ReadonlyArray<string>;
+	readonly badge_ids?: ReadonlyArray<string>;
 	readonly verification_level?: number;
 	readonly mfa_level?: number;
 	readonly nsfw_level?: number;
@@ -272,6 +296,7 @@ export interface Guild {
 	readonly message_history_cutoff?: string | null;
 	readonly joined_at?: string;
 	readonly unavailable?: boolean;
+	readonly visiting?: boolean;
 	readonly unavailable_hidden?: boolean;
 	readonly member_count?: number;
 	readonly online_count?: number;

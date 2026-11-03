@@ -1,158 +1,31 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.card {
-	position: relative;
-	width: 100%;
-	border: 0.0625rem solid var(--background-modifier-accent);
-	border-radius: 0.75rem;
-	padding: 1rem;
-	color: var(--text-primary);
-}
-
-@media (min-width: 768px) {
-	.card {
-		padding: 1.25rem;
-	}
-}
-
-.grid {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 1rem;
-}
-
-@media (min-width: 1024px) {
-	.grid {
-		grid-template-columns: 1fr auto;
-		align-items: start;
-	}
-}
-
-.content {
-	display: flex;
-	min-width: 0;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-@media (min-width: 768px) {
-	.content {
-		gap: 0.75rem;
-	}
-}
-
-.header {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.title {
-	font-weight: 600;
-	font-size: 1rem;
-	line-height: 1.5rem;
-	color: var(--text-primary);
-}
-
-.description {
-	font-size: 0.8125rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
-@media (min-width: 768px) {
-	.description {
-		font-size: 0.875rem;
-		line-height: 1.375rem;
-	}
-}
-
-.description strong {
-	color: var(--text-primary);
-	font-weight: 600;
-}
-
-.renewalInfo {
-	font-size: 0.8125rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
-.renewalInfo strong {
-	color: var(--text-primary);
-	font-weight: 600;
-}
-
-.pendingChangeInfo {
+.note {
 	max-width: 42rem;
-	border: 0.0625rem solid var(--background-modifier-accent);
-	border-radius: 0.5rem;
-	padding: 0.625rem 0.75rem;
-	background: var(--background-modifier-hover);
-	font-size: 0.8125rem;
-	line-height: 1.25rem;
 	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	text-wrap: pretty;
 }
 
-.pendingChangeInfo strong {
+.note strong {
 	color: var(--text-primary);
 	font-weight: 600;
 }
 
 .actions {
 	display: flex;
-	width: 100%;
-	flex-direction: column;
-	align-items: stretch;
+	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5rem;
 }
 
-@media (min-width: 768px) {
-	.actions {
-		flex-direction: row;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: flex-end;
-	}
-}
-
-@media (min-width: 1024px) {
-	.actions {
-		min-width: 12.5rem;
-		flex-direction: column;
-		align-items: flex-end;
-		justify-content: flex-start;
-	}
-}
-
-.actionButton {
-	width: 100%;
-}
-
-@media (min-width: 768px) {
-	.actionButton {
-		width: auto;
-	}
-}
-
-@media (min-width: 1024px) {
-	.actionButton {
-		width: auto;
-	}
-}
-
 .legacyRateBadge {
-	display: inline-flex;
-	align-items: center;
-	margin-left: 0.375rem;
-	padding: 0.0625rem 0.4375rem;
-	border-radius: 62.4375rem;
-	background: var(--background-modifier-accent);
-	color: var(--text-primary-muted);
-	font-size: 0.6875rem;
+	margin-inline-start: 0.375rem;
+	color: var(--text-link);
 	font-weight: 600;
-	letter-spacing: 0.01em;
+	text-decoration-line: underline;
+	text-decoration-style: dotted;
+	text-underline-offset: 3px;
 	cursor: help;
-	vertical-align: middle;
 }

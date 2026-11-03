@@ -15,33 +15,33 @@
 	transition: none;
 	padding-top: 1rem;
 	padding-bottom: var(--message-filler-padding-bottom);
-	margin-left: calc(-1 * var(--message-mobile-margin));
-	margin-right: calc(-1 * var(--message-mobile-margin));
-	padding-left: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
-	padding-right: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+	margin-inline-start: calc(-1 * var(--message-mobile-margin));
+	margin-inline-end: calc(-1 * var(--message-mobile-margin));
+	padding-inline-start: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+	padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 }
 
 .wrapperCompact {
-	margin-left: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
-	margin-right: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
-	padding-left: var(--message-compact-horizontal-padding);
-	padding-right: var(--message-compact-horizontal-padding);
+	margin-inline-start: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+	margin-inline-end: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+	padding-inline-start: var(--message-compact-horizontal-padding);
+	padding-inline-end: var(--message-compact-horizontal-padding);
 }
 
 @media (min-width: 768px) {
 	.wrapper {
-		margin-left: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
-		margin-right: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
-		padding-left: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
-		padding-right: calc(
+		margin-inline-start: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+		margin-inline-end: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+		padding-inline-start: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		padding-inline-end: calc(
 			var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) +
 			var(--message-action-bar-offset)
 		);
 	}
 
 	.wrapperCompact {
-		padding-left: var(--message-compact-horizontal-padding);
-		padding-right: calc(var(--message-compact-horizontal-padding) + var(--message-action-bar-offset));
+		padding-inline-start: var(--message-compact-horizontal-padding);
+		padding-inline-end: calc(var(--message-compact-horizontal-padding) + var(--message-action-bar-offset));
 	}
 }
 
@@ -95,7 +95,7 @@
 .cozyAttachment {
 	display: block;
 	margin-top: 0.5rem;
-	margin-left: calc(var(--message-avatar-size) + var(--message-gutter));
+	margin-inline-start: calc(var(--message-avatar-size) + var(--message-gutter));
 }
 
 .compactMessages {
@@ -152,7 +152,7 @@
 	display: block;
 	box-sizing: border-box;
 	padding-top: 0.5rem;
-	padding-left: calc(
+	padding-inline-start: calc(
 		var(--message-compact-timestamp-width) +
 		var(--message-compact-gap) +
 		var(--message-compact-text-indent-from-username)

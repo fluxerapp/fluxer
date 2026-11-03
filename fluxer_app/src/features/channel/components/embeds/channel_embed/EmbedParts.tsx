@@ -158,7 +158,7 @@ export const EmbedFields: FC<{fields?: ReadonlyArray<EmbedField>; messageId?: st
 				{groupedFields.map((group, groupIndex) => {
 					const groupLength = group.length;
 					return group.map(({name, value}, index) => {
-						const span = groupLength === 1 ? 12 : groupLength === 2 ? 6 : 4;
+						const span = 12 / groupLength;
 						const gridColumnStart = index * span + 1;
 						const gridColumnEnd = gridColumnStart + span;
 						return (

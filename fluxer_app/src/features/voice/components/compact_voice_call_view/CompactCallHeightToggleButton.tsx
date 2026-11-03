@@ -55,6 +55,7 @@ export const CompactCallHeightToggleButton: React.FC<{
 	return (
 		<div
 			className={clsx(styles.heightToggleButtonWrap, voiceCallStyles.voiceChrome)}
+			data-voice-call-corner
 			data-flx="voice.compact-voice-call-view.compact-call-height-toggle-button.height-toggle-button-wrap"
 		>
 			<div

@@ -25,6 +25,7 @@ const KEYBOARD_STEP_LARGE = 48;
 interface DragState {
 	pointerId: number;
 	startX: number;
+	direction: 1 | -1;
 	startWidth: number;
 	latest: number;
 	zoom: number;
@@ -42,6 +43,10 @@ function clampWidth(value: number): number {
 	return Math.max(SIDEBAR_WIDTH_MIN, Math.min(Math.round(value), SIDEBAR_WIDTH_MAX));
 }
 
+function getGrowthDirection(ownerDocument: Document): 1 | -1 {
+	return ownerDocument.documentElement.dir === 'rtl' ? -1 : 1;
+}
+
 function resolveSidebarWidth(): number {
 	const width = SidebarWidth.width;
 	if (width == null) return SIDEBAR_WIDTH_DEFAULT;
@@ -53,7 +58,9 @@ function measureSidebarWidth(handle: HTMLElement): number {
 	if (frame == null) return resolveSidebarWidth();
 	const handleRect = handle.getBoundingClientRect();
 	const frameRect = frame.getBoundingClientRect();
-	const measured = handleRect.left + handleRect.width / 2 - frameRect.left;
+	const handleCenter = handleRect.left + handleRect.width / 2;
+	const measured =
+		getGrowthDirection(handle.ownerDocument) === 1 ? handleCenter - frameRect.left : frameRect.right - handleCenter;
 	if (!Number.isFinite(measured) || measured <= 0) return resolveSidebarWidth();
 	return clampWidth(measured / resolveZoomFactor(handle.ownerDocument));
 }
@@ -116,6 +123,7 @@ export const SidebarResizeHandle = observer(() => {
 			const state: DragState = {
 				pointerId: event.pointerId,
 				startX: event.clientX,
+				direction: getGrowthDirection(ownerDocument),
 				startWidth,
 				latest: startWidth,
 				zoom: resolveZoomFactor(ownerDocument),
@@ -125,7 +133,9 @@ export const SidebarResizeHandle = observer(() => {
 			const onDocumentPointerMove = (nativeEvent: PointerEvent) => {
 				if (dragRef.current !== state || nativeEvent.pointerId !== state.pointerId) return;
 				nativeEvent.preventDefault();
-				const next = clampWidth(state.startWidth + (nativeEvent.clientX - state.startX) / state.zoom);
+				const next = clampWidth(
+					state.startWidth + (state.direction * (nativeEvent.clientX - state.startX)) / state.zoom,
+				);
 				state.latest = next;
 				SidebarWidth.setWidth(next, false);
 				setAriaValueNow(next);
@@ -198,13 +208,14 @@ export const SidebarResizeHandle = observer(() => {
 		const handle = event.currentTarget;
 		const step = event.shiftKey ? KEYBOARD_STEP_LARGE : KEYBOARD_STEP;
 		const base = resolveCurrentSidebarWidth(handle);
+		const growth = step * getGrowthDirection(handle.ownerDocument);
 		let next: number;
 		switch (event.key) {
 			case 'ArrowLeft':
-				next = base - step;
+				next = base - growth;
 				break;
 			case 'ArrowRight':
-				next = base + step;
+				next = base + growth;
 				break;
 			case 'Home':
 				next = SIDEBAR_WIDTH_MIN;

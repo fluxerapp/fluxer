@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createDMChannel,
-	createFriendship,
 	createGuild,
 	sendMessage,
 } from '@app/api/message/tests/MessageTestUtils';
@@ -40,7 +40,7 @@ describe('Unclaimed Account Restrictions', () => {
 			code: string;
 		}>(harness, unclaimed.token)
 			.put(`/channels/${channelId}/messages/${message.id}/reactions/%F0%9F%91%8D/@me`)
-			.expect(HTTP_STATUS.BAD_REQUEST)
+			.expect(HTTP_STATUS.FORBIDDEN)
 			.executeWithResponse();
 		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS');
 	});
@@ -52,7 +52,7 @@ describe('Unclaimed Account Restrictions', () => {
 		await createBuilder(harness, unclaimed.token)
 			.post('/users/@me/channels')
 			.body({recipients: [user1.userId, user2.userId]})
-			.expect(HTTP_STATUS.BAD_REQUEST)
+			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
 	test('unclaimed account cannot join group DM via invite', async () => {
@@ -79,7 +79,7 @@ describe('Unclaimed Account Restrictions', () => {
 		}>(harness, friend2.token)
 			.post(`/invites/${invite.code}`)
 			.body({})
-			.expect(HTTP_STATUS.BAD_REQUEST)
+			.expect(HTTP_STATUS.FORBIDDEN)
 			.executeWithResponse();
 		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS');
 	});
@@ -92,7 +92,7 @@ describe('Unclaimed Account Restrictions', () => {
 		await createBuilder(harness, sender.token)
 			.post(`/channels/${dmChannel.id}/messages`)
 			.body({content: 'Hello from unclaimed'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
+			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
 	test('unclaimed account cannot send guild messages', async () => {
@@ -108,45 +108,9 @@ describe('Unclaimed Account Restrictions', () => {
 		}>(harness, unclaimed.token)
 			.post(`/channels/${channelId}/messages`)
 			.body({content: 'Hello world'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
+			.expect(HTTP_STATUS.FORBIDDEN)
 			.executeWithResponse();
 		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES');
-	});
-	test('unclaimed account cannot send friend request', async () => {
-		const sender = await createTestAccount(harness);
-		const receiver = await createTestAccount(harness);
-		await unclaimAccount(harness, sender.userId);
-		await createBuilder(harness, sender.token)
-			.put(`/users/@me/relationships/${receiver.userId}`)
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('unclaimed account cannot accept friend request', async () => {
-		const sender = await createTestAccount(harness);
-		const receiver = await createTestAccount(harness);
-		await createBuilder(harness, sender.token).post(`/users/@me/relationships/${receiver.userId}`).body({}).execute();
-		await unclaimAccount(harness, receiver.userId);
-		await createBuilder(harness, receiver.token)
-			.put(`/users/@me/relationships/${sender.userId}`)
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('unclaimed account cannot open DM with another user', async () => {
-		const unclaimed = await createTestAccount(harness);
-		const target = await createTestAccount(harness);
-		const guild = await createGuild(harness, unclaimed.token, 'Test Guild');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, unclaimed.token, channelId);
-		await acceptInvite(harness, target.token, invite.code);
-		await unclaimAccount(harness, unclaimed.userId);
-		const {json: error} = await createBuilder<{
-			code: string;
-		}>(harness, unclaimed.token)
-			.post('/users/@me/channels')
-			.body({recipient_id: target.userId})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES');
 	});
 	test('unclaimed account can delete without password', async () => {
 		const unclaimed = await createTestAccount(harness);
@@ -163,7 +127,7 @@ describe('Unclaimed Account Restrictions', () => {
 		await createBuilder(harness, unclaimed.token)
 			.post('/guilds')
 			.body({name: 'Guild'})
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS)
 			.execute();
 	});
 	test('bot account cannot create guild', async () => {

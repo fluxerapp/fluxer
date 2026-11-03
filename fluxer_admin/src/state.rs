@@ -3,7 +3,10 @@
 use crate::{
     api::{
         client::{AdminApiClient, ApiResultExt},
-        types::{AccountIdentityMode, AccountIdentitySettings, PremiumBranding, ReportReasonEntry},
+        types::{
+            AccountIdentityMode, AccountIdentitySettings, InstanceConfigResponse, PremiumBranding,
+            ReportReasonEntry,
+        },
     },
     config::AdminConfig,
 };
@@ -74,6 +77,25 @@ impl AppState {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some((Instant::now(), branding));
     }
 
+    pub fn remember_instance_config_branding(&self, instance_config: &InstanceConfigResponse) {
+        self.merge_instance_config_branding(PremiumBranding::from_instance_config(instance_config));
+    }
+
+    fn merge_instance_config_branding(&self, branding: PremiumBranding) {
+        let mut cache = self
+            .inner
+            .premium_branding
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some((fetched_at, previous)) = cache.as_ref() {
+            let branding = PremiumBranding {
+                discovery_enabled: previous.discovery_enabled,
+                ..branding
+            };
+            *cache = Some((*fetched_at, branding));
+        }
+    }
+
     pub async fn premium_branding(&self, client: &AdminApiClient) -> Option<PremiumBranding> {
         if let Some(branding) = self.cached_premium_branding() {
             return Some(branding);
@@ -86,6 +108,30 @@ impl AppState {
         );
         self.remember_premium_branding(branding.clone());
         Some(branding)
+    }
+
+    pub async fn self_hosted_branding(&self) -> Option<PremiumBranding> {
+        if !self.config().self_hosted {
+            return None;
+        }
+        self.premium_branding(&AdminApiClient::anonymous(
+            self.http_client(),
+            self.config(),
+        ))
+        .await
+    }
+
+    pub fn forget_instance_settings(&self) {
+        *self
+            .inner
+            .premium_branding
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+        *self
+            .inner
+            .account_identity
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
     }
 
     pub async fn account_identity(&self, client: &AdminApiClient) -> AccountIdentityMode {

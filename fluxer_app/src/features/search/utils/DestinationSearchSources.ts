@@ -110,7 +110,7 @@ function buildForwardGroupDMCandidates(i18n: I18n): ReadonlyArray<ForwardGroupDM
 	return Object.freeze(candidates);
 }
 
-function isForwardableThread(thread: Channel): boolean {
+export function isForwardableThread(thread: Channel): boolean {
 	if (!ThreadGuilds.isActive(thread.guildId) || ChannelThreads.getThread(thread.id) == null) return false;
 	if (thread.isArchived && thread.isLocked) return false;
 	return ThreadMemberships.isMember(thread.id) || canJoinThreadChannel(thread);

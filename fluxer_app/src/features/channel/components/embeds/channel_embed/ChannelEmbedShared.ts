@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {
 	buildAnimatedImageProxyURL,
@@ -16,6 +17,7 @@ import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type React from 'react';
+import {useMemo} from 'react';
 
 export const logger = new Logger('Embed');
 export const THUMBNAIL_SIZE = 80;
@@ -242,6 +244,20 @@ export const buildGalleryAttachments = (
 	}));
 };
 
+export function withFreshEmbedMediaUrls<T extends EmbedMedia | undefined>(media: T): T {
+	if (!media) return media;
+	const url = AttachmentUrlRefresher.fresh(media.url);
+	const proxyUrl = media.proxy_url == null ? media.proxy_url : AttachmentUrlRefresher.fresh(media.proxy_url);
+	if (url === media.url && proxyUrl === media.proxy_url) return media;
+	return {...media, url, proxy_url: proxyUrl};
+}
+
+export function useFreshGalleryImages(images: Array<Required<EmbedMedia>>): Array<Required<EmbedMedia>> {
+	const freshImages = images.map(withFreshEmbedMediaUrls);
+	const freshUrls = freshImages.map((image) => `${image.url}\n${image.proxy_url}`).join('\n');
+	return useMemo(() => freshImages, [freshUrls, images]);
+}
+
 interface EmbedListRenderMetadata {
 	normalizedUrls: Array<string | null>;
 	firstIndexByNormalizedUrl: Map<string, number>;
@@ -287,12 +303,11 @@ const getEmbedListRenderMetadata = (embedList: ReadonlyArray<MessageEmbed>): Emb
 		const firstIndex = firstIndexByNormalizedUrl.get(normalizedUrl);
 		if (firstIndex === undefined) continue;
 		const candidate = embedList[index];
-		const candidateMedia = isValidMedia(candidate?.image)
-			? candidate.image
-			: isValidMedia(candidate?.thumbnail)
-				? candidate.thumbnail
-				: undefined;
-		tryAddGalleryMedia(firstIndex, candidateMedia);
+		if (isValidMedia(candidate?.image)) {
+			tryAddGalleryMedia(firstIndex, candidate.image);
+		} else if (isValidMedia(candidate?.thumbnail)) {
+			tryAddGalleryMedia(firstIndex, candidate.thumbnail);
+		}
 	}
 	const metadata = {normalizedUrls, firstIndexByNormalizedUrl, galleryImagesByFirstIndex};
 	embedListRenderMetadataCache.set(embedList, metadata);
@@ -322,7 +337,7 @@ export const collectGalleryImages = ({
 };
 export const getBorderColor = (color: number | undefined) => {
 	if (color === undefined || color === 0) {
-		return 'var(--brand-primary)';
+		return 'var(--brand-primary-foreground)';
 	}
 	return ColorUtils.int2rgb(color);
 };

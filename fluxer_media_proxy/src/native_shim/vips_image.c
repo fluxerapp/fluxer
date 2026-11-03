@@ -41,13 +41,15 @@ void fluxer_vips_tune_for_server(int per_pipeline_threads) {
     vips_leak_set(FALSE);
 }
 
-int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *height, int *pages) {
-    if (width == NULL || height == NULL || pages == NULL) {
+int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *height, int *pages, int *bands, int *format) {
+    if (width == NULL || height == NULL || pages == NULL || bands == NULL || format == NULL) {
         return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     }
     *width = 0;
     *height = 0;
     *pages = 0;
+    *bands = 0;
+    *format = VIPS_FORMAT_NOTSET;
     if (buf == NULL || len == 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     VipsImage *header = vips_image_new_from_buffer(buf, len, "n=1", NULL);
     if (header == NULL) {
@@ -82,6 +84,8 @@ int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *hei
     *width = display_width;
     *height = display_height;
     *pages = n_pages;
+    *bands = vips_image_get_bands(display_header);
+    *format = vips_image_get_format(display_header);
     g_object_unref(display_header);
     g_object_unref(header);
     return FLUXER_NATIVE_STATUS_OK;
@@ -176,37 +180,8 @@ struct fluxer_vips_deadline_guard {
     int reached;
 };
 
-static int fluxer_vips_deadline_guard_start(
-    struct fluxer_vips_deadline_guard *guard,
-    VipsImage *image,
-    long long deadline_monotonic_ms);
-static int fluxer_vips_deadline_guard_finish(
-    struct fluxer_vips_deadline_guard *guard);
 
-int fluxer_vips_image_copy_memory(
-    VipsImage *in,
-    long long deadline_monotonic_ms,
-    VipsImage **out
-) {
-    if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    *out = NULL;
-    if (in == NULL || deadline_monotonic_ms < 0) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
-    struct fluxer_vips_deadline_guard deadline_guard;
-    int status = fluxer_vips_deadline_guard_start(
-        &deadline_guard, in, deadline_monotonic_ms);
-    if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    VipsImage *memory = vips_image_copy_memory(in);
-    int deadline_status = fluxer_vips_deadline_guard_finish(&deadline_guard);
-    if (deadline_status != FLUXER_NATIVE_STATUS_OK) {
-        if (memory != NULL) g_object_unref(memory);
-        return deadline_status;
-    }
-    if (memory == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    *out = memory;
-    return FLUXER_NATIVE_STATUS_OK;
-}
+
 
 int fluxer_vips_autorot(
     VipsImage *in,
@@ -229,6 +204,40 @@ int fluxer_vips_autorot(
         }
         return status;
     }
+    return fluxer_vips_operation_status(rc, out);
+}
+
+int fluxer_vips_srgb_without_alpha(VipsImage *in, VipsImage **out) {
+    if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    *out = NULL;
+    if (in == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    VipsImage *srgb = NULL;
+    int rc;
+    if (vips_image_get_interpretation(in) == VIPS_INTERPRETATION_CMYK) {
+        rc = vips_icc_transform(
+            in, &srgb, "srgb",
+            "embedded", TRUE,
+            "input_profile", "cmyk",
+            "intent", VIPS_INTENT_RELATIVE,
+            NULL);
+    } else if (vips_image_get_typeof(in, VIPS_META_ICC_NAME) != 0) {
+        rc = vips_icc_transform(
+            in, &srgb, "srgb",
+            "embedded", TRUE,
+            "intent", VIPS_INTENT_RELATIVE,
+            "depth", 8,
+            NULL);
+    } else {
+        rc = vips_colourspace(in, &srgb, VIPS_INTERPRETATION_sRGB, NULL);
+    }
+    int status = fluxer_vips_operation_status(rc, &srgb);
+    if (status != FLUXER_NATIVE_STATUS_OK) return status;
+    if (!vips_image_hasalpha(srgb)) {
+        *out = srgb;
+        return FLUXER_NATIVE_STATUS_OK;
+    }
+    rc = vips_extract_band(srgb, out, 0, "n", vips_image_get_bands(srgb) - 1, NULL);
+    g_object_unref(srgb);
     return fluxer_vips_operation_status(rc, out);
 }
 

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -9,6 +8,7 @@ import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataDeletionTab.module.css';
 import {
+	accountGetsEmail,
 	DataRequestModal,
 	EXPORT_TAB_DESCRIPTION,
 } from '@app/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal';
@@ -100,7 +100,7 @@ const DataExportStatus = observer(
 
 export const DataExportTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const showInAppStatus = RuntimeConfig.usesUsernameSignIn;
+	const showInAppStatus = !accountGetsEmail();
 	const [harvest, setHarvest] = useState<HarvestStatusResponse | null>(null);
 	const [refreshToken, setRefreshToken] = useState(0);
 	const [downloading, setDownloading] = useState(false);

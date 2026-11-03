@@ -5,6 +5,7 @@ import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
 	getDesktopWindowBehaviorSettings,
+	rememberInstanceProductName,
 	setDesktopWindowBehaviorSettings,
 	setPrebootTheme,
 } from '@electron/common/DesktopConfig';
@@ -25,12 +26,14 @@ import {
 	applyDesktopWindowBehaviorSettings,
 	desktopTrayChangePendingRestart,
 	hasActiveDesktopTray,
+	setDesktopTrayUnreadBadge,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
 import {getDesktopUpdateState, observeDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
 import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
 import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {retryBlockedGlobalShortcutHooks} from '@electron/main/GlobalShortcutsIpc';
+import {setDirectMessagesAvailable} from '@electron/main/JumpList';
 import {
 	type LinuxAppearanceSnapshot,
 	type LinuxAppearanceSubscription,
@@ -48,10 +51,15 @@ import {
 } from '@electron/main/NativeGatewayTransport';
 import {registerNotificationIpcHandlers} from '@electron/main/NotificationsIpc';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
+import {
+	cleanupOtherPlatformTemplateHandlers,
+	registerOtherPlatformTemplateHandlers,
+} from '@electron/main/OtherPlatformTemplateIpc';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
 import {
 	createPrivilegedRendererDocumentOwners,
+	isPrivilegedRendererDocumentSender,
 	requirePrivilegedRendererDocumentSender,
 } from '@electron/main/PrivilegedRendererDocuments';
 import {getDesktopSelectedInstanceClient} from '@electron/main/SelectedInstanceFetch';
@@ -61,13 +69,14 @@ import {
 	getStreamingPriorityDiagnostics,
 	releaseStreamingPriority,
 } from '@electron/main/StreamingPriority';
-import {setTaskbarProgress, type TaskbarProgressMode} from '@electron/main/TaskbarProgress';
 import {registerThemeLocalFileHandlers} from '@electron/main/ThemeLocalFiles';
 import {
 	relaunchAndExit,
 	setHardwareAccelerationDisabled,
 	setHardwareAccelerationDisabledAndRestart,
+	setModuleUpdatesDisabledAndRestart,
 } from '@electron/main/Troubleshooting';
+import {parseUnreadBadge, UNREAD_BADGE_DOT} from '@electron/main/UnreadBadge';
 import {registerVoiceBackgroundMediaCacheHandlers} from '@electron/main/VoiceBackgroundMediaCache';
 import {
 	focusVoiceDebugEventSinkPopout,
@@ -77,26 +86,27 @@ import {
 } from '@electron/main/VoiceDebugEventSinkPopout';
 import {
 	clearSavedWindowBounds,
-	closeThemeStudioPopoutWindow,
 	desktopTransparencyPendingRestart,
 	desktopUseNativeTitleBarPendingRestart,
-	focusThemeStudioPopoutWindow,
+	focusQuickCssEditorWindow,
 	focusVoicePopoutWindow,
 	getActiveAllowTransparency,
 	getActiveUseNativeTitleBar,
 	getMainWindow,
-	setThemeStudioPopoutAlwaysOnTop,
+	QUICK_CSS_EDITOR_WINDOW_KEY,
+	setQuickCssEditorAlwaysOnTop,
 	setVoicePopoutAlwaysOnTop,
 	showWindow,
-	THEME_STUDIO_POPOUT_KEY,
 } from '@electron/main/Window';
-import {flashWindowForAttention, stopFlashingWindow} from '@electron/main/WindowFlash';
-import {setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
+import {refreshWindowsBadgeOverlay, setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
+import {DESKTOP_DIRECT_MESSAGES_AVAILABLE_CHANNEL} from '@fluxer/desktop_ipc/src/DirectMessagesContract';
+import {DESKTOP_INSTANCE_PRODUCT_NAME_CHANNEL} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
 import {
 	DESKTOP_MODULE_CHANNELS,
 	DESKTOP_UPDATE_CHANNELS,
 	DESKTOP_UPDATE_EVENTS,
 } from '@fluxer/desktop_ipc/src/ModuleContract';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {app, BrowserWindow, clipboard, dialog, ipcMain, powerMonitor, shell, systemPreferences} from 'electron';
 import log from 'electron-log';
 
@@ -109,10 +119,6 @@ interface TrayRuntimeStateUpdate {
 	buildInfo?: string | null;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
-
 function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWindowBehaviorSettings> {
 	if (!isRecord(value)) {
 		return {};
@@ -120,6 +126,12 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	const update: Partial<DesktopWindowBehaviorSettings> = {};
 	if (typeof value.showTrayIcon === 'boolean') {
 		update.showTrayIcon = value.showTrayIcon;
+	}
+	if (typeof value.coloredTrayIcon === 'boolean') {
+		update.coloredTrayIcon = value.coloredTrayIcon;
+	}
+	if (typeof value.darkTaskbarBadge === 'boolean') {
+		update.darkTaskbarBadge = value.darkTaskbarBadge;
 	}
 	if (typeof value.minimizeToTray === 'boolean') {
 		update.minimizeToTray = value.minimizeToTray;
@@ -154,6 +166,17 @@ function getActiveSmoothScrolling(): boolean {
 
 function getActiveMiddleClickAutoscroll(): boolean {
 	return process.platform === 'linux' && hasEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
+}
+
+function applyUnreadBadge(badge: number): void {
+	if (process.platform === 'win32') {
+		setWindowsBadgeOverlay(getMainWindow(), badge);
+	} else if (process.platform === 'darwin' && badge === UNREAD_BADGE_DOT) {
+		app.dock?.setBadge('•');
+	} else {
+		app.setBadgeCount(Math.max(badge, 0));
+	}
+	setDesktopTrayUnreadBadge(badge);
 }
 
 export function registerIpcHandlers(): void {
@@ -228,6 +251,13 @@ export function registerIpcHandlers(): void {
 			return getLaunchDesktopTroubleshootingSettings();
 		},
 	);
+	ipcMain.handle(
+		'desktop-troubleshooting-set-disable-module-updates',
+		(_event, payload: {disable: boolean}): DesktopTroubleshootingSettings => {
+			setModuleUpdatesDisabledAndRestart(Boolean(payload?.disable));
+			return getLaunchDesktopTroubleshootingSettings();
+		},
+	);
 	ipcMain.on('streaming-priority-acquire', (event) => {
 		acquireStreamingPriority(event.sender);
 	});
@@ -239,6 +269,10 @@ export function registerIpcHandlers(): void {
 		if (!state || typeof state !== 'object') return;
 		const update = state as TrayRuntimeStateUpdate;
 		updateTrayRuntimeState(update, event.sender.id);
+	});
+	ipcMain.on(DESKTOP_DIRECT_MESSAGES_AVAILABLE_CHANNEL, (event, available: unknown) => {
+		if (typeof available !== 'boolean' || !isPrivilegedRendererDocumentSender(event)) return;
+		setDirectMessagesAvailable(available);
 	});
 	ipcMain.on('native-locale-set', (_event, payload: unknown) => {
 		if (!payload || typeof payload !== 'object') return;
@@ -280,6 +314,11 @@ export function registerIpcHandlers(): void {
 			setPrebootTheme(theme);
 		}
 	});
+	ipcMain.on(DESKTOP_INSTANCE_PRODUCT_NAME_CHANNEL, (event, report: unknown) => {
+		if (event.senderFrame?.origin === DESKTOP_APP_ORIGIN) {
+			rememberInstanceProductName(report);
+		}
+	});
 	ipcMain.handle('desktop-window-behavior-pending-restart', (): boolean => {
 		return (
 			desktopTrayChangePendingRestart() ||
@@ -294,6 +333,7 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('desktop-window-behavior-set', (_event, settings: unknown): DesktopWindowBehaviorSettings => {
 		const nextSettings = setDesktopWindowBehaviorSettings(normalizeDesktopWindowBehaviorUpdate(settings));
 		applyDesktopWindowBehaviorSettings();
+		refreshWindowsBadgeOverlay(getMainWindow());
 		if (!nextSettings.showTrayIcon) {
 			const mainWindow = getMainWindow();
 			if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
@@ -337,18 +377,13 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('window-is-maximized', (event): boolean => {
 		return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
 	});
-	ipcMain.handle('theme-studio-popout-focus', (): boolean => {
-		return focusThemeStudioPopoutWindow();
-	});
-	ipcMain.handle('theme-studio-popout-close', (): boolean => {
-		return closeThemeStudioPopoutWindow();
-	});
+
 	ipcMain.handle('popout:set-always-on-top', (_event, key: unknown, flag: unknown): boolean => {
 		if (typeof key !== 'string' || typeof flag !== 'boolean') {
 			return false;
 		}
-		if (key === THEME_STUDIO_POPOUT_KEY) {
-			return setThemeStudioPopoutAlwaysOnTop(flag);
+		if (key === QUICK_CSS_EDITOR_WINDOW_KEY) {
+			return setQuickCssEditorAlwaysOnTop(flag);
 		}
 		if (key === VOICE_DEBUG_EVENT_SINK_POPOUT_KEY) {
 			return setVoiceDebugEventSinkAlwaysOnTop(flag);
@@ -359,8 +394,8 @@ export function registerIpcHandlers(): void {
 		if (typeof key !== 'string') {
 			return false;
 		}
-		if (key === THEME_STUDIO_POPOUT_KEY) {
-			return focusThemeStudioPopoutWindow();
+		if (key === QUICK_CSS_EDITOR_WINDOW_KEY) {
+			return focusQuickCssEditorWindow();
 		}
 		if (key === VOICE_DEBUG_EVENT_SINK_POPOUT_KEY) {
 			return focusVoiceDebugEventSinkPopout();
@@ -471,14 +506,15 @@ export function registerIpcHandlers(): void {
 			if (surface === 'input-monitoring' && status === 'granted') retryBlockedGlobalShortcutHooks();
 		},
 	});
-	ipcMain.on('set-badge-count', (_event, count: number) => {
-		if (process.platform === 'darwin') {
-			app.setBadgeCount(count);
-		} else if (process.platform === 'win32') {
-			setWindowsBadgeOverlay(getMainWindow(), count);
-		} else {
-			app.setBadgeCount(count);
-		}
+	ipcMain.on('set-badge-count', (event, count: unknown) => {
+		const badge = parseUnreadBadge(count);
+		if (badge === null || !isPrivilegedRendererDocumentSender(event)) return;
+		applyUnreadBadge(Math.max(badge, 0));
+	});
+	ipcMain.on('set-unread-badge', (event, value: unknown) => {
+		const badge = parseUnreadBadge(value);
+		if (badge === null || !isPrivilegedRendererDocumentSender(event)) return;
+		applyUnreadBadge(badge);
 	});
 	ipcMain.on('set-zoom-factor', (event, factor: number) => {
 		const win = BrowserWindow.fromWebContents(event.sender);
@@ -495,6 +531,7 @@ export function registerIpcHandlers(): void {
 	registerPasskeyHandlers();
 	registerLinuxAppearanceHandlers();
 	registerBrowserHandoffHandlers();
+	registerOtherPlatformTemplateHandlers();
 }
 
 let linuxAppearanceSubscription: LinuxAppearanceSubscription | null = null;
@@ -578,10 +615,44 @@ export function cleanupIpcHandlers(_options: {quitting?: boolean} = {}): void {
 	browserHandoff?.cleanup();
 	browserHandoff = null;
 	setHandoffReturnLinkSink(null);
+	cleanupOtherPlatformTemplateHandlers();
 	if (linuxAppearanceSubscription) {
 		try {
 			linuxAppearanceSubscription.close();
 		} catch {}
 		linuxAppearanceSubscription = null;
 	}
+}
+
+type TaskbarProgressMode = 'normal' | 'indeterminate' | 'error' | 'paused' | 'none';
+
+function setTaskbarProgress(fraction: number, mode: TaskbarProgressMode = 'normal'): void {
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	try {
+		if (mode === 'none' || fraction < 0) {
+			mainWindow.setProgressBar(-1);
+			return;
+		}
+		const clamped = Math.max(0, Math.min(1, fraction));
+		mainWindow.setProgressBar(clamped, {mode});
+	} catch {}
+}
+
+function flashWindowForAttention(persistent: boolean): void {
+	if (process.platform === 'darwin') return;
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	if (mainWindow.isFocused()) return;
+	try {
+		mainWindow.flashFrame(persistent);
+	} catch {}
+}
+
+function stopFlashingWindow(): void {
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	try {
+		mainWindow.flashFrame(false);
+	} catch {}
 }

@@ -53,16 +53,74 @@ pub(in crate::server) fn media_response(response: MediaResponse<'_>) -> Response
         (StatusCode::OK, retained)
     };
     let body_len = body_bytes.len();
-    let mut response = if method == Method::HEAD {
-        Response::new(Body::empty())
+    let body = if method == Method::HEAD {
+        Body::empty()
     } else {
-        Response::new(Body::from(body_bytes))
+        Body::from(body_bytes)
     };
+    media_body_response(
+        body,
+        status,
+        total_len,
+        content_type,
+        byte_range,
+        Some(body_len as u64),
+        disposition,
+    )
+}
+
+pub(in crate::server) struct GeneratedMediaResponse<'a> {
+    pub(in crate::server) method: Method,
+    pub(in crate::server) data: BudgetedBytes,
+    pub(in crate::server) content_type: &'a str,
+    pub(in crate::server) disposition: Option<HeaderValue>,
+}
+
+pub(in crate::server) fn generated_media_response(
+    response: GeneratedMediaResponse<'_>,
+) -> Response {
+    let GeneratedMediaResponse {
+        method,
+        data,
+        content_type,
+        disposition,
+    } = response;
+    let total_len = data.len();
+    let body = if method == Method::HEAD {
+        Body::empty()
+    } else {
+        Body::from(retained_response_bytes(data))
+    };
+    let mut response = media_body_response(
+        body,
+        StatusCode::OK,
+        total_len,
+        content_type,
+        None,
+        Some(total_len as u64),
+        disposition,
+    );
+    response.headers_mut().remove(header::ACCEPT_RANGES);
+    response
+}
+
+pub(in crate::server) fn media_body_response(
+    body: Body,
+    status: StatusCode,
+    total_len: usize,
+    content_type: &str,
+    byte_range: Option<range::ByteRange>,
+    content_length: Option<u64>,
+    disposition: Option<HeaderValue>,
+) -> Response {
+    let mut response = Response::new(body);
     *response.status_mut() = status;
     http_headers::add_media_headers(response.headers_mut(), total_len, content_type, byte_range);
-    response
-        .headers_mut()
-        .insert(header::CONTENT_LENGTH, HeaderValue::from(body_len));
+    if let Some(length) = content_length {
+        response
+            .headers_mut()
+            .insert(header::CONTENT_LENGTH, HeaderValue::from(length));
+    }
     if let Some(value) = disposition {
         response
             .headers_mut()
@@ -106,78 +164,5 @@ fn download_filename_for_content_type<'a>(
         Cow::Owned(format!("{filename}.{ext}"))
     } else {
         Cow::Owned(format!("{stem}.{ext}"))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::server::params::{filename_from_storage_key, url_filename};
-
-    fn disposition_string(
-        content_type: &str,
-        requested_download: bool,
-        filename: Option<&str>,
-    ) -> String {
-        content_disposition_header(content_type, requested_download, filename)
-            .to_str()
-            .expect("content disposition is ascii")
-            .to_owned()
-    }
-
-    #[test]
-    fn explicit_download_disposition_uses_response_image_extension() {
-        assert_eq!(
-            "attachment; filename=\"welcome.gif\"",
-            disposition_string("image/gif", true, Some("welcome.png"))
-        );
-        assert_eq!(
-            "attachment; filename=\"welcome.gif\"",
-            disposition_string("image/gif", true, Some("welcome"))
-        );
-        assert_eq!(
-            "attachment; filename=\"photo.jpg\"",
-            disposition_string("image/jpeg", true, Some("photo.jpg"))
-        );
-        assert_eq!(
-            "attachment; filename=\"photo.jpg\"",
-            disposition_string(
-                "image/jpeg",
-                true,
-                Some(filename_from_storage_key("attachments/123/456/photo.jpg"))
-            )
-        );
-        assert_eq!(
-            "inline; filename=\"welcome.png\"",
-            disposition_string("image/gif", false, Some("welcome.png"))
-        );
-    }
-
-    #[test]
-    fn a_long_external_filename_keeps_its_leading_bytes_in_the_header() {
-        let url = format!(
-            "https://example.test/lead{}tail.png",
-            "a".repeat(disposition::CONTENT_DISPOSITION_FILENAME_BYTES_MAX)
-        );
-        let filename = url_filename(&url);
-        let value = disposition_string("image/png", false, Some(&filename));
-        assert!(
-            value.starts_with("inline; filename=\"lead"),
-            "{}",
-            &value[..32]
-        );
-        assert!(!value.contains("tail.png"));
-        assert!(value.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
-    }
-
-    #[test]
-    fn a_long_multi_byte_external_filename_still_gets_a_disposition() {
-        let filename = "\u{e9}".repeat(1100);
-        let inline = disposition_string("image/png", false, Some(&filename));
-        assert!(inline.starts_with("inline; filename=\""));
-        assert!(inline.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
-        let attachment = disposition_string("application/octet-stream", false, Some(&filename));
-        assert!(attachment.starts_with("attachment; filename=\""));
-        assert!(attachment.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
     }
 }

@@ -3,6 +3,7 @@
 import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/channel/components/MentionEveryonePopout.module.css';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import type {I18n} from '@lingui/core';
 import {msg, ph} from '@lingui/core/macro';
@@ -31,7 +32,6 @@ interface MentionEveryonePopoutProps {
 	roleName?: string;
 }
 
-const isMac = () => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 export const getMentionTitle = (
 	i18n: I18n,
 	mentionType: MentionEveryonePopoutProps['mentionType'],
@@ -165,7 +165,7 @@ export const MentionEveryonePopout = ({
 		document.addEventListener('keydown', handleKeyDown, true);
 		return () => document.removeEventListener('keydown', handleKeyDown, true);
 	}, [handleKeyDown]);
-	const enterKeySymbol = isMac() ? '↵' : i18n._(ENTER_DESCRIPTOR);
+	const enterKeySymbol = isMacPlatform() ? '↵' : i18n._(ENTER_DESCRIPTOR);
 	const escapeKeyLabel = i18n._(ESC_DESCRIPTOR);
 	return (
 		<div

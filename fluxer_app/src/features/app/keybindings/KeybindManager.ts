@@ -24,6 +24,7 @@ import type {
 } from '@app/features/app/keybindings/keybind_manager/shared';
 import {comboToCombokeysStrings} from '@app/features/app/keybindings/utils/ComboShortcutStrings';
 import {
+	CHANNEL_TEXTAREA_SELECTOR,
 	EDITABLE_CAPTURE_SHORTCUT_ACTIONS,
 	getEditableElementValue,
 	isChannelTextareaElement,
@@ -49,6 +50,8 @@ import {
 	sourceIdForKeybind,
 } from '@app/features/app/keybindings/utils/RuntimeKeybinds';
 import {LOCAL_SHORTCUT_ACTION_PRIORITY} from '@app/features/app/keybindings/utils/ShortcutPriority';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
@@ -63,9 +66,9 @@ import Keybind, {
 	type KeybindConfig,
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
+import {isAccountKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUtils';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
 import {shouldUseKeyboardShortcutsOverlayFallbackFromEvent} from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
 import {jsKeyToUiohookKeycode} from '@app/features/input/utils/UiohookKeycodes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -75,7 +78,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
-import NativePermission from '@app/features/permissions/system/state/NativePermission';
+import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import {ensureMacPermission} from '@app/features/permissions/system/utils/MacPermissionGate';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -102,11 +105,11 @@ import type {
 } from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 import type {I18n} from '@lingui/core';
 import CombokeysImport from 'combokeys';
 import {autorun, compareStructural, computed, reaction} from 'mobx';
 
-const ROUTE_ALLOWED_ACTIONS = new Set<KeybindCommand>(['system_open_theme_studio_popout']);
 const GAMEPAD_POLL_INTERVAL_MS = 50;
 const PORTAL_SOURCE_ID_PREFIX = 'portal:';
 
@@ -248,7 +251,9 @@ class KeybindManager {
 	private readonly resolvedKeybindsValue = computed(
 		(): ReadonlyArray<RuntimeKeybind> => {
 			const skipDefaults = Keybind.getDisableBuiltinKeybinds();
-			const defaults = skipDefaults ? [] : Keybind.getDefaultsForRuntimeDispatch();
+			const defaults = skipDefaults
+				? Keybind.getDefaultsForRuntimeDispatch().filter((entry) => isAccountKeybindCommand(entry.action))
+				: Keybind.getDefaultsForRuntimeDispatch();
 			const customs = Keybind.getCustomKeybinds();
 			return [
 				...buildDefaultRuntimeKeybinds(defaults, getSuppressedBuiltinActions(customs)),
@@ -297,7 +302,7 @@ class KeybindManager {
 
 	navigateToDirectMessages(): void {
 		const channelId = SelectedChannel.selectedChannelIds.get(ME);
-		if (channelId && Channels.getChannel(channelId)) {
+		if (channelId && !RuntimeConfig.directMessagesDisabled && Channels.getChannel(channelId)) {
 			this.navigateToChannel(ME, channelId);
 			return;
 		}
@@ -386,6 +391,16 @@ class KeybindManager {
 		}
 	}
 
+	private getNextChannel(channels: ReadonlyArray<Channel>, direction: 1 | -1): Channel {
+		const current = this.currentChannelId;
+		const idx = current ? channels.findIndex((channel) => channel.id === current) : -1;
+		let base = idx;
+		if (idx === -1) {
+			base = direction === 1 ? -1 : 0;
+		}
+		return channels[(base + direction + channels.length) % channels.length];
+	}
+
 	cycleChannelInCurrentContext(direction: 1 | -1): void {
 		if (Navigation.context === 'dm') {
 			this.cycleDirectMessageContext(direction);
@@ -393,10 +408,7 @@ class KeybindManager {
 		}
 		const channels = this.getNavigableChannelsInCurrentContext();
 		if (!channels.length) return;
-		const current = this.currentChannelId;
-		const idx = current ? channels.findIndex((c) => c.id === current) : -1;
-		const base = idx === -1 ? (direction === 1 ? -1 : 0) : idx;
-		const target = channels[(base + direction + channels.length) % channels.length];
+		const target = this.getNextChannel(channels, direction);
 		this.navigateToChannel(target.guildId ?? null, target.id);
 	}
 
@@ -407,10 +419,7 @@ class KeybindManager {
 			predicate(c),
 		);
 		if (!channels.length) return;
-		const current = this.currentChannelId;
-		const idx = current ? channels.findIndex((c) => c.id === current) : -1;
-		const base = idx === -1 ? (direction === 1 ? -1 : 0) : idx;
-		const target = channels[(base + direction + channels.length) % channels.length];
+		const target = this.getNextChannel(channels, direction);
 		this.navigateToChannel(guildId, target.id);
 	}
 
@@ -453,11 +462,14 @@ class KeybindManager {
 			const channelId = this.currentChannelId;
 			return Boolean(channelId && ReadStates.hasUnread(channelId));
 		}
+		if (action === 'chat_focus_textarea') {
+			return this.currentChannelId != null && document.querySelector(CHANNEL_TEXTAREA_SELECTOR) != null;
+		}
 		return true;
 	}
 
 	private isAppRoute(pathname: string): boolean {
-		return pathname.startsWith('/channels/');
+		return pathname.startsWith('/channels/') && !isAccountHandoffArrival(pathname);
 	}
 
 	private ensureCombokeys(): CombokeysInstance | null {
@@ -475,18 +487,18 @@ class KeybindManager {
 		if (this.inputMonitoringHookStatus === 'granted') return true;
 		const electronApi = getElectronAPI();
 		if (await electronApi?.checkInputMonitoringAccess?.()) {
-			NativePermission.setInputMonitoringStatus('granted');
+			MacPermissions.applyPermissionResult('input-monitoring', 'granted');
 			this.inputMonitoringHookStatus = 'granted';
 			return true;
 		}
 		const result = await ensureMacPermission('input-monitoring', {behavior: 'passive'});
 		switch (result) {
 			case 'granted':
-				NativePermission.setInputMonitoringStatus('granted');
+				MacPermissions.applyPermissionResult('input-monitoring', 'granted');
 				this.inputMonitoringHookStatus = 'granted';
 				return true;
 			case 'denied':
-				NativePermission.setInputMonitoringStatus('denied');
+				MacPermissions.applyPermissionResult('input-monitoring', 'denied');
 				this.inputMonitoringHookStatus = 'denied';
 				return false;
 			case 'unsupported-platform':
@@ -521,7 +533,7 @@ class KeybindManager {
 				}),
 			);
 		}
-		this.disposers.push(reactToPushToTalkModeChanges((options) => MediaEngine.handlePushToTalkModeChange(options)));
+		this.disposers.push(reactToPushToTalkModeChanges(() => MediaEngine.handlePushToTalkModeChange()));
 		this.disposers.push(
 			reaction(
 				() => ({entries: this.buildHoldBindingEntries(), routing: this.getGlobalHoldRouting()}),
@@ -1132,7 +1144,7 @@ class KeybindManager {
 	private localKeyEventMatchesBinding(binding: HoldBindingRuntime, event: KeyboardEvent): boolean {
 		const expectedCode = binding.combo.code ?? null;
 		const expectedKey = binding.combo.key ?? null;
-		if (shouldPreferLayoutKeyForShortcut(binding.combo) && expectedKey) {
+		if (shouldPreferLayoutKey(binding.combo) && expectedKey) {
 			if (normalizeKeyboardShortcutKey(event.key) !== normalizeKeyboardShortcutKey(expectedKey)) return false;
 		} else if (expectedCode && event.code !== expectedCode) {
 			return false;
@@ -1734,7 +1746,7 @@ class KeybindManager {
 	}
 
 	private isActionAllowedForCurrentView(action: KeybindCommand): boolean {
-		if (this.routeSuspended && !ROUTE_ALLOWED_ACTIONS.has(action)) return false;
+		if (this.routeSuspended) return false;
 		if (this.isCompactCallTextareaActionBlocked(action)) return false;
 		return !VoiceCallFullscreen.isActive || isKeybindAllowedDuringVoiceCallFullscreen(action);
 	}

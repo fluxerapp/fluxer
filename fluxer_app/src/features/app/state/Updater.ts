@@ -2,6 +2,8 @@
 
 import Config from '@app/features/app/config/Config';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isWebUpdateHost} from '@app/features/app/state/WebUpdateHost';
 import {WORKER_NAVIGATION_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
 import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -25,8 +27,7 @@ import {
 	type UpdaterMachineEvent,
 	type UpdaterMachineSnapshot,
 } from '@app/features/updater/state/UpdaterStateMachine';
-import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
-import type {UpdaterEvent as NativeUpdaterEvent, UpdaterDownloadOption} from '@app/types/electron.d';
+import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 type UpdaterContext = NonNullable<NativeUpdaterEvent['context']>;
@@ -40,7 +41,6 @@ type UpdaterEvent =
 			context: UpdaterContext;
 			version: string | null;
 			downloadUrl?: string;
-			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
 	| {
 			type: 'not-available';
@@ -65,17 +65,10 @@ type UpdaterEvent =
 const logger = new Logger('Updater');
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_CHECK_INTERVAL_MS = 60 * 1000;
-const MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS = 5 * 1000;
 const WEB_CHECK_TIMEOUT_MS = 15 * 1000;
 const NATIVE_CHECK_TIMEOUT_MS = 30 * 1000;
 const VERSION_ENDPOINT = '/version.json';
-const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
-const ALLOWED_WEB_UPDATE_HOSTS = new Set([
-	'web.fluxer.app',
-	'web.canary.fluxer.app',
-	'fluxer.com',
-	'canary.fluxer.com',
-]);
+const CURRENT_BUILD_VERSION = Config.BUILD_VERSION ?? null;
 
 function loadUpdaterModals(): Promise<typeof UpdaterModalCommands> {
 	return import('@app/features/updater/commands/UpdaterModalCommands');
@@ -124,7 +117,6 @@ function normalizeUpdaterEvent(event: NativeUpdaterEvent): UpdaterEvent | null {
 				context,
 				version: event.version ?? null,
 				downloadUrl: event.downloadUrl,
-				downloadOptions: event.downloadOptions,
 			};
 		case 'not-available':
 			return {type: 'not-available', context};
@@ -155,7 +147,7 @@ class Updater {
 	private snapshot: UpdaterMachineSnapshot = createUpdaterMachineSnapshot();
 	currentVersion: string | null = null;
 	channel: string | null = null;
-	private desktopArch: string | null = null;
+	private flatpakAppId: string | null = null;
 	private isNative: boolean;
 	private backgroundCheckStarted = false;
 	private backgroundCheckInterval: number | null = null;
@@ -163,12 +155,12 @@ class Updater {
 	private unsubscribeNativeEvents: (() => void) | null = null;
 	private unsubscribeDesktopUpdate: (() => void) | null = null;
 	private desktopUpdateReported = false;
+	private desktopUpdateReportedReplacesShell = false;
 	private desktopUpdateRunning = false;
 	private olderShellModuleUpdateReady = false;
 	private olderShellUpdateDownloaded = false;
 	private olderShellInstallWhenDownloaded = false;
 	private desktopUpdateStarting = false;
-	private pendingManualDownloadRefreshes = 0;
 	private checkInProgress = false;
 
 	constructor() {
@@ -196,10 +188,6 @@ class Updater {
 		return this.snapshot.context.nativeManualDownloadUrl;
 	}
 
-	get nativeManualDownloadOptions(): ReadonlyArray<UpdaterDownloadOption> {
-		return this.snapshot.context.nativeManualDownloadOptions;
-	}
-
 	private get nativeCheckFailed(): boolean {
 		return this.snapshot.context.nativeCheckFailed;
 	}
@@ -214,6 +202,10 @@ class Updater {
 
 	get desktopUpdateAvailable(): boolean {
 		return this.desktopUpdateReported || this.olderShellModuleUpdateReady || this.olderShellUpdateAvailable;
+	}
+
+	get desktopUpdateReplacesShell(): boolean {
+		return (this.desktopUpdateReported && this.desktopUpdateReportedReplacesShell) || this.olderShellUpdateAvailable;
 	}
 
 	private get olderShellUpdateAvailable(): boolean {
@@ -264,11 +256,16 @@ class Updater {
 
 	private async bootstrapNative(): Promise<void> {
 		try {
-			const info = await getClientInfo();
+			const [info, desktopInfo] = await Promise.all([
+				getClientInfo(),
+				getElectronAPI()
+					?.getDesktopInfo()
+					.catch(() => null),
+			]);
 			runInAction(() => {
 				this.currentVersion = info.desktopVersion ?? null;
 				this.channel = info.desktopChannel ?? null;
-				this.desktopArch = info.desktopArch ?? info.arch ?? null;
+				this.flatpakAppId = desktopInfo?.flatpak === true ? (desktopInfo.flatpakAppId ?? null) : null;
 			});
 		} catch (error) {
 			logger.warn('Failed to read desktop info', error);
@@ -289,6 +286,7 @@ class Updater {
 		this.unsubscribeDesktopUpdate = desktopUpdate.onStateChanged((state) => {
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateReportedReplacesShell = state.replacesShell === true;
 				this.desktopUpdateRunning = state.updating === true;
 			});
 		});
@@ -322,6 +320,7 @@ class Updater {
 			const state = await desktopUpdate.state();
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateReportedReplacesShell = state.replacesShell === true;
 				this.desktopUpdateRunning = state.updating === true;
 			});
 		} catch (error) {
@@ -380,35 +379,22 @@ class Updater {
 	}
 
 	private handleNativeEvent(event: UpdaterEvent): void {
-		const isManualDownloadRefreshResult =
-			event.context === 'user' &&
-			this.pendingManualDownloadRefreshes > 0 &&
-			(event.type === 'available' ||
-				event.type === 'not-available' ||
-				event.type === 'error' ||
-				event.type === 'unsupported');
-		if (isManualDownloadRefreshResult) {
-			this.pendingManualDownloadRefreshes -= 1;
-		}
-		const isUserCheck = event.context === 'user' && !isManualDownloadRefreshResult;
+		const isUserCheck = event.context === 'user';
 		const shouldShowImmediateUserResult = isUserCheck && !this.checkInProgress;
 		switch (event.type) {
 			case 'checking':
 				this.transition({type: 'check.started'});
 				break;
-			case 'available': {
-				const manualDownloadOptions = this.resolveManualNativeDownloadOptions(event, event.downloadOptions ?? []);
+			case 'available':
 				this.transition({
 					type: 'native.available',
 					version: event.version ?? null,
-					downloadUrl: manualDownloadOptions[0]?.url ?? event.downloadUrl ?? null,
-					downloadOptions: manualDownloadOptions,
+					downloadUrl: getElectronAPI()?.platform === 'linux' ? DESKTOP_DOWNLOAD_URL : (event.downloadUrl ?? null),
 				});
 				if (shouldShowImmediateUserResult) {
 					this.showCurrentUpdateState();
 				}
 				break;
-			}
 			case 'not-available':
 				this.transition({type: 'native.notAvailable', now: Date.now()});
 				if (shouldShowImmediateUserResult) {
@@ -444,22 +430,6 @@ class Updater {
 				}
 				break;
 		}
-	}
-
-	private resolveManualNativeDownloadOptions(
-		event: Extract<UpdaterEvent, {type: 'available'}>,
-		options: ReadonlyArray<UpdaterDownloadOption>,
-	): ReadonlyArray<UpdaterDownloadOption> {
-		if (getElectronAPI()?.platform !== 'linux') {
-			return options;
-		}
-		return buildLinuxManualUpdateOptions({
-			downloadUrl: event.downloadUrl ?? options[0]?.url ?? null,
-			channel: this.channel ?? Config.PUBLIC_RELEASE_CHANNEL,
-			arch: this.desktopArch,
-			version: event.version ?? null,
-			knownOptions: options,
-		});
 	}
 
 	private startBackgroundChecks(): void {
@@ -567,7 +537,7 @@ class Updater {
 		if (isDesktop()) {
 			return {available: false, version: null};
 		}
-		if (!ALLOWED_WEB_UPDATE_HOSTS.has(window.location.host)) {
+		if (!isWebUpdateHost(window.location.host, RuntimeConfig.getSnapshotOrNull()?.webAppEndpoint ?? '')) {
 			return {available: false, version: null};
 		}
 		try {
@@ -605,11 +575,7 @@ class Updater {
 			await this.startDesktopUpdate();
 			return;
 		}
-		if (this.isNative && this.nativeUnsupported?.reason === 'managed-package' && !this.updateInfo.web.available) {
-			showUpdaterModal((modals) => modals.pushUnsupportedUpdateModal('managed-package'));
-			return;
-		}
-		if (this.isNative && this.nativeManualUpdateAvailable && !this.nativeUnsupported) {
+		if (this.isNative && this.nativeManualUpdateAvailable) {
 			this.showManualNativeUpdateModal();
 			return;
 		}
@@ -621,15 +587,7 @@ class Updater {
 		}
 		if (this.isNative && this.updateInfo.native.available) {
 			logger.info('Native update is available but not installable in-app; opening desktop downloads...');
-			const url = this.nativeManualDownloadUrl ?? this.nativeUnsupported?.downloadUrl ?? null;
-			if (url) {
-				await openExternalUrl(url);
-			} else if (this.nativeUnsupported) {
-				const {reason, downloadUrl} = this.nativeUnsupported;
-				showUpdaterModal((modals) => modals.pushUnsupportedUpdateModal(reason, downloadUrl));
-			} else {
-				await openExternalUrl(DESKTOP_DOWNLOAD_URL);
-			}
+			await openExternalUrl(DESKTOP_DOWNLOAD_URL);
 		}
 	}
 
@@ -667,61 +625,15 @@ class Updater {
 
 	private showManualNativeUpdateModal(): void {
 		const version = this.updateInfo.native.version;
-		const options = this.nativeManualDownloadOptions;
-		if (options.length > 0) {
-			const currentVersion = this.currentVersion;
-			showUpdaterModal((modals) =>
-				modals.pushManualUpdateAvailableModal({
-					currentVersion,
-					version,
-					options,
-					onDownload: (option) => this.downloadManualNativeUpdateOption(option),
-				}),
-			);
+		if (getElectronAPI()?.platform === 'linux') {
+			const flatpakAppId = this.flatpakAppId;
+			showUpdaterModal((modals) => modals.pushManagedShellUpdateModal({version, flatpakAppId}));
 			return;
 		}
-		const url = this.nativeManualDownloadUrl ?? this.nativeUnsupported?.downloadUrl ?? DESKTOP_DOWNLOAD_URL;
+		const url = this.nativeManualDownloadUrl ?? DESKTOP_DOWNLOAD_URL;
 		showUpdaterModal((modals) =>
 			modals.pushUpdateAvailableModal(version, () => this.downloadManualNativeUpdateOrOpen(url)),
 		);
-	}
-
-	private async refreshManualNativeDownloadOption(option: UpdaterDownloadOption): Promise<UpdaterDownloadOption> {
-		if (this.checkInProgress) {
-			return option;
-		}
-		this.checkInProgress = true;
-		this.transition({type: 'check.started'});
-		let timeoutId: number | undefined;
-		const timedOut = new Promise<boolean>((resolve) => {
-			timeoutId = window.setTimeout(() => resolve(false), MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS);
-		});
-		try {
-			this.pendingManualDownloadRefreshes += 1;
-			const checked = await Promise.race([this.checkNativeUpdate('user'), timedOut]);
-			if (!checked) {
-				return option;
-			}
-			return this.nativeManualDownloadOptions.find((candidate) => candidate.format === option.format) ?? option;
-		} finally {
-			window.clearTimeout(timeoutId);
-			this.checkInProgress = false;
-			this.transition({type: 'check.finished', now: Date.now()});
-		}
-	}
-
-	private async downloadManualNativeUpdateOption(option: UpdaterDownloadOption): Promise<void> {
-		if (this.manualNativeDownloadInFlight) {
-			return;
-		}
-		this.transition({type: 'manualDownload.started'});
-		let currentOption = option;
-		try {
-			currentOption = await this.refreshManualNativeDownloadOption(option);
-		} finally {
-			this.transition({type: 'manualDownload.finished'});
-		}
-		await this.downloadManualNativeUpdateOrOpen(currentOption.url, currentOption.suggestedName, currentOption.sha256);
 	}
 
 	private async downloadManualNativeUpdateOrOpen(
@@ -764,6 +676,7 @@ class Updater {
 			this.unsubscribeDesktopUpdate = null;
 		}
 		this.desktopUpdateReported = false;
+		this.desktopUpdateReportedReplacesShell = false;
 		this.desktopUpdateRunning = false;
 		this.olderShellModuleUpdateReady = false;
 		this.olderShellUpdateDownloaded = false;

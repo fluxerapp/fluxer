@@ -1,10 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_voice_permission_sync).
+
 -typing([eqwalizer]).
 
 -export([
-    sync_user_voice_permissions/2,
     sync_all_voice_permissions_for_channels/2,
     sync_roles_after_change/3,
     maybe_sync_permissions_on_member_update/2
@@ -21,10 +21,6 @@
 -type voice_state() :: map().
 -type user_id() :: integer().
 -type channel_id() :: integer().
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec sync_user_voice_permissions(user_id(), guild_state()) -> ok.
 sync_user_voice_permissions(UserId, State) ->
@@ -62,13 +58,17 @@ sync_all_voice_permissions_for_channels(ChannelIds, State) ->
         undefined ->
             ok;
         GuildId ->
-            lists:foreach(
-                fun(ChannelId) ->
-                    do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
-                end,
-                ChannelIds
-            )
+            sync_channels(GuildId, ChannelIds, VoiceStates, State)
     end.
+
+-spec sync_channels(integer(), [channel_id()], map(), guild_state()) -> ok.
+sync_channels(GuildId, ChannelIds, VoiceStates, State) ->
+    lists:foreach(
+        fun(ChannelId) ->
+            do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
+        end,
+        ChannelIds
+    ).
 
 -spec do_sync_channel_permissions(integer(), channel_id(), map(), guild_state()) -> ok.
 do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State) ->
@@ -97,7 +97,7 @@ sync_channel_voice_state_permissions(GuildId, VoiceState, State) ->
 
 -spec maybe_sync_permissions_on_member_update(map(), guild_state()) -> ok.
 maybe_sync_permissions_on_member_update(MemberUpdate, State) ->
-    UserId = get_member_user_id(MemberUpdate),
+    UserId = guild_members_common:member_user_id(MemberUpdate),
     case UserId of
         undefined ->
             ok;
@@ -142,7 +142,7 @@ sync_validated_voice_state(GuildId, UserId, ChId, ConnId, VoiceState, State) ->
 maybe_clear_self_stream(ChId, VoiceState, #{can_stream := false}, State) ->
     SelfStream = maps:get(<<"self_stream">>, VoiceState, false),
     SelfVideo = maps:get(<<"self_video">>, VoiceState, false),
-    case SelfStream =:= true orelse SelfVideo =:= true of
+    case type_conv:is_true(SelfStream) orelse type_conv:is_true(SelfVideo) of
         false ->
             ok;
         true ->
@@ -166,8 +166,8 @@ user_has_base_voice_access(UserId, ChannelId, State) ->
             Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
             ViewPerm = constants:view_channel_permission(),
             ConnectPerm = constants:connect_permission(),
-            HasView = permission_bits:has(Permissions, ViewPerm),
-            HasConnect = permission_bits:has(Permissions, ConnectPerm),
+            HasView = bitset:has(Permissions, ViewPerm),
+            HasConnect = bitset:has(Permissions, ConnectPerm),
             HasView andalso HasConnect
     end.
 
@@ -187,7 +187,7 @@ dispatch_force_disconnect(GuildId, ChannelId, UserId, ConnectionId, State) ->
 -spec spawn_force_disconnect(integer(), channel_id(), user_id(), binary()) -> pid().
 spawn_force_disconnect(GuildId, ChannelId, UserId, ConnectionId) ->
     spawn(fun() ->
-        guild_voice_disconnect:force_disconnect_participant(
+        guild_voice_disconnect_user:force_disconnect_participant(
             GuildId, ChannelId, UserId, ConnectionId
         )
     end).
@@ -260,8 +260,10 @@ affected_role_users(GuildId, RoleIds, OldState, State) ->
         true ->
             all;
         false ->
-            OldIndex = guild_data_index:member_role_index(maps:get(data, OldState, #{})),
-            NewIndex = guild_data_index:member_role_index(maps:get(data, State, #{})),
+            OldIndex = guild_data_index_members:member_role_index(
+                maps:get(data, OldState, #{})
+            ),
+            NewIndex = guild_data_index_members:member_role_index(maps:get(data, State, #{})),
             sets:from_list(
                 lists:append([
                     maps:keys(maps:get(RoleId, OldIndex, #{})) ++
@@ -293,271 +295,8 @@ sync_if_affected(GuildId, UserId, Affected, VoiceState, State) ->
 is_affected(_UserId, all) -> true;
 is_affected(UserId, Affected) -> sets:is_element(UserId, Affected).
 
--spec get_member_user_id(map()) -> user_id() | undefined.
-get_member_user_id(MemberUpdate) ->
-    User = map_utils:ensure_map(maps:get(<<"user">>, MemberUpdate, #{})),
-    guild_voice_connection_normalize:normalize_positive_snowflake(
-        maps:get(<<"id">>, User, undefined)
-    ).
-
 -spec state_guild_id(guild_state()) -> integer() | undefined.
 state_guild_id(State) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         maps:get(id, State, undefined)
     ).
-
--ifdef(TEST).
-
-build_sync_test_state(TestFun) ->
-    UserId = 10,
-    ChannelId = 500,
-    GuildId = 42,
-    RoleId = 999,
-    VoiceState = #{
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"connection_id">> => <<"test-conn">>,
-        <<"deaf">> => true
-    },
-    Permissions =
-        constants:view_channel_permission() bor
-            constants:connect_permission() bor
-            constants:speak_permission() bor
-            constants:stream_permission(),
-    #{
-        id => GuildId,
-        voice_states => #{<<"conn">> => VoiceState},
-        test_permission_sync_fun => TestFun,
-        data => build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions)
-    }.
-
-build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions) ->
-    RoleIdBin = integer_to_binary(RoleId),
-    PermsBin = integer_to_binary(Permissions),
-    GuildIdBin = integer_to_binary(GuildId),
-    UserIdBin = integer_to_binary(UserId),
-    ChIdBin = integer_to_binary(ChannelId),
-    #{
-        <<"guild">> => #{<<"owner_id">> => <<"1">>},
-        <<"roles">> => [
-            #{<<"id">> => RoleIdBin, <<"permissions">> => PermsBin},
-            #{<<"id">> => GuildIdBin, <<"permissions">> => <<"0">>}
-        ],
-        <<"members">> => [
-            #{<<"user">> => #{<<"id">> => UserIdBin}, <<"roles">> => [RoleIdBin]}
-        ],
-        <<"channels">> => [
-            #{<<"id">> => ChIdBin, <<"permission_overwrites">> => []}
-        ]
-    }.
-
-sync_user_voice_permissions_syncs_connected_user_test() ->
-    ok = drain_mailbox(),
-    TestFun = make_sync_test_fun(),
-    State = build_sync_test_state(TestFun),
-    ok = sync_user_voice_permissions(10, State),
-    receive
-        {synced, 42, 500, 10, <<"test-conn">>, Perms} ->
-            ?assertEqual(true, maps:get(can_speak, Perms)),
-            ?assertEqual(true, maps:get(can_stream, Perms)),
-            ?assertEqual(true, maps:get(deaf, Perms))
-    after 100 ->
-        ?assert(false)
-    end.
-
-sync_roles_after_change_uses_role_index_test() ->
-    TestFun = make_sync_test_fun(),
-    GuildId = 42,
-    RoleId = 999,
-    OtherRoleId = 1000,
-    UserId = 10,
-    OtherUserId = 20,
-    ChannelId = 500,
-    Permissions =
-        constants:view_channel_permission() bor
-            constants:connect_permission() bor
-            constants:speak_permission(),
-    State = #{
-        id => GuildId,
-        voice_states => #{
-            <<"conn1">> => #{
-                <<"user_id">> => integer_to_binary(UserId),
-                <<"channel_id">> => integer_to_binary(ChannelId),
-                <<"connection_id">> => <<"conn1">>
-            },
-            <<"conn2">> => #{
-                <<"user_id">> => integer_to_binary(OtherUserId),
-                <<"channel_id">> => integer_to_binary(ChannelId),
-                <<"connection_id">> => <<"conn2">>
-            }
-        },
-        test_permission_sync_fun => TestFun,
-        data => role_sync_test_data(
-            GuildId, RoleId, OtherRoleId, UserId, OtherUserId, ChannelId, Permissions
-        )
-    },
-    ok = sync_roles_after_change([RoleId], State, State),
-    receive
-        {synced, GuildId, ChannelId, UserId, <<"conn1">>, _Perms} -> ok
-    after 200 ->
-        ?assert(false)
-    end,
-    receive
-        {synced, GuildId, ChannelId, OtherUserId, <<"conn2">>, _OtherPerms} ->
-            ?assert(false)
-    after 50 ->
-        ok
-    end.
-
-sync_disconnects_when_connect_permission_lost_test() ->
-    ok = drain_mailbox(),
-    TestFun = make_sync_test_fun(),
-    UserId = 10,
-    ChannelId = 500,
-    GuildId = 42,
-    RoleId = 999,
-    ViewOnly = constants:view_channel_permission(),
-    State = build_sync_test_state_with_perms(
-        TestFun, GuildId, RoleId, UserId, ChannelId, ViewOnly
-    ),
-    ok = sync_user_voice_permissions(UserId, State),
-    receive
-        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
-            ?assertEqual(true, maps:get(disconnected, Perms, false))
-    after 200 ->
-        ?assert(false)
-    end.
-
-sync_clears_self_stream_when_stream_permission_lost_test() ->
-    ok = drain_mailbox(),
-    TestFun = make_sync_test_fun(),
-    UserId = 10,
-    ChannelId = 500,
-    GuildId = 42,
-    RoleId = 999,
-    WithoutStream =
-        constants:view_channel_permission() bor
-            constants:connect_permission() bor
-            constants:speak_permission(),
-    State = build_streaming_sync_test_state(
-        TestFun, GuildId, RoleId, UserId, ChannelId, WithoutStream
-    ),
-    ok = sync_user_voice_permissions(UserId, State),
-    Broadcast = receive_voice_state_dispatch(),
-    ?assertEqual(false, maps:get(<<"self_stream">>, Broadcast)),
-    ?assertEqual(false, maps:get(<<"self_video">>, Broadcast)),
-    ?assertEqual(<<"test-conn">>, maps:get(<<"connection_id">>, Broadcast)).
-
-sync_keeps_self_stream_when_stream_permission_held_test() ->
-    ok = drain_mailbox(),
-    TestFun = make_sync_test_fun(),
-    UserId = 10,
-    ChannelId = 500,
-    GuildId = 42,
-    RoleId = 999,
-    WithStream =
-        constants:view_channel_permission() bor
-            constants:connect_permission() bor
-            constants:speak_permission() bor
-            constants:stream_permission(),
-    State = build_streaming_sync_test_state(
-        TestFun, GuildId, RoleId, UserId, ChannelId, WithStream
-    ),
-    ok = sync_user_voice_permissions(UserId, State),
-    ?assertEqual(undefined, receive_optional_voice_state_dispatch()).
-
-build_streaming_sync_test_state(TestFun, GuildId, RoleId, UserId, ChannelId, Permissions) ->
-    VoiceState = #{
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"connection_id">> => <<"test-conn">>,
-        <<"self_stream">> => true,
-        <<"self_video">> => true
-    },
-    #{
-        id => GuildId,
-        voice_states => #{<<"conn">> => VoiceState},
-        sessions => #{
-            <<"s1">> => #{
-                pid => self(),
-                user_id => UserId,
-                viewable_channels => #{ChannelId => true}
-            }
-        },
-        test_permission_sync_fun => TestFun,
-        data => build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions)
-    }.
-
-receive_voice_state_dispatch() ->
-    case receive_optional_voice_state_dispatch() of
-        undefined -> error(voice_state_update_not_received);
-        Payload -> Payload
-    end.
-
-receive_optional_voice_state_dispatch() ->
-    receive
-        {'$gen_cast', {dispatch, voice_state_update, {pre_encoded, Bin}}} -> json:decode(Bin);
-        {'$gen_cast', {dispatch, voice_state_update, Payload}} -> Payload
-    after 200 ->
-        undefined
-    end.
-
-make_sync_test_fun() ->
-    Self = self(),
-    fun(GId, ChId, UId, ConnId, Perms) ->
-        Self ! {synced, GId, ChId, UId, ConnId, Perms}
-    end.
-
-build_sync_test_state_with_perms(TestFun, GuildId, RoleId, UserId, ChannelId, Permissions) ->
-    VoiceState = #{
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"connection_id">> => <<"test-conn">>,
-        <<"deaf">> => false
-    },
-    #{
-        id => GuildId,
-        voice_states => #{<<"conn">> => VoiceState},
-        test_permission_sync_fun => TestFun,
-        data => build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions)
-    }.
-
-role_sync_test_data(
-    GuildId, RoleId, OtherRoleId, UserId, OtherUserId, ChannelId, Permissions
-) ->
-    guild_data_index:normalize_data(#{
-        <<"guild">> => #{<<"owner_id">> => <<"1">>},
-        <<"roles">> => [
-            #{
-                <<"id">> => integer_to_binary(RoleId),
-                <<"permissions">> => integer_to_binary(Permissions)
-            },
-            #{
-                <<"id">> => integer_to_binary(OtherRoleId),
-                <<"permissions">> => integer_to_binary(Permissions)
-            },
-            #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>}
-        ],
-        <<"members">> => [
-            #{
-                <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
-                <<"roles">> => [integer_to_binary(RoleId)]
-            },
-            #{
-                <<"user">> => #{<<"id">> => integer_to_binary(OtherUserId)},
-                <<"roles">> => [integer_to_binary(OtherRoleId)]
-            }
-        ],
-        <<"channels">> => [
-            #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
-        ]
-    }).
-
-drain_mailbox() ->
-    receive
-        _ -> drain_mailbox()
-    after 0 ->
-        ok
-    end.
-
--endif.

@@ -12,7 +12,6 @@
     extract_guild_id/1,
     forward_call/4,
     forward_call/5,
-    forward_call_to_shard/4,
     forward_call_to_shard/5,
     ensure_local_owner/1,
     aggregate_counts/2,
@@ -65,11 +64,6 @@ forward_call(GuildId, Request, Timeout, From, State) ->
         ok -> forward_owned_call(GuildId, Request, Timeout, From, State);
         {error, _Reason} = Error -> {reply, Error, State}
     end.
-
--spec forward_call_to_shard(guild_id(), term(), gen_server:from(), state()) ->
-    {noreply, state()}.
-forward_call_to_shard(GuildId, Request, From, State) ->
-    forward_call_to_shard(GuildId, Request, ?DEFAULT_GEN_SERVER_TIMEOUT, From, State).
 
 -spec forward_call_to_shard(
     guild_id(), term(), pos_integer(), gen_server:from(), state()

@@ -17,7 +17,11 @@
     merge_state/2,
     api_remote_from_session_result/1,
     remote_node/2,
-    is_recorder/1
+    is_recorder/1,
+    ensure_trace/1,
+    maybe_put_remote/2,
+    lookup_remote_pod_name/1,
+    normalize_key/1
 ]).
 
 -export_type([recorder/0]).

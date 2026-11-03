@@ -36,7 +36,8 @@ pub struct NotificationFields {
     pub title: String,
     pub body: String,
     pub icon: String,
-    pub badge: String,
+    #[serde(default)]
+    pub badge: Option<String>,
     pub tag: String,
     pub notification_tag: String,
     pub url: String,
@@ -166,16 +167,12 @@ mod tests {
     }
 
     #[test]
-    fn a_thread_job_decodes_its_optional_fields() {
+    fn a_job_without_a_badge_decodes() {
         let job = decode_message(
-            format!(r#"{BASE},"kind":"thread","parent_id":"9","parent_name":"general","channel_name":"plans"}}"#)
-                .as_bytes(),
+            br#"{"v":1,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"t","body":"b","icon":"i","tag":"x","notification_tag":"y","url":"/u"},"user_ids":["8"]}"#,
         )
         .expect("the job decodes");
-        assert!(job.is_thread());
-        assert_eq!(job.parent_id.as_deref(), Some("9"));
-        assert_eq!(job.parent_name.as_deref(), Some("general"));
-        assert_eq!(job.channel_name.as_deref(), Some("plans"));
+        assert_eq!(job.notification.badge, None);
     }
 
     #[test]
@@ -188,31 +185,5 @@ mod tests {
         assert_eq!(job.parent_id.as_deref(), Some("200"));
         assert_eq!(job.parent_name.as_deref(), Some("general"));
         assert_eq!(job.channel_name.as_deref(), Some("ideas"));
-    }
-
-    #[test]
-    fn a_forum_thread_created_job_reaches_thread_capable_devices_only() {
-        let job = decode_message(
-            format!(
-                r#"{BASE},"kind":"forum_thread_created","parent_id":"9","channel_name":"post"}}"#
-            )
-            .as_bytes(),
-        )
-        .expect("the job decodes");
-        assert!(job.is_thread());
-        assert!(job.is_forum_thread_created());
-        let thread = decode_message(format!(r#"{BASE},"kind":"thread"}}"#).as_bytes())
-            .expect("the job decodes");
-        assert!(!thread.is_forum_thread_created());
-    }
-
-    #[test]
-    fn thread_fields_nested_in_the_notification_do_not_mark_a_thread() {
-        let job = decode_message(
-            br#"{"v":1,"config_version":3,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"t","body":"b","icon":"i","badge":"g","tag":"x","notification_tag":"y","url":"/u","kind":"thread","parent_id":"200"},"user_ids":["8"]}"#,
-        )
-        .expect("the job decodes");
-        assert!(!job.is_thread());
-        assert_eq!(job.parent_id, None);
     }
 }

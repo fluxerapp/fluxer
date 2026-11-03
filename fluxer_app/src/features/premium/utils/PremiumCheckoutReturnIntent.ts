@@ -3,19 +3,18 @@
 import {getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import Users from '@app/features/user/state/Users';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const STORAGE_KEY = 'PremiumCheckoutReturnIntent';
 const INTENT_TTL_MS = 30 * 60 * 1000;
 
-export type PremiumCheckoutReturnSource = 'plutonium';
-
 interface PremiumCheckoutReturnIntent {
 	id: string;
-	source: PremiumCheckoutReturnSource;
+	source: 'plutonium';
 	userId: string | null;
 	createdAt: number;
 	expiresAt: number;
-	startedPremium: boolean;
+	startedComplete: boolean;
 }
 
 function getStorage(): Storage | null {
@@ -24,10 +23,6 @@ function getStorage(): Storage | null {
 
 function generateIntentId(): string {
 	return `premium-checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function parsePremiumCheckoutReturnIntent(raw: string): PremiumCheckoutReturnIntent | null {
@@ -41,7 +36,7 @@ function parsePremiumCheckoutReturnIntent(raw: string): PremiumCheckoutReturnInt
 		(typeof parsed.userId !== 'string' && parsed.userId !== null) ||
 		typeof parsed.createdAt !== 'number' ||
 		typeof parsed.expiresAt !== 'number' ||
-		typeof parsed.startedPremium !== 'boolean'
+		typeof parsed.startedComplete !== 'boolean'
 	) {
 		return null;
 	}
@@ -51,7 +46,7 @@ function parsePremiumCheckoutReturnIntent(raw: string): PremiumCheckoutReturnInt
 		userId: parsed.userId,
 		createdAt: parsed.createdAt,
 		expiresAt: parsed.expiresAt,
-		startedPremium: parsed.startedPremium,
+		startedComplete: parsed.startedComplete,
 	};
 }
 
@@ -84,30 +79,30 @@ function readIntent(): PremiumCheckoutReturnIntent | null {
 	}
 }
 
-export function recordPremiumCheckoutReturnIntent(source: PremiumCheckoutReturnSource): void {
+export function recordPremiumCheckoutReturnIntent(): void {
 	const storage = getStorage();
 	if (!storage) return;
 	const currentUser = Users.currentUser;
-	const startedPremium = getCurrentPremiumActive();
-	if (startedPremium) {
+	const startedComplete = getCurrentPremiumActive();
+	if (startedComplete) {
 		storage.removeItem(STORAGE_KEY);
 		return;
 	}
 	const now = Date.now();
 	const intent: PremiumCheckoutReturnIntent = {
 		id: generateIntentId(),
-		source,
+		source: 'plutonium',
 		userId: currentUser?.id ?? null,
 		createdAt: now,
 		expiresAt: now + INTENT_TTL_MS,
-		startedPremium,
+		startedComplete,
 	};
 	storage.setItem(STORAGE_KEY, JSON.stringify(intent));
 }
 
 export function getPendingPremiumCheckoutReturnIntent(): PremiumCheckoutReturnIntent | null {
 	const intent = readIntent();
-	if (!intent || intent.startedPremium) return null;
+	if (!intent || intent.startedComplete) return null;
 	const currentUserId = Users.currentUser?.id ?? null;
 	if (intent.userId && intent.userId !== currentUserId) {
 		clearPremiumCheckoutReturnIntent();

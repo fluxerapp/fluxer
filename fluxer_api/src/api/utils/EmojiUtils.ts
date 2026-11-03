@@ -108,7 +108,7 @@ function collectEmojiMatches(content: string, isInEscapedContext: (index: number
 	return matches;
 }
 
-async function checkUserGlobalExpressions(
+export async function checkUserGlobalExpressions(
 	userId: UserID,
 	userRepository: EmojiUserRepository,
 	limitConfigService: LimitConfigService,

@@ -16,14 +16,14 @@ export interface AuthSessionTransitionDependencies {
 	): Promise<Result>;
 }
 
-export class AuthSessionTransitionCapacityError extends Error {
+class AuthSessionTransitionCapacityError extends Error {
 	constructor() {
 		super('Auth session transitions already have one active operation and one queued operation');
 		this.name = 'AuthSessionTransitionCapacityError';
 	}
 }
 
-export class AuthSessionTransitionInvariantError extends Error {
+class AuthSessionTransitionInvariantError extends Error {
 	constructor(message: string) {
 		super(message);
 		this.name = 'AuthSessionTransitionInvariantError';

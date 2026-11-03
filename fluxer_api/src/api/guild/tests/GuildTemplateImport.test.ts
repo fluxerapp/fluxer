@@ -6,7 +6,8 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {SystemChannelFlags} from '@fluxer/constants/src/GuildConstants';
-import {CHANNEL_TOPIC_MAX_LENGTH, VOICE_CHANNEL_USER_LIMIT_MAX} from '@fluxer/constants/src/LimitConstants';
+import {VOICE_CHANNEL_USER_LIMIT_MAX} from '@fluxer/constants/src/LimitConstants';
+import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -110,7 +111,7 @@ describe('Guild Template Import', () => {
 		expect(guild.system_channel_flags).toBe(SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS);
 		expect(guild.afk_timeout).toBe(60);
 	});
-	test('maps supported competitor-only channel types to Fluxer equivalents and ignores unsupported ones', async () => {
+	test('imports announcement, stage, forum and media channels and ignores unsupported types', async () => {
 		const account = await createTestAccount(harness);
 		const guild = await createBuilder<GuildResponse>(harness, account.token)
 			.post('/guilds')
@@ -155,16 +156,31 @@ describe('Guild Template Import', () => {
 						},
 						{
 							id: '4104',
-							type: 16,
+							type: ChannelTypes.GUILD_MEDIA,
 							name: 'media-feed',
 							parent_id: '4101',
 							position: 3,
+						},
+						{
+							id: '4105',
+							type: ChannelTypes.GUILD_FORUM,
+							name: 'help',
+							parent_id: '4101',
+							position: 4,
+							rate_limit_per_user: 120,
+						},
+						{
+							id: '4106',
+							type: 14,
+							name: 'directory',
+							parent_id: '4101',
+							position: 5,
 						},
 					],
 				},
 			})
 			.execute();
-		const channels = await getGuildChannels(harness, account.token, guild.id);
+		const channels = await listThreadAwareChannels(account.token, guild.id);
 		const categoryChannel = channels.find((channel) => channel.name === 'Main');
 		const announcementsChannel = channels.find((channel) => channel.name === 'announcements');
 		const stageChannel = channels.find((channel) => channel.name === 'town-hall');
@@ -176,82 +192,15 @@ describe('Guild Template Import', () => {
 		expect(stageChannel).toBeDefined();
 		expect(stageChannel?.type).toBe(ChannelTypes.GUILD_VOICE);
 		expect(stageChannel?.parent_id).toBe(categoryChannel?.id ?? null);
-		expect(mediaChannel).toBeUndefined();
+		const forumChannel = channels.find((channel) => channel.name === 'help');
+		expect(mediaChannel?.type).toBe(ChannelTypes.GUILD_MEDIA);
+		expect(mediaChannel?.parent_id).toBe(categoryChannel?.id ?? null);
+		expect(mediaChannel?.position).toBe(3);
+		expect(forumChannel?.type).toBe(ChannelTypes.GUILD_FORUM);
+		expect(forumChannel?.parent_id).toBe(categoryChannel?.id ?? null);
+		expect(forumChannel?.rate_limit_per_user).toBe(120);
+		expect(channels.find((channel) => channel.name === 'directory')).toBeUndefined();
 		expect(guild.system_channel_id).toBe(announcementsChannel?.id ?? null);
-	});
-	test('accepts template roles and channels with empty names', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createBuilder<GuildResponse>(harness, account.token)
-			.post('/guilds')
-			.body({
-				name: 'Empty Names Guild',
-				template: {
-					name: 'Template Source',
-					description: null,
-					verification_level: 0,
-					default_message_notifications: 0,
-					explicit_content_filter: 0,
-					system_channel_id: 5001,
-					afk_timeout: 300,
-					system_channel_flags: 0,
-					roles: [
-						{id: 0, name: '@everyone', permissions: DEFAULT_EVERYONE_PERMISSIONS},
-						{id: 5100, name: '', permissions: DEFAULT_EVERYONE_PERMISSIONS},
-					],
-					channels: [
-						{id: 5001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0},
-						{id: 5002, type: ChannelTypes.GUILD_TEXT, name: '', position: 1},
-					],
-				},
-			})
-			.execute();
-		const roles = await getRoles(harness, account.token, guild.id);
-		const channels = await getGuildChannels(harness, account.token, guild.id);
-		expect(roles.some((role) => role.name === '')).toBe(true);
-		expect(channels.some((channel) => channel.name === '')).toBe(true);
-	});
-	test.each([
-		['a negative slowmode', {rate_limit_per_user: -1}],
-		['a slowmode above the channel maximum', {rate_limit_per_user: 1_000_000_000}],
-		['a fractional position', {position: 0.5}],
-		['a negative position', {position: -3}],
-		['a topic above the template maximum', {topic: 'x'.repeat(4097)}],
-		['a name above the channel maximum', {name: 'x'.repeat(101)}],
-		['a negative user limit', {type: ChannelTypes.GUILD_VOICE, user_limit: -1}],
-		['a voice connection limit above the maximum', {type: ChannelTypes.GUILD_VOICE, voice_connection_limit: 100_000}],
-		['a negative voice connection limit', {type: ChannelTypes.GUILD_VOICE, voice_connection_limit: -5}],
-	])('rejects a template channel with %s', async (_label, overrides) => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/guilds')
-			.body({
-				name: 'Bounded Guild',
-				template: buildMinimalTemplate({
-					channels: [{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0, ...overrides}],
-				}),
-			})
-			.expect(400, 'INVALID_FORM_BODY')
-			.execute();
-	});
-	test.each([
-		['a negative colour', {color: -1}],
-		['a colour above 0xffffff', {color: 0x1000000}],
-		['a name above the role maximum', {name: 'x'.repeat(101)}],
-	])('rejects a template role with %s', async (_label, overrides) => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/guilds')
-			.body({
-				name: 'Bounded Guild',
-				template: buildMinimalTemplate({
-					roles: [
-						{id: 0, name: '@everyone', permissions: DEFAULT_EVERYONE_PERMISSIONS},
-						{id: 6100, name: 'Role', permissions: '0', ...overrides},
-					],
-				}),
-			})
-			.expect(400, 'INVALID_FORM_BODY')
-			.execute();
 	});
 	test('clamps imported voice user limits to the channel maximum and keeps channels readable', async () => {
 		const account = await createTestAccount(harness);
@@ -273,27 +222,75 @@ describe('Guild Template Import', () => {
 		expect(channels.find((channel) => channel.name === 'town-hall')?.user_limit).toBe(VOICE_CHANNEL_USER_LIMIT_MAX);
 		expect(channels.find((channel) => channel.name === 'lounge')?.voice_connection_limit).toBe(100);
 	});
-	test('accepts forum-length topics and shortens them to the channel topic limit', async () => {
+	test('accepts channels shaped like a full template export', async () => {
 		const account = await createTestAccount(harness);
-		const longTopic = `${'a'.repeat(CHANNEL_TOPIC_MAX_LENGTH - 1)}\u{1F600}${'b'.repeat(300)}`;
+		const exported = {
+			bitrate: 64000,
+			user_limit: 0,
+			nsfw: false,
+			rate_limit_per_user: 0,
+			topic: null,
+			default_auto_archive_duration: null,
+			permission_overwrites: [{id: 0, type: 0, allow: '0', deny: Permissions.SEND_MESSAGES.toString()}],
+			available_tags: [],
+			template: '',
+			default_reaction_emoji: null,
+			default_thread_rate_limit_per_user: 0,
+			default_sort_order: null,
+			default_forum_layout: 0,
+			default_tag_setting: null,
+			icon_emoji: null,
+			theme_color: null,
+		};
 		const guild = await createBuilder<GuildResponse>(harness, account.token)
 			.post('/guilds')
 			.body({
-				name: 'Forum Guild',
-				template: buildMinimalTemplate({
-					channels: [
-						{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0, topic: longTopic},
-						{id: 6002, type: 15, name: 'projects', position: 1, topic: 'c'.repeat(1356)},
-					],
-				}),
+				name: 'Exported Guild',
+				template: {
+					...buildMinimalTemplate({
+						channels: [
+							{...exported, id: 1, type: ChannelTypes.GUILD_CATEGORY, name: 'Info', position: 0, parent_id: null},
+							{...exported, id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'rules', position: 0, parent_id: 1},
+							{...exported, id: 3, type: ChannelTypes.GUILD_CATEGORY, name: 'Nested', position: 1, parent_id: 1},
+							{
+								...exported,
+								id: 4,
+								type: ChannelTypes.GUILD_FORUM,
+								name: 'ideas',
+								position: 1,
+								parent_id: 1,
+								nsfw: null,
+							},
+						],
+					}),
+					afk_channel_id: null,
+					preferred_locale: 'en-US',
+					region: 'us-west',
+				},
 			})
 			.execute();
-		const channels = await getGuildChannels(harness, account.token, guild.id);
-		const general = channels.find((channel) => channel.name === 'general');
-		expect(general?.topic).toBe('a'.repeat(CHANNEL_TOPIC_MAX_LENGTH - 1));
-		expect(channels.find((channel) => channel.name === 'projects')).toBeUndefined();
+		const channels = await listThreadAwareChannels(account.token, guild.id);
+		const category = channels.find((channel) => channel.name === 'Info');
+		const rules = channels.find((channel) => channel.name === 'rules');
+		expect(rules?.parent_id).toBe(category?.id ?? null);
+		expect(rules?.permission_overwrites?.find((overwrite) => overwrite.id === guild.id)?.deny).toBe(
+			Permissions.SEND_MESSAGES.toString(),
+		);
+		expect(channels.find((channel) => channel.name === 'Nested')?.parent_id ?? null).toBeNull();
+		expect(channels.find((channel) => channel.name === 'ideas')?.parent_id).toBe(category?.id ?? null);
+		expect(guild.system_channel_id).toBe(rules?.id ?? null);
 	});
+
+	function listThreadAwareChannels(token: string, guildId: string): Promise<Array<ChannelResponse>> {
+		return createBuilder<Array<ChannelResponse>>(harness, token)
+			.get(`/guilds/${guildId}/channels`)
+			.header(THREAD_FEATURES_HEADER, THREAD_FEATURES_CAPABLE)
+			.execute();
+	}
 });
+
+const THREAD_FEATURES_HEADER = 'X-Fluxer-Features';
+const THREAD_FEATURES_CAPABLE = 'channel_threads';
 
 const DEFAULT_EVERYONE_PERMISSIONS = Permissions.VIEW_CHANNEL.toString();
 

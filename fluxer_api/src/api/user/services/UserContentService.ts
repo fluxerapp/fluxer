@@ -14,27 +14,19 @@ import {
 	maskThreadArtifactsByChannel,
 } from '@app/api/channel/services/message/ThreadMessageResponses';
 import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
-import {
-	everEnabled,
-	THREAD_FEATURE_CHANNEL_TYPES,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {PushSubscription} from '@app/api/models/PushSubscription';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {
@@ -50,6 +42,7 @@ import {
 } from '@app/api/user/services/WebPushOriginReplacement';
 import {UserHarvest} from '@app/api/user/UserHarvestModel';
 import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
@@ -68,7 +61,6 @@ import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestF
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {HarvestCreationResponse, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
@@ -79,6 +71,7 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
@@ -108,6 +101,16 @@ const DEFAULT_MOBILE_APP_ID = 'stable';
 const DEFAULT_APNS_PROVIDER_ENVIRONMENT = 'production';
 const MAX_HIDDEN_REFILL_PAGES = 3;
 
+function oldestMessageId(entries: ReadonlyArray<{messageId: MessageID}>): MessageID | undefined {
+	let oldest: MessageID | undefined;
+	for (const {messageId} of entries) {
+		if (oldest === undefined || messageId < oldest) {
+			oldest = messageId;
+		}
+	}
+	return oldest;
+}
+
 function savedMessageCreatePayloads(channel: Channel, data: MessageResponse | undefined): Array<unknown> {
 	const guildId = channel.guildId?.toString();
 	if (!data || !guildId) return [data];
@@ -132,7 +135,10 @@ function assertPublicPushEndpoint(endpoint: string, fieldName: string): void {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(endpoint);
-	} catch {
+	} catch (error) {
+		if (!(error instanceof TypeError)) {
+			Logger.warn({error, fieldName}, 'Failed to parse a public push endpoint');
+		}
 		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
 	}
 	if (!isPubliclyRoutableUrlShape(parsedUrl)) {
@@ -188,7 +194,6 @@ const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof NsfwContentRequiresAgeVerificationError;
 
 export class UserContentService {
-	private readonly updatePropagator: BaseUserUpdatePropagator;
 	private readonly userRepository: UserRepository;
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
@@ -197,11 +202,11 @@ export class UserContentService {
 
 	constructor(
 		apiContext: ApiContext,
-		userCacheService: UserCacheService,
-		private channelService: ChannelService,
-		private channelRepository: ChannelRepository,
-		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
-		private limitConfigService: LimitConfigService,
+
+		private readonly channelService: ChannelService,
+		private readonly channelRepository: ChannelRepository,
+		private readonly bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
+		private readonly limitConfigService: LimitConfigService,
 	) {
 		const {users, gateway, worker, snowflake, kv} = apiContext.services;
 		this.userRepository = users;
@@ -209,10 +214,6 @@ export class UserContentService {
 		this.workerService = worker;
 		this.snowflakeService = snowflake;
 		this.kv = kv;
-		this.updatePropagator = new BaseUserUpdatePropagator({
-			userCacheService,
-			gatewayService: this.gatewayService,
-		});
 	}
 
 	async getRecentMentions(params: {
@@ -242,10 +243,7 @@ export class UserContentService {
 				if (message) messages.push(message);
 			}
 			if (hidden === 0 || mentions.length < pageLimit || refills === MAX_HIDDEN_REFILL_PAGES) break;
-			cursor = mentions.reduce(
-				(oldest, mention) => (mention.messageId < oldest ? mention.messageId : oldest),
-				mentions[0]!.messageId,
-			);
+			cursor = oldestMessageId(mentions);
 			pageLimit = hidden;
 		}
 		return messages.sort((a, b) => (b.id > a.id ? 1 : -1));
@@ -333,13 +331,10 @@ export class UserContentService {
 			const savedMessages = await this.userRepository.listSavedMessages(userId, pageLimit, cursor);
 			const hidden = await this.collectSavedMessages(userId, viewer, savedMessages, results);
 			if (hidden === 0 || savedMessages.length < pageLimit || refills === MAX_HIDDEN_REFILL_PAGES) break;
-			cursor = savedMessages.reduce(
-				(oldest, savedMessage) => (savedMessage.messageId < oldest ? savedMessage.messageId : oldest),
-				savedMessages[0]!.messageId,
-			);
+			cursor = oldestMessageId(savedMessages);
 			pageLimit = hidden;
 		}
-		return results.sort((a, b) => (b.messageId > a.messageId ? 1 : a.messageId > b.messageId ? -1 : 0));
+		return results.sort((a, b) => compareSnowflakes(b.messageId, a.messageId));
 	}
 
 	private async collectSavedMessages(
@@ -397,7 +392,6 @@ export class UserContentService {
 		viewer: ThreadViewer,
 		messagesByChannel: ReadonlyMap<string, Map<string, Message> | null>,
 	): Promise<Set<string>> {
-		if (!everEnabled()) return new Set();
 		const unreachable = Array.from(messagesByChannel)
 			.filter(([, messages]) => messages === null)
 			.map(([channelId]) => createChannelID(BigInt(channelId)));
@@ -419,20 +413,13 @@ export class UserContentService {
 		viewer,
 		channelId,
 		messageId,
-		userCacheService,
-		requestCache,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
-		userCacheService: UserCacheService;
-		requestCache: RequestCache;
 	}): Promise<void> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
+		const user = await this.userRepository.findUniqueAssert(userId);
 		const savedMessageCount = await this.userRepository.countSavedMessages(userId);
 		const ctx = createLimitMatchContext({user});
 		const maxBookmarks = resolveLimitSafe(
@@ -450,7 +437,7 @@ export class UserContentService {
 			throw new UnknownMessageError();
 		}
 		await this.userRepository.createSavedMessage(userId, channelId, messageId);
-		await this.dispatchSavedMessageCreate({userId, message, channel, userCacheService, requestCache});
+		await this.dispatchSavedMessageCreate({userId, message, channel});
 	}
 
 	async unsaveMessage({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
@@ -671,8 +658,7 @@ export class UserContentService {
 		userId: UserID,
 		filter: HarvestSelfDataRequest | null,
 	): Promise<HarvestCreationResponse> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) throw new UnknownUserError();
+		await this.userRepository.findUniqueAssert(userId);
 		const harvestId = await this.snowflakeService.generate();
 		const harvest = new UserHarvest({
 			user_id: userId,
@@ -781,7 +767,10 @@ export class UserContentService {
 		let userId: UserID;
 		try {
 			userId = createUserID(BigInt(payload.userId));
-		} catch {
+		} catch (error) {
+			if (!(error instanceof SyntaxError)) {
+				Logger.warn({error, harvestId: params.harvestId}, 'Failed to read a harvest download user id');
+			}
 			return null;
 		}
 		const harvestRepository = new UserHarvestRepository();
@@ -838,7 +827,7 @@ export class UserContentService {
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.scheduleDeletion(userId, scheduledAt);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	async bulkDeleteSelfMessagesImmediate(params: {userId: UserID; filter: BulkDeleteSelfMessagesFilter}): Promise<void> {
@@ -868,7 +857,7 @@ export class UserContentService {
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	private async countBulkDeletionTargets(
@@ -905,7 +894,13 @@ export class UserContentService {
 		};
 	}
 
-	async dispatchRecentMentionDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
+	private async dispatchRecentMentionDelete({
+		userId,
+		messageId,
+	}: {
+		userId: UserID;
+		messageId: MessageID;
+	}): Promise<void> {
 		await this.gatewayService
 			.dispatchPresence({
 				userId,
@@ -921,7 +916,7 @@ export class UserContentService {
 			});
 	}
 
-	async dispatchSavedMessageCreate({
+	private async dispatchSavedMessageCreate({
 		userId,
 		message,
 		channel,
@@ -929,8 +924,6 @@ export class UserContentService {
 		userId: UserID;
 		message: Message;
 		channel: Channel;
-		userCacheService: UserCacheService;
-		requestCache: RequestCache;
 	}): Promise<void> {
 		const data = (await this.buildUnmaskedResponses(userId, [message])).responses[0];
 		if (!data) return;
@@ -960,7 +953,7 @@ export class UserContentService {
 		return maskThreadArtifactsByChannel(viewer, channelById, responses);
 	}
 
-	async buildUnmaskedResponses(
+	private async buildUnmaskedResponses(
 		userId: UserID,
 		messages: Array<Message>,
 	): Promise<{responses: Array<MessageResponse>; channelById: Map<string, Channel>}> {
@@ -978,7 +971,7 @@ export class UserContentService {
 		return {responses, channelById};
 	}
 
-	async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
+	private async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
 		await this.gatewayService
 			.dispatchPresence({
 				userId,

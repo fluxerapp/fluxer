@@ -1,11 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import InstanceSnapshotStore, {type RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import authPageStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRouteLoadError} from '@app/features/auth/flow/AuthRouteLoadError';
 import {AuthShellLoadingState} from '@app/features/auth/flow/AuthShellLoadingState';
-import {AuthRuntimeTarget, AuthRuntimeTargetProvider} from '@app/features/auth/state/AuthRuntimeTarget';
+import {useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
+import {
+	AuthRuntimeTarget,
+	AuthRuntimeTargetProvider,
+	useAuthRuntimeTarget,
+} from '@app/features/auth/state/AuthRuntimeTarget';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {Button} from '@app/features/ui/button/Button';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import {type ReactNode, useCallback, useEffect, useReducer, useState} from 'react';
+import {ph} from '@lingui/core/macro';
+import {Trans} from '@lingui/react/macro';
+import {observer} from 'mobx-react-lite';
+import {type ReactNode, useCallback, useEffect, useLayoutEffect, useReducer, useState} from 'react';
+
+const logger = new Logger('AuthRuntimeTargetBoundary');
 
 const AuthRuntimeResolutionStatus = Object.freeze({
 	LOADING: 'loading',
@@ -147,6 +162,13 @@ function browserAuthDocumentOrigin(): string {
 
 async function resolveBrowserAuthRuntime(signal: AbortSignal): Promise<RuntimeConfigSnapshot> {
 	const resolution = await InstanceSnapshotStore.resolve({input: browserAuthDocumentOrigin(), signal});
+	if (RuntimeConfig.getSnapshotOrNull() === null) {
+		try {
+			RuntimeConfig.applySnapshot(resolution.snapshot);
+		} catch (error) {
+			logger.warn('Failed to activate the instance this page belongs to:', error);
+		}
+	}
 	return resolution.snapshot;
 }
 
@@ -171,6 +193,10 @@ export async function warmAuthRuntimeTarget(signal: AbortSignal): Promise<Runtim
 	return runtime;
 }
 
+export async function readyBrowserAuthRuntime(signal: AbortSignal): Promise<RuntimeConfigSnapshot> {
+	return readWarmBrowserAuthRuntime()?.runtime ?? (await resolveBrowserAuthRuntime(signal));
+}
+
 function readWarmDesktopAuthRuntime(): {readonly runtime: RuntimeConfigSnapshot | null} | null {
 	return readWarmAuthRuntime(true);
 }
@@ -182,6 +208,16 @@ function readWarmBrowserAuthRuntime(): {readonly runtime: RuntimeConfigSnapshot}
 	}
 	return {runtime: warm.runtime};
 }
+
+const AuthBrandSnapshotReporter = observer(function AuthBrandSnapshotReporter() {
+	const {snapshot} = useAuthRuntimeTarget();
+	const {setBrandSnapshot} = useAuthLayoutContext();
+	useLayoutEffect(() => {
+		setBrandSnapshot(snapshot);
+	}, [setBrandSnapshot, snapshot]);
+	useLayoutEffect(() => () => setBrandSnapshot(null), [setBrandSnapshot]);
+	return null;
+});
 
 function ResolvedDesktopAuthRuntimeTargetBoundary({
 	snapshot,
@@ -196,6 +232,7 @@ function ResolvedDesktopAuthRuntimeTargetBoundary({
 			target={target}
 			data-flx="auth.flow.auth-runtime-target-boundary.resolved-desktop-auth-runtime-target-boundary.auth-runtime-target-provider"
 		>
+			<AuthBrandSnapshotReporter data-flx="auth.flow.auth-runtime-target-boundary.auth-brand-snapshot-reporter" />
 			{children}
 		</AuthRuntimeTargetProvider>
 	);
@@ -208,28 +245,91 @@ function ResolvedBrowserAuthRuntimeTargetBoundary({
 	readonly snapshot: RuntimeConfigSnapshot;
 	readonly children: ReactNode;
 }) {
-	const [target] = useState(() => AuthRuntimeTarget.forBrowserDocument(snapshot));
+	const [target] = useState(() => AuthRuntimeTarget.forFixedInstance(snapshot));
 	return (
 		<AuthRuntimeTargetProvider
 			target={target}
 			data-flx="auth.flow.auth-runtime-target-boundary.resolved-browser-auth-runtime-target-boundary.auth-runtime-target-provider"
 		>
+			<AuthBrandSnapshotReporter data-flx="auth.flow.auth-runtime-target-boundary.auth-brand-snapshot-reporter" />
 			{children}
 		</AuthRuntimeTargetProvider>
 	);
 }
 
+function DesktopAuthRuntimeResolutionError({
+	retry,
+	onChooseDifferentInstance,
+}: {
+	readonly retry: () => void;
+	readonly onChooseDifferentInstance: () => void;
+}) {
+	return (
+		<div
+			className={authPageStyles.errorContainer}
+			data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.div"
+		>
+			<div
+				className={authPageStyles.errorTitle}
+				data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.div--2"
+			>
+				<Trans>Could not load this page</Trans>
+			</div>
+			<div
+				className={authPageStyles.errorText}
+				data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.div--3"
+			>
+				<Trans>
+					Try again, or refresh {ph({productName: getActiveInstanceProductName()})} if the problem continues.
+				</Trans>
+			</div>
+			<div
+				className={authPageStyles.disabledActions}
+				data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.div--4"
+			>
+				<Button
+					onClick={retry}
+					fitContainer
+					data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.button.retry"
+				>
+					<Trans>Try again</Trans>
+				</Button>
+				<Button
+					variant="secondary"
+					onClick={onChooseDifferentInstance}
+					fitContainer
+					data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-resolution-error.button.choose-different-instance"
+				>
+					<Trans>Choose a different instance</Trans>
+				</Button>
+			</div>
+		</div>
+	);
+}
+
 function DesktopAuthRuntimeTargetBoundary({children}: {readonly children: ReactNode}) {
 	const {state, retry} = useAuthRuntimeResolution(resolveDesktopAuthRuntime, readWarmDesktopAuthRuntime);
+	const [chooseDifferentInstance, setChooseDifferentInstance] = useState(false);
+	const handleChooseDifferentInstance = useCallback(() => setChooseDifferentInstance(true), []);
+	if (chooseDifferentInstance) {
+		return (
+			<ResolvedDesktopAuthRuntimeTargetBoundary
+				snapshot={null}
+				data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-target-boundary.resolved-desktop-auth-runtime-target-boundary"
+			>
+				{children}
+			</ResolvedDesktopAuthRuntimeTargetBoundary>
+		);
+	}
 	if (state.status === AuthRuntimeResolutionStatus.LOADING) {
 		return <AuthShellLoadingState data-flx="auth.flow.auth-runtime-target-boundary.desktop-loading" />;
 	}
 	if (state.status === AuthRuntimeResolutionStatus.FAILED) {
 		return (
-			<AuthRouteLoadError
-				error={state.error}
+			<DesktopAuthRuntimeResolutionError
 				retry={retry}
-				data-flx="auth.flow.auth-runtime-target-boundary.desktop-error"
+				onChooseDifferentInstance={handleChooseDifferentInstance}
+				data-flx="auth.flow.auth-runtime-target-boundary.desktop-auth-runtime-target-boundary.desktop-auth-runtime-resolution-error"
 			/>
 		);
 	}

@@ -6,7 +6,7 @@ import {searchRetryDelayMs} from '@app/features/forum/state/ForumPosts';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {useCallback, useEffect, useState} from 'react';
 
-export const THREAD_SEARCH_DEBOUNCE_MS = 300;
+const THREAD_SEARCH_DEBOUNCE_MS = 300;
 const MAX_INDEX_RETRIES = 6;
 
 export type ThreadSearchState =

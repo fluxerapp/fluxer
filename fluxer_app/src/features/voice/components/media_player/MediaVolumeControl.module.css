@@ -118,5 +118,5 @@
 
 :global(.theme-light) .sliderFill,
 :global(.theme-light) .sliderThumb {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

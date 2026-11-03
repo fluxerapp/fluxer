@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	START_VIDEO_CALL_DESCRIPTOR,
@@ -130,4 +132,18 @@ export async function requestStartCall(
 			/>
 		)),
 	);
+}
+
+export async function startCallWithUser(
+	i18n: I18n,
+	userId: string,
+	options: CallStartConfirmationOptions = {},
+): Promise<void> {
+	try {
+		const channelId = await PrivateChannelCommands.ensureDMChannel(userId);
+		await requestStartCall(i18n, channelId, options);
+	} catch (error) {
+		logger.error('Failed to start call:', error);
+		showDmActionErrorModal(error);
+	}
 }

@@ -45,8 +45,8 @@ declare global {
 		readonly MODE: 'development' | 'production' | 'test';
 		readonly DEV: boolean;
 		readonly PROD: boolean;
-		readonly PUBLIC_BUILD_VERSION?: string;
-		readonly PUBLIC_RELEASE_CHANNEL?: 'stable' | 'canary' | 'development';
+		readonly BUILD_VERSION?: string;
+		readonly BUILD_CHANNEL?: 'stable' | 'canary' | 'development';
 	}
 	interface ImportMetaHot {
 		readonly data: Record<string, unknown>;

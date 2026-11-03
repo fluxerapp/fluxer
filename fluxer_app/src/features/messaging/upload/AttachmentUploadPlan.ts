@@ -2,11 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {
-	type ChunkedUploadPart,
-	type ChunkedUploadPlan,
-	uploadFileInChunks,
-} from '@app/features/messaging/upload/ChunkedAttachmentUploader';
+import {type ChunkedUploadPart, uploadFileInChunks} from '@app/features/messaging/upload/ChunkedAttachmentUploader';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {wrapDesktopLocalUploadURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import type {ApiAttachmentMetadata} from '@app/features/messaging/utils/MessageRequestUtils';
@@ -114,6 +110,36 @@ export async function requestPresignedAttachmentUploads(
 	return plans;
 }
 
+async function transferFileForPlan(
+	file: File,
+	plan: PresignedAttachmentUploadResponseAttachment,
+	signal: AbortSignal,
+	onBytes: (uploadedBytes: number) => void,
+): Promise<void> {
+	if (plan.upload_mode === 'singlepart') {
+		await http.put(wrapDesktopLocalUploadURL(plan.upload_url), {
+			body: file,
+			auth: 'none',
+			headers: {
+				'Content-Type': plan.content_type,
+			},
+			signal,
+			onProgress: (event) => {
+				onBytes(event.loaded);
+			},
+		});
+		return;
+	}
+	const parts: Array<ChunkedUploadPart> = plan.parts.map((entry) => ({
+		partNumber: entry.part_number,
+		uploadUrl: entry.upload_url,
+	}));
+	await uploadFileInChunks(
+		{file, contentType: plan.content_type, partSize: plan.part_size, parts},
+		{signal, onProgress: onBytes},
+	);
+}
+
 export async function uploadAttachmentsViaPlans(params: {
 	nonce: string;
 	attachments: Array<ApiAttachmentMetadata>;
@@ -145,44 +171,20 @@ export async function uploadAttachmentsViaPlans(params: {
 			throw new Error(`Missing presigned upload metadata for attachment ${attachment.id}`);
 		}
 		const plan = plans[planIndex];
-		if (plan.upload_mode === 'singlepart') {
-			await http.put(wrapDesktopLocalUploadURL(plan.upload_url), {
-				body: file,
-				auth: 'none',
-				headers: {
-					'Content-Type': plan.content_type,
-				},
-				signal,
-				onProgress: (event) => {
-					const loaded = Math.min(file.size, event.loaded);
-					if (loaded > loadedBytesByIndex[index]) {
-						loadedBytesByIndex[index] = loaded;
-						reportProgress();
-					}
-				},
-			});
-			loadedBytesByIndex[index] = file.size;
-		} else {
+		if (plan.upload_mode === 'multipart') {
 			multipartUploadsToComplete.push({
 				upload_filename: plan.upload_filename,
 				upload_id: plan.upload_id,
 			});
-			const parts: Array<ChunkedUploadPart> = plan.parts.map((entry) => ({
-				partNumber: entry.part_number,
-				uploadUrl: entry.upload_url,
-			}));
-			const uploadPlan: ChunkedUploadPlan = {file, contentType: plan.content_type, partSize: plan.part_size, parts};
-			await uploadFileInChunks(uploadPlan, {
-				signal,
-				onProgress: (uploaded) => {
-					if (uploaded > loadedBytesByIndex[index]) {
-						loadedBytesByIndex[index] = uploaded;
-						reportProgress();
-					}
-				},
-			});
-			loadedBytesByIndex[index] = file.size;
 		}
+		await transferFileForPlan(file, plan, signal, (uploaded) => {
+			const loaded = Math.min(file.size, uploaded);
+			if (loaded > loadedBytesByIndex[index]) {
+				loadedBytesByIndex[index] = loaded;
+				reportProgress();
+			}
+		});
+		loadedBytesByIndex[index] = file.size;
 		completedUploads += 1;
 		reportProgress();
 	}
@@ -217,32 +219,8 @@ export async function uploadTextareaAttachmentViaPlan(params: {
 		const uploadProgress = Math.round((Math.min(file.size, uploadedBytes) / file.size) * 100);
 		CloudUpload.updateAttachment(channelId, attachmentId, {status: 'uploading', uploadProgress});
 	};
-	if (plan.upload_mode === 'singlepart') {
-		await http.put(wrapDesktopLocalUploadURL(plan.upload_url), {
-			body: file,
-			auth: 'none',
-			headers: {
-				'Content-Type': plan.content_type,
-			},
-			signal,
-			onProgress: (event) => {
-				reportProgress(event.loaded);
-			},
-		});
-	} else {
-		const parts: Array<ChunkedUploadPart> = plan.parts.map((entry) => ({
-			partNumber: entry.part_number,
-			uploadUrl: entry.upload_url,
-		}));
-		await uploadFileInChunks(
-			{file, contentType: plan.content_type, partSize: plan.part_size, parts},
-			{
-				signal,
-				onProgress: (uploadedBytes) => {
-					reportProgress(uploadedBytes);
-				},
-			},
-		);
+	await transferFileForPlan(file, plan, signal, reportProgress);
+	if (plan.upload_mode === 'multipart') {
 		await completeMultipartAttachmentUploads(
 			channelId,
 			[{upload_filename: plan.upload_filename, upload_id: plan.upload_id}],

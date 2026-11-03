@@ -40,12 +40,12 @@ apply_voice_permissions_to_flags(Flags, VoicePermissions) ->
     SelfStream =
         case maps:get(can_stream, VoicePermissions, true) of
             false -> false;
-            _ -> maps:get(self_stream, Flags, false) =:= true
+            _ -> type_conv:is_true(maps:get(self_stream, Flags, false))
         end,
     SelfVideo =
         case maps:get(can_video, VoicePermissions, true) of
             false -> false;
-            _ -> maps:get(self_video, Flags, false) =:= true
+            _ -> type_conv:is_true(maps:get(self_video, Flags, false))
         end,
     Flags#{
         suppress => Suppress,
@@ -195,9 +195,9 @@ compute_voice_permissions(UserId, ChannelId, State) ->
     SpeakPerm = constants:speak_permission(),
     StreamPerm = constants:stream_permission(),
     AdminPerm = constants:administrator_permission(),
-    IsAdmin = permission_bits:has(Permissions, AdminPerm),
-    CanSpeak = IsAdmin orelse permission_bits:has(Permissions, SpeakPerm),
-    CanStream = IsAdmin orelse permission_bits:has(Permissions, StreamPerm),
+    IsAdmin = bitset:has(Permissions, AdminPerm),
+    CanSpeak = IsAdmin orelse bitset:has(Permissions, SpeakPerm),
+    CanStream = IsAdmin orelse bitset:has(Permissions, StreamPerm),
     HasVirtualAccess = guild_virtual_channel_access:has_voice_access(
         UserId, ChannelId, State
     ),

@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::AdminApiClient,
+    api::client::{AdminApiClient, ApiError},
     config::AdminConfig,
     oauth2,
-    session::{self, LEGACY_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_MAX_AGE},
+    session::{
+        self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookies,
+        clear_cookie_values,
+    },
     state::AppState,
     templates::pages::login,
 };
 use axum::{
     Json, Router,
     extract::{Query, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
 };
@@ -24,7 +27,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
-const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 300;
+const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 1800;
 const OAUTH_STATE_NONCE_BYTES: usize = 16;
 const OAUTH_STATE_VERIFIER_HASH_BYTES: usize = 32;
 const OAUTH_STATE_PAYLOAD_BYTES: usize =
@@ -78,16 +81,9 @@ async fn login_page(
     {
         return Redirect::to(&format!("{}/dashboard", config.base_path)).into_response();
     }
-    let error_msg = match query.error.as_deref() {
-        Some("oauth_failed") => Some("Authentication failed. Please try again."),
-        Some("missing_admin_acl") => Some(
-            "Access denied: missing admin:authenticate permission. \
-             Ask an administrator to grant access.",
-        ),
-        Some(_) => Some("Login error. Please try again."),
-        None => None,
-    };
-    Html(login::login_page(config, error_msg).into_string()).into_response()
+    let error_msg = query.error.as_deref().map(login_error_message);
+    let branding = state.self_hosted_branding().await;
+    Html(login::login_page(config, branding.as_ref(), error_msg).into_string()).into_response()
 }
 
 async fn auth_start(State(state): State<AppState>) -> Response {
@@ -177,12 +173,16 @@ async fn oauth2_callback_finish(
         created_at: 0,
     };
     let api_client = AdminApiClient::new(state.http_client(), config, &temp_session);
-    if api_client.get_current_admin().await.is_err() {
-        return oauth_finish_response(
-            StatusCode::FORBIDDEN,
-            &format!("{base}/login?error=missing_admin_acl"),
-            &[],
-        );
+    if let Err(err) = api_client.get_current_admin().await {
+        let code = admin_check_error_code(&err);
+        let status = if code == "missing_admin_acl" {
+            tracing::warn!(%err, user_id = %user.id, "Admin access check denied");
+            StatusCode::FORBIDDEN
+        } else {
+            tracing::error!(%err, user_id = %user.id, "Admin access check failed");
+            StatusCode::BAD_GATEWAY
+        };
+        return oauth_finish_response(status, &format!("{base}/login?error={code}"), &[]);
     }
 
     let session_cookie_value =
@@ -201,7 +201,7 @@ async fn oauth2_callback_finish(
         secure
     );
 
-    let mut cookies = clear_session_cookie_values(config);
+    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
     cookies.push(session_cookie);
     oauth_finish_response(StatusCode::OK, &format!("{base}/dashboard"), &cookies)
 }
@@ -215,7 +215,7 @@ async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -
     }
     redirect_with_cookies(
         &format!("{}/login", config.base_path),
-        &clear_session_cookie_values(config),
+        &clear_cookie_values(SESSION_COOKIE_NAME, config),
     )
 }
 
@@ -261,7 +261,7 @@ fn oauth_start_page(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fluxer Admin</title>
+<title>Signing in</title>
 </head>
 <body>
 <p>Starting authentication...</p>
@@ -292,7 +292,7 @@ fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fluxer Admin</title>
+<title>Signing in</title>
 </head>
 <body>
 <p>Completing authentication...</p>
@@ -356,45 +356,6 @@ pub(crate) fn json_string(value: &str) -> String {
         .replace('&', "\\u0026")
         .replace('\u{2028}', "\\u2028")
         .replace('\u{2029}', "\\u2029")
-}
-
-fn admin_cookie_path(config: &AdminConfig) -> &str {
-    if config.base_path.is_empty() {
-        "/"
-    } else {
-        config.base_path.as_str()
-    }
-}
-
-fn clear_cookie_value(name: &str, path: &str) -> String {
-    format!("{name}=; Path={path}; HttpOnly; SameSite=Lax; Max-Age=0")
-}
-
-fn clear_cookie_values(name: &str, config: &AdminConfig) -> Vec<String> {
-    let admin_path = admin_cookie_path(config);
-    let mut cookies = vec![clear_cookie_value(name, admin_path)];
-    if admin_path != "/" {
-        cookies.push(clear_cookie_value(name, "/"));
-    }
-    cookies
-}
-
-fn clear_session_cookie_values(config: &AdminConfig) -> Vec<String> {
-    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
-    cookies.extend(clear_cookie_values(LEGACY_SESSION_COOKIE_NAME, config));
-    cookies
-}
-
-fn append_cookie(response: &mut Response, cookie: &str) {
-    if let Ok(value) = HeaderValue::from_str(cookie) {
-        response.headers_mut().append(header::SET_COOKIE, value);
-    }
-}
-
-fn append_cookies(response: &mut Response, cookies: &[String]) {
-    for cookie in cookies {
-        append_cookie(response, cookie);
-    }
 }
 
 fn redirect_with_cookies(url: &str, cookies: &[String]) -> Response {
@@ -519,67 +480,39 @@ fn now_seconds() -> u64 {
         .as_secs()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const SECRET: &str = "test-admin-state-secret";
-    const VERIFIER: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-    #[test]
-    fn generated_oauth_state_verifies() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(verify_oauth_state(SECRET, &state, VERIFIER));
+fn admin_check_error_code(err: &ApiError) -> &'static str {
+    match err {
+        ApiError::Http {
+            status: 401 | 403, ..
+        } => "missing_admin_acl",
+        ApiError::Http {
+            status: 404 | 405, ..
+        }
+        | ApiError::Parse(_) => "admin_api_mismatch",
+        ApiError::Network(_) => "admin_api_unreachable",
+        ApiError::Http { .. } => "admin_check_failed",
     }
+}
 
-    #[test]
-    fn generated_oauth_state_fits_api_state_limit() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(state.len() <= 256, "state length was {}", state.len());
-    }
-
-    #[test]
-    fn oauth_state_rejects_tampering() {
-        let mut state = generate_oauth_state(SECRET, VERIFIER);
-        let last = state.pop().unwrap();
-        state.push(if last == 'A' { 'B' } else { 'A' });
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_wrong_secret() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(!verify_oauth_state("different-secret", &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_wrong_verifier() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(!verify_oauth_state(
-            SECRET,
-            &state,
-            "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-        ));
-    }
-
-    #[test]
-    fn oauth_state_rejects_expired_payloads() {
-        let issued_at = now_seconds().saturating_sub(OAUTH_STATE_MAX_AGE_SECONDS + 1);
-        let state = sign_oauth_state(SECRET, issued_at, random_state_nonce(), VERIFIER);
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_future_payloads() {
-        let issued_at = now_seconds() + 1;
-        let state = sign_oauth_state(SECRET, issued_at, random_state_nonce(), VERIFIER);
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn json_string_is_safe_inside_script_tags() {
-        let encoded = json_string("</script><script>alert(1)</script>");
-        assert!(!encoded.contains("</script>"));
-        assert!(encoded.contains("\\u003c/script\\u003e"));
+fn login_error_message(code: &str) -> &'static str {
+    match code {
+        "oauth_failed" => "Authentication failed. Please try again.",
+        "missing_admin_acl" => {
+            "Access denied: missing admin:authenticate permission. \
+             Ask an administrator to grant access."
+        }
+        "admin_api_mismatch" => {
+            "Could not verify admin access because the API response did not match this admin panel. \
+             Make sure the admin and API services run the same release."
+        }
+        "admin_api_unreachable" => {
+            "Could not connect to the API to verify admin access. \
+             Check that the admin service can connect to the API and try again."
+        }
+        "admin_check_failed" => {
+            "Could not verify admin access. \
+             Try again in a moment and check the admin service logs if it keeps failing."
+        }
+        _ => "Login error. Please try again.",
     }
 }

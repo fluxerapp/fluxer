@@ -1,34 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub(super) use fluxer_common::config::{EnvMap, parse_bool, parse_number};
+
 use super::{BucketStyle, DeploymentMode, PolicyMode, StorageBackend};
-use crate::{constants::DESKTOP_APP_ORIGIN, secret::SecretBytes};
+use crate::constants::DESKTOP_APP_ORIGIN;
 use base64::{Engine as _, engine::general_purpose};
+use fluxer_common::secret::SecretBytes;
 use http::HeaderValue;
-
-#[derive(Debug, Default)]
-pub(super) struct EnvMap(Vec<(String, String)>);
-
-impl EnvMap {
-    pub(super) fn from_iter<I, K, V>(vars: I) -> Self
-    where
-        I: IntoIterator<Item = (K, V)>,
-        K: Into<String>,
-        V: Into<String>,
-    {
-        Self(
-            vars.into_iter()
-                .map(|(k, v)| (k.into(), v.into()))
-                .collect(),
-        )
-    }
-
-    pub(super) fn get(&self, key: &str) -> Option<&str> {
-        self.0
-            .iter()
-            .find_map(|(k, v)| (k == key).then_some(v.as_str()))
-            .filter(|v| !v.trim().is_empty())
-    }
-}
 
 fn parse_mode(raw: &str) -> Option<DeploymentMode> {
     match raw.to_ascii_lowercase().as_str() {
@@ -225,20 +203,6 @@ pub(super) fn decode_upload_relay_secret(
     Ok(SecretBytes::new(decoded))
 }
 
-pub(super) fn parse_bool(var_name: &str, raw: Option<&str>) -> anyhow::Result<Option<bool>> {
-    let Some(raw) = raw else {
-        return Ok(None);
-    };
-    let raw = raw.trim();
-    match raw.to_ascii_lowercase().as_str() {
-        "true" | "1" | "yes" => Ok(Some(true)),
-        "false" | "0" | "no" => Ok(Some(false)),
-        _ => Err(anyhow::anyhow!(
-            "{var_name} must be a boolean: true, false, 1, 0, yes, or no"
-        )),
-    }
-}
-
 pub(super) fn parse_u16(
     var_name: &str,
     raw: Option<&str>,
@@ -284,30 +248,6 @@ pub(super) fn parse_f32(
     anyhow::ensure!(parsed.is_finite(), "{var_name} must be a finite number");
     anyhow::ensure!(
         (min_value..=max_value).contains(&parsed),
-        "{var_name} must be between {min_value} and {max_value}"
-    );
-    Ok(parsed)
-}
-
-fn parse_number<T>(
-    var_name: &str,
-    raw: Option<&str>,
-    default_value: T,
-    min_value: T,
-    max_value: T,
-) -> anyhow::Result<T>
-where
-    T: std::str::FromStr + PartialOrd + std::fmt::Display + Copy,
-{
-    let Some(raw) = raw else {
-        return Ok(default_value);
-    };
-    let parsed = raw
-        .trim()
-        .parse::<T>()
-        .map_err(|_| anyhow::anyhow!("{var_name} must be a number"))?;
-    anyhow::ensure!(
-        parsed >= min_value && parsed <= max_value,
         "{var_name} must be between {min_value} and {max_value}"
     );
     Ok(parsed)

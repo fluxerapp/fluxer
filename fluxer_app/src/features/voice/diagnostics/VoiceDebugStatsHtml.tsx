@@ -2,7 +2,7 @@
 
 import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {AppMetricsSnapshot} from '@app/types/electron.d';
-import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {renderToStaticMarkup} from 'react-dom/server';
 
 const VOICE_DEBUG_STATS_JSON_ELEMENT_ID = 'stats-json';

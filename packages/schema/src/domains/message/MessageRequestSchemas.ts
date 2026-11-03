@@ -222,6 +222,7 @@ export const MessageSearchRequest = z.object({
 		.describe('Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this.'),
 	cursor: z
 		.array(z.string())
+		.max(16)
 		.optional()
 		.describe('Opaque cursor for search_after pagination. When provided, page is ignored.'),
 	max_id: SnowflakeType.optional().describe('Maximum message ID to include in results'),
@@ -328,9 +329,10 @@ export type MessageContentRequest = z.infer<typeof MessageContentRequest>;
 export const MessageRequestSchema = z
 	.object({
 		content: MessageContentRequest.nullish(),
-		embeds: z.array(RichEmbedRequest).describe('Array of embed objects to include in the message'),
+		embeds: z.array(RichEmbedRequest).max(100).describe('Array of embed objects to include in the message'),
 		attachments: z
 			.array(z.union([ClientUploadedAttachmentRequest, ClientAttachmentRequest]))
+			.max(100)
 			.describe('Array of attachment objects'),
 		message_reference: MessageReferenceRequest.nullish().describe(
 			'Reference to another message (for replies or forwards)',
@@ -374,6 +376,7 @@ export const MessageUpdateRequestSchema = MessageRequestSchema.pick({
 	).optional(),
 	attachments: z
 		.array(z.union([ClientUploadedAttachmentRequest, ClientAttachmentReferenceRequest]))
+		.max(100)
 		.optional()
 		.describe('Array of attachment objects to keep or add'),
 	message_snapshots: z

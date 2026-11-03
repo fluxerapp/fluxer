@@ -48,7 +48,12 @@ export const AddFriendsToGroupModal = observer((props: AddFriendsToGroupModalPro
 			? i18n._(LINK_HIDDEN_WHILE_SHARING_DESCRIPTOR)
 			: (modalLogic.inviteLink ?? '');
 	return (
-		<Modal.Root size="small" centered data-flx="relationship.add-friends-to-group-modal.modal-root">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="relationship.add-friends-to-group-modal.modal-root"
+		>
 			<Modal.Header
 				title={i18n._(SELECT_FRIENDS_DESCRIPTOR)}
 				data-flx="relationship.add-friends-to-group-modal.modal-header"

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_WITH_AVIF_FORMATS,
 	WIDE_IMAGE_ASPECT_RATIO_LABEL,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {GuildInviteEmbedPreview} from '@app/features/channel/components/InviteEmbed';
 import {AssetType, getAssetConfig} from '@app/features/expressions/components/modals/AssetCropModal';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadMinimumHintWithNote} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import styles from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTab.module.css';
 import type {GuildLike} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
@@ -15,6 +14,7 @@ import {useGuildImageAssetField} from '@app/features/guild/components/modals/gui
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -76,7 +76,7 @@ export const GuildEmbedSplashUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_CHAT_EMBED_BACKGROUND_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHintWithNote(i18n, {
 			formats: STATIC_IMAGE_WITH_AVIF_FORMATS,
-			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 			minimumSize: embedSplashMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 			note: i18n._(SHOWN_IN_INVITE_EMBEDS_IN_CHAT_DESCRIPTOR),

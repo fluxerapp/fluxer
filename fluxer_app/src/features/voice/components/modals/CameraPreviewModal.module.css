@@ -64,6 +64,10 @@
 	object-fit: contain;
 }
 
+.mirroredVideo {
+	transform: scaleX(-1);
+}
+
 .overlay {
 	position: absolute;
 	inset: 0;

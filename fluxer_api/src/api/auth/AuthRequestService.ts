@@ -3,6 +3,8 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthEmail from '@app/api/auth/AuthEmail';
 import * as AuthEmailRevert from '@app/api/auth/AuthEmailRevert';
+import * as AuthIdentify from '@app/api/auth/AuthIdentify';
+import * as AuthInstantAccounts from '@app/api/auth/AuthInstantAccounts';
 import * as AuthLogin from '@app/api/auth/AuthLogin';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
@@ -12,11 +14,12 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import {getTokenIdHash} from '@app/api/auth/AuthUtility';
 import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
 import type {SsoService} from '@app/api/auth/services/SsoService';
-import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
+import type {TierContext} from '@app/api/user/AccountTier';
 import {
 	classifyWebPushOrigin,
 	encodePushSessionIdHash,
@@ -31,29 +34,34 @@ import {generateUsernameSuggestions} from '@app/api/utils/UsernameSuggestionUtil
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
+	AccountHandoffRedeemRequest,
+	AccountHandoffRequest,
+	AccountHandoffResponse,
 	AuthLoginResponse,
 	AuthorizeIpRequest,
 	AuthRegisterResponse,
-	AuthSessionsResponse,
+	AuthRegisterSuccessResponse,
 	AuthTokenWithUserIdResponse,
+	EmailCodeSendResponse,
+	EmailCodeVerifyRequest,
+	EmailCodeVerifyResponse,
 	EmailRevertRequest,
-	ForgotPasswordRequest,
 	HandoffCompleteRequest,
 	HandoffCompleteResponse,
 	HandoffInfoResponse,
 	HandoffInitiateResponse,
 	HandoffStatusResponse,
+	IdentifyResponse,
 	IpAuthorizationPollResponse,
 	LoginRequest,
 	LogoutAuthSessionsRequest,
-	MfaTicketRequest,
 	RecoverAccountRequest,
 	RecoverAccountResponse,
 	RegisterRequest,
 	ResetPasswordRequest,
 	SsoCompleteRequest,
+	SsoCompleteResponse,
 	SsoStartRequest,
 	UsernameAvailabilityResponse,
 	UsernameSuggestionsResponse,
@@ -67,18 +75,13 @@ interface AuthRegisterRequest {
 	data: RegisterRequest;
 	request: Request;
 	requestCache: RequestCache;
+	tierContext: TierContext;
 }
 
 interface AuthLoginRequest {
 	data: LoginRequest;
 	request: Request;
-	requestCache: RequestCache;
 	captchaVerified?: boolean;
-}
-
-interface AuthForgotPasswordRequest {
-	data: ForgotPasswordRequest;
-	request: Request;
 }
 
 interface AuthResetPasswordRequest {
@@ -100,10 +103,6 @@ interface AuthLoginMfaRequest {
 	code: string;
 	ticket: string;
 	request: Request;
-}
-
-interface AuthLogoutRequest {
-	authToken?: string;
 }
 
 interface AuthHandoffCompleteRequest {
@@ -157,11 +156,6 @@ interface AuthHandoffStatusRequest {
 	grant?: string;
 }
 
-interface AuthHandoffCancelRequest {
-	code: string;
-	pollSecret: string;
-}
-
 export class AuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
@@ -171,10 +165,6 @@ export class AuthRequestService {
 		private loginDependencies: AuthLogin.LoginDependencies,
 	) {}
 
-	getSsoStatus() {
-		return this.ssoService.getPublicStatus();
-	}
-
 	startSso(data: SsoStartRequest) {
 		return this.ssoService.startLogin({
 			redirectTo: data.redirect_to ?? undefined,
@@ -182,43 +172,37 @@ export class AuthRequestService {
 		});
 	}
 
-	completeSso(data: SsoCompleteRequest, request: Request, requestCache: RequestCache) {
+	completeSso(data: SsoCompleteRequest, request: Request, requestCache: RequestCache, clientIp: string) {
 		return this.toSsoCompleteResponse(
-			this.ssoService.completeLogin({code: data.code, state: data.state, request, requestCache}),
+			this.ssoService.completeLogin({
+				code: data.code,
+				state: data.state,
+				clientBinding: data.client_binding ?? undefined,
+				request,
+				requestCache,
+				clientIp,
+			}),
 		);
 	}
 
-	async register({data, request, requestCache}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
+	async register({data, request, requestCache, tierContext}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
 		const result = await AuthRegistration.register(this.apiContext, this.registrationDependencies, {
 			data,
 			request,
 			requestCache,
+			tierContext,
 		});
-		if ('registration_pending_approval' in result) {
-			return result;
-		}
-		return await this.toAuthTokenResponse(result);
+		return toAuthRegisterResponse(result);
 	}
 
-	async login({
-		data,
-		request,
-		requestCache: _requestCache,
-		captchaVerified,
-	}: AuthLoginRequest): Promise<AuthLoginResponse> {
+	async login({data, request, captchaVerified}: AuthLoginRequest): Promise<AuthLoginResponse> {
 		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request, captchaVerified});
 		return await this.toAuthLoginResponse(result);
 	}
 
 	async loginMfaTotp({code, ticket, request}: AuthLoginMfaRequest): Promise<AuthTokenWithUserIdResponse> {
-		const result = await AuthLogin.loginMfaTotp(this.apiContext, {code, ticket, request});
+		const result = await AuthLogin.loginMfaTotp(this.apiContext, {code, ticket, request, ssoLinks: this.ssoService});
 		return await this.toAuthTokenResponse(result);
-	}
-
-	async logout({authToken}: AuthLogoutRequest): Promise<void> {
-		if (authToken) {
-			await AuthSession.revokeToken(this.apiContext, authToken);
-		}
 	}
 
 	async verifyEmail(data: VerifyEmailRequest): Promise<void> {
@@ -226,14 +210,6 @@ export class AuthRequestService {
 		if (!success) {
 			throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
 		}
-	}
-
-	async resendVerificationEmail(user: User): Promise<void> {
-		await AuthEmail.resendVerificationEmail(this.apiContext, user);
-	}
-
-	async forgotPassword({data, request}: AuthForgotPasswordRequest): Promise<void> {
-		await AuthPassword.forgotPassword(this.apiContext, {data, request});
 	}
 
 	async validateResetPasswordToken(token: string): Promise<{
@@ -266,10 +242,6 @@ export class AuthRequestService {
 		return await this.toAuthTokenResponse(result);
 	}
 
-	getAuthSessions(userId: UserID, currentSessionIdHash?: Uint8Array): Promise<AuthSessionsResponse> {
-		return AuthSession.getAuthSessions(this.apiContext, userId, currentSessionIdHash);
-	}
-
 	async logoutAuthSessions({user, data}: AuthLogoutAuthSessionsRequest): Promise<void> {
 		await AuthSession.logoutAuthSessions(this.apiContext, {
 			user,
@@ -282,10 +254,6 @@ export class AuthRequestService {
 		const result = await AuthLogin.completeIpAuthorization(this.apiContext, data.token);
 		const payload = JSON.stringify({token: result.token, user_id: result.user_id});
 		await cache.set(`ip-auth-result:${result.ticket}`, payload, 60);
-	}
-
-	async resendIpAuthorization({ticket}: MfaTicketRequest): Promise<void> {
-		await AuthLogin.resendIpAuthorization(this.apiContext, ticket);
 	}
 
 	async pollIpAuthorization({ticket}: AuthPollIpRequest): Promise<IpAuthorizationPollResponse> {
@@ -310,18 +278,10 @@ export class AuthRequestService {
 		return {completed: false};
 	}
 
-	async getWebAuthnAuthenticationOptions(origin: string | undefined) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext, origin);
-	}
-
 	async authenticateWebAuthnDiscoverable({data, request}: AuthWebAuthnAuthenticateRequest) {
 		const user = await AuthMfa.verifyWebAuthnAuthenticationDiscoverable(this.apiContext, data.response, data.challenge);
 		const [token] = await AuthLogin.createLoginSession(this.apiContext, user, request);
 		return {token, user_id: user.id.toString(), user: mapUserToPartialResponse(user)};
-	}
-
-	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest, origin: string | undefined) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket, origin);
 	}
 
 	async loginMfaWebAuthn({data, request}: AuthWebAuthnMfaRequest): Promise<AuthTokenWithUserIdResponse> {
@@ -330,6 +290,7 @@ export class AuthRequestService {
 			challenge: data.challenge,
 			ticket: data.ticket,
 			request,
+			ssoLinks: this.ssoService,
 		});
 		return await this.toAuthTokenResponse(result);
 	}
@@ -340,6 +301,106 @@ export class AuthRequestService {
 
 	async getUsernameAvailability(username: string): Promise<UsernameAvailabilityResponse> {
 		return {available: !(await isUsernameTaken(this.apiContext.services.users, username))};
+	}
+
+	identify(params: {
+		identifier: string;
+		deviceProof: string | undefined;
+		registrationUrlCode: string | null | undefined;
+		request: Request;
+		clientIp: string;
+		captcha: AuthIdentify.CaptchaGate;
+	}): Promise<IdentifyResponse> {
+		return AuthIdentify.identify(this.apiContext, params);
+	}
+
+	sendEmailCode(params: {
+		ticket: string;
+		registrationUrlCode: string | null | undefined;
+		request: Request;
+		clientIp: string;
+		captcha: AuthIdentify.CaptchaGate;
+	}): Promise<EmailCodeSendResponse> {
+		return AuthIdentify.sendEmailCode(this.apiContext, params);
+	}
+
+	async verifyEmailCode(params: {
+		data: EmailCodeVerifyRequest;
+		request: Request;
+		clientIp: string;
+		requestCache: RequestCache;
+		tierContext: TierContext;
+		captcha: AuthIdentify.CaptchaGate;
+	}): Promise<EmailCodeVerifyResponse> {
+		const {data} = params;
+		const result = await AuthIdentify.verifyEmailCode(this.apiContext, this.registrationDependencies, {
+			ticket: data.ticket,
+			code: data.code,
+			consent: data.consent,
+			registrationUrlCode: data.registration_url_code,
+			inviteCode: data.invite_code,
+			username: data.username,
+			globalName: data.global_name,
+			request: params.request,
+			clientIp: params.clientIp,
+			requestCache: params.requestCache,
+			tierContext: params.tierContext,
+			captcha: params.captcha,
+		});
+		if (result.kind === 'sign_up') return toAuthRegisterResponse(result.result);
+		if (result.kind === 'mfa') return result.mfa;
+		return {
+			token: result.token,
+			user_id: result.user.id.toString(),
+			user: mapUserToPartialResponse(result.user),
+			device_proof: result.deviceProof,
+		};
+	}
+
+	instantAccountChallengeSteps(
+		request: Request,
+		clientIp: string,
+		registrationUrlCode: string | null = null,
+	): Promise<number> {
+		return AuthInstantAccounts.instantAccountChallengeSteps(this.apiContext, request, clientIp, registrationUrlCode);
+	}
+
+	createAccountHandoff(params: {data: AccountHandoffRequest; clientIp: string}): Promise<AccountHandoffResponse> {
+		return AuthInstantAccounts.createAccountHandoff(this.apiContext, {
+			globalName: params.data.global_name,
+			nonceHash: params.data.nonce_hash,
+			locale: params.data.locale,
+			registrationUrlCode: params.data.registration_url_code,
+			clientIp: params.clientIp,
+		});
+	}
+
+	async redeemHandoff(params: {
+		data: AccountHandoffRedeemRequest;
+		request: Request;
+		requestCache: RequestCache;
+		tierContext: TierContext;
+	}): Promise<AuthRegisterSuccessResponse> {
+		const {user, token, deviceProof, entry} = await AuthInstantAccounts.redeemHandoff(
+			this.apiContext,
+			this.registrationDependencies,
+			{
+				handoffCode: params.data.handoff_code,
+				nonce: params.data.nonce,
+				consent: params.data.consent,
+				globalName: params.data.global_name,
+				request: params.request,
+				requestCache: params.requestCache,
+				tierContext: params.tierContext,
+			},
+		);
+		return {
+			token,
+			user_id: user.id.toString(),
+			user: mapUserToPartialResponse(user),
+			device_proof: deviceProof,
+			entry,
+		};
 	}
 
 	async initiateHandoff({request, returnUri}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
@@ -383,10 +444,6 @@ export class AuthRequestService {
 			},
 			return_method: info.returnMethod,
 		};
-	}
-
-	async denyHandoff({code, clientIp}: AuthHandoffInfoRequest): Promise<void> {
-		await this.desktopHandoffService.denyHandoff(code, clientIp);
 	}
 
 	async completeHandoff({
@@ -460,19 +517,12 @@ export class AuthRequestService {
 		};
 	}
 
-	async cancelHandoff({code, pollSecret}: AuthHandoffCancelRequest): Promise<void> {
-		await this.desktopHandoffService.cancelHandoff(code, pollSecret);
-	}
-
 	private async getUserPartial(userId: string): Promise<UserPartialResponse> {
-		const user = await this.apiContext.services.users.findUnique(createUserID(BigInt(userId)));
-		if (!user) {
-			throw new UnknownUserError();
-		}
+		const user = await this.apiContext.services.users.findUniqueAssert(createUserID(BigInt(userId)));
 		return mapUserToPartialResponse(user);
 	}
 
-	private async toAuthTokenResponse(result: {user_id: string; token: string}): Promise<AuthTokenWithUserIdResponse> {
+	async toAuthTokenResponse(result: {user_id: string; token: string}): Promise<AuthTokenWithUserIdResponse> {
 		return {
 			...result,
 			user: await this.getUserPartial(result.user_id),
@@ -480,14 +530,13 @@ export class AuthRequestService {
 	}
 
 	private async toSsoCompleteResponse(
-		resultPromise: Promise<{user_id: string; token: string; redirect_to: string}>,
-	): Promise<AuthTokenWithUserIdResponse & {redirect_to: string}> {
-		const result = await resultPromise;
-		const tokenResponse = await this.toAuthTokenResponse(result);
-		return {
-			...tokenResponse,
-			redirect_to: result.redirect_to,
-		};
+		resultPromise: ReturnType<SsoService['completeLogin']>,
+	): Promise<SsoCompleteResponse> {
+		const {redirect_to, ...result} = await resultPromise;
+		if ('linked' in result) {
+			return {linked: true, redirect_to};
+		}
+		return {...(await this.toAuthLoginResponse(result)), redirect_to};
 	}
 
 	private async toAuthLoginResponse(
@@ -513,4 +562,17 @@ export class AuthRequestService {
 			backup_codes: allowedMethods.has('backup_codes'),
 		};
 	}
+}
+
+function toAuthRegisterResponse(result: AuthRegistration.AccountCreationResult): AuthRegisterResponse {
+	if (result.pendingApproval) {
+		return {registration_pending_approval: true, user_id: result.user.id.toString()};
+	}
+	return {
+		token: result.token,
+		user_id: result.user.id.toString(),
+		user: mapUserToPartialResponse(result.user),
+		device_proof: result.deviceProof,
+		entry: result.entry,
+	};
 }

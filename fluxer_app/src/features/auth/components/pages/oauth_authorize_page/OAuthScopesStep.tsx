@@ -7,8 +7,8 @@ import type {
 	AuthorizeParams,
 	PublicAppData,
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
+import {OAuthAuthorizingAccount} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizingAccount';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
-import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -45,6 +45,7 @@ interface OAuthScopesStepProps {
 	scopesAdjusted: boolean;
 	selectedScopes: ReadonlySet<string>;
 	showInlineActions?: boolean;
+	showAccount: boolean;
 	isScopeLocked: (scope: string) => boolean;
 	submitting: 'approve' | 'deny' | null;
 }
@@ -68,6 +69,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 	scopesAdjusted,
 	selectedScopes,
 	showInlineActions = true,
+	showAccount,
 	isScopeLocked,
 	submitting,
 }) => {
@@ -91,12 +93,11 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 						<p className={styles.sectionDescription} data-flx="auth.o-auth-authorize-page.request-summary">
 							{botInviteWithoutRedirect
 								? i18n._(BOT_INVITE_NO_EXTERNAL_REDIRECT_DESCRIPTOR)
-								: authParams.channelId
-									? authParams.channelId
-									: authParams.guildId
-										? authParams.guildId
-										: i18n._(BOT_SCOPE_REQUESTED_DESCRIPTOR)}
+								: authParams.channelId || authParams.guildId || i18n._(BOT_SCOPE_REQUESTED_DESCRIPTOR)}
 						</p>
+					) : null}
+					{showAccount ? (
+						<OAuthAuthorizingAccount data-flx="auth.o-auth-authorize-page.scopes-step.authorizing-account" />
 					) : null}
 				</div>
 			</div>
@@ -143,7 +144,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 													className={styles.scopeDescription}
 													data-flx="auth.o-auth-authorize-page.scope-description"
 												>
-													{getOAuth2ScopeDescription(i18n, scope as OAuth2Scope) ?? scope}
+													{getOAuth2ScopeDescription(i18n, scope) ?? scope}
 												</span>
 											}
 											data-flx="auth.o-auth-authorize-page.switch.toggle-scope"

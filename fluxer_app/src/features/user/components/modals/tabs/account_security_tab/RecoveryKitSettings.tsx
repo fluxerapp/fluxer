@@ -15,7 +15,7 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useState} from 'react';
+import {type ReactNode, useCallback, useEffect, useState} from 'react';
 
 const RECOVERY_KIT_ERROR_DESCRIPTOR = msg({
 	message: 'Could not create a recovery kit',
@@ -80,16 +80,18 @@ export const RecoveryKitRow = observer(({user}: {user: User}) => {
 	const {creating, create} = useCreateRecoveryKit();
 	const createdAt = status?.createdAt ?? null;
 	const missing = status != null && !status.hasRecoveryKit;
+	let description: ReactNode = null;
+	if (!missing) {
+		description = createdAt ? (
+			<Trans>Created: {DateUtils.getRelativeDateString(createdAt, i18n)}</Trans>
+		) : (
+			<Trans>Lets you reset your password if you forget it.</Trans>
+		);
+	}
 	return (
 		<AccountSecurityRow
 			label={<Trans>Recovery kit</Trans>}
-			description={
-				missing ? null : createdAt ? (
-					<Trans>Created {DateUtils.getRelativeDateString(createdAt, i18n)}</Trans>
-				) : (
-					<Trans>Lets you reset your password if you forget it.</Trans>
-				)
-			}
+			description={description}
 			warning={missing ? <Trans>You don't have a recovery kit yet</Trans> : null}
 			data-flx="user.account-security-tab.recovery-kit-settings.recovery-kit-row"
 		>

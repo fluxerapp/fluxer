@@ -14,12 +14,8 @@ path = "src/lib.rs"
 name = "fluxer-media-proxy"
 path = "src/main.rs"
 
-[[bench]]
-name = "core"
-harness = false
-
 [dependencies]
-fluxer_common = { path = "../fluxer_common" }
+fluxer_common = { path = "../fluxer_common", features = ["healthcheck"] }
 anyhow = "1.0.104"
 axum = {version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"]}
 base64 = "0.23.1"
@@ -31,22 +27,23 @@ hmac = "0.13.0"
 http = "1.5.0"
 http-body = "1.1.0"
 http-body-util = "0.1.5"
-hyper = {version = "1.11.1", default-features = false}
-libc = "0.2.189"
+hyper = {version = "1.12.0", default-features = false}
+libc = "0.2.191"
+memmap2 = "0.9.12"
 moka = {version = "0.12.16", features = ["sync"]}
 parking_lot = "0.12.5"
 percent-encoding = "2.3.2"
-rand = "0.10.2"
+rand = "0.10.3"
 rand_chacha = "0.10.0"
 reqwest = {version = "0.13.5", default-features = false, features = ["json", "rustls", "stream"]}
 reqwest-middleware = "0.5.2"
 reqwest-retry = "0.9.1"
 serde = {version = "1.0.229", features = ["derive"]}
-serde_json = "1.0.151"
-sha2 = "0.11.0"
+serde_json = "1.0.154"
+sha2 = "0.11.1"
 tempfile = "3.27.0"
-thiserror = "2.0.20"
-tokio = {version = "1.53.1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"]}
+thiserror = "2.0.21"
+tokio = {version = "1.54.1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"]}
 tower-http = {version = "0.7.1", features = ["compression-gzip"]}
 tracing = "0.1.44"
 tracing-subscriber = {version = "0.3.23", features = ["fmt", "json"]}
@@ -54,11 +51,8 @@ url = "2.5.8"
 wyhash = "0.6.0"
 
 [build-dependencies]
-cc = "1.4.6"
+cc = "1.10.0"
 pkg-config = "0.3.34"
 
 [dev-dependencies]
-criterion = "0.8.2"
-flate2 = "1.1.10"
-proptest = "1.11.0"
 tower = {version = "0.5.3", features = ["util"]}

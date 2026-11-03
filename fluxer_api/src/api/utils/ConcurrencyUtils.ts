@@ -11,6 +11,11 @@ export async function awaitAll(tasks: ReadonlyArray<Promise<unknown>>, failureMe
 	throwCompletionErrors(errors, failureMessage);
 }
 
+export function startEarly<T>(task: Promise<T>): Promise<T> {
+	task.catch(() => {});
+	return task;
+}
+
 export async function runAllInOrder(
 	steps: ReadonlyArray<() => Promise<unknown>>,
 	failureMessage: string,
@@ -53,4 +58,18 @@ export async function mapWithConcurrency<T, TResult>(
 	await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, () => worker()));
 	if (failure) throw failure.error;
 	return results;
+}
+
+export async function allSettledWithConcurrency<T, TResult>(
+	items: ReadonlyArray<T>,
+	concurrency: number,
+	mapper: (item: T, index: number) => Promise<TResult>,
+): Promise<Array<PromiseSettledResult<TResult>>> {
+	return mapWithConcurrency(items, concurrency, async (item, index): Promise<PromiseSettledResult<TResult>> => {
+		try {
+			return {status: 'fulfilled', value: await mapper(item, index)};
+		} catch (reason) {
+			return {status: 'rejected', reason};
+		}
+	});
 }

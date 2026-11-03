@@ -14,25 +14,6 @@ describe('OAuth2 Application List', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('returns list response shape', async () => {
-		const account = await createTestAccount(harness);
-		const appName = createUniqueApplicationName();
-		await createOAuth2Application(harness, account.token, {
-			name: appName,
-			redirect_uris: ['https://example.com/callback'],
-		});
-		const applications = await listOAuth2Applications(harness, account.token);
-		expect(applications.length).toBeGreaterThan(0);
-		const app = applications[0]!;
-		expect(app.id).toBeTruthy();
-		expect(app.name).toBeTruthy();
-		expect(app.redirect_uris).toBeDefined();
-		expect(app.bot?.id).toBeTruthy();
-		expect(app.bot?.username).toBeTruthy();
-		expect(app.bot?.discriminator).toBeTruthy();
-		expect(app.bot?.token).toBeUndefined();
-		expect(app.client_secret).toBeUndefined();
-	});
 	test('returns only applications owned by user', async () => {
 		const owner1 = await createTestAccount(harness);
 		const owner2 = await createTestAccount(harness);

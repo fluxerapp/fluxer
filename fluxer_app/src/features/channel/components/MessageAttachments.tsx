@@ -47,6 +47,7 @@ import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMen
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowBendUpRightIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -58,7 +59,7 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowBendUpRightIcon, CaretRightIcon, NotePencilIcon} from '@phosphor-icons/react';
+import {NotePencilIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -402,7 +403,7 @@ const ForwardedMessageContent = observer(({message, snapshot, onDelete}: Forward
 						})()}
 					</div>
 				)}
-				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.getRenderEmbeds() && (
+				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.renderEmbeds && (
 					<div
 						className={styles.attachmentsContainer}
 						data-flx="channel.message-attachments.forwarded-message-content.attachments-container--2"
@@ -698,7 +699,7 @@ export const MessageAttachments = observer(() => {
 					</>
 				);
 			})()}
-			{UserSettings.getRenderEmbeds() &&
+			{UserSettings.renderEmbeds &&
 				!message.suppressEmbeds &&
 				message.embeds.map((embed, index) => {
 					const embedKey = `${embed.id}-${index}`;
@@ -714,7 +715,7 @@ export const MessageAttachments = observer(() => {
 						/>
 					);
 				})}
-			{UserSettings.getRenderReactions() && reactions.length > 0 && (
+			{UserSettings.renderReactions && reactions.length > 0 && (
 				<MessageReactions
 					message={message}
 					isPreview={reactionsIsPreview}

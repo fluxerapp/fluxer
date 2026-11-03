@@ -7,7 +7,6 @@ import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import {EntranceSound, EntranceSoundSelection} from '@app/api/models/EntranceSound';
-import {resolveEntranceSoundDurationMs} from '@app/api/user/entrance_sound/EntranceSoundDurationProbe';
 import type {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
 import {
 	ENTRANCE_SOUND_EXT_TO_MIME,
@@ -128,15 +127,15 @@ export class EntranceSoundService {
 				format: metadata.format ?? metadata.content_type ?? 'unknown',
 			});
 		}
-		const metadataDurationSeconds = typeof metadata.duration === 'number' ? metadata.duration : null;
-		const durationMs = await resolveEntranceSoundDurationMs({
-			bytes,
-			extension,
-			metadataDurationSeconds,
-		});
-		if (durationMs == null) {
+		const metadataDurationSeconds =
+			typeof metadata.duration === 'number' && Number.isFinite(metadata.duration) && metadata.duration > 0
+				? metadata.duration
+				: null;
+		const durationSeconds = (await this.mediaService.getAudioDurationSeconds(trimmed)) ?? metadataDurationSeconds;
+		if (durationSeconds == null) {
 			throw InputValidationError.fromCode('audio', ValidationErrorCodes.ENTRANCE_SOUND_INVALID_FORMAT);
 		}
+		const durationMs = Math.round(durationSeconds * 1000);
 		if (durationMs > ENTRANCE_SOUND_MAX_DURATION_MS) {
 			throw InputValidationError.fromCode('audio', ValidationErrorCodes.ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT, {
 				max_ms: ENTRANCE_SOUND_MAX_DURATION_MS,

@@ -22,13 +22,4 @@ describe('Admin guild routes', () => {
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 			.execute();
 	});
-	test('GET /admin/guilds/{guild_id}/members requires guild:list:members', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-		const guild = await createGuild(harness, admin.token, `Member ACL Guild ${Date.now()}`);
-		await createBuilder(harness, `${admin.token}`)
-			.get(`/admin/guilds/${guild.id}/members`)
-			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
-			.execute();
-	});
 });

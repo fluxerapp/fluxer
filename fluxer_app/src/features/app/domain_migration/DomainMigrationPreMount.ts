@@ -48,7 +48,6 @@ import {
 	readDomainMigrationIntent,
 	readDomainMigrationMarker,
 	resolveDomainMigrationSide,
-	rewriteImportedAccount,
 	type StorageLike,
 	sanitizeNextPath,
 	shouldForwardCompletedSource,
@@ -66,11 +65,14 @@ import {
 	randomBase64Url,
 	sha256Hex,
 } from '@app/features/app/domain_migration/DomainMigrationCrypto';
+import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
+import {parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import type {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {
 	AuthSessionStorageKey,
 	parseStoredSessionValue,
+	readStoredActiveAccountKey,
 	readStoredSessionUserId,
 } from '@app/features/platform/state/auth_session/AuthSessionStorage';
 import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
@@ -91,6 +93,9 @@ const MAX_HANDOFF_PAYLOAD_LENGTH = 8 * 1024 * 1024;
 const IMPORT_WAIT_MS = 20_000;
 const IMPORT_POLL_MS = 250;
 const MEDIA_DEVICES_WAIT_MS = 1500;
+const REDEEM_RETRY_MAX_WAIT_MS = 60_000;
+const UNLOAD_GRACE_MS = 250;
+const MIGRATE_DISCOVERY_TIMEOUTS_MS: ReadonlyArray<number> = [5000, 15_000];
 
 type DomainMigrationLanding = 'target' | 'source';
 
@@ -116,11 +121,20 @@ interface PendingHandoff {
 	nonce: string;
 	next: string;
 	at: number;
+	handoff?: string;
+	key?: string;
+	land?: string;
+	redeeming?: boolean;
+	sealed?: string;
 }
 
 function navigate(url: string): true {
 	window.location.replace(url);
 	return true;
+}
+
+async function outliveUnload(): Promise<void> {
+	await new Promise((resolve) => setTimeout(resolve, UNLOAD_GRACE_MS));
 }
 
 function mountInPlace(next: string): false {
@@ -301,18 +315,43 @@ async function createHandoff(apiEndpoint: string, token: string, nonceHash: stri
 	return body.handoff_id;
 }
 
-async function redeemHandoff(target: string, handoffId: string, nonce: string): Promise<string> {
-	let response: Response;
+async function rateLimitRetryMs(response: Response): Promise<number | null> {
 	try {
-		response = await fetch(`${target}/api/v1/auth/origin-handoff/redeem`, {
-			method: 'POST',
-			credentials: 'omit',
-			headers: {'Content-Type': 'application/json'},
-			body: JSON.stringify({handoff_id: handoffId, nonce}),
-		});
+		const body = (await response.json()) as {retry_after?: unknown};
+		return typeof body.retry_after === 'number' && body.retry_after >= 0 ? Math.ceil(body.retry_after * 1000) : null;
 	} catch {
-		throw new DomainMigrationImportError('redeem_failed');
+		return null;
 	}
+}
+
+async function postRedeem(target: string, handoffId: string, nonce: string): Promise<Response> {
+	const deadline = Date.now() + REDEEM_RETRY_MAX_WAIT_MS;
+	for (;;) {
+		let response: Response;
+		try {
+			response = await fetch(`${target}/api/v1/auth/origin-handoff/redeem`, {
+				method: 'POST',
+				credentials: 'omit',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({handoff_id: handoffId, nonce}),
+			});
+		} catch {
+			throw new DomainMigrationImportError('redeem_failed');
+		}
+		if (response.status !== 429) {
+			return response;
+		}
+		const waitMs = await rateLimitRetryMs(response);
+		if (waitMs === null || Date.now() + waitMs > deadline) {
+			return response;
+		}
+		logger.warn(`Origin handoff redeem was rate limited, retrying in ${waitMs}ms`);
+		await new Promise((resolve) => setTimeout(resolve, waitMs));
+	}
+}
+
+async function redeemHandoff(target: string, handoffId: string, nonce: string): Promise<string> {
+	const response = await postRedeem(target, handoffId, nonce);
 	if (response.status === 404) {
 		throw new DomainMigrationImportError('handoff_expired');
 	}
@@ -350,7 +389,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 	const storage = getProtectedLocalStorage();
 	const sessionStorage = getProtectedSessionStorage();
 	const intent = readDomainMigrationIntent(sessionStorage, Date.now());
-	if (intent === null || intent.handoff_id !== undefined) {
+	if (intent === null || (intent.handoff_id !== undefined && intent.nonce !== nonce)) {
 		clearDomainMigrationIntent(sessionStorage);
 		return navigate(sourceUrl(side, DOMAIN_MIGRATION_DEFAULT_NEXT_PATH));
 	}
@@ -402,7 +441,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 			sealed = await encryptDomainMigrationPayload(withoutOptionalPayloadData(payload));
 		}
 		const handoffId = await createHandoff(instance.apiEndpoint, token, await sha256Hex(nonce), sealed.payload);
-		writeDomainMigrationIntent(sessionStorage, {at: intent.at, handoff_id: handoffId});
+		writeDomainMigrationIntent(sessionStorage, {at: intent.at, handoff_id: handoffId, nonce});
 		markDomainMigrationHandedOff(storage, side.target, Date.now(), attempts);
 		const landing: DomainMigrationLanding = environmentMayForward(
 			readDomainMigrationEnvironment(),
@@ -413,6 +452,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		return navigate(`${side.target}/migrate/complete#h=${handoffId}&k=${sealed.key}&land=${landing}`);
 	} catch (err) {
 		logger.warn('Domain migration export failed:', err);
+		await outliveUnload();
 		clearDomainMigrationIntent(sessionStorage);
 		revokeCompletedMarker(storage);
 		return navigate(sourceUrl(side, DOMAIN_MIGRATION_DEFAULT_NEXT_PATH));
@@ -566,11 +606,13 @@ async function handleSource(side: DomainMigrationSide): Promise<boolean> {
 	return false;
 }
 
-function takePendingHandoff(): PendingHandoff | null {
-	const storage = getProtectedSessionStorage();
+function optionalString(value: unknown): string | undefined {
+	return typeof value === 'string' ? value : undefined;
+}
+
+function readPendingHandoff(): PendingHandoff | null {
 	try {
-		const raw = storage?.getItem(DOMAIN_MIGRATION_PENDING_KEY) ?? null;
-		storage?.removeItem(DOMAIN_MIGRATION_PENDING_KEY);
+		const raw = getProtectedSessionStorage()?.getItem(DOMAIN_MIGRATION_PENDING_KEY) ?? null;
 		if (!raw) {
 			return null;
 		}
@@ -578,19 +620,43 @@ function takePendingHandoff(): PendingHandoff | null {
 		if (typeof value.nonce !== 'string' || typeof value.next !== 'string' || typeof value.at !== 'number') {
 			return null;
 		}
-		return {nonce: value.nonce, next: value.next, at: value.at};
+		return {
+			nonce: value.nonce,
+			next: value.next,
+			at: value.at,
+			handoff: optionalString(value.handoff),
+			key: optionalString(value.key),
+			land: optionalString(value.land),
+			redeeming: value.redeeming === true,
+			sealed: optionalString(value.sealed),
+		};
 	} catch {
 		return null;
 	}
 }
 
-async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParams, nonce: string): Promise<void> {
-	const handoffId = fragment.get('h');
-	const key = fragment.get('k');
+function writePendingHandoff(pending: PendingHandoff | null): void {
+	const storage = getProtectedSessionStorage();
+	try {
+		if (pending === null) {
+			storage?.removeItem(DOMAIN_MIGRATION_PENDING_KEY);
+		} else {
+			storage?.setItem(DOMAIN_MIGRATION_PENDING_KEY, JSON.stringify(pending));
+		}
+	} catch {}
+}
+
+async function importHandoff(side: DomainMigrationSide, pending: PendingHandoff): Promise<void> {
+	const {handoff: handoffId, key} = pending;
 	if (!handoffId || !key || !BASE64URL_TOKEN_PATTERN.test(handoffId)) {
 		throw new DomainMigrationImportError('missing_handoff');
 	}
-	const sealed = await redeemHandoff(side.target, handoffId, nonce);
+	let sealed = pending.sealed;
+	if (sealed === undefined) {
+		writePendingHandoff({...pending, redeeming: true});
+		sealed = await redeemHandoff(side.target, handoffId, pending.nonce);
+		writePendingHandoff({...pending, redeeming: true, sealed});
+	}
 	let payload: DomainMigrationPayload | null;
 	try {
 		payload = parseDomainMigrationPayload(await decryptDomainMigrationPayload(sealed, key), side.source);
@@ -603,6 +669,10 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 	const storage = getProtectedLocalStorage();
 	const previousImport = readDomainMigrationImport(storage);
 	writeDomainMigrationImport(storage, {state: 'running', at: Date.now()});
+	const [appStorage, {getPersistentStorageBackend}] = await Promise.all([
+		import('@app/features/app/domain_migration/DomainMigrationAppStorage'),
+		import('@app/features/platform/state/PersistentStorageBackend'),
+	]);
 	let instance: RuntimeConfigSnapshot;
 	try {
 		const [{default: accountStorage}, {runtimeConfigSnapshotsAreSameInstance}, snapshot] = await Promise.all([
@@ -622,7 +692,7 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 		);
 		await accountStorage.importAccounts(
 			payload.accounts.map((account) =>
-				keepValidTargetSession(rewriteImportedAccount(account, instance), existing.get(account.userId)),
+				keepValidTargetSession(appStorage.rewriteImportedAccount(account, instance), existing.get(account.userId)),
 			),
 		);
 		if (activeToken !== null && activeUserId !== null && incomingToken !== null && incomingUserId !== activeUserId) {
@@ -647,14 +717,24 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 	}
 	if (payload.app_storage) {
 		try {
-			const [{writeImportedAppStorage}, {getPersistentStorageBackend}] = await Promise.all([
-				import('@app/features/app/domain_migration/DomainMigrationAppStorage'),
-				import('@app/features/platform/state/PersistentStorageBackend'),
-			]);
-			await writeImportedAppStorage(getPersistentStorageBackend(), payload.app_storage, payload.accounts, instance);
+			await appStorage.writeImportedAppStorage(
+				getPersistentStorageBackend(),
+				payload.app_storage,
+				payload.accounts,
+				instance,
+			);
 		} catch (err) {
 			logger.warn('Failed to import scoped app storage:', err);
 		}
+	}
+	try {
+		await appStorage.retargetAccountKeys(
+			getPersistentStorageBackend(),
+			storage,
+			appStorage.importedAccountKeyMoves(payload.accounts, instance),
+		);
+	} catch (err) {
+		logger.warn('Failed to point imported state at the new account keys:', err);
 	}
 	if (payload.media_devices) {
 		writeDomainMigrationDeviceMap(storage, {at: Date.now(), devices: payload.media_devices, resolved: []});
@@ -674,14 +754,19 @@ function doneUrl(side: DomainMigrationSide, next: string, handoffId: string | nu
 	return `${side.source}/migrate/done?${handoff}next=${encodeURIComponent(next)}`;
 }
 
-function landingUrl(side: DomainMigrationSide, fragment: URLSearchParams, next: string): string {
-	switch (fragment.get('land')) {
+function landOnTarget(
+	side: DomainMigrationSide,
+	land: string | undefined,
+	handoffId: string | null,
+	next: string,
+): boolean {
+	switch (land) {
 		case 'target':
-			return `${side.target}${next}`;
+			return mountInPlace(next);
 		case 'source':
-			return sourceUrl(side, next);
+			return navigate(sourceUrl(side, next));
 	}
-	return doneUrl(side, next, fragment.get('h'));
+	return navigate(doneUrl(side, next, handoffId));
 }
 
 function failedUrl(side: DomainMigrationSide, reason: DomainMigrationFailureReason, next: string): string {
@@ -726,34 +811,73 @@ async function beginOnTarget(side: DomainMigrationSide, params: URLSearchParams)
 async function completeOnTarget(side: DomainMigrationSide): Promise<boolean> {
 	const fragment = new URLSearchParams(window.location.hash.slice(1));
 	window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
-	const pending = takePendingHandoff();
-	if (pending === null || Date.now() - pending.at > DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
-		const lastImport = readDomainMigrationImport(getProtectedLocalStorage());
+	const stored = readPendingHandoff();
+	const lastImport = readDomainMigrationImport(getProtectedLocalStorage());
+	if (stored === null || Date.now() - stored.at > DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
+		writePendingHandoff(null);
 		if (lastImport?.state === 'done' && Date.now() - lastImport.at < DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
-			return navigate(
-				fragment.get('land') === 'source'
-					? sourceUrl(side, DOMAIN_MIGRATION_DEFAULT_NEXT_PATH)
-					: `${side.target}${DOMAIN_MIGRATION_DEFAULT_NEXT_PATH}`,
-			);
+			const land = fragment.get('land') === 'source' ? 'source' : 'target';
+			return landOnTarget(side, land, null, DOMAIN_MIGRATION_DEFAULT_NEXT_PATH);
 		}
 		return navigate(failedUrl(side, 'no_pending', DOMAIN_MIGRATION_DEFAULT_NEXT_PATH));
 	}
+	const pending: PendingHandoff = {
+		...stored,
+		handoff: fragment.get('h') ?? stored.handoff,
+		key: fragment.get('k') ?? stored.key,
+		land: fragment.get('land') ?? stored.land,
+	};
+	writePendingHandoff(pending);
 	const next = sanitizeNextPath(pending.next);
+	if (lastImport?.state === 'done' && lastImport.at >= pending.at) {
+		writePendingHandoff(null);
+		return landOnTarget(side, pending.land, pending.handoff ?? null, next);
+	}
 	try {
-		await importHandoff(side, fragment, pending.nonce);
+		await importHandoff(side, pending);
 	} catch (err) {
 		const reason = err instanceof DomainMigrationImportError ? err.reason : 'import_failed';
 		logger.warn('Domain migration import failed:', err);
+		await outliveUnload();
+		writePendingHandoff(null);
 		const storage = getProtectedLocalStorage();
 		if (readDomainMigrationImport(storage)?.state === 'running') {
 			writeDomainMigrationImport(storage, null);
 		}
+		if (reason === 'handoff_expired' && pending.redeeming === true) {
+			return navigate(`${side.source}/migrate/start?next=${encodeURIComponent(next)}`);
+		}
 		return navigate(failedUrl(side, reason, next));
 	}
-	return navigate(landingUrl(side, fragment, next));
+	writePendingHandoff(null);
+	return landOnTarget(side, pending.land, pending.handoff ?? null, next);
+}
+
+async function repairMovedAccounts(): Promise<void> {
+	const storage = getProtectedLocalStorage();
+	if (storage === null || readDomainMigrationImport(storage)?.state !== 'done') {
+		return;
+	}
+	const instance = await currentInstanceSnapshot();
+	const pointer = parseAccountStorageKey(readStoredActiveAccountKey(storage));
+	if (pointer === null || pointer.instanceKey === runtimeInstanceKey(instance)) {
+		return;
+	}
+	const [{default: accountStorage}, {retargetAccountKeys}, {getPersistentStorageBackend}] = await Promise.all([
+		import('@app/features/auth/state/AccountStorage'),
+		import('@app/features/app/domain_migration/DomainMigrationAppStorage'),
+		import('@app/features/platform/state/PersistentStorageBackend'),
+	]);
+	const moves = await accountStorage.rekeyAccountsOnInstance(instance);
+	await retargetAccountKeys(getPersistentStorageBackend(), storage, moves);
 }
 
 async function handleTarget(side: DomainMigrationSide): Promise<boolean> {
+	if (window.location.pathname !== '/migrate/complete') {
+		await repairMovedAccounts().catch((err: unknown) => {
+			logger.warn('Failed to repair accounts moved by an earlier import:', err);
+		});
+	}
 	switch (window.location.pathname) {
 		case '/migrate/begin':
 			return beginOnTarget(side, new URLSearchParams(window.location.search));
@@ -761,6 +885,20 @@ async function handleTarget(side: DomainMigrationSide): Promise<boolean> {
 			return completeOnTarget(side);
 	}
 	return false;
+}
+
+async function loadDiscovery(): Promise<void> {
+	const timeouts: ReadonlyArray<number | undefined> = window.location.pathname.startsWith('/migrate/')
+		? MIGRATE_DISCOVERY_TIMEOUTS_MS
+		: [undefined];
+	for (const [index, timeoutMs] of timeouts.entries()) {
+		try {
+			await loadDomainMigrationDiscovery(timeoutMs);
+			return;
+		} catch (err) {
+			logger.warn(`Domain migration discovery is unavailable (attempt ${index + 1} of ${timeouts.length}):`, err);
+		}
+	}
 }
 
 export async function runDomainMigrationPreMount(): Promise<boolean> {
@@ -771,11 +909,7 @@ export async function runDomainMigrationPreMount(): Promise<boolean> {
 	if (side === null) {
 		return false;
 	}
-	try {
-		await loadDomainMigrationDiscovery();
-	} catch (err) {
-		logger.warn('Domain migration discovery is unavailable:', err);
-	}
+	await loadDiscovery();
 	try {
 		return side.role === 'source' ? await handleSource(side) : await handleTarget(side);
 	} catch (err) {

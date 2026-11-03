@@ -45,9 +45,6 @@ pub fn extract_video_thumbnail_with_options(
     options: VideoThumbnailOptions,
     media_limits: &MediaLimits,
 ) -> Result<ProcessedMedia, MediaError> {
-    if input.len() > media_limits.max_media_proxy_bytes() {
-        return Err(MediaError::StreamTooLong);
-    }
     let VideoThumbnailOptions {
         format,
         width,
@@ -57,7 +54,7 @@ pub fn extract_video_thumbnail_with_options(
     } = options;
     let runtime = vips_runtime()?;
     let (max_width, max_height) = native_thumbnail_bounds(width, height, media_limits)?;
-    let suffix = output_suffix(format, quality, None, None)?;
+    let suffix = output_suffix(format, quality, None, None, u64::MAX)?;
     let mut out_ptr: *mut c_void = ptr::null_mut();
     let mut out_size: size_t = 0;
     let mut out_capacity: size_t = 0;

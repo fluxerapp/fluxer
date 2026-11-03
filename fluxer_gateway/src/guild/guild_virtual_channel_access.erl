@@ -9,18 +9,14 @@
     remove_virtual_access/3,
     has_virtual_access/3,
     has_voice_access/3,
-    is_view_only/3,
     get_virtual_channels_for_user/2,
     dispatch_channel_visibility_change/4,
-    mark_pending_join/3,
     clear_pending_join/3,
     mark_transition_flags/3,
     clear_transition_flags/3,
     is_pending_join/3,
-    mark_preserve/3,
     clear_preserve/3,
     has_preserve/3,
-    mark_move_pending/3,
     clear_move_pending/3,
     is_move_pending/3
 ]).
@@ -233,7 +229,7 @@ is_move_pending(UserId, ChannelId, State) ->
 -spec dispatch_channel_visibility_change(user_id(), channel_id(), add | remove, guild_state()) ->
     ok.
 dispatch_channel_visibility_change(UserId, ChannelId, Action, State) ->
-    case guild_permissions:find_channel_by_id(ChannelId, State) of
+    case guild_permissions_check:find_channel_by_id(ChannelId, State) of
         undefined ->
             ok;
         Channel ->

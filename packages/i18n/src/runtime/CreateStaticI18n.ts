@@ -11,7 +11,6 @@ export interface StaticI18nConfig<TKey extends string, TValue, TVariables> {
 	defaultLocale: string;
 	defaultMessages: Record<TKey, TValue>;
 	localeMessages: Record<string, StaticLocaleMessages<TKey, TValue>>;
-	normalizeLocale?: (locale: string) => string;
 	onWarning?: (message: string) => void;
 	validateVariables?: (key: TKey, template: TValue, variables: TVariables) => string | null;
 	messageFormatOptions?: MessageFormatOptions<'string'>;

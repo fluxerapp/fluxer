@@ -7,12 +7,6 @@ pub struct Info {
     pub process_group_id: i32,
 }
 
-pub type ResolverFn = fn(ctx: Option<&dyn ResolverCtx>, pid: i32) -> Option<Info>;
-
-pub trait ResolverCtx {
-    fn resolve(&self, pid: i32) -> Option<Info>;
-}
-
 #[cfg(target_os = "macos")]
 mod sys {
     use super::Info;
@@ -95,21 +89,7 @@ pub fn info_for_pid(_pid: i32) -> Option<Info> {
     None
 }
 
-fn live_resolver(_ctx: Option<&dyn ResolverCtx>, pid: i32) -> Option<Info> {
-    info_for_pid(pid)
-}
-
 pub fn is_same_launch_tree(candidate_pid: i32, target_pid: i32, target_info: Option<Info>) -> bool {
-    is_same_launch_tree_with_resolver(candidate_pid, target_pid, target_info, None, live_resolver)
-}
-
-pub fn is_same_launch_tree_with_resolver(
-    candidate_pid: i32,
-    target_pid: i32,
-    target_info: Option<Info>,
-    ctx: Option<&dyn ResolverCtx>,
-    resolver: ResolverFn,
-) -> bool {
     if candidate_pid <= 0 || target_pid <= 0 {
         return false;
     }
@@ -117,7 +97,7 @@ pub fn is_same_launch_tree_with_resolver(
         return true;
     }
 
-    let mut current = match resolver(ctx, candidate_pid) {
+    let mut current = match info_for_pid(candidate_pid) {
         Some(i) => i,
         None => return false,
     };
@@ -134,7 +114,7 @@ pub fn is_same_launch_tree_with_resolver(
         if parent <= 1 || parent == current.pid {
             return false;
         }
-        current = match resolver(ctx, parent) {
+        current = match info_for_pid(parent) {
             Some(i) => i,
             None => return false,
         };
@@ -157,6 +137,7 @@ fn shares_process_group(candidate: Info, target_pid: i32, target_info: Option<In
     false
 }
 
+#[cfg(target_os = "macos")]
 fn append_pid(out: &mut Vec<i32>, max: usize, pid: i32) -> bool {
     if out.contains(&pid) {
         return true;
@@ -168,13 +149,12 @@ fn append_pid(out: &mut Vec<i32>, max: usize, pid: i32) -> bool {
     true
 }
 
-pub fn collect_related_pids_with_resolver(
+#[cfg(target_os = "macos")]
+fn related_pids(
     target_pid: i32,
     target_info: Option<Info>,
     candidates: &[i32],
     max_count: usize,
-    ctx: Option<&dyn ResolverCtx>,
-    resolver: ResolverFn,
 ) -> Vec<i32> {
     if target_pid <= 0 || max_count == 0 {
         return Vec::new();
@@ -189,7 +169,7 @@ pub fn collect_related_pids_with_resolver(
         if pid <= 0 || pid == target_pid {
             continue;
         }
-        if !is_same_launch_tree_with_resolver(pid, target_pid, target_info, ctx, resolver) {
+        if !is_same_launch_tree(pid, target_pid, target_info) {
             continue;
         }
         let _ = append_pid(&mut out, cap, pid);
@@ -217,13 +197,11 @@ pub fn collect_related_pids(target_pid: i32, max_count: usize) -> Vec<i32> {
         return vec![target_pid];
     }
     let count = (copied as usize).min(all_pids.len());
-    collect_related_pids_with_resolver(
+    related_pids(
         target_pid,
         info_for_pid(target_pid),
         &all_pids[..count],
         max_count,
-        None,
-        live_resolver,
     )
 }
 
@@ -233,131 +211,4 @@ pub fn collect_related_pids(target_pid: i32, _max_count: usize) -> Vec<i32> {
         return Vec::new();
     }
     vec![target_pid]
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct StaticCtx<'a> {
-        infos: &'a [Info],
-    }
-    impl<'a> ResolverCtx for StaticCtx<'a> {
-        fn resolve(&self, pid: i32) -> Option<Info> {
-            self.infos.iter().copied().find(|i| i.pid == pid)
-        }
-    }
-
-    fn ctx_resolver(ctx: Option<&dyn ResolverCtx>, pid: i32) -> Option<Info> {
-        ctx?.resolve(pid)
-    }
-
-    #[test]
-    fn same_launch_tree_includes_direct_child() {
-        let infos = [
-            Info {
-                pid: 100,
-                parent_pid: 1,
-                process_group_id: 100,
-            },
-            Info {
-                pid: 101,
-                parent_pid: 100,
-                process_group_id: 100,
-            },
-        ];
-        let ctx = StaticCtx { infos: &infos };
-        assert!(is_same_launch_tree_with_resolver(
-            101,
-            100,
-            Some(infos[0]),
-            Some(&ctx),
-            ctx_resolver
-        ));
-    }
-
-    #[test]
-    fn same_launch_tree_includes_pgrp_peer() {
-        let infos = [
-            Info {
-                pid: 200,
-                parent_pid: 1,
-                process_group_id: 200,
-            },
-            Info {
-                pid: 201,
-                parent_pid: 1,
-                process_group_id: 200,
-            },
-        ];
-        let ctx = StaticCtx { infos: &infos };
-        assert!(is_same_launch_tree_with_resolver(
-            201,
-            200,
-            Some(infos[0]),
-            Some(&ctx),
-            ctx_resolver
-        ));
-    }
-
-    #[test]
-    fn same_launch_tree_excludes_unrelated() {
-        let infos = [
-            Info {
-                pid: 300,
-                parent_pid: 1,
-                process_group_id: 300,
-            },
-            Info {
-                pid: 301,
-                parent_pid: 1,
-                process_group_id: 301,
-            },
-        ];
-        let ctx = StaticCtx { infos: &infos };
-        assert!(!is_same_launch_tree_with_resolver(
-            301,
-            300,
-            Some(infos[0]),
-            Some(&ctx),
-            ctx_resolver
-        ));
-    }
-
-    #[test]
-    fn collect_related_returns_tree() {
-        let infos = [
-            Info {
-                pid: 400,
-                parent_pid: 1,
-                process_group_id: 400,
-            },
-            Info {
-                pid: 401,
-                parent_pid: 400,
-                process_group_id: 400,
-            },
-            Info {
-                pid: 402,
-                parent_pid: 401,
-                process_group_id: 400,
-            },
-            Info {
-                pid: 500,
-                parent_pid: 1,
-                process_group_id: 500,
-            },
-        ];
-        let candidates = [500i32, 401, 402, 400];
-        let ctx = StaticCtx { infos: &infos };
-        let pids = collect_related_pids_with_resolver(
-            400,
-            Some(infos[0]),
-            &candidates,
-            8,
-            Some(&ctx),
-            ctx_resolver,
-        );
-        assert_eq!(pids, vec![400, 401, 402]);
-    }
 }

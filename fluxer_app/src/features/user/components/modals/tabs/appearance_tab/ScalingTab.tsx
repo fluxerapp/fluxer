@@ -8,7 +8,8 @@ import Accessibility, {
 } from '@app/features/accessibility/state/Accessibility';
 import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import {type ComboboxOption, resolveNearestNumericOption} from '@app/features/ui/components/form/FormCombobox';
+import {resolveNearestNumericOption} from '@app/features/ui/components/form/ComboboxNumericInput';
+import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Slider} from '@app/features/ui/components/Slider';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {formatRoundedPercentage, roundPercentage} from '@app/features/ui/utils/PercentageFormatting';

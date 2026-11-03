@@ -17,15 +17,20 @@ import {
 	$selectComposerOffset,
 } from '@app/features/lexical/composer/composerOffsets';
 import {$isSlashSlotNode, type SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
-import {COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH} from '@app/features/lexical/composer/SlashSlotPersistence';
+import {
+	COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH,
+	hasExactKeys,
+} from '@app/features/lexical/composer/SlashSlotPersistence';
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {mergeRegister} from '@lexical/utils';
 import {
 	$addUpdateTag,
 	$createLineBreakNode,
 	$createTextNode,
+	$findMatchingParent,
 	$getRoot,
 	$getSelection,
 	$isElementNode,
@@ -83,15 +88,6 @@ interface SerializedComposerClipboardPayload {
 	token: string;
 	display: string;
 	segments: Array<MentionSegment>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
-}
-
-function hasExactKeys<const T extends ReadonlyArray<string>>(value: Record<string, unknown>, keys: T): boolean {
-	const actualKeys = Object.keys(value);
-	return actualKeys.length === keys.length && keys.every((key) => Object.hasOwn(value, key));
 }
 
 function isBoundedString(value: unknown, minimumLength: number, maximumLength: number): value is string {
@@ -334,17 +330,6 @@ function $createSliceNodes(slice: ComposerClipboardSlice, plainText: boolean): A
 	return nodes;
 }
 
-function $findEnclosingSlashSlot(node: LexicalNode): SlashSlotNode | null {
-	let current: LexicalNode | null = node;
-	while (current != null) {
-		if ($isSlashSlotNode(current)) {
-			return current;
-		}
-		current = current.getParent();
-	}
-	return null;
-}
-
 function $selectSlashSlotOffset(slot: SlashSlotNode, offset: number): void {
 	let consumed = 0;
 	const children = slot.getChildren();
@@ -414,7 +399,7 @@ export function $insertComposerClipboardSlice(
 			return false;
 		}
 		const selectedNode = selectedNodes[0]!;
-		const slot = $findEnclosingSlashSlot(selectedNode);
+		const slot = $findMatchingParent(selectedNode, $isSlashSlotNode);
 		if (slot != null) {
 			const selectedRange = $getNodeDisplayRange(selectedNode);
 			return (
@@ -434,8 +419,8 @@ export function $insertComposerClipboardSlice(
 	}
 	const start = Math.min(offsets.anchor, offsets.focus);
 	const end = Math.max(offsets.anchor, offsets.focus);
-	const anchorSlot = $findEnclosingSlashSlot(selection.anchor.getNode());
-	const focusSlot = $findEnclosingSlashSlot(selection.focus.getNode());
+	const anchorSlot = $findMatchingParent(selection.anchor.getNode(), $isSlashSlotNode);
+	const focusSlot = $findMatchingParent(selection.focus.getNode(), $isSlashSlotNode);
 	if (anchorSlot != null && focusSlot != null && anchorSlot.is(focusSlot)) {
 		return $replaceSlashSlotRange(anchorSlot, start, end, sliceToWire(validated));
 	}

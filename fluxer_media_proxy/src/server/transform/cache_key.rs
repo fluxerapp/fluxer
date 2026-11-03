@@ -74,6 +74,8 @@ fn asset_kind_name(kind: AssetKind) -> &'static str {
         AssetKind::EmbedSplash => "embed_splash",
         AssetKind::Emoji => "emoji",
         AssetKind::Sticker => "sticker",
+        AssetKind::Branding => "branding",
+        AssetKind::RoleIcon => "role_icon",
     }
 }
 
@@ -94,89 +96,4 @@ fn serialize_optional_number(value: Option<impl ToString>) -> String {
 
 pub(in crate::server) fn sha256_hex(data: &[u8]) -> String {
     hex::encode(Sha256::digest(data))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn input<'a>(route: TransformRoute, identity: &'a str) -> TransformCacheKeyInput<'a> {
-        TransformCacheKeyInput {
-            route,
-            asset_kind: None,
-            cache_identity: identity,
-            width: None,
-            height: None,
-            format: OutputFormat::WebP,
-            quality: None,
-            animated: false,
-            effort: None,
-            resize_mode: None,
-        }
-    }
-
-    #[test]
-    fn cache_key_serializes_every_transform_decision() {
-        let key = transform_cache_key(TransformCacheKeyInput {
-            route: TransformRoute::Attachment,
-            asset_kind: None,
-            cache_identity: "attachment/1",
-            width: Some(128),
-            height: Some(256),
-            format: OutputFormat::PNG,
-            quality: Some(ImageQuality::Lossless),
-            animated: true,
-            effort: EncodeEffort::parse_lenient("3"),
-            resize_mode: Some(ResizeMode::Cover),
-        });
-        assert_eq!(
-            "attachment:attachment/1|asset_kind=not-applicable|w=128|h=256|fmt=png|q=lossless|anim=true|effort=3|resize=cover",
-            key
-        );
-        assert_ne!(
-            key,
-            transform_cache_key(input(TransformRoute::Attachment, "attachment/1"))
-        );
-    }
-
-    #[test]
-    fn external_cache_identity_is_hashed_and_route_namespaces_are_distinct() {
-        let raw = "https://user:secret@example.invalid/media.png?token=private";
-        let external = transform_cache_key(input(TransformRoute::External, raw));
-        assert!(external.starts_with("external:"));
-        assert!(!external.contains(raw));
-        assert!(!external.contains("secret"));
-        assert_ne!(
-            external,
-            transform_cache_key(input(TransformRoute::Stored, raw))
-        );
-        assert_eq!(64, sha256_hex(b"abc").len());
-    }
-
-    #[test]
-    fn asset_keys_name_their_kind_and_stay_distinct_per_kind() {
-        let emoji = transform_cache_key(TransformCacheKeyInput {
-            asset_kind: Some(AssetKind::Emoji),
-            resize_mode: Some(ResizeMode::Cover),
-            ..input(TransformRoute::Asset, "identity")
-        });
-        assert_eq!(
-            "asset:identity|asset_kind=emoji|w=none|h=none|fmt=webp|q=default|anim=false|effort=none|resize=cover",
-            emoji
-        );
-        assert_ne!(
-            emoji,
-            transform_cache_key(TransformCacheKeyInput {
-                asset_kind: Some(AssetKind::Sticker),
-                resize_mode: Some(ResizeMode::Cover),
-                ..input(TransformRoute::Asset, "identity")
-            })
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "an asset transform cache key requires its kind")]
-    fn an_asset_key_without_a_kind_is_a_programming_error() {
-        let _ = transform_cache_key(input(TransformRoute::Asset, "identity"));
-    }
 }

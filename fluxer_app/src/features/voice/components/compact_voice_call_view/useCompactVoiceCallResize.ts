@@ -3,12 +3,12 @@
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {
 	COMPACT_HEIGHT_MESSAGES_SLIVER,
+	getCompactHeightMax,
 	resolveCompactHeightMaxFromLayout,
 } from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
 import {
 	COMPACT_HEIGHT_DRAG_THRESHOLD_SQ,
 	COMPACT_HEIGHT_STEP,
-	getCompactHeightMax,
 	type ResizeListeners,
 	type ResizeState,
 	toLayoutPx,

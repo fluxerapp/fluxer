@@ -24,7 +24,7 @@ const BOT_DIRECT_MESSAGES_DESCRIPTOR = msg({
 });
 const ALLOW_BOTS_FROM_THIS_COMMUNITY_TO_SEND_YOU_DESCRIPTOR = msg({
 	message: 'Let bots in this community DM you',
-	comment: 'Toggle label in the community privacy modal: allow DMs from bots that live in this community.',
+	comment: 'Toggle label in the community privacy modal: allow DMs from bots that are in this community.',
 });
 export const GuildPrivacySettingsModal = observer(({guildId}: {guildId: string}) => {
 	const {i18n} = useLingui();

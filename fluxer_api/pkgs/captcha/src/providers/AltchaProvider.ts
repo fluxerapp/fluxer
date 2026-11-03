@@ -64,11 +64,11 @@ export class AltchaProvider {
 		this.now = options.now ?? Date.now;
 	}
 
-	async createChallenge(): Promise<Challenge> {
+	async createChallenge(costOverride?: number): Promise<Challenge> {
 		const {cost, maxCounter, hmacSignatureSecret, hmacKeySignatureSecret} = this.options;
 		return await createChallenge({
 			algorithm: ALTCHA_ALGORITHM,
-			cost,
+			cost: Math.max(cost, costOverride ?? cost),
 			counter: randomInt(maxCounter, Math.ceil(maxCounter / 2)),
 			deriveKey,
 			expiresAt: new Date(this.now() + ALTCHA_CHALLENGE_TTL_MS),
@@ -77,9 +77,10 @@ export class AltchaProvider {
 		});
 	}
 
-	async verify({token}: {token: string}): Promise<boolean> {
+	async verify({token, minCost}: {token: string; minCost?: number}): Promise<boolean> {
 		const payload = decodePayload(token);
 		if (!payload) return false;
+		if (minCost !== undefined && payload.challenge.parameters.cost < minCost) return false;
 		try {
 			const result = await verifySolution({
 				challenge: payload.challenge,

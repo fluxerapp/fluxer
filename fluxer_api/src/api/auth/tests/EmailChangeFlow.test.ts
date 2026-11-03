@@ -11,10 +11,14 @@ import {
 	loginUser,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -125,9 +129,6 @@ describe('Email change flow', () => {
 	beforeEach(async () => {
 		await harness.reset();
 		await clearTestEmails(harness);
-	});
-	afterEach(() => {
-		vi.restoreAllMocks();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -297,6 +298,77 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
+	async function verifyOriginal(account: TestAccount): Promise<{ticket: string; originalProof: string}> {
+		const startResp = await startEmailChange(harness, account, account.password);
+		const originalEmail = findLastTestEmail(
+			await listTestEmails(harness, {recipient: account.email}),
+			'email_change_original',
+		);
+		const originalProof = await verifyOriginalEmailChange(
+			harness,
+			account,
+			startResp.ticket,
+			originalEmail!.metadata!.code!,
+			account.password,
+		);
+		return {ticket: startResp.ticket, originalProof};
+	}
+
+	it('refuses a new address stored on another account, confirmed or not', async () => {
+		const owner = await createTestAccount(harness);
+		const holder = await createBuilderWithoutAuth<{token: string}>(harness)
+			.post('/auth/register')
+			.body({username: 'pendingholder', consent: true, date_of_birth: '1995-05-05'})
+			.execute();
+		const unconfirmed = `integration-held-${Date.now()}@example.com`;
+		await createBuilder(harness, holder.token).post('/users/@me/claim').body({email: unconfirmed}).execute();
+		const account = await createTestAccount(harness);
+		for (const taken of [owner.email, unconfirmed]) {
+			const {ticket, originalProof} = await verifyOriginal(account);
+			const {json} = await createBuilder<{errors: Array<{path: string; code: string}>}>(harness, account.token)
+				.post('/users/@me/email-change/request-new')
+				.body({ticket, new_email: taken, original_proof: originalProof, password: account.password})
+				.expect(400, 'INVALID_FORM_BODY')
+				.executeWithResponse();
+			expect(json.errors).toEqual([
+				expect.objectContaining({path: 'new_email', code: ValidationErrorCodes.EMAIL_ALREADY_IN_USE}),
+			]);
+			expect(findLastTestEmail(await listTestEmails(harness, {recipient: taken}), 'email_change_new')).toBeNull();
+		}
+	});
+
+	it('refuses a new address outside the allowed email domains', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setRegistrationConfig({allowed_email_domains: ['example.com']});
+		const outside = `integration-outside-${Date.now()}@elsewhere.test`;
+		const {ticket, originalProof} = await verifyOriginal(account);
+		const {json} = await createBuilder<{errors: Array<{path: string; code: string}>}>(harness, account.token)
+			.post('/users/@me/email-change/request-new')
+			.body({ticket, new_email: outside, original_proof: originalProof, password: account.password})
+			.expect(400, 'INVALID_FORM_BODY')
+			.executeWithResponse();
+		expect(json.errors).toEqual([
+			expect.objectContaining({path: 'new_email', code: ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED}),
+		]);
+		expect(findLastTestEmail(await listTestEmails(harness, {recipient: outside}), 'email_change_new')).toBeNull();
+	});
+
+	it('refuses to claim an account with an address outside the allowed email domains', async () => {
+		await getInstanceConfigRepository().setRegistrationConfig({allowed_email_domains: ['example.com']});
+		const holder = await createBuilderWithoutAuth<{token: string}>(harness)
+			.post('/auth/register')
+			.body({username: 'outsideclaimer', consent: true, date_of_birth: '1995-05-05'})
+			.execute();
+		const {json} = await createBuilder<{errors: Array<{path: string; code: string}>}>(harness, holder.token)
+			.post('/users/@me/claim')
+			.body({email: `integration-claim-${Date.now()}@elsewhere.test`})
+			.expect(400, 'INVALID_FORM_BODY')
+			.executeWithResponse();
+		expect(json.errors).toEqual([
+			expect.objectContaining({path: 'email', code: ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED}),
+		]);
+	});
+
 	it('applies email changes for users who have ever purchased and syncs their Stripe customer', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
@@ -304,7 +376,9 @@ describe('Email change flow', () => {
 			.body({has_ever_purchased: true, stripe_customer_id: 'cus_email_change_sync'})
 			.expect(200)
 			.execute();
-		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+		const worker = new RecordingWorkerService();
+		setInjectedWorkerService(worker);
+		resetApiServicesForTesting();
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
 		if (startResp.require_original) {
@@ -344,47 +418,7 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.has_ever_purchased).toBe(true);
-		expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: account.userId});
-	});
-	it('applies ordinary claimed email changes', async () => {
-		const account = await createTestAccount(harness);
-		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
-		const startResp = await startEmailChange(harness, account, account.password);
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const originalEmail = findLastTestEmail(emails, 'email_change_original');
-		expect(startResp.require_original).toBe(true);
-		expect(originalEmail?.metadata?.code).toBeDefined();
-		const originalProof = await verifyOriginalEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			originalEmail!.metadata!.code!,
-			account.password,
-		);
-		const newEmail = `integration-plain-${Date.now()}@example.com`;
-		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const token = await verifyNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const updated = await createBuilder<UserPrivateResponse>(harness, account.token)
-			.patch('/users/@me')
-			.body({
-				email_token: token,
-				password: account.password,
-			})
-			.expect(200)
-			.execute();
-		expect(updated.email).toBe(newEmail);
-		expect(updated.verified).toBe(true);
-		expect(addJob).not.toHaveBeenCalledWith('syncStripeCustomerEmail', expect.anything());
+		expect(worker.byTask('syncStripeCustomerEmail').map((job) => job.payload)).toContainEqual({userId: account.userId});
 	});
 	it('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
 		const account = await createTestAccount(harness);
@@ -448,7 +482,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(noSudoResp.has_mfa).toBe(true);
-		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
+		expect(noSudoResp.methods).toEqual({
+			totp: true,
+			webauthn: false,
+			backup_codes: true,
+			email_code: false,
+			password: false,
+			sso_reauth: false,
+		});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
 			has_mfa?: boolean;
@@ -463,7 +504,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(passwordOnlyResp.has_mfa).toBe(true);
-		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
+		expect(passwordOnlyResp.methods).toEqual({
+			totp: true,
+			webauthn: false,
+			backup_codes: true,
+			email_code: false,
+			password: false,
+			sso_reauth: false,
+		});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.patch('/users/@me')
 			.body({
@@ -535,7 +583,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(noSudoResp.has_mfa).toBe(true);
-		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
+		expect(noSudoResp.methods).toEqual({
+			totp: true,
+			webauthn: false,
+			backup_codes: true,
+			email_code: false,
+			password: false,
+			sso_reauth: false,
+		});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
 			has_mfa?: boolean;
@@ -550,7 +605,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(passwordOnlyResp.has_mfa).toBe(true);
-		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
+		expect(passwordOnlyResp.methods).toEqual({
+			totp: true,
+			webauthn: false,
+			backup_codes: true,
+			email_code: false,
+			password: false,
+			sso_reauth: false,
+		});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
 			.body({
@@ -562,52 +624,6 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.mfa_enabled).toBe(true);
-	});
-	it('dedicated apply endpoint succeeds with password for non-MFA users', async () => {
-		const account = await createTestAccount(harness);
-		const startResp = await startEmailChange(harness, account, account.password);
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const originalEmail = findLastTestEmail(emails, 'email_change_original');
-		const originalProof = await verifyOriginalEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			originalEmail!.metadata!.code!,
-			account.password,
-		);
-		const newEmail = `integration-apply-nomfa-${Date.now()}@example.com`;
-		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		const emailToken = await verifyNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const noSudoResp = await createBuilder<{
-			code: string;
-			has_mfa?: boolean;
-			methods?: {
-				totp?: boolean;
-				webauthn?: boolean;
-				backup_codes?: boolean;
-			};
-		}>(harness, account.token)
-			.post('/users/@me/email-change/apply')
-			.body({email_token: emailToken})
-			.expect(403, 'SUDO_MODE_REQUIRED')
-			.execute();
-		expect(noSudoResp.has_mfa).toBe(false);
-		expect(noSudoResp.methods).toEqual({totp: false, webauthn: false, backup_codes: false});
-		const updated = await createBuilder<UserPrivateResponse>(harness, account.token)
-			.post('/users/@me/email-change/apply')
-			.body({email_token: emailToken, password: account.password})
-			.expect(200)
-			.execute();
-		expect(updated.email).toBe(newEmail);
 	});
 	it('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
 		const account = await createTestAccount(harness);
@@ -671,7 +687,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(discovery.has_mfa).toBe(true);
-		expect(discovery.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
+		expect(discovery.methods).toEqual({
+			totp: true,
+			webauthn: false,
+			backup_codes: true,
+			email_code: false,
+			password: false,
+			sso_reauth: false,
+		});
 		const applied = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
 			.body({

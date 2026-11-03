@@ -1,0 +1,4 @@
+services:
+  livekit:
+    ports:
+      - "${FLUXER_VOICE_HTTP_BIND:-127.0.0.1}:${FLUXER_VOICE_HTTP_PORT:-7880}:7880/tcp"

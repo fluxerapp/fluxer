@@ -25,7 +25,7 @@ describe('AdminRepository IP ban canonicalization', () => {
 	});
 
 	async function storedIps(): Promise<Array<string>> {
-		return Array.from(await repository.loadAllBannedIps()).sort();
+		return (await repository.loadAllBannedIpEntries()).map((entry) => entry.ip).sort();
 	}
 
 	async function insertLegacyBannedIp(ip: string): Promise<void> {
@@ -36,6 +36,7 @@ describe('AdminRepository IP ban canonicalization', () => {
 				reason: 'legacy_test_row',
 				expires_at: null,
 				created_at: new Date(),
+				decision_id: null,
 			}),
 		);
 	}

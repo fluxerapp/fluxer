@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IS_DEV} from '@app/features/platform/types/Env';
+import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import {makeAutoObservable} from 'mobx';
 
 const IDLE_DURATION_MS = 1000 * (IS_DEV ? 10 : 60 * 10);
@@ -12,6 +13,7 @@ interface DesktopIdleApi {
 }
 
 function getDesktopIdleApi(): Required<DesktopIdleApi> | null {
+	if (!isElectron()) return null;
 	const electronApi = (
 		window as {
 			electron?: DesktopIdleApi | null;
@@ -33,6 +35,7 @@ class Idle {
 	private afkThresholdMs = IDLE_DURATION_MS;
 	private lastLocalActivityTime = Date.now();
 	private lastSystemActivityTime = 0;
+	private lastNonZeroSystemIdleTime = Date.now();
 	private checkInterval: NodeJS.Timeout | null = null;
 	private systemIdleCheckInFlight = false;
 	private lastSystemIdleFailureAt = 0;
@@ -108,10 +111,14 @@ class Idle {
 		this.systemIdleCheckInFlight = true;
 		try {
 			const idleTimeMs = normalizeIdleTimeMs(await desktopIdleApi.getSystemIdleTimeMs());
+			const now = Date.now();
 			if (idleTimeMs === null) {
-				this.lastSystemIdleFailureAt = Date.now();
-			} else {
-				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, Date.now() - idleTimeMs);
+				this.lastSystemIdleFailureAt = now;
+			} else if (idleTimeMs > 0) {
+				this.lastNonZeroSystemIdleTime = now;
+				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, now - idleTimeMs);
+			} else if (now - this.lastNonZeroSystemIdleTime < Math.min(IDLE_DURATION_MS, this.afkThresholdMs)) {
+				this.lastSystemActivityTime = now;
 			}
 		} catch {
 			this.lastSystemIdleFailureAt = Date.now();

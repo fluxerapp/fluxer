@@ -1,24 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {confirmEmailOwnership} from '@app/api/auth/EmailOwnership';
 import {createEmailVerificationToken} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import type {VerifyEmailRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
 
-function assertNonBotUser(user: User): void {
-	if (user.isBot) {
-		throw new BotUserAuthEndpointAccessDeniedError();
-	}
-}
-
 export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Promise<boolean> {
-	const {users, gateway} = ctx.services;
+	const {users} = ctx.services;
 	const tokenData = await users.getEmailVerificationToken(data.token);
 	if (!tokenData) {
 		return false;
@@ -27,7 +21,7 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 	if (!user) {
 		return false;
 	}
-	assertNonBotUser(user);
+	AuthUtility.assertNonBotUser(ctx, user);
 	if (
 		user.flags & UserFlags.DELETED ||
 		!user.email ||
@@ -35,19 +29,14 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 	) {
 		return false;
 	}
-	const updatedUser = await users.patchUpsert(user.id, {email_verified: true, email_bounced: false}, user.toRow());
+	await confirmEmailOwnership(ctx, user);
 	await users.deleteEmailVerificationToken(data.token);
-	await gateway.dispatchPresence({
-		userId: user.id,
-		event: 'USER_UPDATE',
-		data: mapUserToPrivateResponse(updatedUser),
-	});
 	return true;
 }
 
 export async function resendVerificationEmail(ctx: ApiContext, user: User): Promise<void> {
-	const {users, email, rateLimit} = ctx.services;
-	assertNonBotUser(user);
+	const {rateLimit} = ctx.services;
+	AuthUtility.assertNonBotUser(ctx, user);
 	if (user.emailVerified) {
 		return;
 	}
@@ -57,17 +46,19 @@ export async function resendVerificationEmail(ctx: ApiContext, user: User): Prom
 		windowMs: ms('15 minutes'),
 	});
 	if (!limit.allowed) {
-		throw new RateLimitError({
-			retryAfter: limit.retryAfter || 0,
-			limit: limit.limit,
-			resetTime: limit.resetTime,
-		});
+		throw createRateLimitError(limit);
 	}
-	const emailVerifyToken = createEmailVerificationToken(await RandomUtils.randomString(64));
+	await sendVerificationEmail(ctx, {user, email: user.email!});
+}
+
+export async function sendVerificationEmail(ctx: ApiContext, params: {user: User; email: string}): Promise<void> {
+	const {users, email: emailService} = ctx.services;
+	const {user, email} = params;
+	const token = createEmailVerificationToken(await RandomUtils.randomString(64));
 	await users.createEmailVerificationToken({
-		token_: emailVerifyToken,
+		token_: token,
 		user_id: user.id,
-		email: user.email!,
+		email,
 	});
-	await email.sendEmailVerification(user.email!, user.username, emailVerifyToken, user.locale);
+	await emailService.send('email_verification', email, {verificationToken: token}, user.locale);
 }

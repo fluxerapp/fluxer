@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
@@ -27,6 +27,7 @@ export interface Account {
 	lastActive: number;
 	instance?: RuntimeConfigSnapshot;
 	isValid: boolean;
+	switcherPosition?: number;
 }
 
 interface AuthSessionMachineContext {
@@ -52,6 +53,7 @@ export type AuthSessionMachineEvent =
 	| {type: 'account.markInvalid'; accountKey: string}
 	| {type: 'account.remove'; accountKey: string}
 	| {type: 'account.userDataUpdated'; accountKey: string; userData: UserData}
+	| {type: 'accounts.reordered'; positions: ReadonlyMap<string, number>}
 	| {type: 'token.set'; token: string | null}
 	| {type: 'userId.set'; userId: string | null}
 	| {type: 'connection.start'}
@@ -84,7 +86,8 @@ function accountMapFromAccounts(accounts: ReadonlyArray<Account>): Map<string, A
 
 function upsertAccount(accounts: Map<string, Account>, account: Account): Map<string, Account> {
 	const nextAccounts = cloneAccounts(accounts);
-	nextAccounts.set(account.storageKey, account);
+	const switcherPosition = account.switcherPosition ?? accounts.get(account.storageKey)?.switcherPosition;
+	nextAccounts.set(account.storageKey, switcherPosition === undefined ? account : {...account, switcherPosition});
 	return nextAccounts;
 }
 
@@ -196,6 +199,17 @@ const authSessionStateMachine = setup({
 				})),
 			};
 		}),
+		reorderAccounts: assign(({context, event}) => {
+			if (event.type !== 'accounts.reordered') return {};
+			const nextAccounts = cloneAccounts(context.accounts);
+			for (const [accountKey, switcherPosition] of event.positions) {
+				const account = nextAccounts.get(accountKey);
+				if (account !== undefined) {
+					nextAccounts.set(accountKey, {...account, switcherPosition});
+				}
+			}
+			return {accounts: nextAccounts};
+		}),
 		setToken: assign(({event}) => {
 			if (event.type !== 'token.set') return {};
 			return {token: event.token};
@@ -223,6 +237,7 @@ const authSessionStateMachine = setup({
 		'account.markInvalid': {actions: 'markInvalid'},
 		'account.remove': {actions: 'removeAccount'},
 		'account.userDataUpdated': {actions: 'updateAccountUserData'},
+		'accounts.reordered': {actions: 'reorderAccounts'},
 		'token.set': {actions: 'setToken'},
 		'userId.set': {actions: 'setUserId'},
 		reset: {target: '.idle', actions: 'reset'},

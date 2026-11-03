@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ForwardResultType} from '@app/features/app/components/dialogs/shared/ForwardDestinationQuery';
+import {escapeRegex} from '@app/features/messaging/utils/RegexUtils';
 import {
 	buildChannelSearchTerms,
 	consumeBestSearchTerm,
 	createSearchTerm,
-	escapeSearchPattern,
 	fuzzySearch,
 	scoreSearchTerm,
 	stripCombiningMarks,
@@ -179,7 +179,7 @@ export function searchUsers(
 	confusables: ReadonlyMap<string, string>,
 	limit: number,
 ): Array<ForwardSearchResult> {
-	const escapedQuery = escapeSearchPattern(query);
+	const escapedQuery = escapeRegex(query);
 	const prefixQuery = new RegExp(`^${escapedQuery}`, 'i');
 	const substringPattern = new RegExp(escapedQuery, 'i');
 	const loweredText = query.toLocaleLowerCase();

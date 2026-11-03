@@ -15,9 +15,9 @@ import * as React from 'react';
 import {useCallback, useContext, useEffect, useMemo, useSyncExternalStore} from 'react';
 
 const RouterContext = React.createContext<Router | null>(null);
-export const RouterProvider: React.FC<RouterProviderProps> = ({router, children, linkContainerRef}) => {
+export const RouterProvider: React.FC<RouterProviderProps> = ({router, children}) => {
 	useEffect(() => {
-		const container = linkContainerRef?.current ?? document.body;
+		const container = document.body;
 		const onClick = (event: MouseEvent) => {
 			if (event.defaultPrevented) return;
 			if (event.button !== 0) return;
@@ -44,7 +44,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({router, children,
 		};
 		container.addEventListener('click', onClick);
 		return () => container.removeEventListener('click', onClick);
-	}, [router, linkContainerRef]);
+	}, [router]);
 	useEffect(
 		() => () => {
 			router.destroy();
@@ -157,11 +157,12 @@ export const Outlet: React.FC = () => {
 			url: location,
 		};
 		const isLeaf = index === matches.length - 1;
-		const child = isLeaf
-			? match.route.component
-				? React.createElement(match.route.component, props)
-				: null
-			: renderAt(index + 1);
+		let child: React.ReactNode = null;
+		if (!isLeaf) {
+			child = renderAt(index + 1);
+		} else if (match.route.component) {
+			child = React.createElement(match.route.component, props);
+		}
 		const Layout = match.route.layout;
 		if (Layout) {
 			return (

@@ -3,7 +3,6 @@
 import {GuildListActionButton} from '@app/features/app/components/layout/sidebar_nav/GuildListActionButton';
 import styles from '@app/features/app/components/layout/sidebar_nav/GuildListActionButton.module.css';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -16,8 +15,8 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const DOWNLOAD_DESCRIPTOR = msg({
-	message: 'Download {productName}',
-	comment: 'Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.',
+	message: 'Download desktop app',
+	comment: 'Short label in the sidebar navigation download button. Opens the desktop app download page.',
 });
 export const DownloadButton = observer(() => {
 	const {i18n} = useLingui();
@@ -52,8 +51,8 @@ export const DownloadButton = observer(() => {
 	};
 	return (
 		<GuildListActionButton
-			label={i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
-			tooltip={() => i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+			label={i18n._(DOWNLOAD_DESCRIPTOR)}
+			tooltip={() => i18n._(DOWNLOAD_DESCRIPTOR)}
 			icon={
 				<DownloadSimpleIcon
 					weight="bold"

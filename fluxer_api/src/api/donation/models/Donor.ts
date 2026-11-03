@@ -38,26 +38,6 @@ export class Donor {
 		this.version = row.version;
 	}
 
-	toRow(): DonorRow {
-		return {
-			email: this.email,
-			stripe_customer_id: this.stripeCustomerId,
-			business_name: this.businessName,
-			tax_id: this.taxId,
-			tax_id_type: this.taxIdType,
-			stripe_subscription_id: this.stripeSubscriptionId,
-			subscription_amount_cents: this.subscriptionAmountCents,
-			subscription_currency: this.subscriptionCurrency,
-			subscription_interval: this.subscriptionInterval,
-			subscription_current_period_end: this.subscriptionCurrentPeriodEnd,
-			subscription_cancel_at: this.subscriptionCancelAt,
-			subscription_status: this.subscriptionStatus,
-			created_at: this.createdAt,
-			updated_at: this.updatedAt,
-			version: this.version,
-		};
-	}
-
 	hasActiveSubscription(): boolean {
 		if (!this.stripeSubscriptionId || !this.subscriptionCurrentPeriodEnd) {
 			return false;

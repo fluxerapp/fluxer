@@ -23,7 +23,7 @@ export function SystemDmAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Queue a worker job that delivers the same content to every listed user, or to every user when all_users is set, as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.',
+				'Queue a worker job that delivers the same content to every listed user, or to every user when all_users is set, as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Returns 400 DIRECT_MESSAGES_DISABLED when the instance has direct messages turned off, because nobody would see the message. Requires SYSTEM_DM_SEND permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

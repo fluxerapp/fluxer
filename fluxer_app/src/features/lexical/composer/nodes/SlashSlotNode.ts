@@ -414,8 +414,7 @@ export class SlashSlotNode extends ElementNode {
 	setResolvedWire(resolvedWire: string | null, resolvedDisplay?: string | null): this {
 		const writable = this.getWritable();
 		writable.__resolvedWire = resolvedWire;
-		writable.__resolvedDisplay =
-			resolvedWire == null ? null : resolvedDisplay == null ? this.getTextContent() : resolvedDisplay;
+		writable.__resolvedDisplay = resolvedWire == null ? null : (resolvedDisplay ?? this.getTextContent());
 		if (resolvedWire != null) {
 			writable.__validity = 'valid';
 			writable.__validationError = null;

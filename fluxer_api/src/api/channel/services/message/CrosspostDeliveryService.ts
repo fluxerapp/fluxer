@@ -7,10 +7,10 @@ import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {CrosspostedMessageKey} from '@app/api/channel/repositories/CrosspostedMessageRepository';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
-	collectEmbedContentHashes,
 	type EmbedMediaField,
 	forEachEmbedMedia,
 	parseAttachmentUrl,
+	scanMessageForModeration,
 } from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import {isCrosspostedMessage, isCrosspostSourcePurged} from '@app/api/channel/services/message/CrosspostPropagation';
 import {MessageContentService} from '@app/api/channel/services/message/MessageContentService';
@@ -39,7 +39,7 @@ import type {
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
-import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
+import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -50,6 +50,7 @@ import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {compareText} from '@app/api/utils/StringComparison';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {
 	CROSSPOST_PENDING_RECLAIM_AFTER_MS,
@@ -151,7 +152,7 @@ function toStableValue(value: unknown): unknown {
 	if (value instanceof Map) {
 		return [...value.entries()]
 			.map(([key, entry]) => [String(key), toStableValue(entry)] as const)
-			.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+			.sort(([a], [b]) => compareText(a, b));
 	}
 	if (Array.isArray(value)) return value.map(toStableValue);
 	if (typeof value === 'object') {
@@ -251,7 +252,7 @@ export class CrosspostDeliveryService {
 		return {kind: 'ready', context};
 	}
 
-	isSourceGuildActive(guild: GuildResponse): boolean {
+	private isSourceGuildActive(guild: GuildResponse): boolean {
 		return (
 			!isGuildUnavailable(guild) &&
 			!isOperationDisabled(guild, GuildOperations.SEND_MESSAGE) &&
@@ -446,7 +447,7 @@ export class CrosspostDeliveryService {
 	private async announceCopy(channel: Channel, copy: Message): Promise<void> {
 		await dispatchMessageCreateBroadcast({gatewayService: this.deps.gatewayService, channel, message: copy});
 		if (channel.indexedAt != null) {
-			void this.deps.searchService.indexMessage(copy, false, {includeDefault: true});
+			void this.deps.searchService.indexMessage(copy, false);
 		}
 	}
 
@@ -572,7 +573,7 @@ export class CrosspostDeliveryService {
 			message: result.updated,
 		});
 		if (target.channel.indexedAt != null) {
-			void this.deps.searchService.updateMessageIndex(result.updated, {includeDefault: true});
+			void this.deps.searchService.updateMessageIndex(result.updated);
 		}
 	}
 
@@ -608,7 +609,7 @@ export class CrosspostDeliveryService {
 		if (!channel) return;
 		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updated});
 		if (channel.indexedAt != null) {
-			void this.deps.searchService.updateMessageIndex(updated, {includeDefault: true});
+			void this.deps.searchService.updateMessageIndex(updated);
 		}
 	}
 
@@ -671,7 +672,7 @@ export class CrosspostDeliveryService {
 					message: outcome.updated,
 				});
 				if (channel.indexedAt != null) {
-					void this.deps.searchService.updateMessageIndex(outcome.updated, {includeDefault: true});
+					void this.deps.searchService.updateMessageIndex(outcome.updated);
 				}
 			}
 		}
@@ -789,27 +790,7 @@ export class CrosspostDeliveryService {
 			messageId: message.id,
 		};
 		try {
-			const textContext: ModerationContext = {...context, surface: 'message_content'};
-			contentModerationService.scanText(message.content, textContext);
-			for (const embed of message.embeds) {
-				if (embed.type !== 'rich') continue;
-				contentModerationService.scanText(embed.title, textContext);
-				contentModerationService.scanText(embed.description, textContext);
-				for (const field of embed.fields) {
-					contentModerationService.scanText(field.name, textContext);
-					contentModerationService.scanText(field.value, textContext);
-				}
-				contentModerationService.scanText(embed.footer?.text, textContext);
-				contentModerationService.scanText(embed.author?.name, textContext);
-			}
-			for (const attachment of message.attachments) {
-				if (attachment.contentHash) {
-					contentModerationService.scanSha256(attachment.contentHash, {...context, surface: 'message_attachment'});
-				}
-			}
-			for (const contentHash of collectEmbedContentHashes(message)) {
-				contentModerationService.scanSha256(contentHash, {...context, surface: 'message_attachment'});
-			}
+			scanMessageForModeration(message, context);
 		} catch (error) {
 			if (error instanceof ContentBlockedError) return true;
 			throw error;

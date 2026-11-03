@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import {cleanupChannelLocalState} from '@app/features/channel/events/ChannelDelete';
 import type {Channel, ChannelWire} from '@app/features/channel/models/Channel';
@@ -286,4 +287,8 @@ function newestId(a: string | null | undefined, b: string | null | undefined): s
 	return SnowflakeUtils.compare(a, b) >= 0 ? a : b;
 }
 
-export default new ChannelThreads();
+const channelThreads = new ChannelThreads();
+
+ResettableStates.register(channelThreads, () => channelThreads.handleGatewayReady([]));
+
+export default channelThreads;

@@ -7,6 +7,7 @@ export const NagbarType = {
 	CONNECTION: 'connection',
 	CORRUPTED_INSTALLATION: 'corrupted-installation',
 	SCHEDULED_MAINTENANCE: 'scheduled-maintenance',
+	INSTANCE_NOTICE: 'instance-notice',
 	UNCLAIMED_ACCOUNT: 'unclaimed-account',
 	EMAIL_VERIFICATION: 'email-verification',
 	ACCOUNT_LIMITED: 'account-limited',
@@ -26,6 +27,7 @@ export const NagbarType = {
 	STREAMER_MODE: 'streamer-mode',
 	DOMAIN_MOVED: 'domain-moved',
 	WINDOWS_FONT: 'windows-font',
+	CUSTOM_CSS_OFF: 'custom-css-off',
 } as const;
 
 export type NagbarType = ValueOf<typeof NagbarType>;
@@ -46,6 +48,7 @@ export interface NagbarConditions {
 	canShowConnection: boolean;
 	canShowCorruptedInstallation: boolean;
 	canShowScheduledMaintenance: boolean;
+	canShowInstanceNotice: boolean;
 	userIsUnclaimed: boolean;
 	userNeedsVerification: boolean;
 	canShowAccountLimited: boolean;
@@ -65,4 +68,5 @@ export interface NagbarConditions {
 	canShowStreamerMode: boolean;
 	canShowDomainMoved: boolean;
 	canShowWindowsFont: boolean;
+	canShowCustomCssOff: boolean;
 }

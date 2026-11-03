@@ -10,7 +10,7 @@ const COMMUNITY_AT_CAPACITY_DESCRIPTOR = msg({
 	comment: 'Short label in the guild at capacity modal. Keep it concise.',
 });
 const THIS_COMMUNITY_HAS_REACHED_ITS_MAXIMUM_MEMBER_LIMIT_DESCRIPTOR = msg({
-	message: 'This community has reached its maximum member limit and is not accepting new members at this time.',
+	message: "This community is at its member limit and isn't accepting new members right now.",
 	comment: 'Description text in the guild at capacity modal.',
 });
 export const GuildAtCapacityModal = observer(() => {

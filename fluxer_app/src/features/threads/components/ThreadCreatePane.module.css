@@ -36,7 +36,7 @@
 }
 
 .sourcePreview {
-	border-left: 0.25rem solid var(--background-modifier-accent);
+	border-inline-start: 0.25rem solid var(--background-modifier-accent);
 	border-radius: 0.25rem;
 	padding: 0.25rem 0;
 }

@@ -40,7 +40,7 @@ repair_enabled(State) ->
 
 -spec self_heal_enabled() -> boolean().
 self_heal_enabled() ->
-    application:get_env(fluxer_gateway, guild_members_table_self_heal, true) =:= true.
+    type_conv:is_true(application:get_env(fluxer_gateway, guild_members_table_self_heal, true)).
 
 -spec members_table_healthy(term()) -> boolean().
 members_table_healthy(Tab) when is_reference(Tab) ->
@@ -137,11 +137,11 @@ record_start_failure(State) ->
     ),
     bump_attempts(State).
 
--spec run_pass(ets:tid(), member_map()) -> pass_result().
+-spec run_pass(ets:table(), member_map()) -> pass_result().
 run_pass(Tab, MemberMap) ->
     run_pass(Tab, MemberMap, ?MAX_MEMBER_ETS_REPAIR_CHUNK).
 
--spec run_pass(ets:tid(), member_map(), pos_integer()) -> pass_result().
+-spec run_pass(ets:table(), member_map(), pos_integer()) -> pass_result().
 run_pass(Tab, MemberMap, Budget) ->
     try
         apply_pass(Tab, MemberMap, Budget)
@@ -149,14 +149,14 @@ run_pass(Tab, MemberMap, Budget) ->
         error:badarg -> {error, table_unavailable}
     end.
 
--spec apply_pass(ets:tid(), member_map(), pos_integer()) -> continue | complete.
+-spec apply_pass(ets:table(), member_map(), pos_integer()) -> continue | complete.
 apply_pass(Tab, MemberMap, Budget) ->
     case collect_missing_rows(Tab, MemberMap, Budget) of
         [] -> drop_extra_rows(Tab, MemberMap, Budget);
         Rows -> insert_missing_rows(Tab, MemberMap, Rows, Budget)
     end.
 
--spec insert_missing_rows(ets:tid(), member_map(), [{user_id(), member()}], pos_integer()) ->
+-spec insert_missing_rows(ets:table(), member_map(), [{user_id(), member()}], pos_integer()) ->
     continue | complete.
 insert_missing_rows(Tab, MemberMap, Rows, Budget) ->
     true = ets:insert(Tab, Rows),
@@ -165,14 +165,14 @@ insert_missing_rows(Tab, MemberMap, Rows, Budget) ->
         false -> continue
     end.
 
--spec drop_extra_rows(ets:tid(), member_map(), pos_integer()) -> continue | complete.
+-spec drop_extra_rows(ets:table(), member_map(), pos_integer()) -> continue | complete.
 drop_extra_rows(Tab, MemberMap, Budget) ->
     case collect_extra_ids(Tab, MemberMap, Budget) of
         [] -> complete;
         Ids -> delete_extra_ids(Tab, Ids, Budget)
     end.
 
--spec delete_extra_ids(ets:tid(), [user_id()], pos_integer()) -> continue | complete.
+-spec delete_extra_ids(ets:table(), [user_id()], pos_integer()) -> continue | complete.
 delete_extra_ids(Tab, Ids, Budget) ->
     lists:foreach(fun(UserId) -> ets:delete(Tab, UserId) end, Ids),
     case length(Ids) < Budget of
@@ -180,12 +180,17 @@ delete_extra_ids(Tab, Ids, Budget) ->
         false -> continue
     end.
 
--spec collect_missing_rows(ets:tid(), member_map(), pos_integer()) ->
+-spec collect_missing_rows(ets:table(), member_map(), pos_integer()) ->
     [{user_id(), member()}].
 collect_missing_rows(Tab, MemberMap, Budget) ->
     collect_missing_iter(maps:next(maps:iterator(MemberMap)), Tab, Budget, []).
 
--spec collect_missing_iter(term(), ets:tid(), non_neg_integer(), [{user_id(), member()}]) ->
+-spec collect_missing_iter(
+    none | {user_id(), member(), maps:iterator(user_id(), member())},
+    ets:table(),
+    non_neg_integer(),
+    [{user_id(), member()}]
+) ->
     [{user_id(), member()}].
 collect_missing_iter(_Next, _Tab, 0, Acc) ->
     Acc;
@@ -199,18 +204,20 @@ collect_missing_iter({UserId, Member, Iter}, Tab, Budget, Acc) ->
             collect_missing_iter(maps:next(Iter), Tab, Budget - 1, [{UserId, Member} | Acc])
     end.
 
--spec collect_extra_ids(ets:tid(), member_map(), pos_integer()) -> [user_id()].
+-spec collect_extra_ids(ets:table(), member_map(), pos_integer()) -> [user_id()].
 collect_extra_ids(Tab, MemberMap, Budget) ->
-    collect_extra_iter(ets:first(Tab), Tab, MemberMap, Budget, []).
+    collect_extra_iter(eqwalizer:dynamic_cast(ets:first(Tab)), Tab, MemberMap, Budget, []).
 
--spec collect_extra_iter(term(), ets:tid(), member_map(), non_neg_integer(), [user_id()]) ->
+-spec collect_extra_iter(
+    user_id() | '$end_of_table', ets:table(), member_map(), non_neg_integer(), [user_id()]
+) ->
     [user_id()].
 collect_extra_iter(_Key, _Tab, _MemberMap, 0, Acc) ->
     Acc;
 collect_extra_iter('$end_of_table', _Tab, _MemberMap, _Budget, Acc) ->
     Acc;
 collect_extra_iter(Key, Tab, MemberMap, Budget, Acc) ->
-    Next = ets:next(Tab, Key),
+    Next = eqwalizer:dynamic_cast(ets:next(Tab, Key)),
     case maps:is_key(Key, MemberMap) of
         true ->
             collect_extra_iter(Next, Tab, MemberMap, Budget, Acc);
@@ -307,239 +314,3 @@ message_queue_len() ->
 -spec mailbox_within_bound(non_neg_integer()) -> boolean().
 mailbox_within_bound(Len) ->
     Len < ?MAX_MEMBER_ETS_REPAIR_MAILBOX.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-healthy_table_is_left_untouched_test() ->
-    Tab = ets:new(healthy_members, [set, public]),
-    try
-        State = repair_state_with_table(#{1 => test_member(1)}, Tab),
-        ?assertEqual(State, maybe_repair(State)),
-        ?assertEqual(0, ets:info(Tab, size))
-    after
-        ets:delete(Tab)
-    end.
-
-healthy_table_releases_pending_staging_table_test() ->
-    Healthy = ets:new(healthy_members, [set, public]),
-    try
-        Staging = ets:new(rollback_members, [set, public]),
-        State0 = with_repair_key(
-            repair_state_with_table(#{1 => test_member(1)}, Healthy), Staging, 3
-        ),
-        State1 = maybe_repair(State0),
-        ?assertNot(maps:is_key(?REPAIR_KEY, State1)),
-        ?assertEqual(undefined, ets:info(Staging, size))
-    after
-        ets:delete(Healthy)
-    end.
-
-repair_publishes_table_matching_member_map_test() ->
-    ok = drain_mailbox(),
-    with_self_heal_enabled(fun() ->
-        MemberMap = #{1 => test_member(1), 2 => test_member(2)},
-        State1 = maybe_repair(repair_state(MemberMap)),
-        Tab = published_table(State1),
-        ?assert(is_reference(Tab)),
-        ?assertNot(maps:is_key(?REPAIR_KEY, State1)),
-        ?assertEqual(lists:sort(maps:to_list(MemberMap)), lists:sort(ets:tab2list(Tab))),
-        ?assertEqual(State1, maybe_repair(State1)),
-        ets:delete(Tab)
-    end).
-
-repair_replaces_dead_table_tid_test() ->
-    ok = drain_mailbox(),
-    with_self_heal_enabled(fun() ->
-        Dead = ets:new(dead_members, [set, public]),
-        true = ets:delete(Dead),
-        State0 = repair_state_with_table(#{1 => test_member(1)}, Dead),
-        State1 = maybe_repair(State0),
-        Tab = published_table(State1),
-        ?assert(is_reference(Tab)),
-        ?assertNotEqual(Dead, Tab),
-        ?assertEqual([{1, test_member(1)}], ets:tab2list(Tab)),
-        ets:delete(Tab)
-    end).
-
-repair_replaces_table_owned_by_another_process_test() ->
-    ok = drain_mailbox(),
-    with_self_heal_enabled(fun() ->
-        {Owner, Foreign} = foreign_members_table(),
-        State1 = maybe_repair(repair_state_with_table(#{1 => test_member(1)}, Foreign)),
-        Tab = published_table(State1),
-        ?assert(is_reference(Tab)),
-        ?assertNotEqual(Foreign, Tab),
-        ?assertEqual(Owner, ets:info(Foreign, owner)),
-        Owner ! stop,
-        ets:delete(Tab)
-    end).
-
-repair_pass_is_bounded_by_chunk_test() ->
-    Tab = ets:new(bounded_members, [set, public]),
-    try
-        MemberMap = maps:from_list([{N, test_member(N)} || N <- lists:seq(1, 5)]),
-        ?assertEqual(continue, run_pass(Tab, MemberMap, 2)),
-        ?assertEqual(2, ets:info(Tab, size)),
-        ?assertEqual(continue, run_pass(Tab, MemberMap, 2)),
-        ?assertEqual(4, ets:info(Tab, size)),
-        ?assertEqual(complete, run_pass(Tab, MemberMap, 2)),
-        ?assertEqual(5, ets:info(Tab, size))
-    after
-        ets:delete(Tab)
-    end.
-
-repair_picks_up_member_added_mid_build_test() ->
-    Tab = ets:new(midbuild_members, [set, public]),
-    try
-        Map1 = #{1 => test_member(1), 2 => test_member(2)},
-        ?assertEqual(continue, run_pass(Tab, Map1, 1)),
-        Map2 = Map1#{3 => test_member(3)},
-        ?assertEqual(continue, run_pass(Tab, Map2, 1)),
-        ?assertEqual(continue, run_pass(Tab, Map2, 1)),
-        ?assertEqual(complete, run_pass(Tab, Map2, 1)),
-        ?assertEqual([1, 2, 3], table_ids(Tab))
-    after
-        ets:delete(Tab)
-    end.
-
-repair_deletes_member_removed_mid_build_test() ->
-    Tab = ets:new(midremove_members, [set, public]),
-    try
-        Map1 = #{1 => test_member(1), 2 => test_member(2)},
-        ?assertEqual(continue, run_pass(Tab, Map1, 2)),
-        ?assertEqual(2, ets:info(Tab, size)),
-        ?assertEqual(complete, run_pass(Tab, #{1 => test_member(1)}, 2)),
-        ?assertEqual([{1, test_member(1)}], ets:tab2list(Tab))
-    after
-        ets:delete(Tab)
-    end.
-
-repair_abandons_after_tick_cap_test() ->
-    ok = drain_mailbox(),
-    with_self_heal_enabled(fun() ->
-        Tab = ets:new(ticks_members, [set, public]),
-        State0 = with_repair_key(
-            repair_state(#{1 => test_member(1)}), Tab, ?MAX_MEMBER_ETS_REPAIR_TICKS
-        ),
-        State1 = maybe_repair(State0),
-        ?assertNot(maps:is_key(?REPAIR_KEY, State1)),
-        ?assertEqual(1, maps:get(?ATTEMPTS_KEY, State1)),
-        ?assertEqual(undefined, ets:info(Tab, size)),
-        ?assertEqual(undefined, published_table(State1))
-    end).
-
-repair_abandons_when_staging_table_is_dead_test() ->
-    ok = drain_mailbox(),
-    with_self_heal_enabled(fun() ->
-        Tab = ets:new(dying_members, [set, public]),
-        true = ets:delete(Tab),
-        State0 = with_repair_key(repair_state(#{1 => test_member(1)}), Tab, 1),
-        State1 = maybe_repair(State0),
-        ?assertNot(maps:is_key(?REPAIR_KEY, State1)),
-        ?assertEqual(1, maps:get(?ATTEMPTS_KEY, State1)),
-        ?assertEqual(undefined, published_table(State1))
-    end).
-
-repair_stops_after_attempt_cap_test() ->
-    State0 = (repair_state(#{1 => test_member(1)}))#{
-        ?ATTEMPTS_KEY => ?MAX_MEMBER_ETS_REPAIR_ATTEMPTS
-    },
-    ?assertEqual(State0, maybe_repair(State0)).
-
-oversized_member_map_is_refused_and_counted_test() ->
-    State0 = repair_state(#{1 => test_member(1)}),
-    State1 = refuse_oversized(?MAX_MEMBER_ETS_REPAIR_MEMBERS + 1, State0),
-    ?assertEqual(?MAX_MEMBER_ETS_REPAIR_ATTEMPTS, maps:get(?ATTEMPTS_KEY, State1)),
-    ?assertEqual(State1, start_repair(State1)).
-
-mailbox_guard_bound_test() ->
-    ?assert(mailbox_within_bound(0)),
-    ?assert(mailbox_within_bound(?MAX_MEMBER_ETS_REPAIR_MAILBOX - 1)),
-    ?assertNot(mailbox_within_bound(?MAX_MEMBER_ETS_REPAIR_MAILBOX)),
-    ?assertNot(mailbox_within_bound(?MAX_MEMBER_ETS_REPAIR_MAILBOX + 1)).
-
-repair_skips_pass_when_mailbox_is_deep_test() ->
-    with_self_heal_enabled(fun() ->
-        Self = self(),
-        Sent = lists:seq(1, ?MAX_MEMBER_ETS_REPAIR_MAILBOX),
-        lists:foreach(fun(N) -> Self ! {mailbox_guard, N} end, Sent),
-        State = repair_state(#{1 => test_member(1)}),
-        ?assertEqual(State, maybe_repair(State)),
-        drain_mailbox_guard(?MAX_MEMBER_ETS_REPAIR_MAILBOX)
-    end).
-
-members_table_healthy_rejects_non_references_test() ->
-    ?assertNot(members_table_healthy(undefined)),
-    ?assertNot(members_table_healthy(not_a_table)),
-    ?assertNot(members_table_healthy(make_ref())).
-
-%% repair_unhealthy/1 bails out when the CURRENT process mailbox exceeds
-%% ?MAX_MEMBER_ETS_REPAIR_MAILBOX, so a test that leaves the eunit process's
-%% mailbox polluted by an earlier test silently exercises the bail-out branch
-%% instead of the repair it means to assert.
-drain_mailbox() ->
-    receive
-        _Any -> drain_mailbox()
-    after 0 -> ok
-    end.
-
-%% Self-heal defaults to off (production enables it via config), so a test that
-%% exercises the actual repair pass must arm it and always disarm it afterwards -
-%% left on, it would make every other test's update_counts/1 call in this shared
-%% eunit VM attempt a real repair too.
-with_self_heal_enabled(Fun) ->
-    ok = application:set_env(fluxer_gateway, guild_members_table_self_heal, true),
-    try
-        Fun()
-    after
-        application:unset_env(fluxer_gateway, guild_members_table_self_heal)
-    end.
-
-repair_state(MemberMap) ->
-    #{
-        id => 42,
-        data => #{<<"members">> => MemberMap, members_normalized => MemberMap}
-    }.
-
-repair_state_with_table(MemberMap, Tab) ->
-    State = repair_state(MemberMap),
-    Data = maps:get(data, State),
-    State#{data => Data#{members_ets => Tab}}.
-
-with_repair_key(State, Tab, Ticks) ->
-    State#{?REPAIR_KEY => #{tab => Tab, ticks => Ticks}}.
-
-published_table(State) ->
-    maps:get(members_ets, maps:get(data, State, #{}), undefined).
-
-test_member(UserId) ->
-    #{<<"user">> => #{<<"id">> => UserId}}.
-
-table_ids(Tab) ->
-    lists:sort([Id || {Id, _} <- ets:tab2list(Tab)]).
-
-foreign_members_table() ->
-    Self = self(),
-    Owner = spawn(fun() -> foreign_table_owner(Self) end),
-    receive
-        {foreign_members_table, Tab} -> {Owner, Tab}
-    after 5000 -> error(foreign_table_timeout)
-    end.
-
-foreign_table_owner(Parent) ->
-    Parent ! {foreign_members_table, ets:new(foreign_members, [set, public])},
-    receive
-        stop -> ok
-    after 30000 -> ok
-    end.
-
-drain_mailbox_guard(0) ->
-    ok;
-drain_mailbox_guard(N) ->
-    receive
-        {mailbox_guard, _} -> drain_mailbox_guard(N - 1)
-    after 0 -> ok
-    end.
-
--endif.

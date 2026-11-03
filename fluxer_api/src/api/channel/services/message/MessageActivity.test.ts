@@ -1,18 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createAttachmentID, createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
-import {emitMessageCreated, emitMessageUpdated} from '@app/api/channel/services/message/MessageActivity';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {emitMessageCreated} from '@app/api/channel/services/message/MessageActivity';
+import {createDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
-import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
+import {
+	idleActivityEvents,
+	resetActivityEventsForTests,
+	startActivityEvents,
+} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import type {Channel} from '@app/api/models/Channel';
 import {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
-import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const HASH = '3F'.repeat(32);
+const channelRepository = new ChannelRepository();
+const userRepository = new UserRepository();
 
 function attachment(id: bigint, hash: string | null): MessageAttachment {
 	return {
@@ -63,63 +75,94 @@ function message(attachments: Array<MessageAttachment>, content = ''): Message {
 }
 
 class CapturingPublisher implements ActivityPublisher {
-	readonly payloads: Array<string> = [];
+	private readonly payloads: Array<unknown> = [];
+	private readonly waiters: Array<(event: unknown) => void> = [];
 
 	async publish(_subject: string, payload: string): Promise<void> {
-		this.payloads.push(payload);
+		const event: unknown = JSON.parse(payload);
+		const waiter = this.waiters.shift();
+		if (waiter) {
+			waiter(event);
+		} else {
+			this.payloads.push(event);
+		}
+	}
+
+	next(): Promise<unknown> {
+		const event = this.payloads.shift();
+		if (event !== undefined) {
+			return Promise.resolve(event);
+		}
+		return new Promise((resolve) => this.waiters.push(resolve));
 	}
 }
 
 describe('message activity', () => {
-	afterEach(() => {
+	let harness: ApiTestHarness;
+	let publisher: CapturingPublisher;
+	let author: TestAccount;
+	let user: User;
+	let channel: Channel;
+	let recipient: TestAccount;
+
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+	});
+
+	beforeEach(async () => {
+		await harness.reset();
+		author = await createTestAccount(harness);
+		recipient = await createTestAccount(harness);
+		const dm = await createDmChannel(harness, author.token, recipient.userId);
+		const storedUser = await userRepository.findUnique(createUserID(BigInt(author.userId)));
+		const storedChannel = await channelRepository.channelData.findUnique(createChannelID(BigInt(dm.id)));
+		assert(storedUser !== null && storedChannel !== null);
+		user = storedUser;
+		channel = storedChannel;
+		publisher = new CapturingPublisher();
+	});
+
+	afterEach(async () => {
+		await idleActivityEvents();
 		resetActivityEventsForTests();
 	});
 
-	function params(attachments: Array<MessageAttachment>, content = '') {
+	afterAll(async () => {
+		await harness.shutdown();
+	});
+
+	function params(attachments: Array<MessageAttachment>, content = ''): Parameters<typeof emitMessageCreated>[0] {
 		return {
-			user: {id: createUserID(3n), isBot: false} as unknown as User,
-			message: message(attachments, content),
-			channel: {id: createChannelID(10n), type: ChannelTypes.DM} as unknown as Channel,
+			user,
+			message: new Message({...message(attachments, content).toRow(), author_id: user.id, channel_id: channel.id}),
+			channel,
 			guildId: null,
 			guildOwnerId: null,
-			dmRecipientId: createUserID(4n),
+			dmRecipientId: createUserID(BigInt(recipient.userId)),
 			channelHadMessages: true,
 			delivered: true,
-			userRepository: {getRelationship: async () => null},
+			userRepository,
 		};
 	}
 
 	it('serializes attachment metadata', async () => {
-		const publisher = new CapturingPublisher();
 		await startActivityEvents({publisher, kv: new MockKVProvider()});
 		emitMessageCreated(params([attachment(1n, HASH), attachment(2n, null)]));
-		await vi.waitFor(() => expect(publisher.payloads).toHaveLength(1));
-		const event = JSON.parse(publisher.payloads[0]!);
-		expect([event.kind, event.key]).toEqual(['message_created', '3']);
-		expect(event.data).toMatchObject({
-			attachment_count: 2,
-			attachments: [
-				{size: 10, content_type: 'image/png', hash: HASH.toLowerCase()},
-				{size: 20, content_type: 'image/png', hash: null},
-			],
+		expect(await publisher.next()).toMatchObject({
+			kind: 'message_created',
+			key: author.userId,
+			data: {
+				channel_type: 'dm',
+				attachment_count: 2,
+				attachments: [
+					{size: 10, content_type: 'image/png', hash: '3f'.repeat(32)},
+					{size: 20, content_type: 'image/png', hash: null},
+				],
+			},
 		});
 	});
 
-	it('serializes message updates', async () => {
-		const publisher = new CapturingPublisher();
-		await startActivityEvents({publisher, kv: new MockKVProvider()});
-		emitMessageCreated(params([]));
-		emitMessageUpdated(params([attachment(1n, HASH)]));
-		await vi.waitFor(() => expect(publisher.payloads).toHaveLength(2));
-		const [created, updated] = publisher.payloads.map((payload) => JSON.parse(payload));
-		expect(created.kind).toBe('message_created');
-		expect(updated.kind).toBe('message_updated');
-		expect(updated.data).toMatchObject({message_id: '100', attachments: [{hash: HASH.toLowerCase()}]});
-		expect(updated.id).not.toBe(created.id);
-	});
-
 	it('records the link domain of a masked markdown link without its brackets', async () => {
-		const publisher = new CapturingPublisher();
 		await startActivityEvents({publisher, kv: new MockKVProvider()});
 		emitMessageCreated(
 			params(
@@ -127,8 +170,8 @@ describe('message activity', () => {
 				'[OPEN](https://Shop.Example.com) [docs](<https://www.docs.example.org/a>) https://user@cdn.example.net:8443/x',
 			),
 		);
-		await vi.waitFor(() => expect(publisher.payloads).toHaveLength(1));
-		const event = JSON.parse(publisher.payloads[0]!);
-		expect(event.data.link_domains).toEqual(['shop.example.com', 'docs.example.org', 'cdn.example.net']);
+		expect(await publisher.next()).toMatchObject({
+			data: {link_domains: ['shop.example.com', 'docs.example.org', 'cdn.example.net']},
+		});
 	});
 });

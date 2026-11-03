@@ -36,5 +36,10 @@ async fn main() -> anyhow::Result<()> {
             let shard = GifsShard::new()?;
             fluxer_svc::shard::run_shard(&config, shard, transport).await
         }
+        Mode::Combined => {
+            let router = GifsRouter::new(config.cache_max_entries, config.cache_ttl);
+            let shard = GifsShard::new()?;
+            fluxer_svc::combined::run_combined(&config, router, shard, transport).await
+        }
     }
 }

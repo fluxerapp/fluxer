@@ -14,16 +14,6 @@ const ALLOWED_EXTERNAL_URL_PROTOCOLS = new Set([
 ]);
 const recentOpens = new Map<string, number>();
 
-function getSafeExternalUrl(url: string): string | null {
-	try {
-		const parsed = new URL(url);
-		const protocol = parsed.protocol.toLowerCase();
-		return ALLOWED_EXTERNAL_URL_PROTOCOLS.has(protocol) ? parsed.toString() : null;
-	} catch {
-		return null;
-	}
-}
-
 function pruneStale(now: number): void {
 	for (const [url, timestamp] of recentOpens) {
 		if (now - timestamp > DEDUPE_WINDOW_MS) {
@@ -32,12 +22,15 @@ function pruneStale(now: number): void {
 	}
 }
 
-export function shouldOpenExternalUrl(url: string): boolean {
-	return getSafeExternalUrl(url) !== null;
-}
-
 export async function openExternalDeduped(url: string): Promise<void> {
-	const safeUrl = getSafeExternalUrl(url);
+	let safeUrl: string | null;
+	try {
+		const parsed = new URL(url);
+		const protocol = parsed.protocol.toLowerCase();
+		safeUrl = ALLOWED_EXTERNAL_URL_PROTOCOLS.has(protocol) ? parsed.toString() : null;
+	} catch {
+		safeUrl = null;
+	}
 	if (!safeUrl) {
 		throw new Error('External URL open request blocked');
 	}

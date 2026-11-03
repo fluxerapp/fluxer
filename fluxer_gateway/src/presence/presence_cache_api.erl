@@ -5,13 +5,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    cast_owner/2,
-    safe_call_if_enabled/2,
-    safe_cast_if_enabled/1,
-    rebalance/0,
-    generation/0
-]).
+-export([cast_owner/2, safe_call_if_enabled/2, safe_cast_if_enabled/1, rebalance/0]).
 
 -spec cast_owner(integer(), term()) -> ok.
 cast_owner(UserId, Request) ->
@@ -41,17 +35,6 @@ rebalance() ->
         true -> ok;
         false -> rebalance_if_enabled()
     end.
-
--spec generation() -> non_neg_integer().
-generation() ->
-    case fluxer_gateway_sup:role_enabled(presence) of
-        true -> normalize_generation(safe_call(get_generation, 2000, 0));
-        false -> 0
-    end.
-
--spec normalize_generation(term()) -> non_neg_integer().
-normalize_generation(G) when is_integer(G), G >= 0 -> G;
-normalize_generation(_) -> 0.
 
 -spec rebalance_if_enabled() -> ok.
 rebalance_if_enabled() ->

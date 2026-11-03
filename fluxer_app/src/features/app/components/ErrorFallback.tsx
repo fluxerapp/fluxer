@@ -49,11 +49,11 @@ async function resetAppDataExceptDrafts(): Promise<void> {
 
 async function cleanupRuntimeStateOnCrash(): Promise<void> {
 	LayerManager.closeAll();
-	const [{default: GatewayConnection}, {default: MediaEngine}] = await Promise.all([
-		import('@app/features/gateway/transport/GatewayConnection'),
+	const [{default: GatewaySessions}, {default: MediaEngine}] = await Promise.all([
+		import('@app/features/gateway/transport/GatewaySessionPool'),
 		import('@app/features/voice/engine/MediaEngineFacade'),
 	]);
-	GatewayConnection.logout();
+	GatewaySessions.foregroundConnection.logout();
 	MediaEngine.cleanup();
 }
 
@@ -119,6 +119,14 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 			setIsCopyingStackTrace(false);
 		}
 	}, [stackTraceText]);
+	let description = <Trans>Something went wrong and the app crashed. Try reloading or resetting the app.</Trans>;
+	if (checkingForUpdates) {
+		description = <Trans>The app has crashed. Checking for updates that might fix this issue…</Trans>;
+	} else if (updateAvailable) {
+		description = (
+			<Trans>Something went wrong and the app crashed. An update is available that may fix this issue.</Trans>
+		);
+	}
 	return (
 		<div className={errorFallbackStyles.errorFallbackContainer} data-flx="app.error-fallback.div">
 			{isNative && !useSystemTitleBar && (
@@ -130,13 +138,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 					<Trans>The app crashed</Trans>
 				</h1>
 				<p className={errorFallbackStyles.errorFallbackDescription} data-flx="app.error-fallback.p">
-					{checkingForUpdates ? (
-						<Trans>The app has crashed. Checking for updates that might fix this issue…</Trans>
-					) : updateAvailable ? (
-						<Trans>Something went wrong and the app crashed. An update is available that may fix this issue.</Trans>
-					) : (
-						<Trans>Something went wrong and the app crashed. Try reloading or resetting the app.</Trans>
-					)}
+					{description}
 				</p>
 			</div>
 			<div className={errorFallbackStyles.errorFallbackActions} data-flx="app.error-fallback.div--3">

@@ -80,6 +80,10 @@ function getThreadContribution(channelId: string): GuildReadStateContribution {
 	return contribution;
 }
 
+function isVisitingGuildChannel(channel: ContributeChannel): boolean {
+	return channel.guildId != null && Guilds.getGuild(channel.guildId)?.visiting === true;
+}
+
 function getChannelContribution(channel: ContributeChannel, channelId: string): GuildReadStateContribution {
 	if (THREAD_CHANNEL_TYPES.has(channel.type)) {
 		return getThreadContribution(channelId);
@@ -88,7 +92,8 @@ function getChannelContribution(channel: ContributeChannel, channelId: string): 
 	const mentionCount = ReadStates.getMentionCount(channelId);
 	const hasUnread = forum ? hasForumUnread(forum) : ReadStates.hasUnread(channelId);
 	return resolveGuildReadStateContribution({
-		isEligibleTextChannel: GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || forum != null,
+		isEligibleTextChannel:
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || forum != null) && !isVisitingGuildChannel(channel),
 		isPrivate: channel.isPrivate(),
 		unreadBadgesLevel: resolveUnreadBadgesLevel(channel),
 		isMutedForUnread: isChannelMutedForUnread(channel),

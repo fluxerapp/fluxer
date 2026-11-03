@@ -254,6 +254,7 @@ describe('Embed attachment purge', () => {
 		const admin = await createAdmin();
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/channels/${channelId}/messages/${message.id}`)
+			.body({basis: {type: 'housekeeping'}})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(deletedKeys()).toEqual(expect.arrayContaining(keys));

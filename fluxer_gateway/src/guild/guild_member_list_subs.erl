@@ -1,11 +1,8 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_member_list_subs).
--typing([eqwalizer]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
+-typing([eqwalizer]).
 
 -export([
     new/0,
@@ -16,8 +13,7 @@
     get_list_subs/2,
     get_session_ranges/3,
     list_ids/1,
-    fold_list_subs/4,
-    is_subscribed/3
+    fold_list_subs/4
 ]).
 
 -type range() :: {non_neg_integer(), non_neg_integer()}.
@@ -134,10 +130,6 @@ list_ids(Tab) ->
 fold_list_subs(ListId, Tab, Fun, Acc0) ->
     fold_list_subs_loop(Tab, ets:next(Tab, {ListId, <<>>}), ListId, Fun, Acc0).
 
--spec is_subscribed(binary(), binary(), ets:table()) -> boolean().
-is_subscribed(ListId, SessionId, Tab) ->
-    ets:member(Tab, {ListId, SessionId}).
-
 -spec collect_list(ets:table(), term(), binary(), list_subs()) -> list_subs().
 collect_list(_Tab, '$end_of_table', _ListId, Acc) ->
     Acc;
@@ -208,36 +200,3 @@ remove_list_from_session_index(IdxTab, SessionId, ListId, Ids) ->
         [] -> ets:delete(IdxTab, SessionId);
         _ -> ets:insert(IdxTab, {SessionId, NewIds})
     end.
-
--ifdef(TEST).
-
-retain_only_session_list_drops_other_lists_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"200">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"300">>, [{0, 99}], Tab),
-    Removed = retain_only_session_list(<<"s1">>, <<"300">>, Tab),
-    ?assertEqual([<<"100">>, <<"200">>], lists:sort(Removed)),
-    ?assert(is_subscribed(<<"300">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"200">>, <<"s1">>, Tab)),
-    destroy(Tab).
-
-retain_only_session_list_noop_when_single_list_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    ?assertEqual([], retain_only_session_list(<<"s1">>, <<"100">>, Tab)),
-    ?assert(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    destroy(Tab).
-
-retain_only_session_list_leaves_other_sessions_untouched_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    subscribe(<<"s2">>, <<"100">>, [{0, 99}], Tab),
-    subscribe(<<"s2">>, <<"200">>, [{0, 99}], Tab),
-    retain_only_session_list(<<"s1">>, <<"100">>, Tab),
-    ?assert(is_subscribed(<<"100">>, <<"s2">>, Tab)),
-    ?assert(is_subscribed(<<"200">>, <<"s2">>, Tab)),
-    destroy(Tab).
-
--endif.

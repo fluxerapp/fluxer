@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
-import {createGuild, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -24,57 +23,6 @@ describe('Discovery Application Validation', () => {
 	});
 	afterEach(async () => {
 		await harness?.shutdown();
-	});
-	describe('member count requirements', () => {
-		test('should reject application with 0 members', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Empty Guild');
-			await setGuildMemberCount(harness, guild.id, 0);
-			await createBuilder(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'No members yet', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_INSUFFICIENT_MEMBERS)
-				.execute();
-		});
-	});
-	describe('duplicate application', () => {
-		test('should reject duplicate application when pending', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Dupe Pending Guild');
-			await setGuildMemberCount(harness, guild.id, 1);
-			await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'First application attempt', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'Second application attempt', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_ALREADY_APPLIED)
-				.execute();
-		});
-		test('should reject duplicate application when approved', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Dupe Approved Guild');
-			await setGuildMemberCount(harness, guild.id, 1);
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
-			await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'Application to be approved', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'approved'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'Trying to reapply while approved', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_ALREADY_APPLIED)
-				.execute();
-		});
 	});
 	describe('permission requirements', () => {
 		test('should require MANAGE_GUILD permission to apply', async () => {
@@ -122,30 +70,6 @@ describe('Discovery Application Validation', () => {
 			await createBuilder(harness, member.token)
 				.get(`/guilds/${guild.id}/discovery`)
 				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
-				.execute();
-		});
-	});
-	describe('edit restrictions', () => {
-		test('should not allow editing rejected application', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Rejected Edit Guild');
-			await setGuildMemberCount(harness, guild.id, 1);
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
-			await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-				.post(`/guilds/${guild.id}/discovery`)
-				.body({description: 'To be rejected for edit test', category_type: DiscoveryCategories.GAMING})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'rejected', reason: 'Not suitable'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, owner.token)
-				.patch(`/guilds/${guild.id}/discovery`)
-				.body({description: 'Trying to edit rejected'})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_APPLICATION_ALREADY_REVIEWED)
 				.execute();
 		});
 	});

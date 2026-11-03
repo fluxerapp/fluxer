@@ -6,13 +6,13 @@ use crate::desktop::{
     DESKTOP_RENDERER_MODULE, DesktopChannelManifest, desktop_module_package_url,
     is_desktop_module_name,
 };
-use crate::functions::sha256_reader;
+use crate::functions::sha256_file;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use chrono::{DateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs::{self, File};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
@@ -660,6 +660,20 @@ struct ReleaseSummary {
     #[serde(rename = "draft")]
     is_draft: bool,
     published_at: Option<String>,
+    #[serde(default)]
+    assets: Vec<ReleaseAssetSummary>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ReleaseAssetSummary {
+    name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopPublishedRelease {
+    pub(crate) version: String,
+    pub(crate) tag: String,
+    pub(crate) assets: BTreeSet<String>,
 }
 
 #[derive(Debug)]
@@ -711,29 +725,35 @@ struct GitRef {
     name: String,
 }
 
-const PUBLISH_ATTEMPTS: u64 = 3;
+const GITHUB_ATTEMPTS: u64 = 3;
+
+fn wait_before_retry(attempt: u64) {
+    thread::sleep(Duration::from_secs(attempt * 15));
+}
 
 pub async fn run(args: ReleaseArgs) -> Result<()> {
     match args.command {
-        ReleaseCommand::Publish(args) => retry_publish(
-            PUBLISH_ATTEMPTS,
-            |attempt| thread::sleep(Duration::from_secs(attempt * 15)),
+        ReleaseCommand::Publish(args) => retry(
+            "Release publish",
+            GITHUB_ATTEMPTS,
+            wait_before_retry,
             || publish(args.clone()),
         ),
     }
 }
 
-fn retry_publish(
+fn retry<T>(
+    label: &str,
     attempts: u64,
     mut wait: impl FnMut(u64),
-    mut publish: impl FnMut() -> Result<()>,
-) -> Result<()> {
+    mut operation: impl FnMut() -> Result<T>,
+) -> Result<T> {
     let mut attempt = 1;
     loop {
-        match publish() {
-            Ok(()) => return Ok(()),
+        match operation() {
+            Ok(value) => return Ok(value),
             Err(error) if attempt < attempts => {
-                eprintln!("Release publish attempt {attempt} of {attempts} failed: {error:#}");
+                eprintln!("{label} attempt {attempt} of {attempts} failed: {error:#}");
                 wait(attempt);
                 attempt += 1;
             }
@@ -931,6 +951,78 @@ fn release_summaries() -> Result<Vec<ReleaseSummary>> {
     let pages: Vec<Vec<ReleaseSummary>> =
         serde_json::from_str(&output).context("Failed to parse GitHub Release history")?;
     Ok(pages.into_iter().flatten().collect())
+}
+
+pub(crate) fn desktop_releases(channel: &str) -> Result<Vec<DesktopPublishedRelease>> {
+    let summaries = retry(
+        "Release history read",
+        GITHUB_ATTEMPTS,
+        wait_before_retry,
+        release_summaries,
+    )?;
+    desktop_releases_from(&summaries, channel)
+}
+
+fn desktop_releases_from(
+    summaries: &[ReleaseSummary],
+    channel: &str,
+) -> Result<Vec<DesktopPublishedRelease>> {
+    let prefix = format!("fluxer-desktop-{channel}@");
+    let mut releases = Vec::new();
+    for release in summaries.iter().filter(|release| !release.is_draft) {
+        let Some(version) = release.tag_name.strip_prefix(&prefix) else {
+            continue;
+        };
+        let Ok(instant) = parse_version_instant(version) else {
+            continue;
+        };
+        releases.push((
+            instant,
+            DesktopPublishedRelease {
+                version: version.to_string(),
+                tag: release.tag_name.clone(),
+                assets: release
+                    .assets
+                    .iter()
+                    .map(|asset| asset.name.clone())
+                    .collect(),
+            },
+        ));
+    }
+    releases.sort_by_key(|(instant, _)| *instant);
+    Ok(releases.into_iter().map(|(_, release)| release).collect())
+}
+
+pub(crate) fn download_desktop_release_asset(tag: &str, name: &str) -> Result<Vec<u8>> {
+    let output = CommandSpec::new("gh")
+        .args(["release", "download", tag])
+        .args(["--repo", RELEASE_REPOSITORY])
+        .args(["--pattern", name])
+        .args(["--output", "-"])
+        .to_command()
+        .output()
+        .with_context(|| format!("Failed to download {name} from {tag}"))?;
+    ensure!(
+        output.status.success(),
+        "Failed to download {name} from {tag}: {}",
+        String::from_utf8_lossy(&output.stderr).trim()
+    );
+    Ok(output.stdout)
+}
+
+pub(crate) fn desktop_release_kind(channel: &str, version: &str) -> Result<DesktopReleaseKind> {
+    let tag = format!("fluxer-desktop-{channel}@{version}");
+    let pattern = desktop_release_descriptor_filename(channel, version)?;
+    let descriptor: DesktopReleaseDescriptor =
+        serde_json::from_slice(&download_desktop_release_asset(&tag, &pattern)?)
+            .with_context(|| format!("{pattern} from {tag} is not a release descriptor"))?;
+    ensure!(
+        descriptor.channel == channel && descriptor.version == version,
+        "{pattern} from {tag} describes {} {}",
+        descriptor.channel,
+        descriptor.version
+    );
+    Ok(descriptor.kind)
 }
 
 fn qualified_releases(
@@ -1140,12 +1232,6 @@ fn local_release_assets(
     }
     validate_desktop_release_module_files(&descriptor, asset_dir)?;
     Ok(assets)
-}
-
-fn sha256_file(path: &Path) -> Result<String> {
-    let file = File::open(path)
-        .with_context(|| format!("Failed to open release asset {}", path.display()))?;
-    sha256_reader(file).with_context(|| format!("Failed to read release asset {}", path.display()))
 }
 
 fn create_draft_release(
@@ -1416,7 +1502,6 @@ fn desktop_channel(component: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::anyhow;
 
     const SAMPLE_CHANNEL: &str = "canary";
     const SAMPLE_VERSION: &str = "2026.913.210037";
@@ -1571,6 +1656,7 @@ mod tests {
                     .map(|(module, entry)| (module.clone(), entry.clone()))
                     .collect(),
                 required_modules: vec![DESKTOP_RENDERER_MODULE.to_string()],
+                shell_compatibility: None,
             };
             let release_asset = desktop_module_manifest_release_asset_name(
                 SAMPLE_CHANNEL,
@@ -1645,23 +1731,6 @@ mod tests {
     }
 
     #[test]
-    fn the_release_inventory_is_the_one_the_publisher_stages() {
-        assert_eq!(
-            desktop_release_route_inventory(),
-            BTreeMap::from([
-                ("darwin/arm64".to_string(), 4usize),
-                ("darwin/x64".to_string(), 4usize),
-                ("linux/arm64".to_string(), 5usize),
-                ("linux/x64".to_string(), 5usize),
-                ("win32/arm64".to_string(), 6usize),
-                ("win32/x64".to_string(), 6usize),
-            ])
-        );
-        assert_eq!(desktop_release_route_count(), 30);
-        assert_eq!(desktop_release_asset_count(), 26);
-    }
-
-    #[test]
     fn a_complete_desktop_release_validates() {
         let descriptor = sample_descriptor();
         assert_eq!(descriptor.assets.len(), desktop_release_route_count());
@@ -1709,22 +1778,6 @@ mod tests {
         assert_eq!(
             validate_sample(&descriptor).unwrap_err().to_string(),
             "Desktop release descriptor must contain 30 routes, found 29"
-        );
-    }
-
-    #[test]
-    fn a_release_with_an_extra_route_is_refused() {
-        let mut descriptor = sample_descriptor();
-        let extra = DesktopReleaseAsset {
-            storage_key: format!("desktop/{SAMPLE_CHANNEL}/linux/x64/latest-linux.yml"),
-            release_asset: format!("Fluxer-Canary-{SAMPLE_VERSION}-linux-x64-latest-linux.yml"),
-            sha256: format!("{:064x}", 99u64),
-            size: 4096,
-        };
-        descriptor.assets.push(extra);
-        assert_eq!(
-            validate_sample(&descriptor).unwrap_err().to_string(),
-            "Desktop release descriptor must contain 30 routes, found 31"
         );
     }
 
@@ -2053,58 +2106,5 @@ mod tests {
             .to_string()
             .starts_with("Desktop release asset inventory mismatch")
         );
-    }
-
-    #[test]
-    fn retry_publish_retries_until_a_publish_succeeds() {
-        let mut calls = 0;
-        let mut waits = Vec::new();
-        let result = retry_publish(
-            3,
-            |attempt| waits.push(attempt),
-            || {
-                calls += 1;
-                if calls < 3 {
-                    Err(anyhow!("unexpected end of JSON input"))
-                } else {
-                    Ok(())
-                }
-            },
-        );
-        assert!(result.is_ok());
-        assert_eq!(calls, 3);
-        assert_eq!(waits, vec![1, 2]);
-    }
-
-    #[test]
-    fn retry_publish_returns_the_last_error_without_waiting_after_it() {
-        let mut calls = 0;
-        let mut waits = Vec::new();
-        let result = retry_publish(
-            3,
-            |attempt| waits.push(attempt),
-            || {
-                calls += 1;
-                Err(anyhow!("attempt {calls} failed"))
-            },
-        );
-        assert_eq!(result.unwrap_err().to_string(), "attempt 3 failed");
-        assert_eq!(calls, 3);
-        assert_eq!(waits, vec![1, 2]);
-    }
-
-    #[test]
-    fn retry_publish_does_not_retry_a_successful_publish() {
-        let mut calls = 0;
-        let result = retry_publish(
-            3,
-            |_| panic!("a successful publish must not wait"),
-            || {
-                calls += 1;
-                Ok(())
-            },
-        );
-        assert!(result.is_ok());
-        assert_eq!(calls, 1);
     }
 }

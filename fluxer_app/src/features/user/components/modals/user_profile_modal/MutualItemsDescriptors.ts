@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MUTUAL_GUILDS_DESCRIPTOR as MUTUAL_COMMUNITIES_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -19,10 +20,7 @@ const MUTUAL_COMMUNITIES_GROUPS_COUNT_DESCRIPTOR = msg({
 	comment:
 		'Short tab or button label for a combined list of mutual group DMs and mutual communities. Preserve {count}; it is inserted by code. Translate "places" as the most accurate local word for shared communities and groups.',
 });
-const MUTUAL_COMMUNITIES_DESCRIPTOR = msg({
-	message: 'Mutual communities',
-	comment: 'Short label for a list of mutual communities in the user profile modal.',
-});
+
 const MUTUAL_COMMUNITIES_COUNT_DESCRIPTOR = msg({
 	message: 'Mutual communities ({count})',
 	comment:

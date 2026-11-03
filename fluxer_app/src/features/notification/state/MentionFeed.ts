@@ -209,26 +209,10 @@ class MentionFeed {
 		this.recentMentions.unshift(messageRecord);
 	}
 
-	private touchMessage(messageId: string): void {
+	handleMessageReactionChange(messageId: string): void {
 		const index = this.recentMentions.findIndex((m) => m.id === messageId);
 		if (index === -1) return;
 		this.recentMentions[index] = this.recentMentions[index].withUpdates({});
-	}
-
-	handleMessageReactionAdd(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemove(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveAll(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveEmoji(messageId: string): void {
-		this.touchMessage(messageId);
 	}
 }
 

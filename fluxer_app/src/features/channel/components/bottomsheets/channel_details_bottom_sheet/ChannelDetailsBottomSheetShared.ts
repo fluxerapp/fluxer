@@ -75,16 +75,6 @@ export const FAILED_TO_UNPIN_DM_DESCRIPTOR = msg({
 	comment:
 		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
 });
-export const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
-	message: 'Close your DM with {recipientUsername}? You can reopen it anytime.',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
-export const DM_CLOSED_DESCRIPTOR = msg({
-	message: 'DM closed',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
 export const USER_ID_COPIED_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'User ID copied to clipboard',
 	comment:

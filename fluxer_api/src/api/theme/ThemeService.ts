@@ -13,7 +13,7 @@ export function setThemeCssMaxBytesForTesting(bytes: number | undefined): void {
 	themeCssMaxBytesOverride = bytes;
 }
 
-export function resolveThemeCssMaxBytes(): number {
+function resolveThemeCssMaxBytes(): number {
 	if (Config.dev.testModeEnabled && themeCssMaxBytesOverride !== undefined) {
 		return themeCssMaxBytesOverride;
 	}

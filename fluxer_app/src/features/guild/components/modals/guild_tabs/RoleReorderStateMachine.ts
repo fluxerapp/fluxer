@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-
 export interface RoleReorderPoint {
 	x: number;
 	y: number;
@@ -68,27 +66,7 @@ export interface RoleReorderResolution {
 	blockedReason: RoleReorderBlockedReason | null;
 }
 
-interface RoleReorderMachineContext extends RoleReorderResolution {}
-
-type RoleReorderEvent =
-	| {
-			type: 'drag.hover';
-			item: RoleReorderDragItem;
-			target: RoleReorderTarget;
-			access: RoleReorderAccess;
-			clientOffset: RoleReorderPoint;
-			targetRect: RoleReorderRect;
-	  }
-	| {type: 'drag.leave'}
-	| {type: 'drag.drop'};
-
 type VerticalZone = 'before' | 'after';
-
-const initialRoleReorderMachineContext: RoleReorderMachineContext = {
-	intent: null,
-	indicator: null,
-	blockedReason: null,
-};
 
 function getTargetHeight(rect: RoleReorderRect): number {
 	return rect.bottom - rect.top;
@@ -224,63 +202,6 @@ function resolveRoleReorderHover(
 	};
 }
 
-const roleReorderStateMachine = setup({
-	types: {} as {
-		context: RoleReorderMachineContext;
-		events: RoleReorderEvent;
-	},
-	guards: {
-		hasIntent: ({context}) => context.intent !== null,
-	},
-	actions: {
-		resolveHover: assign(({event}) => {
-			if (event.type !== 'drag.hover') return initialRoleReorderMachineContext;
-			return resolveRoleReorderHover(event.item, event.target, event.access, event.clientOffset, event.targetRect);
-		}),
-		clear: assign(() => initialRoleReorderMachineContext),
-	},
-}).createMachine({
-	id: 'roleReorder',
-	initial: 'idle',
-	context: initialRoleReorderMachineContext,
-	states: {
-		idle: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {actions: 'clear'},
-				'drag.drop': {actions: 'clear'},
-			},
-		},
-		resolving: {
-			always: [{target: 'targeting', guard: 'hasIntent'}, {target: 'blocked'}],
-		},
-		targeting: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-		blocked: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-	},
-});
-
-type RoleReorderSnapshot = SnapshotFrom<typeof roleReorderStateMachine>;
-
-function createRoleReorderSnapshot(): RoleReorderSnapshot {
-	return initialTransition(roleReorderStateMachine)[0];
-}
-
-function transitionRoleReorderSnapshot(snapshot: RoleReorderSnapshot, event: RoleReorderEvent): RoleReorderSnapshot {
-	return transition(roleReorderStateMachine, snapshot, event)[0] as RoleReorderSnapshot;
-}
-
 export function selectRoleReorderResolution(
 	item: RoleReorderDragItem,
 	target: RoleReorderTarget,
@@ -288,13 +209,5 @@ export function selectRoleReorderResolution(
 	clientOffset: RoleReorderPoint,
 	targetRect: RoleReorderRect,
 ): RoleReorderResolution {
-	const snapshot = transitionRoleReorderSnapshot(createRoleReorderSnapshot(), {
-		type: 'drag.hover',
-		item,
-		target,
-		access,
-		clientOffset,
-		targetRect,
-	});
-	return snapshot.context;
+	return resolveRoleReorderHover(item, target, access, clientOffset, targetRect);
 }

@@ -43,6 +43,7 @@ function guildRow(features: Set<string>): GuildRow {
 		audit_logs_indexed_at: null,
 		members_indexed_at: null,
 		message_history_cutoff: null,
+		invites_paused_until: null,
 		version: 1,
 	};
 }

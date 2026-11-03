@@ -132,6 +132,7 @@ thread_event_map() ->
 -spec user_voice_event_map() -> #{binary() => atom()}.
 user_voice_event_map() ->
     #{
+        <<"OPERATOR_PASS_UPDATE">> => operator_pass_update,
         <<"USER_CONNECTIONS_UPDATE">> => user_connections_update,
         <<"USER_GUILD_SETTINGS_UPDATE">> => user_guild_settings_update,
         <<"USER_NOTE_UPDATE">> => user_note_update,

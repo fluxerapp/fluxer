@@ -21,7 +21,7 @@ export interface LoadableErrorProps {
 	retry: () => void;
 }
 
-export interface LoadableModule<Props extends object> {
+interface LoadableModule<Props extends object> {
 	default: ComponentType<Props>;
 }
 
@@ -29,7 +29,7 @@ export type LoadableComponent<Props extends object> = ComponentType<Props> & {
 	preload: () => Promise<boolean>;
 };
 
-export interface CreateLoadableComponentOptions<Props extends object> {
+interface CreateLoadableComponentOptions<Props extends object> {
 	displayName: string;
 	load: () => Promise<LoadableModule<Props>>;
 	LoadingComponent?: ComponentType;
@@ -100,7 +100,7 @@ function LoadableInlineLoadError({error, retry}: LoadableErrorProps): React.JSX.
 	);
 }
 
-export function createLoadableComponent<Props extends object>({
+function createLoadableComponent<Props extends object>({
 	displayName,
 	load,
 	LoadingComponent = NullLoadingComponent,

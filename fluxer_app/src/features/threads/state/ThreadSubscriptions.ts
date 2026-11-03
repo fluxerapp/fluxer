@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
+import Guilds from '@app/features/guild/state/Guilds';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
@@ -40,7 +42,7 @@ class ThreadSubscriptions {
 					const active = ThreadGuilds.isActive(guildId);
 					return {
 						epoch: this.connectionEpoch,
-						ready: this.armed && GatewayConnection.isReady,
+						ready: this.armed && GatewaySessions.foregroundConnection.isReady,
 						guildId,
 						active,
 						memberLists: active && guildId ? ThreadRoster.subscribedThreadIds(guildId) : [],
@@ -50,7 +52,7 @@ class ThreadSubscriptions {
 				{equals: compareStructural, fireImmediately: true, scheduler: (run) => queueMicrotask(run)},
 			);
 			reaction(
-				() => GatewayConnection.isReady,
+				() => GatewaySessions.foregroundConnection.isReady,
 				(ready) => {
 					if (!ready) this.handleConnectionLost();
 				},
@@ -69,6 +71,12 @@ class ThreadSubscriptions {
 		this.connectionEpoch += 1;
 	}
 
+	reset(): void {
+		this.sent = new Map();
+		this.listGuilds = new Set();
+		this.lastGuildId = null;
+	}
+
 	private handleConnectionLost(): void {
 		this.sent = new Map();
 		this.armed = false;
@@ -85,13 +93,14 @@ class ThreadSubscriptions {
 		for (const listGuildId of this.listGuilds) {
 			if (listGuildId !== guildId) subscriptions[listGuildId] = {thread_member_lists: []};
 		}
-		const memberLists = desired.memberLists.join(',');
+		const visibleMemberLists = guildId && Guilds.getGuild(guildId)?.visiting === true ? [] : desired.memberLists;
+		const memberLists = visibleMemberLists.join(',');
 		const previous = guildId ? this.sent.get(guildId) : undefined;
 		if (guildId && !(previous?.threads && previous.memberLists === memberLists)) {
-			subscriptions[guildId] = {threads: true, thread_member_lists: [...desired.memberLists]};
+			subscriptions[guildId] = {threads: true, thread_member_lists: [...visibleMemberLists]};
 		}
 		if (Object.keys(subscriptions).length === 0) return;
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		if (!socket?.isConnected()) return;
 		socket.updateGuildSubscriptions({subscriptions});
 		for (const clearedGuildId of Object.keys(subscriptions)) {
@@ -99,14 +108,14 @@ class ThreadSubscriptions {
 		}
 		if (guildId && subscriptions[guildId]) {
 			this.sent.set(guildId, {threads: true, memberLists});
-			if (desired.memberLists.length > 0) this.listGuilds.add(guildId);
+			if (visibleMemberLists.length > 0) this.listGuilds.add(guildId);
 			else this.listGuilds.delete(guildId);
 		}
 	}
 
 	private handleActiveGuildsChanged(activeGuildIds: ReadonlyArray<string>): void {
 		const active = new Set(activeGuildIds);
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		for (const guildId of Array.from(this.sent.keys())) {
 			if (active.has(guildId)) continue;
 			this.sent.delete(guildId);
@@ -120,4 +129,8 @@ class ThreadSubscriptions {
 	}
 }
 
-export default new ThreadSubscriptions();
+const threadSubscriptions = new ThreadSubscriptions();
+
+ResettableStates.register(threadSubscriptions, () => threadSubscriptions.reset());
+
+export default threadSubscriptions;

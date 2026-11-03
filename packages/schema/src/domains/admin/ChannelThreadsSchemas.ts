@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {EXPERIMENT_BUCKET_RESOLUTION} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
 
 const CHANNEL_THREADS_BASIS_POINTS_MAX = EXPERIMENT_BUCKET_RESOLUTION;
@@ -66,55 +66,9 @@ export function everyoneChannelThreadsConfig(configVersion: number): ChannelThre
 	};
 }
 
-export interface CompiledChannelThreadsConfig {
-	config: ChannelThreadsConfig;
-	enabledGuildIds: ReadonlySet<string>;
-	disabledGuildIds: ReadonlySet<string>;
-	includedUserIds: ReadonlySet<string>;
-	excludedUserIds: ReadonlySet<string>;
-}
-
-export function compileChannelThreadsConfig(config: ChannelThreadsConfig): CompiledChannelThreadsConfig {
-	return {
-		config,
-		enabledGuildIds: new Set(config.enabled_guild_ids),
-		disabledGuildIds: new Set(config.disabled_guild_ids),
-		includedUserIds: new Set(config.included_user_ids),
-		excludedUserIds: new Set(config.excluded_user_ids),
-	};
-}
-
-export function channelThreadsGuildActive(compiled: CompiledChannelThreadsConfig, guildId: string): boolean {
-	const {config} = compiled;
-	if (!config.enabled) return false;
-	if (compiled.disabledGuildIds.has(guildId)) return false;
-	if (compiled.enabledGuildIds.has(guildId)) return true;
-	return config.guild_basis_points > 0 && experimentBucket(guildId, config.guild_salt) < config.guild_basis_points;
-}
-
-export function channelThreadsUserExcluded(compiled: CompiledChannelThreadsConfig, userId: string): boolean {
-	return compiled.excludedUserIds.has(userId);
-}
-
-export function channelThreadsUserActive(compiled: CompiledChannelThreadsConfig, userId: string): boolean {
-	const {config} = compiled;
-	if (!config.enabled) return false;
-	if (compiled.excludedUserIds.has(userId)) return false;
-	if (compiled.includedUserIds.has(userId)) return true;
-	return config.user_basis_points > 0 && experimentBucket(userId, config.user_salt) < config.user_basis_points;
-}
-
 export const ChannelThreadsAssignmentResponse = z.object({
 	active: z.literal(true),
 	config_version: z.number().int().min(0),
 });
 
 export type ChannelThreadsAssignmentResponse = z.infer<typeof ChannelThreadsAssignmentResponse>;
-
-export function resolveChannelThreadsAssignment(
-	compiled: CompiledChannelThreadsConfig,
-	userId: string,
-): ChannelThreadsAssignmentResponse | undefined {
-	if (!channelThreadsUserActive(compiled, userId)) return undefined;
-	return {active: true, config_version: compiled.config.config_version};
-}

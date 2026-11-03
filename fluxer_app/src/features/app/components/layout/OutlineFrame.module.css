@@ -6,7 +6,7 @@
 	width: 100%;
 	border: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
 	border-top: none;
-	border-top-left-radius: var(--outline-radius, 0px);
+	border-start-start-radius: var(--outline-radius, 0px);
 	background: var(--background-secondary-lighter);
 	overflow: hidden;
 	display: flex;
@@ -37,7 +37,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: var(--layout-sidebar-width);
+	inset-inline-start: var(--layout-sidebar-width);
 	width: 0.0625rem;
 	pointer-events: none;
 	background: var(--user-area-divider-color);

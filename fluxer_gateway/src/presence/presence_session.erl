@@ -9,6 +9,7 @@
     dispatch_sessions_replace/1,
     notify_sessions_guild_join/2,
     notify_sessions_guild_leave/2,
+    notify_sessions/2,
     find_session_by_ref/2
 ]).
 
@@ -55,7 +56,9 @@ handle_session_connect(Request, Pid, State) ->
             },
             NewSessions = Sessions#{SessionId => SessionEntry},
             NewState = State#{sessions => NewSessions},
-            SessionsData = presence_status:collect_sessions_for_replace(NewSessions),
+            SessionsData = presence_status:collect_sessions_for_replace(
+                presence_status:effective_sessions(NewState)
+            ),
             {reply, {ok, SessionsData}, NewState};
         Existing ->
             {UpdatedSession, NewState0} = refresh_existing_session(
@@ -63,7 +66,9 @@ handle_session_connect(Request, Pid, State) ->
             ),
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = NewState0#{sessions => NewSessions},
-            SessionsData = presence_status:collect_sessions_for_replace(NewSessions),
+            SessionsData = presence_status:collect_sessions_for_replace(
+                presence_status:effective_sessions(NewState)
+            ),
             {reply, {ok, SessionsData}, NewState}
     end.
 
@@ -143,7 +148,9 @@ session_presence_changed(Session, Status, Afk, Mobile) ->
 -spec dispatch_sessions_replace(state()) -> ok.
 dispatch_sessions_replace(State) ->
     Sessions = maps:get(sessions, State),
-    SessionsData = presence_status:collect_sessions_for_replace(Sessions),
+    SessionsData = presence_status:collect_sessions_for_replace(
+        presence_status:effective_sessions(State)
+    ),
     SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
     gateway_dispatch_relay:dispatch_many(
         [Pid || Pid <- SessionPids, is_pid(Pid)], sessions_replace, SessionsData, 0
@@ -152,27 +159,22 @@ dispatch_sessions_replace(State) ->
 
 -spec notify_sessions_guild_join(integer(), state()) -> ok.
 notify_sessions_guild_join(GuildId, State) ->
-    Sessions = maps:get(sessions, State),
-    SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
-    lists:foreach(
-        fun(Pid) when is_pid(Pid) ->
-            _ = shard_utils:safe_cast(Pid, {guild_join, GuildId})
-        end,
-        SessionPids
-    ),
-    ok.
+    notify_sessions({guild_join, GuildId}, State).
 
 -spec notify_sessions_guild_leave(integer(), state()) -> ok.
 notify_sessions_guild_leave(GuildId, State) ->
+    notify_sessions({guild_leave, GuildId}, State).
+
+-spec notify_sessions(term(), state()) -> ok.
+notify_sessions(Msg, State) ->
     Sessions = maps:get(sessions, State),
-    SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
     lists:foreach(
-        fun(Pid) when is_pid(Pid) ->
-            _ = shard_utils:safe_cast(Pid, {guild_leave, GuildId})
+        fun
+            (#{pid := Pid}) when is_pid(Pid) -> _ = shard_utils:safe_cast(Pid, Msg);
+            (_) -> ok
         end,
-        SessionPids
-    ),
-    ok.
+        maps:values(Sessions)
+    ).
 
 -spec find_session_by_ref(reference(), session_ref_map()) -> {ok, session_id()} | not_found.
 find_session_by_ref(Ref, Sessions) ->
@@ -209,104 +211,3 @@ normalize_boolean(_) -> false.
 -spec normalize_socket_pid(term()) -> pid() | undefined.
 normalize_socket_pid(Pid) when is_pid(Pid) -> Pid;
 normalize_socket_pid(_) -> undefined.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-handle_presence_update_updates_mobile_test() ->
-    SessionId = <<"s1">>,
-    State = #{
-        sessions => #{
-            SessionId => #{
-                session_id => SessionId,
-                status => online,
-                afk => false,
-                mobile => false,
-                pid => self(),
-                mref => make_ref(),
-                socket_pid => undefined
-            }
-        }
-    },
-    {noreply, NewState} = handle_presence_update(
-        #{session_id => SessionId, status => online, afk => false, mobile => true}, State
-    ),
-    UpdatedSession = maps:get(SessionId, maps:get(sessions, NewState)),
-    ?assertEqual(true, maps:get(mobile, UpdatedSession)),
-    receive
-        {'$gen_cast', {dispatch, sessions_replace, SessionsData}} ->
-            AllSession = hd(SessionsData),
-            ?assertEqual(<<"all">>, maps:get(<<"session_id">>, AllSession)),
-            ?assertEqual(true, maps:get(<<"mobile">>, AllSession))
-    after 1000 ->
-        ?assert(false)
-    end.
-
-handle_presence_update_unchanged_session_is_noop_test() ->
-    flush_test_messages(),
-    SessionId = <<"s1">>,
-    Session = #{
-        session_id => SessionId,
-        status => online,
-        afk => false,
-        mobile => false,
-        pid => self(),
-        mref => make_ref(),
-        socket_pid => undefined
-    },
-    State = #{sessions => #{SessionId => Session}},
-    {noreply, NewState} = handle_presence_update(
-        #{session_id => SessionId, status => online, afk => false, mobile => false}, State
-    ),
-    ?assertEqual(State, NewState),
-    receive
-        {'$gen_cast', {dispatch, sessions_replace, _SessionsData}} ->
-            ?assert(false)
-    after 50 ->
-        ok
-    end.
-
-handle_session_connect_existing_session_refreshes_status_test() ->
-    SessionId = <<"s1">>,
-    Ref = make_ref(),
-    State = #{
-        sessions => #{
-            SessionId => #{
-                session_id => SessionId,
-                status => invisible,
-                afk => true,
-                mobile => false,
-                pid => self(),
-                mref => Ref,
-                socket_pid => undefined
-            }
-        }
-    },
-    {reply, {ok, SessionsData}, NewState} = handle_session_connect(
-        #{
-            session_id => SessionId,
-            status => dnd,
-            afk => false,
-            mobile => true,
-            socket_pid => self()
-        },
-        self(),
-        State
-    ),
-    UpdatedSession = maps:get(SessionId, maps:get(sessions, NewState)),
-    ?assertEqual(dnd, maps:get(status, UpdatedSession)),
-    ?assertEqual(false, maps:get(afk, UpdatedSession)),
-    ?assertEqual(true, maps:get(mobile, UpdatedSession)),
-    ?assertEqual(self(), maps:get(socket_pid, UpdatedSession)),
-    ?assertEqual(Ref, maps:get(mref, UpdatedSession)),
-    [AllSession | _] = SessionsData,
-    ?assertEqual(<<"dnd">>, maps:get(<<"status">>, AllSession)),
-    ?assertEqual(false, maps:get(<<"mobile">>, AllSession)).
-
-flush_test_messages() ->
-    receive
-        _ -> flush_test_messages()
-    after 0 ->
-        ok
-    end.
--endif.

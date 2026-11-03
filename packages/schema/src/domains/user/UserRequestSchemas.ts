@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AVATAR_MAX_SIZE, MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GUILDS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GUILDS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -18,12 +18,13 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {HiddenProfileBadgesType} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {
 	isValidSyncedPreferencesEncoding,
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
 import {createQueryIntegerType, DateTimeType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -67,12 +68,8 @@ export const UserUpdateRequest = z
 		email: EmailType.describe('The email address for the account'),
 		new_password: PasswordType.describe('The new password to set'),
 		password: PasswordType.describe('The current password for verification'),
-		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('Base64-encoded avatar image'),
-		banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('Base64-encoded profile banner image'),
+		avatar: createBase64ImageType().nullish().describe('Base64-encoded avatar image'),
+		banner: createBase64ImageType().nullish().describe('Base64-encoded profile banner image'),
 		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),
 		pronouns: createStringType(1, 40).nullish().describe('User pronouns (max 40 characters)'),
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),
@@ -83,10 +80,28 @@ export const UserUpdateRequest = z
 			'Bitfield controlling who can see the profile timezone',
 			'ProfileFieldPrivacyFlags',
 		).describe('Bitfield controlling who can see the profile timezone'),
-		premium_badge_hidden: z.boolean().describe('Whether to hide the premium badge'),
+		hidden_profile_badges: HiddenProfileBadgesType,
+		premium_badge_hidden: z
+			.boolean()
+			.describe(
+				'Deprecated, use hidden_profile_badges. true adds plutonium, visionary and premium to the list, and false removes them',
+			),
 		premium_badge_masked: z.boolean().describe('Whether to mask the premium badge'),
 		premium_badge_timestamp_hidden: z.boolean().describe('Whether to hide premium badge timestamp'),
-		premium_badge_sequence_hidden: z.boolean().describe('Whether to hide premium badge sequence'),
+		premium_badge_sequence_hidden: z
+			.boolean()
+			.describe('Deprecated, use hidden_profile_badges. true adds visionary_number to the list, and false removes it'),
+		operator_pass_badge_hidden: z
+			.boolean()
+			.describe('Deprecated, use hidden_profile_badges. true adds operator_pass to the list, and false removes it'),
+		operator_pass_badge_timestamp_hidden: z
+			.boolean()
+			.describe('Whether to hide from other people the month and year the Operator Pass was first held'),
+		operator_pass_badge_count_hidden: z
+			.boolean()
+			.describe(
+				"Whether to hide from other people how many Operator Passes are held, on the badge and the Operators' wall",
+			),
 		premium_enabled_override: z.boolean().describe('Override premium enabled state'),
 		has_dismissed_premium_onboarding: z.boolean().describe('Whether user dismissed premium onboarding'),
 		has_unread_gift_inventory: z.boolean().describe('Whether user has unread gifts'),
@@ -178,7 +193,7 @@ export type PasswordChangeVerifyRequest = z.infer<typeof PasswordChangeVerifyReq
 export const PasswordChangeCompleteRequest = PasswordChangeTicketRequest.extend({
 	verification_proof: createStringType().describe('Proof token obtained from verifying the email code'),
 	new_password: PasswordType.describe('The new password to set'),
-});
+}).extend(SudoVerificationSchema.shape);
 
 export type PasswordChangeCompleteRequest = z.infer<typeof PasswordChangeCompleteRequest>;
 
@@ -192,7 +207,9 @@ export type UserPasswordUpdateRequest = z.infer<typeof UserPasswordUpdateRequest
 
 export const FriendRequestByTagRequest = z.object({
 	username: UsernameType.describe('Username of the user to send friend request'),
-	discriminator: DiscriminatorType.describe('Discriminator tag of the user'),
+	discriminator: DiscriminatorType.optional().describe(
+		'Discriminator tag of the user, optional on an instance without tags',
+	),
 });
 
 export type FriendRequestByTagRequest = z.infer<typeof FriendRequestByTagRequest>;
@@ -274,6 +291,7 @@ export type CreatePrivateChannelRequest = z.infer<typeof CreatePrivateChannelReq
 
 const UserSettingsGuildIds = z
 	.array(SnowflakeType)
+	.max(10000)
 	.transform((ids) => [...new Set(ids)])
 	.refine((ids) => ids.length <= MAX_GUILDS_PREMIUM, `Maximum ${MAX_GUILDS_PREMIUM} guilds allowed`);
 
@@ -384,9 +402,14 @@ export const UserSettingsUpdateRequest = z
 			.describe('Suppress direct mentions and reply mentions from unprivileged users'),
 		suppress_unprivileged_self_mentions_bypass_user_ids: z
 			.array(SnowflakeType)
+			.max(1000)
 			.nullish()
 			.describe('User IDs that bypass self-mention suppression'),
-		staff_dm_access_user_ids: z.array(SnowflakeType).nullish().describe('User IDs with Staff DM Access enabled'),
+		staff_dm_access_user_ids: z
+			.array(SnowflakeType)
+			.max(1000)
+			.nullish()
+			.describe('User IDs with Staff DM Access enabled'),
 		profile_privacy: withFieldDescription(
 			ProfilePrivacyLevelSchema,
 			'Controls who sees the full profile: all guild members, only small-guild members, or only friends',
@@ -411,6 +434,12 @@ export const UserSettingsUpdateRequest = z
 			.nullish()
 			.describe(
 				'Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it.',
+			),
+		synced_preferences_base_hash: z
+			.string()
+			.regex(/^[0-9a-f]{64}$/u)
+			.describe(
+				'Lowercase hex SHA-256 of the decoded bytes of the synced_preferences snapshot this update was built on, as last returned by the server. An empty snapshot hashes as zero bytes. When it does not match the stored snapshot, nothing is written and the request fails with SYNCED_PREFERENCES_CONFLICT. Only checked when synced_preferences is present.',
 			),
 	})
 	.partial();

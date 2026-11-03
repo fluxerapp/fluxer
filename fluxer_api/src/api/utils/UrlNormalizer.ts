@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {compareText} from '@app/api/utils/StringComparison';
 
 const TRACKING_PARAMS = new Set([
 	'gclid',
@@ -14,13 +15,19 @@ const TRACKING_PARAMS = new Set([
 	'ref_src',
 	'ref_url',
 ]);
-// biome-ignore lint/complexity/useRegexLiterals: The literal form trips noControlCharactersInRegex for C0 controls.
-const CONTROL_OR_WS_RE = new RegExp('[\\s\\x00-\\x1f]');
+const FIRST_PRINTABLE_ASCII_CODE = 0x20;
+const WHITESPACE_RE = /\s/;
 
 export function canonicalizeUrl(raw: string): string | null {
 	const trimmed = raw.trim();
 	if (!trimmed) return null;
-	if (CONTROL_OR_WS_RE.test(trimmed)) return null;
+	const checked = `${trimmed}`;
+	for (let index = 0; index < checked.length; index++) {
+		if (checked.charCodeAt(index) < FIRST_PRINTABLE_ASCII_CODE) {
+			return null;
+		}
+	}
+	if (WHITESPACE_RE.test(checked)) return null;
 	let parsed: URL;
 	try {
 		parsed = new URL(trimmed);
@@ -49,7 +56,7 @@ export function canonicalizeUrl(raw: string): string | null {
 		}
 		kept.push([k, v]);
 	}
-	kept.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+	kept.sort(([a], [b]) => compareText(a, b));
 	parsed.search = '';
 	for (const [k, v] of kept) {
 		parsed.searchParams.append(k, v);

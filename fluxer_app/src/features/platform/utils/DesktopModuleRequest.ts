@@ -13,6 +13,7 @@ type DesktopModuleState = 'idle' | 'loading' | 'ready' | 'failed';
 export interface DesktopModuleRequest {
 	readonly ensure: () => Promise<DesktopModuleEnsureStatus | null>;
 	readonly isSettled: () => boolean;
+	readonly isUnavailable: () => boolean;
 	readonly subscribe: (listener: () => void) => () => void;
 	readonly reset: () => void;
 }
@@ -27,11 +28,10 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 	const backoff = new ExponentialBackoff({
 		minDelay: DESKTOP_MODULE_BACKOFF_MIN_MS,
 		maxDelay: DESKTOP_MODULE_BACKOFF_MAX_MS,
-		factor: 2,
-		jitter: true,
 		jitterFactor: 0.2,
 	});
 	let state: DesktopModuleState = 'idle';
+	let unavailable = false;
 	let pending: Promise<DesktopModuleEnsureStatus | null> | null = null;
 	let retryTimer: ReturnType<typeof setTimeout> | null = null;
 	let generation = 0;
@@ -76,8 +76,9 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 				}
 				if (result.status === DesktopModuleEnsureStatus.UNAVAILABLE) {
 					state = 'failed';
+					unavailable = true;
+					logger.warn('The desktop shell reports this module is unavailable; not retrying until the next launch');
 					notify();
-					scheduleRetry(loadGeneration);
 					return result.status;
 				}
 				state = 'ready';
@@ -109,6 +110,9 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 		if (state === 'ready') {
 			return Promise.resolve(null);
 		}
+		if (unavailable) {
+			return Promise.resolve(DesktopModuleEnsureStatus.UNAVAILABLE);
+		}
 		if (pending) {
 			return pending;
 		}
@@ -121,6 +125,7 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 	return {
 		ensure,
 		isSettled: () => state === 'ready',
+		isUnavailable: () => unavailable,
 		subscribe: (listener) => {
 			listeners.add(listener);
 			return () => {
@@ -135,6 +140,7 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 			}
 			backoff.reset();
 			state = 'idle';
+			unavailable = false;
 			generation++;
 			listeners.clear();
 		},

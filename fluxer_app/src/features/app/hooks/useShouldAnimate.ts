@@ -19,7 +19,6 @@ export interface UseShouldAnimateOptions {
 	isAnimated?: boolean;
 	isHovering?: boolean;
 	isFocused?: boolean;
-	entitlementOk?: boolean;
 }
 
 function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
@@ -57,7 +56,6 @@ interface ShouldAnimateDecisionInput {
 	reducedMotion: boolean;
 	keptUnderReducedMotion: boolean;
 	isInteracting: boolean;
-	entitlementOk?: boolean;
 	saveData: boolean;
 }
 
@@ -67,11 +65,9 @@ function resolveShouldAnimateDecision({
 	reducedMotion,
 	keptUnderReducedMotion,
 	isInteracting,
-	entitlementOk,
 	saveData,
 }: ShouldAnimateDecisionInput): boolean {
 	if (!isAnimated) return false;
-	if (entitlementOk === false) return false;
 	if (saveData) return false;
 	if (allowance === 'NEVER') return false;
 	if (reducedMotion && !keptUnderReducedMotion) return isInteracting;
@@ -84,7 +80,6 @@ export function useShouldAnimate({
 	isAnimated = true,
 	isHovering = false,
 	isFocused = false,
-	entitlementOk,
 }: UseShouldAnimateOptions): boolean {
 	const saveData = useSaveData();
 	const allowance = getKindAllowance(kind);
@@ -94,7 +89,6 @@ export function useShouldAnimate({
 		reducedMotion: Accessibility.useReducedMotion,
 		keptUnderReducedMotion: isKeptUnderReducedMotion(kind),
 		isInteracting: isHovering || isFocused,
-		entitlementOk,
 		saveData,
 	});
 }

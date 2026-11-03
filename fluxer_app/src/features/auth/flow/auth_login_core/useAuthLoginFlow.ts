@@ -3,11 +3,11 @@
 import {AuthLoginStep} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import {startTransition, useMemo, useReducer} from 'react';
 
-export type CredentialsBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.METHOD;
+type CredentialsBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.METHOD;
 
-export type MethodBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.INSTANCE;
+type MethodBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.INSTANCE;
 
-export interface AuthLoginFlowState {
+interface AuthLoginFlowState {
 	showAccountSelector: boolean;
 	hasCompletedInstanceStep: boolean;
 	hasSelectedLoginMethod: boolean;
@@ -18,7 +18,7 @@ export interface AuthLoginFlowState {
 	error: string | null;
 }
 
-export interface AuthLoginFlowSync {
+interface AuthLoginFlowSync {
 	startWithAddAccount: boolean;
 	forceCredentials: boolean;
 	initialIdentifier: string | null;
@@ -31,7 +31,7 @@ export interface AuthLoginFlowInit extends AuthLoginFlowSync {
 	hasStoredAccounts: boolean;
 }
 
-function hasInitialIdentifier(initialIdentifier: string | null): boolean {
+export function hasInitialIdentifier(initialIdentifier: string | null): boolean {
 	if (initialIdentifier == null) {
 		return false;
 	}
@@ -68,7 +68,7 @@ function initialAuthLoginFlowState(init: AuthLoginFlowInit): AuthLoginFlowState 
 	};
 }
 
-export type AuthLoginFlowAction =
+type AuthLoginFlowAction =
 	| {type: 'syncFromProps'; sync: AuthLoginFlowSync}
 	| {
 			type: 'showFormForAccount';

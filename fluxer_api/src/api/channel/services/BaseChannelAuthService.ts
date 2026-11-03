@@ -2,9 +2,14 @@
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import type {AuthenticatedChannel, AuthenticatedThread} from '@app/api/channel/services/AuthenticatedChannel';
+import type {
+	AuthenticatedChannel,
+	AuthenticatedThread,
+	ChannelAccess,
+} from '@app/api/channel/services/AuthenticatedChannel';
 import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
 import {
+	assertPersonalNotesEnabled,
 	ensurePersonalNotesChannelExists,
 	isPersonalNotesChannelId,
 } from '@app/api/channel/services/PersonalNotesChannelRepair';
@@ -25,16 +30,28 @@ import {
 	type ThreadViewer,
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
-import {isGuildMemberTimedOut} from '@app/api/guild/GuildModel';
+import {isGuildMemberTimedOut, mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import {guildVisitHistoryWindowTotal} from '@app/api/guild/visits/GuildVisitMetrics';
+import {
+	chargeGuildVisitorBuckets,
+	computeVisitorChannelPermissionsFor,
+	GUILD_VISITOR_READ_BUCKETS,
+	recordGuildVisitHistoryRead,
+	resolveGuildVisitorAccess,
+	toVisitorChannelModel,
+	visitorHistoryCutoff,
+} from '@app/api/guild/visits/GuildVisitorAccess';
 import type {GuildChannelAuthContext, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {startEarly} from '@app/api/utils/ConcurrencyUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GUILD_VISITOR_PERMISSIONS_MASK} from '@fluxer/constants/src/GuildVisitConstants';
 import {
 	canViewThread,
 	isThreadModerator,
@@ -96,13 +113,16 @@ export abstract class BaseChannelAuthService {
 		channelId,
 		viewer,
 		skipNsfwValidation,
+		access = 'member',
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		viewer: ThreadViewer;
 		skipNsfwValidation?: boolean;
+		access?: ChannelAccess;
 	}): Promise<AuthenticatedChannel> {
-		if (this.isPersonalNotesChannel({userId, channelId})) {
+		if (isPersonalNotesChannelId({userId, channelId})) {
+			await assertPersonalNotesEnabled();
 			const channel = await ensurePersonalNotesChannelExists({
 				channelRepository: this.channelRepository.channelData,
 				userId,
@@ -121,11 +141,112 @@ export abstract class BaseChannelAuthService {
 			const recipients = await this.userRepository.listUsers(Array.from(channel.recipientIds));
 			return this.getDMChannelAuth({channel, recipients, userId});
 		}
-		return this.getGuildChannelAuth({channel, userId, skipNsfwValidation});
+		if (access !== 'visitor_read') {
+			return this.getGuildChannelAuth({channel, userId, skipNsfwValidation});
+		}
+		try {
+			return await this.getGuildChannelAuth({channel, userId, skipNsfwValidation});
+		} catch (memberError) {
+			const visitorAuth = await this.getVisitorChannelAuth({channel, userId});
+			if (visitorAuth) return visitorAuth;
+			throw memberError;
+		}
 	}
 
-	isPersonalNotesChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
-		return isPersonalNotesChannelId({userId, channelId});
+	protected async getVisitorChannelAuth({
+		channel,
+		userId,
+	}: {
+		channel: Channel;
+		userId: UserID;
+	}): Promise<AuthenticatedChannel | null> {
+		const guildId = channel.guildId;
+		if (guildId === null) return null;
+		const access = await resolveGuildVisitorAccess({userId, guildId});
+		if (!access) return null;
+		const channelData = this.channelRepository.channelData;
+		let thread: AuthenticatedThread | undefined;
+		let permissions: bigint;
+		if (THREAD_CHANNEL_TYPES.has(channel.type)) {
+			const [state, parent] = await Promise.all([
+				this.channelRepository.threads.getState(channel.id),
+				channel.parentId ? channelData.findUnique(channel.parentId) : Promise.resolve(null),
+			]);
+			if (!state || !parent || parent.guildId !== guildId || !THREAD_PARENT_CHANNEL_TYPES.has(parent.type)) {
+				throw new UnknownChannelError();
+			}
+			const category = await this.findParentCategory(parent);
+			const parentPermissions = computeVisitorChannelPermissionsFor({
+				access,
+				channel: parent,
+				parent: category,
+				thread: {private: state.type === ChannelTypes.PRIVATE_THREAD},
+			});
+			permissions = threadViewPermissions(parentPermissions) & GUILD_VISITOR_PERMISSIONS_MASK;
+			thread = {
+				state,
+				parent: toVisitorChannelModel(parent),
+				member: null,
+				parentPermissions,
+				actor: {
+					permissions: parentPermissions,
+					isOwner: false,
+					timedOut: false,
+					thread: {
+						type: state.type,
+						archived: state.archived,
+						locked: state.locked,
+						invitable: state.invitable ?? true,
+					},
+					isThreadOwner: false,
+					isMember: false,
+				},
+				isModerator: false,
+				enforceMfa: () => {},
+			};
+		} else {
+			permissions = computeVisitorChannelPermissionsFor({
+				access,
+				channel,
+				parent: await this.findParentCategory(channel),
+			});
+		}
+		if ((permissions & Permissions.VIEW_CHANNEL) !== Permissions.VIEW_CHANNEL) throw new UnknownChannelError();
+		await chargeGuildVisitorBuckets({buckets: GUILD_VISITOR_READ_BUCKETS, userId, guildId, tier: access.tier});
+		await recordGuildVisitHistoryRead({userId, guildId, tier: access.tier});
+		const guild = mapGuildToGuildResponse(access.view.guild);
+		const canReadHistory = (permissions & Permissions.READ_MESSAGE_HISTORY) === Permissions.READ_MESSAGE_HISTORY;
+		const windowed = access.historyCutoff !== null;
+		const effectivePermissions = windowed ? permissions & ~Permissions.READ_MESSAGE_HISTORY : permissions;
+		const cutoff = visitorHistoryCutoff({
+			canReadHistory,
+			guildCutoff: guild.message_history_cutoff ?? null,
+			windowCutoff: access.historyCutoff,
+		});
+		if (windowed) guildVisitHistoryWindowTotal.inc();
+		const hasPermission = async (permission: bigint): Promise<boolean> =>
+			(effectivePermissions & permission) === permission;
+		return {
+			channel: toVisitorChannelModel(channel),
+			guild: {...guild, message_history_cutoff: cutoff},
+			member: null,
+			hasPermission,
+			checkPermission: async (permission: bigint) => {
+				if (!(await hasPermission(permission))) throw new MissingPermissionsError();
+			},
+			thread,
+			visitor: {
+				permissions: effectivePermissions,
+				tier: access.tier,
+				adultContentAllowed: access.adultContentAllowed,
+				historyCutoff: access.historyCutoff,
+			},
+		};
+	}
+
+	private async findParentCategory(channel: Channel): Promise<Channel | null> {
+		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) return null;
+		return this.channelRepository.channelData.findUnique(channel.parentId);
 	}
 
 	protected async getRealPersonalNotesChannelAuth({
@@ -135,7 +256,7 @@ export abstract class BaseChannelAuthService {
 		channel: Channel;
 		userId: UserID;
 	}): Promise<AuthenticatedChannel> {
-		if (!this.isPersonalNotesChannel({userId, channelId: channel.id})) {
+		if (!isPersonalNotesChannelId({userId, channelId: channel.id})) {
 			throw new UnknownChannelError();
 		}
 		if (channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
@@ -210,6 +331,13 @@ export abstract class BaseChannelAuthService {
 			return this.getThreadChannelAuth({channel, userId, skipNsfwValidation});
 		}
 		const guildId = channel.guildId!;
+		const channelPermissionsTask = startEarly(
+			this.gatewayService.getUserPermissions({
+				guildId,
+				userId,
+				channelId: channel.id,
+			}),
+		);
 		const [authContextResult, guildMemberResult] = await Promise.all([
 			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(channel)}),
 			this.fetchGuildMemberOrThrow({guildId, userId}),
@@ -231,11 +359,7 @@ export abstract class BaseChannelAuthService {
 			guildData: guildDataResult,
 			userId,
 		});
-		const channelPermissions = await this.gatewayService.getUserPermissions({
-			guildId,
-			userId,
-			channelId: channel.id,
-		});
+		const channelPermissions = await channelPermissionsTask;
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
 			const allowed = (channelPermissions & permission) === permission;
 			if (allowed) enforceGuildMfa(permission);
@@ -280,7 +404,7 @@ export abstract class BaseChannelAuthService {
 		};
 	}
 
-	async resolveThreadPermissionContext({
+	private async resolveThreadPermissionContext({
 		thread,
 		userId,
 	}: {

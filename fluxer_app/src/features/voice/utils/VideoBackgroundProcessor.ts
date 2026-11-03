@@ -2,11 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getBackgroundMediaObjectURL} from '@app/features/theme/utils/BackgroundImageDB';
-import VoiceSettings, {
-	type BackgroundImage,
-	BLUR_BACKGROUND_ID,
-	NONE_BACKGROUND_ID,
-} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings, {BLUR_BACKGROUND_ID, NONE_BACKGROUND_ID} from '@app/features/voice/state/VoiceSettings';
 import {
 	type CameraVideoProcessorHandle,
 	type CameraVideoProcessorOptions,
@@ -22,8 +18,6 @@ const logger = new Logger('VideoBackgroundProcessor');
 
 export interface BackgroundProcessorOptions {
 	backgroundImageId?: string;
-	backgroundImages?: Array<BackgroundImage>;
-	mirrorCamera?: boolean;
 }
 
 export interface AppliedBackgroundProcessor {
@@ -129,7 +123,7 @@ async function resolveBackgroundEffectConfig(
 	if (backgroundImageId === BLUR_BACKGROUND_ID) {
 		return {mode: CameraBackgroundMode.BLUR, blurStrength};
 	}
-	const backgroundImages = options?.backgroundImages ?? VoiceSettings.getBackgroundImages();
+	const backgroundImages = VoiceSettings.getBackgroundImages();
 	const hasImage = backgroundImages.some((image) => image.id === backgroundImageId);
 	if (!hasImage) {
 		throw new Error(`Custom camera background is not present in the saved media list: ${backgroundImageId}`);
@@ -146,37 +140,18 @@ async function resolveBackgroundEffectConfig(
 	};
 }
 
-export async function applyCameraMirrorProcessor(
-	track: LocalVideoTrack,
-	mirrorCamera = VoiceSettings.getMirrorCamera(),
-) {
-	try {
-		if (!mirrorCamera) {
-			await clearCameraVideoProcessor(track);
-			logger.debug('No camera mirror processor applied');
-			return null;
-		}
-		return applyCameraVideoProcessor(track, {mirror: true}, 'Applied camera mirror');
-	} catch (error) {
-		logger.warn('Failed to apply camera mirror processor', error);
-		throw error;
-	}
-}
-
 export async function applyBackgroundProcessor(
 	track: LocalVideoTrack,
 	options?: BackgroundProcessorOptions,
 ): Promise<AppliedBackgroundProcessor | null> {
 	try {
-		const mirrorCamera = options?.mirrorCamera ?? VoiceSettings.getMirrorCamera();
 		const background = await resolveBackgroundEffectConfig(options);
-		if (!mirrorCamera && background == null) {
+		if (background == null) {
 			await clearCameraVideoProcessor(track);
 			logger.debug('No camera video processor applied');
 			return null;
 		}
-		const logLabel = background == null ? 'Applied camera mirror' : `Applied camera background (${background.mode})`;
-		return applyCameraVideoProcessor(track, {mirror: mirrorCamera, background}, logLabel);
+		return applyCameraVideoProcessor(track, {background}, `Applied camera background (${background.mode})`);
 	} catch (error) {
 		logger.warn('Failed to apply camera video processor', error);
 		throw error;

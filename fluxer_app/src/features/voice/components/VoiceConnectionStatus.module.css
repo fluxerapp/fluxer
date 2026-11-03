@@ -44,7 +44,7 @@
 	border: none;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	font-weight: 600;
 	font-size: 0.875rem;
 	line-height: 1.125rem;
@@ -385,7 +385,7 @@
 	background: transparent;
 	color: var(--text-tertiary);
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -452,9 +452,9 @@
 	font-weight: 600;
 	font-size: 0.75rem;
 	color: var(--text-primary);
-	margin-left: auto;
+	margin-inline-start: auto;
 	flex: 1 1 auto;
-	text-align: right;
+	text-align: end;
 }
 
 .popoutStatTextValue {
@@ -505,7 +505,7 @@
 	color: var(--status-online);
 	min-width: 0;
 	max-width: 100%;
-	text-align: right;
+	text-align: end;
 }
 
 .chartContainer {

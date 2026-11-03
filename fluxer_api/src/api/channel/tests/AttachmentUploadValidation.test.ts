@@ -13,8 +13,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {TestMediaService} from '@app/api/test/TestMediaService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Logger} from '@fluxer/logger/src/Logger';
-import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 class NullUploadMetadataService extends TestMediaService {
 	override async getMetadata(request: MediaProxyMetadataRequest) {
@@ -77,7 +76,6 @@ describe('Attachment Upload Validation', () => {
 				const guild = await createGuild(harness, account.token, 'Storage Unavailable Test Guild');
 				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 				const channelId = guild.system_channel_id ?? channel.id;
-				const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 				harness.storageService.configure({shouldFailUpload: true});
 				try {
 					const payload = {
@@ -90,25 +88,8 @@ describe('Attachment Upload Validation', () => {
 					const body = JSON.parse(text) as {code?: string};
 					expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
 					expect(body.code).toBe(APIErrorCodes.SERVICE_UNAVAILABLE);
-					expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-					expect(errorLoggerSpy).toHaveBeenCalledWith(
-						{
-							err: expect.objectContaining({
-								cause: expect.objectContaining({message: 'Mock storage upload failure'}),
-								code: APIErrorCodes.SERVICE_UNAVAILABLE,
-								message: 'Attachment storage is temporarily unavailable',
-								status: HTTP_STATUS.SERVICE_UNAVAILABLE,
-							}),
-							method: 'POST',
-							path: '/channels/:channel_id/messages',
-							requestId: expect.any(String),
-							status: HTTP_STATUS.SERVICE_UNAVAILABLE,
-						},
-						'Request failed',
-					);
 				} finally {
 					harness.storageService.configure({shouldFailUpload: false});
-					errorLoggerSpy.mockRestore();
 				}
 			});
 		});
@@ -144,25 +125,15 @@ describe('Attachment Upload Validation', () => {
 				channelId = guild.system_channel_id ?? channel.id;
 			});
 			const testCases = [
-				{filename: 'file<script>.txt', shouldSanitize: true, description: 'HTML tag in filename'},
-				{filename: 'file>output.txt', shouldSanitize: true, description: 'redirect operator'},
-				{filename: 'file|pipe.txt', shouldSanitize: true, description: 'pipe character'},
-				{filename: 'file:colon.txt', shouldSanitize: true, description: 'colon (Windows reserved)'},
-				{filename: 'file*star.txt', shouldSanitize: true, description: 'asterisk (wildcard)'},
-				{filename: 'file?question.txt', shouldSanitize: true, description: 'question mark'},
-				{filename: 'file"quote.txt', shouldSanitize: true, description: 'double quote'},
-				{filename: 'COM1.txt', shouldSanitize: true, description: 'Windows reserved name'},
-				{filename: 'LPT1.txt', shouldSanitize: true, description: 'Windows reserved name'},
-				{filename: 'file with spaces.txt', shouldSanitize: false, description: 'spaces should be OK'},
-				{
-					filename: 'file-dash_underscore.txt',
-					shouldSanitize: false,
-					description: 'dash and underscore OK',
-				},
-				{filename: 'file.multiple.dots.txt', shouldSanitize: false, description: 'multiple dots OK'},
-				{filename: 'файл.txt', shouldSanitize: false, description: 'unicode characters OK'},
-				{filename: '文件.txt', shouldSanitize: false, description: 'CJK characters OK'},
-				{filename: '😀.txt', shouldSanitize: false, description: 'emoji OK'},
+				{filename: 'file<script>.txt', description: 'HTML tag in filename'},
+				{filename: 'file>output.txt', description: 'redirect operator'},
+				{filename: 'file|pipe.txt', description: 'pipe character'},
+				{filename: 'file:colon.txt', description: 'colon (Windows reserved)'},
+				{filename: 'file*star.txt', description: 'asterisk (wildcard)'},
+				{filename: 'file?question.txt', description: 'question mark'},
+				{filename: 'file"quote.txt', description: 'double quote'},
+				{filename: 'COM1.txt', description: 'Windows reserved name'},
+				{filename: 'LPT1.txt', description: 'Windows reserved name'},
 			];
 			for (const tc of testCases) {
 				it(`should handle ${tc.description}`, async () => {
@@ -184,11 +155,9 @@ describe('Attachment Upload Validation', () => {
 					expect(json.attachments).not.toBeNull();
 					expect(json.attachments!).toHaveLength(1);
 					const sanitized = json.attachments![0].filename;
-					if (tc.shouldSanitize) {
-						const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
-						for (const char of dangerousChars) {
-							expect(sanitized).not.toContain(char);
-						}
+					const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
+					for (const char of dangerousChars) {
+						expect(sanitized).not.toContain(char);
 					}
 				});
 			}

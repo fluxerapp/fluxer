@@ -10,6 +10,7 @@ import {
 	type EmbedProps,
 	getBorderColor,
 	isValidMedia,
+	useFreshGalleryImages,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedMediaRenderer} from '@app/features/channel/components/embeds/channel_embed/EmbedMediaRenderer';
 import {
@@ -117,9 +118,10 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 		const hasImage = isValidMedia(embed.image);
 		const hasThumbnail = isValidMedia(embed.thumbnail);
 		const hasAnyMedia = hasVideo || hasImage || hasThumbnail;
-		const galleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
+		const rawGalleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
 			return collectGalleryImages({embed, embedIndex, embedList});
 		}, [embed, embedIndex, embedList]);
+		const galleryImages = useFreshGalleryImages(rawGalleryImages);
 		const showGallery = galleryImages.length > 1 || (!hasAnyMedia && galleryImages.length > 0);
 		const galleryAttachments = useMemo(
 			() => (showGallery ? buildGalleryAttachments(galleryImages, embed, embedIndex) : undefined),
@@ -128,7 +130,14 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 		const shouldRenderMedia = hasAnyMedia || showGallery;
 		const blueskyMediaMaxWidth = useMemo(() => {
 			if (showGallery || isNested) return undefined;
-			const primaryMedia = hasVideo ? embed.video : hasImage ? embed.image : hasThumbnail ? embed.thumbnail : undefined;
+			let primaryMedia: EmbedMedia | undefined;
+			if (hasVideo) {
+				primaryMedia = embed.video;
+			} else if (hasImage) {
+				primaryMedia = embed.image;
+			} else if (hasThumbnail) {
+				primaryMedia = embed.thumbnail;
+			}
 			if (!primaryMedia || !isValidMedia(primaryMedia)) return undefined;
 			return calculateMediaDimensions(primaryMedia).width;
 		}, [embed.video, embed.image, embed.thumbnail, hasVideo, hasImage, hasThumbnail, isNested, showGallery]);

@@ -6,8 +6,8 @@ import type {
 	KeyedStoredAccount,
 	StoredAccount,
 	StoredAccountList,
-} from '@app/features/auth/state/AccountStorage';
-import {BrowserAccountStorageUnavailableError, planAccountRekey} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
+import {BrowserAccountStorageUnavailableError, planAccountRekey} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey, LEGACY_APP_STORAGE_MIGRATION_MARKER_KEY} from '@app/features/platform/state/AppStorageKeys';
 import {
@@ -47,7 +47,7 @@ import {
 
 const logger = new Logger('DesktopLegacyImport');
 
-export const DESKTOP_LEGACY_IMPORT_MAX_FAILURES = 10;
+const DESKTOP_LEGACY_IMPORT_MAX_FAILURES = 10;
 
 const LEGACY_CORPUS_STAMP = 0;
 
@@ -61,7 +61,7 @@ export const DesktopLegacyImportStatus = Object.freeze({
 
 export type DesktopLegacyImportStatus = (typeof DesktopLegacyImportStatus)[keyof typeof DesktopLegacyImportStatus];
 
-export const DesktopLegacyImportRefusal = Object.freeze({
+const DesktopLegacyImportRefusal = Object.freeze({
 	STORE_UNAVAILABLE: 'store-unavailable',
 	STICKY_FALLBACK: 'sticky-fallback',
 	NO_LOCAL_STORAGE: 'no-local-storage',
@@ -69,7 +69,7 @@ export const DesktopLegacyImportRefusal = Object.freeze({
 	ACCOUNTS_NOT_AUTHORITATIVE: 'accounts-not-authoritative',
 } as const);
 
-export type DesktopLegacyImportRefusal = (typeof DesktopLegacyImportRefusal)[keyof typeof DesktopLegacyImportRefusal];
+type DesktopLegacyImportRefusal = (typeof DesktopLegacyImportRefusal)[keyof typeof DesktopLegacyImportRefusal];
 
 export interface DesktopLegacyImportAccountSource {
 	getAllAccounts(): Promise<StoredAccountList>;
@@ -447,7 +447,7 @@ async function storeNeedsReseed(
 	return !expectedKeys.has(context.activeAccountKey);
 }
 
-export async function pruneDesktopLegacyAccounts(
+async function pruneDesktopLegacyAccounts(
 	request: DesktopLegacyImportRequest,
 	knownStorageKeys: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<string>> {

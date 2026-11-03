@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
-	applyDefaultAppShellDocumentBranding,
 	applyRuntimeDocumentBranding,
+	applyServedDocumentBranding,
 } from '@app/features/app/state/RuntimeDocumentBranding';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {compareStructural, reaction} from 'mobx';
 
 let activeDisposer: (() => void) | null = null;
@@ -39,10 +41,30 @@ export function installRuntimeConfigEffects(): () => void {
 		() => RuntimeConfig.getSnapshotOrNull()?.appPublic ?? null,
 		(appPublic) => {
 			if (appPublic === null) {
-				applyDefaultAppShellDocumentBranding();
+				applyServedDocumentBranding();
 				return;
 			}
 			applyRuntimeDocumentBranding(appPublic);
+		},
+		{fireImmediately: true, equals: compareStructural},
+	);
+	const disposeDesktopProductName = reaction(
+		() => {
+			const snapshot = RuntimeConfig.getSnapshotOrNull();
+			if (snapshot === null) {
+				return null;
+			}
+			const instanceKey = runtimeInstanceKey(snapshot);
+			if (instanceKey === null) {
+				return null;
+			}
+			return {instanceKey, productName: snapshot.appPublic.branding.product_name};
+		},
+		(report) => {
+			if (report === null) {
+				return;
+			}
+			getElectronAPI()?.reportInstanceProductName?.(report.instanceKey, report.productName);
 		},
 		{fireImmediately: true, equals: compareStructural},
 	);
@@ -52,8 +74,9 @@ export function installRuntimeConfigEffects(): () => void {
 		}
 		disposeRouting();
 		disposeBranding();
+		disposeDesktopProductName();
 		http.clearRuntime();
-		applyDefaultAppShellDocumentBranding();
+		applyServedDocumentBranding();
 		activeDisposer = null;
 	};
 	activeDisposer = dispose;

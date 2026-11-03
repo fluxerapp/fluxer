@@ -41,7 +41,11 @@ export function MemesPickerHeader({
 	selectedFilter,
 	onFilterChange,
 	inputRef,
+	className,
+	showBackButton = true,
 }: {
+	className?: string;
+	showBackButton?: boolean;
 	searchTerm: string;
 	onSearchTermChange: (value: string) => void;
 	onClearSearch: () => void;
@@ -94,13 +98,16 @@ export function MemesPickerHeader({
 		},
 	];
 	return (
-		<div className={styles.headerContainer} data-flx="channel.pickers.memes.memes-picker-header.header-container">
+		<div
+			className={className ?? styles.headerContainer}
+			data-flx="channel.pickers.memes.memes-picker-header.header-container"
+		>
 			<PickerSearchInput
 				value={searchTerm}
 				onChange={onSearchTermChange}
 				placeholder={i18n._(SEARCH_SAVED_MEDIA_DESCRIPTOR)}
 				inputRef={inputRef}
-				showBackButton={Boolean(searchTerm)}
+				showBackButton={showBackButton && Boolean(searchTerm)}
 				onBackButtonClick={onClearSearch}
 				data-flx="channel.pickers.memes.memes-picker-header.picker-search-input.search-term-change"
 			/>

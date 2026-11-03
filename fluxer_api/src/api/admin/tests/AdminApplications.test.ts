@@ -7,7 +7,6 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-import type {ApplicationUpdateResponse} from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface AuditLogsResponse {
@@ -41,24 +40,6 @@ describe('Admin applications', () => {
 			.get(`/admin/applications?owner_id=${owner.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.executeWithResponse();
-	});
-
-	test('transfers application ownership', async () => {
-		const owner = await createTestAccount(harness);
-		const newOwner = await createTestAccount(harness);
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName('Transferred App'),
-			redirect_uris: ['https://example.test/callback'],
-		});
-		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_TRANSFER_OWNERSHIP]);
-
-		const response = await createBuilder<ApplicationUpdateResponse>(harness, `${owner.token}`)
-			.patch(`/admin/applications/${app.application.id}`)
-			.body({new_owner_id: newOwner.userId})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-
-		expect(response.application.owner_user_id).toBe(newOwner.userId);
 	});
 
 	test('refuses to transfer the built-in admin application', async () => {

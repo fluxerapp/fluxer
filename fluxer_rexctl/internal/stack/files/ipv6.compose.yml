@@ -1,0 +1,3 @@
+networks:
+  fluxer:
+    enable_ipv6: true

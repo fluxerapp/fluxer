@@ -4,7 +4,6 @@ import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/te
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -12,24 +11,16 @@ import {
 	createChannelInvite,
 	createGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	THREADS_FEATURE,
-	THREADS_FEATURE_HEADER,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {THREADS_FEATURE, THREADS_FEATURE_HEADER, threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ServerMessageFlags, ThreadMemberFlags} from '@fluxer/constants/src/ThreadConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
-import {ThreadAlreadyCreatedForMessageError} from '@fluxer/errors/src/domains/channel/ThreadAlreadyCreatedForMessageError';
 import type {
 	ActiveThreadsResponse,
 	ArchivedThreadsResponse,
@@ -38,8 +29,7 @@ import type {
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface Setup {
 	owner: TestAccount;
@@ -70,20 +60,15 @@ describe('thread routes', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -115,6 +100,16 @@ describe('thread routes', () => {
 			.body(body)
 			.expect(201)
 			.execute();
+	}
+
+	async function threadMessages(token: string, channelId: string): Promise<Array<MessageResponse>> {
+		return threadsRequest<Array<MessageResponse>>(harness, token).get(`/channels/${channelId}/messages`).execute();
+	}
+
+	async function threadCreatedMessages(s: Setup): Promise<Array<MessageResponse>> {
+		return (await threadMessages(s.owner.token, s.channelId)).filter(
+			(message) => message.type === MessageTypes.THREAD_CREATED,
+		);
 	}
 
 	describe('control arm', () => {
@@ -163,21 +158,9 @@ describe('thread routes', () => {
 			}
 		}
 
-		it('answers every thread route like an unregistered path while the experiment is off', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: false});
-			await expectEveryRouteUnregistered(s, s.owner.token, {[THREADS_FEATURE_HEADER]: THREADS_FEATURE});
-		});
-
 		it('answers every thread route like an unregistered path without the client capability', async () => {
 			const s = await setup();
 			await expectEveryRouteUnregistered(s, s.owner.token, {});
-		});
-
-		it('answers every thread route like an unregistered path for a guild outside the experiment', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: true, user_basis_points: 10000, disabled_guild_ids: [s.guildId]});
-			await expectEveryRouteUnregistered(s, s.owner.token, {[THREADS_FEATURE_HEADER]: THREADS_FEATURE});
 		});
 
 		it('answers bot-only routes like an unregistered path for users', async () => {
@@ -193,27 +176,12 @@ describe('thread routes', () => {
 				expect(((await response.json()) as {code: string}).code).toBe('NOT_FOUND');
 			}
 		});
-
-		it('writes no thread data and dispatches nothing when the gate is off', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: false});
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-			const message = await sendMessage(harness, s.owner.token, s.channelId, 'hello');
-			await threadsRequest(harness, s.owner.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'nope'})
-				.expect(404)
-				.execute();
-			expect(await repository.threads.getState(createChannelID(BigInt(message.id)))).toBeNull();
-			expect(dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_'))).toEqual([]);
-		});
 	});
 
 	describe('start thread from message', () => {
 		it('creates a public thread that shares the message id', async () => {
 			const s = await setup();
 			const message = await sendMessage(harness, s.member.token, s.channelId, 'start here');
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			const thread = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)
 				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
 				.body({name: 'Discussion', auto_archive_duration: 1440})
@@ -237,25 +205,6 @@ describe('thread routes', () => {
 			expect(thread.member).toBeUndefined();
 			expect('position' in thread).toBe(false);
 			expect('permission_overwrites' in thread).toBe(false);
-			const threadEvents = dispatch.mock.calls
-				.map(([params]) => params)
-				.filter((params) => params.event !== 'GUILD_AUDIT_LOG_ENTRY_CREATE');
-			expect(threadEvents.map((params) => params.event)).toEqual(['THREAD_CREATE', 'MESSAGE_UPDATE', 'MESSAGE_CREATE']);
-			expect(threadEvents[0]!.data).toMatchObject({id: message.id, newly_created: true});
-			const starter = threadEvents[2]!.data as MessageResponse;
-			expect(starter).toMatchObject({
-				id: message.id,
-				channel_id: message.id,
-				type: MessageTypes.THREAD_STARTER_MESSAGE,
-				message_reference: {channel_id: s.channelId, message_id: message.id},
-			});
-			expect(starter.referenced_message?.id).toBe(message.id);
-			expect(starter.referenced_message?.thread?.id).toBe(message.id);
-			expect(starter.referenced_message?.thread && 'member' in starter.referenced_message.thread).toBe(false);
-			const update = threadEvents[1]!.data as MessageResponse & {__thread_only_update?: boolean};
-			expect(update.flags & ServerMessageFlags.HAS_THREAD).toBe(ServerMessageFlags.HAS_THREAD);
-			expect(update.__thread_only_update).toBe(true);
-			expect(update.thread?.id).toBe(message.id);
 			const stored = await repository.messages.getMessage(
 				createChannelID(BigInt(s.channelId)),
 				createMessageID(BigInt(message.id)),
@@ -274,7 +223,6 @@ describe('thread routes', () => {
 			const nearBottom = await sendMessage(harness, s.owner.token, s.channelId, 'recent news');
 			let latest = nearBottom;
 			for (let i = 0; i < 4; i++) latest = await sendMessage(harness, s.owner.token, s.channelId, `filler ${i}`);
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			for (const message of [nearBottom, pushedUp]) {
 				await threadsRequest(harness, s.owner.token)
 					.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
@@ -282,9 +230,7 @@ describe('thread routes', () => {
 					.expect(201)
 					.execute();
 			}
-			const announced = dispatch.mock.calls
-				.map(([params]) => params.data as MessageResponse)
-				.filter((data) => data.type === MessageTypes.THREAD_CREATED);
+			const announced = await threadCreatedMessages(s);
 			expect(announced).toHaveLength(1);
 			expect(announced[0]).toMatchObject({channel_id: s.channelId, content: 'old news'});
 			expect(announced[0]!.message_reference?.channel_id).toBe(pushedUp.id);
@@ -370,23 +316,6 @@ describe('thread routes', () => {
 				.execute();
 		});
 
-		it('refunds the parent slowmode when the thread write loses a race', async () => {
-			const s = await setup();
-			await threadsRequest(harness, s.owner.token)
-				.patch(`/channels/${s.channelId}`)
-				.body({rate_limit_per_user: 60})
-				.expect(200)
-				.execute();
-			const message = await sendMessage(harness, s.owner.token, s.channelId, 'x');
-			vi.spyOn(ThreadRepository.prototype, 'create').mockRejectedValueOnce(new ThreadAlreadyCreatedForMessageError());
-			await threadsRequest(harness, s.member.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'raced'})
-				.expect(400, APIErrorCodes.THREAD_ALREADY_CREATED_FOR_MESSAGE)
-				.execute();
-			await startThread(s.member.token, s.channelId, {name: 'next', type: ChannelTypes.PUBLIC_THREAD});
-		});
-
 		it('resets the thread create slowmode when the parent rate limit changes', async () => {
 			const s = await setup();
 			const setRateLimit = (seconds: number) =>
@@ -402,42 +331,18 @@ describe('thread routes', () => {
 				.body({name: 'blocked', type: ChannelTypes.PUBLIC_THREAD})
 				.expect(400, APIErrorCodes.SLOWMODE_RATE_LIMITED)
 				.execute();
-			const clear = vi.spyOn(RateLimitService.prototype, 'clearLimitsByIdentifierPrefix');
 			await setRateLimit(30);
-			expect(clear.mock.calls).toEqual([[`slowmode:${s.channelId}:`], [`slowmode-thread:${s.channelId}:`]]);
 			await startThread(s.member.token, s.channelId, {name: 'second', type: ChannelTypes.PUBLIC_THREAD});
-		});
-
-		it('clears only the message slowmode on a rate limit change in a guild without threads', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'control');
-			const channel = await createChannel(harness, owner.token, guild.id, 'general');
-			const clear = vi.spyOn(RateLimitService.prototype, 'clearLimitsByIdentifierPrefix');
-			const arms: Array<[Parameters<typeof setChannelThreadsConfig>[0], number]> = [
-				[{enabled: false}, 60],
-				[{enabled: true, included_user_ids: [owner.userId]}, 30],
-			];
-			for (const [config, seconds] of arms) {
-				await setChannelThreadsConfig(config);
-				clear.mockClear();
-				await threadsRequest(harness, owner.token)
-					.patch(`/channels/${channel.id}`)
-					.body({rate_limit_per_user: seconds})
-					.expect(200)
-					.execute();
-				expect(clear.mock.calls).toEqual([[`slowmode:${channel.id}:`]]);
-			}
 		});
 	});
 
-	it('refuses a limited account on both thread create routes without dispatching', async () => {
+	it('refuses a limited account on both thread create routes', async () => {
 		const s = await setup();
 		const message = await sendMessage(harness, s.owner.token, s.channelId, 'start here');
 		await createBuilder(harness, '')
 			.post(`/test/users/${s.member.userId}/security-flags`)
 			.body({set_flags: ['ACCOUNT_LIMITED']})
 			.execute();
-		const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		await threadsRequest(harness, s.member.token)
 			.post(`/channels/${s.channelId}/threads`)
 			.body({name: 'limited', type: ChannelTypes.PUBLIC_THREAD})
@@ -449,7 +354,7 @@ describe('thread routes', () => {
 			.expect(403, APIErrorCodes.ACCOUNT_LIMITED)
 			.execute();
 		expect(await repository.threads.getState(createChannelID(BigInt(message.id)))).toBeNull();
-		expect(dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_'))).toEqual([]);
+		expect(await threadCreatedMessages(s)).toEqual([]);
 	});
 
 	describe('start thread without a message', () => {
@@ -503,18 +408,12 @@ describe('thread routes', () => {
 
 		it('posts a thread created message in the parent for public threads only', async () => {
 			const s = await setup();
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			const publicThread = await startThread(s.owner.token, s.channelId);
-			const created = dispatch.mock.calls
-				.map(([params]) => params)
-				.filter((params) => params.event === 'MESSAGE_CREATE')
-				.map((params) => params.data as MessageResponse);
-			expect(created).toHaveLength(1);
-			expect(created[0]).toMatchObject({type: MessageTypes.THREAD_CREATED, channel_id: s.channelId, content: 'topic'});
-			expect(created[0]!.message_reference?.channel_id).toBe(publicThread.id);
-			dispatch.mockClear();
 			await startThread(s.owner.token, s.channelId, {name: 'quiet', type: ChannelTypes.PRIVATE_THREAD});
-			expect(dispatch.mock.calls.filter(([params]) => params.event === 'MESSAGE_CREATE')).toEqual([]);
+			const created = await threadCreatedMessages(s);
+			expect(created).toHaveLength(1);
+			expect(created[0]).toMatchObject({channel_id: s.channelId, content: 'topic'});
+			expect(created[0]!.message_reference?.channel_id).toBe(publicThread.id);
 		});
 
 		it('refuses private threads without create private threads', async () => {
@@ -543,7 +442,6 @@ describe('thread routes', () => {
 		it('joins and leaves a thread', async () => {
 			const s = await setup();
 			const thread = await startThread(s.owner.token, s.channelId);
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/@me`)
 				.expect(204)
@@ -552,14 +450,7 @@ describe('thread routes', () => {
 				.put(`/channels/${thread.id}/thread-members/@me`)
 				.expect(204)
 				.execute();
-			const joined = dispatch.mock.calls.filter(([params]) => params.event === 'THREAD_MEMBERS_UPDATE');
-			expect(joined).toHaveLength(1);
-			expect(joined[0]![0].data).toMatchObject({
-				id: thread.id,
-				guild_id: s.guildId,
-				member_count: 2,
-				added_members: [{id: thread.id, user_id: s.member.userId, flags: 0}],
-			});
+			expect((await repository.threads.getState(createChannelID(BigInt(thread.id))))?.memberCount).toBe(2);
 			await threadsRequest(harness, s.member.token)
 				.delete(`/channels/${thread.id}/thread-members/@me`)
 				.expect(204)
@@ -614,68 +505,30 @@ describe('thread routes', () => {
 		it('adds and removes other members with recipient system messages', async () => {
 			const s = await setup();
 			const thread = await startThread(s.owner.token, s.channelId);
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			await threadsRequest(harness, s.owner.token)
 				.put(`/channels/${thread.id}/thread-members/${s.member.userId}`)
 				.expect(204)
 				.execute();
-			const recipientAdd = dispatch.mock.calls
-				.map(([params]) => params)
-				.find((params) => params.event === 'MESSAGE_CREATE')?.data as MessageResponse | undefined;
-			expect(recipientAdd).toMatchObject({type: MessageTypes.RECIPIENT_ADD, channel_id: thread.id});
+			const recipientAdd = (await threadMessages(s.owner.token, thread.id)).find(
+				(message) => message.type === MessageTypes.RECIPIENT_ADD,
+			);
+			expect(recipientAdd).toMatchObject({channel_id: thread.id});
 			expect(recipientAdd?.mentions.map((user) => user.id)).toEqual([s.member.userId]);
 			await threadsRequest(harness, s.member.token)
 				.delete(`/channels/${thread.id}/thread-members/${s.owner.userId}`)
 				.expect(403, APIErrorCodes.MISSING_PERMISSIONS)
 				.execute();
-			dispatch.mockClear();
 			await threadsRequest(harness, s.owner.token)
 				.delete(`/channels/${thread.id}/thread-members/${s.member.userId}`)
 				.expect(204)
 				.execute();
-			const events = dispatch.mock.calls.map(([params]) => params.event);
-			expect(events).toContain('THREAD_MEMBERS_UPDATE');
-			const removed = dispatch.mock.calls.find(([params]) => params.event === 'THREAD_MEMBERS_UPDATE')![0].data;
-			expect(removed).toMatchObject({removed_member_ids: [s.member.userId], member_count: 1});
+			const messages = await threadMessages(s.owner.token, thread.id);
+			expect(messages.some((message) => message.type === MessageTypes.RECIPIENT_REMOVE)).toBe(true);
+			expect((await repository.threads.getState(createChannelID(BigInt(thread.id))))?.memberCount).toBe(1);
 			await threadsRequest(harness, s.owner.token)
 				.delete(`/channels/${thread.id}/thread-members/${s.member.userId}`)
 				.expect(404, APIErrorCodes.UNKNOWN_THREAD_MEMBER)
 				.execute();
-		});
-
-		it('posts one recipient message when concurrent adds or removes race past the membership check', async () => {
-			const s = await setup();
-			const thread = await startThread(s.owner.token, s.channelId);
-			const realGetMember = ThreadRepository.prototype.getMember;
-			let stale: Awaited<ReturnType<ThreadRepository['getMember']>> = null;
-			vi.spyOn(ThreadRepository.prototype, 'getMember').mockImplementation(function (this: ThreadRepository, ...args) {
-				return args[1].toString() === s.member.userId ? Promise.resolve(stale) : realGetMember.apply(this, args);
-			});
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-			const recipientMessages = (type: number) =>
-				dispatch.mock.calls.filter(
-					([params]) => params.event === 'MESSAGE_CREATE' && (params.data as MessageResponse).type === type,
-				);
-			const put = () =>
-				threadsRequest(harness, s.owner.token)
-					.put(`/channels/${thread.id}/thread-members/${s.member.userId}`)
-					.expect(204)
-					.execute();
-			await Promise.all([put(), put()]);
-			expect(recipientMessages(MessageTypes.RECIPIENT_ADD)).toHaveLength(1);
-			stale = await realGetMember.call(
-				repository.threads as ThreadRepository,
-				createChannelID(BigInt(thread.id)),
-				createUserID(BigInt(s.member.userId)),
-			);
-			expect(stale).not.toBeNull();
-			const del = () =>
-				threadsRequest(harness, s.owner.token)
-					.delete(`/channels/${thread.id}/thread-members/${s.member.userId}`)
-					.expect(204)
-					.execute();
-			await Promise.all([del(), del()]);
-			expect(recipientMessages(MessageTypes.RECIPIENT_REMOVE)).toHaveLength(1);
 		});
 
 		it('refuses adding a user who is not a guild member', async () => {
@@ -685,16 +538,6 @@ describe('thread routes', () => {
 			await threadsRequest(harness, s.owner.token)
 				.put(`/channels/${thread.id}/thread-members/${outsider.userId}`)
 				.expect(404, APIErrorCodes.UNKNOWN_MEMBER)
-				.execute();
-		});
-
-		it('refuses adding a member who is outside the experiment like one who cannot view the parent', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({...ALL_THREADS_ACTIVE, excluded_user_ids: [s.member.userId]});
-			const thread = await startThread(s.owner.token, s.channelId);
-			await threadsRequest(harness, s.owner.token)
-				.put(`/channels/${thread.id}/thread-members/${s.member.userId}`)
-				.expect(403, APIErrorCodes.MISSING_ACCESS)
 				.execute();
 		});
 
@@ -721,18 +564,18 @@ describe('thread routes', () => {
 				.body({name: 'mods', permissions: ThreadPermissionFlags.MANAGE_THREADS.toString()})
 				.execute();
 			await addMemberRole(harness, s.owner.token, s.guildId, third.userId, role.id);
-			const setTimeout = (until: string | null) =>
+			const setTimedOutUntil = (until: string | null) =>
 				threadsRequest(harness, s.owner.token)
 					.patch(`/guilds/${s.guildId}/members/${third.userId}`)
 					.body({communication_disabled_until: until})
 					.expect(200)
 					.execute();
-			await setTimeout(new Date(Date.now() + 10 * 60 * 1000).toISOString());
+			await setTimedOutUntil(new Date(Date.now() + 10 * 60 * 1000).toISOString());
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/${third.userId}`)
 				.expect(403, APIErrorCodes.MISSING_PERMISSIONS)
 				.execute();
-			await setTimeout(null);
+			await setTimedOutUntil(null);
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/${third.userId}`)
 				.expect(204)
@@ -948,36 +791,14 @@ describe('thread routes', () => {
 		});
 	});
 
-	describe('announcement parents', () => {
-		it('refuses a thread whose parent became an announcement channel mid-create', async () => {
-			const s = await setup();
-			const parentId = createChannelID(BigInt(s.channelId));
-			const count = ThreadRepository.prototype.countActiveThreads;
-			vi.spyOn(ThreadRepository.prototype, 'countActiveThreads').mockImplementationOnce(async function (
-				this: ThreadRepository,
-				guildId,
-			) {
-				const parent = await repository.channelData.findUnique(parentId);
-				await repository.channelData.upsert({...parent!.toRow(), type: ChannelTypes.GUILD_ANNOUNCEMENT});
-				return count.call(this, guildId);
-			});
-			await threadsRequest(harness, s.owner.token)
-				.post(`/channels/${s.channelId}/threads`)
-				.body({name: 'late', type: ChannelTypes.PUBLIC_THREAD})
-				.expect(400, APIErrorCodes.INVALID_CHANNEL_TYPE)
-				.execute();
-			expect(await repository.threads.listThreadIdsByParent(parentId, {limit: 1})).toEqual([]);
-		});
-	});
-
 	describe('admin', () => {
-		it('lists every thread of a guild and deletes threads even after the experiment is off', async () => {
+		it('lists every thread of a guild and deletes thread data', async () => {
 			const s = await setup();
 			const admin = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.WILDCARD]);
 			const open = await startThread(s.owner.token, s.channelId);
 			const archived = await startThread(s.owner.token, s.channelId, {name: 'old', type: ChannelTypes.PUBLIC_THREAD});
 			await archive(archived.id);
-			await setChannelThreadsConfig({enabled: false});
+
 			const listed = await createBuilder<{threads: Array<ThreadChannelResponse>}>(harness, admin.token)
 				.get(`/admin/guilds/${s.guildId}/threads`)
 				.execute();

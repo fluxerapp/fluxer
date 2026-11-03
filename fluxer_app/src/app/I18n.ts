@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {messages as messagesEnUS} from '@app/features/i18n/locales/en-US/messages.mjs';
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {getNativeLocaleIdentifier} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -145,7 +147,7 @@ function detectPreferredLocale(forceLocale?: string): LocaleCode {
 	if (forceLocale) {
 		return normalizeLocale(forceLocale);
 	}
-	const storedLocale = AppStorage.getItem('locale');
+	const storedLocale = AppStorage.getItem(AppStorageKey.I18N_CHOSEN_LOCALE);
 	if (storedLocale) {
 		return normalizeLocale(storedLocale);
 	}
@@ -160,13 +162,18 @@ function detectPreferredLocale(forceLocale?: string): LocaleCode {
 	return DEFAULT_LOCALE;
 }
 
+function applyDocumentLocale(localeCode: LocaleCode): void {
+	if (typeof document === 'undefined') {
+		return;
+	}
+	document.documentElement.lang = localeCode;
+	document.documentElement.dir = getLocaleDirection(localeCode);
+}
+
 function activateLocale(localeCode: LocaleCode, messages: Messages): void {
 	i18n.loadAndActivate({locale: localeCode, messages});
-	if (typeof document !== 'undefined') {
-		document.documentElement.lang = localeCode;
-	}
+	applyDocumentLocale(localeCode);
 	noteLocale(localeCode);
-	AppStorage.setItem('locale', localeCode);
 }
 
 export function ensureActiveLocale(): void {
@@ -174,9 +181,7 @@ export function ensureActiveLocale(): void {
 		return;
 	}
 	i18n.loadAndActivate({locale: DEFAULT_LOCALE, messages: messagesEnUS});
-	if (typeof document !== 'undefined') {
-		document.documentElement.lang = DEFAULT_LOCALE;
-	}
+	applyDocumentLocale(DEFAULT_LOCALE);
 }
 
 const inFlightLoads = new Map<LocaleCode, Promise<Messages>>();
@@ -208,10 +213,10 @@ export function applyLocaleChange(localeCode: string): LocaleCode {
 	const normalized = normalizeLocale(localeCode);
 	requestedLocale = normalized;
 	if (normalized === i18n.locale) {
-		AppStorage.setItem('locale', normalized);
+		AppStorage.setItem(AppStorageKey.I18N_CHOSEN_LOCALE, normalized);
 		return normalized;
 	}
-	AppStorage.setItem('locale', normalized);
+	AppStorage.setItem(AppStorageKey.I18N_CHOSEN_LOCALE, normalized);
 	void loadLocaleCatalog(normalized).catch((error) => {
 		logger.error(`Failed to apply locale ${normalized}`, error);
 	});

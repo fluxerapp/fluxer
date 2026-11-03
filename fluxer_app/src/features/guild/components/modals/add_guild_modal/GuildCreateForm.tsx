@@ -86,7 +86,7 @@ export const GuildCreateForm = observer(() => {
 		);
 		return () => modalFooterContext?.setFooterContent(null);
 	}, [handleSubmit, isSubmitting, modalFooterContext, nameValue]);
-	const accountGate = renderGuildCreateAccountGate(i18n, 'guild.add-guild-modal.guild-create-form');
+	const accountGate = renderGuildCreateAccountGate('guild.add-guild-modal.guild-create-form');
 	if (accountGate) {
 		return accountGate;
 	}

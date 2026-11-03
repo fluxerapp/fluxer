@@ -80,7 +80,6 @@ enum ContentDigestRequest {
 struct ObjectStreamPlan<'a> {
     bucket: &'a str,
     key: &'a str,
-    max_bytes: usize,
     range: StreamRange<'a>,
 }
 
@@ -134,6 +133,7 @@ pub struct Store {
 }
 
 impl Store {
+    #[cfg(test)]
     pub fn new(
         cfg: Config,
         metrics: Arc<StorageMetrics>,
@@ -167,20 +167,22 @@ impl Store {
         })
     }
 
+    #[cfg(test)]
     pub async fn write_object(
         &self,
         bucket: &str,
         key: &str,
         data: &[u8],
-        content_type: &str,
+        _content_type: &str,
     ) -> Result<(), StorageError> {
         if self.cfg.read_only {
             return Err(StorageError::ReadOnlyStorage);
         }
-        match self.cfg.storage.backend {
-            StorageBackend::Local => self.write_local(bucket, key, data).await,
-            StorageBackend::S3 => self.write_s3(bucket, key, data, content_type).await,
-        }
+        assert!(
+            matches!(self.cfg.storage.backend, StorageBackend::Local),
+            "write_object is a local-only test fixture"
+        );
+        self.write_local(bucket, key, data).await
     }
 
     pub async fn relay_put_object(
@@ -215,9 +217,9 @@ pub(crate) fn unversioned_read_budget(limit: usize) -> ByteBudget {
 
 fn record_storage_outcome<T>(metrics: &StorageMetrics, result: &Result<T, StorageError>) {
     match result {
-        Ok(_) => metrics.record_hit(),
-        Err(StorageError::NotFound) => metrics.record_miss(),
-        Err(_) => metrics.record_error(),
+        Ok(_) => metrics.storage_hits.inc(),
+        Err(StorageError::NotFound) => metrics.storage_misses.inc(),
+        Err(_) => metrics.storage_errors.inc(),
     }
 }
 

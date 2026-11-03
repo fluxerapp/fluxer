@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {STABLE_APP_URL} from '@electron/common/Constants';
+import {DESKTOP_APP_SCHEME, STABLE_APP_URL} from '@electron/common/Constants';
 import {isPlainRecord} from '@electron/common/PlainRecord';
 
 const SUB_FRAME_RESOURCE_TYPE = 'subFrame';
@@ -9,6 +9,10 @@ const REFERER_REQUEST_HEADER = 'Referer';
 const REFERER_HEADER_NAME_LOWERCASE = 'referer';
 const YOUTUBE_EMBED_FRAME_ORIGIN = 'https://www.youtube.com';
 const YOUTUBE_EMBED_FRAME_PATH_PREFIX = '/embed/';
+const DESKTOP_RUNTIME_SECURITY_REQUEST_URL_PATTERNS = [
+	`${DESKTOP_APP_SCHEME}://*/*`,
+	`${YOUTUBE_EMBED_FRAME_ORIGIN}${YOUTUBE_EMBED_FRAME_PATH_PREFIX}*`,
+];
 
 interface DesktopRuntimeSecurityLogger {
 	error: (...args: Array<unknown>) => void;
@@ -21,13 +25,6 @@ interface DesktopLocalAppRequestAuthorization {
 interface DesktopRuntimeSecurityDependencies {
 	readonly logger: DesktopRuntimeSecurityLogger;
 	readonly localAppAuthorization?: DesktopLocalAppRequestAuthorization;
-}
-
-class DesktopRuntimeSecurityClosedError extends Error {
-	constructor() {
-		super('Desktop runtime security policy is closed');
-		this.name = 'DesktopRuntimeSecurityClosedError';
-	}
 }
 
 class InvalidWebRequestDetailsError extends TypeError {
@@ -48,7 +45,6 @@ export class DesktopRuntimeSecurity {
 	private readonly logger: DesktopRuntimeSecurityLogger;
 	private readonly localAppAuthorization: DesktopLocalAppRequestAuthorization | null;
 	private readonly installedSessions = new Set<Electron.Session>();
-	private acceptingChanges = true;
 
 	constructor(dependencies: DesktopRuntimeSecurityDependencies) {
 		this.logger = dependencies.logger;
@@ -56,25 +52,20 @@ export class DesktopRuntimeSecurity {
 	}
 
 	install(session: Electron.Session): void {
-		this.requireAcceptingChanges();
 		if (this.installedSessions.has(session)) {
 			return;
 		}
 		this.installedSessions.add(session);
 		try {
-			session.webRequest.onBeforeSendHeaders((details: unknown, callback: unknown) => {
-				this.settleRequestHeaders(details, callback);
-			});
+			session.webRequest.onBeforeSendHeaders(
+				{urls: DESKTOP_RUNTIME_SECURITY_REQUEST_URL_PATTERNS},
+				(details: unknown, callback: unknown) => {
+					this.settleRequestHeaders(details, callback);
+				},
+			);
 		} catch (installationError) {
 			this.uninstall(session);
 			throw installationError;
-		}
-	}
-
-	cleanup(): void {
-		this.acceptingChanges = false;
-		for (const session of this.installedSessions) {
-			this.uninstall(session);
 		}
 	}
 
@@ -84,12 +75,6 @@ export class DesktopRuntimeSecurity {
 			session.webRequest.onBeforeSendHeaders(null);
 		} catch (error) {
 			this.logger.error('Failed to remove desktop runtime security listeners', error);
-		}
-	}
-
-	private requireAcceptingChanges(): void {
-		if (!this.acceptingChanges) {
-			throw new DesktopRuntimeSecurityClosedError();
 		}
 	}
 

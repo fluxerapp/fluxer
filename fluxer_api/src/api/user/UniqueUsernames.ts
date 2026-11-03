@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomInt} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
+import {randomUsernameVariant} from '@app/api/utils/UsernameSuggestionUtils';
 import {DELETED_USER_USERNAME, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -28,7 +28,6 @@ export interface ParsedLoginHandle {
 	discriminator: number | null;
 }
 
-const USERNAME_MAX_LENGTH = 32;
 const RESERVATION_TTL_SECONDS = 15;
 const RESERVATION_WAIT_MS = ms('5 seconds');
 const RESERVATION_RETRY_MS = 50;
@@ -37,6 +36,13 @@ const LOGIN_HANDLE_REGEX = /^([a-zA-Z0-9_]{1,32})(?:#(\d{1,4}))?$/;
 
 function usernameTakenError(): InputValidationError {
 	return InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_ALREADY_TAKEN);
+}
+
+export function isUsernameTakenError(error: unknown): boolean {
+	return (
+		error instanceof InputValidationError &&
+		(error.getLocalizedErrors()?.some(({code}) => code === ValidationErrorCodes.USERNAME_ALREADY_TAKEN) ?? false)
+	);
 }
 
 export function assertNoDiscriminatorChange(requested: number | undefined, current: number): void {
@@ -119,14 +125,9 @@ export async function reserveUsername(
 	return {username, release};
 }
 
-function withNumericSuffix(base: string, suffix: number): string {
-	const suffixText = String(suffix);
-	return `${base.slice(0, USERNAME_MAX_LENGTH - suffixText.length)}${suffixText}`;
-}
-
 export async function deriveAvailableUsername(users: UsernameLookup, base: string): Promise<string> {
 	for (let attempt = 0; attempt < DERIVE_ATTEMPTS; attempt++) {
-		const candidate = attempt === 0 ? base : withNumericSuffix(base, randomInt(1, 10000));
+		const candidate = attempt === 0 ? base : randomUsernameVariant(base);
 		if (!(await isUsernameTaken(users, candidate))) return candidate;
 	}
 	throw usernameTakenError();

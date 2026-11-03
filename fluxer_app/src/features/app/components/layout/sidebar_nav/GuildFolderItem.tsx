@@ -23,10 +23,10 @@ import {
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import type {Guild} from '@app/features/guild/models/Guild';
 import GuildFolderExpanded from '@app/features/guild/state/GuildFolderExpanded';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
-import {getInitialsFromName, truncateInitials} from '@app/features/guild/utils/GuildInitialsUtils';
 import {MENTION_COUNT_ARIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/useImageRecovery';
@@ -40,7 +40,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {AnimePresence, AnimeSpan, createAnimeFlxElement} from '@app/features/ui/motion/AnimeElement';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {flxElementClassName} from '@app/lib/react';
 import {
@@ -760,8 +760,6 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 	);
 });
 
-const MINI_GUILD_INITIALS_MAX_LENGTH = 2;
-
 interface MiniGuildIconProps {
 	readonly guild: Guild;
 }
@@ -782,12 +780,7 @@ const MiniGuildIcon = observer(({guild}: MiniGuildIconProps) => {
 			className={flxElementClassName(styles.miniGuildIcon, styles.miniGuildIconWithInitials)}
 			data-flx="app.sidebar-nav.guild-folder-item.mini-guild-icon.mini-guild-icon--2"
 		>
-			<span
-				className={styles.miniGuildInitials}
-				data-flx="app.sidebar-nav.guild-folder-item.mini-guild-icon.mini-guild-initials"
-			>
-				{truncateInitials(getInitialsFromName(guild.name), MINI_GUILD_INITIALS_MAX_LENGTH)}
-			</span>
+			<GuildAcronym name={guild.name} data-flx="app.sidebar-nav.guild-folder-item.mini-guild-icon.acronym" />
 		</flx-app-mini-guild-icon>
 	);
 });

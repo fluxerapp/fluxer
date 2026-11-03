@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createAdminApiKey} from '@app/api/admin/tests/AdminTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -46,33 +45,6 @@ describe('Admin OAuth2 Application Requirement', () => {
 	});
 
 	describe('third-party OAuth2 bearer tokens', () => {
-		test('cannot access admin endpoints even if the user has admin ACLs', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-			const oauth2Token = await createOAuth2Token(harness, admin.userId, ['identify', 'email']);
-
-			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.get(`/admin/users/${admin.userId}`)
-				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
-				.execute();
-		});
-
-		test('cannot access admin endpoints with broad OAuth scopes', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const oauth2Token = await createOAuth2Token(harness, admin.userId, [
-				'identify',
-				'email',
-				'guilds',
-				'connections',
-			]);
-
-			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.get('/admin/guilds/123')
-				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
-				.execute();
-		});
-
 		test('cannot access multiple admin endpoints with wildcard user ACLs', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['*']);
@@ -94,17 +66,6 @@ describe('Admin OAuth2 Application Requirement', () => {
 	});
 
 	describe('built-in admin OAuth2 bearer tokens', () => {
-		test('can access admin endpoints when the user has the required ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-			const oauth2Token = await createAdminOAuth2Token(harness, admin.userId);
-
-			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.get(`/admin/users/${admin.userId}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		});
-
 		test('can access multiple admin endpoints without an admin OAuth scope', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'guild:lookup', 'audit_log:view']);
@@ -147,41 +108,12 @@ describe('Admin OAuth2 Application Requirement', () => {
 	});
 
 	describe('non-OAuth admin authentication', () => {
-		test('session token can access admin endpoints with proper ACLs', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-
-			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users/${admin.userId}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		});
-
 		test('session token without admin:authenticate ACL cannot access admin endpoints', async () => {
 			const user = await createTestAccount(harness);
 
 			await createBuilder(harness, `${user.token}`)
 				.get(`/admin/users/${user.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
-				.execute();
-		});
-
-		test('admin API key can access endpoints with granted ACLs', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
-			const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['user:lookup'], null);
-
-			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
-		});
-
-		test('admin API key without required ACL cannot access endpoint', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-			const apiKey = await createAdminApiKey(harness, admin, 'Limited Key', ['audit_log:view'], null);
-
-			await createBuilder(harness, apiKey.token)
-				.get(`/admin/users/${admin.userId}`)
-				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
 	});

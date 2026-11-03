@@ -6,25 +6,10 @@ use url::Url;
 #[derive(Clone)]
 pub struct MediaProxyUrlBuilder {
     endpoint: String,
-    endpoint_host: Option<String>,
     secret_key: String,
 }
 
 impl MediaProxyUrlBuilder {
-    #[cfg(test)]
-    pub(crate) fn for_test(endpoint: &str, secret_key: &str) -> Self {
-        let endpoint = endpoint.trim_end_matches('/').to_owned();
-        let endpoint_host = Url::parse(&endpoint)
-            .ok()
-            .and_then(|parsed| parsed.host_str().map(ToOwned::to_owned));
-
-        Self {
-            endpoint,
-            endpoint_host,
-            secret_key: secret_key.to_owned(),
-        }
-    }
-
     pub fn from_env() -> anyhow::Result<Self> {
         let Some(endpoint) = optional_env("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
             .or_else(|| optional_env("FLUXER_MEDIA_ENDPOINT"))
@@ -41,24 +26,19 @@ impl MediaProxyUrlBuilder {
         let endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
             endpoint.trim_end_matches('/'),
         );
-        let endpoint_host = Url::parse(&endpoint)
-            .ok()
-            .and_then(|parsed| parsed.host_str().map(ToOwned::to_owned));
+        Ok(Self::new(&endpoint, &secret_key))
+    }
 
-        Ok(Self {
-            endpoint,
-            endpoint_host,
-            secret_key,
-        })
+    pub fn new(endpoint: &str, secret_key: &str) -> Self {
+        Self {
+            endpoint: endpoint.trim_end_matches('/').to_owned(),
+            secret_key: secret_key.to_owned(),
+        }
     }
 
     pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
         let parsed = Url::parse(input_url).ok()?;
-        if self
-            .endpoint_host
-            .as_deref()
-            .is_some_and(|host| parsed.host_str() == Some(host))
-        {
+        if fluxer_common::external_media_path::is_own_media_url(&self.endpoint, &parsed) {
             return Some(input_url.to_owned());
         }
 
@@ -78,7 +58,6 @@ mod tests {
     fn external_proxy_url_builds_v2_signed_url() {
         let builder = MediaProxyUrlBuilder {
             endpoint: "https://media.example.test".to_owned(),
-            endpoint_host: Some("media.example.test".to_owned()),
             secret_key: "secret".to_owned(),
         };
 

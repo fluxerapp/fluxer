@@ -81,13 +81,6 @@ export async function sniffImageFormat(data: Uint8Array): Promise<number> {
 	return withPinnedLibfluxcoreModule(() => wasm.sniff_image_format(data));
 }
 
-export async function decompressZstdFrame(input: Uint8Array): Promise<Uint8Array | null> {
-	return withPinnedLibfluxcoreModule(() => {
-		const result = wasm.decompress_zstd_frame(input);
-		return result instanceof Uint8Array ? result : new Uint8Array(result);
-	});
-}
-
 export async function createZstdStreamDecoder(): Promise<number> {
 	return withPinnedLibfluxcoreModule(() => {
 		const decoder = wasm.create_zstd_stream_decoder();

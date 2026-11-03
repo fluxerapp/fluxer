@@ -15,11 +15,15 @@ import {
 } from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
 import {UserIndexRepository} from '@app/api/user/repositories/account/crud/UserIndexRepository';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
-import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
+import {personalFieldsToClear} from '@app/api/user/UserHelpers';
 import {
+	clearLegacyBadgeHideBits,
 	extractPremiumFlagsFromLegacyUserFlags,
+	LEGACY_BADGE_HIDE_PREMIUM_FLAGS_MASK,
+	LEGACY_BADGE_HIDE_USER_FLAGS_MASK,
 	LEGACY_DEAD_USER_FLAGS_MASK,
 	LEGACY_PREMIUM_FLAGS_MASK,
+	legacyHiddenProfileBadges,
 } from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
@@ -32,6 +36,7 @@ export interface UserDeletionScheduleUpdate {
 	deletion_scheduled_by?: UserID | null;
 	deletion_scheduled_at?: Date | null;
 	temp_banned_until?: Date | null;
+	enforcement_decision_id?: bigint | null;
 	first_refund_at?: Date | null;
 }
 
@@ -42,14 +47,12 @@ export class UserAccountRepository {
 	private emailOwnershipRepo: UserEmailOwnershipRepository;
 	private indexRepo: UserIndexRepository;
 	private searchRepo: UserSearchRepository;
-	private lookupRepo: UserLookupRepository;
 
 	constructor(kv: IKVProvider) {
 		this.dataRepo = new UserDataRepository();
 		this.emailOwnershipRepo = new UserEmailOwnershipRepository((userId: UserID) => this.findUnique(userId), kv);
 		this.indexRepo = new UserIndexRepository();
 		this.searchRepo = new UserSearchRepository();
-		this.lookupRepo = new UserLookupRepository((userId: UserID) => this.findUnique(userId), this.emailOwnershipRepo);
 	}
 
 	async create(data: UserRow): Promise<User> {
@@ -141,6 +144,30 @@ export class UserAccountRepository {
 		throw new Error(`User ${userId} flags kept changing during update`);
 	}
 
+	async moveLegacyBadgeHideBits(userId: UserID, options: {mergeIntoHiddenList: boolean}): Promise<User | null> {
+		for (let attempt = 0; attempt < USER_FLAGS_WRITE_ATTEMPTS; attempt++) {
+			const row = await this.dataRepo.findRow(userId);
+			if (!row) return null;
+			const legacyHidden = legacyHiddenProfileBadges(row.flags ?? 0n, row.premium_flags ?? 0);
+			if (legacyHidden.length === 0) return null;
+			const cleared = clearLegacyBadgeHideBits(row.flags ?? 0n, row.premium_flags ?? 0);
+			const hidden = new Set(row.hidden_profile_badges ?? []);
+			if (options.mergeIntoHiddenList) {
+				for (const key of legacyHidden) hidden.add(key);
+			}
+			const updatedData = await this.dataRepo.compareAndSetBadgeHideState(row, {
+				flags: cleared.flags,
+				premium_flags: cleared.premiumFlags,
+				hidden_profile_badges: hidden.size > 0 ? hidden : null,
+			});
+			if (!updatedData) continue;
+			const updatedUser = new User(updatedData);
+			await this.searchRepo.updateUser(updatedUser);
+			return updatedUser;
+		}
+		throw new Error(`User ${userId} flags kept changing while moving legacy badge hide bits`);
+	}
+
 	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
 		return this.patchAccount(
 			user.id,
@@ -163,7 +190,23 @@ export class UserAccountRepository {
 	}
 
 	async completeDeletion(user: User): Promise<void> {
-		await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		const {updatedData} = await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		await this.searchRepo.updateUser(new User(updatedData));
+	}
+
+	async scrubDeletedUser(user: User): Promise<boolean> {
+		const cleared = Object.keys(personalFieldsToClear(user.toRow()));
+		if (cleared.length === 0) return false;
+		await this.deleteUserSecondaryIndices(user.id);
+		await this.dataRepo.patchUser(
+			user.id,
+			Object.fromEntries(cleared.map((field) => [field, Db.clear()])),
+			user.toRow(),
+		);
+		if (user.email) {
+			await this.emailOwnershipRepo.releaseEmail(user.email, user.id);
+		}
+		return true;
 	}
 
 	private async patchAccount(
@@ -176,7 +219,7 @@ export class UserAccountRepository {
 			const existingUser = await this.findUniqueAssert(userId);
 			oldData = existingUser.toRow();
 		}
-		patchData = this.migratePremiumFlagsInPatch(patchData, oldData);
+		patchData = this.migrateBadgeHideBitsInPatch(this.migratePremiumFlagsInPatch(patchData, oldData), oldData);
 		const userPatch: Record<string, DbOp<unknown>> = {};
 		for (const [key, value] of Object.entries(patchData)) {
 			if (key === 'user_id' || value === undefined) continue;
@@ -212,6 +255,9 @@ export class UserAccountRepository {
 				await this.indexRepo.syncIndices(updatedData, previousData);
 			}
 			await this.searchRepo.updateUser(updatedUser);
+			if (legacyHiddenProfileBadges(updatedData.flags ?? 0n, updatedData.premium_flags ?? 0).length > 0) {
+				return (await this.moveLegacyBadgeHideBits(userId, {mergeIntoHiddenList: false})) ?? updatedUser;
+			}
 			return updatedUser;
 		} catch (error) {
 			if (!dataCommitted && emailClaim) {
@@ -219,6 +265,10 @@ export class UserAccountRepository {
 			}
 			throw error;
 		}
+	}
+
+	async indexUserAcls(user: User): Promise<void> {
+		await this.indexRepo.indexAcls(user.id, user.acls);
 	}
 
 	async deleteUserSecondaryIndices(userId: UserID): Promise<void> {
@@ -232,6 +282,7 @@ export class UserAccountRepository {
 			user.stripeCustomerId,
 			user.stripeSubscriptionId,
 			user.lastActiveIp,
+			user.acls,
 		);
 	}
 
@@ -267,17 +318,6 @@ export class UserAccountRepository {
 		return this.dataRepo.updateSubscriptionStatus(userId, updates);
 	}
 
-	async listUserIdsByLastActiveIp(
-		lastActiveIp: string,
-		limit: number,
-		offset: number,
-	): Promise<{
-		userIds: Array<UserID>;
-		total: number;
-	}> {
-		return this.lookupRepo.listUserIdsByLastActiveIp(lastActiveIp, limit, offset);
-	}
-
 	private applyPremiumFlagsMigration(data: UserRow, oldData: UserRow | null | undefined): void {
 		const rawFlags = data.flags ?? 0n;
 		const legacyPremiumBits = extractPremiumFlagsFromLegacyUserFlags(rawFlags);
@@ -289,6 +329,26 @@ export class UserAccountRepository {
 			const basePremiumFlags = data.premium_flags ?? oldData?.premium_flags ?? 0;
 			data.premium_flags = basePremiumFlags | legacyPremiumBits;
 		}
+		const legacyHidden = legacyHiddenProfileBadges(rawFlags, data.premium_flags ?? 0);
+		if (legacyHidden.length === 0) return;
+		data.hidden_profile_badges = new Set([...(data.hidden_profile_badges ?? []), ...legacyHidden]);
+		data.flags = (data.flags ?? 0n) & ~LEGACY_BADGE_HIDE_USER_FLAGS_MASK;
+		data.premium_flags = (data.premium_flags ?? 0) & ~LEGACY_BADGE_HIDE_PREMIUM_FLAGS_MASK;
+	}
+
+	private migrateBadgeHideBitsInPatch(patchData: Partial<UserRow>, oldData: UserRow): Partial<UserRow> {
+		const flags = patchData.flags !== undefined ? (patchData.flags ?? 0n) : (oldData.flags ?? 0n);
+		const premiumFlags =
+			patchData.premium_flags !== undefined ? (patchData.premium_flags ?? 0) : (oldData.premium_flags ?? 0);
+		const legacyHidden = legacyHiddenProfileBadges(flags, premiumFlags);
+		if (legacyHidden.length === 0) return patchData;
+		const migrated = {...patchData};
+		if (migrated.hidden_profile_badges === undefined) {
+			migrated.hidden_profile_badges = new Set([...(oldData.hidden_profile_badges ?? []), ...legacyHidden]);
+		}
+		if (migrated.flags != null) migrated.flags &= ~LEGACY_BADGE_HIDE_USER_FLAGS_MASK;
+		if (migrated.premium_flags != null) migrated.premium_flags &= ~LEGACY_BADGE_HIDE_PREMIUM_FLAGS_MASK;
+		return migrated;
 	}
 
 	private migratePremiumFlagsInPatch(patchData: Partial<UserRow>, oldData: UserRow): Partial<UserRow> {

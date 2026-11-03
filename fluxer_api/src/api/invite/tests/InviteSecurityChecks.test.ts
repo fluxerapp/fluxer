@@ -3,8 +3,8 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID, createInviteCode, createUserID} from '@app/api/BrandedTypes';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import {deleteInvite} from '@app/api/guild/tests/GuildTestUtils';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
-import {deleteInvite} from '@app/api/invite/tests/InviteTestUtils';
 import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';

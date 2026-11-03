@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::direct_media::{MediaKind, detect_media_kind};
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::{MediaMetadata, MediaProxyClient};
 use crate::types::{EmbedMedia, MessageEmbed, NsfwMode};
 use url::Url;
 
@@ -94,15 +94,7 @@ pub async fn build_own_media_embed(
 fn media_embed(url: &Url, meta: &MediaMetadata, kind: MediaKind) -> MessageEmbed {
     let url_str = url.to_string();
     let media = EmbedMedia {
-        url: Some(url_str.clone()),
-        content_type: Some(meta.content_type.clone()),
-        content_hash: Some(meta.content_hash.clone()),
-        width: meta.width,
-        height: meta.height,
-        placeholder: meta.placeholder.clone(),
-        duration: meta.duration.map(|duration| duration as u32),
-        flags: embed_media_flags(meta),
-        ..Default::default()
+        ..meta.to_embed_media(&url_str)
     };
 
     let mut embed = match kind {

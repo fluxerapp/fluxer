@@ -2,7 +2,7 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::MediaProxyClient;
 use crate::text_limits;
 use crate::types::{EmbedMedia, MessageEmbed};
 use serde::Deserialize;
@@ -141,42 +141,11 @@ async fn process_thumbnail(
         .media_proxy
         .get_metadata(&thumbnail.source, nsfw_mode)
         .await?;
-    Ok(Some(build_embed_media_payload(
+    Ok(Some(meta.to_embed_media_sized(
         &thumbnail.source,
-        &meta,
         thumbnail.width,
         thumbnail.height,
     )))
-}
-
-fn build_embed_media_payload(
-    url: &str,
-    metadata: &MediaMetadata,
-    width: Option<u32>,
-    height: Option<u32>,
-) -> EmbedMedia {
-    EmbedMedia {
-        url: Some(url.to_owned()),
-        width: width.or(metadata.width),
-        height: height.or(metadata.height),
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
-        content_hash: Some(metadata.content_hash.clone()),
-        content_type: Some(metadata.content_type.clone()),
-        duration: metadata.duration.map(|duration| duration as u32),
-        ..Default::default()
-    }
-}
-
-fn parse_text(value: &str, max_len: usize) -> String {
-    text_limits::truncate(decode_html_entities(value).trim(), max_len)
-}
-
-fn decode_html_entities(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
-        .root_element()
-        .text()
-        .collect()
 }
 
 fn deduplicate_thumbnails(images: Vec<Option<EmbedMedia>>) -> Vec<EmbedMedia> {
@@ -237,3 +206,5 @@ fn normalize_wiki_url(url_str: &str) -> String {
         url_str.trim_end_matches('/').to_owned()
     }
 }
+
+use super::default_helpers::parse_text;

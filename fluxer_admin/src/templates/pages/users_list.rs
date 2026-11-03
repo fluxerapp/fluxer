@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
 use crate::{
     api::types::AdminUser,
     config::AdminConfig,
@@ -18,7 +20,7 @@ use crate::{
                 empty_state, table_body, table_cell, table_container, table_head,
                 table_header_cell, table_row,
             },
-            user_profile_badges::user_profile_badges,
+            user_profile_badges::{BadgeSize, user_profile_badges},
         },
         layout::admin_layout,
     },
@@ -96,29 +98,42 @@ impl UserListParams {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn users_list_page(
-    config: &AdminConfig,
-    auth: &AuthContext,
-    params: &UserListParams,
-    results: Option<&[AdminUser]>,
-    has_more: bool,
-    can_view_email: bool,
-    username_sign_in: bool,
-    premium_badge_name: Option<&str>,
-    is_htmx: bool,
-) -> Markup {
+#[derive(Clone, Copy)]
+pub enum UserEmailAccess {
+    Hidden,
+    SearchOnly,
+    SearchAndView,
+}
+
+pub enum UserListOutput {
+    Page,
+    Results,
+}
+
+pub struct UserListResults<'a> {
+    pub users: &'a [AdminUser],
+    pub has_more: bool,
+    pub total: Option<u64>,
+}
+
+pub struct UserListView<'a> {
+    pub params: &'a UserListParams,
+    pub results: Option<UserListResults<'a>>,
+    pub email: UserEmailAccess,
+    pub output: UserListOutput,
+}
+
+pub fn users_list_page(config: &AdminConfig, auth: &AuthContext, view: UserListView<'_>) -> Markup {
     let base = &config.base_path;
-    let results_markup = render_results(
-        config,
+    let UserListView {
         params,
         results,
-        has_more,
-        can_view_email,
-        premium_badge_name,
-    );
+        email,
+        output,
+    } = view;
+    let results_markup = render_results(config, params, results.as_ref(), email);
 
-    if is_htmx {
+    if matches!(output, UserListOutput::Results) {
         return results_markup;
     }
 
@@ -127,9 +142,9 @@ pub fn users_list_page(
             (page_header("Users", None))
             div class="rounded-lg bg-white transition-all border border-neutral-200 p-3" {
                 p class="mb-1 text-xs text-neutral-500" {
-                    "For example, type " span class="font-mono" { "*" } " in to search for all users."
+                    "Every account is listed, oldest first. Type to narrow the list."
                 }
-                (search_form(base, params, !username_sign_in))
+                (search_form(base, params, email))
             }
             (results_markup)
         }
@@ -155,7 +170,23 @@ fn parse_ids_query(ids_query: &str) -> Vec<String> {
     ids
 }
 
-fn search_form(base: &str, params: &UserListParams, show_email_search: bool) -> Markup {
+fn search_input(name: &str, value: &str, placeholder: &str, action: &str) -> Markup {
+    html! {
+        div class="flex-1" {
+            input id={"search-" (name)} type="text" name=(name) value=(value)
+                placeholder=(placeholder)
+                class={(FORM_CONTROL_CLASS) " " (FORM_SEARCH_INPUT_SIZE_CLASS)}
+                hx-get=(action)
+                hx-trigger="input changed delay:300ms, search"
+                hx-target="#users-results"
+                hx-push-url="true"
+                hx-include="closest form"
+                hx-swap="outerHTML";
+        }
+    }
+}
+
+fn search_form(base: &str, params: &UserListParams, email: UserEmailAccess) -> Markup {
     let action = format!("{base}/users");
     let placeholder = if unique_usernames() {
         "Search by user ID, username, or Stripe ID..."
@@ -166,41 +197,11 @@ fn search_form(base: &str, params: &UserListParams, show_email_search: bool) -> 
         form method="get" action=(&action)
             class="flex flex-col gap-3 sm:flex-row sm:items-center" {
             div class="flex flex-1 flex-col gap-2 sm:flex-row" {
-                div class="flex-1" {
-                    input id="search-q" type="text" name="q" value=(params.q)
-                        placeholder=(placeholder)
-                        class={(FORM_CONTROL_CLASS) " " (FORM_SEARCH_INPUT_SIZE_CLASS)}
-                        hx-get=(&action)
-                        hx-trigger="input changed delay:300ms, search"
-                        hx-target="#users-results"
-                        hx-push-url="true"
-                        hx-include="closest form"
-                        hx-swap="outerHTML";
+                (search_input("q", &params.q, placeholder, &action))
+                @if !matches!(email, UserEmailAccess::Hidden) {
+                    (search_input("email", &params.email, "Exact email address...", &action))
                 }
-                @if show_email_search {
-                    div class="flex-1" {
-                        input id="search-email" type="text" name="email" value=(params.email)
-                            placeholder="Exact email address..."
-                            class={(FORM_CONTROL_CLASS) " " (FORM_SEARCH_INPUT_SIZE_CLASS)}
-                            hx-get=(&action)
-                            hx-trigger="input changed delay:300ms, search"
-                            hx-target="#users-results"
-                            hx-push-url="true"
-                            hx-include="closest form"
-                            hx-swap="outerHTML";
-                    }
-                }
-                div class="flex-1" {
-                    input id="search-ip" type="text" name="ip" value=(params.ip)
-                        placeholder="Last active IP address..."
-                        class={(FORM_CONTROL_CLASS) " " (FORM_SEARCH_INPUT_SIZE_CLASS)}
-                        hx-get=(&action)
-                        hx-trigger="input changed delay:300ms, search"
-                        hx-target="#users-results"
-                        hx-push-url="true"
-                        hx-include="closest form"
-                        hx-swap="outerHTML";
-                }
+                (search_input("ip", &params.ip, "Last active IP address...", &action))
                 div class="flex-1" {
                     div class="relative" {
                         select id="search-limit" name="limit"
@@ -230,14 +231,13 @@ fn search_form(base: &str, params: &UserListParams, show_email_search: bool) -> 
 fn render_results(
     config: &AdminConfig,
     params: &UserListParams,
-    results: Option<&[AdminUser]>,
-    page_has_more: bool,
-    can_view_email: bool,
-    premium_badge_name: Option<&str>,
+    results: Option<&UserListResults<'_>>,
+    email: UserEmailAccess,
 ) -> Markup {
     let base = &config.base_path;
     html! {
-        @if let Some(users) = results {
+        @if let Some(result) = results {
+            @let users = result.users;
             @if users.is_empty() {
                 div id="users-results" class="flex flex-col gap-4 items-stretch" {
                     (empty_state(&empty_state_title(params)))
@@ -249,16 +249,27 @@ fn render_results(
                             (users.len()) " of " (params.requested_ids.len()) " requested users found (" (params.requested_ids.len() - users.len()) " missing)."
                         }
                     }
-                    div class="flex justify-end" {
+                    div class="flex items-center justify-between gap-2" {
+                        p class="text-sm text-neutral-500" {
+                            @if let Some(total) = result.total {
+                                @let filtered = params.has_search();
+                                @let noun = if total == 1 { "user" } else { "users" };
+                                @if filtered {
+                                    (format!("{total} matching {noun}"))
+                                } @else {
+                                    (format!("{total} {noun} on this instance"))
+                                }
+                            }
+                        }
                         button type="button" id="copy-ids-btn" onclick="copyAllIds()"
                             class="rounded border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 text-xs hover:bg-neutral-50" {
                             "Copy IDs"
                         }
                     }
-                    (render_users_table(config, users, can_view_email, premium_badge_name))
+                    (render_users_table(config, users, email))
                     script { (maud::PreEscaped(copy_ids_script())) }
-                    @if !params.has_id_lookup() && (params.page > 0 || page_has_more) {
-                        (pagination_controls(base, params, page_has_more))
+                    @if !params.has_id_lookup() && (params.page > 0 || result.has_more) {
+                        (pagination_controls(base, params, result))
                     }
                 }
             }
@@ -268,14 +279,16 @@ fn render_results(
             }
         } @else {
             div id="users-results" class="flex flex-col gap-4 items-stretch" {
-                (empty_state("Enter a search query to find users"))
+                (empty_state("The user list could not be loaded."))
             }
         }
     }
 }
 
 fn empty_state_title(params: &UserListParams) -> String {
-    if params.has_id_lookup() {
+    if !params.has_search() {
+        "No users yet".to_owned()
+    } else if params.has_id_lookup() {
         format!(
             "No users found for the {} requested IDs",
             params.requested_ids.len()
@@ -320,12 +333,7 @@ fn user_status_badge(user: &AdminUser) -> Markup {
     }
 }
 
-fn render_users_table(
-    config: &AdminConfig,
-    users: &[AdminUser],
-    can_view_email: bool,
-    premium_badge_name: Option<&str>,
-) -> Markup {
+fn render_users_table(config: &AdminConfig, users: &[AdminUser], email: UserEmailAccess) -> Markup {
     let base = &config.base_path;
     table_container(html! {
         table class="min-w-full divide-y divide-neutral-200" {
@@ -333,7 +341,7 @@ fn render_users_table(
                 tr {
                     (table_header_cell("User"))
                     (table_header_cell("ID"))
-                    @if can_view_email {
+                    @if matches!(email, UserEmailAccess::SearchAndView) {
                         (table_header_cell("Email"))
                     }
                     (table_header_cell("Status"))
@@ -363,12 +371,8 @@ fn render_users_table(
                                         }
                                         (user_profile_badges(
                                             &config.static_cdn_endpoint,
-                                            user.flags,
-                                            user.premium_type,
-                                            user.premium_since.as_deref(),
-                                            config.self_hosted,
-                                            premium_badge_name,
-                                            true,
+                                            &user.profile_badges,
+                                            BadgeSize::Dense,
                                         ))
                                     }
                                     @if user.global_name.as_deref().map(|n| !n.trim().is_empty()).unwrap_or(false) {
@@ -385,7 +389,7 @@ fn render_users_table(
                                 (user.id)
                             }
                         }))
-                        @if can_view_email {
+                        @if matches!(email, UserEmailAccess::SearchAndView) {
                             (table_cell(true, html! {
                                 (user.email.as_deref().unwrap_or("-"))
                             }))
@@ -420,28 +424,18 @@ fn render_users_table(
     })
 }
 
-fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> Markup {
-    let next_page = params.page.checked_add(1).filter(|_| has_more);
-    html! {
-        div class="mt-4 flex items-center justify-between" {
-            @if params.page > 0 {
-                a href=(users_url(base, params, params.page - 1))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    "< Previous"
-                }
-            } @else {
-                span {}
-            }
-            @if let Some(next_page) = next_page {
-                a href=(users_url(base, params, next_page))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    "Next >"
-                }
-            } @else {
-                span {}
-            }
-        }
-    }
+fn pagination_controls(
+    base: &str,
+    params: &UserListParams,
+    result: &UserListResults<'_>,
+) -> Markup {
+    let next_page = params.page.checked_add(1).filter(|_| result.has_more);
+    pager_with_missing(
+        (params.page > 0).then(|| users_url(base, params, params.page - 1)),
+        None,
+        next_page.map(|page| users_url(base, params, page)),
+        true,
+    )
 }
 
 fn users_url(base: &str, params: &UserListParams, page: u32) -> String {

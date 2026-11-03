@@ -55,12 +55,10 @@ export function normalizeCustomStatus(status: CustomStatus | null | undefined): 
 	const text = clampText(status.text);
 	const emojiId = trimToNonEmpty(status.emojiId);
 	const rawEmojiName = trimToNonEmpty(status.emojiName);
-	const emojiName =
-		rawEmojiName == null
-			? null
-			: emojiId != null
-				? rawEmojiName
-				: UnicodeEmojis.normalizeEmojiNameToSurrogate(rawEmojiName);
+	let emojiName: string | null = null;
+	if (rawEmojiName != null) {
+		emojiName = emojiId != null ? rawEmojiName : UnicodeEmojis.normalizeEmojiNameToSurrogate(rawEmojiName);
+	}
 	if (text == null && emojiId == null && emojiName == null) return null;
 	const normalized: CustomStatus = {
 		text,

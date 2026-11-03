@@ -1,16 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import Guilds from '@app/features/guild/state/Guilds';
+import {OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import MemberSearch, {type SearchContext, type TransformedMember} from '@app/features/member/state/MemberSearch';
+import MemberSearch, {type SearchContext} from '@app/features/member/state/MemberSearch';
+import type {TransformedMember} from '@app/features/member/workers/MemberSearchProtocol';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
-import {parseChannelUrl} from '@app/features/navigation/utils/DeepLinkUtils';
+import {isAppDeepLink, parseChannelUrl} from '@app/features/navigation/utils/DeepLinkUtils';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
+import {
+	generateOtherAccountSections,
+	listOtherAccountResults,
+	mergeWithOtherAccountResults,
+	OTHER_ACCOUNT_ACTIVITY_CHANNEL_LIMIT,
+	type OtherAccountsContext,
+	searchOtherAccounts,
+} from '@app/features/search/state/QuickSwitcherAccountResults';
 import {buildCandidateSets} from '@app/features/search/state/QuickSwitcherCandidateBuilder';
+import {buildOtherAccountsContext} from '@app/features/search/state/QuickSwitcherOtherAccounts';
 import {getFirstSelectableIndex} from '@app/features/search/state/QuickSwitcherResultConverters';
 import {
 	generateDefaultResults,
@@ -28,6 +40,7 @@ import type {
 	QuickSwitcherExecutableResult,
 	QuickSwitcherQueryMode,
 	QuickSwitcherResult,
+	QuickSwitcherScope,
 } from '@app/features/search/state/QuickSwitcherTypes';
 import {MEMBER_SEARCH_LIMIT, QUICK_SWITCHER_OVERLAY_ID} from '@app/features/search/state/QuickSwitcherTypes';
 import {
@@ -39,9 +52,10 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
+import type {AccountEngineAccountActivity} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {type IReactionDisposer, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const GO_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Go to message',
@@ -55,6 +69,8 @@ const PREFIX_MODES: ReadonlyMap<string, QuickSwitcherQueryMode> = new Map([
 ]);
 const ALL_USERS_PREFIX = '@@';
 const NO_CONFUSABLES: ReadonlyMap<string, string> = new Map();
+const NO_ACCOUNT_ACTIVITY: ReadonlyMap<string, AccountEngineAccountActivity> = new Map();
+const ACCOUNT_ACTIVITY_RELOAD_DELAY_MS = 1_000;
 const QUICK_SWITCHER_I18N_MISSING_ERROR = 'QuickSwitcher i18n has not been set';
 
 interface ParsedPrefix {
@@ -86,7 +102,11 @@ class QuickSwitcher {
 	private defaultResults: Array<QuickSwitcherResult> | null = null;
 	private modalPreloadPromise: Promise<QuickSwitcherModalModule> | null = null;
 	private modalPreloadCancel: (() => void) | null = null;
+	private accountActivity: ReadonlyMap<string, AccountEngineAccountActivity> = NO_ACCOUNT_ACTIVITY;
+	private accountActivityGeneration = 0;
+	private accountActivityReaction: IReactionDisposer | null = null;
 	isOpen = false;
+	scope: QuickSwitcherScope = 'all';
 	query = '';
 	prefixMode: QuickSwitcherQueryMode | null = null;
 	results: Array<QuickSwitcherResult> = [];
@@ -108,6 +128,9 @@ class QuickSwitcher {
 			| 'logger'
 			| 'modalPreloadCancel'
 			| 'modalPreloadPromise'
+			| 'accountActivity'
+			| 'accountActivityGeneration'
+			| 'accountActivityReaction'
 		>(
 			this,
 			{
@@ -119,6 +142,9 @@ class QuickSwitcher {
 				logger: false,
 				modalPreloadCancel: false,
 				modalPreloadPromise: false,
+				accountActivity: false,
+				accountActivityGeneration: false,
+				accountActivityReaction: false,
 			},
 			{autoBind: true},
 		);
@@ -192,17 +218,27 @@ class QuickSwitcher {
 		return this.selectedIndex;
 	}
 
-	show(): void {
-		if (this.isOpen) return;
+	show(options: {scope?: QuickSwitcherScope} = {}): void {
+		const scope = options.scope ?? 'all';
+		if (this.isOpen) {
+			if (this.scope !== scope) {
+				this.scope = scope;
+				this.defaultResults = null;
+				this.search('');
+			}
+			return;
+		}
 		this.cancelCandidateWarmup();
 		this.candidateSets = null;
 		this.defaultResults = null;
 		this.isOpen = true;
+		this.scope = scope;
 		this.query = '';
 		this.prefixMode = null;
 		if (!MobileLayout.isMobileLayout()) {
 			void this.pushModal();
 		}
+		this.watchAccountActivity();
 		try {
 			const {results, selectedIndex} = this.computeResultsForQuery('');
 			this.results = results;
@@ -266,7 +302,9 @@ class QuickSwitcher {
 			return;
 		}
 		this.cancelCandidateWarmup();
+		this.stopWatchingAccountActivity();
 		this.isOpen = false;
+		this.scope = 'all';
 		this.candidateSets = null;
 		this.searchSources = null;
 		this.defaultResults = null;
@@ -287,6 +325,44 @@ class QuickSwitcher {
 		if (!MobileLayout.isMobileLayout()) {
 			ModalCommands.popWithKey(QUICK_SWITCHER_OVERLAY_ID);
 		}
+	}
+
+	private watchAccountActivity(): void {
+		this.stopWatchingAccountActivity();
+		if (!AccountEngine.available) return;
+		this.accountActivityReaction = reaction(
+			() =>
+				Array.from(
+					AccountEngine.summaries.values(),
+					(summary) => `${summary.accountKey}:${summary.mentionCount}:${summary.unreadChannelCount}:${summary.state}`,
+				).join('|'),
+			() => this.loadAccountActivity(),
+			{fireImmediately: true, delay: ACCOUNT_ACTIVITY_RELOAD_DELAY_MS},
+		);
+	}
+
+	private stopWatchingAccountActivity(): void {
+		this.accountActivityReaction?.();
+		this.accountActivityReaction = null;
+		this.accountActivityGeneration += 1;
+		this.accountActivity = NO_ACCOUNT_ACTIVITY;
+	}
+
+	private loadAccountActivity(): void {
+		const generation = ++this.accountActivityGeneration;
+		AccountEngine.loadActivity({channelLimit: OTHER_ACCOUNT_ACTIVITY_CHANNEL_LIMIT, mentionLimit: 0}).then(
+			(activity) => {
+				if (!this.isOpen || generation !== this.accountActivityGeneration) return;
+				this.accountActivity = new Map(activity.map((entry) => [entry.accountKey, entry]));
+				this.defaultResults = null;
+				this.recomputeIfOpen({force: true, invalidateCandidates: false});
+			},
+			(error: unknown) => this.logger.warn('Quick switcher failed to load other account activity', error),
+		);
+	}
+
+	private getOtherAccountsContext(i18n: I18n): OtherAccountsContext {
+		return buildOtherAccountsContext(this.accountActivity, i18n);
 	}
 
 	private invalidateCandidateSets(): void {
@@ -458,13 +534,31 @@ class QuickSwitcher {
 
 	private getDefaultResults(i18n: I18n): Array<QuickSwitcherResult> {
 		if (this.defaultResults == null || this.defaultResults.length === 0) {
-			this.defaultResults = generateDefaultResults(i18n);
+			this.defaultResults = [
+				...generateDefaultResults(i18n),
+				...generateOtherAccountSections(this.getOtherAccountsContext(i18n), i18n),
+			];
 		}
 		return this.defaultResults;
 	}
 
+	private computeOtherAccountResults(query: string, i18n: I18n): ComputeResultsForQueryResult {
+		const context = this.getOtherAccountsContext(i18n);
+		let results: Array<QuickSwitcherResult>;
+		if (query.trim().length === 0) {
+			const sections = generateOtherAccountSections(context, i18n);
+			results = sections.length > 0 ? sections : listOtherAccountResults(context, i18n);
+		} else {
+			results = mergeWithOtherAccountResults([], searchOtherAccounts(query, context, i18n));
+		}
+		return {prefixMode: null, results, selectedIndex: getFirstSelectableIndex(results)};
+	}
+
 	private computeResultsForQuery(query: string): ComputeResultsForQueryResult {
 		const i18n = this.getI18n();
+		if (this.scope === 'other_accounts') {
+			return this.computeOtherAccountResults(query, i18n);
+		}
 		const channelPath = parseChannelUrl(query);
 		const linkResults: Array<QuickSwitcherResult> = [];
 		if (channelPath) {
@@ -474,6 +568,15 @@ class QuickSwitcher {
 				title: i18n._(GO_TO_MESSAGE_DESCRIPTOR),
 				subtitle: query,
 				path: channelPath,
+			};
+			linkResults.push(linkResult);
+		} else if (isAppDeepLink(query)) {
+			const linkResult: LinkResult = {
+				type: QuickSwitcherResultTypes.LINK,
+				id: 'link-open',
+				title: i18n._(OPEN_LINK_DESCRIPTOR),
+				subtitle: query,
+				path: query,
 			};
 			linkResults.push(linkResult);
 		}
@@ -491,7 +594,13 @@ class QuickSwitcher {
 		} else if (search.length === 0) {
 			results = this.getDefaultResults(i18n);
 		} else {
-			results = [...linkResults, ...generateGeneralResults(search, this.getSearchContext(i18n), i18n)];
+			results = [
+				...linkResults,
+				...mergeWithOtherAccountResults(
+					generateGeneralResults(search, this.getSearchContext(i18n), i18n),
+					searchOtherAccounts(search, this.getOtherAccountsContext(i18n), i18n),
+				),
+			];
 		}
 		return {
 			prefixMode: mode,

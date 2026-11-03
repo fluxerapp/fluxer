@@ -14,7 +14,6 @@ import {getGpuEncoderReportSync, type HardwareEncodeAnswer} from '@app/features/
 import {
 	getNativeHardwareEncoderCapabilitiesSync,
 	hasNativeHardwareEncoder,
-	resetNativeHardwareEncoderCapabilities,
 } from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
 import {
 	LAST_RESORT_VIDEO_CODEC,
@@ -171,7 +170,7 @@ function getScreenShareCodecPolicyUnsupported(
 			supported: false,
 			reason: 'opt-in-required',
 			detail:
-				'AV1 screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on AV1 screen sharing in Advanced settings to use it.',
+				"AV1 screen sharing is off by default because it may cause compatibility issues for viewers. We're working on improving this. Turn on AV1 screen sharing in Advanced settings to use it.",
 		};
 	}
 	if (codec === 'h265' && !VoiceSettings.getScreenShareHevcOptIn()) {
@@ -179,7 +178,7 @@ function getScreenShareCodecPolicyUnsupported(
 			supported: false,
 			reason: 'opt-in-required',
 			detail:
-				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
+				"H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We're working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.",
 		};
 	}
 	if (context.firefox && codec === 'h265') {
@@ -246,14 +245,16 @@ function buildReport(): CodecCapabilityReport {
 		}
 		const supportedByNativeHardware = hasPublishPathNativeHardwareEncoder(codec, context);
 		if (caps[codec]) {
+			let detail = 'Available on your system.';
+			if (supportedByNativeHardware) {
+				detail = 'Available through the native hardware encoder.';
+			} else if (linuxNvidiaWebRtcEncodeLimited && hwAccel(codec) === 'software') {
+				detail = 'Available through Chromium software encoding. NVIDIA NVENC is not exposed to WebRTC on Linux.';
+			}
 			return {
 				supported: true,
 				reason: 'supported',
-				detail: supportedByNativeHardware
-					? 'Available through the native hardware encoder.'
-					: linuxNvidiaWebRtcEncodeLimited && hwAccel(codec) === 'software'
-						? 'Available through Chromium software encoding. NVIDIA NVENC is not exposed to WebRTC on Linux.'
-						: 'Available on your system.',
+				detail,
 				hardwareAccelerated: hwAccel(codec),
 			};
 		}
@@ -270,15 +271,17 @@ function buildReport(): CodecCapabilityReport {
 				nativeHardwareEncoder?.backend === 'nvenc' && nativeHardwareEncoder.reason
 					? ` Native NVENC is unavailable: ${nativeHardwareEncoder.reason}.`
 					: '';
+			let h265Detail = 'H.265 (HEVC) encoding requires a Chromium-based browser with hardware HEVC support.';
+			if (context.chromium && linuxNvidiaWebRtcEncodeLimited) {
+				h265Detail = `Chromium on Linux does not expose NVIDIA NVENC to WebRTC, and the NVIDIA VA-API bridge used by Chromium does not support encoding.${nativeNvencDetail}`;
+			} else if (context.chromium) {
+				h265Detail =
+					'Your browser/system doesn\u2019t expose an H.265 (HEVC) encoder. H.265 needs hardware support on most platforms.';
+			}
 			return unsupported(codec, {
 				supported: false,
 				reason: 'unsupported-system',
-				detail:
-					context.chromium && linuxNvidiaWebRtcEncodeLimited
-						? `Chromium on Linux does not expose NVIDIA NVENC to WebRTC, and the NVIDIA VA-API bridge used by Chromium does not support encoding.${nativeNvencDetail}`
-						: context.chromium
-							? 'Your browser/system doesn\u2019t expose an H.265 (HEVC) encoder. H.265 needs hardware support on most platforms.'
-							: 'H.265 (HEVC) encoding requires a Chromium-based browser with hardware HEVC support.',
+				detail: h265Detail,
 			});
 		}
 		if (codec === 'av1') {
@@ -364,7 +367,12 @@ export function selectOptimalCameraCodec(preference: CodecPreference = 'auto'): 
 
 export function buildScreenShareCodecProfile(): ScreenShareCodecProfile {
 	const report = getCodecCapabilityReport();
-	const browser: ScreenShareCodecBrowser = isFirefoxBrowser() ? 'firefox' : isChromiumBrowser() ? 'chromium' : 'other';
+	let browser: ScreenShareCodecBrowser = 'other';
+	if (isFirefoxBrowser()) {
+		browser = 'firefox';
+	} else if (isChromiumBrowser()) {
+		browser = 'chromium';
+	}
 	const entry = (codec: VideoCodec): ScreenShareCodecProfileEntry => ({
 		allowed: isVideoCodecAllowedForPublish(codec),
 		supported: report[codec].supported,
@@ -432,7 +440,7 @@ export function selectOptimalScreenShareCodec(
 	return selectAutomaticScreenShareCodec(encoderMode).codec;
 }
 
-export function markScreenShareCodecEncodeRuntimeFailure(codec: VideoCodec, reason: string): boolean {
+function markScreenShareCodecEncodeRuntimeFailure(codec: VideoCodec, reason: string): boolean {
 	if (codec === 'vp8') return false;
 	if (runtimeEncodeFailureCodecs.has(codec)) return false;
 	runtimeEncodeFailureCodecs.add(codec);
@@ -475,7 +483,7 @@ export type ScreenShareEncoderVerificationAction =
 			alternative: VideoCodec | null;
 	  };
 
-export function getVideoPublishCodecDenial(codec: VideoCodec): VideoPublishCodecDenial | null {
+function getVideoPublishCodecDenial(codec: VideoCodec): VideoPublishCodecDenial | null {
 	if (!supportsVideoCodec(codec)) return 'sender-cannot-encode';
 	if (getScreenShareCodecPolicyUnsupported(codec, buildScreenShareCodecPolicyContext())) return 'policy';
 	if (runtimeEncodeFailureCodecs.has(codec)) return 'runtime-failed';
@@ -488,7 +496,7 @@ export function isVideoCodecAllowedForPublish(codec: VideoCodec): boolean {
 	return getVideoPublishCodecDenial(codec) === null;
 }
 
-export function getAllowedVideoPublishCodecs(): ReadonlyArray<VideoCodec> {
+function getAllowedVideoPublishCodecs(): ReadonlyArray<VideoCodec> {
 	return LIVEKIT_SUPPORTED_CODECS.filter(isVideoCodecAllowedForPublish);
 }
 
@@ -582,16 +590,3 @@ export function resolveScreenShareEncoderVerificationAction(
 }
 
 export type ScreenShareContentSource = 'app' | 'device' | 'display';
-
-export function resetCachedCodecCapabilities(): void {
-	cachedCapabilities = null;
-	cachedReport = null;
-	cachedReportGpuKey = undefined;
-	cachedReportNativeHardwareEncoderKey = undefined;
-	cachedReportHardwareAccelerationDisabled = undefined;
-	cachedReportAv1OptIn = undefined;
-	cachedReportHevcOptIn = undefined;
-	runtimeEncodeFailureCodecs.clear();
-	observedSoftwareEncodeCodecs.clear();
-	resetNativeHardwareEncoderCapabilities();
-}

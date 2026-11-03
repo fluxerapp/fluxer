@@ -82,7 +82,7 @@ export async function createThread(
 	return ingestThread(response.body, parent.guildId);
 }
 
-export async function fetchThread(guildId: string, threadId: string): Promise<Channel | undefined> {
+async function fetchThread(guildId: string, threadId: string): Promise<Channel | undefined> {
 	assertActive(guildId);
 	const response = await http.get<ChannelWire>(Endpoints.CHANNEL(threadId));
 	const wire = response.body;
@@ -136,12 +136,14 @@ export async function fetchArchivedThreads(
 	before?: string,
 ): Promise<ArchivedThreadPage> {
 	assertActive(parent.guildId);
-	const endpoint =
-		kind === 'public'
-			? Endpoints.CHANNEL_THREADS_ARCHIVED_PUBLIC(parent.id)
-			: kind === 'private'
-				? Endpoints.CHANNEL_THREADS_ARCHIVED_PRIVATE(parent.id)
-				: Endpoints.CHANNEL_THREADS_JOINED_ARCHIVED_PRIVATE(parent.id);
+	let endpoint: string;
+	if (kind === 'public') {
+		endpoint = Endpoints.CHANNEL_THREADS_ARCHIVED_PUBLIC(parent.id);
+	} else if (kind === 'private') {
+		endpoint = Endpoints.CHANNEL_THREADS_ARCHIVED_PRIVATE(parent.id);
+	} else {
+		endpoint = Endpoints.CHANNEL_THREADS_JOINED_ARCHIVED_PRIVATE(parent.id);
+	}
 	const response = await http.get<ThreadListResponse>(endpoint, {query: before ? {before} : {}});
 	const body = response.body;
 	const membersByThread = new Map<string, ThreadMemberResponse>();

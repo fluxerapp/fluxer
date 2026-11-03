@@ -2,18 +2,18 @@
 
 import i18nGlobal from '@app/app/I18n';
 import {Routes} from '@app/app/Routes';
-import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {CopyLinkSection} from '@app/features/app/components/dialogs/shared/CopyLinkSection';
-import type {RecipientItem} from '@app/features/app/components/dialogs/shared/RecipientList';
-import {RecipientList, useRecipientItems} from '@app/features/app/components/dialogs/shared/RecipientList';
+import {
+	RecipientList,
+	useRecipientItems,
+	useSendLinkToRecipients,
+} from '@app/features/app/components/dialogs/shared/RecipientList';
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {SEARCH_FRIENDS_DESCRIPTOR, SENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
@@ -23,10 +23,8 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
-import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
@@ -102,8 +100,7 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 	const {i18n} = useLingui();
 	const [themeUrl, setThemeUrl] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [sentTo, setSentTo] = useState(new Map<string, boolean>());
-	const [sendingTo, setSendingTo] = useState(new Set<string>());
+
 	const recipients = useRecipientItems();
 	const [searchQuery, setSearchQuery] = useState('');
 	useEffect(() => {
@@ -141,35 +138,18 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 		};
 	}, [themeCss, RuntimeConfig.webAppBaseUrl]);
 	const handleCopy = useCopyLinkHandler(themeUrl, true);
-	const handleSendTheme = async (item: RecipientItem) => {
-		if (!themeUrl) return;
-		if (blockIfAccountLimited()) return;
-		const userId = item.type === 'group_dm' ? item.id : item.user.id;
-		setSendingTo((prev) => new Set(prev).add(userId));
-		try {
-			const targetChannelId = item.channelId
-				? item.channelId
-				: await PrivateChannelCommands.ensureDMChannel(item.user.id);
-			const result = await MessageCommands.send(targetChannelId, {
-				content: `${i18n._(CHECK_OUT_MY_CUSTOM_THEME_DESCRIPTOR)}\n${themeUrl}`,
-				nonce: SnowflakeUtils.fromTimestamp(Date.now()),
-			});
-			if (result) {
-				setSentTo((prev) => new Map(prev).set(userId, true));
-			}
-		} catch (error) {
-			logger.error('Failed to send theme link:', error);
-			showDmActionErrorModal(error);
-		} finally {
-			setSendingTo((prev) => {
-				const next = new Set(prev);
-				next.delete(userId);
-				return next;
-			});
-		}
-	};
+	const {
+		sendingTo,
+		sentTo,
+		send: handleSendTheme,
+	} = useSendLinkToRecipients(() => (themeUrl ? `${i18n._(CHECK_OUT_MY_CUSTOM_THEME_DESCRIPTOR)}\n${themeUrl}` : null));
 	return (
-		<Modal.Root size="small" centered data-flx="theme.share-theme-modal.modal-root">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="theme.share-theme-modal.modal-root"
+		>
 			<Modal.Header title={i18n._(SHARE_YOUR_THEME_DESCRIPTOR)} data-flx="theme.share-theme-modal.modal-header">
 				<div className={selectorStyles.headerSearch} data-flx="theme.share-theme-modal.div">
 					<Input

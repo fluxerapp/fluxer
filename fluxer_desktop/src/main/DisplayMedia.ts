@@ -8,6 +8,7 @@ import {
 } from '@electron/main/DisplayMediaValidation';
 import {isWaylandSession} from '@electron/main/LinuxSession';
 import {startWindowsScreenCaptureGuardForSource} from '@electron/main/WindowsScreenCaptureGuard';
+import {reuseWindowsCaptureItemsForSource} from '@electron/main/WindowsWindowCaptureItemReuse';
 import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
 import log from 'electron-log';
 
@@ -448,6 +449,7 @@ export function registerDisplayMediaHandlers(): void {
 					withAudio: withAudio === true,
 				});
 				startWindowsScreenCaptureGuardForSource(selectedSource, event.sender);
+				reuseWindowsCaptureItemsForSource(selectedSource);
 				const streams: Electron.Streams = {
 					video: selectedSource,
 				};

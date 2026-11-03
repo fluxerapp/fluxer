@@ -18,10 +18,11 @@ export interface ThreadView {
 
 export function mapThreadMemberToResponse(
 	member: ThreadMember,
-	options: {self: boolean; guildMember?: GuildMemberResponse; withIds?: boolean},
+	options: {self: boolean; guildMember?: GuildMemberResponse},
 ): ThreadMemberResponse {
 	const response: ThreadMemberResponse = {
-		...(options.withIds === false ? {} : {id: member.threadId.toString(), user_id: member.userId.toString()}),
+		id: member.threadId.toString(),
+		user_id: member.userId.toString(),
 		join_timestamp: member.joinTimestamp.toISOString(),
 		flags: member.flags,
 	};

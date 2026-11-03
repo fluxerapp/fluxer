@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const MAX_RECONNECT_ATTEMPTS = 8;
-export const RECONNECT_BACKOFF_STEP_MS = 100;
-export const RECONNECT_BACKOFF_CAP_MS = 5_000;
-
 export type SourceFault = 'captureDeviceLost' | 'gpuDeviceLost' | 'encoderError' | 'networkError' | 'decoderError';
 
 export type SourceLifecycleState =
@@ -199,23 +196,6 @@ function transitionFromFailed(
 		default:
 			return assertNeverEvent(event);
 	}
-}
-
-export function computeReconnectBackoffMs(attempt: number): number {
-	assertBoundedAttempts(attempt);
-	if (attempt < 1) {
-		throw new SourceLifecycleError('invariantViolated', `backoff attempt must be >= 1 (received ${attempt})`);
-	}
-	const shift = attempt - 1;
-	const raw = RECONNECT_BACKOFF_STEP_MS * 2 ** shift;
-	const capped = raw > RECONNECT_BACKOFF_CAP_MS ? RECONNECT_BACKOFF_CAP_MS : raw;
-	if (capped < RECONNECT_BACKOFF_STEP_MS) {
-		throw new SourceLifecycleError('invariantViolated', `backoff produced sub-step value ${capped}`);
-	}
-	if (capped > RECONNECT_BACKOFF_CAP_MS) {
-		throw new SourceLifecycleError('invariantViolated', `backoff exceeded cap ${capped}`);
-	}
-	return capped;
 }
 
 export function assertStateShape(state: SourceLifecycleState): void {

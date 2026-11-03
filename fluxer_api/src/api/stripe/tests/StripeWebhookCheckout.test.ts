@@ -3,13 +3,18 @@
 import {clearTestEmails, createTestAccount, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {getPaymentDisputeRepository} from '@app/api/middleware/ServiceSingletons';
+import {seedOpenPaymentDisputeReview} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
 import {
+	createTestPayment,
 	sendStripeWebhook,
 	sendStripeWebhookExpectStripeError,
 	sendStripeWebhookRaw,
 	setupSyncStripeWebhookWorker,
 } from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {Payments} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createCheckoutCompletedEvent,
@@ -19,8 +24,12 @@ import {
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
+import {afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -85,8 +94,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('processes completed premium checkout session successfully', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_premium_success_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -117,11 +124,161 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 		});
+		test('records the payment intent of the first invoice so a later refund marks the payment refunded', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_invoice_intent';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_test_1',
+					paymentIntentId: null,
+					invoiceId: 'in_premium_invoice_intent',
+					metadata: {},
+				}),
+			);
+			const completed = await userRepository.getPaymentByCheckoutSession(sessionId);
+			expect(completed?.paymentIntentId).toBe('pi_in_premium_invoice_intent');
+			await sendStripeWebhook(harness, {
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_pi_in_premium_invoice_intent',
+						payment_intent: 'pi_in_premium_invoice_intent',
+						amount: 2500,
+						amount_refunded: 2500,
+						refunded: true,
+					},
+				},
+			});
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('refunded');
+		});
+		test('grants no premium when the subscription was cancelled before the checkout webhook', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_cancelled_before_fulfilment';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			stripeHandlers = createStripeApiHandlers({subscriptions: {sub_cancelled_early: {status: 'canceled'}}});
+			server.use(...stripeHandlers.handlers);
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_cancelled_early',
+					metadata: {},
+				}),
+			);
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('completed');
+			const user = await userRepository.findUnique(createUserID(BigInt(account.userId)));
+			expect(user?.premiumType ?? null).toBeNull();
+			expect(user?.stripeSubscriptionId ?? null).toBeNull();
+		});
+		test('leaves a payment pending when its price ID is missing', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const sessionId = 'cs_missing_price';
+			const paymentRepository = new PaymentRepository();
+			await createTestPayment(harness, userId, sessionId, {
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const payment = await paymentRepository.getPaymentByCheckoutSession(sessionId);
+			assert(payment !== null);
+			await upsertOne(Payments.upsertAll({...payment.toRow(), price_id: null}));
+
+			await sendStripeWebhookExpectStripeError(harness, createCheckoutCompletedEvent({sessionId, metadata: {}}));
+
+			expect((await paymentRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('pending');
+			expect((await new UserRepository().findUnique(userId))?.premiumType).toBeNull();
+		});
+
+		test.each([
+			['valid timestamp without consent', '2025-01-02T03:04:05.000Z', null, '2025-01-02T03:04:05.000Z'],
+			['valid timestamp with consent', '2025-01-02T03:04:05.000Z', 'accepted', '2025-01-02T03:04:05.000Z'],
+			['invalid timestamp with consent', 'invalid', 'accepted', 'now'],
+			['empty timestamp with consent', '', 'accepted', 'now'],
+			['invalid timestamp without consent', 'invalid', null, null],
+			['empty timestamp without consent', '', null, null],
+		] as const)('recovers a missing payment with %s', async (_label, timestamp, consent, expected) => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_recovered_waiver';
+			const event = createCheckoutCompletedEvent({
+				sessionId,
+				metadata: {
+					user_id: account.userId,
+					price_id: MOCK_PRICES.monthlyUsd,
+					product_type: ProductType.MONTHLY_SUBSCRIPTION,
+					eu_withdrawal_waiver_accepted_at: timestamp,
+				},
+			});
+			event.data.object.consent = {terms_of_service: consent};
+			const before = Date.now();
+
+			await sendStripeWebhook(harness, event);
+
+			const payment = await new PaymentRepository().getPaymentByCheckoutSession(sessionId);
+			expect(payment?.status).toBe('completed');
+			const acceptedAt = payment?.euWithdrawalWaiverAcceptedAt ?? null;
+			if (expected === 'now') {
+				expect(acceptedAt?.getTime()).toBeGreaterThanOrEqual(before);
+				expect(acceptedAt?.getTime()).toBeLessThanOrEqual(Date.now());
+			} else {
+				expect(acceptedAt?.toISOString() ?? null).toBe(expected);
+			}
+		});
+
+		test('flags an open payment dispute review when a checkout opened before the dispute completes', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const sessionId = 'cs_premium_during_dispute';
+			await new PaymentRepository().createPayment({
+				checkout_session_id: sessionId,
+				user_id: userId,
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await seedOpenPaymentDisputeReview(userId, 'dp_checkout_during_dispute');
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_during_dispute',
+					subscriptionId: 'sub_during_dispute',
+					metadata: {},
+				}),
+			);
+			const review = await getPaymentDisputeRepository().findReview('dp_checkout_during_dispute');
+			expect(review?.dispute_purchase_at).toBeInstanceOf(Date);
+		});
+
 		test('allows localized BRL PIX subscription checkout when checkout.session.completed has no payment intent', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_brl_pix_subscription';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -165,8 +322,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('updates user with Stripe customer ID on first purchase', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_first_purchase_customer_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -190,8 +345,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		});
 		test('processes duplicate checkout delivery idempotently across concurrency and retry', async () => {
 			const account = await createTestAccount(harness);
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -217,7 +370,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sendStripeWebhookRaw(harness, eventData),
 			]);
 			const statuses = concurrentResponses.map((response) => response.response.status).sort();
-			expect(statuses).toEqual([200, 400]);
+			expect(statuses).toEqual([HttpStatus.OK, HttpStatus.BAD_REQUEST]);
 			expect(
 				concurrentResponses.some((response) => response.text.includes('Stripe webhook event in-flight, retry')),
 			).toBe(true);
@@ -228,9 +381,9 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.get('/users/@me')
 				.execute();
 			expect(userAfterConcurrent.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(userAfterConcurrent.premium_until).not.toBeNull();
-			const premiumUntilAfterConcurrent = new Date(userAfterConcurrent.premium_until!);
-			const daysUntilAfterConcurrent = (premiumUntilAfterConcurrent.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+			assert(userAfterConcurrent.premium_until !== null);
+			const premiumUntilAfterConcurrent = new Date(userAfterConcurrent.premium_until);
+			const daysUntilAfterConcurrent = (premiumUntilAfterConcurrent.getTime() - Date.now()) / MS_PER_DAY;
 			expect(daysUntilAfterConcurrent).toBeGreaterThanOrEqual(27);
 			expect(daysUntilAfterConcurrent).toBeLessThanOrEqual(31);
 			const retryEventData: StripeWebhookEventData = {
@@ -254,8 +407,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('skips already processed payment', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_already_completed_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -326,8 +477,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('handles gift purchase correctly', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_gift_purchase_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({

@@ -1,24 +1,16 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin guilds
-description: Guild search, detail, mutation, deletion, membership, expressions, and Gateway lifecycle.
+description: Admin routes for finding, changing, moderating and deleting guilds.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most need no membership in the guild and no guild permission. [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the exceptions.
-
-[Archives](/admin-api/archives/) owns the archive lifecycle and the downloads.
-
-Reads use the `admin:lookup` bucket, which permits 200 requests per minute for each authenticated user. Writes use the `admin:guild:modify` bucket, which permits 100 requests per minute for each authenticated user. [Create guild archive](#create-guild-archive) is the one write served from the read bucket.
-
-:::danger[Guild deletion is immediate]
-[Delete guild](#delete-guild) destroys the guild at once. There is no scheduled deletion, no recovery window, and no restore operation.
-:::
+These routes look up and change any guild without membership or guild permissions. Routes that call the Gateway return 502, 503 or 504 when the Gateway fails, is overloaded or doesn't respond.
 
 ## Admin guild object
 
-The compact guild representation returned by [List guilds](#list-guilds) and by [List user guilds](/admin-api/users/#list-user-guilds), with no channel or role state.
+The short form of a guild, returned by [List guilds](#list-guilds) and [List user guilds](/admin-api/users/#list-user-guilds).
 
 ### Structure
 
@@ -26,26 +18,24 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 | --- | --- | --- |
 | id | snowflake | The ID of the guild |
 | name | string | The name of the guild |
-| features | array[string] | The complete [guild feature](/http-api/guilds/#guild-features) set (at most 100) |
+| features | array[string] | The [guild features](/http-api/guilds/#guild-features) (at most 100) |
 | owner_id | snowflake | The ID of the owner |
 | owner_username<sup>1</sup> | ?string | The username of the owner |
 | owner_global_name<sup>1</sup> | ?string | The display name of the owner |
 | owner_discriminator<sup>1</sup> | ?string | The owner discriminator, zero-padded to four digits |
-| icon | ?string | The icon hash, or null when unset |
-| banner | ?string | The banner hash, or null when unset |
-| member_count<sup>2</sup> | integer | The recorded member count |
+| icon | ?string | The icon hash |
+| banner | ?string | The banner hash |
+| member_count | integer | The number of members |
 | nsfw_level? | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw | boolean | Whether the guild is flagged as adult content |
+| nsfw | boolean | Whether the guild is age restricted |
 | content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
-| content_warning_text | ?string | The custom content warning text, or null when unset |
-| approximate_member_count?<sup>3</sup> | integer | The member count the main Gateway reports |
-| approximate_presence_count?<sup>3</sup> | integer | The connected member count the main Gateway reports |
+| content_warning_text | ?string | The custom content warning text |
+| approximate_member_count?<sup>2</sup> | integer | The member count the Gateway reports |
+| approximate_presence_count?<sup>2</sup> | integer | The number of connected members the Gateway reports |
 
-<sup>1</sup> All are null whenever the owner account is not resolved. [List guilds](#list-guilds) never resolves it, so all are always null there
+<sup>1</sup> Always null on [List guilds](#list-guilds), and null elsewhere when the owner account is missing
 
-<sup>2</sup> A member connecting or disconnecting does not change it
-
-<sup>3</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when the request sets `with_counts` to true
+<sup>2</sup> Only on [List user guilds](/admin-api/users/#list-user-guilds) when `with_counts` is true
 
 ### Example
 
@@ -70,7 +60,9 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 
 ## Admin guild detail object
 
-The full guild representation returned by [Get guild](#get-guild). It embeds every channel and every role of the guild. [List guild threads](/admin-api/threads/#list-guild-threads) returns the threads.
+The full guild with every channel and role, returned by [Get guild](#get-guild). Use [List guild threads](/admin-api/threads/#list-guild-threads) for threads.
+
+The owner fields are null when the owner account doesn't exist.
 
 ### Structure
 
@@ -78,35 +70,34 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | --- | --- | --- |
 | id | snowflake | The ID of the guild |
 | owner_id | snowflake | The ID of the owner |
-| owner_username<sup>1</sup> | ?string | The username of the owner |
-| owner_global_name<sup>1</sup> | ?string | The display name of the owner |
-| owner_discriminator<sup>1</sup> | ?string | The owner discriminator, zero-padded to four digits |
+| owner_username | ?string | The username of the owner |
+| owner_global_name | ?string | The display name of the owner |
+| owner_discriminator | ?string | The owner discriminator, zero-padded to four digits |
 | name | string | The name of the guild (1-100 characters) |
-| vanity_url_code | ?string | The custom invite code, or null when the guild owns none |
-| icon | ?string | The icon hash, or null when unset |
-| banner | ?string | The banner hash, or null when unset |
-| splash | ?string | The invite splash hash, or null when unset |
-| embed_splash | ?string | The embedded invite splash hash, or null when unset |
-| features | array[string] | The complete [guild feature](/http-api/guilds/#guild-features) set (at most 100) |
+| vanity_url_code | ?string | The custom invite code |
+| icon | ?string | The icon hash |
+| banner | ?string | The banner hash |
+| splash | ?string | The invite splash hash |
+| embed_splash | ?string | The embedded invite splash hash |
+| features | array[string] | The [guild features](/http-api/guilds/#guild-features) (at most 100) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) of the guild (at most 200) |
 | verification_level | integer | The [verification level](/http-api/guilds/#verification-levels) |
-| mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) required of moderators |
+| mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) moderators need |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw | boolean | Whether the guild is flagged as adult content |
+| nsfw | boolean | Whether the guild is age restricted |
 | content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
-| content_warning_text | ?string | The custom content warning text, or null when unset |
+| content_warning_text | ?string | The custom content warning text |
 | explicit_content_filter | integer | The [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
 | default_message_notifications | integer | The [default message notification level](/http-api/guilds/#default-message-notification-levels) |
-| afk_channel_id | ?snowflake | The voice channel idle members are moved to, or null when unset |
+| afk_channel_id | ?snowflake | The voice channel idle members are moved to |
 | afk_timeout | integer | The idle time before a member is moved, in seconds |
-| system_channel_id | ?snowflake | The channel system messages are sent to, or null when they are disabled |
+| system_channel_id | ?snowflake | The channel system messages are sent to |
 | system_channel_flags | integer | The [system channel flags](/http-api/guilds/#system-channel-flags) |
-| rules_channel_id | ?snowflake | The channel holding the guild rules, or null when unset |
+| rules_channel_id | ?snowflake | The rules channel |
 | disabled_operations | integer | The [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
-| member_count | integer | The recorded member count |
-| channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild except its threads |
+| member_count | integer | The number of members |
+| channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild except threads |
 | roles | array[[Admin guild role](#admin-guild-role-object) object] | Every role in the guild |
-
-<sup>1</sup> All are null when the owner account cannot be resolved
 
 ### Admin guild channel object
 
@@ -117,15 +108,13 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | id | snowflake | The ID of the channel |
 | name | ?string | The channel name (1-100 characters) |
 | type | integer | The [channel type](/http-api/channels/#channel-types) |
-| position | integer | The sort position within the guild |
-| parent_id | ?snowflake | The parent category ID, or null when the channel is top-level |
-| nsfw | ?boolean | Whether the channel is marked age restricted |
-| nsfw_override | ?boolean | The age restriction set on the channel itself, or null when the channel sets none |
+| position | integer | The sort position in the guild |
+| parent_id | ?snowflake | The parent category ID |
+| nsfw | ?boolean | Whether the channel itself is age restricted, false when it inherits |
+| nsfw_override | ?boolean | The channel's own age restriction, or null when it inherits from its category or guild |
 | content_warning_level | integer | The [content warning level](/http-api/guilds/#guild-content-warning-levels) set on the channel |
-| content_warning_text | ?string | The content warning text set on the channel, or null when unset |
-| url<sup>2</sup> | ?string | The external channel URL (1-2048 characters) |
-
-<sup>2</sup> Null for every channel type that is not an external link channel
+| content_warning_text | ?string | The content warning text set on the channel |
+| url | ?string | The URL of a link channel (1-2048 characters), or null for other types |
 
 ### Admin guild role object
 
@@ -135,15 +124,17 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | --- | --- | --- |
 | id | snowflake | The ID of the role |
 | name | string | The role name (1-100 characters) |
-| color | integer | The packed RGB colour |
-| position | integer | The sort position within the guild |
-| permissions | string | The [permission](/http-api/permissions/) bitfield as an unsigned 64-bit decimal string |
-| hoist | boolean | Whether the role is displayed separately in the member list |
-| mentionable | boolean | Whether the role can be mentioned by anyone |
+| color | integer | The RGB color |
+| position | integer | The sort position in the guild |
+| permissions | string | The [permission](/http-api/permissions/) bitfield as a decimal string |
+| hoist | boolean | Whether the role shows separately in the member list |
+| mentionable | boolean | Whether anyone can mention the role |
+| icon | ?string | The hash of the [role icon](/http-api/permissions/#role-icons) image |
+| unicode_emoji | ?string | The Unicode emoji used as the role icon |
 
 ## Admin guild update object
 
-The guild state [Update guild](#update-guild) reads back after applying the request, with no channel, role, or owner identity state.
+The guild after [Update guild](#update-guild) applies a change.
 
 ### Structure
 
@@ -151,28 +142,26 @@ The guild state [Update guild](#update-guild) reads back after applying the requ
 | --- | --- | --- |
 | id | snowflake | The ID of the guild |
 | name | string | The name of the guild (1-100 characters) |
-| features | array[string] | The complete [guild feature](/http-api/guilds/#guild-features) set after the update (at most 100) |
-| owner_id | snowflake | The ID of the owner after the update |
-| icon | ?string | The icon hash, or null when unset or cleared |
-| banner | ?string | The banner hash, or null when unset or cleared |
-| member_count | integer | The recorded member count |
+| features | array[string] | The [guild features](/http-api/guilds/#guild-features) (at most 100) |
+| owner_id | snowflake | The ID of the owner |
+| icon | ?string | The icon hash |
+| banner | ?string | The banner hash |
+| member_count | integer | The number of members |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
 
 ## Admin guild expression object
 
-A custom emoji or a sticker of a guild, with a resolvable media URL. The listings return the same shape.
+A custom emoji or sticker of a guild.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | id | snowflake | The ID of the emoji or sticker |
-| name | string | The expression name (1-100 characters) |
-| animated | boolean | Whether the stored image is animated |
-| creator_id | snowflake | The account that uploaded the expression |
-| media_url<sup>1</sup> | string | The [Media Proxy](/media-proxy/routes/) URL the expression is served from (1-2048 characters) |
-
-<sup>1</sup> Always the WebP representation, at size 160 for an emoji and size 320 for a sticker, and the URL has the `animated=true` query parameter only when `animated` is true
+| name | string | The name (1-100 characters) |
+| animated | boolean | Whether the image is animated |
+| creator_id | snowflake | The user who uploaded it |
+| media_url | string | The WebP [Media Proxy](/media-proxy/routes/) URL of the image |
 
 ### Example
 
@@ -188,230 +177,172 @@ A custom emoji or a sticker of a guild, with a resolvable media URL. The listing
 
 ## Admin guild asset purge result object
 
-One entry of the `processed` array returned by [Purge guild assets](#purge-guild-assets).
+An entry in the `processed` array of [Purge guild assets](#purge-guild-assets).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id | snowflake | The asset that was purged |
-| asset_type | string | The [asset type](#asset-types) the ID resolved to |
-| found_in_db<sup>1</sup> | boolean | Whether the ID matched an emoji or sticker record |
-| guild_id<sup>2</sup> | ?snowflake | The guild the purged record belonged to |
-| guild_nsfw_level<sup>2</sup> | ?integer | The [NSFW level](/http-api/guilds/#nsfw-levels) of that guild |
-
-<sup>1</sup> False exactly when `asset_type` is `unknown`, in which case only the stored media was queued for removal
-
-<sup>2</sup> Both null when `asset_type` is `unknown`, and `guild_nsfw_level` is also null when the owning guild can no longer be resolved
+| id | snowflake | The ID that was purged |
+| asset_type | string | The [asset type](#asset-types) |
+| found_in_db | boolean | Whether the ID matched an emoji or sticker, which is false for `unknown` |
+| guild_id | ?snowflake | The guild the emoji or sticker belonged to, or null for `unknown` |
+| guild_nsfw_level | ?integer | The [NSFW level](/http-api/guilds/#nsfw-levels) of that guild, or null for `unknown` |
 
 ## Admin guild asset purge error object
 
-One entry of the `errors` array returned by [Purge guild assets](#purge-guild-assets).
+An entry in the `errors` array of [Purge guild assets](#purge-guild-assets).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id | string | The asset that could not be purged, as supplied |
-| error<sup>1</sup> | string | The reason the asset could not be purged (1-4000 characters) |
-
-<sup>1</sup> The operation produces `Invalid numeric ID`, `Asset belongs to another guild`, and `Failed to purge asset`. Any other value is the message of the error Fluxer hit while purging that ID
+| id | string | The ID as you sent it |
+| error | string | Why it failed, such as `Asset belongs to another guild` |
 
 ## Asset types
 
 | Value | Description |
 | --- | --- |
-| emoji | The ID resolved to a custom emoji owned by the requested guild |
-| sticker | The ID resolved to a sticker owned by the requested guild |
-| unknown | The ID matched no emoji or sticker, and Fluxer queued removal of any emoji and sticker media stored under that ID |
-
-An ID owned by a different guild appears in `errors` with no asset type.
+| emoji | A custom emoji of the guild |
+| sticker | A sticker of the guild |
+| unknown | No emoji or sticker has the ID, and Fluxer still deletes any stored image with that ID |
 
 ## List guilds
 
 <RouteHeader method="GET" path="/v1/admin/guilds" auditReason />
 
-Searches guilds through the guild search index and returns [Admin guild](#admin-guild-object) objects. Requires `guild:lookup`.
-
-The index matches `q` against the guild name, the discovery tags, the custom invite code, and the discovery description, in that order of weight. Hits are ordered by guild creation time ascending, so the oldest matching guild is first. An empty or omitted `q` matches every indexed guild.
+Searches guilds by name, discovery tags, custom invite code and discovery description, oldest first. You need `guild:lookup`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| q?<sup>1</sup> | string | Free-text query (1-1024 characters) |
+| q?<sup>1</sup> | string | The search text (1-1024 characters). Leave it out to match every guild |
 | limit? | integer | Maximum guilds to return (1-200, default 50) |
-| offset? | integer | Guilds to skip before returning results (0-10000, default 0) |
+| offset? | integer | Guilds to skip (0-10000, default 0) |
 
-<sup>1</sup> A `q` of all decimal digits also resolves that value as an exact guild ID, but only while `offset` is 0. When the index did not return the guild with that ID, Fluxer prepends it to `guilds` and adds one to `total`
+<sup>1</sup> When `q` is all digits and `offset` is 0, the guild with that ID is also returned
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | guilds | array[[Admin guild](#admin-guild-object) object] | Guilds in this page |
-| total<sup>2</sup> | integer | The number of guilds the index reported for the query |
-
-<sup>2</sup> The value can exceed the number of entries in `guilds`. Pagination advances with `offset`, and the operation returns no cursor
+| total | integer | The number of matching guilds |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Guild page was returned |
-| 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED`, because the instance has no search backend configured |
+| 200 | response body | The page was returned |
+| 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when the instance has no search backend |
 
-### Side effects
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `search_guilds`, the target type `guild`, and the target ID `0`. Its metadata keys are `limit`, `offset`, `result_count` for the guilds in this page, and `total`. `has_query` is added as `true` when `q` is supplied, and the query text is not recorded. A 403 records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Get guild
 
 <RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}" auditReason />
 
-Returns one guild with its channels and roles. Requires `guild:lookup`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Returns a guild with its channels and roles. You need `guild:lookup`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild<sup>1</sup> | ?[Admin guild detail](#admin-guild-detail-object) object | The guild, or null when the ID resolves to nothing |
-
-<sup>1</sup> A guild that does not exist answers 200 with a null guild
+| guild | ?[Admin guild detail](#admin-guild-detail-object) object | The guild, or null when it doesn't exist |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | A lookup was done, whether or not it resolved |
+| 200 | response body | Always, with `guild` null when the guild doesn't exist |
 
-### Side effects
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_guild`, the target type `guild`, and the requested guild ID as the target. Its metadata key `found` is `true` when the guild resolved and `false` when `guild` is null.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Update guild
 
 <RouteHeader method="PATCH" path="/v1/admin/guilds/{guild_id}" auditReason />
 
-Applies one or more field groups to a guild and returns the [Admin guild update](#admin-guild-update-object) object read back afterwards. Omitted fields are left unchanged.
+Changes a guild, including its owner, and returns the [Admin guild update](#admin-guild-update-object) object. You need the ACL for every group of fields you send.
 
-This is the only way to change the owner of a guild without acting as its current owner. The public [Transfer guild ownership](/http-api/guild-members/#transfer-guild-ownership) operation requires the caller to be the owner.
+| ACL | Needed for |
+| --- | --- |
+| `guild:update:name` | Renaming the guild (`name`) |
+| `guild:update:settings` | Clearing images and changing settings (`fields` and every field from `verification_level` to `disabled_operations`) |
+| `guild:update:features` | Adding and removing features (`add_features`, `remove_features`) |
+| `guild:update:badges` | Replacing the [custom badges](/admin-api/badges/) (`badge_ids`) |
+| `guild:update:vanity` | Changing the custom invite code (`vanity_url_code`) |
+| `guild:transfer_ownership` | Transferring ownership (`new_owner_id`) |
 
-Fluxer evaluates authorisation in two stages and reads the body between them. The account first needs at least one of `guild:update:name`, `guild:update:settings`, `guild:update:features`, `guild:update:vanity`, and `guild:transfer_ownership`. The validated body then selects a set of ACLs and every one of them is required, so a body with `name` and `nsfw` needs both `guild:update:name` and `guild:update:settings`. The wildcard satisfies both stages.
-
-- `name` selects `guild:update:name`.
-- `fields`, `verification_level`, `mfa_level`, `nsfw_level`, `nsfw`, `content_warning_level`, `content_warning_text`, `explicit_content_filter`, `default_message_notifications`, and `disabled_operations` select `guild:update:settings`.
-- `add_features` and `remove_features` select `guild:update:features`.
-- `vanity_url_code` selects `guild:update:vanity`.
-- `new_owner_id` selects `guild:transfer_ownership`.
-
-A body with no field at all selects nothing, so an empty patch applies no change and records one `update_guild` entry.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify guild](/http-api/guilds/#modify-guild).
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| name? | string | The replacement name (1-100 characters) |
-| vanity_url_code?<sup>1</sup> | ?string | The replacement custom invite code, or null to release the current one |
-| new_owner_id?<sup>2</sup> | snowflake | The replacement owner |
+| name? | string | The new name (1-100 characters) |
+| vanity_url_code?<sup>1</sup> | ?string | The new custom invite code, or null to remove it |
+| new_owner_id?<sup>2</sup> | snowflake | The new owner |
 | add_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (at most 100) |
 | remove_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (at most 100) |
-| fields?<sup>4</sup> | array[string] | Image fields to clear, each `icon`, `banner`, `splash`, or `embed_splash` (at most 10) |
-| verification_level? | integer | The replacement [verification level](/http-api/guilds/#verification-levels) |
-| mfa_level? | integer | The replacement [MFA level](/http-api/guilds/#mfa-levels) |
-| nsfw_level? | integer | The replacement [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw? | boolean | Whether the guild is flagged as adult content |
-| content_warning_level? | integer | The replacement [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
-| content_warning_text? | ?string | The replacement custom content warning text (at most 200 characters), or null to clear it |
-| explicit_content_filter? | integer | The replacement [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
-| default_message_notifications? | integer | The replacement [default message notification level](/http-api/guilds/#default-message-notification-levels) |
-| disabled_operations?<sup>5</sup> | integer | The replacement [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
+| badge_ids?<sup>4</sup> | array[snowflake] | The guild badges to give, replacing the current ones |
+| fields? | array[string] | Images to clear, each `icon`, `banner`, `splash` or `embed_splash` (at most 10) |
+| verification_level? | integer | The new [verification level](/http-api/guilds/#verification-levels) |
+| mfa_level? | integer | The new [MFA level](/http-api/guilds/#mfa-levels) |
+| nsfw_level? | integer | The new [NSFW level](/http-api/guilds/#nsfw-levels) |
+| nsfw? | boolean | Whether the guild is age restricted |
+| content_warning_level? | integer | The new [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| content_warning_text? | ?string | The new content warning text (at most 200 characters), or null to clear it |
+| explicit_content_filter? | integer | The new [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
+| default_message_notifications? | integer | The new [default message notification level](/http-api/guilds/#default-message-notification-levels) |
+| disabled_operations? | integer | The new [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
 
-<sup>1</sup> Normalised to lowercase with whitespace folded to hyphens and consecutive hyphens collapsed. The normalised result is 2 to 32 characters, and a shorter or longer one is rejected with 400
+<sup>1</sup> Fluxer lowercases the code and turns spaces into hyphens. The result must be 2-32 lowercase letters, digits and hyphens, and it can't start or end with a hyphen
 
-<sup>2</sup> The operation does not confirm that the replacement account exists, and an unresolvable owner makes every `owner_` field null on later reads
+<sup>2</sup> Fluxer doesn't check that the user exists
 
-<sup>3</sup> Additions are applied before removals, so a feature named in both is removed. Any string is accepted
+<sup>3</sup> A feature in both lists ends up removed. Adding `DISCOVERABLE` approves the guild's [discovery](/admin-api/discovery/) application, and removing it takes the guild out of discovery
 
-<sup>4</sup> The array only clears an image, and no Admin operation uploads one
-
-<sup>5</sup> Any integer from 0 to 2147483647, stored as supplied, including bits outside the documented registry
-
-A code already claimed by any invite is rejected with 400 `INVALID_FORM_BODY` and the validation code `THIS_VANITY_URL_IS_ALREADY_TAKEN` against `vanity_url_code`.
-
-`afk_channel_id`, `system_channel_id`, `afk_timeout`, and `message_history_cutoff` of a guild are not Admin-writable. They change through the public [Modify guild](/http-api/guilds/#modify-guild) operation.
+<sup>4</sup> A list that adds a badge can hold up to `max_per_guild` of the [badge settings](/admin-api/badges/#badge-settings-object), which is at most 200. A list that only removes badges always works
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild | [Admin guild update](#admin-guild-update-object) object | The guild state read back after the request was applied |
+| guild | [Admin guild update](#admin-guild-update-object) object | The guild after the change |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Every selected field group was applied |
-| 400 | [error response](/admin-api/#error-response) | The custom invite code is malformed or already claimed |
-| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL`, because the account holds none of the update ACLs, or lacks an ACL a supplied field selects |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
+| 200 | response body | The changes were applied |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the custom invite code is invalid or `THIS_VANITY_URL_IS_ALREADY_TAKEN` |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when `badge_ids` adds a badge and holds more than `max_per_guild` of the [badge settings](/admin-api/badges/#badge-settings-object) |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` when you lack an ACL a field needs |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist, or `UNKNOWN_BADGE` when an ID in `badge_ids` isn't a guild badge |
 
-:::caution[Field groups apply one at a time]
-The groups run in a fixed order: image clears, settings, features, name, custom invite code, ownership. Each is a separate write with its own [Guild Update](/gateway/events/#guild-update) Dispatch and its own Admin audit entry. A failure part way through leaves the earlier groups applied.
-:::
+Fluxer saves image clears, settings, features, badges, name, custom invite code and owner one at a time in that order, and each sends a [Guild Update](/gateway/events/#guild-update) event. If one fails, the ones before it stay saved.
 
-### Side effects
-
-Clearing an image schedules its deletion. Replacing or clearing the custom invite code invalidates the previous invite link.
-
-Supplying `add_features` or `remove_features` reconciles an existing discovery application. The application is approved when [DISCOVERABLE](/http-api/guilds/#guild-features) becomes present and it is not already approved, and it is marked removed when `DISCOVERABLE` becomes absent and it was approved. A guild that has never applied for [discovery](/admin-api/discovery/) gains no application.
-
-Every applied group refreshes the guild's entry in the guild search index and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session that can see the guild, including when the write changes no value.
-
-Each applied group records one Admin audit entry with the target type `guild` and the guild ID as the target. A body that applies no group records one entry with action `update_guild` and no metadata instead.
-
-- `clear_fields` records the cleared field names.
-- `update_settings` records each applied setting.
-- `update_features` records the added, removed, and resulting feature sets.
-- `update_name` records the old and new names.
-- `update_vanity` records the old and new codes.
-- `transfer_ownership` records the old and new owner IDs.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## Delete guild
 
 <RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}" auditReason />
 
-Permanently deletes a guild and every record it owns. Requires `guild:delete`.
+Deletes a guild with its channels, messages, attachments, invites and webhooks. You need `guild:delete`. Members get [Guild Delete](/gateway/events/#guild-delete).
 
-### Path parameters
+:::danger
+Deletion is immediate and can't be undone. [Create a guild archive](#create-guild-archive) first if you need the content.
+:::
+
+### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+| basis<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | `enforcement` when a rule was broken, or `holder_request` when the owner asked |
+
+<sup>1</sup> `enforcement` records a removal [decision](/admin-api/enforcement/) and sends the owner a notice
 
 ### Response body
 
@@ -423,88 +354,48 @@ Permanently deletes a guild and every record it owns. Requires `guild:delete`.
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Guild was deleted |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
+| 200 | response body | The guild was deleted |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the basis or the [decision](/admin-api/enforcement/#validation) isn't valid |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-:::danger[Archive content before deleting the guild]
-The guild, its channels, roles, memberships, messages, and attachments are destroyed as soon as the request is accepted. Take a [guild archive](#create-guild-archive) first when the content has to be retained.
-:::
-
-### Side effects
-
-Members receive [Guild Delete](/gateway/events/#guild-delete). The guild disappears from their [settings and folders](/http-api/users/settings/) and from search. Its invites, webhooks, messages, attachments and discovery application are also deleted.
-
-One Admin audit entry is recorded with the action `delete_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## List guild members
 
 <RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/members" auditReason />
 
-Returns one page of [guild member](/http-api/guild-members/#guild-member-object) objects read from the main Gateway, without requiring membership. Requires `guild:list:members`.
-
-:::note[Members come from the main Gateway]
-A guild the main Gateway cannot load answers 404 `UNKNOWN_GUILD`.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Returns a page of [guild member](/http-api/guild-members/#guild-member-object) objects from the Gateway. You need `guild:list:members`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | limit? | integer | Maximum members to return (1-200, default 50) |
-| offset? | integer | Members to skip before returning results (0-2147483647, default 0) |
+| offset? | integer | Members to skip (0-2147483647, default 0) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | members | array[[guild member](/http-api/guild-members/#guild-member-object) object] | Members in this page |
-| total | integer | The total member count the main Gateway reported |
-| limit<sup>1</sup> | integer | The limit the operation applied |
-| offset<sup>1</sup> | integer | The offset the operation applied |
-
-<sup>1</sup> Both are echoed from the resolved query, so a request that omitted them reads back the defaults. A client advances the page by adding `limit` to `offset`
+| total | integer | The number of members |
+| limit | integer | The limit that was used |
+| offset | integer | The offset that was used |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Member page was returned |
-| 500 | [error response](/admin-api/#error-response) | The API loses its connection to the main Gateway during the call |
+| 200 | response body | The page was returned |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-A member query the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unanswered call returns 504 `GATEWAY_TIMEOUT`, and an overloaded cluster returns 503 `SERVICE_UNAVAILABLE`.
-
-### Side effects
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_members`, the target type `guild`, and the guild ID as the target. Its metadata keys are `limit` and `offset` as applied, `result_count` for the members in this page, and `total`. An error response records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Add guild member
 
 <RouteHeader method="PUT" path="/v1/admin/guilds/{guild_id}/members/{user_id}" auditReason />
 
-Adds a user to a guild without an invite. Requires `guild:force_add_member`. The operation takes no request body.
-
-Fluxer checks only the Admin ACL. The acting account needs no membership and no permission in the guild.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
-| user_id | snowflake | The user to add |
+Adds a user to a guild without an invite, even when they're banned from it. You need `guild:force_add_member`. Adding a user who is already a member does nothing.
 
 ### Response body
 
@@ -516,261 +407,166 @@ Fluxer checks only the Admin ACL. The acting account needs no membership and no 
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Member was added, or the user was already a member |
-| 400 | [error response](/admin-api/#error-response) | `MAX_GUILDS` because the user is at their guild limit, or `MAX_GUILD_MEMBERS` because the guild is at its member limit |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` because the user does not exist, or `UNKNOWN_GUILD` because the guild does not exist |
+| 200 | response body | The user is a member |
+| 400 | [error response](/admin-api/#error-response) | `MAX_GUILDS` or `MAX_GUILD_MEMBERS` when the user or the guild is at its limit |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` or `UNKNOWN_GUILD` when the user or the guild doesn't exist |
 
-### Side effects
+The guild gets [Guild Member Add](/gateway/events/#guild-member-add), and the guild's system channel shows a join message.
 
-Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The per-user guild limit and the guild member limit are still enforced.
-
-[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, and the user's sessions are joined to the guild on the main Gateway. When the guild's members are already indexed for search, Fluxer adds the new member to guild member search. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no `system_channel_id`, or its `system_channel_id` names a channel that no longer exists. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
-
-A user who is already a member keeps their existing membership. No membership is created, `member_count` does not change, and no Dispatch is emitted. The Admin audit entry is still written.
-
-One Admin audit entry is recorded with the action `force_add_to_guild`, the target type `user`, the added user as the target, and the guild ID in the metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## Remove guild member
 
 <RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/members/{user_id}" auditReason />
 
-Removes a member from a guild without banning them and returns 204 with an empty body. Requires `guild:kick_member`.
-
-:::caution[Removal also needs KICK_MEMBERS in the guild]
-The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions/) in it, and rank above the target. A guild at [MFA level](/http-api/guilds/#mfa-levels) 1 also requires an enrolled authenticator.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
-| user_id | snowflake | The member to remove |
+Removes a member from a guild without banning them. You need `guild:kick_member`. The guild's [audit log](/http-api/guild-audit-logs/#audit-actions) shows the Fluxer system user (ID `0`) as the moderator.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Member was removed |
-| 400 | [error response](/admin-api/#error-response) | `TWO_FACTOR_REQUIRED` in an MFA level 1 guild |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | `MISSING_ACCESS` when the acting account cannot see the guild, or `MISSING_PERMISSIONS` when `KICK_MEMBERS` is absent |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_MEMBER`, because the target is not a member, is the guild owner, or is the acting account |
+| 204 | empty | The member was removed |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` when the user owns the guild |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist, or `UNKNOWN_MEMBER` when the user isn't a member |
 
-<sup>1</sup> `MISSING_PERMISSIONS` also covers a target who outranks the acting account
+The guild gets [Guild Member Remove](/gateway/events/#guild-member-remove).
 
-### Side effects
-
-The user loses membership and disappears from guild member search. Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A later rejoin restores a communication timeout that is still in force. The rejoined member starts with no nickname and no roles.
-
-[Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
-
-The removal creates no ban record, so the user can rejoin.
-
-One Admin audit entry is recorded with the action `kick_member`, the target type `guild_member`, the removed user as the target, and the guild and user IDs in the metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## Ban guild member
 
 <RouteHeader method="PUT" path="/v1/admin/guilds/{guild_id}/bans/{user_id}" auditReason />
 
-Bans a user from a guild, optionally removes their recent messages, and returns 204 with an empty body. The target need not be a member. Requires `guild:ban_member`.
-
-:::caution[A ban also needs BAN_MEMBERS in the guild]
-The acting account must hold [BAN_MEMBERS](/http-api/permissions/) in the guild, and must rank above a target who is a member. A guild at [MFA level](/http-api/guilds/#mfa-levels) 1 also requires an enrolled authenticator.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
-| user_id | snowflake | The user to ban |
+Bans a user from a guild, whether or not they're a member, and can delete their recent messages. You need `guild:ban_member`. The guild's [audit log](/http-api/guild-audit-logs/#audit-actions) shows the Fluxer system user (ID `0`) as the moderator.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| delete_message_seconds?<sup>1</sup> | integer | The window of recent messages to delete, in seconds (0-604800) |
-| delete_message_days?<sup>1</sup> | integer | The window of recent messages to delete, in days (0-7, default 0) |
-| reason? | ?string | The guild ban reason stored on the ban record (at most 512 characters) |
-| ban_duration_seconds?<sup>2</sup> | integer | The ban duration in seconds, either exactly 0 or between 60 and 63072000 |
+| delete_message_seconds?<sup>1</sup> | integer | How far back to delete messages, in seconds (0-604800) |
+| delete_message_days?<sup>1</sup> | integer | How far back to delete messages, in days (0-7, default 0) |
+| reason? | ?string | The ban reason (at most 512 characters) |
+| ban_duration_seconds? | integer | How long the ban lasts, in seconds (60-63072000, or 0 for permanent, default 0) |
 
-<sup>1</sup> `delete_message_seconds` wins when both are supplied, and `delete_message_days` is otherwise multiplied by 86400. A resolved window of 0 deletes no message
-
-<sup>2</sup> Omitting the field and sending 0 both produce a permanent ban. There is no field that sets an absolute expiry timestamp
+<sup>1</sup> `delete_message_seconds` wins when you send both
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | User was banned |
-| 400 | [error response](/admin-api/#error-response) | Duration, reason, or message window validation fails, or `TWO_FACTOR_REQUIRED` in an MFA level 1 guild |
-| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` because `BAN_MEMBERS` is absent in the guild or the target member outranks the acting account |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_MEMBER` because the target is the acting account, or `UNKNOWN_USER` because the user does not exist |
+| 204 | empty | The user was banned |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` when the user owns the guild |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` or `UNKNOWN_USER` when the guild or the user doesn't exist, or `UNKNOWN_MEMBER` for the system user |
 
-:::caution[The ban can also delete messages]
-A ban removes current membership and blocks later joins until its expiry or explicit removal. Messages inside the resolved deletion window are permanently deleted and are not restored when the ban ends.
-:::
+Like any [guild ban](/http-api/guild-moderation/#guild-ban-object), it also blocks the user's email address and last IP address. The guild gets [Guild Ban Add](/gateway/events/#guild-ban-add). If the user is a member, they're removed and the guild gets [Guild Member Remove](/gateway/events/#guild-member-remove).
 
-### Side effects
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
-The ban record names the acting Admin account as moderator. It has the expiry, the reason, the target's lowercased email address, and the target's last known IP address unless that address is on the ban exemption list. While the ban exists the guild also blocks that address and that email, as described by [Guild moderation](/http-api/guild-moderation/#guild-ban-object), and removing the ban releases both.
+## Unban guild member
 
-A positive deletion window queues a background job that deletes the target's matching messages after the response, which fires [Message Delete Bulk](/gateway/events/#message-delete-bulk) as deletion progresses.
+<RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/bans/{user_id}" auditReason />
 
-[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A communication timeout in force at the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log and emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
+Removes a guild ban and sends [Guild Ban Remove](/gateway/events/#guild-ban-remove) to the guild. You need `guild:ban_member`.
 
-One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, and the banned user as the target. Its metadata has the guild ID, the user ID, the `delete_message_days` value, and any supplied reason and duration.
+### Response
 
-### Rate limit
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The ban was removed |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `USER_IS_NOT_BANNED` when the user isn't banned |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
+
+## Clear guild role icon
+
+<RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/roles/{role_id}/icon" auditReason />
+
+Clears the image and Unicode emoji of a [role icon](/http-api/permissions/#role-icons), deletes the old image later and sends [Guild Role Update](/gateway/events/#guild-role-update) to the guild. You need `guild:update:settings`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The role icon was cleared |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ROLE` when the role doesn't exist in the guild |
+
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## List guild emojis
 
 <RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/emojis" auditReason />
 
-Returns every custom emoji of a guild as [Admin guild expression](#admin-guild-expression-object) objects. Requires `asset:purge`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Returns every custom emoji of a guild. You need `asset:purge`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id | snowflake | The guild the listing covers, echoed from the path |
-| emojis<sup>1</sup> | array[[Admin guild expression](#admin-guild-expression-object) object] | Every custom emoji of the guild |
-
-<sup>1</sup> The listing is not paginated and takes no query parameters
+| guild_id | snowflake | The ID of the guild |
+| emojis | array[[Admin guild expression](#admin-guild-expression-object) object] | Every custom emoji of the guild |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Emojis were returned, or the guild owns none |
+| 200 | response body | The emojis were returned, and the list is empty for an unknown guild |
 
-The operation does not verify that the guild exists, so an unknown guild ID returns an empty listing.
-
-### Side effects
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_emojis`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of emojis returned.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## List guild stickers
 
 <RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/stickers" auditReason />
 
-Returns every sticker of a guild as [Admin guild expression](#admin-guild-expression-object) objects. Requires `asset:purge`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Returns every sticker of a guild. You need `asset:purge`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id | snowflake | The guild the listing covers, echoed from the path |
-| stickers<sup>1</sup> | array[[Admin guild expression](#admin-guild-expression-object) object] | Every sticker of the guild |
-
-<sup>1</sup> The listing is not paginated and takes no query parameters
+| guild_id | snowflake | The ID of the guild |
+| stickers | array[[Admin guild expression](#admin-guild-expression-object) object] | Every sticker of the guild |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Stickers were returned, or the guild owns none |
+| 200 | response body | The stickers were returned, and the list is empty for an unknown guild |
 
-The operation does not verify that the guild exists, so an unknown guild ID returns an empty listing.
-
-### Side effects
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_stickers`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of stickers returned.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Purge guild assets
 
 <RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/assets" auditReason />
 
-Deletes emoji and sticker records owned by a guild and queues their stored media for removal, reporting the outcome of every ID separately. Requires `asset:purge`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Deletes emojis and stickers of a guild with their images and returns a result for each ID. You need `asset:purge`. This can't be undone, and the guild gets [Guild Emojis Update](/gateway/events/#guild-emojis-update) or [Guild Stickers Update](/gateway/events/#guild-stickers-update) for each deletion.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| ids<sup>1</sup> | array[string] | Emoji and sticker IDs to delete with their media, each 1 to 64 characters (at most 100) |
-
-<sup>1</sup> Each entry is trimmed, and Fluxer skips one that is then empty and any repeat of an entry already seen, so neither appears in `processed` or `errors`. An empty array is accepted and purges nothing
+| ids | array[string] | Emoji and sticker IDs, each 1-64 characters (at most 100) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| processed | array[[Admin guild asset purge result](#admin-guild-asset-purge-result-object) object] | Assets that were purged |
-| errors | array[[Admin guild asset purge error](#admin-guild-asset-purge-error-object) object] | Assets that could not be purged |
+| processed | array[[Admin guild asset purge result](#admin-guild-asset-purge-result-object) object] | IDs that were purged |
+| errors | array[[Admin guild asset purge error](#admin-guild-asset-purge-error-object) object] | IDs that failed |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The purge attempt completed, whether or not every ID succeeded |
+| 200 | response body | The purge finished, even when some IDs failed |
 
-The operation does not verify that the guild exists. Under an unknown guild ID, an ID that matches another guild's record lands in `errors` and every other ID is reported as `unknown`.
-
-:::danger[Successful asset purges cannot be undone]
-Every ID in `processed` loses its record and its stored media permanently. The operation still returns 200 when other IDs fail.
-:::
-
-### Side effects
-
-A record owned by the guild in the path is deleted, and its stored media is queued for removal. The guild then receives one [Guild Emojis Update](/gateway/events/#guild-emojis-update) or [Guild Stickers Update](/gateway/events/#guild-stickers-update) Dispatch with its complete remaining expression set. A request that purges several records emits one such Dispatch per record.
-
-A record owned by a different guild is left untouched and reported in `errors`. An ID with no record queues emoji and sticker media removal for that ID and is reported with the `unknown` asset type, so the operation also removes stored media that has no emoji or sticker record.
-
-Every entry in `processed` records its own Admin audit entry, with the numeric ID as the target. A purged emoji records `purge_guild_emoji_asset` with the target type `guild_emoji`, a purged sticker records `purge_guild_sticker_asset` with `guild_sticker`, and an `unknown` ID records `purge_asset` with `asset`. Entries in `errors` record nothing.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## List guild audit logs
 
 <RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/audit-logs" auditReason />
 
-Returns one page of the guild's own in-app audit log, without requiring guild membership or [VIEW_AUDIT_LOG](/http-api/permissions/). Requires `guild:audit_log:view`.
-
-The query parameters behave the same way as in the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation, except for the thread action values in `action_type`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Returns a page of the guild's own audit log, the same as the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs). You need `guild:audit_log:view`.
 
 ### Query parameters
 
@@ -779,55 +575,36 @@ The query parameters behave the same way as in the public [List guild audit logs
 | limit? | integer | Maximum entries to return (1-100, default 50) |
 | before?<sup>1</sup> | snowflake | Return entries older than this entry ID |
 | after?<sup>1</sup> | snowflake | Return entries newer than this entry ID |
-| user_id?<sup>2</sup> | snowflake | Return only entries recorded for this actor |
-| action_type?<sup>2</sup><sup>3</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) value |
+| user_id? | snowflake | Return only entries by this user |
+| action_type?<sup>2</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) |
 
-<sup>1</sup> The cursors are mutually exclusive. Supplying both fails with 400 `INVALID_FORM_BODY` and the validation code `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` against `before`
+<sup>1</sup> Sending both fails with `INVALID_FORM_BODY` and `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER`
 
-<sup>2</sup> Supplying either filter disables the consolidation of consecutive message deletion entries
-
-<sup>3</sup> The values 110, 111, and 112 return 400 `INVALID_FORM_BODY`
+<sup>2</sup> The thread actions 110, 111 and 112 fail with `INVALID_FORM_BODY`
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| audit_log_entries | array[[guild audit log entry](/http-api/guild-audit-logs/#guild-audit-log-entry-object) object] | The returned page of audit entries |
-| users | array[[partial user](/http-api/users/#partial-user-object) object] | Users referenced by the returned entries |
-| webhooks | array[[audit log webhook](/http-api/guild-audit-logs/#audit-log-webhook-object) object] | Webhooks referenced by the returned entries |
+| audit_log_entries | array[[guild audit log entry](/http-api/guild-audit-logs/#guild-audit-log-entry-object) object] | The entries in this page |
+| users | array[[partial user](/http-api/users/#partial-user-object) object] | Users the entries mention |
+| webhooks | array[[audit log webhook](/http-api/guild-audit-logs/#audit-log-webhook-object) object] | Webhooks the entries mention |
 
-The schema also declares `threads`. This operation never returns it.
+The schema also declares `threads`, which this route never returns.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Audit page was returned, or the guild has no matching entry |
-| 400 | [error response](/admin-api/#error-response) | `before` and `after` were supplied together |
+| 200 | response body | The page was returned, and it's empty for an unknown guild |
 
-The operation does not verify that the guild exists, so an unknown guild ID returns an empty page.
-
-### Side effects
-
-The read appends no ordinary entry to the guild's own audit log. It still changes that log. Runs of consecutive message deletion entries are replaced with one bulk entry, and that replacement emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), exactly as the public operation does.
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_audit_logs`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of entries returned. The supplied query parameters add `limit`, `before`, `after`, `filter_user_id` for `user_id`, and `action_type`. A 400 records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Reload guild
 
 <RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/reloads" auditReason />
 
-Reloads a guild's state on the main Gateway. Requires `guild:reload`. The operation takes no request body.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Loads a guild again from storage on the Gateway, which also starts a stopped guild. You need `guild:reload`. Connected sessions get [Guild Update](/gateway/events/#guild-update).
 
 ### Response body
 
@@ -839,33 +616,16 @@ Reloads a guild's state on the main Gateway. Requires `guild:reload`. The operat
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Reload command completed |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
-| 500 | [error response](/admin-api/#error-response) | The API loses its connection to the main Gateway during the call |
+| 200 | response body | The guild was reloaded |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-A reload the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unanswered call returns 504 `GATEWAY_TIMEOUT`, and an overloaded cluster returns 503 `SERVICE_UNAVAILABLE`.
-
-### Side effects
-
-The main Gateway reloads the guild's current state from storage and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session subscribed to the guild. The reload also reloads the thread state of the guild. Sessions then receive [Thread List Sync](/gateway/threads/#thread-list-sync) in the cases that entry lists. The operation changes no guild data.
-
-One Admin audit entry is recorded with the action `reload_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## Shut down guild
 
 <RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/shutdowns" auditReason />
 
-Unloads a guild from the main Gateway without deleting stored data. Requires `guild:shutdown`. The operation takes no request body.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Stops a guild on the Gateway without touching stored data. You need `guild:shutdown`. Connected sessions get [Guild Delete](/gateway/events/#guild-delete) with `unavailable` true, and the Gateway reconnects them to the guild on its own, which starts it again.
 
 ### Response body
 
@@ -877,58 +637,28 @@ Unloads a guild from the main Gateway without deleting stored data. Requires `gu
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Shutdown command completed |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
-| 500 | [error response](/admin-api/#error-response) | The API loses its connection to the main Gateway during the call |
+| 200 | response body | The guild was stopped |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-A shutdown the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unanswered call returns 504 `GATEWAY_TIMEOUT`, and an overloaded cluster returns 503 `SERVICE_UNAVAILABLE`.
-
-### Side effects
-
-The main Gateway stops the guild process. Every session subscribed to the guild receives a [Guild Delete](/gateway/events/#guild-delete) Dispatch with `unavailable` true. One second later the main Gateway reconnects each of those sessions to the guild, which starts the guild again from stored data. Stored guild data is untouched, and [Reload guild](#reload-guild) also starts a stopped guild.
-
-One Admin audit entry is recorded with the action `shutdown_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 ## Create guild archive
 
 <RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/archives" auditReason />
 
-Queues an asynchronous archive of the guild's channels, threads, messages, members, roles, and settings, and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:guild`.
-
-Archive status and downloads are read through [Archives](/admin-api/archives/).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the guild |
+Starts building an archive of a guild's channels, messages, members, roles and settings. You need `archive:trigger:guild`. Check progress and download it through [Archives](/admin-api/archives/).
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| include_attachments? | boolean | Whether uploaded files are included in the archive (default false) |
+| include_attachments? | boolean | Whether to include uploaded files (default false) |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [archive](/admin-api/archives/#archive-object) object | Archive was created and queued |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
-| 500 | [error response](/admin-api/#error-response) | Archive creation or queueing fails |
+| 200 | [archive](/admin-api/archives/#archive-object) object | The archive was queued |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
 
-### Side effects
-
-The archive record is created with the acting Admin account as `requested_by`, a `progress_percent` of 0, a `progress_step` of `Queued`, and an `expires_at` that is never extended. The archive is built after the response is returned. A client reads progress through [Get archive](/admin-api/archives/#get-archive).
-
-The operation emits no Gateway Dispatch.
-
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `trigger_guild_archive`, the target type `guild`, and the guild ID as the target. Its metadata keys are `archive_id` for the new archive and `include_attachments`, which is `true` or `false`.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.

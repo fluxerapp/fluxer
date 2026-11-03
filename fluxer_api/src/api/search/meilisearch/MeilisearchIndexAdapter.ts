@@ -2,15 +2,18 @@
 
 import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
 import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
-import type {MeilisearchFilter} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
-import {joinMeiliFilters} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import {
+	joinMeiliFilters,
+	type MeilisearchFilter,
+	meiliTermFilter,
+} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
 import type {MeilisearchIndexDefinition} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 
 const MAX_SEARCH_LIMIT = 1000;
 const MAX_TOTAL_HITS = 10000;
 
-export const MEILISEARCH_MAX_TRACKED_BULK_TASKS = 4096;
+const MEILISEARCH_MAX_TRACKED_BULK_TASKS = 4096;
 
 interface MeilisearchIndexAdapterOptions<TFilters> {
 	client: MeilisearchClient;
@@ -18,6 +21,22 @@ interface MeilisearchIndexAdapterOptions<TFilters> {
 	buildFilters: (filters: TFilters) => Array<MeilisearchFilter | undefined>;
 	buildSort?: (filters: TFilters) => Array<string> | undefined;
 	buildQuery?: (query: string, filters: TFilters) => string;
+	matchingStrategy?: 'all' | 'last';
+}
+
+interface MeilisearchIndexSettings {
+	searchableAttributes?: Array<unknown>;
+	filterableAttributes?: Array<unknown>;
+	sortableAttributes?: Array<unknown>;
+	pagination?: {maxTotalHits?: number};
+}
+
+function sameAttributes(current: Array<unknown> | undefined, wanted: Array<string>): boolean {
+	return current !== undefined && current.length === wanted.length && current.every((value, i) => value === wanted[i]);
+}
+
+function sameAttributeSet(current: Array<unknown> | undefined, wanted: Array<string>): boolean {
+	return sameAttributes(current?.slice().sort(), wanted.slice().sort());
 }
 
 interface MeilisearchSearchResponse<TResult> {
@@ -40,6 +59,7 @@ export class MeilisearchIndexAdapter<
 	protected readonly buildFilters: (filters: TFilters) => Array<MeilisearchFilter | undefined>;
 	protected readonly buildSort: ((filters: TFilters) => Array<string> | undefined) | undefined;
 	protected readonly buildQuery: ((query: string, filters: TFilters) => string) | undefined;
+	protected readonly matchingStrategy: 'all' | 'last' | undefined;
 	private readonly pendingBulkTaskIds = new Set<number>();
 	private initialized = false;
 
@@ -49,6 +69,7 @@ export class MeilisearchIndexAdapter<
 		this.buildFilters = options.buildFilters;
 		this.buildSort = options.buildSort;
 		this.buildQuery = options.buildQuery;
+		this.matchingStrategy = options.matchingStrategy;
 	}
 
 	async initialize(): Promise<void> {
@@ -67,12 +88,25 @@ export class MeilisearchIndexAdapter<
 				}
 			}
 		}
-		await Promise.all([
-			this.applySetting('PUT', 'searchable-attributes', this.indexDefinition.searchableAttributes),
-			this.applySetting('PUT', 'filterable-attributes', this.indexDefinition.filterableAttributes),
-			this.applySetting('PUT', 'sortable-attributes', this.indexDefinition.sortableAttributes),
-			this.applySetting('PATCH', 'pagination', {maxTotalHits: MAX_TOTAL_HITS}),
-		]);
+		const current = await this.client.request<MeilisearchIndexSettings>(
+			'GET',
+			`/indexes/${encodeURIComponent(uid)}/settings`,
+		);
+		const {searchableAttributes, filterableAttributes, sortableAttributes} = this.indexDefinition;
+		const updates: Array<Promise<void>> = [];
+		if (!sameAttributes(current.searchableAttributes, searchableAttributes)) {
+			updates.push(this.applySetting('PUT', 'searchable-attributes', searchableAttributes));
+		}
+		if (!sameAttributeSet(current.filterableAttributes, filterableAttributes)) {
+			updates.push(this.applySetting('PUT', 'filterable-attributes', filterableAttributes));
+		}
+		if (!sameAttributeSet(current.sortableAttributes, sortableAttributes)) {
+			updates.push(this.applySetting('PUT', 'sortable-attributes', sortableAttributes));
+		}
+		if (current.pagination?.maxTotalHits !== MAX_TOTAL_HITS) {
+			updates.push(this.applySetting('PATCH', 'pagination', {maxTotalHits: MAX_TOTAL_HITS}));
+		}
+		await Promise.all(updates);
 		this.initialized = true;
 	}
 
@@ -111,6 +145,10 @@ export class MeilisearchIndexAdapter<
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents/delete-batch`,
 			ids,
 		);
+	}
+
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		await this.deleteByFilter(meiliTermFilter(field, value));
 	}
 
 	async deleteByFilter(filter: MeilisearchFilter): Promise<void> {
@@ -162,6 +200,7 @@ export class MeilisearchIndexAdapter<
 				sort: this.buildSort?.(filters),
 				attributesToSearchOn: this.indexDefinition.searchableAttributes,
 				showRankingScore: false,
+				...(this.matchingStrategy ? {matchingStrategy: this.matchingStrategy} : {}),
 				...(facets && facets.length > 0 ? {facets} : {}),
 			},
 		);

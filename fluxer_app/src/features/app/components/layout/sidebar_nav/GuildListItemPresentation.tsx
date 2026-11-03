@@ -9,21 +9,14 @@ import type {GuildListItemDragAndDrop} from '@app/features/app/components/layout
 import {VoiceBadge, type VoiceBadgeActivity} from '@app/features/app/components/layout/sidebar_nav/VoiceBadge';
 import {DropPlacement} from '@app/features/app/components/layout/types/DndTypes';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
-import {
-	type GuildInitialsLength,
-	getGuildIconDisplayInitials,
-	getGuildInitialsFitStyle,
-	getInitialsFromName,
-	getInitialsLength,
-	truncateInitials,
-} from '@app/features/guild/utils/GuildInitialsUtils';
 import {ariaCurrentPage} from '@app/features/platform/ARIAProps';
 import {Edge} from '@app/features/ui/AxisOrientation';
 import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import {AnimePresence, AnimeSpan, type AnimeStyle, createAnimeFlxElement} from '@app/features/ui/motion/AnimeElement';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {ExclamationMarkIcon, PauseIcon} from '@phosphor-icons/react';
@@ -56,13 +49,6 @@ function resolveGuildListItemMotion(useReducedMotion: boolean): GuildListItemMot
 		return REDUCED_GUILD_LIST_ITEM_MOTION;
 	}
 	return STANDARD_GUILD_LIST_ITEM_MOTION;
-}
-
-function resolveInitialsLength(displayInitials: string): GuildInitialsLength | null {
-	if (displayInitials.length === 0) {
-		return null;
-	}
-	return getInitialsLength(displayInitials);
 }
 
 function resolveDraggingCursor(dragAndDrop: GuildListItemDragAndDrop | null): 'grabbing' | null {
@@ -164,7 +150,6 @@ function GuildListItemBadges({
 
 function CombinePreviewIcon({guild}: {readonly guild: Guild}) {
 	const url = AvatarSourceUtils.getGuildIconURL(guild, false);
-	const initials = truncateInitials(getInitialsFromName(guild.name), 2);
 	const backgroundStyle: React.CSSProperties = {};
 	if (url.length > 0) {
 		backgroundStyle.backgroundImage = `url(${url})`;
@@ -176,7 +161,10 @@ function CombinePreviewIcon({guild}: {readonly guild: Guild}) {
 			data-flx="app.sidebar-nav.guild-list-item-presentation.combine-preview-icon.combine-preview-icon"
 		>
 			{url.length === 0 && (
-				<span data-flx="app.sidebar-nav.guild-list-item-presentation.combine-preview-icon.span">{initials}</span>
+				<GuildAcronym
+					name={guild.name}
+					data-flx="app.sidebar-nav.guild-list-item-presentation.combine-preview-icon.acronym"
+				/>
 			)}
 		</flx-app-combine-preview-icon>
 	);
@@ -304,8 +292,6 @@ export const GuildListItemPresentation = forwardRef<
 	forwardedRef,
 ) {
 	const rootRef = useMergeRefs([surfaceRef, forwardedRef]);
-	const displayInitials = getGuildIconDisplayInitials(getInitialsFromName(guild.name));
-	const initialsLength = resolveInitialsLength(displayInitials);
 	const dropIndicator = resolveDropIndicator(dragAndDrop);
 	const motion = resolveGuildListItemMotion(Accessibility.useReducedMotion);
 	const draggingCursor = resolveDraggingCursor(dragAndDrop);
@@ -372,18 +358,14 @@ export const GuildListItemPresentation = forwardRef<
 					to={guildIconTarget}
 					from={false}
 					tween={{duration: motion.iconTweenDuration, ease: 'easeOut'}}
-					data-initials-length={initialsLength}
 					style={guildIconStyle}
 					data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon"
 				>
 					{!hasPaintedIcon && (
-						<span
-							className={styles.guildIconInitials}
-							style={getGuildInitialsFitStyle(displayInitials)}
-							data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon-initials"
-						>
-							{displayInitials}
-						</span>
+						<GuildAcronym
+							name={guild.name}
+							data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon-acronym"
+						/>
 					)}
 				</GuildListItemIcon>
 				<GuildListItemBadges

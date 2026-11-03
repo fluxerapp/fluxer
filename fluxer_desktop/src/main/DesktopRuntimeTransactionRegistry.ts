@@ -213,9 +213,8 @@ export class DesktopRuntimeTransactionRegistry {
 		this.pending.set(preparationId, pending);
 		try {
 			const protocol = getDesktopLocalAppProtocol();
-			const cached = protocol.findPlanForRoute(instanceKey);
 			const signal = AbortSignal.any([controller.signal, protocol.getShutdownSignal()]);
-			const plan = cached ?? (await discoverPlanForInstanceKey(instanceKey, signal));
+			const plan = await discoverPlanForInstanceKey(instanceKey, signal, protocol.findPlanForRoute(instanceKey));
 			owner.requireCurrent('Desktop runtime config prepare');
 			if (this.pending.get(preparationId) !== pending) {
 				throw new DesktopRuntimePreparationNotFoundError(preparationId);
@@ -508,12 +507,24 @@ function buildRuntimePreparation(preparation: RuntimePreparationRecord): Desktop
 	};
 }
 
-async function discoverPlanForInstanceKey(instanceKey: string, signal: AbortSignal): Promise<LocalAppRuntimePlan> {
-	const plan = await resolveDesktopRuntimePlan({input: instanceKey, signal});
-	if (plan.instanceKey !== instanceKey) {
-		throw new DesktopRuntimeInstanceMismatchError(instanceKey, plan.instanceKey);
+async function discoverPlanForInstanceKey(
+	instanceKey: string,
+	signal: AbortSignal,
+	cached: LocalAppRuntimePlan | null,
+): Promise<LocalAppRuntimePlan> {
+	try {
+		const plan = await resolveDesktopRuntimePlan({input: instanceKey, signal});
+		if (plan.instanceKey !== instanceKey) {
+			throw new DesktopRuntimeInstanceMismatchError(instanceKey, plan.instanceKey);
+		}
+		return plan;
+	} catch (error) {
+		if (cached === null || signal.aborted) {
+			throw error;
+		}
+		log.warn('Instance discovery failed, preparing the cached runtime plan', {instanceKey, error});
+		return cached;
 	}
-	return plan;
 }
 
 function requireTransactionIdentity(request: unknown): RuntimeTransactionIdentity {

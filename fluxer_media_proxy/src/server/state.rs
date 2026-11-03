@@ -42,7 +42,7 @@ impl AppState {
             NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
         let store = Store::try_new(cfg.clone(), metrics.storage(), metrics.http_client())?;
         let external_client = http_client::build(
-            HTTPClientOptions::new(socket_io_timeout, socket_io_timeout).restrict_to_public(),
+            HTTPClientOptions::external(socket_io_timeout),
             metrics.http_client(),
         )?;
         let nsfw = NSFWClient::new(

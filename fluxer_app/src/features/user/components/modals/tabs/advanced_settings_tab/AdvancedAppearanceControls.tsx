@@ -15,6 +15,7 @@ import {
 	SHOW_NEKO_DESCRIPTOR,
 	USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -22,10 +23,6 @@ import {observer} from 'mobx-react-lite';
 const REQUIRE_DOUBLE_CLICK_TO_JOIN_VOICE_DESCRIPTOR = msg({
 	message: 'Require double-click to join voice channels',
 	comment: 'Short label for an advanced voice-channel navigation preference.',
-});
-const CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR = msg({
-	message: 'Confirm before joining voice channels',
-	comment: 'Short label for an advanced voice-channel safety preference.',
 });
 
 export const WindowsFluxerSansControl = observer(() => {

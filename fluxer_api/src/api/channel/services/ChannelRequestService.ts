@@ -8,24 +8,19 @@ import {applyForumTagEdit, type ForumTagEdit} from '@app/api/channel/services/th
 import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {withThreadParentFields} from '@app/api/channel/services/thread/ThreadParentSettings';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
+import {withRetryingLock} from '@app/api/channel/utils/RetryingLock';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {maskChannelResponseThreadBits} from '@app/api/guild/services/ThreadPermissionBits';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
-import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
 import type {ChannelUpdateGatedRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {ChannelResponse, ChannelSlowmodeStateResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-
-const FORUM_TAGS_LOCK_TTL_SECONDS = 5;
-const FORUM_TAGS_LOCK_ACQUIRE_ATTEMPTS = 6;
-const FORUM_TAGS_LOCK_RETRY_DELAY_MS = 50;
 
 export class ChannelRequestService {
 	constructor(
@@ -44,6 +39,7 @@ export class ChannelRequestService {
 			userId: params.userId,
 			viewer: params.viewer,
 			channelId: params.channelId,
+			access: 'visitor_read',
 		});
 		return this.maskedChannelResponse(channel, params);
 	}
@@ -191,25 +187,7 @@ export class ChannelRequestService {
 	}
 
 	private async withForumTagsLock<T>(channelId: ChannelID, fn: () => Promise<T>): Promise<T> {
-		const lockKey = `channel:${channelId}:forum-tags`;
-		let lockToken: string | null = null;
-		for (let attempt = 0; attempt < FORUM_TAGS_LOCK_ACQUIRE_ATTEMPTS; attempt++) {
-			lockToken = await this.cacheService.acquireLock(lockKey, FORUM_TAGS_LOCK_TTL_SECONDS);
-			if (lockToken) break;
-			await new Promise((resolve) => setTimeout(resolve, FORUM_TAGS_LOCK_RETRY_DELAY_MS * (attempt + 1)));
-		}
-		if (!lockToken) {
-			throw new ThrottledError({
-				code: APIErrorCodes.RESOURCE_LOCKED,
-				retryAfterSeconds: 1,
-				data: {retry_after: 1},
-			});
-		}
-		try {
-			return await fn();
-		} finally {
-			await this.cacheService.releaseLock(lockKey, lockToken).catch(() => {});
-		}
+		return withRetryingLock(this.cacheService, `channel:${channelId}:forum-tags`, fn);
 	}
 
 	async deleteChannel(params: {

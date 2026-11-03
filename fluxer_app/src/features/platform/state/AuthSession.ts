@@ -2,7 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
 import {AuthSessionAccountCatalog} from '@app/features/platform/state/auth_session/AuthSessionAccountCatalog';
@@ -10,10 +10,7 @@ import {
 	AuthSessionAccountPersistence,
 	type PersistableSessionAccount,
 } from '@app/features/platform/state/auth_session/AuthSessionAccountPersistence';
-import {
-	AuthSessionCheckpointManager,
-	AuthSessionRuntimeUnavailableError,
-} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
+import {AuthSessionCheckpointManager} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
 import {AuthSessionCleanup} from '@app/features/platform/state/auth_session/AuthSessionCleanup';
 import {
 	type AuthSessionDependencies,
@@ -25,6 +22,7 @@ import {
 	type AuthSessionSwitchOptions,
 	type AuthSessionTokenValidation,
 	type AuthSessionValidatedSwitchOptions,
+	requireRuntimeSnapshot,
 } from '@app/features/platform/state/auth_session/AuthSessionLifecycle';
 import {AuthSessionRestorer} from '@app/features/platform/state/auth_session/AuthSessionRestorer';
 import {AuthSessionRuntimeCommitter} from '@app/features/platform/state/auth_session/AuthSessionRuntimeCommitter';
@@ -50,7 +48,6 @@ import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootM
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {setSyncedFieldSessionManager} from '@app/features/user/state/SyncedField';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {actionBound, makeAutoObservable} from 'mobx';
@@ -72,13 +69,6 @@ const AUTH_SESSION_TOKEN_VALIDATION_TIMEOUT_MS = 10_000;
 
 export interface AuthSessionConnectionCloseResult {
 	readonly invalidatedCurrentSession: boolean;
-}
-
-function requireRuntimeSnapshot(snapshot: RuntimeConfigSnapshot | null, operation: string): RuntimeConfigSnapshot {
-	if (snapshot == null) {
-		throw new AuthSessionRuntimeUnavailableError(operation);
-	}
-	return snapshot;
 }
 
 export class AuthSessionManager {
@@ -209,6 +199,18 @@ export class AuthSessionManager {
 
 	get currentAccountKey(): string | null {
 		return selectAuthSessionAccountKey(this._snapshot);
+	}
+
+	get restoringAccountKey(): string | null {
+		return this.currentCredentialMirror().storageKey;
+	}
+
+	async restoreAccountOnNextStart(accountKey: string): Promise<void> {
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved === null) {
+			throw new Error(`No stored account found for ${accountKey}`);
+		}
+		await this.deps.credentialMirror.persist(this.accountPersistence.pointer(resolved.account));
 	}
 
 	get currentAccount(): Account | null {
@@ -465,6 +467,32 @@ export class AuthSessionManager {
 		});
 	}
 
+	async addStoredAccount({
+		userId,
+		token,
+		userData,
+		instance,
+	}: {
+		userId: string;
+		token: string;
+		userData?: UserData;
+		instance: RuntimeConfigSnapshot;
+	}): Promise<void> {
+		await this.initialize();
+		const account = {
+			storageKey: getAccountKey({userId, instance}),
+			userId,
+			token,
+			userData,
+			presenceIntent: null,
+			lastActive: this.deps.now(),
+			instance,
+			isValid: true,
+		} satisfies PersistableSessionAccount;
+		await this.accountPersistence.stash(account);
+		this.send({type: 'account.upsert', account});
+	}
+
 	async validateToken(
 		token: string,
 		userId: string,
@@ -527,6 +555,30 @@ export class AuthSessionManager {
 		return prepared;
 	}
 
+	async reloadStoredAccount(accountKey: string): Promise<void> {
+		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved === null || resolved.accountKey === this.currentAccountKey) {
+			return;
+		}
+		await this.adoptStoredAccountToken(resolved.account);
+	}
+
+	async adoptRotatedAccountToken(accountKey: string, expectedToken: string, token: string): Promise<void> {
+		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (
+			resolved === null ||
+			resolved.accountKey === this.currentAccountKey ||
+			resolved.account.token !== expectedToken ||
+			token.length === 0
+		) {
+			return;
+		}
+		await this.deps.accountStorage.updateAccountToken(resolved.accountKey, expectedToken, token);
+		await this.adoptStoredAccountToken(resolved.account);
+	}
+
 	private async adoptStoredAccountToken(account: Account): Promise<Account> {
 		if (account.storageKey === this.currentAccountKey) {
 			return account;
@@ -562,9 +614,9 @@ export class AuthSessionManager {
 		await this.lifecycle.switchAccountWithinAccountActivation(accountKey, options, suspension);
 	}
 
-	async logout(): Promise<void> {
+	async logout(options: {notifyServer?: boolean} = {}): Promise<void> {
 		await this.initialize();
-		await this.lifecycle.logout();
+		await this.lifecycle.logout(options);
 	}
 
 	async removeAccount(accountKey: string): Promise<void> {
@@ -653,6 +705,21 @@ export class AuthSessionManager {
 		this.send({type: 'account.userDataUpdated', accountKey: resolved.accountKey, userData});
 	}
 
+	async reorderAccounts(orderedAccountKeys: ReadonlyArray<string>): Promise<void> {
+		const positions = new Map<string, number>();
+		for (const accountKey of orderedAccountKeys) {
+			const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+			if (resolved !== null && !positions.has(resolved.accountKey)) {
+				positions.set(resolved.accountKey, positions.size);
+			}
+		}
+		if (positions.size === 0) {
+			return;
+		}
+		this.send({type: 'accounts.reordered', positions});
+		await this.deps.accountStorage.updateAccountSwitcherPositions(positions);
+	}
+
 	async reset(): Promise<void> {
 		await this.deps.deactivateRuntime();
 		this.send({type: 'reset'});
@@ -665,6 +732,5 @@ export function createSessionManager(dependencies?: AuthSessionDependencies): Au
 }
 
 const SessionManager = createSessionManager();
-setSyncedFieldSessionManager(SessionManager);
 
 export default SessionManager;

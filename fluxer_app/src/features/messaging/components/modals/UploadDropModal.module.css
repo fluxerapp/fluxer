@@ -109,10 +109,14 @@
 }
 
 .statusIndicatorActive .statusIcon {
-	color: var(--brand-primary-fill);
+	color: var(--brand-primary-light-fill);
 }
 
 :global(.theme-light) .statusIndicatorActive {
 	border-color: var(--brand-primary);
 	background-color: var(--brand-primary);
+}
+
+:global(.theme-light) .statusIndicatorActive .statusIcon {
+	color: var(--brand-primary-fill);
 }

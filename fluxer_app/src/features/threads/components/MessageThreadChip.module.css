@@ -11,7 +11,7 @@
 	border-radius: 0.5rem;
 	background-color: var(--background-secondary-alt);
 	color: var(--text-primary);
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	font: inherit;
 }
@@ -47,7 +47,7 @@
 }
 
 :global(.theme-light) .count {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .preview {

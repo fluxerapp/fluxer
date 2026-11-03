@@ -42,9 +42,7 @@ async function clearFluxerServiceWorkerCaches(): Promise<Array<string>> {
 }
 
 export function shouldDisableServiceWorkersForLocalDev(): boolean {
-	return (
-		import.meta.env.MODE === 'development' || (Config.PUBLIC_BUILD_VERSION ?? 'dev').trim().toLowerCase() === 'dev'
-	);
+	return import.meta.env.MODE === 'development' || (Config.BUILD_VERSION ?? 'dev').trim().toLowerCase() === 'dev';
 }
 
 async function unregisterFluxerServiceWorkers({
@@ -108,7 +106,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 		return;
 	}
 	try {
-		const versionParam = Config.PUBLIC_BUILD_VERSION || 'dev';
+		const versionParam = Config.BUILD_VERSION || 'dev';
 		const swUrl = resolveDocumentURLFromRoot('/sw.js');
 		swUrl.searchParams.set('v', String(versionParam));
 		return await navigator.serviceWorker.register(`${swUrl.pathname}${swUrl.search}`);

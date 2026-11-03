@@ -1,13 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showPremiumActionErrorModal} from '@app/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import GeoIP from '@app/features/app/state/GeoIP';
+import {whenDateOfBirthStepClosed} from '@app/features/auth/state/DateOfBirthStep';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {
+	CUSTOMER_PORTAL_FAILED_MESSAGE_DESCRIPTOR,
+	CUSTOMER_PORTAL_FAILED_TITLE_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
+import type {CreateCheckoutSessionRequest} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import type {
 	CurrentSubscriptionPriceResponse,
+	PlutoniumWithdrawalListResponse,
+	PlutoniumWithdrawRequest,
 	PremiumStateResponse,
 	PriceIdsResponse,
 	SelfServeRefundResponse,
@@ -43,13 +54,17 @@ function checkoutSessionBody(
 	priceId: string,
 	countryCode: string | undefined,
 	isGift: boolean,
-	paymentMethod?: CheckoutPaymentMethod,
-): Record<string, string> {
+	paymentMethod: CheckoutPaymentMethod | undefined,
+	isBusiness: boolean,
+	cnpj: string | undefined,
+): CreateCheckoutSessionRequest {
 	return {
 		price_id: priceId,
 		...(countryCode ? {country_code: countryCode} : {}),
 		...(countryCode ? {client_geoip_country_code: countryCode} : {}),
 		...(paymentMethod && !isGift ? {payment_method: paymentMethod} : {}),
+		...(isBusiness ? {is_business: true} : {}),
+		...(isBusiness && cnpj ? {cnpj} : {}),
 	};
 }
 
@@ -93,11 +108,8 @@ async function fetchPremiumState(countryCode?: string): Promise<PremiumStateResp
 	return response.body;
 }
 
-function isAbortError(error: unknown): boolean {
-	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
-}
-
 export async function refreshPremiumState(countryCode?: string): Promise<PremiumStateResponse> {
+	await whenDateOfBirthStepClosed();
 	const currentUserId = Users.currentUser?.id;
 	if (currentUserId) {
 		PremiumState.beginLoad(currentUserId);
@@ -155,13 +167,15 @@ export async function createCheckoutSession(
 	countryCode?: string,
 	isGift: boolean = false,
 	paymentMethod?: CheckoutPaymentMethod,
+	isBusiness: boolean = false,
+	cnpj?: string,
 ): Promise<string> {
 	try {
 		const country = normalizedCountryCode(countryCode);
 		const response = await http.post<UrlResponse>(checkoutEndpoint(isGift), {
-			body: checkoutSessionBody(priceId, country, isGift, paymentMethod),
+			body: checkoutSessionBody(priceId, country, isGift, paymentMethod, isBusiness, cnpj),
 		});
-		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod});
+		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod, isBusiness});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
@@ -199,18 +213,13 @@ export async function endPremiumGracePeriod(): Promise<void> {
 	}
 }
 
-export type SubscriptionBillingCycleChangeEffectiveAt = 'now' | 'period_end';
-
-export async function changeSubscriptionBillingCycle(
-	billingCycle: 'monthly' | 'yearly',
-	effectiveAt: SubscriptionBillingCycleChangeEffectiveAt = 'now',
-): Promise<void> {
+export async function changeSubscriptionBillingCycle(billingCycle: 'monthly' | 'yearly'): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_CHANGE_SUBSCRIPTION, {
 			billing_cycle: billingCycle,
-			effective_at: effectiveAt,
+			effective_at: 'period_end',
 		});
-		logger.info('Subscription billing cycle changed', {billingCycle, effectiveAt});
+		logger.info('Subscription billing cycle change scheduled', {billingCycle});
 	} catch (error) {
 		logger.error('Failed to change subscription billing cycle', error);
 		throw error;
@@ -249,6 +258,27 @@ export async function refundLatestPurchase(): Promise<SelfServeRefundResponse> {
 	}
 }
 
+export async function fetchWithdrawals(): Promise<PlutoniumWithdrawalListResponse> {
+	const response = await http.get<PlutoniumWithdrawalListResponse>(Endpoints.PREMIUM_WITHDRAWALS);
+	return response.body;
+}
+
+export async function withdrawPurchase(
+	purchaseId: string,
+	request: PlutoniumWithdrawRequest,
+): Promise<SelfServeRefundResponse> {
+	try {
+		const response = await http.post<SelfServeRefundResponse>(Endpoints.PREMIUM_WITHDRAW(purchaseId), {
+			body: request,
+		});
+		logger.info('Plutonium purchase withdrawn', response.body);
+		return response.body;
+	} catch (error) {
+		logger.error('Plutonium withdrawal failed', error);
+		throw error;
+	}
+}
+
 export async function rejoinVisionaryGuild(): Promise<void> {
 	try {
 		await http.post(Endpoints.PREMIUM_VISIONARY_REJOIN);
@@ -256,5 +286,22 @@ export async function rejoinVisionaryGuild(): Promise<void> {
 	} catch (error) {
 		logger.error('Failed to rejoin Visionary guild', error);
 		throw error;
+	}
+}
+
+export async function openCustomerPortalWithErrorModal(dataFlx: string): Promise<void> {
+	try {
+		const url = await createCustomerPortalSession();
+		await openExternalUrl(url);
+	} catch (error) {
+		logger.error('Failed to open customer portal', error);
+		showPremiumActionErrorModal(
+			error,
+			{
+				fallbackTitle: CUSTOMER_PORTAL_FAILED_TITLE_DESCRIPTOR,
+				fallbackMessage: CUSTOMER_PORTAL_FAILED_MESSAGE_DESCRIPTOR,
+			},
+			dataFlx,
+		);
 	}
 }

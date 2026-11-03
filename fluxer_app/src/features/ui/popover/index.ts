@@ -44,7 +44,6 @@ export interface Popout {
 	render: (props: {popoutKey: PopoutKey; onClose: () => void}) => React.ReactNode;
 	zIndexBoost?: number;
 	shouldAutoUpdate?: boolean;
-	shouldReposition?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
 	animationType?: PopoutAnimationType;
@@ -54,10 +53,6 @@ export interface Popout {
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;
 	returnFocusRef?: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement>;
-	lastPosition?: {
-		x: number;
-		y: number;
-	};
 	clickPos?: number;
 	preventInvert?: boolean;
 	disableBackdrop?: boolean;

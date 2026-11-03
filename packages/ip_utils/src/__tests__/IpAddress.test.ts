@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	canonicalizeIpAddress,
 	getIpNetworkKey,
 	getSameIpDecisionKey,
 	getSubnet,
@@ -89,6 +90,21 @@ describe('parseIpAddress', () => {
 	it('returns null for invalid values', () => {
 		expect(parseIpAddress('not-an-ip')).toBeNull();
 		expect(parseIpAddress('')).toBeNull();
+	});
+});
+
+describe('canonicalizeIpAddress', () => {
+	it('keeps ipv4 and plain ipv6 in their normalised form', () => {
+		expect(canonicalizeIpAddress(' 203.0.113.5 ')).toBe('203.0.113.5');
+		expect(canonicalizeIpAddress('[2001:DB8::1]')).toBe('2001:db8::1');
+	});
+	it('unmaps ipv4-mapped ipv6 in dotted and hex form', () => {
+		expect(canonicalizeIpAddress('::ffff:203.0.113.5')).toBe('203.0.113.5');
+		expect(canonicalizeIpAddress('::ffff:cb00:7105')).toBe('203.0.113.5');
+	});
+	it('returns null for anything that is not an address', () => {
+		expect(canonicalizeIpAddress('')).toBeNull();
+		expect(canonicalizeIpAddress('not-an-ip')).toBeNull();
 	});
 });
 

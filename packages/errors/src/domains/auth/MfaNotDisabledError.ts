@@ -5,6 +5,6 @@ import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 
 export class MfaNotDisabledError extends BadRequestError {
 	constructor() {
-		super({code: APIErrorCodes.TWO_FA_NOT_ENABLED});
+		super({code: APIErrorCodes.TWO_FA_ALREADY_ENABLED});
 	}
 }

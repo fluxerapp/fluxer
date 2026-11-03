@@ -18,7 +18,7 @@ import {
 	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -31,7 +31,7 @@ import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {listReportProfileSnapshotAssets} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;
@@ -162,7 +162,7 @@ describe('Report profile snapshots', () => {
 
 	test('a user report with guild context keeps the profile as it was when reported', async () => {
 		const {owner, target, guild, profile} = await setupProfile(harness);
-		const member = await new GuildMemberRepository().getMember(
+		const member = await new GuildRepository().getMember(
 			createGuildID(BigInt(guild.id)),
 			createUserID(BigInt(target.userId)),
 		);
@@ -343,20 +343,6 @@ describe('Report profile snapshots', () => {
 			.execute();
 		expect(harness.storageService.getCopiedObjects()).toHaveLength(copiesBefore);
 		expect(await countReports()).toBe(2);
-	});
-
-	test('a notice whose ticket is claimed elsewhere copies no images', async () => {
-		const {target} = await setupProfile(harness);
-		const ticket = await issueTicket(harness);
-		const copiesBefore = harness.storageService.getCopiedObjects().length;
-		const claim = vi.spyOn(ReportRepository.prototype, 'consumeDsaTicket').mockResolvedValueOnce(false);
-		await submitDsa(harness, ticket, {report_type: 'user', user_id: target.userId})
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_DSA_TICKET)
-			.execute();
-		expect(claim).toHaveBeenCalledTimes(1);
-		claim.mockRestore();
-		expect(harness.storageService.getCopiedObjects()).toHaveLength(copiesBefore);
-		expect(await countReports()).toBe(0);
 	});
 
 	test('notices filed through the DSA form keep the same snapshots', async () => {

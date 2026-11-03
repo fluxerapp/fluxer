@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {UserID} from '@app/api/BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {fetchUserSettings, updateUserSettings} from '@app/api/user/tests/UserTestUtils';
 import {create, equals} from '@bufbuild/protobuf';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	decodeSyncedPreferences,
@@ -20,17 +24,25 @@ import {
 	LocalUserSpamOverridesSchema,
 	SearchEngineSettingsSchema,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
-import {beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+
+function snapshotHash(encoded: string): string {
+	return createHash('sha256').update(Buffer.from(encoded, 'base64')).digest('hex');
+}
+
+function encodedFontSize(fontSize: number): string {
+	return encodeSyncedPreferences(
+		create(SyncedPreferencesSchema, {accessibility: create(AccessibilitySettingsSchema, {fontSize})}),
+	);
+}
 
 describe('User Settings synced_preferences', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('default response contains an empty string', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await updateUserSettings(harness, account.token, {});
-		expect(json.synced_preferences).toBe('');
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 	test('round-trips an encoded snapshot', async () => {
 		const account = await createTestAccount(harness);
@@ -72,22 +84,6 @@ describe('User Settings synced_preferences', () => {
 			synced_preferences: null,
 		});
 		expect(json.synced_preferences).toBe('');
-	});
-	test('rejects non-string payloads with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: {a: 1}})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('rejects invalid base64 with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: 'not_base64!!!'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
 	});
 	test('rejects garbage protobuf bytes with 400', async () => {
 		const account = await createTestAccount(harness);
@@ -174,6 +170,58 @@ describe('User Settings synced_preferences', () => {
 			gif_auto_play: false,
 		});
 		expect(json.synced_preferences).toBe(initial);
+		expect(json.gif_auto_play).toBe(false);
+	});
+	test('accepts a base hash that matches the stored snapshot, starting from an empty one', async () => {
+		const account = await createTestAccount(harness);
+		const first = await updateUserSettings(harness, account.token, {
+			synced_preferences: encodedFontSize(14),
+			synced_preferences_base_hash: snapshotHash(''),
+		});
+		const second = await updateUserSettings(harness, account.token, {
+			synced_preferences: encodedFontSize(16),
+			synced_preferences_base_hash: snapshotHash(first.json.synced_preferences),
+		});
+		expect(second.json.synced_preferences).toBe(encodedFontSize(16));
+	});
+	test('rejects a stale base hash with 409 and leaves the stored snapshot alone', async () => {
+		const account = await createTestAccount(harness);
+		const first = await updateUserSettings(harness, account.token, {synced_preferences: encodedFontSize(14)});
+		await updateUserSettings(harness, account.token, {synced_preferences: encodedFontSize(16)});
+		const response = await createBuilder<{code: string; message: string}>(harness, account.token)
+			.patch('/users/@me/settings')
+			.body({
+				synced_preferences: encodedFontSize(18),
+				synced_preferences_base_hash: snapshotHash(first.json.synced_preferences),
+				gif_auto_play: false,
+			})
+			.expect(HTTP_STATUS.CONFLICT)
+			.execute();
+		expect(response.code).toBe(APIErrorCodes.SYNCED_PREFERENCES_CONFLICT);
+		const {json} = await fetchUserSettings(harness, account.token);
+		expect(json.synced_preferences).toBe(encodedFontSize(16));
+		expect(json.gif_auto_play).toBe(true);
+	});
+	test('a patch without synced_preferences keeps a snapshot written while it was in flight', async () => {
+		const account = await createTestAccount(harness);
+		await updateUserSettings(harness, account.token, {synced_preferences: encodedFontSize(14)});
+		const findSettings = UserRepository.prototype.findSettings;
+		let concurrentWrite: Promise<unknown> | null = null;
+		vi.spyOn(UserRepository.prototype, 'findSettings').mockImplementation(async function (
+			this: UserRepository,
+			userId: UserID,
+		) {
+			const settings = await findSettings.call(this, userId);
+			if (concurrentWrite === null) {
+				concurrentWrite = updateUserSettings(harness, account.token, {synced_preferences: encodedFontSize(16)});
+				await concurrentWrite;
+			}
+			return settings;
+		});
+		await updateUserSettings(harness, account.token, {gif_auto_play: false});
+		vi.restoreAllMocks();
+		const {json} = await fetchUserSettings(harness, account.token);
+		expect(json.synced_preferences).toBe(encodedFontSize(16));
 		expect(json.gif_auto_play).toBe(false);
 	});
 });

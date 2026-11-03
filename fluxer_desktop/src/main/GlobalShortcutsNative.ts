@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	evdevKeyToDomCode,
@@ -102,7 +103,7 @@ function loadModule<T extends {loadError: Error | null}>(name: string): T {
 	} catch (error) {
 		throw new Error(
 			`${name} failed to load; this is a packaging bug, not a runtime fallback case. ` +
-				`Original error: ${error instanceof Error ? error.message : String(error)}`,
+				`Original error: ${errorMessage(error)}`,
 		);
 	}
 	moduleCache.set(name, loaded);
@@ -154,7 +155,7 @@ function isNativeMouseEvent(event: NativeHookEvent): event is NativeMouseEvent {
 	return event.type === 'mousedown' || event.type === 'mouseup';
 }
 
-export function translateNativeHookEvent(kind: HookBackendKind, event: NativeHookEvent): HookEvent | null {
+function translateNativeHookEvent(kind: HookBackendKind, event: NativeHookEvent): HookEvent | null {
 	const unflaggedModifierCodes = kind === 'x11' ? X11_UNFLAGGED_MODIFIER_CODES : undefined;
 	if (isNativeMouseEvent(event)) {
 		return {

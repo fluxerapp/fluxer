@@ -3,6 +3,7 @@
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {ThreadState} from '@app/api/models/ThreadState';
+import type {AccountTier} from '@app/api/user/AccountTier';
 import type {ThreadActorContext} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -17,6 +18,15 @@ export interface AuthenticatedThread {
 	enforceMfa: (permission: bigint) => void;
 }
 
+interface AuthenticatedVisitor {
+	permissions: bigint;
+	tier: AccountTier;
+	adultContentAllowed: boolean;
+	historyCutoff: Date | null;
+}
+
+export type ChannelAccess = 'member' | 'visitor_read';
+
 export interface AuthenticatedChannel {
 	channel: Channel;
 	guild: GuildResponse | null;
@@ -24,4 +34,5 @@ export interface AuthenticatedChannel {
 	hasPermission: (permission: bigint) => Promise<boolean>;
 	checkPermission: (permission: bigint) => Promise<void>;
 	thread?: AuthenticatedThread;
+	visitor?: AuthenticatedVisitor;
 }

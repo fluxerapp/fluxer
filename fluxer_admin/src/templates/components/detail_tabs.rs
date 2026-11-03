@@ -19,21 +19,22 @@ pub fn build_detail_tabs(
 ) -> Vec<DetailTab> {
     tabs.iter()
         .filter(|(id, _)| visible(id))
-        .map(|(id, label)| {
-            let href = if *id == "overview" {
-                format!("{base_url}/{entity_id}")
-            } else {
-                format!("{base_url}/{entity_id}?tab={id}")
-            };
-            DetailTab {
-                id: id.to_string(),
-                label: label.to_string(),
-                tab_url: format!("{base_url}/{entity_id}/tabs/{id}"),
-                href,
-                active: *id == active_tab,
-            }
+        .map(|(id, label)| DetailTab {
+            id: id.to_string(),
+            label: label.to_string(),
+            tab_url: format!("{base_url}/{entity_id}/tabs/{id}"),
+            href: detail_page_href(base_url, entity_id, id),
+            active: *id == active_tab,
         })
         .collect()
+}
+
+pub fn detail_page_href(base_url: &str, entity_id: &str, tab: &str) -> String {
+    if tab == "overview" {
+        format!("{base_url}/{entity_id}")
+    } else {
+        format!("{base_url}/{entity_id}?tab={tab}")
+    }
 }
 
 const MOBILE_TAB_BASE: &str = "inline-flex min-h-[44px] flex-shrink-0 items-center \

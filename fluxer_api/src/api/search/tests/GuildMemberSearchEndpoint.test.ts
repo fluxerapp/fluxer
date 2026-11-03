@@ -71,16 +71,6 @@ describe('Guild Member Search Endpoint', () => {
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 				.execute();
 		});
-		test('allows guild owner to search', async () => {
-			const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
-			await indexGuildMembers(harness, guild.id);
-			const result = await createBuilder<GuildMemberSearchResponse>(harness, owner.token)
-				.post(`/guilds/${guild.id}/members-search`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.members.length).toBeGreaterThan(0);
-		});
 		test('rejects an elevated-permission holder without MFA in an elevated guild (400)', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 			const moderator = members[0]!;

@@ -5,7 +5,7 @@ import {isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress'
 const LOCAL_HOST_NAMES: ReadonlySet<string> = new Set(['localhost']);
 const LOCAL_HOST_SUFFIXES: ReadonlyArray<string> = ['.localhost', '.local'];
 
-export function isLocalNetworkHost(hostname: string): boolean {
+function isLocalNetworkHost(hostname: string): boolean {
 	const host = hostname.trim().toLowerCase().replace(/^\[/u, '').replace(/\]$/u, '');
 	if (host.length === 0) {
 		return false;

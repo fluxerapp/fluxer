@@ -10,15 +10,18 @@ import ForumReadState from '@app/features/forum/state/ForumReadState';
 import {getDefaultReaction, getForumTags} from '@app/features/forum/utils/ForumChannelUtils';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
+import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
-import {buildFitInsideMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -58,7 +61,9 @@ function firstMedia(message: WireMessage | null | undefined): {src: string; vide
 	const attachment = message?.attachments?.find(isVisualAttachment);
 	const source = attachment?.proxy_url ?? attachment?.url;
 	if (!attachment || !source) return null;
-	return {src: source, video: (attachment.content_type ?? '').startsWith('video/')};
+	const src = AttachmentUrlRefresher.freshWhenReady(source);
+	if (src === null) return null;
+	return {src, video: (attachment.content_type ?? '').startsWith('video/')};
 }
 
 function defaultReactionState(
@@ -139,7 +144,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	const pinned = isPinnedPost(post);
 	const open = Navigation.threadId === post.id;
 	const lastActivity = new Date(SnowflakeUtils.extractTimestamp(lastActivityId(post)));
-	const handleOpen = useCallback(() => openThread(post), [post]);
+	const handleOpen = useCallback((event: ThreadOpenEvent) => openThreadFromEvent(post, event), [post]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			if (MobileLayout.enabled) {
@@ -153,10 +158,12 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	);
 	const thumbnail = media
 		? buildFitInsideMediaProxyURL(media.src, {
+				format: resolvePreferredImageFormat(),
 				width: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 				height: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 			})
 		: null;
+	const handleThumbnailError = useAttachmentRefreshOnError(media?.src);
 	return (
 		<>
 			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
@@ -169,7 +176,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 					onKeyDown={(event) => {
 						if (event.key === 'Enter' || event.key === ' ') {
 							event.preventDefault();
-							handleOpen();
+							handleOpen(event);
 						}
 					}}
 					onContextMenu={handleContextMenu}
@@ -184,6 +191,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 									className={styles.cardMediaImage}
 									loading="lazy"
 									draggable={false}
+									onError={handleThumbnailError}
 									data-flx="forum.forum-post-card.card-media-image"
 								/>
 							) : (
@@ -251,7 +259,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 									aria-hidden
 									data-flx="forum.forum-post-card.chat-circle-icon--2"
 								/>
-								{i18n._(D.POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
+								{i18n._(D_POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
 							</span>
 							{unread && (
 								<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">
@@ -274,6 +282,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 								className={styles.cardMediaImage}
 								loading="lazy"
 								draggable={false}
+								onError={handleThumbnailError}
 								data-flx="forum.forum-post-card.card-media-image--2"
 							/>
 							{media?.video && (

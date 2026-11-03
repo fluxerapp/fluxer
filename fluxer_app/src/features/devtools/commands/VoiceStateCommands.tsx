@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import Keybind from '@app/features/input/state/InputKeybind';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
@@ -119,14 +118,10 @@ const requestMicrophoneDirectly = async (): Promise<boolean> => {
 };
 
 export async function toggleSelfMute(_guildId: string | null = null): Promise<void> {
-	if (Keybind.isPushToTalkEffective()) {
-		logger.debug('Ignoring self-mute toggle: push-to-talk controls the microphone');
-		return;
-	}
 	const room = MediaEngine.room;
 	const connectedChannelId = MediaEngine.channelId;
 	const microphoneFailureLatched = MediaEngine.isMicrophoneFailureLatched();
-	const currentMute = LocalVoiceState.getSelfMute() || microphoneFailureLatched;
+	const currentMute = getCurrentSelfMute();
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
 	const willUnmute = currentMute;
@@ -204,7 +199,7 @@ const updateConnectionProperty = async (
 ): Promise<void> => {
 	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	socket.updateVoiceStateExplicit({
 		guild_id: voiceState.guild_id,
@@ -221,7 +216,7 @@ const updateConnectionsProperty = async (
 	property: VoiceStateProperty,
 	value: boolean,
 ): Promise<void> => {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
@@ -238,7 +233,20 @@ const updateConnectionsProperty = async (
 	}
 };
 
+export function getCurrentSelfMute(): boolean {
+	return LocalVoiceState.getSelfMute() || MediaEngine.isMicrophoneFailureLatched();
+}
+
+export function getSelfMuteForConnection(connectionId: string): boolean {
+	if (connectionId === MediaEngine.connectionId) return getCurrentSelfMute();
+	return MediaEngine.getVoiceStateByConnectionId(connectionId)?.self_mute ?? false;
+}
+
 export async function toggleSelfMuteForConnection(connectionId: string): Promise<void> {
+	if (connectionId === MediaEngine.connectionId) {
+		await toggleSelfMute(null);
+		return;
+	}
 	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
 	const target = !voiceState.self_mute;
@@ -265,7 +273,16 @@ export async function turnOffStreamForConnection(connectionId: string): Promise<
 }
 
 export async function bulkMuteConnections(connectionIds: Array<string>, mute: boolean = true): Promise<void> {
-	await updateConnectionsProperty(connectionIds, 'self_mute', mute);
+	const currentConnectionId = MediaEngine.connectionId;
+	if (currentConnectionId && connectionIds.includes(currentConnectionId)) {
+		if (!mute) MediaEngine.clearMicrophoneFailureLatch();
+		LocalVoiceState.updateSelfMute(mute);
+	}
+	await updateConnectionsProperty(
+		connectionIds.filter((connectionId) => connectionId !== currentConnectionId),
+		'self_mute',
+		mute,
+	);
 }
 
 export async function bulkDeafenConnections(connectionIds: Array<string>, deafen: boolean = true): Promise<void> {
@@ -277,7 +294,7 @@ export async function bulkTurnOffCameras(connectionIds: Array<string>): Promise<
 }
 
 export async function bulkDisconnect(connectionIds: Array<string>): Promise<void> {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
@@ -295,7 +312,7 @@ export async function bulkDisconnect(connectionIds: Array<string>): Promise<void
 }
 
 export async function bulkMoveConnections(connectionIds: Array<string>, targetChannelId: string): Promise<void> {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	const localConnectionId = MediaEngine.connectionId;
 	for (const connectionId of connectionIds) {

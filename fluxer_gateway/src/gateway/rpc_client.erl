@@ -4,14 +4,11 @@
 -typing([eqwalizer]).
 
 -export([
-    call/1,
-    call/2,
+    call/1, call/2,
     call_with_retry/2,
     handle_http_response/2,
-    rpc_headers/1,
     rpc_url/0,
     rpc_url_meta/0,
-    is_retryable/1,
     backoff_delay/2
 ]).
 
@@ -349,7 +346,7 @@ normalize_optional_binary(Value) when is_binary(Value) ->
 normalize_optional_binary(Value) when is_integer(Value) ->
     integer_to_binary(Value);
 normalize_optional_binary(Value) when is_list(Value) ->
-    unicode_binary(Value);
+    type_conv:unicode_to_binary(Value);
 normalize_optional_binary(_) ->
     undefined.
 
@@ -369,13 +366,9 @@ ensure_response_map(Response) when is_map(Response) ->
 ensure_response_map(_) ->
     erlang:error(badarg).
 
--spec unicode_binary(term()) -> binary() | undefined.
-unicode_binary(Value) ->
-    type_conv:unicode_to_binary(Value).
-
 -spec unicode_binary_or_default(term(), binary()) -> binary().
 unicode_binary_or_default(Value, Default) ->
-    case unicode_binary(Value) of
+    case type_conv:unicode_to_binary(Value) of
         Binary when is_binary(Binary) -> Binary;
         undefined -> Default
     end.

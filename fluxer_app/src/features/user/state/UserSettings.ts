@@ -11,14 +11,18 @@ import {
 	selectEffectiveGifAutoPlay,
 } from '@app/features/accessibility/state/MotionPreferencesMachine';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isDateOfBirthStepOpen, whenDateOfBirthStepClosed} from '@app/features/auth/state/DateOfBirthStep';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import AppStorage, {flushAppStorageWrites} from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import LocalPresence, {setLocalPresenceUserSettings} from '@app/features/presence/state/LocalPresence';
-import Theme from '@app/features/theme/state/Theme';
+import AccountTheme from '@app/features/theme/state/AccountTheme';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {PRIVACY_SETUP_VERSION} from '@app/features/user/constants/PrivacySetupConstants';
 import {
@@ -38,6 +42,8 @@ import {
 	type SyncedPreferencesField,
 	syncedPreferencesEqual,
 } from '@app/features/user/state/SyncedPreferencesEngine';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {
@@ -67,6 +73,7 @@ export interface UserSettingsAccountTransitionCheckpoint {
 	readonly hydrated: boolean;
 	readonly syncedPreferences: SyncedPreferences;
 	readonly wireSyncedPreferences: SyncedPreferences;
+	readonly wireSyncedPreferencesBase: string | null;
 	readonly dirtySyncedPreferenceFields: ReadonlyArray<SyncedPreferencesField>;
 	readonly recentlyAckedSyncedPreferenceFields: ReadonlyArray<readonly [SyncedPreferencesField, number]>;
 	readonly syncConsecutive429s: number;
@@ -134,10 +141,7 @@ const SYNCED_PREFERENCES_LOCAL_KEY = 'UserSettings:syncedPreferencesLocal';
 const SYNCED_PREFERENCES_WIRE_KEY = 'UserSettings:syncedPreferencesWire';
 const SYNCED_PREFERENCES_RECENT_ACK_KEY = 'UserSettings:syncedPreferencesRecentAck';
 const RECENT_SYNCED_PREFERENCES_ACK_WINDOW_MS = 60_000;
-
-function isAbortError(error: unknown): boolean {
-	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
-}
+const MAX_SYNCED_PREFERENCES_CONFLICT_RETRIES = 3;
 
 function readDirtySyncedPreferenceFields(): Set<SyncedPreferencesField> {
 	try {
@@ -216,6 +220,21 @@ function writePersistedRecentAck(entries: ReadonlyMap<SyncedPreferencesField, nu
 	} catch (error) {
 		logger.warn('Failed to persist recent-ack window:', error);
 	}
+}
+
+async function syncedPreferencesBaseHash(encoded: string): Promise<string> {
+	const binary = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
+	const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+	return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function readSyncedPreferencesFromBody(body: unknown): string | null | undefined {
+	if (body == null || typeof body !== 'object') return undefined;
+	const candidate =
+		(body as {synced_preferences?: unknown}).synced_preferences ??
+		(body as {syncedPreferences?: unknown}).syncedPreferences;
+	return typeof candidate === 'string' || candidate === null ? candidate : undefined;
 }
 
 function cloneSyncedPreferences(preferences: SyncedPreferences): SyncedPreferences {
@@ -316,8 +335,11 @@ class UserSettingsState {
 	staffDmAccessUserIds: Array<string> = [];
 	syncedPreferences: SyncedPreferences = readPersistedSyncedPreferences(SYNCED_PREFERENCES_LOCAL_KEY);
 	private hydrated = false;
+	private awaitingAccountSettings = false;
 	private wireSyncedPreferences: SyncedPreferences = readPersistedSyncedPreferences(SYNCED_PREFERENCES_WIRE_KEY);
+	private wireSyncedPreferencesBase: string | null = null;
 	private syncFlushTimer: NodeJS.Timeout | 'microtask' | null = null;
+	private syncWaitingForDateOfBirth = false;
 	private syncFlushInFlight = false;
 	private syncFlushPendingPromise: Promise<void> | null = null;
 	private syncFlushPendingResolvers: Array<{
@@ -325,6 +347,7 @@ class UserSettingsState {
 		reject: (error: unknown) => void;
 	}> = [];
 	private syncConsecutive429s = 0;
+	private syncConflictRetries = 0;
 	private dirtySyncedPreferenceFields: Set<SyncedPreferencesField> = readDirtySyncedPreferenceFields();
 	private inFlightSyncedPreferenceFields: Set<SyncedPreferencesField> = new Set();
 	private inFlightSyncedPreferences: SyncedPreferences | null = null;
@@ -336,31 +359,33 @@ class UserSettingsState {
 		makeAutoObservable<
 			UserSettings,
 			| 'wireSyncedPreferences'
+			| 'wireSyncedPreferencesBase'
 			| 'syncFlushTimer'
 			| 'syncFlushInFlight'
 			| 'syncFlushPendingPromise'
 			| 'syncFlushPendingResolvers'
 			| 'syncConsecutive429s'
+			| 'syncConflictRetries'
 			| 'dirtySyncedPreferenceFields'
 			| 'inFlightSyncedPreferenceFields'
 			| 'inFlightSyncedPreferences'
 			| 'recentlyAckedSyncedPreferenceFields'
-			| 'accountEpoch'
 			| 'syncFlushGeneration'
 		>(
 			this,
 			{
 				wireSyncedPreferences: false,
+				wireSyncedPreferencesBase: false,
 				syncFlushTimer: false,
 				syncFlushInFlight: false,
 				syncFlushPendingPromise: false,
 				syncFlushPendingResolvers: false,
 				syncConsecutive429s: false,
+				syncConflictRetries: false,
 				dirtySyncedPreferenceFields: false,
 				inFlightSyncedPreferenceFields: false,
 				inFlightSyncedPreferences: false,
 				recentlyAckedSyncedPreferenceFields: false,
-				accountEpoch: false,
 				syncFlushGeneration: false,
 			},
 			{autoBind: true},
@@ -402,28 +427,8 @@ class UserSettingsState {
 		return this.statusResetsTo;
 	}
 
-	getTimeFormat(): number {
-		return this.timeFormat;
-	}
-
-	getLocale(): string {
-		return this.locale;
-	}
-
 	applyLocalLocale(locale: string): void {
 		this.locale = applyLocaleChange(locale);
-	}
-
-	getBotDefaultGuildsRestricted(): boolean {
-		return this.botDefaultGuildsRestricted;
-	}
-
-	getDefaultGuildsRestricted(): boolean {
-		return this.defaultGuildsRestricted;
-	}
-
-	getInlineAttachmentMedia(): boolean {
-		return this.inlineAttachmentMedia;
 	}
 
 	getMotionPreferencesInput(): MotionPreferencesInput {
@@ -452,14 +457,6 @@ class UserSettingsState {
 		return selectEffectiveGifAutoPlay(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
 
-	getRenderEmbeds(): boolean {
-		return this.renderEmbeds;
-	}
-
-	getRenderReactions(): boolean {
-		return this.renderReactions;
-	}
-
 	getAnimateEmoji(): boolean {
 		return selectEffectiveAnimateEmoji(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
@@ -475,28 +472,13 @@ class UserSettingsState {
 		return this.messageDisplayCompact;
 	}
 
-	getFriendSourceFlags(): number {
-		return this.friendSourceFlags;
-	}
-
-	getIncomingCallFlags(): number {
-		return this.incomingCallFlags;
-	}
-
-	getGroupDmAddPermissionFlags(): number {
-		return this.groupDmAddPermissionFlags;
-	}
-
-	getProfilePrivacy(): ProfilePrivacyLevel {
-		return this.profilePrivacy;
-	}
-
-	getDefaultShareVoiceActivity(): boolean {
-		return this.defaultShareVoiceActivity;
-	}
-
 	isPrivacySetupPending(): boolean {
-		return this.hydrated && this.privacySetupVersion !== null && this.privacySetupVersion < PRIVACY_SETUP_VERSION;
+		return (
+			this.hydrated &&
+			this.privacySetupVersion !== null &&
+			this.privacySetupVersion < PRIVACY_SETUP_VERSION &&
+			!RuntimeConfig.directMessagesDisabled
+		);
 	}
 
 	getCustomStatus(): CustomStatus | null {
@@ -507,32 +489,16 @@ class UserSettingsState {
 		return this.afkTimeout;
 	}
 
-	getTrustedDomains(): ReadonlyArray<string> {
-		return this.trustedDomains;
-	}
-
 	trustAllDomains(): boolean {
 		return this.trustedDomains.includes('*');
 	}
 
-	getDefaultHideMutedChannels(): boolean {
-		return this.defaultHideMutedChannels;
-	}
-
-	getSuppressUnprivilegedSelfMentions(): boolean {
-		return this.suppressUnprivilegedSelfMentions;
-	}
-
-	getSuppressUnprivilegedSelfMentionsBypassUserIds(): ReadonlyArray<string> {
-		return this.suppressUnprivilegedSelfMentionsBypassUserIds;
-	}
-
-	getStaffDmAccessUserIds(): ReadonlyArray<string> {
-		return this.staffDmAccessUserIds;
-	}
-
 	isHydrated(): boolean {
 		return this.hydrated;
+	}
+
+	getAccountEpoch(): number {
+		return this.accountEpoch;
 	}
 
 	markSessionChanging(): void {
@@ -545,6 +511,7 @@ class UserSettingsState {
 			hydrated: this.hydrated,
 			syncedPreferences: cloneSyncedPreferences(this.syncedPreferences),
 			wireSyncedPreferences: cloneSyncedPreferences(this.wireSyncedPreferences),
+			wireSyncedPreferencesBase: this.wireSyncedPreferencesBase,
 			dirtySyncedPreferenceFields: [...this.dirtySyncedPreferenceFields],
 			recentlyAckedSyncedPreferenceFields: [...this.recentlyAckedSyncedPreferenceFields.entries()],
 			syncConsecutive429s: this.syncConsecutive429s,
@@ -565,11 +532,14 @@ class UserSettingsState {
 		runInAction(() => {
 			this.accountEpoch = Math.max(this.accountEpoch, checkpoint.accountEpoch);
 			this.hydrated = checkpoint.hydrated;
+			this.awaitingAccountSettings = false;
 			this.syncedPreferences = cloneSyncedPreferences(checkpoint.syncedPreferences);
 			this.wireSyncedPreferences = cloneSyncedPreferences(checkpoint.wireSyncedPreferences);
+			this.wireSyncedPreferencesBase = checkpoint.wireSyncedPreferencesBase;
 			this.dirtySyncedPreferenceFields = new Set(checkpoint.dirtySyncedPreferenceFields);
 			this.recentlyAckedSyncedPreferenceFields = new Map(checkpoint.recentlyAckedSyncedPreferenceFields);
 			this.syncConsecutive429s = checkpoint.syncConsecutive429s;
+			this.syncConflictRetries = 0;
 			this.syncFlushTimer = null;
 			this.syncFlushInFlight = false;
 			this.inFlightSyncedPreferenceFields.clear();
@@ -607,8 +577,10 @@ class UserSettingsState {
 		this.accountEpoch += 1;
 		this.syncFlushGeneration += 1;
 		this.hydrated = false;
+		this.awaitingAccountSettings = true;
 		this.syncedPreferences = createEmptySyncedPreferences();
 		this.wireSyncedPreferences = createEmptySyncedPreferences();
+		this.wireSyncedPreferencesBase = null;
 		this.dirtySyncedPreferenceFields.clear();
 		writeDirtySyncedPreferenceFields(this.dirtySyncedPreferenceFields);
 		this.inFlightSyncedPreferenceFields.clear();
@@ -623,6 +595,7 @@ class UserSettingsState {
 		this.syncFlushTimer = null;
 		this.syncFlushInFlight = false;
 		this.syncConsecutive429s = 0;
+		this.syncConflictRetries = 0;
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
 		this.syncFlushPendingPromise = null;
@@ -657,6 +630,7 @@ class UserSettingsState {
 		const camelCaseSettings = convertKeysToCamelCase<UserSettings>(userSettings);
 		if (hydrate) {
 			this.hydrated = true;
+			this.awaitingAccountSettings = false;
 		}
 		this.flags = camelCaseSettings.flags;
 		const normalizedStatus = normalizeStatus(camelCaseSettings.status);
@@ -665,7 +639,7 @@ class UserSettingsState {
 		this.statusResetsTo = camelCaseSettings.statusResetsTo ?? null;
 		if (camelCaseSettings.theme) {
 			this.theme = camelCaseSettings.theme;
-			Theme.updateServerTheme(camelCaseSettings.theme);
+			AccountTheme.updateServerTheme(camelCaseSettings.theme);
 		}
 		this.timeFormat = camelCaseSettings.timeFormat;
 		const localeToLoad = camelCaseSettings.locale ?? this.locale;
@@ -741,6 +715,7 @@ class UserSettingsState {
 			incomingSyncedPreferences !== undefined &&
 			(typeof incomingSyncedPreferences === 'string' || incomingSyncedPreferences === null)
 		) {
+			this.wireSyncedPreferencesBase = incomingSyncedPreferences ?? '';
 			this.mergeIncomingSyncedPreferences(decodeSyncedPreferencesLenient(incomingSyncedPreferences));
 		}
 		if (
@@ -832,6 +807,9 @@ class UserSettingsState {
 		field: F,
 		value: NonNullable<SyncedPreferences[F]>,
 	): Promise<void> {
+		if (this.awaitingAccountSettings) {
+			return;
+		}
 		runInAction(() => {
 			this.markSyncedPreferenceFieldDirty(field);
 			(this.syncedPreferences as SyncedPreferences)[field] = value;
@@ -937,30 +915,6 @@ class UserSettingsState {
 		}
 	}
 
-	private decodeSyncedPreferencesFromPatchResponse(
-		responseBody: unknown,
-		fallback: SyncedPreferences,
-	): SyncedPreferences {
-		if (responseBody == null || typeof responseBody !== 'object') {
-			return cloneSyncedPreferences(fallback);
-		}
-		const candidate =
-			(
-				responseBody as {
-					synced_preferences?: unknown;
-				}
-			).synced_preferences ??
-			(
-				responseBody as {
-					syncedPreferences?: unknown;
-				}
-			).syncedPreferences;
-		if (typeof candidate === 'string' || candidate === null) {
-			return decodeSyncedPreferencesLenient(candidate);
-		}
-		return cloneSyncedPreferences(fallback);
-	}
-
 	private scheduleSyncedPreferencesFlush(): Promise<void> {
 		if (this.syncFlushPendingPromise == null) {
 			this.syncFlushPendingPromise = new Promise<void>((resolve, reject) => {
@@ -991,6 +945,16 @@ class UserSettingsState {
 
 	private async runSyncedPreferencesFlush(): Promise<void> {
 		if (this.syncFlushInFlight || AccountScopedWork.isSuspended) return;
+		if (isDateOfBirthStepOpen()) {
+			if (!this.syncWaitingForDateOfBirth) {
+				this.syncWaitingForDateOfBirth = true;
+				void whenDateOfBirthStepClosed().then(() => {
+					this.syncWaitingForDateOfBirth = false;
+					void this.scheduleSyncedPreferencesFlush();
+				});
+			}
+			return;
+		}
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
 		const pendingPromise = this.syncFlushPendingPromise;
@@ -1022,11 +986,21 @@ class UserSettingsState {
 		this.inFlightSyncedPreferenceFields = new Set(fieldsInRequest);
 		this.inFlightSyncedPreferences = cloneSyncedPreferences(snapshotAtFlush);
 		const encoded = encodeSyncedPreferences(snapshotAtFlush);
+		const baseAtFlush = this.wireSyncedPreferencesBase;
+		const isStale = (): boolean => this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush;
 		try {
+			const baseHash = baseAtFlush === null ? null : await syncedPreferencesBaseHash(baseAtFlush);
+			if (isStale()) {
+				completeAll();
+				return;
+			}
 			const response = await http.patch(Endpoints.USER_SETTINGS, {
-				body: {synced_preferences: encoded === '' ? null : encoded},
+				body:
+					baseHash === null
+						? {synced_preferences: encoded === '' ? null : encoded}
+						: {synced_preferences: encoded === '' ? null : encoded, synced_preferences_base_hash: baseHash},
 			});
-			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
+			if (isStale()) {
 				completeAll();
 				return;
 			}
@@ -1043,20 +1017,17 @@ class UserSettingsState {
 				writeDirtySyncedPreferenceFields(this.dirtySyncedPreferenceFields);
 				this.inFlightSyncedPreferenceFields.clear();
 				this.inFlightSyncedPreferences = null;
-				const confirmed = this.decodeSyncedPreferencesFromPatchResponse(
-					(
-						response as
-							| {
-									body?: unknown;
-							  }
-							| undefined
-					)?.body,
-					snapshotAtFlush,
+				const confirmedRaw = readSyncedPreferencesFromBody((response as {body?: unknown} | undefined)?.body);
+				this.wireSyncedPreferencesBase = confirmedRaw === undefined ? encoded : (confirmedRaw ?? '');
+				this.mergeIncomingSyncedPreferences(
+					confirmedRaw === undefined
+						? cloneSyncedPreferences(snapshotAtFlush)
+						: decodeSyncedPreferencesLenient(confirmedRaw),
 				);
-				this.mergeIncomingSyncedPreferences(confirmed);
 				this.markSyncedPreferenceFieldsAcked(ackedFields);
 			});
 			this.syncConsecutive429s = 0;
+			this.syncConflictRetries = 0;
 			completeAll();
 			if (
 				this.dirtySyncedPreferenceFields.size > 0 ||
@@ -1065,8 +1036,50 @@ class UserSettingsState {
 				void this.scheduleSyncedPreferencesFlush();
 			}
 		} catch (error) {
-			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
+			if (isStale()) {
 				completeAll();
+				return;
+			}
+			if (
+				this.isSyncedPreferencesConflict(error) &&
+				this.syncConflictRetries < MAX_SYNCED_PREFERENCES_CONFLICT_RETRIES
+			) {
+				this.syncConflictRetries += 1;
+				let refetched: unknown;
+				try {
+					refetched = (await http.get(Endpoints.USER_SETTINGS)).body;
+				} catch (refetchError) {
+					if (isStale()) {
+						completeAll();
+						return;
+					}
+					this.syncFlushInFlight = false;
+					this.inFlightSyncedPreferenceFields.clear();
+					this.inFlightSyncedPreferences = null;
+					this.syncConflictRetries = 0;
+					logger.error('Failed to refetch synced preferences after a conflict:', refetchError);
+					completeAll(refetchError);
+					return;
+				}
+				if (isStale()) {
+					completeAll();
+					return;
+				}
+				runInAction(() => {
+					this.syncFlushInFlight = false;
+					this.inFlightSyncedPreferenceFields.clear();
+					this.inFlightSyncedPreferences = null;
+					const raw = readSyncedPreferencesFromBody(refetched);
+					if (raw !== undefined) {
+						this.wireSyncedPreferencesBase = raw ?? '';
+						this.mergeIncomingSyncedPreferences(decodeSyncedPreferencesLenient(raw));
+					}
+				});
+				if (this.syncFlushPendingPromise == null) {
+					this.syncFlushPendingPromise = pendingPromise ?? new Promise<void>(() => undefined);
+				}
+				this.syncFlushPendingResolvers.unshift(...resolvers);
+				void this.scheduleSyncedPreferencesFlush();
 				return;
 			}
 			this.syncFlushInFlight = false;
@@ -1100,6 +1113,7 @@ class UserSettingsState {
 				}
 				return;
 			}
+			this.syncConflictRetries = 0;
 			logger.error('Failed to save synced preferences:', error);
 			completeAll(error);
 		}
@@ -1108,6 +1122,14 @@ class UserSettingsState {
 	private syncBackoffMs(): number {
 		const exp = Math.min(this.syncConsecutive429s, 6);
 		return Math.min(60000, 1000 * 2 ** exp);
+	}
+
+	private isSyncedPreferencesConflict(error: unknown): boolean {
+		return (
+			error instanceof HttpError &&
+			error.status === HttpStatus.CONFLICT &&
+			failureCode(error) === APIErrorCodes.SYNCED_PREFERENCES_CONFLICT
+		);
 	}
 
 	private isRateLimitError(error: unknown): boolean {

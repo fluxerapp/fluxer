@@ -22,7 +22,6 @@ interface AuthSurfaceTransitionProps {
 	surfaceKey: string;
 	motionKind: AuthSurfaceMotionKind;
 	suppressed: boolean;
-	anchorsContentOnInteraction: boolean;
 	className: string;
 	children: ReactNode;
 }
@@ -37,28 +36,10 @@ function setSurfaceFinalStyle(surface: HTMLElement): void {
 	surface.style.transform = 'translateY(0px) scale(1)';
 }
 
-function anchorSurfaceContent(surface: HTMLElement): void {
-	const content = surface.firstElementChild;
-	if (surface.style.paddingTop !== '' || !(content instanceof HTMLElement)) {
-		return;
-	}
-	const style = getComputedStyle(surface);
-	const paddingTop = Number.parseFloat(style.paddingTop);
-	const freeHeight = surface.clientHeight - paddingTop - Number.parseFloat(style.paddingBottom) - content.offsetHeight;
-	surface.style.alignItems = 'start';
-	surface.style.paddingTop = `${paddingTop + Math.max(0, freeHeight / 2)}px`;
-}
-
-function releaseSurfaceContent(surface: HTMLElement): void {
-	surface.style.removeProperty('align-items');
-	surface.style.removeProperty('padding-top');
-}
-
 export function AuthSurfaceTransition({
 	surfaceKey,
 	motionKind,
 	suppressed,
-	anchorsContentOnInteraction,
 	className,
 	children,
 }: AuthSurfaceTransitionProps) {
@@ -68,7 +49,6 @@ export function AuthSurfaceTransition({
 	useLayoutEffect(() => {
 		const surface = surfaceRef.current;
 		if (surface == null) return;
-		releaseSurfaceContent(surface);
 		if (suppressed) {
 			setSurfaceFinalStyle(surface);
 			return;
@@ -91,23 +71,6 @@ export function AuthSurfaceTransition({
 			animation.revert();
 		};
 	}, [motionKind, prefersReducedMotion, suppressed, surfaceKey]);
-	useLayoutEffect(() => {
-		const surface = surfaceRef.current;
-		if (surface == null || suppressed || !anchorsContentOnInteraction) {
-			return;
-		}
-		const anchor = (): void => anchorSurfaceContent(surface);
-		const release = (): void => releaseSurfaceContent(surface);
-		surface.addEventListener('pointerdown', anchor, true);
-		surface.addEventListener('keydown', anchor, true);
-		window.addEventListener('resize', release);
-		return () => {
-			surface.removeEventListener('pointerdown', anchor, true);
-			surface.removeEventListener('keydown', anchor, true);
-			window.removeEventListener('resize', release);
-			release();
-		};
-	}, [anchorsContentOnInteraction, suppressed]);
 	return (
 		<flx-auth-surface-transition
 			ref={surfaceRef}

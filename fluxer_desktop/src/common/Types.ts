@@ -1,12 +1,69 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	AppMetricsSnapshot,
+	ChromiumRuntimeInfo,
+	ClipboardWriteFileOptions,
+	ClipboardWriteFileResult,
+	DesktopTroubleshootingSettings,
+	DesktopVoiceDebugEventSinkEntry,
+	DisplayMediaPortalSurfacePreference,
+	GlobalKeybindTriggeredEvent,
+	GlobalKeyEvent,
+	GlobalKeyHookRegisterOptions,
+	GlobalMouseEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutEvent,
+	GlobalShortcutsBackend,
+	GlobalShortcutsPortalShortcut,
+	GlobalShortcutsPortalState,
+	GlobalShortcutsSyncPayload,
+	GpuInfo,
+	InputMonitoringPermissionStatus,
+	LinuxAppearanceSnapshot,
+	MediaAccessStatus,
+	MediaAccessType,
+	NativeAudioApplication,
+	NativeAudioAvailability,
+	NativeAudioEndMessage,
+	NativeAudioFrameMessage,
+	NativeAudioPlaybackDevice,
+	NativeAudioStartOptions,
+	NativeAudioStartResult,
+	NativeScreenCaptureLifecycleMessage,
+	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
+	SetDesktopTroubleshootingDisableModuleUpdatesOptions,
+	SpellcheckBundledDictionary,
+	SpellcheckEngine,
+	SpellcheckResolvedEngineInfo,
+	StreamerModeCaptureAppStatus,
+	StreamingPriorityDiagnostics,
+	ThemeDirectoryCssFile,
+	ThemeFolderChange,
+	ThemeFolderImportResult,
+	ThemeLinkedFileChange,
+	ThemeLocalFileReadResult,
+	ThemeLocalFileReference,
+	TrayPresenceStatus,
+	TrayRuntimeStatePayload,
+	VirtmicBackend,
+	VirtmicNode,
+	VoiceBackgroundMediaCacheRequest,
+	VoiceBackgroundMediaCacheResult,
+	VoiceBackgroundMediaReadResult,
+} from '@fluxer/desktop_ipc/src/DesktopBridgeTypes';
+
+export type * from '@fluxer/desktop_ipc/src/DesktopBridgeTypes';
+
 import type {BuildChannel} from '@electron/common/BuildChannel';
 import type {DesktopAccountStorageAPI} from '@fluxer/desktop_ipc/src/AccountContract';
+import type {AccountEngineRendererAPI} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import type {NativeGatewayTransportAPI} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import type {DesktopKnownInstanceStorageAPI} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
 import type {DesktopModuleAPI, DesktopUpdateAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {OtherPlatformTemplateAPI} from '@fluxer/desktop_ipc/src/OtherPlatformTemplateContract';
 import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {
@@ -15,12 +72,6 @@ import type {
 	PublicKeyCredentialRequestOptionsJSON,
 	RegistrationResponseJSON,
 } from '@simplewebauthn/browser';
-
-export interface LinuxAppearanceSnapshot {
-	colorScheme: 'no-preference' | 'prefer-dark' | 'prefer-light';
-	contrast: 'no-preference' | 'high';
-	accent: {r: number; g: number; b: number} | null;
-}
 
 export interface DesktopInfo {
 	version: string;
@@ -41,74 +92,10 @@ export interface DesktopInfo {
 	chromiumRuntime: ChromiumRuntimeInfo;
 }
 
-export interface ChromiumRuntimeInfo {
-	enableFeatures: Array<string>;
-	disableFeatures: Array<string>;
-	switches: Array<string>;
-}
-
-export interface GpuDeviceInfo {
-	active: boolean;
-	vendorId: number;
-	deviceId: number;
-	vendorName?: string;
-	deviceString?: string;
-	driverVendor?: string;
-	driverVersion?: string;
-	dedicatedVideoMemory?: number;
-	sharedSystemMemory?: number;
-	subsystemVendorId?: number;
-	subsystemDeviceId?: number;
-	registryId?: string;
-	adapterLuid?: string;
-	pciPath?: string;
-	integrated?: boolean;
-	removable?: boolean;
-	headless?: boolean;
-	source?: 'metal' | 'dxgi' | 'linux-sysfs' | 'electron';
-}
-
-export interface GpuInfo {
-	devices: ReadonlyArray<GpuDeviceInfo>;
-	glRenderer?: string;
-	glVendor?: string;
-	machineModelName?: string;
-	machineModelVersion?: string;
-	nativeSource?: 'metal' | 'dxgi' | 'linux-sysfs';
-}
-
-export type StreamingPriorityDiagnostics = Record<string, unknown>;
-
-export interface CpuInfo {
-	model: string;
-	speed: number;
-	cores: number;
-	physicalCores: number;
-}
-
-export interface ProcessMetrics {
-	cpu: {
-		percentCPUUsage: number;
-	};
-	memory: {
-		workingSetSize: number;
-		peakWorkingSetSize: number;
-		privateBytes?: number;
-	};
-	pid: number;
-	type: string;
-	name?: string;
-}
-
-export interface AppMetricsSnapshot {
-	cpuInfo: CpuInfo;
-	processes: Array<ProcessMetrics>;
-	totalMemoryMB: number;
-	freeMemoryMB: number;
-}
-
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
+	coloredTrayIcon: boolean;
+	darkTaskbarBadge: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
 	startMinimized: boolean;
@@ -123,91 +110,8 @@ export interface DesktopWindowBehaviorSettings {
 	activeMiddleClickAutoscroll: boolean;
 }
 
-export interface ThemeLocalFileReference {
-	id: string;
-	name: string;
-	path: string;
-	mimeType: string;
-	size: number;
-}
-
-export interface ThemeLocalFileReadResult {
-	path: string;
-	dataUrl?: string;
-	error?: string;
-}
-
-export interface ThemeDirectoryCssFile {
-	fileName: string;
-	path: string;
-	css: string;
-}
-
-export type ThemeLinkedFileError = 'not_allowed' | 'missing' | 'not_file' | 'too_large' | 'too_many' | 'read_failed';
-
-export interface ThemeLinkedFileChange {
-	path: string;
-	css?: string;
-	error?: ThemeLinkedFileError;
-}
-
-export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
-
-export interface VoiceBackgroundMediaCacheRequest {
-	id: string;
-	mimeType: string;
-	fileName?: string;
-	data: ArrayBuffer;
-}
-
-export interface VoiceBackgroundMediaCacheResult {
-	path: string;
-	mediaKind: VoiceBackgroundMediaKind;
-}
-
-export interface VoiceBackgroundMediaReadResult {
-	path: string;
-	mediaKind: VoiceBackgroundMediaKind;
-	dataUrl: string;
-}
-
-export interface DesktopTroubleshootingSettings {
-	disableHardwareAcceleration: boolean;
-}
-
-export interface SetDesktopTroubleshootingDisableHardwareAccelerationOptions {
-	disable: boolean;
-	restart?: boolean;
-}
-
-export interface DesktopVoiceDebugEventSinkEntry {
-	sequence: number;
-	line: string;
-}
-
-export type ClipboardWriteFileMediaType = 'image' | 'gif' | 'video' | 'audio';
-
-export interface ClipboardWriteFileOptions {
-	url: string;
-	suggestedName?: string;
-	mediaType: ClipboardWriteFileMediaType;
-}
-
-export interface ClipboardWriteFileResult {
-	success: boolean;
-	path?: string;
-	error?: string;
-}
-
 export type UpdaterContext = 'user' | 'background' | 'focus';
-export type UpdaterDownloadFormat = 'setup' | 'dmg' | 'zip' | 'appimage' | 'deb' | 'rpm' | 'tar_gz';
-export interface UpdaterDownloadOption {
-	format: UpdaterDownloadFormat;
-	label: string;
-	url: string;
-	suggestedName?: string;
-	sha256?: string | null;
-}
+
 export type UpdaterEvent =
 	| {
 			type: 'checking';
@@ -218,7 +122,6 @@ export type UpdaterEvent =
 			context: UpdaterContext;
 			version: string | null;
 			downloadUrl?: string;
-			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
 	| {
 			type: 'not-available';
@@ -232,7 +135,7 @@ export type UpdaterEvent =
 	| {
 			type: 'unsupported';
 			context: UpdaterContext;
-			reason: 'platform' | 'unpackaged' | 'managed-package';
+			reason: 'platform' | 'unpackaged';
 			downloadUrl?: string;
 	  };
 
@@ -243,10 +146,6 @@ export interface DownloadFileResult {
 	path?: string;
 	error?: string;
 }
-
-export type MediaAccessType = 'microphone' | 'camera' | 'screen' | 'audio-capture';
-export type MediaAccessStatus = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown';
-export type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
 
 export interface DesktopSource {
 	id: string;
@@ -269,7 +168,6 @@ export type VirtmicUnavailableReason =
 	| 'load-failed'
 	| 'no-pipewire'
 	| 'disabled-by-launch';
-export type VirtmicBackend = 'pipewire';
 
 export interface VirtmicAvailability {
 	available: boolean;
@@ -277,16 +175,7 @@ export interface VirtmicAvailability {
 	backend?: VirtmicBackend;
 }
 
-export type VirtmicNode = Record<string, string>;
-
-export interface VirtmicLinkOptions {
-	ignoreDevices?: boolean;
-	ignoreInputMedia?: boolean;
-	ignoreVirtual?: boolean;
-	workaround?: boolean;
-}
-
-export interface VirtmicApi {
+interface VirtmicApi {
 	getAvailability: () => Promise<VirtmicAvailability>;
 	listTargets: (options?: {granular?: boolean}) => Promise<{
 		ok: boolean;
@@ -296,97 +185,20 @@ export interface VirtmicApi {
 	stop: () => Promise<void>;
 }
 
-export type NativeAudioBackend = 'macos-sck' | 'macos-coreaudio' | 'windows-wasapi-loopback' | 'linux-pipewire';
-
-export interface NativeAudioAvailability {
-	available: boolean;
-	backend?: NativeAudioBackend;
-	capabilities?: {
-		process: boolean;
-		system: boolean;
-		systemExcludesSelf?: boolean;
-		processInclude?: boolean;
-		processExclude?: boolean;
-		sessionMixer?: boolean;
-		systemLoopbackMode?: 'process-exclude' | 'session-mixer' | 'unavailable';
-	};
-	reason?:
-		| 'unsupported-platform'
-		| 'addon-not-installed'
-		| 'load-failed'
-		| 'os-version-too-old'
-		| 'permission-denied'
-		| 'no-pipewire'
-		| 'disabled-by-launch';
-	detail?: string;
-}
-
-export interface NativeAudioApplication {
-	pid: number;
-	identifier: string;
-	name: string;
-	audible?: boolean;
-}
-
-export interface NativeAudioStartOptions {
-	targetPid?: number;
-	includeProcessTree?: boolean;
-	macBackend?: 'sck' | 'coreaudio' | 'auto';
-	macCaptureScope?: 'process' | 'system';
-	winCaptureScope?: 'process' | 'system' | 'session-mixer';
-	linuxRule?: VirtmicLinkOptions & {
-		include?: Array<VirtmicNode>;
-		exclude?: Array<VirtmicNode>;
-		onlySpeakers?: boolean;
-		onlyDefaultSpeakers?: boolean;
-	};
-}
-
-export interface NativeAudioStartResult {
-	captureId: string;
-	sampleRate: number;
-	channels: number;
-}
-
-export interface NativeAudioFrameMessage {
-	captureId: string;
-	sampleRate: number;
-	channels: number;
-	timestampUs: number;
-	samples: ArrayBuffer;
-}
-
-export type NativeAudioEndReason = 'stopped' | 'target-exited' | 'addon-error';
-
-export interface NativeAudioEndMessage {
-	captureId: string;
-	reason: NativeAudioEndReason;
-	detail?: string;
-}
-
-export interface NativeAudioApi {
+interface NativeAudioApi {
 	getAvailability: () => Promise<NativeAudioAvailability>;
 	listAudibleApplications: () => Promise<Array<NativeAudioApplication>>;
 	resolveAudioRootPidForSource: (sourceId: string) => Promise<number | null>;
 	start: (options: NativeAudioStartOptions) => Promise<NativeAudioStartResult>;
 	setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>) => Promise<boolean>;
+	listPlaybackDevices: () => Promise<Array<NativeAudioPlaybackDevice>>;
+	setWinEndpoints: (captureId: string, endpoints: Array<string>) => Promise<boolean>;
 	stop: (captureId: string) => Promise<void>;
 	onFrame: (callback: (message: NativeAudioFrameMessage) => void) => () => void;
 	onEnd: (callback: (message: NativeAudioEndMessage) => void) => () => void;
 }
 
-export type NativeScreenCaptureLifecycleEventKind = 'error' | 'closed' | 'closed-clean' | 'stalled' | 'diagnostic';
-
-export type NativeScreenCaptureLifecycleSource = 'delegate' | 'programmatic';
-
-export interface NativeScreenCaptureLifecycleMessage {
-	captureId: string;
-	kind: NativeScreenCaptureLifecycleEventKind;
-	message: string;
-	source?: NativeScreenCaptureLifecycleSource;
-}
-
-export interface NativeScreenCaptureApi {
+interface NativeScreenCaptureApi {
 	onLifecycleEvent: (callback: (message: NativeScreenCaptureLifecycleMessage) => void) => () => void;
 }
 
@@ -396,8 +208,6 @@ export interface DisplayMediaRequestInfo {
 	supportsLoopbackAudio: boolean;
 }
 
-export type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
-
 export interface NotificationOptions {
 	id?: string;
 	title: string;
@@ -405,31 +215,11 @@ export interface NotificationOptions {
 	body: string;
 	icon?: string;
 	url?: string;
+	accountKey?: string;
 }
 
 export interface NotificationResult {
 	id: string;
-}
-
-export interface StreamerModeCaptureProcess {
-	name: string;
-	pid?: number;
-}
-
-export interface StreamerModeCaptureAppStatus {
-	detected: boolean;
-	processes: Array<StreamerModeCaptureProcess>;
-}
-
-export type TrayPresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible';
-
-export interface TrayRuntimeStatePayload {
-	voiceConnected: boolean;
-	voiceChannelLabel: string | null;
-	selfMute: boolean;
-	selfDeaf: boolean;
-	presenceStatus: TrayPresenceStatus | null;
-	buildInfo: string | null;
 }
 
 export type TrayActionPayload =
@@ -448,6 +238,16 @@ export type TrayActionPayload =
 	  }
 	| {
 			action: 'check-for-updates';
+	  }
+	| {
+			action: 'switch-account';
+			accountKey: string;
+	  }
+	| {
+			action: 'open-account-switcher';
+	  }
+	| {
+			action: 'toggle-custom-css';
 	  };
 
 export interface ElectronAPI {
@@ -470,6 +270,11 @@ export interface ElectronAPI {
 	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => Promise<Array<ThemeDirectoryCssFile>>;
 	watchThemeLinkedFiles: (paths: Array<string>) => Promise<void>;
 	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void) => () => void;
+	importThemeFolder: () => Promise<ThemeFolderImportResult | null>;
+	watchThemeFolders: (paths: Array<string>) => Promise<void>;
+	removeThemeFolder: (path: string) => Promise<void>;
+	onThemeFolderChange: (callback: (change: ThemeFolderChange) => void) => () => void;
+	themeFolderWatch: true;
 	cacheVoiceBackgroundMedia: (options: VoiceBackgroundMediaCacheRequest) => Promise<VoiceBackgroundMediaCacheResult>;
 	readVoiceBackgroundMedia: (id: string) => Promise<VoiceBackgroundMediaReadResult | null>;
 	deleteVoiceBackgroundMedia: (id: string) => Promise<void>;
@@ -477,16 +282,19 @@ export interface ElectronAPI {
 	setDesktopDisableHardwareAcceleration: (
 		options: SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	) => Promise<DesktopTroubleshootingSettings>;
+	setDesktopDisableModuleUpdates: (
+		options: SetDesktopTroubleshootingDisableModuleUpdatesOptions,
+	) => Promise<DesktopTroubleshootingSettings>;
 	onUpdaterEvent: (callback: (event: UpdaterEvent) => void) => () => void;
 	updaterCheck: (context: UpdaterContext) => Promise<void>;
 	windowMinimize: () => void;
 	windowMaximize: () => void;
 	windowClose: () => void;
 	windowIsMaximized: () => Promise<boolean>;
-	focusThemeStudioPopout: () => Promise<boolean>;
-	closeThemeStudioPopout: () => Promise<boolean>;
+
 	popoutSetAlwaysOnTop: (key: string, flag: boolean) => Promise<boolean>;
 	popoutFocus: (key: string) => Promise<boolean>;
+	cssEditorWindow: true;
 	openVoiceDebugEventSinkPopout: (entries: Array<DesktopVoiceDebugEventSinkEntry>) => Promise<void>;
 	appendVoiceDebugEventSinkEntries: (entries: Array<DesktopVoiceDebugEventSinkEntry>) => void;
 	setVoiceDebugEventSinkStatsHtml: (html: string) => void;
@@ -518,8 +326,9 @@ export interface ElectronAPI {
 	getStreamerModeCaptureAppStatus: () => Promise<StreamerModeCaptureAppStatus>;
 	closeNotification: (id: string) => void;
 	closeNotifications: (ids: Array<string>) => void;
-	onNotificationClick: (callback: (id: string, url?: string) => void) => () => void;
+	onNotificationClick: (callback: (id: string, url: string | null, accountKey: string | null) => void) => () => void;
 	setBadgeCount: (count: number) => void;
+	setUnreadBadge: (badge: number) => void;
 	setNativeLocale: (locale: string, strings: Record<string, string>) => void;
 	flashFrame: (persistent?: boolean) => void;
 	stopFlashFrame: () => void;
@@ -529,12 +338,14 @@ export interface ElectronAPI {
 	getAccessibilitySupportEnabled: () => Promise<boolean>;
 	onAccessibilitySupportChanged: (callback: (enabled: boolean) => void) => () => void;
 	getLinuxAppearance: () => Promise<LinuxAppearanceSnapshot>;
+	setPrebootTheme: (theme: string) => void;
 	onLinuxAppearanceChanged: (callback: (snapshot: LinuxAppearanceSnapshot) => void) => () => void;
 	onZoomIn: (callback: () => void) => () => void;
 	onZoomOut: (callback: () => void) => () => void;
 	onZoomReset: (callback: () => void) => () => void;
 	onOpenSettings: (callback: () => void) => () => void;
 	setTrayRuntimeState: (state: Partial<TrayRuntimeStatePayload>) => void;
+	setDirectMessagesAvailable: (available: boolean) => void;
 	acquireStreamingPriority: () => void;
 	releaseStreamingPriority: () => void;
 	getStreamingPriorityDiagnostics: () => Promise<StreamingPriorityDiagnostics>;
@@ -555,11 +366,7 @@ export interface ElectronAPI {
 		readableEventDevices: number;
 		inInputGroup: boolean;
 	}>;
-	linuxEvdevGrantAccess: () => Promise<{
-		success: boolean;
-		needsRelogin: boolean;
-		error?: string;
-	}>;
+
 	onGlobalKeyEvent: (callback: (event: GlobalKeyEvent) => void) => () => void;
 	onGlobalMouseEvent: (callback: (event: GlobalMouseEvent) => void) => () => void;
 	onGlobalKeybindTriggered: (callback: (event: GlobalKeybindTriggeredEvent) => void) => () => void;
@@ -600,29 +407,15 @@ export interface ElectronAPI {
 	desktopModules: DesktopModuleAPI;
 	desktopUpdate: DesktopUpdateAPI;
 	reportLastRoute: (routePath: string) => void;
+	reportInstanceProductName: (instanceKey: string, productName: string) => void;
 	notifyFirstContentPainted: () => void;
 	desktopAccounts: DesktopAccountStorageAPI;
 	desktopStorage: DesktopStorageAPI;
 	desktopKnownInstances: DesktopKnownInstanceStorageAPI;
 	desktopHandoff: DesktopHandoffAPI;
 	nativeGatewayTransport: NativeGatewayTransportAPI;
-}
-
-export type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';
-
-export type GlobalShortcutsPortalState =
-	| 'unknown'
-	| 'probing'
-	| 'unsupported'
-	| 'not-set-up'
-	| 'binding'
-	| 'bound'
-	| 'declined'
-	| 'error';
-
-export interface GlobalShortcutsPortalShortcut {
-	action: string;
-	triggerDescription: string | null;
+	accountEngine: AccountEngineRendererAPI;
+	otherPlatformTemplate: OtherPlatformTemplateAPI;
 }
 
 export interface GlobalShortcutsPortalStatus {
@@ -640,7 +433,7 @@ export type LinuxSessionType = 'wayland' | 'x11' | 'unknown';
 
 export type LinuxDesktopKind = 'kde' | 'gnome' | 'hyprland' | 'other';
 
-export interface GlobalShortcutsLinuxStatus {
+interface GlobalShortcutsLinuxStatus {
 	session: LinuxSessionType;
 	sandbox: 'flatpak' | 'none';
 	desktop: LinuxDesktopKind;
@@ -658,53 +451,7 @@ export interface GlobalShortcutsStatus {
 	supportsModifierOnly: boolean;
 }
 
-export interface GlobalShortcutCombo {
-	code?: string;
-	key: string;
-	ctrl: boolean;
-	alt: boolean;
-	shift: boolean;
-	meta: boolean;
-	mouseButton?: number;
-	modifierOnly?: boolean;
-	bothSides?: boolean;
-}
-
-export interface GlobalShortcutBinding {
-	sourceId: string;
-	action: string;
-	combo: GlobalShortcutCombo;
-}
-
-export interface GlobalShortcutActionDefinition {
-	action: string;
-	description: string;
-	preferredCombo: GlobalShortcutCombo | null;
-}
-
-export interface GlobalShortcutsSyncPayload {
-	bindings: Array<GlobalShortcutBinding>;
-	actions: Array<GlobalShortcutActionDefinition>;
-}
-
-export interface GlobalShortcutEvent {
-	action: string;
-	sourceId: string;
-	phase: 'press' | 'release';
-}
-
-export interface GlobalShortcutCaptureEvent {
-	type: 'keydown' | 'keyup' | 'mousedown' | 'mouseup';
-	code: string | null;
-	key: string | null;
-	button: number | null;
-	ctrl: boolean;
-	alt: boolean;
-	shift: boolean;
-	meta: boolean;
-}
-
-export interface GlobalShortcutsApi {
+interface GlobalShortcutsApi {
 	sync: (payload: GlobalShortcutsSyncPayload) => Promise<void>;
 	setPaused: (paused: boolean) => Promise<void>;
 	getStatus: () => Promise<GlobalShortcutsStatus>;
@@ -719,65 +466,12 @@ export interface GlobalShortcutsApi {
 	onCapture: (callback: (event: GlobalShortcutCaptureEvent) => void) => () => void;
 }
 
-export interface GlobalKeyHookRegisterOptions {
-	id: string;
-	description?: string;
-	keycode?: number;
-	keyName?: string;
-	physicalKeyName?: string;
-	mouseButton?: number;
-	ctrl?: boolean;
-	alt?: boolean;
-	shift?: boolean;
-	meta?: boolean;
-}
-
-export interface GlobalKeyEvent {
-	type: 'keydown' | 'keyup';
-	keycode: number;
-	keyName: string;
-	backend?: 'evdev' | 'native' | null;
-	altKey: boolean;
-	ctrlKey: boolean;
-	shiftKey: boolean;
-	metaKey: boolean;
-}
-
-export interface GlobalMouseEvent {
-	type: 'mousedown' | 'mouseup';
-	button: number;
-	altKey: boolean;
-	ctrlKey: boolean;
-	shiftKey: boolean;
-	metaKey: boolean;
-}
-
-export interface GlobalKeybindTriggeredEvent {
-	id: string;
-	type: 'keydown' | 'keyup';
-}
-
-export type SpellcheckEngine = 'auto' | 'hunspell' | 'system';
-
 export interface SpellcheckState {
 	enabled: boolean;
 	engine: SpellcheckEngine;
 	autoDetect: boolean;
 	languages: Array<string>;
 	personalDictionary: Array<string>;
-}
-
-export interface SpellcheckBundledDictionary {
-	tag: string;
-	package: string;
-	displayName: string;
-	nativeName: string;
-}
-
-export interface SpellcheckResolvedEngineInfo {
-	mode: 'hunspell' | 'system' | 'off';
-	hunspellLangs: Array<string>;
-	systemLangs: Array<string>;
 }
 
 export interface TextareaContextMenuParams {

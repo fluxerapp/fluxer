@@ -18,7 +18,7 @@
 	border: 0;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	font-family: inherit;
 }
 
@@ -73,7 +73,7 @@
 }
 
 .mentionIcon {
-	margin-right: 0.1875rem;
+	margin-inline-end: 0.1875rem;
 	height: 1rem;
 	width: 1rem;
 }

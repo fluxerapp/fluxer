@@ -151,21 +151,23 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 		const proxyUrl = attachment.proxy_url ?? attachment.url ?? '';
 		const isBlob = proxyUrl.startsWith('blob:');
 		const isPlainGif = attachmentMediaType === 'gif';
-		const thumbnailSrc =
-			proxyUrl.length === 0
-				? ''
-				: isBlob
-					? proxyUrl
-					: isPlainGif
-						? shouldAnimateGif
-							? buildAnimatedImageProxyURL(proxyUrl, targetWidth, targetHeight)
-							: buildStaticGifPreviewURL(proxyUrl, targetWidth, targetHeight)
-						: buildMediaProxyURL(proxyUrl, {
-								format: resolvePreferredImageFormat(attachment.content_type),
-								width: targetWidth,
-								height: targetHeight,
-								animated: isAnimatedGif && shouldAnimateGif,
-							});
+		let thumbnailSrc: string;
+		if (proxyUrl.length === 0) {
+			thumbnailSrc = '';
+		} else if (isBlob) {
+			thumbnailSrc = proxyUrl;
+		} else if (isPlainGif && shouldAnimateGif) {
+			thumbnailSrc = buildAnimatedImageProxyURL(proxyUrl, targetWidth, targetHeight);
+		} else if (isPlainGif) {
+			thumbnailSrc = buildStaticGifPreviewURL(proxyUrl, targetWidth, targetHeight);
+		} else {
+			thumbnailSrc = buildMediaProxyURL(proxyUrl, {
+				format: resolvePreferredImageFormat(attachment.content_type),
+				width: targetWidth,
+				height: targetHeight,
+				animated: isAnimatedGif && shouldAnimateGif,
+			});
+		}
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: thumbnailSrc});
 		const shouldLoadMedia = isNearViewport && !shouldBlur && !spoilerHidden;
 		const {

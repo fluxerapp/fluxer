@@ -28,8 +28,6 @@ const DESKTOP_OUTBOUND_HTTP_RESOLUTION_TIMEOUT_MS = 10_000;
 const DESKTOP_OUTBOUND_HTTP_MAX_TARGET_URL_BYTES = 16 * 1024;
 const DESKTOP_OUTBOUND_HTTP_MAX_REDIRECT_LOCATION_BYTES = 4096;
 const DESKTOP_OUTBOUND_HTTP_MAX_ORIGINS = 2048;
-const DESKTOP_OUTBOUND_HTTP_MAX_ORIGIN_REQUESTS_IN_FLIGHT = 128;
-const DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE = 64;
 const DESKTOP_OUTBOUND_HTTP_MAX_PENDING_RESOLUTIONS = 64;
 const DESKTOP_OUTBOUND_HTTP_MAX_REQUEST_BODY_BYTES = 1024 * 1024;
 const DESKTOP_OUTBOUND_HTTP_STALE_SOCKET_ATTEMPTS = 1;
@@ -57,8 +55,6 @@ const DESKTOP_OUTBOUND_HTTP_CAPACITY_MESSAGE = 'Too many downloads are already i
 
 const DesktopOutboundBlockReason = Object.freeze({
 	INSECURE_TRANSPORT: 'insecure-transport',
-	INVALID_TARGET: 'invalid-target',
-	LOOKUP_HOSTNAME_MISMATCH: 'lookup-hostname-mismatch',
 	NON_PUBLIC_ADDRESS: 'non-public-address',
 	NO_USABLE_ADDRESS: 'no-usable-address',
 	RESOLUTION_FAILED: 'resolution-failed',
@@ -115,7 +111,6 @@ export interface DesktopOutboundHTTPRequest {
 	readonly maximumRequestBodyBytes?: number;
 	readonly method: string;
 	readonly originTrust: DesktopOriginTrust;
-	readonly serviceName: string;
 	readonly signal: AbortSignal | null;
 	readonly timeoutMs: number;
 	readonly url: string;
@@ -381,13 +376,9 @@ function absoluteLookupHostname(hostname: string): string {
 	return hostname;
 }
 
-export function createPinnedHostLookup(
-	hostname: string,
-	pinned: PinnedAddress | ReadonlyArray<PinnedAddress>,
-): LookupFunction {
+function createPinnedHostLookup(hostname: string, pinned: ReadonlyArray<PinnedAddress>): LookupFunction {
 	const expected = normalizeLookupHostname(hostname);
-	const addresses: ReadonlyArray<PinnedAddress> = Array.isArray(pinned) ? pinned : [pinned as PinnedAddress];
-	const primary = addresses[0];
+	const primary = pinned[0];
 	return (requestedHostname, options, callback) => {
 		process.nextTick(() => {
 			if (normalizeLookupHostname(requestedHostname) !== expected) {
@@ -395,7 +386,7 @@ export function createPinnedHostLookup(
 				return;
 			}
 			if (options.all === true) {
-				(callback as unknown as (error: null, addresses: ReadonlyArray<PinnedAddress>) => void)(null, addresses);
+				callback(null, [...pinned]);
 				return;
 			}
 			callback(null, primary.address, primary.family);
@@ -567,7 +558,7 @@ interface DesktopProxiedSend {
 	readonly body: Uint8Array | Readable | null;
 	readonly headers: Readonly<Record<string, string>>;
 	readonly method: string;
-	readonly release: () => void;
+	readonly release?: () => void;
 	readonly signal: AbortSignal | null;
 	readonly target: URL;
 	readonly timeout: () => Error;
@@ -580,20 +571,15 @@ export class DesktopOutboundHTTP {
 		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
 	});
 	private readonly httpsAgent: https.Agent;
-	private readonly originRequestHttpAgent = new HappyEyeballsHttpAgent({
-		keepAlive: true,
-		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
-	});
+	private readonly originRequestHttpAgent = new HappyEyeballsHttpAgent({keepAlive: true});
 	private readonly originRequestHttpsAgent: https.Agent;
 	private readonly bindings = new Map<string, DesktopOriginAddressBinding>();
 	private readonly pendingBindings = new Map<string, DesktopPendingOriginBinding>();
 	private readonly registeredRequirements = new Map<string, DesktopAddressRequirement>();
-	private readonly originRequestsInFlightByService = new Map<string, number>();
 	private readonly resolveHostAddresses: DesktopHostAddressResolver;
 	private readonly resolveProxy: DesktopProxyResolver;
 	private readonly sendThroughSession: DesktopSessionHTTPSender;
 	private inFlight = 0;
-	private originRequestsInFlight = 0;
 	private activeResolutions = 0;
 	private acceptingRequests = true;
 
@@ -610,7 +596,6 @@ export class DesktopOutboundHTTP {
 		});
 		this.originRequestHttpsAgent = new HappyEyeballsHttpsAgent({
 			keepAlive: true,
-			maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
 			...trust,
 		});
 	}
@@ -785,7 +770,6 @@ export class DesktopOutboundHTTP {
 		this.originRequestHttpsAgent.destroy();
 		this.bindings.clear();
 		this.registeredRequirements.clear();
-		this.originRequestsInFlightByService.clear();
 	}
 
 	private async routesDirect(url: URL): Promise<boolean> {
@@ -815,15 +799,6 @@ export class DesktopOutboundHTTP {
 		request: DesktopOutboundHTTPRequest,
 		target: URL,
 	): Promise<DesktopOutboundHTTPMessage> {
-		this.acquireSlot(request.serviceName);
-		let released = false;
-		const release = (): void => {
-			if (released) {
-				return;
-			}
-			released = true;
-			this.releaseSlot(request.serviceName);
-		};
 		return this.sendProxied({
 			body: this.proxiedRequestBody(request),
 			headers: requestHeaders(request.headers),
@@ -832,7 +807,6 @@ export class DesktopOutboundHTTP {
 			target,
 			timeout: () => new DesktopOutboundHTTPRequestTimeoutError(target.toString(), request.timeoutMs),
 			timeoutMs: request.timeoutMs,
-			release,
 		}).catch((error: unknown) => {
 			if (request.signal?.aborted === true) {
 				throw new DesktopOutboundHTTPRequestAbortedError(target.toString());
@@ -856,7 +830,7 @@ export class DesktopOutboundHTTP {
 		timer.unref();
 		const settle = (): void => {
 			clearTimeout(timer);
-			release();
+			release?.();
 		};
 		try {
 			const response = await this.sendThroughSession({
@@ -943,13 +917,18 @@ export class DesktopOutboundHTTP {
 		return new Promise<DesktopOutboundHTTPMessage>((resolve, reject) => {
 			const secure = request.url.protocol === 'https:';
 			const transport = secure ? https : http;
-			const clientRequest = transport.request(request.url, {
+			const connection = new AbortController();
+			const connectionOptions = {
 				agent: secure ? this.httpsAgent : this.httpAgent,
+				connectionSignal: connection.signal,
 				lookup: createPinnedHostLookup(request.url.hostname, pinned),
 				method: 'GET',
-			});
+			};
+			const clientRequest = transport.request(request.url, connectionOptions);
 			const deadline = setTimeout(() => {
-				clientRequest.destroy(new DesktopOutboundHTTPTimeoutError());
+				const error = new DesktopOutboundHTTPTimeoutError();
+				clientRequest.destroy(error);
+				connection.abort(error);
 			}, request.timeoutMs);
 			deadline.unref();
 			let settled = false;
@@ -1085,46 +1064,20 @@ export class DesktopOutboundHTTP {
 		}
 	}
 
-	private acquireSlot(serviceName: string): void {
-		if (this.originRequestsInFlight >= DESKTOP_OUTBOUND_HTTP_MAX_ORIGIN_REQUESTS_IN_FLIGHT) {
-			throw new DesktopOutboundHTTPCapacityError('in-flight request');
-		}
-		const perService = this.originRequestsInFlightByService.get(serviceName) ?? 0;
-		if (perService >= DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE) {
-			throw new DesktopOutboundHTTPCapacityError(`in-flight request for ${serviceName}`);
-		}
-		this.originRequestsInFlight += 1;
-		this.originRequestsInFlightByService.set(serviceName, perService + 1);
-	}
-
-	private releaseSlot(serviceName: string): void {
-		this.originRequestsInFlight -= 1;
-		const perService = (this.originRequestsInFlightByService.get(serviceName) ?? 1) - 1;
-		if (perService <= 0) {
-			this.originRequestsInFlightByService.delete(serviceName);
-		} else {
-			this.originRequestsInFlightByService.set(serviceName, perService);
-		}
-	}
-
 	private issueOriginRequest(
 		request: DesktopOutboundHTTPRequest,
 		target: URL,
 		binding: DesktopOriginAddressBinding,
 	): Promise<DesktopOutboundHTTPMessage> {
-		this.acquireSlot(request.serviceName);
-		let released = false;
-		const release = (): void => {
-			if (released) {
-				return;
-			}
-			released = true;
-			this.releaseSlot(request.serviceName);
-		};
 		return new Promise<DesktopOutboundHTTPMessage>((resolve, reject) => {
 			let attemptsRemaining = isReplayableRequest(request) ? DESKTOP_OUTBOUND_HTTP_STALE_SOCKET_ATTEMPTS : 0;
 			let active: http.ClientRequest | null = null;
 			let terminated = false;
+			const connection = new AbortController();
+			const destroyActive = (error: Error): void => {
+				active?.destroy(error);
+				connection.abort(error);
+			};
 			const releaseUnconnectedBinding = (): void => {
 				const socket = active?.socket;
 				if (socket == null || socket.connecting) {
@@ -1134,22 +1087,18 @@ export class DesktopOutboundHTTP {
 			const timeout = setTimeout(() => {
 				terminated = true;
 				releaseUnconnectedBinding();
-				active?.destroy(new DesktopOutboundHTTPRequestTimeoutError(target.toString(), request.timeoutMs));
+				destroyActive(new DesktopOutboundHTTPRequestTimeoutError(target.toString(), request.timeoutMs));
 			}, request.timeoutMs);
 			timeout.unref();
 			const onAbort = (): void => {
 				terminated = true;
 				releaseUnconnectedBinding();
-				active?.destroy(new DesktopOutboundHTTPRequestAbortedError(target.toString()));
+				destroyActive(new DesktopOutboundHTTPRequestAbortedError(target.toString()));
 			};
 			request.signal?.addEventListener('abort', onAbort, {once: true});
 			const settle = (): void => {
 				clearTimeout(timeout);
 				request.signal?.removeEventListener('abort', onAbort);
-				release();
-			};
-			const destroyActive = (error: Error): void => {
-				active?.destroy(error);
 			};
 			if (request.signal?.aborted === true) {
 				settle();
@@ -1158,12 +1107,14 @@ export class DesktopOutboundHTTP {
 			}
 			const attempt = (): void => {
 				const transport = target.protocol === 'https:' ? https : http;
-				const clientRequest = transport.request(target, {
+				const connectionOptions = {
 					agent: target.protocol === 'https:' ? this.originRequestHttpsAgent : this.originRequestHttpAgent,
+					connectionSignal: connection.signal,
 					headers: requestHeaders(request.headers),
 					lookup: createPinnedHostLookup(target.hostname, binding.addresses),
 					method: request.method,
-				});
+				};
+				const clientRequest = transport.request(target, connectionOptions);
 				active = clientRequest;
 				clientRequest.on('error', (error) => {
 					if (

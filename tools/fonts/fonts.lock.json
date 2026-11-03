@@ -70,12 +70,6 @@
 			"version": "1.1.0",
 			"sha256": "24e908ea7d251be77a09c0773e0579dcc7327ff7f758b69df9f08cb0ae9f1054"
 		},
-		"plex-sans-thai": {
-			"type": "npm",
-			"package": "@ibm/plex-sans-thai",
-			"version": "1.1.0",
-			"sha256": "9ddc70a54f7992646989fbc981f0bfeca32b3adceaa9bdf425ece7f0fbfd6565"
-		},
 		"plex-sans-thai-looped": {
 			"type": "npm",
 			"package": "@ibm/plex-sans-thai-looped",
@@ -1808,253 +1802,6 @@
 				}
 			}
 		},
-		"FluxerSansThai": {
-			"mode": "rebuild",
-			"source": "plex-sans-thai",
-			"srcSubdir": "fonts/complete/woff2",
-			"cssFamily": "Fluxer Sans Thai",
-			"stylesheet": "css/script-thai.css",
-			"latinCore": false,
-			"gasp": {
-				"8": 10,
-				"65535": 15
-			},
-			"codepoints": 451,
-			"faces": {
-				"Thin": {
-					"sourceFile": "IBMPlexSansThai-Thin.woff2",
-					"sourceSha256": "9bbe3c3f11812e6544f435403ae0c21a9c092454f37cba36b94b56f2b1502c27",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 610,
-						"cvt ": 74
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 506,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 100,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"ExtraLight": {
-					"sourceFile": "IBMPlexSansThai-ExtraLight.woff2",
-					"sourceSha256": "d553a18e78e826ac9d79580ef67750269d44da355760f1c73d27af430b97cd79",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 610,
-						"cvt ": 78
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 508,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 200,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"Light": {
-					"sourceFile": "IBMPlexSansThai-Light.woff2",
-					"sourceSha256": "0353228819543acef0debab28a41b67bead7a3d0b9e6dca038e3e8fa53c0daa7",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 594,
-						"cvt ": 78
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 512,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 300,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"Regular": {
-					"sourceFile": "IBMPlexSansThai-Regular.woff2",
-					"sourceSha256": "0350508969dad82ffd2b7608d8299454bf19ec54e464a16a66e5a9733e83654d",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 492,
-						"cvt ": 80
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 516,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 400,
-						"OS/2.fsSelection": 320
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"Text": {
-					"sourceFile": "IBMPlexSansThai-Text.woff2",
-					"sourceSha256": "deb6005a9eeddc81faea5849a5d1be85d545c3984621e15aaaf5dfb033f3f55c",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 458,
-						"cvt ": 74
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 518,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 450,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"Medium": {
-					"sourceFile": "IBMPlexSansThai-Medium.woff2",
-					"sourceSha256": "8249537de3768f46ce7b04e9e832c47f3ffa84900bdac2b18968d431d8814c61",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 482,
-						"cvt ": 74
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 520,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 500,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"SemiBold": {
-					"sourceFile": "IBMPlexSansThai-SemiBold.woff2",
-					"sourceSha256": "83f9d86c099e0006077854cac1cf6f9d3177fb0c4f356254a7d56d047c097e52",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 484,
-						"cvt ": 72
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 0,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 522,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 600,
-						"OS/2.fsSelection": 256
-					},
-					"files": 1,
-					"codepoints": 451
-				},
-				"Bold": {
-					"sourceFile": "IBMPlexSansThai-Bold.woff2",
-					"sourceSha256": "c65640f017e19c668aa927ec7e539d4306a8c77fec717ea979b12a1bb1c40121",
-					"hinting": {
-						"fpgm": 371,
-						"prep": 574,
-						"cvt ": 74
-					},
-					"metrics": {
-						"head.unitsPerEm": 1000,
-						"head.macStyle": 1,
-						"hhea.ascender": 1116,
-						"hhea.descender": -534,
-						"hhea.lineGap": 0,
-						"hhea.caretSlopeRise": 1,
-						"hhea.caretSlopeRun": 0,
-						"OS/2.sTypoAscender": 780,
-						"OS/2.sTypoDescender": -220,
-						"OS/2.sTypoLineGap": 650,
-						"OS/2.usWinAscent": 1116,
-						"OS/2.usWinDescent": 534,
-						"OS/2.sxHeight": 525,
-						"OS/2.sCapHeight": 698,
-						"OS/2.usWeightClass": 700,
-						"OS/2.fsSelection": 288
-					},
-					"files": 1,
-					"codepoints": 451
-				}
-			}
-		},
 		"FluxerSansThaiLooped": {
 			"mode": "rebuild",
 			"source": "plex-sans-thai-looped",
@@ -3532,17 +3279,13 @@
 			"sha256": "bfb106e6cd9474e2f482c3bb0ec3e2a78cacebc38f766f8c1a8f0a2ef42a0038",
 			"bytes": 8662
 		},
-		"css/script-thai.css": {
-			"sha256": "0b3a1a7176e318aa8d13f28e6154bcdd6930509278c8fa1be4841613c2dee7b9",
-			"bytes": 8510
-		},
 		"css/variables.css": {
 			"sha256": "8fe0dd78ec093d7a8dd4c55bb320e887f14bf33279b4d30e5106a9d26830f1a3",
 			"bytes": 486
 		},
 		"manifest.json": {
-			"sha256": "da980d123e88665fa0e87c0d5693b527293ee4d6738711fbf4035f9888d09ab5",
-			"bytes": 1210587
+			"sha256": "02c5a7e6ceaad648ae5ccc51b8c28ecb7f892187116c35713a07924808223aa7",
+			"bytes": 1202350
 		}
 	},
 	"files": {
@@ -3769,38 +3512,6 @@
 		"files/FluxerSansHebrew/FluxerSansHebrew-Bold.woff2": {
 			"sha256": "afb3c756aaa1fb27aa892b8be4e499768d6c3924304629a1a57e755dcf850c2b",
 			"bytes": 33804
-		},
-		"files/FluxerSansThai/FluxerSansThai-Thin.woff2": {
-			"sha256": "897e4e26a160691756c7fc3451118b1d193ce7536d08f077c5ece74af0ecc07f",
-			"bytes": 40916
-		},
-		"files/FluxerSansThai/FluxerSansThai-ExtraLight.woff2": {
-			"sha256": "5406635cf4836882b2924a163d643461cf7db3dec9e00e6b9de8855efece66f4",
-			"bytes": 42184
-		},
-		"files/FluxerSansThai/FluxerSansThai-Light.woff2": {
-			"sha256": "5038d59185a52ab56f37fda94cc2583d00b25b3a37844c13f894162edf48d58f",
-			"bytes": 41652
-		},
-		"files/FluxerSansThai/FluxerSansThai-Regular.woff2": {
-			"sha256": "6f31db3a1dd40bd884711603409d6c3292a0e646a5d2c0548fbae434412764c5",
-			"bytes": 39840
-		},
-		"files/FluxerSansThai/FluxerSansThai-Text.woff2": {
-			"sha256": "9c3b734c0a6c713fa3d8d643da38fc9908e88ccf6eeb9ee552420ddd19b99be5",
-			"bytes": 41008
-		},
-		"files/FluxerSansThai/FluxerSansThai-Medium.woff2": {
-			"sha256": "6bf065f633743675b1563097243f926ee84bfa91173c6971d59b85960aaede6d",
-			"bytes": 41068
-		},
-		"files/FluxerSansThai/FluxerSansThai-SemiBold.woff2": {
-			"sha256": "a7daaf5d6fb58b12e081d0cdb30115d3db0cb4e2a7a68998a7fac83f3644f7d8",
-			"bytes": 41416
-		},
-		"files/FluxerSansThai/FluxerSansThai-Bold.woff2": {
-			"sha256": "a4f18fa77a2dea9e52c0f63ee801ea5a6545596bc15e84908f938e6190f9c6b9",
-			"bytes": 40300
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Thin.woff2": {
 			"sha256": "5b3ed57fd06bb438dd9a5a2b42a898a3e4f966455737d25e136058f052402d54",

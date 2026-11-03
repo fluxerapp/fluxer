@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {planDesiredState} from '@fluxer/voice_engine_v2/src/core/reducers/_plan';
 import {transitionCamera} from '@fluxer/voice_engine_v2/src/core/reducers/camera';
-import {transitionCapabilities} from '@fluxer/voice_engine_v2/src/core/reducers/capabilities';
+
 import {transitionCommand} from '@fluxer/voice_engine_v2/src/core/reducers/command';
 import {transitionConnection} from '@fluxer/voice_engine_v2/src/core/reducers/connection';
 import {transitionData} from '@fluxer/voice_engine_v2/src/core/reducers/data';
@@ -140,11 +140,7 @@ export function dispatchSessionEvent(
 		case 'stats.collected':
 		case 'stats.collectFailed':
 			return transitionStats(snapshot, event);
-		case 'capabilities.changed':
-		case 'capabilities.hardwareEncoderQueryRequested':
-		case 'capabilities.hardwareEncoderChanged':
-		case 'capabilities.hardwareEncoderQueryFailed':
-			return transitionCapabilities(snapshot, event);
+
 		default:
 			return null;
 	}
@@ -176,7 +172,6 @@ export function dispatchPlatformEvent(
 		case 'nativeCapture.started':
 		case 'nativeCapture.stopped':
 		case 'nativeCapture.failed':
-		case 'nativeCapture.frame':
 			return transitionNativeCapture(snapshot, event);
 		case 'nativeAudioTap.startRequested':
 		case 'nativeAudioTap.stopRequested':
@@ -206,7 +201,6 @@ export function dispatchRuntimeEvent(
 		case 'timer.cancelRequested':
 		case 'timer.fired':
 		case 'diagnostics.logRequested':
-		case 'diagnostics.logged':
 			return transitionUtilityPorts(snapshot, event);
 		case 'lifecycle.teardownRequested':
 		case 'lifecycle.teardownSucceeded':
@@ -220,9 +214,7 @@ export function dispatchRuntimeEvent(
 		case 'room.trackUnmuted':
 			return transitionRoom(snapshot, event);
 		case 'inboundVideo.trackSubscribed':
-		case 'inboundVideo.trackUnsubscribed':
 		case 'inboundVideo.frameReceived':
-		case 'inboundVideo.frameStats':
 			return transitionInboundVideo(snapshot, event);
 		default:
 			return dispatchControlEvent(snapshot, event);
@@ -251,8 +243,6 @@ function dispatchControlEvent(
 		case 'gateway.voiceStateClearSucceeded':
 		case 'gateway.voiceStateClearFailed':
 		case 'gateway.voiceStateUpdated':
-		case 'gateway.voiceServerUpdated':
-		case 'livekit.roomStateChanged':
 			return transitionGateway(snapshot, event);
 		default:
 			return null;

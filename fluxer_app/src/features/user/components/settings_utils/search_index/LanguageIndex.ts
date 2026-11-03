@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {
+	LANGUAGE_DESCRIPTOR,
+	SPELL_CHECK_DESCRIPTOR,
+	SPELL_CHECK_DESCRIPTOR as SPELLCHECK_DESCRIPTOR,
+	TIME_DESCRIPTOR,
+	TIME_FORMAT_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {PERSONAL_DICTIONARY_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const LANGUAGE_DESCRIPTOR = msg({
-	message: 'Language',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
 const LOCALE_DESCRIPTOR = msg({
 	message: 'Locale',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -23,14 +27,7 @@ const CHOOSE_YOUR_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Choose your language',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const TIME_FORMAT_DESCRIPTOR = msg({
-	message: 'Time format',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const TIME_DESCRIPTOR = msg({
-	message: 'Time',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const TWELVE_HOUR_DESCRIPTOR = msg({
 	message: 'Twelve-hour',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -71,14 +68,7 @@ const CHOOSE_HOW_TIMES_ARE_DISPLAYED_THROUGHOUT_THE_APP_DESCRIPTOR = msg({
 	message: 'Choose how times are displayed throughout the app',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const SPELLCHECK_DESCRIPTOR = msg({
-	message: 'Spellcheck',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const SPELL_CHECK_DESCRIPTOR = msg({
-	message: 'Spellcheck',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SPELLING_DESCRIPTOR = msg({
 	message: 'Spelling',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -91,10 +81,7 @@ const DICTIONARIES_DESCRIPTOR = msg({
 	message: 'Dictionaries',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const PERSONAL_DICTIONARY_DESCRIPTOR = msg({
-	message: 'Personal dictionary',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const AUTOMATIC_LANGUAGE_DETECTION_DESCRIPTOR = msg({
 	message: 'Automatic language detection',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

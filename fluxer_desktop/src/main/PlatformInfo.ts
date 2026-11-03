@@ -3,6 +3,7 @@
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import type {
 	AppMetricsSnapshot,
 	CpuInfo,
@@ -20,7 +21,6 @@ const requireModule = createRequire(import.meta.url);
 
 type MacSysctlModule = {
 	sysctlByNameInt: ((name: string) => Promise<number | null>) | null;
-	sysctlByNameString: ((name: string) => Promise<string | null>) | null;
 	loadError: Error | null;
 };
 type NativeGpuInfoSource = 'metal' | 'dxgi' | 'linux-sysfs';
@@ -88,9 +88,9 @@ function loadMacSysctl(): MacSysctlModule | null {
 		macSysctlCache = requireModule('@fluxer/mac-sysctl') as MacSysctlModule;
 	} catch (error) {
 		throw new Error(
-			`@fluxer/mac-sysctl failed to load on macOS; native diagnostics cannot continue. Original error: ${
-				error instanceof Error ? error.message : String(error)
-			}`,
+			`@fluxer/mac-sysctl failed to load on macOS; native diagnostics cannot continue. Original error: ${errorMessage(
+				error,
+			)}`,
 		);
 	}
 	return macSysctlCache;

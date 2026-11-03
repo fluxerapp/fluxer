@@ -27,36 +27,24 @@ import type {ThreadRepository} from '@app/api/channel/repositories/ThreadReposit
 import {
 	isChannelEligible,
 	isTimestampInWindow,
+	loadSelfMessageEligibilityContext,
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
-import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
-import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
-import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import type {OperatorPassCertificateRow, OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
+import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
+import {getOperatorPassRepository, getOperatorPassWaitlistService} from '@app/api/middleware/ServiceSingletons';
 import type {Application} from '@app/api/models/Application';
 import type {Attachment} from '@app/api/models/Attachment';
-import type {AuthSession} from '@app/api/models/AuthSession';
 import type {Channel} from '@app/api/models/Channel';
-import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
-import type {GiftCode} from '@app/api/models/GiftCode';
-import type {Guild} from '@app/api/models/Guild';
-import type {GuildMember} from '@app/api/models/GuildMember';
-import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {Payment} from '@app/api/models/Payment';
-import type {PushSubscription} from '@app/api/models/PushSubscription';
-import type {Relationship} from '@app/api/models/Relationship';
-import type {SavedMessage} from '@app/api/models/SavedMessage';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {User} from '@app/api/models/User';
-import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
-import type {UserSettings} from '@app/api/models/UserSettings';
-import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
-import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
+import {getOperatorPassVisionaryPassId} from '@app/api/operator_pass/OperatorPassVisionaryService';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
-import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
 import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
 import {
@@ -65,14 +53,17 @@ import {
 	getAnimatedAssetExtension,
 } from '@app/api/worker/utils/AssetArchiveHelpers';
 import {ContentAddressedAttachmentCollector} from '@app/api/worker/utils/ContentAddressedAttachmentCollector';
+import {
+	buildUserDataJson,
+	getOperatorPassCertificateArchivePath,
+	mapOAuthApplication,
+	mapPayment,
+	mapSecurityData,
+} from '@app/api/worker/utils/HarvestDataMappers';
 import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {
-	decodeSyncedPreferencesLenient,
-	syncedPreferencesToJson,
-} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
 import {z} from 'zod';
@@ -109,51 +100,9 @@ interface ChannelHarvestResult {
 	messageData: HarvestedMessage;
 }
 
-interface GuildMembershipEntry {
-	member: GuildMember | null;
-	guild: Guild | null;
-	guildId: GuildID;
-}
-
 interface HarvestMessageResult {
 	channelMessagesMap: Map<string, Array<HarvestedMessage>>;
 	totalMessages: number;
-}
-
-interface UserDataJsonParams {
-	user: User;
-	userId: UserID;
-	productName: string;
-	authSessions: Array<AuthSession>;
-	relationships: Array<Relationship>;
-	userNotes: Map<UserID, string>;
-	userSettings: UserSettings | null;
-	guildMemberships: Array<GuildMembershipEntry>;
-	guildSettings: Array<UserGuildSettings | null>;
-	threadMemberships: Array<ThreadMember>;
-	savedMessages: Array<SavedMessage>;
-	privateChannels: Array<Channel>;
-	favoriteMemes: Array<FavoriteMeme>;
-	pushSubscriptions: Array<PushSubscription>;
-	webAuthnCredentials: Array<WebAuthnCredential>;
-	mfaBackupCodes: Array<MfaBackupCode>;
-	recoveryKitCreatedAt: Date | null;
-	createdGiftCodes: Array<GiftCode>;
-	payments: Array<Payment>;
-	storePurchases: Array<StorePurchaseRow>;
-	oauthClients: Array<Application>;
-	connections: Array<UserConnectionRow>;
-	pinnedDms: Array<{
-		channel_id: bigint;
-		sort_order: number;
-	}>;
-	authorizedIps: Array<{
-		ip: string;
-	}>;
-	activityData: {
-		last_active_at: Date | null;
-		last_active_ip: string | null;
-	};
 }
 
 interface ArchiveParams {
@@ -175,6 +124,7 @@ interface ArchiveParams {
 		last_active_at: Date | null;
 		last_active_ip: string | null;
 	};
+	operatorPassCertificates: Array<OperatorPassCertificateRow>;
 	storageService: IStorageService;
 }
 
@@ -238,57 +188,12 @@ async function claimUserArchive(
 	};
 }
 
-// A harvest is every message the account wrote, so the read pages to the end of
-// the account rather than stopping at a count. The page size is what bounds one
-// query, not what bounds the archive.
 const HARVEST_MESSAGE_CHUNK_SIZE = 1000;
 const HARVEST_READ_CONCURRENCY = 10;
 const INITIAL_PROGRESS = 5;
 const MESSAGES_PROGRESS_MAX = 55;
 const METADATA_PROGRESS = 60;
 const ZIP_EXPIRY_MS = ms('7 days');
-
-function mapPayment(payment: Payment) {
-	return {
-		checkout_session_id: payment.checkoutSessionId,
-		amount_cents: payment.amountCents,
-		currency: payment.currency,
-		status: payment.status,
-		subscription_id: payment.subscriptionId,
-		payment_intent_id: payment.paymentIntentId,
-		product_type: payment.productType,
-		is_gift: payment.isGift,
-		gift_code: payment.giftCode,
-		created_at: payment.createdAt.toISOString(),
-		completed_at: payment.completedAt?.toISOString() ?? null,
-	};
-}
-
-function mapOAuthApplication(app: Application) {
-	return {
-		application_id: app.applicationId.toString(),
-		name: app.name,
-		redirect_uris: Array.from(app.oauth2RedirectUris),
-	};
-}
-
-function mapSecurityData(params: {
-	authorizedIps: Array<{
-		ip: string;
-	}>;
-	activityData: {
-		last_active_at: Date | null;
-		last_active_ip: string | null;
-	};
-}) {
-	return {
-		authorized_ips: params.authorizedIps,
-		activity_tracking: {
-			last_active_at: params.activityData.last_active_at?.toISOString() ?? null,
-			last_active_ip: params.activityData.last_active_ip,
-		},
-	};
-}
 
 interface HarvestMessagesFilterArgs {
 	filter: SelfMessageFilter;
@@ -313,14 +218,14 @@ interface HarvestMessageRepository {
 	): Promise<{content: string | null; attachments?: Array<Attachment>} | null>;
 }
 
-export async function harvestMessages(
+async function harvestMessages(
 	channelRepository: HarvestMessageRepository,
 	userId: UserID,
 	startTime: number,
 	filterArgs: HarvestMessagesFilterArgs | null,
 ): Promise<HarvestMessageResult> {
 	const channelMessagesMap = new Map<string, Array<HarvestedMessage>>();
-	const channelEligibility = filterArgs ? new Map<string, boolean>() : null;
+	const channelEligibility = new Map<string, boolean>();
 	Logger.debug('Fetching all user messages');
 	const startFetchTime = Date.now();
 	let lastMessageId: MessageID | undefined;
@@ -376,11 +281,11 @@ export async function harvestMessages(
 				continue;
 			}
 			const channelIdStr = ref.channelId.toString();
-			let eligible = channelEligibility!.get(channelIdStr);
+			let eligible = channelEligibility.get(channelIdStr);
 			if (eligible === undefined) {
 				const channel = await filterArgs.findChannel(ref.channelId);
 				eligible = channel ? isChannelEligible(channel, userId, filterArgs.filter, filterArgs.context) : false;
-				channelEligibility!.set(channelIdStr, eligible);
+				channelEligibility.set(channelIdStr, eligible);
 			}
 			if (eligible) {
 				pageRefs.push(ref);
@@ -416,12 +321,11 @@ export async function harvestMessages(
 	return {channelMessagesMap, totalMessages};
 }
 
-export async function collectThreadMemberships(
+async function collectThreadMemberships(
 	threads: Pick<ThreadRepository, 'listJoinedThreadIds' | 'getMember'>,
 	userId: UserID,
 	guildIds: ReadonlyArray<GuildID>,
 ): Promise<Array<ThreadMember>> {
-	if (!everEnabled()) return [];
 	const perGuild = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
 		if (!(await isTainted(guildId, {fresh: true}))) return [];
 		const threadIds = await threads.listJoinedThreadIds(userId, guildId);
@@ -429,268 +333,6 @@ export async function collectThreadMemberships(
 		return members.filter((member): member is ThreadMember => member !== null);
 	});
 	return perGuild.flat();
-}
-
-export function buildUserDataJson(params: UserDataJsonParams) {
-	const {
-		user,
-		userId,
-		productName,
-		authSessions,
-		relationships,
-		userNotes,
-		userSettings,
-		guildMemberships,
-		guildSettings,
-		threadMemberships,
-		savedMessages,
-		privateChannels,
-		favoriteMemes,
-		pushSubscriptions,
-		webAuthnCredentials,
-		mfaBackupCodes,
-		recoveryKitCreatedAt,
-		createdGiftCodes,
-		payments,
-		storePurchases,
-		oauthClients,
-		connections,
-		pinnedDms,
-		authorizedIps,
-		activityData,
-	} = params;
-	return {
-		user: {
-			id: user.id.toString(),
-			username: user.username,
-			discriminator: user.discriminator,
-			bot: user.isBot,
-			system: user.isSystem,
-			email: user.email,
-			email_verified: user.emailVerified,
-			email_bounced: user.emailBounced,
-			avatar_hash: user.avatarHash,
-			avatar_url: user.avatarHash
-				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${user.avatarHash.startsWith('a_') ? 'gif' : 'png'}`
-				: null,
-			banner_hash: user.bannerHash,
-			banner_url: user.bannerHash
-				? `${Config.endpoints.media}/banners/${userId}/${user.bannerHash}.${user.bannerHash.startsWith('a_') ? 'gif' : 'png'}`
-				: null,
-			bio: user.bio,
-			pronouns: user.pronouns,
-			accent_color: user.accentColor,
-			date_of_birth: user.dateOfBirth,
-			locale: user.locale,
-			flags: user.flags.toString(),
-			premium_type: user.premiumType,
-			premium_since: user.premiumSince?.toISOString() ?? null,
-			premium_until: user.premiumUntil?.toISOString() ?? null,
-			premium_lifetime_sequence: user.premiumLifetimeSequence,
-			stripe_customer_id: user.stripeCustomerId,
-			stripe_subscription_id: user.stripeSubscriptionId,
-			terms_agreed_at: user.termsAgreedAt?.toISOString() ?? null,
-			privacy_agreed_at: user.privacyAgreedAt?.toISOString() ?? null,
-			last_active_at: user.lastActiveAt?.toISOString() ?? null,
-			created_at: snowflakeToDate(user.id).toISOString(),
-			mfa_enabled: user.authenticatorTypes.size > 0,
-			authenticator_types: Array.from(user.authenticatorTypes),
-		},
-		auth_sessions: authSessions.map((session) => {
-			const clientInfo = resolveSessionClientInfo({
-				userAgent: session.clientUserAgent,
-				reportedOs: session.clientOs ?? null,
-				productName,
-			});
-			return {
-				created_at: session.createdAt.toISOString(),
-				approx_last_used_at: session.approximateLastUsedAt?.toISOString() ?? null,
-				client_ip: session.clientIp,
-				client_os: clientInfo.os,
-				client_user_agent: session.clientUserAgent,
-				client_platform: clientInfo.platform,
-			};
-		}),
-		relationships: relationships.map((rel) => ({
-			target_user_id: rel.targetUserId.toString(),
-			type: rel.type,
-			nickname: rel.nickname,
-			since: rel.since?.toISOString() ?? null,
-		})),
-		notes: Array.from(userNotes.entries()).map(([targetUserId, note]) => ({
-			target_user_id: targetUserId.toString(),
-			note,
-		})),
-		user_settings: userSettings
-			? {
-					locale: userSettings.locale,
-					theme: userSettings.theme,
-					status: userSettings.status,
-					custom_status: userSettings.customStatus
-						? {
-								text: userSettings.customStatus.text,
-								emoji_id: userSettings.customStatus.emojiId?.toString() ?? null,
-								emoji_name: userSettings.customStatus.emojiName,
-								emoji_animated: userSettings.customStatus.emojiAnimated,
-								expires_at: userSettings.customStatus.expiresAt?.toISOString() ?? null,
-							}
-						: null,
-					developer_mode: userSettings.developerMode,
-					message_display_compact: userSettings.compactMessageDisplay,
-					animate_emoji: userSettings.animateEmoji,
-					animate_stickers: userSettings.animateStickers,
-					gif_auto_play: userSettings.gifAutoPlay,
-					render_embeds: userSettings.renderEmbeds,
-					render_reactions: userSettings.renderReactions,
-					render_spoilers: userSettings.renderSpoilers,
-					inline_attachment_media: userSettings.inlineAttachmentMedia,
-					inline_embed_media: userSettings.inlineEmbedMedia,
-					explicit_content_filter: userSettings.explicitContentFilter,
-					friend_source_flags: userSettings.friendSourceFlags,
-					default_guilds_restricted: userSettings.defaultGuildsRestricted,
-					bot_default_guilds_restricted: userSettings.botDefaultGuildsRestricted,
-					restricted_guilds: Array.from(userSettings.restrictedGuilds).map((id) => id.toString()),
-					bot_restricted_guilds: Array.from(userSettings.botRestrictedGuilds).map((id) => id.toString()),
-					guild_positions: userSettings.guildPositions.map((id) => id.toString()),
-					guild_folders: userSettings.guildFolders.map((folder) => ({
-						id: folder.folderId,
-						name: folder.name,
-						color: folder.color,
-						flags: folder.flags,
-						icon: folder.icon,
-						guild_ids: folder.guildIds.map(String),
-					})),
-					afk_timeout: userSettings.afkTimeout,
-					time_format: userSettings.timeFormat,
-					suppress_unprivileged_self_mentions: userSettings.suppressUnprivilegedSelfMentions,
-					suppress_unprivileged_self_mentions_bypass_user_ids: Array.from(
-						userSettings.suppressUnprivilegedSelfMentionBypassUserIds,
-					).map((id) => id.toString()),
-					staff_dm_access_user_ids: Array.from(userSettings.staffDmAccessUserIds).map((id) => id.toString()),
-					synced_preferences: syncedPreferencesToJson(decodeSyncedPreferencesLenient(userSettings.syncedPreferences)),
-					profile_privacy: userSettings.profilePrivacy,
-					privacy_setup_version: userSettings.privacySetupVersion,
-					privacy_setup_completed_at: userSettings.privacySetupCompletedAt?.toISOString() ?? null,
-				}
-			: null,
-		guild_memberships: guildMemberships
-			.filter((gm) => gm.member !== null)
-			.map(({member, guild, guildId}) => ({
-				guild_id: guildId.toString(),
-				guild_name: guild?.name ?? null,
-				joined_at: member!.joinedAt.toISOString(),
-				nick: member!.nickname,
-				avatar_hash: member!.avatarHash,
-				avatar_url: member!.avatarHash
-					? `${Config.endpoints.media}/guilds/${guildId}/users/${userId}/avatars/${member!.avatarHash}`
-					: null,
-				banner_hash: member!.bannerHash,
-				banner_url: member!.bannerHash
-					? `${Config.endpoints.media}/guilds/${guildId}/users/${userId}/banners/${member!.bannerHash}`
-					: null,
-				role_ids: Array.from(member!.roleIds).map((id) => id.toString()),
-			})),
-		user_guild_settings: guildSettings
-			.filter((settings) => settings !== null)
-			.map((settings) => ({
-				guild_id: settings!.guildId.toString(),
-				message_notifications: settings!.messageNotifications,
-				muted: settings!.muted,
-				mobile_push: settings!.mobilePush,
-				suppress_everyone: settings!.suppressEveryone,
-				suppress_roles: settings!.suppressRoles,
-				hide_muted_channels: settings!.hideMutedChannels,
-			})),
-		...(threadMemberships.length > 0
-			? {
-					thread_memberships: threadMemberships.map((member) => ({
-						thread_id: member.threadId.toString(),
-						guild_id: member.guildId.toString(),
-						parent_id: member.parentId.toString(),
-						join_timestamp: member.joinTimestamp.toISOString(),
-						flags: member.flags,
-						muted: member.muted,
-					})),
-				}
-			: {}),
-		saved_messages: savedMessages.map((msg) => ({
-			channel_id: msg.channelId.toString(),
-			message_id: msg.messageId.toString(),
-			saved_at: msg.savedAt.toISOString(),
-		})),
-		private_channels: privateChannels.map((channel) => ({
-			channel_id: channel.id.toString(),
-			type: channel.type,
-			name: channel.name,
-			icon_hash: channel.iconHash,
-			owner_id: channel.ownerId?.toString() ?? null,
-			recipient_ids: Array.from(channel.recipientIds).map((id) => id.toString()),
-			last_message_id: channel.lastMessageId?.toString() ?? null,
-		})),
-		favorite_memes: favoriteMemes.map((meme) => ({
-			meme_id: meme.id.toString(),
-			name: meme.name,
-			alt_text: meme.altText,
-			tags: meme.tags,
-			filename: meme.filename,
-			content_type: meme.contentType,
-			size: meme.size.toString(),
-			width: meme.width,
-			height: meme.height,
-			duration: meme.duration,
-		})),
-		push_subscriptions: pushSubscriptions.map((sub) => ({
-			subscription_id: sub.subscriptionId,
-			platform: sub.platform,
-			app_id: sub.appId,
-			provider_environment: sub.providerEnvironment,
-			endpoint: sub.endpoint,
-			user_agent: sub.userAgent,
-		})),
-		webauthn_credentials: webAuthnCredentials.map((cred) => ({
-			credential_id: cred.credentialId,
-			name: cred.name,
-			transports: cred.transports ? Array.from(cred.transports) : [],
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		})),
-		mfa_backup_codes: {
-			total_count: mfaBackupCodes.length,
-			consumed_count: mfaBackupCodes.filter((code) => code.consumed).length,
-			remaining_count: mfaBackupCodes.filter((code) => !code.consumed).length,
-		},
-		...(recoveryKitCreatedAt ? {recovery_kit: {created_at: recoveryKitCreatedAt.toISOString()}} : {}),
-		gift_codes_created: createdGiftCodes.map((gift) => ({
-			code: gift.code,
-			duration_months: gift.durationMonths,
-			duration_type: gift.durationType,
-			duration_quantity: gift.durationQuantity,
-			created_at: gift.createdAt.toISOString(),
-			redeemed_by_user_id: gift.redeemedByUserId?.toString() ?? null,
-			redeemed_at: gift.redeemedAt?.toISOString() ?? null,
-			stripe_payment_intent_id: gift.stripePaymentIntentId,
-		})),
-		payments: payments.map(mapPayment),
-		store_purchases: storePurchases.map(mapStorePurchaseToResponse),
-		oauth_applications: oauthClients.map(mapOAuthApplication),
-		connections: connections.map((connection) => ({
-			id: connection.connection_id,
-			type: connection.connection_type,
-			identifier: connection.identifier,
-			name: connection.name,
-			verified: connection.verified,
-			visibility_flags: connection.visibility_flags,
-			sort_order: connection.sort_order,
-			created_at: connection.created_at.toISOString(),
-			verified_at: connection.verified_at?.toISOString() ?? null,
-			last_verified_at: connection.last_verified_at?.toISOString() ?? null,
-		})),
-		pinned_dms: pinnedDms.map((pin) => ({
-			channel_id: pin.channel_id.toString(),
-			sort_order: pin.sort_order,
-		})),
-		...mapSecurityData({authorizedIps, activityData}),
-	};
 }
 
 async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveResult> {
@@ -708,6 +350,7 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 		oauthClients,
 		authorizedIps,
 		activityData,
+		operatorPassCertificates,
 		storageService,
 	} = params;
 	const userIdString = userId.toString();
@@ -764,6 +407,11 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 		if (collector) {
 			const manifest = collector.getManifest();
 			await archive.append(createArchiveJsonBuffer(manifest), {name: 'attachments_manifest.json'});
+		}
+		for (const certificate of operatorPassCertificates) {
+			if (certificate.pdf.length > 0) {
+				await archive.append(Buffer.from(certificate.pdf), {name: getOperatorPassCertificateArchivePath(certificate)});
+			}
 		}
 		await archive.append(createArchiveJsonBuffer(payments.map(mapPayment)), {
 			name: 'payments/payment_history.json',
@@ -831,20 +479,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		let filterArgs: HarvestMessagesFilterArgs | null = null;
 		if (validated.filter) {
 			const filter = deserializeSelfMessageFilter(validated.filter);
-			const [privateChannelsForFilter, userGuildsForFilter] = await Promise.all([
-				userRepository.listPrivateChannels(userId),
-				guildRepository.listUserGuilds(userId),
-			]);
-			const openDmChannelIds = new Set<string>();
-			for (const channel of privateChannelsForFilter) {
-				if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
-					openDmChannelIds.add(channel.id.toString());
-				}
-			}
-			const context: SelfMessageEligibilityContext = {
-				currentGuildIds: new Set(userGuildsForFilter.map((guild) => guild.id.toString())),
-				openDmChannelIds,
-			};
+			const context = await loadSelfMessageEligibilityContext(userId, {userRepository, guildRepository});
 			filterArgs = {
 				filter,
 				context,
@@ -896,6 +531,11 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			createdGiftCodes,
 			payments,
 			storePurchases,
+			operatorPass,
+			operatorPassPurchases,
+			operatorPassWaitlistEntry,
+			operatorPassWall,
+			operatorPassWallEvents,
 			oauthClients,
 			connections,
 			pinnedDms,
@@ -917,12 +557,45 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.findGiftCodesByCreator(userId),
 			paymentRepository.findPaymentsByUserId(userId),
 			storeEntitlementService.listStorePurchases(userId),
+			getOperatorPassRepository().findOperatorPass(userId),
+			getOperatorPassRepository().listPurchasesByPurchaser(userId),
+			user.email ? getOperatorPassWaitlistService().findEntryForAddress(user.email) : null,
+			getOperatorPassRepository().findWallEntry(userId),
+			getOperatorPassRepository().listWallEvents(userId),
 			applicationRepository.listApplicationsByOwner(userId),
 			connectionRepository.findByUserId(userId),
 			userRepository.getPinnedDmsWithDetails(userId),
 			userRepository.getAuthorizedIps(userId),
 			userRepository.getActivityTracking(userId),
 		]);
+		const operatorPassRepository = getOperatorPassRepository();
+		const operatorPassUnitRows = new Map<string, OperatorPassUnitRow>();
+		for (const unit of await operatorPassRepository.listUnitsByHolder(userId)) {
+			operatorPassUnitRows.set(unit.pass_id, unit);
+		}
+		for (const purchase of operatorPassPurchases) {
+			for (const unit of await operatorPassRepository.listUnitsByPurchase(purchase.checkout_session_id)) {
+				operatorPassUnitRows.set(unit.pass_id, unit);
+			}
+		}
+		const operatorPassUnits = await Promise.all(
+			[...operatorPassUnitRows.values()].map(async (unit) => ({
+				unit,
+				events: await operatorPassRepository.listUnitEvents(unit.pass_id),
+			})),
+		);
+		const operatorPassOffers = await operatorPassRepository.listOffersByUser(userId);
+		const operatorPassCertificates: Array<OperatorPassCertificateRow> = [];
+		for (const purchase of operatorPassPurchases) {
+			for (const page of await operatorPassRepository.listCertificatesByPurchase(purchase.checkout_session_id)) {
+				operatorPassCertificates.push(...(await operatorPassRepository.listCertificateVersions(page.pass_id)));
+			}
+		}
+		const operatorPassVisionaryActivation = await operatorPassRepository.findVisionaryActivation(userId);
+		const operatorPassLabs = await operatorPassRepository.findLabsMember(userId);
+		operatorPassCertificates.push(
+			...(await operatorPassRepository.listCertificateVersions(getOperatorPassVisionaryPassId(userId))),
+		);
 		const guilds = await guildRepository.listGuilds(guildIds);
 		const guildsMap = new Map(guilds.map((guild) => [guild.id.toString(), guild]));
 		const guildMemberships = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
@@ -956,6 +629,16 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			createdGiftCodes,
 			payments,
 			storePurchases,
+			operatorPass,
+			operatorPassPurchases,
+			operatorPassWaitlistEntry,
+			operatorPassWall,
+			operatorPassWallEvents,
+			operatorPassUnits,
+			operatorPassOffers,
+			operatorPassCertificates,
+			operatorPassVisionaryActivation,
+			operatorPassLabs,
 			oauthClients,
 			connections,
 			pinnedDms,
@@ -981,6 +664,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			oauthClients,
 			authorizedIps,
 			activityData,
+			operatorPassCertificates,
 			storageService,
 		});
 		Logger.debug(
@@ -1017,13 +701,15 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 	await progressReporter.markAsCompleted(archive.storageKey, archive.fileSize, archive.expiresAt);
 	Logger.debug({userId, harvestId}, 'Marked harvest as completed');
 	if (!isAdminArchive && user.email && (await instanceConfigRepository.isEmailEnabled())) {
-		const sent = await emailService.sendHarvestCompletedEmail(
+		const sent = await emailService.send(
+			'harvest_completed',
 			user.email,
-			user.username,
-			archive.downloadUrl,
-			totalMessages,
-			Number(archive.fileSize),
-			archive.expiresAt,
+			{
+				downloadUrl: archive.downloadUrl,
+				totalMessages,
+				fileSize: Number(archive.fileSize),
+				expiresAt: archive.expiresAt,
+			},
 			user.locale,
 		);
 		if (!sent) throw new Error(`Completion email for harvest ${harvestId} was not sent`);

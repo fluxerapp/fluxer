@@ -73,7 +73,7 @@
 .summaryValue {
 	font-family: var(--font-mono);
 	color: var(--text-primary);
-	text-align: right;
+	text-align: end;
 	word-break: break-word;
 }
 

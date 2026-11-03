@@ -22,6 +22,7 @@ export type ArmedNativeAudioCapture =
 			kind: 'capture';
 			captureId: string;
 			includeSelfWindowAudio?: boolean;
+			winEndpoints?: Array<string>;
 	  }
 	| {
 			kind: 'linux-routing';
@@ -44,6 +45,7 @@ export interface ActiveNativeAudioBridge {
 	cleanup: NativeAudioBridgeCleanup;
 	linuxRule?: NativeAudioRoutingRule;
 	includeSelfWindowAudio?: boolean;
+	winEndpoints?: Array<string>;
 }
 
 export type NativeAudioRoutingRule = NonNullable<NativeAudioStartOptions['linuxRule']>;
@@ -411,6 +413,28 @@ export function getArmedCaptureId(capture: ArmedNativeAudioCapture | null): stri
 
 export function unsupportedPlatformAvailability(): NativeAudioAvailability {
 	return {available: false, reason: 'unsupported-platform'};
+}
+
+export interface WindowsDesktopAudioSelection {
+	all: boolean;
+	devices: Array<string>;
+}
+
+export function selectWindowsDesktopAudioStart(
+	selection: WindowsDesktopAudioSelection,
+	availability: NativeAudioAvailability | null,
+): Pick<NativeAudioStartOptions, 'winCaptureScope' | 'winEndpoints'> {
+	if (availability?.capabilities?.endpointSelect !== true || selection.all) {
+		return {winCaptureScope: 'system'};
+	}
+	return {winCaptureScope: 'session-mixer', winEndpoints: [...selection.devices]};
+}
+
+export function windowsEndpointsEqual(a: Array<string>, b: Array<string>): boolean {
+	if (a.length !== b.length) return false;
+	const sortedA = [...a].sort();
+	const sortedB = [...b].sort();
+	return sortedA.every((entry, index) => entry === sortedB[index]);
 }
 
 export function shouldMixSelfWindowAudioIntoSystemCapture(_availability: NativeAudioAvailability): boolean {

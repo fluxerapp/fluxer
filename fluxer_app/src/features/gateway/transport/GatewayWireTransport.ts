@@ -22,6 +22,7 @@ const WEBSOCKET_NORMAL_CLOSURE = 1000;
 const WEBSOCKET_ABNORMAL_CLOSURE = 1006;
 const DESKTOP_CONNECTION_ID_PREFIX = 'gateway-renderer-';
 const DESKTOP_RETIRED_CONNECTION_ID_LIMIT = 256;
+const DESKTOP_CLOSE_DRAIN_TIMEOUT_MS = 2000;
 const DESKTOP_ROUTER_GLOBAL_KEY = '__fluxerDesktopGatewayTransport';
 const DESKTOP_ROUTER_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const NATIVE_GATEWAY_TRANSPORT_METHODS = ['create', 'sendText', 'sendBinary', 'close', 'dispose', 'onEvent'] as const;
@@ -65,14 +66,14 @@ export interface GatewayWireErrorEvent {
 	error: unknown;
 }
 
-export interface GatewayWireTransportEventMap {
+interface GatewayWireTransportEventMap {
 	open: GatewayWireOpenEvent;
 	message: GatewayWireMessageEvent;
 	close: GatewayWireCloseEvent;
 	error: GatewayWireErrorEvent;
 }
 
-export type GatewayWireTransportEvents = {
+type GatewayWireTransportEvents = {
 	[K in keyof GatewayWireTransportEventMap]: (event: GatewayWireTransportEventMap[K]) => void;
 };
 
@@ -98,7 +99,7 @@ class DesktopNativeGatewayTransportNotOpenError extends Error {
 	}
 }
 
-export class InvalidDesktopGatewayTransportRouterStateError extends Error {
+class InvalidDesktopGatewayTransportRouterStateError extends Error {
 	constructor(reason: string) {
 		super(`Desktop gateway transport router state is invalid: ${reason}`);
 		this.name = 'InvalidDesktopGatewayTransportRouterStateError';
@@ -274,6 +275,7 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 	private nativeCreateCompleted = false;
 	private pendingClose: PendingDesktopClose | null = null;
 	private nativeDisposal: DesktopNativeGatewayDisposal | null = null;
+	private closeDrain: (() => void) | null = null;
 	private opened = false;
 	private serverRespondedBeforeOpen = false;
 
@@ -328,17 +330,38 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 		this.disposed = true;
 		const connectionId = this.connectionId;
 		const nativeCreateCompleted = this.nativeCreateCompleted;
+		const closeSent = this.state === GatewayWireReadyState.CLOSING && this.pendingClose !== null;
 		this.connectionId = null;
 		this.nativeCreateCompleted = false;
 		this.pendingClose = null;
 		this.state = GatewayWireReadyState.CLOSED;
-		this.detachRouterListener();
-		if (connectionId != null && nativeCreateCompleted) {
-			this.disposeNativeConnection(connectionId).catch((error: unknown) => {
-				log.warn('Failed to dispose the desktop native gateway connection', error);
-			});
-		}
 		this.clearListeners();
+		if (connectionId == null || !nativeCreateCompleted) {
+			this.detachRouterListener();
+			return;
+		}
+		if (closeSent) {
+			this.disposeAfterClose(connectionId);
+			return;
+		}
+		this.detachRouterListener();
+		this.disposeAfterDrain(connectionId);
+	}
+
+	private disposeAfterClose(connectionId: string): void {
+		const timer = setTimeout(() => this.closeDrain?.(), DESKTOP_CLOSE_DRAIN_TIMEOUT_MS);
+		this.closeDrain = () => {
+			clearTimeout(timer);
+			this.closeDrain = null;
+			this.detachRouterListener();
+			this.disposeAfterDrain(connectionId);
+		};
+	}
+
+	private disposeAfterDrain(connectionId: string): void {
+		this.disposeNativeConnection(connectionId).catch((error: unknown) => {
+			log.warn('Failed to dispose the desktop native gateway connection', error);
+		});
 	}
 
 	private disposeNativeConnection(connectionId: string): Promise<void> {
@@ -368,7 +391,12 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 			creation = this.router.create({
 				url: this.url,
 				callback: (event) => {
-					if (this.disposed) return;
+					if (this.disposed) {
+						if (event.kind === NativeGatewayTransportEventKind.CLOSE) {
+							this.closeDrain?.();
+						}
+						return;
+					}
 					this.handleRouterEvent(event);
 				},
 			});
@@ -434,10 +462,12 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 
 	private failOpen(error: unknown): void {
 		if (this.disposed) return;
-		if (describeError(error).includes(NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE)) {
-			switchProxiedGatewayToBrowserTransport();
-		} else {
-			recordNativeGatewayFailureWithoutOpen();
+		if (browserTransportCanReach(this.url)) {
+			if (describeError(error).includes(NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE)) {
+				switchProxiedGatewayToBrowserTransport();
+			} else {
+				recordNativeGatewayFailureWithoutOpen();
+			}
 		}
 		this.abandonNativeConnection();
 		this.emitTransportFailure(error);
@@ -486,7 +516,12 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 				this.emit('message', {target: this, data: event.binary});
 				return;
 			case NativeGatewayTransportEventKind.CLOSE:
-				if (!this.opened && this.state !== GatewayWireReadyState.CLOSING && !this.serverRespondedBeforeOpen) {
+				if (
+					!this.opened &&
+					this.state !== GatewayWireReadyState.CLOSING &&
+					!this.serverRespondedBeforeOpen &&
+					browserTransportCanReach(this.url)
+				) {
 					recordNativeGatewayFailureWithoutOpen();
 				}
 				this.abandonNativeConnection();
@@ -581,6 +616,11 @@ function getRouterState(): DesktopGatewayTransportRouterState {
 		throw new InvalidDesktopGatewayTransportRouterStateError('state installation failed');
 	}
 	return state;
+}
+
+function browserTransportCanReach(url: string | null): boolean {
+	if (url == null || !URL.canParse(url)) return true;
+	return new URL(url).protocol !== 'ws:';
 }
 
 function isNativeGatewayFallbackActive(state: DesktopGatewayTransportRouterState): boolean {
@@ -713,7 +753,7 @@ class DesktopGatewayTransportEventRouter implements DesktopGatewayTransportRoute
 	}
 }
 
-function resolveNativeGatewayTransportAPI(): NativeGatewayTransportAPI | null {
+function resolveNativeGatewayTransportAPI(url: string | null): NativeGatewayTransportAPI | null {
 	if (!isDesktopLocalAppDocument()) return null;
 	const api = getElectronAPI()?.nativeGatewayTransport;
 	if (api == null) return null;
@@ -724,7 +764,7 @@ function resolveNativeGatewayTransportAPI(): NativeGatewayTransportAPI | null {
 			return null;
 		}
 	}
-	if (isNativeGatewayFallbackActive(getRouterState())) return null;
+	if (isNativeGatewayFallbackActive(getRouterState()) && browserTransportCanReach(url)) return null;
 	return api;
 }
 
@@ -742,12 +782,8 @@ function getDesktopGatewayTransportRouter(api: NativeGatewayTransportAPI): Deskt
 	return state.router;
 }
 
-export function isDesktopNativeGatewayTransportAvailable(): boolean {
-	return resolveNativeGatewayTransportAPI() != null;
-}
-
 export function createGatewayWireTransport(url: string, options: GatewayWireTransportOptions): GatewayWireTransport {
-	const api = resolveNativeGatewayTransportAPI();
+	const api = resolveNativeGatewayTransportAPI(url);
 	if (api != null) {
 		return new DesktopNativeGatewayWireTransport(url, getDesktopGatewayTransportRouter(api));
 	}

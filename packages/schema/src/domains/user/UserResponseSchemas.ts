@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AccountTier, AccountVerificationNeed} from '@fluxer/constants/src/AccountTierConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	FriendSourceFlags,
@@ -16,9 +17,11 @@ import {
 	PublicUserFlags,
 	PublicUserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
+import {AccountTierSchema, AccountVerificationNeedSchema} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
 import {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {ProfileBadgeListResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
 import {
 	createBitflagInt32Type,
@@ -122,13 +125,45 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe(
 			'Whether the user selected a premium-only discriminator that will be rerolled when non-lifetime premium access ends',
 		),
-	premium_badge_hidden: z.boolean().describe('Whether the premium badge is hidden on the profile'),
+	hidden_profile_badges: z
+		.array(z.string())
+		.describe('Keys of the badges hidden from other people, as in the key field of a profile badge'),
+	premium_badge_hidden: z
+		.boolean()
+		.describe('Deprecated, use hidden_profile_badges. Whether the premium badge held is in that list'),
 	premium_badge_masked: z.boolean().describe('Whether the premium badge shows a masked appearance'),
 	premium_badge_timestamp_hidden: z.boolean().describe('Whether the premium start timestamp is hidden'),
-	premium_badge_sequence_hidden: z.boolean().describe('Whether the lifetime sequence number is hidden'),
+	premium_badge_sequence_hidden: z
+		.boolean()
+		.describe('Deprecated, use hidden_profile_badges. Whether visionary_number is in that list'),
 	premium_purchase_disabled: z.boolean().describe('Whether premium purchases are disabled for this account'),
 	premium_enabled_override: z.boolean().describe('Whether premium features are enabled via override'),
 	premium_perks_disabled: z.boolean().describe('Whether premium perks are temporarily disabled for this account'),
+	operator_pass_badge_hidden: z
+		.boolean()
+		.optional()
+		.describe(
+			'Deprecated, use hidden_profile_badges. Whether operator_pass is in that list. Only present on the current user response. Older servers omit it',
+		),
+	operator_pass_badge_timestamp_hidden: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the month and year the Operator Pass was first held are hidden from other people. Only present on the current user response. Older servers omit it',
+		),
+	operator_pass_badge_count_hidden: z
+		.boolean()
+		.optional()
+		.describe(
+			"Whether the number of Operator Passes held is hidden from other people, on the badge and the Operators' wall. Only present on the current user response. Older servers omit it",
+		),
+	operator_pass_since: z
+		.string()
+		.nullable()
+		.optional()
+		.describe(
+			'ISO8601 timestamp of when the account got the Operator Pass, or null without one. Only present on the current user response.',
+		),
 	password_last_changed_at: z.string().nullable().describe('ISO8601 timestamp of the last password change'),
 	last_voice_activity_sharing_change_at: z
 		.string()
@@ -152,10 +187,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe(
 			'Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here.',
 		),
-	age_verified_adult: z
-		.boolean()
-		.optional()
-		.describe('Whether the user has verified their age as an adult via credit card verification'),
+	age_verified_adult: z.boolean().optional().describe('Whether the user has verified their age as an adult'),
 	terms_agreed_at: z
 		.string()
 		.nullable()
@@ -163,7 +195,32 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 	privacy_agreed_at: z
 		.string()
 		.nullable()
-		.describe('ISO8601 timestamp of when the user last agreed to the privacy policy'),
+		.describe(
+			'ISO8601 timestamp of when the user was last shown the current privacy policy. People are informed of it, they do not agree to it',
+		),
+	claimed: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the account can be signed in to again from another device: an email on instances that sign in with an email, a password otherwise',
+		),
+	account_tier: AccountTierSchema.optional().describe(
+		'How far the account has got with setting up a way to sign in. Clients that do not get it derive it from claimed and verified',
+	),
+	verification_need: AccountVerificationNeedSchema.nullable()
+		.optional()
+		.describe('What the account still has to do before it can use everything, null once it is verified'),
+	has_password: z.boolean().optional().describe('Whether the account has a password'),
+	date_of_birth_required: z
+		.boolean()
+		.optional()
+		.describe('Whether the account still has to enter its date of birth, which clients ask for before anything else'),
+	profile_restricted: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether other people see only the username and tag of this account until it has a confirmed email address',
+		),
 });
 
 export type UserPrivateResponse = z.infer<typeof UserPrivateResponse>;
@@ -494,6 +551,7 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly premium_lifetime_sequence: number | null;
 	readonly premium_grace_ends_at: string | null;
 	readonly premium_discriminator: boolean;
+	readonly hidden_profile_badges?: ReadonlyArray<string>;
 	readonly premium_badge_hidden: boolean;
 	readonly premium_badge_masked: boolean;
 	readonly premium_badge_timestamp_hidden: boolean;
@@ -501,6 +559,10 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly premium_purchase_disabled: boolean;
 	readonly premium_enabled_override: boolean;
 	readonly premium_perks_disabled: boolean;
+	readonly operator_pass_badge_hidden?: boolean;
+	readonly operator_pass_badge_timestamp_hidden?: boolean;
+	readonly operator_pass_badge_count_hidden?: boolean;
+	readonly operator_pass_since?: string | null;
 	readonly timezone?: string | null;
 	readonly timezone_privacy_flags?: number;
 	readonly password_last_changed_at: string | null;
@@ -516,6 +578,12 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly terms_agreed_at?: string | null;
 	readonly privacy_agreed_at?: string | null;
 	readonly traits: ReadonlyArray<string>;
+	readonly claimed?: boolean;
+	readonly account_tier?: AccountTier;
+	readonly verification_need?: AccountVerificationNeed | null;
+	readonly has_password?: boolean;
+	readonly date_of_birth_required?: boolean;
+	readonly profile_restricted?: boolean;
 }
 
 export type User = UserPartial & Partial<UserPrivate>;
@@ -593,9 +661,31 @@ export const UserProfileFullResponse = z.object({
 		.optional()
 		.describe('The guild member data if guild_id was provided'),
 	guild_member_profile: GuildMemberProfileDataResponse.describe('Guild-specific profile data'),
-	premium_type: withFieldDescription(UserPremiumTypesSchema, 'The type of premium subscription').optional(),
-	premium_since: z.string().optional().describe('ISO8601 timestamp of when premium was activated'),
-	premium_lifetime_sequence: Int32Type.optional().describe('Sequence number for lifetime premium'),
+	premium_type: withFieldDescription(
+		UserPremiumTypesSchema,
+		'The type of premium subscription. Deprecated for badge display, use profile_badges',
+	).optional(),
+	premium_since: z
+		.string()
+		.optional()
+		.describe('ISO8601 timestamp of when premium was activated. Deprecated for badge display, use profile_badges'),
+	premium_lifetime_sequence: Int32Type.optional().describe(
+		'Sequence number for lifetime premium. Deprecated for badge display, use profile_badges',
+	),
+	profile_badges: ProfileBadgeListResponse.optional().describe(
+		'Profile badges in display order. Empty when there is nothing to show. Older servers omit it',
+	),
+	operator_pass_since: z
+		.string()
+		.nullish()
+		.describe(
+			'ISO8601 timestamp of when the user got the Operator Pass, or null when absent or hidden. Older servers omit it',
+		),
+	hidden_profile_badge_count: z
+		.number()
+		.int()
+		.optional()
+		.describe('How many of the badges you hold are hidden from other people. Only present on your own profile'),
 	mutual_friends: z.array(UserPartialResponse).optional().describe('Array of mutual friends'),
 	mutual_guilds: z.array(MutualGuildResponse).optional().describe('Array of mutual guilds'),
 	connected_accounts: z.array(ConnectionResponse).optional().describe('Array of verified external connections'),
@@ -606,7 +696,7 @@ export const UserProfileFullResponse = z.object({
 		.boolean()
 		.optional()
 		.describe(
-			'True when the target user has restricted their profile and the viewer does not meet the visibility tier; bio, pronouns, badges, and connected accounts have been stripped.',
+			'True when the target user has restricted their profile and the viewer does not meet the visibility tier. Bio, pronouns, connected accounts, and the premium and Operator Pass badges have been stripped. Staff, partner, and bug hunter badges remain.',
 		),
 });
 

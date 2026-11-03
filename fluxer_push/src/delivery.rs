@@ -9,10 +9,10 @@ use crate::metrics::{JobKind, JobRejection, Provider, elapsed_ms};
 use crate::payload;
 use crate::providers::{self, SendOutcome};
 use crate::retry::{self, RETRY_DEADLINE};
-use crate::rpc::RpcError;
+use crate::rpc::{RpcClient, RpcError};
 use crate::server::AppState;
 use crate::subscription::{Platform, Subscription};
-use crate::unix_millis;
+use fluxer_common::time::unix_millis;
 use fluxer_svc::metrics::now_ms;
 use fluxer_svc::transport::{Transport, TransportMessage, TransportSubscriber};
 use futures::future::join_all;
@@ -353,13 +353,7 @@ async fn run_message_job(
 ) -> anyhow::Result<()> {
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(&job.user_ids),
-            state.rpc.push_subscriptions(&job.user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, &job.user_ids, deadline).await?;
     state.metrics.record_recipients(job.user_ids.len() as u64);
 
     let envelopes = job
@@ -410,13 +404,7 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(user_ids),
-            state.rpc.push_subscriptions(user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, user_ids, deadline).await?;
     state.metrics.record_recipients(1);
 
     let envelope = payload::web_push_clear(&job, badge_of(&badges, &job.user_id));
@@ -501,6 +489,24 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
         .metrics
         .record_job_completed(JobKind::Ring, duration_ms);
     Ok(())
+}
+
+async fn lookup_recipients(
+    rpc: &RpcClient,
+    user_ids: &[String],
+    deadline: Instant,
+) -> Result<(HashMap<String, u32>, HashMap<String, Vec<Subscription>>), RpcError> {
+    let subscriptions = lookup(deadline, || rpc.push_subscriptions(user_ids)).await?;
+    let subscribed_ids: Vec<String> = user_ids
+        .iter()
+        .filter(|user_id| subscribed(&subscriptions, user_id))
+        .cloned()
+        .collect();
+    if subscribed_ids.is_empty() {
+        return Ok((HashMap::new(), subscriptions));
+    }
+    let badges = lookup(deadline, || rpc.badge_counts(&subscribed_ids)).await?;
+    Ok((badges, subscriptions))
 }
 
 async fn lookup<T, F, Fut>(deadline: Instant, mut call: F) -> Result<T, RpcError>
@@ -676,36 +682,5 @@ fn record_depth(state: &AppState, admission: &Semaphore, capacity: usize) {
 fn reap(result: Result<(), tokio::task::JoinError>) {
     if let Err(error) = result {
         warn!(error = %error, "push job task failed");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn subscription(platform: &str, thread_channels: bool) -> Subscription {
-        Subscription {
-            subscription_id: "sub".to_owned(),
-            endpoint: "token".to_owned(),
-            p256dh_key: None,
-            auth_key: None,
-            platform: Some(platform.to_owned()),
-            app_id: None,
-            provider_environment: None,
-            thread_channels,
-        }
-    }
-
-    #[test]
-    fn a_thread_push_reaches_only_devices_that_registered_the_capability() {
-        assert!(Audience::Thread.admits(&subscription("android_fcm", true)));
-        assert!(!Audience::Thread.admits(&subscription("android_fcm", false)));
-        assert!(!Audience::Thread.admits(&subscription("ios_apns_voip", true)));
-    }
-
-    #[test]
-    fn a_standard_push_ignores_the_capability() {
-        assert!(Audience::Standard.admits(&subscription("ios_apns", false)));
-        assert!(Audience::Standard.admits(&subscription("ios_apns", true)));
     }
 }

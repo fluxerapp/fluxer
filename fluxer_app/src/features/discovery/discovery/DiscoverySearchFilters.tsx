@@ -16,28 +16,28 @@ import {type ReactNode, useCallback, useId, useLayoutEffect, useMemo, useRef} fr
 
 const SEARCH_FILTERS_DESCRIPTOR = msg({
 	message: 'Search filters',
-	comment: 'Accessible label for the filter sidebar shown beside the Discovery search results.',
+	comment: 'Accessible label for the filter sidebar shown beside the Explore search results.',
 });
 const CATEGORIES_DESCRIPTOR = msg({
 	message: 'Categories',
-	comment: 'Heading above the category filter list in the Discovery search sidebar.',
+	comment: 'Heading above the category filter list in the Explore search sidebar.',
 });
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
-	comment: 'Label for the all-categories tab in the Discovery page.',
+	comment: 'Label for the all-categories tab in the Explore page.',
 });
 const ALL_LANGUAGES_DESCRIPTOR = msg({
 	message: 'All languages',
-	comment: 'Short label in the discovery page. Keep it concise.',
+	comment: 'Short label in the Explore page. Keep it concise.',
 });
 const FILTER_BY_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Filter by language',
-	comment: 'Short label in the discovery page. Keep it concise.',
+	comment: 'Short label in the Explore page. Keep it concise.',
 });
 const CATEGORY_FILTER_DESCRIPTOR = msg({
 	message: '{categoryLabel}, {count, plural, one {# community} other {# communities}}',
 	comment:
-		'Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.',
+		'Accessible label for a category row in the Explore search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.',
 });
 
 const FILTERS_ENTER_TRANSLATE_Y_PX = 8;

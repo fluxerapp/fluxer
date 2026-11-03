@@ -31,7 +31,7 @@ export function handleMessageReactionAdd(data: MessageReactionAddPayload, _conte
 	if (data.guild_id && data.member) {
 		GuildMembers.hydrateIfMissing(data.guild_id, data.member);
 	}
-	SavedMessages.handleMessageReactionAdd(data.message_id);
+	SavedMessages.handleMessageReactionChange(data.message_id);
 	MessageReactions.handleReactionAdd(data.message_id, data.user_id, emoji);
 	ChannelPins.handleMessageReactionAdd(data.channel_id, data.message_id);
 	ForumPosts.handleReaction(
@@ -41,13 +41,12 @@ export function handleMessageReactionAdd(data: MessageReactionAddPayload, _conte
 		true,
 		data.user_id === Authentication.currentUserId,
 	);
-	MentionFeed.handleMessageReactionAdd(data.message_id);
+	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleReaction({
 		type: 'MESSAGE_REACTION_ADD',
 		channelId: data.channel_id,
 		messageId: data.message_id,
 		userId: data.user_id,
 		emoji,
-		skipReactionStore: true,
 	});
 }

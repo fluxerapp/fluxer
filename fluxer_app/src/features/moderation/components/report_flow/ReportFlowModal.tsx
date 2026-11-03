@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import {
+	BACK_DESCRIPTOR,
+	DONE_DESCRIPTOR,
 	NEXT_DESCRIPTOR,
 	REPORT_MESSAGE_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
@@ -16,10 +17,6 @@ import {type ReportFlowSubmissionTarget, submitReportFlow} from '@app/features/m
 import {
 	ALREADY_REPORTED_MESSAGE_DESCRIPTOR,
 	ALREADY_REPORTED_PROFILE_DESCRIPTOR,
-	BACK_DESCRIPTOR,
-	CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR,
-	CLAIM_TO_REPORT_DESCRIPTOR,
-	DONE_DESCRIPTOR,
 	FINISH_ACCOUNT_SETUP_DESCRIPTOR,
 	FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR,
 	FLOW_OUTDATED_DESCRIPTOR,
@@ -61,7 +58,7 @@ import {
 } from '@app/features/moderation/components/report_flow/ReportFlowWalk';
 import ReportFlows from '@app/features/moderation/state/ReportFlows';
 import {REPORT_USER_PROFILE_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {canSubmitReport, showReportRestrictionDialog} from '@app/features/moderation/utils/ReportVerificationGate';
+import {reportGate, showReportRestrictionDialog} from '@app/features/moderation/utils/ReportVerificationGate';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -72,6 +69,7 @@ import {Spinner} from '@app/features/ui/components/Spinner';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import type {User} from '@app/features/user/models/User';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import type {ReportFlowOption, ReportFlowResponse} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
@@ -144,6 +142,12 @@ function getContextGuildId(context: ReportFlowContext): string | null | undefine
 	return Channels.getChannel(context.message.channelId)?.guildId ?? context.message.guildId;
 }
 
+const REPORT_TIER_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.ACCOUNT_VERIFICATION_REQUIRED,
+	APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED,
+	APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS,
+]);
+
 function isTerminalSubmitFailure(code: string | undefined): boolean {
 	return (
 		code === APIErrorCodes.CONFLICT ||
@@ -168,6 +172,7 @@ function describeSubmitFailure(i18n: I18n, context: ReportFlowContext, error: un
 	}
 	if (
 		code === APIErrorCodes.REPORT_BANNED ||
+		(code !== undefined && REPORT_TIER_CODES.has(code)) ||
 		code === APIErrorCodes.UNKNOWN_MESSAGE ||
 		code === APIErrorCodes.UNKNOWN_USER ||
 		code?.startsWith('CANNOT_REPORT_')
@@ -214,7 +219,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 		const user = getReportedUser(context);
 		return user !== null && !Relationships.isBlocked(user.id) ? user : null;
 	});
-	const accountReady = canSubmitReport();
+	const accountGate = reportGate();
 	if (loadState?.status === 'loaded' && session?.flow !== loadState.flow) {
 		const keepWalk = session !== null && session.flow.revision_hash === loadState.flow.revision_hash;
 		setSession({
@@ -286,10 +291,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 	}, [targetType, locale]);
 	const handleSubmit = useCallback(async () => {
 		if (session === null || session.walk.phase !== 'summary') return;
-		if (!canSubmitReport()) {
-			showReportRestrictionDialog();
-			return;
-		}
+		if (showReportRestrictionDialog()) return;
 		setSubmitting(true);
 		setSubmitNote(null);
 		const submission = submitReportFlow(toSubmissionTarget(context), session.flow, session.walk.steps);
@@ -306,13 +308,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 				void ReportFlows.restart(targetType, SURFACE, locale);
 				return;
 			}
-			if (
-				code === APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED ||
-				code === APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS
-			) {
-				showReportRestrictionDialog();
-				return;
-			}
+			if (code !== undefined && REPORT_TIER_CODES.has(code) && showReportRestrictionDialog()) return;
 			setSubmitClosed(isTerminalSubmitFailure(code));
 			setSubmitNote(describeSubmitFailure(i18n, context, error));
 		} finally {
@@ -410,7 +406,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 							preview={preview}
 							data-flx="moderation.report-flow.report-flow-modal.render-body.report-flow-summary"
 						/>
-						{!accountReady && (
+						{!accountGate.allowed && (
 							<div
 								className={styles.accountNotice}
 								data-flx="moderation.report-flow.report-flow-modal.render-body.account-notice"
@@ -425,11 +421,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 									className={styles.accountNoticeText}
 									data-flx="moderation.report-flow.report-flow-modal.render-body.account-notice-text"
 								>
-									{i18n._(
-										RuntimeConfig.usesUsernameSignIn
-											? CLAIM_TO_REPORT_DESCRIPTOR
-											: CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR,
-									)}
+									{accountGateReason(i18n, accountGate)}
 								</span>
 								<div
 									className={styles.accountNoticeActions}
@@ -564,7 +556,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 								variant="danger"
 								onClick={handleSubmit}
 								submitting={submitting || walk?.phase === 'thanks'}
-								disabled={!accountReady}
+								disabled={!accountGate.allowed}
 								data-flx="moderation.report-flow.report-flow-modal.render-footer.button.submit"
 							>
 								{i18n._(SUBMIT_REPORT_DESCRIPTOR)}
@@ -575,17 +567,10 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 			case 'notice':
 			case 'thanks':
 				return (
-					<Modal.Footer
-						stretchButtons
-						data-flx="moderation.report-flow.report-flow-modal.render-footer.modal-footer--4"
-					>
-						<Button
-							onClick={closeModal}
-							data-flx="moderation.report-flow.report-flow-modal.render-footer.button.close-modal--2"
-						>
-							{i18n._(DONE_DESCRIPTOR)}
-						</Button>
-					</Modal.Footer>
+					<Modal.DismissFooter
+						label={i18n._(DONE_DESCRIPTOR)}
+						data-flx="moderation.report-flow.report-flow-modal.render-footer.dismiss-footer"
+					/>
 				);
 		}
 	};

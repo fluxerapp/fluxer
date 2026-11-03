@@ -5,7 +5,6 @@
 
 -export([
     handle_join_internal/7,
-    handle_join_async/5,
     handle_session_down/2,
     handle_disconnect_user/4,
     handle_leave/2,
@@ -111,22 +110,6 @@ monitor_session_entry(Sessions, SessionId, UserId, SessionPid) ->
     end,
     SessionRef = monitor(process, SessionPid),
     Sessions#{SessionId => {UserId, SessionPid, SessionRef}}.
-
--spec handle_join_async(integer(), map(), binary(), pid(), map()) -> {noreply, map()}.
-handle_join_async(
-    UserId, VoiceState, SessionId, SessionPid, #{channel_id := ChannelId} = State
-) ->
-    case join_violation(UserId, VoiceState, undefined, State) of
-        {error, ErrorAtom} ->
-            SessionPid ! {call_join_result, ChannelId, {error, ErrorAtom}},
-            {noreply, State};
-        ok ->
-            FinalState = admit_join(
-                UserId, VoiceState, SessionId, SessionPid, undefined, State
-            ),
-            SessionPid ! {call_join_result, ChannelId, {ok, FinalState}},
-            {noreply, FinalState}
-    end.
 
 -spec maybe_remove_user_voice_state(integer(), map(), map()) -> map().
 maybe_remove_user_voice_state(UserId, RemainingSessions, VoiceStates) ->

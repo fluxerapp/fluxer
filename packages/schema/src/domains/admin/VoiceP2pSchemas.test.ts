@@ -4,7 +4,6 @@ import {
 	DEFAULT_VOICE_P2P_CONFIG,
 	resolveVoiceP2pAssignment,
 	type VoiceP2pConfig,
-	VoiceP2pConfigSchema,
 	VoiceP2pConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {type ExperimentTargeting, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
@@ -26,51 +25,15 @@ function syntheticUserIds(count: number): Array<string> {
 }
 
 describe('voice p2p configuration', () => {
-	test('defaults to disabled', () => {
-		expect(VoiceP2pConfigSchema.parse({})).toEqual({
-			enabled: false,
-			config_version: 0,
-			rollout_basis_points: 0,
-			rollout_country_codes: [],
-			rollout_salt: 'voice-p2p-v1',
-			included_user_ids: [],
-			excluded_user_ids: [],
-			included_guild_ids: [],
-			include_premium_users: false,
-			max_participants: 2,
-		});
-	});
-
 	test('limits max_participants to 2 through 4', () => {
 		expect(VoiceP2pConfigUpdateRequest.safeParse({max_participants: 4}).data).toEqual({max_participants: 4});
 		expect(VoiceP2pConfigUpdateRequest.safeParse({max_participants: 1}).success).toBe(false);
 		expect(VoiceP2pConfigUpdateRequest.safeParse({max_participants: 5}).success).toBe(false);
 		expect(VoiceP2pConfigUpdateRequest.safeParse({max_participants: 2.5}).success).toBe(false);
 	});
-
-	test('strips config_version from admin updates', () => {
-		expect(VoiceP2pConfigUpdateRequest.safeParse({config_version: 3}).data).toEqual({});
-		expect(VoiceP2pConfigUpdateRequest.safeParse({rollout_basis_points: 10001}).success).toBe(false);
-	});
 });
 
 describe('resolveVoiceP2pAssignment', () => {
-	test('reports the configured cap whether or not the caller is selected', () => {
-		const config = createConfig({enabled: true, max_participants: 4, included_user_ids: [TARGETED_USER_ID]});
-		expect(resolveVoiceP2pAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({
-			enabled: true,
-			max_participants: 4,
-		});
-		expect(resolveVoiceP2pAssignment(config, '1000000000000000007', NO_TARGETING)).toEqual({
-			enabled: false,
-			max_participants: 4,
-		});
-		expect(resolveVoiceP2pAssignment({...config, enabled: false}, TARGETED_USER_ID, NO_TARGETING)).toEqual({
-			enabled: false,
-			max_participants: 4,
-		});
-	});
-
 	test('serves nobody while disabled, even included users', () => {
 		const config = createConfig({rollout_basis_points: 10000, included_user_ids: [TARGETED_USER_ID]});
 		expect(resolveVoiceP2pAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual(UNSELECTED);

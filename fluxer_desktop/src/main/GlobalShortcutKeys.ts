@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PUNCTUATION_KEY_CODES} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
+
 const EVDEV_KEY_CODES: ReadonlyMap<number, string> = new Map([
 	[0x001, 'Escape'],
 	[0x002, 'Digit1'],
@@ -557,32 +559,6 @@ const MACOS_KEY_CODES: ReadonlyMap<number, string> = new Map([
 const X11_KEYCODE_OFFSET = 8;
 const WINDOWS_EXTENDED_SCAN_PREFIX = 0xe000;
 
-const PUNCTUATION_KEY_CODES: Readonly<Record<string, string>> = {
-	' ': 'Space',
-	'-': 'Minus',
-	_: 'Minus',
-	'=': 'Equal',
-	'+': 'Equal',
-	',': 'Comma',
-	'<': 'Comma',
-	'.': 'Period',
-	'>': 'Period',
-	';': 'Semicolon',
-	':': 'Semicolon',
-	"'": 'Quote',
-	'"': 'Quote',
-	'/': 'Slash',
-	'?': 'Slash',
-	'\\': 'Backslash',
-	'|': 'Backslash',
-	'[': 'BracketLeft',
-	'{': 'BracketLeft',
-	']': 'BracketRight',
-	'}': 'BracketRight',
-	'`': 'Backquote',
-	'~': 'Backquote',
-};
-
 const NAMED_KEY_CODES: Readonly<Record<string, string>> = {
 	Spacebar: 'Space',
 	Esc: 'Escape',
@@ -641,25 +617,6 @@ export function windowsKeyToDomCode(scanCode: number, extended: boolean, virtual
 
 export function macosKeycodeToDomCode(keycode: number): string | null {
 	return MACOS_KEY_CODES.get(keycode) ?? null;
-}
-
-function isPrintableShortcutKey(key: string | null | undefined): key is string {
-	if (!key) return false;
-	if (key === 'Dead' || key === 'Unidentified' || key === 'Process') return false;
-	return key.length === 1;
-}
-
-export function shouldPreferLayoutKey(combo: {key: string; code?: string}): boolean {
-	if (!isPrintableShortcutKey(combo.key)) return false;
-	return !(combo.code && /^Numpad/.test(combo.code));
-}
-
-export function hookKeyNameForLayoutKey(key: string): string | null {
-	if (key.length !== 1) return null;
-	const punctuation = PUNCTUATION_KEY_CODES[key];
-	if (punctuation) return punctuation;
-	const upper = key.toUpperCase();
-	return /^[A-Z0-9]$/.test(upper) ? upper : null;
 }
 
 export function hookKeyNameToDomCode(name: string): string | null {

@@ -39,6 +39,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
 import {TextInput} from '@app/features/ui/components/form/FormInput';
+import {ArrowLeftIcon, ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {flxElementClassName} from '@app/lib/react';
 import type {DesktopKnownInstanceRecord} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
@@ -47,7 +48,7 @@ import {officialMarketingOrigin} from '@fluxer/instance_bootstrap/src/OfficialIn
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, ArrowRightIcon, GlobeIcon} from '@phosphor-icons/react';
+import {GlobeIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {
 	type AriaAttributes,
@@ -321,7 +322,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 		[discoveryRequestOwner, onChange, updateDiscoveryStatus],
 	);
 	const handleSelectOfficial = useCallback(() => {
-		const origin = officialMarketingOrigin(Config.PUBLIC_RELEASE_CHANNEL);
+		const origin = officialMarketingOrigin(Config.RELEASE_CHANNEL);
 		onChange(origin);
 		startDiscovery(origin, false);
 	}, [onChange, startDiscovery]);

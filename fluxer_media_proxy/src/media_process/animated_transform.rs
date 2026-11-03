@@ -7,6 +7,7 @@ use super::{
     MediaError, native_animated_frame_limit, native_buffer_to_media_bytes, native_status_error,
 };
 use crate::{
+    constants,
     image_transform::ImageOptions,
     media_limits::MediaLimits,
     metrics::transform::TransformMetrics,
@@ -50,19 +51,19 @@ pub(super) fn try_decode_heif_primary_still(
         NativeStatus::Ok if image.is_some() => {}
         NativeStatus::Ok | NativeStatus::Unsupported | NativeStatus::CodecFailure => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Ok(None);
         }
         status => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Err(native_status_error(status, MediaError::MediaDecodeFailed)
                 .expect("non-success native status must map to an error"));
         }
     }
-    metrics.record_heif_primary_still_decode();
+    metrics.avif_libheif_decode_count.inc();
     if facts.hdr_gain_map_detected != 0 {
-        metrics.record_heif_hdr_gain_map_detected();
+        metrics.heif_hdr_gain_map_count.inc();
     }
     let image = image.ok_or(MediaError::MediaDecodeFailed)?;
     Ok(Some(DecodedHEIFPrimaryStill {
@@ -174,6 +175,15 @@ pub(super) fn decode_heif_sequence(
 pub(super) struct GifResizeDims {
     pub(super) width: c_int,
     pub(super) height: c_int,
+}
+
+impl GifResizeDims {
+    pub(super) fn fits_work_budget(self, frames: c_int) -> bool {
+        (self.width as usize)
+            .saturating_mul(self.height as usize)
+            .saturating_mul(frames.max(1) as usize)
+            <= constants::MAX_ANIMATED_OUTPUT_PIXELS
+    }
 }
 
 pub(super) fn gif_resize_dims(

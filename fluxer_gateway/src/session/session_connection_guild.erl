@@ -9,10 +9,7 @@
     handle_guild_connect_timeout/4,
     handle_guild_connect_worker_down/3,
     maybe_spawn_guild_connect/5,
-    finalize_guild_connection/4,
-    repair_stalled_guild_connects/1,
-    do_guild_connect/1,
-    handle_result_internal/4
+    repair_stalled_guild_connects/1
 ]).
 
 -export_type([session_state/0, guild_id/0, attempt/0, guild_connect_result/0, session_result/0]).
@@ -31,6 +28,15 @@
     | {ok_unavailable, pid(), map()}
     | {ok_cached_unavailable, map()}
     | {error, term()}.
+
+-type connect_worker_request() :: #{
+    guild_id := guild_id(),
+    attempt := attempt(),
+    session_id := binary(),
+    user_id := integer(),
+    bot := boolean(),
+    is_staff := boolean()
+}.
 
 -type session_result() :: {noreply, session_state()} | {stop, normal, session_state()}.
 
@@ -77,31 +83,26 @@ try_acquire_and_spawn(GuildId, Attempt, SessionId, UserId, Inflight0, State) ->
             erlang:send_after(50 + Jitter, self(), {guild_connect, GuildId, Attempt}),
             {noreply, State};
         ok ->
-            spawn_guild_connect_worker(
-                GuildId, Attempt, SessionId, UserId, Bot, IsStaff, Inflight0, State
-            )
+            Request = #{
+                guild_id => GuildId,
+                attempt => Attempt,
+                session_id => SessionId,
+                user_id => UserId,
+                bot => Bot,
+                is_staff => IsStaff
+            },
+            spawn_guild_connect_worker(Request, Inflight0, State)
     end.
 
--spec spawn_guild_connect_worker(
-    guild_id(),
-    attempt(),
-    binary(),
-    integer(),
-    boolean(),
-    boolean(),
-    map(),
-    session_state()
-) -> {noreply, session_state()}.
-spawn_guild_connect_worker(GuildId, Attempt, SessionId, UserId, Bot, IsStaff, Inflight0, State) ->
+-spec spawn_guild_connect_worker(connect_worker_request(), map(), session_state()) ->
+    {noreply, session_state()}.
+spawn_guild_connect_worker(
+    #{guild_id := GuildId, attempt := Attempt} = Request, Inflight0, State
+) ->
     Inflight = Inflight0#{GuildId => Attempt},
-    Ctx = #{
+    Ctx = Request#{
+        visit => session_visits:connect_fields(GuildId, State),
         session_pid => self(),
-        guild_id => GuildId,
-        attempt => Attempt,
-        session_id => SessionId,
-        user_id => UserId,
-        bot => Bot,
-        is_staff => IsStaff,
         initial_guild_id => maps:get(initial_guild_id, State, undefined),
         user_data => maps:get(user_data, State, #{}),
         thread_channels_capable => maps:get(thread_channels_capable, State, false)
@@ -191,8 +192,7 @@ expire_guild_connect(GuildId, Attempt, State) ->
     session_connection_retry:retry_or_fail(
         GuildId,
         Attempt,
-        State1,
-        fun session_ready:mark_guild_unavailable/2
+        State1
     ).
 
 -spec handle_guild_connect_worker_down(reference(), term(), session_state()) ->
@@ -227,8 +227,7 @@ fail_dead_guild_connect_worker(GuildId, Attempt, Reason, State) ->
             Result = session_connection_retry:retry_or_fail(
                 GuildId,
                 Attempt,
-                State1,
-                fun session_ready:mark_guild_unavailable/2
+                State1
             ),
             {guild_connect_worker, Result};
         _Other ->
@@ -294,19 +293,18 @@ put_guild_connect_workers(Workers, State) ->
     guild_id(), attempt(), guild_connect_result(), session_state()
 ) -> session_result().
 handle_result_internal(GuildId, _, {ok_unavailable, GuildPid, Resp}, State) ->
-    ReadyFun = fun(St) ->
-        session_ready:process_guild_state(Resp, St)
-    end,
-    finalize_guild_connection(GuildId, GuildPid, State, ReadyFun);
+    finalize_guild_connection(GuildId, GuildPid, State, Resp);
 handle_result_internal(GuildId, Attempt, {ok_cached_unavailable, _}, State) ->
     session_connection_unavailability:mark_cached_guild_unavailable_and_retry(
         GuildId, Attempt, State
     );
-handle_result_internal(GuildId, _, {ok, GuildPid, GuildState}, State) ->
-    ReadyFun = fun(St) ->
-        session_ready:process_guild_state(GuildState, St)
-    end,
-    finalize_guild_connection(GuildId, GuildPid, State, ReadyFun);
+handle_result_internal(GuildId, _, {ok, GuildPid, GuildState}, State0) ->
+    case session_visits:accept_connect(GuildId, GuildPid, GuildState, State0) of
+        {accept, State} ->
+            finalize_guild_connection(GuildId, GuildPid, State, GuildState);
+        {drop, State} ->
+            session_ready:check_readiness(State)
+    end;
 handle_result_internal(GuildId, Attempt, {error, Reason}, State) ->
     handle_result_error(GuildId, Attempt, Reason, State).
 
@@ -315,6 +313,8 @@ handle_result_internal(GuildId, Attempt, {error, Reason}, State) ->
 ) -> session_result().
 handle_result_error(GuildId, Attempt, not_member, State) ->
     handle_not_member(GuildId, Attempt, State);
+handle_result_error(GuildId, _Attempt, {visit_rejected, _Reason}, State) ->
+    session_visits:handle_rejected(GuildId, State);
 handle_result_error(GuildId, Attempt, {session_connect_failed, Reason}, State) ->
     log_and_retry(
         "guild_session_connect_failed", GuildId, Attempt, Reason, State
@@ -418,8 +418,7 @@ log_and_retry(Msg, GuildId, Attempt, Reason, State) ->
     session_connection_retry:retry_or_fail(
         GuildId,
         Attempt,
-        State,
-        fun session_ready:mark_guild_unavailable/2
+        State
     ).
 
 -spec log_connect_failed(
@@ -434,34 +433,31 @@ log_connect_failed(Msg, GuildId, Attempt, Reason, State) ->
         [GuildId, UserId, Attempt, Reason]
     ).
 
--spec finalize_guild_connection(guild_id(), pid(), session_state(), fun(
-    (session_state()) -> {noreply, session_state()} | {stop, normal, session_state()}
-)) -> {noreply, session_state()} | {stop, normal, session_state()}.
-finalize_guild_connection(GuildId, GuildPid, State, ReadyFun) ->
+-spec finalize_guild_connection(guild_id(), pid(), session_state(), map()) -> session_result().
+finalize_guild_connection(GuildId, GuildPid, State, GuildState) ->
     Guilds0 = maps:get(guilds, State),
     case maps:find(GuildId, Guilds0) of
         {ok, {Pid, _}} when is_pid(Pid) -> {noreply, State};
-        _ -> finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun)
+        _ -> finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, GuildState)
     end.
 
--spec finalize_guild_monitor(guild_id(), pid(), map(), session_state(), fun(
-    (session_state()) -> {noreply, session_state()} | {stop, normal, session_state()}
-)) -> {noreply, session_state()} | {stop, normal, session_state()}.
-finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun) ->
+-spec finalize_guild_monitor(guild_id(), pid(), map(), session_state(), map()) ->
+    session_result().
+finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, GuildState) ->
     MonitorRef = monitor(process, GuildPid),
     Guilds = Guilds0#{GuildId => {GuildPid, MonitorRef}},
     ok = session_lifecycle:send_guild_push_hold({GuildPid, MonitorRef}, State),
-    apply_ready_fun(GuildId, GuildPid, ReadyFun, State#{guilds => Guilds}).
+    process_ready_guild(GuildId, GuildPid, GuildState, State#{guilds => Guilds}).
 
--spec apply_ready_fun(
+-spec process_ready_guild(
     guild_id(),
     pid(),
-    fun((session_state()) -> session_result()),
+    map(),
     session_state()
 ) -> session_result().
-apply_ready_fun(GuildId, GuildPid, ReadyFun, State) ->
+process_ready_guild(GuildId, GuildPid, GuildState, State) ->
     State1 = session_guild_health:forget(GuildId, State),
-    case ReadyFun(State1) of
+    case session_ready:process_guild_state(GuildState, State1) of
         {noreply, ReadyState} ->
             ok = guild_health:send_current(GuildPid, self()),
             ReplayedState = maybe_replay_guild_subscriptions(GuildId, GuildPid, ReadyState),

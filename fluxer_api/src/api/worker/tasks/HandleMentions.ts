@@ -227,7 +227,7 @@ async function enqueueGuildMentionSourcePages({
 const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 	const validated = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload: validated}, 'Processing handleMentions task');
-	const {channelRepository, gatewayService, userRepository} = getWorkerDependencies();
+	const {channelRepository, gatewayService} = getWorkerDependencies();
 	const authorId = createUserID(BigInt(validated.authorId));
 	const channelId = createChannelID(BigInt(validated.channelId));
 	const messageId = createMessageID(BigInt(validated.messageId));
@@ -249,11 +249,7 @@ const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 	const userIds =
 		validated.mentionUserIds?.map((userId) => createUserID(BigInt(userId))) ?? Array.from(message.mentionedUserIds);
 	if (channel.guildId) {
-		const threadScope = await ThreadMentionScope.load(
-			{channelRepository, gatewayService, userRepository},
-			channel,
-			messageId,
-		);
+		const threadScope = await ThreadMentionScope.load({channelRepository, gatewayService}, channel, messageId);
 		const result = await enqueueGuildMentionSourcePages({
 			gatewayService,
 			guildId: channel.guildId,

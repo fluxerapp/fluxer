@@ -124,20 +124,12 @@
 
 .miniGuildIconWithInitials {
 	background-color: var(--folder-mini-surface);
-}
-
-.miniGuildInitials {
-	font-size: 0.5rem;
-	font-weight: 600;
 	color: var(--text-primary);
-	line-height: 1;
-	text-align: center;
-	white-space: nowrap;
 }
 
 .folderBadge {
 	position: absolute;
-	right: -0.25rem;
+	inset-inline-end: -0.25rem;
 	bottom: -0.25rem;
 	z-index: 2;
 	pointer-events: auto;
@@ -277,10 +269,10 @@
 
 :global(.theme-light) .dropIndicatorTop::before,
 :global(.theme-light) .dropIndicatorBottom::after {
-	background: var(--brand-primary);
+	background: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .dropIndicatorInside .collapsedFolder,
 :global(.theme-light) .dropIndicatorInside .folderHeaderButton {
-	outline-color: var(--brand-primary);
+	outline-color: var(--brand-primary-foreground);
 }

@@ -4,8 +4,10 @@ import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCom
 import {DiscoveryGuildPreviewModal} from '@app/features/discovery/components/modals/DiscoveryGuildPreviewModal';
 import styles from '@app/features/discovery/discovery/DiscoveryGuildCard.module.css';
 import {resolveBannerTintClassName} from '@app/features/discovery/utils/DiscoveryBannerTint';
+import {visitFromDiscovery} from '@app/features/guild/commands/GuildVisitCommands';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
+import Guilds from '@app/features/guild/state/Guilds';
 import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {DiscoveryGuildContextMenu} from '@app/features/ui/action_menu/DiscoveryGuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -23,16 +25,17 @@ import {useCallback, useId, useMemo} from 'react';
 
 const NO_DESCRIPTION_PROVIDED_DESCRIPTOR = msg({
 	message: 'No description.',
-	comment: 'Empty-state text in the discovery guild card.',
+	comment: 'Empty-state text in the Explore community card.',
 });
 const ONLINE_DESCRIPTOR = msg({
 	message: '{onlineCount} online',
-	comment: 'Short label in the discovery guild card. Keep it concise. Preserve {onlineCount}; it is inserted by code.',
+	comment:
+		'Short label in the Explore community card. Keep it concise. Preserve {onlineCount}; it is inserted by code.',
 });
 const PREVIEW_NAMED_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Preview {communityName}',
 	comment:
-		'Accessible label for a Discovery community card, which opens a preview of the community. {communityName} is the public community name.',
+		'Accessible label for a community card in Explore, which opens a preview of the community. {communityName} is the public community name.',
 });
 
 const DISCOVERY_NAME_BADGE_IGNORED_FEATURES = new Set<string>([GuildFeatures.DISCOVERABLE]);
@@ -63,15 +66,21 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({
 		return AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}) || null;
 	}, [guild.banner, guild.id]);
 	const handleActivate = useCallback(() => {
-		ModalCommands.pushWithKey(
-			modal(() => (
-				<DiscoveryGuildPreviewModal
-					guild={guild}
-					data-flx="discovery.discovery.discovery-guild-card.handle-activate.discovery-guild-preview-modal"
-				/>
-			)),
-			`discovery-guild-preview-${guild.id}`,
-		);
+		const openPreview = () =>
+			ModalCommands.pushWithKey(
+				modal(() => (
+					<DiscoveryGuildPreviewModal
+						guild={guild}
+						data-flx="discovery.discovery.discovery-guild-card.handle-activate.discovery-guild-preview-modal"
+					/>
+				)),
+				`discovery-guild-preview-${guild.id}`,
+			);
+		if (guild.visits_enabled === true || Guilds.getGuild(guild.id)?.visiting === true) {
+			void visitFromDiscovery(guild.id, openPreview);
+			return;
+		}
+		openPreview();
 	}, [guild]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
@@ -134,6 +143,8 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({
 							</span>
 							<GuildBadge
 								features={nameBadgeFeatures}
+								badgeIds={guild.badge_ids}
+								expandable={false}
 								tooltipPosition="bottom"
 								data-flx="discovery.discovery.discovery-guild-card.guild-badge"
 							/>

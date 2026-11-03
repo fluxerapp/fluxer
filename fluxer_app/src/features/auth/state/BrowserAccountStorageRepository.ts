@@ -88,7 +88,7 @@ export class BrowserAccountStorageRepository {
 		);
 	}
 
-	private async listRaw(): Promise<Array<unknown>> {
+	async listRaw(): Promise<Array<unknown>> {
 		const database = await this.openStore();
 		if (database instanceof BrowserAccountFallbackStore) {
 			return database.list();

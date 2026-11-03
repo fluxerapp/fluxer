@@ -62,7 +62,6 @@ impl Store {
         &self,
         bucket: &str,
         key: &str,
-        max_bytes: usize,
     ) -> Result<HeadResult, StorageError> {
         let path = self.local_path(bucket, key).await?;
         let metadata = tokio::fs::symlink_metadata(&path)
@@ -70,9 +69,6 @@ impl Store {
             .map_err(map_not_found)?;
         if !metadata.is_file() {
             return Err(StorageError::NotFound);
-        }
-        if metadata.len() > max_bytes as u64 {
-            return Err(StorageError::StreamTooLong);
         }
         Ok(HeadResult {
             content_length: metadata.len(),
@@ -86,9 +82,6 @@ impl Store {
     ) -> Result<StreamObject, StorageError> {
         let path = self.local_path(plan.bucket, plan.key).await?;
         let (mut file, metadata) = open_local_read_file(&path).await?;
-        if metadata.len() > plan.max_bytes as u64 {
-            return Err(StorageError::StreamTooLong);
-        }
         let total_len = usize::try_from(metadata.len()).map_err(|_| StorageError::StreamTooLong)?;
         let byte_range = match plan.range {
             StreamRange::Full => None,
@@ -138,6 +131,7 @@ impl Store {
         })
     }
 
+    #[cfg(test)]
     pub(super) async fn write_local(
         &self,
         bucket: &str,

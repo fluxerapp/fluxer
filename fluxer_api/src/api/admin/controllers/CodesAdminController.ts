@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
@@ -11,6 +12,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {CodesResponse, GenerateGiftCodesRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
 function trimTrailingSlash(value: string): string {
@@ -27,7 +29,7 @@ export function CodesAdminController(app: HonoApp) {
 			operationId: 'create_admin_gift_codes',
 			summary: 'Issue gift codes',
 			description:
-				'Create one-use premium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.',
+				'Create one-use premium gift codes and return their complete redemption links. Use a positive duration, or on a self-hosted instance the duration type lifetime for premium that never ends. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.',
 			responseSchema: CodesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -39,23 +41,24 @@ export function CodesAdminController(app: HonoApp) {
 			}
 			const adminService = ctx.get('adminService');
 			const {count, duration_type, duration_quantity} = ctx.req.valid('json');
+			if (duration_type === 'lifetime' && !Config.instance.selfHosted) {
+				throw InputValidationError.create('duration_type', 'Lifetime gift codes are only for self-hosted instances');
+			}
 			const codes = await adminService.codeGenerationService.generateGiftCodes({
 				count,
 				durationType: duration_type,
 				durationQuantity: duration_quantity,
 				createdByUserId: Config.instance.selfHosted ? ctx.get('adminUserId') : SYSTEM_USER_ID,
 			});
-			await adminService.auditService.createAuditLog({
-				adminUserId: ctx.get('adminUserId'),
+			await recordAdminWrite(ctx, {
 				targetType: 'gift_code',
 				targetId: BigInt(0),
 				action: 'generate_gift_codes',
-				auditLogReason: ctx.get('auditLogReason'),
-				metadata: new Map([
-					['count', codes.length.toString()],
-					['duration_type', duration_type],
-					['duration_quantity', duration_quantity.toString()],
-				]),
+				metadata: {
+					count: codes.length.toString(),
+					duration_type: duration_type,
+					duration_quantity: duration_quantity.toString(),
+				},
 			});
 			const baseUrl = trimTrailingSlash(Config.endpoints.gift);
 			return ctx.json({

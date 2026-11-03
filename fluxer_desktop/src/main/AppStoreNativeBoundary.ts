@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import type {
 	AppStoreAccount,
 	AppStoreAccountCompareAndSwapRequest,
@@ -70,7 +71,7 @@ function describeAddonLoadFailure(error: unknown): string {
 	if (error == null) {
 		return 'the app store addon did not export a binding';
 	}
-	const message = error instanceof Error ? error.message : String(error);
+	const message = errorMessage(error);
 	const reason = /^reason=(.+)$/mu.exec(message)?.[1]?.trim();
 	const summary = (reason ?? message.split('\n')[0] ?? '').trim();
 	if (summary.length === 0) {

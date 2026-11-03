@@ -3,11 +3,10 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
-import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, it} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
 
 describe('Group DM nickname update', () => {
 	let harness: ApiTestHarness;
@@ -16,9 +15,6 @@ describe('Group DM nickname update', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
-	});
-	afterEach(() => {
-		profileSubstringBlocklistCache.remove('nickname', 'blockedslug');
 	});
 	afterAll(async () => {
 		await harness?.shutdown();

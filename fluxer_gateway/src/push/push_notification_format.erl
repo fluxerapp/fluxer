@@ -4,28 +4,21 @@
 -typing([eqwalizer]).
 
 -export([
-    build_content_preview/1,
     build_content_preview/2,
     build_markdown_context/4,
     resolve_author_name/3,
     resolve_author_avatar_url/1,
-    extract_image_url/1,
     build_url/3,
     truncate_bytes/2
 ]).
 
 -define(MAX_MENTIONS_FOR_PUSH, 50).
 -define(MAX_PREVIEW_BYTES, 100).
--define(MAX_IMAGE_URL_BYTES, 1024).
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
 -define(CHANNEL_TYPE_GUILD_ANNOUNCEMENT, 5).
 -define(CHANNEL_TYPE_GUILD_LINK, 998).
-
--spec build_content_preview(map()) -> binary().
-build_content_preview(MessageData) ->
-    build_content_preview(MessageData, #{}).
 
 -spec build_content_preview(map(), map()) -> binary().
 build_content_preview(MessageData, MarkdownContext) ->
@@ -150,7 +143,7 @@ user_nicknames(_MessageData, _GuildId, GuildData) ->
 
 -spec guild_user_nicknames(map()) -> map().
 guild_user_nicknames(GuildData) when is_map(GuildData) ->
-    maps:fold(fun put_member_nickname/3, #{}, guild_data_index:member_map(GuildData));
+    maps:fold(fun put_member_nickname/3, #{}, guild_data_index_members:member_map(GuildData));
 guild_user_nicknames(_GuildData) ->
     #{}.
 
@@ -289,7 +282,7 @@ maybe_prepend_snowflake(IdBin, Acc) ->
 channel_names_from_guild_data([], _GuildData) ->
     #{};
 channel_names_from_guild_data(ChannelIds, GuildData) when is_map(GuildData) ->
-    ChannelIndex = guild_data_index:channel_index(GuildData),
+    ChannelIndex = guild_data_index_channels:channel_index(GuildData),
     lists:foldl(
         fun(ChannelId, Acc) -> put_index_channel_name(ChannelId, ChannelIndex, Acc) end,
         #{},
@@ -512,112 +505,6 @@ format_name_list(Names) ->
     Prefix = join_binary(lists:reverse(ReversedRest), <<", ">>),
     iolist_to_binary([Prefix, <<", and ">>, Last]).
 
--spec extract_image_url(map()) -> binary() | undefined.
-extract_image_url(MessageData) ->
-    bounded_image_url(resolve_image_url(MessageData)).
-
--spec resolve_image_url(map()) -> binary() | undefined.
-resolve_image_url(MessageData) ->
-    case extract_attachment_image_url(maps:get(<<"attachments">>, MessageData, [])) of
-        undefined -> extract_embed_image_url(maps:get(<<"embeds">>, MessageData, []));
-        ImageUrl -> ImageUrl
-    end.
-
--spec bounded_image_url(binary() | undefined) -> binary() | undefined.
-bounded_image_url(ImageUrl) when
-    is_binary(ImageUrl), byte_size(ImageUrl) =< ?MAX_IMAGE_URL_BYTES
-->
-    ImageUrl;
-bounded_image_url(_ImageUrl) ->
-    undefined.
-
--spec extract_attachment_image_url(term()) -> binary() | undefined.
-extract_attachment_image_url([Attachment | Rest]) when is_map(Attachment) ->
-    case check_media_safe_url(Attachment) of
-        {ok, Url} -> Url;
-        unsafe -> extract_attachment_image_url(Rest)
-    end;
-extract_attachment_image_url([_ | Rest]) ->
-    extract_attachment_image_url(Rest);
-extract_attachment_image_url(_) ->
-    undefined.
-
--spec extract_embed_image_url(term()) -> binary() | undefined.
-extract_embed_image_url([Embed | Rest]) when is_map(Embed) ->
-    case first_embed_media_url(Embed) of
-        undefined -> extract_embed_image_url(Rest);
-        Url -> Url
-    end;
-extract_embed_image_url([_ | Rest]) ->
-    extract_embed_image_url(Rest);
-extract_embed_image_url(_) ->
-    undefined.
-
--spec first_embed_media_url(map()) -> binary() | undefined.
-first_embed_media_url(Embed) ->
-    Candidates = [
-        maps:get(<<"image">>, Embed, undefined),
-        maps:get(<<"thumbnail">>, Embed, undefined)
-    ],
-    first_embed_media_url_from_candidates(Candidates).
-
--spec first_embed_media_url_from_candidates(list()) -> binary() | undefined.
-first_embed_media_url_from_candidates([Media | Rest]) when is_map(Media) ->
-    case check_media_safe_url(Media) of
-        {ok, Url} -> Url;
-        unsafe -> first_embed_media_url_from_candidates(Rest)
-    end;
-first_embed_media_url_from_candidates([_ | Rest]) ->
-    first_embed_media_url_from_candidates(Rest);
-first_embed_media_url_from_candidates([]) ->
-    undefined.
-
--spec check_media_safe_url(map()) -> {ok, binary()} | unsafe.
-check_media_safe_url(Media) ->
-    ProxyUrl = maps:get(<<"proxy_url">>, Media, undefined),
-    FallbackUrl = maps:get(<<"url">>, Media, undefined),
-    Url = push_utils:normalize_binary(
-        case ProxyUrl of
-            undefined -> FallbackUrl;
-            _ -> ProxyUrl
-        end
-    ),
-    DefaultCT = maps:get(<<"content_type">>, Media, <<>>),
-    ContentType = push_utils:normalize_binary(DefaultCT),
-    Flags = bitset:parse_maybe(
-        maps:get(<<"flags">>, Media, 0)
-    ),
-    Nsfw = maps:get(<<"nsfw">>, Media, false),
-    case is_safe_media_url(Url, ContentType, Flags, Nsfw) of
-        true when is_binary(Url) -> {ok, Url};
-        _ -> unsafe
-    end.
-
--spec is_safe_media_url(
-    binary() | undefined,
-    binary() | undefined,
-    integer() | undefined,
-    term()
-) ->
-    boolean().
-is_safe_media_url(undefined, _ContentType, _Flags, _Nsfw) ->
-    false;
-is_safe_media_url(_Url, undefined, _Flags, _Nsfw) ->
-    false;
-is_safe_media_url(_Url, _ContentType, undefined, _Nsfw) ->
-    false;
-is_safe_media_url(Url, ContentType, Flags, Nsfw) when is_binary(Url), is_binary(ContentType) ->
-    IsImage = binary:match(lowercase_binary(ContentType), <<"image/">>) =/= nomatch,
-    IsSensitive = is_sensitive_media(Nsfw, Flags),
-    IsHttps = binary:match(lowercase_binary(Url), <<"https://">>) =:= {0, 8},
-    IsImage andalso not IsSensitive andalso IsHttps.
-
--spec is_sensitive_media(term(), integer()) -> boolean().
-is_sensitive_media(true, _Flags) ->
-    true;
-is_sensitive_media(_Nsfw, Flags) ->
-    bitset:any(Flags, 16#18).
-
 -spec build_url(integer(), integer(), integer()) -> binary().
 build_url(0, ChannelId, MessageId) ->
     build_url_parts([<<"@me">>, integer_to_binary(ChannelId), integer_to_binary(MessageId)]);
@@ -634,65 +521,3 @@ build_url_parts(Parts) ->
         <<"/channels/">>,
         join_binary(Parts, <<"/">>)
     ]).
-
--spec lowercase_binary(binary()) -> binary().
-lowercase_binary(Value) ->
-    iolist_to_binary(string:lowercase(Value)).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-truncate_preview_never_splits_a_utf8_character_test() ->
-    Emoji = <<"\xF0\x9F\x98\x80">>,
-    Content = <<(binary:copy(<<"a">>, 98))/binary, Emoji/binary>>,
-    ?assert(byte_size(Content) > 100),
-    Truncated = truncate_preview(Content),
-    ?assert(byte_size(Truncated) =< 100),
-    ?assertMatch(Bin when is_binary(Bin), unicode:characters_to_binary(Truncated, utf8, utf8)),
-    ?assertEqual(binary:copy(<<"a">>, 98), Truncated).
-
-truncate_preview_is_unchanged_for_valid_ascii_test() ->
-    Content = binary:copy(<<"a">>, 150),
-    ?assertEqual(binary:copy(<<"a">>, 100), truncate_preview(Content)).
-
-truncate_preview_keeps_short_valid_content_identical_test() ->
-    Content = <<"hello \xC3\xA9 world">>,
-    ?assertEqual(Content, truncate_preview(Content)).
-
-extract_image_url_keeps_a_url_within_the_size_bound_test() ->
-    Url = image_url_of_size(?MAX_IMAGE_URL_BYTES),
-    ?assertEqual(Url, extract_image_url(message_with_embed_image(Url))).
-
-extract_image_url_rejects_an_oversized_url_test() ->
-    Url = image_url_of_size(?MAX_IMAGE_URL_BYTES + 1),
-    ?assertEqual(undefined, extract_image_url(message_with_embed_image(Url))).
-
-image_url_of_size(Size) ->
-    Prefix = <<"https://media.example/">>,
-    <<Prefix/binary, (binary:copy(<<"a">>, Size - byte_size(Prefix)))/binary>>.
-
-message_with_embed_image(Url) ->
-    #{
-        <<"embeds">> => [
-            #{
-                <<"image">> => #{
-                    <<"content_type">> => <<"image/png">>,
-                    <<"proxy_url">> => Url
-                }
-            }
-        ]
-    }.
-
-extract_image_url_rejects_malformed_flags_test() ->
-    MessageData = #{
-        <<"attachments">> => [
-            #{
-                <<"content_type">> => <<"image/png">>,
-                <<"proxy_url">> => <<"https://cdn.example/image.png">>,
-                <<"flags">> => <<"not-an-int">>
-            }
-        ]
-    },
-    ?assertEqual(undefined, extract_image_url(MessageData)).
-
--endif.

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useSaveData} from '@app/features/app/hooks/useSaveData';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {buildViewerMediaURL, isViewerImageItem} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import type {MediaViewerItem} from '@app/features/ui/state/MediaViewer';
@@ -60,7 +61,11 @@ export function useMediaViewerHoverWarm(
 		if (item == null) {
 			return;
 		}
-		const url = resolveViewerWarmURL(item, {saveData, allowAnimated});
+		const src = AttachmentUrlRefresher.freshWhenReady(item.src, {refreshUnsigned: true});
+		if (src === null) {
+			return;
+		}
+		const url = resolveViewerWarmURL({...item, src}, {saveData, allowAnimated});
 		if (url == null) {
 			return;
 		}

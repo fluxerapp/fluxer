@@ -4,7 +4,7 @@ import {type FocusEvent, useCallback, useEffect, useRef} from 'react';
 
 const TAB_KEY_RECENCY_THRESHOLD_MS = 100;
 
-export function useTabKeyFocusGuard(): (event: FocusEvent<HTMLAnchorElement>) => void {
+export function useTabKeyFocusGuard(): (event: FocusEvent<HTMLElement>) => void {
 	const lastTabKeyAtRef = useRef(0);
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -13,7 +13,7 @@ export function useTabKeyFocusGuard(): (event: FocusEvent<HTMLAnchorElement>) =>
 		document.addEventListener('keydown', onKeyDown, true);
 		return () => document.removeEventListener('keydown', onKeyDown, true);
 	}, []);
-	return useCallback((event: FocusEvent<HTMLAnchorElement>) => {
+	return useCallback((event: FocusEvent<HTMLElement>) => {
 		if (performance.now() - lastTabKeyAtRef.current > TAB_KEY_RECENCY_THRESHOLD_MS) {
 			event.currentTarget.blur();
 		}

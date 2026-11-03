@@ -14,6 +14,7 @@ import {
 	type MarkdownHlFormat,
 	type MarkdownSpan,
 	markSilentMessagePrefix,
+	splitSpansByLine,
 } from '@app/features/lexical/composer/markdownSpans';
 import {
 	$createComposerBlockquoteMarkerNode,
@@ -134,22 +135,12 @@ function $reconcileParagraph(
 		return;
 	}
 	const spans = silentMessagePrefix ? markSilentMessagePrefix(markdownSpans, source) : markdownSpans;
-	let lineStart = 0;
+	const lineSpans = splitSpansByLine(spans, lineSources);
 	for (let index = 0; index < lines.length; index += 1) {
 		const nodes = lines[index]!.nodes;
-		const lineSource = lineSources[index]!;
-		const lineEnd = lineStart + lineSource.length;
 		if (nodes.length > 0) {
-			const lineSpans = spans
-				.map((span) => ({
-					...span,
-					start: Math.max(span.start, lineStart) - lineStart,
-					end: Math.min(span.end, lineEnd) - lineStart,
-				}))
-				.filter((span) => span.end > span.start);
-			$reconcileLine(nodes, parserFlags, lineSource, lineSpans, quoteMarkerEnds[index]);
+			$reconcileLine(nodes, parserFlags, lineSources[index]!, lineSpans[index]!, quoteMarkerEnds[index]);
 		}
-		lineStart = lineEnd + 1;
 	}
 	$syncComposerBlockquoteLines(
 		paragraph,

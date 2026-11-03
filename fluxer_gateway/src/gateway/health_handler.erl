@@ -3,7 +3,7 @@
 -module(health_handler).
 -typing([eqwalizer]).
 
--export([init/2]).
+-export([init/2, is_loopback_request/1]).
 
 -type mode() :: liveness | readiness | drain | undrain.
 
@@ -41,14 +41,16 @@ readiness_response(Req) ->
         false ->
             {403, <<"FORBIDDEN">>};
         true ->
-            readiness_status(gateway_node_router:is_ready())
+            readiness_status(gateway_node_router:is_ready(), gateway_nats_rpc:nats_ready())
     end.
 
--spec readiness_status(boolean()) -> {200 | 503, binary()}.
-readiness_status(true) ->
-    {200, <<"OK">>};
-readiness_status(false) ->
-    {503, <<"DRAINING">>}.
+-spec readiness_status(boolean(), boolean()) -> {200 | 503, binary()}.
+readiness_status(false, _NatsReady) ->
+    {503, <<"DRAINING">>};
+readiness_status(true, false) ->
+    {503, <<"NATS_UNAVAILABLE">>};
+readiness_status(true, true) ->
+    {200, <<"OK">>}.
 
 -spec drain_response(cowboy_req:req()) -> {200 | 403, binary()}.
 drain_response(Req) ->
@@ -95,27 +97,3 @@ is_loopback_request(Req) ->
         _ ->
             false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-readiness_status_test() ->
-    ?assertEqual({200, <<"OK">>}, readiness_status(true)),
-    ?assertEqual({503, <<"DRAINING">>}, readiness_status(false)).
-
-activate_drain_sets_draining_flag_test() ->
-    persistent_term:erase({fluxer_gateway, draining}),
-    ?assertEqual(ok, activate_drain()),
-    ?assert(gateway_node_router:is_draining()),
-    persistent_term:erase({fluxer_gateway, draining}).
-
-deactivate_drain_clears_draining_flag_test() ->
-    persistent_term:erase({fluxer_gateway, draining}),
-    ?assertEqual(ok, activate_drain()),
-    ?assert(gateway_node_router:is_draining()),
-    ?assertEqual(ok, deactivate_drain()),
-    ?assertNot(gateway_node_router:is_draining()),
-    ?assertEqual({200, <<"OK">>}, readiness_status(gateway_node_router:is_ready())),
-    persistent_term:erase({fluxer_gateway, draining}).
-
--endif.

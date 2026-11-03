@@ -13,8 +13,12 @@ import {
 	PIN_DM_DESCRIPTOR,
 	UNPIN_DM_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {
+	CHANNEL_RECORD_DESCRIPTOR,
+	RecordDebugModal,
+	USER_RECORD_DESCRIPTOR,
+} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {
 	ADD_NOTE_DESCRIPTOR,
 	CHANGE_FRIEND_NICKNAME_DESCRIPTOR,
@@ -70,8 +74,10 @@ import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {canPerform} from '@app/features/user/utils/AccountGates';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {getMutedText} from '@app/lib/overlay/OverlayContextMenu';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {PublicUserFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -452,7 +458,7 @@ export function buildMobileMenuGroups({
 					onClick: () => undefined,
 					disabled: true,
 				});
-			} else if (Users.currentUser?.verified !== false) {
+			} else if (canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed) {
 				relationshipItems.push({
 					icon: (
 						<SendFriendRequestIcon
@@ -516,7 +522,7 @@ export function buildMobileMenuGroups({
 					});
 					break;
 				default:
-					if (Users.currentUser?.verified !== false) {
+					if (canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed) {
 						relationshipItems.push({
 							icon: (
 								<SendFriendRequestIcon
@@ -608,9 +614,10 @@ export function buildMobileMenuGroups({
 					ModalCommands.pushAfterBottomSheetClose(
 						closeAllSheets,
 						modal(() => (
-							<UserDebugModal
+							<RecordDebugModal
+								label={i18n._(USER_RECORD_DESCRIPTOR)}
 								title={i18n._(USER_DEBUG_DESCRIPTOR)}
-								user={recipient}
+								record={recipient}
 								data-flx="channel.direct-message.dm-list-item-menu-groups.on-click.user-debug-modal"
 							/>
 						)),
@@ -630,9 +637,10 @@ export function buildMobileMenuGroups({
 				ModalCommands.pushAfterBottomSheetClose(
 					closeAllSheets,
 					modal(() => (
-						<ChannelDebugModal
+						<RecordDebugModal
+							label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 							title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-							channel={channel}
+							record={channel}
 							data-flx="channel.direct-message.dm-list-item-menu-groups.on-click.channel-debug-modal"
 						/>
 					)),

@@ -2,6 +2,7 @@
 
 import type {ChannelTypeOption} from '@app/features/channel/utils/ChannelCreateModalUtils';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
+import {MEDIA_DESCRIPTOR as D_MEDIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 
@@ -14,7 +15,7 @@ export function getForumChannelTypeOptions(i18n: I18n): Array<ChannelTypeOption>
 		},
 		{
 			value: ChannelTypes.GUILD_MEDIA,
-			name: i18n._(D.MEDIA_DESCRIPTOR),
+			name: i18n._(D_MEDIA_DESCRIPTOR),
 			desc: i18n._(D.MEDIA_CHANNEL_DESC_DESCRIPTOR),
 		},
 	];

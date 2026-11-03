@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {createOperatorPassServices, type OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
 import {
 	getBillingRepository,
 	getGatewayService,
@@ -18,6 +19,7 @@ import {
 	getEmailService,
 	getGuildRepository,
 	getKVAccountDeletionQueue,
+	getOperatorPassRepository,
 	getPremiumStateReconciliationQueueService,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
@@ -27,8 +29,10 @@ import {createMockWebhookPayload, type StripeWebhookEventData} from '@app/api/te
 import {SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import closePaymentDisputeAccounts from '@app/api/worker/tasks/ClosePaymentDisputeAccounts';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
-import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
+import {getWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import Stripe from 'stripe';
 
@@ -98,8 +102,14 @@ export function setupSyncStripeWebhookWorker(): void {
 		apiVersion: STRIPE_API_VERSION,
 		httpClient: Stripe.createFetchHttpClient(),
 	});
+	let operatorPassServices: OperatorPassServices | undefined;
 	setWorkerDependenciesForTest({
 		stripe,
+		operatorPassRepository: getOperatorPassRepository(),
+		get operatorPassServices() {
+			operatorPassServices ??= createOperatorPassServices(getWorkerDependencies());
+			return operatorPassServices;
+		},
 		userRepository: getUserRepository(),
 		userCacheService: createUserCacheService(),
 		emailService: getEmailService(),
@@ -113,7 +123,9 @@ export function setupSyncStripeWebhookWorker(): void {
 		snowflakeService: getSnowflakeService(),
 		billingRepository: getBillingRepository(),
 	});
-	setInjectedWorkerService(new SyncTaskWorkerService({processStripeWebhook}));
+	setInjectedWorkerService(
+		new SyncTaskWorkerService({processStripeWebhook, closePaymentDisputeAccounts, sendBillingEmail}),
+	);
 }
 
 let originalWebhookSecretDescriptor: PropertyDescriptor | undefined;

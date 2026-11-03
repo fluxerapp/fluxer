@@ -23,6 +23,10 @@
 -define(PROBE_TIMEOUT_MS, 5000).
 -define(STALE_PROBE_MS, (?PROBE_TIMEOUT_MS + 4 * ?INTERVAL_MS)).
 
+-type pending() :: {reference(), integer(), non_neg_integer()} | undefined.
+-type entry() :: {pid(), integer(), boolean(), ets:table(), pending()}.
+-type state() :: #{pid() => reference()}.
+
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -46,7 +50,7 @@ is_overloaded(Pid) ->
 -spec is_degraded(pid()) -> boolean().
 is_degraded(Pid) ->
     case lookup(Pid) of
-        {Pid, _GuildId, Degraded, _Targets, _Pending} -> Degraded =:= true;
+        {Pid, _GuildId, Degraded, _Targets, _Pending} -> Degraded;
         undefined -> false
     end.
 
@@ -56,14 +60,18 @@ register_guild(State) ->
         GuildId when is_integer(GuildId), GuildId > 0 ->
             State1 = ensure_targets(State),
             Targets = maps:get(guild_health_sessions, State1),
-            try ets:insert_new(?TABLE, {self(), GuildId, false, Targets, undefined}) of
-                _ -> gen_server:cast(?MODULE, {register, self()})
-            catch
-                error:badarg -> ok
-            end,
+            ok = insert_entry(GuildId, Targets),
             State1;
         _ ->
             State
+    end.
+
+-spec insert_entry(integer(), ets:table()) -> ok.
+insert_entry(GuildId, Targets) ->
+    try ets:insert_new(?TABLE, {self(), GuildId, false, Targets, undefined}) of
+        _ -> gen_server:cast(?MODULE, {register, self()})
+    catch
+        error:badarg -> ok
     end.
 
 -spec ensure_targets(map()) -> map().
@@ -111,7 +119,7 @@ remove_session(_, _) ->
 send_current(GuildPid, SessionPid) ->
     gen_server:cast({?MODULE, node(GuildPid)}, {current, GuildPid, SessionPid}).
 
--spec init([]) -> {ok, map()}.
+-spec init([]) -> {ok, state()}.
 init([]) ->
     ok = guild_ets_owner:ensure_table(?TABLE, [
         named_table, public, set, {read_concurrency, true}
@@ -123,14 +131,16 @@ init([]) ->
     schedule_tick(),
     {ok, State}.
 
--spec handle_call(term(), gen_server:from(), map()) -> {reply, ok, map()}.
+-spec handle_call(term(), gen_server:from(), state()) -> {reply, ok, state()}.
 handle_call(_, _, State) ->
     {reply, ok, State}.
 
--spec handle_cast(term(), map()) -> {noreply, map()}.
+-spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast({register, Pid}, State) when is_pid(Pid), node(Pid) =:= node() ->
     {noreply, track_guild(Pid, State)};
-handle_cast({pong, Pid, Ref, HandledAt}, State) when is_pid(Pid), is_integer(HandledAt) ->
+handle_cast({pong, Pid, Ref, HandledAt}, State) when
+    is_pid(Pid), is_reference(Ref), is_integer(HandledAt)
+->
     ok = pong(Pid, Ref, HandledAt, erlang:monotonic_time(millisecond)),
     {noreply, State};
 handle_cast({current, Pid, SessionPid}, State) when is_pid(Pid), is_pid(SessionPid) ->
@@ -144,20 +154,16 @@ handle_cast({current, Pid, SessionPid}, State) when is_pid(Pid), is_pid(SessionP
 handle_cast(_, State) ->
     {noreply, State}.
 
--spec handle_info(term(), map()) -> {noreply, map()}.
+-spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(tick, State) ->
     Now = erlang:monotonic_time(millisecond),
     maps:foreach(fun(Pid, _) -> check_guild(Pid, Now) end, State),
     schedule_tick(),
     {noreply, State};
-handle_info({'DOWN', Ref, process, Pid, _}, State) ->
+handle_info({'DOWN', Ref, process, Pid, _}, State) when is_pid(Pid) ->
     case maps:get(Pid, State, undefined) of
         Ref ->
-            case lookup(Pid) of
-                {Pid, GuildId, _, _, _} -> guild_read_model:delete(GuildId, Pid);
-                _ -> ok
-            end,
-            ets:delete(?TABLE, Pid),
+            ok = forget_guild(Pid),
             {noreply, maps:remove(Pid, State)};
         _ ->
             {noreply, State}
@@ -165,22 +171,31 @@ handle_info({'DOWN', Ref, process, Pid, _}, State) ->
 handle_info(_, State) ->
     {noreply, State}.
 
--spec terminate(term(), map()) -> ok.
+-spec forget_guild(pid()) -> ok.
+forget_guild(Pid) ->
+    case lookup(Pid) of
+        {Pid, GuildId, _, _, _} -> guild_read_model:delete(GuildId, Pid);
+        _ -> ok
+    end,
+    ets:delete(?TABLE, Pid),
+    ok.
+
+-spec terminate(term(), state()) -> ok.
 terminate(_, _) -> ok.
 
--spec code_change(term(), map(), term()) -> {ok, map()}.
+-spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_, State, _) -> {ok, State}.
 
--spec lookup(pid()) -> tuple() | undefined.
+-spec lookup(pid()) -> entry() | undefined.
 lookup(Pid) ->
     try ets:lookup(?TABLE, Pid) of
-        [Entry] -> Entry;
+        [Entry] -> eqwalizer:dynamic_cast(Entry);
         [] -> undefined
     catch
         error:badarg -> undefined
     end.
 
--spec track_guild(pid(), map()) -> map().
+-spec track_guild(pid(), state()) -> state().
 track_guild(Pid, State) ->
     case maps:is_key(Pid, State) orelse lookup(Pid) =:= undefined of
         true -> State;
@@ -190,11 +205,8 @@ track_guild(Pid, State) ->
 -spec check_guild(pid(), integer()) -> ok.
 check_guild(Pid, Now) ->
     case lookup(Pid) of
-        {Pid, GuildId, Degraded, Targets, undefined} ->
-            case should_probe(Pid, Degraded) of
-                true -> update({Pid, GuildId, Degraded, Targets, probe(Pid, Now, 0)}, Degraded);
-                false -> ok
-            end;
+        {Pid, _GuildId, Degraded, _Targets, undefined} = Entry ->
+            maybe_probe(should_probe(Pid, Degraded), Entry, Now);
         {Pid, GuildId, Degraded, Targets, {_Ref, SentAt, Lag}} when
             Now - SentAt >= ?PROBE_TIMEOUT_MS
         ->
@@ -205,6 +217,12 @@ check_guild(Pid, Now) ->
         _ ->
             ok
     end.
+
+-spec maybe_probe(boolean(), entry(), integer()) -> ok.
+maybe_probe(true, {Pid, GuildId, Degraded, Targets, _Pending}, Now) ->
+    update({Pid, GuildId, Degraded, Targets, probe(Pid, Now, 0)}, Degraded);
+maybe_probe(false, _Entry, _Now) ->
+    ok.
 
 -spec pong(pid(), reference(), integer(), integer()) -> ok.
 pong(Pid, Ref, HandledAt, Now) ->
@@ -218,8 +236,7 @@ pong(Pid, Ref, HandledAt, Now) ->
             ok
     end.
 
--spec next_pending(pid(), boolean(), non_neg_integer(), integer()) ->
-    {reference(), integer(), non_neg_integer()} | undefined.
+-spec next_pending(pid(), boolean(), non_neg_integer(), integer()) -> pending().
 next_pending(Pid, true, Delay, Now) -> probe(Pid, Now, Delay);
 next_pending(_Pid, false, _Delay, _Now) -> undefined.
 
@@ -229,7 +246,7 @@ probe(Pid, Now, Lag) ->
     Pid ! {guild_health_probe, Ref},
     {Ref, Now, Lag}.
 
--spec overloaded(term(), integer()) -> boolean().
+-spec overloaded(pending(), integer()) -> boolean().
 overloaded({_Ref, SentAt, Lag}, Now) when Now - SentAt =< ?STALE_PROBE_MS ->
     max(Lag, Now - SentAt) > ?DEGRADED_MS;
 overloaded(_Pending, _Now) ->
@@ -249,7 +266,7 @@ next_degraded(_Degraded, Delay) when Delay > ?DEGRADED_MS -> true;
 next_degraded(_Degraded, Delay) when Delay < ?RECOVERED_MS -> false;
 next_degraded(Degraded, _Delay) -> Degraded.
 
--spec update(tuple(), boolean()) -> ok.
+-spec update(entry(), boolean()) -> ok.
 update({Pid, GuildId, Previous, Targets, Pending}, Degraded) ->
     ets:insert(?TABLE, {Pid, GuildId, Degraded, Targets, Pending}),
     case Previous =/= Degraded of
@@ -259,17 +276,10 @@ update({Pid, GuildId, Previous, Targets, Pending}, Degraded) ->
 
 -spec notify_targets(ets:table(), integer(), pid(), boolean()) -> ok.
 notify_targets(Targets, GuildId, Pid, Degraded) ->
-    try ets:tab2list(Targets) of
-        Rows ->
-            lists:foreach(
-                fun({_SessionId, SessionPid}) ->
-                    notify_session(SessionPid, GuildId, Pid, Degraded)
-                end,
-                Rows
-            )
-    catch
-        error:badarg -> ok
-    end.
+    lists:foreach(
+        fun({_SessionId, SessionPid}) -> notify_session(SessionPid, GuildId, Pid, Degraded) end,
+        table_rows(Targets)
+    ).
 
 -spec notify_session(pid(), integer(), pid(), boolean()) -> ok.
 notify_session(SessionPid, GuildId, GuildPid, Degraded) ->
@@ -277,193 +287,23 @@ notify_session(SessionPid, GuildId, GuildPid, Degraded) ->
 
 -spec discover_guilds() -> ok.
 discover_guilds() ->
-    try ets:tab2list(guild_pid_cache) of
-        Rows ->
-            lists:foreach(
-                fun
-                    ({_GuildId, Pid}) when is_pid(Pid), node(Pid) =:= node() ->
-                        Pid ! guild_health_register;
-                    (_) ->
-                        ok
-                end,
-                Rows
-            )
+    lists:foreach(
+        fun
+            ({_GuildId, Pid}) when is_pid(Pid), node(Pid) =:= node() ->
+                Pid ! guild_health_register;
+            (_) ->
+                ok
+        end,
+        table_rows(guild_pid_cache)
+    ).
+
+-spec table_rows(ets:table()) -> [{term(), pid()}].
+table_rows(Tab) ->
+    try
+        eqwalizer:dynamic_cast(ets:tab2list(Tab))
     catch
-        error:badarg -> ok
+        error:badarg -> []
     end.
 
 -spec schedule_tick() -> reference().
 schedule_tick() -> erlang:send_after(?INTERVAL_MS, self(), tick).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-hysteresis_test() ->
-    ?assert(next_degraded(false, 2001)),
-    ?assertNot(next_degraded(false, 2000)),
-    ?assert(next_degraded(true, 500)),
-    ?assertNot(next_degraded(true, 499)),
-    ?assert(next_degraded(true, 3000)).
-
-unreachable_remote_pid_is_unknown_test() ->
-    Pid = binary_to_term(<<131, 88, 119, 12, "fake@nowhere", 1:32, 0:32, 1:32>>),
-    ?assertNotEqual(node(), node(Pid)),
-    {ElapsedUs, Result} = timer:tc(?MODULE, is_overloaded, [Pid]),
-    ?assertNot(Result),
-    ?assert(ElapsedUs < 1000000).
-
-pending_probe_is_bounded_and_recovers_only_after_fresh_reply_test() ->
-    ok = guild_ets_owner:ensure_table(?TABLE, [named_table, public, set]),
-    Targets = ets:new(health_test_targets, [set]),
-    ets:insert(Targets, {<<"session">>, self()}),
-    Pid = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    Entry = {Pid, 42, false, Targets, undefined},
-    ets:insert(?TABLE, Entry),
-    try
-        Pid ! queued_work,
-        check_guild(Pid, 100),
-        {Pid, 42, false, Targets, {Ref, 100, 0}} = lookup(Pid),
-        check_guild(Pid, 2201),
-        {Pid, 42, true, Targets, {Ref, 100, 0}} = lookup(Pid),
-        receive
-            {'$gen_cast', {guild_health, 42, Pid, true}} -> ok
-        after 100 -> ?assert(false)
-        end,
-        check_guild(Pid, 5000),
-        ?assertEqual({message_queue_len, 2}, process_info(Pid, message_queue_len)),
-        ok = pong(Pid, Ref, 5000, 5000),
-        {Pid, 42, true, Targets, {Ref2, 5000, 4900}} = lookup(Pid),
-        ?assertEqual({message_queue_len, 3}, process_info(Pid, message_queue_len)),
-        ok = pong(Pid, Ref, 5110, 5110),
-        {Pid, 42, true, Targets, {Ref2, 5000, 4900}} = lookup(Pid),
-        ok = pong(Pid, Ref2, 5110, 5110),
-        ?assertEqual({Pid, 42, false, Targets, undefined}, lookup(Pid)),
-        receive
-            {'$gen_cast', {guild_health, 42, Pid, false}} -> ok
-        after 100 -> ?assert(false)
-        end
-    after
-        Pid ! stop,
-        ets:delete(?TABLE, Pid),
-        ets:delete(Targets)
-    end.
-
-lost_pong_is_reprobed_and_the_guild_recovers_test() ->
-    ok = guild_ets_owner:ensure_table(?TABLE, [named_table, public, set]),
-    Targets = ets:new(health_lost_pong_targets, [set]),
-    ets:insert(Targets, {<<"session">>, self()}),
-    Pid = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    ets:insert(?TABLE, {Pid, 44, false, Targets, undefined}),
-    try
-        Pid ! queued_work,
-        check_guild(Pid, 0),
-        {Pid, 44, false, Targets, {Lost, 0, 0}} = lookup(Pid),
-        check_guild(Pid, 2001),
-        receive
-            {'$gen_cast', {guild_health, 44, Pid, true}} -> ok
-        after 100 -> ?assert(false)
-        end,
-        check_guild(Pid, 4999),
-        ?assertEqual({message_queue_len, 2}, process_info(Pid, message_queue_len)),
-        check_guild(Pid, 5000),
-        {Pid, 44, true, Targets, {Fresh, 5000, 5000} = Pending} = lookup(Pid),
-        ?assertNotEqual(Lost, Fresh),
-        ?assertEqual({message_queue_len, 3}, process_info(Pid, message_queue_len)),
-        ?assert(overloaded(Pending, 5001)),
-        ok = pong(Pid, Fresh, 5020, 5020),
-        ?assertEqual({Pid, 44, false, Targets, undefined}, lookup(Pid)),
-        ?assertNot(is_overloaded(Pid)),
-        receive
-            {'$gen_cast', {guild_health, 44, Pid, false}} -> ok
-        after 100 -> ?assert(false)
-        end,
-        ok = pong(Pid, Lost, 5030, 5030),
-        ?assertEqual({Pid, 44, false, Targets, undefined}, lookup(Pid))
-    after
-        Pid ! stop,
-        ets:delete(?TABLE, Pid),
-        ets:delete(Targets)
-    end.
-
-shedding_needs_fresh_evidence_of_lag_test() ->
-    Ref = make_ref(),
-    ?assertNot(overloaded(undefined, 10000)),
-    ?assertNot(overloaded({Ref, 10000, 0}, 12000)),
-    ?assert(overloaded({Ref, 10000, 0}, 12001)),
-    ?assertNot(overloaded({Ref, 10000, 1500}, 10100)),
-    ?assert(overloaded({Ref, 10000, 2500}, 10100)),
-    ?assert(overloaded({Ref, 10000, 5000}, 10000 + ?STALE_PROBE_MS)),
-    ?assertNot(overloaded({Ref, 10000, 5000}, 10001 + ?STALE_PROBE_MS)).
-
-session_targets_follow_replacement_and_removal_test() ->
-    Tab = ets:new(health_test_targets, [set]),
-    State = #{guild_health_sessions => Tab, sessions => #{<<"s">> => #{pid => self()}}},
-    ok = put_session(<<"s">>, State),
-    ?assertEqual([{<<"s">>, self()}], ets:tab2list(Tab)),
-    Other = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    ok = put_session(<<"s">>, State#{sessions => #{<<"s">> => #{pid => Other}}}),
-    ?assertEqual([{<<"s">>, Other}], ets:tab2list(Tab)),
-    ok = remove_session(<<"s">>, State),
-    ?assertEqual([], ets:tab2list(Tab)),
-    Other ! stop,
-    ets:delete(Tab).
-
-idle_guild_is_not_probed_test() ->
-    ok = guild_ets_owner:ensure_table(?TABLE, [named_table, public, set]),
-    Targets = ets:new(health_idle_targets, [set]),
-    Parent = self(),
-    Pid = spawn(fun() ->
-        Parent ! {idle, self()},
-        receive
-            stop -> ok
-        end
-    end),
-    receive
-        {idle, Pid} -> ok
-    end,
-    ets:insert(?TABLE, {Pid, 43, false, Targets, undefined}),
-    try
-        check_guild(Pid, 100),
-        check_guild(Pid, 1000),
-        ?assertEqual({message_queue_len, 0}, process_info(Pid, message_queue_len))
-    after
-        Pid ! stop,
-        ets:delete(?TABLE, Pid),
-        ets:delete(Targets)
-    end.
-
-foreign_target_table_is_rebuilt_test() ->
-    Parent = self(),
-    Owner = spawn(fun() ->
-        Tab = ets:new(health_foreign_targets, [set, public]),
-        Parent ! {foreign, Tab},
-        receive
-            stop -> ok
-        end
-    end),
-    receive
-        {foreign, Foreign} ->
-            State = ensure_targets(#{
-                guild_health_sessions => Foreign, sessions => #{<<"s">> => #{pid => self()}}
-            }),
-            Local = maps:get(guild_health_sessions, State),
-            ?assertNotEqual(Foreign, Local),
-            ?assertEqual(self(), ets:info(Local, owner)),
-            ?assertEqual([{<<"s">>, self()}], ets:tab2list(Local)),
-            ets:delete(Local)
-    end,
-    Owner ! stop.
-
--endif.

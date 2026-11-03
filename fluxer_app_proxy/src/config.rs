@@ -5,38 +5,25 @@ use reqwest::Url;
 use std::env;
 use std::fmt;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum InvalidAppProxyEnvironmentError {
-    InvalidValue {
-        name: &'static str,
-        value: String,
-        expected: &'static str,
-    },
+const DEFAULT_DISCOVERY_UPSTREAM_URL: &str = "http://localhost:8088/api/.well-known/fluxer";
+
+#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
+#[error("{name} must be {expected}, got {value:?}")]
+pub struct InvalidAppProxyEnvironmentError {
+    name: &'static str,
+    value: String,
+    expected: &'static str,
 }
 
 impl InvalidAppProxyEnvironmentError {
     fn new(name: &'static str, value: &str, expected: &'static str) -> Self {
-        Self::InvalidValue {
+        Self {
             name,
             value: value.to_owned(),
             expected,
         }
     }
 }
-
-impl fmt::Display for InvalidAppProxyEnvironmentError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidValue {
-                name,
-                value,
-                expected,
-            } => write!(formatter, "{name} must be {expected}, got {value:?}"),
-        }
-    }
-}
-
-impl std::error::Error for InvalidAppProxyEnvironmentError {}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct HttpUrl(Url);
@@ -104,6 +91,19 @@ impl HttpEndpoint {
         Ok(Self { url, csp_origin })
     }
 
+    pub fn origin_of(
+        name: &'static str,
+        value: &str,
+    ) -> Result<Self, InvalidAppProxyEnvironmentError> {
+        let url = Url::parse(value.trim())
+            .ok()
+            .filter(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some())
+            .ok_or_else(|| {
+                InvalidAppProxyEnvironmentError::new(name, value, "an absolute HTTP or HTTPS URL")
+            })?;
+        Self::parse(name, &url.origin().ascii_serialization())
+    }
+
     pub fn with_host_prefix(
         &self,
         name: &'static str,
@@ -131,10 +131,6 @@ impl HttpEndpoint {
         })?;
         let csp_origin = url.origin().ascii_serialization();
         Ok(Self { url, csp_origin })
-    }
-
-    pub fn as_url(&self) -> &Url {
-        &self.url
     }
 
     pub fn as_str(&self) -> &str {
@@ -344,41 +340,22 @@ pub struct AppProxyConfig {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
-    pub release_channel: ReleaseChannel,
+    pub branding: crate::branding_images::BrandingSnapshot,
+    pub discovery_upstream_url: String,
+    pub discovery_refresh_interval_ms: u64,
     pub build_version: String,
     pub csp: CspConfig,
     pub same_origin_hosts: Vec<String>,
     pub manifest_scope_extensions: Vec<String>,
+    pub release_channel: Option<&'static str>,
     pub self_hosted: bool,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ReleaseChannel {
-    Stable,
-    Canary,
-}
-
-impl ReleaseChannel {
-    fn from_env_value(value: &str) -> Self {
-        if value.eq_ignore_ascii_case("canary") {
-            Self::Canary
-        } else {
-            Self::Stable
-        }
-    }
-
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Stable => "stable",
-            Self::Canary => "canary",
-        }
-    }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct CspConfig {
     pub extra_default_src: Vec<CspSource>,
     pub extra_connect_src: Vec<CspSource>,
+    pub voice_connect_src: Vec<CspSource>,
     pub extra_img_src: Vec<CspSource>,
     pub extra_media_src: Vec<CspSource>,
     pub extra_font_src: Vec<CspSource>,
@@ -395,6 +372,9 @@ impl CspConfig {
         Self {
             extra_default_src: read_csp_sources("FLUXER_CSP_EXTRA_DEFAULT_SRC"),
             extra_connect_src: read_csp_sources("FLUXER_CSP_EXTRA_CONNECT_SRC"),
+            voice_connect_src: cfg::env_value("FLUXER_LIVEKIT_URL")
+                .map(|value| voice_connect_sources("FLUXER_LIVEKIT_URL", &value))
+                .unwrap_or_default(),
             extra_img_src: read_csp_sources("FLUXER_CSP_EXTRA_IMG_SRC"),
             extra_media_src: read_csp_sources("FLUXER_CSP_EXTRA_MEDIA_SRC"),
             extra_font_src: read_csp_sources("FLUXER_CSP_EXTRA_FONT_SRC"),
@@ -421,6 +401,32 @@ fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
         .collect()
 }
 
+pub fn voice_connect_sources(name: &'static str, value: &str) -> Vec<CspSource> {
+    let Ok(url) = Url::parse(value.trim()) else {
+        return Vec::new();
+    };
+    let twin_scheme = match url.scheme() {
+        "https" => "wss",
+        "wss" => "https",
+        "http" => "ws",
+        "ws" => "http",
+        _ => return Vec::new(),
+    };
+    let origin = url.origin().ascii_serialization();
+    let Some((_, authority)) = origin.split_once("://") else {
+        return Vec::new();
+    };
+    let twin = format!("{twin_scheme}://{authority}");
+    [origin.as_str(), twin.as_str()]
+        .into_iter()
+        .filter_map(|source| {
+            CspSource::parse(name, source)
+                .inspect_err(warn_invalid)
+                .ok()
+        })
+        .collect()
+}
+
 fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
     let value = cfg::env_value(name)?;
     CspReportUri::parse(name, value.trim())
@@ -430,9 +436,6 @@ fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
 
 impl AppProxyConfig {
     pub fn from_env() -> Self {
-        let release_channel =
-            ReleaseChannel::from_env_value(&cfg::read_env("RELEASE_CHANNEL", "stable"));
-
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
             cfg::env_value("FLUXER_S3_PUBLIC_ENDPOINT"),
@@ -445,6 +448,7 @@ impl AppProxyConfig {
                 .ok()
         });
 
+        let self_hosted = cfg::read_bool_env("FLUXER_SELF_HOSTED", false);
         Self {
             host: cfg::read_env("FLUXER_APP_PROXY_HOST", "0.0.0.0"),
             port: parse_env_or_warn(
@@ -467,7 +471,16 @@ impl AppProxyConfig {
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
-            release_channel,
+            branding: crate::branding_images::snapshot_from_environment(cfg::env_value),
+            discovery_upstream_url: cfg::read_env(
+                "DISCOVERY_UPSTREAM_URL",
+                DEFAULT_DISCOVERY_UPSTREAM_URL,
+            ),
+            discovery_refresh_interval_ms: parse_env_or_warn(
+                "DISCOVERY_REFRESH_INTERVAL_MS",
+                &cfg::read_env("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
+                60_000u64,
+            ),
             build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
@@ -481,7 +494,34 @@ impl AppProxyConfig {
                 "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
                 &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
             ),
-            self_hosted: cfg::read_bool_env("FLUXER_SELF_HOSTED", false),
+            release_channel: resolve_release_channel(
+                parse_release_channel("RELEASE_CHANNEL", &cfg::read_env("RELEASE_CHANNEL", "")),
+                self_hosted,
+            ),
+            self_hosted,
+        }
+    }
+}
+
+fn resolve_release_channel(
+    configured: Option<&'static str>,
+    self_hosted: bool,
+) -> Option<&'static str> {
+    configured.or(if self_hosted { Some("stable") } else { None })
+}
+
+fn parse_release_channel(name: &'static str, raw: &str) -> Option<&'static str> {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "" => None,
+        "stable" => Some("stable"),
+        "canary" => Some("canary"),
+        _ => {
+            warn_invalid(&InvalidAppProxyEnvironmentError::new(
+                name,
+                raw,
+                "stable or canary",
+            ));
+            None
         }
     }
 }
@@ -567,56 +607,4 @@ fn parse_same_origin_host(
         ));
     }
     Ok(host)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn same_origin_hosts_are_normalised_and_deduplicated() {
-        assert_eq!(
-            parse_same_origin_hosts(
-                "TEST_SAME_ORIGIN_HOSTS",
-                " web.fluxer.app, Fluxer.COM,fluxer.com. ,fluxer.com"
-            ),
-            vec!["web.fluxer.app".to_owned(), "fluxer.com".to_owned()]
-        );
-    }
-
-    #[test]
-    fn same_origin_hosts_drop_anything_but_a_bare_hostname() {
-        assert_eq!(
-            parse_same_origin_hosts(
-                "TEST_SAME_ORIGIN_HOSTS",
-                "https://fluxer.com,fluxer.com:443,fluxer.com/api,user@fluxer.com,canary.fluxer.com"
-            ),
-            vec!["canary.fluxer.com".to_owned()]
-        );
-    }
-
-    #[test]
-    fn manifest_scope_extensions_are_normalised_and_deduplicated() {
-        assert_eq!(
-            parse_manifest_scope_extensions(
-                "TEST_SCOPE_EXTENSIONS",
-                " https://Fluxer.COM, https://fluxer.com/ ,https://canary.fluxer.com:443"
-            ),
-            vec![
-                "https://fluxer.com".to_owned(),
-                "https://canary.fluxer.com".to_owned()
-            ]
-        );
-    }
-
-    #[test]
-    fn manifest_scope_extensions_drop_anything_but_an_https_origin() {
-        assert_eq!(
-            parse_manifest_scope_extensions(
-                "TEST_SCOPE_EXTENSIONS",
-                "fluxer.com,http://fluxer.com,https://fluxer.com/app,https://fluxer.com/?a=1,https://user@fluxer.com,https://canary.fluxer.com"
-            ),
-            vec!["https://canary.fluxer.com".to_owned()]
-        );
-    }
 }

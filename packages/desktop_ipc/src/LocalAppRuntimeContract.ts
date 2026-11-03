@@ -33,7 +33,7 @@ export interface DesktopRuntimeCommit extends DesktopRuntimeTransactionRequest {
 
 export type DesktopRuntimeFinalization = DesktopRuntimeCommittedTransactionRequest;
 
-export type DesktopRuntimeAbortDisposition = 'absent' | 'aborted' | 'rolled-back';
+type DesktopRuntimeAbortDisposition = 'absent' | 'aborted' | 'rolled-back';
 
 export interface DesktopRuntimeAbort {
 	readonly disposition: DesktopRuntimeAbortDisposition;

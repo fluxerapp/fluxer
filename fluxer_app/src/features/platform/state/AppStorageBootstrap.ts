@@ -10,27 +10,26 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 export type {
 	AppStorageBootstrapHandle,
-	AppStorageFinalizationResult,
 	AppStorageSessionAccount,
 } from '@app/features/platform/state/AppStorageBootstrapContract';
 
-async function initializeSignedOutStorage(options?: {readonly scoped?: boolean}): Promise<void> {
-	await initializeAppStorage(options);
+async function initializeSignedOutStorage(): Promise<void> {
+	await initializeAppStorage();
 	await activateAppStorageScope(null);
 	Logger.refreshGlobalLogLevel();
 }
 
-export async function startAppStorage(options?: {readonly scoped?: boolean}): Promise<AppStorageBootstrapHandle> {
+export async function startAppStorage(): Promise<AppStorageBootstrapHandle> {
 	const now = Date.now();
 	const desktopAuthority = await DesktopStorageAuthority.prepareBoot();
 	if (desktopAuthority.isCommitted) {
-		await initializeSignedOutStorage(options);
+		await initializeSignedOutStorage();
 		return AppStorageFinalizationSession.forCommittedAuthority(desktopAuthority);
 	}
 
 	const migration = await AppStorageMigrationCoordinator.prepare(now);
 	const webBackend = getPersistentStorageBackend();
-	await initializeSignedOutStorage(options);
+	await initializeSignedOutStorage();
 	return AppStorageFinalizationSession.forMigration({
 		desktopAuthority,
 		migration,

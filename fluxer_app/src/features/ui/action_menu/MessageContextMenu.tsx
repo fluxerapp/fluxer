@@ -23,14 +23,17 @@ import {MessageReactionsModal} from '@app/features/messaging/components/modals/M
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import MessagesState from '@app/features/messaging/state/MessagingMessages';
+import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessagePlaintextCopyText} from '@app/features/messaging/utils/MessagePlaintextCopyUtils';
 import {
 	buildMessageSelectionCopyTextForRange,
 	getMessageSelectionRoot,
 } from '@app/features/messaging/utils/MessageSelectionCopyUtils';
 import {getEmojiNameWithColons, toReactionEmoji, useEmojiURL} from '@app/features/messaging/utils/ReactionUtils';
-import {useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
+import {SubMenu as MenuItemSubmenu, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
 import contextMenuStyles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import {CopyIdIcon, CopyLinkIcon, CopyTextIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import type {MediaMenuHandlers} from '@app/features/ui/action_menu/items/MediaMenuData';
@@ -38,7 +41,7 @@ import {TranslateMenuItems} from '@app/features/ui/action_menu/items/TranslateMe
 import {WebSearchMenuItems} from '@app/features/ui/action_menu/items/WebSearchMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -382,16 +385,16 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			return () => document.removeEventListener('selectionchange', handleSelectionChange);
 		}, [restoreSelection, normalizeSelectionText]);
 		const copyShortcut = useMemo(() => {
-			return /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? '⌘C' : `${i18n._(CTRL_DESCRIPTOR)}+C`;
+			return isMacPlatform() ? '⌘C' : `${i18n._(CTRL_DESCRIPTOR)}+C`;
 		}, [i18n.locale]);
 		const handleCopySelection = useCallback(async () => {
 			if (!selectionText) return;
-			await TextCopyCommands.copy(i18n, selectionText, true);
+			await TextCopyCommands.copy(i18n, await refreshAttachmentUrlsInText(selectionText), true);
 			onClose();
 		}, [selectionText, onClose, i18n]);
 		const handleCopyLink = useCallback(async () => {
 			if (!linkUrl) return;
-			await TextCopyCommands.copy(i18n, linkUrl, true);
+			await TextCopyCommands.copy(i18n, await AttachmentUrlRefresher.refresh(linkUrl), true);
 			onClose();
 		}, [linkUrl, onClose, i18n]);
 		const handleOpenLink = useCallback(() => {
@@ -799,7 +802,6 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					<WebSearchMenuItems
 						selectionText={selectionText}
 						onClose={onClose}
-						wrapInGroup
 						data-flx="ui.action-menu.message-context-menu.web-search-menu-items"
 					/>
 				)}
@@ -807,7 +809,6 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					<TranslateMenuItems
 						selectionText={translateText}
 						onClose={onClose}
-						wrapInGroup
 						data-flx="ui.action-menu.message-context-menu.translate-menu-items"
 					/>
 				)}

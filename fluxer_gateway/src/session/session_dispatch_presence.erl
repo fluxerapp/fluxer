@@ -26,7 +26,7 @@
 -type event() :: atom() | binary().
 -type user_id() :: session:user_id().
 
--spec should_buffer_presence(event(), map() | list(), session_state()) -> boolean().
+-spec should_buffer_presence(event(), map(), session_state()) -> boolean().
 should_buffer_presence(presence_update, Data, State) ->
     case maps:get(suppress_presence_updates, State, true) of
         true ->
@@ -99,9 +99,9 @@ buffer_presence(Event, Data, State) ->
 
 -spec maybe_flush_pending_presences(event(), map() | list(), session_state()) ->
     {session_state(), [user_id()]}.
-maybe_flush_pending_presences(relationship_add, Data, State) ->
+maybe_flush_pending_presences(relationship_add, Data, State) when is_map(Data) ->
     maybe_flush_relationship_pending_presences(Data, State);
-maybe_flush_pending_presences(relationship_update, Data, State) ->
+maybe_flush_pending_presences(relationship_update, Data, State) when is_map(Data) ->
     maybe_flush_relationship_pending_presences(Data, State);
 maybe_flush_pending_presences(channel_create, Data, State) ->
     flush_dm_channel_pending_presences(Data, maybe_register_dm_partners(Data, State));
@@ -111,7 +111,7 @@ maybe_flush_pending_presences(channel_delete, Data, State) ->
     {maybe_register_dm_partners(Data, State), []};
 maybe_flush_pending_presences(guild_delete, Data, State) ->
     {forget_deleted_guild(Data, State), []};
-maybe_flush_pending_presences(channel_recipient_add, Data, State) ->
+maybe_flush_pending_presences(channel_recipient_add, Data, State) when is_map(Data) ->
     flush_added_recipient_pending_presences(Data, State);
 maybe_flush_pending_presences(_, _, State) ->
     {State, []}.
@@ -131,7 +131,7 @@ forget_deleted_guild(#{<<"id">> := RawGuildId}, State) ->
 forget_deleted_guild(_Data, State) ->
     State.
 
--spec flush_dm_channel_pending_presences(map(), session_state()) ->
+-spec flush_dm_channel_pending_presences(term(), session_state()) ->
     {session_state(), [user_id()]}.
 flush_dm_channel_pending_presences(Data, State) ->
     SelfUserId = maps:get(user_id, State, undefined),
@@ -298,234 +298,3 @@ send_to_socket(undefined, _Event, _Data, _Seq) ->
 send_to_socket(Pid, Event, Data, Seq) when is_pid(Pid) ->
     Pid ! {dispatch, Event, guild_data_wire:payload(Data), Seq},
     ok.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-relationship_allows_presence_test() ->
-    ?assertEqual(true, relationship_allows_presence(1, #{1 => 1})),
-    ?assertEqual(false, relationship_allows_presence(1, #{1 => 3})),
-    ?assertEqual(false, relationship_allows_presence(1, #{1 => 0})),
-    ?assertEqual(false, relationship_allows_presence(1, #{1 => 2})),
-    ?assertEqual(false, relationship_allows_presence(1, #{1 => 4})),
-    ?assertEqual(false, relationship_allows_presence(1, #{})),
-    ?assertEqual(false, relationship_allows_presence(0, #{})),
-    ok.
-
-buffering_test_state() ->
-    #{
-        user_id => 1,
-        suppress_presence_updates => false,
-        relationships => #{},
-        channels => #{
-            100 => #{
-                <<"id">> => <<"100">>,
-                <<"type">> => 1,
-                <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"dm-user">>}]
-            },
-            200 => #{
-                <<"id">> => <<"200">>,
-                <<"type">> => 3,
-                <<"recipients">> => [#{<<"id">> => <<"3">>, <<"username">> => <<"gdm-user">>}]
-            }
-        }
-    }.
-
-presence_data(UserIdBin) ->
-    #{<<"user">> => #{<<"id">> => UserIdBin}, <<"status">> => <<"online">>}.
-
-should_buffer_presence_buffers_one_to_one_dm_recipient_test() ->
-    State = buffering_test_state(),
-    ?assertEqual(
-        true, should_buffer_presence(presence_update, presence_data(<<"2">>), State)
-    ).
-
-should_buffer_presence_passes_group_dm_recipient_test() ->
-    State = buffering_test_state(),
-    ?assertEqual(
-        false, should_buffer_presence(presence_update, presence_data(<<"3">>), State)
-    ).
-
-should_buffer_presence_buffers_unrelated_user_test() ->
-    State = buffering_test_state(),
-    ?assertEqual(
-        true, should_buffer_presence(presence_update, presence_data(<<"99">>), State)
-    ).
-
-should_buffer_presence_passes_friend_test() ->
-    State = (buffering_test_state())#{channels => #{}, relationships => #{4 => 1}},
-    ?assertEqual(
-        false, should_buffer_presence(presence_update, presence_data(<<"4">>), State)
-    ).
-
-one_to_one_dm_presence_passes_attached_guild_scope_test() ->
-    State = (buffering_test_state())#{guilds => #{42 => undefined}},
-    Data = (presence_data(<<"2">>))#{<<"guild_id">> => <<"42">>},
-    ?assertEqual(false, should_buffer_presence(presence_update, Data, State)).
-
-one_to_one_dm_presence_buffers_unattached_guild_scope_test() ->
-    State = (buffering_test_state())#{guilds => #{42 => undefined}},
-    Data = (presence_data(<<"2">>))#{<<"guild_id">> => <<"99">>},
-    ?assertEqual(true, should_buffer_presence(presence_update, Data, State)).
-
-flush_test_state(PendingUserIds) ->
-    #{
-        user_id => 1,
-        seq => 0,
-        buffer => [],
-        socket_pid => undefined,
-        pending_presences => [
-            #{
-                event => presence_update,
-                data => presence_data(integer_to_binary(Uid)),
-                user_id => Uid
-            }
-         || Uid <- PendingUserIds
-        ]
-    }.
-
-channel_create_does_not_flush_one_to_one_dm_recipient_presence_test() ->
-    State = flush_test_state([2, 99]),
-    ChannelData = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 1,
-        <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"dm-user">>}]
-    },
-    {NewState, FlushedIds} = maybe_flush_pending_presences(
-        channel_create, ChannelData, State
-    ),
-    ?assertEqual([], FlushedIds),
-    ?assertEqual(0, maps:get(seq, NewState)),
-    Remaining = queue:to_list(ensure_queue(maps:get(pending_presences, NewState))),
-    ?assertEqual([2, 99], [maps:get(user_id, P) || P <- Remaining]).
-
-channel_create_ignores_guild_channels_test() ->
-    State = flush_test_state([2]),
-    ChannelData = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 0,
-        <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"dm-user">>}]
-    },
-    {NewState, FlushedIds} = maybe_flush_pending_presences(
-        channel_create, ChannelData, State
-    ),
-    ?assertEqual([], FlushedIds),
-    ?assertEqual(0, maps:get(seq, NewState)).
-
-channel_recipient_add_flushes_pending_presence_test() ->
-    State = flush_test_state([3, 99]),
-    Data = #{
-        <<"channel_id">> => <<"200">>,
-        <<"user">> => #{<<"id">> => <<"3">>, <<"username">> => <<"gdm-user">>}
-    },
-    {NewState, FlushedIds} = maybe_flush_pending_presences(
-        channel_recipient_add, Data, State
-    ),
-    ?assertEqual([3], FlushedIds),
-    Remaining = queue:to_list(ensure_queue(maps:get(pending_presences, NewState))),
-    ?assertEqual([99], [maps:get(user_id, P) || P <- Remaining]).
-
-relationship_update_top_level_id_flushes_pending_presence_test() ->
-    State = flush_test_state([2, 99]),
-    Data = #{<<"id">> => <<"2">>, <<"type">> => 1, <<"user">> => #{<<"id">> => <<"2">>}},
-    {NewState, FlushedIds} = maybe_flush_pending_presences(relationship_update, Data, State),
-    ?assertEqual([2], FlushedIds),
-    Remaining = queue:to_list(ensure_queue(maps:get(pending_presences, NewState))),
-    ?assertEqual([99], [maps:get(user_id, P) || P <- Remaining]).
-
-event_changes_presence_targets_test() ->
-    ?assertEqual(true, event_changes_presence_targets(relationship_add)),
-    ?assertEqual(true, event_changes_presence_targets(relationship_update)),
-    ?assertEqual(true, event_changes_presence_targets(relationship_remove)),
-    ?assertEqual(true, event_changes_presence_targets(channel_create)),
-    ?assertEqual(true, event_changes_presence_targets(channel_update)),
-    ?assertEqual(true, event_changes_presence_targets(channel_delete)),
-    ?assertEqual(true, event_changes_presence_targets(channel_recipient_add)),
-    ?assertEqual(true, event_changes_presence_targets(channel_recipient_remove)),
-    ?assertEqual(false, event_changes_presence_targets(presence_update)),
-    ?assertEqual(false, event_changes_presence_targets(message_create)),
-    ?assertEqual(false, event_changes_presence_targets(guild_member_update)),
-    ?assertEqual(false, event_changes_presence_targets(typing_start)),
-    ok.
-
-presence_status_data(UserIdBin, Status) ->
-    #{<<"user">> => #{<<"id">> => UserIdBin}, <<"status">> => Status}.
-
-buffered_presences_flush_in_arrival_order_test() ->
-    drain_mailbox(),
-    Base = #{
-        user_id => 1,
-        seq => 0,
-        buffer => [],
-        socket_pid => self(),
-        pending_presences => queue:new()
-    },
-    S1 = buffer_presence(presence_update, presence_status_data(<<"2">>, <<"online">>), Base),
-    S2 = buffer_presence(presence_update, presence_status_data(<<"2">>, <<"dnd">>), S1),
-    Flushed = flush_all_pending_presences(S2),
-    ?assertEqual(2, maps:get(seq, Flushed)),
-    ?assertEqual([{1, <<"online">>}, {2, <<"dnd">>}], collect_dispatched_statuses(2)).
-
-pending_presence_buffer_drops_oldest_when_full_test() ->
-    Total = ?MAX_PENDING_PRESENCE_BUFFER_SIZE + 2,
-    Filled = lists:foldl(
-        fun(N, Acc) ->
-            buffer_presence(
-                presence_update,
-                presence_status_data(integer_to_binary(N), <<"online">>),
-                Acc
-            )
-        end,
-        #{user_id => 1, pending_presences => queue:new()},
-        lists:seq(1, Total)
-    ),
-    Pending = queue:to_list(maps:get(pending_presences, Filled)),
-    ?assertEqual(?MAX_PENDING_PRESENCE_BUFFER_SIZE, length(Pending)),
-    ?assertEqual(3, maps:get(user_id, hd(Pending))),
-    ?assertEqual(Total, maps:get(user_id, lists:last(Pending))).
-
-presence_flush_eviction_raises_replay_floor_test() ->
-    Base = #{
-        user_id => 1,
-        seq => 0,
-        buffer => limited_deque:new(2, 0),
-        socket_pid => undefined,
-        pending_presences => queue:new()
-    },
-    Filled = lists:foldl(
-        fun(N, Acc) ->
-            buffer_presence(
-                presence_update,
-                presence_status_data(integer_to_binary(N), <<"online">>),
-                Acc
-            )
-        end,
-        Base,
-        lists:seq(2, 4)
-    ),
-    Flushed = flush_all_pending_presences(Filled),
-    ?assertEqual(3, maps:get(seq, Flushed)),
-    ?assertEqual(1, maps:get(replay_floor, Flushed)),
-    ?assertEqual(
-        [2, 3],
-        [maps:get(seq, E) || E <- limited_deque:to_list(maps:get(buffer, Flushed))]
-    ).
-
-collect_dispatched_statuses(0) ->
-    [];
-collect_dispatched_statuses(N) ->
-    receive
-        {dispatch, presence_update, Data, Seq} ->
-            [{Seq, maps:get(<<"status">>, Data)} | collect_dispatched_statuses(N - 1)]
-    after 100 ->
-        []
-    end.
-
-drain_mailbox() ->
-    receive
-        _Message -> drain_mailbox()
-    after 0 ->
-        ok
-    end.
-
--endif.

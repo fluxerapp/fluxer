@@ -3,8 +3,10 @@
 import {
 	ExperimentRolloutCountryCodesSchema,
 	type ExperimentTargeting,
+	experimentBucket,
 	experimentRolloutCountryIncludes,
 } from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import vectors from '@fluxer/schema/src/domains/experiment/ExperimentBucketVectors.json' with {type: 'json'};
 import {describe, expect, test} from 'vitest';
 
 describe('ExperimentRolloutCountryCodesSchema', () => {
@@ -46,5 +48,11 @@ describe('experimentRolloutCountryIncludes', () => {
 		expect(experimentRolloutCountryIncludes(rules, targeting('NO'))).toBe(true);
 		expect(experimentRolloutCountryIncludes(rules, targeting('BR'))).toBe(false);
 		expect(experimentRolloutCountryIncludes(rules, targeting(null))).toBe(false);
+	});
+});
+
+describe('shared experiment bucket vectors', () => {
+	test.each(vectors as Array<[string, string, number]>)('bucket(%s, %s) is %i', (salt, id, bucket) => {
+		expect(experimentBucket(id, salt)).toBe(bucket);
 	});
 });

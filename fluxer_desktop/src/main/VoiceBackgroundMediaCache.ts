@@ -9,6 +9,7 @@ import type {
 	VoiceBackgroundMediaKind,
 	VoiceBackgroundMediaReadResult,
 } from '@electron/common/Types';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {app, ipcMain} from 'electron';
 
 const CACHE_DIR_NAME = 'voice-background-media';
@@ -179,14 +180,7 @@ async function cacheVoiceBackgroundMedia(
 	const mediaKind = classifyMediaKind(mediaType, data);
 	await fs.mkdir(cacheDir, {recursive: true});
 	const filePath = path.join(cacheDir, `${cacheKey}.${mediaType.extension}`);
-	const tempPath = path.join(cacheDir, `${cacheKey}.${process.pid}.${Date.now()}.tmp`);
-	await fs.writeFile(tempPath, data, {mode: 0o600});
-	try {
-		await fs.rename(tempPath, filePath);
-	} catch (error) {
-		await fs.rm(tempPath, {force: true});
-		throw error;
-	}
+	await writeFileAtomically(filePath, data, 0o600);
 	await trimVoiceBackgroundMediaCache(cacheDir);
 	return {path: filePath, mediaKind};
 }

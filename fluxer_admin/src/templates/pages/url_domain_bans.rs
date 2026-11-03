@@ -7,7 +7,7 @@ use crate::{
     templates::{
         components::{
             badge::{BadgeVariant, badge},
-            form::{checkbox, csrf_input},
+            form::{Checkbox, csrf_input},
             page_container::page_header,
             table::{data_table, empty_state, table_cell, table_row},
         },
@@ -64,7 +64,13 @@ fn ban_card(base: &str, csrf_token: &str) -> Markup {
         csrf_token,
         html! {
             (blocklist_text_field("domain", "Domain or pattern", "example.com or *shop*.example.com", true))
-            (checkbox("match_subdomains", "true", "Match subdomains (e.g. sub.example.com)", true, true))
+            (Checkbox {
+                name: "match_subdomains",
+                value: "true",
+                label: "Match subdomains (e.g. sub.example.com)",
+                checked: true,
+                enabled: true,
+            }.render())
             (blocklist_text_field("audit_log_reason", "Private reason (audit log, optional)", "Why is this ban being applied?", false))
         },
         "Ban",

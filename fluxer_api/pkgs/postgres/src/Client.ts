@@ -5,6 +5,9 @@ import type {Pool, PoolClient, PoolConfig, QueryResult, QueryResultRow} from 'pg
 import pg from 'pg';
 
 const MAX_DIAGNOSTIC_FIELD_LENGTH = 128;
+const INVALID_PASSWORD_CODE = '28P01';
+const PASSWORD_MISMATCH_DOCS = 'https://docs.fluxer.com/operator/rexctl/#rexctl-doctor';
+const SYNCHRONOUS_COMMIT_LEVELS = new Set(['on', 'off', 'local', 'remote_write', 'remote_apply']);
 
 interface PostgresConnectionDiagnostic {
 	phase: 'idle' | 'checked_out';
@@ -33,6 +36,7 @@ interface PostgresConfig {
 	maxConnections?: number;
 	kvTable?: string;
 	preparedStatements?: boolean;
+	synchronousCommit?: string;
 }
 
 export interface PostgresQueryable {
@@ -47,6 +51,7 @@ export interface IPostgresClient extends PostgresQueryable {
 	connect(): Promise<void>;
 	shutdown(): Promise<void>;
 	transaction<T>(fn: (client: PostgresQueryable) => Promise<T>): Promise<T>;
+	session<T>(fn: (client: PostgresQueryable) => Promise<T>): Promise<T>;
 	kvTable(): string;
 }
 
@@ -93,6 +98,14 @@ function connectionDiagnostic(
 	};
 }
 
+function explainConnectError(error: unknown): unknown {
+	if (!(error instanceof Error) || !('code' in error) || error.code !== INVALID_PASSWORD_CODE) return error;
+	return new Error(
+		`${error.message}. The password the API was given differs from the one stored in the existing Postgres data. Postgres sets that password only when its data volume is first created, so changing POSTGRES_PASSWORD later does not change it. Put the old password back, or run rexctl doctor --fix to set the new one inside the database: ${PASSWORD_MISMATCH_DOCS}`,
+		{cause: error},
+	);
+}
+
 function reportConnectionError(diagnostic: PostgresConnectionDiagnostic): void {
 	console.error('Postgres connection error', diagnostic);
 }
@@ -109,11 +122,17 @@ class PostgresClient implements IPostgresClient {
 	private activeOperations = 0;
 	private resolveOperationsDrained: (() => void) | null = null;
 	private readonly acquiredConnections = new WeakMap<PoolClient, AcquiredPostgresConnection>();
+	private readonly sessions = new Set<PoolClient>();
 
 	constructor(
 		config: PostgresConfig,
 		private readonly onConnectionError: PostgresConnectionErrorReporter,
 	) {
+		if (config.synchronousCommit !== undefined && !SYNCHRONOUS_COMMIT_LEVELS.has(config.synchronousCommit)) {
+			throw new Error(
+				`Postgres synchronous_commit must be one of ${[...SYNCHRONOUS_COMMIT_LEVELS].join(', ')}, got ${JSON.stringify(config.synchronousCommit)}`,
+			);
+		}
 		this.config = {...config};
 		this.pool = null;
 	}
@@ -130,6 +149,7 @@ class PostgresClient implements IPostgresClient {
 	}
 
 	private async openPool(): Promise<void> {
+		const synchronousCommit = this.config.synchronousCommit;
 		const poolConfig: PoolConfig & {scramMaxIterations: number} = {
 			connectionString: this.config.url || undefined,
 			host: this.config.url ? undefined : (this.config.host ?? '127.0.0.1'),
@@ -140,6 +160,11 @@ class PostgresClient implements IPostgresClient {
 			ssl: this.config.ssl ? {rejectUnauthorized: true, ca: normalizePem(this.config.sslCa)} : undefined,
 			max: this.config.maxConnections ?? 20,
 			scramMaxIterations: 0,
+			onConnect: synchronousCommit
+				? async (client) => {
+						await client.query(`SET synchronous_commit = ${synchronousCommit}`).catch(() => {});
+					}
+				: undefined,
 		};
 		const pool = new pg.Pool(poolConfig);
 		this.observePoolConnections(pool);
@@ -159,7 +184,7 @@ class PostgresClient implements IPostgresClient {
 			} catch (cleanupError) {
 				throw new AggregateError([error, cleanupError], 'Postgres connection and pool cleanup failed');
 			}
-			throw error;
+			throw explainConnectError(error);
 		}
 		this.pool = pool;
 	}
@@ -203,6 +228,7 @@ class PostgresClient implements IPostgresClient {
 
 	private async closePool(): Promise<void> {
 		await this.connection;
+		for (const client of this.sessions) void client.end().catch(() => {});
 		if (this.activeOperations > 0) {
 			await new Promise<void>((resolve) => {
 				this.resolveOperationsDrained = resolve;
@@ -239,7 +265,7 @@ class PostgresClient implements IPostgresClient {
 			if (acquired.error) throw acquired.error;
 			await client.query('BEGIN');
 			if (acquired.error) throw acquired.error;
-			const result = await runTransactionCallback(client, acquired, this.config.preparedStatements !== false, fn);
+			const result = await runConnectionCallback(client, acquired, this.config.preparedStatements !== false, fn);
 			if (acquired.error) throw acquired.error;
 			await client.query('COMMIT');
 			return result;
@@ -260,6 +286,21 @@ class PostgresClient implements IPostgresClient {
 		} finally {
 			client.release(discardClient || acquired === null || acquired.error !== null);
 		}
+	}
+
+	async session<T>(fn: (client: PostgresQueryable) => Promise<T>): Promise<T> {
+		return this.withPool(async (pool) => {
+			const client = await pool.connect();
+			this.sessions.add(client);
+			try {
+				const acquired = this.getAcquiredConnection(client);
+				if (acquired.error) throw acquired.error;
+				return await runConnectionCallback(client, acquired, this.config.preparedStatements !== false, fn);
+			} finally {
+				this.sessions.delete(client);
+				client.release(true);
+			}
+		});
 	}
 
 	kvTable(): string {
@@ -291,7 +332,7 @@ class PostgresClient implements IPostgresClient {
 	}
 }
 
-async function runTransactionCallback<T>(
+async function runConnectionCallback<T>(
 	client: PoolClient,
 	acquired: AcquiredPostgresConnection,
 	preparedStatements: boolean,
@@ -304,7 +345,7 @@ async function runTransactionCallback<T>(
 			values: Array<unknown> = [],
 			name?: string,
 		) => {
-			if (!active) throw new Error('Postgres transaction callback has already completed');
+			if (!active) throw new Error('Postgres connection callback has already completed');
 			if (acquired.error) throw acquired.error;
 			return client.query<TRow>({text, values, name: preparedStatements ? name : undefined});
 		},

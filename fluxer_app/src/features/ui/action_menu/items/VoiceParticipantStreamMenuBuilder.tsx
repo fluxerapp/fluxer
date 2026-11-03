@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MORE_OPTIONS_DESCRIPTOR, WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	ChangeStreamIcon,
 	LocalMuteIcon,
@@ -22,7 +23,7 @@ import {
 } from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import type {
 	MenuCheckboxType,
 	MenuGroupType,
@@ -223,7 +224,7 @@ function buildStreamMoreOptions(options: VoiceParticipantStreamMenuBuilderOption
 				onChange: (checked: boolean) => VoiceSettingsCommands.update({showMyOwnScreenShare: checked}),
 			},
 			{
-				label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR),
+				label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 				checked: pauseOwnScreenSharePreviewOnUnfocus,
 				onChange: (checked: boolean) => VoiceSettingsCommands.update({pauseOwnScreenSharePreviewOnUnfocus: checked}),
 			},
@@ -335,7 +336,7 @@ export const VoiceParticipantOwnStreamMenuTail: React.FC<VoiceParticipantOwnStre
 									}
 									data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.voice-participant-own-stream-menu-tail.checkbox-item--2"
 								>
-									{i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR)}
+									{i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 								</CheckboxItem>
 								{guildId === undefined && (
 									<MenuItem

@@ -7,7 +7,9 @@ import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageT
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
 import {isOriginalPoster} from '@app/features/forum/utils/ForumChannelUtils';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import type {Guild} from '@app/features/guild/models/Guild';
+import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {compactMessagePrefixProps} from '@app/features/theme/layout/MessageLayoutAttributes';
@@ -42,6 +44,7 @@ interface CompactAuthorPrefixProps {
 	previewOverrides?: {
 		usernameColor?: string;
 		displayName?: string;
+		iconRole?: GuildRole | null;
 	};
 }
 
@@ -168,6 +171,7 @@ export function CompactAuthorPrefix({
 	previewOverrides,
 }: CompactAuthorPrefixProps): React.ReactElement {
 	const isPreview = Boolean(previewContext);
+	const iconRole = previewOverrides?.iconRole !== undefined ? previewOverrides.iconRole : member?.getIconRole();
 	return (
 		<span
 			className={styles.compactAuthorPrefix}
@@ -215,17 +219,30 @@ export function CompactAuthorPrefix({
 						data-flx="channel.compact-message-layout.compact-author-prefix.message-timeout-indicator"
 					/>
 				)}
-				<MessageUsername
-					user={author}
-					message={message}
-					guild={guild}
-					member={member}
-					className={styles.messageUsername}
-					isPreview={isPreview}
-					previewColor={previewOverrides?.usernameColor}
-					previewName={previewOverrides?.displayName}
-					data-flx="channel.compact-message-layout.compact-author-prefix.message-username"
-				/>
+				<span
+					className={styles.messageAuthorName}
+					data-flx="channel.compact-message-layout.compact-author-prefix.message-author-name"
+				>
+					<MessageUsername
+						user={author}
+						message={message}
+						guild={guild}
+						member={member}
+						className={styles.messageUsername}
+						isPreview={isPreview}
+						previewColor={previewOverrides?.usernameColor}
+						previewName={previewOverrides?.displayName}
+						data-flx="channel.compact-message-layout.compact-author-prefix.message-username"
+					/>
+					{iconRole && (
+						<RoleIcon
+							role={iconRole}
+							size={16}
+							className={styles.messageRoleIcon}
+							data-flx="channel.compact-message-layout.compact-author-prefix.role-icon"
+						/>
+					)}
+				</span>
 			</span>
 			<span className={styles.copyOnly} data-flx="channel.compact-message-layout.compact-author-prefix.copy-only--2">
 				:{' '}

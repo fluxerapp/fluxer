@@ -85,6 +85,9 @@ p:logger:
 p:markdown-parser:
   - changed-files:
     - any-glob-to-any-file: packages/markdown_parser/**/*
+p:number-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/number_utils/**/*
 p:openapi:
   - changed-files:
     - any-glob-to-any-file: packages/openapi/**/*

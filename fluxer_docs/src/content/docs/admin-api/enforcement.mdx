@@ -1,0 +1,348 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Enforcement decisions
+description: The record behind every restriction staff apply, the notice it sends, and the routes that read, annotate and end it.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An enforcement decision records why staff restricted an account or community. The route that applies the restriction records the decision in the same request, and the decision sends a notice to the holder. Every route that suspends, warns, limits, closes or removes something takes a [`decision`](#enforcement-decision-input) or a [`basis`](#basis).
+
+The restriction itself is still stored on the account, as `temp_banned_until` and the `DISABLED` flag for a suspension or `pending_deletion_at` and the `DELETED` flag for a closure. The account's `enforcement_decision_id` is the suspension or closure decision behind its current state.
+
+## Concepts
+
+| Term | Meaning |
+| --- | --- |
+| subject | The account, bot or community the decision is about |
+| holder | The person who gets the notice, which is the account itself, a bot's owner or a community's owner |
+| kind | `warning`, `suspension`, `closure`, `feature_limit`, `content_removal`, `profile_reset` or `community_removal` |
+| reason code | An enforcement [deletion reason](/admin-api/users/#deletion-reasons). Codes 1, 2, 19, 32 and 33 are refused |
+| handling | `standard`, `protected` or `restricted`, set by the reason code. It decides how much detail the notice gives |
+| evidence | A snapshot of the subject's messages, or for a community the messages posted in it, taken when the decision is made |
+| notes | Internal staff notes. The `X-Audit-Log-Reason` header of the request is the first note |
+| notice | The statement of reasons the holder gets by email, system DM or at sign-in |
+
+### Handling
+
+| Handling | Reason codes | Notice detail |
+| --- | --- | --- |
+| standard | Every other code | The rule, where and when it happened, and the note to the user |
+| protected | 7, 10, 11, 15, 23 | The same, but messages in direct and group conversations show the month only |
+| restricted | 9, 13, 24 | The rule only, with no locations and no note to the user |
+
+A restricted reason allows only a permanent suspension or a content removal, and its evidence keeps only the message ID, channel ID, time and attachment count.
+
+### Lifecycle
+
+A decision is `active` until staff end it as `lifted` or `reversed`. Fluxer ends a temporary suspension that ran out as `expired` when the holder next signs in, or in a task that runs every six hours. The system user (ID 0) is `ended_by`, no notice is sent, and staff can still end the decision as `reversed`.
+
+The API computes two more states each time it returns a decision, and never stores them.
+
+- `expired`: an active suspension or feature limit whose `ends_at` has passed, before Fluxer ends it
+- `replaced`: an active suspension or closure that a later decision replaced
+
+A closure replaces an active suspension and lifts it. A replaced decision gets no ended email.
+
+### Basis
+
+Routes whose action is not always enforcement take a `basis` in place of a `decision`. Only the `enforcement` basis records a decision and sends a notice.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | `enforcement` (a rule was broken), `holder_request` (the holder asked) or `housekeeping` (no conduct involved) |
+| decision?<sup>1</sup> | [enforcement decision input](#enforcement-decision-input) object | Why the subject is restricted |
+
+<sup>1</sup> Required for `enforcement` and refused for the others. A bulk job takes a [narrower decision](/admin-api/bulk-jobs/)
+
+| Route | Bases |
+| --- | --- |
+| [Schedule user deletion](/admin-api/users/#schedule-user-deletion) | `enforcement`, `holder_request`, `housekeeping` |
+| [Clear user profile fields](/admin-api/users/#clear-user-profile-fields) | `enforcement`, `holder_request`, `housekeeping` |
+| [Shred user messages](/admin-api/users/#shred-user-messages) | `enforcement`, `holder_request`, `housekeeping` |
+| [Delete all user messages](/admin-api/users/#delete-all-user-messages) | `enforcement`, `holder_request`, `housekeeping` |
+| [Delete message](/admin-api/messages/#delete-message) | `holder_request`, `housekeeping` |
+| [Delete guild](/admin-api/guilds/#delete-guild) | `enforcement`, `holder_request` |
+
+### Feature limits
+
+Each feature limit decision limits one feature, and ending one never touches another.
+
+| Limit | Flag | Reason codes |
+| --- | --- | --- |
+| `direct_messages` | `SPAMMER` | 3, 6, 8, 18, 21 |
+| `reports` | `REPORT_BANNED` | 29 |
+| `purchases` | `PURCHASE_DISABLED` | 12, 14 |
+
+Only a `reports` limit ends, after 90 days by default and at most 365. The next report from the account after a reports limit's `ends_at` clears `REPORT_BANNED` and is accepted.
+
+### Removals
+
+[Shred user messages](/admin-api/users/#shred-user-messages) snapshots the first 50 messages as evidence, or every message for a restricted reason, before it queues the job, and it refuses `evidence`. [Delete all user messages](/admin-api/users/#delete-all-user-messages) refuses restricted reasons.
+
+A profile reset saves the old values of the cleared fields as `profile_values` and needs no evidence or statement.
+
+A community removal has the community as its subject and sends the notice to its owner. Evidence must be posted in that community, linked reports must be about it, and restricted reasons are refused.
+
+Removed content cannot be restored, and these decisions end only as `reversed`.
+
+### Reporter outcomes
+
+A decision that resolves linked reports tells each reporter what happened to the item.
+
+| Outcome | Decisions |
+| --- | --- |
+| `removed` | A removed message, a profile reset or a community removal |
+| `restricted` | A suspension, closure or feature limit |
+| `warned` | A warning, and the reporter is told only that action was taken |
+
+A content removal or profile reset that leaves the reported item in place leaves the report pending. [Update report](/admin-api/reports/#update-report) sets the outcome for a manual resolution.
+
+### Network blocks
+
+A permanent suspension, or a closure for a broken rule, can block the networks the account used in the last 30 days. Set `block_networks` on [Suspend user](/admin-api/users/#suspend-user) or [Schedule user deletion](/admin-api/users/#schedule-user-deletion), and use [List network block candidates](/admin-api/users/#list-network-block-candidates) to see which addresses qualify. The blocks last 90 days unless the request sets another length, and they are removed when the decision ends. These are separate from [plain IP blocks](/admin-api/blocklists/#network-blocks-from-decisions).
+
+Fluxer never blocks an exempt address or a special-purpose range, such as a private, loopback or link-local range, and leaves an address that is already blocked as it is. It lists all of these in `skipped_ips`. It refuses an address where another account that is not suspended or closed was last active, matching IPv6 addresses by their /64.
+
+The notice says the networks were blocked and until when, and never shows an address.
+
+### Review queue
+
+A decision with `automation` set to `automated` waits in the review queue until a person ends it or records a warning, suspension or closure on the same account. Its `decided_by` is the system user (ID 0).
+
+## Enforcement decision input
+
+Every route that records a decision takes this object as `decision`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reason_code | integer | An enforcement [deletion reason](/admin-api/users/#deletion-reasons) |
+| source | string | `report` after a report, `own_review` otherwise |
+| automation | string | `flagged` when automated tools flagged it first, `none` otherwise |
+| report_ids?<sup>1</sup> | array[snowflake] | Reports about the subject that the decision resolves (at most 20) |
+| evidence?<sup>2</sup> | array[object] | `channel_id` and `message_id` of messages the decision relies on (at most 50) |
+| statement?<sup>3</sup> | string | Note to the user, shown in the notice (1-500 characters) |
+| rights_holder?<sup>4</sup> | string | The rights holder or the right concerned (1-200 characters) |
+| confirmations?<sup>5</sup> | array[string] | `evidence_preserved` and `reports_filed_or_not_required` |
+
+<sup>1</sup> Required when `source` is `report`. Each report must be about the subject. Pending reports are resolved and their reporters told the [outcome](#reporter-outcomes). The subject's messages in each report's snapshot, or for a community the messages posted in it, become evidence too
+
+<sup>2</sup> Every message must exist and be the subject's own, or for a community be posted in it. A message in a direct or group conversation needs a linked report that covers it
+
+<sup>3</sup> The decision needs an evidence message or a statement, except for a profile reset. Restricted reasons refuse it
+
+<sup>4</sup> Required for code 31 (`COPYRIGHT`) and refused for every other code
+
+<sup>5</sup> Both are required for restricted reasons
+
+The `X-Audit-Log-Reason` header is required on every route that takes a decision.
+
+### Validation
+
+Fluxer checks ACLs before it looks anything up. Evidence needs `message:lookup`, `remove_evidence` needs `message:shred`, reports need `report:view` and `report:resolve`, and `block_networks` needs `ban:ip:add` and `user:view:ip`. Every other failure is a 400 `INVALID_FORM_BODY` with one of these codes.
+
+- `ENFORCEMENT_INTERNAL_NOTE_REQUIRED` when the `X-Audit-Log-Reason` header is missing
+- `ENFORCEMENT_KIND_NOT_ALLOWED` when the reason code does not allow this kind or action, or a bot is given anything other than a suspension or closure
+- `ENFORCEMENT_LIMIT_NOT_ALLOWED` when the reason code does not allow this feature limit
+- `ENFORCEMENT_LIMIT_END_INVALID` when a reports limit ends in the past or after 365 days, or another limit has an end
+- `ENFORCEMENT_REPORT_REQUIRED` when `source` is `report` and no report is linked
+- `ENFORCEMENT_REPORT_MISMATCH` when a linked report does not exist or is about someone else
+- `ENFORCEMENT_EVIDENCE_NOT_ALLOWED` when a shred has evidence messages
+- `ENFORCEMENT_EVIDENCE_NOT_FOUND` when an evidence message does not exist
+- `ENFORCEMENT_EVIDENCE_NOT_SUBJECT` when an evidence message is not the subject's, or not posted in the community
+- `ENFORCEMENT_EVIDENCE_DM_UNREPORTED` when an evidence message is in a conversation no linked report covers
+- `ENFORCEMENT_FACTS_REQUIRED` when there is no evidence message and no statement
+- `ENFORCEMENT_EVIDENCE_REQUIRED` when a restricted reason has no evidence, or `remove_evidence` has nothing to remove
+- `ENFORCEMENT_STATEMENT_NOT_ALLOWED` when a restricted reason has a statement
+- `ENFORCEMENT_PERMANENT_REQUIRED` when a restricted reason has a temporary suspension
+- `ENFORCEMENT_CONFIRMATIONS_REQUIRED` when a restricted reason is missing a confirmation
+- `ENFORCEMENT_RIGHTS_HOLDER_REQUIRED` when code 31 has no `rights_holder`
+- `ENFORCEMENT_RIGHTS_HOLDER_NOT_ALLOWED` when another code has a `rights_holder`
+- `ENFORCEMENT_NETWORK_BLOCK_NOT_ALLOWED` when `block_networks` is given with a temporary suspension or a closure not for a broken rule
+- `ENFORCEMENT_NETWORK_UNKNOWN` when the account did not use an address in `block_networks` in the last 30 days
+- `ENFORCEMENT_NETWORK_SHARED` when another unrestricted account was last active on an address in `block_networks`
+
+### Notice delivery
+
+A person's suspension or closure notice is sent by email only. Every other notice, including any notice about a bot, is also sent as a system DM to the holder. `notice_status` is `undelivered` when no channel can deliver the notice. A suspension or closure notice that was not sent is delivered at the holder's next sign-in. The notice uses the instance's own name.
+
+## Enforcement decision object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| decision_id | snowflake | The ID of the decision |
+| subject_type | string | `user` or `guild` |
+| subject_id | snowflake | The ID of the account, bot or community |
+| subject_name | ?string | The bot username or community name when the decision was made, null for a person's own account |
+| recipient_user_id | ?snowflake | The holder, or null when there is none |
+| kind | string | The [kind](#concepts) of decision |
+| reason_code | integer | The [deletion reason](/admin-api/users/#deletion-reasons) |
+| source | string | `report` or `own_review` |
+| automation | string | `none`, `flagged` or `automated` |
+| statement | ?string | Note to the user |
+| rights_holder | ?string | The rights holder or the right concerned |
+| ends_at | ?ISO8601 timestamp | When a suspension or feature limit ends, null when permanent |
+| deletion_at | ?ISO8601 timestamp | When a closed account is deleted |
+| limit | ?string | `direct_messages`, `reports` or `purchases` for a feature limit |
+| profile_fields | array[string] | The fields a profile reset cleared |
+| removed_message_count | ?integer | Messages the decision removed |
+| removed_all_messages | boolean | Whether every message of the account was removed |
+| payment_at | ?ISO8601 timestamp | The charge a payment decision is about |
+| report_ids<sup>1</sup> | array[snowflake] | Linked reports |
+| decided_by | snowflake | The staff member who decided, or 0 for an automated decision |
+| created_at | ISO8601 timestamp | When the decision was made |
+| status | string | `active` or `ended` |
+| end_outcome | ?string | `lifted`, `reversed` or `expired` |
+| ended_at | ?ISO8601 timestamp | When the decision ended |
+| ended_by | ?snowflake | Who ended it |
+| end_statement | ?string | Note to the user sent with the ended email |
+| notice_status | string | `pending`, `sent` or `undelivered` |
+| notice_channels | array[string] | `email`, `system_dm` and `sign_in` |
+| notice_locale | ?string | The locale the notice was written in |
+| notice_text | ?string | The plain text that was sent |
+| notice_sent_at | ?ISO8601 timestamp | When the holder got the notice |
+| expired | boolean | See [Lifecycle](#lifecycle) |
+| replaced | boolean | See [Lifecycle](#lifecycle) |
+
+<sup>1</sup> Empty without `report:view`
+
+[Get enforcement decision](#get-enforcement-decision) adds these fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| notes | array[object] | Internal notes in order, each with `note_id`, `author_id`, `body` and `created_at` |
+| evidence<sup>1</sup> | array[object] | Snapshot messages, each with `message_id`, `channel_id`, `timestamp`, `content`, `attachments` and `attachment_count` |
+| profile_values<sup>1</sup> | ?object | Profile values before a reset |
+| network_blocks<sup>2</sup> | array[object] | The decision's unexpired [network blocks](#network-blocks), each with `ip` and `expires_at` |
+| notice | object | The notice as the holder sees it, in English |
+
+<sup>1</sup> Message content, attachment details and profile values are null without `message:lookup`. Evidence is deleted a year after the decision, and each note a year after it was written
+
+<sup>2</sup> Each `ip` is masked to its /24 or /64 without `user:view:ip`
+
+## List enforcement decisions
+
+<RouteHeader method="GET" path="/v1/admin/enforcement-decisions" />
+
+Lists the decisions about one account or community, newest first, or the [review queue](#review-queue). You need `enforcement:view`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| review_queue?<sup>1</sup> | boolean | List the automated decisions waiting for a person |
+| subject_type? | string | `user` or `guild` |
+| subject_id? | snowflake | The ID of the account or community |
+| limit? | integer | Maximum number of decisions (1-100, default 50) |
+| before? | snowflake | Return decisions older than this decision |
+
+<sup>1</sup> Without `review_queue=true`, `subject_type` and `subject_id` are required
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| decisions | array[[enforcement decision](#enforcement-decision-object) object] | The decisions, without the fields [Get enforcement decision](#get-enforcement-decision) adds |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The decisions were listed |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Get enforcement decision
+
+<RouteHeader method="GET" path="/v1/admin/enforcement-decisions/{decision_id}" />
+
+Returns one decision with its notes, evidence and notice. You need `enforcement:view`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [enforcement decision](#enforcement-decision-object) object | The decision was found |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ENFORCEMENT_DECISION` when no decision has this ID |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Add a note to an enforcement decision
+
+<RouteHeader method="POST" path="/v1/admin/enforcement-decisions/{decision_id}/notes" auditReason />
+
+Appends an internal note that staff can see and nobody can change. You need `enforcement:annotate`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| body | string | The note (1-2000 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| note_id | snowflake | The ID of the note |
+| author_id | snowflake | The staff member who wrote it |
+| body | string | The note |
+| created_at | ISO8601 timestamp | When it was written |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The note was added |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ENFORCEMENT_DECISION` when no decision has this ID |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## End an enforcement decision
+
+<RouteHeader method="POST" path="/v1/admin/enforcement-decisions/{decision_id}/end" auditReason />
+
+Ends an active decision, or reverses a suspension that ended as `expired`, and emails the holder. You need `enforcement:view` and the ACL of the route that made the decision, plus `ban:ip:remove` when the decision has network blocks.
+
+| Kind | ACL |
+| --- | --- |
+| `suspension` | `user:temp_ban` |
+| `closure` | `user:delete` |
+| `warning`, `feature_limit` | `user:update:flags` |
+| `profile_reset` | `user:update:profile` |
+| `community_removal` | `guild:delete` |
+
+A `content_removal` needs `message:shred`, or `message:delete_all` when every message was removed.
+
+| Kind | What ending it does |
+| --- | --- |
+| `suspension` | Clears `temp_banned_until`, `enforcement_decision_id` and `DISABLED` |
+| `closure` | Cancels the deletion and clears `DELETED`, `deletion_reason_code` and `enforcement_decision_id` |
+| `feature_limit` | Removes its flag unless another active decision has the same limit |
+
+Ending any other kind changes nothing on the account. Ending a closure also unblocks the email address if the closure blocked it, and ending a suspension or closure removes its network blocks.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| outcome<sup>1</sup> | string | `lifted` or `reversed` |
+| statement? | string | Note to the user, sent in the email (1-500 characters) |
+
+<sup>1</sup> `lifted` ends a restriction that was correct and `reversed` says the decision was wrong. Only suspensions, closures and feature limits can be lifted, and a suspension that ended as `expired` or a suspension or closure no longer on the account can only be reversed
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [enforcement decision](#enforcement-decision-object) object | The decision ended |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `ENFORCEMENT_OUTCOME_NOT_ALLOWED` when the decision cannot be lifted |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ENFORCEMENT_DECISION` when no decision has this ID |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_ENDED` when the decision already ended, or ended as `expired` and was given `lifted` |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_REPLACED` when `lifted` is given for a suspension or closure that a later one replaced |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DELETION_STARTED` when the deletion of a closed account has started |
+
+The holder is emailed that the restriction ended or was reversed, with the statement when one is given. Every kind except a person's suspension or closure also gets a system DM.
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

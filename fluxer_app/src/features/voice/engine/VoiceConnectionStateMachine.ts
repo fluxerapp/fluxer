@@ -2,14 +2,14 @@
 
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type VoiceConnectionDisconnectReason = 'user' | 'error' | 'server';
+type VoiceConnectionDisconnectReason = 'user' | 'error' | 'server';
 export type VoiceConnectionLocalDisconnectReason =
 	| VoiceConnectionDisconnectReason
 	| 'channelMove'
 	| 'abort'
 	| 'replaced'
 	| null;
-export type VoiceConnectionFailureReason = 'connectTimeout' | 'gatewayTimeout' | 'transport' | null;
+type VoiceConnectionFailureReason = 'connectTimeout' | 'gatewayTimeout' | 'transport' | null;
 
 export const VoiceEngineConnectionState = Object.freeze({
 	Disconnected: 'disconnected',
@@ -48,7 +48,7 @@ export interface VoiceConnectionServerUpdatePayload {
 	e2ee_key?: string | null;
 }
 
-export interface VoiceConnectionHotSwapContext {
+interface VoiceConnectionHotSwapContext {
 	pendingRoom: unknown | null;
 	previousRoom: unknown | null;
 	inProgress: boolean;
@@ -56,7 +56,7 @@ export interface VoiceConnectionHotSwapContext {
 	queuedOperationCount: number;
 }
 
-export interface VoiceConnectionMachineContext {
+interface VoiceConnectionMachineContext {
 	room: unknown | null;
 	guildId: string | null;
 	channelId: string | null;
@@ -141,7 +141,7 @@ const initialHotSwapContext: VoiceConnectionHotSwapContext = {
 	queuedOperationCount: 0,
 };
 
-export const initialVoiceConnectionContext: VoiceConnectionMachineContext = {
+const initialVoiceConnectionContext: VoiceConnectionMachineContext = {
 	room: null,
 	guildId: null,
 	channelId: null,
@@ -251,7 +251,7 @@ function clearHotSwap(context: VoiceConnectionMachineContext, abortRequested: bo
 	};
 }
 
-export const voiceConnectionStateMachine = setup({
+const voiceConnectionStateMachine = setup({
 	types: {} as {
 		context: VoiceConnectionMachineContext;
 		events: VoiceConnectionEvent;
@@ -551,7 +551,7 @@ export function getVoiceConnectionFailedTarget(
 	return {guildId: failedGuildId, channelId: failedChannelId};
 }
 
-export function shouldApplyVoiceServerTimeout(
+function shouldApplyVoiceServerTimeout(
 	context: VoiceConnectionMachineContext,
 	guildId: string | null,
 	channelId: string,

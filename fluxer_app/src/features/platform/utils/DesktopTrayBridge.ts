@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Updater from '@app/features/app/state/Updater';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
 import Authentication from '@app/features/auth/state/Authentication';
+import {switchToSavedAccount} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {formatClientBuildInfo, getClientInfo, getClientInfoSync} from '@app/features/platform/utils/ClientInfo';
 import Presence from '@app/features/presence/state/Presence';
+import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import UserSettings from '@app/features/user/state/UserSettings';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -68,6 +73,8 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 			selfMute: LocalVoiceState.getSelfMute(),
 			selfDeaf: LocalVoiceState.getSelfDeaf(),
 			presenceStatus: toTrayStatus(resolvePresenceStatus()),
+			hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+			customCssOff: ThemeSettingsState.customCssOff,
 		});
 	};
 	void getClientInfo()
@@ -88,6 +95,8 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 				selfMute: LocalVoiceState.getSelfMute(),
 				selfDeaf: LocalVoiceState.getSelfDeaf(),
 				status: resolvePresenceStatus(),
+				hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+				customCssOff: ThemeSettingsState.customCssOff,
 			};
 		},
 		pushState,
@@ -113,6 +122,18 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 			}
 			case 'check-for-updates': {
 				void Updater.checkForUpdates(true, true);
+				break;
+			}
+			case 'switch-account': {
+				void switchToSavedAccount({accountKey: payload.accountKey});
+				break;
+			}
+			case 'open-account-switcher': {
+				openAccountSwitcherModal();
+				break;
+			}
+			case 'toggle-custom-css': {
+				ThemeSettingsCommands.toggleCustomCss();
 				break;
 			}
 		}

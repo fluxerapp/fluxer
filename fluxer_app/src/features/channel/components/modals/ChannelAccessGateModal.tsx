@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {MatureContentCheckModal} from '@app/features/auth/components/modals/MatureContentCheckModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as GuildMatureContentCommands from '@app/features/guild/commands/GuildMatureContentCommands';
 import GuildMatureContentAgree, {
@@ -10,21 +9,15 @@ import GuildMatureContentAgree, {
 } from '@app/features/guild/state/GuildMatureContentAgree';
 import {
 	CANCEL_DESCRIPTOR,
-	COMPLETE_MATURE_CONTENT_CHECK_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
 	MATURE_CONTENT_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
 	PROCEED_DESCRIPTOR,
-	UNDERSTOOD_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getDefaultContentWarningText} from '@app/features/messaging/utils/ContentWarningUtils';
-import {
-	getEffectiveMatureContentGeoContext,
-	isMatureContentCheckAvailableInRegion,
-} from '@app/features/moderation/utils/MatureContentGeoUtils';
+import {getEffectiveMatureContentGeoContext} from '@app/features/moderation/utils/MatureContentGeoUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {getRegionDisplayName} from '@app/features/user/utils/UserGeo';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
@@ -44,17 +37,10 @@ const CHANNEL_CONTENT_WARNING_DESCRIPTOR = msg({
 	message: 'Channel content warning',
 	comment: 'Title in a modal shown before opening a channel with a custom content warning.',
 });
-const DUE_TO_MATURE_CONTENT_LAWS_DESCRIPTOR = msg({
-	message:
-		'Due to mature content laws in {regionName}, this content is blocked until you complete the mature content check.',
+const MATURE_CONTENT_REGION_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'Due to mature content laws in {regionName}, this content is not available from here.',
 	comment:
-		'Body in the channel gate modal for regions that require a mature content check. {regionName} is a localized place name.',
-});
-const MATURE_CONTENT_CHECK_NOT_AVAILABLE_DESCRIPTOR = msg({
-	message:
-		'Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK.',
-	comment:
-		'Body in the channel gate modal for regions where mature content is blocked and the app cannot offer the check. {regionName} is a localized place name.',
+		'Body in the channel gate modal for regions where local law blocks mature content. {regionName} is a localized place name.',
 });
 const MATURE_COMMUNITY_UNAVAILABLE_DESCRIPTOR = msg({
 	message: 'This mature community is not available to your account.',
@@ -129,8 +115,6 @@ export const ChannelAccessGateModal = observer(
 		const warningBody = hasCustomWarningText ? resolved.effectiveWarningText : getDefaultContentWarningText(i18n);
 		const isVoiceChannel = channel?.type === ChannelTypes.GUILD_VOICE;
 		const isLinkChannel = channel?.type === ChannelTypes.GUILD_LINK;
-		const matureContentCheckAvailable =
-			reason === MatureContentGateReason.GEO_RESTRICTED && isMatureContentCheckAvailableInRegion();
 		const title = useMemo(() => {
 			if (
 				reason === MatureContentGateReason.GEO_RESTRICTED ||
@@ -153,10 +137,7 @@ export const ChannelAccessGateModal = observer(
 			if (reason === MatureContentGateReason.GEO_RESTRICTED) {
 				const {countryCode, regionCode} = getEffectiveMatureContentGeoContext();
 				const regionName = getRegionDisplayName(i18n, countryCode ?? undefined, regionCode ?? undefined);
-				if (matureContentCheckAvailable) {
-					return i18n._(DUE_TO_MATURE_CONTENT_LAWS_DESCRIPTOR, {regionName});
-				}
-				return i18n._(MATURE_CONTENT_CHECK_NOT_AVAILABLE_DESCRIPTOR, {regionName});
+				return i18n._(MATURE_CONTENT_REGION_UNAVAILABLE_DESCRIPTOR, {regionName});
 			}
 			if (reason === MatureContentGateReason.MATURE_CONTENT_CHECK_REQUIRED) {
 				if (resolved.scope === 'guild') {
@@ -189,7 +170,6 @@ export const ChannelAccessGateModal = observer(
 		}, [
 			i18n.locale,
 			reason,
-			matureContentCheckAvailable,
 			resolved.scope,
 			resolved.effectiveMatureContent,
 			warningBody,
@@ -200,20 +180,20 @@ export const ChannelAccessGateModal = observer(
 		const handleCancel = useCallback(() => {
 			ModalCommands.pop();
 		}, []);
-		const handleOpenMatureContentCheck = useCallback(() => {
-			ModalCommands.pop();
-			ModalCommands.push(
-				modal(() => (
-					<MatureContentCheckModal data-flx="channel.channel-access-gate-modal.mature-content-check-modal" />
-				)),
-			);
-		}, []);
 		const handleConfirm = useCallback(() => {
 			agreeToResolvedScope(resolved, channelId ?? channel?.id ?? null);
 			ModalCommands.pop();
 			onConfirm?.();
 		}, [channel?.id, channelId, onConfirm, resolved]);
 		const canConfirm = reason === MatureContentGateReason.CONSENT_REQUIRED;
+		let confirmDescriptor = CONTINUE_DESCRIPTOR;
+		if (canConfirm) {
+			if (resolved.effectiveMatureContent) {
+				confirmDescriptor = PROCEED_DESCRIPTOR;
+			} else if (isLinkChannel) {
+				confirmDescriptor = OPEN_LINK_DESCRIPTOR;
+			}
+		}
 		return (
 			<Modal.Root
 				size="small"
@@ -228,8 +208,8 @@ export const ChannelAccessGateModal = observer(
 						<Modal.Description data-flx="channel.channel-access-gate-modal.modal-description">{body}</Modal.Description>
 					</Modal.ContentLayout>
 				</Modal.Content>
-				<Modal.Footer data-flx="channel.channel-access-gate-modal.modal-footer">
-					{canConfirm && (
+				{canConfirm ? (
+					<Modal.Footer data-flx="channel.channel-access-gate-modal.modal-footer">
 						<Button
 							type="button"
 							variant="secondary"
@@ -238,29 +218,19 @@ export const ChannelAccessGateModal = observer(
 						>
 							{i18n._(CANCEL_DESCRIPTOR)}
 						</Button>
-					)}
-					<Button
-						type="button"
-						ref={initialFocusRef}
-						variant={canConfirm && resolved.effectiveMatureContent ? 'danger' : 'primary'}
-						onClick={
-							canConfirm ? handleConfirm : matureContentCheckAvailable ? handleOpenMatureContentCheck : handleCancel
-						}
-						data-flx="channel.channel-access-gate-modal.button.primary"
-					>
-						{canConfirm
-							? i18n._(
-									resolved.effectiveMatureContent
-										? PROCEED_DESCRIPTOR
-										: isLinkChannel
-											? OPEN_LINK_DESCRIPTOR
-											: CONTINUE_DESCRIPTOR,
-								)
-							: matureContentCheckAvailable
-								? i18n._(COMPLETE_MATURE_CONTENT_CHECK_DESCRIPTOR)
-								: i18n._(UNDERSTOOD_DESCRIPTOR)}
-					</Button>
-				</Modal.Footer>
+						<Button
+							type="button"
+							ref={initialFocusRef}
+							variant={resolved.effectiveMatureContent ? 'danger' : 'primary'}
+							onClick={handleConfirm}
+							data-flx="channel.channel-access-gate-modal.button.primary"
+						>
+							{i18n._(confirmDescriptor)}
+						</Button>
+					</Modal.Footer>
+				) : (
+					<Modal.DismissFooter data-flx="channel.channel-access-gate-modal.dismiss-footer" />
+				)}
 			</Modal.Root>
 		);
 	},

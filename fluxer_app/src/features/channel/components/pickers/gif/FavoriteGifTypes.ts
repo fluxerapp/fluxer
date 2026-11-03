@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isAttachmentCdnUrl, stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 
 export interface FavoriteGifMediaFormat {
@@ -108,14 +109,20 @@ export function pickCanonicalPreviewFormat(
 
 const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
 
+export function stripOwnAttachmentSignature(url: string): string {
+	const mediaEndpoint = RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint;
+	if (mediaEndpoint === undefined) return stripAttachmentSignature(url);
+	return isAttachmentCdnUrl(url, mediaEndpoint) ? stripAttachmentSignature(url) : url;
+}
+
 export function stripFavoriteGifEntrySignatures(entry: FavoriteGifEntry): FavoriteGifEntry {
-	const url = stripAttachmentSignature(entry.url);
-	const proxyUrl = stripAttachmentSignature(entry.proxy_url);
+	const url = stripOwnAttachmentSignature(entry.url);
+	const proxyUrl = stripOwnAttachmentSignature(entry.proxy_url);
 	const media: Record<string, FavoriteGifMediaFormat> = {};
 	let mediaChanged = false;
 	for (const [key, format] of Object.entries(entry.media)) {
-		const src = stripAttachmentSignature(format.src);
-		const proxySrc = stripAttachmentSignature(format.proxy_src);
+		const src = stripOwnAttachmentSignature(format.src);
+		const proxySrc = stripOwnAttachmentSignature(format.proxy_src);
 		if (src === format.src && proxySrc === format.proxy_src) {
 			media[key] = format;
 			continue;

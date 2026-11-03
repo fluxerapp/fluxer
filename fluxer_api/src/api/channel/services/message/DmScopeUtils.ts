@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
+import {userIdToChannelId} from '@app/api/BrandedTypes';
+import {isPersonalNotesChannelId, personalNotesEnabled} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -15,6 +17,9 @@ interface DmScopeOptions {
 }
 
 export function isDmScopeChannelForUser(channel: Channel, userId: UserID): boolean {
+	if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+		return isPersonalNotesChannelId({userId, channelId: channel.id});
+	}
 	const isDm = channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
 	return isDm && channel.recipientIds.has(userId);
 }
@@ -46,6 +51,12 @@ export async function getDmChannelIdsForScope({
 	}
 	if (includeChannel && isDmScopeChannelForUser(includeChannel, userId)) {
 		channelIdStrings.add(includeChannel.id.toString());
+	}
+	const personalNotesChannelId = userIdToChannelId(userId).toString();
+	if (await personalNotesEnabled()) {
+		channelIdStrings.add(personalNotesChannelId);
+	} else {
+		channelIdStrings.delete(personalNotesChannelId);
 	}
 	return Array.from(channelIdStrings);
 }

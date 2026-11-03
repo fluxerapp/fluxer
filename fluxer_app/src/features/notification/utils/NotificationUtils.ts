@@ -8,13 +8,14 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import type {NotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {getNotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl as readBlobAsDataURL} from '@app/features/platform/utils/BlobDataUrl';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import Sound from '@app/features/ui/state/Sound';
 import {getElectronAPI, hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {isInstalledIOSPwa, isInstalledPwa, isMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
 import Users from '@app/features/user/state/Users';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const logger = new Logger('NotificationUtils');
@@ -52,28 +53,12 @@ export function ensureDesktopNotificationClickHandler(): void {
 	const electronApi = getElectronAPI();
 	if (!electronApi) return;
 	setDesktopNotificationClickHandlerInitialized();
-	electronApi.onNotificationClick((id: string, url?: string) => {
-		const accountKey = notificationAccountKeys.get(id) ?? null;
-		notificationAccountKeys.delete(id);
-		void openNotificationTarget(accountKey, url ?? null);
+	electronApi.onNotificationClick((_id, url, accountKey) => {
+		void openNotificationTarget(accountKey ?? null, url ?? null);
 	});
 }
 
-const MAX_TRACKED_NOTIFICATION_ACCOUNTS = 500;
-const notificationAccountKeys = new Map<string, string>();
-
-function rememberNotificationAccount(id: string, accountKey: string | null): void {
-	notificationAccountKeys.delete(id);
-	if (accountKey === null) return;
-	notificationAccountKeys.set(id, accountKey);
-	while (notificationAccountKeys.size > MAX_TRACKED_NOTIFICATION_ACCOUNTS) {
-		const oldest = notificationAccountKeys.keys().next().value;
-		if (oldest === undefined) break;
-		notificationAccountKeys.delete(oldest);
-	}
-}
-
-export async function openNotificationTarget(accountKey: string | null, url: string | null): Promise<void> {
+async function openNotificationTarget(accountKey: string | null, url: string | null): Promise<void> {
 	if (accountKey !== null) {
 		const {default: Accounts} = await import('@app/features/auth/state/Accounts');
 		if (accountKey !== Accounts.currentAccountKey) {
@@ -81,7 +66,6 @@ export async function openNotificationTarget(accountKey: string | null, url: str
 			const {switchStoredAccountFromSwitcher} = await import('@app/features/auth/utils/AccountSwitcherModalUtils');
 			await switchStoredAccountFromSwitcher({
 				accountKey,
-				onSessionExpired: null,
 				onSuccess: null,
 				redirectAfterSwitch: url,
 				switchAccount: null,
@@ -96,16 +80,7 @@ export async function openNotificationTarget(accountKey: string | null, url: str
 
 const NATIVE_NOTIFICATION_ICON_URL_PATTERN = /^(?:https?:|data:)/i;
 
-function readBlobAsDataURL(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-		reader.onerror = () => reject(reader.error);
-		reader.readAsDataURL(blob);
-	});
-}
-
-export async function resolveNativeNotificationIcon(icon: string | undefined): Promise<string> {
+async function resolveNativeNotificationIcon(icon: string | undefined): Promise<string> {
 	if (!icon) return '';
 	const unwrapped = unwrapDesktopLocalResourceURL(icon);
 	if (NATIVE_NOTIFICATION_ICON_URL_PATTERN.test(unwrapped)) return unwrapped;
@@ -185,7 +160,8 @@ const requestBrowserPermission = async (): Promise<PermissionResult> => {
 	try {
 		const permission = await Notification.requestPermission();
 		return permission === 'granted' ? 'granted' : 'denied';
-	} catch {
+	} catch (error) {
+		logger.warn('Browser notification permission request failed', {error});
 		return 'denied';
 	}
 };
@@ -209,11 +185,14 @@ const applyGrantedPermission = async (i18n: I18n): Promise<void> => {
 	playNotificationSoundIfEnabled();
 	const icon = getCurrentUserAvatar() ?? '';
 	const isPwa = !isDesktop() && isInstalledPwa();
-	const body = isDesktop()
-		? HUZZAH_DESKTOP_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR
-		: isPwa
-			? HUZZAH_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR
-			: HUZZAH_BROWSER_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	let body: MessageDescriptor;
+	if (isDesktop()) {
+		body = HUZZAH_DESKTOP_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	} else if (isPwa) {
+		body = HUZZAH_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	} else {
+		body = HUZZAH_BROWSER_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	}
 	void showNotification({
 		title: i18n._(ACCESS_GRANTED_DESCRIPTOR),
 		body: i18n._(body),
@@ -249,7 +228,7 @@ export async function requestPermission(i18n: I18n): Promise<void> {
 	await applyGrantedPermission(i18n);
 }
 
-export interface NotificationResult {
+interface NotificationResult {
 	browserNotification: Notification | null;
 	nativeNotificationId: string | null;
 }
@@ -264,7 +243,8 @@ const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegistration
 	}
 	try {
 		return (await navigator.serviceWorker.getRegistration()) ?? null;
-	} catch {
+	} catch (error) {
+		logger.warn('Failed to read notification service worker registration', {error});
 		return null;
 	}
 };
@@ -372,7 +352,9 @@ export async function showNotification({
 					if (typeof electronApi.flashFrame === 'function' && !document.hasFocus()) {
 						electronApi.flashFrame(false);
 					}
-				} catch {}
+				} catch (error) {
+					logger.warn('Failed to flash the desktop window for a notification', {error});
+				}
 				const result = await electronApi.showNotification({
 					id,
 					title,
@@ -380,8 +362,8 @@ export async function showNotification({
 					body,
 					icon: await resolveNativeNotificationIcon(icon),
 					url,
+					accountKey: accountKey ?? undefined,
 				});
-				rememberNotificationAccount(result.id, accountKey);
 				return {browserNotification: null, nativeNotificationId: result.id};
 			} catch (error) {
 				logger.error('Electron native notification show failed; refusing browser/Web Push fallback', {error});
@@ -402,21 +384,16 @@ export async function showNotification({
 		if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
 			try {
 				return tryShowNotificationViaWindowNotification({title, body, url, icon, accountKey});
-			} catch {
+			} catch (error) {
+				logger.warn('Window notification failed; retrying through service worker', {error});
 				const swFallback = await tryShowNotificationViaServiceWorker({title, body, url, icon, targetUserId});
 				return swFallback.result;
 			}
 		}
 		return swAttempt.result;
-	} catch {
+	} catch (error) {
+		logger.warn('Notification delivery failed', {error});
 		return {browserNotification: null, nativeNotificationId: null};
-	}
-}
-
-export function closeNativeNotification(id: string): void {
-	const electronApi = getElectronAPI();
-	if (electronApi) {
-		electronApi.closeNotification(id);
 	}
 }
 

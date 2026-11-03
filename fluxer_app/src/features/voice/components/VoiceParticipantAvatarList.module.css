@@ -109,7 +109,7 @@
 	background: transparent;
 	border: none;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	transition: background-color 100ms ease;
 }
 

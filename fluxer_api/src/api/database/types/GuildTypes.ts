@@ -14,43 +14,43 @@ import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType'
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 
-type Nullish<T> = T | null;
-
 export interface GuildRow {
 	guild_id: GuildID;
 	owner_id: UserID;
 	name: string;
-	vanity_url_code: Nullish<VanityURLCode>;
-	icon_hash: Nullish<string>;
-	banner_hash: Nullish<string>;
-	banner_width: Nullish<number>;
-	banner_height: Nullish<number>;
-	splash_hash: Nullish<string>;
-	splash_width: Nullish<number>;
-	splash_height: Nullish<number>;
-	splash_card_alignment: Nullish<GuildSplashCardAlignmentValue>;
-	embed_splash_hash: Nullish<string>;
-	embed_splash_width: Nullish<number>;
-	embed_splash_height: Nullish<number>;
-	features: Nullish<Set<string>>;
+	vanity_url_code: VanityURLCode | null;
+	icon_hash: string | null;
+	banner_hash: string | null;
+	banner_width: number | null;
+	banner_height: number | null;
+	splash_hash: string | null;
+	splash_width: number | null;
+	splash_height: number | null;
+	splash_card_alignment: GuildSplashCardAlignmentValue | null;
+	embed_splash_hash: string | null;
+	embed_splash_width: number | null;
+	embed_splash_height: number | null;
+	features: Set<string> | null;
+	badge_ids?: Set<bigint> | null;
 	verification_level: number;
 	mfa_level: number;
 	nsfw_level: number;
-	nsfw?: Nullish<boolean>;
-	content_warning_level?: Nullish<number>;
-	content_warning_text?: Nullish<string>;
+	nsfw?: boolean | null;
+	content_warning_level?: number | null;
+	content_warning_text?: string | null;
 	explicit_content_filter: number;
 	default_message_notifications: number;
-	system_channel_id: Nullish<ChannelID>;
+	system_channel_id: ChannelID | null;
 	system_channel_flags: number;
-	rules_channel_id: Nullish<ChannelID>;
-	afk_channel_id: Nullish<ChannelID>;
+	rules_channel_id: ChannelID | null;
+	afk_channel_id: ChannelID | null;
 	afk_timeout: number;
 	disabled_operations: number;
 	member_count: number;
-	audit_logs_indexed_at: Nullish<Date>;
-	members_indexed_at: Nullish<Date>;
-	message_history_cutoff: Nullish<Date>;
+	audit_logs_indexed_at: Date | null;
+	members_indexed_at: Date | null;
+	message_history_cutoff: Date | null;
+	invites_paused_until: Date | null;
 	version: number;
 }
 
@@ -71,6 +71,7 @@ export const GUILD_COLUMNS = [
 	'embed_splash_width',
 	'embed_splash_height',
 	'features',
+	'badge_ids',
 	'verification_level',
 	'mfa_level',
 	'nsfw_level',
@@ -89,6 +90,7 @@ export const GUILD_COLUMNS = [
 	'audit_logs_indexed_at',
 	'members_indexed_at',
 	'message_history_cutoff',
+	'invites_paused_until',
 	'version',
 ] as const satisfies ReadonlyArray<keyof GuildRow>;
 
@@ -96,23 +98,23 @@ export interface GuildMemberRow {
 	guild_id: GuildID;
 	user_id: UserID;
 	joined_at: Date;
-	nick: Nullish<string>;
-	avatar_hash: Nullish<string>;
-	banner_hash: Nullish<string>;
-	bio: Nullish<string>;
-	pronouns: Nullish<string>;
-	accent_color: Nullish<number>;
-	join_source_type: Nullish<number>;
-	source_invite_code: Nullish<InviteCode>;
-	inviter_id: Nullish<UserID>;
+	nick: string | null;
+	avatar_hash: string | null;
+	banner_hash: string | null;
+	bio: string | null;
+	pronouns: string | null;
+	accent_color: number | null;
+	join_source_type: number | null;
+	source_invite_code: InviteCode | null;
+	inviter_id: UserID | null;
 	deaf: boolean;
 	mute: boolean;
-	communication_disabled_until: Nullish<Date>;
-	role_ids: Nullish<Set<RoleID>>;
-	is_premium_sanitized: Nullish<boolean>;
-	temporary: Nullish<boolean>;
-	profile_flags: Nullish<number>;
-	mention_flags?: Nullish<MentionReplyPreference>;
+	communication_disabled_until: Date | null;
+	role_ids: Set<RoleID> | null;
+	is_premium_sanitized: boolean | null;
+	temporary: boolean | null;
+	profile_flags: number | null;
+	mention_flags?: MentionReplyPreference | null;
 	version: number;
 }
 
@@ -144,11 +146,11 @@ export interface GuildAuditLogRow {
 	guild_id: GuildID;
 	log_id: bigint;
 	user_id: UserID;
-	target_id: Nullish<string>;
+	target_id: string | null;
 	action_type: AuditLogActionType;
-	reason: Nullish<string>;
-	options: Nullish<Map<string, string>>;
-	changes: Nullish<string>;
+	reason: string | null;
+	options: Map<string, string> | null;
+	changes: string | null;
 }
 
 export const GUILD_AUDIT_LOG_COLUMNS = [
@@ -168,10 +170,10 @@ export interface GuildRoleRow {
 	name: string;
 	permissions: bigint;
 	position: number;
-	hoist_position: Nullish<number>;
+	hoist_position: number | null;
 	color: number;
-	icon_hash: Nullish<string>;
-	unicode_emoji: Nullish<string>;
+	icon_hash: string | null;
+	unicode_emoji: string | null;
 	hoist: boolean;
 	mentionable: boolean;
 	version: number;
@@ -197,10 +199,10 @@ export interface GuildBanRow {
 	user_id: UserID;
 	moderator_id: UserID;
 	banned_at: Date;
-	expires_at: Nullish<Date>;
-	reason: Nullish<string>;
-	ip: Nullish<string>;
-	email: Nullish<string>;
+	expires_at: Date | null;
+	reason: string | null;
+	ip: string | null;
+	email: string | null;
 }
 
 export const GUILD_BAN_COLUMNS = [
@@ -227,7 +229,7 @@ export const GUILD_BAN_BY_EMAIL_COLUMNS = ['guild_id', 'email', 'user_id'] as co
 export interface GuildBanByUserIdRow {
 	user_id: UserID;
 	guild_id: GuildID;
-	email: Nullish<string>;
+	email: string | null;
 }
 
 export const GUILD_BAN_BY_USER_ID_COLUMNS = ['user_id', 'guild_id', 'email'] as const satisfies ReadonlyArray<
@@ -263,9 +265,9 @@ export interface GuildStickerRow {
 	guild_id: GuildID;
 	sticker_id: StickerID;
 	name: string;
-	description: Nullish<string>;
+	description: string | null;
 	animated: boolean;
-	tags: Nullish<Array<string>>;
+	tags: Array<string> | null;
 	creator_id: UserID;
 	version: number;
 }
@@ -293,9 +295,9 @@ export const GUILD_STICKER_BY_STICKER_ID_COLUMNS = [
 export interface GuildMembershipMetadataRow {
 	guild_id: GuildID;
 	user_id: UserID;
-	communication_disabled_until: Nullish<Date>;
-	first_joined_at: Nullish<Date>;
-	last_left_at: Nullish<Date>;
+	communication_disabled_until: Date | null;
+	first_joined_at: Date | null;
+	last_left_at: Date | null;
 }
 
 export const GUILD_MEMBERSHIP_METADATA_COLUMNS = [

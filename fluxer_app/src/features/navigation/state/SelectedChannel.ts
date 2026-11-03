@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import Favorites from '@app/features/messaging/state/Favorites';
 import Navigation from '@app/features/navigation/state/Navigation';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {
 	type AppStorageScopeChangeEvent,
 	UNAUTHENTICATED_APP_STORAGE_SCOPE,
@@ -103,6 +105,10 @@ class SelectedChannel {
 	get currentChannelId(): string | null {
 		const guildId = this.getCurrentGuildId();
 		if (guildId == null) return null;
+		const routeChannelId = Navigation.channelId;
+		if (routeChannelId != null) {
+			return this.isStoredChannelNavigable(routeChannelId) ? routeChannelId : null;
+		}
 		return this.selectedChannelIds.get(guildId) ?? null;
 	}
 
@@ -272,6 +278,16 @@ class SelectedChannel {
 		this.removeGuildSelection(FAVORITES_GUILD_ID);
 		return null;
 	}
+
+	reset(): void {
+		this.viewedChannelHistory = [];
+		this.viewedChannelHistoryIndex = -1;
+		RouterUtils.getHistory()?.markBoundary();
+	}
 }
 
-export default new SelectedChannel();
+const selectedChannel = new SelectedChannel();
+
+ResettableStates.register(selectedChannel, () => selectedChannel.reset());
+
+export default selectedChannel;

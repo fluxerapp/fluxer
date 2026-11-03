@@ -37,7 +37,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const isMobileBrowser = Platform.isMobileBrowser;
-	if (isDesktop() || isMobileBrowser) return null;
+	if (isDesktop() || isMobileBrowser || RuntimeConfig.isSelfHosted()) return null;
 	const getPath = (): string => {
 		switch (kind) {
 			case 'invite':
@@ -72,7 +72,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 					</p>
 				) : (
 					<p className={styles.body} data-flx="auth.flow.desktop-deep-link-prompt.body">
-						<Trans>Jump straight to the app to continue.</Trans>
+						<Trans>Continue in the desktop app.</Trans>
 					</p>
 				)}
 			</div>
@@ -88,7 +88,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 					weight="fill"
 					data-flx="auth.flow.desktop-deep-link-prompt.arrow-square-out-icon"
 				/>
-				<span data-flx="auth.flow.desktop-deep-link-prompt.span">
+				<span className={styles.ctaLabel} data-flx="auth.flow.desktop-deep-link-prompt.span">
 					{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</span>
 			</Button>

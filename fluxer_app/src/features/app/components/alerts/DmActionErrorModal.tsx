@@ -7,6 +7,7 @@ import {
 	RATE_LIMITED_ERROR_TITLE_DESCRIPTOR,
 } from '@app/features/app/components/alerts/CommonErrorModalDescriptors';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -42,11 +43,11 @@ const CLAIM_ACCOUNT_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when an unclaimed account tries to start a DM.',
 });
 const VERIFY_EMAIL_TITLE_DESCRIPTOR = msg({
-	message: 'Verify your email',
+	message: 'Confirm your email',
 	comment: 'Title of the error modal shown when an unverified account tries to start a DM.',
 });
 const VERIFY_EMAIL_MESSAGE_DESCRIPTOR = msg({
-	message: 'You need to verify your email address before you can start a direct message.',
+	message: 'You need to confirm your email address before you can start a direct message.',
 	comment: 'Body of the error modal shown when an unverified account tries to start a DM.',
 });
 const TOO_MANY_PEOPLE_TITLE_DESCRIPTOR = msg({
@@ -58,7 +59,7 @@ const TOO_MANY_PEOPLE_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when a group DM would exceed the maximum number of recipients.',
 });
 const GROUP_DM_LIMIT_TITLE_DESCRIPTOR = msg({
-	message: "You've reached the group DM limit",
+	message: "You're at the group DM limit",
 	comment: 'Title of the error modal shown when the user or a recipient has too many open group DMs.',
 });
 const GROUP_DM_LIMIT_MESSAGE_DESCRIPTOR = msg({
@@ -126,6 +127,9 @@ function resolveDmActionErrorContent(code: string | undefined, apiMessage?: stri
 }
 
 export function showDmActionErrorModal(error: unknown): void {
+	if (promptForAccountTier(error)) {
+		return;
+	}
 	const code = failureCode(error);
 	const apiMessage = failureMessage(error);
 	ModalCommands.push(

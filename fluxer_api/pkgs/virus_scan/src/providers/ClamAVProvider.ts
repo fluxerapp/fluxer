@@ -2,7 +2,7 @@
 
 import {createReadStream} from 'node:fs';
 import {createConnection} from 'node:net';
-import {Readable} from 'node:stream';
+import type {Readable} from 'node:stream';
 import type {VirusScanProviderResult} from '@pkgs/virus_scan/src/VirusScanProviderResult';
 
 interface ClamAVConfig {
@@ -20,10 +20,6 @@ export class ClamAVProvider {
 
 	async scanFile(filePath: string): Promise<VirusScanProviderResult> {
 		return this.scanReadable(createReadStream(filePath, {highWaterMark: this.streamChunkBytes}));
-	}
-
-	async scanBuffer(buffer: Buffer): Promise<VirusScanProviderResult> {
-		return this.scanReadable(Readable.from(buffer));
 	}
 
 	private scanReadable(source: Readable): Promise<VirusScanProviderResult> {

@@ -24,10 +24,7 @@ import {
 	type SnapshotUserRow,
 	snapshotUserKey,
 } from '@app/features/gateway/snapshot/SnapshotEntities';
-import SnapshotSync, {
-	disposeAndEvictDesktopSnapshot,
-	isDesktopSnapshotAvailable,
-} from '@app/features/gateway/snapshot/SnapshotSync';
+import SnapshotSync from '@app/features/gateway/snapshot/SnapshotSync';
 import type {StateSnapshotEntries, StateSyncCursor} from '@app/features/gateway/snapshot/SnapshotTypes';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
@@ -86,7 +83,7 @@ interface ParsedSnapshot {
 	readonly voiceStates: Map<string, ReadonlyArray<VoiceState>>;
 }
 
-export interface SnapshotHydrationDependencies {
+interface SnapshotHydrationDependencies {
 	readonly readSnapshot: (storageKey: string) => Promise<StateSnapshotEntries> | null;
 	readonly readCursor: (storageKey: string) => Promise<StateSyncCursor | null> | null;
 	readonly resolveSelfUserId: (storageKey: string) => string | null | Promise<string | null>;
@@ -108,7 +105,7 @@ const defaultDependencies: SnapshotHydrationDependencies = {
 	readCursor: (storageKey) => SnapshotSync.readCursor(storageKey),
 	resolveSelfUserId: (storageKey) => SessionManager.getAccount(storageKey)?.userId ?? null,
 	resolveCheckedSelfUser: (storageKey) => AccountAccess.getCheckedUser(storageKey),
-	evictSnapshot: (storageKey) => disposeAndEvictDesktopSnapshot(storageKey),
+	evictSnapshot: (storageKey) => SnapshotSync.evict(storageKey),
 };
 
 let hydrationEpoch = 0;
@@ -227,7 +224,7 @@ function hydrateAccountMetadata(metadata: SnapshotAccountMetadataRow): void {
 	WebAuthnCredentials.setCredentials(metadata.webAuthnCredentials);
 }
 
-function hydrateThreads(parsed: ParsedSnapshot): void {
+function guildsWithChannels(parsed: ParsedSnapshot): Array<GuildReadyData> {
 	const channelsByGuild = new Map<string, Array<WireChannel>>();
 	for (const channel of parsed.channels) {
 		if (channel.guild_id == null) continue;
@@ -238,9 +235,7 @@ function hydrateThreads(parsed: ParsedSnapshot): void {
 		}
 		channels.push(channel);
 	}
-	const guilds = parsed.guilds.map((guild) => ({...guild, channels: channelsByGuild.get(guild.id) ?? []}));
-	ThreadGuilds.handleGatewayReady(guilds);
-	ChannelThreads.handleGatewayReady(guilds);
+	return parsed.guilds.map((guild) => ({...guild, channels: channelsByGuild.get(guild.id) ?? []}));
 }
 
 function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUserId: string): void {
@@ -256,8 +251,10 @@ function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUse
 		GuildCount.handleGatewayReady(parsed.guilds);
 		GuildMembers.handleGatewayReady(parsed.guilds);
 		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
+		const threadGuilds = guildsWithChannels(parsed);
+		ThreadGuilds.handleGatewayReady(threadGuilds);
 		Channels.hydrateFromSnapshot(parsed.channels, selfUserId);
-		hydrateThreads(parsed);
+		ChannelThreads.handleGatewayReady(threadGuilds);
 		GuildVerification.handleGatewayReady();
 		Permission.handleGatewayReady();
 		MemberSearch.handleGatewayReady();
@@ -290,11 +287,7 @@ function overlayMentionCounts(
 	return overlaid;
 }
 
-export function captureForegroundMentionCounts(): Map<string, number> {
-	return ReadStates.captureMentionCounts();
-}
-
-export async function runSnapshotScopeHydration(
+async function runSnapshotScopeHydration(
 	storageKey: string,
 	dependencies: SnapshotHydrationDependencies,
 	mentionCounts: ReadonlyMap<string, number> | null,
@@ -349,7 +342,7 @@ export async function hydrateStoresFromSnapshotScope(
 	storageKey: string,
 	mentionCounts: ReadonlyMap<string, number> | null,
 ): Promise<void> {
-	if (!isDesktopSnapshotAvailable()) {
+	if (!SnapshotSync.enabled) {
 		throw new SnapshotHydrationUnavailableError(storageKey);
 	}
 	try {

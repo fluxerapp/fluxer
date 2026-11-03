@@ -235,10 +235,13 @@ export const CallMessage = observer(({message}: {message: Message}) => {
 			</Trans>
 		);
 	}
-	const iconClassname = clsx(
-		styles.icon,
-		callEnded ? (isMissedCall ? styles.iconMissed : styles.iconEnded) : styles.iconActive,
-	);
+	let iconStateClassname = styles.iconActive;
+	if (callEnded && isMissedCall) {
+		iconStateClassname = styles.iconMissed;
+	} else if (callEnded) {
+		iconStateClassname = styles.iconEnded;
+	}
+	const iconClassname = clsx(styles.icon, iconStateClassname);
 	return (
 		<SystemMessage
 			icon={PhoneIcon}

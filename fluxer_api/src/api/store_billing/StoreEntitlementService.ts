@@ -9,6 +9,8 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
+import type {PaymentDisputeRepository} from '@app/api/payment_disputes/PaymentDisputeRepository';
+import {flagPurchaseDuringDispute} from '@app/api/payment_disputes/PaymentDisputeReviews';
 import {
 	AppStoreJwsVerificationError,
 	toStoreEnvironment,
@@ -20,9 +22,17 @@ import {
 	AppStoreServerApiError,
 	isAppStoreTransactionNotFound,
 } from '@app/api/store_billing/app_store/AppStoreServerApiClient';
+import {
+	findGooglePlayRefundTarget,
+	type GooglePlayRefundTarget,
+	isGooglePlaySelfServiceRefundEnabled,
+} from '@app/api/store_billing/GooglePlayRefundTarget';
 import {GooglePlaySettlement} from '@app/api/store_billing/GooglePlaySettlement';
 import {isGooglePlayApiError} from '@app/api/store_billing/google_play/GooglePlayApiError';
-import type {GooglePlayDeveloperApiClient} from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
+import type {
+	GooglePlayCancellationType,
+	GooglePlayDeveloperApiClient,
+} from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
 import {
 	buildGooglePlayProductSnapshot,
 	buildGooglePlaySubscriptionSnapshot,
@@ -44,6 +54,7 @@ import {
 	isTerminalStorePurchaseState,
 	isVoidedGooglePlaySubscriptionStillRenewing,
 	LIFETIME_REFUND_REASON,
+	normalizeAccountToken,
 	PAID_SUBSCRIPTION_STATES,
 	redactStoreKey,
 	type StoreEnvironment,
@@ -87,6 +98,7 @@ interface StoreEntitlementServiceDeps {
 	appStoreClient: AppStoreServerApiClient;
 	googlePlayClient: GooglePlayDeveloperApiClient;
 	giftReversalHandler: StripeGiftReversalHandler;
+	paymentDisputeRepository: PaymentDisputeRepository;
 }
 
 interface ActiveStoreEntitlement {
@@ -151,10 +163,6 @@ interface PersistResult {
 const NOTIFICATION_CONTEXT: SyncContext = {claimerId: null, hintAccountToken: null};
 
 class StorePurchaseRejectedByStoreError extends StorePurchaseInvalidError {}
-
-function normalizeAccountToken(token: string | null | undefined): string | null {
-	return token ? token.toLowerCase() : null;
-}
 
 function toStoreBillingError(error: unknown): unknown {
 	if (error instanceof AppStoreJwsVerificationError || error instanceof AppStorePurchaseSyncError) {
@@ -222,7 +230,7 @@ export class StoreEntitlementService {
 		};
 	}
 
-	async hasStorePurchases(userId: UserID): Promise<boolean> {
+	private async hasStorePurchases(userId: UserID): Promise<boolean> {
 		if (Config.instance.selfHosted) {
 			return false;
 		}
@@ -375,9 +383,14 @@ export class StoreEntitlementService {
 		}
 		const storeKey = buildGooglePlayStoreKey(params.purchaseToken);
 		const known = await this.deps.repository.findPurchase(storeKey);
-		const kind =
-			known?.kind ??
-			(params.productType === 'subscription' ? 'subscription' : params.productType === 'one_time' ? 'gift' : null);
+		let kind = known?.kind ?? null;
+		if (kind === null) {
+			if (params.productType === 'subscription') {
+				kind = 'subscription';
+			} else if (params.productType === 'one_time') {
+				kind = 'gift';
+			}
+		}
 		try {
 			if (kind === 'subscription') {
 				await this.syncGooglePlaySubscription({packageName: params.packageName, purchaseToken: params.purchaseToken});
@@ -460,25 +473,64 @@ export class StoreEntitlementService {
 		}
 	}
 
+	async findGooglePlayRefundTarget(userId: UserID): Promise<GooglePlayRefundTarget | null> {
+		if (!isGooglePlaySelfServiceRefundEnabled()) {
+			return null;
+		}
+		const rows = await this.deps.repository.listPurchasesForUser(userId);
+		return findGooglePlayRefundTarget(rows, (code) => this.deps.userRepository.findGiftCode(code));
+	}
+
+	async refundGooglePlayPurchase(userId: UserID, target: GooglePlayRefundTarget): Promise<boolean> {
+		const storeKey = target.row.store_key;
+		return this.withPurchaseLock(storeKey, async () => {
+			const current = await this.deps.repository.findPurchase(storeKey);
+			if (!current || current.user_id !== userId) {
+				return false;
+			}
+			const confirmed = await findGooglePlayRefundTarget([current], (code) =>
+				this.deps.userRepository.findGiftCode(code),
+			);
+			if (!confirmed || confirmed.orderId !== target.orderId) {
+				return false;
+			}
+			await this.deps.googlePlayClient.refundOrder(current.app_id, confirmed.orderId);
+			Logger.info(
+				{userId: userId.toString(), storeKey: redactStoreKey(storeKey), kind: current.kind},
+				'Refunded a Google Play purchase at its owner request',
+			);
+			await this.markGooglePlayVoided(storeKey, confirmed.orderId, new Date());
+			return true;
+		});
+	}
+
 	async stopBillingForDeletedUser(userId: UserID): Promise<void> {
+		await this.cancelGooglePlaySubscriptions(userId, 'DEVELOPER_REQUESTED_STOP_PAYMENTS', 'a deleted user');
+	}
+
+	async stopGooglePlayRenewals(userId: UserID): Promise<void> {
+		await this.cancelGooglePlaySubscriptions(userId, 'USER_REQUESTED_STOP_RENEWALS', 'a long gift');
+	}
+
+	private async cancelGooglePlaySubscriptions(
+		userId: UserID,
+		cancellationType: GooglePlayCancellationType,
+		reason: string,
+	): Promise<void> {
 		try {
 			const rows = await this.listGooglePlaySubscriptionsToStop(userId);
 			for (const row of rows) {
 				try {
-					await this.deps.googlePlayClient.cancelSubscription(
-						row.app_id,
-						row.store_reference,
-						'DEVELOPER_REQUESTED_STOP_PAYMENTS',
-					);
+					await this.deps.googlePlayClient.cancelSubscription(row.app_id, row.store_reference, cancellationType);
 				} catch (error) {
 					Logger.warn(
 						{error, userId: userId.toString(), storeKey: redactStoreKey(row.store_key)},
-						'Failed to stop Google Play billing for a deleted user',
+						`Failed to stop Google Play billing for ${reason}`,
 					);
 				}
 			}
 		} catch (error) {
-			Logger.warn({error, userId: userId.toString()}, 'Failed to stop store billing for a deleted user');
+			Logger.warn({error, userId: userId.toString()}, `Failed to stop store billing for ${reason}`);
 		}
 	}
 
@@ -748,6 +800,9 @@ export class StoreEntitlementService {
 		if (context.claimerId !== null && row.user_id === context.claimerId && row.provider === 'app_store') {
 			row = await this.ensureAppStoreAccountToken(row, snapshot);
 		}
+		if (row.user_id !== null && previous?.user_id !== row.user_id) {
+			await flagPurchaseDuringDispute(this.deps.paymentDisputeRepository, row.user_id, row.store_key);
+		}
 		const owner = row.user_id !== null ? await this.deps.userRepository.findUnique(row.user_id) : null;
 		if (row.kind === 'gift') {
 			row = await this.giftFulfilment.settleGift(row);
@@ -767,7 +822,10 @@ export class StoreEntitlementService {
 			const ownerId = await this.resolveOwner(existing, snapshot, context);
 			const now = new Date();
 			const fields = this.buildRowFields(snapshot, existing, ownerId, context, now);
-			const boundAt = ownerId === null ? null : ownerId === existing?.user_id ? existing.bound_at : now;
+			let boundAt: Date | null = null;
+			if (ownerId !== null) {
+				boundAt = ownerId === existing?.user_id ? existing.bound_at : now;
+			}
 			const releasedAt = ownerId === null ? (existing?.released_at ?? null) : null;
 			if (!existing) {
 				const row: StorePurchaseRow = {

@@ -47,7 +47,7 @@ export type ComposerInsertPayload =
 	| {kind: 'customEmoji'; emojiId: string; animated: boolean; display: string; wire: string}
 	| {kind: 'standardEmoji'; name: string; surrogate: string; url: string | null; display: string};
 
-function $firstParagraph(): ElementNode {
+export function $firstParagraph(): ElementNode {
 	const root = $getRoot();
 	const first = root.getFirstChild();
 	if (first != null && first.getType() === 'paragraph') {

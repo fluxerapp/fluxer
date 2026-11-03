@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
-import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {sanitizeExpiredPremiumMemberPerks} from '@app/api/guild/services/member/PremiumMemberSanitization';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -20,7 +20,7 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {checkIsPremium, createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -50,71 +50,6 @@ interface SweepDeps {
 	premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService;
 	storeEntitlementService: StoreEntitlementService;
 	workerService: IWorkerService<WorkerTaskName>;
-}
-
-async function sanitizeGuildMemberPerks(user: User, deps: SweepDeps): Promise<boolean> {
-	const guildIds = await deps.userRepository.getUserGuildIds(user.id);
-	if (guildIds.length === 0) {
-		return false;
-	}
-	const requestCache = createRequestCache();
-	const members = await Promise.all(
-		guildIds.map(async (guildId) => {
-			try {
-				const member = await deps.guildRepository.getMember(guildId, user.id);
-				return {guildId, member, error: null};
-			} catch (error) {
-				Logger.error(
-					{userId: user.id.toString(), guildId: guildId.toString(), error},
-					'Failed to fetch guild member for expired premium sweep sanitization',
-				);
-				return {guildId, member: null, error};
-			}
-		}),
-	);
-	const membersToSanitize = members.filter(
-		({member, error}) =>
-			!error &&
-			member &&
-			!member.isPremiumSanitized &&
-			(member.avatarHash || member.bannerHash || member.bio || member.accentColor !== null),
-	);
-	if (membersToSanitize.length === 0) {
-		return false;
-	}
-	const updatePromises = membersToSanitize.map(({guildId, member}) =>
-		deps.guildRepository
-			.upsertMember({
-				...member!.toRow(),
-				is_premium_sanitized: true,
-			})
-			.then((updatedMember) => ({guildId, updatedMember, error: null}))
-			.catch((error) => {
-				Logger.error(
-					{userId: user.id.toString(), guildId: guildId.toString(), error},
-					'Failed to upsert guild member during expired premium sweep sanitization',
-				);
-				return {guildId, updatedMember: null, error};
-			}),
-	);
-	const updatedResults = await Promise.all(updatePromises);
-	const dispatchPromises = updatedResults.map(async ({guildId, updatedMember, error}) => {
-		if (error || !updatedMember) return;
-		try {
-			await deps.gatewayService.dispatchGuild({
-				guildId,
-				event: 'GUILD_MEMBER_UPDATE',
-				data: await mapGuildMemberToResponse(updatedMember, deps.userCacheService, requestCache),
-			});
-		} catch (error) {
-			Logger.error(
-				{userId: user.id.toString(), guildId: guildId.toString(), error},
-				'Failed to dispatch guild member update during expired premium sweep sanitization',
-			);
-		}
-	});
-	await Promise.all(dispatchPromises);
-	return true;
 }
 
 function isStoreProviderConfigured(row: StorePurchaseRow): boolean {
@@ -200,16 +135,19 @@ async function processUser(user: User, deps: SweepDeps, result: SweepResult): Pr
 	try {
 		let currentUser = await deps.userRepository.patchUpsert(user.id, createPremiumClearPatch(), user.toRow());
 		deps.userCacheService.setUserPartialResponseFromUserInBackground(currentUser);
-		await deps.gatewayService.dispatchPresence({
-			userId: currentUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(currentUser),
-		});
+		await dispatchUserUpdate(deps.gatewayService, currentUser);
 		result.stripped += 1;
 		const hasBeenSanitized = !!(user.premiumFlags & PremiumFlags.PERKS_SANITIZED);
 		if (!hasBeenSanitized) {
 			try {
-				const didSanitize = await sanitizeGuildMemberPerks(user, deps);
+				const didSanitize = await sanitizeExpiredPremiumMemberPerks({
+					userId: user.id,
+					guildIds: await deps.userRepository.getUserGuildIds(user.id),
+					guildRepository: deps.guildRepository,
+					gatewayService: deps.gatewayService,
+					userCacheService: deps.userCacheService,
+					requestCache: createRequestCache(),
+				});
 				if (didSanitize) {
 					result.sanitized += 1;
 				}
@@ -226,11 +164,7 @@ async function processUser(user: User, deps: SweepDeps, result: SweepResult): Pr
 			);
 			currentUser = flaggedUser;
 			deps.userCacheService.setUserPartialResponseFromUserInBackground(currentUser);
-			await deps.gatewayService.dispatchPresence({
-				userId: currentUser.id,
-				event: 'USER_UPDATE',
-				data: mapUserToPrivateResponse(currentUser),
-			});
+			await dispatchUserUpdate(deps.gatewayService, currentUser);
 		}
 	} catch (error) {
 		Logger.error({userId: user.id.toString(), error}, 'Failed to strip expired premium during sweep');

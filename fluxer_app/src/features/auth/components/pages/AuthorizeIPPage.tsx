@@ -8,8 +8,8 @@ import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGa
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {useAuthTokenVerification} from '@app/features/auth/flow/useAuthTokenVerification';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {type VerificationError, VerificationErrorType} from '@app/features/auth/types/VerificationError';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {msg} from '@lingui/core/macro';
@@ -40,7 +40,7 @@ interface AuthorizeIPPageContentProps {
 const AuthorizeIPPageContent = observer(function AuthorizeIPPageContent({
 	runtimeSnapshot,
 }: AuthorizeIPPageContentProps) {
-	const requestTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const requestTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
 	const verify = useCallback(
 		(token: string) => AuthenticationCommands.authorizeIp(token, requestTarget),
 		[requestTarget],

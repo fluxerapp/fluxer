@@ -35,9 +35,9 @@
 
 .previewMessagesContainer :global(.message),
 .previewMessagesContainer :global(.messageCompact) {
-	margin-left: 0 !important;
-	margin-right: 0 !important;
-	padding-right: var(--chat-horizontal-padding, 1rem) !important;
+	margin-inline-start: 0 !important;
+	margin-inline-end: 0 !important;
+	padding-inline-end: var(--chat-horizontal-padding, 1rem) !important;
 	pointer-events: none;
 }
 
@@ -47,9 +47,9 @@
 
 .previewOverlay {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	cursor: default;
 	content: '';
 	pointer-events: none;

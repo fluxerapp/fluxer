@@ -52,6 +52,7 @@
 			"complexity": {
 				"noForEach": "off",
 				"noImportantStyles": "off",
+				"noUselessCatch": "error",
 				"useLiteralKeys": "off"
 			},
 			"correctness": {
@@ -122,30 +123,54 @@
 				"noSvgWithoutTitle": "off"
 			},
 			"nursery": {
-				"useSortedClasses": "error"
+				"useTailwindSortedClasses": "error"
 			}
 		}
 	},
 	"assist": {"actions": {"source": {"organizeImports": "on"}}},
 	"overrides": [
 		{
+			"includes": [
+				"packages/**",
+				"fluxer_desktop/**",
+				"fluxer_docs/**",
+				"fluxer_api/**",
+				"fluxer_app/**",
+				"!fluxer_app/pkgs/livekit-client/**"
+			],
+			"linter": {"rules": {"style": {"noNestedTernary": "error"}}}
+		},
+		{
+			"includes": [
+				"packages/constants/**",
+				"packages/date_utils/**",
+				"packages/number_utils/**",
+				"packages/snowflake/**"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveCognitiveComplexity": {"level": "error", "options": {"maxAllowedComplexity": 25}}
+					},
+					"suspicious": {"noEmptyBlockStatements": "error"}
+				}
+			}
+		},
+		{
 			"includes": ["fluxer_app/src/**/*.tsx"],
 			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
 		},
 		{
-			"includes": ["fluxer_docs/scripts/VerifyDocsCoverage.ts"],
-			"linter": {"rules": {"suspicious": {"noTemplateCurlyInString": "off"}}}
-		},
-		{
-			"includes": [
-				"fluxer_app/src/features/i18n/components/AppI18nProvider.tsx",
-				"fluxer_app/src/features/i18n/components/AppI18nProvider.test.tsx"
-			],
+			"includes": ["fluxer_app/src/features/i18n/components/AppI18nProvider.tsx"],
 			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
 		},
 		{
 			"includes": ["fluxer_app/src/**/*.worklet.js"],
 			"javascript": {"globals": ["AudioWorkletProcessor", "registerProcessor", "sampleRate", "currentTime"]}
+		},
+		{
+			"includes": ["fluxer_app/src/features/app/config/WebAppHostedImages.json"],
+			"json": {"formatter": {"indentStyle": "space", "indentWidth": 2}}
 		},
 		{
 			"includes": ["**/*.astro"],
@@ -177,16 +202,22 @@
 			"!packages/schema/src/gen",
 			"!**/tailwind.css",
 			"!**/*.html",
+			"!**/*.md",
+			"!**/*.yaml",
+			"!**/*.yml",
 			"!**/*.module.css.d.ts",
 			"!**/fluxer_app/src/features/ui/components/SVGMasks.tsx",
 			"!fluxer_static",
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
 			"!fluxer_api/src/api/openapi/openapi.json",
+			"!fluxer_admin/openapi-admin.json",
 			"!fluxer_api/pkgs/email/src/email_i18n/weblate",
 			"!fluxer_api/src/api/content_i18n/weblate",
 			"!packages/errors/src/i18n/weblate",
-			"!**/auto-i18n-reviewed-unchanged.json"
+			"!fluxer_rexctl/internal/adminapi/configschema.json",
+			"!fluxer_rexctl/internal/stack/imageset.json",
+			"!fluxer_rexctl/internal/stack/files/profiles.json"
 		],
 		"ignoreUnknown": true
 	}

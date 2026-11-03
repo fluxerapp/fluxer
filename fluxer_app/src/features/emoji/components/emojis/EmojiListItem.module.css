@@ -5,7 +5,8 @@
 	grid-template-columns: 4.5rem minmax(12.5rem, 1fr) minmax(11.25rem, 0.85fr);
 	align-items: center;
 	gap: 0.75rem;
-	padding: 0 0.75rem 0.5rem calc(0.75rem + 0.0625rem);
+	padding-block: 0 0.5rem;
+	padding-inline: calc(0.75rem + 0.0625rem) 0.75rem;
 }
 
 .headerCell:first-child {
@@ -13,7 +14,7 @@
 }
 
 .headerCell:nth-child(2) {
-	padding-left: 0.5rem;
+	padding-inline-start: 0.5rem;
 }
 
 .headerCell {
@@ -164,7 +165,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	text-align: left;
+	text-align: start;
 	overflow: hidden;
 	overflow-wrap: anywhere;
 	word-break: break-word;
@@ -172,16 +173,16 @@
 
 .listName .nameInlineEdit {
 	justify-content: flex-start;
-	text-align: left;
+	text-align: start;
 }
 
 .listName .nameInlineEditButton {
 	justify-content: flex-start;
-	text-align: left;
+	text-align: start;
 }
 
 .listName .nameInlineEditInput {
-	text-align: left;
+	text-align: start;
 }
 
 .nameInlineEdit[data-mode='idle'] .nameInlineEditInput {
@@ -260,7 +261,7 @@
 .gridAvatar {
 	position: absolute;
 	top: -0.35rem;
-	left: -0.35rem;
+	inset-inline-start: -0.35rem;
 	height: 1.75rem;
 	width: 1.75rem;
 	border-radius: 624.9375rem;

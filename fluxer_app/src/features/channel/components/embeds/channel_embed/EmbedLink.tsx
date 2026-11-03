@@ -8,11 +8,15 @@ import {
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {SUPPRESS_EMBEDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import {LinkDestinationTooltip} from '@app/features/messaging/components/LinkDestinationTooltip';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import {isTrustedExternalUrl, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -20,6 +24,8 @@ import type React from 'react';
 import type {FC} from 'react';
 
 export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, className}) => {
+	const href = AttachmentUrlRefresher.fresh(url);
+	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
 	const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
 		e.stopPropagation();
 		try {
@@ -27,6 +33,11 @@ export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, class
 			if (!TrustedDomain.isTrustedDomain(parsed.hostname)) {
 				e.preventDefault();
 				openExternalUrlWithWarning(url);
+				return;
+			}
+			if (attachmentUrlMayNeedRefresh(href, Date.now())) {
+				e.preventDefault();
+				void openExternalUrl(href);
 			}
 		} catch (_error) {
 			logger.warn('Invalid URL in embed link:', url);
@@ -34,19 +45,27 @@ export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, class
 	};
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
 	return (
-		<FocusRing data-flx="channel.embeds.embed.link-component.focus-ring">
-			<a
-				className={clsx(styles.embedLink, className)}
-				href={url}
-				rel="noopener noreferrer"
-				target="_blank"
-				onClick={handleClick}
-				onAuxClick={openInBrowser.onAuxClick}
-				data-flx="channel.embeds.embed.link-component.a"
-			>
-				{children}
-			</a>
-		</FocusRing>
+		<LinkDestinationTooltip
+			url={url}
+			untrusted={!isTrustedExternalUrl(url)}
+			data-flx="channel.embeds.channel-embed.embed-link.link-destination-tooltip"
+		>
+			<FocusRing data-flx="channel.embeds.embed.link-component.focus-ring">
+				<a
+					className={clsx(styles.embedLink, className)}
+					href={href}
+					rel="noopener noreferrer"
+					target="_blank"
+					onClick={handleClick}
+					onPointerEnter={warmAttachmentUrl}
+					onFocus={warmAttachmentUrl}
+					onAuxClick={openInBrowser.onAuxClick}
+					data-flx="channel.embeds.embed.link-component.a"
+				>
+					{children}
+				</a>
+			</FocusRing>
+		</LinkDestinationTooltip>
 	);
 });
 export const SuppressEmbedsConfirmModal: FC<{message: Message}> = ({message}) => {

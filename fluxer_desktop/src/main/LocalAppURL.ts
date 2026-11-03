@@ -33,7 +33,7 @@ export function isLocalAppURL(value: string | null): boolean {
 	return parseLocalAppURL(value) != null;
 }
 
-export function isReservedLocalAppProxyPath(pathname: string): boolean {
+function isReservedLocalAppProxyPath(pathname: string): boolean {
 	if (pathname === LOCAL_APP_API_PATH_PREFIX || pathname.startsWith(`${LOCAL_APP_API_PATH_PREFIX}/`)) {
 		return true;
 	}

@@ -11,7 +11,10 @@ interface UsePresenceCustomStatusOptions {
 	enabled?: boolean;
 }
 
-function filterExpiredStatus(status: CustomStatus | null): CustomStatus | null {
+export function filterExpiredStatus<T extends CustomStatusResult>(status: T): T | null {
+	if (status === undefined) {
+		return status;
+	}
 	if (status === null || isCustomStatusExpired(status)) {
 		return null;
 	}
@@ -19,14 +22,7 @@ function filterExpiredStatus(status: CustomStatus | null): CustomStatus | null {
 }
 
 export function usePresenceCustomStatus({userId, enabled = true}: UsePresenceCustomStatusOptions): CustomStatus | null {
-	const [expiryTick, setExpiryTick] = useState(0);
-	const timerRef = useRef<NodeJS.Timeout | null>(null);
-	const clearTimer = useCallback(() => {
-		if (timerRef.current !== null) {
-			clearTimeout(timerRef.current);
-			timerRef.current = null;
-		}
-	}, []);
+	const expiryTick = useCustomStatusExpiryTick(enabled ? Presence.getCustomStatus(userId)?.expiresAt : undefined);
 	const subscribe = useCallback(
 		(onChange: () => void) => {
 			if (!enabled) {
@@ -43,23 +39,30 @@ export function usePresenceCustomStatus({userId, enabled = true}: UsePresenceCus
 		return filterExpiredStatus(Presence.getCustomStatus(userId));
 	}, [userId, enabled, expiryTick]);
 	const customStatus = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+	return customStatus;
+}
+
+type CustomStatusResult = CustomStatus | null | undefined;
+
+export function useCustomStatusExpiryTick(expiresAt: string | null | undefined): number {
+	const [expiryTick, setExpiryTick] = useState(0);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const clearTimer = useCallback(() => {
+		if (timerRef.current !== null) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+	}, []);
 	useEffect(() => {
 		clearTimer();
-		if (!customStatus?.expiresAt) {
-			return;
-		}
-		const expiresAtMs = Date.parse(customStatus.expiresAt);
-		if (Number.isNaN(expiresAtMs)) {
-			return;
-		}
+		if (!expiresAt) return;
+		const expiresAtMs = Date.parse(expiresAt);
+		if (Number.isNaN(expiresAtMs)) return;
 		const delay = expiresAtMs - Date.now();
-		if (delay <= 0) {
-			return;
-		}
-		timerRef.current = setTimeout(() => {
-			setExpiryTick((t) => t + 1);
-		}, delay);
+		if (delay <= 0) return;
+		timerRef.current = setTimeout(() => setExpiryTick((t) => t + 1), delay);
 		return clearTimer;
-	}, [customStatus?.expiresAt, clearTimer]);
-	return customStatus;
+	}, [expiresAt, clearTimer]);
+	return expiryTick;
 }

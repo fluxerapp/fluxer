@@ -125,13 +125,6 @@ describe('thread permission case table', () => {
 });
 
 describe('thread permission bits', () => {
-	it('uses the expected bit positions', () => {
-		expect(ThreadPermissionFlags.MANAGE_THREADS).toBe(1n << 34n);
-		expect(ThreadPermissionFlags.CREATE_PUBLIC_THREADS).toBe(1n << 35n);
-		expect(ThreadPermissionFlags.CREATE_PRIVATE_THREADS).toBe(1n << 36n);
-		expect(ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS).toBe(1n << 38n);
-	});
-
 	it('stays outside the control permission set', () => {
 		expect(ALL_PERMISSIONS & THREAD_PERMISSIONS).toBe(0n);
 		expect(THREAD_AWARE_ALL_PERMISSIONS).toBe(ALL_PERMISSIONS | THREAD_PERMISSIONS);

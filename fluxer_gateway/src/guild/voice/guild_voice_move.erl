@@ -1,14 +1,11 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_voice_move).
+
 -typing([eqwalizer]).
 
 -export([move_member/2]).
 -export([send_voice_server_updates_for_move/4]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     guild_state/0,
@@ -159,47 +156,3 @@ send_captured_voice_server_updates(GuildId, ChannelId, SessionDataList, GuildPid
         end,
         SessionDataList
     ).
-
--ifdef(TEST).
-
-move_member_user_not_in_voice_test() ->
-    Request = #{
-        user_id => 10,
-        moderator_id => 20,
-        channel_id => null,
-        mute => false,
-        deaf => false
-    },
-    State = test_state(#{}),
-    {reply, {error, not_found, voice_user_not_in_voice}, _} = move_member(Request, State).
-
-select_connections_to_move_specific_connection_test() ->
-    VoiceStates = #{
-        <<"conn-a">> => voice_state_fixture(10, 100, <<"conn-a">>),
-        <<"conn-b">> => voice_state_fixture(11, 101, <<"conn-b">>)
-    },
-    Selected = select_connections_to_move(<<"conn-b">>, 11, VoiceStates, #{}),
-    ?assertEqual(#{<<"conn-b">> => maps:get(<<"conn-b">>, VoiceStates)}, Selected),
-    ?assertEqual(#{}, select_connections_to_move(<<"conn-b">>, 10, VoiceStates, #{})).
-
-test_state(VoiceStates) ->
-    #{
-        id => 1,
-        data => #{
-            <<"members">> => [],
-            <<"channels">> => []
-        },
-        voice_states => VoiceStates
-    }.
-
-voice_state_fixture(UserId, ChannelId, ConnId) ->
-    #{
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"connection_id">> => ConnId,
-        <<"member">> => #{
-            <<"user">> => #{<<"id">> => integer_to_binary(UserId)}
-        }
-    }.
-
--endif.

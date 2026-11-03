@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): string | undefined {
+function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): string | undefined {
 	if (typeof url !== 'string') {
 		return;
 	}

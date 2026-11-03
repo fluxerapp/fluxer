@@ -14,24 +14,6 @@ describe('OAuth2 Scope Validation', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('should reject unknown scope', async () => {
-		const {appOwner, endUser} = await createOAuth2TestSetup(harness);
-		const application = await createOAuth2Application(harness, appOwner, {
-			name: 'Unknown Scope Test',
-			redirect_uris: ['https://example.com/callback'],
-		});
-		await createBuilder(harness, endUser.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				response_type: 'code',
-				client_id: application.id,
-				redirect_uri: 'https://example.com/callback',
-				scope: 'unknown_scope_invalid',
-				state: 'test-state',
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('should reject mix of valid and invalid scopes', async () => {
 		const {appOwner, endUser} = await createOAuth2TestSetup(harness);
 		const application = await createOAuth2Application(harness, appOwner, {

@@ -9,7 +9,7 @@ use crate::{
         components::{
             alert::{AlertVariant, alert},
             badge::{BadgeVariant, badge},
-            form::{checkbox, csrf_input, form_actions},
+            form::{Checkbox, csrf_input, form_actions},
             page_container::page_header,
             section_card::section_card,
             table::empty_state,
@@ -96,7 +96,13 @@ fn create_form(base: &str, csrf_token: &str, acls: &[&str]) -> Markup {
                         }
                         div class="grid grid-cols-1 gap-3 md:grid-cols-2" {
                             @for acl in acls {
-                                (checkbox("acls", acl, acl, false, true))
+                                (Checkbox {
+                                    name: "acls",
+                                    value: acl,
+                                    label: acl,
+                                    checked: false,
+                                    enabled: true,
+                                }.render())
                             }
                         }
                     }

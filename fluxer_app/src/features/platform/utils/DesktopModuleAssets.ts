@@ -18,6 +18,10 @@ export async function ensureDesktopModule(moduleName: string): Promise<boolean> 
 	return request.isSettled();
 }
 
+export function isDesktopModuleUnavailable(moduleName: string): boolean {
+	return requests.get(moduleName)?.isUnavailable() ?? false;
+}
+
 export function ensureDesktopModuleForAsset(assetUrl: string): Promise<boolean> {
 	const moduleName = desktopModuleNameForAsset(assetUrl);
 	if (moduleName == null) {

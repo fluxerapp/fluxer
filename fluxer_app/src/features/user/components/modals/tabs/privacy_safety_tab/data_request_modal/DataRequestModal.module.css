@@ -47,7 +47,8 @@
 	border-radius: 0.625rem;
 	border: 0.0625rem solid var(--background-header-secondary);
 	background: var(--background-secondary);
-	padding: 1.5rem 0.5rem 1.5rem 1.25rem;
+	padding-block: 1.5rem;
+	padding-inline: 1.25rem 0.5rem;
 }
 
 .communityListEmpty {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {existsSync, mkdirSync, readdirSync, writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {existsSync, readdirSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
@@ -9,6 +10,7 @@ import {
 	DefinePlugin,
 	HtmlRspackPlugin,
 	LightningCssMinimizerRspackPlugin,
+	SubresourceIntegrityPlugin,
 	SwcJsMinimizerRspackPlugin,
 	sources,
 } from '@rspack/core';
@@ -33,10 +35,8 @@ const BOOT_PRELOAD_FONT_FILES = [
 ];
 const BOOT_LOW_PRIORITY_FONT_FILES = ['FluxerSans/FluxerSans-Medium.woff2'];
 const AUTH_ENTRY_DOCUMENT = 'auth-index.html';
-const ENTRY_STYLESHEET_LINK_PATTERN = /<link href="([^"]+\.css)" rel="stylesheet">/gu;
+const ENTRY_STYLESHEET_LINK_PATTERN = /<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+\.css)"[^>]*>/gu;
 const CSS_URL_PATTERN = /url\(\s*['"]?([^'")]+)/gu;
-const DESKTOP_MODULE_ASSET_QUERY = /[?&]m=([a-z][a-z0-9_]{0,63})(?:&|$)/u;
-const RESERVED_DESKTOP_MODULE_NAMES = new Set(['assets', 'fluxer_renderer']);
 const DESKTOP_MODULE_ASSET_SOURCES = [
 	{
 		test: /[\\/]fonts[\\/]files[\\/]FluxerSans(JP|KR|SC|TC)[\\/][^\\/]+\.woff2$/u,
@@ -58,19 +58,9 @@ const DESKTOP_MODULE_ASSET_SOURCES = [
 
 class UnusableDesktopModuleQueryError extends Error {
 	constructor(resource) {
-		super(
-			`${resource} carries an ?m= desktop module query that is not a usable module name. It must match [a-z][a-z0-9_]{0,63} and cannot be assets or fluxer_renderer.`,
-		);
+		super(`${resource} does not match a registered desktop module asset source.`);
 		this.name = 'UnusableDesktopModuleQueryError';
 	}
-}
-
-function desktopModuleAssetName(resource) {
-	const match = DESKTOP_MODULE_ASSET_QUERY.exec(resource);
-	if (match == null || RESERVED_DESKTOP_MODULE_NAMES.has(match[1])) {
-		throw new UnusableDesktopModuleQueryError(resource);
-	}
-	return match[1];
 }
 
 function desktopModuleAssetRules(isProduction) {
@@ -161,7 +151,28 @@ function mirrorCacheGroups(groups) {
 	return mirrored;
 }
 
-function bootPreloadPlugin() {
+const ENTRY_RECOVERY_ATTRIBUTE = 'data-fluxer-entry';
+
+function subresourceIntegrity(source) {
+	return `sha384-${createHash('sha384').update(source).digest('base64')}`;
+}
+
+function entryRecoveryMarkerPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('EntryRecoveryMarkerPlugin', (compilation) => {
+				HtmlRspackPlugin.getCompilationHooks(compilation).alterAssetTags.tap('EntryRecoveryMarkerPlugin', (data) => {
+					for (const tag of [...data.assetTags.scripts, ...data.assetTags.styles]) {
+						tag.attributes = {...tag.attributes, [ENTRY_RECOVERY_ATTRIBUTE]: ''};
+					}
+					return data;
+				});
+			});
+		},
+	};
+}
+
+function bootPreloadPlugin({withIntegrity}) {
 	return {
 		apply(compiler) {
 			compiler.hooks.thisCompilation.tap('BootPreloadPlugin', (compilation) => {
@@ -193,13 +204,26 @@ function bootPreloadPlugin() {
 							}
 						}
 						const ordered = [...files];
+						const integrityAttributes = (file) => {
+							if (!withIntegrity) {
+								return '';
+							}
+							const source = compilation.getAsset(file)?.source.buffer();
+							return source == null ? '' : ` crossorigin integrity="${subresourceIntegrity(source)}"`;
+						};
 						const links = [
 							...ordered
 								.filter((file) => file.endsWith('.css'))
-								.map((file) => `<link rel="preload" as="style" fetchpriority="low" href="${base}${file}">`),
+								.map(
+									(file) =>
+										`<link rel="preload" as="style" fetchpriority="low" href="${base}${file}"${integrityAttributes(file)}>`,
+								),
 							...ordered
 								.filter((file) => file.endsWith('.js'))
-								.map((file) => `<link rel="preload" as="script" fetchpriority="low" href="${base}${file}">`),
+								.map(
+									(file) =>
+										`<link rel="preload" as="script" fetchpriority="low" href="${base}${file}"${integrityAttributes(file)}>`,
+								),
 						].join('');
 						if (links === '') {
 							return;
@@ -262,6 +286,21 @@ function authEntryDocumentPlugin() {
 						compilation.emitAsset(AUTH_ENTRY_DOCUMENT, new sources.RawSource(document));
 					},
 				);
+			});
+		},
+	};
+}
+
+function rocketLoaderOptOutPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('RocketLoaderOptOutPlugin', (compilation) => {
+				HtmlRspackPlugin.getCompilationHooks(compilation).alterAssetTags.tap('RocketLoaderOptOutPlugin', (data) => {
+					for (const tag of data.assetTags.scripts) {
+						tag.attributes = {'data-cfasync': 'false', ...tag.attributes};
+					}
+					return data;
+				});
 			});
 		},
 	};
@@ -352,24 +391,34 @@ function devServerHeaders() {
 	return {...devCorsHeaders, ...devNoStoreHeaders};
 }
 
-function resolveReleaseChannel() {
-	const value = envString('PUBLIC_RELEASE_CHANNEL', envString('RELEASE_CHANNEL', 'canary')).trim().toLowerCase();
+const RENAMED_BUILD_ENV = {
+	PUBLIC_BUILD_VERSION: 'BUILD_VERSION',
+	PUBLIC_RELEASE_CHANNEL: 'BUILD_CHANNEL',
+	RELEASE_CHANNEL: 'BUILD_CHANNEL',
+};
+
+function rejectRenamedBuildEnv() {
+	for (const [oldName, newName] of Object.entries(RENAMED_BUILD_ENV)) {
+		if (envString(oldName) !== undefined && envString(newName) === undefined) {
+			throw new Error(`The web build no longer reads ${oldName}. Set ${newName} instead.`);
+		}
+	}
+}
+
+function resolveBuildChannel() {
+	const value = envString('BUILD_CHANNEL', 'canary').trim().toLowerCase();
 	if (value === 'stable' || value === 'canary' || value === 'development') {
 		return value;
 	}
-	throw new Error(`PUBLIC_RELEASE_CHANNEL must be stable, canary, or development, received ${JSON.stringify(value)}`);
+	throw new Error(`BUILD_CHANNEL must be stable, canary, or development, received ${JSON.stringify(value)}`);
 }
 
-function resolvePublicValues() {
+function resolveBuildInfo() {
+	rejectRenamedBuildEnv();
 	return {
-		PUBLIC_BUILD_VERSION: envString('PUBLIC_BUILD_VERSION', envString('BUILD_VERSION', 'dev')),
-		PUBLIC_RELEASE_CHANNEL: resolveReleaseChannel(),
+		version: envString('BUILD_VERSION', 'dev'),
+		channel: resolveBuildChannel(),
 	};
-}
-
-function getPublicEnvVar(values, name) {
-	const value = values[name];
-	return value === undefined ? 'undefined' : JSON.stringify(value);
 }
 
 function getChunkRuntimeNames(runtime) {
@@ -412,7 +461,7 @@ function jsFilename(pathData) {
 
 export default () => {
 	const linguiSwcPlugin = getLinguiSwcPluginConfig();
-	const publicValues = resolvePublicValues();
+	const buildInfo = resolveBuildInfo();
 	const assetBaseUrl = isDesktopRenderer ? undefined : envString('PUBLIC_ASSET_BASE_URL');
 	const staticCdnEndpoint = isDesktopRenderer
 		? ''
@@ -450,6 +499,7 @@ export default () => {
 			publicPath,
 			workerPublicPath: '/',
 			workerChunkLoading: false,
+			crossOriginLoading: isProduction && !isDesktopRenderer ? 'anonymous' : false,
 			filename: jsFilename,
 			chunkFilename: jsFilename,
 			cssFilename: isProduction ? 'assets/[contenthash:16].css' : devCssName,
@@ -477,22 +527,6 @@ export default () => {
 					'voice_engine_v2',
 					'src',
 					'bridge',
-					'index.ts',
-				),
-				'@fluxer/voice_engine_v2/runtime': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'runtime',
-					'index.ts',
-				),
-				'@fluxer/voice_engine_v2/testing': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'testing',
 					'index.ts',
 				),
 				'@fluxer': path.join(MONOREPO_ROOT, 'packages'),
@@ -657,18 +691,6 @@ export default () => {
 					},
 				},
 				...(isDesktopRenderer ? desktopModuleAssetRules(isProduction) : []),
-				{
-					resourceQuery: DESKTOP_MODULE_ASSET_QUERY,
-					type: 'asset/resource',
-					generator: {
-						filename: (pathData) => {
-							const moduleName = desktopModuleAssetName(pathData.filename ?? '');
-							return isProduction
-								? `assets/${moduleName}/[contenthash:16][ext]`
-								: `assets/${moduleName}/[name].[hash][ext]`;
-						},
-					},
-				},
 			],
 			generator: {
 				'css/module': {
@@ -686,8 +708,13 @@ export default () => {
 		plugins: [
 			nodeAssertStrictSchemePlugin(),
 			fontPreloadPlugin(),
-			...(isProduction ? [bootPreloadPlugin()] : []),
+			rocketLoaderOptOutPlugin(),
+			...(isProduction ? [bootPreloadPlugin({withIntegrity: !isDesktopRenderer})] : []),
+			...(isProduction && !isDesktopRenderer ? [entryRecoveryMarkerPlugin()] : []),
 			...(isProduction && !isDesktopRenderer ? [authEntryDocumentPlugin()] : []),
+			...(isProduction && !isDesktopRenderer
+				? [new SubresourceIntegrityPlugin({hashFuncNames: ['sha384'], enabled: true})]
+				: []),
 			new HtmlRspackPlugin({
 				template: path.join(ROOT_DIR, 'index.html'),
 				filename: 'index.html',
@@ -722,22 +749,29 @@ export default () => {
 			new DefinePlugin({
 				define: 'undefined',
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
-				__FLUXER_SW_VERSION__: JSON.stringify(publicValues.PUBLIC_BUILD_VERSION || 'dev'),
+				__FLUXER_SW_VERSION__: JSON.stringify(buildInfo.version),
 				'process.env.NODE_ENV': JSON.stringify(mode),
 				'import.meta.env.DEV': JSON.stringify(isDevelopment),
 				'import.meta.env.PROD': JSON.stringify(isProduction),
 				'import.meta.env.MODE': JSON.stringify(mode),
-				'import.meta.env.PUBLIC_BUILD_VERSION': getPublicEnvVar(publicValues, 'PUBLIC_BUILD_VERSION'),
-				'import.meta.env.PUBLIC_RELEASE_CHANNEL': getPublicEnvVar(publicValues, 'PUBLIC_RELEASE_CHANNEL'),
+				'import.meta.env.BUILD_VERSION': JSON.stringify(buildInfo.version),
+				'import.meta.env.BUILD_CHANNEL': JSON.stringify(buildInfo.channel),
 			}),
 			{
 				apply(compiler) {
-					compiler.hooks.afterEmit.tap('VersionJsonPlugin', () => {
-						const versionData = {
-							version: publicValues.PUBLIC_BUILD_VERSION,
-						};
-						mkdirSync(DIST_DIR, {recursive: true});
-						writeFileSync(path.join(DIST_DIR, 'version.json'), JSON.stringify(versionData));
+					compiler.hooks.thisCompilation.tap('VersionJsonPlugin', (compilation) => {
+						const {Compilation} = compiler.rspack;
+						compilation.hooks.processAssets.tap(
+							{name: 'VersionJsonPlugin', stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL},
+							() => {
+								const {RawSource} = compiler.rspack.sources;
+								const versionData = {
+									version: buildInfo.version,
+								};
+								const source = new RawSource(JSON.stringify(versionData));
+								compilation.emitAsset('version.json', source);
+							},
+						);
 					});
 				},
 			},
@@ -771,6 +805,15 @@ export default () => {
 								enforce: true,
 								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
 							},
+							plutoniumAtom: {
+								test: /[\\/]node_modules[\\/]three[\\/]/,
+								name: 'plutonium-atom',
+								priority: 54,
+								reuseExistingChunk: true,
+								enforce: true,
+								maxAsyncSize: Number.POSITIVE_INFINITY,
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
+							},
 							editor: {
 								test: /[\\/]node_modules[\\/](@codemirror|@lezer|codemirror|style-mod|w3c-keyname|crelt|@marijn)[\\/]/,
 								name: 'editor',
@@ -793,7 +836,7 @@ export default () => {
 								maxSize: 100_000,
 							},
 							animation: {
-								test: /[\\/]node_modules[\\/](framer-motion|motion|motion-dom|motion-utils)[\\/]/,
+								test: /[\\/]node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/,
 								name: 'animation',
 								priority: 45,
 								reuseExistingChunk: true,

@@ -23,7 +23,7 @@
 	border: none;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	vertical-align: middle;
 	font-weight: 500;
 	color: var(--text-primary);
@@ -46,7 +46,7 @@
 }
 
 .userTagWrapper {
-	margin-left: 0.25rem;
+	margin-inline-start: 0.25rem;
 }
 
 .actionsContainer {
@@ -77,7 +77,7 @@
 	border: none;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	font: inherit;
 	color: inherit;
 	line-height: 1.125rem;

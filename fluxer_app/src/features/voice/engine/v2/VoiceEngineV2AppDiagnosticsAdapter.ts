@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {DiagnosticsPort} from '@fluxer/voice_engine_v2';
+import type {DiagnosticsPort} from '@fluxer/voice_engine_v2/src/ports';
 
 const VOICE_ENGINE_V2_DIAGNOSTICS_CODE_MAX_LENGTH = 128;
 const VOICE_ENGINE_V2_DIAGNOSTICS_MESSAGE_MAX_LENGTH = 4096;
@@ -20,17 +20,15 @@ export interface VoiceEngineV2AppDiagnosticsLogger {
 
 export interface VoiceEngineV2AppDiagnosticsAdapterOptions {
 	logger: VoiceEngineV2AppDiagnosticsLogger;
-	fallbackLevel?: VoiceEngineV2DiagnosticsLevel;
-	onError?: (code: string, error: unknown) => void;
 }
 
-function normaliseLevel(level: string, fallback: VoiceEngineV2DiagnosticsLevel): VoiceEngineV2DiagnosticsLevel {
+function normaliseLevel(level: string): VoiceEngineV2DiagnosticsLevel {
 	assert.equal(typeof level, 'string', 'diagnostics level must be a string');
 	const lower = level.toLowerCase();
 	if (KNOWN_LEVELS.has(lower as VoiceEngineV2DiagnosticsLevel)) {
 		return lower as VoiceEngineV2DiagnosticsLevel;
 	}
-	return fallback;
+	return 'info';
 }
 
 function dispatch(
@@ -66,10 +64,7 @@ export function createVoiceEngineV2AppDiagnosticsAdapter(
 ): DiagnosticsPort {
 	assert.ok(options !== null && typeof options === 'object', 'voice-engine-v2 diagnostics adapter requires options');
 	assert.ok(options.logger !== null && typeof options.logger === 'object', 'diagnostics adapter requires a logger');
-	const fallback = options.fallbackLevel ?? 'info';
-	assert.ok(KNOWN_LEVELS.has(fallback), 'diagnostics adapter fallbackLevel must be a known level');
 	const logger = options.logger;
-	const onError = options.onError;
 	return {
 		async log(level: string, code: string, message: string, detail?: unknown): Promise<void> {
 			assert.equal(typeof code, 'string', 'diagnostics code must be a string');
@@ -83,13 +78,11 @@ export function createVoiceEngineV2AppDiagnosticsAdapter(
 				message.length <= VOICE_ENGINE_V2_DIAGNOSTICS_MESSAGE_MAX_LENGTH,
 				'diagnostics message exceeds the maximum length',
 			);
-			const resolvedLevel = normaliseLevel(level, fallback);
+			const resolvedLevel = normaliseLevel(level);
 			const payload: Record<string, unknown> = detail === undefined ? {code, message} : {code, message, detail};
 			try {
 				dispatch(logger, resolvedLevel, payload);
-			} catch (error) {
-				onError?.(code, error);
-			}
+			} catch {}
 		},
 	};
 }

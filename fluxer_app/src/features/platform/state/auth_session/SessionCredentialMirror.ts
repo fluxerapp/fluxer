@@ -40,7 +40,7 @@ export interface SessionCredentialMirror {
 	persist(mirror: StoredSessionMirror): Promise<void>;
 }
 
-export class SessionCredentialMirrorReadError extends Error {
+class SessionCredentialMirrorReadError extends Error {
 	constructor(cause: unknown) {
 		super('The session credential mirror is unreadable', {cause});
 		this.name = 'SessionCredentialMirrorReadError';

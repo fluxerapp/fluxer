@@ -5,7 +5,7 @@ import styles from '@app/features/ui/components/form/FormCombobox.module.css';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
-import {Combobox as BaseCombobox, type ComboboxPortalProps} from '@base-ui/react/combobox';
+import {Combobox as BaseCombobox} from '@base-ui/react/combobox';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CaretDownIcon, CheckIcon, CircleNotchIcon, XIcon} from '@phosphor-icons/react';
@@ -15,25 +15,18 @@ import type React from 'react';
 import {useCallback, useId, useMemo, useRef, useState} from 'react';
 
 type Primitive = string | number | null;
-type BaseComboboxValue<O, IsMulti extends boolean> = IsMulti extends true ? Array<O> : O;
-
 export interface ComboboxOption<V extends Primitive = string> {
 	value: V;
 	label: string;
 	isDisabled?: boolean;
 }
 
-export function resolveNearestNumericOption(
+function findOptionByLabel<V extends Primitive, O extends ComboboxOption<V>>(
 	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined {
-	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	return options.reduce((nearest, option) =>
-		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
-	).value;
+	options: ReadonlyArray<O>,
+): O | undefined {
+	const lowered = inputValue.trim().toLowerCase();
+	return options.find((option) => option.label.trim().toLowerCase() === lowered);
 }
 
 export interface ComboboxFilterOption<O> {
@@ -47,16 +40,12 @@ type ComboboxInputValueResolver<V extends Primitive, O extends ComboboxOption<V>
 	options: ReadonlyArray<O>,
 ) => V | undefined;
 
-export interface ComboboxProps<
-	V extends Primitive = string,
-	IsMulti extends boolean = false,
-	O extends ComboboxOption<V> = ComboboxOption<V>,
-> {
+export interface ComboboxProps<V extends Primitive = string, O extends ComboboxOption<V> = ComboboxOption<V>> {
 	label?: React.ReactNode;
 	description?: string;
-	value: IsMulti extends true ? Array<V> : V;
+	value: V;
 	options: ReadonlyArray<O>;
-	onChange: (value: IsMulti extends true ? Array<V> : V) => void;
+	onChange: (value: V) => void;
 	disabled?: boolean;
 	error?: string;
 	placeholder?: string;
@@ -72,15 +61,12 @@ export interface ComboboxProps<
 	isLoading?: boolean;
 	isClearable?: boolean;
 	filterOption?: (option: ComboboxFilterOption<O>, inputValue: string) => boolean;
-	isMulti?: IsMulti;
 	menuPlacement?: 'auto' | 'bottom' | 'top';
 	maxMenuHeight?: number | null;
 	menuMinWidth?: number;
 	wrapMenuText?: boolean;
-	wrapValueText?: boolean;
 	renderOption?: (option: O, isSelected: boolean) => React.ReactNode;
-	renderValue?: (option: IsMulti extends true ? Array<O> : O | null) => React.ReactNode;
-	portalProps?: ComboboxPortalProps;
+	renderValue?: (option: O | null) => React.ReactNode;
 	density?: 'default' | 'compact' | 'compactOverlay';
 	dir?: 'ltr' | 'rtl';
 	'aria-label'?: string;
@@ -90,10 +76,6 @@ export interface ComboboxProps<
 const SELECT_DESCRIPTOR = msg({
 	message: 'Select…',
 	comment: 'Generic combobox control placeholder.',
-});
-const SELECTED_DESCRIPTOR = msg({
-	message: '{selectedCount} selected',
-	comment: 'Generic multi-select summary label. selectedCount is the number of selected options.',
 });
 const NO_RESULTS_FOUND_DESCRIPTOR = msg({
 	message: 'No results found',
@@ -150,7 +132,6 @@ function normalizeNumeric(value: string): string | null {
 
 export const Combobox = observer(function Combobox<
 	V extends Primitive = string,
-	IsMulti extends boolean = false,
 	O extends ComboboxOption<V> = ComboboxOption<V>,
 >({
 	id,
@@ -173,20 +154,17 @@ export const Combobox = observer(function Combobox<
 	isLoading = false,
 	isClearable = false,
 	filterOption,
-	isMulti,
 	menuPlacement: menuPlacementProp = 'auto',
 	maxMenuHeight: maxMenuHeightProp,
 	menuMinWidth,
 	wrapMenuText,
-	wrapValueText,
 	renderOption,
 	renderValue,
-	portalProps,
 	density = 'default',
 	dir,
 	'aria-label': ariaLabel,
 	'data-flx': dataFlx,
-}: ComboboxProps<V, IsMulti, O>) {
+}: ComboboxProps<V, O>) {
 	const {i18n} = useLingui();
 	const portalHost = usePortalHost();
 	const generatedId = useId();
@@ -196,17 +174,10 @@ export const Combobox = observer(function Combobox<
 	const [open, setOpen] = useState(false);
 	const [isTyping, setIsTyping] = useState(false);
 	const selectedOptions = useMemo(() => {
-		if (isMulti) {
-			if (!Array.isArray(value)) return [];
-			return options.filter((option) =>
-				(value as Array<V>).some((selectedValue) => Object.is(selectedValue, option.value)),
-			);
-		}
 		return options.find((option) => Object.is(option.value, value as V)) ?? null;
-	}, [isMulti, options, value]);
-	const selectedOptionArray = Array.isArray(selectedOptions) ? selectedOptions : [];
-	const selectedOption = Array.isArray(selectedOptions) ? null : selectedOptions;
-	const comboboxValue = selectedOptions as BaseComboboxValue<O, IsMulti> | null;
+	}, [options, value]);
+	const selectedOption = selectedOptions;
+	const comboboxValue = selectedOptions as O | null;
 	const popupMaxHeight = useMemo(() => {
 		if (maxMenuHeightProp === null || options.length < COMBOBOX_SCROLL_ITEM_THRESHOLD) return 'var(--available-height)';
 		return `min(var(--available-height), ${maxMenuHeightProp ?? COMBOBOX_DEFAULT_MAX_HEIGHT}px)`;
@@ -221,6 +192,8 @@ export const Combobox = observer(function Combobox<
 	);
 	const resolveInputValue = useCallback(
 		(inputValue: string): V | undefined => {
+			const labelMatch = findOptionByLabel<V, O>(inputValue, options);
+			if (labelMatch) return labelMatch.value;
 			const customValue = autoSelectValueFromInput?.(inputValue, options);
 			if (customValue !== undefined) return customValue;
 			if (!autoSelectExactMatch) return undefined;
@@ -256,18 +229,18 @@ export const Combobox = observer(function Combobox<
 	);
 	const handleBlur = useCallback(
 		(event: React.FocusEvent<HTMLInputElement>) => {
-			if ((!autoSelectExactMatch && !autoSelectValueFromInput) || isMulti) return;
+			if (!autoSelectExactMatch && !autoSelectValueFromInput) return;
 			const inputValue = (event.target.value ?? '').trim();
 			if (!inputValue) return;
 			const resolvedValue = resolveInputValue(inputValue);
 			if (resolvedValue !== undefined) (onChange as (value: V) => void)(resolvedValue);
 		},
-		[autoSelectExactMatch, autoSelectValueFromInput, isMulti, onChange, resolveInputValue],
+		[autoSelectExactMatch, autoSelectValueFromInput, onChange, resolveInputValue],
 	);
 	const selectSelectedLabel = useCallback(() => {
-		if (!isSearchable || isMulti || isTyping) return;
+		if (!isSearchable || isTyping) return;
 		inputRef.current?.select();
-	}, [isMulti, isSearchable, isTyping]);
+	}, [isSearchable, isTyping]);
 	const handleFocus = useCallback(() => {
 		if (openMenuOnFocus && !disabled) setOpen(true);
 		selectSelectedLabel();
@@ -299,11 +272,8 @@ export const Combobox = observer(function Combobox<
 		[closeMenuOnSelect],
 	);
 	const handleValueChange = useCallback(
-		(nextValue: O | Array<O> | null, eventDetails: BaseCombobox.Root.ChangeEventDetails) => {
-			if (isMulti) {
-				const nextValues = Array.isArray(nextValue) ? nextValue.map((option) => option.value) : [];
-				(onChange as (value: Array<V>) => void)(nextValues);
-			} else if (nextValue == null) {
+		(nextValue: O | null, eventDetails: BaseCombobox.Root.ChangeEventDetails) => {
+			if (nextValue == null) {
 				if (isClearable) (onChange as (value: V) => void)(null as V);
 			} else {
 				(onChange as (value: V) => void)((nextValue as O).value);
@@ -312,7 +282,7 @@ export const Combobox = observer(function Combobox<
 				window.requestAnimationFrame(() => inputRef.current?.blur());
 			}
 		},
-		[blurInputOnSelect, isClearable, isMulti, onChange],
+		[blurInputOnSelect, isClearable, onChange],
 	);
 	const comboboxFilter = useCallback(
 		(option: O, query: string) => {
@@ -329,20 +299,13 @@ export const Combobox = observer(function Combobox<
 		[filterOption],
 	);
 	const renderedValue = useMemo(() => {
-		if (isMulti) {
-			const selected = selectedOptionArray;
-			if (renderValue) return renderValue(selected as IsMulti extends true ? Array<O> : O | null);
-			if (selected.length === 0) return null;
-			if (selected.length === 1) return selected[0].label;
-			return i18n._(SELECTED_DESCRIPTOR, {selectedCount: selected.length});
-		}
 		if (!selectedOption) return null;
-		if (renderValue) return renderValue(selectedOption as IsMulti extends true ? Array<O> : O | null);
+		if (renderValue) return renderValue(selectedOption as O | null);
 		return null;
-	}, [i18n.locale, isMulti, renderValue, selectedOption, selectedOptionArray]);
+	}, [i18n.locale, renderValue, selectedOption]);
 	const shouldShowValueOverlay =
 		Boolean(renderedValue) && (!open || !isSearchable || (Boolean(renderValue) && !isTyping));
-	const hasSelectedValue = isMulti ? selectedOptionArray.length > 0 : selectedOption != null;
+	const hasSelectedValue = selectedOption != null;
 	const emptyMessage = isLoading ? i18n._(LOADING_DESCRIPTOR) : i18n._(NO_RESULTS_FOUND_DESCRIPTOR);
 	return (
 		<div className={styles.container} data-flx={dataFlx ?? 'ui.form.combobox.container'}>
@@ -356,7 +319,7 @@ export const Combobox = observer(function Combobox<
 				</label>
 			)}
 			<div className={className} data-flx="ui.form.combobox.control-wrap">
-				<BaseCombobox.Root<O, IsMulti>
+				<BaseCombobox.Root<O>
 					id={inputId}
 					items={options}
 					value={comboboxValue}
@@ -364,7 +327,6 @@ export const Combobox = observer(function Combobox<
 					open={open}
 					onOpenChange={handleOpenChange}
 					onInputValueChange={handleInputValueChange}
-					multiple={isMulti}
 					disabled={disabled}
 					filter={isSearchable ? comboboxFilter : null}
 					autoHighlight={true}
@@ -404,7 +366,6 @@ export const Combobox = observer(function Combobox<
 									styles.input,
 									densityInputClass[density],
 									shouldShowValueOverlay && styles.inputWithValueOverlay,
-									wrapValueText && styles.inputWrapValue,
 								)}
 								disabled={disabled}
 								readOnly={!isSearchable}
@@ -423,7 +384,6 @@ export const Combobox = observer(function Combobox<
 										styles.valueOverlay,
 										densityValueOverlayClass[density],
 										isClearable && hasSelectedValue && styles.valueOverlayWithClear,
-										wrapValueText && styles.valueOverlayWrap,
 									)}
 									aria-hidden
 									data-flx="ui.form.combobox.value-overlay"
@@ -465,7 +425,7 @@ export const Combobox = observer(function Combobox<
 							</div>
 						</BaseCombobox.InputGroup>
 					</FocusRing>
-					<BaseCombobox.Portal container={portalHost ?? undefined} {...portalProps} data-flx="ui.form.combobox.portal">
+					<BaseCombobox.Portal container={portalHost ?? undefined} data-flx="ui.form.combobox.portal">
 						<BaseCombobox.Positioner
 							className={styles.positioner}
 							positionMethod="fixed"
@@ -526,8 +486,7 @@ export const Combobox = observer(function Combobox<
 													<CheckIcon weight="bold" data-flx="ui.form.combobox.item-check-icon" />
 												</BaseCombobox.ItemIndicator>
 												<span className={styles.itemText} data-flx="ui.form.combobox.item-text">
-													{renderOption?.(option, selectedOptionArray.includes(option) || selectedOption === option) ??
-														option.label}
+													{renderOption?.(option, selectedOption === option) ?? option.label}
 												</span>
 											</BaseCombobox.Item>
 										)}

@@ -4,7 +4,10 @@ mod activity_pub;
 mod cache_policy;
 mod charset;
 mod direct_media;
+mod dns_txt;
+mod domain_verification;
 mod embed_normalizer;
+mod external_fetch;
 mod html_markdown;
 mod html_parser;
 mod http_fetch;
@@ -47,6 +50,11 @@ async fn main() -> anyhow::Result<()> {
         Mode::Shard => {
             let shard = UnfurlShard::new(config.cache_ttl);
             fluxer_svc::shard::run_shard(&config, shard, transport).await
+        }
+        Mode::Combined => {
+            let router = UnfurlRouter::new(config.cache_max_entries, config.cache_ttl);
+            let shard = UnfurlShard::new(config.cache_ttl);
+            fluxer_svc::combined::run_combined(&config, router, shard, transport).await
         }
     }
 }

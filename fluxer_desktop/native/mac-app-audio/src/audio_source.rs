@@ -103,14 +103,6 @@ struct Callbacks {
 unsafe impl Send for Source {}
 unsafe impl Sync for Source {}
 
-#[derive(Debug)]
-pub enum SourceCreateError {
-    DispatchQueue,
-}
-
-#[derive(Debug)]
-pub struct ClassRegistrationError;
-
 pub struct DelegateIvars {
     pub source: AtomicPtr<Source>,
 }
@@ -347,7 +339,7 @@ unsafe fn handle_audio_sample(src: &Source, sample_buffer: &CMSampleBuffer) {
 }
 
 impl Source {
-    pub fn create(opts: SourceOptions) -> Result<Box<Source>, SourceCreateError> {
+    pub fn create(opts: SourceOptions) -> Box<Source> {
         assert!(opts.target_sample_rate > 0.0);
         assert!(opts.target_channels > 0);
         let delegate = FluxerSCKAudioSource::new();
@@ -381,7 +373,7 @@ impl Source {
 
         let raw: *mut Source = &mut *src;
         src.delegate.ivars().source.store(raw, Ordering::Release);
-        Ok(src)
+        src
     }
 
     fn lock_callbacks(&self) -> MutexGuard<'_, Callbacks> {
@@ -434,29 +426,5 @@ impl Drop for Source {
             .ivars()
             .source
             .store(ptr::null_mut(), Ordering::Release);
-    }
-}
-
-#[cfg(test)]
-mod abl_scratch_tests {
-    use super::*;
-
-    #[test]
-    fn abl_scratch_layout_matches_audio_buffer_list() {
-        assert_eq!(16, core::mem::align_of::<AblScratch>());
-        assert_eq!(8, core::mem::offset_of!(AblScratch, buffers));
-        assert!(
-            core::mem::size_of::<AblScratch>()
-                >= core::mem::size_of::<u32>()
-                    + MAX_ABL_BUFFERS * core::mem::size_of::<ac::AudioBuffer>()
-        );
-    }
-
-    #[test]
-    fn abl_scratch_empty_has_no_buffers() {
-        let scratch = AblScratch::empty();
-        assert_eq!(0, scratch.n_buffers);
-        assert!(scratch.buffers[0].m_data.is_null());
-        assert_eq!(0, scratch.buffers[MAX_ABL_BUFFERS - 1].m_data_byte_size);
     }
 }

@@ -154,21 +154,6 @@
 	color: transparent;
 }
 
-.inputWrapValue {
-	white-space: normal;
-	overflow: visible;
-	text-overflow: clip;
-}
-
-.inputWithValueOverlay.inputWrapValue {
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	width: 100%;
-	height: 100%;
-	padding: 0;
-}
-
 .valueOverlay {
 	position: absolute;
 	top: 50%;
@@ -207,28 +192,6 @@
 	font-size: 0.625rem;
 	line-height: 0.75rem;
 	color: #fff;
-}
-
-.valueOverlayWrap {
-	position: static;
-	flex: 1;
-	min-width: 0;
-	box-sizing: border-box;
-	transform: none;
-	white-space: normal;
-	overflow: visible;
-}
-
-.valueOverlayDefault.valueOverlayWrap {
-	padding: 0.6875rem 0;
-}
-
-.valueOverlayCompact.valueOverlayWrap {
-	padding: 0.4375rem 0;
-}
-
-.valueOverlayCompactOverlay.valueOverlayWrap {
-	padding: 0.1875rem 0;
 }
 
 .actionButtons {
@@ -401,11 +364,15 @@
 
 .itemSelected {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .itemSelected.itemHighlighted {
 	background-color: var(--brand-primary);
+}
+
+.itemSelected .itemText :where(*) {
+	color: inherit;
 }
 
 .itemRendered {
@@ -419,14 +386,14 @@
 .itemRendered .itemIndicator:not(.itemIndicatorHidden) {
 	position: absolute;
 	top: 50%;
-	right: 0.625rem;
+	inset-inline-end: 0.625rem;
 	pointer-events: none;
 	transform: translateY(-50%);
 }
 
 .popupCompact .itemRendered .itemIndicator:not(.itemIndicatorHidden),
 .popupCompactOverlay .itemRendered .itemIndicator:not(.itemIndicatorHidden) {
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 }
 
 .itemDisabled {

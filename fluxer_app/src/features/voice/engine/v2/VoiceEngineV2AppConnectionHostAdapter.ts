@@ -3,7 +3,11 @@
 import assert from 'node:assert/strict';
 import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {createVoiceMeshRoom, holdVoiceMeshConversion} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
+import {
+	createVoiceMeshRoom,
+	holdVoiceMeshConversion,
+	isVoiceMeshRoom,
+} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
 import {
@@ -25,7 +29,10 @@ import {
 	releaseE2EEWorker,
 } from '@app/features/voice/engine/VoiceE2EEKeyProvider';
 import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import {selectLocalMediaPublicationsForConnectionRepublish} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
+import {
+	releaseCaptureWithRepublishedTrack,
+	selectLocalMediaPublicationsForConnectionRepublish,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {
 	assertDisconnectReason,
 	assertNonEmptyString,
@@ -41,12 +48,12 @@ import {
 	getRoomVideoPublishDefaults,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {getScreenShareBitrateCeilingBps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {
 	ExternalE2EEKeyProvider,
 	LocalTrack,
@@ -74,7 +81,7 @@ export interface VoiceServerUpdateData {
 	ice_servers?: Array<Pick<RTCIceServer, 'urls'>>;
 }
 
-export interface VoiceConnectionState {
+interface VoiceConnectionState {
 	room: Room | null;
 	guildId: string | null;
 	channelId: string | null;
@@ -85,14 +92,14 @@ export interface VoiceConnectionState {
 	connectionId: string | null;
 }
 
-export interface RegionHotSwapState {
+interface RegionHotSwapState {
 	pendingRoom: Room | null;
 	previousRoom: Room | null;
 	inProgress: boolean;
 }
 
-export type HotSwapQueuedOperation = () => void | Promise<void>;
-export type VoiceConnectFailureHandler = (
+type HotSwapQueuedOperation = () => void | Promise<void>;
+type VoiceConnectFailureHandler = (
 	guildId: string | null,
 	channelId: string,
 	connectionId: string | null,
@@ -145,7 +152,7 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
 	return {
 		screenShareEncoding: {
-			maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+			maxBitrate: getScreenShareBitrateCeilingBps(),
 			maxFramerate: 30,
 			priority: 'high',
 		},
@@ -200,7 +207,7 @@ function createRoomConnectOptions(): RoomConnectOptions {
 	return connectOptions;
 }
 
-export class VoiceEngineV2AppConnectionHostAdapter extends Store {
+class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	connectionState: VoiceConnectionState = initialConnectionState;
 	hotSwapState: RegionHotSwapState = initialHotSwapState;
 	private connectionSnapshot: VoiceConnectionSnapshot = createVoiceConnectionSnapshot();
@@ -785,8 +792,13 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			logger.warn('Region hot-swap: missing participant for track republishing');
 			return;
 		}
+		const isMeshConversion = isVoiceMeshRoom(oldRoom);
 		const publications = selectLocalMediaPublicationsForConnectionRepublish(
 			Array.from(oldParticipant.trackPublications.values()),
+		).filter(
+			(publication) =>
+				!isMeshConversion ||
+				(publication.source !== Track.Source.ScreenShare && publication.source !== Track.Source.ScreenShareAudio),
 		);
 		const errors: Array<{source: string; error: unknown}> = [];
 		let codecPolicyFailure: Error | null = null;
@@ -810,6 +822,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					name: publication.trackName,
 				};
 				const republished = await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				releaseCaptureWithRepublishedTrack(newParticipant, republished, track);
 				const violation = publishOptions.videoCodec
 					? findVideoPublishCodecPolicyViolation(publishOptions.videoCodec, republished.options?.videoCodec)
 					: null;
@@ -1087,12 +1100,10 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	private disconnectPreviousRoom(previousRoom: Room | null, stopTracks = true): void {
 		if (!previousRoom) return;
 		try {
-			if (previousRoom.state === 'connected') {
-				const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
-				previousRoom.disconnect(stopTracks);
-				this.stopPreviousRoomTracks(tracksToStop);
-				logger.debug('Previous room disconnected', {stopTracks});
-			}
+			const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
+			previousRoom.disconnect(stopTracks);
+			this.stopPreviousRoomTracks(tracksToStop);
+			logger.debug('Previous room disconnected', {stopTracks});
 		} catch (error) {
 			logger.warn('Failed to disconnect previous room', error);
 		}

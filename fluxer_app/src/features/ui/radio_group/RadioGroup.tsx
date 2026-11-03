@@ -2,11 +2,12 @@
 
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import styles from '@app/features/ui/radio_group/RadioGroup.module.css';
+import {useDirection} from '@base-ui/react/direction-provider';
 import * as RadixRadioGroup from '@radix-ui/react-radio-group';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useRef} from 'react';
+import {useId, useRef} from 'react';
 
 export interface RadioOption<T> {
 	value: T;
@@ -23,7 +24,6 @@ interface RadioGroupProps<T> {
 	onChange: (value: T) => void;
 	renderContent?: (option: RadioOption<T>, checked: boolean) => React.ReactNode;
 	optionAlign?: 'start' | 'center';
-	dir?: 'ltr' | 'rtl';
 	'aria-label'?: string;
 }
 
@@ -45,6 +45,9 @@ const RadioOptionItem = <T,>({
 	align,
 }: RadioOptionItemProps<T>) => {
 	const radioRef = useRef<HTMLButtonElement | null>(null);
+	const labelId = useId();
+	const descriptionId = useId();
+	const describedByDescription = !renderContent && Boolean(option.desc);
 	return (
 		<FocusRing
 			focusTarget={radioRef}
@@ -58,6 +61,8 @@ const RadioOptionItem = <T,>({
 				ref={radioRef}
 				value={value}
 				disabled={option.disabled || groupDisabled}
+				aria-labelledby={describedByDescription ? labelId : undefined}
+				aria-describedby={describedByDescription ? descriptionId : undefined}
 				className={clsx(styles.radioGroupOption, align === 'center' && styles.radioGroupOptionCenter)}
 				data-flx="ui.radio-group.radio-group.radio-option-item.radio-group-option"
 			>
@@ -103,13 +108,17 @@ const RadioOptionItem = <T,>({
 						</div>
 					) : (
 						<>
-							<span className={styles.label} data-flx="ui.radio-group.radio-group.radio-option-item.label">
+							<span id={labelId} className={styles.label} data-flx="ui.radio-group.radio-group.radio-option-item.label">
 								<div className={styles.labelText} data-flx="ui.radio-group.radio-group.radio-option-item.label-text">
 									{option.name}
 								</div>
 							</span>
 							{option.desc && (
-								<div className={styles.description} data-flx="ui.radio-group.radio-group.radio-option-item.description">
+								<div
+									id={descriptionId}
+									className={styles.description}
+									data-flx="ui.radio-group.radio-group.radio-option-item.description"
+								>
 									{option.desc}
 								</div>
 							)}
@@ -129,9 +138,9 @@ export const RadioGroup = observer(
 		onChange,
 		renderContent,
 		optionAlign = 'start',
-		dir,
 		'aria-label': ariaLabel,
 	}: RadioGroupProps<T>) => {
+		const direction = useDirection();
 		const valueToString = (val: T): string => {
 			if (typeof val === 'string') return val;
 			if (typeof val === 'number') return String(val);
@@ -155,7 +164,7 @@ export const RadioGroup = observer(
 				onValueChange={handleChange}
 				disabled={disabled}
 				orientation="vertical"
-				dir={dir}
+				dir={direction}
 				aria-label={ariaLabel}
 				data-flx="ui.radio-group.radio-group.group"
 			>

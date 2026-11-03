@@ -19,10 +19,8 @@ import {
 } from '@app/api/channel/services/message/CrosspostPropagation';
 import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
+	adminMessageResponseAccess,
 	createMessageResponseDataService,
-	type MessageResponseAccessContext,
-	messageResponseAccessForChannel,
-	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -36,7 +34,7 @@ import type {
 	SearchChannelMessagesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageBrowseSchemas';
 import type {
-	DeleteMessageRequest,
+	AdminMessageDeleteRequest,
 	LookupMessageByAttachmentRequest,
 	LookupMessageRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
@@ -108,11 +106,15 @@ export class AdminMessageService {
 		};
 	}
 
-	async deleteMessage(data: DeleteMessageRequest, adminUserId: UserID, auditLogReason: string | null) {
+	async deleteMessage(
+		channelId: ChannelID,
+		messageId: MessageID,
+		{basis}: AdminMessageDeleteRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
 		const {channelRepository, auditService} = this.deps;
 		const {gateway: gatewayService, worker: workerService} = this.deps.apiContext.services;
-		const channelId = createChannelID(data.channel_id);
-		const messageId = createMessageID(data.message_id);
 		const channel = await channelRepository.channelData.findUnique(channelId);
 		const message = await channelRepository.messages.getMessage(channelId, messageId);
 		if (message) {
@@ -160,6 +162,7 @@ export class AdminMessageService {
 			metadata: new Map([
 				['channel_id', channelId.toString()],
 				['message_id', messageId.toString()],
+				['basis', basis.type],
 			]),
 		});
 		return {
@@ -214,7 +217,7 @@ export class AdminMessageService {
 		const messageResponses = await createMessageResponseDataService().buildMessages({
 			userId: createUserID(0n),
 			messages: result.messages,
-			access: await this.getMessageResponseAccessForAdmin(channelId),
+			access: await adminMessageResponseAccess(this.deps.channelRepository, channelId),
 		});
 		const adminMessages = messageResponses.map((message) =>
 			this.mapMessageResponseToAdminMessage(message, channelNsfwContext),
@@ -226,12 +229,6 @@ export class AdminMessageService {
 		};
 	}
 
-	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
-		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
-		return {...access, includeHidden: true};
-	}
-
 	private async listMessageResponsesForAdmin(params: {
 		channelId: ChannelID;
 		limit: number;
@@ -239,7 +236,7 @@ export class AdminMessageService {
 		after?: MessageID;
 		around?: MessageID;
 	}): Promise<Array<MessageResponse>> {
-		const access = await this.getMessageResponseAccessForAdmin(params.channelId);
+		const access = await adminMessageResponseAccess(this.deps.channelRepository, params.channelId);
 		return createMessageResponseDataService().listMessages({
 			userId: createUserID(0n),
 			channelId: params.channelId,
@@ -265,6 +262,8 @@ export class AdminMessageService {
 			author_global_name: message.author.global_name ?? null,
 			author_discriminator: message.author.discriminator,
 			author_avatar: message.author.avatar,
+			author_bot: message.author.bot ?? false,
+			webhook_id: message.webhook_id ?? null,
 			content: message.content ?? '',
 			timestamp: message.timestamp,
 			attachments:
@@ -278,6 +277,7 @@ export class AdminMessageService {
 					height: attachment.height ?? null,
 					size: attachment.size == null ? null : assertSafeByteSize(attachment.size, 'admin message attachment size'),
 				})) ?? [],
+			embeds: message.embeds ?? [],
 		};
 	}
 

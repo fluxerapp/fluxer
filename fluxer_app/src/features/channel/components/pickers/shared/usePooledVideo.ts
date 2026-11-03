@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {useEffect, useRef} from 'react';
 
 const HAVE_METADATA_READY_STATE = 1;
@@ -41,10 +42,15 @@ export function usePooledVideo({
 		videoRef.current = video;
 		video.autoplay = false;
 		video.preload = effectivePreload;
+		const refreshOnError = () => {
+			void AttachmentUrlRefresher.refresh(src, {force: true});
+		};
+		video.addEventListener('error', refreshOnError, {once: true});
 		video.src = src;
 		container.appendChild(video);
 		videoPool.registerActive(video);
 		return () => {
+			video.removeEventListener('error', refreshOnError);
 			videoPool.unregisterActive(video);
 			videoPool.returnElement(video);
 			if (videoRef.current === video) {

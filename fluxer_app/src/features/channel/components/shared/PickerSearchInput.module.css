@@ -26,7 +26,8 @@
 
 .searchInput {
 	min-height: 2.25rem;
-	padding: 0.5rem 2.5rem 0.5rem 2.25rem;
+	padding-block: 0.5rem;
+	padding-inline: 2.25rem 2.5rem;
 	font-size: 1rem;
 	border-radius: var(--radius-md);
 	background-color: color-mix(in srgb, var(--form-surface-background) 85%, black);

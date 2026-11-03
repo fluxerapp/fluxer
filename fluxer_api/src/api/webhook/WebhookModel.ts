@@ -8,7 +8,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Webhook} from '@app/api/models/Webhook';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import {Permissions, WebhookTypes, type WebhookTypeValue} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
@@ -120,11 +120,7 @@ export async function mapWebhookToResponseWithCache({
 	resolveSource?: WebhookSourceResolver;
 }): Promise<WebhookResponse> {
 	const [creatorPartial, source] = await Promise.all([
-		getCachedUserPartialResponse({
-			userId: webhook.creatorId ?? createUserID(DELETED_USER_ID),
-			userCacheService,
-			requestCache,
-		}),
+		userCacheService.getUserPartialResponse(webhook.creatorId ?? createUserID(DELETED_USER_ID), requestCache),
 		resolveSource ? resolveSource(webhook) : Promise.resolve(null),
 	]);
 	const {token, ...common} = mapWebhookToTokenResponse(webhook);

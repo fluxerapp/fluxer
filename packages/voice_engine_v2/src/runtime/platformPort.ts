@@ -4,10 +4,6 @@ export interface VoiceEngineV2ClockPort {
 	now(): number;
 }
 
-export interface VoiceEngineV2RandomPort {
-	next(): number;
-}
-
 export interface VoiceEngineV2WallClockSource {
 	read(): number;
 }

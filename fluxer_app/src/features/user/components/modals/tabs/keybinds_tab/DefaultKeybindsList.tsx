@@ -16,35 +16,33 @@ import {
 	partitionMergedShortcutRows,
 	sortBySectionDisplayOrder,
 } from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+import {
+	MESSAGES_3_DESCRIPTOR as MESSAGES_DESCRIPTOR,
+	NAVIGATION_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	MESSAGES_AND_MEDIA_DESCRIPTOR as CHAT_DESCRIPTOR,
+	DEFAULT_SHORTCUTS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
 
-const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
-const MESSAGES_DESCRIPTOR = msg({
-	message: 'Messages',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
-const NAVIGATION_DESCRIPTOR = msg({
-	message: 'Navigation',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
 const DRAG_AND_DROP_DESCRIPTOR = msg({
 	message: 'Drag and drop',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
-const CHAT_DESCRIPTOR = msg({
-	message: 'Chat',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
+
 const VOICE_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice and video',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
+});
+const ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Accounts',
+	comment:
+		'Short label in the keybinds tab for the section of shortcuts that switch between signed-in accounts. Keep it concise.',
 });
 const MISCELLANEOUS_DESCRIPTOR = msg({
 	message: 'Miscellaneous',
@@ -70,6 +68,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 		drag_and_drop: i18n._(DRAG_AND_DROP_DESCRIPTOR),
 		chat: i18n._(CHAT_DESCRIPTOR),
 		voice_and_video: i18n._(VOICE_AND_VIDEO_DESCRIPTOR),
+		accounts: i18n._(ACCOUNTS_DESCRIPTOR),
 		misc: i18n._(MISCELLANEOUS_DESCRIPTOR),
 	};
 	const sections = useMemo(() => {
@@ -80,6 +79,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 			drag_and_drop: [],
 			chat: [],
 			voice_and_video: [],
+			accounts: [],
 			misc: [],
 		};
 		for (const entry of defaults) {
@@ -94,7 +94,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 		return (
 			<div className={styles.defaultsList} data-flx="user.keybinds-tab.default-keybinds-list.defaults-list">
 				<div className={styles.emptyState} data-flx="user.keybinds-tab.default-keybinds-list.empty-state">
-					<Trans>No shortcuts match that search.</Trans>
+					<Trans>No keybinds match that search.</Trans>
 				</div>
 			</div>
 		);

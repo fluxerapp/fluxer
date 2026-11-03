@@ -29,7 +29,6 @@ export const FavoritesGuildHeaderPopout = observer(() => {
 	}, []);
 	const listRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-roving-focus="true"]',
-		manageTabIndex: true,
 	});
 	return (
 		<div

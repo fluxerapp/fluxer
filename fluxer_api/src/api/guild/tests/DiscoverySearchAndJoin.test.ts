@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
-import type {GuildID} from '@app/api/BrandedTypes';
+import {createGuildID, createUserID, type GuildID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {createChannel, createGuild, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
-import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+	idleActivityEvents,
+	resetActivityEventsForTests,
+	startActivityEvents,
+} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
+import type {Event} from '@app/api/infrastructure/activity/Contract.generated';
 import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
 import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
@@ -24,12 +27,13 @@ import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/wo
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryChannelPreviewResponse,
 	DiscoveryGuildListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
@@ -44,7 +48,13 @@ interface LiveGuildCounts {
 	onlineCount: number;
 }
 
-const WORKER_HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
+class CapturingPublisher implements ActivityPublisher {
+	readonly events: Array<Event> = [];
+
+	async publish(_subject: string, payload: string): Promise<void> {
+		this.events.push(JSON.parse(payload) as Event);
+	}
+}
 
 class LiveCountsGatewayService extends NoopGatewayService {
 	constructor(private readonly liveCounts: Map<string, LiveGuildCounts>) {
@@ -110,7 +120,7 @@ describe('Discovery Search and Join', () => {
 	});
 	afterEach(async () => {
 		clearWorkerDependencies();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness?.shutdown();
 	});
 	describe('search', () => {
@@ -149,7 +159,7 @@ describe('Discovery Search and Join', () => {
 			expect(firstPage.guilds.map((guild) => guild.id)).toEqual([guildIds[0], guildIds[1]]);
 			liveCounts.set(guildIds[0], {memberCount: 5, onlineCount: 0});
 			setWorkerDependenciesForTest({guildRepository: getGuildRepository(), gatewayService});
-			await syncDiscoveryIndex({}, WORKER_HELPERS);
+			await syncDiscoveryIndex({}, createTestWorkerHelpers());
 			const secondPage = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
 				.get('/discovery/guilds?sort_by=member_count&limit=2&offset=2')
 				.expect(HTTP_STATUS.OK)
@@ -164,6 +174,42 @@ describe('Discovery Search and Join', () => {
 		});
 	});
 	describe('join', () => {
+		test('should block discovery join for an email ban on a different user and IP', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Email Discovery Ban');
+			await setGuildMemberCount(harness, guild.id, 10);
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			await applyAndApprove(
+				harness,
+				owner.token,
+				admin.token,
+				guild.id,
+				'Join this community',
+				DiscoveryCategories.GAMING,
+			);
+			const bannedUser = await createTestAccount(harness);
+			const joiner = await createTestAccount(harness, {ipAddress: '203.0.113.42'});
+			await getGuildRepository().upsertBan({
+				guild_id: createGuildID(BigInt(guild.id)),
+				user_id: createUserID(BigInt(bannedUser.userId)),
+				moderator_id: createUserID(BigInt(owner.userId)),
+				banned_at: new Date(),
+				expires_at: null,
+				reason: null,
+				ip: null,
+				email: joiner.email.toLowerCase(),
+			});
+			await createBuilder(harness, joiner.token)
+				.post(`/discovery/guilds/${guild.id}/join`)
+				.header('x-forwarded-for', joiner.ipAddress!)
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.USER_BANNED_FROM_GUILD)
+				.execute();
+			expect(
+				await getGuildRepository().getMember(createGuildID(BigInt(guild.id)), createUserID(BigInt(joiner.userId))),
+			).toBeNull();
+		});
+
 		test('should block discovery join for same /64 IPv6 guild ban', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'IPv6 Discovery Ban');
@@ -216,6 +262,46 @@ describe('Discovery Search and Join', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
 				.execute();
 		});
+		test('should publish a refusal for a non-member discovery join while invites are disabled', async () => {
+			const publisher = new CapturingPublisher();
+			await startActivityEvents({publisher, kv: new MockKVProvider()});
+			try {
+				const owner = await createTestAccount(harness);
+				const guild = await createGuild(harness, owner.token, 'Closed Discovery Guild');
+				await setGuildMemberCount(harness, guild.id, 10);
+				const admin = await createTestAccount(harness);
+				await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+				await applyAndApprove(
+					harness,
+					owner.token,
+					admin.token,
+					guild.id,
+					'Join this closed community',
+					DiscoveryCategories.GAMING,
+				);
+				await updateGuild(harness, owner.token, guild.id, {
+					features: [...guild.features, GuildFeatures.INVITES_DISABLED],
+				});
+				const joiner = await createTestAccount(harness);
+				for (const account of [owner, joiner]) {
+					await createBuilder(harness, account.token)
+						.post(`/discovery/guilds/${guild.id}/join`)
+						.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.INVITES_DISABLED)
+						.execute();
+				}
+				await idleActivityEvents();
+				const refusals = publisher.events.filter((event) => event.kind === 'guild_join_refused');
+				expect(refusals.map((event) => [event.key, event.data])).toEqual([
+					[
+						joiner.userId,
+						{guild_id: guild.id, user_id: joiner.userId, cause: 'invites_paused', join_source: 'discovery'},
+					],
+				]);
+			} finally {
+				resetActivityEventsForTests();
+			}
+		});
+
 		test('should not allow bot accounts to join discoverable guilds', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'No Bots Guild');
@@ -279,7 +365,6 @@ describe('Discovery Search and Join', () => {
 				.execute();
 		});
 		test('should only preview a forum for viewers in the threads experiment', async () => {
-			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 			const {ownerToken, guildId} = await createListedGuild('Forum Guild');
 			const forum = await threadsRequest<{id: string}>(harness, ownerToken)
 				.post(`/guilds/${guildId}/channels`)
@@ -297,7 +382,6 @@ describe('Discovery Search and Join', () => {
 				.execute();
 		});
 		test('should never preview a thread', async () => {
-			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 			const {ownerToken, guildId, channelId} = await createListedGuild('Thread Guild');
 			const viewer = await createTestAccount(harness);
 			for (const type of [ChannelTypes.PUBLIC_THREAD, ChannelTypes.PRIVATE_THREAD]) {

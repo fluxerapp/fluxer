@@ -6,6 +6,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {fetchUserSettings, updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -87,8 +88,8 @@ describe('User Settings - Sensitive Content Filters', () => {
 		});
 		test('allows an account without a birth date to relax every filter when none is collected', async () => {
 			const repository = getInstanceConfigRepository();
-			const previous = (await repository.getAppPublicConfig()).registration.collect_date_of_birth;
-			await repository.setAppPublicConfig({registration: {collect_date_of_birth: false}});
+			const previous = (await repository.getAccountsConfig()).date_of_birth;
+			await repository.updateAccountsConfig({date_of_birth: DateOfBirthPolicies.OFF});
 			try {
 				const account = await createTestAccount(harness);
 				const {json} = await updateUserSettings(harness, account.token, {
@@ -100,7 +101,7 @@ describe('User Settings - Sensitive Content Filters', () => {
 				expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 				expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 			} finally {
-				await repository.setAppPublicConfig({registration: {collect_date_of_birth: previous}});
+				await repository.updateAccountsConfig({date_of_birth: previous});
 			}
 		});
 	});

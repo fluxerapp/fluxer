@@ -2,8 +2,6 @@
 
 import {msg} from '@lingui/core/macro';
 
-export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-
 export const COPY_DEVICE_ID_DESCRIPTOR = msg({
 	message: 'Copy device ID',
 	comment: 'Developer-mode voice menu action that copies the unique identifier of a voice device or connection.',
@@ -26,8 +24,9 @@ export const CHANGE_STREAM_DESCRIPTOR = msg({
 	comment: 'Voice screen share menu action that changes the shared source.',
 });
 export const PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR = msg({
-	message: 'Pause preview when Fluxer isn’t focused',
-	comment: 'Voice screen share menu preference that pauses the local stream preview while the app is unfocused.',
+	message: "Pause preview when {productName} isn't focused",
+	comment:
+		'Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.',
 });
 export const SCREEN_SHARE_PRIVACY_DESCRIPTOR = msg({
 	message: 'Screen share privacy',

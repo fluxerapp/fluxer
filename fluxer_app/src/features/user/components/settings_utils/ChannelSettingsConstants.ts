@@ -104,13 +104,8 @@ function getChannelSettingsTabLabel(i18n: I18n, tabType: ChannelSettingsTabType)
 	return tab ? i18n._(tab.label) : '';
 }
 
-export function formatChannelSettingsPath(
-	i18n: I18n,
-	tabType: ChannelSettingsTabType,
-	kind: 'channel' | 'category' = 'channel',
-): string {
-	const rootLabel =
-		kind === 'category' ? i18n._(CATEGORY_SETTINGS_LABEL_DESCRIPTOR) : i18n._(CHANNEL_SETTINGS_LABEL_DESCRIPTOR);
+export function formatChannelSettingsPath(i18n: I18n, tabType: ChannelSettingsTabType): string {
+	const rootLabel = i18n._(CHANNEL_SETTINGS_LABEL_DESCRIPTOR);
 	return [rootLabel, getChannelSettingsTabLabel(i18n, tabType)].filter(Boolean).join(' > ');
 }
 

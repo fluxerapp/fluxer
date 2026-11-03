@@ -14,7 +14,8 @@ import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 } from '@fluxer/voice_engine_v2/src/core/state';
-import type {VoiceEngineV2Command, VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import {describe, expect, it} from 'vitest';
 
 interface VoiceEngineV2FixtureExpected {
@@ -38,7 +39,6 @@ interface VoiceEngineV2ScreenFixtureExpected {
 	cameraDeviceId?: string | null;
 	cameraWidth?: number;
 	cameraFrameRate?: number;
-	cameraMirror?: boolean;
 	cameraBackgroundMode?: string;
 	screenStatus?: string;
 	screenCaptureId?: string | null;
@@ -111,9 +111,6 @@ describe('voice engine v2 shared fixtures', () => {
 		}
 		if (fixture.expected.cameraFrameRate !== undefined) {
 			expect(snapshot.camera.published?.frameRate).toBe(fixture.expected.cameraFrameRate);
-		}
-		if (fixture.expected.cameraMirror !== undefined) {
-			expect(snapshot.camera.published?.mirror).toBe(fixture.expected.cameraMirror);
 		}
 		if (fixture.expected.cameraBackgroundMode !== undefined) {
 			expect(snapshot.camera.published?.backgroundMode).toBe(fixture.expected.cameraBackgroundMode);

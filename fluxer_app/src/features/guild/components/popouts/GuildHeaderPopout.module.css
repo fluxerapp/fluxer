@@ -4,10 +4,6 @@
 	--guild-header-popout-surface: var(--settings-surface-background, var(--form-surface-background));
 	--guild-header-popout-border: var(--settings-border-color, var(--background-modifier-accent));
 	--guild-header-popout-hover-background: var(--settings-hover-background, var(--surface-interactive-hover-bg));
-	--guild-header-popout-hover-border: var(
-		--settings-hover-border-color,
-		color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary))
-	);
 	--guild-header-popout-danger-text: var(
 		--settings-danger-text,
 		color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%)
@@ -15,10 +11,6 @@
 	--guild-header-popout-danger-background: var(
 		--settings-danger-background,
 		color-mix(in srgb, var(--status-danger) 6%, var(--surface-interactive-hover-bg))
-	);
-	--guild-header-popout-danger-border: var(
-		--settings-danger-border-color,
-		color-mix(in srgb, var(--status-danger) 32%, transparent)
 	);
 	display: flex;
 	box-sizing: border-box;
@@ -78,7 +70,7 @@
 	border: 0.0625rem solid transparent;
 	background: transparent;
 	padding: 0.3125rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	font-size: 0.8125rem;
 	line-height: 1.125rem;
 	color: var(--text-primary);

@@ -8,8 +8,10 @@
 
 -export([
     start_link/0,
-    start/2,
-    lookup/1,
+    send_start/2,
+    check_start_response/4,
+    abandon_start/1,
+    start_timeout/1,
     lookup_or_rehydrate/3,
     reconnect_drain/0,
     handoff_to_topology/1,
@@ -21,12 +23,16 @@
     ensure_shard/2, restart_shard/2
 ]).
 
+-export_type([start_request/0]).
+
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(START_TIMEOUT, 135000).
 -define(LOOKUP_TIMEOUT, 5000).
 
 -type session_id() :: binary().
+-type start_request() ::
+    {shard | proxy, gen_server:request_id()} | {remote, erpc:request_id()}.
 -type shard() :: #{pid := pid(), ref := reference()}.
 -type state() :: #{shards := #{non_neg_integer() => shard()}, shard_count := pos_integer()}.
 -type handoff_result() :: #{
@@ -38,22 +44,82 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
--spec start(map(), pid()) -> term().
-start(Request, SocketPid) ->
+-spec send_start(map(), pid()) -> {ok, start_request()} | {error, unavailable}.
+send_start(Request, SocketPid) ->
     SessionId = maps:get(session_id, Request),
-    session_manager_routing:call_owner_manager(
-        SessionId, {start, Request, SocketPid}, ?START_TIMEOUT
-    ).
-
--spec lookup(session_id()) -> {ok, pid()} | {error, not_found}.
-lookup(SessionId) ->
-    Reply = session_manager_routing:call_owner_manager(
-        SessionId, {lookup, SessionId}, ?LOOKUP_TIMEOUT
-    ),
-    case Reply of
-        {ok, Pid} when is_pid(Pid) -> {ok, Pid};
-        _ -> {error, not_found}
+    StartCall = {start, Request, SocketPid},
+    case session_manager_routing:owner_scope(SessionId) of
+        local ->
+            send_local_start(SessionId, StartCall);
+        {remote, OwnerNode} ->
+            Args = [SessionId, StartCall, ?START_TIMEOUT],
+            {ok, {remote, erpc:send_request(OwnerNode, ?MODULE, call_shard, Args)}};
+        unavailable ->
+            {error, unavailable}
     end.
+
+-spec send_local_start(session_id(), term()) -> {ok, start_request()} | {error, unavailable}.
+send_local_start(SessionId, StartCall) ->
+    case session_manager_routing:shard_pid_from_table(SessionId) of
+        {ok, Pid} -> {ok, {shard, gen_server:send_request(Pid, StartCall)}};
+        error -> send_proxy_start(SessionId, StartCall)
+    end.
+
+-spec send_proxy_start(session_id(), term()) -> {ok, start_request()} | {error, unavailable}.
+send_proxy_start(SessionId, StartCall) ->
+    case fluxer_gateway_sup:role_enabled(sessions) of
+        true ->
+            ProxyCall = {proxy_call, SessionId, StartCall, ?START_TIMEOUT},
+            {ok, {proxy, gen_server:send_request(?MODULE, ProxyCall)}};
+        false ->
+            {error, unavailable}
+    end.
+
+-spec check_start_response(term(), start_request(), map(), pid()) ->
+    no_reply | {reply, term()} | {pending, start_request()}.
+check_start_response(Msg, {remote, ReqId}, _Request, _SocketPid) ->
+    try erpc:check_response(Msg, ReqId) of
+        no_response -> no_reply;
+        {response, Reply} -> {reply, Reply}
+    catch
+        _:_ -> {reply, {error, unavailable}}
+    end;
+check_start_response(Msg, {Kind, ReqId}, Request, SocketPid) ->
+    case gen_server:check_response(Msg, ReqId) of
+        no_reply -> no_reply;
+        {reply, Reply} -> {reply, Reply};
+        {error, _} -> start_request_down(Kind, Request, SocketPid)
+    end.
+
+-spec start_request_down(shard | proxy, map(), pid()) ->
+    {reply, {error, unavailable}} | {pending, start_request()}.
+start_request_down(shard, Request, SocketPid) ->
+    SessionId = maps:get(session_id, Request),
+    case send_proxy_start(SessionId, {start, Request, SocketPid}) of
+        {ok, StartRequest} -> {pending, StartRequest};
+        {error, unavailable} -> {reply, {error, unavailable}}
+    end;
+start_request_down(proxy, _Request, _SocketPid) ->
+    {reply, {error, unavailable}}.
+
+-spec abandon_start(start_request()) -> term().
+abandon_start({remote, ReqId}) ->
+    try erpc:receive_response(ReqId, 0) of
+        Reply -> Reply
+    catch
+        error:{erpc, timeout} -> {error, timeout};
+        _:_ -> {error, unavailable}
+    end;
+abandon_start({_Kind, ReqId}) ->
+    case gen_server:receive_response(ReqId, 0) of
+        {reply, Reply} -> Reply;
+        timeout -> {error, timeout};
+        {error, _} -> {error, unavailable}
+    end.
+
+-spec start_timeout(start_request()) -> pos_integer().
+start_timeout({shard, _ReqId}) -> ?START_TIMEOUT;
+start_timeout({_Kind, _ReqId}) -> ?START_TIMEOUT + 1000.
 
 -spec lookup_or_rehydrate(session_id(), binary(), pid()) ->
     {ok, pid()} | {error, not_found} | {error, invalid_token}.
@@ -96,7 +162,7 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     _ = fluxer_gateway_env:load(),
     session_manager_shards:ensure_shard_table(),
-    {ShardCount, _Source} = shard_utils:determine_shard_count(session_shards),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([session_shards]),
     Shards = session_manager_shards:start_shards(ShardCount),
     State = #{shards => Shards, shard_count => ShardCount},
     session_manager_shards:sync_shard_table(State),
@@ -205,7 +271,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> handle_down_by_pid(Pid, State)
     end;
@@ -298,7 +364,7 @@ restart_shard_noreply(Index, State) ->
 -spec handle_down_by_pid(pid(), state()) -> {noreply, state()}.
 handle_down_by_pid(Pid, State) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> {noreply, State}
     end.

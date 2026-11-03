@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/auth/flow/DateOfBirthField.module.css';
+import {dateOfBirthYearRange, isPlausibleDateOfBirthInput} from '@app/features/auth/flow/DateOfBirthRules';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -11,7 +12,7 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useMemo} from 'react';
+import {useId, useMemo} from 'react';
 
 const DATE_OF_BIRTH_DESCRIPTOR = msg({
 	message: 'Date of birth',
@@ -30,7 +31,20 @@ const YEAR_DESCRIPTOR = msg({
 	comment: 'Short label in the authentication date of birth field. Keep the tone plain and specific.',
 });
 
+const ENTER_YOUR_REAL_DATE_OF_BIRTH_DESCRIPTOR = msg({
+	message: 'Enter your real date of birth.',
+	comment:
+		'Calm error under the date of birth field when the date is today, in the future, impossible, or more than 120 years ago.',
+});
+
 type DateFieldType = 'month' | 'day' | 'year';
+
+function useDateOfBirthError(year: string, month: string, day: string, error: string | undefined): string | undefined {
+	const {i18n} = useLingui();
+	if (error) return error;
+	if (!year || !month || !day || isPlausibleDateOfBirthInput(year, month, day)) return undefined;
+	return i18n._(ENTER_YOUR_REAL_DATE_OF_BIRTH_DESCRIPTOR);
+}
 
 interface DateOfBirthFieldProps {
 	selectedMonth: string;
@@ -62,10 +76,11 @@ function NativeDatePicker({
 	error,
 }: NativeDatePickerProps) {
 	const {i18n} = useLingui();
+	const inputId = useId();
 	const dateOfBirthPlaceholder = i18n._(DATE_OF_BIRTH_DESCRIPTOR);
-	const currentYear = new Date().getFullYear();
-	const minDate = `${currentYear - 150}-01-01`;
-	const maxDate = `${currentYear}-12-31`;
+	const yearRange = dateOfBirthYearRange();
+	const minDate = `${yearRange.oldest}-01-01`;
+	const maxDate = `${yearRange.newest}-12-31`;
 	const dateValue = useMemo(() => {
 		if (!selectedYear || !selectedMonth || !selectedDay) {
 			return '';
@@ -94,9 +109,13 @@ function NativeDatePicker({
 				className={styles.labelContainer}
 				data-flx="auth.flow.date-of-birth-field.native-date-picker.label-container"
 			>
-				<legend className={styles.legend} data-flx="auth.flow.date-of-birth-field.native-date-picker.legend">
+				<label
+					htmlFor={inputId}
+					className={styles.legend}
+					data-flx="auth.flow.date-of-birth-field.native-date-picker.legend"
+				>
 					<Trans>Date of birth</Trans>
-				</legend>
+				</label>
 			</div>
 			<div
 				className={styles.inputsContainer}
@@ -104,6 +123,7 @@ function NativeDatePicker({
 			>
 				<FocusRing offset={-2} data-flx="auth.flow.date-of-birth-field.native-date-picker.focus-ring">
 					<input
+						id={inputId}
 						type="date"
 						data-flx="auth.flow.date-of-birth-field.native-date-picker.native-date-input.date-change"
 						{...PASSWORD_MANAGER_IGNORE_ATTRIBUTES}
@@ -114,10 +134,16 @@ function NativeDatePicker({
 						max={maxDate}
 						placeholder={dateOfBirthPlaceholder}
 						aria-invalid={!!error || undefined}
+						aria-describedby={error ? `${inputId}-error` : undefined}
 					/>
 				</FocusRing>
 				{error && (
-					<span className={styles.errorText} data-flx="auth.flow.date-of-birth-field.native-date-picker.error-text">
+					<span
+						id={`${inputId}-error`}
+						className={styles.errorText}
+						role="alert"
+						data-flx="auth.flow.date-of-birth-field.native-date-picker.error-text"
+					>
 						{error}
 					</span>
 				)}
@@ -133,17 +159,17 @@ export const DateOfBirthField = observer(function DateOfBirthField({
 	onMonthChange,
 	onDayChange,
 	onYearChange,
-	error,
+	error: externalError,
 }: DateOfBirthFieldProps) {
 	const {i18n} = useLingui();
+	const error = useDateOfBirthError(selectedYear, selectedMonth, selectedDay, externalError);
 	const monthPlaceholder = i18n._(MONTH_DESCRIPTOR);
 	const dayPlaceholder = i18n._(DAY_DESCRIPTOR);
 	const yearPlaceholder = i18n._(YEAR_DESCRIPTOR);
 	const locale = getCurrentLocale();
 	const fieldOrder = useMemo(() => getDateFieldOrder(locale), [locale]);
 	const dateOptions = useMemo(() => {
-		const currentDate = new Date();
-		const currentYear = currentDate.getFullYear();
+		const yearRange = dateOfBirthYearRange();
 		const monthNames = getMonthNames(locale);
 		const allMonths = Array.from({length: 12}, (_, index) => {
 			return {
@@ -152,7 +178,7 @@ export const DateOfBirthField = observer(function DateOfBirthField({
 			};
 		});
 		const years = [];
-		for (let year = currentYear; year >= currentYear - 150; year--) {
+		for (let year = yearRange.newest; year >= yearRange.oldest; year--) {
 			years.push({
 				value: String(year),
 				label: String(year),
@@ -269,7 +295,7 @@ export const DateOfBirthField = observer(function DateOfBirthField({
 					{orderedFields}
 				</div>
 				{error && (
-					<span className={styles.errorText} data-flx="auth.flow.date-of-birth-field.error-text">
+					<span className={styles.errorText} role="alert" data-flx="auth.flow.date-of-birth-field.error-text">
 						{error}
 					</span>
 				)}

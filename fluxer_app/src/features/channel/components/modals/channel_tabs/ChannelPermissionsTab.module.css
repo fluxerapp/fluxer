@@ -142,7 +142,7 @@
 	gap: 0.5rem;
 	border-radius: 0.25rem;
 	padding: 0.375rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	background: transparent;
 }
@@ -271,7 +271,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
-	text-align: left;
+	text-align: start;
 	line-height: 1.2;
 	max-height: 1.2em;
 }

@@ -4,11 +4,11 @@ import {type ChannelID, createChannelID, createGuildID, type MessageID, type Use
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
-import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
@@ -166,7 +166,7 @@ export class MessageProcessingService {
 	}): Promise<MentionProcessingResult> {
 		const {channel, message, referencedMessageOnSend, allowedMentions, guild, canMentionEveryone, canMentionRoles} =
 			params;
-		if (message.authorId != null && isPersonalNotesChannel({userId: message.authorId, channelId: channel.id})) {
+		if (message.authorId != null && isPersonalNotesChannelId({userId: message.authorId, channelId: channel.id})) {
 			return {message, mentionChannels: []};
 		}
 		const content = message.content ?? '';
@@ -271,9 +271,8 @@ export class MessageProcessingService {
 		channel: Channel;
 		requestCache: RequestCache;
 		persistenceService: MessagePersistenceService;
-		dispatchService: MessageDispatchService;
 	}): Promise<Message> {
-		const {message, data, guild, hasPermission, channel, requestCache, persistenceService, dispatchService} = params;
+		const {message, data, guild, hasPermission, channel, persistenceService} = params;
 		const editResult = await persistenceService.handleNonAuthorEdit({
 			message,
 			data,
@@ -289,7 +288,7 @@ export class MessageProcessingService {
 				updatedRowData.attachments = editResult.updatedAttachments;
 			}
 			const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
-			await dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+			await dispatchMessageUpdateBroadcast({gatewayService: this.gatewayService, channel, message: updatedMessage});
 			return updatedMessage;
 		}
 		throw new CannotEditOtherUserMessageError();

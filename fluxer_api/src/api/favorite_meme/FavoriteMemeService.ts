@@ -15,7 +15,7 @@ import {
 	type ResolvedGifProviderSlug,
 	tryExtractGifProviderSlug,
 } from '@app/api/gif/GifProviderUtils';
-import type {GifService} from '@app/api/gif/GifService';
+import type {NatsGifProvider} from '@app/api/gif/NatsGifProvider';
 import type {MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
@@ -101,7 +101,7 @@ export class FavoriteMemeService {
 		private readonly storageService: IStorageService,
 		private readonly unfurlerService: IUnfurlerService,
 		private readonly limitConfigService: LimitConfigService,
-		private readonly gifService: GifService,
+		private readonly gifService: NatsGifProvider,
 	) {}
 
 	async createFromMessage({
@@ -491,14 +491,14 @@ export class FavoriteMemeService {
 		url: string;
 	}): Promise<ResolvedGifProviderSlug | null> {
 		if (slug && providerName) {
-			const provider = this.gifService.getByName(providerName);
+			const provider = this.gifService.meta.name === providerName ? this.gifService : null;
 			const trimmed = slug.trim();
 			if (provider && trimmed) {
 				const normalized = (await tryExtractGifProviderSlug(provider, trimmed)) ?? trimmed;
 				return {provider, slug: normalized};
 			}
 		}
-		const provider = this.gifService.getProvider();
+		const provider = this.gifService;
 		const extracted = await tryExtractGifProviderSlug(provider, url);
 		return extracted ? {provider, slug: extracted} : null;
 	}

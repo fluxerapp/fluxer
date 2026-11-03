@@ -18,7 +18,7 @@ function isTypedEmojiShortcodeBoundary(text: string, start: number, end: number)
 	return !SHORTCODE_WORD_BOUNDARY_CHAR.test(previous) && !SHORTCODE_WORD_BOUNDARY_CHAR.test(next);
 }
 
-function isExistingCustomEmojiMarkdown(content: string, matchIndex: number): boolean {
+export function isExistingCustomEmojiMarkdown(content: string, matchIndex: number): boolean {
 	return content[matchIndex - 1] === '<' || (content[matchIndex - 2] === '<' && content[matchIndex - 1] === 'a');
 }
 

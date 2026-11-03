@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, ReportID} from '@app/api/BrandedTypes';
-import type {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
-import type {ILogger} from '@app/api/ILogger';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ReportRepository} from '@app/api/report/ReportRepository';
 import {
 	getAuditLogSearchService,
@@ -14,14 +13,15 @@ import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 const BATCH_SIZE = 100;
 
 interface SearchWarmupDeps {
 	userRepository: UserRepository;
-	guildRepository: GuildDataRepository;
+	guildRepository: GuildRepository;
 	reportRepository: ReportRepository;
-	logger: ILogger;
+	logger: LoggerInterface;
 }
 
 export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<void> {
@@ -66,9 +66,9 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 }
 
 async function warmupGuilds(
-	guildRepository: GuildDataRepository,
+	guildRepository: GuildRepository,
 	guildSearchService: IGuildSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastGuildId: GuildID | undefined;
 	let hasMore = true;
@@ -89,7 +89,7 @@ async function warmupGuilds(
 async function warmupUsers(
 	userRepository: UserRepository,
 	userSearchService: IUserSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let pageState: string | null = null;
 	let totalIndexed = 0;
@@ -108,7 +108,7 @@ async function warmupUsers(
 async function warmupReports(
 	reportRepository: ReportRepository,
 	reportSearchService: IReportSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastReportId: ReportID | undefined;
 	let hasMore = true;

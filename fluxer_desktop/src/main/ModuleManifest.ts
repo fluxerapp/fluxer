@@ -1,12 +1,8 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Buffer} from 'node:buffer';
-import {
-	compareModuleVersions,
-	type ModuleVersion,
-	ModuleVersionMalformedError,
-	parseModuleVersion,
-} from '@electron/main/ModuleVersion';
+import {type ModuleVersion, ModuleVersionMalformedError, parseModuleVersion} from '@electron/main/ModuleVersion';
 import {isDesktopModuleName} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const MODULE_MANIFEST_VERSION = 1;
@@ -30,14 +26,9 @@ export interface DesktopModuleManifestEntry {
 	readonly maximumShellVersion: ModuleVersion | null;
 }
 
-export interface DesktopModuleShellRequirement {
+interface DesktopModuleShellRequirement {
 	readonly latestVersion: ModuleVersion;
 	readonly minimumVersion: ModuleVersion;
-}
-
-export interface DesktopLinuxSecurityMinimum {
-	readonly version: ModuleVersion;
-	readonly requiredModules: ReadonlyArray<string>;
 }
 
 export interface DesktopModuleUpdateManifest {
@@ -51,7 +42,6 @@ export interface DesktopModuleUpdateManifest {
 	readonly shell: DesktopModuleShellRequirement;
 	readonly modules: Readonly<Record<string, DesktopModuleManifestEntry>>;
 	readonly requiredModules: ReadonlyArray<string>;
-	readonly linuxSecurityMinimum: DesktopLinuxSecurityMinimum | null;
 }
 
 class ModuleManifestMalformedError extends Error {
@@ -79,10 +69,6 @@ export function resolveDesktopModuleArchitecture(architecture: NodeJS.Architectu
 		default:
 			throw new UnsupportedModuleArchitectureError(architecture);
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function requireString(record: Record<string, unknown>, key: string): string {
@@ -231,51 +217,6 @@ export function parseModuleUpdateManifest(
 	}
 	const buildVersion = requireBuildVersion(parsed);
 	const shell = parseShellRequirement(parsed['shell']);
-	const rawLinuxSecurityMinimum = parsed['linux_security_minimum'];
-	let linuxSecurityMinimum: DesktopLinuxSecurityMinimum | null = null;
-	if (rawLinuxSecurityMinimum != null) {
-		if (!isRecord(rawLinuxSecurityMinimum)) {
-			throw new ModuleManifestMalformedError('manifest linux_security_minimum must be an object or null');
-		}
-		const rawSecurityModules = rawLinuxSecurityMinimum['required_modules'];
-		if (!Array.isArray(rawSecurityModules)) {
-			throw new ModuleManifestMalformedError('manifest linux_security_minimum.required_modules must be an array');
-		}
-		const securityModules: Array<string> = [];
-		const seenSecurityModules = new Set<string>();
-		for (const moduleName of rawSecurityModules) {
-			if (typeof moduleName !== 'string' || !Object.hasOwn(modules, moduleName)) {
-				throw new ModuleManifestMalformedError(
-					`linux_security_minimum.required_modules names an undeclared module: ${String(moduleName)}`,
-				);
-			}
-			if (seenSecurityModules.has(moduleName)) {
-				throw new ModuleManifestMalformedError(
-					`linux_security_minimum.required_modules contains a duplicate module: ${moduleName}`,
-				);
-			}
-			seenSecurityModules.add(moduleName);
-			securityModules.push(moduleName);
-		}
-		securityModules.sort();
-		linuxSecurityMinimum = Object.freeze({
-			version: requireVersion(rawLinuxSecurityMinimum, 'version', 'manifest linux_security_minimum.version'),
-			requiredModules: Object.freeze(securityModules),
-		});
-	}
-	if (platform !== 'linux' && linuxSecurityMinimum != null) {
-		throw new ModuleManifestMalformedError('manifest linux security minimum is only valid for Linux');
-	}
-	if (linuxSecurityMinimum != null) {
-		if (compareModuleVersions(buildVersion, linuxSecurityMinimum.version) < 0) {
-			throw new ModuleManifestMalformedError('manifest build_version cannot be below linux_security_minimum.version');
-		}
-		if (compareModuleVersions(shell.minimumVersion, linuxSecurityMinimum.version) < 0) {
-			throw new ModuleManifestMalformedError(
-				'manifest shell.minimum_version cannot be below linux_security_minimum.version',
-			);
-		}
-	}
 	return Object.freeze({
 		manifestVersion,
 		releaseChannel,
@@ -287,14 +228,5 @@ export function parseModuleUpdateManifest(
 		shell,
 		modules: Object.freeze(modules),
 		requiredModules: Object.freeze(requiredModules),
-		linuxSecurityMinimum,
 	});
-}
-
-export function blockingModuleNames(manifest: DesktopModuleUpdateManifest): ReadonlySet<string> {
-	const names = new Set(manifest.requiredModules);
-	for (const moduleName of manifest.linuxSecurityMinimum?.requiredModules ?? []) {
-		names.add(moduleName);
-	}
-	return names;
 }

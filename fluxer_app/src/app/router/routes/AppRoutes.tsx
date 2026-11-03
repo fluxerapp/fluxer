@@ -10,6 +10,9 @@ import {DiscoveryLayout} from '@app/features/app/components/layout/DiscoveryLayo
 import {FavoritesLayout} from '@app/features/app/components/layout/FavoritesLayout';
 import {GuildsLayout} from '@app/features/app/components/layout/GuildsLayout';
 import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isDiscoveryAvailable} from '@app/features/app/utils/DiscoveryFeatures';
+import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import {
 	AuthenticatedRuntimeInvariantError,
 	readAuthenticatedRuntimeContext,
@@ -18,10 +21,11 @@ import {ChannelIndexPage} from '@app/features/channel/components/ChannelIndexPag
 import {ChannelLayout} from '@app/features/channel/components/ChannelLayout';
 import {DMLayout} from '@app/features/channel/components/direct_message/DirectMessageLayout';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {navigateToLinkedUserProfile} from '@app/features/navigation/utils/DeepLinkUtils';
-import {getDirectMessagesFallbackPath} from '@app/features/navigation/utils/DefaultLandingUtils';
+import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {
 	createDefaultLoadableComponent,
 	createNamedLoadableComponent,
@@ -40,21 +44,49 @@ import {type ReactNode, useEffect, useState} from 'react';
 
 type AppRouteComponentProps = Record<string, unknown>;
 
-function authenticatedRuntimeDisablesDirectMessages(): boolean {
+function requireAuthenticatedRuntime() {
 	const runtimeContext = readAuthenticatedRuntimeContext();
 	if (runtimeContext === null) {
 		throw new AuthenticatedRuntimeInvariantError('An authenticated route requires an active account runtime');
 	}
-	return runtimeContext.runtime.community.direct_messages_disabled;
+	return runtimeContext.runtime;
+}
+
+function personalNotesHomePath(
+	directMessagesDisabled: boolean,
+	friendsDisabled: boolean,
+	personalNotesEnabled: boolean,
+): string | null {
+	const userId = SessionManager.userId;
+	return directMessagesDisabled && friendsDisabled && personalNotesEnabled && userId != null
+		? Routes.dmChannel(userId)
+		: null;
+}
+
+function authenticatedRuntimePersonalNotesHomePath(): string | null {
+	const {community} = requireAuthenticatedRuntime();
+	return personalNotesHomePath(
+		community.direct_messages_disabled,
+		community.friends_disabled ?? community.direct_messages_disabled,
+		community.personal_notes_enabled ?? true,
+	);
+}
+
+function redirectsDirectMessageRoute(guildId: string, channelId: string): boolean {
+	if (guildId !== ME) return false;
+	const {community} = requireAuthenticatedRuntime();
+	return channelId === SessionManager.userId
+		? !(community.personal_notes_enabled ?? true)
+		: community.direct_messages_disabled;
+}
+
+function authenticatedRuntimeHasDiscovery(): boolean {
+	return isDiscoveryAvailable(requireAuthenticatedRuntime());
 }
 
 const YouPage = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'YouPage',
 	load: async () => (await import('@app/features/app/components/pages/YouPage')).YouPage,
-});
-const MatureContentCheckCallbackPage = createDefaultLoadableComponent<AppRouteComponentProps>({
-	displayName: 'MatureContentCheckCallbackPage',
-	load: () => import('@app/features/auth/components/pages/MatureContentCheckCallbackPage'),
 });
 const GuildMembersPage = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'GuildMembersPage',
@@ -76,6 +108,11 @@ const PlutoniumPageLayout = createNamedLoadableComponent<AppRouteComponentProps>
 	displayName: 'PlutoniumPageLayout',
 	load: async () =>
 		(await import('@app/features/premium/components/plutonium_page/PlutoniumPageLayout')).PlutoniumPageLayout,
+});
+const OperatorPassRoutePage = createNamedLoadableComponent<AppRouteComponentProps>({
+	displayName: 'OperatorPassRoutePage',
+	load: async () =>
+		(await import('@app/features/premium/components/operator_pass/OperatorPassRoutePage')).OperatorPassRoutePage,
 });
 const PremiumCallbackPage = createDefaultLoadableComponent<AppRouteComponentProps>({
 	displayName: 'PremiumCallbackPage',
@@ -172,18 +209,10 @@ export const premiumCallbackRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'premiumCallback',
 	path: Routes.PREMIUM_CALLBACK,
-	onEnter: requireAuthentication,
+	onEnter: (context) =>
+		context.url.searchParams.get('product') === 'operator_pass' ? requireAuthentication(context) : undefined,
 	preload: PremiumCallbackPage.preload,
 	component: () => <PremiumCallbackPage data-flx="app.router.app-routes.premium-callback-page" />,
-});
-export const matureContentCheckCallbackRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	id: 'matureContentCheckCallback',
-	path: Routes.AGE_VERIFICATION_CALLBACK,
-	preload: MatureContentCheckCallbackPage.preload,
-	component: () => (
-		<MatureContentCheckCallbackPage data-flx="app.router.app-routes.mature-content-check-callback-page" />
-	),
 });
 export const connectionCallbackRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -208,27 +237,49 @@ const meRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
 	id: 'me',
 	path: '/channels/@me',
-	onEnter: whenAuthenticated(() => {
-		if (authenticatedRuntimeDisablesDirectMessages()) {
-			return new Redirect(getDirectMessagesFallbackPath());
+	onEnter: whenAuthenticated((context) => {
+		if (isAccountHandoffArrival(context.url.pathname)) {
+			return undefined;
 		}
-		return undefined;
+		const notesPath = authenticatedRuntimePersonalNotesHomePath();
+		return notesPath ? new Redirect(notesPath) : undefined;
 	}),
 	component: observer(() => {
 		const isMobileLayout = MobileLayout.enabled;
+		const homeFallbackPath = isAccountHandoffArrival(Routes.ME)
+			? null
+			: personalNotesHomePath(
+					RuntimeConfig.directMessagesDisabled,
+					RuntimeConfig.friendsDisabled,
+					RuntimeConfig.personalNotesEnabled,
+				);
 		useEffect(() => {
 			if (!isMobileLayout && SelectedChannel.selectedChannelIds.has(ME)) {
 				SelectedChannel.clearGuildSelection(ME);
 			}
 		}, [isMobileLayout]);
+		useEffect(() => {
+			if (homeFallbackPath) {
+				RouterUtils.replaceWith(homeFallbackPath);
+			}
+		}, [homeFallbackPath]);
 		return <DMLayout data-flx="app.router.app-routes.dm-layout--3" />;
 	}),
 });
 const discoverRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
 	id: 'discover',
-	path: '/channels/@discover',
+	path: Routes.DISCOVER,
+	onEnter: whenAuthenticated(() =>
+		authenticatedRuntimeHasDiscovery() ? undefined : new Redirect(getDefaultLandingPath()),
+	),
 	component: () => <DiscoveryLayout data-flx="app.router.app-routes.discovery-layout" />,
+});
+const legacyDiscoverRoute = createRoute({
+	getParentRoute: () => guildsLayoutRoute,
+	id: 'legacyDiscover',
+	path: Routes.LEGACY_DISCOVER,
+	onEnter: () => new Redirect(Routes.DISCOVER),
 });
 const plutoniumRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
@@ -246,6 +297,17 @@ const legacyPlutoniumRoute = createRoute({
 	id: 'legacyPlutonium',
 	path: Routes.LEGACY_PLUTONIUM,
 	onEnter: () => new Redirect(Routes.PLUTONIUM),
+});
+const operatorPassRoute = createRoute({
+	getParentRoute: () => guildsLayoutRoute,
+	id: 'operatorPass',
+	path: Routes.OPERATOR_PASS,
+	preload: OperatorPassRoutePage.preload,
+	component: () => (
+		<DMLayout data-flx="app.router.app-routes.dm-layout--operator-pass">
+			<OperatorPassRoutePage data-flx="app.router.app-routes.operator-pass-route-page" />
+		</DMLayout>
+	),
 });
 const userProfileRoute = createRoute({
 	getParentRoute: () => appLayoutRoute,
@@ -310,8 +372,8 @@ const channelRoute = createRoute({
 	path: '/channels/:guildId/:channelId',
 	onEnter: whenAuthenticated((ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME && authenticatedRuntimeDisablesDirectMessages()) {
-			return new Redirect(getDirectMessagesFallbackPath());
+		if (redirectsDirectMessageRoute(guildId, channelId)) {
+			return new Redirect(Routes.ME);
 		}
 		const channel = Channels.getChannel(channelId);
 		if (channel && channel.type === ChannelTypes.GUILD_CATEGORY) {
@@ -331,8 +393,8 @@ const messageRoute = createRoute({
 	path: '/channels/:guildId/:channelId/:messageId',
 	onEnter: whenAuthenticated((ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME && authenticatedRuntimeDisablesDirectMessages()) {
-			return new Redirect(getDirectMessagesFallbackPath());
+		if (redirectsDirectMessageRoute(guildId, channelId)) {
+			return new Redirect(Routes.ME);
 		}
 		const channel = Channels.getChannel(channelId);
 		if (channel && channel.type === ChannelTypes.GUILD_CATEGORY) {
@@ -348,7 +410,7 @@ const messageRoute = createRoute({
 });
 const ThreadPanelRoutePage = observer(() => {
 	const {guildId} = useParams() as {guildId?: string};
-	if (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId)) {
+	if (GatewaySessions.foregroundConnection.isReady && !ThreadGuilds.isActive(guildId)) {
 		return <NotFoundPage data-flx="app.router.app-routes.thread-panel-not-found-page" />;
 	}
 	return (
@@ -363,7 +425,7 @@ const threadPanelRoute = createRoute({
 	path: '/channels/:guildId/:channelId/threads/:threadId/:threadMessageId?',
 	onEnter: (ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME || (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId))) {
+		if (guildId === ME || (GatewaySessions.foregroundConnection.isReady && !ThreadGuilds.isActive(guildId))) {
 			return notFound();
 		}
 		const channel = Channels.getChannel(channelId);
@@ -383,8 +445,10 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		mentionsRoute,
 		meRoute,
 		discoverRoute,
+		legacyDiscoverRoute,
 		plutoniumRoute,
 		legacyPlutoniumRoute,
+		operatorPassRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
 		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute, threadPanelRoute])]),
 	]),

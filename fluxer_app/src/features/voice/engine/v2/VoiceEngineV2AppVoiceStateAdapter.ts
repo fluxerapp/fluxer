@@ -40,7 +40,7 @@ function filterIgnoredGuildVoiceStates(
 	return {...guild, voice_states: filteredVoiceStates};
 }
 
-export class VoiceEngineV2AppVoiceStateAdapter extends Store {
+class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	private snapshot: VoiceGatewayStateSnapshot = createVoiceGatewayStateSnapshot();
 	private voiceStates: VoiceGatewayVoiceStates = {};
 	private userVoiceStates: VoiceGatewayUserVoiceStates = {};

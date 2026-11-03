@@ -16,7 +16,6 @@ interface UseChannelHoverPreloadOptions {
 	defaultHiddenForChannel?: boolean;
 	enabled?: boolean;
 	preloadMemberList?: boolean;
-	preloadMessages?: boolean;
 }
 
 function ensureMembersForCachedChannelMessages(channelId: string): void {
@@ -27,12 +26,7 @@ function ensureMembersForCachedChannelMessages(channelId: string): void {
 	void ensureMembersForMessages(messages.toArray());
 }
 
-export function useChannelHoverPreload({
-	channel,
-	guild = null,
-	enabled = true,
-	preloadMessages = true,
-}: UseChannelHoverPreloadOptions): {
+export function useChannelHoverPreload({channel, guild = null, enabled = true}: UseChannelHoverPreloadOptions): {
 	scheduleChannelPreload: () => void;
 	cancelChannelPreload: () => void;
 	preloadChannelNow: () => void;
@@ -59,12 +53,10 @@ export function useChannelHoverPreload({
 		if (channel.isThreadOnly() || (channel.isThread() && !ThreadGuilds.isActive(channel.guildId))) {
 			return;
 		}
-		if (preloadMessages) {
-			if (!Messages.preloadLatestPage(channel.id, guild?.id ?? channel.guildId ?? null)) {
-				ensureMembersForCachedChannelMessages(channel.id);
-			}
+		if (!Messages.preloadLatestPage(channel.id, guild?.id ?? channel.guildId ?? null)) {
+			ensureMembersForCachedChannelMessages(channel.id);
 		}
-	}, [cancelChannelPreload, channel, enabled, guild, preloadMessages]);
+	}, [cancelChannelPreload, channel, enabled, guild]);
 	const scheduleChannelPreload = useCallback(() => {
 		if (!enabled || !channel || typeof window === 'undefined') {
 			return;

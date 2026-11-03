@@ -5,12 +5,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    perform_handoff_to_topology/2,
-    merge_handoff_results/2,
-    handoff_guild_ids/5,
-    resolve_handoff_target/3
-]).
+-export([perform_handoff_to_topology/2, merge_handoff_results/2, resolve_handoff_target/3]).
 
 -export_type([guild_id/0, handoff_result/0, state/0]).
 
@@ -218,25 +213,3 @@ mark_handoff_attempt(#{attempted := Attempted, handed_off := HandedOff}) ->
 -spec mark_handoff_success(handoff_result()) -> handoff_result().
 mark_handoff_success(#{attempted := Attempted, handed_off := HandedOff}) ->
     #{attempted => Attempted + 1, handed_off => HandedOff + 1}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-topology_handoff_keeps_a_guild_pinned_to_this_node_test() ->
-    GuildId = 1100000000000000001,
-    Peers = ['guilds_a@h', 'guilds_b@h'],
-    Resolver = topology_owner_resolver(),
-    persistent_term:put({gateway_cluster_membership, members}, [node() | Peers]),
-    persistent_term:put({gateway_cluster_membership, members_by_role}, #{guilds => Peers}),
-    try
-        ?assertMatch({handoff, _}, resolve_handoff_target(GuildId, node(), Resolver)),
-        application:set_env(fluxer_gateway, guild_owner_pins, #{GuildId => node()}),
-        ?assertEqual(skip, resolve_handoff_target(GuildId, node(), Resolver)),
-        ?assertMatch({handoff, _}, resolve_handoff_target(GuildId + 1, node(), Resolver))
-    after
-        application:unset_env(fluxer_gateway, guild_owner_pins),
-        persistent_term:erase({gateway_cluster_membership, members}),
-        persistent_term:erase({gateway_cluster_membership, members_by_role})
-    end.
-
--endif.

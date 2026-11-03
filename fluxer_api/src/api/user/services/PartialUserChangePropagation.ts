@@ -7,7 +7,9 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
-import {updateUserCache} from '@app/api/user/UserCacheHelpers';
+import {followOperatorPassWallStanding} from '@app/api/operator_pass/OperatorPassWallStanding';
+import {dispatchUserUpdate, hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
+import {runAllInOrder} from '@app/api/utils/ConcurrencyUtils';
 
 interface UserGuildIdReader {
 	getUserGuildIds(userId: UserID): Promise<Array<GuildID>>;
@@ -22,7 +24,7 @@ export interface PartialUserChangePropagationDeps {
 
 export async function propagatePartialUserChange(deps: PartialUserChangePropagationDeps, user: User): Promise<void> {
 	const {userCacheService, gatewayService, userRepository, guildRepository} = deps;
-	await updateUserCache({user, userCacheService});
+	await userCacheService.setUserPartialResponseFromUser(user);
 	const guildIds = await userRepository.getUserGuildIds(user.id);
 	if (guildIds.length === 0) {
 		return;
@@ -41,4 +43,24 @@ export async function propagatePartialUserChange(deps: PartialUserChangePropagat
 		});
 	}
 	requestCache.clear();
+}
+
+export async function propagateUserUpdate(
+	deps: PartialUserChangePropagationDeps,
+	oldUser: User,
+	updatedUser: User,
+	options: {continueAfterDispatchFailure?: boolean} = {},
+): Promise<void> {
+	const dispatch = () => dispatchUserUpdate(deps.gatewayService, updatedUser);
+	const partial = async () => {
+		if (hasPartialUserFieldsChanged(oldUser, updatedUser)) await propagatePartialUserChange(deps, updatedUser);
+	};
+	const wall = () => followOperatorPassWallStanding(oldUser, updatedUser);
+	if (options.continueAfterDispatchFailure) {
+		await runAllInOrder([dispatch, partial, wall], 'Failed to propagate user update');
+	} else {
+		await dispatch();
+		await partial();
+		await wall();
+	}
 }

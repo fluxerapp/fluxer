@@ -129,7 +129,7 @@ channel_invariant_violation(VoiceState, VoiceStates) ->
 -spec try_restore_from_recently_disconnected(binary(), guild_state()) ->
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 try_restore_from_recently_disconnected(ConnectionId, State) ->
-    Cache = guild_voice_disconnect:recently_disconnected_voice_states(State),
+    Cache = guild_voice_disconnect_broadcast:recently_disconnected_voice_states(State),
     Now = erlang:system_time(millisecond),
     case maps:get(ConnectionId, Cache, undefined) of
         #{voice_state := VoiceState, disconnected_at := DisconnectedAt} when

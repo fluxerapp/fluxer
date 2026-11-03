@@ -78,34 +78,33 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 		);
 	}
 	return (
-		<Popout
-			data-flx="channel.channel-header-components.channel-pins-button.popout"
-			{...openProps}
-			render={({onClose}) => (
-				<ChannelPinsPopout
-					channel={channel}
-					onClose={onClose}
-					data-flx="channel.channel-header-components.channel-pins-button.channel-pins-popout"
-				/>
-			)}
-			position="bottom-end"
-			subscribeTo="CHANNEL_PINS_OPEN"
+		<div
+			className={styles.iconButtonWrapper}
+			data-flx="channel.channel-header-components.channel-pins-button.icon-button-wrapper--2"
 		>
-			<div
-				className={styles.iconButtonWrapper}
-				data-flx="channel.channel-header-components.channel-pins-button.icon-button-wrapper--2"
+			<Popout
+				data-flx="channel.channel-header-components.channel-pins-button.popout"
+				{...openProps}
+				render={({onClose}) => (
+					<ChannelPinsPopout
+						channel={channel}
+						onClose={onClose}
+						data-flx="channel.channel-header-components.channel-pins-button.channel-pins-popout"
+					/>
+				)}
+				position="bottom-end"
+				subscribeTo="CHANNEL_PINS_OPEN"
 			>
 				<ChannelHeaderIcon
 					icon={PushPinIcon}
 					label={pinsLabel}
 					isSelected={isOpen}
 					aria-haspopup={true}
-					aria-expanded={isOpen}
 					keybindAction="chat_toggle_pins"
 					data-flx="channel.channel-header-components.channel-pins-button.channel-header-icon"
 				/>
-				{indicator}
-			</div>
-		</Popout>
+			</Popout>
+			{indicator}
+		</div>
 	);
 });

@@ -11,17 +11,19 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
-import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
+import {openProfileBadgeSettings, openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import {NoteEditSheet} from '@app/features/user/components/modals/NoteEditSheet';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
 import {UserProfileBio, UserProfileMembershipInfo} from '@app/features/user/components/popouts/UserProfileShared';
 import {USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR} from '@app/features/user/components/settings_utils/SettingsConstants';
+import {useOwnProfileBadges} from '@app/features/user/hooks/useOwnProfileBadges';
 import {normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserNote from '@app/features/user/state/UserNote';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -55,7 +57,8 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 			),
 		);
 	};
-	const profile = useMemo(() => (user ? createMockProfile(user) : null), [user]);
+	const profileBadges = useOwnProfileBadges(user?.id ?? null);
+	const profile = useMemo(() => (user ? createMockProfile(user, {profileBadges}) : null), [user, profileBadges]);
 	const normalizedCustomStatus = useMemo(() => {
 		if (!user) return null;
 		return normalizeCustomStatus(Presence.getCustomStatus(user.id));
@@ -141,10 +144,11 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 										</span>
 										<div className={styles.badgesWrapper} data-flx="app.you-page.badges-wrapper">
 											<UserProfileBadges
-												user={user}
-												profile={profile}
+												badges={profile?.profileBadges ?? []}
+												maxVisible={15}
 												isModal={true}
 												isMobile={true}
+												onEditBadges={canEditOwnProfileBadges(user.id, profile) ? openProfileBadgeSettings : undefined}
 												data-flx="app.you-page.user-profile-badges"
 											/>
 										</div>
@@ -162,7 +166,7 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 										</div>
 									)}
 								</div>
-								{user.isClaimed() && (
+								{canOpenProfileEditor(user) && (
 									<button
 										type="button"
 										onClick={handleEditProfile}

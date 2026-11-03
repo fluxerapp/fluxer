@@ -11,10 +11,16 @@ import type {
 	BrowserLoginHandoffTarget,
 } from '@app/features/auth/flow/browser_handoff/BrowserLoginHandoffTransport';
 import {resolveBrowserLoginHandoffTransport} from '@app/features/auth/flow/browser_handoff/BrowserLoginHandoffTransport';
+import {
+	handoffReachedServer,
+	resolveHandoffErrorMessage,
+} from '@app/features/auth/flow/browser_handoff/HandoffErrorMessages';
+import {SSO_START_QUERY_PARAM} from '@app/features/auth/flow/SsoAutoStart';
 import {getAuthErrorMessage} from '@app/features/auth/hooks/useAuthForm';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {type LoginIdentifierField, loginIdentifierField} from '@app/features/auth/utils/AccountSignInIdentifier';
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {navigateToExternalURL} from '@app/features/ui/utils/NativeUtils';
@@ -36,11 +42,20 @@ export const BrowserLoginHandoffAction = Object.freeze({
 } as const);
 
 export type BrowserLoginHandoffAction = (typeof BrowserLoginHandoffAction)[keyof typeof BrowserLoginHandoffAction];
-export type BrowserLoginHandoffPendingAction = BrowserLoginHandoffAction | null;
+
+export const BrowserLoginHandoffStopReason = Object.freeze({
+	UNREACHABLE: 'unreachable',
+	REJECTED: 'rejected',
+} as const);
+
+export type BrowserLoginHandoffStopReason =
+	(typeof BrowserLoginHandoffStopReason)[keyof typeof BrowserLoginHandoffStopReason];
+type BrowserLoginHandoffPendingAction = BrowserLoginHandoffAction | null;
 
 export interface UseBrowserLoginHandoffOptions {
 	readonly runtimeSnapshot: RuntimeConfigSnapshot;
 	readonly prefillIdentifier?: string | null;
+	readonly startSso?: boolean;
 	readonly onEnded: () => void;
 	readonly onSuccess: (payload: LoginSuccessPayload) => Promise<void> | void;
 }
@@ -53,6 +68,7 @@ export interface BrowserLoginHandoffController {
 	readonly error: string | null;
 	readonly hasCode: boolean;
 	readonly hasStoppedWaiting: boolean;
+	readonly stopReason: BrowserLoginHandoffStopReason | null;
 	readonly isExpired: boolean;
 	readonly isGenerating: boolean;
 	readonly pendingAction: BrowserLoginHandoffPendingAction;
@@ -83,12 +99,14 @@ interface BrowserLoginHandoffURLRequest {
 	readonly session: BrowserLoginHandoffSession;
 	readonly prefillIdentifier: string | null | undefined;
 	readonly prefillField: LoginIdentifierField;
+	readonly startSso: boolean;
 }
 
 function buildBrowserLoginHandoffURL({
 	session,
 	prefillIdentifier,
 	prefillField,
+	startSso,
 }: BrowserLoginHandoffURLRequest): string {
 	const params = new URLSearchParams({
 		handoff: '1',
@@ -97,6 +115,9 @@ function buildBrowserLoginHandoffURL({
 	});
 	if (prefillIdentifier != null && prefillIdentifier.length > 0) {
 		params.set(prefillField, prefillIdentifier);
+	}
+	if (startSso) {
+		params.set(SSO_START_QUERY_PARAM, '1');
 	}
 	return `${session.target.webAppEndpoint}/login?${params.toString()}`;
 }
@@ -131,6 +152,7 @@ function useBrowserLoginHandoffCountdown(expiresAt: string | null): number | nul
 export function useBrowserLoginHandoff({
 	runtimeSnapshot,
 	prefillIdentifier,
+	startSso = false,
 	onEnded,
 	onSuccess,
 }: UseBrowserLoginHandoffOptions): BrowserLoginHandoffController {
@@ -141,6 +163,7 @@ export function useBrowserLoginHandoff({
 	const [error, setError] = useState<string | null>(null);
 	const [copied, setCopied] = useState(false);
 	const [hasStoppedWaiting, setHasStoppedWaiting] = useState(false);
+	const [stopReason, setStopReason] = useState<BrowserLoginHandoffStopReason | null>(null);
 	const [waitGeneration, setWaitGeneration] = useState(0);
 	const [transport] = useState(resolveBrowserLoginHandoffTransport);
 	const generationRef = useRef(0);
@@ -176,6 +199,7 @@ export function useBrowserLoginHandoff({
 			setPendingAction(null);
 			setCopied(false);
 			setHasStoppedWaiting(false);
+			setStopReason(null);
 			setError(errorMessage);
 		},
 		[clearCopyFeedbackTimer],
@@ -194,6 +218,7 @@ export function useBrowserLoginHandoff({
 		setSession(null);
 		setCopied(false);
 		setHasStoppedWaiting(false);
+		setStopReason(null);
 		const requestTarget = targetRef.current;
 		try {
 			if (requestTarget.webAppEndpoint.length === 0) {
@@ -247,6 +272,7 @@ export function useBrowserLoginHandoff({
 					session: currentSession,
 					prefillIdentifier,
 					prefillField: loginIdentifierField(runtimeSnapshot),
+					startSso,
 				}),
 			);
 			return true;
@@ -256,7 +282,7 @@ export function useBrowserLoginHandoff({
 		} finally {
 			setPendingAction(null);
 		}
-	}, [getCurrentSession, i18n, prefillIdentifier, runtimeSnapshot]);
+	}, [getCurrentSession, i18n, prefillIdentifier, runtimeSnapshot, startSso]);
 	const showManualCode = useCallback(async (): Promise<boolean> => {
 		setPendingAction(BrowserLoginHandoffAction.SHOW_CODE);
 		try {
@@ -274,10 +300,15 @@ export function useBrowserLoginHandoff({
 		}
 	}, [generateSession]);
 	const resumeWaiting = useCallback(() => {
+		if (session != null && Date.parse(session.expiresAt) <= Date.now()) {
+			void generateSession();
+			return;
+		}
 		setHasStoppedWaiting(false);
+		setStopReason(null);
 		setError(null);
 		setWaitGeneration((current) => current + 1);
-	}, []);
+	}, [generateSession, session]);
 	const copyCode = useCallback(() => {
 		if (code == null) {
 			return;
@@ -340,6 +371,7 @@ export function useBrowserLoginHandoff({
 						completedRef.current = false;
 						if (!disposed) {
 							setError(getAuthErrorMessage(caught, i18nRef.current));
+							setStopReason(BrowserLoginHandoffStopReason.REJECTED);
 							setHasStoppedWaiting(true);
 						}
 					}
@@ -358,12 +390,20 @@ export function useBrowserLoginHandoff({
 				}
 			} catch (caught) {
 				consecutiveErrors += 1;
+				const reachedServer = handoffReachedServer(caught);
 				if (!disposed) {
-					setError(getAuthErrorMessage(caught, i18nRef.current));
+					setError(
+						caught instanceof HttpError
+							? (resolveHandoffErrorMessage(i18nRef.current, caught) ?? getAuthErrorMessage(caught, i18nRef.current))
+							: null,
+					);
 				}
 				if (consecutiveErrors >= MAX_HANDOFF_POLL_ERRORS) {
 					keepPolling = false;
 					if (!disposed) {
+						setStopReason(
+							reachedServer ? BrowserLoginHandoffStopReason.REJECTED : BrowserLoginHandoffStopReason.UNREACHABLE,
+						);
 						setHasStoppedWaiting(true);
 					}
 				}
@@ -392,6 +432,7 @@ export function useBrowserLoginHandoff({
 		error,
 		hasCode: code != null,
 		hasStoppedWaiting,
+		stopReason,
 		isExpired: remainingSeconds != null && remainingSeconds <= 0,
 		isGenerating,
 		pendingAction,

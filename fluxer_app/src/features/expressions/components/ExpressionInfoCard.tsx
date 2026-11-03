@@ -110,7 +110,7 @@ const JOIN_COMMUNITY_REASON_DESCRIPTORS: Record<ExpressionKind, MessageDescripto
 const JOIN_COMMUNITY_CONFIRMATION_DESCRIPTOR = msg({
 	message: 'Do you want to join {communityName}?',
 	comment:
-		'Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.',
+		'Body of the confirmation shown before joining a community listed in Explore from an expression info card. {communityName} is the community name.',
 });
 
 const GUILD_ICON_SIZE_PX = 40;
@@ -130,7 +130,7 @@ interface ExpressionInfoCardCommonProps {
 	onClose?: () => void;
 }
 
-export type ExpressionInfoCardProps = ExpressionInfoCardCommonProps &
+type ExpressionInfoCardProps = ExpressionInfoCardCommonProps &
 	({kind: 'default_emoji'} | {kind: ExpressionKind; expressionId: string; guildId: string | null});
 
 function toSourceGuild(guild: Guild): ExpressionSourceGuild {
@@ -248,7 +248,7 @@ const ExpressionSourceGuildRow = observer(function ExpressionSourceGuildRow({
 	onClose,
 }: ExpressionSourceGuildRowProps) {
 	const {i18n} = useLingui();
-	const isDiscoverable = guild.features.includes(GuildFeatures.DISCOVERABLE);
+	const isDiscoverable = guild.features.includes(GuildFeatures.DISCOVERABLE) && RuntimeConfig.discoveryAvailable;
 	const handleJump = useCallback(() => {
 		NavigationCommands.selectGuild(guild.id);
 		onClose?.();
@@ -281,8 +281,12 @@ const ExpressionSourceGuildRow = observer(function ExpressionSourceGuildRow({
 			modalKey,
 		);
 	}, [guild, kind, expressionName, i18n, onClose]);
-	const canJoin = isDiscoverable && !RuntimeConfig.singleCommunityEnabled;
-	const activate = isMember ? handleJump : canJoin ? handleJoin : null;
+	let activate: (() => void) | null = null;
+	if (isMember) {
+		activate = handleJump;
+	} else if (isDiscoverable) {
+		activate = handleJoin;
+	}
 	const accessibleName = isMember
 		? i18n._(GO_TO_NAMED_COMMUNITY_DESCRIPTOR, {communityName: guild.name})
 		: i18n._(JOIN_NAMED_COMMUNITY_DESCRIPTOR, {communityName: guild.name});

@@ -82,11 +82,8 @@ function useUserVoiceActivities(userId: string): ReadonlyArray<UserVoiceActivity
 					const channel = Channels.getChannel(channelId);
 					const guild = effectiveGuildId ? Guilds.getGuild(effectiveGuildId) : undefined;
 					const isStreaming = vs.self_stream === true;
-					const streamKey = isStreaming
-						? effectiveGuildId
-							? `${effectiveGuildId}:${channelId}:${connectionId}`
-							: `dm:${channelId}:${connectionId}`
-						: null;
+					const streamScope = effectiveGuildId ? effectiveGuildId : 'dm';
+					const streamKey = isStreaming ? `${streamScope}:${channelId}:${connectionId}` : null;
 					const {participantUserIds, participantUsers} = collectParticipantUsers(channelStates);
 					activities.push({
 						voiceState: vs,

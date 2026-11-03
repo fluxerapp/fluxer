@@ -116,12 +116,6 @@
 	line-height: 1.5;
 }
 
-.cardActions {
-	display: flex;
-	gap: var(--spacing-2);
-	flex-wrap: wrap;
-}
-
 .cardBody {
 	display: flex;
 	flex-direction: column;
@@ -294,7 +288,7 @@
 		color-mix(in srgb, var(--brand-primary) 90%, transparent),
 		color-mix(in srgb, var(--brand-secondary) 85%, transparent)
 	);
-	color: white;
+	color: var(--brand-primary-fill);
 	font-weight: 800;
 	font-size: 1.85rem;
 }

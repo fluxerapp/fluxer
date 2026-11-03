@@ -41,7 +41,6 @@ import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {hasVisibleContent} from '@app/api/utils/StringUtils';
 import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -51,6 +50,7 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
@@ -179,16 +179,17 @@ export class MessagePersistenceService {
 			} as const);
 		const isBot = params.user?.isBot ?? false;
 		const isBugHunterBot = isBot && ((params.user?.flags ?? 0n) & UserFlags.BUG_HUNTER) !== 0n;
-		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
+		const attachmentNsfwMode = this.contentService.attachmentNsfwMode({
 			channel: params.channel ? await this.nsfwScopeChannel(params.channel) : undefined,
 			guild: params.guild,
 			member: params.member,
 			isBot,
 			dmNsfwContext: params.dmNsfwContext,
 		});
+		const isNSFWAllowed = attachmentNsfwMode !== 'block';
 		const [sanitizedContent, attachmentResult, processedStickers] = await Promise.all([
 			this.sanitizeContentIfNeeded(params, authorId),
-			this.processAttachments(params, isNSFWAllowed ? 'allow' : 'block'),
+			this.processAttachments(params, attachmentNsfwMode),
 			this.processStickers(params, authorId),
 		]);
 		let messageContent = sanitizedContent;
@@ -412,13 +413,14 @@ export class MessagePersistenceService {
 		if (message.messageSnapshots && message.messageSnapshots.length > 0) {
 			throw InputValidationError.fromCode('message', ValidationErrorCodes.MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED);
 		}
-		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
+		const attachmentNsfwMode = this.contentService.attachmentNsfwMode({
 			channel: await this.nsfwScopeChannel(channel),
 			guild,
 			member,
 			isBot: params.isBot,
 			dmNsfwContext: params.dmNsfwContext,
 		});
+		const isNSFWAllowed = attachmentNsfwMode !== 'block';
 		const updatedRowData = {...message.toRow()};
 		let hasChanges = false;
 		const allowEmbeds = params.allowEmbeds ?? true;
@@ -463,20 +465,8 @@ export class MessagePersistenceService {
 					if ('upload_filename' in att && att.upload_filename) {
 						newAttachments.push(att as AttachmentToProcess);
 					} else {
-						const existingAtt = att as EditExistingAttachment;
-						const refId = createAttachmentID(existingAtt.id);
-						let found = message.attachments.find((existing) => existing.id === refId);
-						if (!found && refId < BigInt(message.attachments.length)) {
-							found = message.attachments[Number(refId)];
-						}
-						if (found) {
-							const updated = found.toMessageAttachment();
-							if ('title' in existingAtt && existingAtt.title !== undefined) {
-								updated.title = existingAtt.title;
-							}
-							if ('description' in existingAtt && existingAtt.description !== undefined) {
-								updated.description = existingAtt.description;
-							}
+						const updated = this.resolveExistingAttachment(message, att as EditExistingAttachment);
+						if (updated) {
 							existingAttachments.push(updated);
 						}
 					}
@@ -521,7 +511,7 @@ export class MessagePersistenceService {
 						channel,
 						guild,
 						member,
-						nsfwMode: isNSFWAllowed ? 'allow' : 'block',
+						nsfwMode: attachmentNsfwMode,
 					});
 					processedNewAttachments = attachmentResult.attachments;
 					if (attachmentResult.hasVirusDetected) {
@@ -642,20 +632,8 @@ export class MessagePersistenceService {
 			const processedAttachments: Array<MessageAttachment> = [];
 			for (const att of data.attachments as Array<EditAttachment>) {
 				if (!('upload_filename' in att)) {
-					const existingAtt = att as EditExistingAttachment;
-					const refId = createAttachmentID(existingAtt.id);
-					let found = message.attachments.find((existing) => existing.id === refId);
-					if (!found && refId < BigInt(message.attachments.length)) {
-						found = message.attachments[Number(refId)];
-					}
-					if (found) {
-						const updated = found.toMessageAttachment();
-						if ('title' in existingAtt && existingAtt.title !== undefined) {
-							updated.title = existingAtt.title;
-						}
-						if ('description' in existingAtt && existingAtt.description !== undefined) {
-							updated.description = existingAtt.description;
-						}
+					const updated = this.resolveExistingAttachment(message, att as EditExistingAttachment);
+					if (updated) {
 						processedAttachments.push(updated);
 					}
 				}
@@ -663,6 +641,28 @@ export class MessagePersistenceService {
 			updatedAttachments = processedAttachments;
 		}
 		return {canEdit: true, updatedFlags, updatedAttachments};
+	}
+
+	private resolveExistingAttachment(
+		message: Message,
+		existingAtt: {id: bigint; title?: string | null; description?: string | null},
+	): MessageAttachment | null {
+		const refId = createAttachmentID(existingAtt.id);
+		let found = message.attachments.find((existing) => existing.id === refId);
+		if (!found && refId < BigInt(message.attachments.length)) {
+			found = message.attachments[Number(refId)];
+		}
+		if (!found) {
+			return null;
+		}
+		const updated = found.toMessageAttachment();
+		if ('title' in existingAtt && existingAtt.title !== undefined) {
+			updated.title = existingAtt.title;
+		}
+		if ('description' in existingAtt && existingAtt.description !== undefined) {
+			updated.description = existingAtt.description;
+		}
+		return updated;
 	}
 
 	async createSystemMessage(params: {

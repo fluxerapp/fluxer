@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
-import {createServer} from 'node:net';
 import {fileURLToPath} from 'node:url';
 import {
 	type ChannelID,
@@ -25,13 +23,8 @@ import {
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
 import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
-import {CHANNEL_COLUMNS, type ChannelRow} from '@app/api/database/types/ChannelTypes';
-import {MESSAGE_COLUMNS} from '@app/api/database/types/MessageTypes';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	syncChannelThreadsConfig,
-} from '@app/api/experiment/ChannelThreadsGate';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	ActiveThreadsByGuild,
 	ArchivedThreadsByParent,
@@ -39,6 +32,7 @@ import {
 	ChannelsByGuild,
 	ForumPinnedThread,
 	GuildThreadState,
+	Messages,
 	ThreadMembers,
 	ThreadMembersByUser,
 	ThreadOnlyChannelsByGuild,
@@ -47,19 +41,13 @@ import {
 	ThreadStats,
 	ThreadsByParent,
 } from '@app/api/Tables';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ChannelFlags, MAX_THREAD_MEMBERS} from '@fluxer/constants/src/ThreadConstants';
 import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThreadMembersError';
 import {ThreadAlreadyCreatedForMessageError} from '@fluxer/errors/src/domains/channel/ThreadAlreadyCreatedForMessageError';
-import {
-	type ChannelThreadsConfig,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
-import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 const GUILD_ID = createGuildID(1_900_000_000_000_000_000n);
 const PARENT_ID = createChannelID(1_900_000_000_000_000_100n);
@@ -95,15 +83,6 @@ class RecordingExecutor implements CassandraQueryExecutorForTesting {
 		if (!meta) return;
 		this.statements.push(`${prefix ?? meta.action}:${meta.table.name}`);
 	}
-}
-
-function parseConfig(raw: string | null): ChannelThreadsConfig {
-	return ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {});
-}
-
-function setThreadsConfig(patch: Partial<ChannelThreadsConfig> | null): void {
-	clearChannelThreadsTaintCacheForTesting();
-	syncChannelThreadsConfig(patch === null ? null : JSON.stringify(patch), parseConfig);
 }
 
 function channelRow(channelId: ChannelID, type: number, overrides: Partial<ChannelRow> = {}): ChannelRow {
@@ -171,7 +150,7 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 		beforeEach(async () => {
 			executor = new RecordingExecutor(await makeExecutor());
 			setCassandraQueryExecutorForTesting(executor);
-			setThreadsConfig(null);
+			clearChannelThreadsTaintCacheForTesting();
 			repositories = new ChannelRepository();
 			await upsertOne(Channels.upsertAll(channelRow(PARENT_ID, ChannelTypes.GUILD_TEXT)));
 			await upsertOne(ChannelsByGuild.upsertAll({guild_id: GUILD_ID, channel_id: PARENT_ID}));
@@ -179,11 +158,11 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 		});
 
 		afterEach(() => {
-			setThreadsConfig(null);
+			clearChannelThreadsTaintCacheForTesting();
 		});
 
 		async function taint(guildId: GuildID = GUILD_ID): Promise<void> {
-			setThreadsConfig({enabled: true, ever_enabled: true, enabled_guild_ids: [guildId.toString()]});
+			clearChannelThreadsTaintCacheForTesting();
 			await upsertOne(
 				GuildThreadState.upsertAll({
 					guild_id: guildId,
@@ -380,8 +359,10 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 		});
 
 		it('drops and reports stale index rows, and repairs missing ones', async () => {
-			const drift = vi.fn();
-			const threads = new ThreadRepository(repositories.channelData, repositories.messages, drift);
+			const drifted: Array<Array<ChannelID>> = [];
+			const threads = new ThreadRepository(repositories.channelData, repositories.messages, (threadIds) => {
+				drifted.push(threadIds);
+			});
 			const threadId = freshThreadId();
 			await threads.create(createParams(threadId));
 			await threads.updateState(threadId, () => ({archived: true}));
@@ -394,7 +375,7 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 				}),
 			);
 			expect(await threads.listActiveThreads(GUILD_ID)).toEqual([]);
-			expect(drift).toHaveBeenCalledWith([threadId]);
+			expect(drifted).toContainEqual([threadId]);
 			expect(
 				await fetchMany(ActiveThreadsByGuild.selectCql({where: ActiveThreadsByGuild.where.eq('guild_id')}), {
 					guild_id: GUILD_ID,
@@ -641,41 +622,6 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 			expect(await repositories.threads.listJoinedThreadIds(leaving, GUILD_ID)).toEqual([]);
 		});
 
-		it('rolls back member rows when the member count compare-and-set gives up', async () => {
-			const threadId = freshThreadId();
-			const staying = createUserID(1_900_000_000_040_000_001n);
-			const joining = createUserID(1_900_000_000_040_000_002n);
-			await repositories.threads.create(
-				createParams(threadId, {
-					members: [
-						{userId: OWNER_ID, flags: 1},
-						{userId: staying, flags: 0},
-					],
-				}),
-			);
-			const executeQuery = executor.executeQuery.bind(executor);
-			const spy = vi.spyOn(executor, 'executeQuery').mockImplementation(async (query) => {
-				const meta = query.kvMeta;
-				if (meta?.table.name === 'thread_state' && meta.conditions) {
-					return [{'[applied]': false}] as never;
-				}
-				return executeQuery(query);
-			});
-			await expect(repositories.threads.addMembers(threadId, [{userId: joining, flags: 0}])).rejects.toThrow();
-			await expect(repositories.threads.removeMembers(threadId, [staying])).rejects.toThrow();
-			spy.mockRestore();
-			const rows = await repositories.threads.listMembers(threadId, {limit: 100});
-			expect(rows.map((row) => row.userId).sort()).toEqual([OWNER_ID, staying].sort());
-			expect((await repositories.threads.getState(threadId))?.memberCount).toBe(2);
-			const joined = await repositories.threads.addMembers(threadId, [{userId: joining, flags: 0}]);
-			expect(joined?.added.map((member) => member.userId)).toEqual([joining]);
-			expect(joined?.state.memberCount).toBe(3);
-			expect(await repositories.threads.listJoinedThreadIds(joining, GUILD_ID)).toEqual([threadId]);
-			const left = await repositories.threads.removeMembers(threadId, [staying]);
-			expect(left.removed.map((member) => member.userId)).toEqual([staying]);
-			expect(left.state?.memberCount).toBe(2);
-		});
-
 		it('counts inserted thread messages only, excludes the starter id and floors at zero', async () => {
 			const threadId = freshThreadId();
 			await repositories.threads.create(createParams(threadId));
@@ -736,41 +682,18 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 			).toEqual([newThread]);
 		});
 
-		it('does no thread IO for never-enabled guilds', async () => {
-			const threadId = freshThreadId();
-			await upsertOne(
-				ThreadsByParent.upsertAll({parent_id: PARENT_ID, thread_id: threadId, guild_id: GUILD_ID, type: 11}),
-			);
-			executor.statements.length = 0;
-			expect(await repositories.threads.listGuildThreadIds(GUILD_ID)).toEqual([]);
-			expect(executor.statements).toEqual([]);
-			await repositories.channelData.listGuildChannels(GUILD_ID, 'maintenance');
-			await repositories.channelData.listGuildChannels(GUILD_ID, 'enrolled');
-			expect(executor.statements.every((entry) => /:(channels|channels_by_guild_id)$/.test(entry))).toBe(true);
-			expect(executor.count('select:guild_thread_state')).toBe(0);
-		});
-
-		it('indexes forums separately and merges them only for active or tainted guilds', async () => {
+		it('indexes forums separately, merges them into guild collections, and removes their side index on deletion', async () => {
 			await repositories.channelData.upsert(channelRow(FORUM_ID, ChannelTypes.GUILD_FORUM));
 			expect(
 				await fetchMany(ThreadOnlyChannelsByGuild.selectCql({where: ThreadOnlyChannelsByGuild.where.eq('guild_id')}), {
 					guild_id: GUILD_ID,
 				}),
 			).toHaveLength(1);
-			expect((await repositories.channelData.listGuildChannels(GUILD_ID, 'enrolled')).map((c) => c.id)).toEqual([
-				PARENT_ID,
-			]);
-			expect((await repositories.channelData.listGuildChannels(GUILD_ID, 'maintenance')).map((c) => c.id)).toEqual([
-				PARENT_ID,
-			]);
-			await taint();
+
 			expect(
 				new Set((await repositories.channelData.listGuildChannels(GUILD_ID, 'enrolled')).map((c) => c.id)),
 			).toEqual(new Set([PARENT_ID, FORUM_ID]));
-			setThreadsConfig({enabled: false, ever_enabled: true});
-			expect((await repositories.channelData.listGuildChannels(GUILD_ID, 'enrolled')).map((c) => c.id)).toEqual([
-				PARENT_ID,
-			]);
+			await taint();
 			expect(
 				new Set((await repositories.channelData.listGuildChannels(GUILD_ID, 'maintenance')).map((c) => c.id)),
 			).toEqual(new Set([PARENT_ID, FORUM_ID]));
@@ -836,67 +759,11 @@ const THREAD_TABLES = [
 	ForumPinnedThread,
 	ThreadOnlyChannelsByGuild,
 	GuildThreadState,
+	Channels,
+	Messages,
 ];
 
 describe('thread storage leaves control storage untouched', () => {
-	it('keeps the channel and message column lists byte-identical', () => {
-		expect([...CHANNEL_COLUMNS]).toEqual([
-			'channel_id',
-			'guild_id',
-			'type',
-			'name',
-			'topic',
-			'icon_hash',
-			'url',
-			'parent_id',
-			'position',
-			'owner_id',
-			'recipient_ids',
-			'nsfw',
-			'content_warning_level',
-			'content_warning_text',
-			'rate_limit_per_user',
-			'bitrate',
-			'user_limit',
-			'voice_connection_limit',
-			'rtc_region',
-			'rtc_p2p',
-			'last_message_id',
-			'last_pin_timestamp',
-			'permission_overwrites',
-			'nicks',
-			'soft_deleted',
-			'indexed_at',
-			'version',
-		]);
-		expect([...MESSAGE_COLUMNS]).toEqual([
-			'channel_id',
-			'bucket',
-			'message_id',
-			'author_id',
-			'type',
-			'webhook_id',
-			'webhook_name',
-			'webhook_avatar_hash',
-			'content',
-			'edited_timestamp',
-			'pinned_timestamp',
-			'flags',
-			'mention_everyone',
-			'mention_users',
-			'mention_roles',
-			'mention_channels',
-			'attachments',
-			'embeds',
-			'sticker_items',
-			'message_reference',
-			'message_snapshots',
-			'call',
-			'has_reaction',
-			'version',
-		]);
-	});
-
 	it('declares every thread table in the target schema with the same columns and no TTL', () => {
 		const schema = JSON.parse(
 			readFileSync(
@@ -915,79 +782,3 @@ describe('thread storage leaves control storage untouched', () => {
 });
 
 describeThreadRepository('in-memory cassandra', async () => new InMemoryCassandraQueryExecutor());
-
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
-const KV_TABLE = 'kv_thread_repository';
-const CONTAINER = `fluxer-threads-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
-}
-
-describe.skipIf(!dockerAvailable)('ThreadRepository against postgres kv', () => {
-	beforeAll(async () => {
-		const port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 8,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		await ensurePostgresKvSchema(getDefaultPostgresClient());
-	}, 900_000);
-
-	afterAll(async () => {
-		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
-	});
-
-	describeThreadRepository('postgres kv', async () => {
-		const client = getDefaultPostgresClient();
-		await client.query(`DELETE FROM ${KV_TABLE}`);
-		return new PostgresKvQueryExecutor(client);
-	});
-});

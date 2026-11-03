@@ -29,7 +29,7 @@
 	font-size: 1rem;
 	font-weight: 500;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 	transition:
 		background-color var(--transition-fast),
 		color var(--transition-fast);

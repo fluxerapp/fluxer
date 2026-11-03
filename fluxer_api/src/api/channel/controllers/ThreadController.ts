@@ -3,7 +3,7 @@
 import {type ChannelID, createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import type {MessageRequest} from '@app/api/channel/MessageTypes';
 import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
-import {parseMultipartMessageData} from '@app/api/channel/services/message/MessageRequestParser';
+import {parseMultipartMessageData, readMessageJsonBody} from '@app/api/channel/services/message/MessageRequestParser';
 import type {ForumPostInput} from '@app/api/channel/services/thread/ThreadCreationService';
 import {ChannelThreadsRouteGuard} from '@app/api/channel/threads/ChannelThreadsRouteGuard';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
@@ -12,8 +12,10 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
 import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
@@ -72,12 +74,7 @@ async function readPayloadJson(ctx: Context<HonoEnv>): Promise<unknown> {
 
 async function readJsonBody(ctx: Context<HonoEnv>): Promise<unknown> {
 	if (isMultipart(ctx)) return readPayloadJson(ctx);
-	try {
-		const raw = await ctx.req.text();
-		return raw.trim().length === 0 ? {} : parseJsonPreservingLargeIntegers(raw);
-	} catch {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
-	}
+	return readMessageJsonBody(ctx);
 }
 
 function parseWithSchema<T extends z.ZodType>(schema: T, value: unknown): z.output<T> {
@@ -155,6 +152,7 @@ export function ThreadController(app: HonoApp) {
 		async (ctx) => {
 			const {channel_id, message_id} = ctx.req.valid('param');
 			const body = ctx.req.valid('json');
+			assertTierAllows(ctx.get('user'), TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 			const thread = await ctx.get('threadService').creation.createFromMessage({
 				viewer: viewerFromCtx(ctx),
 				user: ctx.get('user'),
@@ -193,6 +191,7 @@ export function ThreadController(app: HonoApp) {
 		async (ctx) => {
 			const viewer = viewerFromCtx(ctx);
 			const user = ctx.get('user');
+			assertTierAllows(user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const creation = ctx.get('threadService').creation;
 			const parentAuth = await creation.authenticateParent(viewer, user.id, channelId);
@@ -399,6 +398,7 @@ export function ThreadController(app: HonoApp) {
 			experiment: EXPERIMENT,
 		}),
 		async (ctx) => {
+			assertTierAllows(ctx.get('user'), TierGatedActions.THREAD_JOIN, NO_TIER_CONTEXT);
 			await ctx.get('threadService').members.join({
 				viewer: viewerFromCtx(ctx),
 				user: ctx.get('user'),

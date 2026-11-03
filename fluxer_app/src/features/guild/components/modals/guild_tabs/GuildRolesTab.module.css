@@ -121,33 +121,6 @@
 	min-width: 0;
 }
 
-.layoutButtons {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	flex-shrink: 0;
-}
-
-.layoutButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.25rem;
-	height: 2.25rem;
-	border-radius: 0.375rem;
-	background: var(--background-secondary);
-	color: var(--text-primary-muted);
-	cursor: pointer;
-	transition:
-		background-color 150ms ease,
-		color 150ms ease;
-}
-
-.layoutButton:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .permCategories {
 	display: flex;
 	flex-direction: column;
@@ -216,7 +189,7 @@
 	gap: 0.5rem;
 	border-radius: 0.25rem;
 	padding: 0.375rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	background: transparent;
 }
@@ -231,11 +204,24 @@
 	color: var(--brand-primary-fill);
 }
 
+.overwriteItemSelected .lockIcon {
+	color: inherit;
+}
+
 .roleDot {
 	width: 0.75rem;
 	height: 0.75rem;
 	border-radius: 624.9375rem;
 	flex-shrink: 0;
+}
+
+.roleIconSlot {
+	display: flex;
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
 }
 
 .overwriteName {
@@ -298,7 +284,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
-	text-align: left;
+	text-align: start;
 	line-height: 1.2;
 	max-height: 1.2em;
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import type {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 
@@ -18,7 +18,7 @@ const DOMAIN_MIGRATION_TARGET_TO_SOURCE: Readonly<Record<string, string>> = Obje
 export const DOMAIN_MIGRATION_MARKER_KEY = 'fluxer:domain-migration';
 export const DOMAIN_MIGRATION_DEVICE_KEY = 'fluxer:domain-migration:device';
 export const DOMAIN_MIGRATION_PENDING_KEY = 'fluxer:domain-migration:pending';
-export const DOMAIN_MIGRATION_INTENT_KEY = 'fluxer:domain-migration:intent';
+const DOMAIN_MIGRATION_INTENT_KEY = 'fluxer:domain-migration:intent';
 export const DOMAIN_MIGRATION_NOTIFICATIONS_KEY = 'fluxer:domain-migration:notifications';
 export const DOMAIN_MIGRATION_MOVED_DISMISSED_KEY = 'fluxer:domain-migration:moved-dismissed-at';
 const DOMAIN_MIGRATION_ENROLLED_KEY = 'fluxer:domain-migration:enrolled';
@@ -34,7 +34,7 @@ const DOMAIN_MIGRATION_FAILED_RETRY_DELAY_MS = 24 * 60 * 60 * 1000;
 export const DOMAIN_MIGRATION_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
 export const DOMAIN_MIGRATION_CUSTOM_SOUNDS_MAX_BYTES = 4 * 1024 * 1024;
 export const DOMAIN_MIGRATION_THEME_ASSETS_MAX_BYTES = 2 * 1024 * 1024;
-export const DOMAIN_MIGRATION_MOVED_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
+const DOMAIN_MIGRATION_MOVED_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 const DOMAIN_MIGRATION_PROBE_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DOMAIN_MIGRATION_IMPORT_STALE_MS = 2 * 60 * 1000;
 const DOMAIN_MIGRATION_DEVICES_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -47,7 +47,6 @@ const ONE_SHOT_ROUTE_PREFIXES: ReadonlyArray<string> = [
 	'/oauth2/authorize',
 	'/auth/sso/callback',
 	'/premium-callback',
-	'/age-verification-callback',
 	'/connection-callback',
 ];
 
@@ -111,7 +110,7 @@ export function sanitizeNextPath(value: unknown): string {
 	return `${pathname}${url.search}${url.hash}`;
 }
 
-export function isDomainMigrationStorageKey(key: string): boolean {
+function isDomainMigrationStorageKey(key: string): boolean {
 	return key.startsWith(DOMAIN_MIGRATION_MARKER_KEY);
 }
 
@@ -344,9 +343,10 @@ export function writeDomainMigrationDeviceMap(storage: StorageLike | null, map: 
 	} catch {}
 }
 
-export interface DomainMigrationIntent {
+interface DomainMigrationIntent {
 	at: number;
 	handoff_id?: string;
+	nonce?: string;
 }
 
 export function readDomainMigrationIntent(storage: StorageLike | null, now: number): DomainMigrationIntent | null {
@@ -359,7 +359,11 @@ export function readDomainMigrationIntent(storage: StorageLike | null, now: numb
 		if (!isRecord(value) || typeof value.at !== 'number' || now - value.at > DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
 			return null;
 		}
-		return typeof value.handoff_id === 'string' ? {at: value.at, handoff_id: value.handoff_id} : {at: value.at};
+		return {
+			at: value.at,
+			...(typeof value.handoff_id === 'string' ? {handoff_id: value.handoff_id} : {}),
+			...(typeof value.nonce === 'string' ? {nonce: value.nonce} : {}),
+		};
 	} catch {
 		return null;
 	}
@@ -392,7 +396,7 @@ export type DomainMigrationInstallKind =
 
 export type DomainMigrationDisplayMode = 'browser' | 'minimal-ui' | 'standalone' | 'window-controls-overlay';
 
-export interface DomainMigrationInstallSignals {
+interface DomainMigrationInstallSignals {
 	displayMode: DomainMigrationDisplayMode;
 	navigatorStandalone: boolean;
 	userAgent: string;
@@ -602,10 +606,6 @@ export interface DomainMigrationPayload {
 	notification_permission: string;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function isStringRecord(value: unknown): value is Record<string, string> {
 	return isRecord(value) && Object.values(value).every((entry) => typeof entry === 'string');
 }
@@ -709,10 +709,6 @@ export function parseDomainMigrationPayload(value: unknown, expectedSource: stri
 	};
 }
 
-function exportableSnapshot(snapshot: Record<string, string> | undefined): Record<string, string> {
-	return Object.fromEntries(Object.entries(snapshot ?? {}).filter(([key]) => isExportableLocalStorageKey(key)));
-}
-
 export function keepValidTargetSession(incoming: StoredAccount, existing: StoredAccount | undefined): StoredAccount {
 	if (incoming.isValid !== false || !existing?.token || existing.isValid === false) {
 		return incoming;
@@ -722,15 +718,5 @@ export function keepValidTargetSession(incoming: StoredAccount, existing: Stored
 		token: existing.token,
 		isValid: existing.isValid,
 		userData: existing.userData ?? incoming.userData,
-	};
-}
-
-export function rewriteImportedAccount(record: StoredAccount, instance: RuntimeConfigSnapshot): StoredAccount {
-	const managed = exportableSnapshot(record.managedStorageData ?? record.localStorageData);
-	return {
-		...record,
-		localStorageData: managed,
-		managedStorageData: managed,
-		instance,
 	};
 }

@@ -5,33 +5,79 @@
 	align-items: center;
 }
 
+.badgeRow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.customBadge {
+	flex-shrink: 0;
+	object-fit: contain;
+}
+
+.customBadgeTooltip {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	max-width: 16rem;
+}
+
+.customBadgeTooltipName {
+	font-weight: 600;
+}
+
 .badge {
 	flex-shrink: 0;
-	--guild-badge-seal: white;
+	--guild-badge-seal: var(--brand-primary-fill);
 	--guild-badge-icon: var(--brand-primary);
 }
 
 .badgeOnLightSurface {
 	flex-shrink: 0;
-	--guild-badge-seal: white;
+	--guild-badge-seal: var(--brand-primary-fill);
 	--guild-badge-icon: var(--brand-primary);
 }
 
 :global(.theme-light) .badgeOnLightSurface {
 	--guild-badge-seal: var(--brand-primary);
-	--guild-badge-icon: white;
+	--guild-badge-icon: var(--brand-primary-fill);
 }
 
 .badgeBanner {
 	flex-shrink: 0;
 	filter: drop-shadow(0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.9));
-	--guild-badge-seal: white;
+	--guild-badge-seal: var(--brand-primary-fill);
 	--guild-badge-icon: var(--brand-primary);
 }
 
 .badgeBannerDark {
 	flex-shrink: 0;
 	filter: drop-shadow(0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.9));
-	--guild-badge-seal: white;
+	--guild-badge-seal: var(--brand-primary-fill);
 	--guild-badge-icon: var(--brand-primary);
+}
+
+.morePill {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.25rem;
+	height: 1.25rem;
+	border: 0;
+	border-radius: 0.625rem;
+	padding: 0 0.375rem;
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+	font: inherit;
+	font-weight: 600;
+	font-size: 0.75rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+button.morePill {
+	cursor: pointer;
 }

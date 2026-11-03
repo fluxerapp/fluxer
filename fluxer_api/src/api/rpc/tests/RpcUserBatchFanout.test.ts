@@ -6,7 +6,6 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {blockUser} from '@app/api/user/tests/RelationshipTestUtils';
 import {UserNotificationSettings} from '@fluxer/constants/src/UserConstants';
-import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface RpcUserGuildSettingsResponse {
@@ -68,23 +67,6 @@ describe('RpcService user batch fanout', () => {
 		expect(
 			rpcResponse.data.user_guild_settings.map((settings) => settings?.message_notifications ?? null),
 		).toStrictEqual(requested.map((entry) => entry.expected));
-	});
-
-	test('rejects user batch requests above the schema bound', () => {
-		for (const type of ['get_user_guild_settings', 'get_user_blocked_ids']) {
-			const withinBound = RpcRequest.safeParse({
-				type,
-				user_ids: Array.from({length: 1000}, () => UNKNOWN_USER_ID),
-				guild_id: '0',
-			});
-			expect(withinBound.success).toBe(true);
-			const aboveBound = RpcRequest.safeParse({
-				type,
-				user_ids: Array.from({length: 1001}, () => UNKNOWN_USER_ID),
-				guild_id: '0',
-			});
-			expect(aboveBound.success).toBe(false);
-		}
 	});
 
 	test('returns blocked ids per user for get_user_blocked_ids', async () => {

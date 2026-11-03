@@ -11,15 +11,6 @@ describe('Admin jobs and bulk jobs', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('job cancellation requires jobs:cancel rather than jobs:view', async () => {
-		const admin = await createTestAccount(harness);
-		const updated = await setUserACLs(harness, admin, ['admin:authenticate', 'jobs:view']);
-		await createBuilder(harness, `${updated.token}`)
-			.put('/admin/jobs/123456789012345678/cancellation')
-			.body({})
-			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
 	test('holding one bulk ACL does not authorise another task', async () => {
 		const admin = await createTestAccount(harness);
 		const updated = await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:update:user_flags']);

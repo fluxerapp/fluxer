@@ -109,33 +109,16 @@ export class GiftCodeRepository {
 	}
 
 	async findGiftCodesByCreator(userId: UserID): Promise<Array<GiftCode>> {
-		const codes = await fetchMany<{
-			code: string;
-		}>(FETCH_GIFT_CODES_BY_CREATOR_QUERY, {
-			created_by_user_id: userId,
-		});
-		if (codes.length === 0) {
-			return [];
-		}
-		const gifts: Array<GiftCode> = [];
-		for (const {code} of codes) {
-			const gift = await this.findGiftCode(code);
-			if (gift) {
-				gifts.push(gift);
-			}
-		}
-		return gifts;
+		const codes = await fetchMany<{code: string}>(FETCH_GIFT_CODES_BY_CREATOR_QUERY, {created_by_user_id: userId});
+		return this.loadGiftCodes(codes);
 	}
 
 	async findGiftCodesByRedeemer(userId: UserID): Promise<Array<GiftCode>> {
-		const codes = await fetchMany<{
-			code: string;
-		}>(FETCH_GIFT_CODES_BY_REDEEMER_QUERY, {
-			redeemed_by_user_id: userId,
-		});
-		if (codes.length === 0) {
-			return [];
-		}
+		const codes = await fetchMany<{code: string}>(FETCH_GIFT_CODES_BY_REDEEMER_QUERY, {redeemed_by_user_id: userId});
+		return this.loadGiftCodes(codes);
+	}
+
+	private async loadGiftCodes(codes: Array<{code: string}>): Promise<Array<GiftCode>> {
 		const gifts: Array<GiftCode> = [];
 		for (const {code} of codes) {
 			const gift = await this.findGiftCode(code);

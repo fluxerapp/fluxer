@@ -99,7 +99,7 @@
 	border-radius: var(--radius-md);
 	color: inherit;
 	font: inherit;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 }
 

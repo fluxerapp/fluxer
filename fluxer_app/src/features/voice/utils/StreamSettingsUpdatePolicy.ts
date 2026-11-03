@@ -74,6 +74,14 @@ export function canSelectManualAudioSources(
 	return availability.available === true && availability.capabilities?.process !== false;
 }
 
+export function canSelectWindowsDesktopAudioSource(
+	input: Pick<ManualAudioSourceSelectionInput, 'platform' | 'shareContext' | 'nativeAudioAvailability'>,
+): boolean {
+	if (input.platform !== 'win32' || input.shareContext !== 'display') return false;
+	const availability = input.nativeAudioAvailability;
+	return availability?.available === true && availability.capabilities?.endpointSelect === true;
+}
+
 export function routesManualAudioSources(input: ManualAudioSourceSelectionInput): boolean {
 	if (input.shareContext === 'device' && input.usesDeviceMicrophone === true) return false;
 	return (

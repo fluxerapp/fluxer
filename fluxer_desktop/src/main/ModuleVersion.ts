@@ -101,3 +101,7 @@ export function compareModuleVersions(left: ModuleVersion, right: ModuleVersion)
 	}
 	return left.prerelease.length < right.prerelease.length ? -1 : 1;
 }
+
+export function compareShellVersions(left: string, right: string): number {
+	return compareModuleVersions(parseModuleVersion(left, 'shell version'), parseModuleVersion(right, 'shell version'));
+}

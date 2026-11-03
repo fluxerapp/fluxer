@@ -4,7 +4,10 @@ import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {serializeGuildForAudit} from '@app/api/utils/AuditSerializationUtils';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -45,9 +48,10 @@ export class GuildOwnershipService {
 		if (newOwnerUser?.isBot) {
 			throw new CannotTransferOwnershipToBotError();
 		}
+		if (newOwnerUser) assertTierAllows(newOwnerUser, TierGatedActions.OWNERSHIP_TRANSFER, NO_TIER_CONTEXT);
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) throw new UnknownGuildError();
-		const previousSnapshot = this.helpers.serializeGuildForAudit(guild);
+		const previousSnapshot = serializeGuildForAudit(guild);
 		const previousOwnerId = guild.ownerId;
 		const updatedGuild = await this.guildRepository.upsertPartial(
 			guildId,
@@ -56,7 +60,7 @@ export class GuildOwnershipService {
 			previousOwnerId,
 		);
 		await this.helpers.dispatchGuildUpdate(updatedGuild);
-		await this.helpers.recordAuditLog({
+		await this.helpers.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.GUILD_UPDATE,

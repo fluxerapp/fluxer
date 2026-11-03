@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage as describeFailure} from '@electron/common/ErrorMessage';
+
 import type {DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
 import type {ModuleLaunchAttempt} from '@electron/main/ModuleStore';
 
@@ -41,20 +43,18 @@ interface DesktopUpdateRunOptions {
 	readonly now?: () => number;
 }
 
+const SHELL_FEED_BEHIND_RETRY_MS = 10 * 60_000;
+
 interface FilteredProbe {
 	readonly check: DesktopUpdateCheck;
 	readonly shellLatestVersion: string;
-}
-
-function describeFailure(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 export class DesktopUpdateRun {
 	private readonly options: DesktopUpdateRunOptions;
 	private readonly now: () => number;
 	private launchSettled = false;
-	private shellFeedBehindVersion: string | null = null;
+	private shellFeedBehind: {readonly version: string; readonly at: number} | null = null;
 	private shellInstallFailed = false;
 	private lastShellFailure: ShellSelfUpdateResult | null = null;
 	private lastCheck: DesktopUpdateCheck | null = null;
@@ -68,7 +68,10 @@ export class DesktopUpdateRun {
 		this.launchSettled = true;
 	}
 
-	public async check(): Promise<DesktopUpdateCheck> {
+	public async check({manual = false}: {readonly manual?: boolean} = {}): Promise<DesktopUpdateCheck> {
+		if (manual) {
+			this.shellFeedBehind = null;
+		}
 		return (await this.probe()).check;
 	}
 
@@ -190,7 +193,7 @@ export class DesktopUpdateRun {
 		logger.warn('The shell self update did not restart the app', result);
 		this.lastShellFailure = result.reason === 'no-update' ? null : result;
 		if (result.reason === 'no-update') {
-			this.shellFeedBehindVersion = probe.shellLatestVersion;
+			this.shellFeedBehind = {version: probe.shellLatestVersion, at: this.now()};
 			return {shellNewer: false, modulesChanged: probe.check.modulesChanged};
 		}
 		if (result.reason === 'install-failed') {
@@ -203,11 +206,16 @@ export class DesktopUpdateRun {
 		const probe = await this.options.probe();
 		const check = {
 			shellNewer:
-				this.options.canSelfUpdateShell && probe.shellNewer && probe.shellLatestVersion !== this.shellFeedBehindVersion,
+				this.options.canSelfUpdateShell && probe.shellNewer && !this.isShellFeedBehind(probe.shellLatestVersion),
 			modulesChanged: probe.modulesChanged,
 		};
 		this.lastCheck = check;
 		return {check, shellLatestVersion: probe.shellLatestVersion};
+	}
+
+	private isShellFeedBehind(version: string): boolean {
+		const behind = this.shellFeedBehind;
+		return behind != null && behind.version === version && this.now() - behind.at < SHELL_FEED_BEHIND_RETRY_MS;
 	}
 
 	private publish(check: DesktopUpdateCheck): void {

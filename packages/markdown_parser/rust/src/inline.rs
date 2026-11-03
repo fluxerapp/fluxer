@@ -2,19 +2,20 @@
 
 use crate::ast::{EmojiKind, Node, ParserFlags, ParserResult};
 use crate::constants::{CODE_FENCE_LENGTH, MAX_INLINE_DEPTH, MAX_LINE_LENGTH};
-use crate::emoji::{EmojiContext, StandardEmoji};
+use crate::emoji::{StandardCursor, StandardEmoji};
 use crate::links;
 use crate::normalize::{
     combine_adjacent_text, compact_empty_text_nodes, flatten_top_level_formatting,
     merge_adjacent_text_simple, normalize_nodes,
 };
 use crate::parser::{MarkdownParser, ParseError};
+use crate::scan::{Closing, Lookahead, Pattern, Token, step};
 use crate::text::{
-    advance_one, append_text, byte_at, ends_with, has_visible_content, is_alpha_numeric,
-    is_escapable_character, string_from_lossy,
+    append_text, byte_at, has_visible_content, is_alpha_numeric, is_escapable_character,
+    string_from_lossy,
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 struct FormattingEntry {
     delimiter: u8,
     is_double: bool,
@@ -22,26 +23,28 @@ struct FormattingEntry {
 
 #[derive(Clone, Debug, Default)]
 struct FormattingContext {
-    entries: Vec<FormattingEntry>,
+    entries: [FormattingEntry; MAX_INLINE_DEPTH],
+    len: usize,
 }
 
 impl FormattingContext {
     fn can_enter(&self, delimiter: u8, is_double: bool) -> bool {
-        self.entries.len() < MAX_INLINE_DEPTH && !self.is_active(delimiter, is_double)
+        self.len < MAX_INLINE_DEPTH && !self.is_active(delimiter, is_double)
     }
 
     fn is_active(&self, delimiter: u8, is_double: bool) -> bool {
-        self.entries
+        self.entries[..self.len]
             .iter()
             .any(|entry| entry.delimiter == delimiter && entry.is_double == is_double)
     }
 
     fn push(&mut self, delimiter: u8, is_double: bool) {
-        if self.entries.len() < MAX_INLINE_DEPTH {
-            self.entries.push(FormattingEntry {
+        if self.len < MAX_INLINE_DEPTH {
+            self.entries[self.len] = FormattingEntry {
                 delimiter,
                 is_double,
-            });
+            };
+            self.len += 1;
         }
     }
 }
@@ -57,15 +60,34 @@ enum FormattingNodeType {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct FormattingMarkerInfo<'a> {
-    marker: &'a str,
+struct FormattingMarkerInfo {
+    delimiter: u8,
     node_type: FormattingNodeType,
     marker_length: usize,
 }
 
-#[derive(Clone, Copy, Debug)]
-struct FormattingEnd {
-    end_position: usize,
+impl FormattingMarkerInfo {
+    fn is_double(self) -> bool {
+        self.marker_length > 1
+    }
+
+    fn is_triple_emphasis(self) -> bool {
+        self.marker_length == 3 && self.node_type == FormattingNodeType::Emphasis
+    }
+
+    fn scan_index(self) -> usize {
+        match (self.delimiter, self.marker_length) {
+            (b'*', 2) => 0,
+            (b'_', 2) => 1,
+            (b'~', _) => 2,
+            (b'|', _) => 3,
+            (b'*', 3) => 4,
+            (b'_', 3) => 5,
+            (b'*', _) => 6,
+            (b'_', _) => 7,
+            _ => 8,
+        }
+    }
 }
 
 pub fn parse_inline(
@@ -95,15 +117,39 @@ fn parse_inline_with_context(
     context: &mut FormattingContext,
 ) -> Result<Vec<Node>, ParseError> {
     let mut nodes = Vec::new();
-    let mut accumulated = Vec::<u8>::new();
+    let mut accumulated = String::new();
+    let mut scan = Lookahead::new(text);
+    let emoji_context = parser.shared_emoji_context();
+    let mut emojis = emoji_context.standard_cursor();
     let mut position = 0usize;
     while position < text.len() {
         let current = byte_at(text, position);
+        if is_plain_text_byte(current) {
+            let run_limit = emojis
+                .next_offset(base_offset + position)
+                .map_or(text.len(), |offset| (offset - base_offset).min(text.len()));
+            if run_limit > position {
+                let run_end = text.as_bytes()[position..run_limit]
+                    .iter()
+                    .position(|byte| !is_plain_text_byte(*byte))
+                    .map_or(run_limit, |offset| position + offset);
+                let room = (MAX_LINE_LENGTH + 1)
+                    .saturating_sub(accumulated.len())
+                    .max(1);
+                let end = run_end.min(position + room);
+                accumulated.push_str(&text[position..end]);
+                position = end;
+                if accumulated.len() > MAX_LINE_LENGTH {
+                    flush_bounded_accumulated_text(&mut nodes, &mut accumulated, MAX_LINE_LENGTH);
+                    break;
+                }
+                continue;
+            }
+        }
         if current == b'\\' && position + 1 < text.len() {
             let next = byte_at(text, position + 1);
             if next == b'_' && position > 0 && byte_at(text, position - 1) == 0xaf {
-                accumulated.push(current);
-                accumulated.push(next);
+                accumulated.push_str("\\_");
                 position += 2;
                 continue;
             }
@@ -113,23 +159,21 @@ fn parse_inline_with_context(
                     kind: EmojiKind::Standard { raw, .. },
                 } = &result.node
             {
-                accumulated.extend_from_slice(raw.as_bytes());
+                accumulated.push_str(raw);
                 position += 1 + result.advance;
                 continue;
             }
-            if let Some(emoji) = parser
-                .emoji_context()
-                .standard_at(base_offset + position + 1)
+            if let Some(emoji) = emojis.at(base_offset + position + 1)
                 && text[position + 1..].starts_with(&emoji.raw)
             {
-                accumulated.extend_from_slice(emoji.raw.as_bytes());
+                accumulated.push_str(&emoji.raw);
                 position += 1 + emoji.len;
                 continue;
             }
             if next == b'`' {
                 let run = backtick_run_length(text, position + 1);
                 if run >= CODE_FENCE_LENGTH {
-                    accumulated.extend(std::iter::repeat_n(b'`', run));
+                    accumulated.extend(std::iter::repeat_n('`', run));
                     position += 1 + run;
                     continue;
                 }
@@ -138,18 +182,18 @@ fn parse_inline_with_context(
                 || is_ordered_list_marker_dot_escape(text, position)
                 || is_word_dot_escape(text, position)
             {
-                accumulated.push(next);
+                accumulated.push(char::from(next));
                 position += 2;
                 continue;
             }
         }
 
         let remaining = &text[position..];
-        if !ends_with(&accumulated, b"<\"")
-            && !ends_with(&accumulated, b"<'")
+        if !accumulated.ends_with("<\"")
+            && !accumulated.ends_with("<'")
             && ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS)
             && links::starts_with_url(remaining)
-            && let Some(result) = links::parse_url_segment(remaining, parser.flags())
+            && let Some(result) = links::parse_url_segment(&mut scan, position, parser.flags())
         {
             flush_accumulated_text(&mut nodes, &mut accumulated);
             nodes.push(result.node);
@@ -162,7 +206,7 @@ fn parse_inline_with_context(
             && byte_at(text, position + 1) != b'_'
             && links::is_word_underscore(text, position)
         {
-            accumulated.push(b'_');
+            accumulated.push('_');
             position += 1;
             continue;
         }
@@ -171,7 +215,7 @@ fn parse_inline_with_context(
             flush_accumulated_text(&mut nodes, &mut accumulated);
             push_regional_indicator_pair(
                 &mut nodes,
-                parser.emoji_context(),
+                &mut emojis,
                 base_offset + position,
                 &remaining[..result.advance],
                 result.node,
@@ -180,7 +224,7 @@ fn parse_inline_with_context(
             continue;
         }
 
-        if let Some(emoji) = parser.emoji_context().standard_at(base_offset + position)
+        if let Some(emoji) = emojis.at(base_offset + position)
             && remaining.starts_with(&emoji.raw)
         {
             flush_accumulated_text(&mut nodes, &mut accumulated);
@@ -195,26 +239,6 @@ fn parse_inline_with_context(
             continue;
         }
 
-        if current == b'<'
-            && position + 2 < text.len()
-            && let Some(result) = links::parse_custom_emoji(remaining)
-        {
-            flush_accumulated_text(&mut nodes, &mut accumulated);
-            nodes.push(result.node);
-            position += result.advance;
-            continue;
-        }
-
-        if current == b'<'
-            && remaining.starts_with("<t:")
-            && let Some(result) = links::parse_timestamp(remaining)
-        {
-            flush_accumulated_text(&mut nodes, &mut accumulated);
-            nodes.push(result.node);
-            position += result.advance;
-            continue;
-        }
-
         if current == b':'
             && let Some(result) = links::parse_emoji_shortcode(parser, remaining)
         {
@@ -224,48 +248,14 @@ fn parse_inline_with_context(
             continue;
         }
 
-        if current == b'<' && position + 1 < text.len() {
-            let next = byte_at(text, position + 1);
-            if next == b'+'
-                && ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS)
-                && let Some(result) = links::parse_phone_link(parser, remaining)
-            {
-                flush_accumulated_text(&mut nodes, &mut accumulated);
-                nodes.push(result.node);
-                position += result.advance;
-                continue;
-            }
-            if remaining.starts_with("<sms:")
-                && ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS)
-                && let Some(result) = links::parse_sms_link(parser, remaining)
-            {
-                flush_accumulated_text(&mut nodes, &mut accumulated);
-                nodes.push(result.node);
-                position += result.advance;
-                continue;
-            }
-            if matches!(next, b'@' | b'#' | b'/' | b'i')
-                && let Some(result) = links::parse_mention(remaining, parser.flags())
-            {
-                flush_accumulated_text(&mut nodes, &mut accumulated);
-                nodes.push(result.node);
-                position += result.advance;
-                continue;
-            }
-            if ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS) {
-                if let Some(result) = links::parse_autolink(remaining, parser.flags()) {
-                    flush_accumulated_text(&mut nodes, &mut accumulated);
-                    nodes.push(result.node);
-                    position += result.advance;
-                    continue;
-                }
-                if let Some(result) = links::parse_email_link(parser, remaining) {
-                    flush_accumulated_text(&mut nodes, &mut accumulated);
-                    nodes.push(result.node);
-                    position += result.advance;
-                    continue;
-                }
-            }
+        if current == b'<'
+            && let Some(close) = scan.next(Pattern::AngleClose, position, text.len())
+            && let Some(result) = parse_angle_bracket(parser, &mut scan, position, close)
+        {
+            flush_accumulated_text(&mut nodes, &mut accumulated);
+            nodes.push(result.node);
+            position += result.advance;
+            continue;
         }
 
         if current == b'@' && ParserFlags::has(parser.flags(), ParserFlags::ALLOW_EVERYONE_MENTIONS)
@@ -291,7 +281,7 @@ fn parse_inline_with_context(
 
         if current >= 0x80 {
             let char_len = remaining.chars().next().map_or(1, char::len_utf8);
-            accumulated.extend_from_slice(&text.as_bytes()[position..position + char_len]);
+            accumulated.push_str(&text[position..position + char_len]);
             position += char_len;
             continue;
         }
@@ -302,7 +292,7 @@ fn parse_inline_with_context(
             && (is_double_underscore
                 || !(current == b'_'
                     && !accumulated.is_empty()
-                    && is_alpha_numeric(*accumulated.last().unwrap_or(&0))))
+                    && is_alpha_numeric(*accumulated.as_bytes().last().unwrap_or(&0))))
         {
             let previous = if position > 0 {
                 byte_at(text, position - 1)
@@ -311,7 +301,8 @@ fn parse_inline_with_context(
             };
             if let Some(result) = parse_special_sequence(
                 parser,
-                remaining,
+                &mut scan,
+                position,
                 base_offset + position,
                 context,
                 previous,
@@ -323,7 +314,7 @@ fn parse_inline_with_context(
             }
         }
 
-        accumulated.push(current);
+        accumulated.push(char::from(current));
         position += 1;
         if accumulated.len() > MAX_LINE_LENGTH {
             flush_bounded_accumulated_text(&mut nodes, &mut accumulated, MAX_LINE_LENGTH);
@@ -358,17 +349,17 @@ fn parse_regional_indicator_flag(text: &str) -> Option<ParserResult> {
 
 fn push_regional_indicator_pair(
     nodes: &mut Vec<Node>,
-    emoji_context: &EmojiContext,
+    emojis: &mut StandardCursor<'_>,
     offset: usize,
     pair: &str,
     flag: Node,
 ) {
     let (first, second) = pair.split_at(pair.len() / 2);
-    match emoji_context.standard_at(offset) {
+    match emojis.at(offset) {
         Some(emoji) if emoji.raw == pair => nodes.push(standard_emoji_node(emoji)),
         Some(emoji) if emoji.raw == first => {
             nodes.push(standard_emoji_node(emoji));
-            match emoji_context.standard_at(offset + first.len()) {
+            match emojis.at(offset + first.len()) {
                 Some(emoji) if emoji.raw == second => nodes.push(standard_emoji_node(emoji)),
                 _ => nodes.extend(regional_indicator_emoji(second)),
             }
@@ -429,13 +420,11 @@ fn is_ordered_list_marker_dot_escape(text: &str, backslash_position: usize) -> b
     if digit_start == backslash_position {
         return false;
     }
-    let line_start = text[..digit_start]
-        .rfind('\n')
-        .map_or(0, |position| position + 1);
-    if text.as_bytes()[line_start..digit_start]
-        .iter()
-        .any(|byte| *byte != b' ')
-    {
+    let mut line_start = digit_start;
+    while line_start > 0 && byte_at(text, line_start - 1) == b' ' {
+        line_start -= 1;
+    }
+    if line_start > 0 && byte_at(text, line_start - 1) != b'\n' {
         return false;
     }
     let indent = digit_start - line_start;
@@ -450,80 +439,52 @@ fn is_word_dot_escape(text: &str, backslash_position: usize) -> bool {
     previous.is_ascii_alphanumeric() || previous == b'.'
 }
 
+fn parse_angle_bracket(
+    parser: &MarkdownParser,
+    scan: &mut Lookahead<'_>,
+    position: usize,
+    close: usize,
+) -> Option<ParserResult> {
+    let tag = &scan.text[position..=close];
+    links::parse_custom_emoji(tag)
+        .or_else(|| links::parse_timestamp(tag))
+        .or_else(|| links::parse_phone_link(parser, tag))
+        .or_else(|| links::parse_sms_link(parser, tag))
+        .or_else(|| links::parse_mention(tag, parser.flags()))
+        .or_else(|| links::parse_autolink(scan, position, close, parser.flags()))
+        .or_else(|| links::parse_email_link(parser, tag))
+}
+
 fn parse_special_sequence(
     parser: &mut MarkdownParser,
-    text: &str,
+    scan: &mut Lookahead<'_>,
+    position: usize,
     base_offset: usize,
     context: &mut FormattingContext,
     previous: u8,
 ) -> Result<Option<ParserResult>, ParseError> {
-    if text.is_empty() {
+    if byte_at(scan.text, position) != b'[' {
+        return parse_formatting(parser, scan, position, base_offset, context, previous);
+    }
+    if !ParserFlags::has(parser.flags(), ParserFlags::ALLOW_MASKED_LINKS) {
         return Ok(None);
     }
-    match byte_at(text, 0) {
-        b'*' | b'_' | b'~' | b'|' | b'`' => {
-            if let Some(result) = parse_formatting(parser, text, base_offset, context, previous)? {
-                return Ok(Some(result));
-            }
-        }
-        b'@' => {
-            if ParserFlags::has(parser.flags(), ParserFlags::ALLOW_EVERYONE_MENTIONS) {
-                if text.starts_with("@everyone") {
-                    return Ok(Some(ParserResult {
-                        node: Node::Mention {
-                            kind: crate::ast::MentionKind::Everyone,
-                        },
-                        advance: 9,
-                    }));
-                }
-                if text.starts_with("@here") {
-                    return Ok(Some(ParserResult {
-                        node: Node::Mention {
-                            kind: crate::ast::MentionKind::Here,
-                        },
-                        advance: 5,
-                    }));
-                }
-            }
-        }
-        b'[' => {
-            if let Some(result) = links::parse_timestamp(text) {
-                return Ok(Some(result));
-            }
-            if ParserFlags::has(parser.flags(), ParserFlags::ALLOW_MASKED_LINKS)
-                && let Some(result) = links::parse_masked_link(parser, text, base_offset)?
-            {
-                return Ok(Some(result));
-            }
-        }
-        _ => {}
-    }
-    if byte_at(text, 0) != b'['
-        && let Some(result) = links::parse_timestamp(text)
-    {
-        return Ok(Some(result));
-    }
-    if byte_at(text, 0) != b'<'
-        && byte_at(text, 0) != b'['
-        && ParserFlags::has(parser.flags(), ParserFlags::ALLOW_MASKED_LINKS)
-        && let Some(result) = links::parse_masked_link(parser, text, base_offset)?
-    {
-        return Ok(Some(result));
-    }
-    Ok(None)
+    links::parse_masked_link(parser, scan, position, base_offset)
 }
 
 fn parse_formatting(
     parser: &mut MarkdownParser,
-    text: &str,
+    scan: &mut Lookahead<'_>,
+    position: usize,
     base_offset: usize,
     context: &mut FormattingContext,
     previous: u8,
 ) -> Result<Option<ParserResult>, ParseError> {
+    let text = &scan.text[position..];
     if text.len() < 2 {
         return Ok(None);
     }
-    let Some(marker) = get_formatting_marker_info(text) else {
+    let Some(marker) = get_formatting_marker_info(scan, position) else {
         return Ok(None);
     };
     if marker.node_type == FormattingNodeType::Spoiler
@@ -531,23 +492,23 @@ fn parse_formatting(
     {
         return Ok(None);
     }
-    if !context.can_enter(byte_at(marker.marker, 0), marker.marker.len() > 1) {
+    if !context.can_enter(marker.delimiter, marker.is_double()) {
         return Ok(None);
     }
     if marker.marker_length == 1 && marker.node_type == FormattingNodeType::Emphasis {
         let next = byte_at(text, marker.marker_length);
-        if !links::can_open_single_emphasis(byte_at(marker.marker, 0), previous, next) {
+        if !links::can_open_single_emphasis(marker.delimiter, previous, next) {
             return Ok(None);
         }
     }
-    let Some(end) = find_formatting_end(text, marker) else {
+    let Some(end_position) = find_formatting_end(scan, position, marker) else {
         return Ok(None);
     };
-    let inner = &text[marker.marker_length..end.end_position];
-    if !formatting_inner_has_visible_content(marker, inner) {
+    let inner = &text[marker.marker_length..end_position];
+    if !has_visible_content(inner) {
         return Ok(None);
     }
-    let is_block = context.is_active(byte_at(marker.marker, 0), marker.marker.len() > 1);
+    let is_block = context.is_active(marker.delimiter, marker.is_double());
     let node = create_formatting_node(
         parser,
         marker,
@@ -557,262 +518,142 @@ fn parse_formatting(
     )?;
     Ok(Some(ParserResult {
         node,
-        advance: end.end_position + marker.marker_length,
+        advance: end_position + marker.marker_length,
     }))
 }
 
-fn formatting_inner_has_visible_content(marker: FormattingMarkerInfo<'_>, inner: &str) -> bool {
-    if marker.node_type == FormattingNodeType::InlineCode {
-        return has_visible_content(&unescape_inline_code(inner));
-    }
-    has_visible_content(inner)
-}
-
-fn get_formatting_marker_info(text: &str) -> Option<FormattingMarkerInfo<'_>> {
-    if text.is_empty() || !is_formatting_char(byte_at(text, 0)) {
+fn get_formatting_marker_info(
+    scan: &mut Lookahead<'_>,
+    position: usize,
+) -> Option<FormattingMarkerInfo> {
+    let text = scan.text;
+    let first = byte_at(text, position);
+    if !is_formatting_char(first) {
         return None;
     }
-    let first = byte_at(text, 0);
-    let second = byte_at(text, 1);
-    let third = byte_at(text, 2);
-    if first == b'*' && second == b'*' && third == b'*' {
-        return Some(marker("***", FormattingNodeType::Emphasis, 3));
-    }
-    if first == b'_' && second == b'_' && third == b'_' {
-        return Some(marker("___", FormattingNodeType::Emphasis, 3));
-    }
-    if first == b'|' && second == b'|' {
-        return Some(marker("||", FormattingNodeType::Spoiler, 2));
-    }
-    if first == b'~' && second == b'~' {
-        return Some(marker("~~", FormattingNodeType::Strikethrough, 2));
-    }
-    if first == b'*' && second == b'*' {
-        return Some(marker("**", FormattingNodeType::Strong, 2));
-    }
-    if first == b'_' && second == b'_' {
-        return Some(marker("__", FormattingNodeType::Underline, 2));
-    }
-    if first == b'`' {
-        let mut count = 1;
-        while count < text.len() && byte_at(text, count) == b'`' {
-            count += 1;
-        }
-        return Some(FormattingMarkerInfo {
-            marker: &text[..count],
-            node_type: FormattingNodeType::InlineCode,
-            marker_length: count,
-        });
-    }
-    if first == b'*' {
-        return Some(marker("*", FormattingNodeType::Emphasis, 1));
-    }
-    if first == b'_' {
-        return Some(marker("_", FormattingNodeType::Emphasis, 1));
-    }
-    None
-}
-
-fn marker(
-    marker: &'static str,
-    node_type: FormattingNodeType,
-    marker_length: usize,
-) -> FormattingMarkerInfo<'static> {
-    FormattingMarkerInfo {
-        marker,
+    let second = byte_at(text, position + 1);
+    let third = byte_at(text, position + 2);
+    let (node_type, marker_length) = match (first, second, third) {
+        (b'*', b'*', b'*') | (b'_', b'_', b'_') => (FormattingNodeType::Emphasis, 3),
+        (b'|', b'|', _) => (FormattingNodeType::Spoiler, 2),
+        (b'~', b'~', _) => (FormattingNodeType::Strikethrough, 2),
+        (b'*', b'*', _) => (FormattingNodeType::Strong, 2),
+        (b'_', b'_', _) => (FormattingNodeType::Underline, 2),
+        (b'`', _, _) => (
+            FormattingNodeType::InlineCode,
+            scan.run_end(position, b'`') - position,
+        ),
+        (b'*' | b'_', _, _) => (FormattingNodeType::Emphasis, 1),
+        _ => return None,
+    };
+    Some(FormattingMarkerInfo {
+        delimiter: first,
         node_type,
         marker_length,
-    }
+    })
 }
 
-fn find_formatting_end(text: &str, marker: FormattingMarkerInfo<'_>) -> Option<FormattingEnd> {
-    let mut position = marker.marker_length;
-    let mut nested_level = 0usize;
-    if text.len() < marker.marker_length * 2 {
+fn find_formatting_end(
+    scan: &mut Lookahead<'_>,
+    opener: usize,
+    marker: FormattingMarkerInfo,
+) -> Option<usize> {
+    let len = scan.text.len();
+    if len - opener < marker.marker_length * 2 {
         return None;
     }
+    let mut start = opener + marker.marker_length;
     if marker.node_type == FormattingNodeType::InlineCode && marker.marker_length > 1 {
-        while position < text.len() {
-            let current = byte_at(text, position);
-            if is_inline_code_line_break(current) {
-                return None;
-            }
-            if current == b'`' {
-                let mut count = 0usize;
-                let mut check = position;
-                while check < text.len() && byte_at(text, check) == b'`' {
-                    count += 1;
-                    check += 1;
-                }
-                if count >= marker.marker_length {
-                    return Some(FormattingEnd {
-                        end_position: position + count - marker.marker_length,
-                    });
-                }
-                position = check;
-                continue;
-            }
-            position += advance_one(text, position);
-            if position > MAX_LINE_LENGTH {
-                break;
-            }
-        }
-        return None;
+        return scan.code_span_end(opener, marker.marker_length, MAX_LINE_LENGTH);
     }
-    if marker.marker_length == 1 && marker.node_type == FormattingNodeType::InlineCode {
-        let marker_char = byte_at(marker.marker, 0);
-        while position < text.len() {
-            let current = byte_at(text, position);
-            if is_inline_code_line_break(current) {
-                return None;
-            }
-            if current == b'\\' && position + 1 < text.len() {
-                position += 2;
-                continue;
-            }
-            if current == marker_char {
-                if marker_char == b'`'
-                    && position + 1 < text.len()
-                    && byte_at(text, position + 1) == b'`'
-                {
-                    while position < text.len() && byte_at(text, position) == b'`' {
-                        position += 1;
-                    }
-                    continue;
-                }
-                return Some(FormattingEnd {
-                    end_position: position,
-                });
-            }
-            position += advance_one(text, position);
-            if position > MAX_LINE_LENGTH {
-                break;
-            }
-        }
-        return None;
+    if marker.node_type == FormattingNodeType::Spoiler
+        && scan.text.as_bytes()[start..].starts_with(b"||")
+        && start + 2 < len
+    {
+        start += 1;
     }
-    if marker.marker_length == 1 && marker.node_type == FormattingNodeType::Emphasis {
-        let marker_char = byte_at(marker.marker, 0);
-        while position < text.len() {
-            let current = byte_at(text, position);
-            if current == b'\\' && position + 1 < text.len() {
-                position += 2;
-                continue;
-            }
-            if current == marker_char {
-                if marker_char == b'*'
-                    && let Some(nested_end) = find_nested_asterisk_run_end(text, position)
-                {
-                    position = nested_end;
-                    continue;
-                }
-                if marker_char == b'_'
-                    && position + 1 < text.len()
-                    && byte_at(text, position + 1) == b'_'
-                {
-                    position += 2;
-                    continue;
-                }
-                let prev = if position > 0 {
-                    byte_at(text, position - 1)
-                } else {
-                    0
-                };
-                let next = byte_at(text, position + 1);
-                if links::can_close_single_emphasis(marker_char, prev, next) {
-                    return Some(FormattingEnd {
-                        end_position: position,
-                    });
-                }
-            }
-            position += advance_one(text, position);
-            if position > MAX_LINE_LENGTH {
-                break;
-            }
-        }
-        return None;
+    let close_len = if marker.is_triple_emphasis() { 3 } else { 1 };
+    let closer = scan.closer(
+        Closing::Formatting(marker.scan_index()),
+        start,
+        close_len,
+        |scan, position| classify_formatting(scan, marker, position),
+    );
+    closer?
+        .within(opener, MAX_LINE_LENGTH)
+        .map(|end| end - opener)
+}
+
+fn classify_formatting(
+    scan: &mut Lookahead<'_>,
+    marker: FormattingMarkerInfo,
+    position: usize,
+) -> Token {
+    let text = scan.text;
+    let bytes = text.as_bytes();
+    let current = bytes[position];
+    let delimiter = marker.delimiter;
+    if marker.node_type == FormattingNodeType::InlineCode && is_inline_code_line_break(current) {
+        return Token::Fail;
     }
-    if marker.node_type == FormattingNodeType::InlineCode {
-        while position < text.len() {
-            let current = byte_at(text, position);
-            if is_inline_code_line_break(current) {
-                return None;
-            }
-            if current == b'`' {
-                return Some(FormattingEnd {
-                    end_position: position,
-                });
-            }
-            position += advance_one(text, position);
-            if position > MAX_LINE_LENGTH {
-                break;
-            }
-        }
-        return None;
+    if current == b'\\' && position + 1 < bytes.len() {
+        return Token::Skip(2);
     }
-    let first_marker_char = byte_at(marker.marker, 0);
-    let is_double = marker.marker.len() > 1;
-    while position < text.len() {
-        if byte_at(text, position) == b'\\' && position + 1 < text.len() {
-            position += 2;
-            continue;
-        }
-        if text.as_bytes()[position..].starts_with(marker.marker.as_bytes()) {
-            if nested_level == 0 {
-                if marker.node_type == FormattingNodeType::Spoiler
-                    && position == marker.marker_length
-                    && position + marker.marker.len() < text.len()
-                {
-                    position += 1;
-                    continue;
-                }
-                return Some(FormattingEnd {
-                    end_position: position,
-                });
+    let repeats = |count: usize| {
+        bytes.len() - position >= count
+            && bytes[position..position + count]
+                .iter()
+                .all(|byte| *byte == delimiter)
+    };
+    match (marker.node_type, marker.marker_length) {
+        (FormattingNodeType::InlineCode, _) if current == b'`' => {
+            if repeats(2) {
+                Token::Skip(scan.run_end(position, b'`') - position)
+            } else {
+                Token::Close
             }
-            nested_level -= 1;
-            position += marker.marker.len();
-            continue;
         }
-        if is_double
-            && position + 1 < text.len()
-            && byte_at(text, position) == first_marker_char
-            && byte_at(text, position + 1) == first_marker_char
-        {
-            nested_level += 1;
+        (FormattingNodeType::Emphasis, 1) if current == delimiter => {
+            if delimiter == b'*'
+                && let Some(nested_end) = find_nested_asterisk_run_end(scan, position)
+            {
+                return Token::Skip(nested_end - position);
+            }
+            if delimiter == b'_' && repeats(2) {
+                return Token::Skip(2);
+            }
+            let next = byte_at(text, position + 1);
+            if links::can_close_single_emphasis(delimiter, bytes[position - 1], next) {
+                return Token::Close;
+            }
+            step(text, position)
         }
-        position += advance_one(text, position);
-        if position > MAX_LINE_LENGTH {
-            break;
-        }
+        (FormattingNodeType::Emphasis, 3) if repeats(3) => Token::Close,
+        (FormattingNodeType::Emphasis, 3) if repeats(2) => Token::Open(1),
+        (FormattingNodeType::InlineCode | FormattingNodeType::Emphasis, _) => step(text, position),
+        _ if repeats(2) => Token::Close,
+        _ => step(text, position),
     }
-    None
 }
 
 fn is_inline_code_line_break(byte: u8) -> bool {
     matches!(byte, b'\n' | b'\r')
 }
 
-fn find_nested_asterisk_run_end(text: &str, position: usize) -> Option<usize> {
-    let run_length = links::count_repeated_byte(text, position, b'*');
+fn find_nested_asterisk_run_end(scan: &mut Lookahead<'_>, position: usize) -> Option<usize> {
+    let text = scan.text;
+    let run_length = scan.run_end(position, b'*') - position;
     if run_length < 2 {
         return None;
     }
-    let previous = if position > 0 {
-        byte_at(text, position - 1)
-    } else {
-        0
-    };
+    let previous = byte_at(text, position - 1);
     let next = byte_at(text, position + run_length);
     if !links::is_left_flanking_delimiter(previous, next) {
         return None;
     }
-    let nested_marker = get_formatting_marker_info(&text[position..])?;
-    if byte_at(nested_marker.marker, 0) != b'*' || nested_marker.marker_length < 2 {
-        return None;
-    }
-    let nested_end = find_formatting_end(&text[position..], nested_marker)?;
-    let end_position = position + nested_end.end_position + nested_marker.marker_length;
+    let nested_marker = get_formatting_marker_info(scan, position)?;
+    let nested_end = find_formatting_end(scan, position, nested_marker)?;
+    let end_position = position + nested_end + nested_marker.marker_length;
     if end_position <= position || end_position > text.len() {
         return None;
     }
@@ -821,7 +662,7 @@ fn find_nested_asterisk_run_end(text: &str, position: usize) -> Option<usize> {
 
 fn create_formatting_node(
     parser: &mut MarkdownParser,
-    marker: FormattingMarkerInfo<'_>,
+    marker: FormattingMarkerInfo,
     inner: &str,
     inner_offset: usize,
     is_block: bool,
@@ -831,7 +672,7 @@ fn create_formatting_node(
             content: unescape_inline_code(inner),
         });
     }
-    if marker.marker == "***" || marker.marker == "___" {
+    if marker.is_triple_emphasis() {
         let mut strong_context = FormattingContext::default();
         strong_context.push(b'*', true);
         let inner_nodes =
@@ -843,7 +684,7 @@ fn create_formatting_node(
         });
     }
     let mut new_context = FormattingContext::default();
-    new_context.push(byte_at(marker.marker, 0), marker.marker.len() > 1);
+    new_context.push(marker.delimiter, marker.is_double());
     let children = parse_inline_with_context(parser, inner, inner_offset, &mut new_context)?;
     Ok(match marker.node_type {
         FormattingNodeType::Strong => Node::Strong { children },
@@ -887,31 +728,26 @@ fn unescape_inline_code(content: &str) -> String {
     string_from_lossy(&out)
 }
 
-fn flush_accumulated_text(nodes: &mut Vec<Node>, accumulated: &mut Vec<u8>) {
-    if accumulated.is_empty() {
-        return;
-    }
-    let content = string_from_lossy(accumulated);
-    append_text(nodes, content);
+fn flush_accumulated_text(nodes: &mut Vec<Node>, accumulated: &mut String) {
+    append_text(nodes, accumulated);
     accumulated.clear();
 }
 
-fn flush_bounded_accumulated_text(
-    nodes: &mut Vec<Node>,
-    accumulated: &mut Vec<u8>,
-    max_len: usize,
-) {
-    if accumulated.is_empty() {
-        return;
-    }
+fn flush_bounded_accumulated_text(nodes: &mut Vec<Node>, accumulated: &mut String, max_len: usize) {
     let mut prefix_len = accumulated.len().min(max_len);
-    while prefix_len > 0 && std::str::from_utf8(&accumulated[..prefix_len]).is_err() {
+    while !accumulated.is_char_boundary(prefix_len) {
         prefix_len -= 1;
     }
-    if prefix_len > 0 {
-        append_text(nodes, string_from_lossy(&accumulated[..prefix_len]));
-    }
-    accumulated.clear();
+    accumulated.truncate(prefix_len);
+    flush_accumulated_text(nodes, accumulated);
+}
+
+fn is_plain_text_byte(byte: u8) -> bool {
+    byte.is_ascii()
+        && !matches!(
+            byte,
+            b'\\' | b'h' | b'f' | b'_' | b'<' | b':' | b'@' | b'*' | b'~' | b'|' | b'`' | b'['
+        )
 }
 
 fn is_formatting_char(char: u8) -> bool {

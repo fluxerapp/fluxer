@@ -61,12 +61,12 @@ function formatMaintenanceTimeLabel(value: string, locale: string): string {
 
 function formatMaintenanceDurationLabel(durationMinutes: number, locale: string): string {
 	const normalizedDurationMinutes = Math.max(1, Math.round(durationMinutes));
-	const durationParts =
-		normalizedDurationMinutes % (HOURS_PER_DAY * MINUTES_PER_HOUR) === 0
-			? {value: normalizedDurationMinutes / (HOURS_PER_DAY * MINUTES_PER_HOUR), unit: 'day'}
-			: normalizedDurationMinutes % MINUTES_PER_HOUR === 0
-				? {value: normalizedDurationMinutes / MINUTES_PER_HOUR, unit: 'hour'}
-				: {value: normalizedDurationMinutes, unit: 'minute'};
+	let durationParts = {value: normalizedDurationMinutes, unit: 'minute'};
+	if (normalizedDurationMinutes % (HOURS_PER_DAY * MINUTES_PER_HOUR) === 0) {
+		durationParts = {value: normalizedDurationMinutes / (HOURS_PER_DAY * MINUTES_PER_HOUR), unit: 'day'};
+	} else if (normalizedDurationMinutes % MINUTES_PER_HOUR === 0) {
+		durationParts = {value: normalizedDurationMinutes / MINUTES_PER_HOUR, unit: 'hour'};
+	}
 	try {
 		return getCachedNumberFormat(locale, {
 			style: 'unit',

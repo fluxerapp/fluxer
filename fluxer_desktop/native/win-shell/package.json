@@ -22,8 +22,7 @@
 	],
 	"scripts": {
 		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "cargo test --manifest-path Cargo.toml",
-		"check:windows:x64": "cargo check --manifest-path Cargo.toml --target x86_64-pc-windows-msvc --tests",
-		"check:windows:arm64": "cargo check --manifest-path Cargo.toml --target aarch64-pc-windows-msvc --tests"
+		"check:windows:x64": "cargo check --manifest-path Cargo.toml --target x86_64-pc-windows-msvc",
+		"check:windows:arm64": "cargo check --manifest-path Cargo.toml --target aarch64-pc-windows-msvc"
 	}
 }

@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import {
 	channelToContentWarningView,
 	computeEffectiveChannelNsfw,
 	resolveEffectiveThreadNsfw,
 } from '@app/api/channel/utils/EffectiveContentWarning';
 import type {Channel} from '@app/api/models/Channel';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 
 export function channelRequiresAgeVerification(
 	channel: Channel,
@@ -30,4 +34,12 @@ export function channelRequiresAgeVerification(
 		parent ? channelToContentWarningView(parent) : null,
 		guild,
 	);
+}
+
+export async function getCanUserAccessNsfw(userRepository: UserRepository, userId: UserID): Promise<boolean> {
+	const user = await userRepository.findUnique(userId);
+	if (!user) {
+		throw new UnknownUserError();
+	}
+	return canUserAccessNsfwContent(user);
 }

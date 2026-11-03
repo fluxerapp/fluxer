@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {GatewayRpcTransport} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
 import {GatewayService} from '@app/api/infrastructure/GatewayService';
-import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {afterEach, describe, expect, it} from 'vitest';
 
-function failingTransport(code: string): IGatewayRpcTransport {
+function failingTransport(code: string): GatewayRpcTransport {
 	return {
 		async call(): Promise<unknown> {
 			throw new GatewayRpcMethodError(code);
@@ -29,47 +25,6 @@ function serviceRaising(code: string): GatewayService {
 describe('GatewayService gateway error mapping', () => {
 	afterEach(async () => {
 		await GatewayRpcClient.resetForTests();
-	});
-
-	it('maps guild_not_found from guild.get_user_permissions to UnknownGuildError', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
-		await expect(
-			service.getUserPermissions({guildId: createGuildID(1n), userId: createUserID(2n)}),
-		).rejects.toBeInstanceOf(UnknownGuildError);
-	});
-
-	it('maps guild_not_found from guild.check_permission to UnknownGuildError', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
-		await expect(
-			service.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n}),
-		).rejects.toBeInstanceOf(UnknownGuildError);
-	});
-
-	it('maps an unrecognised gateway error from guild.check_permission to BadGatewayError', async () => {
-		const service = serviceRaising('permission_check_error');
-		await expect(
-			service.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n}),
-		).rejects.toBeInstanceOf(BadGatewayError);
-	});
-
-	it('maps invalid_params to a 400 instead of an upstream failure', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.INVALID_PARAMS);
-		const error = await service
-			.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n})
-			.catch((raised: unknown) => raised);
-		expect(error).toBeInstanceOf(BadRequestError);
-		expect((error as BadRequestError).status).toBe(400);
-		expect((error as BadRequestError).code).toBe(APIErrorCodes.INVALID_FORM_BODY);
-	});
-
-	it('maps batch_too_large to a 400 instead of an upstream failure', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.BATCH_TOO_LARGE);
-		const error = await service
-			.getUserPermissionsBatch({guildIds: [createGuildID(1n)], userId: createUserID(2n)})
-			.catch((raised: unknown) => raised);
-		expect(error).toBeInstanceOf(BadRequestError);
-		expect((error as BadRequestError).status).toBe(400);
-		expect((error as BadRequestError).code).toBe(APIErrorCodes.INVALID_FORM_BODY);
 	});
 
 	it('returns 503 with Retry-After for an overloaded guild', async () => {

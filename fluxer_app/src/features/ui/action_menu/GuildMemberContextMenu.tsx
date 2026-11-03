@@ -4,8 +4,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
-import Guilds from '@app/features/guild/state/Guilds';
-import {resolveGuildModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
+import {useGuildMemberModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {KICK_MEMBER_DESCRIPTOR, TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -18,9 +17,7 @@ import {
 	REMOVE_TIMEOUT_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {getRemovableThread, RemoveFromThreadMenuItem} from '@app/features/threads/components/RemoveFromThreadMenuItem';
 import {
@@ -86,26 +83,18 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const isCurrentUser = user.id === Authentication.currentUserId;
 		const relationship = Relationships.getRelationship(user.id);
 		const relationshipType = relationship?.type;
-		const guild = Guilds.getGuild(guildId);
+
 		const member = providedMember ?? GuildMembers.getMember(guildId, user.id);
 		const currentUserId = Authentication.currentUserId;
 		const isBot = user.bot;
-		const canKickMembers = Permission.can(Permissions.KICK_MEMBERS, {guildId});
-		const canBanMembers = Permission.can(Permissions.BAN_MEMBERS, {guildId});
-		const canModerateMembers = Permission.can(Permissions.MODERATE_MEMBERS, {guildId});
-		const isOwner = guild?.ownerId === currentUserId;
-		const {canManageTarget} = useRoleHierarchy(guild);
-		const guildSnapshot = guild?.toJSON();
-		const targetHasAdministratorPermission =
-			guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-		const {canKick, canBan, canTimeout} = resolveGuildModerationCapabilities({
+
+		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+			guildId,
+			user,
 			isCurrentUser,
-			canManageTarget: canManageTarget(user.id),
-			canKickMembers,
-			canBanMembers,
-			canModerateMembers,
-			targetHasAdministratorPermission,
-		});
+			member,
+		);
+		const isOwner = guild?.ownerId === currentUserId;
 		const canTransfer = Boolean(member) && !isCurrentUser && !isBot && isOwner;
 		const developerMode = UserSettings.developerMode;
 		const isDeveloper = DeveloperMode.isDeveloper;
@@ -120,13 +109,7 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const canShowSpammerOverrideControls =
 			!isCurrentUser && shouldShowSpammerOverrideMenuItems({user, developerMode: isDeveloper});
 		const canShowStaffDeveloperControls = canShowStaffUserControls || canShowSpammerOverrideControls;
-		const hasChangeNicknamePermission = Permission.can(Permissions.CHANGE_NICKNAME, {guildId});
-		const hasManageNicknamesPermission = Permission.can(Permissions.MANAGE_NICKNAMES, {guildId});
-		const canManageNicknames = Boolean(
-			member &&
-				((isCurrentUser && hasChangeNicknamePermission && !member.isTimedOut()) ||
-					(hasManageNicknamesPermission && canManageTarget(user.id))),
-		);
+
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const canManageRoles = Permission.can(Permissions.MANAGE_ROLES, {guildId});
 		const hasVisibleRoles = Boolean(member && hasRoles && (canManageRoles || member.roles.size > 0));

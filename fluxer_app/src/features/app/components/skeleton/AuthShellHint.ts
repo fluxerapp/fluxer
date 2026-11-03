@@ -5,10 +5,13 @@ import {
 	readRawStorageItem,
 	writeRawStorageItem,
 } from '@app/features/platform/state/PrebootMirror';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
+import {isObjectLike} from '@fluxer/record_utils/src/RecordGuards';
 import {useEffect} from 'react';
 
-export const AUTH_SHELL_HINT_VERSION = 1;
+const logger = new Logger('AuthShellHint');
+const AUTH_SHELL_HINT_VERSION = 2;
 
 export const AuthShellHintKind = Object.freeze({
 	CARD: 'card',
@@ -17,20 +20,22 @@ export const AuthShellHintKind = Object.freeze({
 
 export type AuthShellHintKind = (typeof AuthShellHintKind)[keyof typeof AuthShellHintKind];
 
-export interface AuthShellHintEntry {
+interface AuthShellHintEntry {
 	readonly t: number;
 	readonly mo: number;
 	readonly k: AuthShellHintKind;
 	readonly h: number;
 	readonly w: number;
+	readonly s: 0 | 1;
 }
 
-export interface AuthShellHintMeasurement {
+interface AuthShellHintMeasurement {
 	readonly pathname: string;
 	readonly mobile: boolean;
 	readonly kind: AuthShellHintKind;
 	readonly heightPx: number;
 	readonly widthPx: number;
+	readonly split: boolean;
 }
 
 const MAX_CATEGORIES = 12;
@@ -38,14 +43,19 @@ const MAX_MEASURED_PX = 4000;
 const SETTLE_MS = 400;
 const LOADING_SELECTOR =
 	'[data-flx="auth.flow.auth-loading-state.loading-container"],[data-flx^="auth.flow.auth-shell-loading-state."]';
+const NARROW_BRAND_META_SELECTOR = 'meta[name="fluxer-auth-card"][content="narrow"]';
 const LOGIN_PATHS = new Set(['/', '/app', '/login', '/bookmarks', '/mentions', '/notifications', '/you']);
 const LINK_PAGE_PATTERN = /^\/(invite|gift|theme)\/[^/]+(\/login)?\/?$/u;
 const ACCOUNT_PAGE_PATTERN = /^\/(forgot|reset|verify|authorize-ip|wasntme)(\/|$)/u;
+const HANDOFF_PAGE_PATTERN = /^\/channels\/@(start|checkout)(\/|$)/u;
 const capturedCategories = new Set<string>();
 
 export function resolveAuthShellCategory(pathname: string): string | null {
 	if (pathname === '/register') {
 		return 'register';
+	}
+	if (HANDOFF_PAGE_PATTERN.test(pathname)) {
+		return null;
 	}
 	if (LOGIN_PATHS.has(pathname) || pathname.startsWith('/channels/')) {
 		return 'login';
@@ -58,32 +68,31 @@ export function resolveAuthShellCategory(pathname: string): string | null {
 	return accountPage == null ? null : accountPage[1];
 }
 
-function isEntry(value: unknown): value is AuthShellHintEntry {
-	if (value == null || typeof value !== 'object') {
+function isEntry(entry: unknown): entry is AuthShellHintEntry {
+	if (!isObjectLike(entry)) {
 		return false;
 	}
-	const entry = value as Record<string, unknown>;
 	return (
 		typeof entry.t === 'number' &&
 		typeof entry.h === 'number' &&
 		typeof entry.w === 'number' &&
 		(entry.mo === 0 || entry.mo === 1) &&
+		(entry.s === 0 || entry.s === 1) &&
 		(entry.k === AuthShellHintKind.CARD || entry.k === AuthShellHintKind.FULL)
 	);
 }
 
-export function readAuthShellHintEntries(): Map<string, AuthShellHintEntry> {
+function readAuthShellHintEntries(): Map<string, AuthShellHintEntry> {
 	const entries = new Map<string, AuthShellHintEntry>();
 	const raw = readRawStorageItem(AUTH_SHELL_HINT_STORAGE_KEY);
 	if (raw == null) {
 		return entries;
 	}
 	try {
-		const parsed: unknown = JSON.parse(raw);
-		if (parsed == null || typeof parsed !== 'object') {
+		const record: unknown = JSON.parse(raw);
+		if (!isObjectLike(record)) {
 			return entries;
 		}
-		const record = parsed as {v?: unknown; c?: unknown};
 		if (record.v !== AUTH_SHELL_HINT_VERSION || record.c == null || typeof record.c !== 'object') {
 			return entries;
 		}
@@ -92,7 +101,10 @@ export function readAuthShellHintEntries(): Map<string, AuthShellHintEntry> {
 				entries.set(category, entry);
 			}
 		}
-	} catch {
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			logger.warn('Failed to read auth shell hints', error);
+		}
 		return entries;
 	}
 	return entries;
@@ -104,13 +116,16 @@ export interface AuthShellPlaceholder {
 	readonly heightPx: number;
 	readonly widthPx: number;
 	readonly rows: number;
+	readonly split: boolean;
 	readonly source: 'hint' | 'default';
 }
 
-export interface AuthShellPlaceholderEnvironment {
+interface AuthShellPlaceholderEnvironment {
 	readonly mobile: boolean;
 	readonly native: boolean;
 	readonly passkeyLikely: boolean;
+	readonly wide: boolean;
+	readonly narrowBrand: boolean;
 }
 
 const LOGIN_CARD_HEIGHT_PX = 214;
@@ -120,37 +135,62 @@ const REGISTER_CARD_HEIGHT_PX = 674;
 const REGISTER_MOBILE_HEIGHT_PX = 592;
 const GENERIC_CARD_HEIGHT_PX = 402;
 const GENERIC_MOBILE_HEIGHT_PX = 320;
+const SPLIT_CARD_MIN_HEIGHT_PX = 448;
+export const BRAND_ROW_CARD_PX = 44;
+export const BRAND_ROW_MOBILE_PX = 64;
 const MIN_HINT_HEIGHT_PX = 48;
 const MAX_HINT_WIDTH_PX = 1200;
 
-export function resolveDefaultAuthShellPlaceholder(
+function resolveDefaultAuthShellPlaceholder(
 	category: string,
 	environment: AuthShellPlaceholderEnvironment,
 ): AuthShellPlaceholder {
 	const {mobile} = environment;
 	if (category === 'login' && !mobile && environment.native) {
-		return {category, kind: AuthShellHintKind.FULL, heightPx: 0, widthPx: 0, rows: -1, source: 'default'};
+		return {
+			category,
+			kind: AuthShellHintKind.FULL,
+			heightPx: 0,
+			widthPx: 0,
+			rows: -1,
+			split: false,
+			source: 'default',
+		};
 	}
+	const split = !mobile && environment.wide && !environment.narrowBrand;
+	const brandedHeightPx = (contentHeightPx: number): number => {
+		if (mobile) {
+			return contentHeightPx + BRAND_ROW_MOBILE_PX;
+		}
+		return split ? Math.max(contentHeightPx, SPLIT_CARD_MIN_HEIGHT_PX) : contentHeightPx + BRAND_ROW_CARD_PX;
+	};
 	if (category === 'login') {
 		const passkeyRow = environment.passkeyLikely ? LOGIN_PASSKEY_ROW_PX : 0;
 		return {
 			category,
 			kind: AuthShellHintKind.CARD,
-			heightPx: (mobile ? LOGIN_MOBILE_HEIGHT_PX : LOGIN_CARD_HEIGHT_PX) + passkeyRow,
+			heightPx: brandedHeightPx((mobile ? LOGIN_MOBILE_HEIGHT_PX : LOGIN_CARD_HEIGHT_PX) + passkeyRow),
 			widthPx: 0,
 			rows: environment.passkeyLikely ? 3 : 2,
+			split,
 			source: 'default',
 		};
 	}
-	const heightPx =
-		category === 'register'
-			? mobile
-				? REGISTER_MOBILE_HEIGHT_PX
-				: REGISTER_CARD_HEIGHT_PX
-			: mobile
-				? GENERIC_MOBILE_HEIGHT_PX
-				: GENERIC_CARD_HEIGHT_PX;
-	return {category, kind: AuthShellHintKind.CARD, heightPx, widthPx: 0, rows: -1, source: 'default'};
+	let heightPx = GENERIC_CARD_HEIGHT_PX;
+	if (category === 'register') {
+		heightPx = mobile ? REGISTER_MOBILE_HEIGHT_PX : REGISTER_CARD_HEIGHT_PX;
+	} else if (mobile) {
+		heightPx = GENERIC_MOBILE_HEIGHT_PX;
+	}
+	return {
+		category,
+		kind: AuthShellHintKind.CARD,
+		heightPx: brandedHeightPx(heightPx),
+		widthPx: 0,
+		rows: -1,
+		split,
+		source: 'default',
+	};
 }
 
 function clampPlaceholderPx(value: number, min: number, max: number): number {
@@ -167,28 +207,38 @@ export function resolveAuthShellPlaceholder(
 	}
 	const entry = readAuthShellHintEntries().get(category);
 	if (entry != null && entry.mo === (environment.mobile ? 1 : 0) && entry.h > 0) {
+		const kind = entry.k;
+		const heightPx = clampPlaceholderPx(entry.h, MIN_HINT_HEIGHT_PX, MAX_MEASURED_PX);
+		const widthPx = clampPlaceholderPx(entry.w, 0, MAX_HINT_WIDTH_PX);
+		let rows = -1;
+		if (category === 'login') {
+			rows = environment.passkeyLikely ? 3 : 2;
+		}
 		return {
 			category,
-			kind: entry.k,
-			heightPx: clampPlaceholderPx(entry.h, MIN_HINT_HEIGHT_PX, MAX_MEASURED_PX),
-			widthPx: clampPlaceholderPx(entry.w, 0, MAX_HINT_WIDTH_PX),
-			rows: -1,
+			kind,
+			heightPx,
+			widthPx,
+			rows,
+			split: entry.s === 1 && !environment.mobile && environment.wide,
 			source: 'hint',
 		};
 	}
 	return resolveDefaultAuthShellPlaceholder(category, environment);
 }
 
-export function isPasskeyLikelyForDocumentHost(host: string, publicKeyCredentialAvailable: boolean): boolean {
+function isPasskeyLikelyForDocumentHost(host: string, publicKeyCredentialAvailable: boolean): boolean {
 	return publicKeyCredentialAvailable && host.split('.').length >= 2 && !/^[\d.]+$/u.test(host) && !host.includes(':');
 }
 
 export function readAuthShellPlaceholderEnvironment(mobile: boolean): AuthShellPlaceholderEnvironment {
-	const publicKeyCredential = (window as {PublicKeyCredential?: unknown}).PublicKeyCredential;
+	const publicKeyCredential = window.PublicKeyCredential;
 	return {
 		mobile,
 		native: document.documentElement.classList.contains('platform-native'),
 		passkeyLikely: isPasskeyLikelyForDocumentHost(window.location.hostname, typeof publicKeyCredential === 'function'),
+		wide: typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 55rem)').matches,
+		narrowBrand: document.querySelector(NARROW_BRAND_META_SELECTOR) !== null,
 	};
 }
 
@@ -199,7 +249,8 @@ function clampMeasuredPx(value: number): number {
 	return Math.min(MAX_MEASURED_PX, Math.max(0, Math.round(value)));
 }
 
-export function recordAuthShellHint(measurement: AuthShellHintMeasurement, now = Date.now()): void {
+function recordAuthShellHint(measurement: AuthShellHintMeasurement): void {
+	const now = Date.now();
 	const category = resolveAuthShellCategory(measurement.pathname);
 	const heightPx = clampMeasuredPx(measurement.heightPx);
 	if (category == null || heightPx <= 0) {
@@ -213,6 +264,7 @@ export function recordAuthShellHint(measurement: AuthShellHintMeasurement, now =
 		k: measurement.kind,
 		h: heightPx,
 		w: clampMeasuredPx(measurement.widthPx),
+		s: measurement.split ? 1 : 0,
 	});
 	const kept = Array.from(entries.entries())
 		.sort(([, left], [, right]) => right.t - left.t)
@@ -228,6 +280,7 @@ interface AuthShellHintCaptureOptions {
 	readonly pathname: string;
 	readonly mobile: boolean;
 	readonly kind: AuthShellHintKind;
+	readonly split: boolean;
 	readonly resolveTarget: () => HTMLElement | null;
 }
 
@@ -236,6 +289,7 @@ export function useAuthShellHintCapture({
 	pathname,
 	mobile,
 	kind,
+	split,
 	resolveTarget,
 }: AuthShellHintCaptureOptions): void {
 	useEffect(() => {
@@ -258,7 +312,7 @@ export function useAuthShellHintCapture({
 			if (!(heightPx > 0)) {
 				return;
 			}
-			recordAuthShellHint({pathname, mobile, kind, heightPx, widthPx: target.offsetWidth / remScale});
+			recordAuthShellHint({pathname, mobile, kind, heightPx, widthPx: target.offsetWidth / remScale, split});
 			capturedCategories.add(category);
 			stop();
 		};
@@ -282,7 +336,7 @@ export function useAuthShellHintCapture({
 		mutationObserver.observe(target, {childList: true, subtree: true});
 		schedule();
 		return stop;
-	}, [enabled, pathname, mobile, kind, resolveTarget]);
+	}, [enabled, pathname, mobile, kind, split, resolveTarget]);
 }
 
 const CARD_PADDING_MIN_REM = 32;
@@ -302,15 +356,18 @@ export function resolveAuthShellRowCount(
 	if (placeholder.rows > 0) {
 		return placeholder.rows;
 	}
-	const paddingPx = mobile
-		? 0
-		: (Math.max(
+	let paddingPx = BRAND_ROW_MOBILE_PX;
+	if (!mobile) {
+		paddingPx =
+			(Math.max(
 				CARD_PADDING_MIN_REM * remScale,
 				Math.min(CARD_PADDING_VIEWPORT_RATIO * viewportWidthPx, CARD_PADDING_MAX_REM * remScale),
 			) *
 				2) /
 				remScale +
-			CARD_BORDER_PX;
+			CARD_BORDER_PX +
+			(placeholder.split ? 0 : BRAND_ROW_CARD_PX);
+	}
 	return Math.max(
 		1,
 		Math.min(MAX_ROWS, Math.floor((placeholder.heightPx - paddingPx - TITLE_BLOCK_PX) / ROW_PITCH_PX)),

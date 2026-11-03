@@ -10,11 +10,21 @@ interface FormFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
 	error?: string;
 	placeholder?: string;
 	onChange: (value: string) => void;
+	inputRef?: React.Ref<HTMLInputElement>;
 }
 
-const FormField = observer(function FormField({name, label, value, error, onChange, ...props}: FormFieldProps) {
+const FormField = observer(function FormField({
+	name,
+	label,
+	value,
+	error,
+	onChange,
+	inputRef,
+	...props
+}: FormFieldProps) {
 	return (
 		<Input
+			ref={inputRef}
 			name={name}
 			label={typeof label === 'string' ? label : undefined}
 			value={value}

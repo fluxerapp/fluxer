@@ -22,6 +22,7 @@ import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {type ReactionEmoji, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
@@ -177,6 +178,7 @@ export interface MessagePermissions {
 	canSuppressEmbeds: boolean;
 	shouldRenderSuppressEmbeds: boolean;
 	canCreateThread: boolean;
+	isPreviewing: boolean;
 }
 
 function canCreateThreadFromMessage(message: Message, channel: Channel): boolean {
@@ -239,7 +241,10 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		!sendMessageDisabled &&
 		(isDM ? true : Permission.can(Permissions.PIN_MESSAGES, {channelId: message.channelId}));
 	const canForwardMessage =
-		!interactionsBlocked && !sendMessageDisabled && canForwardMessageFromChannel(message, channel, isDM);
+		!interactionsBlocked &&
+		!sendMessageDisabled &&
+		guild?.visiting !== true &&
+		canForwardMessageFromChannel(message, channel, isDM);
 	const canCrosspostMessage =
 		!interactionsBlocked &&
 		!sendMessageDisabled &&
@@ -274,6 +279,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		canSuppressEmbeds,
 		shouldRenderSuppressEmbeds,
 		canCreateThread: canCreateThreadFromMessage(message, channel),
+		isPreviewing: guild?.visiting === true,
 	};
 }
 
@@ -295,13 +301,6 @@ export function getMessagePermissions(message: Message, sourceChannel?: Channel 
 export function useMessagePermissions(message: Message, sourceChannel?: Channel | null): MessagePermissions | null {
 	const context = useMaybeMessageViewContext();
 	const channel = sourceChannel ?? context?.channel;
-	if (context?.previewPermissions) {
-		return {
-			channel: channel ?? context.channel,
-			canCreateThread: false,
-			...context.previewPermissions,
-		};
-	}
 	if (channel) {
 		return getMessagePermissionsForChannel(message, channel);
 	}
@@ -355,7 +354,7 @@ export function createMessageActionHandlers(
 	const handleCopyMessage = () => {
 		const content = getEffectiveContent(message);
 		if (content) {
-			TextCopyCommands.copy(i18n, content);
+			requestCopyMessageText(message, i18n);
 			onClose?.();
 		}
 	};
@@ -664,7 +663,7 @@ export function requestMessageForward(
 export function requestCopyMessageText(message: Message, i18n: I18n): void {
 	const content = getEffectiveContent(message);
 	if (!content) return;
-	void TextCopyCommands.copy(i18n, content);
+	void refreshAttachmentUrlsInText(content).then((text) => TextCopyCommands.copy(i18n, text));
 }
 
 export function requestMarkMessageUnread(message: Message): void {

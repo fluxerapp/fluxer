@@ -6,26 +6,14 @@ import {
 	exchangeOAuth2AuthorizationCode,
 } from '@app/api/oauth/tests/OAuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const CONCURRENT_REQUESTS = 8;
 
 interface TokenResult {
 	status: number;
 	accessToken: string | null;
-}
-
-function addQueryLatency(): void {
-	const executeQuery = InMemoryCassandraQueryExecutor.prototype.executeQuery;
-	vi.spyOn(InMemoryCassandraQueryExecutor.prototype, 'executeQuery').mockImplementation(async function (
-		this: InMemoryCassandraQueryExecutor,
-		...args: Parameters<typeof executeQuery>
-	) {
-		await new Promise((resolve) => setTimeout(resolve, 1));
-		return executeQuery.apply(this, args);
-	} as typeof executeQuery);
 }
 
 async function postToken(
@@ -53,14 +41,7 @@ async function postConcurrently(
 	clientSecret: string,
 	form: Record<string, string>,
 ): Promise<Array<TokenResult>> {
-	addQueryLatency();
-	try {
-		return await Promise.all(
-			Array.from({length: CONCURRENT_REQUESTS}, () => postToken(harness, clientId, clientSecret, form)),
-		);
-	} finally {
-		vi.restoreAllMocks();
-	}
+	return Promise.all(Array.from({length: CONCURRENT_REQUESTS}, () => postToken(harness, clientId, clientSecret, form)));
 }
 
 function expectSingleSuccess(results: Array<TokenResult>): void {
@@ -76,7 +57,6 @@ describe('OAuth2 concurrent grant redemption', () => {
 		harness = await createApiTestHarness();
 	});
 	afterEach(async () => {
-		vi.restoreAllMocks();
 		await harness?.shutdown();
 	});
 

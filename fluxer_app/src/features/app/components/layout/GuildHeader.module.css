@@ -39,8 +39,8 @@
 .bannerClip {
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	overflow: hidden;
 	pointer-events: none;
 }
@@ -48,8 +48,8 @@
 .bannerImage {
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	background-size: cover;
 	background-position: top center;
 	background-repeat: no-repeat;
@@ -73,8 +73,8 @@
 
 .bannerGradient {
 	position: absolute;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	top: 0;
 	height: 2.5rem;
 	background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
@@ -142,7 +142,7 @@
 }
 
 .caretIcon {
-	margin-left: auto;
+	margin-inline-start: auto;
 	height: 1rem;
 	width: 1rem;
 	flex-shrink: 0;
@@ -168,7 +168,7 @@
 }
 
 .dotsIcon {
-	margin-left: auto;
+	margin-inline-start: auto;
 	height: 1.5rem;
 	width: 1.5rem;
 	flex-shrink: 0;

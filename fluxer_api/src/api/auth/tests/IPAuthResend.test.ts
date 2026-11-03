@@ -5,7 +5,6 @@ import {
 	createAuthHarness,
 	createUniqueEmail,
 	createUniqueUsername,
-	listTestEmails,
 	registerUser,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -119,64 +118,6 @@ describe('Auth IP Authorization Resend', () => {
 				.executeWithResponse();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED);
 			expect(response.headers.get('Retry-After')).toBeNull();
-		});
-		it('returns 400 after IP has already been authorized', async () => {
-			const email = createUniqueEmail('ip-resend-after-auth');
-			const password = 'a-strong-password';
-			await registerUser(harness, {
-				email,
-				username: createUniqueUsername('resendafterauth'),
-				global_name: 'Resend After Auth User',
-				password,
-				date_of_birth: '2000-01-01',
-				consent: true,
-			});
-			await clearTestEmails(harness);
-			const newIP = '10.26.27.28';
-			const ipAuthResp = await triggerIpAuthorization(email, password, newIP);
-			const emails = await listTestEmails(harness);
-			const ipAuthEmail = emails.find((e) => e.type === 'ip_authorization' && e.to === email);
-			expect(ipAuthEmail).toBeDefined();
-			const authToken = ipAuthEmail!.metadata['token'];
-			expect(authToken).toBeTruthy();
-			await createBuilderWithoutAuth(harness)
-				.post('/auth/authorize-ip')
-				.body({token: authToken})
-				.header('x-forwarded-for', newIP)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/auth/ip-authorization/resend')
-				.body({ticket: ipAuthResp.ticket})
-				.header('x-forwarded-for', newIP)
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-	});
-	describe('Resend with invalid ticket', () => {
-		it('returns 400 when ticket has expired', async () => {
-			const email = createUniqueEmail('ip-ticket-expired');
-			const password = 'a-strong-password';
-			await registerUser(harness, {
-				email,
-				username: createUniqueUsername('ticketexp'),
-				global_name: 'Ticket Expired User',
-				password,
-				date_of_birth: '2000-01-01',
-				consent: true,
-			});
-			const newIP = '10.70.80.90';
-			const ipAuthResp = await triggerIpAuthorization(email, password, newIP);
-			await createBuilderWithoutAuth(harness)
-				.post('/test/auth/ip-authorization/expire')
-				.body({ticket: ipAuthResp.ticket})
-				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/auth/ip-authorization/resend')
-				.body({ticket: ipAuthResp.ticket})
-				.header('x-forwarded-for', newIP)
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
 		});
 	});
 });

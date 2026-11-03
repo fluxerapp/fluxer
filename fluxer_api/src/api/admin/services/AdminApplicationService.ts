@@ -8,7 +8,6 @@ import type {Application} from '@app/api/models/Application';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownApplicationError} from '@fluxer/errors/src/domains/oauth/UnknownApplicationError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	ApplicationAdminResponse,
 	ListApplicationsResponse,
@@ -47,10 +46,7 @@ export class AdminApplicationService {
 	async listUserApplications(ownerUserId: UserID): Promise<ListApplicationsResponse> {
 		const {applicationRepository} = this.deps;
 		const {users: userRepository} = this.deps.apiContext.services;
-		const owner = await userRepository.findUnique(ownerUserId);
-		if (!owner) {
-			throw new UnknownUserError();
-		}
+		const owner = await userRepository.findUniqueAssert(ownerUserId);
 		const applications = await applicationRepository.listApplicationsByOwner(ownerUserId);
 		const ownerDisplay: UserDisplay = {
 			username: owner.username,
@@ -105,10 +101,7 @@ export class AdminApplicationService {
 			throw new UnknownApplicationError();
 		}
 		const newOwnerId = createUserID(data.new_owner_id);
-		const newOwner = await userRepository.findUnique(newOwnerId);
-		if (!newOwner) {
-			throw new UnknownUserError();
-		}
+		await userRepository.findUniqueAssert(newOwnerId);
 		const oldOwnerId = application.ownerUserId;
 		const oldRow = application.toRow();
 		const updatedApplication = await applicationRepository.upsertApplication(

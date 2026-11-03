@@ -174,5 +174,39 @@ describe('Message Search Endpoint', () => {
 			}
 			expect(found).toBe(true);
 		});
+
+		test.each(['all_dms', 'open_dms', 'all', 'open_dms_and_all_guilds'] as const)(
+			'finds personal note messages in the %s scope',
+			async (scope) => {
+				const account = await createTestAccount(harness);
+				await ensureSessionStarted(harness, account.token);
+				const personalNotesChannelId = account.userId;
+				await sendMessage(harness, account.token, personalNotesChannelId, `personal-notes-bootstrap-${Date.now()}`);
+				await markChannelAsIndexed(harness, personalNotesChannelId);
+				const uniqueContent = `personal-notes-${scope}-${Date.now()}`;
+				await sendMessage(harness, account.token, personalNotesChannelId, uniqueContent);
+				let foundInScope = false;
+				let foundInFilter = false;
+				for (let attempt = 0; attempt < 20 && !(foundInScope && foundInFilter); attempt++) {
+					const scoped = await createBuilder<MessageSearchResponse>(harness, account.token)
+						.post('/search/messages')
+						.body({content: uniqueContent, scope, context_channel_id: personalNotesChannelId})
+						.expect(HTTP_STATUS.OK)
+						.execute();
+					foundInScope ||= isSearchResult(scoped) && scoped.messages.some((m) => m.content === uniqueContent);
+					const filtered = await createBuilder<MessageSearchResponse>(harness, account.token)
+						.post('/search/messages')
+						.body({content: uniqueContent, scope, channel_ids: [personalNotesChannelId]})
+						.expect(HTTP_STATUS.OK)
+						.execute();
+					foundInFilter ||= isSearchResult(filtered) && filtered.messages.some((m) => m.content === uniqueContent);
+					if (!(foundInScope && foundInFilter)) {
+						await wait(TEST_TIMEOUTS.QUICK);
+					}
+				}
+				expect(foundInScope).toBe(true);
+				expect(foundInFilter).toBe(true);
+			},
+		);
 	});
 });

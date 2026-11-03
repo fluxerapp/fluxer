@@ -22,11 +22,10 @@ import {
 	ROTATE_CLOCKWISE_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {useLingui} from '@lingui/react/macro';
 import {
-	ArrowBendUpLeftIcon,
-	ArrowBendUpRightIcon,
 	ArrowClockwiseIcon,
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
@@ -114,7 +113,7 @@ const OverlayTooltipButton: FC<OverlayTooltipButtonProps> = ({
 	</Tooltip>
 );
 
-interface MediaOverlayActionsProps {
+export interface MediaOverlayActionsProps {
 	isFavorited?: boolean;
 	onFavorite?: () => void;
 	onDownload?: () => void;

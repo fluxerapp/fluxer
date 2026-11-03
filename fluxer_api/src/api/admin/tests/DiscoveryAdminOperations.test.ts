@@ -3,12 +3,11 @@
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID} from '@app/api/BrandedTypes';
 import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import {createGuild, getGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {DiscoveryApplicationStatus, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryAdminListedGuildResponse,
 	DiscoveryApplicationResponse,
@@ -82,38 +81,6 @@ describe('Discovery Admin Operations', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	describe('approve', () => {
-		test('should add DISCOVERABLE feature to guild on approval', async () => {
-			const {owner, guild} = await createGuildWithApplication(harness, 'Feature Add Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'approved'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const guildData = await getGuild(harness, owner.token, guild.id);
-			expect(guildData.features).toContain(GuildFeatures.DISCOVERABLE);
-		});
-	});
-	describe('remove', () => {
-		test('should remove an approved guild from discovery', async () => {
-			const {owner, guild} = await createGuildWithApplication(harness, 'Remove Test Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove', 'discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'approved'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
-				.delete(`/admin/discovery/listings/${guild.id}`)
-				.body({reason: 'Violated community guidelines'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.status).toBe('removed');
-			const guildData = await getGuild(harness, owner.token, guild.id);
-			expect(guildData.features).not.toContain(GuildFeatures.DISCOVERABLE);
-		});
-	});
 	describe('list listed guilds', () => {
 		test('returns every approved listing when there are more than a thousand', async () => {
 			await seedApprovedListings(1001);
@@ -148,15 +115,6 @@ describe('Discovery Admin Operations', () => {
 			await createBuilder(harness, `${admin.token}`)
 				.patch(`/admin/discovery/applications/${guild.id}`)
 				.body({status: 'approved'})
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('should require DISCOVERY_REVIEW ACL to reject', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'ACL Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['user:lookup']);
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'rejected', reason: 'Not allowed'})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});

@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showVoiceMemberModerationFailedModal} from '@app/features/app/components/alerts/VoiceMemberModerationFailedModal';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {RecordDebugModal, USER_RECORD_DESCRIPTOR} from '@app/features/devtools/components/debug/RecordDebugModal';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
-import Guilds from '@app/features/guild/state/Guilds';
-import {resolveGuildModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
+import {useGuildMemberModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {
 	ADD_NOTE_DESCRIPTOR,
 	CHANGE_FRIEND_NICKNAME_DESCRIPTOR,
@@ -40,9 +36,7 @@ import {
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {ChangeFriendNicknameModal} from '@app/features/relationship/components/modals/ChangeFriendNicknameModal';
@@ -97,7 +91,6 @@ import {
 import {buildVoiceParticipantStreamMenu} from '@app/features/ui/action_menu/items/VoiceParticipantStreamMenuBuilder';
 import {
 	BAN_MEMBER_DESCRIPTOR,
-	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	COLLAPSE_DEVICES_DESCRIPTOR,
 	CONNECTION_VOLUME_DESCRIPTOR,
 	COPY_DEVICE_ID_DESCRIPTOR,
@@ -136,6 +129,8 @@ import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNi
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -169,6 +164,7 @@ import {
 	VOICE_USER_VOLUME_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {ChannelTypes, Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg, plural} from '@lingui/core/macro';
@@ -250,26 +246,13 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const canMuteMembers = guildId ? Permission.can(Permissions.MUTE_MEMBERS, {guildId}) : false;
 	const canDeafenMembers = guildId ? Permission.can(Permissions.DEAFEN_MEMBERS, {guildId}) : false;
 	const canMoveMembers = guildId ? Permission.can(Permissions.MOVE_MEMBERS, {guildId}) : false;
-	const canKickMembers = guildId ? Permission.can(Permissions.KICK_MEMBERS, {guildId}) : false;
-	const canBanMembers = guildId ? Permission.can(Permissions.BAN_MEMBERS, {guildId}) : false;
-	const canModerateMembers = guildId ? Permission.can(Permissions.MODERATE_MEMBERS, {guildId}) : false;
-	const guild = guildId ? Guilds.getGuild(guildId) : null;
-	const {canManageTarget} = useRoleHierarchy(guild);
-	const guildSnapshot = guild?.toJSON();
-	const targetHasAdministratorPermission =
-		guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
+
 	const {
 		canKick: canKickTarget,
 		canBan: canBanTarget,
 		canTimeout: canTimeoutTarget,
-	} = resolveGuildModerationCapabilities({
-		isCurrentUser,
-		canManageTarget: canManageTarget(user.id),
-		canKickMembers,
-		canBanMembers,
-		canModerateMembers,
-		targetHasAdministratorPermission,
-	});
+		canManageTarget,
+	} = useGuildMemberModerationCapabilities(guildId, user, isCurrentUser);
 	const focusedChannelId = SelectedChannel.currentChannelId;
 	const focusedChannel = focusedChannelId ? Channels.getChannel(focusedChannelId) : null;
 	const isFocusedChannelTextBased = focusedChannel ? TEXT_BASED_CHANNEL_TYPES.has(focusedChannel.type) : false;
@@ -278,12 +261,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		focusedChannelId &&
 		Permission.can(Permissions.SEND_MESSAGES, {guildId: focusedChannel?.guildId, channelId: focusedChannelId});
 	const openDmChannel = useCallback(async () => {
-		try {
-			await PrivateChannelCommands.openDMChannel(user.id);
-		} catch (error) {
-			logger.error('Failed to open DM channel:', error);
-			showDmActionErrorModal(error);
-		}
+		await openDMChannelOrShowError(user.id);
 	}, [user.id]);
 	const handleMessage = useCallback(async () => {
 		onClose();
@@ -293,16 +271,12 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const handleOpenBlockedDm = useCallback(() => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<ConfirmModal
-					title={i18n._(OPEN_DM_DESCRIPTOR)}
-					description={i18n._(BLOCKED_USER_DM_WARNING_DESCRIPTOR, {userName: displayName})}
-					primaryText={i18n._(OPEN_DM_DESCRIPTOR)}
-					primaryVariant="primary"
-					onPrimary={openDmChannel}
-					data-flx="ui.action-menu.items.voice-participant-menu-data.handle-open-blocked-dm.confirm-modal"
-				/>
-			)),
+			blockedDmConfirmModal(
+				i18n,
+				displayName,
+				openDmChannel,
+				'ui.action-menu.items.voice-participant-menu-data.handle-open-blocked-dm.confirm-modal',
+			),
 		);
 	}, [onClose, openDmChannel, displayName, i18n]);
 	const currentUserVoiceStateInGuild = guildId
@@ -346,6 +320,8 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const memberMute = member?.mute ?? false;
 	const memberDeaf = member?.deaf ?? false;
 	const memberTimedOut = member?.isTimedOut() ?? false;
+	const directMessagesDisabled = RuntimeConfig.directMessagesDisabled;
+	const friendsDisabled = RuntimeConfig.friendsDisabled;
 	const userVoiceStates = useMemo(() => {
 		if (!guildId) return [] as Array<{connectionId: string; voiceState: VoiceState}>;
 		const acc: Array<{connectionId: string; voiceState: VoiceState}> = [];
@@ -496,7 +472,10 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			: null;
 		const isCameraLive =
 			source.kind === 'camera' && Boolean(connectionParticipant?.isCameraEnabled || connectionVoiceState?.self_video);
-		const focusSource = source.kind === 'camera' ? (isCameraLive ? 'camera' : undefined) : source.focusSource;
+		let focusSource = source.kind === 'camera' ? undefined : source.focusSource;
+		if (isCameraLive) {
+			focusSource = 'camera';
+		}
 		const shouldShowFocus = focusSource !== undefined && (surface === 'call-tile' || surface === 'participant-list');
 		if (shouldShowFocus && connectionId && isTargetInLocalVoiceRoom) {
 			const identity = buildVoiceParticipantIdentity(user.id, connectionId);
@@ -530,11 +509,9 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					if (isFocused) {
 						VoiceCallLayoutCommands.setPinnedParticipant(null);
 						VoiceCallLayoutCommands.setLayoutMode('grid');
-						VoiceCallLayoutCommands.markUserOverride();
 					} else {
 						VoiceCallLayoutCommands.setLayoutMode('focus');
 						VoiceCallLayoutCommands.setPinnedParticipant(identity, liveKitFocusSource);
-						VoiceCallLayoutCommands.markUserOverride();
 					}
 					onClose();
 				},
@@ -542,8 +519,10 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		}
 		const popoutChannelId = connectionVoiceState?.channel_id ?? null;
 		const isParticipantPopoutSurface = surface === 'call-tile' || surface === 'call-avatar';
-		const participantPopoutSource: VoiceTilePopoutSource | null =
-			isCameraLive && isTargetInLocalVoiceRoom ? 'camera' : isParticipantPopoutSurface ? 'user' : null;
+		let participantPopoutSource: VoiceTilePopoutSource | null = isParticipantPopoutSurface ? 'user' : null;
+		if (isCameraLive && isTargetInLocalVoiceRoom) {
+			participantPopoutSource = 'camera';
+		}
 		if (participantPopoutSource && connectionId && popoutChannelId && isVoicePopoutSupported()) {
 			const openParticipantPopout = (): void => {
 				const didOpen = PopoutWindowManager.openTilePopout({
@@ -602,7 +581,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				},
 			});
 		}
-		if (!isCurrentUser) {
+		if (!isCurrentUser && !directMessagesDisabled) {
 			primaryActions.push({
 				icon: (
 					<MessageUserIcon
@@ -614,7 +593,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				onClick: isBlocked ? handleOpenBlockedDm : handleMessage,
 			});
 		}
-		if (!isCurrentUser && relationshipType === RelationshipTypes.FRIEND) {
+		if (!isCurrentUser && !friendsDisabled && relationshipType === RelationshipTypes.FRIEND) {
 			relationshipActions.push({
 				icon: (
 					<ChangeNicknameIcon
@@ -636,7 +615,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				},
 			});
 		}
-		if (!isCurrentUser && !user.bot && !hasActiveDirectCall) {
+		if (!isCurrentUser && !user.bot && !hasActiveDirectCall && !directMessagesDisabled) {
 			primaryActions.push({
 				icon: (
 					<VoiceCallIcon size={16} data-flx="ui.action-menu.items.voice-participant-menu-data.groups.voice-call-icon" />
@@ -645,13 +624,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				onClick: async () => {
 					ModalCommands.runAfterBottomSheetClose(onClose, () => {
 						void (async () => {
-							try {
-								const channelId = await PrivateChannelCommands.ensureDMChannel(user.id);
-								await CallUtils.requestStartCall(i18n, channelId, {kind: 'voice'});
-							} catch (error) {
-								logger.error('Failed to start voice call:', error);
-								showDmActionErrorModal(error);
-							}
+							await CallUtils.startCallWithUser(i18n, user.id, {kind: 'voice'});
 						})();
 					});
 				},
@@ -703,7 +676,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			const useConnectionSpecificControls =
 				connectionId !== undefined && (isGroupedItem || connectionId !== MediaEngine.connectionId);
 			if (useConnectionSpecificControls) {
-				const isSelfMuted = connectionVoiceState?.self_mute ?? false;
+				const isSelfMuted = VoiceStateCommands.getSelfMuteForConnection(connectionId);
 				const isSelfDeafened = connectionVoiceState?.self_deaf ?? false;
 				const isCameraOn = connectionVoiceState?.self_video ?? false;
 				const isStreaming = connectionVoiceState?.self_stream ?? false;
@@ -762,7 +735,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				}
 				if (isDeviceScopedMenu) advancedActions.push(createCopyDeviceIdAction(connectionId));
 			} else if (currentConnectionId && canUseCurrentConnectionAsRoot) {
-				const isSelfMuted = currentUserVoiceState?.self_mute ?? false;
+				const isSelfMuted = VoiceStateCommands.getCurrentSelfMute();
 				const isSelfDeafened = currentUserVoiceState?.self_deaf ?? false;
 				const isCameraOn = currentConnectionVoiceState?.self_video ?? false;
 				const isStreaming = currentConnectionVoiceState?.self_stream ?? false;
@@ -945,7 +918,9 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			const bulkActions: Array<MenuItemType> = [];
 			const connectionIds = userVoiceStates.map((u) => u.connectionId);
 			if (isCurrentUser && isCurrentUserConnectedToVoice) {
-				const allMuted = userVoiceStates.every(({voiceState}) => voiceState.self_mute);
+				const allMuted = userVoiceStates.every(({connectionId}) =>
+					VoiceStateCommands.getSelfMuteForConnection(connectionId),
+				);
 				bulkActions.push({
 					icon: (
 						<SelfMuteIcon
@@ -1066,7 +1041,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		}
 		if (!isCurrentUser) {
 			const nextRelationshipActions: Array<MenuItemType> = [];
-			if (!RuntimeConfig.directMessagesDisabled) {
+			if (!friendsDisabled) {
 				switch (relationshipType) {
 					case RelationshipTypes.FRIEND:
 						nextRelationshipActions.push({
@@ -1124,7 +1099,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					case RelationshipTypes.BLOCKED:
 						break;
 					default:
-						if (!user.bot && Users.currentUser?.verified !== false) {
+						if (!user.bot && canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed) {
 							nextRelationshipActions.push({
 								icon: (
 									<SendFriendRequestIcon
@@ -1354,9 +1329,10 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
 						modal(() => (
-							<UserDebugModal
+							<RecordDebugModal
+								label={i18n._(USER_RECORD_DESCRIPTOR)}
 								title={i18n._(USER_DEBUG_DESCRIPTOR)}
-								user={user}
+								record={user}
 								data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.user-debug-modal"
 							/>
 						)),
@@ -1421,6 +1397,8 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		memberMute,
 		memberDeaf,
 		memberTimedOut,
+		directMessagesDisabled,
+		friendsDisabled,
 		displayName,
 		currentUserVoiceState,
 		currentUserVoiceStateInGuild,

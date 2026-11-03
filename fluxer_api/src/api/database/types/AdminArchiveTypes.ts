@@ -77,6 +77,7 @@ export interface BannedIpRow {
 	reason?: string | null;
 	expires_at?: Date | null;
 	created_at?: Date | null;
+	decision_id?: bigint | null;
 }
 
 export const BANNED_IP_COLUMNS = [
@@ -85,6 +86,7 @@ export const BANNED_IP_COLUMNS = [
 	'reason',
 	'expires_at',
 	'created_at',
+	'decision_id',
 ] as const satisfies ReadonlyArray<keyof BannedIpRow>;
 
 export interface BannedEmailRow {

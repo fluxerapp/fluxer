@@ -352,3 +352,25 @@ async function resolveMessageAttachmentLimit(ctx: Context<HonoEnv>, user: User, 
 	);
 	return Math.floor(limitValue);
 }
+
+export async function readMessageJsonBody(ctx: Context<HonoEnv>): Promise<unknown> {
+	try {
+		const raw = await ctx.req.text();
+		return raw.trim().length === 0 ? {} : parseJsonPreservingLargeIntegers(raw);
+	} catch {
+		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	}
+}
+
+export async function parseMessageRequestBody<T extends z.ZodType<MessageRequest | MessageUpdateRequest>>(
+	ctx: Context<HonoEnv>,
+	user: User,
+	channelId: ChannelID,
+	schema: T,
+): Promise<z.output<T>> {
+	if (ctx.req.header('content-type')?.includes('multipart/form-data'))
+		return (await parseMultipartMessageData(ctx, user, channelId, schema)) as z.output<T>;
+	const result = schema.safeParse(normalizeMessageRequestPayload(await readMessageJsonBody(ctx)));
+	if (!result.success) throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	return result.data;
+}

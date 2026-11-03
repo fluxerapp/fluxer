@@ -23,3 +23,20 @@ export function openUserSettingsModal(): void {
 		),
 	);
 }
+
+export const PROFILE_BADGES_SECTION_ID = 'profile-badges';
+
+export function openProfileBadgeSettings(): void {
+	ModalCommands.push(
+		modal(
+			() => (
+				<UserSettingsModal
+					initialTab="my_profile"
+					initialSubtab={PROFILE_BADGES_SECTION_ID}
+					data-flx="user.user-settings-modal-commands.open-profile-badge-settings.user-settings-modal"
+				/>
+			),
+			'user-settings',
+		),
+	);
+}

@@ -33,15 +33,18 @@ export const CharacterCounter = observer(
 		const isNearingLimit = remaining < 50;
 		const showPremiumFeatures = shouldShowPremiumFeatures();
 		const needsPremium = canUpgrade && showPremiumFeatures && (isNearingLimit || isOverLimit);
-		const tooltipText = needsPremium
-			? i18n._(CHARACTERS_LEFT_GET_TO_WRITE_UP_TO_CHARACTERS_DESCRIPTOR, {
-					remaining,
-					premiumProductName: getPremiumProductName(),
-					premiumMaxLength,
-				})
-			: isOverLimit
-				? i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR)
-				: i18n._(CHARACTERS_LEFT_DESCRIPTOR, {remaining});
+		let tooltipText: string;
+		if (needsPremium) {
+			tooltipText = i18n._(CHARACTERS_LEFT_GET_TO_WRITE_UP_TO_CHARACTERS_DESCRIPTOR, {
+				remaining,
+				premiumProductName: getPremiumProductName(),
+				premiumMaxLength,
+			});
+		} else if (isOverLimit) {
+			tooltipText = i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR);
+		} else {
+			tooltipText = i18n._(CHARACTERS_LEFT_DESCRIPTOR, {remaining});
+		}
 		const colorClass = isOverLimit || isNearingLimit ? styles.textDanger : styles.textTertiary;
 		const counter = needsPremium ? (
 			<Tooltip text={tooltipText} data-flx="ui.character-counter.character-counter.tooltip">

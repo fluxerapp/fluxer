@@ -48,9 +48,9 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch from '@app/features/channel/state/ChannelSearch';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Channels from '@app/features/channel/state/Channels';
-import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelDisplayUtils';
+import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelUtils';
 import * as CommandUtils from '@app/features/devtools/utils/CommandUtils';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import GuildGuilds from '@app/features/guild/state/Guilds';
@@ -159,12 +159,12 @@ export const LexicalChannelTextareaContent = observer(
 		draftSegments,
 		disabled,
 		inputSuppressed = false,
-		messageSafetyGateActive = false,
 		typingEnabled = true,
 		onSubmit: onSubmitOverride,
 		enableReply = true,
 		enableEditLast = true,
 		enableSlashCommands = true,
+		submitOnEnter = true,
 		draftChannelId,
 		placeholder,
 		bare = false,
@@ -177,12 +177,12 @@ export const LexicalChannelTextareaContent = observer(
 		draftSegments: ReadonlyArray<MentionSegment>;
 		disabled: boolean;
 		inputSuppressed?: boolean;
-		messageSafetyGateActive?: boolean;
 		typingEnabled?: boolean;
 		onSubmit?: SendMessageFunction;
 		enableReply?: boolean;
 		enableEditLast?: boolean;
 		enableSlashCommands?: boolean;
+		submitOnEnter?: boolean;
 		draftChannelId?: string;
 		placeholder?: string;
 		bare?: boolean;
@@ -191,8 +191,9 @@ export const LexicalChannelTextareaContent = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const composerKey = draftChannelId ?? channel.id;
-		const editingMessageId = MessageEdit.getEditingMessageId(channel.id);
-		const editingMobileMessageId = MessageEditMobile.getEditingMobileMessageId(channel.id);
+		const ownsChannelEdits = draftChannelId == null;
+		const editingMessageId = ownsChannelEdits ? MessageEdit.getEditingMessageId(channel.id) : null;
+		const editingMobileMessageId = ownsChannelEdits ? MessageEditMobile.getEditingMobileMessageId(channel.id) : null;
 		const isEditingMessageInComposer = editingMobileMessageId != null;
 		let initialDraftDisplay = '';
 		if (!disabled && !isEditingMessageInComposer && draft !== null) {
@@ -219,7 +220,6 @@ export const LexicalChannelTextareaContent = observer(
 		const handleRef = useRef<ComposerHandle | null>(null);
 		const editorDisplayRef = useRef(initialDraftRef.current.display);
 		const editableRef = useRef<HTMLDivElement | null>(null);
-		const nullTextareaRef = useRef<HTMLTextAreaElement>(null);
 		const expressionPickerTriggerRef = useRef<HTMLButtonElement>(null);
 		const invisibleExpressionPickerTriggerRef = useRef<HTMLDivElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
@@ -230,7 +230,7 @@ export const LexicalChannelTextareaContent = observer(
 		const plusMenuOpenedAtRef = useRef(0);
 		const plusBackdropPressHandledAtRef = useRef(0);
 		const plusPressRef = useRef<{wasOpen: boolean; openedAt: number}>({wasOpen: false, openedAt: 0});
-		const textareaInputDisabled = disabled || inputSuppressed || messageSafetyGateActive;
+		const textareaInputDisabled = disabled || inputSuppressed;
 		useMarkdownKeybinds(isFocused && !textareaInputDisabled, {preserveEditableFocusActions: true});
 		const plusContextMenuOpen = useContextMenuHoverState(plusButtonRef);
 		useEffect(() => {
@@ -319,21 +319,12 @@ export const LexicalChannelTextareaContent = observer(
 			if (!shouldFetchSlowmode) return;
 			void fetchSlowmodeState(channel.id);
 		}, [channel.id, shouldFetchSlowmode]);
-		const {
-			segmentManagerRef,
-			previousValueRef,
-			displayToActual,
-			rememberSegmentsForValue,
-			prepareTextChange,
-			insertSegment,
-			clearSegments,
-		} = useTextareaSegments();
+		const {segmentManagerRef, previousValueRef, displayToActual, clearSegments} = useTextareaSegments();
 		const segmentsSeededRef = useRef(false);
 		if (!segmentsSeededRef.current) {
 			segmentsSeededRef.current = true;
 			segmentManagerRef.current.setSegments(initialDraftRef.current.segments.map((segment) => ({...segment})));
 			previousValueRef.current = initialDraftRef.current.display;
-			rememberSegmentsForValue(initialDraftRef.current.display, initialDraftRef.current.segments);
 		}
 		const [wireValue, setWireValue] = useState(() =>
 			segmentManagerRef.current.displayToActual(initialDraftRef.current.display),
@@ -343,11 +334,10 @@ export const LexicalChannelTextareaContent = observer(
 				editorDisplayRef.current = display;
 				segmentManagerRef.current.setSegments(segments);
 				previousValueRef.current = display;
-				rememberSegmentsForValue(display, segments);
 				setValue(display);
 				setWireValue(wire);
 			},
-			[previousValueRef, rememberSegmentsForValue, segmentManagerRef],
+			[previousValueRef, segmentManagerRef],
 		);
 		useLayoutEffect(() => {
 			if (value === editorDisplayRef.current) {
@@ -363,7 +353,7 @@ export const LexicalChannelTextareaContent = observer(
 			(emoji: FlatEmoji, shiftKey?: boolean): boolean => {
 				const didInsert = insertComposerEmoji(handleRef.current, emoji, {reactionShorthand: true});
 				if (didInsert && !shiftKey) {
-					ExpressionPickerCommands.close();
+					ExpressionPicker.close();
 					PopoutCommands.close(`expression-picker-${channel.id}`);
 				}
 				return didInsert;
@@ -382,7 +372,6 @@ export const LexicalChannelTextareaContent = observer(
 				if (!(onSubmitOverride ?? sendMessage)(...args)) {
 					return false;
 				}
-				rememberSegmentsForValue(value);
 				const handle = handleRef.current;
 				if (handle !== null) {
 					handle.clear();
@@ -391,7 +380,7 @@ export const LexicalChannelTextareaContent = observer(
 				clearSegments();
 				return true;
 			},
-			[onSubmitOverride, sendMessage, clearSegments, rememberSegmentsForValue, value],
+			[onSubmitOverride, sendMessage, clearSegments, value],
 		);
 		const sendExpressionMessage: typeof sendOptimisticMessage = useCallback(
 			(messageData, sendOptions) => {
@@ -714,11 +703,7 @@ export const LexicalChannelTextareaContent = observer(
 		}, [accountKey, textareaInputDisabled, value, channel, uploadAttachments.length, maxAttachments, composerKey]);
 		useTextareaExpressionHandlers({
 			setValue,
-			textareaRef: nullTextareaRef,
-			canSendFavoriteMemeId: true,
-			insertSegment,
 			previousValueRef,
-			prepareTextChange,
 			segmentManagerRef,
 			sendOptimisticMessage: sendExpressionMessage,
 			enabled: !textareaInputDisabled,
@@ -734,13 +719,10 @@ export const LexicalChannelTextareaContent = observer(
 				enabled: !textareaInputDisabled,
 			});
 		useTextareaEditing({
-			channelId: channel.id,
-			editingMessageId,
 			editingMessage: editingMessageForComposer,
 			isMobileEditMode: mobileLayout.enabled,
-			value,
+
 			setValue,
-			textareaRef: nullTextareaRef,
 			previousValueRef,
 		});
 		const hasPendingSticker = ChannelSticker.getPendingSticker(channel.id) !== null;
@@ -831,8 +813,7 @@ export const LexicalChannelTextareaContent = observer(
 			}
 		}, []);
 		const dismissTopmostComposerAffordance = useCallback((): boolean => {
-			const editingInline = MessageEdit.getEditingMessageId(channel.id) !== null;
-			if (editingInline) {
+			if (editingMessageId !== null) {
 				MessageCommands.stopEdit(channel.id);
 				return true;
 			}
@@ -867,6 +848,7 @@ export const LexicalChannelTextareaContent = observer(
 			channel.id,
 			composerKey,
 			editingMessageForComposer,
+			editingMessageId,
 			focusComposer,
 			handleCancelEdit,
 			handleClearSlashCommand,
@@ -1003,15 +985,18 @@ export const LexicalChannelTextareaContent = observer(
 			isFocused,
 			handleArrowUpEmpty,
 		});
-		const placeholderText = placeholder
-			? placeholder
-			: disabled
-				? i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR)
-				: channel.guildId != null
-					? i18n._(MESSAGE_CHANNEL_DESCRIPTOR, {channelName: channel.name || i18n._(CHANNEL_DESCRIPTOR)})
-					: channel.isDM()
-						? i18n._(MESSAGE_USER_DESCRIPTOR, {userName: ChannelDisplayUtils.getDMDisplayName(channel)})
-						: i18n._(MESSAGE_GROUP_DESCRIPTOR, {groupName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		let placeholderText: string;
+		if (placeholder) {
+			placeholderText = placeholder;
+		} else if (disabled) {
+			placeholderText = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR);
+		} else if (channel.guildId != null) {
+			placeholderText = i18n._(MESSAGE_CHANNEL_DESCRIPTOR, {channelName: channel.name || i18n._(CHANNEL_DESCRIPTOR)});
+		} else if (channel.isDM()) {
+			placeholderText = i18n._(MESSAGE_USER_DESCRIPTOR, {userName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		} else {
+			placeholderText = i18n._(MESSAGE_GROUP_DESCRIPTOR, {groupName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		}
 		useEffect(() => ActiveComposer.register(draftChannelId ?? channel.id), [channel.id, draftChannelId]);
 		useEffect(() => {
 			const unsubscribe = ComponentBus.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
@@ -1416,7 +1401,7 @@ export const LexicalChannelTextareaContent = observer(
 										specialMentionsAllowed={specialMentionsAllowed}
 										channelId={channel.id}
 										guildId={channel.guildId}
-										submitOnEnter={!mobileLayout.enabled}
+										submitOnEnter={submitOnEnter && !mobileLayout.enabled}
 										maxWireLength={maxMessageLength}
 										silentMessagePrefix={!isEditingMessageOnMobile}
 										focusRingTarget={containerRef}

@@ -17,7 +17,6 @@ import {Config} from '@app/api/Config';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
-import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
 	CHANNEL_EMPTY_BUCKET_COLUMNS,
 	CHANNEL_MESSAGE_BUCKET_COLUMNS,
@@ -51,7 +50,6 @@ import {parseReportedClientOs} from '@app/api/utils/SessionClientIdentity';
 import {processInactivityDeletionsCore} from '@app/api/worker/tasks/ProcessInactivityDeletions';
 import {setWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {initializeWorkerDependencies} from '@app/api/worker/WorkerDependencies';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -82,7 +80,6 @@ import {seconds} from 'itty-time';
 
 const TEST_EMAIL_ENDPOINT = '/test/emails';
 const TEST_AUTH_HEADER = 'x-test-token';
-const MAX_TEST_PRIVATE_CHANNELS = 1000;
 const GIFT_DURATION_TYPES = new Set<GiftCodeDurationType>(['days', 'weeks', 'months', 'years']);
 
 interface GiftDurationInput {
@@ -548,7 +545,6 @@ export function TestHarnessController(app: HonoApp) {
 			token,
 			user_id: userId,
 			email,
-			username,
 			client_ip: clientIp,
 			user_agent: userAgent,
 			client_location: clientLocation,
@@ -558,7 +554,7 @@ export function TestHarnessController(app: HonoApp) {
 			created_at: createdAtInput,
 			ttl_seconds: ttlSeconds,
 		} = body as Record<string, unknown>;
-		if (!ticket || !token || !userId || !email || !username || !clientIp || !userAgent || !clientLocation) {
+		if (!ticket || !token || !userId || !email || !clientIp || !userAgent || !clientLocation) {
 			return ctx.json({error: 'missing required fields'}, 400);
 		}
 		let createdAt = Date.now();
@@ -573,7 +569,6 @@ export function TestHarnessController(app: HonoApp) {
 		const payload: IpAuthorizationTicketCache = {
 			userId: String(userId),
 			email: String(email),
-			username: String(username),
 			origin: {
 				ip: String(clientIp),
 				userAgent: userAgent ? String(userAgent) : null,
@@ -858,148 +853,6 @@ export function TestHarnessController(app: HonoApp) {
 			idempotencyKey,
 		);
 		return ctx.body(null, 204);
-	});
-	app.post('/test/users/:userId/private-channels', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const body = (await ctx.req.json()) as Record<string, unknown>;
-		const parseCount = (value: unknown, name: string): number => {
-			if (value === undefined || value === null) {
-				return 0;
-			}
-			if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > MAX_TEST_PRIVATE_CHANNELS) {
-				throw InputValidationError.fromCode(name, ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE, {
-					name,
-					minValue: 0,
-					maxValue: MAX_TEST_PRIVATE_CHANNELS,
-				});
-			}
-			return value;
-		};
-		const dmCount = parseCount(body['dm_count'], 'dm_count');
-		const groupDmCount = parseCount(body['group_dm_count'], 'group_dm_count');
-		const recipientsInput = Array.isArray(body['recipients']) ? body['recipients'] : [];
-		if ((dmCount > 0 || groupDmCount > 0) && recipientsInput.length === 0) {
-			throw InputValidationError.fromCode('recipients', ValidationErrorCodes.AT_LEAST_ONE_RECIPIENT_REQUIRED);
-		}
-		const recipients = recipientsInput.map((raw) => {
-			if (typeof raw !== 'string') {
-				throw InputValidationError.fromCode('recipients', ValidationErrorCodes.RECIPIENT_IDS_MUST_BE_STRINGS);
-			}
-			const trimmed = raw.trim();
-			if (trimmed === '') {
-				throw InputValidationError.fromCode('recipients', ValidationErrorCodes.RECIPIENT_IDS_CANNOT_BE_EMPTY);
-			}
-			try {
-				return createUserID(BigInt(trimmed));
-			} catch {
-				throw InputValidationError.fromCode('recipients', ValidationErrorCodes.RECIPIENT_IDS_MUST_BE_VALID_SNOWFLAKES);
-			}
-		});
-		const clearExisting = Boolean(body['clear_existing']);
-		const channelRepository = new ChannelRepository();
-		const userRepository = ctx.get('userRepository');
-		const snowflakeService = ctx.get('snowflakeService');
-		if (clearExisting) {
-			await userRepository.deleteAllPrivateChannels(userId);
-		}
-		const dmChannels: Array<{
-			channel_id: string;
-			last_message_id: string;
-		}> = [];
-		for (let i = 0; i < dmCount; i++) {
-			const recipientId = recipients[i % recipients.length];
-			const channelId = createChannelID(await snowflakeService.generate());
-			const lastMessageId = createMessageID(await snowflakeService.generateForChannel(channelId));
-			const channelRow: ChannelRow = {
-				channel_id: channelId,
-				guild_id: null,
-				type: ChannelTypes.DM,
-				name: null,
-				topic: null,
-				icon_hash: null,
-				url: null,
-				parent_id: null,
-				position: 0,
-				owner_id: null,
-				recipient_ids: new Set([userId, recipientId]),
-				nsfw: null,
-				rate_limit_per_user: null,
-				bitrate: null,
-				user_limit: null,
-				voice_connection_limit: null,
-				rtc_region: null,
-				rtc_p2p: null,
-				last_message_id: lastMessageId,
-				last_pin_timestamp: null,
-				permission_overwrites: null,
-				nicks: null,
-				soft_deleted: false,
-				indexed_at: null,
-				version: 1,
-			};
-			await channelRepository.channelData.upsert(channelRow);
-			await userRepository.openDmForUser(userId, channelId);
-			dmChannels.push({
-				channel_id: channelId.toString(),
-				last_message_id: lastMessageId.toString(),
-			});
-		}
-		const groupDmChannels: Array<{
-			channel_id: string;
-			last_message_id: string;
-		}> = [];
-		if (groupDmCount > 0) {
-			const recipientsSet = new Set<UserID>([userId, ...recipients]);
-			for (let i = 0; i < groupDmCount; i++) {
-				const channelId = createChannelID(await snowflakeService.generate());
-				const lastMessageId = createMessageID(await snowflakeService.generateForChannel(channelId));
-				const channelRow: ChannelRow = {
-					channel_id: channelId,
-					guild_id: null,
-					type: ChannelTypes.GROUP_DM,
-					name: null,
-					topic: null,
-					icon_hash: null,
-					url: null,
-					parent_id: null,
-					position: 0,
-					owner_id: userId,
-					recipient_ids: new Set(recipientsSet),
-					nsfw: false,
-					rate_limit_per_user: 0,
-					bitrate: null,
-					user_limit: null,
-					voice_connection_limit: null,
-					rtc_region: null,
-					rtc_p2p: null,
-					last_message_id: lastMessageId,
-					last_pin_timestamp: null,
-					permission_overwrites: null,
-					nicks: null,
-					soft_deleted: false,
-					indexed_at: null,
-					version: 1,
-				};
-				await channelRepository.channelData.upsert(channelRow);
-				await userRepository.openDmForUser(userId, channelId);
-				groupDmChannels.push({
-					channel_id: channelId.toString(),
-					last_message_id: lastMessageId.toString(),
-				});
-			}
-		}
-		return ctx.json({
-			dms: dmChannels,
-			group_dms: groupDmChannels,
-		});
 	});
 	app.post('/test/guilds/:guildId/features', async (ctx) => {
 		ensureHarnessAccess(ctx);
@@ -1303,6 +1156,7 @@ export function TestHarnessController(app: HonoApp) {
 			const workerDeps = await initializeWorkerDepsWithHarnessEmail(ctx, snowflakeService);
 			setWorkerDependencies(workerDeps);
 			const result = await processInactivityDeletionsCore({
+				cleanup: await workerDeps.instanceConfigRepository.getAccountsConfig(),
 				kvClient: workerDeps.kvClient,
 				userRepository: workerDeps.userRepository,
 				deletionQueueService: workerDeps.deletionQueueService,
@@ -1311,6 +1165,12 @@ export function TestHarnessController(app: HonoApp) {
 				isEmailEnabled: () => workerDeps.instanceConfigRepository.isEmailEnabled(),
 				activityTracker: workerDeps.activityTracker,
 				deletionEligibilityService: workerDeps.deletionEligibilityService,
+				userUpdateDeps: {
+					userCacheService: workerDeps.userCacheService,
+					gatewayService: workerDeps.gatewayService,
+					userRepository: workerDeps.userRepository,
+					guildRepository: workerDeps.guildRepository,
+				},
 			});
 			Logger.info(result, '[test/worker/process-inactivity-deletions] Completed successfully');
 			return ctx.json(
@@ -1319,6 +1179,7 @@ export function TestHarnessController(app: HonoApp) {
 					processed: result.warningsSent + result.deletionsScheduled,
 					warnings_sent: result.warningsSent,
 					deletions_scheduled: result.deletionsScheduled,
+					suspensions_cleared: result.suspensionsCleared,
 					errors: result.errors,
 				},
 				200,
@@ -1667,12 +1528,14 @@ export function TestHarnessController(app: HonoApp) {
 				existingState?.last_message_id && existingState.last_message_id > latestMessageId
 					? existingState.last_message_id
 					: latestMessageId;
-			const finalLastMessageBucket =
-				existingState?.last_message_id && existingState.last_message_id > latestMessageId
-					? existingState.last_message_bucket
-					: skipBucketIndex
-						? null
-						: latestBucket;
+			let finalLastMessageBucket: number | null;
+			if (existingState?.last_message_id && existingState.last_message_id > latestMessageId) {
+				finalLastMessageBucket = existingState.last_message_bucket;
+			} else if (skipBucketIndex) {
+				finalLastMessageBucket = null;
+			} else {
+				finalLastMessageBucket = latestBucket;
+			}
 			batch.addPrepared(
 				ChannelState.upsertAll({
 					channel_id: channelId,

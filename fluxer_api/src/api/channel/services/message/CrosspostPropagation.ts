@@ -104,7 +104,7 @@ export function crosspostSyncChunkJobKey(params: {
 	return `crosspost-sync-chunk:${params.messageId}:${params.mode}:${params.bucketOrMode}:${params.firstWebhookId}`;
 }
 
-export function publishedEditRateLimitIdentifier(messageId: MessageID): string {
+function publishedEditRateLimitIdentifier(messageId: MessageID): string {
 	return `crosspost:edit:${messageId}`;
 }
 

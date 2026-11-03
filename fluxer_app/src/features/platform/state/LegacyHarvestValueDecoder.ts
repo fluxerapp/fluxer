@@ -103,7 +103,12 @@ function decodeBase64(value: unknown, context: LegacyHarvestValueContext): Uint8
 	if (typeof value !== 'string' || value.length % 4 !== 0 || !BASE64_PATTERN.test(value)) {
 		throw new LegacyHarvestValueError();
 	}
-	const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0;
+	let padding = 0;
+	if (value.endsWith('==')) {
+		padding = 2;
+	} else if (value.endsWith('=')) {
+		padding = 1;
+	}
 	if ((value.length / 4) * 3 - padding > MAX_BINARY_BYTES) {
 		throw new LegacyHarvestValueError();
 	}

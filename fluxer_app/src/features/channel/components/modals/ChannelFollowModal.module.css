@@ -137,8 +137,7 @@
 	justify-content: center;
 	background-color: var(--background-modifier-accent);
 	color: var(--text-primary);
-	font-weight: 700;
-	font-size: 0.75rem;
+	overflow: hidden;
 }
 
 .optionLabel {
@@ -166,7 +165,7 @@
 }
 
 .categoryName {
-	margin-left: auto;
+	margin-inline-start: auto;
 	flex-shrink: 0;
 	max-width: 40%;
 	overflow: hidden;

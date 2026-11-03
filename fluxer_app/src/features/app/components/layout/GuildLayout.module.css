@@ -61,8 +61,8 @@
 	display: none;
 	position: absolute;
 	top: 0;
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	height: var(--layout-header-height);
 	z-index: 2;
 }
@@ -136,7 +136,7 @@
 
 .nagbarActionsDesktop {
 	composes: nagbarActions;
-	margin-left: var(--spacing-3);
+	margin-inline-start: var(--spacing-3);
 }
 .mobileNavbarSlot {
 	display: contents;

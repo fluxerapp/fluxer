@@ -6,13 +6,14 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import type {UserSettings} from '@app/api/models/UserSettings';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isBugHunterBotUser} from '@app/api/user/UserHelpers';
 import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
 import {getMutualGuildsForDmAccess} from '@app/api/utils/MutualGuildDmAccess';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
-import {UnclaimedAccountCannotSendDirectMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendDirectMessagesError';
 
 interface DMPermissionValidatorDeps {
 	userRepository: UserRepository;
@@ -30,9 +31,7 @@ export class DMPermissionValidator {
 		if (!senderUser) {
 			throw new CannotSendMessagesToUserError();
 		}
-		if (senderUser.isUnclaimedAccount()) {
-			throw new UnclaimedAccountCannotSendDirectMessagesError();
-		}
+		assertTierAllows(senderUser, TierGatedActions.DIRECT_MESSAGE, NO_TIER_CONTEXT);
 		const targetUser = await this.deps.userRepository.findUnique(recipientId);
 		if (!targetUser) {
 			throw new CannotSendMessagesToUserError();

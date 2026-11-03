@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {fetchReportFlow} from '@app/features/moderation/commands/ReportFlowCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -126,4 +127,8 @@ class ReportFlows {
 	}
 }
 
-export default new ReportFlows();
+const reportFlows = new ReportFlows();
+
+ResettableStates.register(reportFlows, () => reportFlows.reset());
+
+export default reportFlows;

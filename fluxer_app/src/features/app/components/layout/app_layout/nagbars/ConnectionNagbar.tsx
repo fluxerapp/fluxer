@@ -70,7 +70,6 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 				closeCurrentAccountOnSelect: true,
 				initialReloginAccount: null,
 				redirectAfterLogin: null,
-				redirectAfterSwitch: null,
 				switchAccount: switchAccountFromStalledConnection,
 				'data-flx': 'app.app-layout.nagbars.connection-nagbar.handle-switch-account.account-switcher-modal',
 			},

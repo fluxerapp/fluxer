@@ -66,8 +66,14 @@ pub(crate) fn validate_jxl_decode_pixels(
     let pixels = (dims.width as usize)
         .saturating_mul(dims.height as usize)
         .saturating_mul(dims.pages.max(1) as usize);
-    if pixels > constants::MAX_JXL_DECODE_PIXELS {
-        return Err(MediaError::InvalidImageDimensions);
+    let simple = dims.pages == 1 && matches!(dims.bands, 1 | 3) && dims.eight_bit;
+    let cap = if simple {
+        constants::MAX_JXL_SIMPLE_DECODE_PIXELS
+    } else {
+        constants::MAX_JXL_DECODE_PIXELS
+    };
+    if pixels > cap {
+        return Err(MediaError::TooLargeToProcess);
     }
     Ok(())
 }
@@ -96,7 +102,7 @@ pub(crate) fn validate_static_output_pixels(
     dims: ImageDimensions,
 ) -> Result<(), MediaError> {
     if static_output_pixels(options, dims) > constants::MAX_STATIC_OUTPUT_PIXELS {
-        return Err(MediaError::InvalidImageDimensions);
+        return Err(MediaError::TooLargeToProcess);
     }
     Ok(())
 }

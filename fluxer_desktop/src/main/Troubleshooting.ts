@@ -44,6 +44,12 @@ export function setHardwareAccelerationDisabledAndRestart(disable: boolean): voi
 	relaunchAndExit();
 }
 
+export function setModuleUpdatesDisabledAndRestart(disable: boolean): void {
+	setDesktopTroubleshootingSettings({disableModuleUpdates: disable});
+	logger.info('Restarting to apply module updates change', {disable});
+	relaunchAndExit();
+}
+
 function reloadMainWindow(): void {
 	const mainWindow = getMainWindow();
 	if (!mainWindow || mainWindow.isDestroyed()) {

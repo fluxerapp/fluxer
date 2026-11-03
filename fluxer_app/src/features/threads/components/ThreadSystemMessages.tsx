@@ -10,7 +10,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReferences, {MessageReferenceState} from '@app/features/messaging/state/MessageReferences';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadSystemMessages.module.css';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
@@ -26,9 +26,6 @@ export const ThreadCreatedMessage = observer(({message}: {message: Message}) => 
 	const threadId = message.messageReference?.channel_id ?? null;
 	const thread = threadId ? ChannelThreads.getThread(threadId) : undefined;
 	const threadName = thread?.name ?? message.content;
-	const handleOpen = useCallback(() => {
-		if (thread) openThread(thread);
-	}, [thread]);
 	const handleSeeAll = useCallback(() => {
 		ComponentBus.dispatch('THREAD_BROWSER_OPEN');
 	}, []);
@@ -47,7 +44,7 @@ export const ThreadCreatedMessage = observer(({message}: {message: Message}) => 
 				<button
 					type="button"
 					className={messageStyles.systemMessageLink}
-					onClick={handleOpen}
+					onClick={(event) => openThreadFromEvent(thread, event)}
 					data-flx="threads.thread-created-message.system-message-link.open"
 				>
 					{threadName}
@@ -84,12 +81,12 @@ export const ThreadStarterMessage = observer(({message}: {message: Message}) => 
 	const reference = message.messageReference;
 	const resolution = MessageReferences.getMessageReference(reference?.channel_id ?? '', reference?.message_id ?? '');
 	const parent = reference?.channel_id ? Channels.getChannel(reference.channel_id) : undefined;
-	const starter =
-		resolution.state === MessageReferenceState.LOADED
-			? resolution.message
-			: resolution.state === MessageReferenceState.DELETED
-				? null
-				: message.referencedMessage;
+	let starter = message.referencedMessage;
+	if (resolution.state === MessageReferenceState.LOADED) {
+		starter = resolution.message;
+	} else if (resolution.state === MessageReferenceState.DELETED) {
+		starter = null;
+	}
 	if (starter && parent) {
 		return (
 			<div className={styles.starter} data-flx="threads.thread-starter-message.starter">

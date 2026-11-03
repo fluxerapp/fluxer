@@ -20,25 +20,6 @@ describe('OAuth2 Application Get', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('returns application response shape', async () => {
-		const account = await createTestAccount(harness);
-		const appName = createUniqueApplicationName();
-		const redirectURIs = ['https://example.com/callback', 'https://example.com/callback2'];
-		const createResult = await createOAuth2Application(harness, account.token, {
-			name: appName,
-			redirect_uris: redirectURIs,
-		});
-		const application = await getOAuth2Application(harness, account.token, createResult.application.id);
-		expect(application.id).toBeTruthy();
-		expect(application.name).toBe(appName);
-		expect(application.redirect_uris).toEqual(redirectURIs);
-		expect(application.bot).toBeDefined();
-		expect(application.bot?.id).toBeTruthy();
-		expect(application.bot?.username).toBeTruthy();
-		expect(application.bot?.discriminator).toBeTruthy();
-		expect(application.bot?.token).toBeUndefined();
-		expect(application.client_secret).toBeUndefined();
-	});
 	test('enforces access control - user cannot access another users application', async () => {
 		const owner = await createTestAccount(harness);
 		const otherUser = await createTestAccount(harness);

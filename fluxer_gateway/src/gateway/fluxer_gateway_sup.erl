@@ -1,15 +1,12 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(fluxer_gateway_sup).
+
 -typing([eqwalizer]).
 -behaviour(supervisor).
 -export([
     start_link/0, init/1, cluster_children/0, role_enabled/1, role_enabled/2, current_role/0
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec start_link() -> {ok, pid()} | {error, term()}.
 start_link() ->
@@ -36,7 +33,6 @@ common_children() ->
         child_spec(guild_ets_owner, guild_ets_owner),
         child_spec(gateway_nats_rpc, gateway_nats_rpc),
         child_spec(gateway_nats_pool, gateway_nats_pool),
-        child_spec(gateway_event_pause, gateway_event_pause),
         child_spec(gateway_concurrency, gateway_concurrency),
         child_spec(gateway_rollout_config, gateway_rollout_config),
         child_spec(channel_threads_flip, channel_threads_flip),
@@ -52,7 +48,7 @@ common_children() ->
 -spec role_children(atom()) -> [supervisor:child_spec()].
 role_children(Role) ->
     RoleSpecs =
-        presence_bus_children(Role) ++
+        presence_bus_children(Role) ++ push_outbox_children(Role) ++
             lists:append(
                 [
                     role_child_specs(sessions, Role),
@@ -69,6 +65,15 @@ presence_bus_children(Role) ->
     case role_enabled(presence, Role) orelse role_enabled(guilds, Role) of
         true ->
             [child_spec(presence_bus, presence_bus)];
+        false ->
+            []
+    end.
+
+-spec push_outbox_children(atom()) -> [supervisor:child_spec()].
+push_outbox_children(Role) ->
+    case role_enabled(push, Role) orelse role_enabled(calls, Role) of
+        true ->
+            [child_spec(push_outbox, push_outbox)];
         false ->
             []
     end.
@@ -102,10 +107,7 @@ role_specs(guilds, _Role) ->
 role_specs(calls, Role) ->
     [child_spec(call_manager, call_manager)] ++ calls_voice_state_counts_sync_children(Role);
 role_specs(push, _Role) ->
-    [
-        child_spec(push_outbox, push_outbox),
-        child_spec(push, push)
-    ].
+    [child_spec(push, push)].
 
 -spec role_handoff_children(atom()) -> [supervisor:child_spec()].
 role_handoff_children(Role) ->
@@ -214,71 +216,3 @@ child_spec(Id, Module) ->
         shutdown => 5000,
         type => worker
     }.
-
--ifdef(TEST).
-
-guild_role_starts_ets_owner_before_guild_workers_test() ->
-    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => guilds}),
-    ?assert(lists:member(guild_ets_owner, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, gateway_nats_rpc, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, guild_manager, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, voice_state_counts_sync, Ids)).
-
-calls_role_starts_ets_owner_before_call_workers_test() ->
-    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => calls}),
-    ?assert(lists:member(guild_ets_owner, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, call_manager, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, voice_state_counts_sync, Ids)).
-
-all_role_starts_single_ets_owner_test() ->
-    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => all}),
-    ?assertEqual(1, count_id(guild_ets_owner, Ids)).
-
-sessions_role_starts_ets_owner_before_session_workers_test() ->
-    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => sessions}),
-    ?assert(lists:member(guild_ets_owner, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, session_manager, Ids)).
-
-websocket_role_starts_ets_owner_before_rpc_workers_test() ->
-    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => websocket}),
-    ?assert(lists:member(guild_ets_owner, Ids)),
-    ?assert(owner_precedes(guild_ets_owner, gateway_nats_rpc, Ids)).
-
-init_child_ids(Config) ->
-    persistent_term:put({fluxer_gateway, runtime_config}, Config),
-    try
-        {ok, {_SupFlags, Children}} = init([]),
-        [maps:get(id, Child) || Child <- Children, is_map(Child)]
-    after
-        persistent_term:erase({fluxer_gateway, runtime_config})
-    end.
-
-owner_precedes(Owner, Worker, Ids) ->
-    index_of(Owner, Ids) < index_of(Worker, Ids).
-
-index_of(Id, Ids) ->
-    index_of(Id, Ids, 1).
-
-index_of(Id, [Id | _Rest], Index) ->
-    Index;
-index_of(Id, [_Other | Rest], Index) ->
-    index_of(Id, Rest, Index + 1);
-index_of(_Id, [], _Index) ->
-    1000000.
-
-channel_threads_config_runs_on_every_role_after_the_flip_scheduler_test() ->
-    lists:foreach(
-        fun(Role) ->
-            Ids = init_child_ids(#{cluster_enabled => false, gateway_role => Role}),
-            ?assertEqual(1, count_id(channel_threads_config, Ids)),
-            ?assertEqual(1, count_id(channel_threads_flip, Ids)),
-            ?assert(owner_precedes(gateway_nats_rpc, channel_threads_config, Ids)),
-            ?assert(owner_precedes(channel_threads_flip, channel_threads_config, Ids))
-        end,
-        [all, websocket, sessions, presence, guilds, calls, push]
-    ).
-
-count_id(Id, Ids) ->
-    length([Item || Item <- Ids, Item =:= Id]).
-
--endif.

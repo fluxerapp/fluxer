@@ -5,7 +5,7 @@ import MacPermissions, {type MacPermissionKind} from '@app/features/permissions/
 import {requestNativePermission} from '@app/features/permissions/system/utils/NativePermissions';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
 
-export type MacPermissionGateBehavior = 'interactive' | 'passive';
+type MacPermissionGateBehavior = 'interactive' | 'passive';
 export type MacPermissionGateResult = 'granted' | 'denied' | 'unsupported-platform';
 
 interface MacPermissionGateOptions {

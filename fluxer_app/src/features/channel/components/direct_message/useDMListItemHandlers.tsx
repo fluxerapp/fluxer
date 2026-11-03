@@ -8,8 +8,6 @@ import {showChannelErrorModal} from '@app/features/channel/components/alerts/Cha
 import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
 import type {InviteCandidate} from '@app/features/channel/components/direct_message/DMListHelpers';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
-import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
-import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
@@ -77,13 +75,10 @@ interface UseDMListItemHandlersParams {
 	channel: Channel;
 	recipient: User | null;
 	isGroupDM: boolean;
-	isMobile: boolean;
 	relationshipType: number | undefined;
 	restrictRecipientActions: boolean;
 	closeAllSheets: () => void;
 	setMenuOpen: (open: boolean) => void;
-	setEditGroupSheetOpen: (open: boolean) => void;
-	setInvitesSheetOpen: (open: boolean) => void;
 	leaveGroup: (channelId: string) => void;
 	i18n: I18n;
 }
@@ -110,8 +105,6 @@ export interface DMListItemHandlers {
 	handleBlockUser: () => void;
 	handleUnblockUser: () => void;
 	handleSendInvite: (candidate: InviteCandidate) => Promise<void>;
-	handleEditGroup: () => void;
-	handleShowInvites: () => void;
 	handleLeaveGroup: () => void;
 	handleDeleteMyMessagesInChannel: () => void;
 	handlePinChannel: () => Promise<void>;
@@ -122,13 +115,10 @@ export function useDMListItemHandlers({
 	channel,
 	recipient,
 	isGroupDM,
-	isMobile,
 	relationshipType,
 	restrictRecipientActions,
 	closeAllSheets,
 	setMenuOpen,
-	setEditGroupSheetOpen,
-	setInvitesSheetOpen,
 	leaveGroup,
 	i18n,
 }: UseDMListItemHandlersParams): DMListItemHandlers {
@@ -254,7 +244,7 @@ export function useDMListItemHandlers({
 				channel.id,
 				{
 					muted: true,
-					mute_config: duration ? createMuteConfig(duration) : null,
+					mute_config: createMuteConfig(duration),
 				},
 				{persistImmediately: true},
 			);
@@ -372,42 +362,6 @@ export function useDMListItemHandlers({
 		},
 		[recipient, closeAllSheets, i18n],
 	);
-	const handleEditGroup = useCallback(() => {
-		if (isMobile) {
-			ModalCommands.runAfterBottomSheetClose(
-				() => setMenuOpen(false),
-				() => setEditGroupSheetOpen(true),
-			);
-		} else {
-			setMenuOpen(false);
-			ModalCommands.push(
-				modal(() => (
-					<EditGroupModal
-						channelId={channel.id}
-						data-flx="channel.direct-message.use-dm-list-item-handlers.handle-edit-group.edit-group-modal"
-					/>
-				)),
-			);
-		}
-	}, [channel.id, isMobile, setMenuOpen, setEditGroupSheetOpen]);
-	const handleShowInvites = useCallback(() => {
-		if (isMobile) {
-			ModalCommands.runAfterBottomSheetClose(
-				() => setMenuOpen(false),
-				() => setInvitesSheetOpen(true),
-			);
-		} else {
-			setMenuOpen(false);
-			ModalCommands.push(
-				modal(() => (
-					<GroupInvitesModal
-						channelId={channel.id}
-						data-flx="channel.direct-message.use-dm-list-item-handlers.handle-show-invites.group-invites-modal"
-					/>
-				)),
-			);
-		}
-	}, [channel.id, isMobile, setMenuOpen, setInvitesSheetOpen]);
 	const handleLeaveGroup = useCallback(() => {
 		ModalCommands.runAfterBottomSheetClose(
 			() => setMenuOpen(false),
@@ -467,8 +421,6 @@ export function useDMListItemHandlers({
 		handleBlockUser,
 		handleUnblockUser,
 		handleSendInvite,
-		handleEditGroup,
-		handleShowInvites,
 		handleLeaveGroup,
 		handleDeleteMyMessagesInChannel,
 		handlePinChannel,

@@ -11,6 +11,10 @@ import {SecurityTabContent} from '@app/features/user/components/modals/tabs/acco
 import {BlockedUsersContent} from '@app/features/user/components/modals/tabs/BlockedUsersTab';
 import {LinkedDevicesManagementModal} from '@app/features/user/components/modals/tabs/DevicesTab';
 import type {AccountSettingsManagementSectionId} from '@app/features/user/components/settings_utils/SettingsNavigationGroups';
+import {
+	BLOCKED_USERS_DESCRIPTOR,
+	SECURITY_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {User} from '@app/features/user/models/User';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
 import * as FormUtils from '@app/lib/forms';
@@ -23,14 +27,6 @@ import {useCallback, useRef, useState} from 'react';
 const SIGN_IN_DETAILS_DESCRIPTOR = msg({
 	message: 'Sign-in details',
 	comment: 'Section title for email address and password controls in the account security tab. Keep it concise.',
-});
-const SECURITY_DESCRIPTOR = msg({
-	message: 'Security',
-	comment: 'Short label in the account security tab. Keep it concise. Keep the tone plain and specific.',
-});
-const BLOCKED_USERS_DESCRIPTOR = msg({
-	message: 'Blocked users',
-	comment: 'Short label in the account security tab. Keep it concise.',
 });
 const COULD_NOT_LOAD_AUTHORIZED_APPS_DESCRIPTOR = msg({
 	message: "Couldn't load authorized apps",
@@ -85,39 +81,33 @@ export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = o
 		};
 		return (
 			<>
-				{isClaimed && (
-					<SettingsSection
-						id="account"
-						title={i18n._(SIGN_IN_DETAILS_DESCRIPTOR)}
-						data-flx="user.account-security-sections.account"
-					>
-						<AccountTabContent
-							user={user}
-							isClaimed={isClaimed}
-							showMaskedEmail={showMaskedEmail}
-							setShowMaskedEmail={setShowMaskedEmail}
-							data-flx="user.account-security-sections.account-tab-content"
-						/>
-					</SettingsSection>
-				)}
-				{isClaimed && (
-					<SettingsSection
-						id="security"
-						title={i18n._(SECURITY_DESCRIPTOR)}
-						defaultExpanded={targetSection === 'security'}
-						data-flx="user.account-security-sections.security"
-					>
-						<SecurityTabContent
-							user={user}
-							isClaimed={isClaimed}
-							passkeys={passkeys}
-							authorizedAppsSubmitting={authorizedAppsSubmitting}
-							onManageAuthorizedApps={openAuthorizedAppsModal}
-							onManageLinkedDevices={openLinkedDevicesModal}
-							data-flx="user.account-security-sections.security-tab-content"
-						/>
-					</SettingsSection>
-				)}
+				<SettingsSection
+					id="account"
+					title={i18n._(SIGN_IN_DETAILS_DESCRIPTOR)}
+					data-flx="user.account-security-sections.account"
+				>
+					<AccountTabContent
+						user={user}
+						showMaskedEmail={showMaskedEmail}
+						setShowMaskedEmail={setShowMaskedEmail}
+						data-flx="user.account-security-sections.account-tab-content"
+					/>
+				</SettingsSection>
+				<SettingsSection
+					id="security"
+					title={i18n._(SECURITY_DESCRIPTOR)}
+					defaultExpanded={targetSection === 'security'}
+					data-flx="user.account-security-sections.security"
+				>
+					<SecurityTabContent
+						user={user}
+						passkeys={passkeys}
+						authorizedAppsSubmitting={authorizedAppsSubmitting}
+						onManageAuthorizedApps={openAuthorizedAppsModal}
+						onManageLinkedDevices={openLinkedDevicesModal}
+						data-flx="user.account-security-sections.security-tab-content"
+					/>
+				</SettingsSection>
 				<SettingsSection
 					id="danger_zone"
 					title={i18n._(DANGER_ZONE_DESCRIPTOR)}

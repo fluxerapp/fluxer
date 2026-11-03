@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
-import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelDisplayUtils';
+import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
@@ -10,7 +10,7 @@ import {MentionWithTooltip} from '@app/features/lexical/composer/nodes/MentionTo
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import Users from '@app/features/user/state/Users';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';

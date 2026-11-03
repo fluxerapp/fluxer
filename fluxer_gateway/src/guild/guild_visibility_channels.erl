@@ -14,9 +14,9 @@
     preserve_connected_channels/4,
     filter_connected_session_entries/1,
     ensure_viewable_channel_map/3,
-    channel_is_visible/4,
     ensure_new_channel_visibility/5,
-    update_viewable_map_for_channel/3
+    update_viewable_map_for_channel/3,
+    add_created_channel_to_sessions/2
 ]).
 
 -export_type([guild_state/0, user_id/0, channel_id/0]).
@@ -29,7 +29,7 @@
 get_user_viewable_channels(UserId, State) ->
     Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     case Member of
         undefined ->
             [];
@@ -42,7 +42,7 @@ get_user_viewable_channels(UserId, State) ->
     user_id(), guild_permissions:base_permissions(), [map()], guild_state()
 ) -> [channel_id()].
 compute_viewable_with_categories(UserId, Base, Channels, State) ->
-    Viewable = guild_permissions:viewable_channel_ids(UserId, Base, Channels, State),
+    Viewable = guild_permissions_check:viewable_channel_ids(UserId, Base, Channels, State),
     {ViewableIds, ViewableIdSet, NeededParentIds} = lists:foldl(
         fun(Channel, {Ids, IdSet, Parents}) ->
             collect_viewable_channel(Channel, Viewable, {Ids, IdSet, Parents})
@@ -63,19 +63,21 @@ compute_viewable_with_categories(UserId, Base, Channels, State) ->
 shares_viewable_channel(UserId, ChannelMap, State) ->
     Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->
-            lists:any(
-                fun(Channel) ->
-                    shares_channel_or_parent(
-                        Channel, UserId, Member, ChannelMap, Channels, State
-                    )
-                end,
-                Channels
-            )
+            shares_any_channel(UserId, Member, ChannelMap, Channels, State)
     end.
+
+-spec shares_any_channel(user_id(), map(), map(), [map()], guild_state()) -> boolean().
+shares_any_channel(UserId, Member, ChannelMap, Channels, State) ->
+    lists:any(
+        fun(Channel) ->
+            shares_channel_or_parent(Channel, UserId, Member, ChannelMap, Channels, State)
+        end,
+        Channels
+    ).
 
 -spec shares_channel_or_parent(map(), user_id(), map(), map(), [map()], guild_state()) ->
     boolean().
@@ -268,16 +270,11 @@ ensure_viewable_channel_map(SessionData, UserId, State) ->
             viewable_channel_map(sets:from_list(get_user_viewable_channels(UserId, State)))
     end.
 
--spec channel_is_visible(user_id(), channel_id(), map() | undefined, guild_state()) ->
-    boolean().
-channel_is_visible(UserId, ChannelId, Member, State) ->
-    guild_permissions:can_view_channel(UserId, ChannelId, Member, State).
-
 -spec ensure_new_channel_visibility(
     user_id(), channel_id(), sets:set(channel_id()), map() | undefined, guild_state()
 ) -> {guild_state(), boolean()}.
 ensure_new_channel_visibility(UserId, ChannelId, ConnectedSet, NewMember, State) ->
-    NewVisible0 = channel_is_visible(UserId, ChannelId, NewMember, State),
+    NewVisible0 = guild_permissions_check:can_view_channel(UserId, ChannelId, NewMember, State),
     case {NewVisible0, sets:is_element(ChannelId, ConnectedSet)} of
         {true, _} ->
             {State, true};
@@ -301,6 +298,57 @@ maybe_grant_virtual_access(UserId, ChannelId, State) ->
             {State2, true}
     end.
 
+-spec add_created_channel_to_sessions(map(), guild_state()) -> guild_state().
+add_created_channel_to_sessions(Channel, State) ->
+    case channel_id(Channel) of
+        ChannelId when is_integer(ChannelId) ->
+            {Sessions, _Visible} = maps:fold(
+                fun(SessionId, SessionData, {Acc, Memo}) ->
+                    add_created_channel(SessionId, SessionData, ChannelId, State, {Acc, Memo})
+                end,
+                {maps:get(sessions, State, #{}), #{}},
+                maps:get(sessions, State, #{})
+            ),
+            State#{sessions => Sessions};
+        undefined ->
+            State
+    end.
+
+-spec add_created_channel(
+    binary(), map(), channel_id(), guild_state(), {map(), map()}
+) -> {map(), map()}.
+add_created_channel(
+    SessionId,
+    #{user_id := UserId, viewable_channels := Viewable} = SessionData,
+    ChannelId,
+    State,
+    {Sessions, Memo}
+) when is_integer(UserId), is_map(Viewable) ->
+    {CanView, Memo1} =
+        case maps:find(UserId, Memo) of
+            {ok, Known} ->
+                {Known, Memo};
+            error ->
+                Member = guild_permissions_check:find_member_by_user_id(UserId, State),
+                Visible =
+                    Member =/= undefined andalso
+                        guild_permissions_check:can_view_channel(
+                            UserId, ChannelId, Member, State
+                        ),
+                {Visible, Memo#{UserId => Visible}}
+        end,
+    case CanView of
+        true ->
+            NewViewable = guild_visibility_roles:maybe_ensure_parent_category_visible(
+                ChannelId, Viewable#{ChannelId => true}, State, SessionData, maps:get(id, State)
+            ),
+            {Sessions#{SessionId => SessionData#{viewable_channels => NewViewable}}, Memo1};
+        false ->
+            {Sessions, Memo1}
+    end;
+add_created_channel(_SessionId, _SessionData, _ChannelId, _State, Acc) ->
+    Acc.
+
 -spec update_viewable_map_for_channel(map(), channel_id(), boolean()) -> map().
 update_viewable_map_for_channel(ViewableMap, ChannelId, true) ->
     ViewableMap#{ChannelId => true};
@@ -311,7 +359,7 @@ update_viewable_map_for_channel(ViewableMap, ChannelId, false) ->
 channel_viewable(UserId, Member, Channel, State) ->
     case channel_id(Channel) of
         ChannelId when is_integer(ChannelId) ->
-            guild_permissions:can_view_channel(UserId, ChannelId, Member, State);
+            guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State);
         undefined ->
             false
     end.

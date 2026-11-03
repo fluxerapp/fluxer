@@ -1,0 +1,322 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.slot {
+	display: flex;
+	width: var(--tile);
+	min-width: 0;
+	flex: 0 0 var(--tile);
+	justify-content: center;
+	transition: opacity 140ms ease;
+}
+
+.slotDimmed {
+	opacity: 0.5;
+}
+
+.slotDragging {
+	opacity: 0.35;
+}
+
+.tile {
+	position: relative;
+	display: flex;
+	width: var(--tile);
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	gap: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 1.25rem;
+	background: transparent;
+	scroll-margin-block: 3rem;
+	color: var(--switcher-text);
+	cursor: pointer;
+	font: inherit;
+	outline: none;
+	text-align: center;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.tile:disabled {
+	cursor: default;
+}
+
+.avatarFrame {
+	--instance-badge-size: max(1.75rem, calc(var(--tile) * 0.3));
+	--status-badge-size: max(1.625rem, calc(var(--tile) * 0.22));
+	--badge-inset: -0.375rem;
+
+	position: relative;
+	display: block;
+	width: var(--tile);
+	height: var(--tile);
+	flex: 0 0 auto;
+	border-radius: 22%;
+	transform: scale(1);
+	transition: transform var(--switcher-motion-ms) ease;
+}
+
+.avatarClip {
+	position: absolute;
+	inset: 0;
+	display: block;
+	overflow: hidden;
+	border-radius: inherit;
+	background: var(--background-tertiary);
+}
+
+.cutoutDefs {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.avatar {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	user-select: none;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.tile:not(:disabled, .tileStill):hover
+	.avatarFrame,
+.tile:not(.tileStill)[data-context-menu-open] .avatarFrame {
+	transform: scale(var(--switcher-hover-scale));
+}
+
+.tileExpired .avatarClip {
+	filter: grayscale(1);
+	opacity: 0.7;
+}
+
+.manageOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--switcher-scrim);
+	color: var(--switcher-text);
+}
+
+.manageOverlay svg {
+	width: 28%;
+	height: 28%;
+}
+
+.busyRing {
+	position: absolute;
+	inset: -0.5rem;
+	width: calc(100% + 1rem);
+	height: calc(100% + 1rem);
+	overflow: visible;
+	pointer-events: none;
+}
+
+.busyRing rect {
+	fill: none;
+	stroke: var(--switcher-text);
+	stroke-dasharray: 22 78;
+	stroke-linecap: round;
+	stroke-width: 2;
+	vector-effect: non-scaling-stroke;
+	animation: busy-ring var(--switcher-busy-duration) linear infinite;
+}
+
+@keyframes busy-ring {
+	from {
+		stroke-dashoffset: 100;
+	}
+
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+.cornerBadge {
+	position: absolute;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+}
+
+.instanceBadge {
+	position: absolute;
+	top: var(--badge-inset);
+	inset-inline-end: var(--badge-inset);
+	z-index: 2;
+	display: inline-flex;
+	width: var(--instance-badge-size);
+	height: var(--instance-badge-size);
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--switcher-text) 14%, var(--switcher-stage));
+	overflow: hidden;
+	color: var(--switcher-text);
+}
+
+.instanceBadge svg {
+	display: block;
+	width: 62%;
+	height: 62%;
+}
+
+.instanceBadge img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.instanceTooltip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.instanceTooltipLabel {
+	min-width: 0;
+	color: var(--text-primary);
+	font-weight: 600;
+}
+
+.instanceTooltipOfficial {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	color: var(--status-online);
+}
+
+.mentionBadge {
+	bottom: var(--badge-inset);
+	inset-inline-end: var(--badge-inset);
+	border-radius: 0.375rem;
+}
+
+.currentBadge {
+	top: calc(var(--badge-inset) + (var(--instance-badge-size) - var(--status-badge-size)) / 2);
+	inset-inline-start: calc(var(--badge-inset) + (var(--instance-badge-size) - var(--status-badge-size)) / 2);
+	width: var(--status-badge-size);
+	height: var(--status-badge-size);
+	border-radius: 50%;
+	background: var(--switcher-text);
+	color: var(--switcher-stage);
+}
+
+.currentBadge svg {
+	width: 60%;
+	height: 60%;
+}
+
+.unreadDot {
+	bottom: -0.1875rem;
+	inset-inline-end: -0.1875rem;
+	width: 0.875rem;
+	height: 0.875rem;
+	border-radius: 50%;
+	background: var(--switcher-text);
+}
+
+.expiredBadge {
+	bottom: var(--badge-inset);
+	inset-inline-end: var(--badge-inset);
+	width: var(--status-badge-size);
+	height: var(--status-badge-size);
+	border-radius: 50%;
+	background: var(--status-danger);
+	color: var(--switcher-text);
+}
+
+.expiredBadge svg {
+	width: 70%;
+	height: 70%;
+}
+
+.name {
+	display: block;
+	max-width: calc(var(--tile) * 1.15);
+	margin-top: 0.875rem;
+	overflow: hidden;
+	color: var(--switcher-text);
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.375rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.secondLine {
+	display: block;
+	min-height: 1.125rem;
+	max-width: calc(var(--tile) * 1.15);
+	margin-top: 0.125rem;
+	overflow: hidden;
+	color: var(--switcher-text-muted);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.secondLineWarning {
+	color: var(--status-warning);
+}
+
+.secondLineDanger {
+	color: color-mix(in srgb, var(--status-danger) 70%, var(--switcher-text));
+}
+
+.tileAdd .name {
+	display: -webkit-box;
+	color: var(--switcher-text-muted);
+	text-wrap: balance;
+	white-space: normal;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.addFrame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	border: 0.125rem dashed var(--switcher-dashed);
+	background: transparent;
+	color: var(--switcher-text-muted);
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		color 140ms ease,
+		transform var(--switcher-motion-ms) ease;
+}
+
+.addFrame svg {
+	width: 32%;
+	height: 32%;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.tileAdd:not(:disabled):hover
+	.addFrame,
+.tileAdd:focus-visible .addFrame {
+	border-style: solid;
+	border-color: var(--switcher-text-muted);
+	background: color-mix(in srgb, var(--switcher-text) 8%, transparent);
+	color: var(--switcher-text);
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.tileAdd:not(:disabled):hover
+	.name {
+	color: var(--switcher-text);
+}

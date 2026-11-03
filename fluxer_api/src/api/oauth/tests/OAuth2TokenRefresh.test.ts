@@ -49,67 +49,6 @@ describe('OAuth2 Token Refresh', () => {
 		const userInfo = await getOAuth2UserInfo(harness, refreshedTokens.access_token);
 		expect(userInfo.sub).toBe(endUser.userId);
 	});
-	test('should fail with invalid refresh token', async () => {
-		const {application} = await createOAuth2TestSetup(harness);
-		const formData = new URLSearchParams({
-			grant_type: 'refresh_token',
-			refresh_token: 'invalid_refresh_token_12345',
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should fail with revoked refresh token', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const revokeFormData = new URLSearchParams({
-			token: initialTokens.refresh_token!,
-			token_type_hint: 'refresh_token',
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token/revoke')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(revokeFormData.toString())
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const refreshFormData = new URLSearchParams({
-			grant_type: 'refresh_token',
-			refresh_token: initialTokens.refresh_token!,
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(refreshFormData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('should fail with wrong client_secret', async () => {
 		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
 		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {

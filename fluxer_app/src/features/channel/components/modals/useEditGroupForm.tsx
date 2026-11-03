@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
-	STATIC_IMAGE_FORMATS,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {AVATAR_RECOMMENDED_SIZE_LABEL, STATIC_IMAGE_FORMATS} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import {showChannelErrorModal} from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
@@ -13,7 +10,7 @@ import Channels from '@app/features/channel/state/Channels';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
-import {getAcceptStringFiltered, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
@@ -22,6 +19,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -29,6 +27,7 @@ import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {canCropFile} from '@app/features/voice/utils/MediaCapabilities';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {assignTransientUploadFieldMutation} from '@app/lib/forms/TransientUploadFields';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {MessageDescriptor} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {useCallback, useMemo, useState} from 'react';
@@ -85,11 +84,11 @@ export function useEditGroupForm({
 		async (file: File | null) => {
 			try {
 				if (!file) return;
-				if (file.size > 10 * 1024 * 1024) {
+				if (file.size > GlobalLimits.getAvatarMaxSize()) {
 					showChannelErrorModal({
 						title: i18n._(messages.iconFileTooLargeTitle),
 						message: i18n._(messages.iconFileTooLarge, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						}),
 						dataFlx: `${dataFlx}.icon-file-too-large.generic-error-modal`,
 					});
@@ -113,29 +112,28 @@ export function useEditGroupForm({
 					});
 					return;
 				}
-				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
+				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
 				ModalCommands.push(
 					modal(() => (
 						<AssetCropModal
 							assetType={AssetType.CHANNEL_ICON}
 							imageUrl={base64}
 							onCropComplete={(croppedBlob) => {
-								const reader = new FileReader();
-								reader.onload = () => {
-									const croppedBase64 = reader.result as string;
-									form.setValue('icon', croppedBase64);
-									setPreviewIconUrl(croppedBase64);
-									setHasClearedIcon(false);
-									form.clearErrors('icon');
-								};
-								reader.onerror = () => {
-									showChannelErrorModal({
-										title: i18n._(messages.couldNotProcessImageTitle),
-										message: i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
-										dataFlx: `${dataFlx}.process-cropped-image-failed.generic-error-modal`,
-									});
-								};
-								reader.readAsDataURL(croppedBlob);
+								void readBlobAsDataUrl(croppedBlob).then(
+									(croppedBase64) => {
+										form.setValue('icon', croppedBase64);
+										setPreviewIconUrl(croppedBase64);
+										setHasClearedIcon(false);
+										form.clearErrors('icon');
+									},
+									() => {
+										showChannelErrorModal({
+											title: i18n._(messages.couldNotProcessImageTitle),
+											message: i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
+											dataFlx: `${dataFlx}.process-cropped-image-failed.generic-error-modal`,
+										});
+									},
+								);
 							}}
 							onSkip={() => {
 								form.setValue('icon', base64);
@@ -158,7 +156,7 @@ export function useEditGroupForm({
 		[dataFlx, form, i18n, messages],
 	);
 	const handleIconUploadClick = useCallback(async () => {
-		const [file] = await openFilePicker({accept: getAcceptStringFiltered('guild_icon', false)});
+		const [file] = await openFilePicker({accept: getAcceptString('guild_icon', {animatedAllowed: false})});
 		await handleIconUpload(file ?? null);
 	}, [handleIconUpload]);
 	const handleOpenIconUpload = useCallback(() => {
@@ -166,7 +164,7 @@ export function useEditGroupForm({
 			title: i18n._(messages.changeIcon),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+				maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUploadClick,
@@ -180,7 +178,9 @@ export function useEditGroupForm({
 	}, [form]);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
-			const updateData: {icon?: string | null; name: string; nsfw?: boolean} = {name: data.name};
+			const updateData: {icon?: string | null; name: string | null; nsfw?: boolean} = {
+				name: data.name.trim() === '' ? null : data.name,
+			};
 			if (isOwner && data.nsfw !== channel?.nsfw) {
 				updateData.nsfw = data.nsfw;
 			}

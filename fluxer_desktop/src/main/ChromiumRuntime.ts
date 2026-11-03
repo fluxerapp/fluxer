@@ -1,3 +1,4 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
@@ -147,10 +148,6 @@ function resolveUserDataChild(userDataPath: string, relativePath: string): strin
 	return null;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
-
 function splitChromiumFeatureList(value: string): Array<string> {
 	if (!value) return [];
 	return value
@@ -253,7 +250,12 @@ export function hasEnabledBlinkFeature(feature: string): boolean {
 }
 
 export function appendConfiguredChromiumSwitches(rawSwitches: unknown): void {
-	const switches = Array.isArray(rawSwitches) ? rawSwitches : isRecord(rawSwitches) ? Object.keys(rawSwitches) : [];
+	let switches: Array<unknown> = [];
+	if (Array.isArray(rawSwitches)) {
+		switches = rawSwitches;
+	} else if (isRecord(rawSwitches)) {
+		switches = Object.keys(rawSwitches);
+	}
 	for (const chromiumSwitch of switches) {
 		if (typeof chromiumSwitch !== 'string') continue;
 		if (!CONFIGURED_CHROMIUM_SWITCH_ALLOWLIST.has(chromiumSwitch)) continue;
@@ -295,6 +297,11 @@ export function appendLinuxChromiumFlagsConfig(channel: BuildChannel): void {
 			log.warn('[ChromiumRuntime] Failed to load Linux Chromium flags config', {path: filePath, error});
 		}
 	}
+}
+
+export function addLinuxHardwareVideoDecodeFeatures(features: Set<string>): void {
+	if (process.platform !== 'linux') return;
+	features.add('VaapiOnNvidiaGPUs');
 }
 
 export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void {

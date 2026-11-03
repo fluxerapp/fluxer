@@ -2,8 +2,8 @@
 
 use crate::config::{RPC_AUTH_HEADER, RpcConfig};
 use crate::metrics::{Metrics, RpcMethod, RpcOutcome, elapsed_ms};
-use crate::secret::SecretString;
 use crate::subscription::Subscription;
+use fluxer_common::secret::SecretString;
 use fluxer_svc::metrics::now_ms;
 use rand::RngExt as _;
 use serde::Deserialize;

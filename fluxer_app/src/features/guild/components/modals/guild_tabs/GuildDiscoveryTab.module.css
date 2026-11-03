@@ -138,6 +138,7 @@
 }
 
 .warningIcon {
+	display: flex;
 	margin-top: 0.125rem;
 	color: var(--status-warning);
 }
@@ -174,7 +175,7 @@
 }
 
 .infoIcon {
-	margin-top: 0.125rem;
+	display: flex;
 	color: var(--alert-note-color);
 }
 
@@ -232,7 +233,7 @@
 
 .tagsInputRow {
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	gap: 0.5rem;
 }
 

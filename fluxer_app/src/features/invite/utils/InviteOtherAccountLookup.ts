@@ -11,7 +11,7 @@ import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 
 const INVITE_LOOKUP_TIMEOUT_MS = 10_000;
 
-export interface InviteLookupCandidate {
+interface InviteLookupCandidate {
 	readonly account: Account;
 	readonly target: InstanceHTTPTarget;
 }

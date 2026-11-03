@@ -4,13 +4,14 @@ import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSla
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {DeveloperApplication} from '@app/features/devtools/models/DeveloperApplication';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import styles from '@app/features/user/components/modals/tabs/applications_tab/ApplicationsTab.module.css';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {AppWindowIcon, CaretRightIcon} from '@phosphor-icons/react';
+import {AppWindowIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 

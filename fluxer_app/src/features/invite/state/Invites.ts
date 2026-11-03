@@ -9,11 +9,10 @@ import {action, computed, makeAutoObservable, runInAction} from 'mobx';
 
 type FetchStatus = 'idle' | 'pending' | 'success' | 'error';
 
-interface InviteSlot {
-	loading: boolean;
-	error: Error | null;
-	data: Invite | null;
-}
+type InviteSlot =
+	| {loading: true; error: null; data: null}
+	| {loading: false; error: null; data: Invite | null}
+	| {loading: false; error: unknown; data: null};
 
 const SETTIMEOUT_LIMIT_MS = 0x7fff_ffff;
 
@@ -136,7 +135,7 @@ class Invites {
 			this.handleInviteDelete(invite.code, target);
 			return;
 		}
-		const wait = remaining > SETTIMEOUT_LIMIT_MS ? SETTIMEOUT_LIMIT_MS : remaining;
+		const wait = Math.min(remaining, SETTIMEOUT_LIMIT_MS);
 		const handle = setTimeout(() => {
 			runInAction(() => {
 				this.armTimer(invite, target);
@@ -212,7 +211,7 @@ class Invites {
 				nextPending.delete(resourceKey);
 				this.inviteSlots = new Map(this.inviteSlots).set(resourceKey, {
 					loading: false,
-					error: error as Error,
+					error,
 					data: null,
 				});
 				this.pendingRequests = nextPending;

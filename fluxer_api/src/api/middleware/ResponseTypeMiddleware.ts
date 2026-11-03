@@ -70,27 +70,6 @@ async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType
 	});
 }
 
-export function ResponseType<T extends ZodType>(
-	schema: T,
-	options?: {
-		skipValidation?: boolean;
-		allowNoContent?: boolean;
-	},
-): MiddlewareHandler<HonoEnv> {
-	const {skipValidation = false, allowNoContent = false} = options ?? {};
-	return async (ctx, next) => {
-		ctx.set('responseSchema', schema);
-		await next();
-		if (skipValidation || !Config.dev.validateResponses) {
-			return;
-		}
-		if (allowNoContent && ctx.res.status === 204) {
-			return;
-		}
-		await validateAndRewriteResponse(ctx, schema);
-	};
-}
-
 type SecurityScheme = 'botToken' | 'oauth2Token' | 'bearerToken' | 'sessionToken' | 'adminApiKey';
 
 export interface OpenAPIRouteMetadata {
@@ -116,11 +95,6 @@ export interface OpenAPIRouteMetadata {
 	experiment?: string;
 }
 
-interface OpenAPIOptions {
-	description: string;
-	responseContentType?: string;
-}
-
 function validateOperationId(operationId: string): void {
 	if (!/^[a-z][a-z0-9_]*$/.test(operationId)) {
 		throw new Error(
@@ -129,60 +103,13 @@ function validateOperationId(operationId: string): void {
 	}
 }
 
-function toArray<T>(value: T | Array<T>): Array<T> {
-	return Array.isArray(value) ? value : [value];
-}
-
-export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationId: string,
-	summary: string,
-	responseSchema: ZodType | null,
-	options: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationIdOrMetadata: string | OpenAPIRouteMetadata,
-	summary?: string,
-	responseSchema?: ZodType | null,
-	options?: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv> {
-	let metadata: OpenAPIRouteMetadata;
-	if (typeof operationIdOrMetadata === 'string') {
-		if (!options?.description) {
-			throw new Error(
-				`Missing description for OpenAPI route ${operationIdOrMetadata}. The description field is required.`,
-			);
-		}
-		if (responseSchema === undefined) {
-			throw new Error(
-				`Missing responseSchema for OpenAPI route ${operationIdOrMetadata}. The responseSchema field is required (use null for no-content responses).`,
-			);
-		}
-		metadata = {
-			operationId: operationIdOrMetadata,
-			summary: summary!,
-			description: options.description,
-			responseSchema,
-			responseContentType: options.responseContentType,
-			tags: [],
-		};
-	} else {
-		metadata = operationIdOrMetadata;
-	}
+export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv> {
 	validateOperationId(metadata.operationId);
-	const {statusCode, security, tags, bodylessStatusCodes, responseContentType} = metadata;
+	const {bodylessStatusCodes, responseContentType} = metadata;
 	const schema = metadata.responseSchema;
-	const fullMetadata: OpenAPIRouteMetadata = {
-		...metadata,
-		statusCode: statusCode === undefined ? undefined : toArray(statusCode),
-		security: security === undefined ? undefined : toArray(security),
-		tags: toArray(tags),
-	};
 	const mediaType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase();
 	const hasJsonResponse = mediaType === undefined || mediaType === 'application/json';
 	return async (ctx, next) => {
-		ctx.set('openapiMetadata', fullMetadata);
-		ctx.set('responseSchema', schema);
 		await next();
 		const statusSchema =
 			ctx.res.status === 202 && metadata.acceptedResponseSchema ? metadata.acceptedResponseSchema : schema;

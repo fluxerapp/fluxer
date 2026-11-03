@@ -34,7 +34,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {createForwardSearchCandidates} from '@app/features/search/utils/DestinationSearchSources';
+import {createForwardSearchCandidates, isForwardableThread} from '@app/features/search/utils/DestinationSearchSources';
 import {getLoadedUnicodeConfusables, loadUnicodeConfusables} from '@app/features/search/utils/SearchTextMatching';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
@@ -141,6 +141,9 @@ function findDirectMessageChannel(userId: string): Channel | null {
 function resolveForwardChannelRow(channelId: string): ForwardRowIdentity | null {
 	const channel = Channels.getChannel(channelId);
 	if (channel == null) return null;
+	if (channel.isThread()) {
+		return isForwardableThread(channel) ? {id: channel.id, type: 'text_channel'} : null;
+	}
 	switch (channel.type) {
 		case ChannelTypes.DM: {
 			if (channel.recipientIds.length === 0) return null;

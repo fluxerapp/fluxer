@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AVATAR_MAX_SIZE, EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
+import {
+	AVATAR_MAX_SIZE,
+	BASE64_IMAGE_MAX_SIZE,
+	EMOJI_MAX_SIZE,
+	STICKER_MAX_SIZE,
+} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	base64LengthForBytes,
+	createBase64ImageType,
 	createBase64StringType,
 	FilenameType,
 	isValidBase64,
@@ -120,6 +126,7 @@ describe('base64LengthForBytes', () => {
 		[4, 8],
 		[EMOJI_MAX_SIZE, 699052],
 		[AVATAR_MAX_SIZE, 13981016],
+		[BASE64_IMAGE_MAX_SIZE, 139810136],
 	])('encodes a ceiling of %i bytes in %i characters', (bytes, expected) => {
 		expect(base64LengthForBytes(bytes)).toBe(expected);
 	});
@@ -135,6 +142,16 @@ describe('base64LengthForBytes', () => {
 			const encoded = Buffer.alloc(bytes, 1).toString('base64');
 			expect(encoded.length).toBe(base64LengthForBytes(EMOJI_MAX_SIZE));
 			expect(schema.parse(encoded)).toBe(encoded);
+		},
+	);
+});
+
+describe('createBase64ImageType', () => {
+	it.each([EMOJI_MAX_SIZE + 1, STICKER_MAX_SIZE * 2, AVATAR_MAX_SIZE + 1])(
+		'accepts %i decoded bytes so configured size limits above the stock values can apply',
+		(bytes) => {
+			const encoded = Buffer.alloc(bytes, 1).toString('base64');
+			expect(createBase64ImageType().parse(encoded)).toBe(encoded);
 		},
 	);
 });

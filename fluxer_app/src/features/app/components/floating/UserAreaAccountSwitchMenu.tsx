@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import styles from '@app/features/app/components/floating/UserAreaAccountSwitchMenu.module.css';
 import {useAccountAvatarURL} from '@app/features/auth/AccountAvatarUtils';
 import {resolveAccountInstanceKey, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
-import {
-	AccountIdentityText,
-	useAccountDisplayIdentityView,
-} from '@app/features/auth/components/accounts/AccountIdentity';
-import {getAccountMentionCount} from '@app/features/auth/components/accounts/account_switcher_modal/AccountMentionCounts';
+import {useAccountDisplayIdentityView} from '@app/features/auth/components/accounts/AccountIdentity';
 import {SESSION_EXPIRED_DESCRIPTOR} from '@app/features/auth/components/accounts/account_switcher_modal/AccountPickerShared';
 import {InstanceBrandMark} from '@app/features/auth/components/InstanceBrandMark';
 import {resolveInstanceLabel} from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
@@ -107,7 +104,7 @@ const SwitchAccountMenuItem = observer(
 		const isExpired = account.isValid === false;
 		const avatarUrl = useAccountAvatarURL(account);
 		const identityView = useAccountDisplayIdentityView(account);
-		const mentionCount = getAccountMentionCount(accountKey);
+		const mentionCount = AccountEngine.getMentionCount(accountKey);
 		let metaLabel: string | null = null;
 		if (isExpired) {
 			metaLabel = i18n._(SESSION_EXPIRED_DESCRIPTOR);
@@ -149,13 +146,10 @@ const SwitchAccountMenuItem = observer(
 						>
 							<span
 								className={styles.accountMenuNameText}
+								dir="auto"
 								data-flx="app.floating.user-area-account-switch-menu.account-menu-name-text"
 							>
-								<AccountIdentityText
-									identityView={identityView}
-									discriminatorClassName={styles.accountMenuDiscriminator}
-									data-flx="app.floating.user-area-account-switch-menu.account-identity-text"
-								/>
+								{identityView.displayLabel}
 							</span>
 							<MentionBadge
 								mentionCount={mentionCount}

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const GATEWAY_FOREGROUND_READY_TIMEOUT_MS = 60_000;
+const GATEWAY_FOREGROUND_READY_TIMEOUT_MS = 60_000;
 
 export class GatewayReadyTimeoutError extends Error {
 	constructor() {

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SetupWelcomeGate} from '@app/features/app/components/setup/SetupWelcomeGate';
-import {PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import styles from '@app/features/auth/flow/client_intro/AuthClientPreferencesStep.module.css';
 import {CONTINUE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowRightIcon} from '@phosphor-icons/react';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 
@@ -26,8 +25,6 @@ export const AuthClientWelcomeStep = observer(function AuthClientWelcomeStep({on
 		>
 			<SetupWelcomeGate
 				localeCode={LocaleUtils.getCurrentOrDetectedLocale()}
-				productName={PRODUCT_NAME}
-				isAuthenticated={false}
 				data-flx="auth.flow.client-intro.auth-client-welcome-step.setup-welcome-gate"
 			/>
 			<flx-auth-client-welcome-step-footer

@@ -6,11 +6,11 @@ import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSe
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
-import {CheckboxItem, MenuSeparator} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu, MenuSeparator} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
 import type {SpellcheckEngine} from '@app/types/electron.d';

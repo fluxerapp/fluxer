@@ -7,6 +7,7 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {
 	handleSettingsTreeKeyDown,
 	type SettingsModalSidebarItemProps,
@@ -16,7 +17,6 @@ import {
 } from '@app/features/user/utils/SettingsModalLayoutUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {CaretRightIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
@@ -253,6 +253,7 @@ export const SettingsModalSidebarCategory: React.FC<{children: React.ReactNode}>
 		<SidebarCategoryContext.Provider value={contextValue}>
 			<section
 				className={styles.sidebarCategory}
+				role="group"
 				aria-labelledby={titleId ?? undefined}
 				data-flx="app.settings-modal-layout.settings-modal-sidebar-category.sidebar-category"
 			>
@@ -271,6 +272,7 @@ export const SettingsModalSidebarCategoryTitle: React.FC<{children: React.ReactN
 	return (
 		<h2
 			id={titleId}
+			role="none"
 			className={styles.sidebarCategoryTitle}
 			data-flx="app.settings-modal-layout.settings-modal-sidebar-category-title.sidebar-category-title"
 		>

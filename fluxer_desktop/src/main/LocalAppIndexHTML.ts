@@ -2,6 +2,7 @@
 
 import {randomBytes} from 'node:crypto';
 import {LOCAL_APP_STATIC_CDN_ENDPOINT_PLACEHOLDER} from '@electron/main/LocalAppStaticMetadata';
+import {readInstanceProductName} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
 
 const CSP_NONCE_PLACEHOLDER = '{{CSP_NONCE_PLACEHOLDER}}';
 const MEDIA_PRECONNECT_TAG = '<link rel="preconnect" href="{{MEDIA_ENDPOINT}}">';
@@ -10,11 +11,21 @@ const HTML_OPEN_TAG = /<html(?=[\s>])[^>]*>/iu;
 const HTML_CLASS_ATTRIBUTE = /\sclass\s*=/iu;
 const THEME_CLASS_PREFIX = 'theme-';
 const SAFE_THEME_TOKEN = /^[a-z0-9][a-z0-9_-]{0,63}$/iu;
+const TITLE_ELEMENT = /<title(?=[\s>])[^>]*>[^<]*<\/title>/iu;
+const SERVED_PRODUCT_NAME_META = /<meta\s+name="apple-mobile-web-app-title"\s+content="[^"]*"/iu;
+const HTML_ESCAPES: Readonly<Record<string, string>> = Object.freeze({
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#39;',
+});
 
 interface LocalAppIndexHTMLInput {
 	readonly html: string;
 	readonly nonce: string;
 	readonly prebootTheme: string | null;
+	readonly productName: string | null;
 }
 
 export function randomLocalAppCSPNonce(): string {
@@ -26,7 +37,22 @@ export function rewriteLocalAppIndexHTML(input: LocalAppIndexHTMLInput): string 
 		.replaceAll(CSP_NONCE_PLACEHOLDER, input.nonce)
 		.replaceAll(LOCAL_APP_STATIC_CDN_ENDPOINT_PLACEHOLDER, '')
 		.replaceAll(MEDIA_PRECONNECT_TAG, '');
-	return stampPrebootTheme(substituted, input.prebootTheme);
+	return stampProductName(stampPrebootTheme(substituted, input.prebootTheme), input.productName);
+}
+
+function escapeHTML(value: string): string {
+	return value.replace(/[&<>"']/gu, (character) => HTML_ESCAPES[character] ?? character);
+}
+
+function stampProductName(html: string, productName: string | null): string {
+	const name = readInstanceProductName(productName);
+	if (name === null) {
+		return html;
+	}
+	const escaped = escapeHTML(name);
+	return html
+		.replace(TITLE_ELEMENT, (element) => `${element.slice(0, element.indexOf('>') + 1)}${escaped}</title>`)
+		.replace(SERVED_PRODUCT_NAME_META, `<meta name="apple-mobile-web-app-title" content="${escaped}"`);
 }
 
 function stampPrebootTheme(html: string, theme: string | null): string {

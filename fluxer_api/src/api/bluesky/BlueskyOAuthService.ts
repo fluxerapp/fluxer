@@ -4,13 +4,8 @@ import {randomUUID} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {isAbsolute} from 'node:path';
 import type {UserID} from '@app/api/BrandedTypes';
-import {
-	BlueskyOAuthStateInvalidError,
-	BlueskyOAuthStoreError,
-	createSessionStore,
-	createStateStore,
-	validateBlueskyGrantOwner,
-} from '@app/api/bluesky/BlueskyOAuthStores';
+import {BlueskyOAuthStateInvalidError, BlueskyOAuthStoreError} from '@app/api/bluesky/BlueskyOAuthErrors';
+import {createSessionStore, createStateStore, validateBlueskyGrantOwner} from '@app/api/bluesky/BlueskyOAuthStores';
 import type {
 	BlueskyAuthorizeResult,
 	BlueskyCallbackResult,
@@ -19,10 +14,13 @@ import type {
 } from '@app/api/bluesky/IBlueskyOAuthService';
 import type {BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
 import {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
-import {Agent} from '@atproto/api';
+import type {ExternalFetchResponse, IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {JoseKey} from '@atproto/jwk-jose';
 import {
+	AtprotoHandleResolver,
+	type Fetch,
 	FetchError,
+	type HandleResolver,
 	NodeOAuthClient,
 	type NodeSavedSessionStore,
 	type OAuthClientMetadataInput,
@@ -34,6 +32,43 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 interface BlueskyClientConfiguration {
 	clientMetadata: OAuthClientMetadataInput;
 	keyset: Array<JoseKey>;
+	fetch: Fetch;
+	handleResolver: HandleResolver;
+}
+
+const NULL_BODY_STATUSES = new Set([204, 205, 304]);
+
+const HANDLE_LOOKUP_TIMEOUT_MS = 3000;
+const HANDLE_INVALID = 'handle.invalid';
+
+function createUnfurlerFetch(unfurler: IUnfurlerService): Fetch {
+	return async (input, init) => {
+		const request = new Request(input, init);
+		request.signal.throwIfAborted();
+		const body = request.method === 'GET' || request.method === 'HEAD' ? null : await request.text();
+		const response = await new Promise<ExternalFetchResponse>((resolve, reject) => {
+			const onAbort = () => reject(request.signal.reason);
+			request.signal.addEventListener('abort', onAbort, {once: true});
+			unfurler
+				.fetchExternal({method: request.method, url: request.url, headers: [...request.headers], body})
+				.then(resolve, (error: unknown) => reject(new TypeError('fetch failed', {cause: error})))
+				.finally(() => request.signal.removeEventListener('abort', onAbort));
+		});
+		return new Response(NULL_BODY_STATUSES.has(response.status) ? null : response.body, {
+			status: response.status,
+			headers: response.headers,
+		});
+	};
+}
+
+function createHandleResolver(unfurler: IUnfurlerService, fetch: Fetch): HandleResolver {
+	return new AtprotoHandleResolver({
+		fetch: (input, init) => {
+			const timeout = AbortSignal.timeout(HANDLE_LOOKUP_TIMEOUT_MS);
+			return fetch(input, {...init, signal: init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout});
+		},
+		resolveTxt: (name) => unfurler.resolveTxt(name),
+	});
 }
 
 interface BlueskyClientSession {
@@ -41,7 +76,7 @@ interface BlueskyClientSession {
 	sessionStore: NodeSavedSessionStore;
 }
 
-async function loadSigningKey(config: BlueskyOAuthKeyConfig, index: number): Promise<JoseKey> {
+export async function loadSigningKey(config: BlueskyOAuthKeyConfig, index: number): Promise<JoseKey> {
 	const field = `Bluesky OAuth keys[${index}]`;
 	let keyData = config.private_key;
 	if (keyData == null) {
@@ -98,6 +133,7 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 	static async create(
 		config: BlueskyOAuthConfig,
 		kvClient: IKVProvider,
+		unfurler: IUnfurlerService,
 		apiPublicEndpoint: string,
 	): Promise<BlueskyOAuthService> {
 		const baseUrl = apiPublicEndpoint.replace(/\/$/, '');
@@ -105,6 +141,8 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 		for (const [index, key] of config.keys.entries()) {
 			keyset.push(await loadSigningKey(key, index));
 		}
+		const fetch = createUnfurlerFetch(unfurler);
+		const handleResolver = createHandleResolver(unfurler, fetch);
 		return new BlueskyOAuthService(
 			{
 				clientMetadata: {
@@ -125,6 +163,8 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 					jwks_uri: `${baseUrl}/connections/bluesky/jwks.json`,
 				},
 				keyset,
+				fetch,
+				handleResolver,
 			},
 			kvClient,
 		);
@@ -157,7 +197,7 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 		});
 		const {session} = await client.callback(params);
 		const grantOwner = requireOwner();
-		const handle = await this.resolveHandle(session.did);
+		const handle = await this.resolveHandle(client, session.did);
 		return {
 			...grantOwner,
 			did: session.did,
@@ -182,21 +222,20 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 		return {client, sessionStore};
 	}
 
-	private async resolveHandle(did: string): Promise<string> {
-		const agent = new Agent('https://public.api.bsky.app');
+	private async resolveHandle(client: NodeOAuthClient, did: string): Promise<string> {
 		try {
-			const profile = await agent.getProfile({actor: did});
-			return profile.data.handle;
+			for (const noCache of [false, true]) {
+				const {handle} = await client.identityResolver.resolve(did, {noCache});
+				if (handle !== HANDLE_INVALID) return handle;
+			}
 		} catch (error) {
-			throw createOAuthOperationError('resolve profile', error);
+			throw createOAuthOperationError('resolve handle', error);
 		}
+		throw createOAuthOperationError('resolve handle', new Error('The handle does not point back to the account'));
 	}
 }
 
-function createOAuthOperationError(
-	operation: 'authorize account' | 'restore session' | 'resolve profile',
-	error: unknown,
-): Error {
+function createOAuthOperationError(operation: 'authorize account' | 'resolve handle', error: unknown): Error {
 	if (error instanceof BlueskyOAuthStoreError) return error;
 	let status: number | undefined;
 	if (error instanceof OAuthResponseError) status = error.status;

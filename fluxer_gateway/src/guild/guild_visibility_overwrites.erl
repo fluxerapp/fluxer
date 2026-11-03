@@ -159,13 +159,16 @@ gate_channel_set(SessionData, ChannelIds, State) ->
         false ->
             ChannelIds;
         true ->
-            sets:filter(
-                fun(ChannelId) ->
-                    guild_thread_gate:channel_visible(SessionData, ChannelId, State)
-                end,
-                ChannelIds
-            )
+            visible_channel_set(SessionData, ChannelIds, State)
     end.
+
+-spec visible_channel_set(map(), sets:set(channel_id()), guild_state()) ->
+    sets:set(channel_id()).
+visible_channel_set(SessionData, ChannelIds, State) ->
+    sets:filter(
+        fun(ChannelId) -> guild_thread_gate:channel_visible(SessionData, ChannelId, State) end,
+        ChannelIds
+    ).
 
 -spec compute_channel_diffs(
     binary(), map(), user_id(), guild_state(), guild_state(), sets:set(channel_id())
@@ -289,8 +292,8 @@ dispatch_per_channel_changes(
             {NewState, Memo};
         true ->
             Pid = maps:get(pid, SessionData, undefined),
-            OldMember = guild_permissions:find_member_by_user_id(UserId, OldState),
-            NewMember = guild_permissions:find_member_by_user_id(UserId, NewState),
+            OldMember = guild_permissions_check:find_member_by_user_id(UserId, OldState),
+            NewMember = guild_permissions_check:find_member_by_user_id(UserId, NewState),
             ConnectedSet = maps:get(UserId, ConnectedVoiceByUser, sets:new()),
             InitialViewableMap = guild_visibility_channels:ensure_viewable_channel_map(
                 SessionData, UserId, OldState
@@ -335,21 +338,32 @@ process_channel_list(ChannelIds, {Pairs, Settled}, InitialViewableMap, NewState,
         {{Visible, Hidden}, []} ->
             {maps:merge(maps:without(Hidden, InitialViewableMap), Visible), NewState};
         {_, Connected} ->
-            lists:foldl(
-                fun(ChannelId, Acc) ->
-                    case lists:member(ChannelId, Connected) of
-                        true ->
-                            apply_channel_change(ChannelId, Acc, ChangeContext);
-                        false ->
-                            {OldVisible, NewVisible} = maps:get(ChannelId, Pairs),
-                            apply_visibility(
-                                ChannelId, OldVisible, NewVisible, Acc, ChangeContext
-                            )
-                    end
-                end,
-                {InitialViewableMap, NewState},
-                ChannelIds
+            fold_channel_changes(
+                ChannelIds, Connected, Pairs, {InitialViewableMap, NewState}, ChangeContext
             )
+    end.
+
+-spec fold_channel_changes(
+    [channel_id()], [channel_id()], map(), {map(), guild_state()}, map()
+) -> {map(), guild_state()}.
+fold_channel_changes(ChannelIds, Connected, Pairs, Initial, ChangeContext) ->
+    lists:foldl(
+        fun(ChannelId, Acc) ->
+            apply_listed_change(ChannelId, Acc, Connected, Pairs, ChangeContext)
+        end,
+        Initial,
+        ChannelIds
+    ).
+
+-spec apply_listed_change(channel_id(), {map(), guild_state()}, [channel_id()], map(), map()) ->
+    {map(), guild_state()}.
+apply_listed_change(ChannelId, Acc, Connected, Pairs, ChangeContext) ->
+    case lists:member(ChannelId, Connected) of
+        true ->
+            apply_channel_change(ChannelId, Acc, ChangeContext);
+        false ->
+            {OldVisible, NewVisible} = maps:get(ChannelId, Pairs),
+            apply_visibility(ChannelId, OldVisible, NewVisible, Acc, ChangeContext)
     end.
 
 -spec connected_channels([channel_id()], sets:set(channel_id())) -> [channel_id()].
@@ -370,7 +384,7 @@ apply_channel_change(ChannelId, {ViewableMapAcc, StateAcc}, ChangeContext) ->
         connected_set := ConnectedSet,
         old_state := OldState
     } = ChangeContext,
-    OldVisible = guild_visibility_channels:channel_is_visible(
+    OldVisible = guild_permissions_check:can_view_channel(
         UserId, ChannelId, OldMember, OldState
     ),
     {StateAfterPreserve, NewVisible} =

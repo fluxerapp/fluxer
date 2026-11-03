@@ -4,19 +4,10 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -compile({no_auto_import, [get/1]}).
 
 -export([
-    start_link/0,
-    update/3,
-    get/1,
-    bulk_get/1,
-    delete/1,
-    rebalance/0,
-    rebalance_async/0,
-    pending_handoff_count/0
+    start_link/0, update/3, get/1, bulk_get/1, rebalance/0, pending_handoff_count/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -65,16 +56,6 @@ get(GuildId) when is_integer(GuildId) ->
 bulk_get(GuildIds) when is_list(GuildIds) ->
     guild_counts_cache_query:safe_bulk_get(GuildIds).
 
--spec delete(guild_id()) -> ok.
-delete(GuildId) when is_integer(GuildId) ->
-    _ = guild_counts_cache_query:safe_owner_call(GuildId, {delete, GuildId}, ok),
-    ok.
-
--spec rebalance_async() -> ok.
-rebalance_async() ->
-    _ = guild_counts_cache_query:safe_local_cast(rebalance),
-    ok.
-
 -spec rebalance() -> ok.
 rebalance() ->
     _ = guild_counts_cache_query:safe_local_call(rebalance, ok),
@@ -91,7 +72,9 @@ pending_handoff_count() ->
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 0),
-    {ShardCount, _Source} = guild_counts_cache_shard_mgmt:determine_shard_count(),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([
+        guild_counts_cache_shards, guild_shards
+    ]),
     Shards = guild_counts_cache_shard_mgmt:start_shards(ShardCount, #{}),
     {ok,
         #{
@@ -108,8 +91,6 @@ handle_call({update, GuildId, MC, OC}, _From, State) ->
     handle_update(require_guild_id(GuildId), require_count(MC), require_count(OC), State);
 handle_call({update_local, GuildId, MC, OC}, _From, State) ->
     handle_update_local(require_guild_id(GuildId), require_count(MC), require_count(OC), State);
-handle_call({delete, GuildId}, _From, State) ->
-    handle_delete(require_guild_id(GuildId), State);
 handle_call({delete_local, GuildId}, _From, State) ->
     handle_delete_local(require_guild_id(GuildId), State);
 handle_call({get, GuildId}, From, State) ->
@@ -146,21 +127,19 @@ handle_cast({remote_handoff_result, GuildId, Op, Action, Result}, State) ->
         State
     ),
     {noreply, State1};
-handle_cast(rebalance, State) ->
-    {noreply, guild_counts_cache_remote:rebalance_ownership(State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
     Shards = maps:get(shards, State),
-    case guild_counts_cache_shard_mgmt:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_shard(Index, State);
         not_found -> {noreply, State}
     end;
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case guild_counts_cache_shard_mgmt:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_shard(Index, State);
         not_found -> {noreply, State}
     end;
@@ -274,25 +253,6 @@ handle_update_local(GuildId, MC, OC, State) ->
     {ok, S1} = guild_counts_cache_query:update_local(GuildId, MC, OC, State),
     S2 = guild_counts_cache_remote:clear_pending_handoff(GuildId, S1),
     {reply, ok, guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(S2)}.
-
--spec handle_delete(guild_id(), state()) -> {reply, ok, state()}.
-handle_delete(GuildId, State) ->
-    OwnerNode = guild_counts_cache_query:resolve_owner_node(GuildId),
-    case OwnerNode of
-        LocalNode when LocalNode =:= node() ->
-            {ok, S1} = guild_counts_cache_query:delete_local(GuildId, State),
-            S2 = guild_counts_cache_remote:clear_pending_handoff(GuildId, S1),
-            {reply, ok, guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(S2)};
-        unavailable ->
-            S1 = guild_counts_cache_remote:enqueue_pending_delete(GuildId, State),
-            {reply, ok, guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(S1)};
-        RemoteNode when is_atom(RemoteNode) ->
-            S1 = guild_counts_cache_remote:enqueue_pending_delete(GuildId, State),
-            guild_counts_cache_remote:start_remote_pending_handoff(
-                RemoteNode, GuildId, delete, {delete_local, GuildId}
-            ),
-            {reply, ok, guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(S1)}
-    end.
 
 -spec handle_delete_local(guild_id(), state()) -> {reply, ok, state()}.
 handle_delete_local(GuildId, State) ->

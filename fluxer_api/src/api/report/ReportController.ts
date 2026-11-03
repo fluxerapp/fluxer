@@ -77,6 +77,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').submitMessageReportFlow({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					viewer: viewerFromCtx(ctx),
 					data: ctx.req.valid('json'),
 					locale: ctx.get('requestLocale') ?? null,
@@ -103,6 +104,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').submitUserReportFlow({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					data: ctx.req.valid('json'),
 					locale: ctx.get('requestLocale') ?? null,
 				}),
@@ -129,6 +131,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportMessage({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					viewer: viewerFromCtx(ctx),
 					data: ctx.req.valid('json'),
 				}),
@@ -154,6 +157,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportUser({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					data: ctx.req.valid('json'),
 				}),
 			);
@@ -178,6 +182,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportGuild({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					data: ctx.req.valid('json'),
 				}),
 			);

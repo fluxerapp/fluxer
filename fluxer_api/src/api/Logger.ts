@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '@app/api/ILogger';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
-let _logger: ILogger | null = null;
+let _logger: LoggerInterface | null = null;
 
-export function initializeLogger(logger: ILogger): void {
+export function initializeLogger(logger: LoggerInterface): void {
 	if (_logger !== null) {
 		return;
 	}
 	_logger = logger;
 }
 
-export const Logger: ILogger = new Proxy({} as ILogger, {
-	get(_target, prop: keyof ILogger | symbol) {
+export const Logger: LoggerInterface = new Proxy({} as LoggerInterface, {
+	get(_target, prop: keyof LoggerInterface | symbol) {
 		if (_logger === null) {
 			throw new Error('Logger has not been initialized. Call initializeLogger() first.');
 		}
-		const value = _logger[prop as keyof ILogger];
+		const value = _logger[prop as keyof LoggerInterface];
 		if (typeof value === 'function') {
 			return value.bind(_logger);
 		}

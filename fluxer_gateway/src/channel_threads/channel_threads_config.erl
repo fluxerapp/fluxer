@@ -10,30 +10,18 @@
     version/0,
     enabled/0,
     loaded/0,
-    ever_enabled/0,
-    guild_active/1,
-    guild_active/2,
-    user_active/1,
-    user_active/2,
-    user_excluded/1,
-    user_excluded/2,
+    guild_active/1, guild_active/2,
+    user_active/1, user_active/2,
+    user_excluded/1, user_excluded/2,
     guild_fields_changed/2,
     user_fields_changed/2,
-    update_counts/0,
-    note_identify/2,
-    identify_counts/0,
-    identify_os_label/1
+    update_counts/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
-
--ifdef(TEST).
--export([validate_config/1, store_validated_config/3, default_config/0, apply_nats_payload/1]).
--endif.
 
 -define(PERSISTENT_TERM_KEY, channel_threads_config).
 -define(PULLED_KEY, {channel_threads_config, pulled}).
 -define(UPDATE_COUNTS_KEY, {channel_threads_config, update_counts}).
--define(IDENTIFY_COUNTS_KEY, {channel_threads_config, identify_counts}).
 -define(NATS_SUBJECT, <<"config.channel.threads">>).
 -define(FETCH_DELAY_MS, 2000).
 -define(RECONCILE_INTERVAL_MS, 30000).
@@ -64,7 +52,7 @@
     fetch_timer := reference() | undefined
 }.
 -type store_result() :: updated | unchanged | stale | rejected.
--type os_label() :: binary().
+-type field_error() :: {invalid_field, binary(), non_neg_integer() | undefined}.
 
 -export_type([config/0]).
 
@@ -94,10 +82,6 @@ loaded() ->
             #{enabled := false, config_version := 0} -> false;
             _ -> true
         end.
-
--spec ever_enabled() -> boolean().
-ever_enabled() ->
-    maps:get(ever_enabled, config()).
 
 -spec guild_active(integer()) -> boolean().
 guild_active(GuildId) ->
@@ -178,95 +162,17 @@ update_counts() ->
     Counters = persistent_term:get(?UPDATE_COUNTS_KEY, undefined),
     maps:from_list([{Result, read_count(Counters, Result)} || Result <- store_results()]).
 
--spec note_identify(boolean(), map()) -> ok.
-note_identify(Capable, Properties) ->
-    case persistent_term:get(?IDENTIFY_COUNTS_KEY, undefined) of
-        undefined ->
-            ok;
-        Counters ->
-            Os = identify_os_label(maps:get(<<"os">>, Properties, undefined)),
-            counters:add(Counters, identify_index(Capable, Os), 1)
-    end.
-
--spec identify_counts() -> #{{boolean(), os_label()} => non_neg_integer()}.
-identify_counts() ->
-    case persistent_term:get(?IDENTIFY_COUNTS_KEY, undefined) of
-        undefined ->
-            #{};
-        Counters ->
-            maps:from_list([
-                {{Capable, Os}, counters:get(Counters, identify_index(Capable, Os))}
-             || Capable <- [true, false], Os <- os_labels()
-            ])
-    end.
-
--spec identify_os_label(term()) -> os_label().
-identify_os_label(Os) when is_binary(Os) ->
-    classify_os(string:lowercase(Os));
-identify_os_label(_Os) ->
-    <<"other">>.
-
--spec classify_os(unicode:chardata()) -> os_label().
-classify_os(Os) ->
-    first_os_match(Os, [
-        {<<"android">>, [<<"android">>]},
-        {<<"ios">>, [<<"ios">>, <<"iphone">>, <<"ipad">>]},
-        {<<"macos">>, [<<"mac">>, <<"darwin">>, <<"os x">>]},
-        {<<"windows">>, [<<"win">>]},
-        {<<"linux">>, [<<"linux">>, <<"bsd">>]}
-    ]).
-
--spec first_os_match(unicode:chardata(), [{os_label(), [binary()]}]) -> os_label().
-first_os_match(_Os, []) ->
-    <<"other">>;
-first_os_match(Os, [{Label, Needles} | Rest]) ->
-    case lists:any(fun(Needle) -> string:find(Os, Needle) =/= nomatch end, Needles) of
-        true -> Label;
-        false -> first_os_match(Os, Rest)
-    end.
-
--spec os_labels() -> [os_label()].
-os_labels() ->
-    [<<"android">>, <<"ios">>, <<"windows">>, <<"macos">>, <<"linux">>, <<"other">>].
-
--spec identify_index(boolean(), os_label()) -> pos_integer().
-identify_index(Capable, Os) ->
-    CapableOffset =
-        case Capable of
-            true -> 0;
-            false -> length(os_labels())
-        end,
-    CapableOffset + os_index(Os, os_labels(), 1).
-
--spec os_index(os_label(), [os_label()], pos_integer()) -> pos_integer().
-os_index(Os, [Os | _Rest], Index) ->
-    Index;
-os_index(Os, [_Other | Rest], Index) ->
-    os_index(Os, Rest, Index + 1);
-os_index(_Os, [], Index) ->
-    Index - 1.
-
 -spec init([]) -> {ok, state()}.
 init([]) ->
     erlang:process_flag(fullsweep_after, 50),
     persistent_term:put(?PERSISTENT_TERM_KEY, config()),
-    ensure_identify_counters(),
+    channel_threads_identify_counts:ensure_counters(),
     self() ! subscribe_nats,
     {ok, #{
         nats_subscription => undefined,
         nats_monitor => undefined,
         fetch_timer => erlang:send_after(?FETCH_DELAY_MS, self(), fetch_config)
     }}.
-
--spec ensure_identify_counters() -> ok.
-ensure_identify_counters() ->
-    case persistent_term:get(?IDENTIFY_COUNTS_KEY, undefined) of
-        undefined ->
-            Size = 2 * length(os_labels()),
-            persistent_term:put(?IDENTIFY_COUNTS_KEY, counters:new(Size, [write_concurrency]));
-        _Counters ->
-            ok
-    end.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
 handle_call(_Request, _From, State) ->
@@ -323,7 +229,7 @@ default_config() ->
 -spec fetch_config_from_api() -> store_result().
 fetch_config_from_api() ->
     RpcRequest = #{<<"type">> => <<"get_channel_threads_config">>},
-    case api_rpc_client:call(RpcRequest) of
+    case rpc_client:call(RpcRequest) of
         {ok, #{<<"config">> := Config}} when is_map(Config) ->
             store_valid_config(Config, api);
         {ok, _Other} ->
@@ -405,8 +311,7 @@ store_changed_config(Previous, Current, Source) ->
     ok = channel_threads_flip:config_changed(Previous, Current),
     updated.
 
--spec validate_config(map()) ->
-    {ok, config()} | {error, {invalid_field, binary(), non_neg_integer() | undefined}}.
+-spec validate_config(map()) -> {ok, config()} | {error, field_error()}.
 validate_config(Wire) ->
     lists:foldl(
         fun(Field, Acc) -> validate_field(Field, Wire, Acc) end,
@@ -433,8 +338,8 @@ config_fields() ->
 -spec validate_field(
     {atom(), binary(), fun((term()) -> {ok, term()} | error)},
     map(),
-    {ok, config()} | {error, term()}
-) -> {ok, config()} | {error, term()}.
+    {ok, config()} | {error, field_error()}
+) -> {ok, config()} | {error, field_error()}.
 validate_field(_Field, _Wire, {error, _} = Error) ->
     Error;
 validate_field({Key, WireKey, Validate}, Wire, {ok, Acc}) ->
@@ -444,9 +349,9 @@ validate_field({Key, WireKey, Validate}, Wire, {ok, Acc}) ->
     end.
 
 -spec store_validated_field(atom(), binary(), term(), {ok, term()} | error, config()) ->
-    {ok, config()} | {error, term()}.
+    {ok, config()} | {error, field_error()}.
 store_validated_field(Key, _WireKey, _Value, {ok, Normalised}, Acc) ->
-    {ok, Acc#{Key => Normalised}};
+    {ok, eqwalizer:dynamic_cast(Acc#{Key => Normalised})};
 store_validated_field(_Key, WireKey, Value, error, _Acc) when is_list(Value) ->
     {error, {invalid_field, WireKey, length(Value)}};
 store_validated_field(_Key, WireKey, _Value, error, _Acc) ->

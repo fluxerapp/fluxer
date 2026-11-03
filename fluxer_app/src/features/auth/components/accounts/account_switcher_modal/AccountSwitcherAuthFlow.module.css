@@ -1,37 +1,16 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.authCardContainer.authCardContainer {
+.shell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
 	width: 100%;
-	min-height: 0;
-	flex: 0 1 auto;
-	padding: 0;
+	min-width: 0;
 }
 
-.authCard {
-	position: relative;
-	min-height: 0;
-}
-
-.authCardContent.authCardContent {
-	position: relative;
-	box-sizing: border-box;
-	justify-content: flex-start;
-	max-height: min(
-		calc(100dvh - 4rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)),
-		var(--account-switcher-overlay-max-height, 52rem)
-	);
-	min-height: 0;
-	overflow: hidden;
-	overscroll-behavior: contain;
-}
-
-.authCarouselViewport {
-	width: 100%;
-	min-height: 0;
-	flex: 1 1 auto;
-	overflow-x: hidden;
-	overflow-y: auto;
-	overscroll-behavior: contain;
+.backButton {
+	align-self: flex-start;
+	margin-inline-start: calc(-1 * var(--spacing-2));
 }
 
 .inlineLink {
@@ -39,16 +18,17 @@
 	padding: 0;
 	border: 0;
 	background: transparent;
-	color: var(--text-link);
+	color: var(--text-tertiary);
 	cursor: pointer;
 	font: inherit;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	text-align: left;
+	text-align: start;
 	text-decoration: none;
 }
 
 .inlineLink:hover {
+	color: var(--text-primary);
 	text-decoration: underline;
 }
 
@@ -56,8 +36,6 @@
 	width: 100%;
 }
 
-@media (max-width: 42rem) {
-	.authCardContent.authCardContent {
-		max-height: calc(100dvh - 3rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
-	}
+.untitled > form {
+	margin-top: 0;
 }

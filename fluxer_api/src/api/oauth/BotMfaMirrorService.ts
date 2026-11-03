@@ -6,7 +6,7 @@ import type {Application} from '@app/api/models/Application';
 import type {User} from '@app/api/models/User';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 
 export class BotMfaMirrorService {
 	constructor(
@@ -40,8 +40,8 @@ export class BotMfaMirrorService {
 		const applications = await this.listApplications(owner.id);
 		await Promise.all(
 			applications.map(async (application) => {
-				if (!application.hasBotUser()) return;
-				const botUserId = application.getBotUserId();
+				if (application.botUserId === null) return;
+				const botUserId = application.botUserId;
 				if (!botUserId) return;
 				const botUser = await this.userRepository.findUnique(botUserId);
 				if (!botUser) return;
@@ -56,11 +56,7 @@ export class BotMfaMirrorService {
 					botUser.toRow(),
 				);
 				if (updatedBotUser) {
-					await this.gatewayService.dispatchPresence({
-						userId: botUserId,
-						event: 'USER_UPDATE',
-						data: mapUserToPrivateResponse(updatedBotUser),
-					});
+					await dispatchUserUpdate(this.gatewayService, updatedBotUser);
 				}
 			}),
 		);

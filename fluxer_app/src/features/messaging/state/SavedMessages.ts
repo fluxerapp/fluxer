@@ -9,7 +9,9 @@ import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/Me
 import {makeAutoObservable} from 'mobx';
 
 function byIdDescending(a: {id: string}, b: {id: string}): number {
-	return b.id > a.id ? 1 : a.id > b.id ? -1 : 0;
+	if (b.id > a.id) return 1;
+	if (a.id > b.id) return -1;
+	return 0;
 }
 
 class SavedMessages {
@@ -127,7 +129,7 @@ class SavedMessages {
 		this.savedMessages = [new Message(message, {missingReactions: 'preserve'}), ...this.savedMessages];
 	}
 
-	private touchMessage(messageId: string): void {
+	handleMessageReactionChange(messageId: string): void {
 		const index = this.savedMessages.findIndex((m) => m.id === messageId);
 		if (index === -1) return;
 		this.savedMessages = [
@@ -135,22 +137,6 @@ class SavedMessages {
 			this.savedMessages[index].withUpdates({}),
 			...this.savedMessages.slice(index + 1),
 		];
-	}
-
-	handleMessageReactionAdd(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemove(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveAll(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveEmoji(messageId: string): void {
-		this.touchMessage(messageId);
 	}
 }
 

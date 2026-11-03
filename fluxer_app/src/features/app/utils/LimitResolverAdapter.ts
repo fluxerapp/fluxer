@@ -8,7 +8,7 @@ import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 
-export interface LimitResolveOptions {
+interface LimitResolveOptions {
 	key: LimitKey;
 	fallback: number;
 	context?: LimitContextInput;
@@ -35,14 +35,6 @@ class LimitResolverClass {
 			return InstanceSnapshotStore.getLimitsForInstance(instanceDomain);
 		}
 		return RuntimeConfig.getSnapshotOrNull()?.limits ?? null;
-	}
-
-	resolvePremium(key: LimitKey, fallback: number): number {
-		return this.resolveStock(key, fallback);
-	}
-
-	resolveFree(key: LimitKey, fallback: number): number {
-		return this.resolveRestricted(key, fallback);
 	}
 
 	resolveStock(key: LimitKey, fallback: number): number {

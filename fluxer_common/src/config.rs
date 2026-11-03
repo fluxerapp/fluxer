@@ -129,7 +129,7 @@ pub fn parse_public_origin(origin: &str) -> Option<PublicOrigin> {
     if trimmed.is_empty() {
         return None;
     }
-    let parsed = reqwest::Url::parse(trimmed).ok()?;
+    let parsed = url::Url::parse(trimmed).ok()?;
     let scheme = parsed.scheme();
     if scheme != "http" && scheme != "https" {
         return None;
@@ -194,7 +194,7 @@ pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Opti
     if domain.is_empty() {
         return url.to_owned();
     }
-    let Ok(parsed) = reqwest::Url::parse(url) else {
+    let Ok(parsed) = url::Url::parse(url) else {
         return url.to_owned();
     };
     if canonicalize_domain(parsed.host_str().unwrap_or_default()) != domain {
@@ -230,228 +230,72 @@ pub fn normalize_public_endpoint_from_env(url: &str) -> String {
     try_normalize_public_endpoint_from_env(url).unwrap_or_else(|error| panic!("{error}"))
 }
 
+#[derive(Debug, Default)]
+pub struct EnvMap(Vec<(String, String)>);
+
+impl EnvMap {
+    pub fn from_pairs<I, K, V>(vars: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Into<String>,
+    {
+        Self(
+            vars.into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        )
+    }
+
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.0
+            .iter()
+            .find_map(|(k, v)| (k == key).then_some(v.as_str()))
+            .filter(|v| !v.trim().is_empty())
+    }
+}
+
+pub fn parse_bool(var_name: &str, raw: Option<&str>) -> anyhow::Result<Option<bool>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw.trim();
+    match raw.to_ascii_lowercase().as_str() {
+        "true" | "1" | "yes" => Ok(Some(true)),
+        "false" | "0" | "no" => Ok(Some(false)),
+        _ => Err(anyhow::anyhow!(
+            "{var_name} must be a boolean: true, false, 1, 0, yes, or no"
+        )),
+    }
+}
+
+pub fn parse_number<T>(
+    var_name: &str,
+    raw: Option<&str>,
+    default_value: T,
+    min_value: T,
+    max_value: T,
+) -> anyhow::Result<T>
+where
+    T: std::str::FromStr + PartialOrd + std::fmt::Display + Copy,
+{
+    let Some(raw) = raw else {
+        return Ok(default_value);
+    };
+    let parsed = raw
+        .trim()
+        .parse::<T>()
+        .map_err(|_| anyhow::anyhow!("{var_name} must be a number"))?;
+    anyhow::ensure!(
+        parsed >= min_value && parsed <= max_value,
+        "{var_name} must be between {min_value} and {max_value}"
+    );
+    Ok(parsed)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn default_https_install_is_untouched() {
-        for url in [
-            "https://fluxer.example",
-            "https://fluxer.example/media",
-            "https://fluxer.example/admin/oauth2_callback",
-            "wss://fluxer.example/gateway",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(443))
-            );
-        }
-    }
-
-    #[test]
-    fn default_http_install_is_untouched() {
-        for url in [
-            "http://fluxer.example",
-            "http://fluxer.example/media",
-            "ws://fluxer.example/gateway",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(80))
-            );
-        }
-    }
-
-    #[test]
-    fn inserts_a_non_default_port_for_the_base_domain() {
-        assert_eq!(
-            "http://fluxer.example:19080/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080",
-            normalize_public_endpoint("http://fluxer.example", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "https://fluxer.example:8443/admin/oauth2_callback",
-            normalize_public_endpoint(
-                "https://fluxer.example/admin/oauth2_callback",
-                "fluxer.example",
-                Some(8443)
-            )
-        );
-    }
-
-    #[test]
-    fn a_default_port_for_the_urls_own_scheme_is_never_inserted() {
-        assert_eq!(
-            "ws://fluxer.example/gateway",
-            normalize_public_endpoint("ws://fluxer.example/gateway", "fluxer.example", Some(80))
-        );
-        assert_eq!(
-            "wss://fluxer.example/gateway",
-            normalize_public_endpoint("wss://fluxer.example/gateway", "fluxer.example", Some(443))
-        );
-        assert_eq!(
-            "http://fluxer.example:443/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(443))
-        );
-        assert_eq!(
-            "https://fluxer.example:80/media",
-            normalize_public_endpoint("https://fluxer.example/media", "fluxer.example", Some(80))
-        );
-    }
-
-    #[test]
-    fn another_host_is_never_touched() {
-        for url in [
-            "https://cdn.example.net/assets",
-            "https://media.example.net",
-            "http://api:8080",
-            "http://media-proxy:8080",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-        assert_eq!(
-            "https://sub.fluxer.example/media",
-            normalize_public_endpoint(
-                "https://sub.fluxer.example/media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn an_explicit_port_is_never_touched() {
-        for url in [
-            "http://fluxer.example:19080/media",
-            "http://fluxer.example:8080/media",
-            "https://fluxer.example:443/media",
-            "http://fluxer.example:80/media",
-            "http://user:pass@fluxer.example:19080/media",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-    }
-
-    #[test]
-    fn is_idempotent() {
-        let once =
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080));
-        let twice = normalize_public_endpoint(&once, "fluxer.example", Some(19080));
-        assert_eq!("http://fluxer.example:19080/media", once);
-        assert_eq!(once, twice);
-    }
-
-    #[test]
-    fn an_unset_port_leaves_every_url_alone() {
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", None)
-        );
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(0))
-        );
-    }
-
-    #[test]
-    fn an_empty_base_domain_leaves_every_url_alone() {
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "   ", Some(19080))
-        );
-    }
-
-    #[test]
-    fn a_url_that_does_not_parse_is_returned_unchanged() {
-        for url in ["", "/api", "fluxer.example/media", "not a url", "://x"] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-    }
-
-    #[test]
-    fn matches_the_host_case_insensitively_and_ignores_a_trailing_dot() {
-        assert_eq!(
-            "http://FLUXER.example:19080/Media",
-            normalize_public_endpoint("http://FLUXER.example/Media", "Fluxer.Example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example.:19080/media",
-            normalize_public_endpoint(
-                "http://fluxer.example./media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-        assert_eq!(
-            "http://fluxer.example:19080/media",
-            normalize_public_endpoint(
-                "http://fluxer.example/media",
-                "fluxer.example.",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn preserves_path_query_fragment_and_trailing_slash() {
-        assert_eq!(
-            "http://fluxer.example:19080/",
-            normalize_public_endpoint("http://fluxer.example/", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080?a=1",
-            normalize_public_endpoint("http://fluxer.example?a=1", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080#top",
-            normalize_public_endpoint("http://fluxer.example#top", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080/media/x.png?v=1#frag",
-            normalize_public_endpoint(
-                "http://fluxer.example/media/x.png?v=1#frag",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn keeps_credentials_and_ipv6_literals_intact() {
-        assert_eq!(
-            "http://user:pass@fluxer.example:19080/media",
-            normalize_public_endpoint(
-                "http://user:pass@fluxer.example/media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-        assert_eq!(
-            "http://[::1]:19080/media",
-            normalize_public_endpoint("http://[::1]/media", "[::1]", Some(19080))
-        );
-        assert_eq!(
-            "http://[::1]:8080/media",
-            normalize_public_endpoint("http://[::1]:8080/media", "[::1]", Some(19080))
-        );
-    }
 
     #[test]
     fn matches_the_typescript_normalizer_on_the_shared_vectors() {
@@ -474,282 +318,5 @@ mod tests {
                 "vector {url} @ {base_domain} port {public_port:?}"
             );
         }
-    }
-
-    fn reader(vars: &[(&str, &str)]) -> impl FnMut(&str) -> Option<String> {
-        let vars: Vec<(String, String)> = vars
-            .iter()
-            .map(|(name, value)| ((*name).to_owned(), (*value).to_owned()))
-            .collect();
-        move |name: &str| {
-            vars.iter()
-                .find_map(|(key, value)| (key == name).then(|| value.clone()))
-        }
-    }
-
-    #[test]
-    fn parses_a_public_origin() {
-        assert_eq!(
-            Some(PublicOrigin {
-                scheme: "https".to_owned(),
-                domain: "chat.example.com".to_owned(),
-                port: 8443,
-            }),
-            parse_public_origin("https://chat.example.com:8443")
-        );
-        assert_eq!(
-            Some(PublicOrigin {
-                scheme: "http".to_owned(),
-                domain: "chat.example.com".to_owned(),
-                port: 80,
-            }),
-            parse_public_origin("http://chat.example.com")
-        );
-        assert_eq!(
-            Some(PublicOrigin {
-                scheme: "http".to_owned(),
-                domain: "[::1]".to_owned(),
-                port: 19080,
-            }),
-            parse_public_origin("http://[::1]:19080")
-        );
-    }
-
-    #[test]
-    fn an_explicit_default_port_normalizes_to_the_portless_form() {
-        let origin = parse_public_origin("https://chat.example.com:443").expect("origin parses");
-        assert_eq!(443, origin.port);
-        assert_eq!(
-            "https://chat.example.com/admin/oauth2_callback",
-            normalize_public_endpoint(
-                "https://chat.example.com/admin/oauth2_callback",
-                &origin.domain,
-                Some(origin.port)
-            )
-        );
-        assert_eq!(
-            80,
-            parse_public_origin("http://chat.example.com:80")
-                .expect("origin parses")
-                .port
-        );
-    }
-
-    #[test]
-    fn rejects_anything_that_is_not_a_bare_origin() {
-        for origin in [
-            "",
-            "   ",
-            "not a url",
-            "chat.example.com:8443",
-            "wss://chat.example.com",
-            "https://chat.example.com/media",
-            "https://chat.example.com?a=1",
-            "https://user:pw@chat.example.com",
-        ] {
-            assert_eq!(None, parse_public_origin(origin), "origin {origin}");
-        }
-    }
-
-    #[test]
-    fn the_origin_supplies_the_domain_and_the_port() {
-        let (domain, port) = resolve_public_domain_and_port(reader(&[(
-            "FLUXER_PUBLIC_ORIGIN",
-            "https://chat.example.com:29080",
-        )]))
-        .expect("origin resolves");
-        assert_eq!("chat.example.com", domain);
-        assert_eq!(Some(29080), port);
-    }
-
-    #[test]
-    fn the_origin_wins_over_the_named_variables() {
-        let (domain, port) = resolve_public_domain_and_port(reader(&[
-            ("FLUXER_PUBLIC_ORIGIN", "https://chat.example.com:29080"),
-            ("FLUXER_BASE_DOMAIN", "other.example.com"),
-            ("FLUXER_PUBLIC_SCHEME", "http"),
-            ("FLUXER_PUBLIC_PORT", "443"),
-        ]))
-        .expect("the origin resolves");
-        assert_eq!("chat.example.com", domain);
-        assert_eq!(Some(29080), port);
-    }
-
-    #[test]
-    fn a_malformed_public_port_is_loud() {
-        for raw in ["abc", "0", "70000", "-1"] {
-            let error = resolve_public_domain_and_port(reader(&[
-                ("FLUXER_BASE_DOMAIN", "chat.example.com"),
-                ("FLUXER_PUBLIC_PORT", raw),
-            ]))
-            .expect_err("a malformed port is refused");
-            assert!(
-                error.to_string().contains("FLUXER_PUBLIC_PORT"),
-                "port {raw}"
-            );
-        }
-    }
-
-    #[test]
-    fn a_malformed_public_origin_is_loud() {
-        let error = resolve_public_domain_and_port(reader(&[(
-            "FLUXER_PUBLIC_ORIGIN",
-            "https://chat.example.com/app",
-        )]))
-        .expect_err("a malformed origin is refused");
-        assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
-    }
-
-    #[test]
-    fn without_an_origin_the_named_variables_are_used_as_they_are() {
-        let (domain, port) = resolve_public_domain_and_port(reader(&[
-            ("FLUXER_BASE_DOMAIN", "Chat.Example.com."),
-            ("FLUXER_PUBLIC_PORT", "19080"),
-        ]))
-        .expect("named variables resolve");
-        assert_eq!("chat.example.com", domain);
-        assert_eq!(Some(19080), port);
-        let (domain, port) = resolve_public_domain_and_port(reader(&[])).expect("empty resolves");
-        assert_eq!("", domain);
-        assert_eq!(None, port);
-    }
-
-    fn secret_file(dir: &tempfile::TempDir, name: &str, contents: &str) -> String {
-        let path = dir.path().join(name);
-        fs::write(&path, contents).expect("write secret file");
-        path.to_string_lossy().into_owned()
-    }
-
-    fn pairs_reader(pairs: Vec<(String, String)>) -> impl Fn(&str) -> Option<String> {
-        move |key| {
-            pairs
-                .iter()
-                .find_map(|(name, value)| (name == key).then(|| value.clone()))
-        }
-    }
-
-    #[test]
-    fn env_value_reads_name_file_when_name_is_blank() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let path = secret_file(&dir, "secret", "from-file\r\n");
-        let unset = pairs_reader(vec![("X_FILE".to_owned(), path.clone())]);
-        let blank = pairs_reader(vec![
-            ("X".to_owned(), " ".to_owned()),
-            ("X_FILE".to_owned(), path),
-        ]);
-        assert_eq!(
-            Ok(Some("from-file".to_owned())),
-            resolve_env_value("X", unset)
-        );
-        assert_eq!(
-            Ok(Some("from-file".to_owned())),
-            resolve_env_value("X", blank)
-        );
-    }
-
-    #[test]
-    fn env_value_trims_only_one_trailing_newline() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let pem = secret_file(&dir, "pem", "-----BEGIN-----\nabc\n-----END-----\n\n");
-        let empty = secret_file(&dir, "empty", "\n");
-        assert_eq!(
-            Ok(Some("-----BEGIN-----\nabc\n-----END-----\n".to_owned())),
-            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), pem)]))
-        );
-        assert_eq!(
-            Ok(None),
-            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), empty)]))
-        );
-    }
-
-    #[test]
-    fn env_value_rejects_name_and_name_file_together() {
-        let reader = pairs_reader(vec![
-            ("X".to_owned(), "direct".to_owned()),
-            ("X_FILE".to_owned(), "/run/secrets/x".to_owned()),
-        ]);
-        assert_eq!(
-            Err("X and X_FILE are both set, set only one".to_owned()),
-            resolve_env_value("X", reader)
-        );
-    }
-
-    #[test]
-    fn env_value_names_the_file_when_it_is_missing() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let path = dir.path().join("missing").to_string_lossy().into_owned();
-        let error = resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), path.clone())]))
-            .expect_err("missing file fails");
-        assert!(error.starts_with(&format!("X_FILE could not read {path} (")));
-    }
-
-    #[test]
-    fn resolve_env_files_replaces_fluxer_names_with_file_values() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let path = secret_file(&dir, "secret", "from-file\n");
-        let missing = dir.path().join("missing").to_string_lossy().into_owned();
-        let resolved = resolve_env_files(vec![
-            ("FLUXER_X".to_owned(), String::new()),
-            ("FLUXER_X_FILE".to_owned(), path),
-            ("FLUXER_Y".to_owned(), "plain".to_owned()),
-            ("FLUXER_Y_FILE".to_owned(), String::new()),
-            ("SSL_CERT_FILE".to_owned(), missing),
-        ])
-        .expect("resolves");
-        let values = |key: &str| {
-            resolved
-                .iter()
-                .filter(|(name, _)| name == key)
-                .map(|(_, value)| value.as_str())
-                .collect::<Vec<_>>()
-        };
-        assert_eq!(vec!["from-file"], values("FLUXER_X"));
-        assert_eq!(vec!["plain"], values("FLUXER_Y"));
-        assert!(
-            resolve_env_files(vec![
-                ("FLUXER_X".to_owned(), "direct".to_owned()),
-                ("FLUXER_X_FILE".to_owned(), "/run/secrets/x".to_owned()),
-            ])
-            .is_err()
-        );
-    }
-
-    #[test]
-    fn a_blank_value_reads_as_unset() {
-        unsafe {
-            env::set_var("FLUXER_COMMON_TEST_BLANK_EMPTY", "");
-            env::set_var("FLUXER_COMMON_TEST_BLANK_SPACES", "  \t");
-            env::set_var("FLUXER_COMMON_TEST_BLANK_SET", "value");
-            env::set_var("FLUXER_COMMON_TEST_BLANK_TRUE", "true");
-        }
-        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_EMPTY"));
-        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_SPACES"));
-        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_MISSING"));
-        assert_eq!(
-            "fallback",
-            read_env("FLUXER_COMMON_TEST_BLANK_EMPTY", "fallback")
-        );
-        assert_eq!(
-            "fallback",
-            read_env("FLUXER_COMMON_TEST_BLANK_SPACES", "fallback")
-        );
-        assert_eq!(
-            "value",
-            read_env("FLUXER_COMMON_TEST_BLANK_SET", "fallback")
-        );
-        assert_eq!(
-            "value",
-            read_first_env(
-                &[
-                    "FLUXER_COMMON_TEST_BLANK_EMPTY",
-                    "FLUXER_COMMON_TEST_BLANK_SPACES",
-                    "FLUXER_COMMON_TEST_BLANK_SET",
-                ],
-                "fallback"
-            )
-        );
-        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_EMPTY", true));
-        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_SPACES", true));
-        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_TRUE", false));
     }
 }

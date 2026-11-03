@@ -7,7 +7,10 @@ import {SettingsControlRow} from '@app/features/channel/components/modals/channe
 import {SlowmodeControl} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl';
 import type {FormInputs as ChannelOverviewFormInputs} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import Channels from '@app/features/channel/state/Channels';
-import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	SAVE_DESCRIPTOR as D_SAVE_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {canPatchThread, isThreadModeratorFor} from '@app/features/threads/utils/ThreadActionRules';
 import {getAutoArchiveOptions} from '@app/features/threads/utils/ThreadAutoArchiveOptions';
@@ -139,7 +142,7 @@ export const ThreadSettingsModal = observer(({threadId}: {threadId: string}) => 
 						submitting={form.formState.isSubmitting}
 						data-flx="threads.thread-settings-modal.button.submit"
 					>
-						{i18n._(D.SAVE_DESCRIPTOR)}
+						{i18n._(D_SAVE_DESCRIPTOR)}
 					</Button>
 				</Modal.Footer>
 			</Form>

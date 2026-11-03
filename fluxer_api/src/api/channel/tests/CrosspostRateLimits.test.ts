@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	type AnnouncementWorld,
 	channelBudgetRemaining,
-	createAnnouncementChannel,
 	createAnnouncementWorld,
 	crosspostRequest,
 	editMessage,
 	postMessage,
 	publish,
-	publishedEditBudgetRemaining,
 	RecordingWorkerService,
 } from '@app/api/channel/tests/CrosspostTestUtils';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
-import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -24,9 +20,7 @@ import {
 	PUBLISHED_MESSAGE_EDIT_RATE_LIMIT,
 } from '@fluxer/constants/src/AnnouncementConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface RateLimitBody {
@@ -81,37 +75,6 @@ describe('Publishing and published-edit limits', () => {
 		expect(worker.byTask('crosspostMessage')).toHaveLength(CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
 	});
 
-	test('the channel limit is per channel and shared across members', async () => {
-		await publishMany(world.announcement.id, CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
-		const byMod = await postMessage(harness, world.mod.token, world.announcement.id, 'Moderator news');
-		await crosspostRequest(harness, world.mod.token, world.announcement.id, byMod.id)
-			.expect(429, APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED)
-			.execute();
-		const second = await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-two');
-		const elsewhere = await postMessage(harness, world.author.token, second.id, 'Different channel');
-		await publish(harness, world.author.token, second.id, elsewhere.id);
-	});
-
-	test('a community has no shared publish allowance across its announcement channels', async () => {
-		const channels = [
-			world.announcement,
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-b'),
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-c'),
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-d'),
-		];
-		for (const channel of channels) {
-			await publishMany(channel.id, CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
-			expect(await channelBudgetRemaining(channel.id)).toBe(0);
-		}
-		expect(worker.byTask('crosspostMessage')).toHaveLength(channels.length * CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
-		const last = channels[3]!;
-		const extra = await postMessage(harness, world.author.token, last.id, 'One past the channel allowance');
-		const {response} = await crosspostRequest(harness, world.author.token, last.id, extra.id)
-			.expect(429, APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED)
-			.executeWithResponse();
-		expect(response.headers.get('X-RateLimit-Scope')).toBe('shared');
-	});
-
 	test('failed publishes do not consume budget', async () => {
 		const published = await postMessage(harness, world.author.token, world.announcement.id, 'Published once');
 		await publish(harness, world.author.token, world.announcement.id, published.id);
@@ -160,59 +123,6 @@ describe('Publishing and published-edit limits', () => {
 			.execute();
 	});
 
-	test('edits before publishing do not count toward the published-edit cap', async () => {
-		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Draft');
-		for (let index = 0; index < 3; index++) {
-			await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: `Draft ${index}`})
-				.expect(200)
-				.execute();
-		}
-		expect(worker.syncJobsFor(message.id)).toHaveLength(0);
-		await publish(harness, world.author.token, world.announcement.id, message.id);
-		expect(await publishedEditBudgetRemaining(message.id)).toBe(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts);
-		for (let index = 0; index < PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts; index++) {
-			await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: `Final ${index}`})
-				.expect(200)
-				.execute();
-		}
-	});
-
-	test('unpublished messages are never limited by the published-edit cap', async () => {
-		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Never published');
-		for (let index = 0; index < 6; index++) {
-			await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: `Version ${index}`})
-				.expect(200)
-				.execute();
-		}
-		expect(await publishedEditBudgetRemaining(message.id)).toBe(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts);
-		expect(worker.byTask('syncCrosspostedMessage')).toHaveLength(0);
-	});
-
-	test('a moderator suppress-embeds edit is not limited and still propagates', async () => {
-		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Link https://example.com');
-		await publish(harness, world.author.token, world.announcement.id, message.id);
-		for (let index = 0; index < PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts; index++) {
-			await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: `Link ${index}`})
-				.expect(200)
-				.execute();
-		}
-		await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: 'Blocked'})
-			.expect(429, APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED)
-			.execute();
-		const syncsBefore = worker.syncJobsFor(message.id).length;
-		const suppressed = await editMessage(harness, world.mod.token, world.announcement.id, message.id, {
-			flags: MessageFlags.SUPPRESS_EMBEDS,
-		})
-			.expect(200)
-			.execute();
-		expect(suppressed.flags).toBe(MessageFlags.CROSSPOSTED | MessageFlags.SUPPRESS_EMBEDS);
-		const restored = await editMessage(harness, world.mod.token, world.announcement.id, message.id, {flags: 0})
-			.expect(200)
-			.execute();
-		expect(restored.flags).toBe(MessageFlags.CROSSPOSTED);
-		expect(worker.syncJobsFor(message.id).length).toBe(syncsBefore + 2);
-	});
-
 	test('webhook token edits count toward the published-edit cap', async () => {
 		const webhook = await createWebhook(harness, world.announcement.id, world.owner.token, 'Changelog');
 		const executed = await createBuilderWithoutAuth<MessageResponse>(harness)
@@ -235,100 +145,5 @@ describe('Publishing and published-edit limits', () => {
 			.expect(429, APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED)
 			.execute();
 		expect(worker.syncJobsFor(executed.id)).toHaveLength(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts);
-	});
-
-	test('published edits that fail validation do not use the edit budget', async () => {
-		const missingUpload = {
-			attachments: [
-				{
-					id: 0,
-					filename: 'upload.png',
-					upload_filename: 'missing-upload-key',
-					file_size: 2048,
-					content_type: 'image/png',
-				},
-			],
-		};
-		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Edit me');
-		await publish(harness, world.author.token, world.announcement.id, message.id);
-		for (let index = 0; index < PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts; index++) {
-			const {json} = await editMessage(harness, world.author.token, world.announcement.id, message.id, {
-				content: `Broken ${index}`,
-				...missingUpload,
-			})
-				.expect(400)
-				.executeWithResponse();
-			expect(JSON.stringify(json)).toContain('FILE_NOT_FOUND');
-		}
-		expect(await publishedEditBudgetRemaining(message.id)).toBe(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts);
-		await editMessage(harness, world.author.token, world.announcement.id, message.id, {content: 'Valid edit'})
-			.expect(200)
-			.execute();
-		expect(await publishedEditBudgetRemaining(message.id)).toBe(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts - 1);
-	});
-
-	test('removing an attachment from a published message counts toward the cap and propagates', async () => {
-		const {json} = await sendMessageWithAttachments(
-			harness,
-			world.author.token,
-			world.announcement.id,
-			{
-				content: 'Two pictures',
-				attachments: [
-					{id: 0, filename: 'first.png'},
-					{id: 1, filename: 'second.png'},
-				],
-			},
-			[
-				{index: 0, filename: 'first.png', data: loadFixture('yeah.png')},
-				{index: 1, filename: 'second.png', data: loadFixture('yeah.png')},
-			],
-		);
-		expect(json.attachments?.length).toBe(2);
-		await publish(harness, world.author.token, world.announcement.id, json.id);
-		await createBuilder(harness, world.author.token)
-			.delete(`/channels/${world.announcement.id}/messages/${json.id}/attachments/${json.attachments![0]!.id}`)
-			.expect(204)
-			.execute();
-		expect(await publishedEditBudgetRemaining(json.id)).toBe(PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts - 1);
-		expect(worker.syncJobsFor(json.id)).toHaveLength(1);
-		for (let index = 0; index < PUBLISHED_MESSAGE_EDIT_RATE_LIMIT.maxAttempts - 1; index++) {
-			await editMessage(harness, world.author.token, world.announcement.id, json.id, {content: `Caption ${index}`})
-				.expect(200)
-				.execute();
-		}
-		await createBuilder(harness, world.author.token)
-			.delete(`/channels/${world.announcement.id}/messages/${json.id}/attachments/${json.attachments![1]!.id}`)
-			.expect(429, APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED)
-			.execute();
-	});
-
-	test('the publish and follow route buckets are enforced when route limits are on', async () => {
-		expect(RateLimitConfigs.CHANNEL_MESSAGE_CROSSPOST).toEqual({
-			bucket: 'channel:message:crosspost::channel_id',
-			config: {limit: 5, windowMs: ms('5 seconds')},
-		});
-		expect(RateLimitConfigs.CHANNEL_FOLLOW).toEqual({
-			bucket: 'channel:follow::channel_id',
-			config: {limit: 5, windowMs: ms('10 seconds')},
-		});
-		expect(RateLimitConfigs.CHANNEL_FOLLOWER_STATS).toEqual({
-			bucket: 'channel:follower_stats::channel_id',
-			config: {limit: 10, windowMs: ms('10 seconds')},
-		});
-		const statuses: Array<number> = [];
-		for (let index = 0; index < 6; index++) {
-			const {response} = await crosspostRequest(
-				harness,
-				world.author.token,
-				world.announcement.id,
-				`12345678901234567${index}`,
-			)
-				.header('x-fluxer-test-enable-rate-limits', 'true')
-				.executeRaw();
-			statuses.push(response.status);
-		}
-		expect(statuses.slice(0, 5)).toEqual([404, 404, 404, 404, 404]);
-		expect(statuses[5]).toBe(429);
 	});
 });

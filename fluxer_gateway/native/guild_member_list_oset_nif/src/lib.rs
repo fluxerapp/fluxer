@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::cmp::Ordering;
-use std::mem;
 use std::sync::Mutex;
 
 use rustler::types::binary::{Binary, OwnedBinary};
@@ -14,7 +13,6 @@ const MAX_FROM_SORTED_KEYS: usize = 250_000;
 mod atoms {
     rustler::atoms! {
         ok,
-        none,
         not_found
     }
 }
@@ -57,9 +55,9 @@ impl<'a> Decoder<'a> for MemberKey {
 
 impl Encoder for MemberKey {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        let mut sort_key = OwnedBinary::new(self.sort_key.len()).expect("binary allocation failed");
-        sort_key.as_mut_slice().copy_from_slice(&self.sort_key);
-        let sort_key_term = sort_key.release(env).to_term(env);
+        let sort_key_term = OwnedBinary::from_slice(&self.sort_key)
+            .release(env)
+            .to_term(env);
         let terms = [
             self.section_idx.encode(env),
             sort_key_term,
@@ -123,10 +121,6 @@ impl MemberOSet {
         link_size(&self.root)
     }
 
-    fn memory_bytes(&self) -> usize {
-        memory_bytes_link(&self.root)
-    }
-
     fn insert(&mut self, key: MemberKey) -> usize {
         match rank_or_insert_pos(&self.root, &key, 0) {
             RankLookup::Found(rank) => rank,
@@ -145,17 +139,6 @@ impl MemberOSet {
             }
             RankLookup::InsertAt(_) => None,
         }
-    }
-
-    fn rank(&self, key: &MemberKey) -> Option<usize> {
-        match rank_or_insert_pos(&self.root, key, 0) {
-            RankLookup::Found(rank) => Some(rank),
-            RankLookup::InsertAt(_) => None,
-        }
-    }
-
-    fn at(&self, index: usize) -> Option<MemberKey> {
-        select_key(&self.root, index).cloned()
     }
 
     fn range(&self, start: usize, count: usize) -> Vec<MemberKey> {
@@ -204,18 +187,6 @@ fn destroy<'a>(env: Env<'a>, resource: ResourceArc<OSetResource>) -> NifResult<T
 }
 
 #[rustler::nif]
-fn size(resource: ResourceArc<OSetResource>) -> NifResult<usize> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    Ok(set.size())
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-fn memory_bytes(resource: ResourceArc<OSetResource>) -> NifResult<usize> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    Ok(set.memory_bytes())
-}
-
-#[rustler::nif]
 fn insert(resource: ResourceArc<OSetResource>, key: MemberKey) -> NifResult<usize> {
     let mut set = resource.inner.lock().map_err(|_| Error::BadArg)?;
     Ok(set.insert(key))
@@ -231,31 +202,6 @@ fn delete<'a>(
     match set.delete(&key) {
         Some(rank) => Ok(rank.encode(env)),
         None => Ok(atoms::not_found().encode(env)),
-    }
-}
-
-#[rustler::nif]
-fn rank<'a>(
-    env: Env<'a>,
-    resource: ResourceArc<OSetResource>,
-    key: MemberKey,
-) -> NifResult<Term<'a>> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    match set.rank(&key) {
-        Some(rank) => Ok(rank.encode(env)),
-        None => Ok(atoms::not_found().encode(env)),
-    }
-}
-
-#[rustler::nif]
-fn at<'a>(env: Env<'a>, resource: ResourceArc<OSetResource>, index: i64) -> NifResult<Term<'a>> {
-    if index < 0 {
-        return Ok(atoms::none().encode(env));
-    }
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    match set.at(index as usize) {
-        Some(key) => Ok(key.encode(env)),
-        None => Ok(atoms::none().encode(env)),
     }
 }
 
@@ -397,16 +343,6 @@ fn rank_or_insert_pos(link: &Link, key: &MemberKey, base: usize) -> RankLookup {
     }
 }
 
-fn select_key(link: &Link, index: usize) -> Option<&MemberKey> {
-    let node = link.as_ref()?;
-    let left_size = link_size(&node.left);
-    match index.cmp(&left_size) {
-        Ordering::Less => select_key(&node.left, index),
-        Ordering::Equal => Some(&node.key),
-        Ordering::Greater => select_key(&node.right, index - left_size - 1),
-    }
-}
-
 fn collect_range(link: &Link, start: usize, end: usize, base: usize, out: &mut Vec<MemberKey>) {
     let Some(node) = link.as_ref() else {
         return;
@@ -421,18 +357,6 @@ fn collect_range(link: &Link, start: usize, end: usize, base: usize, out: &mut V
     }
     if rank + 1 < end {
         collect_range(&node.right, start, end, rank + 1, out);
-    }
-}
-
-fn memory_bytes_link(link: &Link) -> usize {
-    match link {
-        None => 0,
-        Some(node) => {
-            mem::size_of::<Node>()
-                + node.key.sort_key.len()
-                + memory_bytes_link(&node.left)
-                + memory_bytes_link(&node.right)
-        }
     }
 }
 

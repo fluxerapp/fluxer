@@ -1,0 +1,34 @@
+{{- include "fluxer.validate" . }}
+{{- $healthz := dict "path" "/_healthz" "port" "http" }}
+{{- $health := dict "path" "/_health" "port" "http" }}
+{{- $probes := dict
+  "startup" (dict "httpGet" $healthz "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 12)
+  "liveness" (dict "httpGet" $healthz "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3)
+  "readiness" (dict "httpGet" $health "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3) }}
+{{- range $name := list "gifs" "messages" "snowflakes" "unfurl" "users" }}
+{{- $svc := get $.Values.svc $name | default dict }}
+{{- $router := $svc.router | default dict }}
+{{- $shard := $svc.shard | default dict }}
+{{- $count := include "fluxer.replicas" (dict "w" $shard) }}
+{{- $common := list (dict "name" "FLUXER_SVC_NAME" "value" $name) (dict "name" "FLUXER_SVC_PORT" "value" "8090") (dict "name" "FLUXER_SVC_SHARD_COUNT" "value" $count) }}
+{{- $shardEnv := concat $common (list (dict "name" "FLUXER_SVC_MODE" "value" "shard") (dict "name" "FLUXER_SVC_SHARD_ID" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.labels['apps.kubernetes.io/pod-index']"))) (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name")))) }}
+{{- $usesPostgres := has $name (list "users" "messages") }}
+{{- if $usesPostgres }}
+{{- $shardEnv = append $shardEnv (dict "name" "FLUXER_POSTGRES_MAX_CONNECTIONS" "value" "20") }}
+{{- end }}
+{{- if eq $name "unfurl" }}
+{{- $shardEnv = append $shardEnv (dict "name" "FLUXER_MEDIA_PROXY_ENDPOINT" "value" "http://media-proxy:8080") }}
+{{- if and (not $.Values.secrets.existingSecret) (get (include "fluxer.secretData" $ | fromJson) "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64") }}
+{{- $shardEnv = append $shardEnv (dict "name" "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64" "valueFrom" (dict "secretKeyRef" (dict "name" "fluxer-unfurl-env" "key" "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64"))) }}
+{{- end }}
+{{- end }}
+{{- include "fluxer.app" (dict "root" $ "name" $name "component" "svc" "w" $router "image" (printf "fluxer-%s" $name) "port" 8090 "containerName" "router"
+  "env" (append $common (dict "name" "FLUXER_SVC_MODE" "value" "router"))
+  "probes" $probes
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" $ "usesNats" true) | fromJsonArray)) }}
+{{- include "fluxer.app" (dict "root" $ "name" (printf "%s-shard" $name) "component" "svc" "w" $shard "image" (printf "fluxer-%s" $name) "port" 8090 "containerName" "shard"
+  "kind" "StatefulSet" "serviceName" (printf "%s-shard" $name) "headless" true
+  "env" $shardEnv
+  "probes" $probes
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" $ "usesNats" true "usesPostgres" $usesPostgres) | fromJsonArray)) }}
+{{- end }}

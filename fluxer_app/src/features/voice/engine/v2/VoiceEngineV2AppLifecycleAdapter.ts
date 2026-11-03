@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import type {VoiceEngineV2AppDiagnosticsLogger} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
-import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
+import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 const LIFECYCLE_OPERATION_CAP = 4096;
 const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;
@@ -23,7 +23,6 @@ export interface VoiceEngineV2AppLifecycleAdapterOptions {
 	readonly disposables: ReadonlyArray<VoiceEngineV2AppLifecycleDisposable>;
 	readonly logger: VoiceEngineV2AppDiagnosticsLogger;
 	readonly clock: VoiceEngineV2ClockPort;
-	readonly teardownPerDisposableTimeoutMs?: number;
 }
 
 function isPositiveInteger(value: unknown): value is number {
@@ -42,7 +41,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 	private readonly logger: VoiceEngineV2AppDiagnosticsLogger;
 	private readonly clock: VoiceEngineV2ClockPort;
 	private readonly registry: Map<number, VoiceEngineV2AppLifecycleRegistration>;
-	private readonly teardownTimeoutMs: number;
 	private tornDown: boolean;
 
 	constructor(options: VoiceEngineV2AppLifecycleAdapterOptions) {
@@ -52,8 +50,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		assert.ok(options.logger !== null && typeof options.logger === 'object', 'lifecycle adapter requires a logger');
 		assert.ok(options.clock !== null && typeof options.clock === 'object', 'lifecycle adapter requires a clock');
 		assert.equal(typeof options.clock.now, 'function', 'lifecycle adapter clock must implement now()');
-		const timeoutMs = options.teardownPerDisposableTimeoutMs ?? TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS;
-		assert.ok(isPositiveInteger(timeoutMs), 'lifecycle adapter teardown timeout must be a positive integer');
 		for (const disposable of options.disposables) {
 			assert.ok(
 				disposable !== null && typeof disposable === 'object',
@@ -66,7 +62,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		this.logger = options.logger;
 		this.clock = options.clock;
 		this.registry = new Map();
-		this.teardownTimeoutMs = timeoutMs;
 		this.tornDown = false;
 	}
 
@@ -131,7 +126,7 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		assert.ok(disposable !== null && typeof disposable === 'object', 'disposeWithTimeout requires a disposable');
 		assert.equal(typeof disposable.dispose, 'function', 'disposeWithTimeout requires dispose() method');
 		const startedAt = this.clock.now();
-		const budgetMs = this.teardownTimeoutMs;
+		const budgetMs = TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS;
 		let timeoutHandle: VoiceEngineV2AppLifecycleTimeoutHandle | undefined;
 		const timeoutPromise = new Promise<'timeout'>((resolve) => {
 			timeoutHandle = globalThis.setTimeout(() => {

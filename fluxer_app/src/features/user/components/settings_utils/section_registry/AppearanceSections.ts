@@ -9,136 +9,56 @@ import {shouldShowHdrSettings} from '@app/features/user/components/modals/tabs/a
 import {shouldShowAppZoomLevel} from '@app/features/user/components/settings_utils/AppZoomLevelUtils';
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
+	ACTIVE_NOW_DESCRIPTOR,
 	CHANNEL_LIST_DESCRIPTOR,
 	CHAT_INPUT_DESCRIPTOR,
 	COLOR_DESCRIPTOR,
-	COLORS_DESCRIPTOR,
+	CONFIRM_VOICE_JOIN_DESCRIPTOR,
 	DIRECT_MESSAGE_DESCRIPTOR,
-	FONTS_DESCRIPTOR,
+	DOUBLE_CLICK_DESCRIPTOR as DOUBLE_CLICK_2_DESCRIPTOR,
+	DOUBLE_CLICK_DESCRIPTOR,
 	FRIENDS_DESCRIPTOR,
 	INDICATOR_DESCRIPTOR,
+	JOIN_VOICE_DESCRIPTOR,
+	KEYBINDS_DESCRIPTOR,
 	KEYBOARD_2_DESCRIPTOR,
+	KEYBOARD_SHORTCUTS_DESCRIPTOR,
 	MESSAGES_3_DESCRIPTOR,
 	MUTED_CHANNELS_DESCRIPTOR,
 	MUTED_DESCRIPTOR,
 	NAVIGATION_DESCRIPTOR,
 	NEKO_DESCRIPTOR,
+	SHORTCUT_BADGES_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
 	SIDEBAR_2_DESCRIPTOR,
+	SIZE_DESCRIPTOR,
+	STREAMING_DESCRIPTOR,
+	TIME_DESCRIPTOR,
+	TOOLTIPS_DESCRIPTOR,
+	TWO_CLICKS_DESCRIPTOR,
 	TYPING_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
+	USERS_DESCRIPTOR,
+	VOICE_ACTIVITY_DESCRIPTOR,
+	VOICE_CHANNEL_CONFIRMATION_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	COMFY_DESCRIPTOR,
+	DARK_MODE_DESCRIPTOR,
+	DENSE_DESCRIPTOR,
+	DISPLAY_2_DESCRIPTOR,
+	HIGH_DYNAMIC_RANGE_DESCRIPTOR,
+	SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR,
+	STREAMER_MODE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const CHOOSE_A_BASE_APPEARANCE_MANAGE_QUICK_CSS_ORGANIZE_DESCRIPTOR = msg({
-	message: 'Choose a base appearance, manage quick CSS, organize saved theme files, and tune theme tokens.',
-	comment: 'Settings section description. One-line summary of what the settings section controls.',
-});
 const THEME_2_DESCRIPTOR = msg({
 	message: 'Theme',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DARK_MODE_DESCRIPTOR = msg({
-	message: 'Dark mode',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LIGHT_MODE_DESCRIPTOR = msg({
-	message: 'Light mode',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DARK_DESCRIPTOR = msg({
-	message: 'Dark',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LIGHT_DESCRIPTOR = msg({
-	message: 'Light',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const COAL_DESCRIPTOR = msg({
-	message: 'Coal',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const COLOR_SCHEME_DESCRIPTOR = msg({
-	message: 'Color scheme',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SYSTEM_THEME_DESCRIPTOR = msg({
-	message: 'System theme',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SYNC_DESCRIPTOR = msg({
-	message: 'Sync',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SYNC_THEME_DESCRIPTOR = msg({
-	message: 'Sync theme',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const THEME_SYNC_DESCRIPTOR = msg({
-	message: 'Theme sync',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DEVICES_DESCRIPTOR = msg({
-	message: 'Devices',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CSS_DESCRIPTOR = msg({
-	message: 'CSS',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const QUICK_CSS_DESCRIPTOR = msg({
-	message: 'Quick CSS',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const THEME_LIBRARY_DESCRIPTOR = msg({
-	message: 'Theme library',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const THEME_FILES_DESCRIPTOR = msg({
-	message: 'Theme files',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const IMPORT_THEMES_DESCRIPTOR = msg({
-	message: 'Import themes',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const EXPORT_THEMES_DESCRIPTOR = msg({
-	message: 'Export themes',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const THEME_ASSETS_DESCRIPTOR = msg({
-	message: 'Theme assets',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LOCAL_FILES_DESCRIPTOR = msg({
-	message: 'Local files',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const THEME_TOKENS_DESCRIPTOR = msg({
-	message: 'Theme tokens',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const OVERRIDES_DESCRIPTOR = msg({
-	message: 'Overrides',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const STYLING_DESCRIPTOR = msg({
-	message: 'Styling',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LOOK_AND_FEEL_DESCRIPTOR = msg({
-	message: 'Look and feel',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const HIGH_DYNAMIC_RANGE_DESCRIPTOR = msg({
-	message: 'High dynamic range',
-	comment: 'Settings section label. Also used as a search synonym in the settings search bar.',
-});
+
 const CONTROL_HOW_HDR_IMAGES_ARE_DISPLAYED_ON_HDR_DESCRIPTOR = msg({
 	message: 'Control how HDR images are displayed on HDR-capable monitors.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
@@ -151,10 +71,7 @@ const BRIGHTNESS_DESCRIPTOR = msg({
 	message: 'Brightness',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DISPLAY_2_DESCRIPTOR = msg({
-	message: 'Display',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const TONE_DESCRIPTOR = msg({
 	message: 'Tone',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -171,10 +88,7 @@ const FONT_DESCRIPTOR = msg({
 	message: 'Font',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SIZE_DESCRIPTOR = msg({
-	message: 'Size',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const TEXT_SIZE_DESCRIPTOR = msg({
 	message: 'Text size',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -207,18 +121,12 @@ const DISPLAY_SCALING_DESCRIPTOR = msg({
 	message: 'Display scaling',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const STREAMER_MODE_DESCRIPTOR = msg({
-	message: 'Streaming privacy',
-	comment: 'Settings section label. Also used as a search synonym in the settings search bar.',
-});
+
 const HIDE_PERSONAL_INFO_WHILE_STREAMING_DESCRIPTOR = msg({
 	message: 'Mask names, private details, invites, sounds, and alerts while sharing.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
-const STREAMING_DESCRIPTOR = msg({
-	message: 'Screen sharing',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const HIDE_PERSONAL_INFO_DESCRIPTOR = msg({
 	message: 'Private details',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -251,14 +159,7 @@ const MESSAGE_STYLE_DESCRIPTOR = msg({
 	message: 'Message style',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const COMFY_DESCRIPTOR = msg({
-	message: 'Comfy',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DENSE_DESCRIPTOR = msg({
-	message: 'Dense',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const MESSAGE_LAYOUT_DESCRIPTOR = msg({
 	message: 'Message layout',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -279,10 +180,7 @@ const TIMESTAMPS_DESCRIPTOR = msg({
 	message: 'Timestamps',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const TIME_DESCRIPTOR = msg({
-	message: 'Time',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DATE_DESCRIPTOR = msg({
 	message: 'Date',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -315,10 +213,7 @@ const MESSAGE_GROUPS_DESCRIPTOR = msg({
 	message: 'Message groups',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR = msg({
-	message: 'Space between message groups',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const GAP_DESCRIPTOR = msg({
 	message: 'Gap',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -339,10 +234,7 @@ const MEMBER_LIST_DESCRIPTOR = msg({
 	message: 'Member list',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const USERS_DESCRIPTOR = msg({
-	message: 'Users',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const MEMBERS_DESCRIPTOR = msg({
 	message: 'Members',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -363,30 +255,12 @@ const HINTS_DESCRIPTOR = msg({
 	message: 'Hints',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const TOOLTIPS_DESCRIPTOR = msg({
-	message: 'Tooltips',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SHORTCUT_BADGES_DESCRIPTOR = msg({
-	message: 'Shortcut badges',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const JOIN_DESCRIPTOR = msg({
 	message: 'Join',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DOUBLE_CLICK_DESCRIPTOR = msg({
-	message: 'Double-click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DOUBLE_CLICK_2_DESCRIPTOR = msg({
-	message: 'Double-click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SINGLE_CLICK_DESCRIPTOR = msg({
 	message: 'Single click',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -395,18 +269,7 @@ const VOICE_JOIN_DESCRIPTOR = msg({
 	message: 'Voice join',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const CONFIRM_VOICE_JOIN_DESCRIPTOR = msg({
-	message: 'Confirm voice join',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const VOICE_CHANNEL_CONFIRMATION_DESCRIPTOR = msg({
-	message: 'Voice channel confirmation',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TWO_CLICKS_DESCRIPTOR = msg({
-	message: 'Two clicks',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const MESSAGE_2_CLICKS_DESCRIPTOR = msg({
 	message: '2 clicks',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -427,10 +290,6 @@ const FAVORITES_2_DESCRIPTOR = msg({
 	message: 'Favorites',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const ACTIVE_NOW_DESCRIPTOR = msg({
-	message: 'Active now',
-	comment: 'Settings section label. Also used as a search synonym in the settings search bar.',
-});
 const CONTROL_HOW_ACTIVE_NOW_SURFACES_ACROSS_THE_APP_DESCRIPTOR = msg({
 	message: 'Control how active now appears across the app.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
@@ -443,16 +302,9 @@ const PRESENCE_DESCRIPTOR = msg({
 	message: 'Presence',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const VOICE_ACTIVITY_DESCRIPTOR = msg({
-	message: 'Voice activity',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DM_SIDEBAR_DESCRIPTOR = msg({
 	message: 'DM sidebar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const JOIN_VOICE_DESCRIPTOR = msg({
-	message: 'Join voice',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const HOME_SCREEN_DESCRIPTOR = msg({
@@ -479,36 +331,7 @@ export const appearanceSections = [
 		id: 'theme',
 		tabType: 'appearance',
 		label: THEME_DESCRIPTOR,
-		description: CHOOSE_A_BASE_APPEARANCE_MANAGE_QUICK_CSS_ORGANIZE_DESCRIPTOR,
-		keywords: [
-			THEME_2_DESCRIPTOR,
-			DARK_MODE_DESCRIPTOR,
-			LIGHT_MODE_DESCRIPTOR,
-			DARK_DESCRIPTOR,
-			LIGHT_DESCRIPTOR,
-			COAL_DESCRIPTOR,
-			COLOR_SCHEME_DESCRIPTOR,
-			SYSTEM_THEME_DESCRIPTOR,
-			SYNC_DESCRIPTOR,
-			SYNC_THEME_DESCRIPTOR,
-			THEME_SYNC_DESCRIPTOR,
-			DEVICES_DESCRIPTOR,
-			CSS_DESCRIPTOR,
-			QUICK_CSS_DESCRIPTOR,
-			CUSTOM_DESCRIPTOR,
-			THEME_LIBRARY_DESCRIPTOR,
-			THEME_FILES_DESCRIPTOR,
-			IMPORT_THEMES_DESCRIPTOR,
-			EXPORT_THEMES_DESCRIPTOR,
-			THEME_ASSETS_DESCRIPTOR,
-			LOCAL_FILES_DESCRIPTOR,
-			THEME_TOKENS_DESCRIPTOR,
-			OVERRIDES_DESCRIPTOR,
-			COLORS_DESCRIPTOR,
-			FONTS_DESCRIPTOR,
-			STYLING_DESCRIPTOR,
-			LOOK_AND_FEEL_DESCRIPTOR,
-		],
+		keywords: [THEME_2_DESCRIPTOR, DARK_MODE_DESCRIPTOR],
 		isAdvanced: false,
 	},
 	{
@@ -613,6 +436,7 @@ export const appearanceSections = [
 			HINTS_DESCRIPTOR,
 			TOOLTIPS_DESCRIPTOR,
 			SHORTCUT_BADGES_DESCRIPTOR,
+			KEYBINDS_DESCRIPTOR,
 			KEYBOARD_SHORTCUTS_DESCRIPTOR,
 			SHOW_NEKO_DESCRIPTOR,
 			NEKO_DESCRIPTOR,

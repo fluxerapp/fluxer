@@ -2,7 +2,7 @@
 
 import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
-import {getMaxAttachmentFileSize} from '@app/features/messaging/utils/AttachmentUtils';
+import {countOversizedAttachments} from '@app/features/messaging/utils/AttachmentUtils';
 
 export interface FileUploadResult {
 	success: boolean;
@@ -24,8 +24,7 @@ export async function handleFileUpload(
 	if (currentAttachmentCount + fileArray.length > maxAttachments) {
 		return {success: false, error: 'too_many_attachments'};
 	}
-	const maxFileSize = getMaxAttachmentFileSize();
-	const oversizedFileCount = fileArray.filter((file) => file.size > maxFileSize).length;
+	const oversizedFileCount = await countOversizedAttachments(fileArray);
 	if (oversizedFileCount > 0) {
 		return {success: false, error: 'file_size_too_large', oversizedFileCount};
 	}

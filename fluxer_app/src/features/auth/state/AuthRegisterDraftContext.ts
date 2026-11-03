@@ -7,7 +7,6 @@ export interface AuthRegisterFormDraft {
 	selectedMonth: string;
 	selectedDay: string;
 	selectedYear: string;
-	consent: boolean;
 }
 
 export const EMPTY_AUTH_REGISTER_FORM_DRAFT: AuthRegisterFormDraft = {
@@ -15,7 +14,6 @@ export const EMPTY_AUTH_REGISTER_FORM_DRAFT: AuthRegisterFormDraft = {
 	selectedMonth: '',
 	selectedDay: '',
 	selectedYear: '',
-	consent: false,
 };
 
 interface AuthRegisterDraftContextType {

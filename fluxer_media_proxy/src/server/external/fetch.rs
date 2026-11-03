@@ -76,7 +76,7 @@ async fn send_external_request(
         visited.push(current_url.clone());
         if let Err(err) = public_net_policy::validate_url(&current_url) {
             warn!(?err, url = %current_url, "blocked external fetch");
-            external_metrics.record_blocked_url();
+            external_metrics.blocked_url_attempts.inc();
             return Err(ExternalFetchError::BlockedUrl);
         }
         let mut outbound = app
@@ -89,11 +89,11 @@ async fn send_external_request(
         let response = outbound.send().await.map_err(|err| {
             if public_net_policy::is_pinned_dns_failure(&err) {
                 warn!(?err, url = %current_url, "blocked external fetch");
-                external_metrics.record_blocked_url();
+                external_metrics.blocked_url_attempts.inc();
                 return ExternalFetchError::BlockedUrl;
             }
             warn!(url = %current_url, %err, "external send failed");
-            external_metrics.record_fetch_failure();
+            external_metrics.fetch_failures.inc();
             ExternalFetchError::FetchFailed
         })?;
         let status = response.status();
@@ -105,14 +105,14 @@ async fn send_external_request(
                 Some(location) if !location.is_empty() => location,
                 Some(_) | None => {
                     warn!(url = %current_url, status = status.as_u16(), "redirect has an invalid Location");
-                    external_metrics.record_fetch_failure();
+                    external_metrics.fetch_failures.inc();
                     return Err(ExternalFetchError::FetchFailed);
                 }
             };
             current_url =
                 public_net_policy::resolve_redirect(&current_url, location).map_err(|err| {
                     warn!(url = %current_url, %location, ?err, "redirect target blocked");
-                    external_metrics.record_blocked_url();
+                    external_metrics.blocked_url_attempts.inc();
                     ExternalFetchError::BlockedUrl
                 })?;
             continue;
@@ -183,7 +183,7 @@ async fn fetch_external_inner(
             constants::MAX_MEDIA_PROXY_BYTES,
         ) else {
             warn!(url = %current_url, "invalid upstream partial response");
-            external_metrics.record_fetch_failure();
+            external_metrics.fetch_failures.inc();
             return Err(ExternalFetchError::FetchFailed);
         };
         ExternalSuccessStatus::Partial(partial)
@@ -226,7 +226,7 @@ async fn fetch_external_inner(
         .is_some_and(|expected| data.len() as u64 != expected)
     {
         warn!(url = %current_url, "upstream partial response body length mismatch");
-        external_metrics.record_fetch_failure();
+        external_metrics.fetch_failures.inc();
         return Err(ExternalFetchError::FetchFailed);
     }
     Ok(FetchedExternal {
@@ -258,7 +258,7 @@ async fn external_body_prefix(
     while prefix.len() < EXTERNAL_SNIFF_PREFIX_BYTES {
         let Some(chunk) = response.chunk().await.map_err(|err| {
             warn!(url = %url, %err, "external body read failed");
-            metrics.record_fetch_failure();
+            metrics.fetch_failures.inc();
             ExternalFetchError::FetchFailed
         })?
         else {
@@ -368,7 +368,7 @@ pub(super) async fn buffer_external_response(
     let mut empty_chunks_remaining = response_body_limit::response_body_chunk_limit(limit as u64);
     while let Some(chunk) = response.chunk().await.map_err(|err| {
         warn!(url = %url, %err, "external body read failed");
-        metrics.record_fetch_failure();
+        metrics.fetch_failures.inc();
         ExternalFetchError::FetchFailed
     })? {
         if chunk.is_empty() {
@@ -397,7 +397,7 @@ pub(super) async fn buffer_external_response(
                 .checked_sub(reserved_bytes)
                 .expect("an external buffer target capacity covers its reservation");
             if !reservation.try_grow(additional) {
-                metrics.record_buffer_rejected();
+                metrics.external_buffer_rejected.inc();
                 return Err(ExternalFetchError::BufferBudgetExhausted);
             }
             reserved_bytes = target_capacity;
@@ -417,7 +417,7 @@ pub(super) async fn buffer_external_response(
             actual_length = buf.len(),
             "external buffered body length did not match Content-Length"
         );
-        metrics.record_fetch_failure();
+        metrics.fetch_failures.inc();
         return Err(ExternalFetchError::FetchFailed);
     }
     reservation.shrink_to(buf.capacity());
@@ -430,7 +430,7 @@ fn reserve(
     amount: usize,
 ) -> Result<ByteReservation, ExternalFetchError> {
     budget.try_reserve(amount).ok_or_else(|| {
-        metrics.record_buffer_rejected();
+        metrics.external_buffer_rejected.inc();
         ExternalFetchError::BufferBudgetExhausted
     })
 }
@@ -445,7 +445,7 @@ fn grow_to_capacity(
         return Ok(reserved_bytes);
     }
     if !reservation.try_grow(capacity - reserved_bytes) {
-        metrics.record_buffer_rejected();
+        metrics.external_buffer_rejected.inc();
         return Err(ExternalFetchError::BufferBudgetExhausted);
     }
     Ok(capacity)

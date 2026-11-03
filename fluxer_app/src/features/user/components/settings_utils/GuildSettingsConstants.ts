@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	EXPRESSIONS_DESCRIPTOR as EXPRESSIONS_CATEGORY_DESCRIPTOR,
+	INTEGRATIONS_DESCRIPTOR as INTEGRATIONS_CATEGORY_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -62,9 +66,10 @@ const VANITY_URL_DESCRIPTOR = msg({
 	comment: 'Community settings tab for the community vanity/custom invite link.',
 });
 const DISCOVERY_DESCRIPTOR = msg({
-	message: 'Discovery',
+	message: 'Explore',
 	context: 'community-settings-tab',
-	comment: 'Community settings tab for public community discovery/listing.',
+	comment:
+		'Community settings tab for listing a community in Explore. Explore is the name of the feature, so use the same word as the Explore page heading.',
 });
 const MEMBERS_DESCRIPTOR = msg({
 	message: 'Members',
@@ -110,6 +115,7 @@ export interface GuildSettingsTab {
 	iconWeight?: IconWeight;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 interface GuildSettingsTabDescriptor {
@@ -120,6 +126,7 @@ interface GuildSettingsTabDescriptor {
 	iconWeight?: IconWeight;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
@@ -172,6 +179,7 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		icon: CompassIcon,
 		iconWeight: 'fill',
 		permission: Permissions.MANAGE_GUILD,
+		requireDiscovery: true,
 	},
 	{
 		type: 'vanity_url',
@@ -215,18 +223,9 @@ export const GUILD_SETTINGS_LABEL_DESCRIPTOR = msg({
 	message: 'Community settings',
 	comment: 'Root label for community settings modal and settings search paths.',
 });
-
-const EXPRESSIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Expressions',
-	comment: 'Community settings sidebar category grouping the emoji and stickers tabs.',
-});
 const COMMUNITY_CATEGORY_DESCRIPTOR = msg({
 	message: 'Community',
-	comment: 'Community settings sidebar category grouping discovery and the vanity URL.',
-});
-const INTEGRATIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Integrations',
-	comment: 'Community settings sidebar category grouping webhooks.',
+	comment: 'Community settings sidebar category grouping Explore and the vanity URL.',
 });
 const PEOPLE_CATEGORY_DESCRIPTOR = msg({
 	message: 'People',

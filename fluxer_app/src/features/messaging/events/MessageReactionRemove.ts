@@ -31,7 +31,7 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 	if (data.guild_id && data.member) {
 		GuildMembers.hydrateIfMissing(data.guild_id, data.member);
 	}
-	SavedMessages.handleMessageReactionRemove(data.message_id);
+	SavedMessages.handleMessageReactionChange(data.message_id);
 	MessageReactions.handleReactionRemove(data.message_id, data.user_id, emoji);
 	ChannelPins.handleMessageReactionRemove(data.channel_id, data.message_id);
 	ForumPosts.handleReaction(
@@ -41,13 +41,12 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		false,
 		data.user_id === Authentication.currentUserId,
 	);
-	MentionFeed.handleMessageReactionRemove(data.message_id);
+	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleReaction({
 		type: 'MESSAGE_REACTION_REMOVE',
 		channelId: data.channel_id,
 		messageId: data.message_id,
 		userId: data.user_id,
 		emoji,
-		skipReactionStore: true,
 	});
 }

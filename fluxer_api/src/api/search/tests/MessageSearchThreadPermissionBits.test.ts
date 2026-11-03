@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {markGuildChannelsAsIndexed, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -20,16 +20,15 @@ describe('message search thread permission bits', () => {
 
 	beforeEach(async () => {
 		harness = await createApiTestHarness({search: 'enabled'});
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	test('search channel overwrites are masked for non-viewers in tainted guilds', async () => {
-		await setChannelThreadsConfig({enabled: true, guild_basis_points: 10000, user_basis_points: 10000});
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Search masking');
 		const allow = Permissions.SEND_MESSAGES | ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS;
@@ -63,11 +62,6 @@ describe('message search thread permission bits', () => {
 		for (const scope of scopes) {
 			expect(await searchAllow(scope, true)).toBe(allow);
 			expect(await searchAllow(scope, false)).toBe(Permissions.SEND_MESSAGES);
-		}
-
-		await setChannelThreadsConfig({enabled: false});
-		for (const scope of scopes) {
-			expect(await searchAllow(scope, true)).toBe(Permissions.SEND_MESSAGES);
 		}
 	});
 });

@@ -39,14 +39,6 @@ export class ReadStateEntry {
 	private storedMentionCount = 0;
 	inFlightAckMessageId: string | null = null;
 	serverVersion: string | null = null;
-	snapshot?: {
-		unread: boolean;
-		mentionCount: number;
-		guildUnread: boolean | null;
-		guildMentionCount: number | null;
-		takenAt: number;
-	};
-
 	constructor(channelId: string) {
 		this.channelId = channelId;
 	}
@@ -146,7 +138,10 @@ export class ReadStateEntry {
 	}
 
 	supportsUnreadTracking(): boolean {
-		return Channels.getChannel(this.channelId) != null || this.storedGuildId != null;
+		const channel = Channels.getChannel(this.channelId);
+		const guildId = channel?.guildId ?? this.storedGuildId;
+		if (guildId != null && Guilds.getGuild(guildId)?.visiting === true) return false;
+		return channel != null || this.storedGuildId != null;
 	}
 
 	private get statusModel() {

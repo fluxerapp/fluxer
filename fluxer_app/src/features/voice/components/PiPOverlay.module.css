@@ -6,9 +6,6 @@
 	left: 0;
 	z-index: calc(var(--z-index-modal) - 2);
 	width: 20rem;
-	min-width: 15rem;
-	max-width: min(45rem, calc(100vw - 2.5rem));
-	max-height: calc(100svh - var(--native-titlebar-height, 0px) - 2.5rem);
 	aspect-ratio: 16 / 9;
 	border-radius: 0.75rem;
 	overflow: hidden;
@@ -28,8 +25,39 @@
 	cursor: grabbing;
 }
 
-.containerResizing {
+.container[data-resize-edge] {
+	--floating-pane-grip-opacity: 1;
+}
+
+.container[data-resize-edge='top'],
+.container[data-resize-edge='bottom'] {
+	cursor: ns-resize;
+}
+
+.container[data-resize-edge='left'],
+.container[data-resize-edge='right'] {
+	cursor: ew-resize;
+}
+
+.container[data-resize-edge='top-left'],
+.container[data-resize-edge='bottom-right'] {
 	cursor: nwse-resize;
+}
+
+.container[data-resize-edge='top-right'],
+.container[data-resize-edge='bottom-left'] {
+	cursor: nesw-resize;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.container:hover {
+	--floating-pane-grip-opacity: 1;
+}
+
+@media (hover: none) {
+	.container {
+		--floating-pane-grip-opacity: 1;
+	}
 }
 
 .hoverOverlay {
@@ -60,7 +88,7 @@
 	background: linear-gradient(to bottom, var(--voice-overlay-strong) 0%, transparent 100%);
 	display: flex;
 	align-items: flex-start;
-	padding: 0.5rem 0.625rem;
+	padding: 0.5rem 1.25rem;
 	pointer-events: auto;
 }
 
@@ -123,7 +151,7 @@
 	background: linear-gradient(to top, var(--voice-overlay-strong) 0%, transparent 100%);
 	display: flex;
 	align-items: flex-end;
-	padding: 0.5rem 0.625rem;
+	padding: 0.5rem 1.25rem;
 	pointer-events: auto;
 }
 

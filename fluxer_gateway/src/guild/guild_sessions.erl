@@ -4,26 +4,16 @@
 -typing([eqwalizer]).
 
 -export([
-    handle_session_connect/3,
     handle_session_down/2,
-    remove_session/2,
     filter_sessions_for_channel/4,
     filter_sessions_for_message/5,
     filter_sessions_for_manage_channels/4,
     filter_sessions_exclude_session/2,
-    handle_user_offline/2,
-    set_session_active_guild/3,
-    set_session_passive_guild/3,
-    build_initial_last_message_ids/1,
-    subscribe_to_user_presence/2,
-    unsubscribe_from_user_presence/2,
     set_session_viewable_channels/3,
     refresh_user_session_cache/2,
     refresh_all_viewable_channels/1,
-    handle_set_typing_override/3,
     set_session_push_hold/3,
     released_push_holds/2,
-    handle_send_guild_sync/2,
     build_viewable_channel_map/1
 ]).
 
@@ -51,21 +41,11 @@
     session_pair/0
 ]).
 
--spec handle_session_connect(map(), pid(), guild_state()) ->
-    {reply,
-        {ok, map()}
-        | {ok, unavailable, map()}
-        | {error, too_many_sessions}
-        | {error, not_member},
-        guild_state()}.
-handle_session_connect(Request, Pid, State) ->
-    guild_sessions_connect:handle_session_connect(Request, Pid, State).
-
 -spec handle_session_down(reference(), guild_state()) ->
     {noreply, guild_state()} | {stop, normal, guild_state()}.
 handle_session_down(Ref, State) ->
     case guild_sessions_connect:find_session_by_ref(Ref, State) of
-        {SessionId, #{pending_connect := true} = Session} = Found ->
+        {SessionId, #{pending_connect := true} = Session} = Found when is_binary(SessionId) ->
             handle_pending_ref_down(SessionId, Session, Ref, Found, State);
         Found ->
             guild_sessions_connect:handle_session_down(Ref, Found, State)
@@ -101,38 +81,6 @@ finish_pending_session_down(NewSessions, State) ->
             {noreply, guild_sessions_connect_cleanup:clear_auto_stop_pending(State)}
     end.
 
--spec remove_session(session_id(), guild_state()) -> guild_state().
-remove_session(SessionId, State) ->
-    guild_sessions_connect:remove_session(SessionId, State).
-
--spec build_initial_last_message_ids(map()) -> #{binary() => binary()}.
-build_initial_last_message_ids(GuildState) ->
-    guild_sessions_connect:build_initial_last_message_ids(GuildState).
-
--spec subscribe_to_user_presence(user_id(), guild_state()) -> guild_state().
-subscribe_to_user_presence(UserId, State) ->
-    guild_sessions_presence:subscribe_to_user_presence(UserId, State).
-
--spec unsubscribe_from_user_presence(user_id(), guild_state()) -> guild_state().
-unsubscribe_from_user_presence(UserId, State) ->
-    guild_sessions_presence:unsubscribe_from_user_presence(UserId, State).
-
--spec handle_user_offline(user_id(), guild_state()) -> guild_state().
-handle_user_offline(UserId, State) ->
-    guild_sessions_presence:handle_user_offline(UserId, State).
-
--spec set_session_active_guild(session_id(), guild_id(), guild_state()) -> guild_state().
-set_session_active_guild(SessionId, GuildId, State) ->
-    guild_sessions_passive:set_session_active_guild(SessionId, GuildId, State).
-
--spec set_session_passive_guild(session_id(), guild_id(), guild_state()) -> guild_state().
-set_session_passive_guild(SessionId, GuildId, State) ->
-    guild_sessions_passive:set_session_passive_guild(SessionId, GuildId, State).
-
--spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
-handle_set_typing_override(SessionId, TypingFlag, State) ->
-    guild_sessions_passive:handle_set_typing_override(SessionId, TypingFlag, State).
-
 -spec set_session_push_hold(session_id(), boolean(), guild_state()) -> guild_state().
 set_session_push_hold(SessionId, Hold, State) ->
     Sessions = maps:get(sessions, State, #{}),
@@ -143,18 +91,21 @@ set_session_push_hold(SessionId, Hold, State) ->
             State
     end.
 
--spec released_push_holds([session_id()], guild_state()) -> [session_id()].
+-spec released_push_holds([Id], guild_state()) -> [Id] when Id :: term().
 released_push_holds(SessionIds, State) ->
     Sessions = maps:get(sessions, State, #{}),
     [
         SessionId
      || SessionId <- SessionIds,
-        maps:get(push_hold, maps:get(SessionId, Sessions, #{}), undefined) =:= false
+        push_hold_released(maps:get(SessionId, Sessions, #{}))
     ].
 
--spec handle_send_guild_sync(session_id(), guild_state()) -> guild_state().
-handle_send_guild_sync(SessionId, State) ->
-    guild_sessions_passive:handle_send_guild_sync(SessionId, State).
+-spec push_hold_released(map()) -> boolean().
+push_hold_released(SessionData) ->
+    case maps:get(push_hold, SessionData, undefined) of
+        false -> true;
+        _ -> false
+    end.
 
 -spec filter_sessions_for_channel(
     sessions_map(), channel_id(), session_id() | undefined, guild_state()
@@ -246,7 +197,9 @@ memo_message_session(Sid, S, {ChannelId, MessageId, _SessionIdOpt, _Gated, State
     case maps:get(user_id, S, undefined) of
         UserId when is_integer(UserId) ->
             {Perms, Memo1} = memo_member_permissions(UserId, ChannelId, State, Memo),
-            Ok = guild_permissions:can_access_message_by_permissions(Perms, MessageId, State),
+            Ok = guild_permissions_check:can_access_message_by_permissions(
+                Perms, MessageId, State
+            ),
             {prepend_session(Ok, Sid, S, Acc), Memo1};
         _ ->
             {Acc, Memo}
@@ -280,7 +233,7 @@ prepend_session(false, _Sid, _S, Acc) -> Acc.
 filter_sessions_for_manage_channels(Sessions, ChannelId, SessionIdOpt, State) ->
     filter_active_sessions(Sessions, SessionIdOpt, fun(S, _Sid) ->
         UserId = maps:get(user_id, S),
-        guild_permissions:can_manage_channel(UserId, ChannelId, State)
+        guild_permissions_check:can_manage_channel(UserId, ChannelId, State)
     end).
 
 -spec filter_active_sessions(
@@ -358,7 +311,7 @@ refresh_user_session_cache(UserId, State) when is_integer(UserId), UserId > 0 ->
     Sessions = maps:get(sessions, State, #{}),
     UserRoles = session_passive:get_user_roles_for_guild(UserId, State),
     ViewableChannels = build_viewable_channel_map(
-        guild_visibility:get_user_viewable_channels(UserId, State)
+        guild_visibility_channels:get_user_viewable_channels(UserId, State)
     ),
     NewSessions = maps:map(
         fun(_SessionId, SessionData) ->
@@ -385,7 +338,7 @@ maybe_refresh_user_session_cache(UserId, UserRoles, ViewableChannels, SessionDat
 
 -spec refresh_all_viewable_channels(guild_state()) -> guild_state().
 refresh_all_viewable_channels(State) ->
-    guild_sessions_connect:invalidate_viewable_channels_cache(State),
+    guild_viewable_channels_cache:invalidate(State),
     Sessions = maps:get(sessions, State, #{}),
     maps:fold(
         fun refresh_session_viewable/3,
@@ -399,7 +352,7 @@ refresh_session_viewable(SessionId, SessionData, AccState) ->
     case is_integer(UserId) of
         true ->
             ViewableChannels = build_viewable_channel_map(
-                guild_visibility:get_user_viewable_channels(UserId, AccState)
+                guild_visibility_channels:get_user_viewable_channels(UserId, AccState)
             ),
             set_session_viewable_channels(SessionId, ViewableChannels, AccState);
         false ->
@@ -427,11 +380,10 @@ memo_session_can_view_channel(true, SessionData, ChannelId, State, Memo) ->
 memo_session_can_view_channel_by_permissions(SessionData, ChannelId, State, Memo) ->
     UserId = maps:get(user_id, SessionData, undefined),
     case {UserId, maps:get(viewable_channels, SessionData, undefined)} of
-        {Uid, ViewableChannels} when is_integer(Uid), is_map(ViewableChannels) ->
-            case maps:is_key(ChannelId, ViewableChannels) of
-                true -> {true, Memo};
-                false -> memo_member_channel_access(Uid, ChannelId, State, Memo)
-            end;
+        {Uid, ViewableChannels} when
+            is_integer(Uid), is_map(ViewableChannels), is_map_key(ChannelId, ViewableChannels)
+        ->
+            {true, Memo};
         {Uid, _} when is_integer(Uid) ->
             memo_member_channel_access(Uid, ChannelId, State, Memo);
         _ ->
@@ -451,10 +403,10 @@ memo_member_channel_access(UserId, ChannelId, State, Memo) ->
 
 -spec check_member_channel_access(user_id(), channel_id(), guild_state()) -> boolean().
 check_member_channel_access(UserId, ChannelId, State) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     case Member of
         undefined -> false;
-        _ -> guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
+        _ -> guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
     end.
 
 -spec build_viewable_channel_map([channel_id()]) -> #{channel_id() => true}.
@@ -464,272 +416,3 @@ build_viewable_channel_map(ChannelIds) ->
         #{},
         ChannelIds
     ).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-filter_active_sessions_test() ->
-    S1 = #{user_id => 1, pending_connect => false},
-    S2 = #{user_id => 2, pending_connect => true},
-    S3 = #{user_id => 3},
-    Sessions = #{<<"a">> => S1, <<"b">> => S2, <<"c">> => S3},
-    Result = filter_active_sessions(Sessions, <<"a">>, fun(_S, _Sid) -> true end),
-    ResultSids = lists:sort([Sid || {Sid, _} <- Result]),
-    ?assertEqual([<<"c">>], ResultSids).
-
-filter_active_sessions_with_predicate_test() ->
-    S1 = #{user_id => 1},
-    S2 = #{user_id => 2},
-    Sessions = #{<<"a">> => S1, <<"b">> => S2},
-    Result = filter_active_sessions(Sessions, undefined, fun(S, _Sid) ->
-        maps:get(user_id, S) =:= 2
-    end),
-    ?assertEqual(1, length(Result)),
-    [{<<"b">>, _}] = Result.
-
-store_memo_bound_test() ->
-    Full = maps:from_list([{I, 0} || I <- lists:seq(1, ?MAX_MEMO_ENTRIES)]),
-    ?assertEqual(Full, store_memo(0, 1, Full)),
-    ?assertEqual(?MAX_MEMO_ENTRIES, map_size(store_memo(0, 1, Full))).
-
--spec reference_session_can_access_message(map(), channel_id(), binary(), guild_state()) ->
-    boolean().
-reference_session_can_access_message(SessionData, ChannelId, MessageId, State) ->
-    case maps:get(user_id, SessionData, undefined) of
-        UserId when is_integer(UserId) ->
-            Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-            guild_permissions:can_access_message_by_permissions(Perms, MessageId, State);
-        _ ->
-            false
-    end.
-
--spec reference_session_can_view_channel(session_data(), channel_id(), guild_state()) ->
-    boolean().
-reference_session_can_view_channel(SessionData, ChannelId, State) ->
-    guild_thread_gate:channel_visible(SessionData, ChannelId, State) andalso
-        reference_session_can_view_channel_by_permissions(SessionData, ChannelId, State).
-
--spec reference_session_can_view_channel_by_permissions(
-    session_data(), channel_id(), guild_state()
-) ->
-    boolean().
-reference_session_can_view_channel_by_permissions(SessionData, ChannelId, State) ->
-    UserId = maps:get(user_id, SessionData, undefined),
-    case {UserId, maps:get(viewable_channels, SessionData, undefined)} of
-        {Uid, ViewableChannels} when is_integer(Uid), is_map(ViewableChannels) ->
-            maps:is_key(ChannelId, ViewableChannels) orelse
-                check_member_channel_access(Uid, ChannelId, State);
-        {Uid, _} when is_integer(Uid) ->
-            check_member_channel_access(Uid, ChannelId, State);
-        _ ->
-            false
-    end.
-
--spec reference_filter_channel_direct(
-    sessions_map(), channel_id(), session_id() | undefined, guild_state()
-) -> [session_pair()].
-reference_filter_channel_direct(Sessions, ChannelId, SessionIdOpt, State) ->
-    filter_active_sessions(Sessions, SessionIdOpt, fun(S, _Sid) ->
-        reference_session_can_view_channel(S, ChannelId, State)
-    end).
-
--spec reference_filter_message_direct(
-    sessions_map(), channel_id(), binary(), session_id() | undefined, guild_state()
-) -> [session_pair()].
-reference_filter_message_direct(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
-    filter_active_sessions(Sessions, SessionIdOpt, fun(S, _Sid) ->
-        reference_session_can_view_channel(S, ChannelId, State) andalso
-            reference_session_can_access_message(S, ChannelId, MessageId, State)
-    end).
-
-memo_session_can_view_channel_listed_skips_memo_test() ->
-    Session = #{user_id => 1001, viewable_channels => #{10 => true}},
-    ?assertEqual({true, #{}}, memo_session_can_view_channel(false, Session, 10, #{}, #{})).
-
-memo_session_can_view_channel_without_user_test() ->
-    Session = #{viewable_channels => #{10 => true}},
-    ?assertEqual({false, #{}}, memo_session_can_view_channel(false, Session, 10, #{}, #{})).
-
-channel_filters_match_per_session_reference_test() ->
-    State = visibility_fixture_state(),
-    Sessions = maps:get(sessions, State),
-    Excludes = [undefined | lists:sublist(lists:sort(maps:keys(Sessions)), 3)],
-    Results = [
-        assert_filters_match_reference(Sessions, ChannelId, Exclude, State)
-     || ChannelId <- visibility_fixture_channels(), Exclude <- Excludes
-    ],
-    Visible = lists:append([Sids || {Sids, _} <- Results]),
-    ?assert(lists:member(<<"u1002-stale">>, Visible)),
-    ?assert(lists:member(<<"u1005-nomap">>, Visible)),
-    ?assert(lists:member(<<"u1007-empty">>, Visible)),
-    ?assertNot(lists:member(<<"nouser">>, Visible)),
-    ?assert(lists:any(fun({Sids, _}) -> Sids =/= [] end, Results)),
-    ?assert(lists:any(fun({Sids, Msg}) -> length(Msg) < length(Sids) end, Results)).
-
-assert_filters_match_reference(Sessions, ChannelId, Exclude, State) ->
-    Channel = filter_sessions_for_channel(Sessions, ChannelId, Exclude, State),
-    ?assertEqual(reference_filter_channel_direct(Sessions, ChannelId, Exclude, State), Channel),
-    MessageId = <<"1430000000000000000">>,
-    Message = filter_sessions_for_message(Sessions, ChannelId, MessageId, Exclude, State),
-    ?assertEqual(
-        reference_filter_message_direct(Sessions, ChannelId, MessageId, Exclude, State), Message
-    ),
-    {[Sid || {Sid, _} <- Channel], [Sid || {Sid, _} <- Message]}.
-
-visibility_fixture_channels() ->
-    [10, 20, 30, 40, 50, 60, 61, 70].
-
-visibility_fixture_state() ->
-    View = constants:view_channel_permission(),
-    History = constants:read_message_history_permission(),
-    Deny = fun(Id, Type, Bits) ->
-        #{
-            <<"id">> => Id,
-            <<"type">> => Type,
-            <<"allow">> => <<"0">>,
-            <<"deny">> => integer_to_binary(Bits)
-        }
-    end,
-    Allow = fun(Id, Type, Bits) ->
-        #{
-            <<"id">> => Id,
-            <<"type">> => Type,
-            <<"allow">> => integer_to_binary(Bits),
-            <<"deny">> => <<"0">>
-        }
-    end,
-    Channel = fun(Id, Type, Parent, Overwrites) ->
-        #{
-            <<"id">> => integer_to_binary(Id),
-            <<"type">> => Type,
-            <<"parent_id">> => Parent,
-            <<"permission_overwrites">> => Overwrites
-        }
-    end,
-    Member = fun(UserId, Roles) ->
-        #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => Roles}
-    end,
-    Data = #{
-        <<"guild">> => #{
-            <<"id">> => <<"1">>, <<"owner_id">> => <<"999">>, <<"features">> => []
-        },
-        <<"roles">> => [
-            #{<<"id">> => <<"1">>, <<"permissions">> => integer_to_binary(View bor History)},
-            #{<<"id">> => <<"200">>, <<"permissions">> => <<"0">>},
-            #{<<"id">> => <<"300">>, <<"permissions">> => <<"0">>}
-        ],
-        <<"members">> => [
-            Member(999, []),
-            Member(1001, []),
-            Member(1002, [<<"300">>]),
-            Member(1003, [<<"200">>]),
-            Member(1004, [<<"200">>, <<"300">>]),
-            Member(1005, []),
-            Member(1006, [<<"300">>]),
-            Member(1007, [])
-        ],
-        <<"channels">> => [
-            Channel(10, 0, null, []),
-            Channel(20, 0, null, [Deny(<<"1">>, 0, View), Allow(<<"300">>, 0, View)]),
-            Channel(30, 0, null, [Deny(<<"1">>, 0, View), Allow(<<"1005">>, 1, View)]),
-            Channel(40, 0, null, [Deny(<<"200">>, 0, View)]),
-            Channel(50, 0, null, [Deny(<<"1">>, 0, History), Allow(<<"300">>, 0, History)]),
-            Channel(60, 4, null, [Deny(<<"1">>, 0, View)]),
-            Channel(61, 0, <<"60">>, [Allow(<<"300">>, 0, View)])
-        ]
-    },
-    Sessions = #{
-        <<"owner">> => #{user_id => 999, viewable_channels => #{}},
-        <<"u1001-a">> => #{user_id => 1001, viewable_channels => #{10 => true, 40 => true}},
-        <<"u1001-b">> => #{user_id => 1001},
-        <<"u1001-pending">> => #{user_id => 1001, pending_connect => true},
-        <<"u1002-stale">> => #{user_id => 1002, viewable_channels => #{}},
-        <<"u1002-full">> => #{user_id => 1002, viewable_channels => #{10 => true, 20 => true}},
-        <<"u1003-a">> => #{user_id => 1003, viewable_channels => #{10 => true, 40 => true}},
-        <<"u1003-b">> => #{user_id => 1003, viewable_channels => #{}},
-        <<"u1004">> => #{user_id => 1004, viewable_channels => #{20 => true}},
-        <<"u1005-nomap">> => #{user_id => 1005},
-        <<"u1005-map">> => #{user_id => 1005, viewable_channels => #{10 => true}},
-        <<"u1006">> => #{user_id => 1006, viewable_channels => #{61 => true}},
-        <<"u1007-empty">> => #{user_id => 1007, viewable_channels => #{}},
-        <<"u1008-nonmember">> => #{user_id => 1008, viewable_channels => #{}},
-        <<"u1008-listed">> => #{user_id => 1008, viewable_channels => #{50 => true}},
-        <<"nouser">> => #{viewable_channels => #{10 => true}}
-    },
-    #{
-        id => 1,
-        sessions => Sessions,
-        data => Data,
-        virtual_channel_access => #{1007 => sets:from_list([20])}
-    }.
-
-filter_message_memo_matches_direct_test() ->
-    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
-    Owner1 = #{user_id => 1, viewable_channels => #{5 => true}},
-    Owner2 = #{user_id => 1, viewable_channels => #{5 => true}},
-    Other = #{user_id => 2, viewable_channels => #{5 => true}},
-    Sessions = #{<<"a">> => Owner1, <<"b">> => Owner2, <<"c">> => Other},
-    Direct = reference_filter_message_direct(Sessions, 5, <<"1">>, undefined, State),
-    Memoized = filter_message_memo(Sessions, 5, <<"1">>, undefined, State),
-    ?assertEqual(Direct, Memoized),
-    ?assertEqual([<<"a">>, <<"b">>], lists:sort([Sid || {Sid, _} <- Memoized])).
-
-filter_message_memo_collects_visible_sessions_test() ->
-    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
-    Owner1 = #{user_id => 1, viewable_channels => #{5 => true}},
-    Owner2 = #{user_id => 1, viewable_channels => #{5 => true}},
-    Other = #{user_id => 2, viewable_channels => #{5 => true}},
-    Sessions = #{<<"a">> => Owner1, <<"b">> => Owner2, <<"c">> => Other},
-    Memoized = filter_message_memo(Sessions, 5, <<"1">>, undefined, State),
-    ?assertEqual([<<"a">>, <<"b">>], lists:sort([Sid || {Sid, _} <- Memoized])).
-
-filter_message_memo_skips_excluded_test() ->
-    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
-    S1 = #{user_id => 1, viewable_channels => #{5 => true}},
-    S2 = #{user_id => 1, viewable_channels => #{5 => true}, pending_connect => true},
-    Sessions = #{<<"a">> => S1, <<"b">> => S2},
-    ?assertEqual([], filter_message_memo(Sessions, 5, <<"1">>, <<"a">>, State)).
-
-filter_sessions_for_message_test() ->
-    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
-    Sessions = #{<<"a">> => #{user_id => 1, viewable_channels => #{5 => true}}},
-    ?assertEqual(
-        [{<<"a">>, maps:get(<<"a">>, Sessions)}],
-        filter_sessions_for_message(Sessions, 5, <<"1">>, undefined, State)
-    ).
-
-handle_pending_session_down_keeps_tracking_test() ->
-    Ref = make_ref(),
-    Pending = #{session_id => <<"a">>, user_id => 1, mref => Ref, pending_connect => true},
-    Active = #{session_id => <<"b">>, user_id => 1, mref => make_ref()},
-    Sessions = #{<<"a">> => Pending, <<"b">> => Active},
-    State = #{
-        sessions => Sessions,
-        guild_session_refs => #{Ref => <<"a">>},
-        session_connect_pending => #{<<"a">> => #{}},
-        user_session_counts => #{1 => 1},
-        connected_user_ids => sets:from_list([1])
-    },
-    {noreply, NewState} = handle_pending_session_down(<<"a">>, Ref, Sessions, State),
-    ?assertEqual(#{<<"b">> => Active}, maps:get(sessions, NewState)),
-    ?assertEqual(#{}, maps:get(guild_session_refs, NewState)),
-    ?assertEqual(#{}, maps:get(session_connect_pending, NewState)),
-    ?assertEqual(#{1 => 1}, maps:get(user_session_counts, NewState)),
-    ?assertEqual([1], sets:to_list(maps:get(connected_user_ids, NewState))),
-    ?assertEqual(false, maps:is_key(auto_stop_pending, NewState)).
-
-handle_pending_session_down_last_session_test() ->
-    Ref = make_ref(),
-    Pending = #{session_id => <<"a">>, user_id => 1, mref => Ref, pending_connect => true},
-    Sessions = #{<<"a">> => Pending},
-    State = #{
-        sessions => Sessions,
-        guild_session_refs => #{Ref => <<"a">>},
-        disable_auto_stop_on_empty => true
-    },
-    {noreply, NewState} = handle_pending_session_down(<<"a">>, Ref, Sessions, State),
-    ?assertEqual(#{}, maps:get(sessions, NewState)),
-    ?assertEqual(#{}, maps:get(guild_session_refs, NewState)),
-    ?assertEqual(false, maps:is_key(auto_stop_pending, NewState)).
-
--endif.

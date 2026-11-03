@@ -2,18 +2,18 @@
 
 .container {
 	background-color: var(--background-secondary);
-	margin-left: calc(-1 * var(--chat-mobile-horizontal-padding));
-	margin-right: calc(-1 * var(--chat-mobile-horizontal-padding));
-	padding-left: var(--chat-mobile-horizontal-padding);
-	padding-right: var(--chat-mobile-horizontal-padding);
+	margin-inline-start: calc(-1 * var(--chat-mobile-horizontal-padding));
+	margin-inline-end: calc(-1 * var(--chat-mobile-horizontal-padding));
+	padding-inline-start: var(--chat-mobile-horizontal-padding);
+	padding-inline-end: var(--chat-mobile-horizontal-padding);
 }
 
 @media (min-width: 768px) {
 	.container {
-		margin-left: calc(-1 * var(--chat-horizontal-padding));
-		margin-right: calc(-1 * var(--chat-horizontal-padding));
-		padding-left: var(--chat-horizontal-padding);
-		padding-right: var(--chat-horizontal-padding);
+		margin-inline-start: calc(-1 * var(--chat-horizontal-padding));
+		margin-inline-end: calc(-1 * var(--chat-horizontal-padding));
+		padding-inline-start: var(--chat-horizontal-padding);
+		padding-inline-end: var(--chat-horizontal-padding);
 	}
 }
 

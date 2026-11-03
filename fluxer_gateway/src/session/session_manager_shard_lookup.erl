@@ -8,9 +8,6 @@
     lookup_session_anywhere/2,
     lookup_or_rehydrate/4,
     lookup_remote_on_nodes/2,
-    remote_lookup_nodes/2,
-    select_remote_session_pid/1,
-    validate_transfer_token/2,
     parse_presence/2,
     parse_guild_ids/1,
     get_presence_custom_status/1,
@@ -30,7 +27,6 @@
 -type session_ref() :: {pid(), reference()}.
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    identify_attempts := [integer()],
     pending_identifies := map(),
     identify_workers := map(),
     shard_index := non_neg_integer(),

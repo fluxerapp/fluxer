@@ -14,6 +14,7 @@ const FETCH_RECENT_MENTION_CQL = RecentMentions.selectCql({
 const createFetchRecentMentionsQuery = (limit: number) =>
 	RecentMentions.select({
 		where: [RecentMentions.where.eq('user_id'), RecentMentions.where.lt('message_id', 'before_message_id')],
+		orderBy: {col: 'message_id', direction: 'DESC'},
 		limit,
 	});
 const BULK_RECENT_MENTION_BATCH_QUERY_LIMIT = 50;

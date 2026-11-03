@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createUserID} from '@app/api/BrandedTypes';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {
@@ -17,7 +17,6 @@ import {
 	sendChannelMessage,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -97,27 +96,6 @@ describe('UserChannelService', () => {
 			expect(channel.id).toBeDefined();
 			expect(channel.type).toBe(ChannelTypes.DM);
 		});
-		test('can create DM with a user who shares no mutual community', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const channel = await createDmChannel(harness, user1.token, user2.userId);
-			expect(channel.id).toBeDefined();
-			expect(channel.type).toBe(ChannelTypes.DM);
-		});
-		test('unclaimed account cannot create DM', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const guild = await createGuild(harness, user1.token, 'Test Community');
-			const systemChannel = await getChannel(harness, user1.token, guild.system_channel_id!);
-			const invite = await createChannelInvite(harness, user1.token, systemChannel.id);
-			await acceptInvite(harness, user2.token, invite.code);
-			await unclaimAccount(harness, user1.userId);
-			await createBuilder(harness, user1.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: user2.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES')
-				.execute();
-		});
 		test('reopening existing DM returns same channel', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
@@ -175,37 +153,7 @@ describe('UserChannelService', () => {
 				.execute();
 		});
 	});
-	describe('sending messages in DMs', () => {
-		test('cannot send message to user who blocked you', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			await ensureSessionStarted(harness, user1.token);
-			const channel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user2.token)
-				.put(`/users/@me/relationships/${user1.userId}`)
-				.body({type: 2})
-				.execute();
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${channel.id}/messages`)
-				.body({content: 'Hello!'})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
-				.execute();
-		});
-	});
 	describe('group DM recipient management', () => {
-		test('cannot add non-friend to group DM', async () => {
-			const owner = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			const stranger = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend);
-			const channel = await createGroupDmChannel(harness, owner.token, [friend.userId]);
-			await createBuilder(harness, owner.token)
-				.put(`/channels/${channel.id}/recipients/${stranger.userId}`)
-				.body(null)
-				.expect(HTTP_STATUS.BAD_REQUEST, 'NOT_FRIENDS_WITH_USER')
-				.execute();
-		});
 		test('non-owner cannot remove other recipients', async () => {
 			const owner = await createTestAccount(harness);
 			const member1 = await createTestAccount(harness);

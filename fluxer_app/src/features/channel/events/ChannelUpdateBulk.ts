@@ -8,7 +8,7 @@ import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
-export type ChannelBulkUpdatePayload = Partial<Channel> & {
+type ChannelBulkUpdatePayload = Partial<Channel> & {
 	id: string;
 	type: number;
 };

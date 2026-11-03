@@ -1,4 +1,7 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {errorMessage} from '@electron/common/ErrorMessage';
 
 import {
 	GLOBAL_SHORTCUT_ACTIONS,
@@ -23,6 +26,7 @@ import {
 	type HookKeyEvent,
 	type HookMouseEvent,
 	type ShortcutBinding,
+	ShortcutPressPolicy,
 	type ShortcutTransition,
 } from '@electron/main/GlobalShortcutMatcher';
 import type {LinuxPortalShortcutsManager, PortalShortcutDefinition} from '@electron/main/LinuxGlobalShortcutsPortal';
@@ -116,11 +120,7 @@ const MAX_ACTION_LENGTH = 100;
 const MAX_KEY_LENGTH = 64;
 const MAX_MOUSE_BUTTON = 31;
 const INPUT_DEVICE_REPROBE_DELAY_MS = 500;
-export const GLOBAL_SHORTCUT_CAPTURE_TIMEOUT_MS = 60000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
+const GLOBAL_SHORTCUT_CAPTURE_TIMEOUT_MS = 60000;
 
 function sanitizeBoundedString(value: unknown, maxLength: number): string | null {
 	if (typeof value !== 'string') return null;
@@ -178,14 +178,6 @@ export function sanitizeGlobalShortcutsSyncPayload(value: unknown): SanitizedSyn
 		actions.push({action: entry.action, description, preferredCombo});
 	}
 	return {bindings, actions};
-}
-
-export function storedActionsFromSync(actions: ReadonlyArray<SanitizedSyncAction>): Array<StoredGlobalShortcutAction> {
-	return actions.map((entry) => ({
-		action: entry.action,
-		description: entry.description,
-		preferredTrigger: entry.preferredCombo === null ? null : comboToXdgTrigger(entry.preferredCombo),
-	}));
 }
 
 export function portalDefinitionsFromStored(
@@ -303,7 +295,15 @@ export class GlobalShortcutsEngine {
 			if (binding !== null) bindings.push(binding);
 		}
 		this.emitTransitions(client, client.matcher.setBindings(bindings));
-		if (payload.actions.length > 0) this.storeActions(storedActionsFromSync(payload.actions));
+		if (payload.actions.length > 0) {
+			this.storeActions(
+				payload.actions.map((entry) => ({
+					action: entry.action,
+					description: entry.description,
+					preferredTrigger: entry.preferredCombo === null ? null : comboToXdgTrigger(entry.preferredCombo),
+				})),
+			);
+		}
 		if (bindings.length > 0) this.migrateDirectInput();
 		if (!this.directInputAvailable) this.reprobeDirectInput();
 		void this.refreshHooks();
@@ -314,7 +314,7 @@ export class GlobalShortcutsEngine {
 		if (client) client.paused = paused;
 	}
 
-	refreshDirectInputAvailability(): void {
+	private refreshDirectInputAvailability(): void {
 		if (this.deps.linux === null) return;
 		this.directInputAvailable = this.deps.isDirectInputAvailable();
 		this.syncPortalActivity();
@@ -373,7 +373,7 @@ export class GlobalShortcutsEngine {
 		this.refreshDirectInputAvailability();
 	}
 
-	isDirectInputActive(): boolean {
+	private isDirectInputActive(): boolean {
 		const linux = this.deps.linux;
 		if (linux === null || linux.inputHookMode === 'off' || linux.inputHookMode === 'native') return false;
 		if (!this.directInputAvailable) return false;
@@ -457,7 +457,7 @@ export class GlobalShortcutsEngine {
 		const run = this.hookQueue.then(() => this.reconcileHooks());
 		this.hookQueue = run.catch((error: unknown) => {
 			this.deps.log('Global shortcut hook reconcile failed', {
-				message: error instanceof Error ? error.message : String(error),
+				message: errorMessage(error),
 			});
 		});
 		return this.hookQueue;
@@ -514,7 +514,7 @@ export class GlobalShortcutsEngine {
 		} catch (error) {
 			this.deps.log('Global shortcut hook start threw', {
 				backend: desired,
-				message: error instanceof Error ? error.message : String(error),
+				message: errorMessage(error),
 			});
 			result = 'start-failed';
 		}
@@ -556,23 +556,34 @@ export class GlobalShortcutsEngine {
 		} catch (error) {
 			this.deps.log('Global shortcut hook stop threw', {
 				backend: backend.kind,
-				message: error instanceof Error ? error.message : String(error),
+				message: errorMessage(error),
 			});
 		}
 	}
 
 	private dispatchHookEvent(event: HookEvent, backend: HookBackendKind): void {
 		for (const client of this.clients.values()) {
-			const transitions =
-				event.native === null
-					? client.matcher.handleMouse(event, !client.paused)
-					: client.matcher.handleKey(event, !client.paused);
+			let transitions: Array<ShortcutTransition>;
+			if (event.native === null) {
+				transitions = client.matcher.handleMouse(
+					event,
+					client.paused ? ShortcutPressPolicy.RELEASE_ONLY : ShortcutPressPolicy.PRESS_AND_RELEASE,
+				);
+			} else {
+				transitions = client.matcher.handleKey(
+					event,
+					client.paused ? ShortcutPressPolicy.RELEASE_ONLY : ShortcutPressPolicy.PRESS_AND_RELEASE,
+				);
+			}
 			this.emitTransitions(client, transitions);
 		}
-		for (const consumer of this.consumers) consumer.handleHookEvent(event, backend);
+		for (const consumer of this.consumers) {
+			consumer.handleHookEvent(event, backend);
+		}
 		const capture = this.capture;
-		if (capture !== null)
+		if (capture !== null) {
 			this.clients.get(capture.clientId)?.send('global-shortcuts:capture', captureEventFromHook(event));
+		}
 	}
 
 	private emitTransitions(client: SyncClient, transitions: ReadonlyArray<ShortcutTransition>): void {
@@ -650,7 +661,7 @@ export class GlobalShortcutsEngine {
 		);
 	}
 
-	syncPortalActivity(): void {
+	private syncPortalActivity(): void {
 		const portal = this.deps.portal;
 		if (portal === null) return;
 		if (this.portalRequested && this.portalApplicable()) {

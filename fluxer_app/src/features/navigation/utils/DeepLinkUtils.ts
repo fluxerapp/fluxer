@@ -14,7 +14,6 @@ import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHT
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
@@ -25,6 +24,7 @@ import {
 	type UserSettingsDeepLinkTarget,
 } from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import {ME} from '@fluxer/constants/src/AppConstants';
+import {OFFICIAL_WEB_APP_HOSTS} from '@fluxer/instance_bootstrap/src/OfficialWebAppHosts';
 import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {createElement} from 'react';
 
@@ -132,7 +132,7 @@ const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 };
 
 function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
-	if (target.tab === 'plutonium' && PlutoniumPageRollout.enabled) {
+	if (target.tab === 'plutonium') {
 		PlutoniumPageCommands.openPlutoniumPage();
 		return;
 	}
@@ -194,6 +194,10 @@ const navigateForTarget = (target: DeepLinkTarget) => {
 	RouterUtils.transitionTo(dest);
 };
 
+export function isAppDeepLink(rawUrl: string): boolean {
+	return isAppProtocolUrl(rawUrl) && parseDeepLink(rawUrl) !== null;
+}
+
 export function handleDeepLinkUrl(rawUrl: string): boolean {
 	const target = parseDeepLink(rawUrl);
 	if (!target) return false;
@@ -227,14 +231,7 @@ export async function startDeepLinkHandling(): Promise<void> {
 	}
 }
 
-const OFFICIAL_INTERNAL_APP_HOSTS = [
-	'fluxer.app',
-	'canary.fluxer.app',
-	'web.fluxer.app',
-	'web.canary.fluxer.app',
-	'fluxer.com',
-	'canary.fluxer.com',
-];
+const OFFICIAL_INTERNAL_APP_HOSTS = [...OFFICIAL_WEB_APP_HOSTS, 'fluxer.app', 'canary.fluxer.app'];
 const getNormalizedWebAppHost = (): string => {
 	try {
 		return new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase();
@@ -260,7 +257,7 @@ export function isInternalChannelHost(host: string): boolean {
 	if (webAppHost && normalizedHost === webAppHost) {
 		return true;
 	}
-	return OFFICIAL_INTERNAL_APP_HOSTS.includes(normalizedHost);
+	return !RuntimeConfig.isSelfHosted() && OFFICIAL_INTERNAL_APP_HOSTS.includes(normalizedHost);
 }
 
 export function parseChannelUrl(url: string): string | null {

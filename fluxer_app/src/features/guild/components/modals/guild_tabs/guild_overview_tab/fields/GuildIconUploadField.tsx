@@ -4,11 +4,10 @@ import {
 	ANIMATED_ICON_FEATURE,
 	ANIMATED_IMAGE_FORMATS,
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
-import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import styles from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTab.module.css';
 import type {GuildLike} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
@@ -17,6 +16,7 @@ import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -60,7 +60,7 @@ export const GuildIconUploadField: React.FC<{
 		fieldName: 'icon',
 		assetType: AssetType.GUILD_ICON,
 		canManage: canManageGuild,
-		filePickerAccept: getAcceptStringFiltered('guild_icon', canUseAnimatedIcon),
+		filePickerAccept: getAcceptString('guild_icon', {animatedAllowed: canUseAnimatedIcon}),
 		previewUrl: previewIconUrl,
 		setPreviewUrl: setPreviewIconUrl,
 		setHasCleared: setHasClearedIcon,
@@ -75,7 +75,7 @@ export const GuildIconUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_ICON_DESCRIPTOR),
 		uploadHint: formatImageUploadRecommendedHint(i18n, {
 			formats: iconFormats,
-			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 			recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 		}),
 	});

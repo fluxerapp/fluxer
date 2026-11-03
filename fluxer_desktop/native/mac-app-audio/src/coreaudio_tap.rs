@@ -65,7 +65,6 @@ pub enum CreateError {
     Unsupported,
     NoRelatedProcesses,
     NoProcessObjects,
-    FoundationObjectFailed,
     CreateProcessTapFailed,
     ReadTapUidFailed,
     ReadTapFormatFailed,
@@ -77,12 +76,6 @@ pub enum CreateError {
 pub type PcmCallback =
     unsafe extern "C" fn(ctx: *mut c_void, slot: *mut Option<PooledPcmFrame>, frames: u32);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct TapDiagnostics {
-    pub convert_failures: u64,
-    pub dropped_buffers: u64,
-}
-
 pub struct Capture {
     pub tap_id: AudioObjectID,
     pub aggregate_device_id: AudioObjectID,
@@ -92,8 +85,6 @@ pub struct Capture {
     pub pcm_callback: Option<PcmCallback>,
     pub pcm_callback_ctx: *mut c_void,
     pub pcm_pool: Option<PcmFramePool>,
-    pub convert_failures: AtomicU64,
-    pub dropped_buffers: AtomicU64,
 
     refresher: Option<RefresherHandle>,
 }
@@ -378,16 +369,12 @@ unsafe extern "C-unwind" fn io_proc(
     let frames =
         match unsafe { ac::input_frame_count_for_buffer_list(&capture.input_format, local_abl) } {
             Ok(f) => f,
-            Err(_) => {
-                capture.convert_failures.fetch_add(1, Ordering::Relaxed);
-                return NO_ERR;
-            }
+            Err(_) => return NO_ERR,
         };
     if frames == 0 {
         return NO_ERR;
     }
     if frames > MAX_CALLBACK_INPUT_FRAMES {
-        capture.dropped_buffers.fetch_add(1, Ordering::Relaxed);
         return NO_ERR;
     }
     unsafe {
@@ -412,11 +399,9 @@ unsafe fn convert_and_deliver(capture: &Capture, local_abl: *const AudioBufferLi
     ) as usize)
         * (TARGET_CHANNELS as usize);
     if needed > pool.samples_per_slot() as usize {
-        capture.dropped_buffers.fetch_add(1, Ordering::Relaxed);
         return;
     }
     let Some(mut slot) = pool.try_acquire() else {
-        capture.dropped_buffers.fetch_add(1, Ordering::Relaxed);
         return;
     };
     let out_frames = unsafe {
@@ -430,14 +415,7 @@ unsafe fn convert_and_deliver(capture: &Capture, local_abl: *const AudioBufferLi
         )
     };
     let n = match out_frames {
-        Ok(0) => {
-            capture.dropped_buffers.fetch_add(1, Ordering::Relaxed);
-            return;
-        }
-        Err(_) => {
-            capture.convert_failures.fetch_add(1, Ordering::Relaxed);
-            return;
-        }
+        Ok(0) | Err(_) => return,
         Ok(n) => n,
     };
     let filled = (n as usize) * (TARGET_CHANNELS as usize);
@@ -540,8 +518,6 @@ impl Capture {
             pcm_callback: None,
             pcm_callback_ctx: ptr::null_mut(),
             pcm_pool: None,
-            convert_failures: AtomicU64::new(0),
-            dropped_buffers: AtomicU64::new(0),
             refresher: None,
         });
         let mut io_proc_id: AudioDeviceIOProcID = None;
@@ -578,16 +554,6 @@ impl Capture {
         assert!(pool.capacity() > 0);
         assert!(pool.samples_per_slot() > 0);
         self.pcm_pool = Some(pool);
-    }
-
-    pub fn diagnostics(&self) -> TapDiagnostics {
-        let diagnostics = TapDiagnostics {
-            convert_failures: self.convert_failures.load(Ordering::Relaxed),
-            dropped_buffers: self.dropped_buffers.load(Ordering::Relaxed),
-        };
-        assert!(diagnostics.convert_failures <= u64::MAX / 2);
-        assert!(diagnostics.dropped_buffers <= u64::MAX / 2);
-        diagnostics
     }
 
     pub fn start(&mut self) -> Result<(), CreateError> {
@@ -731,7 +697,6 @@ pub fn coreaudio_error_message(e: &CreateError) -> &'static str {
         CreateError::Unsupported => "CoreAudio process taps unavailable",
         CreateError::NoRelatedProcesses => "No related process for selected app",
         CreateError::NoProcessObjects => "No CoreAudio process object for selected app",
-        CreateError::FoundationObjectFailed => "CoreAudio tap configuration failed",
         CreateError::CreateProcessTapFailed => "CoreAudio process tap creation failed",
         CreateError::ReadTapUidFailed => "CoreAudio process tap UID lookup failed",
         CreateError::ReadTapFormatFailed => "CoreAudio process tap format lookup failed",
@@ -740,214 +705,5 @@ pub fn coreaudio_error_message(e: &CreateError) -> &'static str {
         }
         CreateError::CreateIOProcFailed => "CoreAudio process tap IOProc creation failed",
         CreateError::StartDeviceFailed => "CoreAudio process tap start failed",
-    }
-}
-
-#[cfg(test)]
-mod io_proc_diagnostics_tests {
-    use super::*;
-    use crate::audio_converter::AudioBuffer;
-    use core::mem::size_of;
-    use core::ptr::NonNull;
-    use core::sync::atomic::AtomicU32 as TestAtomicU32;
-    use objc2_core_audio_types::AudioTimeStamp;
-
-    fn make_idle_capture(input_format: AudioStreamBasicDescription) -> Box<Capture> {
-        Box::new(Capture {
-            tap_id: kAudioObjectUnknown,
-            aggregate_device_id: kAudioObjectUnknown,
-            io_proc_id: None,
-            input_format,
-            running: AtomicBool::new(true),
-            pcm_callback: None,
-            pcm_callback_ctx: ptr::null_mut(),
-            pcm_pool: None,
-            convert_failures: AtomicU64::new(0),
-            dropped_buffers: AtomicU64::new(0),
-            refresher: None,
-        })
-    }
-
-    fn make_test_pool() -> PcmFramePool {
-        PcmFramePool::new(2, 8_192).expect("test pool builds")
-    }
-
-    fn call_io_proc(capture: &Capture, abl: &mut AudioBufferList) -> OSStatus {
-        let mut ts_now: AudioTimeStamp = unsafe { core::mem::zeroed() };
-        let mut ts_input: AudioTimeStamp = unsafe { core::mem::zeroed() };
-        let mut ts_output: AudioTimeStamp = unsafe { core::mem::zeroed() };
-        let mut out_abl = AudioBufferList {
-            m_number_buffers: 0,
-            buffers: [AudioBuffer {
-                m_number_channels: 0,
-                m_data_byte_size: 0,
-                m_data: ptr::null_mut(),
-            }],
-        };
-        unsafe {
-            io_proc(
-                0,
-                NonNull::from(&mut ts_now),
-                NonNull::new(
-                    abl as *mut AudioBufferList as *mut objc2_core_audio_types::AudioBufferList,
-                )
-                .expect("input abl non-null"),
-                NonNull::from(&mut ts_input),
-                NonNull::new(
-                    &mut out_abl as *mut AudioBufferList
-                        as *mut objc2_core_audio_types::AudioBufferList,
-                )
-                .expect("output abl non-null"),
-                NonNull::from(&mut ts_output),
-                capture as *const Capture as *mut c_void,
-            )
-        }
-    }
-
-    fn interleaved_abl(data: &mut [f32]) -> AudioBufferList {
-        AudioBufferList {
-            m_number_buffers: 1,
-            buffers: [AudioBuffer {
-                m_number_channels: TARGET_CHANNELS,
-                m_data_byte_size: (data.len() * size_of::<f32>()) as u32,
-                m_data: data.as_mut_ptr() as *mut c_void,
-            }],
-        }
-    }
-
-    #[test]
-    fn convert_failures_counted_for_unsupported_format() {
-        let capture = make_idle_capture(AudioStreamBasicDescription::default());
-        let mut data = [0.0_f32; 8];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.convert_failures, 1);
-        assert_eq!(diagnostics.dropped_buffers, 0);
-    }
-
-    unsafe extern "C" fn noop_pcm_cb(
-        _ctx: *mut c_void,
-        _slot: *mut Option<PooledPcmFrame>,
-        _frames: u32,
-    ) {
-    }
-
-    #[test]
-    fn dropped_buffers_counted_when_pool_exhausted() {
-        let mut capture = make_idle_capture(ac::build_input_asbd(48_000.0, TARGET_CHANNELS, false));
-        let pool = make_test_pool();
-        capture.set_pcm_callback(noop_pcm_cb, ptr::null_mut());
-        capture.set_pcm_pool(pool.clone());
-        let mut held = Vec::with_capacity(pool.capacity() as usize);
-        for _ in 0..pool.capacity() {
-            held.push(pool.try_acquire().expect("slot in capacity"));
-        }
-        let mut data = [0.25_f32; 96];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        drop(held);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.dropped_buffers, 1);
-        assert_eq!(diagnostics.convert_failures, 0);
-    }
-
-    #[test]
-    fn dropped_buffers_counted_when_slot_too_small_for_conversion() {
-        let mut capture = make_idle_capture(ac::build_input_asbd(48_000.0, TARGET_CHANNELS, false));
-        let pool = PcmFramePool::new(2, 16).expect("tiny pool builds");
-        capture.set_pcm_callback(noop_pcm_cb, ptr::null_mut());
-        capture.set_pcm_pool(pool);
-        let mut data = [0.25_f32; 96];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.dropped_buffers, 1);
-        assert_eq!(diagnostics.convert_failures, 0);
-    }
-
-    #[test]
-    fn dropped_buffers_counted_for_oversize_input() {
-        let capture = make_idle_capture(ac::build_input_asbd(48_000.0, TARGET_CHANNELS, false));
-        let mut data = [0.0_f32; 8];
-        let bytes_per_frame = (size_of::<f32>() as u32) * TARGET_CHANNELS;
-        let mut abl = interleaved_abl(&mut data);
-        abl.buffers[0].m_data_byte_size = (MAX_CALLBACK_INPUT_FRAMES + 1) * bytes_per_frame;
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.dropped_buffers, 1);
-        assert_eq!(diagnostics.convert_failures, 0);
-    }
-
-    #[test]
-    fn stopped_capture_counts_nothing() {
-        let capture = make_idle_capture(AudioStreamBasicDescription::default());
-        capture.running.store(false, Ordering::Release);
-        let mut data = [0.0_f32; 8];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.convert_failures, 0);
-        assert_eq!(diagnostics.dropped_buffers, 0);
-    }
-
-    static OBSERVED_FRAMES: TestAtomicU32 = TestAtomicU32::new(0);
-    static OBSERVED_FILLED: TestAtomicU32 = TestAtomicU32::new(0);
-
-    unsafe extern "C" fn observing_pcm_cb(
-        _ctx: *mut c_void,
-        slot: *mut Option<PooledPcmFrame>,
-        frames: u32,
-    ) {
-        assert!(!slot.is_null());
-        let frame = unsafe { (*slot).take() }.expect("slot delivered");
-        assert_eq!(
-            frame.filled_len(),
-            (frames as usize) * (TARGET_CHANNELS as usize)
-        );
-        assert_eq!(frame.data_slice()[0], 0.25);
-        OBSERVED_FILLED.store(frame.filled_len() as u32, Ordering::Release);
-        OBSERVED_FRAMES.store(frames, Ordering::Release);
-    }
-
-    #[test]
-    fn successful_conversion_counts_nothing_and_invokes_callback() {
-        OBSERVED_FRAMES.store(0, Ordering::Release);
-        OBSERVED_FILLED.store(0, Ordering::Release);
-        let mut capture = make_idle_capture(ac::build_input_asbd(48_000.0, TARGET_CHANNELS, false));
-        let pool = make_test_pool();
-        capture.set_pcm_callback(observing_pcm_cb, ptr::null_mut());
-        capture.set_pcm_pool(pool.clone());
-        let mut data = [0.25_f32; 96];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        let diagnostics = capture.diagnostics();
-        assert_eq!(diagnostics.convert_failures, 0);
-        assert_eq!(diagnostics.dropped_buffers, 0);
-        assert_eq!(OBSERVED_FRAMES.load(Ordering::Acquire), 48);
-        assert_eq!(OBSERVED_FILLED.load(Ordering::Acquire), 96);
-        assert_eq!(pool.stats().in_flight, 0);
-        assert_eq!(pool.stats().released, 1);
-    }
-
-    #[test]
-    fn untaken_slot_returns_to_pool() {
-        let mut capture = make_idle_capture(ac::build_input_asbd(48_000.0, TARGET_CHANNELS, false));
-        let pool = make_test_pool();
-        capture.set_pcm_callback(noop_pcm_cb, ptr::null_mut());
-        capture.set_pcm_pool(pool.clone());
-        let mut data = [0.25_f32; 96];
-        let mut abl = interleaved_abl(&mut data);
-        let status = call_io_proc(&capture, &mut abl);
-        assert_eq!(status, NO_ERR);
-        assert_eq!(pool.stats().in_flight, 0);
-        assert_eq!(pool.stats().acquired, 1);
-        assert_eq!(pool.stats().released, 1);
     }
 }

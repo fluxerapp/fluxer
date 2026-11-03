@@ -14,8 +14,7 @@
     dispatches_total/0,
     record_dispatch_drop/0,
     dispatch_drops_total/0,
-    snapshot/0,
-    reset_for_tests/0
+    snapshot/0
 ]).
 
 -define(COUNTERS_KEY, gateway_cluster_metrics_counters).
@@ -130,8 +129,3 @@ new_counters() ->
     Counters = counters:new(?COUNTER_COUNT, [write_concurrency]),
     persistent_term:put(?COUNTERS_KEY, Counters),
     Counters.
-
--spec reset_for_tests() -> ok.
-reset_for_tests() ->
-    persistent_term:erase(?COUNTERS_KEY),
-    ok.

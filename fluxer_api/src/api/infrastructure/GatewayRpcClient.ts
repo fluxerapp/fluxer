@@ -2,20 +2,21 @@
 
 import {Config} from '@app/api/Config';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
-import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
 import {type CallCaller, type CallData, callCallerRpcParams} from '@app/api/infrastructure/IGatewayService';
 import {NatsGatewayRpcTransport} from '@app/api/infrastructure/NatsGatewayRpcTransport';
 import {Logger} from '@app/api/Logger';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {ms} from 'itty-time';
 
+export type GatewayRpcTransport = Pick<NatsGatewayRpcTransport, 'call' | 'destroy'>;
+
 const MAX_RETRY_ATTEMPTS = 2;
 
 export class GatewayRpcClient {
 	private static instance: GatewayRpcClient | null = null;
-	private readonly transport: IGatewayRpcTransport;
+	private readonly transport: GatewayRpcTransport;
 
-	private constructor(transport: IGatewayRpcTransport) {
+	private constructor(transport: GatewayRpcTransport) {
 		this.transport = transport;
 	}
 
@@ -26,7 +27,7 @@ export class GatewayRpcClient {
 		return GatewayRpcClient.instance;
 	}
 
-	static createForTests(transport: IGatewayRpcTransport): GatewayRpcClient {
+	static createForTests(transport: GatewayRpcTransport): GatewayRpcClient {
 		const client = new GatewayRpcClient(transport);
 		GatewayRpcClient.instance = client;
 		return client;

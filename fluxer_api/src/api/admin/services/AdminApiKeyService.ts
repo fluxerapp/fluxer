@@ -4,11 +4,10 @@ import {randomInt} from 'node:crypto';
 import type {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import type {AdminApiKey} from '@app/api/models/AdminApiKey';
 import {verifyPassword} from '@app/api/utils/PasswordUtils';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {AdminApiKeyNotFoundError} from '@fluxer/errors/src/domains/admin/AdminApiKeyNotFoundError';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import type {CreateAdminApiKeyRequest, UpdateAdminApiKeyRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {ms} from 'itty-time';
 
@@ -170,13 +169,7 @@ export class AdminApiKeyService {
 	}
 
 	private assertGrantableAcls(acls: ReadonlyArray<string>, creatorAcls?: Set<string>): void {
-		if (!creatorAcls) {
-			return;
-		}
-		const invalidACLs = acls.filter((acl) => !creatorAcls.has(acl) && !creatorAcls.has(AdminACLs.WILDCARD));
-		if (invalidACLs.length > 0) {
-			throw new MissingACLError(invalidACLs[0]);
-		}
+		if (creatorAcls) requireGrantedAdminACLs(creatorAcls, acls);
 	}
 
 	private toView(apiKey: AdminApiKey): AdminApiKeyView {

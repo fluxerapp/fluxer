@@ -8,31 +8,30 @@ type RequestVariables = HonoEnv['Variables'];
 type EagerlySetVariable = 'apiContext' | 'sudoModeValid';
 
 type ExternallySetVariable =
-	| 'adminApiKey'
 	| 'adminApiKeyAcls'
+	| 'adminApiKeyId'
 	| 'adminUserAcls'
 	| 'adminUserId'
 	| 'auditLogReason'
 	| 'authSession'
 	| 'authToken'
 	| 'authTokenType'
-	| 'authUserId'
-	| 'authViaCookie'
 	| 'channelUpdateType'
 	| 'clientFeatures'
 	| 'oauthBearerAllowed'
 	| 'oauthBearerApplicationId'
 	| 'oauthBearerScopes'
-	| 'oauthBearerToken'
-	| 'oauthBearerUserId'
 	| 'requestCache'
 	| 'requestId'
 	| 'requestLocale'
-	| 'responseSchema'
 	| 'sudoModeToken'
 	| 'user';
 
-type ConfigurationDependentService = 'ageVerificationService' | 'donationService';
+type ConfigurationDependentService =
+	| 'donationService'
+	| 'operatorPassCheckoutService'
+	| 'operatorPassEntitlementService'
+	| 'operatorPassWaitlistService';
 
 export type RequestScopedServices = Omit<
 	RequestVariables,

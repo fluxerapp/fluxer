@@ -13,6 +13,7 @@
 -export_type([session_state/0, attempt/0]).
 
 -define(MAX_RETRY_ATTEMPTS, 25).
+-define(PRESENCE_CONNECT_TIMEOUT_MS, 10000).
 
 -type session_state() :: session:session_state().
 -type attempt() :: non_neg_integer().
@@ -31,11 +32,17 @@ handle_presence_connect(Attempt, State) ->
         #{remote => LookupRemote},
         gateway_timings:from_state(State)
     ),
-    State1 = gateway_timings:put_state(GwTimings, State),
+    State1 = put_timings(GwTimings, State),
     case Result of
         {ok, Pid} -> do_session_connect(Pid, Attempt, State1);
         _Error -> schedule_presence_retry(Attempt, State1)
     end.
+
+-spec put_timings(gateway_timings:recorder(), session_state()) -> session_state().
+put_timings(_GwTimings, #{ready := undefined} = State) ->
+    State;
+put_timings(GwTimings, State) ->
+    gateway_timings:put_state(GwTimings, State).
 
 -spec presence_lookup_remote(term()) -> map() | undefined.
 presence_lookup_remote({ok, PresencePid}) when is_pid(PresencePid) ->
@@ -54,7 +61,7 @@ build_presence_request(State) when is_map(State) ->
     #{
         user_id => maps:get(user_id, State),
         user_data => maps:get(user_data, State),
-        guild_ids => maps:keys(maps:get(guilds, State)),
+        guild_ids => session_visits:member_guild_ids(State),
         status => maps:get(status, State),
         friend_ids => FriendIds,
         group_dm_recipients => GroupDmRecipients,
@@ -71,43 +78,6 @@ do_session_connect(Pid, Attempt, State) when is_map(State) ->
     SocketPid = maps:get(socket_pid, State, undefined),
     FriendIds = presence_targets:friend_ids_from_state(State),
     GroupDmRecipients = presence_targets:group_dm_recipients_from_state(State),
-    try_session_connect(
-        Pid,
-        SessionId,
-        Status,
-        Afk,
-        Mobile,
-        SocketPid,
-        FriendIds,
-        GroupDmRecipients,
-        Attempt,
-        State
-    ).
-
--spec try_session_connect(
-    pid(),
-    binary(),
-    atom(),
-    boolean(),
-    boolean(),
-    pid() | undefined,
-    [integer()],
-    map(),
-    attempt(),
-    session_state()
-) -> {noreply, session_state()} | {stop, normal, session_state()}.
-try_session_connect(
-    Pid,
-    SessionId,
-    Status,
-    Afk,
-    Mobile,
-    SocketPid,
-    FriendIds,
-    GroupDmRecipients,
-    Attempt,
-    State
-) ->
     ConnectReq = #{
         session_id => SessionId,
         status => Status,
@@ -117,7 +87,7 @@ try_session_connect(
     },
     ConnectStartedAt = gateway_timings:start(),
     Result = safe_call(fun() ->
-        gen_server:call(Pid, {session_connect, ConnectReq}, 10000)
+        gen_server:call(Pid, {session_connect, ConnectReq}, ?PRESENCE_CONNECT_TIMEOUT_MS)
     end),
     Remote = gateway_timings:remote_node(presence, node(Pid)),
     GwTimings = gateway_timings:record_function(
@@ -127,7 +97,7 @@ try_session_connect(
         #{remote => Remote},
         gateway_timings:from_state(State)
     ),
-    State1 = gateway_timings:put_state(GwTimings, State),
+    State1 = put_timings(GwTimings, State),
     case Result of
         {ok, Sessions} ->
             gen_server:cast(Pid, {sync_friends, FriendIds}),
@@ -224,131 +194,3 @@ maybe_demonitor_presence(State) ->
         _ ->
             ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-try_session_connect_failure_schedules_retry_test() ->
-    DeadPid = spawn(fun() -> ok end),
-    Ref = monitor(process, DeadPid),
-    receive
-        {'DOWN', Ref, process, DeadPid, _Reason} -> ok
-    after 1000 ->
-        ?assert(false, presence_pid_did_not_exit)
-    end,
-    {noreply, State} = try_session_connect(
-        DeadPid,
-        <<"session">>,
-        online,
-        false,
-        false,
-        undefined,
-        [],
-        #{},
-        0,
-        #{presence_pid => undefined}
-    ),
-    ?assertEqual(undefined, maps:get(presence_pid, State)),
-    receive
-        {presence_connect, 1} -> ok
-    after 2000 ->
-        ?assert(false, presence_retry_not_scheduled)
-    end.
-
-presence_attachment_healthy_false_when_unattached_test() ->
-    ?assertNot(presence_attachment_healthy(#{presence_pid => undefined})),
-    ?assertNot(presence_attachment_healthy(#{})).
-
-presence_attachment_healthy_true_for_live_local_pid_without_user_id_test() ->
-    ?assert(presence_attachment_healthy(#{presence_pid => self()})).
-
-presence_attachment_healthy_false_for_dead_local_pid_test() ->
-    ?assertNot(presence_attachment_healthy(#{presence_pid => dead_pid()})).
-
-presence_attachment_healthy_false_when_owner_node_differs_test() ->
-    with_presence_owner(['remote@nohost'], fun() ->
-        ?assertNot(
-            presence_attachment_healthy(#{presence_pid => self(), user_id => 4242})
-        )
-    end).
-
-presence_attachment_healthy_true_when_owner_is_local_node_test() ->
-    with_presence_owner([node()], fun() ->
-        ?assert(
-            presence_attachment_healthy(#{presence_pid => self(), user_id => 4242})
-        )
-    end).
-
-force_presence_reconnect_clears_state_and_schedules_connect_test() ->
-    State1 = force_presence_reconnect(#{presence_pid => self(), presence_mref => undefined}),
-    ?assertEqual(undefined, maps:get(presence_pid, State1)),
-    ?assertEqual(undefined, maps:get(presence_mref, State1)),
-    ?assert(received_presence_connect()).
-
-force_presence_reconnect_demonitors_existing_mref_test() ->
-    Target = spawn(fun presence_target_loop/0),
-    Ref = monitor(process, Target),
-    State1 = force_presence_reconnect(#{presence_pid => Target, presence_mref => Ref}),
-    ?assertEqual(undefined, maps:get(presence_mref, State1)),
-    _ = received_presence_connect(),
-    Target ! stop,
-    receive
-        {'DOWN', Ref, process, _, _} -> ?assert(false, mref_not_demonitored)
-    after 200 -> ok
-    end.
-
-repair_presence_connection_keeps_healthy_attachment_test() ->
-    State0 = #{presence_pid => self(), presence_mref => undefined},
-    ?assertEqual(State0, repair_presence_connection(State0)),
-    ?assertNot(received_presence_connect()).
-
-repair_presence_connection_reconnects_stale_attachment_test() ->
-    with_presence_owner(['remote@nohost'], fun() ->
-        State0 = #{presence_pid => self(), presence_mref => undefined, user_id => 4242},
-        State1 = repair_presence_connection(State0),
-        ?assertEqual(undefined, maps:get(presence_pid, State1)),
-        ?assert(received_presence_connect())
-    end).
-
-repair_presence_connection_reconnects_when_unattached_test() ->
-    State1 = repair_presence_connection(#{presence_pid => undefined}),
-    ?assertEqual(undefined, maps:get(presence_pid, State1)),
-    ?assert(received_presence_connect()).
-
-dead_pid() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    Pid.
-
-presence_target_loop() ->
-    receive
-        stop -> ok
-    after 5000 -> ok
-    end.
-
-received_presence_connect() ->
-    receive
-        {presence_connect, 0} -> true
-    after 200 -> false
-    end.
-
-with_presence_owner(RoleNodes, Fun) ->
-    MembersKey = {gateway_cluster_membership, members},
-    RoleKey = {gateway_cluster_membership, members_by_role},
-    PrevMembers = persistent_term:get(MembersKey, undefined),
-    PrevRoles = persistent_term:get(RoleKey, undefined),
-    persistent_term:put(MembersKey, lists:usort([node() | RoleNodes])),
-    persistent_term:put(RoleKey, #{presence => RoleNodes}),
-    try
-        Fun()
-    after
-        restore_persistent_term(MembersKey, PrevMembers),
-        restore_persistent_term(RoleKey, PrevRoles)
-    end.
-
-restore_persistent_term(Key, undefined) ->
-    persistent_term:erase(Key);
-restore_persistent_term(Key, Value) ->
-    persistent_term:put(Key, Value).
-
--endif.

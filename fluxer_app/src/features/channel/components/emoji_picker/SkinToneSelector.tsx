@@ -3,14 +3,30 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {EMOJI_CLAP} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
-import * as EmojiCommands from '@app/features/emoji/commands/EmojiCommands';
+
 import Emoji from '@app/features/emoji/state/Emoji';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {SKIN_TONE_SURROGATES} from '@fluxer/constants/src/EmojiConstants';
+import type {MessageDescriptor} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
+import {useLingui} from '@lingui/react/macro';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
+
+const SKIN_TONE_DESCRIPTOR = msg({
+	message: 'Skin tone',
+	comment: 'Accessible name of the emoji picker button that opens the skin tone choices.',
+});
+const SKIN_TONE_LABELS: Readonly<Record<string, MessageDescriptor>> = {
+	'': msg({message: 'Default skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+	'🏻': msg({message: 'Light skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+	'🏼': msg({message: 'Medium-light skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+	'🏽': msg({message: 'Medium skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+	'🏾': msg({message: 'Medium-dark skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+	'🏿': msg({message: 'Dark skin tone', comment: 'Accessible name of a skin tone choice in the emoji picker.'}),
+};
 
 interface SkinTonePickerProps {
 	isOpen: boolean;
@@ -19,9 +35,10 @@ interface SkinTonePickerProps {
 }
 
 const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProps) => {
+	const {i18n} = useLingui();
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const handleSelect = (surrogate: string) => {
-		EmojiCommands.setSkinTone(surrogate);
+		Emoji.setSkinTone(surrogate);
 		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 		onClose();
 	};
@@ -49,6 +66,8 @@ const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProp
 									exit={prefersReducedMotion ? {opacity: 1, scale: 1} : {opacity: 0, scale: 0}}
 									transition={prefersReducedMotion ? {duration: 0} : undefined}
 									className={styles.skinTonePickerItem}
+									aria-label={i18n._(SKIN_TONE_LABELS[surrogate] ?? SKIN_TONE_DESCRIPTOR)}
+									aria-pressed={surrogate === skinTone}
 									onClick={() => handleSelect(surrogate)}
 									data-flx="channel.emoji-picker.skin-tone-selector.skin-tone-picker.skin-tone-picker-item.select.button"
 								>
@@ -70,20 +89,26 @@ const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProp
 interface SkinTonePickerButtonProps {
 	onClick: () => void;
 	selectedEmojiURL: string | null;
+	expanded: boolean;
 }
 
-const SkinTonePickerButton = observer(({onClick, selectedEmojiURL}: SkinTonePickerButtonProps) => (
-	<motion.button
-		type="button"
-		className={styles.skinTonePickerButton}
-		onClick={onClick}
-		style={selectedEmojiURL ? {backgroundImage: `url(${selectedEmojiURL})`} : undefined}
-		initial={{opacity: 1, scale: 1}}
-		animate={{opacity: 1, scale: 1}}
-		exit={{opacity: 0, scale: 0}}
-		data-flx="channel.emoji-picker.skin-tone-selector.skin-tone-picker-button.skin-tone-picker-button.click"
-	/>
-));
+const SkinTonePickerButton = observer(({onClick, selectedEmojiURL, expanded}: SkinTonePickerButtonProps) => {
+	const {i18n} = useLingui();
+	return (
+		<motion.button
+			type="button"
+			className={styles.skinTonePickerButton}
+			aria-label={i18n._(SKIN_TONE_DESCRIPTOR)}
+			aria-expanded={expanded}
+			onClick={onClick}
+			style={selectedEmojiURL ? {backgroundImage: `url(${selectedEmojiURL})`} : undefined}
+			initial={{opacity: 1, scale: 1}}
+			animate={{opacity: 1, scale: 1}}
+			exit={{opacity: 0, scale: 0}}
+			data-flx="channel.emoji-picker.skin-tone-selector.skin-tone-picker-button.skin-tone-picker-button.click"
+		/>
+	);
+});
 export const SkinToneSelector = observer(() => {
 	const [isOpen, setIsOpen] = useState(false);
 	const skinTone = Emoji.skinTone;
@@ -119,6 +144,7 @@ export const SkinToneSelector = observer(() => {
 			<SkinTonePickerButton
 				onClick={() => setIsOpen(true)}
 				selectedEmojiURL={selectedEmojiUrl}
+				expanded={isOpen}
 				data-flx="channel.emoji-picker.skin-tone-selector.skin-tone-picker-button.set-is-open"
 			/>
 		</div>

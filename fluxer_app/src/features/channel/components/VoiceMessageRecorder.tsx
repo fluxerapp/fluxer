@@ -6,6 +6,7 @@ import styles from '@app/features/channel/components/VoiceMessageRecorder.module
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {
 	computeVoiceWaveformFromAudioBuffer,
 	type PreparedVoiceMessage,
@@ -86,8 +87,7 @@ function isUniversallyPlayableContainer(mimeType: string): boolean {
 }
 
 async function prepareUniversalUpload(blob: Blob, filename: string): Promise<PreparedVoiceMessage> {
-	const contextClass =
-		window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+	const contextClass = resolveAudioContextConstructor();
 	if (!contextClass) {
 		throw new Error('AudioContext is unavailable; cannot measure voice message');
 	}
@@ -298,9 +298,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	}, []);
 	const startWaveform = useCallback(
 		(stream: MediaStream) => {
-			const contextClass =
-				window.AudioContext ||
-				(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+			const contextClass = resolveAudioContextConstructor();
 			if (!contextClass) return;
 			const audioContext = new contextClass();
 			const source = audioContext.createMediaStreamSource(stream);

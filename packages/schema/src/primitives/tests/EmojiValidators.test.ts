@@ -1,63 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {GuildRoleCreateRequest, GuildRoleUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
+import {UnicodeRoleEmojiType} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {describe, expect, it} from 'vitest';
 
-describe('isValidSingleUnicodeEmoji', () => {
-	describe('invalid inputs', () => {
-		it('rejects empty string', () => {
-			expect(isValidSingleUnicodeEmoji('')).toBe(false);
-		});
-		it('rejects plain text', () => {
-			expect(isValidSingleUnicodeEmoji('hello')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('abc')).toBe(false);
-		});
-		it('rejects single ascii characters', () => {
-			expect(isValidSingleUnicodeEmoji('a')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('1')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('#')).toBe(false);
-			expect(isValidSingleUnicodeEmoji(' ')).toBe(false);
-		});
-		it('rejects multiple emojis', () => {
-			expect(isValidSingleUnicodeEmoji('👍👍')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('🎉🎊')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('👨‍👩‍👧‍👦👨‍👩‍👧')).toBe(false);
-		});
-		it('rejects multiple regional indicator symbols', () => {
-			expect(isValidSingleUnicodeEmoji('\u{1F1E6}\u{1F1E7}')).toBe(false);
-		});
-		it('rejects emoji with trailing text', () => {
-			expect(isValidSingleUnicodeEmoji('👍abc')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('🎉!')).toBe(false);
-		});
-		it('rejects emoji with leading text', () => {
-			expect(isValidSingleUnicodeEmoji('abc👍')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('!🎉')).toBe(false);
-		});
-		it('rejects unicode characters that are not emoji', () => {
-			expect(isValidSingleUnicodeEmoji('é')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('中')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('α')).toBe(false);
-		});
-		it('rejects regional indicator with trailing text', () => {
-			expect(isValidSingleUnicodeEmoji('\u{1F1F5}abc')).toBe(false);
-		});
-		it('rejects regional indicator with leading text', () => {
-			expect(isValidSingleUnicodeEmoji('abc\u{1F1F5}')).toBe(false);
-		});
+const PNG_DATA_URI = 'data:image/png;base64,iVBORw0KGgo=';
+
+describe('UnicodeRoleEmojiType', () => {
+	it('accepts a single emoji, a skin tone variant and a ZWJ sequence', () => {
+		for (const value of ['🔥', '🛡️', '👍🏽', '👩‍💻', '🏳️‍🌈']) {
+			expect(UnicodeRoleEmojiType.safeParse(value).success, value).toBe(true);
+		}
 	});
-	describe('malformed emoji sequences', () => {
-		it('rejects skin tone at wrong position in ZWJ sequence', () => {
-			expect(isValidSingleUnicodeEmoji('🧑‍🎄🏿')).toBe(false);
-		});
-		it('rejects standalone ZWJ character', () => {
-			expect(isValidSingleUnicodeEmoji('\u200D')).toBe(false);
-		});
-		it('rejects emoji followed by standalone skin tone', () => {
-			expect(isValidSingleUnicodeEmoji('🎄🏿')).toBe(false);
-		});
-		it('rejects double skin tone modifiers', () => {
-			expect(isValidSingleUnicodeEmoji('👍🏿🏻')).toBe(false);
-		});
+
+	it('rejects text, two emoji and long strings', () => {
+		for (const value of ['abc', '🔥🔥', '', '🔥 ', '🔥'.repeat(40)]) {
+			const result = UnicodeRoleEmojiType.safeParse(value);
+			expect(result.success, value).toBe(false);
+			expect(result.error?.issues[0]?.message).toBe(ValidationErrorCodes.NOT_A_VALID_UNICODE_EMOJI);
+		}
 	});
+});
+
+describe('role icon request fields', () => {
+	for (const [name, schema, base] of [
+		['create', GuildRoleCreateRequest, {name: 'Mods'}],
+		['update', GuildRoleUpdateRequest, {}],
+	] as const) {
+		it(`${name} accepts null and absent icon fields`, () => {
+			expect(schema.safeParse(base).success).toBe(true);
+			expect(schema.safeParse({...base, icon: null, unicode_emoji: null}).success).toBe(true);
+			expect(schema.safeParse({...base, icon: PNG_DATA_URI, unicode_emoji: null}).success).toBe(true);
+			expect(schema.safeParse({...base, icon: null, unicode_emoji: '🔥'}).success).toBe(true);
+		});
+
+		it(`${name} rejects an image and an emoji together`, () => {
+			const result = schema.safeParse({...base, icon: PNG_DATA_URI, unicode_emoji: '🔥'});
+			expect(result.success).toBe(false);
+			expect(result.error?.issues[0]).toMatchObject({
+				message: ValidationErrorCodes.ROLE_ICON_AND_EMOJI_EXCLUSIVE,
+				path: ['icon'],
+			});
+		});
+	}
 });

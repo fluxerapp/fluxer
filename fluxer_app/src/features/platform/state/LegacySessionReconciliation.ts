@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
-import type {AccountRekeyTarget, KeyedStoredAccount, StoredAccountList} from '@app/features/auth/state/AccountStorage';
-import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorage';
+import type {
+	AccountRekeyTarget,
+	KeyedStoredAccount,
+	StoredAccountList,
+} from '@app/features/auth/state/AccountStorageContract';
+import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey, getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {
@@ -67,7 +71,7 @@ export interface LegacySessionReconciliationResult {
 	readonly reason: LegacySessionReconciliationSkipReason | null;
 }
 
-export class LegacySessionAccountsNotAuthoritativeError extends Error {
+class LegacySessionAccountsNotAuthoritativeError extends Error {
 	public constructor(source: string) {
 		super(`The stored account list is not authoritative (source: ${source})`);
 		this.name = 'LegacySessionAccountsNotAuthoritativeError';
@@ -90,7 +94,7 @@ export function readLegacySessionCredentials(storage: Storage | null): LegacySes
 	return {userId, token};
 }
 
-export function matchLegacySessionAccount(
+function matchLegacySessionAccount(
 	accounts: ReadonlyArray<KeyedStoredAccount>,
 	credentials: LegacySessionCredentials,
 	instance: RuntimeConfigSnapshot,

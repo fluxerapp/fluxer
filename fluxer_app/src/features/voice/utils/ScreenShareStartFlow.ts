@@ -331,6 +331,7 @@ export function buildConfiguredScreenShareOptions(input: ScreenShareOptionsBuild
 	const {captureOptions, publishOptions} = buildScreenShareOptions({
 		resolution: input.target.resolution,
 		frameRate: input.target.frameRate,
+		maxBitrate: input.target.maxBitrate,
 		context: input.target.context,
 		includeAudio: input.includeAudio,
 		contentHint: input.target.contentHint,
@@ -465,11 +466,12 @@ async function runConfiguredDisplayScreenShare(
 			? await resolveAppShareAudioScope(ActiveScreenShareSource.getPendingWindowAudioScope())
 			: null;
 		const appShareAudioRoute = appShareAudioScope == null ? null : selectAppShareAudioRouteForScope(appShareAudioScope);
-		const linuxAudioSourceMode = requestedAppAudioOnLinux
-			? appShareAudioRouteToSourceMode(appShareAudioRoute)
-			: electronApi.platform === 'linux' && (requestedDesktopAudio || requestedNativePickerAudioOnLinux)
-				? VoiceSettings.getEffectiveScreenShareAudioSourceMode()
-				: null;
+		let linuxAudioSourceMode: ReturnType<typeof appShareAudioRouteToSourceMode> = null;
+		if (requestedAppAudioOnLinux) {
+			linuxAudioSourceMode = appShareAudioRouteToSourceMode(appShareAudioRoute);
+		} else if (electronApi.platform === 'linux' && (requestedDesktopAudio || requestedNativePickerAudioOnLinux)) {
+			linuxAudioSourceMode = VoiceSettings.getEffectiveScreenShareAudioSourceMode();
+		}
 		if (requestedAppAudioOnLinux && appShareAudioRoute === 'window') {
 			try {
 				nativeAudioArmed = await armNativeAudioForNextCapture(sourceId ?? '');
@@ -489,7 +491,14 @@ async function runConfiguredDisplayScreenShare(
 			}
 		} else if (requestedNativeDesktopAudio) {
 			try {
-				nativeAudioArmed = await armNativeSystemAudioForNextCapture();
+				nativeAudioArmed = await armNativeSystemAudioForNextCapture(
+					electronApi.platform === 'win32'
+						? {
+								all: VoiceSettings.getWindowsDesktopAudioAll(),
+								devices: VoiceSettings.getWindowsDesktopAudioDevices(),
+							}
+						: undefined,
+				);
 			} catch (error) {
 				logger.warn('Failed to arm native desktop audio capture', {
 					sourceId,

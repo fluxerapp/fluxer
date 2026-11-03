@@ -9,6 +9,7 @@ import {createReportID} from '@app/api/BrandedTypes';
 import {getReportRepository} from '@app/api/middleware/ServiceSingletons';
 import {listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {expect} from 'vitest';
 
 interface FiledUserReport {
 	reportId: string;
@@ -76,6 +77,8 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetId: '0',
 					metadata: {
 						status: 'pending',
+						sort_by: 'reported_at',
+						sort_order: 'desc',
 						limit: '1',
 						offset: '1',
 						result_count: '1',
@@ -177,7 +180,12 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/reports/${reportId}`,
-					body: {status: 'resolved', public_comment: 'We actioned the account.'},
+					body: {
+						status: 'resolved',
+						resolution: 'actioned',
+						outcome: 'restricted',
+						public_comment: 'We actioned the account.',
+					},
 				},
 				expected: {
 					action: 'resolve_report',
@@ -190,6 +198,8 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						reporter_dm_sent: 'true',
 						reporter_email_sent: 'true',
 						reporter_dsa_email_sent: 'false',
+						resolution: 'actioned',
+						outcome: 'restricted',
 					},
 				},
 			};
@@ -204,7 +214,12 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/reports/${reportId}`,
-					body: {status: 'resolved', public_comment: 'Internal wording', notify_reporter: false},
+					body: {
+						status: 'resolved',
+						resolution: 'no_violation',
+						public_comment: 'Internal wording',
+						notify_reporter: false,
+					},
 				},
 				expected: {
 					action: 'resolve_report',
@@ -218,12 +233,14 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						reporter_dm_sent: 'true',
 						reporter_email_sent: 'true',
 						reporter_dsa_email_sent: 'false',
+						resolution: 'no_violation',
+						outcome: 'no_violation',
 					},
 				},
 			};
 		},
 	},
-	...(['actioned', 'no_violation', 'duplicate'] as const).map(
+	...(['actioned', 'no_violation'] as const).map(
 		(resolution): AdminAuditCoverageCase => ({
 			method: 'PATCH',
 			route: '/admin/reports/:report_id',
@@ -233,7 +250,12 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 				return {
 					request: {
 						path: `/admin/reports/${reportId}`,
-						body: {status: 'resolved', resolution, notify_reporter: false},
+						body: {
+							status: 'resolved',
+							resolution,
+							...(resolution === 'no_violation' ? {} : {outcome: 'removed'}),
+							notify_reporter: false,
+						},
 					},
 					expected: {
 						action: 'resolve_report',
@@ -247,12 +269,97 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 							reporter_email_sent: 'true',
 							reporter_dsa_email_sent: 'false',
 							resolution,
+							outcome: resolution === 'no_violation' ? 'no_violation' : 'removed',
 						},
 					},
 				};
 			},
 		}),
 	),
+	...([true, false] as const).map(
+		(originalResolved): AdminAuditCoverageCase => ({
+			method: 'PATCH',
+			route: '/admin/reports/:report_id',
+			name: originalResolved ? 'duplicate of a resolved report' : 'duplicate of an open report',
+			async prepare(context) {
+				const original = await fileUserReport(context);
+				const {reportId} = await fileUserReport(context);
+				if (originalResolved) {
+					await createBuilder(context.harness, context.admin.token)
+						.patch(`/admin/reports/${original.reportId}`)
+						.body({status: 'resolved', resolution: 'actioned', outcome: 'restricted', notify_reporter: false})
+						.execute();
+				}
+				return {
+					request: {
+						path: `/admin/reports/${reportId}`,
+						body: {
+							status: 'resolved',
+							resolution: 'duplicate',
+							duplicate_of: original.reportId,
+							notify_reporter: false,
+						},
+					},
+					expected: {
+						action: 'resolve_report',
+						targetType: 'report',
+						targetId: reportId,
+						metadata: {
+							report_id: reportId,
+							report_type: '1',
+							notify_reporter: 'false',
+							...(originalResolved
+								? {
+										reporter_dm_sent: 'true',
+										reporter_email_sent: 'true',
+										reporter_dsa_email_sent: 'false',
+										outcome: 'restricted',
+									}
+								: {reporter_notice_skipped: 'duplicate_outcome_unknown'}),
+							resolution: 'duplicate',
+							duplicate_of: original.reportId,
+						},
+					},
+				};
+			},
+		}),
+	),
+	{
+		method: 'GET',
+		route: '/admin/reports/:report_id/notes',
+		async prepare(context) {
+			const {reportId} = await fileUserReport(context);
+			await createBuilder(context.harness, context.admin.token)
+				.post(`/admin/reports/${reportId}/notes`)
+				.body({body: 'Coverage note'})
+				.execute();
+			return {
+				request: {path: `/admin/reports/${reportId}/notes`},
+				expected: {
+					action: 'list_report_notes',
+					targetType: 'report',
+					targetId: reportId,
+					metadata: {result_count: '1'},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/reports/:report_id/notes',
+		async prepare(context) {
+			const {reportId} = await fileUserReport(context);
+			return {
+				request: {path: `/admin/reports/${reportId}/notes`, body: {body: 'Coverage note'}},
+				expected: {
+					action: 'annotate_report',
+					targetType: 'report',
+					targetId: reportId,
+					metadata: {report_id: reportId, note_id: expect.any(String)},
+				},
+			};
+		},
+	},
 	{
 		method: 'POST',
 		route: '/admin/reports/:report_id/legal-hold',

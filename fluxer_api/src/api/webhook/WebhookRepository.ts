@@ -146,9 +146,8 @@ export class WebhookRepository {
 			name: string;
 			avatarHash: string | null;
 		}>,
-		oldData?: WebhookRow | null,
 	): Promise<Webhook | null> {
-		const existing = oldData !== undefined ? (oldData ? new Webhook(oldData) : null) : await this.findUnique(webhookId);
+		const existing = await this.findUnique(webhookId);
 		if (!existing) return null;
 		const updatedData: WebhookRow = {
 			webhook_id: webhookId,
@@ -170,7 +169,6 @@ export class WebhookRepository {
 				patch: buildPatchFromData(updatedData, current, WEBHOOK_COLUMNS, ['webhook_id', 'webhook_token']),
 			}),
 			Webhooks,
-			{initialData: oldData},
 		);
 		const batch = new BatchBuilder();
 		if (existing.guildId !== updatedData.guild_id) {

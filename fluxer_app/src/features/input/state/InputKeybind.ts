@@ -3,10 +3,13 @@
 import type {HoldAction} from '@app/features/app/keybindings/utils/RuntimeKeybinds';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {COPY_TEXT_DESCRIPTOR, DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import AccountKeybinds from '@app/features/input/state/AccountKeybinds';
 import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import {HoldSources} from '@app/features/input/state/HoldSources';
+import {getAccountKeybindDefaults} from '@app/features/input/state/input_keybind/AccountKeybindDefaults';
 import {
 	ACCOUNT_SWITCHER_SLOT_ACTIONS,
+	isAccountKeybindCommand,
 	isKeybindCommand,
 	type KeybindCommand,
 	resolveKeybindCommand,
@@ -49,6 +52,7 @@ import {
 	GO_TO_THIRD_COMMUNITY_DESCRIPTOR,
 	JUMP_BETWEEN_UNREAD_CHANNELS_DESCRIPTOR,
 	JUMP_BETWEEN_UNREAD_CHANNELS_WITH_MENTIONS_DESCRIPTOR,
+	JUMP_TO_NEWEST_OTHER_ACCOUNT_MENTION_DESCRIPTOR,
 	JUMP_TO_THE_CURRENT_CALL_DESCRIPTOR,
 	JUMP_TO_THE_OLDEST_UNREAD_MESSAGE_DESCRIPTOR,
 	MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR,
@@ -62,7 +66,6 @@ import {
 	OPEN_ACCOUNT_SWITCHER_DESCRIPTOR,
 	OPEN_HELP_DESCRIPTOR,
 	OPEN_THE_CONTEXT_MENU_DESCRIPTOR,
-	OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR,
 	OPEN_YOUR_SETTINGS_DESCRIPTOR,
 	PIN_MESSAGE_DESCRIPTOR,
 	PUSH_TO_MUTE_DESCRIPTOR,
@@ -75,15 +78,19 @@ import {
 	SCROLL_CHAT_DOWN_DESCRIPTOR,
 	SCROLL_CHAT_UP_DESCRIPTOR,
 	SEARCH_MESSAGES_DESCRIPTOR,
+	SEARCH_OTHER_ACCOUNTS_DESCRIPTOR,
 	SEND_VOICE_MESSAGE_DESCRIPTOR,
 	SHOW_KEYBOARD_SHORTCUTS_LIST_DESCRIPTOR,
 	START_A_CALL_IN_A_DM_OR_GROUP_DESCRIPTOR,
 	START_A_GROUP_DM_DESCRIPTOR,
 	START_DRAG_AND_DROP_DESCRIPTOR,
+	SWITCH_BACK_TO_LAST_ACCOUNT_DESCRIPTOR,
 	SWITCH_BETWEEN_CHANNELS_DESCRIPTOR,
 	SWITCH_BETWEEN_COMMUNITIES_DESCRIPTOR,
 	SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR,
+	SWITCH_TO_NEXT_ACCOUNT_DESCRIPTOR,
 	SWITCH_TO_NEXT_COMMUNITY_OR_DMS_DESCRIPTOR,
+	SWITCH_TO_PREVIOUS_ACCOUNT_DESCRIPTOR,
 	SWITCH_TO_PREVIOUS_COMMUNITY_OR_DMS_DESCRIPTOR,
 	SWITCH_VOICE_CHANNEL_DESCRIPTOR,
 	TOGGLE_BETWEEN_LAST_COMMUNITY_AND_DMS_DESCRIPTOR,
@@ -114,13 +121,20 @@ import {
 } from '@app/features/input/state/KeybindResolution';
 import {
 	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
-	getKeyboardShortcutsOverlayComboForCurrentLayout,
+	DEFAULT_START_DM_CALL_COMBO,
+	getKeyboardLayoutDefaultCombosForCurrentLayout,
 	keyCombosEqual,
 	SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
 } from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {isApplePlatform} from '@app/features/platform/utils/PlatformHelpers';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import {
+	OPEN_QUICK_CSS_EDITOR_DESCRIPTOR,
+	TURN_CUSTOM_CSS_ON_OR_OFF_DESCRIPTOR,
+} from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {VOICE_TOGGLE_DEAFEN_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -157,6 +171,7 @@ export type KeybindSection =
 	| 'drag_and_drop'
 	| 'chat'
 	| 'voice_and_video'
+	| 'accounts'
 	| 'misc';
 type DefaultsShortcutDisplayKind = 'any_key' | 'space_or_enter';
 type EditableFocusShortcutBehavior = 'allow' | 'allow_when_empty';
@@ -219,9 +234,36 @@ const createBuiltinDisableMarker = (
 	enabled: true,
 });
 
+const ACCOUNT_KEYBIND_LABEL_DESCRIPTORS: Partial<Record<KeybindCommand, KeybindLabelDescriptor>> = {
+	system_open_account_switcher: OPEN_ACCOUNT_SWITCHER_DESCRIPTOR,
+	system_switch_account_next: SWITCH_TO_NEXT_ACCOUNT_DESCRIPTOR,
+	system_switch_account_prev: SWITCH_TO_PREVIOUS_ACCOUNT_DESCRIPTOR,
+	system_switch_account_recent: SWITCH_BACK_TO_LAST_ACCOUNT_DESCRIPTOR,
+	system_jump_account_mention: JUMP_TO_NEWEST_OTHER_ACCOUNT_MENTION_DESCRIPTOR,
+	nav_quick_switcher_accounts: SEARCH_OTHER_ACCOUNTS_DESCRIPTOR,
+};
+
+function accountKeybindLabel(i18n: KeybindLabelI18n, action: KeybindCommand): string {
+	const slotIndex = ACCOUNT_SWITCHER_SLOT_ACTIONS.indexOf(action);
+	if (slotIndex !== -1) return i18n._(SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR, {slot: slotIndex + 1});
+	const descriptor = ACCOUNT_KEYBIND_LABEL_DESCRIPTORS[action];
+	return descriptor === undefined ? action : i18n._(descriptor);
+}
+
+const getAccountKeybindConfigs = (i18n: KeybindLabelI18n): ReadonlyArray<KeybindConfig> =>
+	getAccountKeybindDefaults(isApplePlatform()).map(({action, combo}) => ({
+		action,
+		label: accountKeybindLabel(i18n, action),
+		combo,
+		section: 'accounts',
+		assignable: true,
+		...(action === 'system_open_account_switcher' ? {allowGlobal: true} : {}),
+	}));
+
 const getDefaultKeybinds = (
 	i18n: KeybindLabelI18n,
 	keyboardShortcutsOverlayCombo: KeyCombo = DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
+	startDmCallCombo: KeyCombo = DEFAULT_START_DM_CALL_COMBO,
 ): ReadonlyArray<KeybindConfig> =>
 	[
 		{
@@ -360,7 +402,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_history_back',
 			label: i18n._(MOVE_BACK_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR),
-			combo: {key: '[', ctrlOrMeta: true},
+			combo: isApplePlatform() ? {key: '[', ctrlOrMeta: true} : {key: 'ArrowLeft', alt: true},
 			ignoreWhileTyping: true,
 			editableFocusBehavior: 'allow',
 			section: 'navigation',
@@ -368,7 +410,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_history_forward',
 			label: i18n._(MOVE_FORWARD_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR),
-			combo: {key: ']', ctrlOrMeta: true},
+			combo: isApplePlatform() ? {key: ']', ctrlOrMeta: true} : {key: 'ArrowRight', alt: true},
 			ignoreWhileTyping: true,
 			editableFocusBehavior: 'allow',
 			section: 'navigation',
@@ -412,13 +454,13 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_guild_tab_prev',
 			label: i18n._(SWITCH_TO_PREVIOUS_COMMUNITY_OR_DMS_DESCRIPTOR),
-			combo: {key: 'Tab', ctrlOrMeta: true, shift: true},
+			combo: {key: 'Tab', ctrl: true, shift: true},
 			section: 'navigation',
 		},
 		{
 			action: 'nav_guild_tab_next',
 			label: i18n._(SWITCH_TO_NEXT_COMMUNITY_OR_DMS_DESCRIPTOR),
-			combo: {key: 'Tab', ctrlOrMeta: true},
+			combo: {key: 'Tab', ctrl: true},
 			section: 'navigation',
 		},
 		{
@@ -666,7 +708,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'voice_start_dm_call',
 			label: i18n._(START_A_CALL_IN_A_DM_OR_GROUP_DESCRIPTOR),
-			combo: {key: '`', code: 'Backquote', ctrl: true},
+			combo: {...startDmCallCombo},
 			section: 'voice_and_video',
 		},
 		{
@@ -716,8 +758,17 @@ const getDefaultKeybinds = (
 		},
 		{
 			action: 'system_open_theme_studio_popout',
-			label: i18n._(OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR),
+			label: i18n._(OPEN_QUICK_CSS_EDITOR_DESCRIPTOR),
 			combo: {key: 't', ctrlOrMeta: true, alt: true, shift: true},
+			ignoreWhileTyping: true,
+			editableFocusBehavior: 'allow',
+			section: 'misc',
+			assignable: true,
+		},
+		{
+			action: 'system_toggle_custom_css',
+			label: i18n._(TURN_CUSTOM_CSS_ON_OR_OFF_DESCRIPTOR),
+			combo: {key: 'k', ctrlOrMeta: true, alt: true, shift: true},
 			ignoreWhileTyping: true,
 			editableFocusBehavior: 'allow',
 			section: 'misc',
@@ -870,20 +921,7 @@ const getDefaultKeybinds = (
 			section: 'voice_and_video',
 			hideFromDefaults: true,
 		},
-		{
-			action: 'system_open_account_switcher',
-			label: i18n._(OPEN_ACCOUNT_SWITCHER_DESCRIPTOR),
-			combo: {key: 'o', ctrlOrMeta: true, shift: true},
-			section: 'misc',
-			assignable: true,
-		},
-		...ACCOUNT_SWITCHER_SLOT_ACTIONS.map((action, index) => ({
-			action,
-			label: i18n._(SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR, {slot: index + 1}),
-			combo: {key: String(index + 1), ctrlOrMeta: true, shift: true},
-			section: 'misc' as const,
-			hideFromDefaults: true,
-		})),
+		...getAccountKeybindConfigs(i18n),
 	] as const;
 
 class Keybind {
@@ -899,15 +937,17 @@ class Keybind {
 	private i18n: I18n | null = null;
 	private initialized = false;
 	private keyboardShortcutsOverlayCombo: KeyCombo = {...DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO};
+	private startDmCallCombo: KeyCombo = {...DEFAULT_START_DM_CALL_COMBO};
 	private holdSources = new HoldSources(() => this.pushToTalkReleaseDelay);
 
 	constructor() {
-		makeAutoObservable<this, 'holdSources' | 'defaultKeybinds' | 'runtimeDispatchDefaults'>(
+		makeAutoObservable<this, 'holdSources' | 'defaultKeybinds' | 'runtimeDispatchDefaults' | 'effectiveCustomKeybinds'>(
 			this,
 			{
 				holdSources: false,
 				defaultKeybinds: computed({keepAlive: true}),
 				runtimeDispatchDefaults: computed({keepAlive: true}),
+				effectiveCustomKeybinds: computed({keepAlive: true}),
 			},
 			{autoBind: true},
 		);
@@ -992,7 +1032,7 @@ class Keybind {
 	setI18n(i18n: I18n): void {
 		this.i18n = i18n;
 		if (this.initialized) return;
-		void awaitHydration(KEYBIND_STORE_NAME).then(() => {
+		void Promise.all([awaitHydration(KEYBIND_STORE_NAME), awaitHydration(AppStorageKey.ACCOUNT_KEYBINDS)]).then(() => {
 			runInAction(() => {
 				if (this.initialized) return;
 				if (!Array.isArray(this.customKeybinds)) {
@@ -1000,6 +1040,7 @@ class Keybind {
 				}
 				this.migrateGlobalCapableKeybindsToGlobal();
 				this.migrateEmptyCustomKeybindsToBuiltinDisableMarkers();
+				AccountKeybinds.adopt(this.customKeybinds.filter((entry) => isAccountKeybindCommand(entry.action)));
 				this.initialized = true;
 			});
 		});
@@ -1011,9 +1052,10 @@ class Keybind {
 
 	async refreshKeyboardShortcutLayout(): Promise<void> {
 		try {
-			const combo = await getKeyboardShortcutsOverlayComboForCurrentLayout();
-			if (!combo) return;
-			this.setKeyboardShortcutsOverlayCombo(combo);
+			const combos = await getKeyboardLayoutDefaultCombosForCurrentLayout();
+			if (!combos) return;
+			this.setKeyboardShortcutsOverlayCombo(combos.keyboardShortcutsOverlay);
+			this.setStartDmCallCombo(combos.startDmCall);
 		} catch {}
 	}
 
@@ -1028,8 +1070,15 @@ class Keybind {
 		});
 	}
 
+	private setStartDmCallCombo(combo: KeyCombo): void {
+		if (keyCombosEqual(this.startDmCallCombo, combo)) return;
+		runInAction(() => {
+			this.startDmCallCombo = {...combo};
+		});
+	}
+
 	private get defaultKeybinds(): ReadonlyArray<KeybindConfig> {
-		return getDefaultKeybinds(this.getLabelI18n(), this.keyboardShortcutsOverlayCombo);
+		return getDefaultKeybinds(this.getLabelI18n(), this.keyboardShortcutsOverlayCombo, this.startDmCallCombo);
 	}
 
 	private get runtimeDispatchDefaults(): ReadonlyArray<KeybindConfig> {
@@ -1046,7 +1095,7 @@ class Keybind {
 
 	getActiveCombosForAction(action: KeybindCommand): Array<KeyCombo> {
 		const fallback = this.getDefaultByAction(action);
-		const customBindings = this.customKeybinds.filter((entry) => entry.action === action);
+		const customBindings = this.getCustomKeybinds().filter((entry) => entry.action === action);
 		return getActiveCombosForResolvedAction(fallback, customBindings);
 	}
 
@@ -1058,8 +1107,25 @@ class Keybind {
 		return this.runtimeDispatchDefaults;
 	}
 
+	private get effectiveCustomKeybinds(): ReadonlyArray<CustomKeybindEntry> {
+		return [
+			...this.customKeybinds.filter((entry) => !isAccountKeybindCommand(entry.action)),
+			...AccountKeybinds.validEntries,
+		];
+	}
+
 	getCustomKeybinds(): ReadonlyArray<CustomKeybindEntry> {
-		return this.customKeybinds;
+		return this.effectiveCustomKeybinds;
+	}
+
+	private appendCustomKeybind(entry: CustomKeybindEntry): void {
+		if (isAccountKeybindCommand(entry.action)) {
+			AccountKeybinds.add(entry);
+			return;
+		}
+		runInAction(() => {
+			this.customKeybinds = [...this.customKeybinds, entry];
+		});
 	}
 
 	addCustomKeybind(): CustomKeybindEntry {
@@ -1076,15 +1142,33 @@ class Keybind {
 	}
 
 	removeCustomKeybind(id: string): void {
+		if (AccountKeybinds.hasEntry(id)) {
+			AccountKeybinds.remove(id);
+			return;
+		}
 		runInAction(() => {
 			this.customKeybinds = this.customKeybinds.filter((c) => c.id !== id);
 		});
 	}
 
 	updateCustomKeybind(id: string, patch: Partial<Omit<CustomKeybindEntry, 'id'>>): void {
-		runInAction(() => {
-			this.customKeybinds = this.customKeybinds.map((entry) => (entry.id === id ? {...entry, ...patch} : entry));
-		});
+		const accountEntry = AccountKeybinds.validEntries.find((entry) => entry.id === id) ?? null;
+		const current = accountEntry ?? this.customKeybinds.find((entry) => entry.id === id) ?? null;
+		if (current === null) return;
+		const next = {...current, ...patch};
+		const belongsToAccounts = isAccountKeybindCommand(next.action);
+		if (accountEntry !== null && belongsToAccounts) {
+			AccountKeybinds.update(id, patch);
+			return;
+		}
+		if (accountEntry === null && !belongsToAccounts) {
+			runInAction(() => {
+				this.customKeybinds = this.customKeybinds.map((entry) => (entry.id === id ? next : entry));
+			});
+			return;
+		}
+		this.removeCustomKeybind(id);
+		this.appendCustomKeybind(next);
 	}
 
 	updateCustomKeybindCombo(id: string, combo: KeyCombo): void {
@@ -1098,31 +1182,37 @@ class Keybind {
 			combo: {key: '', enabled: true, global: true},
 			enabled: true,
 		};
-		runInAction(() => {
-			this.customKeybinds = [...this.customKeybinds, entry];
-		});
+		this.appendCustomKeybind(entry);
 		return entry;
 	}
 
 	removeCustomKeybindsForAction(action: KeybindCommand): void {
+		if (isAccountKeybindCommand(action)) {
+			AccountKeybinds.removeForAction(action);
+			return;
+		}
 		runInAction(() => {
 			this.customKeybinds = this.customKeybinds.filter((entry) => entry.action !== action);
 		});
 	}
 
 	isBuiltinDisabled(action: KeybindCommand): boolean {
-		return this.customKeybinds.some((entry) => entry.action === action && isBuiltinDisableMarker(entry));
+		return this.getCustomKeybinds().some((entry) => entry.action === action && isBuiltinDisableMarker(entry));
 	}
 
 	disableBuiltinForAction(action: KeybindCommand): void {
 		if (this.isBuiltinDisabled(action)) return;
 		const global = this.getDefaultByAction(action)?.combo.global;
-		runInAction(() => {
-			this.customKeybinds = [...this.customKeybinds, createBuiltinDisableMarker(action, global)];
-		});
+		this.appendCustomKeybind(createBuiltinDisableMarker(action, global));
 	}
 
 	enableBuiltinForAction(action: KeybindCommand): void {
+		if (isAccountKeybindCommand(action)) {
+			for (const entry of AccountKeybinds.validEntries) {
+				if (entry.action === action && isBuiltinDisableMarker(entry)) AccountKeybinds.remove(entry.id);
+			}
+			return;
+		}
 		runInAction(() => {
 			this.customKeybinds = this.customKeybinds.filter(
 				(entry) => entry.action !== action || !isBuiltinDisableMarker(entry),
@@ -1139,6 +1229,7 @@ class Keybind {
 	}
 
 	resetCustomKeybinds(): void {
+		AccountKeybinds.reset();
 		runInAction(() => {
 			this.customKeybinds = [];
 		});
@@ -1173,7 +1264,7 @@ class Keybind {
 	}
 
 	getPrimaryCustomKeybind(action: KeybindCommand): CustomKeybindEntry | null {
-		return this.customKeybinds.find((c) => c.action === action && !isBuiltinDisableMarker(c)) ?? null;
+		return this.getCustomKeybinds().find((c) => c.action === action && !isBuiltinDisableMarker(c)) ?? null;
 	}
 
 	setPrimaryCustomKeybindCombo(action: KeybindCommand, combo: KeyCombo): CustomKeybindEntry {
@@ -1188,9 +1279,7 @@ class Keybind {
 			combo: {...combo, enabled: true, global: combo.global ?? true},
 			enabled: true,
 		};
-		runInAction(() => {
-			this.customKeybinds = [...this.customKeybinds, created];
-		});
+		this.appendCustomKeybind(created);
 		return created;
 	}
 
@@ -1313,7 +1402,7 @@ class Keybind {
 	} {
 		const base = this.getDefaultByAction(action);
 		if (!base) throw new Error(`Unknown keybind action: ${action}`);
-		const customBindings = this.customKeybinds.filter((c) => c.action === action);
+		const customBindings = this.getCustomKeybinds().filter((c) => c.action === action);
 		return getDisplayKeybindForResolvedAction(base, customBindings);
 	}
 

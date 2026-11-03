@@ -30,14 +30,6 @@ export class StorageObjectListingOverflowError extends Error {
 	}
 }
 
-export interface ProcessedStorageObjectMetadata {
-	contentType: string;
-	contentLength: number;
-	contentHash: string;
-	width?: number;
-	height?: number;
-}
-
 export interface IStorageService {
 	uploadObject(params: {
 		bucket: string;
@@ -71,29 +63,11 @@ export interface IStorageService {
 		contentLength: number;
 		contentRange?: string | null;
 		contentType?: string | null;
-		cacheControl?: string | null;
-		contentDisposition?: string | null;
-		expires?: Date | null;
 		etag?: string | null;
 		lastModified?: Date | null;
 	} | null>;
 	writeObjectToDisk(bucket: string, key: string, filePath: string): Promise<void>;
 	copyObject(params: {
-		sourceBucket: string;
-		sourceKey: string;
-		destinationBucket: string;
-		destinationKey: string;
-		newContentType?: string;
-	}): Promise<void>;
-	copyObjectWithMetadataStripping(params: {
-		sourceBucket: string;
-		sourceKey: string;
-		destinationBucket: string;
-		destinationKey: string;
-		contentType: string;
-		sourceLocalPath?: string;
-	}): Promise<ProcessedStorageObjectMetadata | null>;
-	moveObject(params: {
 		sourceBucket: string;
 		sourceKey: string;
 		destinationBucket: string;
@@ -122,7 +96,6 @@ export interface IStorageService {
 		contentLength?: number;
 		expiresIn?: number;
 	}): Promise<string>;
-	purgeBucket(bucket: string): Promise<void>;
 	uploadAvatar(params: {prefix: string; key: string; body: Uint8Array}): Promise<void>;
 	deleteAvatar(params: {prefix: string; key: string}): Promise<void>;
 	listObjects(params: {bucket: string; prefix: string; maxObjects?: number}): Promise<
@@ -131,17 +104,8 @@ export interface IStorageService {
 			lastModified?: Date;
 		}>
 	>;
-	deleteObjects(params: {
-		bucket: string;
-		objects: ReadonlyArray<{
-			Key: string;
-		}>;
-	}): Promise<void>;
 	createMultipartUpload(params: {bucket: string; key: string; contentType?: string}): Promise<{
 		uploadId: string;
-	}>;
-	uploadPart(params: {bucket: string; key: string; uploadId: string; partNumber: number; body: Uint8Array}): Promise<{
-		etag: string;
 	}>;
 	listParts(params: {bucket: string; key: string; uploadId: string}): Promise<
 		Array<{

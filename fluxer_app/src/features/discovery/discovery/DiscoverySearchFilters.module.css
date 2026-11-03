@@ -51,7 +51,7 @@
 	color: var(--text-secondary);
 	font-size: 0.875rem;
 	font-weight: 500;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	transition:
 		background-color var(--transition-fast),
@@ -90,7 +90,7 @@
 .categoryCount {
 	flex-shrink: 0;
 	min-width: 2.5rem;
-	text-align: right;
+	text-align: end;
 	font-size: 0.75rem;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;

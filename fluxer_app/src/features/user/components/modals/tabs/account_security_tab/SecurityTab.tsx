@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {VerifyEmailButton} from '@app/features/app/components/dialogs/components/EmailVerificationAlert';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {BackupCodesModal} from '@app/features/auth/components/modals/BackupCodesModal';
 import {BackupCodesViewModal} from '@app/features/auth/components/modals/BackupCodesViewModal';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {MfaTotpDisableModal} from '@app/features/auth/components/modals/MfaTotpDisableModal';
 import {MfaTotpEnableModal} from '@app/features/auth/components/modals/MfaTotpEnableModal';
 import {PasskeyNameModal} from '@app/features/auth/components/modals/PasskeyNameModal';
-import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
-import {
-	CLAIM_ACCOUNT_DESCRIPTOR,
-	TWO_FACTOR_AUTHENTICATION_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {startPasskeyRegistration} from '@app/features/auth/utils/PasskeyRegistrationFlow';
+import {TWO_FACTOR_AUTHENTICATION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -26,10 +23,17 @@ import {
 	AccountSecuritySwitchRow,
 } from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/SecurityTab.module.css';
+import {
+	AUTHORIZED_APPS_DESCRIPTOR,
+	DEVICES_DESCRIPTOR as LINKED_DEVICES_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {User} from '@app/features/user/models/User';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
+import {getAccountGatePresentation} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {pushApiErrorModal} from '@app/lib/forms';
+import {AccountVerificationNeeds, TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -44,15 +48,6 @@ const DELETE_PASSKEY_DESCRIPTOR = msg({
 const COULD_NOT_DELETE_PASSKEY_DESCRIPTOR = msg({
 	message: "Couldn't delete passkey",
 	comment: 'Title of the error modal shown when removing a registered passkey fails.',
-});
-const VERIFY_EMAIL_BEFORE_AUTHENTICATOR_APP_DESCRIPTOR = msg({
-	message: 'Verify your email before adding an authenticator app.',
-	comment:
-		'Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.',
-});
-const VERIFY_EMAIL_BEFORE_PASSKEY_DESCRIPTOR = msg({
-	message: 'Verify your email before adding a passkey.',
-	comment: 'Security settings warning shown when an unverified account cannot register a new passkey.',
 });
 const PASSKEY_TWO_FACTOR_ENABLE_TITLE_DESCRIPTOR = msg({
 	message: 'Use passkeys for two-factor authentication?',
@@ -99,20 +94,6 @@ const TWO_FACTOR_CARD_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Ask for a second step after your password when you sign in.',
 	comment: 'Security settings: description under the two-factor authentication card title.',
 });
-const STATUS_ON_DESCRIPTOR = msg({
-	message: 'On',
-	comment:
-		'Security settings: status badge next to the two-factor authentication title when it is turned on. One word.',
-});
-const STATUS_OFF_DESCRIPTOR = msg({
-	message: 'Off',
-	comment:
-		'Security settings: status badge next to the two-factor authentication title when it is turned off. One word.',
-});
-const PASSKEY_COUNT_DESCRIPTOR = msg({
-	message: '{count, plural, one {# passkey} other {# passkeys}}',
-	comment: 'Security settings: badge next to the Passkeys title showing how many passkeys are registered.',
-});
 const TURN_OFF_AUTHENTICATOR_APP_DESCRIPTOR = msg({
 	message: 'Turn off authenticator app',
 	comment:
@@ -144,17 +125,9 @@ const MANAGE_APPS_AND_DEVICES_WITH_ACCESS_TO_YOUR_DESCRIPTOR = msg({
 	message: 'Manage apps and devices with access to your account',
 	comment: 'Security settings section description for account access controls.',
 });
-const AUTHORIZED_APPS_DESCRIPTOR = msg({
-	message: 'Authorized apps',
-	comment: 'Security settings row label for OAuth applications authorized by the user.',
-});
 const REVIEW_APPS_THAT_CAN_ACCESS_YOUR_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Review apps that can access your account.',
 	comment: 'Security settings row description for authorized apps.',
-});
-const LINKED_DEVICES_DESCRIPTOR = msg({
-	message: 'Devices',
-	comment: 'Security settings row label for signed-in devices linked to the account.',
 });
 const REVIEW_SIGNED_IN_DEVICES_DESCRIPTOR = msg({
 	message: "Review signed-in devices and sign out of sessions you don't recognize.",
@@ -164,7 +137,6 @@ const logger = new Logger('SecurityTab');
 
 interface SecurityTabProps {
 	user: User;
-	isClaimed: boolean;
 	passkeys: ReadonlyArray<WebAuthnCredential>;
 	authorizedAppsSubmitting?: boolean;
 	onManageAuthorizedApps?: () => void;
@@ -172,37 +144,21 @@ interface SecurityTabProps {
 }
 
 export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
-	({user, isClaimed, passkeys, authorizedAppsSubmitting, onManageAuthorizedApps, onManageLinkedDevices}) => {
+	({user, passkeys, authorizedAppsSubmitting, onManageAuthorizedApps, onManageLinkedDevices}) => {
 		const {i18n} = useLingui();
 		const hasTotpMfa = user.authenticatorTypes?.includes(UserAuthenticatorTypes.TOTP) ?? false;
 		const hasPasskeyMfa = user.authenticatorTypes?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
 		const hasAnyMfa = hasTotpMfa || hasPasskeyMfa;
-		const needsEmailVerification = user.email != null && user.verified === false;
+		const mfaGate = canPerform(user, TierGatedActions.MFA);
+		const needsEmailVerification = !mfaGate.allowed && mfaGate.need === AccountVerificationNeeds.CONFIRM_EMAIL;
 		const hasReachedPasskeyLimit = passkeys.length >= 10;
 		const canAddSecurityCredential = !needsEmailVerification;
 		const canAddPasskey = canAddSecurityCredential && !hasReachedPasskeyLimit;
-		const registerPasskey = async (name: string) => {
-			try {
-				const options = await UserCommands.getWebAuthnRegistrationOptions();
-				const credential = await WebAuthnUtils.performRegistration(options);
-				await UserCommands.registerWebAuthnCredential(credential, options.challenge, name);
-			} catch (error) {
-				logger.error('Failed to add passkey', error);
-				throw error;
-			}
-		};
 		const handleAddPasskey = () => {
 			if (!canAddPasskey) {
 				return;
 			}
-			ModalCommands.push(
-				modal(() => (
-					<PasskeyNameModal
-						onSubmit={registerPasskey}
-						data-flx="user.account-security-tab.security-tab.handle-add-passkey.passkey-name-modal"
-					/>
-				)),
-			);
+			void startPasskeyRegistration(i18n);
 		};
 		const handleRenamePasskey = async (credentialId: string) => {
 			ModalCommands.push(
@@ -243,26 +199,31 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 		};
 		const handleTogglePasskeyTwoFactor = (enabled: boolean) => {
 			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(
-							enabled ? PASSKEY_TWO_FACTOR_ENABLE_TITLE_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_TITLE_DESCRIPTOR,
-						)}
-						description={i18n._(
-							enabled
-								? PASSKEY_TWO_FACTOR_ENABLE_DESCRIPTION_DESCRIPTOR
-								: hasTotpMfa
-									? PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_WITH_TOTP_DESCRIPTOR
-									: PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_DESCRIPTOR,
-						)}
-						primaryText={i18n._(
-							enabled ? PASSKEY_TWO_FACTOR_ENABLE_CONFIRM_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_CONFIRM_DESCRIPTOR,
-						)}
-						primaryVariant={enabled ? 'primary' : 'danger'}
-						onPrimary={() => applyPasskeyTwoFactor(enabled)}
-						data-flx="user.account-security-tab.security-tab.handle-toggle-passkey-two-factor.confirm-modal"
-					/>
-				)),
+				modal(() => {
+					const title = i18n._(
+						enabled ? PASSKEY_TWO_FACTOR_ENABLE_TITLE_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_TITLE_DESCRIPTOR,
+					);
+					let descriptionDescriptor: typeof PASSKEY_TWO_FACTOR_ENABLE_DESCRIPTION_DESCRIPTOR;
+					if (enabled) {
+						descriptionDescriptor = PASSKEY_TWO_FACTOR_ENABLE_DESCRIPTION_DESCRIPTOR;
+					} else if (hasTotpMfa) {
+						descriptionDescriptor = PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_WITH_TOTP_DESCRIPTOR;
+					} else {
+						descriptionDescriptor = PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_DESCRIPTOR;
+					}
+					return (
+						<ConfirmModal
+							title={title}
+							description={i18n._(descriptionDescriptor)}
+							primaryText={i18n._(
+								enabled ? PASSKEY_TWO_FACTOR_ENABLE_CONFIRM_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_CONFIRM_DESCRIPTOR,
+							)}
+							primaryVariant={enabled ? 'primary' : 'danger'}
+							onPrimary={() => applyPasskeyTwoFactor(enabled)}
+							data-flx="user.account-security-tab.security-tab.handle-toggle-passkey-two-factor.confirm-modal"
+						/>
+					);
+				}),
 			);
 		};
 		const handleDeletePasskey = (credentialId: string) => {
@@ -320,22 +281,21 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				)),
 			);
 		};
-		if (!isClaimed) {
+		if (!mfaGate.allowed && !needsEmailVerification) {
+			const presentation = getAccountGatePresentation(i18n, mfaGate);
 			return (
 				<SettingsTabSection
 					title={<Trans>Security features</Trans>}
-					description={
-						<Trans>Claim your account to access security features like two-factor authentication and passkeys.</Trans>
-					}
+					description={presentation.description}
 					data-flx="user.account-security-tab.security-tab.security-tab-content.settings-tab-section"
 				>
 					<Button
 						className={styles.claimButton}
 						fitContent
-						onClick={() => openClaimAccountModal()}
+						onClick={presentation.onAction}
 						data-flx="user.account-security-tab.security-tab.security-tab-content.claim-button.open-claim-account-modal"
 					>
-						{i18n._(CLAIM_ACCOUNT_DESCRIPTOR)}
+						{presentation.actionLabel}
 					</Button>
 				</SettingsTabSection>
 			);
@@ -350,19 +310,25 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				<AccountSecurityCard
 					title={i18n._(TWO_FACTOR_AUTHENTICATION_DESCRIPTOR)}
 					description={i18n._(TWO_FACTOR_CARD_DESCRIPTION_DESCRIPTOR)}
-					status={
-						hasAnyMfa
-							? {label: i18n._(STATUS_ON_DESCRIPTOR), tone: 'success'}
-							: {label: i18n._(STATUS_OFF_DESCRIPTOR), tone: 'muted'}
-					}
 					data-flx="user.account-security-tab.security-tab.two-factor-card"
 				>
+					{needsEmailVerification && (
+						<AccountSecurityRow
+							label={
+								<Trans comment="Row in the two-factor authentication card shown when the account email is not confirmed yet. Two-factor authentication and passkeys stay locked until it is.">
+									Confirm your email to turn on two-factor authentication or add a passkey.
+								</Trans>
+							}
+							data-flx="user.account-security-tab.security-tab.verify-email-row"
+						>
+							<VerifyEmailButton data-flx="user.account-security-tab.security-tab.security-tab-content.verify-email-button">
+								<Trans>Confirm email</Trans>
+							</VerifyEmailButton>
+						</AccountSecurityRow>
+					)}
 					<AccountSecurityRow
 						label={<Trans>Authenticator app</Trans>}
 						description={totpDescription}
-						warning={
-							needsEmailVerification && !hasTotpMfa ? i18n._(VERIFY_EMAIL_BEFORE_AUTHENTICATOR_APP_DESCRIPTOR) : null
-						}
 						data-flx="user.account-security-tab.security-tab.authenticator-app-row"
 					>
 						{hasTotpMfa ? (
@@ -431,14 +397,6 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				<AccountSecurityCard
 					title={<Trans>Passkeys</Trans>}
 					description={<Trans>Use passkeys to sign in without a password</Trans>}
-					status={
-						passkeys.length > 0
-							? {
-									label: i18n._(PASSKEY_COUNT_DESCRIPTOR, {count: passkeys.length}),
-									tone: 'neutral',
-								}
-							: undefined
-					}
 					action={
 						<Button
 							small={true}
@@ -452,11 +410,6 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 					}
 					data-flx="user.account-security-tab.security-tab.passkeys-card"
 				>
-					{needsEmailVerification && (
-						<AccountSecurityEmptyRow data-flx="user.account-security-tab.security-tab.passkeys-verify-email">
-							{i18n._(VERIFY_EMAIL_BEFORE_PASSKEY_DESCRIPTOR)}
-						</AccountSecurityEmptyRow>
-					)}
 					{passkeys.length === 0 && !needsEmailVerification && (
 						<AccountSecurityEmptyRow data-flx="user.account-security-tab.security-tab.passkeys-empty">
 							<Trans>No passkeys yet. Add one to sign in with your fingerprint, face or a security key.</Trans>
@@ -510,6 +463,7 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 								label={<Trans>Require a passkey as your second factor</Trans>}
 								description={<Trans>Ask for a passkey after your password when you sign in</Trans>}
 								value={hasPasskeyMfa}
+								disabled={needsEmailVerification && !hasPasskeyMfa}
 								onChange={handleTogglePasskeyTwoFactor}
 								data-flx="user.account-security-tab.security-tab.security-tab-content.switch.passkey-two-factor"
 							/>

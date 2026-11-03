@@ -98,12 +98,18 @@ function scanMarkerEnds(
 			markerEndByStart.set(span.start, span.end);
 		}
 	}
-	const blocks = scanAllowedCodeBlocks(source, parserFlags);
+	const blocks = scanAllowedCodeBlocks(source, parserFlags).sort((left, right) => left.start - right.start);
 	const ends: Array<number> = [];
 	let lineStart = 0;
+	let nextBlock = 0;
+	let coveredUntil = -1;
 	for (const line of lines) {
+		while (nextBlock < blocks.length && blocks[nextBlock]!.start <= lineStart) {
+			coveredUntil = Math.max(coveredUntil, blocks[nextBlock]!.end);
+			nextBlock += 1;
+		}
 		const markerEnd = markerEndByStart.get(lineStart);
-		const suppressed = isInsideCodeBlock(blocks, lineStart) || MULTILINE_ALERT_RE.test(line);
+		const suppressed = coveredUntil >= lineStart || MULTILINE_ALERT_RE.test(line);
 		ends.push(markerEnd == null || suppressed ? 0 : Math.min(markerEnd, lineStart + line.length) - lineStart);
 		lineStart += line.length + 1;
 	}

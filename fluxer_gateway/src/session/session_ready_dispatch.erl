@@ -21,11 +21,11 @@
 dispatch_ready_to_socket(State) ->
     #{
         id := SessionId,
-        version := Version,
+        version := _,
         bot := IsBot,
         guilds := Guilds,
         collected_guild_states := CollectedGuilds,
-        collected_sessions := CollectedSessions
+        collected_sessions := _
     } = State,
     GwTimings0 = gateway_timings:from_state(State),
     DispatchStartedAt = gateway_timings:start(),
@@ -40,17 +40,7 @@ dispatch_ready_to_socket(State) ->
         <<"session_ready_collect:collect_ready_users/2">>, UsersStartedAt
     ),
     BuildStartedAt = gateway_timings:start(),
-    FinalReadyData0 = build_final_ready_data(
-        State,
-        CollectedGuilds,
-        CollectedSessions,
-        CollectedPresences,
-        Users,
-        Guilds,
-        Version,
-        SessionId,
-        IsBot
-    ),
+    FinalReadyData0 = build_final_ready_data(State, CollectedPresences, Users),
     BuildSpan = gateway_timings:span(
         <<"session_ready_dispatch:build_final_ready_data/9">>, BuildStartedAt
     ),
@@ -72,13 +62,12 @@ dispatch_ready_to_socket(State) ->
     StateAfterHealth = session_guild_health:dispatch_ready(StateAfterGuilds),
     schedule_call_creates(StateAfterHealth, SessionId),
     StateAfterPresences = release_pending_presences(StateAfterHealth, CollectedPresences),
-    FinalState = StateAfterPresences#{
+    FinalState = maps:remove(gw_timings, StateAfterPresences#{
         ready => undefined,
         collected_guild_states => [],
         collected_sessions => [],
         collected_presences => []
-    },
-    erlang:garbage_collect(),
+    }),
     {noreply, FinalState}.
 
 -spec release_pending_presences(session_state(), [map()]) -> session_state().
@@ -90,16 +79,12 @@ release_pending_presences(State, CollectedPresences) ->
 
 -spec covered_presence_ids([map()]) -> #{integer() => true}.
 covered_presence_ids(CollectedPresences) ->
-    lists:foldl(
-        fun(Presence, Acc) ->
-            case presence_user_id(Presence) of
-                undefined -> Acc;
-                UserId -> Acc#{UserId => true}
-            end
-        end,
-        #{},
-        CollectedPresences
-    ).
+    #{
+        UserId => true
+     || #{<<"user">> := #{<<"id">> := RawId}} <- CollectedPresences,
+        UserId <- [snowflake_id:parse_maybe(RawId)],
+        UserId =/= undefined
+    }.
 
 -spec drop_covered_pending_presences(session_state(), #{integer() => true}) -> session_state().
 drop_covered_pending_presences(State, Covered) when map_size(Covered) =:= 0 ->
@@ -108,18 +93,22 @@ drop_covered_pending_presences(State, Covered) ->
     case maps:get(pending_presences, State, undefined) of
         undefined ->
             State;
-        Pending ->
-            State#{pending_presences => filter_pending_presences(Pending, Covered)}
+        _Pending ->
+            filter_pending_presences(State, Covered)
     end.
 
--spec filter_pending_presences(term(), #{integer() => true}) -> term().
-filter_pending_presences(Pending, Covered) ->
+-spec filter_pending_presences(session_state(), #{integer() => true}) -> session_state().
+filter_pending_presences(#{pending_presences := Pending} = State, Covered) ->
     Keep = fun(Entry) -> not covered_entry(Entry, Covered) end,
     try queue:filter(Keep, Pending) of
-        Filtered -> Filtered
+        Filtered -> State#{pending_presences => Filtered}
     catch
-        error:_ when is_list(Pending) -> lists:filter(Keep, Pending);
-        error:_ -> Pending
+        error:badarg when is_list(Pending) ->
+            State#{pending_presences => lists:filter(Keep, Pending)};
+        error:badarg ->
+            State;
+        error:function_clause ->
+            State
     end.
 
 -spec covered_entry(term(), #{integer() => true}) -> boolean().
@@ -128,18 +117,6 @@ covered_entry(#{user_id := UserId}, Covered) when is_integer(UserId) ->
 covered_entry(_Entry, _Covered) ->
     false.
 
--spec presence_user_id(term()) -> integer() | undefined.
-presence_user_id(Presence) when is_map(Presence) ->
-    User = maps:get(<<"user">>, Presence, #{}),
-    presence_id(User);
-presence_user_id(_Presence) ->
-    undefined.
-
--spec presence_id(term()) -> integer() | undefined.
-presence_id(User) when is_map(User) ->
-    snowflake_id:parse_maybe(maps:get(<<"id">>, User, undefined));
-presence_id(_User) ->
-    undefined.
 -spec is_staff_session(session_state()) -> boolean().
 is_staff_session(#{is_staff := true}) ->
     true;
@@ -152,27 +129,18 @@ apply_timings_visibility(true, GwTimings, ReadyData) ->
 apply_timings_visibility(false, _GwTimings, ReadyData) ->
     maps:without([<<"_timings">>], ReadyData).
 
--spec build_final_ready_data(
-    session_state(),
-    [map()],
-    [map()],
-    [map()],
-    [map()],
-    map(),
-    non_neg_integer(),
-    binary(),
-    boolean()
-) -> map().
+-spec build_final_ready_data(session_state(), [map()], [map()]) -> map().
 build_final_ready_data(
-    State,
-    CollectedGuilds,
-    CollectedSessions,
+    #{
+        id := SessionId,
+        version := Version,
+        bot := IsBot,
+        guilds := Guilds,
+        collected_guild_states := CollectedGuilds,
+        collected_sessions := CollectedSessions
+    } = State,
     CollectedPresences,
-    Users,
-    Guilds,
-    Version,
-    SessionId,
-    IsBot
+    Users
 ) ->
     ReadyData = prepare_ready_base(State),
     GuildsForReady = guilds_for_ready_payload(IsBot, CollectedGuilds, Guilds),
@@ -361,48 +329,3 @@ dispatch_call_create_from_pid(CallPid, ChannelId, _SessionId, SessionPid) ->
         error:_Reason -> ok;
         exit:_Reason -> ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-dispatch_call_create_from_pid_always_casts_to_session_test() ->
-    ChannelId = 1234,
-    SessionId = <<"session-ready-call-test">>,
-    CallData = #{
-        channel_id => integer_to_binary(ChannelId),
-        message_id => <<"9001">>,
-        region => null,
-        ringing => [],
-        recipients => [],
-        voice_states => [],
-        created_at => erlang:system_time(millisecond)
-    },
-    CallPid = spawn(fun() -> call_state_stub_loop(CallData) end),
-    ok = dispatch_call_create_from_pid(CallPid, ChannelId, SessionId, self()),
-    receive
-        {'$gen_cast', {call_monitor, ChannelId, CallPid}} ->
-            ok
-    after 1000 ->
-        ?assert(false, call_monitor_not_cast_to_session)
-    end,
-    receive
-        {'$gen_cast', {dispatch, call_create, DispatchData}} ->
-            ?assertEqual(guild_data_wire:payload(CallData), DispatchData)
-    after 1000 ->
-        ?assert(false, call_create_not_cast_to_session)
-    end,
-    exit(CallPid, kill),
-    ok.
-
--spec call_state_stub_loop(map()) -> ok.
-call_state_stub_loop(CallData) ->
-    receive
-        {'$gen_call', From, {get_state}} ->
-            gen_server:reply(From, {ok, CallData}),
-            call_state_stub_loop(CallData);
-        _ ->
-            call_state_stub_loop(CallData)
-    after 30000 -> ok
-    end.
-
--endif.

@@ -3,7 +3,6 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
-import {everEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import {PushSubscription} from '@app/api/models/PushSubscription';
 import {PushSubscriptions} from '@app/api/Tables';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
@@ -28,7 +27,7 @@ export class PushSubscriptionRepository {
 
 	async createPushSubscription(data: PushSubscriptionRow): Promise<PushSubscription> {
 		const row =
-			data.thread_channels === undefined && everEnabled() && (await this.hasThreadChannels(data))
+			data.thread_channels === undefined && (await this.hasThreadChannels(data))
 				? {...data, thread_channels: null}
 				: data;
 		await upsertOne(PushSubscriptions.upsertAll(row));

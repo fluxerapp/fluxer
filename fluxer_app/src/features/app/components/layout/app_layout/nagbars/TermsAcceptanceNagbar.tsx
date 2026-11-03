@@ -13,12 +13,13 @@ import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
 const TERMS_ACCEPTANCE_MESSAGE_DESCRIPTOR = msg({
-	message: "We've updated our policies. Review and accept them to continue.",
-	comment: 'Nagbar body shown when the user must accept updated policies before continuing.',
+	message: "We've updated our policies. Review them to continue.",
+	comment:
+		'Nagbar body shown when the terms of service or privacy policy changed. People accept the terms and only read the privacy policy.',
 });
-const REVIEW_AGREE_DESCRIPTOR = msg({
-	message: 'Review & agree',
-	comment: 'Button label on the policy-update nagbar. Opens the terms acceptance modal.',
+const REVIEW_POLICIES_DESCRIPTOR = msg({
+	message: 'Review',
+	comment: 'Button label on the policy-update nagbar. Opens the updated policies modal.',
 });
 export const TermsAcceptanceNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 	const {i18n} = useLingui();
@@ -45,7 +46,7 @@ export const TermsAcceptanceNagbar = observer(({isMobile}: {isMobile: boolean}) 
 						onClick={handleOpen}
 						data-flx="app.app-layout.nagbars.terms-acceptance-nagbar.nagbar-button.open"
 					>
-						{i18n._(REVIEW_AGREE_DESCRIPTOR)}
+						{i18n._(REVIEW_POLICIES_DESCRIPTOR)}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.terms-acceptance-nagbar.nagbar-content"

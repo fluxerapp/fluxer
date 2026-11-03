@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {fetchCrosspostSource} from '@app/features/channel/commands/CrosspostSourceCommands';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {CrosspostSourceGuildResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
@@ -58,6 +59,15 @@ class CrosspostSourceCards {
 	private setEntry(sourceGuildId: string, state: CrosspostSourceCardState): void {
 		this.entries = new Map(this.entries).set(sourceGuildId, state);
 	}
+
+	reset(): void {
+		this.entries = new Map();
+		this.inflight.clear();
+	}
 }
 
-export default new CrosspostSourceCards();
+const crosspostSourceCards = new CrosspostSourceCards();
+
+ResettableStates.register(crosspostSourceCards, () => crosspostSourceCards.reset());
+
+export default crosspostSourceCards;

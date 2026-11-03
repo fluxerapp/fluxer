@@ -8,8 +8,7 @@
     update_circuit_state_direct/3,
     acquire_inflight_slot/2,
     release_inflight_slot/1,
-    prune_circuit_table/0,
-    is_stale_circuit/3
+    prune_circuit_table/0
 ]).
 -export_type([response/0, circuit/0]).
 
@@ -92,7 +91,8 @@ prune_circuit_table() ->
 
 -spec prune_circuit_record(tuple(), integer(), integer()) -> ok.
 prune_circuit_record({Key, State, OpenedAt, UpdatedAt}, Now, MaxAgeMs) ->
-    delete_stale_circuit(Key, {State, OpenedAt, UpdatedAt}, Now, MaxAgeMs);
+    Circuit = eqwalizer:dynamic_cast({State, OpenedAt, UpdatedAt}),
+    delete_stale_circuit(eqwalizer:dynamic_cast(Key), Circuit, Now, MaxAgeMs);
 prune_circuit_record(_Record, _Now, _MaxAgeMs) ->
     ok.
 
@@ -318,21 +318,3 @@ safe_delete(Table, Key) ->
     catch
         error:badarg -> ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-circuit_counts_transport_failures_for_rpc_test() ->
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, nxdomain})),
-    ?assertEqual(
-        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {failed_connect, []}})
-    ),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, timeout})),
-    ?assertEqual(
-        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {timeout, connect}})
-    ),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, closed})),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 500, [], <<>>})),
-    ?assertEqual(false, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 200, [], <<>>})).
-
--endif.

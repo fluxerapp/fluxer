@@ -4,11 +4,10 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {MessageInteractionAuthService} from '@app/api/channel/services/interaction/MessageInteractionAuthService';
-import {MessagePinAuthService} from '@app/api/channel/services/interaction/MessagePinAuthService';
 import {MessagePinService} from '@app/api/channel/services/interaction/MessagePinService';
 import {MessageReactionService} from '@app/api/channel/services/interaction/MessageReactionService';
 import {MessageReadStateService} from '@app/api/channel/services/interaction/MessageReadStateService';
-import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {maskThreadArtifactsFor} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
@@ -20,7 +19,6 @@ import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService'
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
-import type {Message} from '@app/api/models/Message';
 import {
 	assertMayStartConversation,
 	getNewConversationLimit,
@@ -37,7 +35,7 @@ import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResp
 
 export class MessageInteractionService {
 	readonly authService: MessageInteractionAuthService;
-	private pinAuthService: MessagePinAuthService;
+	private pinAuthService: MessageChannelAuthService;
 	private readStateService: MessageReadStateService;
 	private pinService: MessagePinService;
 	private reactionService: MessageReactionService;
@@ -46,7 +44,7 @@ export class MessageInteractionService {
 		private channelRepository: ChannelRepository,
 		private userRepository: UserRepository,
 		guildRepository: GuildRepository,
-		private gatewayService: IGatewayService,
+		gatewayService: IGatewayService,
 		snowflakeService: ISnowflakeService,
 		messagePersistenceService: MessagePersistenceService,
 		guildAuditLogService: GuildAuditLogService,
@@ -58,7 +56,12 @@ export class MessageInteractionService {
 			guildRepository,
 			gatewayService,
 		);
-		this.pinAuthService = new MessagePinAuthService(channelRepository, userRepository, guildRepository, gatewayService);
+		this.pinAuthService = new MessageChannelAuthService(
+			channelRepository,
+			userRepository,
+			guildRepository,
+			gatewayService,
+		);
 		this.readStateService = new MessageReadStateService(gatewayService);
 		this.pinService = new MessagePinService(
 			gatewayService,
@@ -101,22 +104,25 @@ export class MessageInteractionService {
 		userId,
 		viewer,
 		channelId,
-		requestCache,
 		beforeTimestamp,
 		limit,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
-		requestCache: RequestCache;
 		beforeTimestamp?: Date;
 		limit?: number;
 	}): Promise<{
 		items: Array<ChannelPinResponse>;
 		has_more: boolean;
 	}> {
-		const authChannel = await this.pinAuthService.getChannelAuthenticated({userId, channelId, viewer});
-		const pins = await this.pinService.getChannelPins({authChannel, userId, requestCache, beforeTimestamp, limit});
+		const authChannel = await this.pinAuthService.getChannelAuthenticated({
+			userId,
+			channelId,
+			viewer,
+			access: 'visitor_read',
+		});
+		const pins = await this.pinService.getChannelPins({authChannel, userId, beforeTimestamp, limit});
 		const original = pins.items.map((item) => item.message as MessageResponse);
 		const messages = maskThreadArtifactsFor(viewer, authChannel.channel.guildId, original);
 		if (messages === original) return pins;
@@ -158,21 +164,19 @@ export class MessageInteractionService {
 		viewer,
 		channelId,
 		messageId,
-		requestCache,
 		auditLogReason,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
-		requestCache: RequestCache;
 		auditLogReason?: string | null;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
 		if (!authChannel.guild && authChannel.channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
 			await this.authService.validateDMSendPermissions({channel: authChannel.channel, userId});
 		}
-		await this.pinService.unpinMessage({authChannel, messageId, userId, requestCache, auditLogReason});
+		await this.pinService.unpinMessage({authChannel, messageId, userId, auditLogReason});
 	}
 
 	async getUsersForReaction({
@@ -263,7 +267,6 @@ export class MessageInteractionService {
 		messageId: MessageID;
 		emoji: string;
 		targetId: UserID;
-		requestCache: RequestCache;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
 		await this.reactionService.removeReaction({authChannel, messageId, emoji, targetId, sessionId, actorId: userId});
@@ -276,7 +279,6 @@ export class MessageInteractionService {
 		channelId,
 		messageId,
 		emoji,
-		requestCache,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -284,9 +286,8 @@ export class MessageInteractionService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		emoji: string;
-		requestCache: RequestCache;
 	}): Promise<void> {
-		await this.removeReaction({userId, viewer, sessionId, channelId, messageId, emoji, targetId: userId, requestCache});
+		await this.removeReaction({userId, viewer, sessionId, channelId, messageId, emoji, targetId: userId});
 	}
 
 	async removeAllReactionsForEmoji({
@@ -319,23 +320,5 @@ export class MessageInteractionService {
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
 		await this.reactionService.removeAllReactions({authChannel, messageId});
-	}
-
-	async dispatchMessageUpdate({
-		channel,
-		message,
-		currentUserId,
-	}: {
-		channel: Channel;
-		message: Message;
-		requestCache: RequestCache;
-		currentUserId?: UserID;
-	}): Promise<void> {
-		await dispatchMessageUpdateBroadcast({
-			gatewayService: this.gatewayService,
-			currentUserId,
-			channel,
-			message,
-		});
 	}
 }

@@ -16,6 +16,8 @@ import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 export class GuildDataService {
 	private readonly helpers: GuildDataHelpers;
@@ -35,6 +37,7 @@ export class GuildDataService {
 		private readonly webhookRepository: WebhookRepository,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
+		private readonly workerService: IWorkerService<WorkerTaskName>,
 	) {
 		this.helpers = new GuildDataHelpers(this.gatewayService, this.guildAuditLogService, this.userRepository);
 		this.operations = new GuildOperationsService(
@@ -50,6 +53,7 @@ export class GuildDataService {
 			this.helpers,
 			this.limitConfigService,
 			new GuildDiscoveryRepository(),
+			this.workerService,
 		);
 		this.vanity = new GuildVanityService(this.guildRepository, this.inviteRepository, this.helpers);
 		this.ownership = new GuildOwnershipService(this.guildRepository, this.userRepository, this.helpers);

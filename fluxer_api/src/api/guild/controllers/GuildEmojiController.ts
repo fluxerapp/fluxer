@@ -3,6 +3,7 @@
 import {createEmojiID, createGuildID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -53,6 +54,7 @@ export function GuildEmojiController(app: HonoApp) {
 	);
 	app.post(
 		'/guilds/:guild_id/emojis/bulk',
+		RequestBodyLimit(jsonAssetBodyLimit({emoji: 50})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_BULK_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),

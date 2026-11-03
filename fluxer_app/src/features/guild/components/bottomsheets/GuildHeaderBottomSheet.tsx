@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MuteDurationSheet} from '@app/features/app/components/bottomsheets/MuteDurationSheet';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import headerStyles from '@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet.module.css';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -63,7 +63,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 	const {i18n} = useLingui();
 	useEffect(() => {
 		if (!isOpen) return;
-		GatewayConnection.syncGuildIfNeeded(guild.id, 'guild-header-bottom-sheet');
+		GatewaySessions.foregroundConnection.syncGuildIfNeeded(guild.id, 'guild-header-bottom-sheet');
 		GuildCount.requestCounts(guild.id, {force: true});
 	}, [guild.id, isOpen]);
 	const {muteSheetOpen, muteConfig, openMuteSheet, closeMuteSheet, handleMute, handleUnmute} = useMuteSheet({

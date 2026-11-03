@@ -8,7 +8,7 @@ use crate::{
     byte_budget::BudgetedBytes,
     config::Config,
     constants::{self, AssetExtension},
-    external_path, mime,
+    mime,
     server::{
         download_stream::DownloadStreamPolicy,
         external::{
@@ -26,7 +26,7 @@ use crate::{
             content_type_is_trustworthy, image_extension_from_filename, is_svg_content_type,
             source_image_format,
         },
-        params::{animated_param, bool_param, url_filename},
+        params::{bool_param, requests_transform, url_filename},
         response::{
             content_disposition_header,
             error::{text, text_with_source},
@@ -38,7 +38,6 @@ use crate::{
             parameters::TransformRoute, serve_bytes_or_transform,
         },
     },
-    signing,
 };
 use axum::{
     http::{HeaderMap, Method, StatusCode, header},
@@ -96,7 +95,6 @@ fn external_cached_transform(
     url: &str,
     method: &Method,
     params: &HashMap<String, String>,
-    headers: &HeaderMap,
 ) -> Option<Response> {
     let hint = app.media.external_hints().get(url)?;
     let filename = url_filename(&hint.url);
@@ -110,7 +108,6 @@ fn external_cached_transform(
             filename: &filename,
             route: TransformRoute::External,
             params,
-            headers,
         },
     )
 }
@@ -199,20 +196,20 @@ impl<'a> PreparedExternalRequest<'a> {
         let Some((sig, proxy_path)) = rest.split_once('/') else {
             return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
         };
-        if !signing::verify_signature(proxy_path, sig, app.cfg.secret_key.as_bytes()) {
+        if !fluxer_common::external_media_path::verify_signature(
+            proxy_path,
+            sig,
+            app.cfg.secret_key.as_bytes(),
+        ) {
             return Err(Box::new(text(StatusCode::UNAUTHORIZED, "Unauthorized")));
         }
-        let Ok(url) = external_path::reconstruct_original_url(proxy_path) else {
+        let Ok(url) = fluxer_common::external_media_path::reconstruct_original_url(proxy_path)
+        else {
             return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
         };
         let url_ext_is_svg =
             image_extension_from_filename(&url_filename(&url)) == Some(AssetExtension::Svg);
-        let wants_transform = url_ext_is_svg
-            || params.contains_key("width")
-            || params.contains_key("height")
-            || params.contains_key("format")
-            || params.contains_key("quality")
-            || animated_param(params, false);
+        let wants_transform = url_ext_is_svg || requests_transform(params);
         let client_range = headers
             .get(header::RANGE)
             .and_then(|value| value.to_str().ok())
@@ -291,7 +288,7 @@ pub(in crate::server) async fn serve_external(
     };
     if prepared.wants_transform
         && let Some(cached) =
-            external_cached_transform(app, &prepared.url, &prepared.method, params, headers)
+            external_cached_transform(app, &prepared.url, &prepared.method, params)
     {
         return cached;
     }

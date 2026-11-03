@@ -7,7 +7,3 @@ export const PlutoniumPageAssignmentResponse = z.object({
 });
 
 export type PlutoniumPageAssignmentResponse = z.infer<typeof PlutoniumPageAssignmentResponse>;
-
-export const INERT_PLUTONIUM_PAGE_ASSIGNMENT: PlutoniumPageAssignmentResponse = {
-	enabled: false,
-};

@@ -16,6 +16,7 @@ import type {MenuGroupType, MenuItemType, MenuRadioType} from '@app/features/ui/
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {getNotificationSettingsLabel} from '@app/lib/overlay/OverlayContextMenu';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -44,17 +45,14 @@ export const NotificationSettingsSheet: React.FC<NotificationSettingsSheetProps>
 		const hasCategory = categoryId != null;
 		const channelNotifications = UserGuildSettings.getChannelOverride(guildId, channel.id)?.message_notifications;
 		const currentNotificationLevel = channelNotifications ?? MessageNotifications.INHERIT;
-		const guildNotificationLevel = UserGuildSettings.getGuildMessageNotifications(guildId);
-		const categoryOverride = UserGuildSettings.getChannelOverride(guildId, categoryId ?? '');
-		const categoryNotifications = categoryId ? categoryOverride?.message_notifications : undefined;
 		const communityNotificationSettingsLabel = i18n._(COMMUNITY_NOTIFICATION_SETTINGS_DESCRIPTOR);
-		const resolveEffectiveLevel = (level: number | undefined, fallback: number): number => {
-			if (level === undefined || level === MessageNotifications.INHERIT) {
-				return fallback;
-			}
-			return level;
-		};
-		const categoryDefaultLevel = resolveEffectiveLevel(categoryNotifications, guildNotificationLevel);
+		const categoryDefaultLevel = guildId
+			? UserGuildSettings.resolveEffectiveMessageNotifications({
+					id: channel.parentId ?? '',
+					guildId: channel.guildId,
+					type: ChannelTypes.GUILD_CATEGORY,
+				})
+			: MessageNotifications.ALL_MESSAGES;
 		const defaultSubtext = getNotificationSettingsLabel(categoryDefaultLevel) ?? undefined;
 		return [
 			{

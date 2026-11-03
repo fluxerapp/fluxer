@@ -14,10 +14,6 @@ export const FORUM_DESCRIPTOR = msg({
 	message: 'Forum',
 	comment: 'Channel type chip label for a forum channel.',
 });
-export const MEDIA_DESCRIPTOR = msg({
-	message: 'Media',
-	comment: 'Channel type chip label for a media channel.',
-});
 export const NEW_POST_DESCRIPTOR = msg({
 	message: 'New post',
 	comment: 'Button in a forum channel that opens the composer for a new post.',
@@ -164,17 +160,9 @@ export const NO_MATCHING_POSTS_HINT_DESCRIPTOR = msg({
 	message: 'Try different words or clear the tag filter.',
 	comment: 'Body of the empty state in a forum channel when the search or tag filter finds nothing.',
 });
-export const SEARCH_INDEXING_DESCRIPTOR = msg({
-	message: 'Search is getting ready for this community. Trying again shortly...',
-	comment: 'Notice in a forum channel while the server is still building the post search index.',
-});
 export const SEARCH_FAILED_DESCRIPTOR = msg({
 	message: "Couldn't load posts. Try again later.",
 	comment: 'Notice in a forum channel when loading posts fails.',
-});
-export const RETRY_DESCRIPTOR = msg({
-	message: 'Retry',
-	comment: 'Button that retries loading forum posts.',
 });
 export const OLDER_POSTS_DESCRIPTOR = msg({
 	message: 'Older posts',
@@ -199,10 +187,6 @@ export const SHOW_GUIDELINES_DESCRIPTOR = msg({
 export const HIDE_GUIDELINES_DESCRIPTOR = msg({
 	message: 'Hide guidelines',
 	comment: 'Button in the forum header that collapses the post guidelines.',
-});
-export const POST_COUNT_DESCRIPTOR = msg({
-	message: '{count, plural, one {# message} other {# messages}}',
-	comment: 'Message count on a forum post card. count is the number of replies.',
 });
 export const DEFAULT_REACTION_DESCRIPTOR = msg({
 	message: 'Default reaction',
@@ -275,14 +259,6 @@ export const TAG_MODERATED_HINT_DESCRIPTOR = msg({
 export const DELETE_TAG_DESCRIPTOR = msg({
 	message: 'Delete tag',
 	comment: 'Button in the forum tag editor that deletes the tag.',
-});
-export const SAVE_DESCRIPTOR = msg({
-	message: 'Save',
-	comment: 'Button that saves the forum tag editor or tag picker.',
-});
-export const CANCEL_DESCRIPTOR = msg({
-	message: 'Cancel',
-	comment: 'Button that closes a forum dialog without saving.',
 });
 export const TAGS_HINT_DESCRIPTOR = msg({
 	message: 'Tags help people find posts. You can add up to {count} tags.',

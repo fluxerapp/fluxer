@@ -69,64 +69,34 @@ function buildMessageFilters(filters: MessageSearchFilters): Array<MeilisearchFi
 	if (filters.channelId) clauses.push(meiliTermFilter('channelId', filters.channelId));
 	if (filters.channelIds && filters.channelIds.length > 0)
 		clauses.push(meiliTermsFilter('channelId', filters.channelIds));
-	if (filters.excludeChannelIds && filters.excludeChannelIds.length > 0) {
-		clauses.push(...meiliExcludeAny('channelId', filters.excludeChannelIds));
-	}
+	clauses.push(...meiliExcludeAny('channelId', filters.excludeChannelIds ?? []));
 	if (filters.authorId && filters.authorId.length > 0) clauses.push(meiliTermsFilter('authorId', filters.authorId));
-	if (filters.excludeAuthorIds && filters.excludeAuthorIds.length > 0) {
-		clauses.push(...meiliExcludeAny('authorId', filters.excludeAuthorIds));
-	}
+	clauses.push(...meiliExcludeAny('authorId', filters.excludeAuthorIds ?? []));
 	if (filters.authorType && filters.authorType.length > 0)
 		clauses.push(meiliTermsFilter('authorType', filters.authorType));
-	if (filters.excludeAuthorType && filters.excludeAuthorType.length > 0) {
-		clauses.push(...meiliExcludeAny('authorType', filters.excludeAuthorType));
-	}
-	if (filters.mentions && filters.mentions.length > 0)
-		clauses.push(...meiliAndTerms('mentionedUserIds', filters.mentions));
-	if (filters.excludeMentions && filters.excludeMentions.length > 0) {
-		clauses.push(...meiliExcludeAny('mentionedUserIds', filters.excludeMentions));
-	}
+	clauses.push(...meiliExcludeAny('authorType', filters.excludeAuthorType ?? []));
+	clauses.push(...meiliAndTerms('mentionedUserIds', filters.mentions ?? []));
+	clauses.push(...meiliExcludeAny('mentionedUserIds', filters.excludeMentions ?? []));
 	if (filters.mentionEveryone !== undefined) clauses.push(meiliTermFilter('mentionEveryone', filters.mentionEveryone));
 	if (filters.pinned !== undefined) clauses.push(meiliTermFilter('isPinned', filters.pinned));
-	if (filters.has && filters.has.length > 0) {
-		for (const hasType of filters.has) {
-			const field = HAS_FIELD_MAP[hasType];
-			if (field) clauses.push(meiliTermFilter(field, true));
-		}
+	for (const hasType of filters.has ?? []) {
+		const field = HAS_FIELD_MAP[hasType];
+		if (field) clauses.push(meiliTermFilter(field, true));
 	}
-	if (filters.excludeHas && filters.excludeHas.length > 0) {
-		for (const hasType of filters.excludeHas) {
-			const field = HAS_FIELD_MAP[hasType];
-			if (field) clauses.push(meiliTermFilter(field, false));
-		}
+	for (const hasType of filters.excludeHas ?? []) {
+		const field = HAS_FIELD_MAP[hasType];
+		if (field) clauses.push(meiliTermFilter(field, false));
 	}
-	if (filters.embedType && filters.embedType.length > 0)
-		clauses.push(...meiliAndTerms('embedTypes', filters.embedType));
-	if (filters.excludeEmbedTypes && filters.excludeEmbedTypes.length > 0) {
-		clauses.push(...meiliExcludeAny('embedTypes', filters.excludeEmbedTypes));
-	}
-	if (filters.embedProvider && filters.embedProvider.length > 0)
-		clauses.push(...meiliAndTerms('embedProviders', filters.embedProvider));
-	if (filters.excludeEmbedProviders && filters.excludeEmbedProviders.length > 0) {
-		clauses.push(...meiliExcludeAny('embedProviders', filters.excludeEmbedProviders));
-	}
-	if (filters.linkHostname && filters.linkHostname.length > 0)
-		clauses.push(...meiliAndTerms('linkHostnames', filters.linkHostname));
-	if (filters.excludeLinkHostnames && filters.excludeLinkHostnames.length > 0) {
-		clauses.push(...meiliExcludeAny('linkHostnames', filters.excludeLinkHostnames));
-	}
-	if (filters.attachmentFilename && filters.attachmentFilename.length > 0) {
-		clauses.push(...meiliAndTerms('attachmentFilenames', filters.attachmentFilename));
-	}
-	if (filters.excludeAttachmentFilenames && filters.excludeAttachmentFilenames.length > 0) {
-		clauses.push(...meiliExcludeAny('attachmentFilenames', filters.excludeAttachmentFilenames));
-	}
-	if (filters.attachmentExtension && filters.attachmentExtension.length > 0) {
-		clauses.push(...meiliAndTerms('attachmentExtensions', filters.attachmentExtension));
-	}
-	if (filters.excludeAttachmentExtensions && filters.excludeAttachmentExtensions.length > 0) {
-		clauses.push(...meiliExcludeAny('attachmentExtensions', filters.excludeAttachmentExtensions));
-	}
+	clauses.push(...meiliAndTerms('embedTypes', filters.embedType ?? []));
+	clauses.push(...meiliExcludeAny('embedTypes', filters.excludeEmbedTypes ?? []));
+	clauses.push(...meiliAndTerms('embedProviders', filters.embedProvider ?? []));
+	clauses.push(...meiliExcludeAny('embedProviders', filters.excludeEmbedProviders ?? []));
+	clauses.push(...meiliAndTerms('linkHostnames', filters.linkHostname ?? []));
+	clauses.push(...meiliExcludeAny('linkHostnames', filters.excludeLinkHostnames ?? []));
+	clauses.push(...meiliAndTerms('attachmentFilenames', filters.attachmentFilename ?? []));
+	clauses.push(...meiliExcludeAny('attachmentFilenames', filters.excludeAttachmentFilenames ?? []));
+	clauses.push(...meiliAndTerms('attachmentExtensions', filters.attachmentExtension ?? []));
+	clauses.push(...meiliExcludeAny('attachmentExtensions', filters.excludeAttachmentExtensions ?? []));
 	if (filters.maxId != null) clauses.push(meiliRangeFilter('createdAt', {lt: snowflakeSeconds(filters.maxId)}));
 	if (filters.minId != null) clauses.push(meiliRangeFilter('createdAt', {gt: snowflakeSeconds(filters.minId)}));
 	return compactMeiliFilters(clauses);
@@ -145,8 +115,7 @@ function buildGuildFilters(filters: GuildSearchFilters): Array<MeilisearchFilter
 		clauses.push(meiliTermFilter('verificationLevel', filters.verificationLevel));
 	if (filters.mfaLevel !== undefined) clauses.push(meiliTermFilter('mfaLevel', filters.mfaLevel));
 	if (filters.nsfwLevel !== undefined) clauses.push(meiliTermFilter('nsfwLevel', filters.nsfwLevel));
-	if (filters.hasFeature && filters.hasFeature.length > 0)
-		clauses.push(...meiliAndTerms('features', filters.hasFeature));
+	clauses.push(...meiliAndTerms('features', filters.hasFeature ?? []));
 	if (filters.isDiscoverable !== undefined) clauses.push(meiliTermFilter('isDiscoverable', filters.isDiscoverable));
 	if (filters.discoveryCategory !== undefined)
 		clauses.push(meiliTermFilter('discoveryCategory', filters.discoveryCategory));
@@ -173,7 +142,7 @@ function buildUserFilters(filters: UserSearchFilters): Array<MeilisearchFilter |
 			filters.isPendingDeletion ? meiliExistsFilter('pendingDeletionAt') : meiliNotExistsFilter('pendingDeletionAt'),
 		);
 	}
-	if (filters.hasAcl && filters.hasAcl.length > 0) clauses.push(...meiliAndTerms('acls', filters.hasAcl));
+	clauses.push(...meiliAndTerms('acls', filters.hasAcl ?? []));
 	if (filters.createdAtGreaterThanOrEqual !== undefined) {
 		clauses.push(meiliRangeFilter('createdAt', {gte: filters.createdAtGreaterThanOrEqual}));
 	}
@@ -209,16 +178,14 @@ function buildAuditLogFilters(filters: AuditLogSearchFilters): Array<Meilisearch
 	if (filters.targetId) clauses.push(meiliTermFilter('targetId', filters.targetId));
 	if (filters.action) clauses.push(meiliTermFilter('action', filters.action));
 	if (filters.actions && filters.actions.length > 0) clauses.push(meiliTermsFilter('action', filters.actions));
-	if (filters.excludeActions && filters.excludeActions.length > 0) {
-		clauses.push(...meiliExcludeAny('action', filters.excludeActions));
-	}
+	clauses.push(...meiliExcludeAny('action', filters.excludeActions ?? []));
 	return compactMeiliFilters(clauses);
 }
 
 function buildGuildMemberFilters(filters: GuildMemberSearchFilters): Array<MeilisearchFilter | undefined> {
 	const clauses: Array<MeilisearchFilter | undefined> = [];
 	clauses.push(meiliTermFilter('guildId', filters.guildId));
-	if (filters.roleIds && filters.roleIds.length > 0) clauses.push(...meiliAndTerms('roleIds', filters.roleIds));
+	clauses.push(...meiliAndTerms('roleIds', filters.roleIds ?? []));
 	if (filters.joinedAtGte !== undefined) clauses.push(meiliRangeFilter('joinedAt', {gte: filters.joinedAtGte}));
 	if (filters.joinedAtLte !== undefined) clauses.push(meiliRangeFilter('joinedAt', {lte: filters.joinedAtLte}));
 	if (filters.joinSourceType && filters.joinSourceType.length > 0) {
@@ -243,6 +210,7 @@ export class MeilisearchMessageAdapter extends MeilisearchIndexAdapter<MessageSe
 			buildFilters: buildMessageFilters,
 			buildSort: buildTimestampSort,
 			buildQuery: buildMessageQuery,
+			matchingStrategy: 'all',
 		});
 	}
 }

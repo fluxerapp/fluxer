@@ -39,8 +39,8 @@
 	display: flex;
 	align-items: center;
 	width: 100%;
-	padding-left: var(--input-container-padding);
-	padding-right: var(--input-container-padding);
+	padding-inline-start: var(--input-container-padding);
+	padding-inline-end: var(--input-container-padding);
 	min-height: var(--message-search-bar-height);
 	border-radius: var(--radius-xl);
 	border: 0.0625rem solid var(--search-input-border-color);
@@ -81,7 +81,7 @@
 .scopeBadge {
 	position: absolute;
 	bottom: -0.25rem;
-	left: -0.25rem;
+	inset-inline-start: -0.25rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -98,7 +98,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-right: var(--message-search-bar-icon-gap);
+	margin-inline-end: var(--message-search-bar-icon-gap);
 	padding: 0;
 	border: none;
 	background: transparent;
@@ -174,7 +174,7 @@
 	gap: var(--spacing-2);
 	border: none;
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	border-radius: var(--radius-md);
 	padding: 0.1875rem var(--spacing-2);
 	cursor: pointer;
@@ -334,7 +334,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	flex-shrink: 0;
-	margin-left: 0.125rem;
+	margin-inline-start: 0.125rem;
 }
 
 .channelIcon {

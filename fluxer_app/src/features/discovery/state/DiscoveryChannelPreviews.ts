@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {DiscoveryChannelPreview} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
@@ -17,10 +19,14 @@ function entryKey(guildId: string, channelId: string): string {
 
 class DiscoveryChannelPreviews {
 	private entries = observable.map<string, DiscoveryChannelPreviewEntry>();
-	private discoveryDisabled = false;
+	private discoveryDisabledByApi = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
+	}
+
+	private get discoveryDisabled(): boolean {
+		return !RuntimeConfig.discoveryEnabled || this.discoveryDisabledByApi;
 	}
 
 	get(guildId: string, channelId: string): DiscoveryChannelPreviewEntry | undefined {
@@ -39,7 +45,7 @@ class DiscoveryChannelPreviews {
 				const code = failureCode(error);
 				runInAction(() => {
 					if (code === APIErrorCodes.DISCOVERY_DISABLED) {
-						this.discoveryDisabled = true;
+						this.discoveryDisabledByApi = true;
 						this.entries.set(key, {status: 'unavailable'});
 					} else if (code === APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE) {
 						this.entries.set(key, {status: 'unavailable'});
@@ -50,6 +56,15 @@ class DiscoveryChannelPreviews {
 			},
 		);
 	}
+
+	reset(): void {
+		this.entries.clear();
+		this.discoveryDisabledByApi = false;
+	}
 }
 
-export default new DiscoveryChannelPreviews();
+const discoveryChannelPreviews = new DiscoveryChannelPreviews();
+
+ResettableStates.register(discoveryChannelPreviews, () => discoveryChannelPreviews.reset());
+
+export default discoveryChannelPreviews;

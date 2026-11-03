@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
 import {useAuthSingleUseRequest} from '@app/features/auth/flow/AuthSingleUseRequest';
+import MfaScreen from '@app/features/auth/flow/MfaScreen';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
-import {completeSsoLogin, startSsoLogin} from '@app/features/auth/state/AuthFlow';
+import {
+	completeSsoLogin,
+	type LoginSuccessPayload,
+	type MfaChallenge,
+	startSsoLogin,
+} from '@app/features/auth/state/AuthFlow';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {type AuthRuntimeTarget, useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
 import {
 	consumeSsoPendingContext,
 	getSsoPendingContext,
+	isValidOAuthState,
 	type SsoPendingContext,
 } from '@app/features/auth/state/SsoPendingContext';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
@@ -20,17 +29,32 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {navigateToExternalURL} from '@app/features/ui/utils/NativeUtils';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import * as FormUtils from '@app/lib/forms';
 import {flxElementClassName} from '@app/lib/react';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {SSO_MOBILE_CALLBACK_URI, SSO_MOBILE_STATE_PREFIX} from '@fluxer/constants/src/SsoConstants';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useState} from 'react';
+
+interface SsoCallbackError {
+	readonly message: string;
+	readonly awaitingApproval: boolean;
+}
+
+interface SsoCallbackMfa {
+	readonly challenge: MfaChallenge;
+	readonly redirectTo: string;
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
 
 const SSO_SIGN_IN_TIMED_OUT_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'SSO sign-in timed out. Try again.',
@@ -48,7 +72,25 @@ const OPEN_PRODUCT_DESCRIPTOR = msg({
 	message: 'Open {productName}',
 	comment: 'Button that hands SSO sign-in back to the mobile app. productName is the app name.',
 });
+const SSO_SIGN_IN_CANCELLED_DESCRIPTOR = msg({
+	message: 'Sign-in was cancelled.',
+	comment: 'SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.',
+});
+const SSO_PROVIDER_NEEDS_SIGN_IN_DESCRIPTOR = msg({
+	message: 'Your provider needs you to sign in again.',
+	comment: 'SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.',
+});
+const SSO_PROVIDER_REPORTED_ERROR_DESCRIPTOR = msg({
+	message: 'Your provider reported an error.',
+	comment: 'SSO callback page error shown when the sign-in provider sent back any other error.',
+});
+const SSO_PROVIDER_SIGN_IN_AGAIN_ERRORS = new Set(['login_required', 'consent_required', 'interaction_required']);
+const SSO_CONNECTED_DESCRIPTOR = msg({
+	message: 'Your account is connected to single sign-on.',
+	comment: 'Toast shown after the account was connected to single sign-on from account settings.',
+});
 const SSO_TIMEOUT_MS = 30_000;
+const logger = new Logger('SsoCallbackPage');
 
 interface SsoCallbackParameters {
 	code: string;
@@ -58,9 +100,11 @@ interface SsoCallbackParameters {
 interface SsoCallbackAttemptDependencies {
 	callbackContext: SsoPendingContext | null;
 	callbackParameters: SsoCallbackParameters | null;
+	callbackState: string | null;
 	i18n: I18n;
 	isCurrent: () => boolean;
-	onError: (error: string) => void;
+	onError: (error: SsoCallbackError) => void;
+	onRequireMfa: (mfa: SsoCallbackMfa) => void;
 	onProcessingChange: (isProcessing: boolean) => void;
 	providerError: string | null;
 	providerErrorDescription: string | null;
@@ -78,8 +122,16 @@ function pendingRedirectTo(context: SsoPendingContext | null): string | null {
 	return context?.redirectTo ?? null;
 }
 
-function resolveSsoRedirectTarget(payloadRedirect: string | undefined, context: SsoPendingContext | null): string {
-	return safeRedirectTarget(payloadRedirect) ?? safeRedirectTarget(pendingRedirectTo(context)) ?? '/';
+function resolveSsoRedirectTarget(
+	payloadRedirect: string | undefined,
+	context: SsoPendingContext | null,
+	runtimeSnapshot: RuntimeConfigSnapshot,
+): string {
+	const target = safeRedirectTarget(payloadRedirect) ?? safeRedirectTarget(pendingRedirectTo(context)) ?? Routes.ME;
+	const singleCommunityGuildId = runtimeSnapshot.community.single_community
+		? runtimeSnapshot.community.single_community_guild_id
+		: null;
+	return target === Routes.ME && singleCommunityGuildId ? Routes.guildChannel(singleCommunityGuildId) : target;
 }
 
 class SsoCallbackAttempt {
@@ -97,9 +149,9 @@ class SsoCallbackAttempt {
 	}
 
 	private async run(): Promise<void> {
-		const providerErrorMessage = this.providerErrorMessage();
-		if (providerErrorMessage != null) {
-			this.finishWithError(providerErrorMessage);
+		const {providerError, callbackContext, i18n} = this.dependencies;
+		if (providerError != null && providerError.length > 0) {
+			this.finishWithError(i18n._(this.providerErrorDescriptor(providerError, callbackContext)));
 			return;
 		}
 		const callbackParameters = this.dependencies.callbackParameters;
@@ -115,6 +167,7 @@ class SsoCallbackAttempt {
 		const result = await completeSsoLogin({
 			code: callbackParameters.code,
 			state: callbackParameters.state,
+			clientBinding: this.dependencies.callbackContext?.clientBinding ?? null,
 			runtimeSnapshot,
 		});
 		consumeSsoPendingContext(callbackParameters.state);
@@ -122,16 +175,38 @@ class SsoCallbackAttempt {
 			return;
 		}
 		this.stopTimeout();
-		const redirectTo = resolveSsoRedirectTarget(result.redirect_to, this.dependencies.callbackContext);
-		await AuthenticationCommands.completeLogin({
-			...result,
+		if (result.type === 'mfa') {
+			this.settled = true;
+			AuthenticationCommands.setMfaTicket({...result.challenge, runtimeSnapshot});
+			this.dependencies.onRequireMfa({
+				challenge: result.challenge,
+				redirectTo: resolveSsoRedirectTarget(result.redirectTo, this.dependencies.callbackContext, runtimeSnapshot),
+				runtimeSnapshot,
+			});
+			return;
+		}
+		if (result.type === 'linked') {
+			this.settled = true;
+			ToastCommands.success(this.dependencies.i18n._(SSO_CONNECTED_DESCRIPTOR));
+			RouterUtils.replaceWith(
+				resolveSsoRedirectTarget(result.redirectTo, this.dependencies.callbackContext, runtimeSnapshot),
+			);
+			return;
+		}
+		const redirectTo = resolveSsoRedirectTarget(
+			result.payload.redirect_to,
+			this.dependencies.callbackContext,
 			runtimeSnapshot,
-		});
+		);
+		await AuthenticationCommands.completeLogin(
+			{
+				...result.payload,
+				runtimeSnapshot,
+			},
+			{redirectPath: redirectTo},
+		);
 		this.dependencies.runtimeTarget.reset();
 		this.settled = true;
-		if (this.dependencies.isCurrent()) {
-			RouterUtils.replaceWith(redirectTo);
-		}
 	}
 
 	private handleTimeout(): void {
@@ -140,14 +215,19 @@ class SsoCallbackAttempt {
 	}
 
 	private handleFailure(error: unknown): void {
+		if (!this.settled && AuthenticationCommands.showAccountRestriction(error)) {
+			this.settled = true;
+			this.stopTimeout();
+			return;
+		}
 		const message =
 			error != null && typeof error === 'object' && 'body' in error
 				? FormUtils.extractErrorMessage(this.dependencies.i18n, error)
 				: this.dependencies.i18n._(FAILED_TO_COMPLETE_SSO_SIGN_IN_DESCRIPTOR);
-		this.finishWithError(message);
+		this.finishWithError(message, failureCode(error) === APIErrorCodes.REGISTRATION_PENDING_APPROVAL);
 	}
 
-	private finishWithError(error: string): void {
+	private finishWithError(message: string, awaitingApproval = false): void {
 		if (this.settled) {
 			return;
 		}
@@ -156,19 +236,24 @@ class SsoCallbackAttempt {
 		if (!this.dependencies.isCurrent()) {
 			return;
 		}
-		this.dependencies.onError(error);
+		this.dependencies.onError({message, awaitingApproval});
 		this.dependencies.onProcessingChange(false);
 	}
 
-	private providerErrorMessage(): string | null {
-		const {providerError, providerErrorDescription} = this.dependencies;
-		if (providerError == null || providerError.length === 0) {
-			return null;
+	private providerErrorDescriptor(providerError: string, callbackContext: SsoPendingContext | null): MessageDescriptor {
+		const {callbackState, providerErrorDescription} = this.dependencies;
+		if (callbackContext == null || callbackState == null) {
+			return FAILED_TO_COMPLETE_SSO_SIGN_IN_DESCRIPTOR;
 		}
-		if (providerErrorDescription != null && providerErrorDescription.length > 0) {
-			return `${providerError}: ${providerErrorDescription}`;
+		consumeSsoPendingContext(callbackState);
+		logger.warn('SSO provider returned an error', {error: providerError, description: providerErrorDescription});
+		if (providerError === 'access_denied') {
+			return SSO_SIGN_IN_CANCELLED_DESCRIPTOR;
 		}
-		return providerError;
+		if (SSO_PROVIDER_SIGN_IN_AGAIN_ERRORS.has(providerError)) {
+			return SSO_PROVIDER_NEEDS_SIGN_IN_DESCRIPTOR;
+		}
+		return SSO_PROVIDER_REPORTED_ERROR_DESCRIPTOR;
 	}
 
 	private stopTimeout(): void {
@@ -193,9 +278,10 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 	const mobileCallbackUrl = state?.startsWith(SSO_MOBILE_STATE_PREFIX)
 		? `${SSO_MOBILE_CALLBACK_URI}${window.location.search}`
 		: null;
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<SsoCallbackError | null>(null);
 	const [isProcessing, setIsProcessing] = useState(true);
 	const [pendingContext, setPendingContext] = useState<SsoPendingContext | null>(null);
+	const [mfa, setMfa] = useState<SsoCallbackMfa | null>(null);
 	const handleBackToLogin = useCallback(() => {
 		if (state != null && state.length > 0) {
 			consumeSsoPendingContext(state);
@@ -226,19 +312,40 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			RouterUtils.replaceWith('/login');
 		}
 	}, [pendingContext, runtimeTarget]);
+	const handleMfaSuccess = useCallback(
+		async (payload: LoginSuccessPayload) => {
+			if (mfa == null) {
+				return;
+			}
+			await AuthenticationCommands.completeLogin(
+				{...payload, runtimeSnapshot: mfa.runtimeSnapshot},
+				{redirectPath: mfa.redirectTo},
+			);
+			AuthenticationCommands.clearMfaTicket();
+			runtimeTarget.reset();
+		},
+		[mfa, runtimeTarget],
+	);
+	const handleMfaCancel = useCallback(() => {
+		AuthenticationCommands.clearMfaTicket();
+		setMfa(null);
+		handleBackToLogin();
+	}, [handleBackToLogin]);
 	useAuthSingleUseRequest(`${code ?? ''}:${state ?? ''}`, (request) => {
 		if (mobileCallbackUrl != null) {
 			window.location.replace(mobileCallbackUrl);
 			return;
 		}
-		const callbackContext = state == null ? null : getSsoPendingContext(state);
+		const callbackContext = state == null || !isValidOAuthState(state) ? null : getSsoPendingContext(state);
 		setPendingContext(callbackContext);
 		const attempt = new SsoCallbackAttempt({
 			callbackContext,
 			callbackParameters: resolveCallbackParameters(code, state),
+			callbackState: state,
 			i18n,
 			isCurrent: () => request.isCurrent(),
 			onError: setError,
+			onRequireMfa: setMfa,
 			onProcessingChange: setIsProcessing,
 			providerError,
 			providerErrorDescription,
@@ -247,6 +354,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 		attempt.start();
 	});
 	if (mobileCallbackUrl != null) {
+		const productName = RuntimeConfig.productName;
 		return (
 			<flx-auth-sso-callback-page
 				className={flxElementClassName(styles.loginContainer)}
@@ -256,7 +364,9 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 					<Trans>Completing sign-in…</Trans>
 				</h1>
 				<p className={styles.ssoProcessingHint} data-flx="auth.sso-callback-page.sso-processing-hint--mobile">
-					<Trans>Jump straight to the app to continue.</Trans>
+					<Trans comment="Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.">
+						Continue in the {productName} app.
+					</Trans>
 				</p>
 				<flx-auth-sso-callback-page-actions
 					className={flxElementClassName(styles.ssoCallbackActions)}
@@ -273,6 +383,16 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			</flx-auth-sso-callback-page>
 		);
 	}
+	if (mfa != null) {
+		return (
+			<MfaScreen
+				challenge={mfa.challenge}
+				onSuccess={handleMfaSuccess}
+				onCancel={handleMfaCancel}
+				data-flx="auth.sso-callback-page.mfa-screen"
+			/>
+		);
+	}
 	if (error != null) {
 		return (
 			<flx-auth-sso-callback-page
@@ -280,27 +400,35 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 				data-flx="auth.sso-callback-page.login-container"
 			>
 				<h1 className={styles.title} data-flx="auth.sso-callback-page.title">
-					<Trans>SSO sign-in failed</Trans>
+					{error.awaitingApproval ? (
+						<Trans comment="Heading on the SSO callback page when the new account is waiting for an admin to approve it.">
+							Waiting for approval
+						</Trans>
+					) : (
+						<Trans>SSO sign-in failed</Trans>
+					)}
 				</h1>
 				<flx-auth-sso-callback-page-notice
 					aria-live="assertive"
 					className={flxElementClassName(styles.loginNotice)}
 					data-flx="auth.sso-callback-page.login-notice"
 				>
-					{error}
+					{error.message}
 				</flx-auth-sso-callback-page-notice>
 				<flx-auth-sso-callback-page-actions
 					className={flxElementClassName(styles.ssoCallbackActions)}
 					data-flx="auth.sso-callback-page.sso-callback-actions"
 				>
-					<button
-						type="button"
-						onClick={handleRetry}
-						className={styles.ssoRetryButton}
-						data-flx="auth.sso-callback-page.sso-retry-button"
-					>
-						{i18n._(TRY_AGAIN_DESCRIPTOR)}
-					</button>
+					{error.awaitingApproval ? null : (
+						<button
+							type="button"
+							onClick={handleRetry}
+							className={styles.ssoRetryButton}
+							data-flx="auth.sso-callback-page.sso-retry-button"
+						>
+							{i18n._(TRY_AGAIN_DESCRIPTOR)}
+						</button>
+					)}
 					<button
 						type="button"
 						onClick={handleBackToLogin}

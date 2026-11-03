@@ -6,6 +6,10 @@ import {formatAssetUploadExtensions, formatKnownAnimatedAssetExtensions} from '@
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
 
 export {PRODUCT_NAME};
+export const PRODUCT_LABS_COMMUNITY_NAME = `${PRODUCT_NAME} Labs`;
+export const OPERATOR_PASS_NAME = 'Operator Pass';
+export const OPERATOR_PASS_SELLER_ADDRESS = 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm';
+export const OPERATOR_PASS_SELLER_PHONE = '+46 79 101 18 18';
 export const DESKTOP_ENTRY_NAME = 'Fluxer';
 export const CANARY_DESKTOP_ENTRY_NAME = 'Fluxer Canary';
 export const PAYMENT_PROVIDER_NAME = 'Stripe';
@@ -37,17 +41,16 @@ export const EXAMPLE_USERNAME_MENTION = '@username';
 export const EXAMPLE_FLUXER_TAG_FULL = 'Username#0000';
 export const EXAMPLE_USERNAME = 'Username';
 export const VISIONARY_LIFETIME_BADGE_LABEL = 'Visionary #42';
-export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.app';
+export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.com';
 export const EXAMPLE_GIF_URLS = `${EXAMPLE_URL}/gif1.gif\n${EXAMPLE_URL}/gif2.gif`;
 export const THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL = `https://${THE_OTHER_PLATFORM.toLowerCase()}.new/abcd1234`;
 const DESKTOP_DOWNLOAD_URLS: Record<string, string> = {
-	stable: 'https://fluxer.app/download',
-	canary: 'https://canary.fluxer.app/download',
+	stable: 'https://fluxer.com/download',
+	canary: 'https://canary.fluxer.com/download',
 	development: 'http://localhost:8088/download',
 };
 
-export const DESKTOP_DOWNLOAD_URL =
-	DESKTOP_DOWNLOAD_URLS[Config.PUBLIC_RELEASE_CHANNEL] ?? DESKTOP_DOWNLOAD_URLS.stable;
+export const DESKTOP_DOWNLOAD_URL = DESKTOP_DOWNLOAD_URLS[Config.RELEASE_CHANNEL] ?? DESKTOP_DOWNLOAD_URLS.stable;
 export const FLUXER_DOCS_DOMAIN = 'fluxer.dev';
 export const FLUXER_DOCS_URL = `https://${FLUXER_DOCS_DOMAIN}`;
 export const FLUXER_BLUESKY_HANDLE = '@fluxer.app';
@@ -67,7 +70,6 @@ export const STATIC_IMAGE_WITH_AVIF_FORMATS = formatAssetUploadExtensions('splas
 export const ANIMATED_IMAGE_FORMATS = formatAssetUploadExtensions('avatar');
 export const ANIMATED_AVATAR_FORMATS = formatKnownAnimatedAssetExtensions('avatar');
 export const AVIF_FORMAT_LABEL = 'AVIF';
-export const IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const BACKGROUND_MEDIA_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const CUSTOM_SOUND_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 export const AVATAR_RECOMMENDED_SIZE_LABEL = '512×512px';

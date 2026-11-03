@@ -3,9 +3,12 @@
 import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const DEFAULT_DISCOVERY_PAGE_SIZE = 36;
+const logger = new Logger('Discovery');
 
 class Discovery {
 	guilds: Array<DiscoveryGuild> = [];
@@ -89,19 +92,24 @@ class Discovery {
 				this.categoryCounts = result.categoryCounts;
 				this.loading = false;
 			});
-		} catch {
+		} catch (error) {
 			runInAction(() => {
 				if (searchToken !== this.activeSearchToken) {
 					return;
 				}
 				this.loading = false;
 				this.error = true;
+				if (!isAbortError(error)) {
+					logger.warn('Failed to load discovery search results', {offset, limit, error});
+				}
 			});
 		}
 	}
 
 	async loadCategories(): Promise<void> {
-		if (this.categoriesLoaded) return;
+		if (this.categoriesLoaded) {
+			return;
+		}
 		try {
 			const categories = await DiscoveryCommands.getCategories();
 			runInAction(() => {
@@ -109,9 +117,12 @@ class Discovery {
 				this.categoriesLoaded = true;
 				this.categoriesError = false;
 			});
-		} catch {
+		} catch (error) {
 			runInAction(() => {
 				this.categoriesError = true;
+				if (!isAbortError(error)) {
+					logger.warn('Failed to load discovery categories', {error});
+				}
 			});
 		}
 	}

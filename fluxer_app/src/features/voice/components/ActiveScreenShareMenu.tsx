@@ -34,7 +34,6 @@ export interface ActiveScreenShareMenuProps {
 	shareContext: StreamSettingsShareContext;
 	shareContextResolved: boolean;
 	iconClassName?: string;
-	additionalActions?: React.ReactNode;
 	tail?: React.ReactNode;
 }
 
@@ -58,7 +57,6 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 	shareContext,
 	shareContextResolved,
 	iconClassName,
-	additionalActions,
 	tail,
 }) => {
 	const {i18n} = useLingui();
@@ -106,7 +104,6 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 				>
 					{i18n._(CHANGE_STREAM_DESCRIPTOR)}
 				</MenuItem>
-				{additionalActions}
 				{!isWeb && (
 					<StreamSettingsMenuContent
 						applyToLiveStream

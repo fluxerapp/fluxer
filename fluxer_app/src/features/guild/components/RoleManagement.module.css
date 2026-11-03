@@ -21,6 +21,7 @@
 	border: 0.0625rem solid var(--background-header-secondary);
 	background-color: var(--background-primary);
 	padding: 0.25rem;
+	gap: 0.25rem;
 	font-weight: 600;
 	font-size: 0.75rem;
 	line-height: 1rem;
@@ -48,7 +49,7 @@
 }
 
 .roleName {
-	margin-right: 0.125rem;
+	margin-inline-end: 0.125rem;
 	min-width: 0;
 	max-width: 12.5rem;
 	overflow: hidden;

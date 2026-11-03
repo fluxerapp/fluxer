@@ -6,13 +6,7 @@ description: Thread member objects, joining and leaving threads, member lists, a
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A thread member records that a user joined a [thread](/http-api/threads/). A thread holds at most 1,000 members, and adding one more returns 400 `MAX_THREAD_MEMBERS`.
-
-:::note[User requests need the `channel_threads` client capability]
-A request from a user without the [`channel_threads` client capability](/http-api/threads/#client-capability) returns 404 `NOT_FOUND`. [Get thread member](#get-thread-member) and [List thread members](#list-thread-members) return 404 `NOT_FOUND` to every user. A `channel_id` that does not exist or names a channel outside a guild returns the same 404.
-:::
-
-A route on this page returns 403 `MISSING_PERMISSIONS` when the caller is not a member of the guild, unless its own entry states an earlier result. A guild channel that is not a thread and that the caller cannot view also returns 403 `MISSING_PERMISSIONS`. A thread whose parent channel no longer exists returns 404 `UNKNOWN_CHANNEL`.
+A thread member records that a user joined a [thread](/http-api/threads/). A thread has at most 1,000 members. Requests from users need the [`channel_threads` client capability](/http-api/threads/#client-capability) and otherwise return 404 `NOT_FOUND`. Every endpoint returns 400 `INVALID_CHANNEL_TYPE` when the channel is not a thread and 403 `MISSING_ACCESS` when you cannot view it.
 
 ## Thread member object
 
@@ -25,14 +19,14 @@ A route on this page returns 403 `MISSING_PERMISSIONS` when the caller is not a 
 | join_timestamp | ISO8601 timestamp | The time the user last joined the thread |
 | flags | integer | The [thread member flags](#thread-member-flags) |
 | muted?<sup>2</sup> | boolean | Whether the user muted the thread |
-| mute_config?<sup>2</sup> | ?[guild mute configuration](/http-api/users/settings/#guild-mute-configuration-object) object | The mute expiry of the thread, or null when none is stored |
+| mute_config?<sup>2</sup> | ?[guild mute configuration](/http-api/users/settings/#guild-mute-configuration-object) object | The mute expiry of the thread |
 | member?<sup>3</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The guild member of the user |
 
-<sup>1</sup> Omitted on the `member` of a thread in [Ready](/gateway/events/#ready), [Guild Create](/gateway/events/#guild-create), and [Guild Sync](/gateway/events/#guild-sync)
+<sup>1</sup> Omitted on the `member` of a thread in [Ready](/gateway/events/#ready), [Guild Create](/gateway/events/#guild-create) and [Guild Sync](/gateway/events/#guild-sync)
 
 <sup>2</sup> Present only on the caller's own membership
 
-<sup>3</sup> In an HTTP response, present only when the request sets `with_member` and the user is still a guild member. [Thread Members Update](/gateway/threads/#thread-members-update) defines it on each `added_members` entry
+<sup>3</sup> Present when the request sets `with_member` and the user is still in the guild. Each `added_members` entry of [Thread Members Update](/gateway/threads/#thread-members-update) also has it
 
 ### Example
 
@@ -49,6 +43,8 @@ A route on this page returns 403 `MISSING_PERMISSIONS` when the caller is not a 
 
 ## Thread member flags
 
+At most one of `ALL_MESSAGES`, `ONLY_MENTIONS` and `NO_MESSAGES` is set. With none set, the thread follows the notification level of its parent.
+
 | Value | Name | Description |
 | --- | --- | --- |
 | 1 &lt;&lt; 0 | HAS_INTERACTED<sup>1</sup> | The user sent a message in the thread or created it |
@@ -56,184 +52,86 @@ A route on this page returns 403 `MISSING_PERMISSIONS` when the caller is not a 
 | 1 &lt;&lt; 2 | ONLY_MENTIONS | Notify the user only of mentions in the thread |
 | 1 &lt;&lt; 3 | NO_MESSAGES | Notify the user of nothing in the thread |
 
-<sup>1</sup> Set only by Fluxer. A bot that creates a thread starts without it
-
-At most one of the three notification flags is set. With none set, the thread follows the notification level of its parent.
-
-A member keeps the membership after losing access to the parent. Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them.
+<sup>1</sup> A bot that creates a thread doesn't get this flag until it sends a message there
 
 ## Join thread
 
 <RouteHeader method="PUT" path="/v1/channels/{channel_id}/thread-members/@me" bot />
 
-Adds the caller to a thread. Returns 204 with no body. Emits a [Thread Members Update](/gateway/threads/#thread-members-update) Gateway event.
-
-### Limitations
-
-- The caller must be able to view the thread.
-- The thread must not be archived.
-- A locked thread requires a thread moderator.
-
-Joining a thread the caller already belongs to runs the checks above, then returns 204 and changes nothing. Each session of a newly added user receives [Thread Create](/gateway/threads/#thread-create) when it has [thread access](/gateway/threads/#session-flag) and can view the thread. A session still connecting to the guild receives none.
-
-Joining a locked thread needs an enrolled authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless the caller owns the guild.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
+Adds you to a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event. You need to be able to view the thread, and to be a thread moderator if it is locked. Joining a locked thread also needs an enrolled authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless you own the guild.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Caller is a member |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
-| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
-| 400 | [error response](/http-api/#error-response) | Thread has 1,000 members and the request returns `MAX_THREAD_MEMBERS` |
-| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
+| 204 | empty | The caller is a member |
+| 400 | [error response](/http-api/#error-response) | `THREAD_ARCHIVED` when the thread is archived |
+| 400 | [error response](/http-api/#error-response) | `THREAD_LOCKED` when the thread is locked and the caller is not a thread moderator |
+| 400 | [error response](/http-api/#error-response) | `MAX_THREAD_MEMBERS` when the thread has 1,000 members |
+| 400 | [error response](/http-api/#error-response) | `TWO_FACTOR_REQUIRED` when the caller needs an authenticator |
+| 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when the caller cannot view the thread |
 
-### Rate limit
-
-10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:put::channel_id` bucket.
+The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:put::channel_id` bucket.
 
 ## Add thread member
 
 <RouteHeader method="PUT" path="/v1/channels/{channel_id}/thread-members/{user_id}" bot />
 
-Adds another guild member to a thread. Requires `SEND_MESSAGES_IN_THREADS`. Returns 204 with no body. Emits a [Thread Members Update](/gateway/threads/#thread-members-update) Gateway event.
-
-### Limitations
-
-- The caller must be able to view the thread.
-- The thread must not be archived.
-- A locked thread requires a thread moderator.
-- A private thread with `invitable` false requires the caller or the target to be a thread moderator.
-- The target must be a guild member who can view the parent.
-
-`user_id` of `@me` behaves as [Join thread](#join-thread). A request that names the caller's own ID runs the checks above, and Fluxer posts no message for it. Adding a user who is already a member runs the checks above, then returns 204 and changes nothing. Each session of a newly added user receives [Thread Create](/gateway/threads/#thread-create) when it has [thread access](/gateway/threads/#session-flag) and can view the thread. A session still connecting to the guild receives none.
-
-Adding to a locked thread needs an enrolled authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless the caller owns the guild. Adding a target who is not a thread moderator to a private thread with `invitable` false needs one too.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
-| user_id | snowflake | The ID of the user to add |
+Adds a guild member to a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event. You need `SEND_MESSAGES_IN_THREADS`. In a private thread that is not `invitable`, you or the target must be a thread moderator. When the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and you don't own the guild, you need an enrolled authenticator to add someone to a locked thread. The same applies to adding someone who is not a thread moderator to that kind of private thread. A `user_id` of `@me` works like [Join thread](#join-thread).
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Target is a member |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
-| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
-| 400 | [error response](/http-api/#error-response) | Thread has 1,000 members and the request returns `MAX_THREAD_MEMBERS` |
-| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 403 | [error response](/http-api/#error-response) | Caller lacks `SEND_MESSAGES_IN_THREADS` and the request returns `MISSING_PERMISSIONS` |
-| 403 | [error response](/http-api/#error-response) | Neither user is a thread moderator in a private thread that is not `invitable`, returning `MISSING_PERMISSIONS` |
-| 403 | [error response](/http-api/#error-response) | Target cannot view the parent and the request returns `MISSING_ACCESS` |
-| 403 | [error response](/http-api/#error-response) | Caller is timed out and the request returns `COMMUNICATION_DISABLED` |
-| 404 | [error response](/http-api/#error-response) | Target is not a guild member and the request returns `UNKNOWN_MEMBER` |
+| 204 | empty | The target is a member |
+| 400 | [error response](/http-api/#error-response) | `THREAD_ARCHIVED`, `THREAD_LOCKED`, `MAX_THREAD_MEMBERS` or `TWO_FACTOR_REQUIRED`, as for [Join thread](#join-thread) |
+| 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when the caller cannot view the thread or the target cannot view the parent |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when the caller lacks `SEND_MESSAGES_IN_THREADS` |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` in a private thread that is not `invitable` when neither user is a thread moderator |
+| 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when the caller is timed out |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_MEMBER` when the target is not a guild member |
 
-### Side effects
-
-Adding another user posts a `RECIPIENT_ADD` message in the thread that mentions the target. Fluxer emits [Message Create](/gateway/events/#message-create) for it.
-
-### Rate limit
-
-10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:put::channel_id` bucket.
+Adding another user posts a `RECIPIENT_ADD` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:put::channel_id` bucket.
 
 ## Leave thread
 
 <RouteHeader method="DELETE" path="/v1/channels/{channel_id}/thread-members/@me" bot />
 
-Removes the caller from a thread. Returns 204 with no body. Emits a [Thread Members Update](/gateway/threads/#thread-members-update) Gateway event.
-
-A timed-out member can leave a thread. A member who can no longer view the thread receives 403 `MISSING_ACCESS`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
+Removes you from a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Caller left the thread |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 404 | [error response](/http-api/#error-response) | Caller is not a member and the request returns `UNKNOWN_THREAD_MEMBER` |
+| 204 | empty | The caller left the thread |
+| 400 | [error response](/http-api/#error-response) | `THREAD_ARCHIVED` when the thread is archived |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the caller is not a member |
 
-### Rate limit
-
-10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:delete::channel_id` bucket.
+The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:delete::channel_id` bucket.
 
 ## Remove thread member
 
 <RouteHeader method="DELETE" path="/v1/channels/{channel_id}/thread-members/{user_id}" bot />
 
-Removes a member from a thread. Requires `MANAGE_THREADS`, or ownership of a private thread. Returns 204 with no body. Emits a [Thread Members Update](/gateway/threads/#thread-members-update) Gateway event.
-
-### Limitations
-
-- The caller must be able to view the thread.
-- The thread must not be archived.
-- The caller must be a [thread moderator](/http-api/threads/#thread-moderators) or the owner of the private thread.
-
-`user_id` of `@me` or of the caller behaves as [Leave thread](#leave-thread).
-
-Removing a member needs an enrolled authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless the caller owns the guild or the private thread.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
-| user_id | snowflake | The ID of the user to remove |
+Removes a member from a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event. You need to be a [thread moderator](/http-api/threads/#thread-moderators) or the owner of the private thread. When the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, you also need an enrolled authenticator unless you own the guild or the private thread. A `user_id` of `@me` or of the caller works like [Leave thread](#leave-thread).
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Member was removed |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
-| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 403 | [error response](/http-api/#error-response) | Caller is neither a thread moderator nor the owner of the private thread and the request returns `MISSING_PERMISSIONS` |
-| 403 | [error response](/http-api/#error-response) | Caller is timed out and the request returns `COMMUNICATION_DISABLED` |
-| 404 | [error response](/http-api/#error-response) | Target is not a member and the request returns `UNKNOWN_THREAD_MEMBER` |
+| 204 | empty | The member was removed |
+| 400 | [error response](/http-api/#error-response) | `THREAD_ARCHIVED` or `TWO_FACTOR_REQUIRED`, as for [Join thread](#join-thread) |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when the caller is neither a thread moderator nor the owner of the private thread |
+| 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when the caller is timed out |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the target is not a member |
 
-### Side effects
-
-Removing another user posts a `RECIPIENT_REMOVE` message in the thread that mentions the target. Fluxer emits [Message Create](/gateway/events/#message-create) for it.
-
-### Rate limit
-
-10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:delete::channel_id` bucket.
+Fluxer posts a `RECIPIENT_REMOVE` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:delete::channel_id` bucket.
 
 ## Get thread member
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/thread-members/{user_id}" bot />
 
-Returns the [thread member object](#thread-member-object) of a user. Requires a bot token.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
-| user_id | snowflake | The ID of the user |
+Returns the [thread member object](#thread-member-object) of a user. Only bots can call it, and users get 404 `NOT_FOUND`.
 
 ### Query parameters
 
@@ -245,29 +143,16 @@ Returns the [thread member object](#thread-member-object) of a user. Requires a 
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [thread member](#thread-member-object) object | Member was returned |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 404 | [error response](/http-api/#error-response) | User is not a member and the request returns `UNKNOWN_THREAD_MEMBER` |
-| 404 | [error response](/http-api/#error-response) | Caller is a user and the request returns `NOT_FOUND` |
+| 200 | [thread member](#thread-member-object) object | The member was returned |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the user is not a member |
 
-### Rate limit
-
-40 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:get::channel_id` bucket.
+The rate limit is 40 requests per 10 seconds, on the `channel:thread:member:get::channel_id` bucket.
 
 ## List thread members
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/thread-members" bot />
 
-Returns the [thread member objects](#thread-member-object) of a thread in ascending user ID order. Requires a bot token.
-
-A user client reads member lists through the `thread_member_lists` option of [Lazy Request](/gateway/commands/#lazy-request).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
+Returns the [thread member objects](#thread-member-object) of a thread in ascending user ID order. Only bots can call it, and users get 404 `NOT_FOUND`. User clients use the `thread_member_lists` option of [Lazy Request](/gateway/commands/#lazy-request).
 
 ### Query parameters
 
@@ -281,26 +166,15 @@ A user client reads member lists through the `thread_member_lists` option of [La
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | array[[thread member](#thread-member-object) object] | Members were returned |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 404 | [error response](/http-api/#error-response) | Caller is a user and the request returns `NOT_FOUND` |
+| 200 | array[[thread member](#thread-member-object) object] | The members were returned |
 
-### Rate limit
-
-20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:members:list::channel_id` bucket.
+The rate limit is 20 requests per 10 seconds, on the `channel:thread:members:list::channel_id` bucket.
 
 ## Modify thread member settings
 
 <RouteHeader method="PATCH" path="/v1/channels/{channel_id}/thread-members/@me/settings" />
 
-Changes the caller's notification settings for a thread they joined. User-only. Returns the updated [thread member object](#thread-member-object), or 204 when nothing changed. Emits a [Thread Member Update](/gateway/threads/#thread-member-update) Gateway event.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channel_id | snowflake | The ID of the thread |
+Changes your notification settings for a thread you joined and sends a [Thread Member Update](/gateway/threads/#thread-member-update) event. While `muted` is true, you get no push notifications from the thread, including for mentions.
 
 ### JSON body
 
@@ -312,20 +186,14 @@ Changes the caller's notification settings for a thread they joined. User-only. 
 
 <sup>1</sup> Replaces the three notification flags and keeps `HAS_INTERACTED`. A value of 0 clears them
 
-While `muted` is true, the member receives no push notification from the thread, including for a mention. A mute with an `end_time` stops when that time passes.
-
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [thread member](#thread-member-object) object | Settings changed |
+| 200 | [thread member](#thread-member-object) object | The settings changed |
 | 204 | empty | The body matched the stored settings |
-| 400 | [error response](/http-api/#error-response) | `flags` sets more than one notification flag or any other bit and the request returns `INVALID_THREAD_NOTIFICATION_SETTINGS` |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 403 | [error response](/http-api/#error-response) | Caller is a bot and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | Caller cannot view the thread and the request returns `MISSING_ACCESS` |
-| 404 | [error response](/http-api/#error-response) | Caller is not a member and the request returns `UNKNOWN_THREAD_MEMBER` |
+| 400 | [error response](/http-api/#error-response) | `INVALID_THREAD_NOTIFICATION_SETTINGS` when `flags` sets more than one notification flag or any other bit |
+| 403 | [error response](/http-api/#error-response) | `ACCESS_DENIED` when the caller is a bot |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the caller is not a member |
 
-### Rate limit
-
-10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:member:settings::channel_id` bucket.
+The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:settings::channel_id` bucket.

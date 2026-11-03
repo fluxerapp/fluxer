@@ -42,7 +42,7 @@ export interface DesktopModuleEnsureResult {
 	readonly status: DesktopModuleEnsureStatus;
 }
 
-export interface DesktopPendingModuleUpdate {
+interface DesktopPendingModuleUpdate {
 	readonly modules: ReadonlyArray<string>;
 }
 
@@ -57,6 +57,7 @@ export interface DesktopModuleAPI {
 export interface DesktopUpdateState {
 	readonly available: boolean;
 	readonly updating?: boolean;
+	readonly replacesShell?: boolean;
 }
 
 export interface DesktopUpdateAPI {

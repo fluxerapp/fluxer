@@ -7,10 +7,5 @@ export default {
 		environment: 'node',
 		include: ['**/*.{test,spec}.{ts,tsx}'],
 		exclude: ['node_modules', 'dist'],
-		coverage: {
-			provider: 'v8',
-			reporter: ['text', 'json', 'html'],
-			exclude: ['**/*.test.tsx', '**/*.spec.tsx', 'node_modules/'],
-		},
 	},
 };

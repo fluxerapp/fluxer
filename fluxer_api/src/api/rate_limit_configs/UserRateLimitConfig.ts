@@ -256,4 +256,20 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:entrance_sound:mutate',
 		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_DATE_OF_BIRTH: {
+		bucket: 'user:date_of_birth',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_CLAIM: {
+		bucket: 'user:claim',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_EMAIL_VERIFICATION: {
+		bucket: 'user:email_verification',
+		config: {limit: 3, windowMs: ms('15 minutes')},
+	} as RouteRateLimitConfig,
+	USER_EMAIL_VERIFICATION_CONFIRM: {
+		bucket: 'user:email_verification:confirm',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 } as const;

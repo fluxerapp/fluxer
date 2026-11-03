@@ -46,3 +46,8 @@ export const UNBLOCK_USER_ACTION_DESCRIPTOR = msg({
 	message: 'Unblock',
 	comment: 'Relationship action label for removing a block from this user.',
 });
+export const FRIENDS_DISABLED_DESCRIPTOR = msg({
+	message: 'Friend requests are turned off on this instance.',
+	comment:
+		'Error shown when sending or accepting a friend request fails because the instance admins have turned off friends for the whole instance.',
+});

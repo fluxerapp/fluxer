@@ -75,4 +75,26 @@ export class PremiumStateReconciliationQueueService {
 			throw error;
 		}
 	}
+
+	async enqueueUserBestEffort(
+		userId: UserID,
+		context: {
+			reason: string;
+			subscriptionId?: string;
+		},
+	): Promise<void> {
+		try {
+			await this.enqueueUser(userId);
+		} catch (error) {
+			Logger.warn(
+				{
+					error,
+					userId: userId.toString(),
+					reason: context.reason,
+					subscriptionId: context.subscriptionId,
+				},
+				'Failed to enqueue premium reconciliation from Stripe webhook',
+			);
+		}
+	}
 }

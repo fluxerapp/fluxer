@@ -105,7 +105,7 @@ let stampSequence = 0;
 
 function nextStamp(): AppStorageStamp {
 	const now = Date.now();
-	stampWall = now > stampWall ? now : stampWall;
+	stampWall = Math.max(now, stampWall);
 	stampSequence += 1;
 	return {wall: stampWall, seq: stampSequence};
 }
@@ -608,4 +608,14 @@ export function getPersistentStorageBackend(): PersistentStorageBackend {
 
 export function installPersistentStorageBackend(backend: PersistentStorageBackend): void {
 	sharedBackend = backend;
+}
+
+export function switchToMemoryPersistentStorageBackend(): PersistentStorageBackend {
+	const current = getPersistentStorageBackend();
+	if (current.kind === PersistentStorageBackendKind.MEMORY) {
+		return current;
+	}
+	const memory = createMemoryBackend();
+	sharedBackend = memory;
+	return memory;
 }

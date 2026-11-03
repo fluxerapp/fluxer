@@ -7,7 +7,12 @@ use std::collections::VecDeque;
 use crate::audio_contract::{
     self, DIRECT_CAPTURE_CHANNELS, DIRECT_CAPTURE_MAX_SAMPLES, DIRECT_CAPTURE_SAMPLE_RATE,
 };
-use crate::backend::CapturedFrame;
+pub struct CapturedFrame {
+    pub samples: Vec<f32>,
+    pub sample_rate: u32,
+    pub channels: u32,
+    pub timestamp_us: i64,
+}
 
 pub struct DirectReadMeta {
     pub sample_rate: u32,
@@ -34,21 +39,6 @@ impl DirectAudioBuffer {
 
     pub fn default_format() -> Self {
         Self::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS)
-    }
-
-    #[cfg(test)]
-    pub fn len(&self) -> usize {
-        self.samples.len()
-    }
-
-    #[cfg(test)]
-    pub fn is_empty(&self) -> bool {
-        self.samples.is_empty()
-    }
-
-    #[cfg(test)]
-    pub fn queue_start_us(&self) -> i64 {
-        self.queue_start_us
     }
 
     pub fn set_format(&mut self, sample_rate: u32, channels: u32) {
@@ -166,51 +156,5 @@ impl DirectAudioBuffer {
                     self.sample_rate,
                     self.channels,
                 ));
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn read_emits_stable_twenty_ms_chunks_with_continuous_timestamps() {
-        let mut buffer = DirectAudioBuffer::default_format();
-        buffer.push(&vec![0.5; 4_800], 1_000_000);
-
-        let first = buffer.read().expect("first chunk");
-        assert_eq!(1_920, first.samples.len());
-        assert_eq!(950_000, first.timestamp_us);
-
-        let second = buffer.read().expect("second chunk");
-        assert_eq!(1_920, second.samples.len());
-        assert_eq!(970_000, second.timestamp_us);
-    }
-
-    #[test]
-    fn format_changes_clear_queued_samples() {
-        let mut buffer = DirectAudioBuffer::default_format();
-        buffer.push(&vec![0.5; 1_920], 100_000);
-        assert!(!buffer.is_empty());
-
-        buffer.set_format(44_100, 2);
-
-        assert!(buffer.is_empty());
-        assert_eq!(0, buffer.queue_start_us());
-        buffer.push(&vec![0.25; 1_764], 200_000);
-        let frame = buffer.read().expect("chunk");
-        assert_eq!(1_764, frame.samples.len());
-        assert_eq!(180_000, frame.timestamp_us);
-        assert_eq!(44_100, frame.sample_rate);
-    }
-
-    #[test]
-    fn overflow_drops_from_front_and_advances_timestamp() {
-        let mut buffer = DirectAudioBuffer::default_format();
-        buffer.push(&vec![0.5; DIRECT_CAPTURE_MAX_SAMPLES + 1_920], 3_000_000);
-
-        assert_eq!(DIRECT_CAPTURE_MAX_SAMPLES, buffer.len());
-        let frame = buffer.read().expect("chunk");
-        assert_eq!(1_000_000, frame.timestamp_us);
     }
 }

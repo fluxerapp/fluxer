@@ -17,10 +17,8 @@
 
 .contextMenu {
 	--context-menu-viewport-max-width: calc(100vw - 1.5rem);
-	--context-menu-hover-border: color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary));
 	--context-menu-danger-text: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 	--context-menu-danger-background: color-mix(in srgb, var(--status-danger) 6%, var(--surface-interactive-hover-bg));
-	--context-menu-danger-border: color-mix(in srgb, var(--status-danger) 32%, transparent);
 	--context-menu-danger-control-border: color-mix(in srgb, var(--status-danger) 46%, transparent);
 	pointer-events: auto;
 	min-width: min(13rem, var(--context-menu-viewport-max-width));
@@ -203,6 +201,10 @@
 	justify-content: center;
 }
 
+:global(html[dir='rtl']) .submenuCaret {
+	scale: -1 1;
+}
+
 .item:is([data-open], [data-popup-open]):not(.disabled):not([data-disabled]) {
 	background-color: var(--surface-interactive-hover-bg);
 	color: var(--text-primary);
@@ -295,7 +297,7 @@
 
 .checkboxChecked {
 	background-color: var(--brand-primary);
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 .checkboxChecked::after {
@@ -305,7 +307,7 @@
 	top: 50%;
 	width: 0.25rem;
 	height: 0.5625rem;
-	border: solid white;
+	border: solid var(--brand-primary-fill);
 	border-width: 0 0.15625rem 0.15625rem 0;
 	transform: translate(-50%, -60%) rotate(45deg);
 }
@@ -347,10 +349,8 @@
 }
 
 .submenuPopover {
-	--context-menu-hover-border: color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary));
 	--context-menu-danger-text: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 	--context-menu-danger-background: color-mix(in srgb, var(--status-danger) 6%, var(--surface-interactive-hover-bg));
-	--context-menu-danger-border: color-mix(in srgb, var(--status-danger) 32%, transparent);
 	--context-menu-danger-control-border: color-mix(in srgb, var(--status-danger) 46%, transparent);
 	pointer-events: auto !important;
 	min-width: 13rem;
@@ -412,7 +412,7 @@
 
 .quickReactionShortcut {
 	position: absolute;
-	right: 0.3125rem;
+	inset-inline-end: 0.3125rem;
 	top: 0.25rem;
 	color: var(--text-primary-muted);
 	font-size: 0.625rem;

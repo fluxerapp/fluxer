@@ -9,18 +9,29 @@ import type {
 	UserID,
 } from '@app/api/BrandedTypes';
 
-type Nullish<T> = T | null;
-
 export interface AuthSessionRow {
 	user_id: UserID;
 	session_id_hash: Buffer;
 	created_at: Date;
 	approx_last_used_at: Date;
 	client_ip: string;
-	client_user_agent: Nullish<string>;
-	client_os: Nullish<string>;
-	client_country: Nullish<string>;
+	client_user_agent: string | null;
+	client_os: string | null;
+	client_country: string | null;
+	app_platform: string | null;
+	app_version: string | null;
+	app_release_channel: string | null;
+	app_build_number: number | null;
+	app_beta_number: number | null;
+	auth_method: string | null;
 	version: number;
+}
+
+export interface AuthSessionByAppChannelRow {
+	app_platform: string;
+	app_release_channel: string;
+	session_id_hash: Buffer;
+	user_id: UserID;
 }
 
 export interface AuthSessionTombstoneRow {
@@ -29,9 +40,9 @@ export interface AuthSessionTombstoneRow {
 	created_at: Date;
 	approx_last_used_at: Date;
 	client_ip: string;
-	client_user_agent: Nullish<string>;
-	client_os: Nullish<string>;
-	client_country: Nullish<string>;
+	client_user_agent: string | null;
+	client_os: string | null;
+	client_country: string | null;
 	deleted_at: Date;
 	version: number;
 }
@@ -94,29 +105,29 @@ export interface WebAuthnCredentialRow {
 	credential_id: string;
 	public_key: Buffer;
 	counter: bigint;
-	transports: Nullish<Set<string>>;
+	transports: Set<string> | null;
 	name: string;
 	created_at: Date;
-	last_used_at: Nullish<Date>;
+	last_used_at: Date | null;
 	version: number;
-	rp_id: Nullish<string>;
-	superseded_by: Nullish<string>;
+	rp_id: string | null;
+	superseded_by: string | null;
 }
 
 export interface EmailChangeTicketRow {
 	ticket: string;
 	user_id: UserID;
 	require_original: boolean;
-	original_email: Nullish<string>;
+	original_email: string | null;
 	original_verified: boolean;
-	original_proof: Nullish<string>;
-	original_code: Nullish<string>;
-	original_code_sent_at: Nullish<Date>;
-	original_code_expires_at: Nullish<Date>;
-	new_email: Nullish<string>;
-	new_code: Nullish<string>;
-	new_code_sent_at: Nullish<Date>;
-	new_code_expires_at: Nullish<Date>;
+	original_proof: string | null;
+	original_code: string | null;
+	original_code_sent_at: Date | null;
+	original_code_expires_at: Date | null;
+	new_email: string | null;
+	new_code: string | null;
+	new_code_sent_at: Date | null;
+	new_code_expires_at: Date | null;
 	status: string;
 	created_at: Date;
 	updated_at: Date;
@@ -139,8 +150,20 @@ export const AUTH_SESSION_COLUMNS = [
 	'client_user_agent',
 	'client_os',
 	'client_country',
+	'app_platform',
+	'app_version',
+	'app_release_channel',
+	'app_build_number',
+	'app_beta_number',
+	'auth_method',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionRow>;
+export const AUTH_SESSION_BY_APP_CHANNEL_COLUMNS = [
+	'app_platform',
+	'app_release_channel',
+	'session_id_hash',
+	'user_id',
+] as const satisfies ReadonlyArray<keyof AuthSessionByAppChannelRow>;
 export const AUTH_SESSION_TOMBSTONE_COLUMNS = [
 	'user_id',
 	'session_id_hash',
@@ -198,11 +221,11 @@ export const WEBAUTHN_CREDENTIAL_COLUMNS = [
 export interface PasswordChangeTicketRow {
 	ticket: string;
 	user_id: UserID;
-	code: Nullish<string>;
-	code_sent_at: Nullish<Date>;
-	code_expires_at: Nullish<Date>;
+	code: string | null;
+	code_sent_at: Date | null;
+	code_expires_at: Date | null;
 	verified: boolean;
-	verification_proof: Nullish<string>;
+	verification_proof: string | null;
 	status: string;
 	created_at: Date;
 	updated_at: Date;

@@ -22,8 +22,12 @@ let installed = false;
 let pendingDeviceMap: DomainMigrationDeviceMap | null = null;
 
 function devicesOfKind(state: VoiceDeviceState, kind: DomainMigrationMediaDeviceKind): Array<MediaDeviceInfo> {
-	const devices =
-		kind === 'audioinput' ? state.inputDevices : kind === 'audiooutput' ? state.outputDevices : state.videoDevices;
+	let devices = state.videoDevices;
+	if (kind === 'audioinput') {
+		devices = state.inputDevices;
+	} else if (kind === 'audiooutput') {
+		devices = state.outputDevices;
+	}
 	return devices.filter(
 		(device) =>
 			device.deviceId.trim().length > 0 &&

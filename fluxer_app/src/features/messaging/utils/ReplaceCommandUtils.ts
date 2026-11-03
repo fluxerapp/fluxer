@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {escapeRegex} from '@app/features/messaging/utils/RegexUtils';
+
 const REPLACE_REGEX = /^s\/(.+?)\/(.*?)(?:\/(g)?)?$/;
 
 interface ReplaceCommand {
 	source: string;
 	replacement: string;
 	global: boolean;
-}
-
-function escapeRegExp(str: string): string {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function parseReplaceCommand(content: string): ReplaceCommand | null {
@@ -36,7 +34,7 @@ function getReplacePattern(source: string, global: boolean): RegExp {
 	const key = `${global ? 'g' : ''}${REPLACE_PATTERN_KEY_SEPARATOR}${source}`;
 	const cached = REPLACE_PATTERN_CACHE.get(key);
 	if (cached) return cached;
-	const compiled = new RegExp(escapeRegExp(source), global ? 'g' : '');
+	const compiled = new RegExp(escapeRegex(source), global ? 'g' : '');
 	if (REPLACE_PATTERN_CACHE.size >= REPLACE_PATTERN_LIMIT) REPLACE_PATTERN_CACHE.clear();
 	REPLACE_PATTERN_CACHE.set(key, compiled);
 	return compiled;

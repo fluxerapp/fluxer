@@ -13,7 +13,7 @@ import {
 	transition,
 } from 'xstate';
 
-export const DesktopClientIntroStage = Object.freeze({
+const DesktopClientIntroStage = Object.freeze({
 	INACTIVE: 'inactive',
 	WELCOME: 'welcome',
 	PREFERENCES: 'preferences',
@@ -21,7 +21,7 @@ export const DesktopClientIntroStage = Object.freeze({
 	COMPLETE: 'complete',
 } as const);
 
-export type DesktopClientIntroStage = (typeof DesktopClientIntroStage)[keyof typeof DesktopClientIntroStage];
+type DesktopClientIntroStage = (typeof DesktopClientIntroStage)[keyof typeof DesktopClientIntroStage];
 
 export interface DesktopClientIntroConditions {
 	enabled: boolean;

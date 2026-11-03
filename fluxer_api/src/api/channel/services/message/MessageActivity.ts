@@ -23,8 +23,12 @@ function linkDomains(content: string): Array<string> {
 	const domains = new Set<string>();
 	for (const host of extractLinkHosts(content)) {
 		const domain = host.replace(WWW_PREFIX_RE, '');
-		if (domain) domains.add(domain);
-		if (domains.size >= LIST_MAX) break;
+		if (domain) {
+			domains.add(domain);
+		}
+		if (domains.size >= LIST_MAX) {
+			break;
+		}
 	}
 	return [...domains];
 }
@@ -37,28 +41,28 @@ interface InviteTarget {
 async function inviteTarget(code: string): Promise<InviteTarget> {
 	try {
 		const invite = await getInviteRepository().findUnique(createInviteCode(code));
-		if (!invite?.guildId) return {guildId: null, ownerId: null};
+		if (!invite?.guildId) {
+			return {guildId: null, ownerId: null};
+		}
 		const guild = await getGuildRepository().findUnique(invite.guildId);
 		return {guildId: invite.guildId.toString(), ownerId: guild ? guild.ownerId.toString() : null};
-	} catch {
+	} catch (error) {
+		Logger.warn({error, inviteCode: code}, 'Failed to look up invite target for message activity');
 		return {guildId: null, ownerId: null};
 	}
-}
-
-function inviteTargets(codes: ReadonlyArray<string>): Promise<Array<InviteTarget>> {
-	return Promise.all(codes.map(inviteTarget));
 }
 
 async function guildMemberCount(guildId: GuildID): Promise<number | null> {
 	try {
 		const guild = await getGuildRepository().findUnique(guildId);
 		return guild ? guild.memberCount : null;
-	} catch {
+	} catch (error) {
+		Logger.warn({error, guildId: guildId.toString()}, 'Failed to look up guild member count for message activity');
 		return null;
 	}
 }
 
-export interface MessageCreatedActivity {
+interface MessageCreatedActivity {
 	user: User;
 	message: Message;
 	channel: Channel;
@@ -89,13 +93,19 @@ async function buildAndEmit(
 	const inviteCodes = findInvites(message.content, LIST_MAX);
 	const domains = linkDomains(message.content ?? '');
 	const [targets, memberCount] = await Promise.all([
-		inviteTargets(inviteCodes),
+		Promise.all(inviteCodes.map(inviteTarget)),
 		guildId && (domains.length > 0 || inviteCodes.length > 0) ? guildMemberCount(guildId) : Promise.resolve(null),
 	]);
 	const mentionedIds = [...message.mentionedUserIds];
 	const recipientIsFriend = dmRecipientId
 		? (await params.userRepository.getRelationship(user.id, dmRecipientId, RelationshipTypes.FRIEND)) !== null
 		: false;
+	let channelType: 'guild' | 'group_dm' | 'dm' = 'dm';
+	if (guildId) {
+		channelType = 'guild';
+	} else if (channel.type === ChannelTypes.GROUP_DM) {
+		channelType = 'group_dm';
+	}
 	await emitActivity(
 		kind,
 		user.id.toString(),
@@ -103,7 +113,7 @@ async function buildAndEmit(
 			user_id: user.id.toString(),
 			message_id: message.id.toString(),
 			channel_id: channel.id.toString(),
-			channel_type: guildId ? 'guild' : channel.type === ChannelTypes.GROUP_DM ? 'group_dm' : 'dm',
+			channel_type: channelType,
 			guild_id: guildId ? guildId.toString() : null,
 			dm_recipient_id: dmRecipientId ? dmRecipientId.toString() : null,
 			recipient_is_friend: recipientIsFriend,

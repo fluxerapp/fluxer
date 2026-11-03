@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {getSubscriptionRenewalDate} from '@app/features/premium/utils/PremiumSubscriptionClassification';
 import {
 	getPremiumProductFullName,
 	getPremiumProductName,
 	getStoreOwnedSubscription,
 } from '@app/features/premium/utils/PremiumUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
@@ -27,37 +25,42 @@ import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo} from 'react';
 
 const PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR = msg({
-	message: 'Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription.',
+	message: 'Welcome to {premiumProductFullName}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.',
 });
 const PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks.',
+		'Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. See all {premiumProductName} features.',
 	comment:
 		'Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.',
 });
+const PREMIUM_ONBOARDING_LIFETIME_MESSAGE_DESCRIPTOR = msg({
+	message: 'Welcome to {premiumProductFullName}. You have lifetime access. See all {premiumProductName} features.',
+	comment:
+		'Premium onboarding nagbar body for lifetime premium users on a self-hosted instance. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.',
+});
 const PREMIUM_ONBOARDING_CANCELING_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_MONTHLY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_YEARLY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_GIFT_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks.',
+		'Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. See all {premiumProductName} features.',
 	comment:
 		'Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
@@ -69,8 +72,9 @@ const VIEW_PREMIUM_FEATURES_DESCRIPTOR = msg({
 
 function useOnboardingMessage(i18n: I18n): string {
 	const user = Users.currentUser;
-	const storeSubscription =
-		user != null && PremiumState.loadedForUserId === user.id ? getStoreOwnedSubscription(PremiumState.state) : null;
+	const premiumState = user != null && PremiumState.loadedForUserId === user.id ? PremiumState.state : null;
+	const storeSubscription = getStoreOwnedSubscription(premiumState);
+	const billingSubscription = premiumState?.billing.subscription ?? null;
 	return useMemo(() => {
 		const premiumProductFullName = getPremiumProductFullName();
 		const premiumProductName = getPremiumProductName();
@@ -82,7 +86,12 @@ function useOnboardingMessage(i18n: I18n): string {
 		const premiumUntil = user.premiumUntil;
 		const willCancel = storeSubscription ? !storeSubscription.will_renew : user.premiumWillCancel;
 		if (isVisionary) {
-			return i18n._(PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
+			return i18n._(
+				RuntimeConfig.isSelfHosted()
+					? PREMIUM_ONBOARDING_LIFETIME_MESSAGE_DESCRIPTOR
+					: PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR,
+				{premiumProductFullName, premiumProductName},
+			);
 		}
 		if (willCancel && premiumUntil) {
 			const formattedDate = getFormattedFullDate(premiumUntil);
@@ -92,8 +101,11 @@ function useOnboardingMessage(i18n: I18n): string {
 				formattedDate,
 			});
 		}
-		if (billingCycle && premiumUntil) {
-			const formattedDate = getFormattedFullDate(premiumUntil);
+		const renewsAt = storeSubscription
+			? premiumUntil
+			: getSubscriptionRenewalDate(premiumUntil ?? null, billingSubscription);
+		if (billingCycle && renewsAt) {
+			const formattedDate = getFormattedFullDate(renewsAt);
 			if (billingCycle === 'monthly') {
 				return i18n._(PREMIUM_ONBOARDING_MONTHLY_MESSAGE_DESCRIPTOR, {
 					premiumProductFullName,
@@ -116,7 +128,7 @@ function useOnboardingMessage(i18n: I18n): string {
 			});
 		}
 		return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
-	}, [i18n.locale, user, storeSubscription]);
+	}, [i18n.locale, user, storeSubscription, billingSubscription]);
 }
 
 export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar({isMobile}: {isMobile: boolean}) {
@@ -125,21 +137,7 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	const handleOpenPremiumSettings = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');
 		void UserCommands.update({has_dismissed_premium_onboarding: true});
-		if (PlutoniumPageRollout.enabled) {
-			PlutoniumPageCommands.openPlutoniumPage();
-			return;
-		}
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal
-						initialTab="plutonium"
-						data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.handle-open-premium-settings.user-settings-modal"
-					/>
-				),
-				'user-settings',
-			),
-		);
+		PlutoniumPageCommands.openPlutoniumPage();
 	}, []);
 	const handleDismiss = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');

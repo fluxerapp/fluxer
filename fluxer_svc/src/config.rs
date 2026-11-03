@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::env;
-use std::fs;
+pub use fluxer_common::config::env_value as optional_env;
+
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
@@ -43,6 +43,7 @@ pub struct ServiceConfig {
 pub enum Mode {
     Router,
     Shard,
+    Combined,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -52,8 +53,40 @@ pub enum DatabaseBackend {
 }
 
 impl ServiceConfig {
+    #[cfg(test)]
+    pub(crate) fn for_test(mode: Mode, shard_id: u32, shard_count: u32) -> Self {
+        ServiceConfig {
+            service_name: "test".to_owned(),
+            mode,
+            database_backend: DatabaseBackend::Postgres,
+            shard_id,
+            shard_count,
+            listen_addr: "127.0.0.1:0".parse().unwrap(),
+            nats_url: "memory".to_owned(),
+            nats_auth_token: None,
+            cache_max_entries: 100,
+            cache_ttl: Duration::from_secs(30),
+            max_concurrent_requests: 16,
+            scylla_hosts: Vec::new(),
+            scylla_keyspace: "fluxer".to_owned(),
+            scylla_username: None,
+            scylla_password: None,
+            postgres_url: None,
+            postgres_host: "127.0.0.1".to_owned(),
+            postgres_port: 5432,
+            postgres_database: "fluxer".to_owned(),
+            postgres_username: "fluxer".to_owned(),
+            postgres_password: Some("fluxer".to_owned()),
+            postgres_ssl: false,
+            postgres_ssl_ca: None,
+            postgres_max_connections: 1,
+            postgres_kv_table: "fluxer_kv".to_owned(),
+            postgres_prepared_statements: true,
+        }
+    }
+
     pub fn from_env() -> anyhow::Result<Self> {
-        Self::from_env_reader(env_var)
+        Self::from_env_reader(fluxer_common::config::env_value)
     }
 
     fn from_env_reader<F>(get: F) -> anyhow::Result<Self>
@@ -77,6 +110,7 @@ impl ServiceConfig {
         let mode = match optional_from(&get, "FLUXER_SVC_MODE").as_deref() {
             None | Some("router") => Mode::Router,
             Some("shard") => Mode::Shard,
+            Some("combined") => Mode::Combined,
             Some(other) => anyhow::bail!("unsupported FLUXER_SVC_MODE: {other}"),
         };
 
@@ -203,66 +237,6 @@ fn default_max_concurrent_requests(service_name: &str) -> usize {
     }
 }
 
-pub fn optional_env(name: &str) -> Option<String> {
-    env_var(name)
-}
-
-fn env_var(name: &str) -> Option<String> {
-    resolve_env_value(name, |key| env::var(key).ok()).unwrap_or_else(|error| panic!("{error}"))
-}
-
-fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
-where
-    F: Fn(&str) -> Option<String>,
-{
-    let non_blank = |value: Option<String>| value.filter(|value| !value.trim().is_empty());
-    let value = non_blank(get(name));
-    let Some(path) = non_blank(get(&format!("{name}_FILE"))) else {
-        return Ok(value);
-    };
-    if value.is_some() {
-        return Err(format!("{name} and {name}_FILE are both set, set only one"));
-    }
-    let contents = fs::read_to_string(&path)
-        .map_err(|error| format!("{name}_FILE could not read {path} ({error})"))?;
-    let contents = contents
-        .strip_suffix('\n')
-        .map_or(contents.as_str(), |rest| {
-            rest.strip_suffix('\r').unwrap_or(rest)
-        });
-    Ok(non_blank(Some(contents.to_owned())))
-}
-
-pub fn resolve_env_files<I>(vars: I) -> Result<Vec<(String, String)>, String>
-where
-    I: IntoIterator<Item = (String, String)>,
-{
-    let vars: Vec<(String, String)> = vars.into_iter().collect();
-    let get = |key: &str| {
-        vars.iter()
-            .find_map(|(name, value)| (name == key).then(|| value.clone()))
-    };
-    let mut resolved = Vec::new();
-    for (key, _) in &vars {
-        let Some(name) = key
-            .strip_suffix("_FILE")
-            .filter(|name| name.starts_with("FLUXER_"))
-        else {
-            continue;
-        };
-        if let Some(value) = resolve_env_value(name, get)? {
-            resolved.push((name.to_owned(), value));
-        }
-    }
-    let rest: Vec<(String, String)> = vars
-        .iter()
-        .filter(|(key, _)| !resolved.iter().any(|(name, _)| name == key))
-        .cloned()
-        .collect();
-    resolved.extend(rest);
-    Ok(resolved)
-}
-
 fn optional_from<F>(get: &F, name: &str) -> Option<String>
 where
     F: Fn(&str) -> Option<String>,
@@ -317,159 +291,5 @@ fn parse_bool(value: &str) -> anyhow::Result<bool> {
         "1" | "true" | "yes" | "y" | "on" => Ok(true),
         "0" | "false" | "no" | "n" | "off" => Ok(false),
         other => anyhow::bail!("invalid boolean value: {other}"),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn config_from_pairs(pairs: &[(&str, &str)]) -> ServiceConfig {
-        ServiceConfig::from_env_reader(|name| {
-            pairs
-                .iter()
-                .find_map(|(key, value)| (*key == name).then(|| (*value).to_owned()))
-        })
-        .unwrap()
-    }
-
-    #[test]
-    fn resolves_name_file_entries() {
-        let dir = env::temp_dir().join(format!("fluxer-svc-env-file-{}", std::process::id()));
-        fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("token");
-        fs::write(&path, "from-file\r\n").unwrap();
-        let path = path.to_string_lossy().into_owned();
-        let missing = dir.join("missing").to_string_lossy().into_owned();
-        let resolved = resolve_env_files(vec![
-            ("FLUXER_NATS_AUTH_TOKEN".to_owned(), String::new()),
-            ("FLUXER_NATS_AUTH_TOKEN_FILE".to_owned(), path.clone()),
-        ])
-        .unwrap();
-        let both = resolve_env_files(vec![
-            ("FLUXER_X".to_owned(), "direct".to_owned()),
-            ("FLUXER_X_FILE".to_owned(), path),
-        ]);
-        let unreadable = resolve_env_files(vec![("FLUXER_X_FILE".to_owned(), missing.clone())]);
-        let unrelated = resolve_env_files(vec![("SSL_CERT_FILE".to_owned(), missing.clone())]);
-        fs::remove_dir_all(&dir).unwrap();
-        assert_eq!(
-            vec!["from-file"],
-            resolved
-                .iter()
-                .filter(|(name, _)| name == "FLUXER_NATS_AUTH_TOKEN")
-                .map(|(_, value)| value.as_str())
-                .collect::<Vec<_>>()
-        );
-        assert_eq!(
-            Err("FLUXER_X and FLUXER_X_FILE are both set, set only one".to_owned()),
-            both
-        );
-        assert!(
-            unreadable
-                .unwrap_err()
-                .starts_with(&format!("FLUXER_X_FILE could not read {missing} ("))
-        );
-        assert_eq!(Ok(vec![("SSL_CERT_FILE".to_owned(), missing)]), unrelated);
-    }
-
-    #[test]
-    fn extracts_statefulset_ordinal() {
-        assert_eq!(shard_id_from_pod_name("my-service-0"), Some(0));
-        assert_eq!(shard_id_from_pod_name("fluxer-user-svc-12"), Some(12));
-        assert_eq!(shard_id_from_pod_name("api"), None);
-    }
-
-    #[test]
-    fn reads_canonical_cassandra_env_for_shards() {
-        let cfg = config_from_pairs(&[
-            ("FLUXER_SVC_NAME", "messages"),
-            ("FLUXER_SVC_MODE", "shard"),
-            ("FLUXER_SVC_SHARD_COUNT", "2"),
-            ("FLUXER_SVC_SHARD_ID", "1"),
-            ("FLUXER_CASSANDRA_HOSTS", "cass-a,cass-b:9142"),
-            ("FLUXER_CASSANDRA_PORT", "9042"),
-            ("FLUXER_CASSANDRA_KEYSPACE", "fluxer_dev"),
-            ("FLUXER_CASSANDRA_USERNAME", "fluxer"),
-            ("FLUXER_CASSANDRA_PASSWORD", "secret"),
-        ]);
-
-        assert_eq!("messages", cfg.service_name);
-        assert_eq!(Mode::Shard, cfg.mode);
-        assert_eq!(1, cfg.shard_id);
-        assert_eq!(2, cfg.shard_count);
-        assert_eq!(vec!["cass-a:9042", "cass-b:9142"], cfg.scylla_hosts);
-        assert_eq!("fluxer_dev", cfg.scylla_keyspace);
-        assert_eq!(Some("fluxer".to_owned()), cfg.scylla_username);
-        assert_eq!(Some("secret".to_owned()), cfg.scylla_password);
-    }
-
-    #[test]
-    fn blank_values_fall_back_to_the_defaults() {
-        let cfg = config_from_pairs(&[
-            ("FLUXER_SVC_NAME", "messages"),
-            ("FLUXER_SVC_MODE", ""),
-            ("FLUXER_SVC_PORT", "  "),
-            ("FLUXER_SVC_MAX_CONCURRENT_REQUESTS", ""),
-            ("FLUXER_NATS_AUTH_TOKEN", " "),
-            ("FLUXER_POSTGRES_HOST", ""),
-            ("FLUXER_POSTGRES_PASSWORD", "  "),
-            ("FLUXER_POSTGRES_MAX_CONNECTIONS", ""),
-            ("FLUXER_POSTGRES_PREPARED_STATEMENTS", " "),
-        ]);
-
-        assert_eq!(Mode::Router, cfg.mode);
-        assert_eq!(8090, cfg.listen_addr.port());
-        assert_eq!(
-            MESSAGES_MAX_CONCURRENT_REQUESTS,
-            cfg.max_concurrent_requests
-        );
-        assert_eq!(None, cfg.nats_auth_token);
-        assert_eq!("127.0.0.1", cfg.postgres_host);
-        assert_eq!(Some("fluxer".to_owned()), cfg.postgres_password);
-        assert_eq!(20, cfg.postgres_max_connections);
-        assert!(cfg.postgres_prepared_statements);
-    }
-
-    #[test]
-    fn rejects_a_non_boolean_prepared_statements_value() {
-        let result = ServiceConfig::from_env_reader(|name| {
-            (name == "FLUXER_POSTGRES_PREPARED_STATEMENTS").then(|| "maybe".to_owned())
-        });
-
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn raises_concurrency_defaults_for_hot_path_services() {
-        assert_eq!(
-            MESSAGES_MAX_CONCURRENT_REQUESTS,
-            config_from_pairs(&[("FLUXER_SVC_NAME", "messages")]).max_concurrent_requests
-        );
-        assert_eq!(
-            SNOWFLAKES_MAX_CONCURRENT_REQUESTS,
-            config_from_pairs(&[("FLUXER_SVC_NAME", "snowflakes")]).max_concurrent_requests
-        );
-        assert_eq!(
-            DEFAULT_MAX_CONCURRENT_REQUESTS,
-            config_from_pairs(&[("FLUXER_SVC_NAME", "users")]).max_concurrent_requests
-        );
-    }
-
-    #[test]
-    fn concurrency_env_override_wins_over_service_default() {
-        let cfg = config_from_pairs(&[
-            ("FLUXER_SVC_NAME", "messages"),
-            ("FLUXER_SVC_MAX_CONCURRENT_REQUESTS", "32"),
-        ]);
-
-        assert_eq!(32, cfg.max_concurrent_requests);
-    }
-
-    #[test]
-    fn reads_legacy_cassandra_backend_aliases() {
-        let cfg = config_from_pairs(&[("FLUXER_DATABASE_BACKEND", "scylla")]);
-
-        assert_eq!(DatabaseBackend::Cassandra, cfg.database_backend);
     }
 }

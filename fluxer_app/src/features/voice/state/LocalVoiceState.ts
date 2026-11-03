@@ -46,7 +46,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 	selfDeaf = false;
 	selfVideo = false;
 	selfStream = false;
-	selfStreamAudio = false;
 	viewerStreamKeys: Array<string> = [];
 	hasUserSetMute = false;
 	hasUserSetDeaf = false;
@@ -245,13 +244,7 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		await makePersistent(
 			this,
 			'LocalVoiceState',
-			[
-				'persistedSelfMute',
-				'persistedSelfDeaf',
-				'persistedHasUserSetMute',
-				'persistedHasUserSetDeaf',
-				'selfStreamAudio',
-			],
+			['persistedSelfMute', 'persistedSelfDeaf', 'persistedHasUserSetMute', 'persistedHasUserSetDeaf'],
 			{
 				syncAcrossTabs: true,
 			},
@@ -498,13 +491,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		runInAction(() => {
 			this.transitionLocalState({type: 'stream.update', activeConnectionId: this.getActiveConnectionId(), streaming});
 			logger.debug('Self stream updated', {streaming});
-		});
-	}
-
-	updateSelfStreamAudio(enabled: boolean): void {
-		runInAction(() => {
-			this.selfStreamAudio = enabled;
-			logger.debug('Self stream audio updated', {enabled});
 		});
 	}
 

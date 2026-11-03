@@ -38,6 +38,8 @@ interface ModuleBootHandoffState {
 	openUrlForwarding: boolean;
 	openUrlSink: OpenUrlSink | null;
 	readonly bufferedOpenUrls: Array<string>;
+	quitGateArmed: boolean;
+	quitStarted: boolean;
 	readonly committedModuleFilesListeners: Set<CommittedModuleFilesListener>;
 	readonly mainWindowListeners: Set<MainWindowListener>;
 	readonly mainWindowReadyListeners: Set<MainWindowReadyListener>;
@@ -56,6 +58,8 @@ const handoffState: ModuleBootHandoffState = {
 	openUrlForwarding: false,
 	openUrlSink: null,
 	bufferedOpenUrls: [],
+	quitGateArmed: false,
+	quitStarted: false,
 	committedModuleFilesListeners: new Set(),
 	mainWindowListeners: new Set(),
 	mainWindowReadyListeners: new Set(),
@@ -69,10 +73,29 @@ function deliverSecondInstance(sink: SecondInstanceSink, argv: Array<string>): v
 	}
 }
 
+function armQuitGate(): void {
+	if (handoffState.quitGateArmed) return;
+	handoffState.quitGateArmed = true;
+	app.once('before-quit', () => {
+		handoffState.quitStarted = true;
+		handoffState.bufferedSecondInstances.splice(0);
+		handoffState.bufferedOpenUrls.splice(0);
+	});
+}
+
+export function hasQuitStarted(): boolean {
+	return handoffState.quitStarted;
+}
+
 export function armSecondInstanceForwarding(): void {
 	if (handoffState.secondInstanceForwarding) return;
 	handoffState.secondInstanceForwarding = true;
+	armQuitGate();
 	app.on('second-instance', (_event, argv) => {
+		if (handoffState.quitStarted) {
+			logger.info('Ignoring a second instance launch because the app is quitting');
+			return;
+		}
 		const sink = handoffState.secondInstanceSink;
 		if (sink == null) {
 			handoffState.bufferedSecondInstances.push(argv);
@@ -99,6 +122,10 @@ function deliverOpenUrl(sink: OpenUrlSink, url: string): void {
 }
 
 function forwardOpenUrl(url: string): void {
+	if (handoffState.quitStarted) {
+		logger.info('Ignoring an opened link because the app is quitting');
+		return;
+	}
 	const sink = handoffState.openUrlSink;
 	if (sink == null) {
 		handoffState.bufferedOpenUrls.push(url);
@@ -110,6 +137,7 @@ function forwardOpenUrl(url: string): void {
 export function armOpenUrlForwarding(): void {
 	if (handoffState.openUrlForwarding) return;
 	handoffState.openUrlForwarding = true;
+	armQuitGate();
 	app.on('open-url', (event, url) => {
 		event.preventDefault();
 		forwardOpenUrl(url);

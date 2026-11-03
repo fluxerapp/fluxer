@@ -75,13 +75,15 @@
 	text-align: center;
 }
 
-@keyframes handoffSpin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
+.ssoButtonLabel {
+	display: -webkit-box;
+	min-width: 0;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	white-space: normal;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 1;
+	line-clamp: 1;
 }
 
 .ssoCallbackActions {

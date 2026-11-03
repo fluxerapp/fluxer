@@ -86,6 +86,8 @@ type LabelSource = 'header' | 'screen-reader';
 
 export type ModalTransitionPreset = 'default' | 'instant' | 'quick' | 'profile-slide';
 
+export type ModalBackdropTone = 'default' | 'strong';
+
 export interface ModalProps {
 	children: ReactNode;
 	className?: string;
@@ -95,6 +97,7 @@ export interface ModalProps {
 	onClose?: () => void;
 	onAnimationComplete?: () => void;
 	backdropSlot?: ReactNode;
+	backdropTone?: ModalBackdropTone;
 	transitionPreset?: ModalTransitionPreset;
 	disableHistoryManagement?: boolean;
 }
@@ -215,11 +218,11 @@ export function useModalLogic({
 		[onClose, popOwningModal],
 	);
 	useEffect(() => {
-		LayerManager.addLayer('modal', modalKey, handleClose);
+		LayerManager.addLayer('modal', modalKey, handleClose, ownerDocument);
 		return () => {
 			LayerManager.removeLayer('modal', modalKey);
 		};
-	}, [handleClose, modalKey]);
+	}, [handleClose, modalKey, ownerDocument]);
 	const handleBackdropClick = useCallback(
 		(customOnClose?: () => void) => {
 			if (isBackdropActivationLeftOver(ownerDocument)) {

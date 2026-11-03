@@ -18,8 +18,8 @@ LABEL org.opencontainers.image.title="fluxer-push"
 LABEL org.opencontainers.image.description="Fluxer push notification delivery service and push relay"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 LABEL org.opencontainers.image.vendor="Fluxer"
-LABEL org.opencontainers.image.url="https://fluxer.app"
-LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.url="https://fluxer.com"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.com"
 LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
 LABEL org.opencontainers.image.revision="${SOURCE_SHA}"
@@ -28,8 +28,7 @@ LABEL app.fluxer.build-version="${BUILD_VERSION}"
 
 WORKDIR /usr/local/bin
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
-	rm -rf /var/lib/apt/lists/*
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 COPY --from=builder /usr/src/app/target/release/fluxer-push /usr/local/bin/fluxer-push
 

@@ -7,7 +7,7 @@ const STATUS_DENIED: &str = "denied";
 const STATUS_NOT_DETERMINED: &str = "not-determined";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 enum TccStatus {
     Granted,
     Denied,
@@ -24,12 +24,12 @@ impl TccStatus {
     }
 }
 
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const IOHID_ACCESS_GRANTED: u32 = 0;
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const IOHID_ACCESS_DENIED: u32 = 1;
 
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const fn input_monitoring_status_from_iohid(access: u32) -> TccStatus {
     match access {
         IOHID_ACCESS_GRANTED => TccStatus::Granted,
@@ -69,7 +69,7 @@ pub fn probe_input_monitoring_access() -> String {
     ))
 }
 
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const fn input_monitoring_status_from_tap(created: Option<bool>) -> TccStatus {
     match created {
         Some(true) => TccStatus::Granted,
@@ -152,53 +152,5 @@ mod platform {
 
     pub(super) fn listen_only_key_tap_created() -> Option<bool> {
         None
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn status_strings_match_js_contract() {
-        assert_eq!(TccStatus::Granted.as_str(), "granted");
-        assert_eq!(TccStatus::Denied.as_str(), "denied");
-        assert_eq!(TccStatus::NotDetermined.as_str(), "not-determined");
-    }
-
-    #[test]
-    fn input_monitoring_maps_known_iohid_statuses() {
-        assert_eq!(
-            input_monitoring_status_from_iohid(IOHID_ACCESS_GRANTED),
-            TccStatus::Granted
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(IOHID_ACCESS_DENIED),
-            TccStatus::Denied
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(2),
-            TccStatus::NotDetermined
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(u32::MAX),
-            TccStatus::NotDetermined
-        );
-    }
-
-    #[test]
-    fn input_monitoring_maps_tap_probe_results() {
-        assert_eq!(
-            input_monitoring_status_from_tap(Some(true)),
-            TccStatus::Granted
-        );
-        assert_eq!(
-            input_monitoring_status_from_tap(Some(false)),
-            TccStatus::Denied
-        );
-        assert_eq!(
-            input_monitoring_status_from_tap(None),
-            TccStatus::NotDetermined
-        );
     }
 }

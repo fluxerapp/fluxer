@@ -2,10 +2,10 @@
 
 import styles from '@app/app/App.module.css';
 import {router} from '@app/app/Router';
-import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import {NekoSprite} from '@app/features/accessibility/components/NekoSprite';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import ScreenReader from '@app/features/accessibility/state/ScreenReader';
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import {DndContext} from '@app/features/app/components/layout/DndContext';
 import GlobalOverlays from '@app/features/app/components/layout/GlobalOverlays';
 import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
@@ -22,11 +22,13 @@ import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import {getServedDocumentBranding} from '@app/features/app/state/ServedDocumentBranding';
+import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
+import {parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {attachExternalLinkInterceptor} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
@@ -37,14 +39,17 @@ import {startDesktopJumpListBridge} from '@app/features/platform/utils/DesktopJu
 import {startDesktopLocaleBridge} from '@app/features/platform/utils/DesktopLocaleBridge';
 import {PremiumCheckoutReturnWatcher} from '@app/features/premium/components/PremiumCheckoutReturnWatcher';
 import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_switcher/QuickSwitcherConstants';
-import {useCustomThemeStyle} from '@app/features/theme/hooks/useCustomThemeStyle';
+import {useCustomThemeStyle, useInstanceCustomCss} from '@app/features/theme/hooks/useCustomThemeStyle';
 import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import WindowsFont from '@app/features/theme/state/WindowsFont';
-import {useThemeStudioBroadcast} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
-import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {QuickCssEditorHost} from '@app/features/theme_settings/components/QuickCssEditorHost';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
+import {canTrustSites} from '@app/features/theme_settings/state/TrustedSites';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {useTextInputContextMenu} from '@app/features/ui/hooks/useTextInputContextMenu';
@@ -52,7 +57,10 @@ import {getActivePortalHost, setActivePortalHost} from '@app/features/ui/overlay
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
-import {getDesktopWindowBehaviorSettings} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
+import {
+	attachMiddleClickAutoscrollPasteGuard,
+	getDesktopWindowBehaviorSettings,
+} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {UNFOCUSED_FULLY_INTERACTIVE_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -64,23 +72,60 @@ import {startScreenSharePiPController} from '@app/features/voice/state/ScreenSha
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
 import {useStopFlashFrameOnFocus} from '@app/features/window/hooks/useStopFlashFrameOnFocus';
 import {useWindowEventListeners} from '@app/features/window/hooks/useWindowEventListeners';
+import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {IconContext} from '@phosphor-icons/react';
 import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
-import React, {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {type ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 
+const NO_TRUSTED_SITES: ReadonlyArray<string> = [];
 const SKIP_TO_CONTENT_DESCRIPTOR = msg({
 	message: 'Skip to content',
 	comment: 'Accessible skip-link label for keyboard users.',
 });
 
+function focusMainContent(event: React.MouseEvent<HTMLButtonElement>): void {
+	event.currentTarget.ownerDocument.getElementById('main-content')?.focus();
+}
+
 const logger = new Logger('App');
 
 interface AppWrapperProps {
 	children: ReactNode;
+}
+
+interface InstanceBrandStyle {
+	readonly themeColor: string | null;
+	readonly customCss: string | null;
+}
+
+const NO_INSTANCE_BRAND_STYLE: InstanceBrandStyle = Object.freeze({themeColor: null, customCss: null});
+
+function getInstanceBrandStyle(): InstanceBrandStyle {
+	const snapshot = RuntimeConfig.getSnapshotOrNull();
+	if (snapshot === null) {
+		return getServedDocumentBranding();
+	}
+	if (!(DeveloperOptions.selfHostedModeOverride || snapshot.features.self_hosted)) {
+		return NO_INSTANCE_BRAND_STYLE;
+	}
+	return {themeColor: snapshot.appPublic.branding.theme_color, customCss: snapshot.appPublic.branding.custom_css};
+}
+
+function getInstanceCssOrigins(): ReadonlyArray<string> | null {
+	if (!isDesktop()) return null;
+	const snapshot = RuntimeConfig.getSnapshotOrNull();
+	if (snapshot === null) return [];
+	const endpoints = [
+		snapshot.mediaEndpoint,
+		snapshot.staticCdnEndpoint,
+		snapshot.apiPublicEndpoint,
+		snapshot.webAppEndpoint,
+	];
+	return endpoints.flatMap((endpoint) => parseEndpoint(endpoint)?.origin ?? []);
 }
 
 export const AppWrapper = observer(({children}: AppWrapperProps) => {
@@ -103,25 +148,6 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	const overlayScopeRef = useRef<HTMLDivElement>(null);
 	useElectronScreenSharePicker();
 	useTextInputContextMenu();
-	useThemeStudioBroadcast(
-		useCallback((message) => {
-			switch (message.type) {
-				case 'customThemeCss':
-					if ((Accessibility.customThemeCss ?? null) !== message.value) {
-						AccessibilityCommands.update({customThemeCss: message.value});
-					}
-					return;
-				case 'themeLibrary':
-					void ThemeLibrary.reload();
-					return;
-				case 'studio:closed-popout':
-					ThemeStudioState.clearPoppedOut();
-					return;
-				default:
-					return;
-			}
-		}, []),
-	);
 	const handleSkipLinkFocus = useTabKeyFocusGuard();
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
 	useEffect(() => {
@@ -130,6 +156,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	}, []);
 	useEffect(() => {
 		let active = true;
+		AccountEngine.start();
 		void SessionManager.initialize()
 			.then(() => {
 				if (active) {
@@ -142,12 +169,13 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		return () => {
 			active = false;
 			GatewaySessions.dispose();
+			AccountEngine.stop();
 		};
 	}, []);
 	useEffect(
 		() =>
 			reaction(
-				() => GatewayConnection.sessionId,
+				() => GatewaySessions.foregroundConnection.sessionId,
 				(sessionId) => MemberSidebar.synchronizeGatewaySession(sessionId),
 				{fireImmediately: true},
 			),
@@ -181,8 +209,14 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useWindowEventListeners();
 	useRemScaleTracking();
 	usePlatformClasses(platform, isNative);
+	const isAuthLayout = layoutVariant === 'auth';
+	const quickCssEditorAllowed = !isAuthLayout && !MobileLayout.enabled;
+	useEffect(() => {
+		if (!quickCssEditorAllowed) ThemeSettingsCommands.closeQuickCssEditor();
+	}, [quickCssEditorAllowed]);
+	const instanceBrandStyle = getInstanceBrandStyle();
 	useThemeCssVariables({
-		effectiveTheme: Theme.effectiveTheme,
+		effectiveTheme: isAuthLayout ? ThemeTypes.DARK : Theme.effectiveTheme,
 		saturationFactor: Accessibility.saturationFactor,
 		alwaysUnderlineLinks: Accessibility.alwaysUnderlineLinks,
 		dimStrikethroughText: Accessibility.dimStrikethroughText,
@@ -191,16 +225,21 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		messageGutter: Accessibility.messageGutter,
 		messageGroupSpacing: Accessibility.getMessageGroupSpacingValue(messageDisplayCompact),
 		hdrDisplayMode: Accessibility.hdrDisplayMode,
-		instanceThemeColor: RuntimeConfig.isSelfHosted()
-			? (RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.theme_color ?? null)
-			: null,
+		instanceThemeColor: instanceBrandStyle.themeColor,
 	});
+	useInstanceCustomCss(instanceBrandStyle.customCss, getInstanceCssOrigins());
+	const userCssApplied = !ThemeSettingsState.customCssOff;
 	useCustomThemeStyle({
-		enabledThemeCss: ThemeLibrary.activeThemeCss,
-		customThemeCss: Accessibility.customThemeCss,
+		enabledThemeCss: userCssApplied ? ThemeProfile.activeThemeCss : null,
+		customThemeCss: userCssApplied ? ThemeProfile.customThemeCss : null,
 		themeLibraryAssets: ThemeLibrary.assets,
 		themeLibraryLocalFiles: ThemeLibrary.localFiles,
 		themeLibraryRevision: ThemeLibrary.revision,
+		mediaEndpoint: RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint ?? '',
+		trustedSites: canTrustSites() ? ThemeSettingsState.trustedSites : NO_TRUSTED_SITES,
+		onMissingReferences: ThemeSettingsState.setMissingReferences,
+		onBlockedUrl: ThemeSettingsState.recordBlockedUrl,
+		onCssRejected: ThemeSettingsState.setCssRejected,
 	});
 	return (
 		<LayoutVariantProvider value={layoutVariantContextValue} data-flx="app.app.app-wrapper.layout-variant-provider">
@@ -208,14 +247,15 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 			<VoiceLiveKitRoot room={room} data-flx="app.app.app-wrapper.voice-live-kit-root">
 				<div ref={ringsContainerRef} className={styles.appContainer} data-flx="app.app.app-wrapper.app-container">
 					<FocusRingScope containerRef={ringsContainerRef} data-flx="app.app.app-wrapper.focus-ring-scope">
-						<a
-							href="#main-content"
+						<button
+							type="button"
 							className={styles.skipLink}
 							onFocus={handleSkipLinkFocus}
+							onClick={focusMainContent}
 							data-flx="app.app.app-wrapper.skip-link"
 						>
 							{i18n._(SKIP_TO_CONTENT_DESCRIPTOR)}
-						</a>
+						</button>
 						{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
 							<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
 						)}
@@ -233,6 +273,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 					/>
 					<GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />
 					<IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />
+					{quickCssEditorAllowed ? <QuickCssEditorHost data-flx="app.app.app-wrapper.quick-css-editor-host" /> : null}
 				</div>
 			</VoiceLiveKitRoot>
 		</LayoutVariantProvider>
@@ -247,6 +288,7 @@ export const App = observer((): React.ReactElement => {
 		if (!isDesktop()) return;
 		void ensureAutostartDefaultEnabled();
 		void getDesktopWindowBehaviorSettings();
+		return attachMiddleClickAutoscrollPasteGuard(window);
 	}, []);
 	useEffect(() => {
 		void startDeepLinkHandling();
@@ -254,8 +296,9 @@ export const App = observer((): React.ReactElement => {
 	useEffect(() => {
 		if (!isDesktop()) return;
 		startDesktopLocaleBridge();
-		startDesktopJumpListBridge();
+		const disposeJumpList = startDesktopJumpListBridge();
 		ScreenReader.startDesktopBridge();
+		return disposeJumpList;
 	}, []);
 	useStopFlashFrameOnFocus();
 	useEffect(() => {

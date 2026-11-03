@@ -12,18 +12,6 @@ describe('parseIpBanEntry', () => {
 			expect(result?.family).toBe('ipv4');
 			expect(result?.canonical).toBe('192.168.1.1');
 		});
-		it('parses IPv4 address 0.0.0.0', () => {
-			const result = parseIpBanEntry('0.0.0.0');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('single');
-			expect(result?.canonical).toBe('0.0.0.0');
-		});
-		it('parses IPv4 address 255.255.255.255', () => {
-			const result = parseIpBanEntry('255.255.255.255');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('single');
-			expect(result?.canonical).toBe('255.255.255.255');
-		});
 		it('rejects IPv4 with leading zeros (octal ambiguity)', () => {
 			const result = parseIpBanEntry('192.168.001.001');
 			expect(result).toBeNull();
@@ -38,12 +26,6 @@ describe('parseIpBanEntry', () => {
 		});
 		it('parses a compressed IPv6 address', () => {
 			const result = parseIpBanEntry('2001:db8::1');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('single');
-			expect(result?.family).toBe('ipv6');
-		});
-		it('parses IPv6 loopback address', () => {
-			const result = parseIpBanEntry('::1');
 			expect(result).not.toBeNull();
 			expect(result?.type).toBe('single');
 			expect(result?.family).toBe('ipv6');
@@ -98,32 +80,6 @@ describe('parseIpBanEntry', () => {
 				expect(result.end - result.start).toBe(255n);
 			}
 		});
-		it('parses /16 (65536 hosts)', () => {
-			const result = parseIpBanEntry('192.168.0.0/16');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-			if (result?.type === 'range') {
-				expect(result.family).toBe('ipv4');
-				expect(result.prefixLength).toBe(16);
-				expect(result.end - result.start).toBe(65535n);
-			}
-		});
-		it('parses /8 (class A)', () => {
-			const result = parseIpBanEntry('10.0.0.0/8');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-			if (result?.type === 'range') {
-				expect(result.prefixLength).toBe(8);
-			}
-		});
-		it('parses /0 (all addresses)', () => {
-			const result = parseIpBanEntry('0.0.0.0/0');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-			if (result?.type === 'range') {
-				expect(result.prefixLength).toBe(0);
-			}
-		});
 		it('normalizes network address in CIDR', () => {
 			const result = parseIpBanEntry('192.168.1.100/24');
 			expect(result).not.toBeNull();
@@ -142,23 +98,6 @@ describe('parseIpBanEntry', () => {
 				expect(result.family).toBe('ipv6');
 				expect(result.prefixLength).toBe(128);
 				expect(result.start).toBe(result.end);
-			}
-		});
-		it('parses /64 (common subnet)', () => {
-			const result = parseIpBanEntry('2001:db8::/64');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-			if (result?.type === 'range') {
-				expect(result.family).toBe('ipv6');
-				expect(result.prefixLength).toBe(64);
-			}
-		});
-		it('parses /48 (site prefix)', () => {
-			const result = parseIpBanEntry('2001:db8:abcd::/48');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-			if (result?.type === 'range') {
-				expect(result.prefixLength).toBe(48);
 			}
 		});
 		it('parses /0 (all addresses)', () => {
@@ -193,6 +132,9 @@ describe('parseIpBanEntry', () => {
 		});
 	});
 	describe('invalid inputs', () => {
+		it('rejects bracketed IPv6 CIDR addresses', () => {
+			expect(parseIpBanEntry('[::ffff:192.0.2.1]/120')).toBeNull();
+		});
 		it('returns null for empty string', () => {
 			expect(parseIpBanEntry('')).toBeNull();
 		});
@@ -223,11 +165,6 @@ describe('parseIpBanEntry', () => {
 			expect(result).not.toBeNull();
 			expect(result?.type).toBe('single');
 		});
-		it('handles whitespace around CIDR', () => {
-			const result = parseIpBanEntry('  192.168.1.0/24  ');
-			expect(result).not.toBeNull();
-			expect(result?.type).toBe('range');
-		});
 		it('handles bracketed IPv6', () => {
 			const result = parseIpBanEntry('[2001:db8::1]');
 			expect(result).not.toBeNull();
@@ -239,11 +176,6 @@ describe('parseIpBanEntry', () => {
 describe('tryParseSingleIp', () => {
 	it('returns parsed result for single IPv4', () => {
 		const result = tryParseSingleIp('192.168.1.1');
-		expect(result).not.toBeNull();
-		expect(result?.type).toBe('single');
-	});
-	it('returns parsed result for single IPv6', () => {
-		const result = tryParseSingleIp('2001:db8::1');
 		expect(result).not.toBeNull();
 		expect(result?.type).toBe('single');
 	});

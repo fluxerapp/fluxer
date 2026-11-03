@@ -19,6 +19,7 @@ interface GenerateDiscriminatorParams {
 	username: string;
 	requestedDiscriminator?: number;
 	user?: User | null;
+	adminOverride?: boolean;
 }
 
 interface GenerateDiscriminatorResult {
@@ -39,20 +40,14 @@ interface ResolveUsernameChangeResult {
 	discriminator: number;
 }
 
-export class UsernameNotAvailableError extends BadRequestError {
+class UsernameNotAvailableError extends BadRequestError {
 	constructor() {
 		super({code: APIErrorCodes.USERNAME_NOT_AVAILABLE});
 		this.name = 'UsernameNotAvailableError';
 	}
 }
 
-export interface IDiscriminatorService {
-	generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult>;
-	isDiscriminatorAvailableForUsername(username: string, discriminator: number): Promise<boolean>;
-	resolveUsernameChange(params: ResolveUsernameChangeParams): Promise<ResolveUsernameChangeResult>;
-}
-
-export class DiscriminatorService implements IDiscriminatorService {
+export class DiscriminatorService {
 	private static readonly LOCK_TTL_MS = ms('5 seconds');
 	private static readonly LOCK_RETRY_DELAY_MS = 50;
 	private static readonly LOCK_MAX_WAIT_MS = ms('10 seconds');
@@ -82,7 +77,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 	}
 
 	async generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult> {
-		const {username, requestedDiscriminator, user} = params;
+		const {username, requestedDiscriminator, user, adminOverride} = params;
 		const usernameLower = username.toLowerCase();
 		const lockKey = `discrim-lock:${usernameLower}`;
 		const lockToken = await this.acquireLockWithRetry(lockKey);
@@ -90,7 +85,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 			return {discriminator: -1, available: false};
 		}
 		try {
-			const allowCustomDiscriminator = await this.canUseCustomDiscriminator(user);
+			const allowCustomDiscriminator = adminOverride === true || (await this.canUseCustomDiscriminator(user));
 			if (allowCustomDiscriminator && requestedDiscriminator !== undefined) {
 				const isAvailable = await this.isDiscriminatorAvailable(usernameLower, requestedDiscriminator);
 				if (isAvailable) {

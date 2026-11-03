@@ -3,7 +3,7 @@
 import type {UseFormReturn} from '@app/features/app/hooks/useForm';
 import {useForm} from '@app/features/app/hooks/useForm';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import type {AuthRequestTarget} from '@app/features/auth/state/AuthRequestTarget';
+import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useId, useState} from 'react';
@@ -19,7 +19,7 @@ export interface ForgotPasswordFormState {
 	readonly isSent: boolean;
 }
 
-export function useForgotPasswordForm(target: AuthRequestTarget): ForgotPasswordFormState {
+export function useForgotPasswordForm(target: InstanceHTTPTarget): ForgotPasswordFormState {
 	const {i18n} = useLingui();
 	const emailId = useId();
 	const [isSent, setIsSent] = useState(false);

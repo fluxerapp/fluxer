@@ -92,14 +92,14 @@ guild_join_decision(Agreed, ChannelId, State) ->
         fun(Pending) -> maps:get(channel_id, Pending, undefined) =:= ChannelId end,
         maps:values(guild_voice_connection_pending:pending_voice_connections(State))
     ),
-    Pinned = pinned(guild_voice_member:find_channel_by_id(ChannelId, State)),
+    Pinned = pinned(guild_permissions_check:find_channel_by_id(ChannelId, State)),
     join_decision(Agreed, ChannelVoiceStates, HasPendingJoins, Pinned).
 
 -spec admit(join_decision(), token_grant() | term()) -> grant() | sfu | rejection().
 admit({p2p, _Role, _Count}, {p2p, _ConnectionId, _IceServers, _MaxParticipants} = Grant) ->
-    Grant;
+    eqwalizer:dynamic_cast(Grant);
 admit({p2p, _Role, _Count}, {declined, ErrorAtom}) ->
-    {reject, ErrorAtom};
+    {reject, eqwalizer:dynamic_cast(ErrorAtom)};
 admit({p2p, initiator, _Count}, _Token) ->
     sfu;
 admit({p2p, joiner, _Count}, _Token) ->
@@ -121,12 +121,16 @@ invariant_violation(VoiceStates, MaxParticipants) ->
         mixed ->
             {error, voice_p2p_consent_required};
         p2p ->
-            case length(VoiceStates) > participant_cap(MaxParticipants) of
-                true -> {error, voice_channel_full};
-                false -> ok
-            end;
+            p2p_capacity(VoiceStates, MaxParticipants);
         _ ->
             ok
+    end.
+
+-spec p2p_capacity([voice_state()], term()) -> ok | {error, atom()}.
+p2p_capacity(VoiceStates, MaxParticipants) ->
+    case length(VoiceStates) > participant_cap(MaxParticipants) of
+        true -> {error, voice_channel_full};
+        false -> ok
     end.
 
 -spec participant_cap(term()) -> pos_integer().

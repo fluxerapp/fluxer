@@ -5,8 +5,7 @@ import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
-import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
-import type {ILogger} from '@app/api/ILogger';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {
 	jetStreamActivityPublisher,
 	renderActivityMetrics,
@@ -33,10 +32,12 @@ import {
 } from '@app/api/middleware/ServiceRegistry';
 import {
 	getCacheService,
+	getCustomBadgeCatalog,
 	getInstanceConfigRepository,
 	getKVAccountDeletionQueue,
 	getReportRepository,
 	getUserRepository,
+	type ServiceSingletonDependencies,
 	shutdownInstanceConfigRepository,
 	shutdownServiceSingletons,
 } from '@app/api/middleware/ServiceSingletons';
@@ -47,12 +48,23 @@ import {VoiceDataInitializer} from '@app/api/voice/VoiceDataInitializer';
 import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {registerMetricsSection} from '@fluxer/hono/src/middleware/Metrics';
-import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
+import {getClient, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {ensureGeoipDatabaseOnStartup} from '@pkgs/geoip/src/GeoipStartup';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
+let jobQueue: ApiJobQueue | null = null;
+let searchInitRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let searchInitStopped = false;
+let searchInitInFlight: Promise<void> | null = null;
+let markSearchReady: () => void = () => {};
+const searchReady = new Promise<void>((resolve) => {
+	markSearchReady = resolve;
+});
+const SEARCH_INIT_RETRY_MIN_MS = 5_000;
+const SEARCH_INIT_RETRY_MAX_MS = 60_000;
 const unregisterMetricsSections: Array<() => void> = [];
 
 interface RefreshCacheLifecycle {
@@ -63,13 +75,17 @@ interface RefreshCacheLifecycle {
 const refreshCaches = new Map<RefreshCacheLifecycle, string>();
 let refreshCacheShutdownPromise: Promise<void> | null = null;
 
-async function initializeRefreshCache(cache: RefreshCacheLifecycle, name: string, logger: ILogger): Promise<void> {
+async function initializeRefreshCache(
+	cache: RefreshCacheLifecycle,
+	name: string,
+	logger: LoggerInterface,
+): Promise<void> {
 	refreshCaches.set(cache, name);
 	await cache.initialize();
 	logger.info(`${name} initialized`);
 }
 
-async function shutdownRefreshCaches(logger: ILogger): Promise<void> {
+async function shutdownRefreshCaches(logger: LoggerInterface): Promise<void> {
 	if (refreshCacheShutdownPromise) return await refreshCacheShutdownPromise;
 	const caches = [...refreshCaches];
 	refreshCaches.clear();
@@ -91,11 +107,84 @@ async function shutdownRefreshCaches(logger: ILogger): Promise<void> {
 	}
 }
 
+interface ApiJobQueue {
+	jsConnectionManager: JetStreamConnectionManager;
+	queue: JetStreamWorkerQueue;
+	workerService: WorkerService;
+	jobLedger: JobLedgerRepository;
+}
+
+export function getApiJobQueue(): ApiJobQueue | null {
+	return jobQueue;
+}
+
+export function whenSearchReady(): Promise<void> {
+	return searchReady;
+}
+
 function unsupportedDatabaseBackend(backend: never): never {
 	throw new Error(`Unsupported database backend during shutdown: ${String(backend)}`);
 }
 
-export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
+async function initializeSearchAndWarmup(
+	kvClient: ReturnType<typeof getKVClient>,
+	logger: LoggerInterface,
+): Promise<void> {
+	await initializeSearch(getCacheService());
+	markSearchReady();
+	if (searchInitStopped) return;
+	logger.info('Search initialized');
+	const warmupLockKey = 'fluxer:search:warmup:admin';
+	const warmupLockToken = randomUUID();
+	const warmupLockTtlSeconds = 60 * 60;
+	const acquiredWarmupLock = await kvClient.acquireLock(warmupLockKey, warmupLockToken, warmupLockTtlSeconds);
+	if (!acquiredWarmupLock) {
+		logger.info('Another API instance is warming search indexes, skipping warmup');
+		return;
+	}
+	try {
+		await warmupAdminSearchIndexes({
+			userRepository: getUserRepository(),
+			guildRepository: new GuildRepository(),
+			reportRepository: getReportRepository(),
+			logger,
+		});
+	} catch (error) {
+		logger.error({error}, 'Admin search warmup failed (continuing startup)');
+	} finally {
+		try {
+			await kvClient.releaseLock(warmupLockKey, warmupLockToken);
+		} catch (error) {
+			logger.warn({error}, 'Failed to release admin search warmup lock');
+		}
+	}
+}
+
+function scheduleSearchInitRetry(
+	kvClient: ReturnType<typeof getKVClient>,
+	logger: LoggerInterface,
+	attempt: number,
+): void {
+	if (searchInitStopped) return;
+	const delay = Math.min(SEARCH_INIT_RETRY_MIN_MS * 2 ** attempt, SEARCH_INIT_RETRY_MAX_MS);
+	searchInitRetryTimer = setTimeout(() => {
+		searchInitRetryTimer = null;
+		searchInitInFlight = initializeSearchAndWarmup(kvClient, logger)
+			.catch((error) => {
+				logger.error({error, attempt: attempt + 1}, 'Search initialisation failed, retrying in the background');
+				scheduleSearchInitRetry(kvClient, logger, attempt + 1);
+			})
+			.finally(() => {
+				searchInitInFlight = null;
+			});
+	}, delay);
+}
+
+export function createInitializer(
+	config: APIConfig,
+	logger: LoggerInterface,
+	dependencies: ServiceSingletonDependencies = {},
+): () => Promise<void> {
 	return async (): Promise<void> => {
 		try {
 			logger.info('Initializing API service...');
@@ -129,6 +218,9 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 				logger.info('Using injected database query executor for tests');
 			}
 			if (config.database.backend === 'cassandra' && !hasDatabaseQueryExecutor()) {
+				const {ensureCassandraSchema, logMissingCassandraKeyspace} = await import(
+					'@app/api/database/CassandraSchemaStartup'
+				);
 				await initCassandra({
 					hosts: config.cassandra.hosts.split(',').filter(Boolean),
 					port: config.cassandra.port,
@@ -136,8 +228,21 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 					localDc: config.cassandra.localDc,
 					username: config.cassandra.username || undefined,
 					password: config.cassandra.password || undefined,
+				}).catch((error: unknown) => {
+					if (config.instance.selfHosted) {
+						logMissingCassandraKeyspace(error, config.cassandra.keyspace, config.cassandra.localDc, logger);
+					}
+					throw error;
 				});
 				logger.info('Cassandra client initialized');
+				if (config.instance.selfHosted) {
+					await ensureCassandraSchema({
+						client: getClient(),
+						keyspace: config.cassandra.keyspace,
+						kv: getKVClient(),
+						logger,
+					});
+				}
 			} else if (config.database.backend === 'cassandra') {
 				logger.info('Using injected database query executor for tests');
 			}
@@ -161,8 +266,10 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			const {profileSubstringBlocklistCache} = await import('@app/api/middleware/ProfileSubstringBlocklistCache');
 			profileSubstringBlocklistCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(profileSubstringBlocklistCache, 'Profile substring blocklist cache', logger);
-			await initializeServiceSingletons();
+			await initializeServiceSingletons(dependencies);
 			logger.info('Service singletons initialized');
+			await getCustomBadgeCatalog().initialize();
+			logger.info('Custom badge catalog initialized');
 			if (!config.dev.testModeEnabled) {
 				jsConnectionManager = new JetStreamConnectionManager({
 					url: config.nats.jetStreamUrl,
@@ -170,9 +277,12 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 					name: 'api-worker',
 				});
 				await jsConnectionManager.connect();
-				const workerQueue = new JetStreamWorkerQueue(jsConnectionManager);
-				await workerQueue.ensureStream();
-				setInjectedWorkerService(new WorkerService(workerQueue, getSnowflakeService(), new JobLedgerRepository()));
+				const queue = new JetStreamWorkerQueue(jsConnectionManager);
+				await queue.ensureStream();
+				const jobLedger = new JobLedgerRepository();
+				const workerService = new WorkerService(queue, getSnowflakeService(), jobLedger);
+				setInjectedWorkerService(workerService);
+				jobQueue = {jsConnectionManager, queue, workerService, jobLedger};
 				logger.info('JetStream worker service initialized');
 				const connection = jsConnectionManager;
 				await startActivityEvents({
@@ -182,7 +292,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 					spoolWhileMissing: !config.instance.selfHosted,
 				});
 				startRequestErrorTelemetry();
-				startSharedListWatch(connection.getJetStreamClient());
+				startSharedListWatch(connection.getJetStreamClient(), {selfHosted: config.instance.selfHosted});
 				unregisterMetricsSections.push(
 					registerMetricsSection(renderActivityMetrics),
 					registerMetricsSection(renderSharedListMetrics),
@@ -191,40 +301,12 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			}
 			await ensureDeletionQueueState(getKVAccountDeletionQueue(), logger);
 			logger.info('Initializing search indexes...');
-			let searchInitialized = false;
+			searchInitStopped = false;
 			try {
-				await initializeSearch(getCacheService());
-				searchInitialized = true;
-				logger.info('Search initialized');
+				await initializeSearchAndWarmup(kvClient, logger);
 			} catch (error) {
-				logger.error({error}, 'Search initialisation failed');
-				throw error;
-			}
-			if (searchInitialized) {
-				const warmupLockKey = 'fluxer:search:warmup:admin';
-				const warmupLockToken = randomUUID();
-				const warmupLockTtlSeconds = 60 * 60;
-				const acquiredWarmupLock = await kvClient.acquireLock(warmupLockKey, warmupLockToken, warmupLockTtlSeconds);
-				if (!acquiredWarmupLock) {
-					logger.info('Another API instance is warming search indexes, skipping warmup');
-				} else {
-					try {
-						await warmupAdminSearchIndexes({
-							userRepository: getUserRepository(),
-							guildRepository: new GuildDataRepository(),
-							reportRepository: getReportRepository(),
-							logger,
-						});
-					} catch (error) {
-						logger.error({error}, 'Admin search warmup failed (continuing startup)');
-					} finally {
-						try {
-							await kvClient.releaseLock(warmupLockKey, warmupLockToken);
-						} catch (error) {
-							logger.warn({error}, 'Failed to release admin search warmup lock');
-						}
-					}
-				}
+				logger.error({error}, 'Search initialisation failed, retrying in the background');
+				scheduleSearchInitRetry(kvClient, logger, 0);
 			}
 			if (config.voice.enabled && config.voice.defaultRegion) {
 				const voiceDataInitializer = new VoiceDataInitializer();
@@ -260,7 +342,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 	};
 }
 
-export function createShutdown(config: APIConfig, logger: ILogger): () => Promise<void> {
+export function createShutdown(config: APIConfig, logger: LoggerInterface): () => Promise<void> {
 	return async (): Promise<void> => {
 		logger.info('Shutting down API service...');
 		try {
@@ -273,6 +355,7 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 		stopSharedListWatch();
 		for (const unregister of unregisterMetricsSections.splice(0)) unregister();
 		await shutdownActivityEvents();
+		jobQueue = null;
 		if (jsConnectionManager) {
 			try {
 				await jsConnectionManager.drain();
@@ -283,6 +366,12 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 		}
 		await shutdownStorageChangeFeed();
 		setInjectedWorkerService(undefined);
+		searchInitStopped = true;
+		if (searchInitRetryTimer) {
+			clearTimeout(searchInitRetryTimer);
+			searchInitRetryTimer = null;
+		}
+		await searchInitInFlight;
 		try {
 			await shutdownSearch();
 			logger.info('Search service shut down');

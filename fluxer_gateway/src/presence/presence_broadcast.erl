@@ -8,15 +8,10 @@
     force_publish_global_presence/1,
     dispatch_global_presence/3,
     dispatch_to_all_sessions/3,
-    ensure_initial_global_subscriptions/1,
-    sync_friend_subscriptions/3,
-    sync_group_dm_subscriptions/2,
-    send_cached_presences_to_session/2,
     publish_user_update_to_bus/3,
     is_last_published_visible/1,
     cache_if_visible/2,
     current_visible_presence/1,
-    map_from_ids/1,
     normalize_group_dm_recipients/3
 ]).
 
@@ -102,22 +97,6 @@ safe_cast_or_shed(Pid, Msg) ->
             ok
     end.
 
--spec ensure_initial_global_subscriptions(state()) -> state().
-ensure_initial_global_subscriptions(State) ->
-    presence_broadcast_subscriptions:ensure_initial_global_subscriptions(State).
-
--spec sync_friend_subscriptions([user_id()], [user_id()], state()) -> state().
-sync_friend_subscriptions(FriendIds, FlushedIds, State) ->
-    presence_broadcast_subscriptions:sync_friend_subscriptions(FriendIds, FlushedIds, State).
-
--spec sync_group_dm_subscriptions(map(), state()) -> state().
-sync_group_dm_subscriptions(RecipientsByChannel, State) ->
-    presence_broadcast_subscriptions:sync_group_dm_subscriptions(RecipientsByChannel, State).
-
--spec send_cached_presences_to_session(pid(), state()) -> ok.
-send_cached_presences_to_session(SessionPid, State) ->
-    presence_broadcast_subscriptions:send_cached_presences_to_session(SessionPid, State).
-
 -spec publish_user_update_to_bus(user_id(), map(), state()) -> ok.
 publish_user_update_to_bus(UserId, UserData, State) ->
     LastPublished = maps:get(last_published_presence, State, undefined),
@@ -155,10 +134,6 @@ current_visible_presence(State) ->
         <<"invisible">> -> not_found;
         _ -> {ok, Payload}
     end.
-
--spec map_from_ids([term()]) -> #{term() => true}.
-map_from_ids(Ids) when is_list(Ids) ->
-    presence_broadcast_subscriptions:map_from_ids(Ids).
 
 -spec normalize_group_dm_recipients(map(), user_id(), boolean()) ->
     #{integer() => #{user_id() => true}}.
@@ -200,7 +175,7 @@ presence_changed(Last, Current) -> Last =/= Current.
 
 -spec build_presence_payload(state()) -> map().
 build_presence_payload(State) ->
-    Sessions = maps:get(sessions, State),
+    Sessions = presence_status:effective_sessions(State),
     Status = presence_status:get_current_status(Sessions),
     Mobile = presence_status:get_flattened_mobile(Sessions),
     Afk = presence_status:get_flattened_afk(Sessions),
@@ -236,63 +211,3 @@ dispatch_global_user_update(TargetId, Payload, State) ->
 dispatch_to_sessions(Payload, State) ->
     SessionPids = presence_connect:collect_session_pids(State),
     gateway_dispatch_relay:dispatch_many(SessionPids, presence_update, Payload).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-expiry_timer_not_armed_without_expires_at_test() ->
-    ?assertNot(
-        maps:is_key(
-            ?CUSTOM_STATUS_EXPIRY_TIMER,
-            refresh_custom_status_expiry_timer(#{custom_status => null})
-        )
-    ),
-    ?assertNot(
-        maps:is_key(
-            ?CUSTOM_STATUS_EXPIRY_TIMER,
-            refresh_custom_status_expiry_timer(#{
-                custom_status => #{<<"text">> => <<"hi">>}
-            })
-        )
-    ).
-
-expiry_timer_armed_for_a_future_expiry_test() ->
-    State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-    ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
-    ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
-
-expiry_timer_not_armed_for_an_already_expired_status_test() ->
-    Expired = #{<<"expires_at">> => <<"2020-01-01T00:00:00.000Z">>},
-    State = refresh_custom_status_expiry_timer(#{custom_status => Expired}),
-    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
-
-expiry_timer_replaces_the_previous_one_test() ->
-    First = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-    Second = refresh_custom_status_expiry_timer(First),
-    ?assertNotEqual(
-        maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, First),
-        maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)
-    ),
-    ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)).
-
-expiry_timer_is_dropped_when_the_status_is_cleared_test() ->
-    Armed = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-    Cleared = refresh_custom_status_expiry_timer(Armed#{custom_status => null}),
-    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, Cleared)).
-
-expiry_timer_delivers_a_reconcile_cast_test() ->
-    State = arm_expiry_timer({ok, 1}, #{}),
-    ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
-    Expected = custom_status_expiry:reconcile_message(),
-    receive
-        Expected -> ok
-    after 1000 -> ?assert(false)
-    end.
-
-future_custom_status() ->
-    ExpiresAt = calendar:system_time_to_rfc3339(
-        erlang:system_time(millisecond) + 3600000, [{unit, millisecond}, {offset, "Z"}]
-    ),
-    #{<<"text">> => <<"brb">>, <<"expires_at">> => list_to_binary(ExpiresAt)}.
-
--endif.

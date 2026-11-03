@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import type {Channel, ChannelWire} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {getDefaultLayout, getDefaultSortOrder, getDefaultTagSetting} from '@app/features/forum/utils/ForumChannelUtils';
@@ -20,16 +21,17 @@ import {
 	POST_DATA_MAX_IDS,
 	THREAD_SEARCH_MAX_LIMIT,
 } from '@fluxer/constants/src/ThreadConstants';
+import {MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {makeAutoObservable, observable, runInAction} from 'mobx';
 
 const logger = new Logger('ForumPosts');
 
-export const FORUM_SEARCH_DEBOUNCE_MS = 300;
-export const POST_DATA_DEBOUNCE_MS = 50;
-export const SEARCH_RETRY_MAX_ATTEMPTS = 6;
-export const SEARCH_RETRY_MAX_DELAY_MS = 60_000;
+const FORUM_SEARCH_DEBOUNCE_MS = 300;
+const POST_DATA_DEBOUNCE_MS = 50;
+const SEARCH_RETRY_MAX_ATTEMPTS = 6;
+const SEARCH_RETRY_MAX_DELAY_MS = MS_PER_MINUTE;
 
 export type ForumListKind = 'archived' | 'search';
 
@@ -121,7 +123,7 @@ export function canRequestForumPosts(forum: Channel): boolean {
 }
 
 export function searchRetryDelayMs(retryAfterSeconds: number | undefined, attempt: number): number {
-	const base = Math.max(1, retryAfterSeconds ?? 1) * 1000;
+	const base = Math.max(1, retryAfterSeconds ?? 1) * MS_PER_SECOND;
 	return Math.min(SEARCH_RETRY_MAX_DELAY_MS, base * 2 ** attempt);
 }
 
@@ -418,17 +420,20 @@ class ForumPosts {
 			return;
 		}
 		const sortOrder = this.getSortOrder(forum);
+		let sortBy: 'last_message_time' | 'creation_time' | 'relevance';
+		if (kind === 'search') {
+			sortBy = 'relevance';
+		} else if (sortOrder === ForumSortOrderTypes.CREATION_TIME) {
+			sortBy = 'creation_time';
+		} else {
+			sortBy = 'last_message_time';
+		}
 		const path = buildSearchPath(forum.id, {
 			name: kind === 'search' ? query : null,
 			tagIds: this.getTagFilter(forum.id),
 			tagSetting: getDefaultTagSetting(forum),
 			archived: kind === 'archived' ? true : null,
-			sortBy:
-				kind === 'search'
-					? 'relevance'
-					: sortOrder === ForumSortOrderTypes.CREATION_TIME
-						? 'creation_time'
-						: 'last_message_time',
+			sortBy,
 			offset: append ? current.ids.length : 0,
 		});
 		try {
@@ -597,4 +602,8 @@ class ForumPosts {
 	}
 }
 
-export default new ForumPosts();
+const forumPosts = new ForumPosts();
+
+ResettableStates.register(forumPosts, () => forumPosts.reset());
+
+export default forumPosts;

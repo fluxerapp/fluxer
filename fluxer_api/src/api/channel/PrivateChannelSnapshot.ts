@@ -21,7 +21,7 @@ type SnapshotPatch = Partial<{
 	snapshot_at: DbOp<Date>;
 }>;
 
-export function isPrivateChannelType(type: number): boolean {
+function isPrivateChannelType(type: number): boolean {
 	return type === ChannelTypes.DM || type === ChannelTypes.GROUP_DM || type === ChannelTypes.DM_PERSONAL_NOTES;
 }
 

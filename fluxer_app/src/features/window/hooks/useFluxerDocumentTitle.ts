@@ -8,10 +8,6 @@ import {useEffect} from 'react';
 type TitlePart = string | null | undefined;
 type TitleInput = TitlePart | Array<TitlePart>;
 
-interface UseDocumentTitleOptions {
-	preserveTitleOnUnmount?: boolean;
-}
-
 interface BadgeState {
 	mentionCount: number;
 	hasUnread: boolean;
@@ -55,18 +51,15 @@ export const updateDocumentTitleBadge = (mentionCount: number, hasUnread: boolea
 	currentBadgeState = {mentionCount, hasUnread};
 	updateDocumentTitle();
 };
-export const useFluxerDocumentTitle = (title?: TitleInput, options?: UseDocumentTitleOptions) => {
+export const useFluxerDocumentTitle = (title?: TitleInput) => {
 	const partsKey = JSON.stringify(normalizeTitleParts(title));
-	const preserveTitleOnUnmount = options?.preserveTitleOnUnmount;
 	useEffect(() => {
 		const previousParts = currentTitleParts;
 		currentTitleParts = JSON.parse(partsKey) as Array<string>;
 		updateDocumentTitle();
 		return () => {
-			if (!preserveTitleOnUnmount) {
-				currentTitleParts = previousParts;
-				updateDocumentTitle();
-			}
+			currentTitleParts = previousParts;
+			updateDocumentTitle();
 		};
-	}, [partsKey, preserveTitleOnUnmount]);
+	}, [partsKey]);
 };

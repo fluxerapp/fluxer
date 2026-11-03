@@ -50,6 +50,7 @@ import {handleRecentMentionDelete} from '@app/features/messaging/events/RecentMe
 import {handleSavedMessageCreate} from '@app/features/messaging/events/SavedMessageCreate';
 import {handleSavedMessageDelete} from '@app/features/messaging/events/SavedMessageDelete';
 import {handleTypingStart} from '@app/features/messaging/events/TypingStart';
+import {handleOperatorPassUpdate} from '@app/features/premium/events/OperatorPassUpdate';
 import {handlePresenceUpdate} from '@app/features/presence/events/PresenceUpdate';
 import {handlePresenceUpdateBulk} from '@app/features/presence/events/PresenceUpdateBulk';
 import {handleRelationshipAdd} from '@app/features/relationship/events/RelationshipAdd';
@@ -108,6 +109,7 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('USER_GUILD_SETTINGS_UPDATE', handleUserGuildSettingsUpdate as GatewayEventHandler);
 	registry.set('USER_PINNED_DMS_UPDATE', handleUserPinnedDmsUpdate as GatewayEventHandler);
 	registry.set('USER_NOTE_UPDATE', handleUserNoteUpdate as GatewayEventHandler);
+	registry.set('OPERATOR_PASS_UPDATE', handleOperatorPassUpdate as GatewayEventHandler);
 	registry.set('USER_CONNECTIONS_UPDATE', handleUserConnectionsUpdate as GatewayEventHandler);
 	registry.set('WEBAUTHN_CREDENTIALS_UPDATE', handleWebAuthnCredentialsUpdate as GatewayEventHandler);
 	registry.set('GUILD_CREATE', handleGuildCreate as GatewayEventHandler);

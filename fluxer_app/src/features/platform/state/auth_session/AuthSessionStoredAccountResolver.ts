@@ -38,7 +38,7 @@ export interface ResolvedActiveStoredAccountRestoration {
 	readonly usedMirroredCredential: boolean;
 }
 
-export interface SignedOutActiveStoredAccountRestoration {
+interface SignedOutActiveStoredAccountRestoration {
 	readonly kind: 'signed-out';
 	readonly inventory: StoredAccountInventory;
 	readonly reason: 'no-session-pointer';
@@ -53,7 +53,7 @@ export type ActiveStoredAccountUnresolvedReason =
 	| 'runtime-identity-unavailable'
 	| 'unavailable-account';
 
-export interface UnresolvedActiveStoredAccountRestoration {
+interface UnresolvedActiveStoredAccountRestoration {
 	readonly kind: 'unresolved';
 	readonly inventory: StoredAccountInventory;
 	readonly reason: ActiveStoredAccountUnresolvedReason;
@@ -74,7 +74,7 @@ export class StoredAccountNotFoundError extends Error {
 	}
 }
 
-export class StoredAccountSelectionAmbiguityError extends Error {
+class StoredAccountSelectionAmbiguityError extends Error {
 	readonly accountKey: string;
 
 	constructor(accountKey: string) {
@@ -84,7 +84,7 @@ export class StoredAccountSelectionAmbiguityError extends Error {
 	}
 }
 
-export class StoredAccountRuntimeIdentityUnavailableError extends Error {
+class StoredAccountRuntimeIdentityUnavailableError extends Error {
 	readonly accountKey: string;
 
 	constructor(accountKey: string) {
@@ -94,7 +94,7 @@ export class StoredAccountRuntimeIdentityUnavailableError extends Error {
 	}
 }
 
-export class StoredAccountRuntimeIdentityMismatchError extends Error {
+class StoredAccountRuntimeIdentityMismatchError extends Error {
 	readonly accountKey: string;
 	readonly expectedInstanceKey: string;
 	readonly resolvedInstanceKey: string;
@@ -108,7 +108,7 @@ export class StoredAccountRuntimeIdentityMismatchError extends Error {
 	}
 }
 
-export class StoredAccountStorageIdentityMismatchError extends Error {
+class StoredAccountStorageIdentityMismatchError extends Error {
 	readonly accountKey: string;
 	readonly derivedAccountKey: string | null;
 
@@ -120,7 +120,7 @@ export class StoredAccountStorageIdentityMismatchError extends Error {
 	}
 }
 
-export class StoredAccountReplacementInvariantError extends Error {
+class StoredAccountReplacementInvariantError extends Error {
 	readonly accountKey: string;
 
 	constructor(accountKey: string, message: string) {
@@ -380,21 +380,16 @@ export class AuthSessionStoredAccountResolver {
 		entry: ReplaceableStoredAccountEntry,
 		mirroredCredential: StoredSessionCredential | null,
 	): Promise<ActiveStoredAccountRestoration> {
+		const storedToken = entry.kind === 'ready' ? entry.record.token : entry.data.token;
 		const selectedToken =
-			inventory.source === 'idb' && mirroredCredential !== null
-				? mirroredCredential.token
-				: entry.kind === 'ready'
-					? entry.record.token
-					: entry.data.token;
+			inventory.source === 'idb' && mirroredCredential !== null ? mirroredCredential.token : storedToken;
 		if (selectedToken === null) {
 			return {kind: 'unresolved', inventory, reason: 'missing-credential'};
 		}
 		if (entry.kind === 'runtime-recovery') {
-			const storedToken = entry.data.token;
 			const replacement = await this.recoverRuntime(entry, selectedToken);
 			return await this.resolvedAfterReplacement(replacement, storedToken !== selectedToken);
 		}
-		const storedToken = entry.record.token;
 		if (inventory.source !== 'idb' || storedToken === selectedToken) {
 			return {
 				kind: 'resolved',

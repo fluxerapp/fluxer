@@ -574,14 +574,10 @@ export const VideoPlayer = observer(function VideoPlayer({
 		),
 	);
 	const progressPreviewPortalRoot = fullscreenPortalRoot;
-	const containerStyle: React.CSSProperties = {
-		...style,
-		...(width && height && !fillContainer
-			? {aspectRatio: `${width} / ${height}`}
-			: !fillContainer
-				? {aspectRatio: '16 / 9'}
-				: {}),
-	};
+	const containerStyle: React.CSSProperties = {...style};
+	if (!fillContainer) {
+		containerStyle.aspectRatio = width && height ? `${width} / ${height}` : '16 / 9';
+	}
 	return (
 		<PortalHostContext.Provider value={fullscreenPortalRoot ?? inheritedPortalHost}>
 			<FocusRing offset={-2} data-flx="voice.media-player.video-player.focus-ring">

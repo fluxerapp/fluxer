@@ -15,14 +15,6 @@ if [ "${PRECOMPRESS_WORKER:-}" = "1" ]; then
 		rm -f "$source_file.br"
 	fi
 
-	if gzip -n "-$PRECOMPRESS_GZIP_LEVEL" -c "$source_file" >"$source_file.gz" 2>/dev/null; then
-		if [ "$(wc -c <"$source_file.gz")" -ge "$source_size" ]; then
-			rm -f "$source_file.gz"
-		fi
-	else
-		rm -f "$source_file.gz"
-	fi
-
 	exit 0
 fi
 
@@ -35,22 +27,19 @@ esac
 
 PRECOMPRESS_WORKER=1
 PRECOMPRESS_BROTLI_QUALITY="${PRECOMPRESS_BROTLI_QUALITY:-11}"
-PRECOMPRESS_GZIP_LEVEL="${PRECOMPRESS_GZIP_LEVEL:-9}"
-export PRECOMPRESS_WORKER PRECOMPRESS_BROTLI_QUALITY PRECOMPRESS_GZIP_LEVEL
+export PRECOMPRESS_WORKER PRECOMPRESS_BROTLI_QUALITY
 
 min_size="${PRECOMPRESS_MIN_SIZE_BYTES:-1024}"
 jobs="${PRECOMPRESS_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 
 find "$root" -type f \
 	! -name '*.br' \
-	! -name '*.gz' \
 	-size +"${min_size}"c \
 	\( \
 	-name '*.css' -o \
 	-name '*.html' -o \
 	-name '*.js' -o \
 	-name '*.json' -o \
-	-name '*.map' -o \
 	-name '*.mjs' -o \
 	-name '*.svg' -o \
 	-name '*.txt' -o \

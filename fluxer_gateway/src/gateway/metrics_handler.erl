@@ -7,7 +7,7 @@
 
 -spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
 init(Req0, State) ->
-    case is_loopback_request(Req0) of
+    case health_handler:is_loopback_request(Req0) of
         false ->
             Req = cowboy_req:reply(
                 403,
@@ -27,17 +27,6 @@ init(Req0, State) ->
             {ok, Req, State}
     end.
 
--spec is_loopback_request(cowboy_req:req()) -> boolean().
-is_loopback_request(Req) ->
-    case cowboy_req:peer(Req) of
-        {{127, 0, 0, 1}, _Port} ->
-            true;
-        {{0, 0, 0, 0, 0, 0, 0, 1}, _Port} ->
-            true;
-        _ ->
-            false
-    end.
-
 -spec render_metrics() -> iolist().
 render_metrics() ->
     [
@@ -45,6 +34,7 @@ render_metrics() ->
         render_cluster_counters(),
         render_process_counts(),
         render_channel_threads_stats(),
+        render_guild_visitor_stats(safe_apply_map(fun guild_visitor_metrics:counts/0)),
         render_push_outbox_stats(safe_apply_map(fun push_outbox:stats/0)),
         render_vm_metrics()
     ].
@@ -61,62 +51,35 @@ render_gateway_gauges() ->
     PushActive = safe_apply_int(fun push_worker_pool:active_count/0),
     ConcurrentSessions = safe_apply_int(fun gateway_concurrency:session_start_count/0),
     ConcurrentGuilds = safe_apply_int(fun gateway_concurrency:guild_start_count/0),
+    QueuedSessions = safe_apply_int(fun gateway_concurrency:session_queue_length/0),
     [
-        format_metric(
-            <<"fluxer_gateway_sessions_total">>,
-            <<"gauge">>,
-            <<"Connected WebSocket sessions">>,
-            integer_to_binary(Sessions)
-        ),
-        format_metric(
-            <<"fluxer_gateway_session_resumes_total">>,
-            <<"counter">>,
-            <<"Successful WebSocket session resumes">>,
-            integer_to_binary(Resumes)
-        ),
-        format_metric(
-            <<"fluxer_gateway_guilds_total">>,
-            <<"gauge">>,
-            <<"Locally loaded guilds">>,
-            integer_to_binary(Guilds)
-        ),
-        format_metric(
-            <<"fluxer_gateway_websocket_dispatches_total">>,
-            <<"counter">>,
-            <<"WebSocket dispatch frames handed to the transport, including replays">>,
-            integer_to_binary(Dispatches)
-        ),
-        format_metric(
-            <<"fluxer_gateway_websocket_dispatch_drops_total">>,
-            <<"counter">>,
-            <<"WebSocket dispatches dropped due to encoding or compression errors">>,
-            integer_to_binary(DispatchDrops)
-        ),
+        format_integer_metrics([
+            {<<"fluxer_gateway_sessions_total">>, <<"gauge">>,
+                <<"Connected WebSocket sessions">>, Sessions},
+            {<<"fluxer_gateway_session_resumes_total">>, <<"counter">>,
+                <<"Successful WebSocket session resumes">>, Resumes},
+            {<<"fluxer_gateway_guilds_total">>, <<"gauge">>, <<"Locally loaded guilds">>,
+                Guilds},
+            {<<"fluxer_gateway_websocket_dispatches_total">>, <<"counter">>,
+                <<"WebSocket dispatch frames handed to the transport, including replays">>,
+                Dispatches},
+            {<<"fluxer_gateway_websocket_dispatch_drops_total">>, <<"counter">>,
+                <<"WebSocket dispatches dropped due to encoding or compression errors">>,
+                DispatchDrops}
+        ]),
         render_voice_metrics(VoiceCounts),
-        format_metric(
-            <<"fluxer_gateway_calls_total">>,
-            <<"gauge">>,
-            <<"Active voice calls">>,
-            integer_to_binary(length(CallIds))
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_workers_active">>,
-            <<"gauge">>,
-            <<"Active push notification workers">>,
-            integer_to_binary(PushActive)
-        ),
-        format_metric(
-            <<"fluxer_gateway_concurrent_session_starts">>,
-            <<"gauge">>,
-            <<"In-flight session start operations">>,
-            integer_to_binary(ConcurrentSessions)
-        ),
-        format_metric(
-            <<"fluxer_gateway_concurrent_guild_starts">>,
-            <<"gauge">>,
-            <<"In-flight guild start operations">>,
-            integer_to_binary(ConcurrentGuilds)
-        )
+        format_integer_metrics([
+            {<<"fluxer_gateway_calls_total">>, <<"gauge">>, <<"Active voice calls">>,
+                length(CallIds)},
+            {<<"fluxer_gateway_push_workers_active">>, <<"gauge">>,
+                <<"Active push notification workers">>, PushActive},
+            {<<"fluxer_gateway_concurrent_session_starts">>, <<"gauge">>,
+                <<"In-flight session start operations">>, ConcurrentSessions},
+            {<<"fluxer_gateway_queued_session_starts">>, <<"gauge">>,
+                <<"Session starts waiting for admission">>, QueuedSessions},
+            {<<"fluxer_gateway_concurrent_guild_starts">>, <<"gauge">>,
+                <<"In-flight guild start operations">>, ConcurrentGuilds}
+        ])
     ].
 
 -spec safe_apply_int(fun(() -> term())) -> integer().
@@ -274,6 +237,60 @@ count_registry_prefix(Prefix) ->
         error:badarg -> 0
     end.
 
+-spec render_guild_visitor_stats(map()) -> iolist().
+render_guild_visitor_stats(Counts) ->
+    [
+        format_metric(
+            <<"fluxer_gateway_guild_visitor_sessions">>,
+            <<"gauge">>,
+            <<"Live guild visitor sessions on this node">>,
+            integer_to_binary(max(0, visitor_count(live, Counts)))
+        ),
+        format_metric(
+            <<"fluxer_gateway_guild_visitor_admitted_total">>,
+            <<"counter">>,
+            <<"Guild visitor sessions admitted">>,
+            integer_to_binary(visitor_count(admitted, Counts))
+        ),
+        format_metric(
+            <<"fluxer_gateway_guild_visitor_converted_total">>,
+            <<"counter">>,
+            <<"Guild visitor sessions converted to member sessions">>,
+            integer_to_binary(visitor_count(converted, Counts))
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_guild_visitor_rejected_total">>,
+            <<"counter">>,
+            <<"Guild visitor connects rejected by reason">>,
+            [
+                {
+                    <<"reason=\"", (atom_to_binary(Reason))/binary, "\"">>,
+                    integer_to_binary(visitor_count({rejected, Reason}, Counts))
+                }
+             || Reason <- guild_visitor_metrics:reject_reasons()
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_guild_visitor_evicted_total">>,
+            <<"counter">>,
+            <<"Guild visitor sessions evicted by reason">>,
+            [
+                {
+                    <<"reason=\"", (atom_to_binary(Reason))/binary, "\"">>,
+                    integer_to_binary(visitor_count({evicted, Reason}, Counts))
+                }
+             || Reason <- guild_visitor_metrics:evict_reasons()
+            ]
+        )
+    ].
+
+-spec visitor_count(term(), map()) -> integer().
+visitor_count(Key, Counts) ->
+    case maps:get(Key, Counts, 0) of
+        N when is_integer(N) -> N;
+        _ -> 0
+    end.
+
 -spec render_channel_threads_stats() -> iolist().
 render_channel_threads_stats() ->
     UpdateCounts = safe_apply_map(fun channel_threads_config:update_counts/0),
@@ -289,27 +306,15 @@ render_channel_threads_stats() ->
             <<"fluxer_gateway_channel_threads_config_updates_total">>,
             <<"counter">>,
             <<"Channel threads config reads by outcome">>,
-            [
-                {
-                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
-                    gate_counter(Result, UpdateCounts)
-                }
-             || Result <- [updated, unchanged, stale, rejected]
-            ]
+            counter_labels(<<"result">>, [updated, unchanged, stale, rejected], UpdateCounts)
         ),
         format_labeled_series(
             <<"fluxer_gateway_channel_threads_flips_total">>,
             <<"counter">>,
             <<"Channel threads gate flips scheduled by kind">>,
-            [
-                {
-                    <<"kind=\"", (atom_to_binary(Kind))/binary, "\"">>,
-                    gate_counter(Kind, FlipCounts)
-                }
-             || Kind <- [guild, viewers, user, heal]
-            ]
+            counter_labels(<<"kind">>, [guild, viewers, user, heal], FlipCounts)
         ),
-        render_identify_counts(safe_apply_map(fun channel_threads_config:identify_counts/0)),
+        render_identify_counts(safe_apply_map(fun channel_threads_identify_counts:counts/0)),
         render_thread_stats()
     ].
 
@@ -345,25 +350,13 @@ render_thread_stats() ->
             <<"fluxer_gateway_thread_list_sync_total">>,
             <<"counter">>,
             <<"THREAD_LIST_SYNC sends by reason">>,
-            [
-                {
-                    <<"reason=\"", (atom_to_binary(Reason))/binary, "\"">>,
-                    gate_counter(Reason, SyncCounts)
-                }
-             || Reason <- [full, access]
-            ]
+            counter_labels(<<"reason">>, [full, access], SyncCounts)
         ),
         format_labeled_series(
             <<"fluxer_gateway_thread_collection_fetch_total">>,
             <<"counter">>,
             <<"Thread collection fetches by result">>,
-            [
-                {
-                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
-                    gate_counter(Result, FetchCounts)
-                }
-             || Result <- [ok, error, refetch]
-            ]
+            counter_labels(<<"result">>, [ok, error, refetch], FetchCounts)
         ),
         format_metric(
             <<"fluxer_gateway_thread_permission_unknown_parent_total">>,
@@ -494,30 +487,14 @@ render_vm_metrics() ->
     SchedulerCount = safe_apply_int(fun() -> erlang:system_info(schedulers_online) end),
     [
         render_memory_metrics(Memory),
-        format_metric(
-            <<"erlang_vm_process_count">>,
-            <<"gauge">>,
-            <<"Erlang VM process count">>,
-            integer_to_binary(ProcessCount)
-        ),
-        format_metric(
-            <<"erlang_vm_port_count">>,
-            <<"gauge">>,
-            <<"Erlang VM port count">>,
-            integer_to_binary(PortCount)
-        ),
-        format_metric(
-            <<"erlang_vm_atom_count">>,
-            <<"gauge">>,
-            <<"Erlang VM atom count">>,
-            integer_to_binary(AtomCount)
-        ),
-        format_metric(
-            <<"erlang_vm_scheduler_count">>,
-            <<"gauge">>,
-            <<"Erlang VM online schedulers">>,
-            integer_to_binary(SchedulerCount)
-        )
+        format_integer_metrics([
+            {<<"erlang_vm_process_count">>, <<"gauge">>, <<"Erlang VM process count">>,
+                ProcessCount},
+            {<<"erlang_vm_port_count">>, <<"gauge">>, <<"Erlang VM port count">>, PortCount},
+            {<<"erlang_vm_atom_count">>, <<"gauge">>, <<"Erlang VM atom count">>, AtomCount},
+            {<<"erlang_vm_scheduler_count">>, <<"gauge">>, <<"Erlang VM online schedulers">>,
+                SchedulerCount}
+        ])
     ].
 
 -spec render_memory_metrics(list()) -> iolist().
@@ -538,6 +515,23 @@ render_memory_metrics(Memory) ->
         <<"Erlang VM memory usage in bytes">>,
         Lines
     ).
+
+-spec counter_labels(binary(), [atom()], map()) -> [{binary(), binary()}].
+counter_labels(Label, Keys, Counts) ->
+    [
+        {
+            <<Label/binary, "=\"", (atom_to_binary(Key))/binary, "\"">>,
+            gate_counter(Key, Counts)
+        }
+     || Key <- Keys
+    ].
+
+-spec format_integer_metrics([{binary(), binary(), binary(), integer()}]) -> iolist().
+format_integer_metrics(Metrics) ->
+    [
+        format_metric(Name, Type, Help, integer_to_binary(Value))
+     || {Name, Type, Help, Value} <- Metrics
+    ].
 
 -spec format_metric(binary(), binary(), binary(), binary()) -> iolist().
 format_metric(Name, Type, Help, Value) ->

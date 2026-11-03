@@ -377,6 +377,24 @@ const SortableAttachmentItem = observer(
 		const isMedia = hasRenderableLocalPreview(attachment);
 		const isHiddenSpoiler = isSpoiler && spoilerHidden;
 		const IconComponent = getFileIcon(attachment.file);
+		let thumbnail: React.ReactNode = null;
+		if (isEmbeddableImageFile(attachment.file)) {
+			thumbnail = (
+				<ImageThumbnail
+					attachment={attachment}
+					spoiler={isHiddenSpoiler}
+					data-flx="channel.channel-attachment-area.sortable-attachment-item.image-thumbnail"
+				/>
+			);
+		} else if (attachment.file.type.startsWith('video/')) {
+			thumbnail = (
+				<VideoThumbnail
+					attachment={attachment}
+					spoiler={isHiddenSpoiler}
+					data-flx="channel.channel-attachment-area.sortable-attachment-item.video-thumbnail"
+				/>
+			);
+		}
 		return (
 			<li
 				ref={setRefs}
@@ -434,19 +452,7 @@ const SortableAttachmentItem = observer(
 											className={styles.spoilerWrapper}
 											data-flx="channel.channel-attachment-area.sortable-attachment-item.spoiler-wrapper"
 										>
-											{isEmbeddableImageFile(attachment.file) ? (
-												<ImageThumbnail
-													attachment={attachment}
-													spoiler={isHiddenSpoiler}
-													data-flx="channel.channel-attachment-area.sortable-attachment-item.image-thumbnail"
-												/>
-											) : attachment.file.type.startsWith('video/') ? (
-												<VideoThumbnail
-													attachment={attachment}
-													spoiler={isHiddenSpoiler}
-													data-flx="channel.channel-attachment-area.sortable-attachment-item.video-thumbnail"
-												/>
-											) : null}
+											{thumbnail}
 											<div
 												className={styles.tags}
 												data-flx="channel.channel-attachment-area.sortable-attachment-item.tags"
