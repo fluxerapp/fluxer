@@ -76,8 +76,10 @@ remote_group_reply(Server, Ids, ReqId, Deadline) ->
     case gen_server:receive_response(ReqId, {abs, Deadline}) of
         {reply, Reply} when is_map(Reply) ->
             sanitize_presence_map(Reply);
+        {reply, _Legacy} ->
+            map_from_presence_list(safe_server_call(Server, {bulk_get_local, Ids}, []));
         _ ->
-            map_from_presence_list(safe_server_call(Server, {bulk_get_local, Ids}, []))
+            #{}
     end.
 
 -spec get_from_cluster(integer()) -> {ok, map()} | not_found.
@@ -130,7 +132,15 @@ safe_remote_call(TargetNode, Request, Fallback) ->
 safe_remote_call(TargetNode, Request, Fallback, Timeout) when
     is_integer(Timeout), Timeout > 0
 ->
-    safe_server_call({presence_cache, TargetNode}, Request, Fallback, Timeout).
+    case is_remote_write(Request) andalso lists:member(TargetNode, nodes()) of
+        true -> fire_remote_cast(TargetNode, Request);
+        false -> safe_server_call({presence_cache, TargetNode}, Request, Fallback, Timeout)
+    end.
+
+-spec is_remote_write(term()) -> boolean().
+is_remote_write({put_local, _UserId, _Presence}) -> true;
+is_remote_write({delete_local, _UserId}) -> true;
+is_remote_write(_Request) -> false.
 
 -spec safe_server_call(gen_server:server_ref(), term(), term()) -> term().
 safe_server_call(Server, Request, Fallback) ->
