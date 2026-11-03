@@ -963,7 +963,7 @@ impl ListContext<'_> {
             {
                 break;
             }
-            if let Some(item) = match_list_item(current_line) {
+            if let Some(item) = match_list_item(current_line, self.parser.flags()) {
                 let ordinal = normalise_ordinal(&items, item.ordinal, ordered);
                 if item.indent_level < indent_level {
                     break;
@@ -973,7 +973,7 @@ impl ListContext<'_> {
                         break;
                     }
                     let mut children = Vec::new();
-                    if let Some(inline_item) = match_list_item(item.content) {
+                    if let Some(inline_item) = match_list_item(item.content, self.parser.flags()) {
                         let mut nested_items = Vec::new();
                         let inline_nodes = crate::inline::parse_inline(
                             self.parser,
@@ -983,6 +983,7 @@ impl ListContext<'_> {
                         nested_items.push(ListItem {
                             children: inline_nodes,
                             ordinal: None,
+                            checked: inline_item.checked,
                         });
                         if let Some(nested) =
                             self.try_parse_nested_list(index + 1, indent_level, depth, new_count)?
@@ -1022,7 +1023,7 @@ impl ListContext<'_> {
                             new_count += content_node_count;
                         }
                     }
-                    items.push(ListItem { children, ordinal });
+                    items.push(ListItem { children, ordinal, checked: item.checked });
                 } else if item.indent_level == indent_level + 1 && depth < 9 {
                     let nested = self.parse_list(
                         index,
@@ -1102,7 +1103,7 @@ impl ListContext<'_> {
                 new_node_count: node_count + 1,
             }));
         }
-        if let Some(item) = match_list_item(&lines[current].text)
+        if let Some(item) = match_list_item(&lines[current].text, self.parser.flags())
             && item.indent_level > parent_indent
             && depth < 9
         {
