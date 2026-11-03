@@ -288,7 +288,7 @@
 		"cta": "Δες την πρόταση",
 		"footer_reason": "Έλαβες αυτό το email επειδή κάποιος θέλει να σου μεταβιβάσει ένα Operator Pass στο {product_name}.",
 		"intro": "Ο χρήστης {senderName} θέλει να σου μεταβιβάσει ένα από τα Operator Pass του.",
-		"lead": "Αποδέξου ή απόρριψέ το στο {product_name}. Αν το αποδεχτείς, θα φτάσει στις {arrivesAt, date, long}, εκτός αν ο αποστολέας αποσύρει πρώτα την πρόταση.",
+		"lead_v2": "Αποδέξου ή απόρριψέ το στο {product_name}. Αν το αποδεχτείς, μεταφέρεται σε σένα αμέσως.",
 		"signoff": "Η ομάδα του {product_name}",
 		"subject": "Ο χρήστης {senderName} θέλει να σου μεταβιβάσει ένα Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Η ομάδα του {product_name}",
 		"subject": "Ένα Operator Pass στον λογαριασμό σου στο {product_name} έληξε"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Το συνοδεύουν επίσης το σήμα Operator, μια θέση στον τοίχο Operators, το #operators και η πρώιμη δοκιμή λειτουργιών.",
-		"cta": "Απόκτησε το Operator Pass",
-		"footer_reason": "Έλαβες αυτό το email επειδή γράφτηκες στη λίστα αναμονής του Operator Pass. Είναι το τελευταίο email που σου στέλνουμε για το πάσο.",
-		"intro": "Ζήτησες να σε ενημερώσουμε όταν το Operator Pass γίνει διαθέσιμο για αγορά. Είναι διαθέσιμο τώρα.",
-		"paid_for": "Το πάσο συνοδεύεται από ένα αριθμημένο πιστοποιητικό Operator με το όνομά σου και την ημερομηνία και ώρα της πληρωμής, που σου παραδίδεται ως PDF που κρατάς.",
-		"price_label": "Εισαγωγική τιμή",
-		"price_value": "{priceFormatted}, εφάπαξ πληρωμή, έως τις {priceEndsOn, date, long}",
-		"signoff": "Η ομάδα του {product_name}",
-		"subject": "Το Operator Pass στο {product_name} είναι διαθέσιμο για αγορά",
-		"terms_link": "Όροι του Operator Pass",
-		"unsubscribe": "Απεγγραφή"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Όταν το ενεργοποιήσεις, παίρνεις ένα αριθμημένο πιστοποιητικό Operator με το όνομα που θα επιλέξεις. Δείχνει {visionaryDate, date, long}, την ημερομηνία που απέκτησες το Visionary, και την ίδια ημερομηνία δείχνει και το σήμα Operator αν επιλέξεις να εμφανίζεται.",
-		"choices_line": "Το σήμα Operator μένει κρυφό μέχρι να επιλέξεις να εμφανίζεται, και εμφανίζεσαι στον τοίχο Operators μόνο αν το επιλέξεις.",
-		"cta": "Ενεργοποίησε το Operator Pass σου",
-		"footer_reason": "Λαμβάνεις αυτό το email επειδή έχεις Visionary στο {product_name}.",
-		"intro": "Το Visionary σου συνοδεύεται από ένα Operator Pass, και μπορείς να το ενεργοποιήσεις όποτε θέλεις από τις ρυθμίσεις σου. Δεν πληρώνεις τίποτα παραπάνω γι' αυτό, και τίποτα δεν αλλάζει στο Visionary σου.",
-		"labs_line": "{member, select, yes {Έχεις ήδη το #operators στο Fluxer Labs μέσω του Visionary σου. Μόλις ενεργοποιήσεις το Operator Pass σου, παίρνεις εκεί και τον ρόλο Operator.} other {Όταν ενεργοποιήσεις το Operator Pass σου, προσθέτουμε αυτόν τον λογαριασμό στο Fluxer Labs με τον ρόλο Operator, εκτός αν έχεις φύγει ή αφαιρεθεί από το Fluxer Labs στο παρελθόν. Το Visionary σου σού δίνει εκεί και το #operators.}}",
-		"signoff": "Η ομάδα του {product_name}",
-		"subject": "Το Operator Pass από το Visionary σου είναι έτοιμο για ενεργοποίηση",
-		"terms_line": "Οι όροι του Operator Pass εξηγούν πώς λειτουργεί το pass, και η ενότητα 13 αφορά το Visionary.",
-		"terms_link": "Όροι του Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Το σήμα Operator εμφανίζεται στο προφίλ σου. Μπορείς να το κρύψεις από τις <settings>ρυθμίσεις</settings> σου.} other {Το σήμα Operator είναι κρυφό. Μπορείς να το εμφανίσεις από τις <settings>ρυθμίσεις</settings> σου.}}",
 		"cta": "Άνοιξε το Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Οι όροι του Operator Pass που αποδέχτηκες (έκδοση {termsVersion}) επισυνάπτονται ως PDF.",
 		"terms_link": "Όροι του Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Επέλεξες να μην εμφανίζεσαι στον τοίχο Operators. Μπορείς να προσθέσεις το όνομά σου στις <settings>ρυθμίσεις</settings> σου.} other {Εμφανίζεσαι στον τοίχο Operators ως {wallName}. Μπορείς να το αλλάξεις ή να αποχωρήσεις από τον τοίχο στις <settings>ρυθμίσεις</settings> σου.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Μπες στη λίστα αναμονής",
-		"expiry": "Αυτός ο σύνδεσμος λήγει σε 48 ώρες.",
-		"footer_reason": "Έλαβες αυτό το email επειδή αυτή η διεύθυνση καταχωρήθηκε στη λίστα αναμονής του Operator Pass στον ιστότοπο του {product_name}.",
-		"intro": "Επιβεβαίωσε αυτή τη διεύθυνση email για να μπεις στη λίστα αναμονής του Operator Pass. Θα σου στείλουμε ένα μόνο email, όταν το πάσο γίνει διαθέσιμο για αγορά.",
-		"note": "Αν δεν το ζήτησες, αγνόησε αυτό το email και δεν θα επικοινωνήσουμε ξανά μαζί σου.",
-		"signoff": "Η ομάδα του {product_name}",
-		"subject": "Επιβεβαίωσε την εγγραφή σου στη λίστα αναμονής του Operator Pass στο {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Απάντησε σε αυτό το email μέσα σε 60 ημέρες και πες μας γιατί διαφωνείς. Είναι δωρεάν, και ένα άτομο της ομάδας μας διαβάζει την ένστασή σου και αποφασίζει γι’ αυτήν.} other {Επικοινώνησε με τους διαχειριστές αυτής της παρουσίας μέσα σε 60 ημέρες και πες τους γιατί διαφωνείς.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Έλαβες αυτό το email λόγω μιας απόφασης σχετικά με την καταχώρισή σου στον τοίχο Operators του {product_name}.",
 		"ground": "Ενότητα 3.1 των όρων του Operator Pass",
 		"ground_label": "Νομική βάση",
-		"intro": "{target, select, avatar {Απορρίψαμε το avatar σου για τον τοίχο Operators.} both {Απορρίψαμε το όνομα και το avatar σου για τον τοίχο Operators.} other {Απορρίψαμε το όνομά σου για τον τοίχο Operators.}} {shown, select, previous {Ο τοίχος κρατά την τελευταία εγκεκριμένη εκδοχή σου.} other {Μέχρι να στείλεις νέο, ο τοίχος δείχνει τη λέξη Operator και το προεπιλεγμένο avatar.}} Η θέση σου στον τοίχο, το μέγεθός της και το σήμα σου μένουν ως έχουν, και η αγορά σου δεν επηρεάζεται.",
+		"intro": "{target, select, avatar {Αφαιρέσαμε το avatar σου από τον τοίχο Operators.} both {Αφαιρέσαμε το όνομα και το avatar σου από τον τοίχο Operators.} other {Αφαιρέσαμε το όνομά σου από τον τοίχο Operators.}} {shown, select, previous {Ο τοίχος δείχνει το προηγούμενο όνομα και avatar σου.} other {Μέχρι να στείλεις νέο, ο τοίχος δείχνει τη λέξη Operator και το προεπιλεγμένο avatar.}} Η θέση σου στον τοίχο, το μέγεθός της και το σήμα σου μένουν ως έχουν, και η αγορά σου δεν επηρεάζεται.",
 		"next": "Μπορείς να στείλεις νέο όνομα ή avatar από τις <settings>ρυθμίσεις</settings> σου.",
 		"reason_label": "Αιτιολογία",
 		"reason_value": "{reason, select, impersonation {Παριστάνει κάποιον άλλον} rights {Χρησιμοποιεί όνομα ή εικόνα χωρίς τα σχετικά δικαιώματα} age_suitability {Δεν είναι κατάλληλο για νεότερους χρήστες} other {Παραβιάζει τις οδηγίες κοινότητας}}",
 		"redress_v2": "Μπορείς επίσης να προσφύγεις στη δικαιοσύνη. Αν βρίσκεσαι στην ΕΕ, μπορείς να απευθυνθείς σε πιστοποιημένο <dsa>φορέα εξωδικαστικής επίλυσης διαφορών</dsa>. Αν είσαι καταναλωτής στην ΕΕ ή στον ΕΟΧ, μπορείς επίσης να φέρεις τη διαφορά στη Σουηδική Εθνική Επιτροπή Καταναλωτικών Διαφορών (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Σουηδία.",
 		"signoff": "Η ομάδα του {product_name}",
-		"subject": "Απορρίψαμε το όνομα ή το avatar σου για τον τοίχο Operators του {product_name}"
+		"subject": "Αφαιρέσαμε το όνομα ή το avatar σου από τον τοίχο Operators του {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Το σήμα σου εμφανίζεται στο προφίλ σου. Μπορείς να το κρύψεις από τις <settings>ρυθμίσεις</settings> σου.",
@@ -480,7 +446,7 @@
 		"signoff": "Ο {founderName} και η ομάδα του {product_name}",
 		"subject": "Το πιστοποιητικό Operator σου για το {product_name}",
 		"terms_link": "Όροι του Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Επέλεξες να μην εμφανίζεσαι στον τοίχο Operators. Μπορείς να προσθέσεις το όνομά σου στις <settings>ρυθμίσεις</settings> σου.} other {Εμφανίζεσαι στον τοίχο Operators ως {wallName}, και το όνομα και το avatar σου εμφανίζονται μόλις τα ελέγξουμε. Μπορείς να το αλλάξεις ή να αποχωρήσεις από τον τοίχο στις <settings>ρυθμίσεις</settings> σου.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Επέλεξες να μην εμφανίζεσαι στον τοίχο Operators. Μπορείς να προσθέσεις το όνομά σου στις <settings>ρυθμίσεις</settings> σου.} other {Εμφανίζεσαι στον τοίχο Operators ως {wallName}. Μπορείς να το αλλάξεις ή να αποχωρήσεις από τον τοίχο στις <settings>ρυθμίσεις</settings> σου.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Το πιστωτικό τιμολόγιο για αυτή την επιστροφή χρημάτων επισυνάπτεται σε αυτό το email ως PDF.",

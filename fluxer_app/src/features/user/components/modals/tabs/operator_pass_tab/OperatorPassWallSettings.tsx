@@ -9,8 +9,6 @@ import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPa
 import {OperatorPassWallNameField} from '@app/features/premium/components/operator_pass/OperatorPassWallNameField';
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {
-	formatOperatorPassDate,
-	formatOperatorPassDateTime,
 	getOperatorPassWallNameProblem,
 	isOperatorPassAvailable,
 	normalizeOperatorPassWallName,
@@ -23,10 +21,9 @@ import {
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
-import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.module.css';
 import Users from '@app/features/user/state/Users';
-import {getDefaultAvatarURL, getUserAvatarURL} from '@app/features/user/utils/AvatarUtils';
+import {getDefaultAvatarURL} from '@app/features/user/utils/AvatarUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {OperatorPassListingResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import {msg} from '@lingui/core/macro';
@@ -46,29 +43,10 @@ const WALL_ON_THE_WALL_DESCRIPTOR = msg({
 	message: 'On the wall',
 	comment: "Label in front of the name and avatar the Operators' wall shows for this account right now.",
 });
-const WALL_IN_REVIEW_DESCRIPTOR = msg({
-	message: 'In review',
-	comment: "Label in front of a new name and avatar for the Operators' wall that our team has not checked yet.",
-});
-const WALL_REVIEW_BY_DESCRIPTOR = msg({
-	message: 'by {date}',
-	comment:
-		"Short muted text after a name waiting for review on the Operators' wall. {date} is the date our team aims to finish the review by, without a time.",
-});
 const WALL_LIVE_DESCRIPTOR = msg({
 	context: 'operators-wall-status',
 	message: 'Live',
-	comment: "Status next to the name and avatar when they are approved and shown on the Operators' wall.",
-});
-const WALL_DECLINED_DESCRIPTOR = msg({
-	message: 'Declined: {name}. {reason}.',
-	comment:
-		'Status in the Operators\' wall settings when our team declined a new name or avatar. {name} is the declined name. {reason} is one of the short decline reasons, such as "Breaks the community guidelines".',
-});
-const WALL_TEAM_NOTE_DESCRIPTOR = msg({
-	message: 'Team note: {note}',
-	comment:
-		"Line in the Operators' wall settings with what our team wrote about a declined name or avatar. {note} is their text, in the language they wrote it.",
+	comment: "Status next to the name and avatar the Operators' wall shows for this account.",
 });
 const WALL_HIDDEN_DESCRIPTOR = msg({
 	message: 'Hidden by our team for now.',
@@ -90,7 +68,7 @@ const WALL_TERMS_LINK_DESCRIPTOR = msg({
 const WALL_SEND_CHANGES_DESCRIPTOR = msg({
 	message: 'Send profile changes to the wall',
 	comment:
-		"Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall after our team checks them.",
+		"Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall right away.",
 });
 const WALL_RELEASE_LIST_DESCRIPTOR = msg({
 	message: 'Add my name to the yearly Operators list',
@@ -103,22 +81,6 @@ const WALL_RELEASE_LIST_HINT_DESCRIPTOR = msg({
 	comment:
 		"Description under the switch that adds the Operators' wall name to the yearly Operators list. A Fluxer release is a published version of the app. Operators are the people who have an Operator Pass, keep the word Operators in English.",
 });
-const REASON_GUIDELINES_DESCRIPTOR = msg({
-	message: 'Breaks the community guidelines',
-	comment: "Short reason our team declined a name or avatar on the Operators' wall.",
-});
-const REASON_IMPERSONATION_DESCRIPTOR = msg({
-	message: 'Pretends to be someone else',
-	comment: "Short reason our team declined a name or avatar on the Operators' wall.",
-});
-const REASON_RIGHTS_DESCRIPTOR = msg({
-	message: 'Uses a name or image without the rights to it',
-	comment: "Short reason our team declined a name or avatar on the Operators' wall.",
-});
-const REASON_AGE_DESCRIPTOR = msg({
-	message: 'Not suitable for younger users',
-	comment: "Short reason our team declined a name or avatar on the Operators' wall.",
-});
 const WALL_SAVE_DESCRIPTOR = msg({
 	message: 'Save',
 	comment: "Button that saves the Operators' wall settings.",
@@ -129,19 +91,6 @@ const WALL_SAVED_DESCRIPTOR = msg({
 });
 
 const logger = new Logger('OperatorPassWallSettings');
-
-function declineReasonDescriptor(reason: NonNullable<OperatorPassListingResponse['decline_reason']>) {
-	switch (reason) {
-		case 'guidelines':
-			return REASON_GUIDELINES_DESCRIPTOR;
-		case 'impersonation':
-			return REASON_IMPERSONATION_DESCRIPTOR;
-		case 'rights':
-			return REASON_RIGHTS_DESCRIPTOR;
-		case 'age_suitability':
-			return REASON_AGE_DESCRIPTOR;
-	}
-}
 
 function WallRow({
 	label,
@@ -231,56 +180,16 @@ const OperatorPassWallStatus = observer(function OperatorPassWallStatus({
 		);
 	}
 	const avatarUrl = listing.shown_avatar_url ?? (user ? getDefaultAvatarURL(user.id) : null);
-	const pending = listing.review_state === 'pending' && listing.pending_name;
-	const declined = listing.review_state === 'declined';
-	const live = listing.display_state === 'live' && !pending && !declined;
 	return (
 		<div className={styles.rows} data-flx="user.operator-pass-tab.operator-pass-wall-settings.rows">
 			<WallRow
 				label={i18n._(WALL_ON_THE_WALL_DESCRIPTOR)}
 				avatarUrl={avatarUrl}
 				name={listing.shown_name ?? ''}
-				trailing={live ? i18n._(WALL_LIVE_DESCRIPTOR) : null}
+				trailing={listing.display_state === 'live' ? i18n._(WALL_LIVE_DESCRIPTOR) : null}
 				flx="shown"
 				data-flx="user.operator-pass-tab.operator-pass-wall-settings.operator-pass-wall-status.wall-row"
 			/>
-			{pending && (
-				<WallRow
-					label={i18n._(WALL_IN_REVIEW_DESCRIPTOR)}
-					avatarUrl={user ? getUserAvatarURL({id: user.id, avatar: user.avatar}) : null}
-					name={listing.pending_name ?? ''}
-					trailing={
-						listing.review_due_at ? (
-							<Tooltip
-								text={formatOperatorPassDateTime(listing.review_due_at)}
-								data-flx="user.operator-pass-tab.operator-pass-wall-settings.review-due-tooltip"
-							>
-								<time
-									dateTime={listing.review_due_at}
-									data-flx="user.operator-pass-tab.operator-pass-wall-settings.review-due"
-								>
-									{i18n._(WALL_REVIEW_BY_DESCRIPTOR, {date: formatOperatorPassDate(listing.review_due_at)})}
-								</time>
-							</Tooltip>
-						) : null
-					}
-					flx="pending"
-					data-flx="user.operator-pass-tab.operator-pass-wall-settings.operator-pass-wall-status.wall-row--2"
-				/>
-			)}
-			{declined && listing.declined_name && listing.decline_reason && (
-				<p className={styles.declined} data-flx="user.operator-pass-tab.operator-pass-wall-settings.declined">
-					{i18n._(WALL_DECLINED_DESCRIPTOR, {
-						name: listing.declined_name,
-						reason: i18n._(declineReasonDescriptor(listing.decline_reason)),
-					})}
-				</p>
-			)}
-			{declined && listing.decline_note && (
-				<p className={styles.status} data-flx="user.operator-pass-tab.operator-pass-wall-settings.decline-note">
-					{i18n._(WALL_TEAM_NOTE_DESCRIPTOR, {note: listing.decline_note})}
-				</p>
-			)}
 		</div>
 	);
 });

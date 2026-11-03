@@ -51,17 +51,6 @@ function claimedNumberKey(passId: string): string {
 	return `operator_pass:certificate:number:${passId}`;
 }
 
-export async function forgetOperatorPassCertificateNumberClaim(
-	cacheService: ICacheService,
-	passId: string,
-): Promise<void> {
-	await cacheService.delete(claimedNumberKey(passId));
-}
-
-export async function resetOperatorPassCertificateNumberCounter(kvClient: IKVProvider): Promise<void> {
-	await kvClient.del(NUMBER_COUNTER_KEY);
-}
-
 export async function validateOperatorPassCertificateName(name: string, index?: number): Promise<string> {
 	const normalized = normalizeOperatorPassCertificateName(name);
 	if (

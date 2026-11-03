@@ -46,7 +46,6 @@ import {
 	formatOperatorPassCalendarDay,
 	formatOperatorPassDate,
 	formatOperatorPassLongDate,
-	formatOperatorPassUnlockDay,
 	getOperatorPassOfferUserName,
 	isOperatorPassAvailable,
 	isOperatorPassLastFreePass,
@@ -124,11 +123,6 @@ const PAUSED_PASS_DESCRIPTOR = msg({
 	message: 'Paused during a payment dispute',
 	comment: 'Short muted line under an Operator Pass that is paused while a payment dispute about it is open.',
 });
-const LOCKED_UNTIL_DESCRIPTOR = msg({
-	message: 'If you pass it on, it moves on {date} at the earliest',
-	comment:
-		'Short muted line under an Operator Pass during the waiting period after payment. The pass can be offered to another account at any time, but it only moves to them once this waiting period is over. {date} is a date without a time.',
-});
 const PASSED_ON_TO_DESCRIPTOR = msg({
 	message: 'Passed on to {name}',
 	comment:
@@ -139,10 +133,10 @@ const OFFERED_TO_DESCRIPTOR = msg({
 	comment:
 		'Short muted line under an Operator Pass this account offered to another account, waiting for them to accept. {name} is a display name.',
 });
-const MOVES_ON_DESCRIPTOR = msg({
-	message: 'Moves to {name} on {date}',
+const ACCEPTED_BY_DESCRIPTOR = msg({
+	message: 'Accepted by {name}',
 	comment:
-		'Short muted line under an Operator Pass offer the other account accepted, before the pass moves to them. {name} is a display name, {date} a date without a time.',
+		'Short muted line under an Operator Pass offer the other account accepted, while the pass moves to them. {name} is a display name.',
 });
 const FROM_DESCRIPTOR = msg({
 	message: 'From {name}',
@@ -423,17 +417,6 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				const links: Array<ReactNode> = [];
 				const pageLinks: Array<ReactNode> = [];
 				if (row.paused) meta.push(i18n._(PAUSED_PASS_DESCRIPTOR));
-				if (row.lockEndsAt) {
-					meta.push(
-						<DateTooltip
-							key="lock"
-							iso={row.lockEndsAt}
-							data-flx="premium.operator-pass.operator-pass-holdings-section.view.date-tooltip--2"
-						>
-							{i18n._(LOCKED_UNTIL_DESCRIPTOR, {date: formatOperatorPassUnlockDay(row.lockEndsAt)})}
-						</DateTooltip>,
-					);
-				}
 				const purchaseId = first.source === 'purchase' ? first.purchase_id : null;
 				const rowPurchase = purchaseId ? purchases.find((purchase) => purchase.id === purchaseId) : undefined;
 				const actionPurchase = row.purchaseActions ? rowPurchase : undefined;
@@ -549,19 +532,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				const name = getOperatorPassOfferUserName(row.offer.recipient);
 				return {
 					title: bought(1, boughtAt(row.pass, row.pass.delivered_at)),
-					meta: [
-						row.offer.status === 'accepted' ? (
-							<DateTooltip
-								key="moves"
-								iso={row.offer.arrives_at}
-								data-flx="premium.operator-pass.operator-pass-holdings-section.view.date-tooltip--4"
-							>
-								{i18n._(MOVES_ON_DESCRIPTOR, {name, date: formatOperatorPassUnlockDay(row.offer.arrives_at)})}
-							</DateTooltip>
-						) : (
-							i18n._(OFFERED_TO_DESCRIPTOR, {name})
-						),
-					],
+					meta: [i18n._(row.offer.status === 'accepted' ? ACCEPTED_BY_DESCRIPTOR : OFFERED_TO_DESCRIPTOR, {name})],
 					links: passedOnPageLinks(row.pass.id),
 					action: takeBackButton(row.offer),
 				};

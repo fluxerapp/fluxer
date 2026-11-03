@@ -288,7 +288,7 @@
 		"cta": "Pogledaj ponudu",
 		"footer_reason": "Ovu si e-poruku primio jer ti je netko ponudio Operator Pass na {product_name}u.",
 		"intro": "Korisnik {senderName} želi ti prenijeti dalje jedan od svojih Operator Passova.",
-		"lead": "Prihvati ga ili odbij na platformi {product_name}. Ako ga prihvatiš, stiže {arrivesAt, date, long}, osim ako pošiljatelj prije toga ne povuče ponudu.",
+		"lead_v2": "Prihvati ga ili odbij na platformi {product_name}. Ako ga prihvatiš, odmah prelazi k tebi.",
 		"signoff": "Tim {product_name}a",
 		"subject": "Korisnik {senderName} želi ti prenijeti dalje Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Tim {product_name}a",
 		"subject": "Operator Pass na tvom računu na {product_name}u prestao je vrijediti"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Uz nju dolaze i značka Operator, mjesto na zidu Operators, #operators i rano isprobavanje.",
-		"cta": "Nabavi Operator Pass",
-		"footer_reason": "Ovu si e-poruku primio jer si se upisao na popis čekanja za Operator Pass. Ovo je posljednja e-poruka koju ti šaljemo o propusnici.",
-		"intro": "Zamolio si nas da ti javimo kad Operator Pass bude u prodaji. Sada je u prodaji.",
-		"paid_for": "Uz propusnicu dolazi numerirani certifikat Operator s tvojim imenom te datumom i vremenom plaćanja, koji dobivaš kao PDF koji zadržavaš.",
-		"price_label": "Cijena za rane kupce",
-		"price_value": "{priceFormatted}, plaćeno jednokratno, zaključno s {priceEndsOn, date, long}",
-		"signoff": "Tim {product_name}a",
-		"subject": "{product_name} Operator Pass je u prodaji",
-		"terms_link": "Uvjeti za Operator Pass",
-		"unsubscribe": "Odjava"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Kad ga uključiš, dobivaš numerirani certifikat Operator s imenom koje odabereš. Na njemu piše {visionaryDate, date, long}, datum kad si dobio Visionary, a isti datum prikazuje i značka Operator ako je odlučiš prikazati.",
-		"choices_line": "Značka Operator ostaje skrivena dok je ne odlučiš prikazati, a na zidu Operators prikazan si samo ako to odabereš.",
-		"cta": "Uključi svoj Operator Pass",
-		"footer_reason": "Ovu e-poruku primaš jer imaš Visionary na {product_name}u.",
-		"intro": "Uz tvoj Visionary dolazi Operator Pass, a možeš ga uključiti u postavkama kad god želiš. Za njega ne plaćaš ništa dodatno i ništa se ne mijenja u tvom Visionaryju.",
-		"labs_line": "{member, select, yes {Pristup kanalu #operators u zajednici Fluxer Labs već imaš uz Visionary. Kad uključiš svoj Operator Pass, ondje dobivaš i ulogu Operator.} other {Kad uključiš svoj Operator Pass, dodajemo ovaj račun u zajednicu Fluxer Labs s ulogom Operator, osim ako je ovaj račun ranije napustio Fluxer Labs ili je iz njega uklonjen. Uz Visionary ondje imaš i pristup kanalu #operators.}}",
-		"signoff": "Tim {product_name}a",
-		"subject": "Tvoj Operator Pass iz Visionaryja spreman je za uključivanje",
-		"terms_line": "Uvjeti za Operator Pass objašnjavaju kako pass funkcionira, a odjeljak 13 odnosi se na Visionary.",
-		"terms_link": "Uvjeti za Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Tvoja značka Operator je na tvom profilu. Možeš je sakriti u <settings>postavkama</settings>.} other {Tvoja značka Operator je skrivena. Možeš je prikazati u <settings>postavkama</settings>.}}",
 		"cta": "Otvori Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Uvjeti za Operator Pass koje si prihvatio (verzija {termsVersion}) priloženi su kao PDF.",
 		"terms_link": "Uvjeti za Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Odabrao si da ne budeš prikazan na zidu Operators. Svoje ime možeš dodati u <settings>postavkama</settings>.} other {Na zidu Operators prikazan si kao {wallName}. To možeš promijeniti ili napustiti zid u <settings>postavkama</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Upiši se na popis čekanja",
-		"expiry": "Ova poveznica istječe za 48 sati.",
-		"footer_reason": "Ovu si e-poruku primio jer je ova adresa unesena na popis čekanja za Operator Pass na web-stranici {product_name}a.",
-		"intro": "Potvrdi ovu adresu e-pošte da se upišeš na popis čekanja za Operator Pass. Javit ćemo ti se samo jednom, kad propusnica bude u prodaji.",
-		"note": "Ako to nisi zatražio, zanemari ovu e-poruku i više ti se nećemo javljati.",
-		"signoff": "Tim {product_name}a",
-		"subject": "Potvrdi upis na popis čekanja za {product_name} Operator Pass"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Odgovori na ovu e-poruku u roku od 60 dana i napiši nam zašto se ne slažeš. Besplatno je, a žalbu čita i o njoj odlučuje osoba iz našeg tima.} other {Javi se administratorima ove instance u roku od 60 dana i reci im zašto se ne slažeš.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Ovu si e-poruku primio zbog odluke o tvom unosu na zidu Operators {product_name}a.",
 		"ground": "Odjeljak 3.1 uvjeta za Operator Pass",
 		"ground_label": "Osnova",
-		"intro": "{target, select, avatar {Odbili smo tvoj avatar za zid Operators.} both {Odbili smo tvoje ime i avatar za zid Operators.} other {Odbili smo tvoje ime za zid Operators.}} {shown, select, previous {Zid zadržava tvoju posljednju odobrenu verziju.} other {Dok ne pošalješ novo, zid prikazuje riječ Operator i zadani avatar.}} Tvoje mjesto na zidu, njegova veličina i značka ostaju nepromijenjeni, a na tvoju kupnju to ne utječe.",
+		"intro": "{target, select, avatar {Uklonili smo tvoj avatar sa zida Operators.} both {Uklonili smo tvoje ime i avatar sa zida Operators.} other {Uklonili smo tvoje ime sa zida Operators.}} {shown, select, previous {Zid prikazuje tvoje prethodno ime i avatar.} other {Dok ne pošalješ novo, zid prikazuje riječ Operator i zadani avatar.}} Tvoje mjesto na zidu, njegova veličina i značka ostaju nepromijenjeni, a na tvoju kupnju to ne utječe.",
 		"next": "Novo ime ili avatar možeš poslati u <settings>postavkama</settings>.",
 		"reason_label": "Razlog",
 		"reason_value": "{reason, select, impersonation {Lažno se predstavlja kao netko drugi} rights {Koristi ime ili sliku bez prava na njih} age_suitability {Nije prikladno za mlađe korisnike} other {Krši smjernice zajednice}}",
 		"redress_v2": "Možeš se obratiti i sudu. Ako si u EU-u, možeš se obratiti certificiranom <dsa>tijelu za izvansudsko rješavanje sporova</dsa>. Ako si potrošač u EU-u ili EGP-u, spor možeš iznijeti i pred švedski Nacionalni odbor za potrošačke sporove (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švedska.",
 		"signoff": "Tim {product_name}a",
-		"subject": "Odbili smo tvoje ime ili avatar za zid Operators {product_name}a"
+		"subject": "Uklonili smo tvoje ime ili avatar sa zida Operators {product_name}a"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Tvoja značka je na tvom profilu. Možeš je sakriti u <settings>postavkama</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} i tim {product_name}a",
 		"subject": "Tvoj certifikat Operator za {product_name}",
 		"terms_link": "Uvjeti za Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Odabrao si da ne budeš prikazan na zidu Operators. Svoje ime možeš dodati u <settings>postavkama</settings>.} other {Na zidu Operators prikazan si kao {wallName}, a tvoje ime i avatar pojavit će se kad ih provjerimo. To možeš promijeniti ili napustiti zid u <settings>postavkama</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Odabrao si da ne budeš prikazan na zidu Operators. Svoje ime možeš dodati u <settings>postavkama</settings>.} other {Na zidu Operators prikazan si kao {wallName}. To možeš promijeniti ili napustiti zid u <settings>postavkama</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Knjižno odobrenje za ovaj povrat novca priloženo je ovoj e-poruci kao PDF.",

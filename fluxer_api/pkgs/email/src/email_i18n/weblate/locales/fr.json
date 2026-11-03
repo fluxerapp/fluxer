@@ -288,7 +288,7 @@
 		"cta": "Voir la proposition",
 		"footer_reason": "Vous avez reçu cet e-mail car quelqu'un vous a proposé un Operator Pass sur {product_name}.",
 		"intro": "{senderName} veut vous transmettre l'un de ses Operator Pass.",
-		"lead": "Acceptez-le ou refusez-le dans {product_name}. Si vous l’acceptez, il arrivera le {arrivesAt, date, long}, sauf si l’expéditeur retire sa proposition avant.",
+		"lead_v2": "Acceptez-le ou refusez-le dans {product_name}. Si vous l'acceptez, il vous est transféré tout de suite.",
 		"signoff": "L’équipe {product_name}",
 		"subject": "{senderName} veut vous transmettre un Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "L’équipe {product_name}",
 		"subject": "Un Operator Pass de votre compte {product_name} a pris fin"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Il est aussi accompagné du badge Operator, d’une place sur le mur des Operators, de #operators et des tests en avant-première.",
-		"cta": "Obtenir l'Operator Pass",
-		"footer_reason": "Vous avez reçu cet e-mail car vous vous êtes inscrit sur la liste d’attente de l’Operator Pass. C’est le dernier e-mail que nous vous envoyons à propos du pass.",
-		"intro": "Vous nous avez demandé de vous prévenir quand l’Operator Pass serait en vente. Il est en vente dès maintenant.",
-		"paid_for": "Le pass est accompagné d’un certificat Operator numéroté portant votre nom ainsi que la date et l’heure du paiement, remis sous forme de PDF que vous conservez.",
-		"price_label": "Prix de lancement",
-		"price_value": "{priceFormatted}, paiement unique, jusqu’au {priceEndsOn, date, long}",
-		"signoff": "L’équipe {product_name}",
-		"subject": "L’Operator Pass {product_name} est en vente",
-		"terms_link": "Conditions de l'Operator Pass",
-		"unsubscribe": "Se désabonner"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "En l'activant, vous recevez un certificat Operator numéroté au nom que vous choisissez. Il indique le {visionaryDate, date, long}, la date à laquelle vous avez obtenu Visionary, tout comme le badge Operator si vous choisissez de l'afficher.",
-		"choices_line": "Le badge Operator reste masqué tant que vous ne choisissez pas de l'afficher, et vous ne figurez sur le mur des Operators que si vous le choisissez.",
-		"cta": "Activer votre Operator Pass",
-		"footer_reason": "Vous recevez cet e-mail parce que vous avez Visionary sur {product_name}.",
-		"intro": "Votre Visionary s'accompagne d'un Operator Pass, et vous pouvez l'activer quand vous voulez dans vos paramètres. Vous ne payez rien de plus pour celui-ci, et rien ne change pour votre Visionary.",
-		"labs_line": "{member, select, yes {Vous avez déjà #operators dans Fluxer Labs grâce à votre Visionary. Une fois votre Operator Pass activé, vous y obtenez aussi le rôle Operator.} other {Quand vous activez votre Operator Pass, nous ajoutons ce compte à Fluxer Labs avec le rôle Operator, sauf si vous avez déjà quitté Fluxer Labs ou en avez été retiré. Votre Visionary vous y donne aussi #operators.}}",
-		"signoff": "L’équipe {product_name}",
-		"subject": "Votre Operator Pass qui accompagne Visionary est prêt à être activé",
-		"terms_line": "Les conditions de l'Operator Pass expliquent son fonctionnement, et la section 13 concerne Visionary.",
-		"terms_link": "Conditions de l'Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Votre badge Operator est sur votre profil. Vous pouvez le masquer dans vos <settings>paramètres</settings>.} other {Votre badge Operator est masqué. Vous pouvez l'afficher dans vos <settings>paramètres</settings>.}}",
 		"cta": "Ouvrir Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Les conditions de l'Operator Pass que vous avez acceptées (version {termsVersion}) sont jointes en PDF.",
 		"terms_link": "Conditions de l'Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Vous avez choisi de ne pas figurer sur le mur des Operators. Vous pouvez ajouter votre nom dans vos <settings>paramètres</settings>.} other {Vous figurez sur le mur des Operators sous le nom {wallName}. Vous pouvez le modifier ou quitter le mur dans vos <settings>paramètres</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Rejoindre la liste d’attente",
-		"expiry": "Ce lien expire dans 48 heures.",
-		"footer_reason": "Vous avez reçu cet e-mail car cette adresse a été saisie sur la liste d'attente de l'Operator Pass sur le site web de {product_name}.",
-		"intro": "Confirmez cette adresse e-mail pour rejoindre la liste d’attente de l’Operator Pass. Nous vous écrirons une seule fois, quand le pass sera en vente.",
-		"note": "Si vous n’avez rien demandé, ignorez cet e-mail et nous ne vous contacterons plus.",
-		"signoff": "L’équipe {product_name}",
-		"subject": "Confirmez votre inscription à la liste d’attente de l’Operator Pass {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Répondez à cet e-mail dans les 60 jours et expliquez-nous pourquoi vous n’êtes pas d’accord. C’est gratuit, et une personne de notre équipe lit votre contestation et statue dessus.} other {Contactez les administrateurs de cette instance dans les 60 jours et expliquez-leur pourquoi vous n’êtes pas d’accord.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Vous avez reçu cet e-mail en raison d'une décision concernant votre inscription sur le mur des Operators de {product_name}.",
 		"ground": "Section 3.1 des conditions de l'Operator Pass",
 		"ground_label": "Motif",
-		"intro": "{target, select, avatar {Nous avons refusé votre avatar pour le mur des Operators.} both {Nous avons refusé votre nom et votre avatar pour le mur des Operators.} other {Nous avons refusé votre nom pour le mur des Operators.}} {shown, select, previous {Le mur garde votre dernière version validée.} other {Jusqu'à ce que vous en envoyiez un nouveau, le mur affiche le mot Operator et l'avatar par défaut.}} Votre place sur le mur, sa taille et votre badge restent tels quels, et votre achat n'est pas concerné.",
+		"intro": "{target, select, avatar {Nous avons retiré votre avatar du mur des Operators.} both {Nous avons retiré votre nom et votre avatar du mur des Operators.} other {Nous avons retiré votre nom du mur des Operators.}} {shown, select, previous {Le mur affiche votre nom et votre avatar précédents.} other {Jusqu'à ce que vous en envoyiez un nouveau, le mur affiche le mot Operator et l'avatar par défaut.}} Votre place sur le mur, sa taille et votre badge restent tels quels, et votre achat n'est pas concerné.",
 		"next": "Vous pouvez envoyer un nouveau nom ou un nouvel avatar dans vos <settings>paramètres</settings>.",
 		"reason_label": "Raison",
 		"reason_value": "{reason, select, impersonation {Se fait passer pour quelqu'un d'autre} rights {Utilise un nom ou une image sans en avoir les droits} age_suitability {Ne convient pas aux jeunes utilisateurs} other {Enfreint les règles de la communauté}}",
 		"redress_v2": "Vous pouvez aussi saisir la justice. Si vous êtes dans l'UE, vous pouvez vous adresser à un <dsa>organe de règlement extrajudiciaire des litiges</dsa> certifié. Si vous êtes consommateur dans l'UE ou l'EEE, vous pouvez aussi soumettre le litige à la Commission nationale suédoise des litiges de consommation (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suède.",
 		"signoff": "L’équipe {product_name}",
-		"subject": "Nous avons refusé votre nom ou votre avatar pour le mur des Operators de {product_name}"
+		"subject": "Nous avons retiré votre nom ou votre avatar du mur des Operators de {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Votre badge est sur votre profil. Vous pouvez le masquer dans vos <settings>paramètres</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} et l’équipe {product_name}",
 		"subject": "Votre certificat Operator {product_name}",
 		"terms_link": "Conditions de l'Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Vous avez choisi de ne pas figurer sur le mur des Operators. Vous pouvez ajouter votre nom dans vos <settings>paramètres</settings>.} other {Vous figurez sur le mur des Operators sous le nom {wallName}, et votre nom et votre avatar s’affichent une fois que nous les avons vérifiés. Vous pouvez le modifier ou quitter le mur dans vos <settings>paramètres</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Vous avez choisi de ne pas figurer sur le mur des Operators. Vous pouvez ajouter votre nom dans vos <settings>paramètres</settings>.} other {Vous figurez sur le mur des Operators sous le nom {wallName}. Vous pouvez le modifier ou quitter le mur dans vos <settings>paramètres</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "L’avoir de ce remboursement est joint à cet e-mail au format PDF.",

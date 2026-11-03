@@ -59,19 +59,11 @@ function emptyEntry(userId: UserID, now: Date): OperatorPassWallEntryRow {
 		live_name: null,
 		live_avatar: null,
 		live_business: null,
-		pending_revision_id: null,
 		pending_name: null,
-		pending_avatar: null,
-		pending_source: null,
-		pending_since: null,
-		declined_revision_id: null,
 		declined_name: null,
-		declined_avatar: null,
 		decline_reason: null,
 		decline_note: null,
 		decline_statement_id: null,
-		reviewed_at: null,
-		reviewed_by: null,
 		listed_at: null,
 		delivered_at: null,
 		release_published_year: null,
@@ -169,9 +161,6 @@ export class OperatorPassWallEntryStore {
 				continue;
 			}
 			this.invalidate();
-			if ((existing?.pending_revision_id != null) !== (next.pending_revision_id != null)) {
-				await this.repository.setWallPending(userId, next.pending_revision_id != null);
-			}
 			for (const event of mutation.events) {
 				await this.appendEvent(userId, now, event, actorId);
 			}

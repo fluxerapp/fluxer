@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "općenito",
 	"guild.default_channel_voice": "Općenito",
 	"operator_pass.labs_greeting": "{size, select, single {Dobro došli u #operators, {last}!} other {Dobro došli u #operators, {others} i {last}!}} Ovo je kanal za sve koji imaju Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Uz tvoj Visionary dolazi Operator Pass. Možeš ga uključiti kad god želiš u postavkama, pod „Operator Pass”, i za njega ne plaćaš ništa dodatno.",
 	"profile_badge.bug_hunter": "Lovac na bugove {product_name}a",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} few {# Operator Passa} other {# Operator Passova}}",

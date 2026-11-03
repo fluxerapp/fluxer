@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "bendras",
 	"guild.default_channel_voice": "Bendras",
 	"operator_pass.labs_greeting": "{size, select, single {Sveiki atvykę į #operators, {last}!} other {Sveiki atvykę į #operators, {others} ir {last}!}} Tai kanalas visiems, kurie turi Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Su tavo Visionary gauni Operator Pass. Įjungti jį gali bet kada nustatymuose, skiltyje „Operator Pass“, ir už jį nieko papildomai nemoki.",
 	"profile_badge.bug_hunter": "{product_name} klaidų medžiotojas",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass leidimas} few {# Operator Pass leidimai} many {# Operator Pass leidimo} other {# Operator Pass leidimų}}",

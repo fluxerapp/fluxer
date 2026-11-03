@@ -288,7 +288,7 @@
 		"cta": "Zobrazit nabídku",
 		"footer_reason": "Tento e-mail jste obdrželi, protože vám někdo nabídl Operator Pass na {product_name}.",
 		"intro": "{senderName} vám chce předat jeden ze svých Operator Passů.",
-		"lead": "Přijměte ho nebo odmítněte v {product_name}. Když ho přijmete, dorazí {arrivesAt, date, long}, pokud odesílatel nabídku mezitím nevezme zpět.",
+		"lead_v2": "Přijměte ho nebo odmítněte v {product_name}. Když ho přijmete, přejde k vám hned.",
 		"signoff": "Tým {product_name}",
 		"subject": "{senderName} vám chce předat Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Tým {product_name}",
 		"subject": "Operator Pass na vašem účtu {product_name} skončil"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Patří k němu také odznak Operator, místo na zdi Operators, #operators a testování funkcí předem.",
-		"cta": "Získejte Operator Pass",
-		"footer_reason": "Tento e-mail jste obdrželi, protože jste se zapsali do pořadníku na Operator Pass. Je to poslední e-mail, který vám o passu pošleme.",
-		"intro": "Chtěli jste vědět, až bude Operator Pass v prodeji. Teď už je.",
-		"paid_for": "K passu patří číslovaný certifikát Operator s vaším jménem a datem a časem platby, doručený jako PDF, které si ponecháte.",
-		"price_label": "Zaváděcí cena",
-		"price_value": "{priceFormatted}, placeno jednorázově, do {priceEndsOn, date, long}",
-		"signoff": "Tým {product_name}",
-		"subject": "{product_name} Operator Pass je v prodeji",
-		"terms_link": "Podmínky Operator Pass",
-		"unsubscribe": "Odhlásit odběr"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Po zapnutí dostanete číslovaný certifikát Operator se jménem, které si zvolíte. Je na něm {visionaryDate, date, long}, datum, kdy jste získali Visionary, a stejné datum ukazuje i odznak Operator, pokud se ho rozhodnete zobrazit.",
-		"choices_line": "Odznak Operator zůstane skrytý, dokud se ho nerozhodnete zobrazit, a na zdi Operators budete uvedeni, jen pokud si to zvolíte.",
-		"cta": "Zapnout Operator Pass",
-		"footer_reason": "Tento e-mail jste dostali, protože máte Visionary na {product_name}.",
-		"intro": "K vašemu Visionary patří Operator Pass a zapnout si ho můžete v nastavení kdykoli. Nic dalšího za něj neplatíte a na vašem Visionary se nic nemění.",
-		"labs_line": "{member, select, yes {Přístup do #operators ve Fluxer Labs už máte díky svému Visionary. Jakmile si zapnete Operator Pass, dostanete tam i roli Operator.} other {Když si zapnete Operator Pass, přidáme tento účet do Fluxer Labs s rolí Operator, pokud jste Fluxer Labs dříve neopustili a nebyli jste z něj odebráni. Díky svému Visionary tam máte i přístup do #operators.}}",
-		"signoff": "Tým {product_name}",
-		"subject": "Váš Operator Pass z Visionary je připravený k zapnutí",
-		"terms_line": "Podmínky Operator Pass popisují, jak pass funguje, a oddíl 13 se týká Visionary.",
-		"terms_link": "Podmínky Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Váš odznak Operator je na vašem profilu. Skrýt ho můžete ve svém <settings>nastavení</settings>.} other {Váš odznak Operator je skrytý. Zobrazit ho můžete ve svém <settings>nastavení</settings>.}}",
 		"cta": "Otevřít Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Podmínky Operator Pass, které jste přijali (verze {termsVersion}), jsou přiložené jako PDF.",
 		"terms_link": "Podmínky Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Zvolili jste, že nechcete být uvedeni na zdi Operators. Své jméno můžete přidat ve svém <settings>nastavení</settings>.} other {Na zdi Operators jste uvedeni jako {wallName}. Můžete to změnit nebo ze zdi odejít ve svém <settings>nastavení</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Zapsat se do pořadníku",
-		"expiry": "Tento odkaz vyprší za 48 hodin.",
-		"footer_reason": "Tento e-mail jste obdrželi, protože tato adresa byla zadána do pořadníku na Operator Pass na webových stránkách {product_name}.",
-		"intro": "Potvrďte tuto e-mailovou adresu a zapište se do pořadníku na Operator Pass. Napíšeme vám jen jednou, až bude pass v prodeji.",
-		"note": "Pokud jste o to nežádali, tento e-mail ignorujte a už se vám neozveme.",
-		"signoff": "Tým {product_name}",
-		"subject": "Potvrďte zápis do pořadníku na {product_name} Operator Pass"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Do 60 dnů odpovězte na tento e-mail a napište nám, proč nesouhlasíte. Je to zdarma a odvolání si přečte a rozhodne o něm člověk z našeho týmu.} other {Do 60 dnů kontaktujte správce této instance a napište jim, proč nesouhlasíte.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Tento e-mail jste obdrželi kvůli rozhodnutí o vašem záznamu na zdi Operators v {product_name}.",
 		"ground": "§ 3.1 podmínek Operator Pass",
 		"ground_label": "Právní základ",
-		"intro": "{target, select, avatar {Váš avatar pro zeď Operators jsme zamítli.} both {Vaše jméno a avatar pro zeď Operators jsme zamítli.} other {Vaše jméno pro zeď Operators jsme zamítli.}} {shown, select, previous {Zeď ponechává vaši poslední schválenou verzi.} other {Dokud nepošlete nové, zeď ukazuje slovo Operator a výchozí avatar.}} Vaše místo na zdi, jeho velikost i odznak zůstávají beze změny a na váš nákup to nemá vliv.",
+		"intro": "{target, select, avatar {Váš avatar jsme ze zdi Operators odstranili.} both {Vaše jméno a avatar jsme ze zdi Operators odstranili.} other {Vaše jméno jsme ze zdi Operators odstranili.}} {shown, select, previous {Zeď ukazuje vaše předchozí jméno a avatar.} other {Dokud nepošlete nové, zeď ukazuje slovo Operator a výchozí avatar.}} Vaše místo na zdi, jeho velikost i odznak zůstávají beze změny a na váš nákup to nemá vliv.",
 		"next": "Nové jméno nebo avatar můžete poslat ve svém <settings>nastavení</settings>.",
 		"reason_label": "Důvod",
 		"reason_value": "{reason, select, impersonation {Vydává se za někoho jiného} rights {Používá jméno nebo obrázek bez práv k nim} age_suitability {Není vhodné pro mladší uživatele} other {Porušuje pravidla komunity}}",
 		"redress_v2": "Můžete se také obrátit na soud. Pokud jste v EU, můžete se obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa>. Pokud jste spotřebitel v EU nebo EHP, můžete spor předložit také švédské Národní radě pro spotřebitelské spory (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švédsko.",
 		"signoff": "Tým {product_name}",
-		"subject": "Zamítli jsme vaše jméno nebo avatar pro zeď Operators v {product_name}"
+		"subject": "Odstranili jsme vaše jméno nebo avatar ze zdi Operators v {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Váš odznak je na vašem profilu. Skrýt ho můžete ve svém <settings>nastavení</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} a tým {product_name}",
 		"subject": "Váš certifikát Operator pro {product_name}",
 		"terms_link": "Podmínky Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Zvolili jste, že nechcete být uvedeni na zdi Operators. Své jméno můžete přidat ve svém <settings>nastavení</settings>.} other {Na zdi Operators jste uvedeni jako {wallName} a vaše jméno a avatar se zobrazí, jakmile je zkontrolujeme. Můžete to změnit nebo ze zdi odejít ve svém <settings>nastavení</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Zvolili jste, že nechcete být uvedeni na zdi Operators. Své jméno můžete přidat ve svém <settings>nastavení</settings>.} other {Na zdi Operators jste uvedeni jako {wallName}. Můžete to změnit nebo ze zdi odejít ve svém <settings>nastavení</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Dobropis k této refundaci najdete v příloze tohoto e-mailu jako PDF.",

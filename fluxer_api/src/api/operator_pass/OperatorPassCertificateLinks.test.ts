@@ -219,11 +219,4 @@ test('a name change keeps the link, and deleting the buyer or resetting a previe
 	await endOperatorPassesForDeletion(repository, getCacheService(), createUserID(BigInt(buyer.userId)));
 	expect((await getPage(token)).response.status).toBe(404);
 	expect((await getPage(token, '/pdf')).response.status).toBe(404);
-
-	const preview = await buyPasses(['Ada Lovelace']);
-	const previewId = `${preview.purchase.checkout_session_id}:1`;
-	const previewToken = await tokenOf(previewId);
-	await repository.deleteCertificateRecords(previewId);
-	expect(await repository.findCertificateLink(previewToken)).toBeNull();
-	expect((await getPage(previewToken)).response.status).toBe(404);
 });

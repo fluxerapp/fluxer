@@ -105,7 +105,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	mfa_backup_codes_view: {minutes: 10},
 	operator_pass_offer_accepted: {recipientName: 'Grace', remainingCount: 2, visionary: 'no'},
 	operator_pass_offer_ended: {otherName: 'Grace', ended: 'declined'},
-	operator_pass_offer_received: {senderName: 'Ada', arrivesAt: '2026-10-12'},
+	operator_pass_offer_received: {senderName: 'Ada'},
 	operator_pass_perks_removed: {
 		scope: 'temporary',
 		until: DATE,
@@ -145,11 +145,8 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	operator_pass_removal_notice: {replyDays: 7, visionary: 'yes'},
 	operator_pass_revoked: {cause: 'refund', lastPass: 'yes', visionary: 'yes'},
 	operator_pass_purchase_refused: {},
-	operator_pass_sale_open: {priceFormatted: '$199', priceEndsOn: '2027-01-01'},
-	operator_pass_waitlist_verification: {},
 	operator_pass_wall_hidden: {reason: 'guidelines'},
 	operator_pass_wall_name_replaced: {target: 'both', shown: 'operator', reason: 'rights'},
-	operator_pass_visionary_notice: {visionaryDate: DATE, member: 'yes'},
 	operator_pass_visionary_turned_on: {
 		badge: 'no',
 		wallName: 'Ada',

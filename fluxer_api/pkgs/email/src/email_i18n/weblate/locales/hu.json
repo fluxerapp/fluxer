@@ -288,7 +288,7 @@
 		"cta": "A felajánlás megtekintése",
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert valaki felajánlott neked egy Operator Passt a(z) {product_name} szolgáltatásban.",
 		"intro": "{senderName} továbbadná neked az egyik Operator Passát.",
-		"lead": "Fogadd el vagy utasítsd el a(z) {product_name} alkalmazásban. Ha elfogadod, {arrivesAt, date, long} napján érkezik meg, hacsak a küldő előbb vissza nem vonja a felajánlást.",
+		"lead_v2": "Fogadd el vagy utasítsd el a(z) {product_name} alkalmazásban. Ha elfogadod, azonnal átkerül hozzád.",
 		"signoff": "{product_name} csapata",
 		"subject": "{senderName} továbbadna neked egy Operator Passt"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} csapata",
 		"subject": "Megszűnt egy Operator Pass a(z) {product_name}-fiókodban"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Mellé jár az Operator-jelvény, egy hely az Operators-falon, az #operators csatorna és a korai tesztelés is.",
-		"cta": "Szerezd meg az Operator Passt",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert feliratkoztál az Operator Pass várólistájára. Ez az utolsó e-mail, amelyet a passról küldünk.",
-		"intro": "Azt kérted, hogy szóljunk, amikor az Operator Pass megvásárolható lesz. Most már megveheted.",
-		"paid_for": "A passhoz egy sorszámozott Operator-tanúsítvány tartozik, amelyen szerepel a neved, valamint a fizetés dátuma és időpontja. PDF-ként kapod meg, és megtarthatod.",
-		"price_label": "Bevezető ár",
-		"price_value": "{priceFormatted}, egyszeri fizetés, {priceEndsOn, date, long} napjáig",
-		"signoff": "{product_name} csapata",
-		"subject": "Megvásárolható a(z) {product_name} Operator Pass",
-		"terms_link": "Az Operator Pass feltételei",
-		"unsubscribe": "Leiratkozás"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Ha bekapcsolod, kapsz egy sorszámozott Operator-tanúsítványt az általad választott névvel. Ezen {visionaryDate, date, long} szerepel, az a nap, amikor Visionaryt kaptál, és ugyanez látszik az Operator-jelvényen is, ha úgy döntesz, hogy megjeleníted.",
-		"choices_line": "Az Operator-jelvény rejtve marad, amíg úgy nem döntesz, hogy megjeleníted, és az Operators-falon is csak akkor szerepelsz, ha ezt választod.",
-		"cta": "Operator Pass bekapcsolása",
-		"footer_reason": "Azért kaptad ezt az e-mailt, mert Visionaryd van a(z) {product_name} szolgáltatásban.",
-		"intro": "A Visionaryd mellé Operator Pass jár, és bármikor bekapcsolhatod a beállításaidban. Nem fizetsz érte többet, és a Visionarydban semmi sem változik.",
-		"labs_line": "{member, select, yes {Az #operators csatornát a Fluxer Labs közösségben a Visionaryd révén már eléred. Ha bekapcsolod az Operator Passodat, ott az Operator-szerepkört is megkapod.} other {Amikor bekapcsolod az Operator Passodat, ezt a fiókot Operator-szerepkörrel hozzáadjuk a Fluxer Labs közösséghez, kivéve, ha korábban már kiléptél a Fluxer Labsből, vagy eltávolítottak onnan. A Visionaryd révén ott az #operators csatornát is eléred.}}",
-		"signoff": "{product_name} csapata",
-		"subject": "A Visionaryhez járó Operator Passod bekapcsolható",
-		"terms_line": "Az Operator Pass feltételei leírják, hogyan működik a pass, a 13. pont pedig a Visionaryről szól.",
-		"terms_link": "Az Operator Pass feltételei"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Az Operator-jelvényed megjelenik a profilodon. A <settings>beállításaidban</settings> elrejtheted.} other {Az Operator-jelvényed rejtve van. A <settings>beállításaidban</settings> megjelenítheted.}}",
 		"cta": "Fluxer Labs megnyitása",
@@ -423,15 +398,6 @@
 		"terms_attached": "Az általad elfogadott Operator Pass-feltételeket (verzió: {termsVersion}) PDF-ként csatoltuk.",
 		"terms_link": "Az Operator Pass feltételei",
 		"wall_line": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Feliratkozás a várólistára",
-		"expiry": "Ez a link 48 óra múlva lejár.",
-		"footer_reason": "Azért kaptad ezt az e-mailt, mert ezt a címet megadták az Operator Pass várólistáján a(z) {product_name} weboldalán.",
-		"intro": "Erősítsd meg ezt az e-mail-címet, hogy felkerülj az Operator Pass várólistájára. Egyetlen e-mailt küldünk, amikor a pass megvásárolható lesz.",
-		"note": "Ha nem te kérted, hagyd figyelmen kívül ezt az e-mailt, és többé nem keresünk.",
-		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg feliratkozásodat a(z) {product_name} Operator Pass várólistájára"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Válaszolj erre az e-mailre 60 napon belül, és írd meg, miért nem értesz egyet. Ez ingyenes, és a csapatunk egyik tagja elolvassa a fellebbezésedet, és dönt róla.} other {Fordulj ennek a példánynak az adminisztrátoraihoz 60 napon belül, és mondd el nekik, miért nem értesz egyet.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Ezt az e-mailt a(z) {product_name} Operators-falán való megjelenéseddel kapcsolatos döntés miatt kaptad.",
 		"ground": "Az Operator Pass feltételeinek 3.1. pontja",
 		"ground_label": "Jogalap",
-		"intro": "{target, select, avatar {Elutasítottuk a profilképedet az Operators-falra.} both {Elutasítottuk a nevedet és a profilképedet az Operators-falra.} other {Elutasítottuk a nevedet az Operators-falra.}} {shown, select, previous {A fal az utolsó jóváhagyott változatot mutatja.} other {Amíg nem küldesz újat, a fal az Operator szót és az alapértelmezett profilképet mutatja.}} A helyed a falon, a mérete és a jelvényed változatlan marad, és ez a vásárlásodat nem érinti.",
+		"intro": "{target, select, avatar {Levettük a profilképedet az Operators-falról.} both {Levettük a nevedet és a profilképedet az Operators-falról.} other {Levettük a nevedet az Operators-falról.}} {shown, select, previous {A fal a korábbi nevedet és profilképedet mutatja.} other {Amíg nem küldesz újat, a fal az Operator szót és az alapértelmezett profilképet mutatja.}} A helyed a falon, a mérete és a jelvényed változatlan marad, és ez a vásárlásodat nem érinti.",
 		"next": "Új nevet vagy avatart a <settings>beállításaidban</settings> küldhetsz.",
 		"reason_label": "Indok",
 		"reason_value": "{reason, select, impersonation {Más személynek adja ki magát} rights {Jogosultság nélkül használ nevet vagy képet} age_suitability {Nem alkalmas fiatalabb felhasználóknak} other {Sérti a közösségi irányelveket}}",
 		"redress_v2": "Bírósághoz is fordulhatsz. Ha az EU-ban vagy, egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, a vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
 		"signoff": "{product_name} csapata",
-		"subject": "Elutasítottuk a nevedet vagy a profilképedet a(z) {product_name} Operators-falára"
+		"subject": "Levettük a nevedet vagy a profilképedet a(z) {product_name} Operators-faláról"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "A jelvényed megjelenik a profilodon. A <settings>beállításaidban</settings> elrejtheted.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} és a(z) {product_name} csapata",
 		"subject": "A {product_name} Operator-tanúsítványod",
 		"terms_link": "Az Operator Pass feltételei",
-		"wall_line": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz, és a neved és az avatarod azután jelenik meg, hogy ellenőriztük őket. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "A visszatérítés jóváíró számláját PDF formátumban csatoltuk ehhez az e-mailhez.",

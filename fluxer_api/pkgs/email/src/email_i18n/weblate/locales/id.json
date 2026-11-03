@@ -288,7 +288,7 @@
 		"cta": "Lihat tawaran",
 		"footer_reason": "Kamu menerima email ini karena seseorang menawarkan untuk meneruskan Operator Pass kepadamu di {product_name}.",
 		"intro": "{senderName} ingin meneruskan salah satu Operator Pass-nya kepadamu.",
-		"lead": "Terima atau tolak di {product_name}. Jika kamu menerimanya, pass ini masuk ke akunmu pada {arrivesAt, date, long}, kecuali pengirim mengambil kembali tawarannya lebih dulu.",
+		"lead_v2": "Terima atau tolak di {product_name}. Jika kamu menerimanya, pass ini langsung pindah ke akunmu.",
 		"signoff": "Tim {product_name}",
 		"subject": "{senderName} ingin meneruskan Operator Pass kepadamu"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Tim {product_name}",
 		"subject": "Sebuah Operator Pass di akun {product_name} kamu telah berakhir"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Lencana Operator, tempat di dinding Operators, #operators, dan uji coba lebih awal juga menyertainya.",
-		"cta": "Dapatkan Operator Pass",
-		"footer_reason": "Kamu menerima email ini karena kamu bergabung dengan daftar tunggu Operator Pass. Ini email terakhir yang kami kirim tentang pass ini.",
-		"intro": "Kamu meminta kami memberi tahu saat Operator Pass mulai dijual. Sekarang pass ini sudah dijual.",
-		"paid_for": "Pass ini disertai sertifikat Operator bernomor berisi namamu serta tanggal dan waktu pembayaran, yang dikirim sebagai PDF yang kamu simpan.",
-		"price_label": "Harga early bird",
-		"price_value": "{priceFormatted}, sekali bayar, sampai {priceEndsOn, date, long}",
-		"signoff": "Tim {product_name}",
-		"subject": "Operator Pass {product_name} sudah dijual",
-		"terms_link": "Ketentuan Operator Pass",
-		"unsubscribe": "Berhenti berlangganan"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Saat kamu mengaktifkannya, kamu mendapat sertifikat Operator bernomor dengan nama yang kamu pilih. Sertifikat itu menampilkan {visionaryDate, date, long}, tanggal kamu mendapatkan Visionary, dan lencana Operator juga menampilkannya jika kamu memilih untuk menampilkan lencana itu.",
-		"choices_line": "Lencana Operator tetap tersembunyi sampai kamu memilih untuk menampilkannya, dan kamu hanya tercantum di dinding Operators jika kamu memilihnya.",
-		"cta": "Aktifkan Operator Pass-mu",
-		"footer_reason": "Kamu menerima email ini karena kamu punya Visionary di {product_name}.",
-		"intro": "Visionary-mu disertai Operator Pass, dan kamu bisa mengaktifkannya kapan saja di pengaturanmu. Kamu tidak membayar apa pun lagi untuk itu, dan tidak ada yang berubah pada Visionary-mu.",
-		"labs_line": "{member, select, yes {Kamu sudah punya #operators di Fluxer Labs lewat Visionary-mu. Setelah kamu mengaktifkan Operator Pass-mu, kamu juga mendapat peran Operator di sana.} other {Saat kamu mengaktifkan Operator Pass-mu, kami menambahkan akun ini ke Fluxer Labs dengan peran Operator, kecuali kamu pernah keluar atau dikeluarkan dari Fluxer Labs. Visionary-mu juga memberimu #operators di sana.}}",
-		"signoff": "Tim {product_name}",
-		"subject": "Operator Pass dari Visionary-mu siap diaktifkan",
-		"terms_line": "Ketentuan Operator Pass menjelaskan cara kerja pass ini, dan bagian 13 membahas Visionary.",
-		"terms_link": "Ketentuan Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Lencana Operator-mu ada di profilmu. Kamu bisa menyembunyikannya di <settings>pengaturanmu</settings>.} other {Lencana Operator-mu tersembunyi. Kamu bisa menampilkannya di <settings>pengaturanmu</settings>.}}",
 		"cta": "Buka Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Ketentuan Operator Pass yang kamu setujui (versi {termsVersion}) terlampir sebagai PDF.",
 		"terms_link": "Ketentuan Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Kamu memilih untuk tidak dicantumkan di dinding Operators. Kamu bisa menambahkan namamu di <settings>pengaturanmu</settings>.} other {Kamu tercantum di dinding Operators sebagai {wallName}. Kamu bisa mengubahnya atau keluar dari dinding di <settings>pengaturanmu</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Gabung daftar tunggu",
-		"expiry": "Tautan ini kedaluwarsa dalam 48 jam.",
-		"footer_reason": "Kamu menerima email ini karena alamat ini dimasukkan dalam daftar tunggu Operator Pass di situs web {product_name}.",
-		"intro": "Konfirmasi alamat email ini untuk bergabung dengan daftar tunggu Operator Pass. Kami akan mengirim email sekali saja, saat pass mulai dijual.",
-		"note": "Jika kamu tidak memintanya, abaikan email ini dan kami tidak akan menghubungimu lagi.",
-		"signoff": "Tim {product_name}",
-		"subject": "Konfirmasi pendaftaran daftar tunggu Operator Pass {product_name} kamu"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Balas email ini dalam 60 hari dan jelaskan mengapa kamu tidak setuju. Banding ini gratis, dan seseorang dari tim kami membaca dan memutuskan banding kamu.} other {Hubungi admin instance ini dalam 60 hari dan jelaskan mengapa kamu tidak setuju.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Kamu menerima email ini karena ada keputusan tentang pencantumanmu di dinding Operators {product_name}.",
 		"ground": "Bagian 3.1 ketentuan Operator Pass",
 		"ground_label": "Dasar",
-		"intro": "{target, select, avatar {Kami menolak avatarmu untuk dinding Operators.} both {Kami menolak nama dan avatarmu untuk dinding Operators.} other {Kami menolak namamu untuk dinding Operators.}} {shown, select, previous {Dinding tetap menampilkan versi terakhirmu yang disetujui.} other {Sampai kamu mengirim yang baru, dinding menampilkan kata Operator dan avatar default.}} Tempatmu di dinding, ukurannya, dan lencanamu tetap seperti semula, dan pembelianmu tidak terpengaruh.",
+		"intro": "{target, select, avatar {Kami menghapus avatarmu dari dinding Operators.} both {Kami menghapus nama dan avatarmu dari dinding Operators.} other {Kami menghapus namamu dari dinding Operators.}} {shown, select, previous {Dinding menampilkan nama dan avatarmu sebelumnya.} other {Sampai kamu mengirim yang baru, dinding menampilkan kata Operator dan avatar default.}} Tempatmu di dinding, ukurannya, dan lencanamu tetap seperti semula, dan pembelianmu tidak terpengaruh.",
 		"next": "Kamu bisa mengirim nama atau avatar baru di <settings>pengaturanmu</settings>.",
 		"reason_label": "Alasan",
 		"reason_value": "{reason, select, impersonation {Menyamar sebagai orang lain} rights {Memakai nama atau gambar tanpa hak atasnya} age_suitability {Tidak sesuai untuk pengguna yang lebih muda} other {Melanggar panduan komunitas}}",
 		"redress_v2": "Kamu juga bisa menempuh jalur pengadilan. Jika kamu berada di UE, kamu bisa menggunakan <dsa>badan penyelesaian sengketa di luar pengadilan</dsa> yang tersertifikasi. Jika kamu konsumen di UE atau EEA, kamu juga bisa membawa sengketa ini ke Badan Nasional Swedia untuk Sengketa Konsumen (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Swedia.",
 		"signoff": "Tim {product_name}",
-		"subject": "Kami menolak nama atau avatarmu untuk dinding Operators {product_name}"
+		"subject": "Kami menghapus nama atau avatarmu dari dinding Operators {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Lencanamu ada di profilmu. Kamu bisa menyembunyikannya di <settings>pengaturanmu</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} dan tim {product_name}",
 		"subject": "Sertifikat Operator {product_name}-mu",
 		"terms_link": "Ketentuan Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Kamu memilih untuk tidak dicantumkan di dinding Operators. Kamu bisa menambahkan namamu di <settings>pengaturanmu</settings>.} other {Kamu tercantum di dinding Operators sebagai {wallName}, dan nama serta avatarmu tampil setelah kami memeriksanya. Kamu bisa mengubahnya atau keluar dari dinding di <settings>pengaturanmu</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Kamu memilih untuk tidak dicantumkan di dinding Operators. Kamu bisa menambahkan namamu di <settings>pengaturanmu</settings>.} other {Kamu tercantum di dinding Operators sebagai {wallName}. Kamu bisa mengubahnya atau keluar dari dinding di <settings>pengaturanmu</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Nota kredit untuk pengembalian dana ini terlampir di email ini sebagai PDF.",

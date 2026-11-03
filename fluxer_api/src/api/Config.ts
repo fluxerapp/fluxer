@@ -11,7 +11,6 @@ import {
 	parseOperatorPassMaxQuantity,
 	parseOperatorPassReleaseLists,
 	parseOperatorPassStandardPrices,
-	parseOperatorPassTransferLockHours,
 	parseOperatorPassWallTiers,
 	parseOperatorPassWithdrawalCountries,
 	resolveOperatorPassDisabledCurrencies,
@@ -250,32 +249,11 @@ function resolveOperatorPassClockOffsetMs(master: MasterConfig): number {
 	return overrideAt.getTime() - Date.now();
 }
 
-function parseOperatorPassPreviewIps(values: ReadonlyArray<string>): Array<string> {
-	const normalized = new Set<string>();
-	for (const value of values) {
-		const entry = parseIpBanEntry(value);
-		if (!entry) {
-			throw new Error(`FLUXER_OPERATOR_PASS_PREVIEW_IPS contains an invalid IP address or CIDR range: ${value}`);
-		}
-		normalized.add(entry.canonical);
-	}
-	return Array.from(normalized);
-}
-
 function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	const source = master.operator_pass;
-	const saleOpensAt = parseOptionalIsoInstant(source.sale_opens_at, 'FLUXER_OPERATOR_PASS_SALE_OPENS_AT');
 	const priceRisesAt = parseOptionalIsoInstant(source.price_rises_at, 'FLUXER_OPERATOR_PASS_PRICE_RISES_AT');
-	if ((saleOpensAt === null) !== (priceRisesAt === null)) {
-		throw new Error('FLUXER_OPERATOR_PASS_SALE_OPENS_AT and FLUXER_OPERATOR_PASS_PRICE_RISES_AT must be set together');
-	}
-	if (saleOpensAt && priceRisesAt && priceRisesAt.getTime() <= saleOpensAt.getTime()) {
-		throw new Error('FLUXER_OPERATOR_PASS_PRICE_RISES_AT must be later than FLUXER_OPERATOR_PASS_SALE_OPENS_AT');
-	}
-	if (saleOpensAt === null && master.env === 'production' && !master.instance.self_hosted) {
-		console.warn(
-			'FLUXER_OPERATOR_PASS_SALE_OPENS_AT and FLUXER_OPERATOR_PASS_PRICE_RISES_AT are not set, the Operator Pass sale stays closed',
-		);
+	if (priceRisesAt === null && master.env === 'production' && !master.instance.self_hosted) {
+		console.warn('FLUXER_OPERATOR_PASS_PRICE_RISES_AT is not set, the Operator Pass early bird price never ends');
 	}
 	const graceMinutes = source.grace_minutes;
 	if (
@@ -309,10 +287,10 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		throw new Error('FLUXER_LABS_OPERATORS_CHANNEL_ID needs FLUXER_LABS_GUILD_ID');
 	}
 	const standardPricesMinor = parseOperatorPassStandardPrices(source.standard_prices_minor);
-	const hostedSale = saleOpensAt !== null && master.env === 'production' && !master.instance.self_hosted;
+	const hostedSale = priceRisesAt !== null && master.env === 'production' && !master.instance.self_hosted;
 	if (hostedSale && standardPricesMinor === null) {
 		throw new Error(
-			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_SALE_OPENS_AT is set',
+			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
 		);
 	}
 	if (
@@ -323,11 +301,10 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 			labsOperatorsChannelId === null)
 	) {
 		throw new Error(
-			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production when FLUXER_OPERATOR_PASS_SALE_OPENS_AT is set',
+			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
 		);
 	}
 	return {
-		saleOpensAt,
 		priceRisesAt,
 		graceMs: graceMinutes * 60 * 1000,
 		clockOffsetMs: resolveOperatorPassClockOffsetMs(master),
@@ -338,13 +315,10 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		labsOperatorsChannelId,
 		standardPricesMinor,
 		releaseLists: parseOperatorPassReleaseLists(source.release_lists),
-		transferLockMs: parseOperatorPassTransferLockHours(source.transfer_lock_hours) * 60 * 60 * 1000,
-		wallAutoApprove: source.wall_auto_approve ?? true,
 		withdrawalCountries: parseOperatorPassWithdrawalCountries(source.withdrawal_countries),
 		wallTierMinimums: parseOperatorPassWallTiers(source.wall_tiers),
 		maxQuantity: parseOperatorPassMaxQuantity(source.max_quantity),
 		disabledCurrencies: resolveOperatorPassDisabledCurrencies(source.localized_prices_enabled),
-		previewIps: parseOperatorPassPreviewIps(source.preview_ips ?? []),
 	};
 }
 

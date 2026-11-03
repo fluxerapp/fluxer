@@ -322,7 +322,7 @@ export const EMAIL_I18N_MESSAGES = {
 	operator_pass_offer_received: {
 		subject: '{senderName} wants to pass you an Operator Pass',
 		intro: '{senderName} wants to pass you one of their Operator Passes.',
-		lead: 'Accept or decline it in {product_name}. If you accept, it arrives on {arrivesAt, date, long}, unless the sender takes the offer back first.',
+		lead_v2: 'Accept or decline it in {product_name}. If you accept, it moves to you right away.',
 		cta: 'View the offer',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because someone offered you an Operator Pass on {product_name}.',
@@ -443,32 +443,6 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because you paid for an Operator Pass on your {product_name} account.',
 	},
-	operator_pass_sale_open: {
-		subject: 'The {product_name} Operator Pass is on sale',
-		intro: "You asked us to tell you when the Operator Pass goes on sale. It's on sale now.",
-		price_label: 'Early bird price',
-		price_value: '{priceFormatted}, paid once, until {priceEndsOn, date, long}',
-		paid_for:
-			'The pass comes with a numbered Operator certificate with your name and the date and time of payment, delivered as a PDF you keep.',
-		bonus_v2: "The Operator badge, a spot on the Operators' wall, #operators and early testing come with it too.",
-		cta: 'Get the Operator Pass',
-		terms_link: 'Operator Pass terms',
-		signoff: 'The {product_name} team',
-		footer_reason:
-			'You received this email because you joined the Operator Pass waitlist. This is the last email we send about the pass.',
-		unsubscribe: 'Unsubscribe',
-	},
-	operator_pass_waitlist_verification: {
-		subject: 'Confirm your {product_name} Operator Pass waitlist signup',
-		intro:
-			"Confirm this email address to join the Operator Pass waitlist. We'll email you once, when the pass goes on sale.",
-		cta: 'Join the waitlist',
-		expiry: 'This link expires in 48 hours.',
-		note: "If you didn't ask for this, ignore this email and we won't contact you again.",
-		signoff: 'The {product_name} team',
-		footer_reason:
-			'You received this email because this address was entered on the Operator Pass waitlist on the {product_name} website.',
-	},
 	operator_pass_wall_hidden: {
 		subject: "We took your listing off the {product_name} Operators' wall for now",
 		intro:
@@ -491,9 +465,9 @@ export const EMAIL_I18N_MESSAGES = {
 			"You received this email because of a decision about your listing on the {product_name} Operators' wall.",
 	},
 	operator_pass_wall_name_replaced: {
-		subject: "We declined your name or avatar for the {product_name} Operators' wall",
+		subject: "We took your name or avatar off the {product_name} Operators' wall",
 		intro:
-			"{target, select, avatar {We declined your avatar for the Operators' wall.} both {We declined your name and avatar for the Operators' wall.} other {We declined your name for the Operators' wall.}} {shown, select, previous {The wall keeps your last approved version.} other {Until you send a new one, the wall shows the word Operator and the default avatar.}} Your spot on the wall, its size and your badge stay as they are, and your purchase isn't affected.",
+			"{target, select, avatar {We took your avatar off the Operators' wall.} both {We took your name and avatar off the Operators' wall.} other {We took your name off the Operators' wall.}} {shown, select, previous {The wall shows your earlier name and avatar.} other {Until you send a new one, the wall shows the word Operator and the default avatar.}} Your spot on the wall, its size and your badge stay as they are, and your purchase isn't affected.",
 		reason_label: 'Reason',
 		reason_value:
 			'{reason, select, impersonation {Pretends to be someone else} rights {Uses a name or image without the rights to it} age_suitability {Not suitable for younger users} other {Breaks the community guidelines}}',
@@ -510,22 +484,6 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason:
 			"You received this email because of a decision about your listing on the {product_name} Operators' wall.",
-	},
-	operator_pass_visionary_notice: {
-		subject: 'Your Operator Pass from Visionary is ready to turn on',
-		intro:
-			'Your Visionary comes with an Operator Pass, and you can turn it on in your settings whenever you like. You pay nothing more for it, and nothing about your Visionary changes.',
-		certificate_line:
-			'When you turn it on, you get a numbered Operator certificate with the name you choose. It shows {visionaryDate, date, long}, the date you got Visionary, and so does the Operator badge if you choose to show it.',
-		choices_line:
-			"The Operator badge stays hidden until you choose to show it, and you're on the Operators' wall only if you choose to be.",
-		labs_line:
-			'{member, select, yes {You already have #operators in Fluxer Labs through your Visionary. Once you turn on your Operator Pass, you also get the Operator role there.} other {When you turn on your Operator Pass, we add this account to Fluxer Labs with the Operator role, unless you left or were removed from Fluxer Labs before. Your Visionary also gives you #operators there.}}',
-		cta: 'Turn on your Operator Pass',
-		terms_line: 'The Operator Pass terms say how the pass works, and section 13 is about Visionary.',
-		terms_link: 'Operator Pass terms',
-		signoff: 'The {product_name} team',
-		footer_reason: 'You received this email because you have Visionary on {product_name}.',
 	},
 	operator_pass_visionary_turned_on: {
 		subject: 'Your {product_name} Operator certificate',
@@ -554,8 +512,8 @@ export const EMAIL_I18N_MESSAGES = {
 		certificate_line:
 			'Your Operator certificate is attached to this email. You can download it again in your Fluxer settings. Keep your own copy too, because we delete ours if your account is deleted.',
 		bonus_heading: 'Also with your pass',
-		wall_line:
-			"{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}, and your name and avatar show once we check them. You can change it or leave the wall in your <settings>settings</settings>.}}",
+		wall_line_v2:
+			"{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}. You can change it or leave the wall in your <settings>settings</settings>.}}",
 		badge_line: 'Your badge is on your profile. You can hide it in your <settings>settings</settings>.',
 		labs_line_v2:
 			'{labs, select, visionary {You have the Operator role in Fluxer Labs. You already have #operators through your Visionary.} member {You have the Operator role and #operators in Fluxer Labs.} other {Your pass comes with the Operator role and #operators in Fluxer Labs. You have them whenever this account is in Fluxer Labs.}}',

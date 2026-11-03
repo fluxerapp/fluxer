@@ -67,26 +67,6 @@ interface OperatorPassCalendarDay {
 	day: number;
 }
 
-function getZonedTime(at: number, timeZone?: string): OperatorPassCalendarDay & {startOfDay: boolean} {
-	const parts = new Intl.DateTimeFormat('en-US', {
-		timeZone,
-		hourCycle: 'h23',
-		year: 'numeric',
-		month: 'numeric',
-		day: 'numeric',
-		hour: 'numeric',
-		minute: 'numeric',
-		second: 'numeric',
-	}).formatToParts(new Date(at));
-	const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0);
-	return {
-		year: value('year'),
-		month: value('month'),
-		day: value('day'),
-		startOfDay: value('hour') === 0 && value('minute') === 0 && value('second') === 0 && at % 1000 === 0,
-	};
-}
-
 function formatCalendarDay(
 	{year, month, day}: OperatorPassCalendarDay,
 	dateStyle: 'medium' | 'long' = 'medium',
@@ -107,19 +87,6 @@ export function formatOperatorPassCalendarDay(day: string): string {
 
 export function formatOperatorPassEarlyBirdEnd(priceRisesAt: string): string {
 	return formatCalendarDay(parseCalendarDay(getOperatorPassEarlyBirdEndsOn(priceRisesAt)), 'long');
-}
-
-export function formatOperatorPassUnlockDay(iso: string, timeZone?: string): string {
-	const zoned = getZonedTime(Date.parse(iso), timeZone);
-	if (zoned.startOfDay) return formatCalendarDay(zoned);
-	const next = new Date(Date.UTC(zoned.year, zoned.month - 1, zoned.day + 1));
-	return formatCalendarDay({year: next.getUTCFullYear(), month: next.getUTCMonth() + 1, day: next.getUTCDate()});
-}
-
-export function hasOperatorPassTimePassed(iso: string | null | undefined, now: number = Date.now()): boolean {
-	if (!iso) return true;
-	const at = Date.parse(iso);
-	return Number.isNaN(at) || at <= now;
 }
 
 export function formatOperatorPassSinceDate(iso: string | Date): string {

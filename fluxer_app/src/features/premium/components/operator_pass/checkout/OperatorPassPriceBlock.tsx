@@ -4,7 +4,6 @@ import styles from '@app/features/premium/components/operator_pass/checkout/Chec
 import {
 	formatOperatorPassDateTime,
 	formatOperatorPassEarlyBirdEnd,
-	formatOperatorPassLongDate,
 } from '@app/features/premium/utils/OperatorPassUtils';
 import type {OperatorPassStateResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import {msg} from '@lingui/core/macro';
@@ -30,11 +29,6 @@ const EARLY_BIRD_UNTIL_THEN_DESCRIPTOR = msg({
 	comment:
 		'Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.',
 });
-const ON_SALE_FROM_DESCRIPTOR = msg({
-	message: 'On sale from {saleOpensAt}.',
-	comment:
-		'Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.',
-});
 
 interface OperatorPassPriceBlockProps {
 	state: OperatorPassStateResponse;
@@ -55,15 +49,6 @@ export function OperatorPassPriceBlock({state, count, formatPrice}: OperatorPass
 					? i18n._(PER_PASS_DESCRIPTOR, {count, price: formatPrice(state.price_minor, state.currency)})
 					: i18n._(SINGLE_PASS_PRICE_DESCRIPTOR)}
 			</span>
-			{state.phase === 'waitlist' && state.sale_opens_at && (
-				<span
-					className={styles.note}
-					title={formatOperatorPassDateTime(state.sale_opens_at)}
-					data-flx="premium.operator-pass-checkout.on-sale-from"
-				>
-					{i18n._(ON_SALE_FROM_DESCRIPTOR, {saleOpensAt: formatOperatorPassLongDate(state.sale_opens_at)})}
-				</span>
-			)}
 			{priceRisesAt && (
 				<span
 					className={styles.note}

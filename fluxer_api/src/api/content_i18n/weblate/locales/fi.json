@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "yleinen",
 	"guild.default_channel_voice": "Yleinen",
 	"operator_pass.labs_greeting": "{size, select, single {Tervetuloa #operators-kanavalle, {last}!} other {Tervetuloa #operators-kanavalle, {others} ja {last}!}} Tämä on kanava kaikille, joilla on Operator Pass.",
-	"operator_pass.visionary_notice_dm_v2": "Visionaryisi mukana tulee Operator Pass. Voit ottaa sen käyttöön milloin haluat asetuksissa kohdassa ”Operator Pass”, etkä maksa siitä mitään lisää.",
 	"profile_badge.bug_hunter": "{product_name}-bugimetsästäjä",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Passia}}",

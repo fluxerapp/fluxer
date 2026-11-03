@@ -288,7 +288,7 @@
 		"cta": "Vedi la proposta",
 		"footer_reason": "Hai ricevuto questa email perché qualcuno ti ha proposto un Operator Pass su {product_name}.",
 		"intro": "{senderName} vuole cederti uno dei suoi Operator Pass.",
-		"lead": "Accettalo o rifiutalo su {product_name}. Se lo accetti, arriverà il {arrivesAt, date, long}, a meno che il mittente non ritiri prima la proposta.",
+		"lead_v2": "Accettalo o rifiutalo su {product_name}. Se lo accetti, ti viene trasferito subito.",
 		"signoff": "Il team di {product_name}",
 		"subject": "{senderName} vuole cederti un Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Il team di {product_name}",
 		"subject": "Un Operator Pass sul tuo account {product_name} è terminato"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Con il pass vengono anche il badge Operator, un posto nella bacheca degli Operators, #operators e i test in anteprima.",
-		"cta": "Ottieni l'Operator Pass",
-		"footer_reason": "Hai ricevuto questa email perché hai effettuato l'iscrizione alla lista d'attesa dell'Operator Pass. È l'ultima email che ti inviamo sul pass.",
-		"intro": "Ci hai chiesto di avvisarti quando l'Operator Pass sarebbe stato in vendita. Ora è in vendita.",
-		"paid_for": "Il pass viene con un certificato Operator numerato con il tuo nome e la data e l'ora del pagamento, consegnato come PDF che conservi.",
-		"price_label": "Prezzo early bird",
-		"price_value": "{priceFormatted}, pagamento unico, fino al {priceEndsOn, date, long}",
-		"signoff": "Il team di {product_name}",
-		"subject": "L'Operator Pass di {product_name} è in vendita",
-		"terms_link": "Termini dell'Operator Pass",
-		"unsubscribe": "Annulla iscrizione"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Quando lo attivi, ricevi un certificato Operator numerato con il nome che scegli. Riporta il {visionaryDate, date, long}, la data in cui hai ottenuto Visionary, e lo stesso vale per il badge Operator se scegli di mostrarlo.",
-		"choices_line": "Il badge Operator resta nascosto finché non scegli di mostrarlo, e compari nella bacheca degli Operators solo se lo scegli.",
-		"cta": "Attiva il tuo Operator Pass",
-		"footer_reason": "Ricevi questa email perché hai Visionary su {product_name}.",
-		"intro": "Il tuo Visionary viene con un Operator Pass, e puoi attivarlo quando vuoi nelle tue impostazioni. Non paghi nulla in più e per il tuo Visionary non cambia nulla.",
-		"labs_line": "{member, select, yes {Hai già #operators in Fluxer Labs grazie al tuo Visionary. Quando attivi il tuo Operator Pass, ricevi lì anche il ruolo Operator.} other {Quando attivi il tuo Operator Pass, aggiungiamo questo account a Fluxer Labs con il ruolo Operator, a meno che tu non abbia già lasciato Fluxer Labs o non ti abbiano rimosso. Il tuo Visionary ti dà lì anche #operators.}}",
-		"signoff": "Il team di {product_name}",
-		"subject": "Il tuo Operator Pass che viene con Visionary è pronto da attivare",
-		"terms_line": "I termini dell'Operator Pass spiegano come funziona il pass, e la sezione 13 riguarda Visionary.",
-		"terms_link": "Termini dell'Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Il tuo badge Operator è sul tuo profilo. Puoi nasconderlo nelle tue <settings>impostazioni</settings>.} other {Il tuo badge Operator è nascosto. Puoi mostrarlo nelle tue <settings>impostazioni</settings>.}}",
 		"cta": "Apri Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "I termini dell'Operator Pass che hai accettato (versione {termsVersion}) sono allegati in PDF.",
 		"terms_link": "Termini dell'Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Hai scelto di non comparire nella bacheca degli Operators. Puoi aggiungere il tuo nome nelle tue <settings>impostazioni</settings>.} other {Compari nella bacheca degli Operators come {wallName}. Puoi cambiarlo o lasciare la bacheca nelle tue <settings>impostazioni</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Iscriviti alla lista d'attesa",
-		"expiry": "Questo link scade tra 48 ore.",
-		"footer_reason": "Hai ricevuto questa email perché questo indirizzo è stato inserito nella lista d'attesa dell'Operator Pass sul sito web di {product_name}.",
-		"intro": "Conferma questo indirizzo email per entrare nella lista d'attesa dell'Operator Pass. Ti scriveremo una sola volta, quando il pass sarà in vendita.",
-		"note": "Se non l'hai chiesto tu, ignora questa email e non ti contatteremo più.",
-		"signoff": "Il team di {product_name}",
-		"subject": "Conferma la tua iscrizione alla lista d'attesa dell'Operator Pass di {product_name}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Rispondi a questa email entro 60 giorni e spiegaci perché non sei d'accordo. È gratuito, e una persona del nostro team legge il tuo ricorso e decide.} other {Contatta gli amministratori di questa istanza entro 60 giorni e spiega loro perché non sei d'accordo.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Hai ricevuto questa email a causa di una decisione relativa alla tua voce nella bacheca degli Operators di {product_name}.",
 		"ground": "Sezione 3.1 dei termini dell'Operator Pass",
 		"ground_label": "Motivazione",
-		"intro": "{target, select, avatar {Abbiamo rifiutato il tuo avatar per la bacheca degli Operators.} both {Abbiamo rifiutato il tuo nome e il tuo avatar per la bacheca degli Operators.} other {Abbiamo rifiutato il tuo nome per la bacheca degli Operators.}} {shown, select, previous {La bacheca mantiene l'ultima versione approvata.} other {Finché non ne invii uno nuovo, la bacheca mostra la parola Operator e l'avatar predefinito.}} Il tuo posto sulla bacheca, la sua dimensione e il tuo badge restano come sono, e il tuo acquisto non cambia.",
+		"intro": "{target, select, avatar {Abbiamo tolto il tuo avatar dalla bacheca degli Operators.} both {Abbiamo tolto il tuo nome e il tuo avatar dalla bacheca degli Operators.} other {Abbiamo tolto il tuo nome dalla bacheca degli Operators.}} {shown, select, previous {La bacheca mostra il tuo nome e il tuo avatar precedenti.} other {Finché non ne invii uno nuovo, la bacheca mostra la parola Operator e l'avatar predefinito.}} Il tuo posto sulla bacheca, la sua dimensione e il tuo badge restano come sono, e il tuo acquisto non cambia.",
 		"next": "Puoi inviare un nuovo nome o avatar nelle tue <settings>impostazioni</settings>.",
 		"reason_label": "Motivo",
 		"reason_value": "{reason, select, impersonation {Si spaccia per qualcun altro} rights {Usa un nome o un'immagine senza averne i diritti} age_suitability {Non adatto agli utenti più giovani} other {Viola le linee guida della community}}",
 		"redress_v2": "Puoi anche rivolgerti a un tribunale. Se sei nell'UE, puoi rivolgerti a un <dsa>organismo di risoluzione extragiudiziale delle controversie</dsa> certificato. Se sei un consumatore nell'UE o nel SEE, puoi anche sottoporre la controversia alla Commissione nazionale svedese per i reclami dei consumatori (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Svezia.",
 		"signoff": "Il team di {product_name}",
-		"subject": "Abbiamo rifiutato il tuo nome o avatar per la bacheca degli Operators di {product_name}"
+		"subject": "Abbiamo tolto il tuo nome o avatar dalla bacheca degli Operators di {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Il tuo badge è sul tuo profilo. Puoi nasconderlo nelle tue <settings>impostazioni</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} e il team di {product_name}",
 		"subject": "Il tuo certificato Operator di {product_name}",
 		"terms_link": "Termini dell'Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Hai scelto di non comparire nella bacheca degli Operators. Puoi aggiungere il tuo nome nelle tue <settings>impostazioni</settings>.} other {Compari nella bacheca degli Operators come {wallName}, e il tuo nome e il tuo avatar vengono mostrati dopo che li abbiamo controllati. Puoi cambiarlo o lasciare la bacheca nelle tue <settings>impostazioni</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Hai scelto di non comparire nella bacheca degli Operators. Puoi aggiungere il tuo nome nelle tue <settings>impostazioni</settings>.} other {Compari nella bacheca degli Operators come {wallName}. Puoi cambiarlo o lasciare la bacheca nelle tue <settings>impostazioni</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "La nota di credito di questo rimborso è allegata a questa email in PDF.",

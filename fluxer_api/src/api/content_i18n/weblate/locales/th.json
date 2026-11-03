@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "ทั่วไป",
 	"guild.default_channel_voice": "ทั่วไป",
 	"operator_pass.labs_greeting": "{size, select, single {ยินดีต้อนรับสู่ #operators, {last}!} other {ยินดีต้อนรับสู่ #operators, {others} และ {last}!}} ที่นี่คือช่องสำหรับทุกคนที่มี Operator Pass",
-	"operator_pass.visionary_notice_dm_v2": "Visionary ของคุณมาพร้อมกับ Operator Pass คุณเปิดใช้ได้ทุกเมื่อในการตั้งค่า ใต้ \"Operator Pass\" และไม่ต้องจ่ายเพิ่ม",
 	"profile_badge.bug_hunter": "นักล่าบั๊ก {product_name}",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator {count, plural, other {Operator Pass # ใบ}}",

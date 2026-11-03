@@ -16,10 +16,8 @@ import {ms} from 'itty-time';
 
 export type OperatorPassSchedule = Pick<
 	OperatorPassConfig,
-	'saleOpensAt' | 'priceRisesAt' | 'graceMs' | 'clockOffsetMs' | 'standardPricesMinor'
+	'priceRisesAt' | 'graceMs' | 'clockOffsetMs' | 'standardPricesMinor'
 >;
-
-export type OperatorPassPricedPhase = Exclude<OperatorPassPhase, 'waitlist'>;
 
 const STRIPE_CHECKOUT_MIN_EXPIRY_MS = ms('30 minutes');
 const OPERATOR_PASS_CHECKOUT_EXPIRY_MS = ms('2 hours');
@@ -43,23 +41,8 @@ export function operatorPassNow(
 export function getOperatorPassPhase(
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
-	previewUnlocked = false,
 ): OperatorPassPhase {
-	const at = now.getTime();
-	if (!schedule.saleOpensAt || !schedule.priceRisesAt) {
-		return 'waitlist';
-	}
-	if (at < schedule.saleOpensAt.getTime() && !previewUnlocked) {
-		return 'waitlist';
-	}
-	if (at < schedule.priceRisesAt.getTime()) {
-		return 'early_bird';
-	}
-	return 'standard';
-}
-
-function getOperatorPassPricedPhase(phase: OperatorPassPhase): OperatorPassPricedPhase {
-	return phase === 'standard' ? 'standard' : 'early_bird';
+	return schedule.priceRisesAt && now.getTime() >= schedule.priceRisesAt.getTime() ? 'standard' : 'early_bird';
 }
 
 export function getOperatorPassPriceMinor(
@@ -67,7 +50,7 @@ export function getOperatorPassPriceMinor(
 	currency: OperatorPassCurrency,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 ): number {
-	if (getOperatorPassPricedPhase(phase) === 'standard' && schedule.standardPricesMinor) {
+	if (phase === 'standard' && schedule.standardPricesMinor) {
 		return schedule.standardPricesMinor[currency];
 	}
 	return OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR[currency];
@@ -184,12 +167,11 @@ export interface OperatorPassCheckoutPriceInput {
 	userId: string | null;
 	quote: string | null | undefined;
 	secret?: string;
-	previewUnlocked?: boolean;
 }
 
 export interface OperatorPassCheckoutPrice {
 	phase: OperatorPassPhase;
-	pricedPhase: OperatorPassPricedPhase;
+	pricedPhase: OperatorPassPhase;
 	amountMinor: number;
 	quoteHonored: boolean;
 	priceChanged: boolean;
@@ -217,7 +199,7 @@ function isQuoteHonored(
 
 export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPriceInput): OperatorPassCheckoutPrice {
 	const schedule = input.schedule ?? getOperatorPassSchedule();
-	const phase = getOperatorPassPhase(input.now, schedule, input.previewUnlocked);
+	const phase = getOperatorPassPhase(input.now, schedule);
 	const verified = input.quote ? verifyOperatorPassQuote(input.quote, input.secret) : null;
 	const quote = verified && (verified.userId === null || verified.userId === input.userId) ? verified : null;
 	if (quote && isQuoteHonored(quote, input, schedule, phase)) {
@@ -232,7 +214,7 @@ export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPric
 	const amountMinor = getOperatorPassPriceMinor(phase, input.currency, schedule);
 	return {
 		phase,
-		pricedPhase: getOperatorPassPricedPhase(phase),
+		pricedPhase: phase,
 		amountMinor,
 		quoteHonored: false,
 		priceChanged: quote !== null && (quote.currency !== input.currency || quote.amountMinor !== amountMinor),
@@ -240,7 +222,7 @@ export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPric
 }
 
 export function getOperatorPassSessionExpiresAt(
-	pricedPhase: OperatorPassPricedPhase,
+	pricedPhase: OperatorPassPhase,
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 	realNowMs = Date.now(),

@@ -3033,10 +3033,15 @@ msgstr "Uitnodiging accepteren"
 msgid "Accept the friend request from {userName}?"
 msgstr "Vriendschapsverzoek van {userName} accepteren?"
 
-#. Toast after accepting an Operator Pass offer while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.
+#. Short muted line under an Operator Pass offer the other account accepted, while the pass moves to them. {name} is a display name.
+#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
+msgid "Accepted by {name}"
+msgstr "Geaccepteerd door {name}"
+
+#. Toast after accepting an Operator Pass offer when the pass could not move to your account right away, for example while a check on its payment is still open.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
-msgid "Accepted. It arrives on {date}, unless the sender takes the offer back first."
-msgstr "Geaccepteerd. Hij komt op {date} binnen, tenzij de afzender het aanbod eerder intrekt."
+msgid "Accepted. The pass moves to you soon."
+msgstr "Geaccepteerd. De pass komt binnenkort naar je toe."
 
 #. Short label in the notification utils helper. Keep it concise.
 #: src/features/notification/utils/NotificationUtils.ts
@@ -6673,11 +6678,6 @@ msgstr "Merk en accenten"
 msgid "Branding"
 msgstr "Huisstijl"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Breaks the community guidelines"
-msgstr "Overtreedt de communityrichtlijnen"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Brightness"
@@ -6872,11 +6872,6 @@ msgstr "Koop een {premiumProductName}-cadeau via het tabblad {premiumProductName
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "Buy gift"
 msgstr "Cadeau kopen"
-
-#. Short muted text after a name waiting for review on the Operators' wall. {date} is the date our team aims to finish the review by, without a time.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "by {date}"
-msgstr "uiterlijk {date}"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
@@ -12487,11 +12482,6 @@ msgstr "Afwijzen"
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Decline the incoming call"
 msgstr "Inkomende oproep weigeren"
-
-#. Status in the Operators' wall settings when our team declined a new name or avatar. {name} is the declined name. {reason} is one of the short decline reasons, such as "Breaks the community guidelines".
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Declined: {name}. {reason}."
-msgstr "Afgewezen: {name}. {reason}."
 
 #. Short label in the channel and chat personal notes welcome section. Keep it concise.
 #: src/features/channel/components/direct_message/PersonalNotesWelcomeSection.tsx
@@ -19170,11 +19160,6 @@ msgstr "Als iemand je heeft gevraagd om hier iets te plakken, is dat oplichting 
 msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
 msgstr "Als de link een andere Fluxer-app opent, kies dan \"Inloggen op een ander apparaat?\" en typ de code in je browser."
 
-#. Line in the dialog for an Operator Pass someone passed on to you, while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.
-#: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
-msgid "If you accept, it arrives on {date}, unless the sender takes the offer back first."
-msgstr "Als je accepteert, komt hij op {date} binnen, tenzij de afzender het aanbod eerder intrekt."
-
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "If you believe it is illegal, say which law and why."
@@ -19244,11 +19229,6 @@ msgstr "Als je dit leeg laat, gebruikt het tabblad je app-pictogram, of het Flux
 msgid "If you leave it empty, those places show the Fluxer icon."
 msgstr "Als je dit leeg laat, tonen die plekken het Fluxer-pictogram."
 
-#. Short muted line under an Operator Pass during the waiting period after payment. The pass can be offered to another account at any time, but it only moves to them once this waiting period is over. {date} is a date without a time.
-#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
-msgid "If you pass it on, it moves on {date} at the earliest"
-msgstr "Als je hem doorgeeft, gaat hij op zijn vroegst op {date} over"
-
 #. Help on the setup token screen for someone who installed Fluxer without rexctl. FLUXER_SETUP_TOKEN and rexctl must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
 msgid "If you run Fluxer without rexctl, set FLUXER_SETUP_TOKEN to a value of at least 32 characters that you choose, restart Fluxer, and enter that value here."
@@ -19291,10 +19271,10 @@ msgstr "Als je denkt dat we een fout hebben gemaakt, stuur dan uiterlijk {deadli
 msgid "If you want to export your data or delete your messages first, please visit {privacyDashboardPath} before proceeding."
 msgstr "Als je eerst je gegevens wilt exporteren of je berichten wilt verwijderen, ga dan naar {privacyDashboardPath} voordat je verdergaat."
 
-#. Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Until we check them, the spot shows the word Operator and the default avatar, never the username. Usually within 72 hours is a description of how it works today, not a promise. Never add a word that says how long the spot lasts.
+#. Text under the heading A spot on the Operators' wall on a slide in the Operator Pass checkout dialog. The Operators' wall is a section on the website's homepage that shows Operators, the people who have an Operator Pass, with their avatars and names. Keep the word Operators in English. Never add a word that says how long the spot lasts.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
-msgid "If you'd like a spot, it goes up when you pay. Your name and avatar show once we check them, usually within 72 hours, and you can leave the wall or come back in your settings."
-msgstr "Als je een plek wilt, komt die erop zodra je betaalt. Je naam en avatar worden zichtbaar nadat we ze hebben gecontroleerd, meestal binnen 72 uur, en je kunt de muur verlaten of weer terugkomen in je instellingen."
+msgid "If you'd like a spot, it goes up with your name and avatar when you pay, and you can leave the wall or come back in your settings."
+msgstr "Als je een plek wilt, komt die met je naam en avatar op de muur zodra je betaalt, en je kunt de muur verlaten of weer terugkomen in je instellingen."
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
@@ -19589,11 +19569,6 @@ msgstr "In kanaal"
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx
 msgid "In channels I moderate"
 msgstr "In kanalen die ik modereer"
-
-#. Label in front of a new name and avatar for the Operators' wall that our team has not checked yet.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "In review"
-msgstr "In beoordeling"
 
 #. Last setup wizard screen, listing what else the admin panel has. Bluesky is a product name.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -20359,7 +20334,7 @@ msgstr "Ierland"
 msgid "Is this instance for one community or many?"
 msgstr "Is deze instantie voor één community of voor veel?"
 
-#. Line in the dialog for an Operator Pass someone passed on to you, once the waiting period after payment has ended. It is the pass.
+#. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
 msgstr "Je ontvangt hem zodra je accepteert."
@@ -20384,10 +20359,10 @@ msgstr "De emoji is mogelijk verwijderd. De naam is teruggezet naar de vorige na
 msgid "It may have left Explore or turned off new joins. Refresh the page and you won't see it again."
 msgstr "De community staat mogelijk niet meer in Ontdekken of accepteert geen nieuwe leden meer. Vernieuw de pagina en je ziet deze niet meer."
 
-#. Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do even after they accept, until the pass moves. The waiting period is the time after payment before a pass can move.
+#. Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do until they accept.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
-msgid "It moves to them once they accept and any waiting period has ended. You can take the offer back until it moves."
-msgstr "Hij gaat naar die persoon zodra die accepteert en een eventuele wachtperiode voorbij is. Je kunt het aanbod intrekken totdat de pass is overgezet."
+msgid "It moves to them as soon as they accept. You can take the offer back until then."
+msgstr "Hij gaat naar die persoon zodra die accepteert. Tot die tijd kun je het aanbod intrekken."
 
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx
@@ -20506,11 +20481,6 @@ msgstr "P2P-oproepen zonder bevestiging deelnemen"
 #: src/features/channel/components/CallMessage.tsx
 msgid "Join the call"
 msgstr "Deelnemen aan gesprek"
-
-#. Button in the Operator Pass dialog before the pass can be bought. Opens the waitlist on the website.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "Join the waitlist"
-msgstr "Aanmelden voor de wachtlijst"
 
 #. Notice above the composer when the user is not a member of the thread.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21532,7 +21502,7 @@ msgstr "Litouws"
 msgid "Live"
 msgstr "Live"
 
-#. Status next to the name and avatar when they are approved and shown on the Operators' wall.
+#. Status next to the name and avatar the Operators' wall shows for this account.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
 msgctxt "operators-wall-status"
 msgid "Live"
@@ -23488,11 +23458,6 @@ msgstr "De rol hoger geplaatst in de ledenlijst"
 msgid "Moved the role up in the role list"
 msgstr "De rol hoger geplaatst in de rollenlijst"
 
-#. Short muted line under an Operator Pass offer the other account accepted, before the pass moves to them. {name} is a display name, {date} a date without a time.
-#: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
-msgid "Moves to {name} on {date}"
-msgstr "Wordt op {date} overgezet naar {name}"
-
 #. Category dropdown option in the "Explore" tab in community settings. "TV" is the abbreviation for television.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Movies & TV"
@@ -25155,11 +25120,6 @@ msgstr "Niet ingesteld"
 msgid "Not set up"
 msgstr "Niet ingesteld"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Not suitable for younger users"
-msgstr "Niet geschikt voor jongere gebruikers"
-
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -25480,11 +25440,6 @@ msgstr "Bij klikken"
 msgctxt "code-editor"
 msgid "on line"
 msgstr "op regel"
-
-#. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "On sale from {saleOpensAt}."
-msgstr "Te koop vanaf {saleOpensAt}."
 
 #. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
 #: src/features/theme_settings/components/QuickCssReference.tsx
@@ -27954,11 +27909,6 @@ msgstr "tik om een reactie toe te voegen"
 #: src/features/channel/components/MessageReactions.tsx
 msgid "press to remove reaction"
 msgstr "tik om de reactie te verwijderen"
-
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Pretends to be someone else"
-msgstr "Doet zich voor als iemand anders"
 
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
 msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
@@ -32236,7 +32186,7 @@ msgstr "Meldingen naar de mobiele Fluxer-apps sturen?"
 msgid "Send offer"
 msgstr "Aanbod versturen"
 
-#. Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall after our team checks them.
+#. Switch in the Operators' wall settings. When on, new profile names and avatars go to the Operators' wall right away.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
 msgid "Send profile changes to the wall"
 msgstr "Profielwijzigingen naar de muur sturen"
@@ -36126,11 +36076,6 @@ msgstr "Taakbalkbadge"
 msgid "Teal"
 msgstr "Blauwgroen"
 
-#. Line in the Operators' wall settings with what our team wrote about a declined name or avatar. {note} is their text, in the language they wrote it.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Team note: {note}"
-msgstr "Teamopmerking: {note}"
-
 #. Overlay label covering the whole voice call view while every participant is moved to a new voice region in place. Trailing ellipsis indicates in-progress.
 #: src/features/voice/components/VoiceRegionTeleportOverlay.tsx
 msgid "Teleporting you to another voice region..."
@@ -36332,11 +36277,6 @@ msgstr "Bedankt"
 #: src/features/moderation/components/report/ReportStepComplete.tsx
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "Bedankt dat je helpt om {productName} veilig te houden. We bekijken je melding zo snel mogelijk."
-
-#. Text in the Operator Pass dialog when the account already has a pass and buying is not open. Backing means supporting the project. "{operatorPassName}" is the name of the settings tab that lists the passes, keep the quotes. Operator Pass is a product name and stays untranslated.
-#: src/features/premium/components/operator_pass/checkout/CheckoutNoticeStage.tsx
-msgid "Thanks for backing {productName}. Your passes are under \"{operatorPassName}\" in your settings."
-msgstr "Bedankt voor je steun aan {productName}. Je passes staan in je instellingen onder \"{operatorPassName}\"."
 
 #. Report flow: title of the final screen when the chosen answer does not lead to a report, so nothing was sent. Thanks the person for raising it.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
@@ -41038,11 +40978,6 @@ msgstr "Gebruikers"
 msgid "Uses"
 msgstr "Aantal keren gebruikt"
 
-#. Short reason our team declined a name or avatar on the Operators' wall.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
-msgid "Uses a name or image without the rights to it"
-msgstr "Gebruikt een naam of afbeelding zonder de rechten daarop"
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open notification settings."
@@ -42246,11 +42181,6 @@ msgstr "We maken een downloadbaar archief aan dat overeenkomt met de onderstaand
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "We'll build a downloadable archive that matches the filters below. You can download it from this page when it's ready. The download expires after 7 days."
 msgstr "We maken een downloadbaar archief dat overeenkomt met de onderstaande filters. Je kunt het vanaf deze pagina downloaden als het klaar is. De download verloopt na 7 dagen."
-
-#. Line in the Operator Pass dialog before the pass can be bought, under the button that opens the waitlist. It means the sale of the Operator Pass opens.
-#: src/features/premium/components/operator_pass/checkout/CheckoutNoticeStage.tsx
-msgid "We'll email you when it opens."
-msgstr "We mailen je zodra de verkoop start."
 
 #. Success toast shown after a data export job is queued when no email can reach the account.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx

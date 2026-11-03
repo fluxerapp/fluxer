@@ -288,7 +288,7 @@
 		"cta": "Näytä tarjous",
 		"footer_reason": "Sait tämän sähköpostin, koska joku tarjosi sinulle Operator Passia palvelussa {product_name}.",
 		"intro": "{senderName} haluaa luovuttaa sinulle yhden Operator Passeistaan.",
-		"lead": "Hyväksy tai hylkää se {product_name}-palvelussa. Jos hyväksyt, se saapuu {arrivesAt, date, long}, ellei lähettäjä vedä tarjousta takaisin sitä ennen.",
+		"lead_v2": "Hyväksy tai hylkää se {product_name}-palvelussa. Jos hyväksyt, se siirtyy sinulle heti.",
 		"signoff": "{product_name}-tiimi",
 		"subject": "{senderName} haluaa luovuttaa sinulle Operator Passin"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name}-tiimi",
 		"subject": "{product_name}-tililläsi oleva Operator Pass on päättynyt"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Sen mukana tulevat myös Operator-merkki, paikka Operators-seinällä, #operators ja uusien ominaisuuksien kokeilu etukäteen.",
-		"cta": "Hanki Operator Pass",
-		"footer_reason": "Sait tämän sähköpostin, koska liityit Operator Pass -jonotuslistalle. Tämä on viimeinen sähköposti, jonka lähetämme passista.",
-		"intro": "Pyysit meitä kertomaan, kun Operator Pass tulee myyntiin. Se on nyt myynnissä.",
-		"paid_for": "Passin mukana tulee numeroitu Operator-sertifikaatti, jossa on nimesi sekä maksun päivämäärä ja kellonaika. Saat sen PDF-tiedostona, jonka voit pitää.",
-		"price_label": "Ennakkohinta",
-		"price_value": "{priceFormatted}, maksetaan kerran, {priceEndsOn, date, long} asti",
-		"signoff": "{product_name}-tiimi",
-		"subject": "{product_name} Operator Pass on nyt myynnissä",
-		"terms_link": "Operator Pass -ehdot",
-		"unsubscribe": "Peru tilaus"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Kun otat sen käyttöön, saat numeroidun Operator-sertifikaatin valitsemallasi nimellä. Siinä näkyy {visionaryDate, date, long}, päivä jolloin sait Visionaryn, ja sama päivä näkyy Operator-merkissä, jos päätät näyttää sen.",
-		"choices_line": "Operator-merkki pysyy piilotettuna, kunnes päätät näyttää sen, ja sinut listataan Operators-seinälle vain, jos itse valitset niin.",
-		"cta": "Ota Operator Pass käyttöön",
-		"footer_reason": "Sait tämän sähköpostin, koska sinulla on Visionary palvelussa {product_name}.",
-		"intro": "Visionaryisi mukana tulee Operator Pass, ja voit ottaa sen käyttöön asetuksistasi milloin haluat. Et maksa siitä mitään lisää, eikä Visionarysi muutu mitenkään.",
-		"labs_line": "{member, select, yes {Pääsy #operators-kanavalle Fluxer Labsissa sinulla on jo Visionaryn kautta. Kun otat Operator Passin käyttöön, saat siellä myös Operator-roolin.} other {Kun otat Operator Passin käyttöön, lisäämme tämän tilin Fluxer Labsiin Operator-roolin kanssa, ellet ole aiemmin poistunut Fluxer Labsista tai ellei sinua ole poistettu sieltä. Visionaryn ansiosta sinulla on siellä myös pääsy #operators-kanavalle.}}",
-		"signoff": "{product_name}-tiimi",
-		"subject": "Visionaryn mukana tuleva Operator Pass on valmis otettavaksi käyttöön",
-		"terms_line": "Operator Pass -ehdoissa kerrotaan, miten passi toimii, ja kohta 13 koskee Visionarya.",
-		"terms_link": "Operator Pass -ehdot"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operator-merkkisi näkyy profiilissasi. Voit piilottaa sen <settings>asetuksissasi</settings>.} other {Operator-merkkisi on piilotettu. Voit näyttää sen <settings>asetuksissasi</settings>.}}",
 		"cta": "Avaa Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Hyväksymäsi Operator Pass -ehdot (versio {termsVersion}) ovat liitteenä PDF-tiedostona.",
 		"terms_link": "Operator Pass -ehdot",
 		"wall_line": "{wallOptOut, select, yes {Valitsit, ettei sinua listata Operators-seinälle. Voit lisätä nimesi <settings>asetuksissasi</settings>.} other {Sinut on listattu Operators-seinälle nimellä {wallName}. Voit muuttaa sitä tai poistua seinältä <settings>asetuksissasi</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Liity jonotuslistalle",
-		"expiry": "Tämä linkki vanhenee 48 tunnin kuluttua.",
-		"footer_reason": "Sait tämän sähköpostin, koska tämä osoite syötettiin Operator Pass -jonotuslistalle {product_name}-verkkosivustolla.",
-		"intro": "Vahvista tämä sähköpostiosoite, niin liityt Operator Pass -jonotuslistalle. Lähetämme sinulle sähköpostia kerran, kun passi tulee myyntiin.",
-		"note": "Jos et pyytänyt tätä, jätä tämä sähköposti huomiotta, emmekä ota sinuun enää yhteyttä.",
-		"signoff": "{product_name}-tiimi",
-		"subject": "Vahvista liittymisesi {product_name} Operator Pass -jonotuslistalle"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Vastaa tähän sähköpostiin 60 päivän kuluessa ja kerro, miksi olet eri mieltä. Se on maksutonta, ja joku tiimistämme lukee valituksesi ja ratkaisee sen.} other {Ota yhteyttä tämän instanssin ylläpitäjiin 60 päivän kuluessa ja kerro heille, miksi olet eri mieltä.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Sait tämän sähköpostin, koska teimme päätöksen, joka koskee listaustasi {product_name}-palvelun Operators-seinällä.",
 		"ground": "Operator Pass -ehtojen kohta 3.1",
 		"ground_label": "Peruste",
-		"intro": "{target, select, avatar {Hylkäsimme avatarisi Operators-seinälle.} both {Hylkäsimme nimesi ja avatarisi Operators-seinälle.} other {Hylkäsimme nimesi Operators-seinälle.}} {shown, select, previous {Seinällä näkyy viimeisin hyväksytty versiosi.} other {Kunnes lähetät uuden, seinällä näkyy sana Operator ja oletusavatar.}} Paikkasi seinällä, sen koko ja merkkisi pysyvät ennallaan, eikä tämä vaikuta ostokseesi.",
+		"intro": "{target, select, avatar {Poistimme avatarisi Operators-seinältä.} both {Poistimme nimesi ja avatarisi Operators-seinältä.} other {Poistimme nimesi Operators-seinältä.}} {shown, select, previous {Seinällä näkyy aiempi nimesi ja avatarisi.} other {Kunnes lähetät uuden, seinällä näkyy sana Operator ja oletusavatar.}} Paikkasi seinällä, sen koko ja merkkisi pysyvät ennallaan, eikä tämä vaikuta ostokseesi.",
 		"next": "Voit lähettää uuden nimen tai avatarin <settings>asetuksissasi</settings>.",
 		"reason_label": "Syy",
 		"reason_value": "{reason, select, impersonation {Esittää jotakuta toista} rights {Käyttää nimeä tai kuvaa ilman oikeutta siihen} age_suitability {Ei sovi nuoremmille käyttäjille} other {Rikkoo yhteisön sääntöjä}}",
 		"redress_v2": "Voit myös viedä asian tuomioistuimeen. Jos olet EU:ssa, voit kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen. Jos olet kuluttaja EU:ssa tai ETA-alueella, voit myös saattaa riidan Ruotsin kuluttajariitalautakunnan (<arn>ARN</arn>) käsiteltäväksi, Box 174, 101 23 Stockholm, Ruotsi.",
 		"signoff": "{product_name}-tiimi",
-		"subject": "Hylkäsimme nimesi tai avatarisi {product_name}-palvelun Operators-seinälle"
+		"subject": "Poistimme nimesi tai avatarisi {product_name}-palvelun Operators-seinältä"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Merkkisi näkyy profiilissasi. Voit piilottaa sen <settings>asetuksissasi</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} ja {product_name}-tiimi",
 		"subject": "{product_name}-palvelun Operator-sertifikaattisi",
 		"terms_link": "Operator Pass -ehdot",
-		"wall_line": "{wallOptOut, select, yes {Valitsit, ettei sinua listata Operators-seinälle. Voit lisätä nimesi <settings>asetuksissasi</settings>.} other {Sinut on listattu Operators-seinälle nimellä {wallName}, ja nimesi ja avatarisi näkyvät, kun olemme tarkistaneet ne. Voit muuttaa sitä tai poistua seinältä <settings>asetuksissasi</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Valitsit, ettei sinua listata Operators-seinälle. Voit lisätä nimesi <settings>asetuksissasi</settings>.} other {Sinut on listattu Operators-seinälle nimellä {wallName}. Voit muuttaa sitä tai poistua seinältä <settings>asetuksissasi</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Tämän hyvityksen hyvityslasku on tämän sähköpostin liitteenä PDF-tiedostona.",

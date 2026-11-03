@@ -110,7 +110,6 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		cron.upsert('pollAppStoreNotificationHistory', 'pollAppStoreNotificationHistory', {}, '0 45 4 * * *', {
 			ledger: false,
 		});
-		cron.upsert('operatorPassSaleBroadcast', 'operatorPassSaleBroadcast', {}, '0 * * * * *', {ledger: false});
 		cron.upsert('operatorPassWaitlistCleanup', 'operatorPassWaitlistCleanup', {}, '0 20 * * * *', {ledger: false});
 		cron.upsert('operatorPassRemovalExpiry', 'operatorPassRemovalExpiry', {}, '0 */5 * * * *', {ledger: false});
 		cron.upsert('operatorPassWallRetention', 'operatorPassWallRetention', {}, '0 40 3 * * *', {ledger: false});
@@ -128,7 +127,6 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 			enabled: isLabsAutoJoinConfigured,
 		});
 		cron.upsert('operatorPassOfferCompletion', 'operatorPassOfferCompletion', {}, '30 */5 * * * *', {ledger: false});
-		cron.upsert('operatorPassWallAutoApprove', 'operatorPassWallAutoApprove', {}, '20 * * * * *', {ledger: false});
 		cron.upsert('operatorPassFulfilmentSweep', 'operatorPassFulfilmentSweep', {}, '45 */15 * * * *', {
 			ledger: false,
 			enabled: () => getStripeClient() !== null,

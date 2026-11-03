@@ -288,7 +288,7 @@
 		"cta": "Teklifi görüntüleyin",
 		"footer_reason": "Bu e-postayı, biri size {product_name} üzerinde bir Operator Pass devretmek istediği için aldınız.",
 		"intro": "{senderName}, Operator Pass'lerinden birini size devretmek istiyor.",
-		"lead": "Teklifi {product_name} üzerinden kabul edin veya reddedin. Kabul ederseniz, gönderen teklifi daha önce geri almadığı sürece Operator Pass {arrivesAt, date, long} tarihinde hesabınıza gelir.",
+		"lead_v2": "Teklifi {product_name} üzerinden kabul edin veya reddedin. Kabul ederseniz Operator Pass hemen hesabınıza gelir.",
 		"signoff": "{product_name} ekibi",
 		"subject": "{senderName} size bir Operator Pass devretmek istiyor"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} ekibi",
 		"subject": "{product_name} hesabınızdaki bir Operator Pass sona erdi"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Operator rozeti, Operators duvarında bir yer, #operators ve erken deneme de Pass ile birlikte gelir.",
-		"cta": "Operator Pass'i alın",
-		"footer_reason": "Bu e-postayı, Operator Pass bekleme listesine katıldığınız için aldınız. Operator Pass hakkında gönderdiğimiz son e-posta budur.",
-		"intro": "Operator Pass satışa çıktığında size haber vermemizi istemiştiniz. Şu anda satışta.",
-		"paid_for": "Pass ile adınızı ve ödemenin tarih ve saatini taşıyan numaralı bir Operator sertifikası gelir. Bu sertifika size saklayacağınız bir PDF olarak teslim edilir.",
-		"price_label": "Erken alım fiyatı",
-		"price_value": "{priceFormatted}, tek seferlik ödeme, {priceEndsOn, date, long} tarihi dahil",
-		"signoff": "{product_name} ekibi",
-		"subject": "{product_name} Operator Pass satışta",
-		"terms_link": "Operator Pass şartları",
-		"unsubscribe": "Abonelikten çık"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Açtığınızda, seçtiğiniz adla numaralı bir Operator sertifikası alırsınız. Sertifikada Visionary'yi aldığınız tarih olan {visionaryDate, date, long} yer alır; Operator rozetini göstermeyi seçerseniz rozette de bu tarih görünür.",
-		"choices_line": "Operator rozeti, göstermeyi seçene kadar gizli kalır; Operators duvarında da yalnızca siz seçerseniz yer alırsınız.",
-		"cta": "Operator Pass'inizi açın",
-		"footer_reason": "Bu e-postayı {product_name} üzerinde Visionary'niz olduğu için aldınız.",
-		"intro": "Visionary'niz bir Operator Pass ile birlikte gelir ve dilediğiniz zaman ayarlarınızdan açabilirsiniz. Bunun için ek bir ücret ödemezsiniz ve Visionary'nizde hiçbir şey değişmez.",
-		"labs_line": "{member, select, yes {#operators kanalına Fluxer Labs'ta Visionary'niz sayesinde zaten erişebilirsiniz. Operator Pass'inizi açtığınızda orada Operator rolünü de alırsınız.} other {Operator Pass'inizi açtığınızda, daha önce Fluxer Labs'tan ayrılmadıysanız ve çıkarılmadıysanız bu hesabı Operator rolüyle Fluxer Labs'a ekleriz. Visionary'niz sayesinde orada #operators kanalına da erişebilirsiniz.}}",
-		"signoff": "{product_name} ekibi",
-		"subject": "Visionary ile gelen Operator Pass'iniz açılmaya hazır",
-		"terms_line": "Operator Pass şartları pass'in nasıl çalıştığını açıklar ve 13. bölüm Visionary hakkındadır.",
-		"terms_link": "Operator Pass şartları"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operator rozetiniz profilinizde. <settings>Ayarlarınızdan</settings> gizleyebilirsiniz.} other {Operator rozetiniz gizli. <settings>Ayarlarınızdan</settings> gösterebilirsiniz.}}",
 		"cta": "Fluxer Labs'ı açın",
@@ -423,15 +398,6 @@
 		"terms_attached": "Kabul ettiğiniz Operator Pass şartları (sürüm {termsVersion}) PDF olarak ektedir.",
 		"terms_link": "Operator Pass şartları",
 		"wall_line": "{wallOptOut, select, yes {Operators duvarında listelenmemeyi seçtiniz. Adınızı <settings>ayarlarınızdan</settings> ekleyebilirsiniz.} other {Operators duvarında {wallName} adıyla listeleniyorsunuz. Bunu <settings>ayarlarınızdan</settings> değiştirebilir veya duvardan ayrılabilirsiniz.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Bekleme listesine katılın",
-		"expiry": "Bu bağlantının süresi 48 saat içinde dolacak.",
-		"footer_reason": "Bu e-postayı, bu adresin {product_name} web sitesindeki Operator Pass bekleme listesine girildiği için aldınız.",
-		"intro": "Operator Pass bekleme listesine katılmak için bu e-posta adresini onaylayın. Operator Pass satışa çıktığında size bir kez e-posta göndereceğiz.",
-		"note": "Bunu siz istemediyseniz bu e-postayı yok sayın, sizinle bir daha iletişime geçmeyeceğiz.",
-		"signoff": "{product_name} ekibi",
-		"subject": "{product_name} Operator Pass bekleme listesi kaydınızı onaylayın"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {60 gün içinde bu e-postayı yanıtlayın ve neden katılmadığınızı bize anlatın. İtiraz ücretsizdir ve ekibimizden biri itirazınızı okuyup karar verir.} other {60 gün içinde bu kurulumun yöneticileriyle iletişime geçin ve neden katılmadığınızı onlara anlatın.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Bu e-postayı, {product_name} Operators duvarındaki kaydınızla ilgili bir karar nedeniyle aldınız.",
 		"ground": "Operator Pass şartlarının 3.1. bölümü",
 		"ground_label": "Gerekçe",
-		"intro": "{target, select, avatar {Operators duvarı için avatarınızı reddettik.} both {Operators duvarı için adınızı ve avatarınızı reddettik.} other {Operators duvarı için adınızı reddettik.}} {shown, select, previous {Duvar son onaylanan sürümünüzü gösterir.} other {Yenisini gönderene kadar duvarda Operator kelimesi ve varsayılan avatar görünür.}} Duvardaki yeriniz, boyutu ve rozetiniz olduğu gibi kalır, satın alımınız da bundan etkilenmez.",
+		"intro": "{target, select, avatar {Avatarınızı Operators duvarından kaldırdık.} both {Adınızı ve avatarınızı Operators duvarından kaldırdık.} other {Adınızı Operators duvarından kaldırdık.}} {shown, select, previous {Duvar önceki adınızı ve avatarınızı gösterir.} other {Yenisini gönderene kadar duvarda Operator kelimesi ve varsayılan avatar görünür.}} Duvardaki yeriniz, boyutu ve rozetiniz olduğu gibi kalır, satın alımınız da bundan etkilenmez.",
 		"next": "Yeni bir ad veya avatarı <settings>ayarlarınızdan</settings> gönderebilirsiniz.",
 		"reason_label": "Neden",
 		"reason_value": "{reason, select, impersonation {Başka biri gibi davranıyor} rights {Hakları olmadan bir ad veya görsel kullanıyor} age_suitability {Genç kullanıcılar için uygun değil} other {Topluluk kurallarını ihlal ediyor}}",
 		"redress_v2": "Mahkemeye de başvurabilirsiniz. AB'deyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> başvurabilirsiniz. AB'de veya AEA'da tüketiciyseniz uyuşmazlığı İsveç Ulusal Tüketici Uyuşmazlıkları Kurulu’na (<arn>ARN</arn>, Box 174, 101 23 Stockholm, İsveç) da taşıyabilirsiniz.",
 		"signoff": "{product_name} ekibi",
-		"subject": "{product_name} Operators duvarı için adınızı veya avatarınızı reddettik"
+		"subject": "Adınızı veya avatarınızı {product_name} Operators duvarından kaldırdık"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Rozetiniz profilinizde. <settings>Ayarlarınızdan</settings> gizleyebilirsiniz.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} ve {product_name} ekibi",
 		"subject": "{product_name} Operator sertifikanız",
 		"terms_link": "Operator Pass şartları",
-		"wall_line": "{wallOptOut, select, yes {Operators duvarında listelenmemeyi seçtiniz. Adınızı <settings>ayarlarınızdan</settings> ekleyebilirsiniz.} other {Operators duvarında {wallName} adıyla listeleniyorsunuz. Adınız ve avatarınız, biz kontrol ettikten sonra görünür. Bunu <settings>ayarlarınızdan</settings> değiştirebilir veya duvardan ayrılabilirsiniz.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Operators duvarında listelenmemeyi seçtiniz. Adınızı <settings>ayarlarınızdan</settings> ekleyebilirsiniz.} other {Operators duvarında {wallName} adıyla listeleniyorsunuz. Bunu <settings>ayarlarınızdan</settings> değiştirebilir veya duvardan ayrılabilirsiniz.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Bu iadenin alacak dekontu bu e-postaya PDF olarak eklenmiştir.",

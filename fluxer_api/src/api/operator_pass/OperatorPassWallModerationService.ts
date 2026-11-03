@@ -9,20 +9,15 @@ import type {
 	OperatorPassWallEntryRow,
 	OperatorPassWallRevisionRow,
 } from '@app/api/database/types/OperatorPassTypes';
-import type {User} from '@app/api/models/User';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import {liveRevisionPatch, type OperatorPassWallEntryStore} from '@app/api/operator_pass/OperatorPassWallEntryStore';
 import {revisionStatuses} from '@app/api/operator_pass/OperatorPassWallHistory';
 import {isOperatorPassWallListed} from '@app/api/operator_pass/OperatorPassWallPresentation';
 import type {OperatorPassWallPublicationService} from '@app/api/operator_pass/OperatorPassWallPublicationService';
-import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownOperatorPassWallEntryError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassWallEntryError';
 import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
-
-const PENDING_LOOKUP_CONCURRENCY = 16;
 
 interface OperatorPassWallDecisionInput {
 	reason: OperatorPassWallDeclineReason;
@@ -38,108 +33,9 @@ export interface OperatorPassWallDecisionResult {
 export class OperatorPassWallModerationService {
 	constructor(
 		private readonly repository: OperatorPassRepository,
-		private readonly userRepository: UserRepository,
 		private readonly entries: OperatorPassWallEntryStore,
 		private readonly publication: OperatorPassWallPublicationService,
 	) {}
-
-	async approve(userId: UserID, adminId: UserID, revisionId?: bigint): Promise<OperatorPassWallDecisionResult> {
-		const entry = await this.requireListed(userId);
-		const targetId = revisionId ?? entry.pending_revision_id;
-		if (targetId == null || targetId !== entry.pending_revision_id) {
-			throw new UnknownOperatorPassWallEntryError();
-		}
-		const revision = await this.findRevision(userId, targetId);
-		const now = operatorPassNow();
-		let previousAvatar: string | null = null;
-		const next = await this.entries.mutate(userId, now, adminId, (current) => {
-			if (!isOperatorPassWallListed(current) || current.pending_revision_id !== targetId) {
-				throw new UnknownOperatorPassWallEntryError();
-			}
-			previousAvatar = current.live_avatar ?? null;
-			return {
-				patch: {
-					...liveRevisionPatch(revision),
-					pending_revision_id: Db.set(null),
-					pending_name: Db.set(null),
-					pending_avatar: Db.set(null),
-					pending_source: Db.set(null),
-					pending_since: Db.set(null),
-					declined_revision_id: Db.set(null),
-					declined_name: Db.set(null),
-					declined_avatar: Db.set(null),
-					decline_reason: Db.set(null),
-					decline_note: Db.set(null),
-					decline_statement_id: Db.set(null),
-					reviewed_at: Db.set(now),
-					reviewed_by: Db.set(adminId),
-					updated_at: Db.set(now),
-				},
-				events: [{kind: 'approved', name: revision.name}],
-			};
-		});
-		const decision = await this.entries.appendDecision(userId, {
-			kind: 'approve',
-			revisionId: targetId,
-			decidedBy: adminId,
-			decidedAt: now,
-		});
-		await this.publication.publishAvatarIfServed(next);
-		await this.publication.publishChanges([userId], 'preserve');
-		if (previousAvatar && previousAvatar !== revision.avatar) {
-			await this.publication.releaseAvatar(previousAvatar);
-		}
-		return {entry: next, revision, decision};
-	}
-
-	async decline(
-		userId: UserID,
-		adminId: UserID,
-		input: OperatorPassWallDecisionInput,
-	): Promise<OperatorPassWallDecisionResult> {
-		const entry = await this.requireListed(userId);
-		const targetId = entry.pending_revision_id;
-		if (targetId == null) {
-			throw new UnknownOperatorPassWallEntryError();
-		}
-		const revision = await this.findRevision(userId, targetId);
-		const now = operatorPassNow();
-		const statementId = randomUUID();
-		const next = await this.entries.mutate(userId, now, adminId, (current) => {
-			if (!isOperatorPassWallListed(current) || current.pending_revision_id !== targetId) {
-				throw new UnknownOperatorPassWallEntryError();
-			}
-			return {
-				patch: {
-					pending_revision_id: Db.set(null),
-					pending_name: Db.set(null),
-					pending_avatar: Db.set(null),
-					pending_source: Db.set(null),
-					pending_since: Db.set(null),
-					declined_revision_id: Db.set(targetId),
-					declined_name: Db.set(revision.name),
-					declined_avatar: Db.set(revision.avatar ?? null),
-					decline_reason: Db.set(input.reason),
-					decline_note: Db.set(input.note),
-					decline_statement_id: Db.set(statementId),
-					reviewed_at: Db.set(now),
-					reviewed_by: Db.set(adminId),
-					updated_at: Db.set(now),
-				},
-				events: [{kind: 'declined', name: revision.name, reason: input.reason}],
-			};
-		});
-		const decision = await this.entries.appendDecision(userId, {
-			kind: 'decline',
-			revisionId: targetId,
-			decidedBy: adminId,
-			decidedAt: now,
-			reason: input.reason,
-			note: input.note,
-			statementId,
-		});
-		return {entry: next, revision, decision};
-	}
 
 	async revert(userId: UserID, adminId: UserID, revisionId: bigint): Promise<OperatorPassWallDecisionResult> {
 		const entry = await this.requireListed(userId);
@@ -275,22 +171,6 @@ export class OperatorPassWallModerationService {
 		return {entry: next, revision: null, decision};
 	}
 
-	async listPending(): Promise<Array<{entry: OperatorPassWallEntryRow; user: User | null}>> {
-		const rows = await mapWithConcurrency(
-			await this.repository.listWallPending(),
-			PENDING_LOOKUP_CONCURRENCY,
-			(userId) => this.repository.findWallEntry(userId),
-		);
-		const entries = rows.filter(
-			(entry): entry is OperatorPassWallEntryRow =>
-				entry != null && entry.pending_revision_id != null && isOperatorPassWallListed(entry),
-		);
-		entries.sort((left, right) => (left.pending_since?.getTime() ?? 0) - (right.pending_since?.getTime() ?? 0));
-		return Promise.all(
-			entries.map(async (entry) => ({entry, user: await this.userRepository.findUnique(entry.user_id)})),
-		);
-	}
-
 	async lastPersonalRevision(userId: UserID): Promise<OperatorPassWallRevisionRow | null> {
 		const [revisions, decisions] = await Promise.all([
 			this.repository.listWallRevisions(userId),
@@ -338,13 +218,5 @@ export class OperatorPassWallModerationService {
 			throw new UnknownOperatorPassWallEntryError();
 		}
 		return entry;
-	}
-
-	private async findRevision(userId: UserID, revisionId: bigint): Promise<OperatorPassWallRevisionRow> {
-		const revision = (await this.repository.listWallRevisions(userId)).find((row) => row.revision_id === revisionId);
-		if (!revision) {
-			throw new UnknownOperatorPassWallEntryError();
-		}
-		return revision;
 	}
 }

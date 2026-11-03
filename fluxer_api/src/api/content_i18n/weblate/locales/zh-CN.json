@@ -126,7 +126,6 @@
 	"guild.default_channel_text": "综合",
 	"guild.default_channel_voice": "综合",
 	"operator_pass.labs_greeting": "{size, select, single {欢迎来到 #operators，{last}！} other {欢迎来到 #operators，{others} 和 {last}！}} 这是所有 Operator Pass 持有者的频道。",
-	"operator_pass.visionary_notice_dm_v2": "你的 Visionary 随附一个 Operator Pass。你可以随时在“设置”的“Operator Pass”中开启它，无需额外付费。",
 	"profile_badge.bug_hunter": "{product_name} 捉虫猎人",
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator，{count, plural, other {# 张 Operator Pass}}",

@@ -288,7 +288,7 @@
 		"cta": "Vezi oferta",
 		"footer_reason": "Ai primit acest e-mail pentru că cineva ți-a propus un Operator Pass pe {product_name}.",
 		"intro": "{senderName} vrea să-ți dea mai departe unul dintre Operator Pass-urile sale.",
-		"lead": "Acceptă-l sau refuză-l în {product_name}. Dacă îl accepți, îl primești pe {arrivesAt, date, long}, dacă expeditorul nu retrage oferta înainte.",
+		"lead_v2": "Acceptă-l sau refuză-l în {product_name}. Dacă îl accepți, se mută imediat la tine.",
 		"signoff": "Echipa {product_name}",
 		"subject": "{senderName} vrea să-ți dea mai departe un Operator Pass"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "Echipa {product_name}",
 		"subject": "Un Operator Pass din contul tău {product_name} s-a încheiat"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "Cu el vin și insigna Operator, un loc pe peretele Operators, #operators și testarea timpurie.",
-		"cta": "Obține Operator Pass",
-		"footer_reason": "Ai primit acest e-mail deoarece te-ai înscris pe lista de așteptare pentru Operator Pass. Acesta este ultimul e-mail pe care ți-l trimitem despre pass.",
-		"intro": "Ne-ai cerut să îți spunem când Operator Pass apare la vânzare. Acum este de vânzare.",
-		"paid_for": "Pass-ul vine cu un certificat Operator numerotat, cu numele tău și data și ora plății, livrat ca PDF pe care îl păstrezi.",
-		"price_label": "Preț de lansare",
-		"price_value": "{priceFormatted}, plătit o singură dată, până la {priceEndsOn, date, long}",
-		"signoff": "Echipa {product_name}",
-		"subject": "{product_name} Operator Pass este de vânzare",
-		"terms_link": "Termenii Operator Pass",
-		"unsubscribe": "Dezabonare"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "Când îl activezi, primești un certificat Operator numerotat cu numele pe care îl alegi. Pe el apare {visionaryDate, date, long}, data la care ai primit Visionary, iar aceeași dată apare și pe insigna Operator dacă alegi s-o afișezi.",
-		"choices_line": "Insigna Operator rămâne ascunsă până alegi s-o afișezi, iar pe peretele Operators apari doar dacă alegi asta.",
-		"cta": "Activează-ți Operator Pass-ul",
-		"footer_reason": "Primești acest e-mail pentru că ai Visionary pe {product_name}.",
-		"intro": "Visionary-ul tău vine cu un Operator Pass, pe care îl poți activa oricând din setări. Nu plătești nimic în plus pentru el și nimic nu se schimbă la Visionary-ul tău.",
-		"labs_line": "{member, select, yes {Ai deja #operators în Fluxer Labs prin Visionary-ul tău. După ce îți activezi Operator Pass-ul, primești acolo și rolul Operator.} other {Când îți activezi Operator Pass-ul, adăugăm acest cont în Fluxer Labs cu rolul Operator, cu excepția cazului în care ai părăsit deja Fluxer Labs sau te-a scos cineva de acolo. Visionary-ul tău îți dă acolo și #operators.}}",
-		"signoff": "Echipa {product_name}",
-		"subject": "Operator Pass-ul tău din Visionary e gata de activat",
-		"terms_line": "Termenii Operator Pass explică cum funcționează pass-ul, iar secțiunea 13 se referă la Visionary.",
-		"terms_link": "Termenii Operator Pass"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Insigna ta Operator apare pe profil. O poți ascunde din <settings>setări</settings>.} other {Insigna ta Operator e ascunsă. O poți afișa din <settings>setări</settings>.}}",
 		"cta": "Deschide Fluxer Labs",
@@ -423,15 +398,6 @@
 		"terms_attached": "Termenii Operator Pass pe care i-ai acceptat (versiunea {termsVersion}) sunt atașați ca PDF.",
 		"terms_link": "Termenii Operator Pass",
 		"wall_line": "{wallOptOut, select, yes {Ai ales să nu apari pe peretele Operators. Îți poți adăuga numele din <settings>setări</settings>.} other {Apari pe peretele Operators ca {wallName}. Poți schimba numele sau poți părăsi peretele din <settings>setări</settings>.}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "Intră pe lista de așteptare",
-		"expiry": "Acest link expiră în 48 de ore.",
-		"footer_reason": "Ai primit acest e-mail deoarece această adresă a fost introdusă pe lista de așteptare pentru Operator Pass de pe site-ul {product_name}.",
-		"intro": "Confirmă această adresă de e-mail ca să intri pe lista de așteptare pentru Operator Pass. Îți scriem o singură dată, când pass-ul apare la vânzare.",
-		"note": "Dacă nu ai cerut asta, ignoră acest e-mail și nu te vom mai contacta.",
-		"signoff": "Echipa {product_name}",
-		"subject": "Confirmă înscrierea pe lista de așteptare pentru {product_name} Operator Pass"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {Răspunde la acest e-mail în cel mult 60 de zile și spune-ne de ce nu ești de acord. Contestația este gratuită, iar o persoană din echipa noastră o citește și decide asupra ei.} other {Contactează administratorii acestei instanțe în cel mult 60 de zile și spune-le de ce nu ești de acord.}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "Ai primit acest e-mail din cauza unei decizii privind înscrierea ta de pe peretele Operators {product_name}.",
 		"ground": "Secțiunea 3.1 din termenii Operator Pass",
 		"ground_label": "Temei",
-		"intro": "{target, select, avatar {Am refuzat avatarul tău pentru peretele Operators.} both {Am refuzat numele și avatarul tău pentru peretele Operators.} other {Am refuzat numele tău pentru peretele Operators.}} {shown, select, previous {Peretele păstrează ultima ta versiune aprobată.} other {Până trimiți unul nou, peretele arată cuvântul Operator și avatarul implicit.}} Locul tău pe perete, dimensiunea lui și insigna rămân așa cum sunt, iar achiziția ta nu este afectată.",
+		"intro": "{target, select, avatar {Am scos avatarul tău de pe peretele Operators.} both {Am scos numele și avatarul tău de pe peretele Operators.} other {Am scos numele tău de pe peretele Operators.}} {shown, select, previous {Peretele arată numele și avatarul tău anterioare.} other {Până trimiți unul nou, peretele arată cuvântul Operator și avatarul implicit.}} Locul tău pe perete, dimensiunea lui și insigna rămân așa cum sunt, iar achiziția ta nu este afectată.",
 		"next": "Poți trimite un nume sau un avatar nou din <settings>setări</settings>.",
 		"reason_label": "Motiv",
 		"reason_value": "{reason, select, impersonation {Se dă drept altcineva} rights {Folosește un nume sau o imagine fără a avea drepturile asupra lor} age_suitability {Nu este potrivit pentru utilizatorii mai tineri} other {Încalcă regulile comunității}}",
 		"redress_v2": "Te poți adresa și instanței. Dacă ești în UE, te poți adresa unui <dsa>organism certificat de soluționare extrajudiciară a litigiilor</dsa>. Dacă ești consumator în UE sau în SEE, poți duce disputa și la Comisia Națională pentru Litigii de Consum din Suedia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suedia.",
 		"signoff": "Echipa {product_name}",
-		"subject": "Am refuzat numele sau avatarul tău pentru peretele Operators {product_name}"
+		"subject": "Am scos numele sau avatarul tău de pe peretele Operators {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Insigna ta apare pe profil. O poți ascunde din <settings>setări</settings>.",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} și echipa {product_name}",
 		"subject": "Certificatul tău Operator {product_name}",
 		"terms_link": "Termenii Operator Pass",
-		"wall_line": "{wallOptOut, select, yes {Ai ales să nu apari pe peretele Operators. Îți poți adăuga numele din <settings>setări</settings>.} other {Apari pe peretele Operators ca {wallName}, iar numele și avatarul tău se afișează după ce le verificăm. Poți schimba numele sau poți părăsi peretele din <settings>setări</settings>.}}"
+		"wall_line_v2": "{wallOptOut, select, yes {Ai ales să nu apari pe peretele Operators. Îți poți adăuga numele din <settings>setări</settings>.} other {Apari pe peretele Operators ca {wallName}. Poți schimba numele sau poți părăsi peretele din <settings>setări</settings>.}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "Nota de credit pentru această rambursare este atașată la acest e-mail în format PDF.",

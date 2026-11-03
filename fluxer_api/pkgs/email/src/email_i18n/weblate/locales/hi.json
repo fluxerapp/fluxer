@@ -288,7 +288,7 @@
 		"cta": "ऑफ़र देखें",
 		"footer_reason": "आपको यह ईमेल इसलिए मिला है, क्योंकि किसी ने {product_name} पर आपको एक Operator Pass सौंपने का ऑफ़र दिया है।",
 		"intro": "{senderName} अपने Operator Pass में से एक आपको सौंपना चाहते हैं।",
-		"lead": "इसे {product_name} में स्वीकार या अस्वीकार करें। अगर आप स्वीकार करते हैं, तो यह {arrivesAt, date, long} को आपके अकाउंट में आ जाएगा, बशर्ते भेजने वाला उससे पहले ऑफ़र वापस न ले ले।",
+		"lead_v2": "इसे {product_name} में स्वीकार या अस्वीकार करें। अगर आप स्वीकार करते हैं, तो यह तुरंत आपके अकाउंट में आ जाएगा।",
 		"signoff": "{product_name} टीम",
 		"subject": "{senderName} आपको एक Operator Pass सौंपना चाहते हैं"
 	},
@@ -387,31 +387,6 @@
 		"signoff": "{product_name} टीम",
 		"subject": "आपके {product_name} अकाउंट पर एक Operator Pass खत्म हो गया है"
 	},
-	"operator_pass_sale_open": {
-		"bonus_v2": "इसके साथ Operator बैज, Operators वॉल पर एक जगह, #operators और नए फ़ीचर पहले आज़माने का मौका भी मिलता है।",
-		"cta": "Operator Pass पाएँ",
-		"footer_reason": "आपको यह ईमेल इसलिए मिला है क्योंकि आप Operator Pass की वेटलिस्ट में शामिल हुए थे। पास के बारे में यह हमारा आखिरी ईमेल है।",
-		"intro": "आपने हमसे कहा था कि Operator Pass की बिक्री शुरू होने पर आपको बताएँ। अब इसकी बिक्री शुरू हो गई है।",
-		"paid_for": "पास के साथ एक नंबर वाला Operator सर्टिफ़िकेट मिलता है, जिस पर आपका नाम और भुगतान की तारीख और समय होता है, और यह आपको PDF के रूप में मिलता है, जिसे आप अपने पास रखते हैं।",
-		"price_label": "अर्ली बर्ड कीमत",
-		"price_value": "{priceFormatted}, एक बार का भुगतान, {priceEndsOn, date, long} तक",
-		"signoff": "{product_name} टीम",
-		"subject": "{product_name} Operator Pass की बिक्री शुरू हो गई है",
-		"terms_link": "Operator Pass की शर्तें",
-		"unsubscribe": "सदस्यता छोड़ें"
-	},
-	"operator_pass_visionary_notice": {
-		"certificate_line": "इसे चालू करने पर आपको अपने चुने हुए नाम के साथ एक नंबर वाला Operator सर्टिफ़िकेट मिलता है। उस पर {visionaryDate, date, long} लिखा होता है, यानी वह तारीख जब आपको Visionary मिला, और अगर आप Operator बैज दिखाना चुनें तो उस पर भी यही तारीख दिखती है।",
-		"choices_line": "Operator बैज तब तक छिपा रहता है जब तक आप उसे दिखाना नहीं चुनते, और आप Operators वॉल पर तभी दिखते हैं जब आप ऐसा चुनें।",
-		"cta": "अपना Operator Pass चालू करें",
-		"footer_reason": "आपको यह ईमेल इसलिए मिला क्योंकि {product_name} पर आपके पास Visionary है।",
-		"intro": "आपके Visionary के साथ एक Operator Pass आता है, और आप जब चाहें इसे अपनी सेटिंग्स में चालू कर सकते हैं। इसके लिए आपको कुछ भी अतिरिक्त नहीं देना होता, और आपके Visionary में कुछ नहीं बदलता।",
-		"labs_line": "{member, select, yes {आपके Visionary की वजह से Fluxer Labs में #operators आपके पास पहले से है। अपना Operator Pass चालू करने के बाद आपको वहाँ Operator रोल भी मिल जाता है।} other {अपना Operator Pass चालू करने पर हम इस अकाउंट को Operator रोल के साथ Fluxer Labs में जोड़ देते हैं, बशर्ते आपने पहले कभी Fluxer Labs न छोड़ा हो और आपको वहाँ से हटाया न गया हो। आपके Visionary की वजह से वहाँ #operators भी आपके पास रहता है।}}",
-		"signoff": "{product_name} टीम",
-		"subject": "Visionary के साथ आने वाला आपका Operator Pass चालू करने के लिए तैयार है",
-		"terms_line": "Operator Pass की शर्तें बताती हैं कि पास कैसे काम करता है, और सेक्शन 13 Visionary के बारे में है।",
-		"terms_link": "Operator Pass की शर्तें"
-	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {आपका Operator बैज आपकी प्रोफ़ाइल पर है। आप इसे अपनी <settings>सेटिंग्स</settings> में छिपा सकते हैं।} other {आपका Operator बैज छिपा हुआ है। आप इसे अपनी <settings>सेटिंग्स</settings> में दिखा सकते हैं।}}",
 		"cta": "Fluxer Labs खोलें",
@@ -423,15 +398,6 @@
 		"terms_attached": "आपने जो Operator Pass की शर्तें स्वीकार कीं (वर्ज़न {termsVersion}), वे PDF के रूप में अटैच हैं।",
 		"terms_link": "Operator Pass की शर्तें",
 		"wall_line": "{wallOptOut, select, yes {आपने Operators वॉल पर लिस्ट न होना चुना। आप अपनी <settings>सेटिंग्स</settings> में अपना नाम जोड़ सकते हैं।} other {आप Operators वॉल पर {wallName} नाम से लिस्टेड हैं। आप अपनी <settings>सेटिंग्स</settings> में इसे बदल सकते हैं या वॉल छोड़ सकते हैं।}}"
-	},
-	"operator_pass_waitlist_verification": {
-		"cta": "वेटलिस्ट में शामिल हों",
-		"expiry": "यह लिंक 48 घंटे में एक्सपायर हो जाएगा।",
-		"footer_reason": "आपको यह ईमेल इसलिए मिला है क्योंकि यह पता {product_name} वेबसाइट पर Operator Pass वेटलिस्ट में दर्ज किया गया था।",
-		"intro": "Operator Pass की वेटलिस्ट में शामिल होने के लिए इस ईमेल पते की पुष्टि करें। पास की बिक्री शुरू होने पर हम आपको सिर्फ़ एक बार ईमेल करेंगे।",
-		"note": "अगर आपने यह नहीं माँगा था, तो इस ईमेल को अनदेखा करें और हम आपसे दोबारा संपर्क नहीं करेंगे।",
-		"signoff": "{product_name} टीम",
-		"subject": "{product_name} Operator Pass वेटलिस्ट में अपने साइनअप की पुष्टि करें"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {60 दिनों के अंदर इस ईमेल का जवाब दें और बताएँ कि आप सहमत क्यों नहीं हैं। यह मुफ़्त है, और हमारी टीम का एक व्यक्ति आपकी अपील पढ़ता है और उस पर फ़ैसला करता है।} other {60 दिनों के अंदर इस इंस्टेंस के एडमिन से संपर्क करें और उन्हें बताएँ कि आप सहमत क्यों नहीं हैं।}}",
@@ -457,13 +423,13 @@
 		"footer_reason": "आपको यह ईमेल {product_name} Operators वॉल पर आपकी लिस्टिंग से जुड़े एक निर्णय की वजह से मिला है।",
 		"ground": "Operator Pass की शर्तों का खंड 3.1",
 		"ground_label": "आधार",
-		"intro": "{target, select, avatar {हमने Operators वॉल के लिए आपका अवतार अस्वीकार कर दिया।} both {हमने Operators वॉल के लिए आपका नाम और अवतार अस्वीकार कर दिया।} other {हमने Operators वॉल के लिए आपका नाम अस्वीकार कर दिया।}} {shown, select, previous {वॉल आपका आखिरी मंज़ूर किया गया वर्ज़न दिखाती है।} other {जब तक आप नया नहीं भेजते, वॉल Operator शब्द और डिफ़ॉल्ट अवतार दिखाती है।}} वॉल पर आपकी जगह, उसका आकार और आपका बैज जैसे थे वैसे ही रहते हैं, और आपकी ख़रीदारी पर कोई असर नहीं पड़ता।",
+		"intro": "{target, select, avatar {हमने Operators वॉल से आपका अवतार हटा दिया।} both {हमने Operators वॉल से आपका नाम और अवतार हटा दिया।} other {हमने Operators वॉल से आपका नाम हटा दिया।}} {shown, select, previous {वॉल आपका पिछला नाम और अवतार दिखाती है।} other {जब तक आप नया नहीं भेजते, वॉल Operator शब्द और डिफ़ॉल्ट अवतार दिखाती है।}} वॉल पर आपकी जगह, उसका आकार और आपका बैज जैसे थे वैसे ही रहते हैं, और आपकी ख़रीदारी पर कोई असर नहीं पड़ता।",
 		"next": "आप अपनी <settings>सेटिंग्स</settings> में नया नाम या अवतार भेज सकते हैं।",
 		"reason_label": "कारण",
 		"reason_value": "{reason, select, impersonation {किसी और का होने का दिखावा करता है} rights {बिना अधिकार के किसी नाम या इमेज का इस्तेमाल करता है} age_suitability {कम उम्र के यूज़र्स के लिए उपयुक्त नहीं} other {कम्युनिटी दिशानिर्देशों का उल्लंघन करता है}}",
 		"redress_v2": "आप अदालत भी जा सकते हैं। अगर आप EU में हैं, तो आप <dsa>अदालत के बाहर विवाद निपटाने वाली</dsa> किसी प्रमाणित संस्था की मदद ले सकते हैं। अगर आप EU या EEA में उपभोक्ता हैं, तो आप यह विवाद स्वीडन के राष्ट्रीय उपभोक्ता विवाद बोर्ड (<arn>ARN</arn>), Box 174, 101 23 Stockholm, स्वीडन के पास भी ले जा सकते हैं।",
 		"signoff": "{product_name} टीम",
-		"subject": "हमने {product_name} Operators वॉल के लिए आपका नाम या अवतार अस्वीकार कर दिया"
+		"subject": "हमने {product_name} Operators वॉल से आपका नाम या अवतार हटा दिया"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "आपका बैज आपकी प्रोफ़ाइल पर है। आप इसे अपनी <settings>सेटिंग्स</settings> में छिपा सकते हैं।",
@@ -480,7 +446,7 @@
 		"signoff": "{founderName} और {product_name} टीम",
 		"subject": "आपका {product_name} Operator सर्टिफ़िकेट",
 		"terms_link": "Operator Pass की शर्तें",
-		"wall_line": "{wallOptOut, select, yes {आपने Operators वॉल पर लिस्ट न होना चुना। आप अपनी <settings>सेटिंग्स</settings> में अपना नाम जोड़ सकते हैं।} other {आप Operators वॉल पर {wallName} नाम से लिस्टेड हैं, और हमारी जाँच के बाद आपका नाम और अवतार दिखेंगे। आप अपनी <settings>सेटिंग्स</settings> में इसे बदल सकते हैं या वॉल छोड़ सकते हैं।}}"
+		"wall_line_v2": "{wallOptOut, select, yes {आपने Operators वॉल पर लिस्ट न होना चुना। आप अपनी <settings>सेटिंग्स</settings> में अपना नाम जोड़ सकते हैं।} other {आप Operators वॉल पर {wallName} नाम से लिस्टेड हैं। आप अपनी <settings>सेटिंग्स</settings> में इसे बदल सकते हैं या वॉल छोड़ सकते हैं।}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "इस रिफ़ंड का क्रेडिट नोट इस ईमेल के साथ PDF के रूप में अटैच है।",

@@ -625,39 +625,6 @@ export class OperatorPassFulfilmentService {
 		await this.markRefunded(purchase);
 	}
 
-	async cancelPreviewPurchase(purchaseId: string): Promise<OperatorPassPurchaseRow> {
-		return this.withPurchaseLock(
-			purchaseId,
-			async () => {
-				const purchase = await this.repository.findPurchase(purchaseId);
-				if (!purchase || purchase.preview_label == null) {
-					throw new UnknownOperatorPassPurchaseError();
-				}
-				if (purchase.status === 'pending') {
-					if (this.stripe) {
-						const session = await this.stripe.checkout.sessions.retrieve(purchaseId);
-						if (session.status === 'open') {
-							await this.stripe.checkout.sessions.expire(purchaseId);
-						} else if (session.status === 'complete') {
-							throw new StripeError('The preview checkout is complete but not delivered yet; retry in a moment');
-						}
-					}
-					await this.repository.deletePurchase(purchase);
-					return purchase;
-				}
-				if (purchase.status === 'completed' || purchase.status === 'disputed') {
-					await this.revokeWholePurchase(purchase);
-					Logger.info(
-						{sessionId: purchaseId, purchaserId: purchase.purchaser_id, label: purchase.preview_label},
-						'Operator Pass preview purchase cancelled',
-					);
-				}
-				return (await this.repository.findPurchase(purchaseId)) ?? purchase;
-			},
-			purchaseBusyError,
-		);
-	}
-
 	private async markRefunded(purchase: OperatorPassPurchaseRow): Promise<void> {
 		if (purchase.status === 'refunded') {
 			return;
@@ -2497,10 +2464,6 @@ function withdrawalCreditNoteOwedKey(refundId: string): string {
 
 function refusalCreditNoteKey(checkoutSessionId: string): string {
 	return `operator_pass:refusal:credit_note:${checkoutSessionId}`;
-}
-
-export function operatorPassPurchaseCacheKeys(checkoutSessionId: string): Array<string> {
-	return [getAppliedKey(checkoutSessionId), confirmationSentKey(checkoutSessionId), refusalSentKey(checkoutSessionId)];
 }
 
 function confirmationSentKey(checkoutSessionId: string): string {

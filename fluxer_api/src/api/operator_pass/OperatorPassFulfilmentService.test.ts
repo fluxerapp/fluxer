@@ -57,19 +57,15 @@ vi.mock('@app/api/Logger', async (importOriginal) => {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let harness: ApiTestHarness;
-let saleOpensAt: Date | null;
 let priceRisesAt: Date | null;
 
 beforeAll(async () => {
 	harness = await createApiTestHarness();
-	saleOpensAt = Config.operatorPass.saleOpensAt;
 	priceRisesAt = Config.operatorPass.priceRisesAt;
-	Config.operatorPass.saleOpensAt = new Date(Date.now() - DAY_MS);
 	Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 });
 
 afterAll(async () => {
-	Config.operatorPass.saleOpensAt = saleOpensAt;
 	Config.operatorPass.priceRisesAt = priceRisesAt;
 	await harness.shutdown();
 });
