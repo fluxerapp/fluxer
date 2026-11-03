@@ -311,8 +311,9 @@
 }
 
 .scopeBadgeDirect {
-	background: var(--entrance-sound-selected-background);
-	color: var(--text-primary);
+	border-color: transparent;
+	background: color-mix(in srgb, var(--status-online) 15%, transparent);
+	color: color-mix(in srgb, var(--status-online) 60%, var(--text-primary));
 }
 
 .scopeBadgeInherited {
@@ -349,6 +350,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: flex-end;
+	align-self: center;
 	gap: 0.375rem;
 	max-width: 45%;
 	min-width: min(12rem, 100%);
@@ -504,6 +506,7 @@
 	}
 
 	.soundStatus {
+		align-self: stretch;
 		justify-content: flex-start;
 		max-width: 100%;
 		min-width: 0;
