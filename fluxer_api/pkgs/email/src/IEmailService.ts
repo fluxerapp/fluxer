@@ -121,6 +121,11 @@ interface OperatorPassWallNameReplacedEmail {
 	note: string;
 }
 
+interface OperatorPassWallQuoteClearedEmail {
+	reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
+	note: string;
+}
+
 export interface PaymentDisputeWarningEmail {
 	product: 'operator_pass' | 'plutonium';
 	invoiceNumber: string | null;
@@ -427,6 +432,7 @@ export interface EmailSendParams {
 	operator_pass_removal_notice: OperatorPassRemovalNoticeEmail;
 	operator_pass_wall_hidden: OperatorPassWallHiddenEmail;
 	operator_pass_wall_name_replaced: OperatorPassWallNameReplacedEmail;
+	operator_pass_wall_quote_cleared: OperatorPassWallQuoteClearedEmail;
 	operator_pass_perks_removed: OperatorPassPerksRemovedEmail;
 	payment_dispute_warning: PaymentDisputeWarningEmail;
 	payment_dispute_review_alert: PaymentDisputeReviewAlertEmail;

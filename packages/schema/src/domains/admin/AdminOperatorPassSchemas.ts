@@ -106,6 +106,7 @@ export const AdminOperatorPassWallEventKindSchema = createNamedStringLiteralUnio
 		['release_published', 'RELEASE_PUBLISHED', 'The name was published in a The Operators of list'],
 		['erased', 'ERASED', 'Staff erased the name from a published list'],
 		['count_changed', 'COUNT_CHANGED', 'The displayed wall count changed, see pass_count'],
+		['quote_cleared', 'QUOTE_CLEARED', 'Staff cleared the quote on the listing, see reason'],
 	],
 	'What happened to the name or the pass',
 );
@@ -144,6 +145,10 @@ export const AdminOperatorPassWallEntryResponse = z.object({
 	username: z.string().nullable().describe('Username of the account, null when it no longer exists'),
 	avatar_url: z.url().nullable().describe('Current profile avatar of the account'),
 	wall_name: z.string().nullable().describe('The name the holder chose for the wall'),
+	wall_quote: z
+		.string()
+		.nullable()
+		.describe('The quote the holder set for their listing, shown on the wall only while the listing is shown'),
 	wall_opt_out: z.boolean(),
 	keep_as_is: z.boolean().describe('Whether profile changes stay off the wall'),
 	release_list_opt_in: z.boolean().describe('Whether the holder chose to be in every yearly The Operators of list'),
@@ -195,7 +200,7 @@ export const AdminOperatorPassWallRevisionResponse = z.object({
 export const AdminOperatorPassWallDecisionResponse = z.object({
 	id: SnowflakeStringType,
 	revision_id: SnowflakeStringType.nullable(),
-	kind: z.string().describe('approve, decline, revert, force_fallback, hide or unhide'),
+	kind: z.string().describe('approve, decline, revert, force_fallback, hide, unhide or clear_quote'),
 	decided_by: SnowflakeStringType.nullable(),
 	decided_at: z.iso.datetime(),
 	reason: OperatorPassWallDeclineReasonSchema.nullable(),
@@ -216,6 +221,13 @@ export const AdminOperatorPassWallTimelineResponse = z.object({
 export const AdminOperatorPassWallDecisionRequest = z.object({
 	reason: OperatorPassWallDeclineReasonSchema,
 	note: z.string().trim().min(1).max(300).describe('The facts the decision relies on, shown to the holder'),
+});
+
+export const AdminOperatorPassWallClearQuoteRequest = AdminOperatorPassWallDecisionRequest.extend({
+	quote: z
+		.string()
+		.max(2048)
+		.describe('The quote staff reviewed, the request fails when the listing now has another one'),
 });
 
 export const AdminOperatorPassWallBusinessRequest = z.object({

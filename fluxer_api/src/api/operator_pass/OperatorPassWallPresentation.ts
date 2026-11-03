@@ -11,7 +11,13 @@ import {OPERATOR_PASS_WALL_FALLBACK_NAME} from '@app/api/operator_pass/OperatorP
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {OperatorPassWallNameRejectedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallNameRejectedError';
 import {OperatorPassWallNameRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallNameRequiredError';
+import {OperatorPassWallQuoteInvalidError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallQuoteInvalidError';
+import {OperatorPassWallQuoteRejectedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassWallQuoteRejectedError';
 import type {OperatorPassListingResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
+import {
+	getOperatorPassWallQuoteProblem,
+	normalizeOperatorPassWallQuote,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 
 const OFF_WALL_FLAGS = UserFlags.DELETED | UserFlags.SELF_DELETED | UserFlags.SPAMMER;
 
@@ -53,6 +59,21 @@ export function normalizeOperatorPassWallChoice({
 	return {name: trimmed, optedOut: false};
 }
 
+export function parseOperatorPassWallQuote(raw: string | null): string | null {
+	const quote = normalizeOperatorPassWallQuote(raw);
+	if (quote === null) {
+		return null;
+	}
+	const problem = getOperatorPassWallQuoteProblem(quote);
+	if (problem === 'link') {
+		throw new OperatorPassWallQuoteRejectedError();
+	}
+	if (problem !== null) {
+		throw new OperatorPassWallQuoteInvalidError();
+	}
+	return quote;
+}
+
 export function hasOperatorPassWallChoice(entry: OperatorPassWallEntryRow | null): boolean {
 	return entry != null && (entry.listed_at != null || entry.left_wall_at != null || entry.delivered_at != null);
 }
@@ -86,6 +107,7 @@ export function mapOperatorPassListing(
 	const listed = entry != null && isOperatorPassWallListed(entry);
 	return {
 		wall_name: entry?.opted_out ? null : (entry?.live_name ?? entry?.name ?? null),
+		wall_quote: entry?.quote ?? null,
 		wall_opt_out: entry?.opted_out ?? true,
 		keep_as_is: entry?.keep_as_is ?? false,
 		release_list_opt_in: entry?.release_list_opt_in ?? false,

@@ -519,6 +519,7 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		operator_pass_wall: operatorPassWall
 			? {
 					name: operatorPassWall.name ?? null,
+					quote: operatorPassWall.quote ?? null,
 					opted_out: operatorPassWall.opted_out,
 					keep_as_is: operatorPassWall.keep_as_is,
 					release_list_opt_in: operatorPassWall.release_list_opt_in ?? false,

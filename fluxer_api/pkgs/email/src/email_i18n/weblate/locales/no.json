@@ -431,6 +431,22 @@
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi fjernet navnet eller avataren din fra Operators-veggen til {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Svar på denne e-posten innen 60 dager og fortell oss hvorfor du er uenig. Det er gratis, og en person i teamet vårt leser og avgjør klagen din.} other {Kontakt administratorene for denne instansen innen 60 dager og fortell dem hvorfor du er uenig.}}",
+		"appeal_title": "Slik klager du",
+		"automated_text": "Dette ble ikke oppdaget automatisk, og en person fra teamet vårt tok avgjørelsen.",
+		"facts_label": "Fakta vi har lagt til grunn",
+		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om oppføringen din på Operators-veggen til {product_name}.",
+		"ground": "Paragraf 6.2 i vilkårene for bruk",
+		"ground_label": "Grunnlag",
+		"intro": "Vi fjernet sitatet fra plassen din på Operators-veggen. Resten av plassen din forblir som den er, og merket ditt og kjøpet ditt påvirkes ikke.",
+		"next": "Du kan legge til et nytt sitat som følger retningslinjene for fellesskapet, i <settings>innstillingene</settings> dine.",
+		"reason_label": "Begrunnelse",
+		"reason_value": "{reason, select, impersonation {Utgir seg for å være noen andre} rights {Bruker andres tekst uten rettighetene til den} age_suitability {Passer ikke for yngre brukere} other {Bryter retningslinjene for fellesskapet}}",
+		"redress_v2": "Du kan også gå til domstolene. Hvis du er i EU, kan du bruke et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa>. Hvis du er forbruker i EU eller EØS, kan du også bringe tvisten inn for Sveriges nasjonale nemnd for forbrukertvister (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sverige.",
+		"signoff": "{product_name}-teamet",
+		"subject": "Vi fjernet sitatet ditt fra Operators-veggen til {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Merket ditt vises på profilen din. Du kan skjule det i <settings>innstillingene</settings> dine.",
 		"bonus_heading": "Også med passet ditt",

@@ -7916,6 +7916,10 @@
 					"type": "text"
 				},
 				{
+					"name": "quote",
+					"type": "text"
+				},
+				{
 					"name": "opted_out",
 					"type": "boolean"
 				},

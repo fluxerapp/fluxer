@@ -20738,6 +20738,11 @@ msgstr "Працювати у фоні"
 msgid "Keep subscription"
 msgstr "Залишити підписку"
 
+#. Error under the "Quote on the wall" field when the quote has a line break.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Keep the quote on one line."
+msgstr "Напишіть цитату в один рядок."
+
 #. Description text in the secrets section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection.tsx
 msgid "Keep these safe. Regenerating will break existing integrations."
@@ -26391,6 +26396,11 @@ msgstr "Варіант два"
 msgid "Optional arguments"
 msgstr "Необов'язкові аргументи"
 
+#. Text under the "Quote on the wall" field in the Operators' wall settings. The wall listing is the person's entry on the Operators' wall. Operator is the badge name.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Optional. It shows in quotes on your wall listing and with your Operator badge."
+msgstr "Необов'язково. Вона показується в лапках у вашому записі на стіні та поруч із вашим значком Operator."
+
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx
 msgid "Options"
@@ -28670,6 +28680,11 @@ msgstr "Вийти з {appName}"
 msgid "Quit {appName}, make sure no other copy is running, and open it again."
 msgstr "Закрийте {appName}, переконайтеся, що інші копії не запущені, і відкрийте його знову."
 
+#. Label of the optional text field for a short quote that shows with the person's listing on the Operators' wall and with their Operator badge. The wall is the list of Operators on the Operator Pass page.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Quote on the wall"
+msgstr "Цитата на стіні"
+
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx
 msgid "Quotes: <0>{countLabel}</0>"
 msgstr "Цитування: <0>{countLabel}</0>"
@@ -29486,6 +29501,11 @@ msgstr "Видалити стікер"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Remove tag {tag}"
 msgstr "Видалити тег {tag}"
+
+#. Error under the "Quote on the wall" field when the quote has invisible characters, text direction controls or stacked accent marks.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Remove the hidden or special characters from the quote."
+msgstr "Приберіть із цитати приховані або спеціальні символи."
 
 #. Error message in the linked accounts tab. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
@@ -36694,6 +36714,11 @@ msgstr "Наданий redirect_uri не зареєстровано для ць�
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Наданий redirect_uri має використовувати HTTP або HTTPS."
 
+#. Error under the "Quote on the wall" field when the quote looks like a link, a web address such as example.com, an email address, an @mention or a community invite.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "The quote can't have links, web addresses, email addresses, @mentions or invites."
+msgstr "У цитаті не може бути посилань, веб-адрес, адрес електронної пошти, @згадок або запрошень."
+
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
 msgid "The report form changed. Please start again."
@@ -40481,6 +40506,11 @@ msgstr "Використовуйте не більше 32 символів."
 #: src/features/premium/components/operator_pass/OperatorPassCertificateNamesField.tsx
 msgid "Use 48 characters or fewer."
 msgstr "Використовуйте не більше 48 символів."
+
+#. Error under the "Quote on the wall" field when the quote is longer than 80 characters. An emoji counts as one character.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Use 80 characters or fewer."
+msgstr "Використовуйте не більше 80 символів."
 
 #. Text button on the browser approval page that goes back to choosing which account signs in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

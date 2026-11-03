@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "此候補名單連結無效。",
 	"operator_pass.wall_name_rejected": "我們無法在 Operators 牆上顯示這個名字。請換一個名字。",
 	"operator_pass.wall_name_required": "請為 Operators 牆輸入一個名字，或選擇不展示。",
+	"operator_pass.wall_quote_invalid": "引言最多 80 個字元，只能寫一行，不能包含隱藏字元或控制字元。",
+	"operator_pass.wall_quote_rejected": "引言不能包含連結、電子郵件地址或 @提及。",
 	"operator_pass.withdrawal_unavailable": "此購買已無法在此處撤回。",
 	"permissions.global_ip_banned": "{reason, select, shown {由於有違反規則的活動，{product_name} 已封鎖來自此網路的存取。} other {{product_name} 已封鎖來自此網路的存取。}}如果您與他人共用此網路，例如在學校、在公司、使用公共 Wi-Fi、透過電信業者或 VPN 上網，這項封鎖可能與您無關。最快的解決方法是切換網路，例如改用行動數據而非 Wi-Fi，或開啟或關閉 VPN。{appealEmail, select, null {} other {如果您認為這項封鎖有誤，請寄信至 {appealEmail}，並附上您的 IP 位址 {ipAddress}。}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {由於有違反規則的活動，{product_name} 已封鎖來自此網路的存取。} other {{product_name} 已封鎖來自此網路的存取。}}這項封鎖將於 {expiresAt} 結束。如果您與他人共用此網路，例如在學校、在公司、使用公共 Wi-Fi、透過電信業者或 VPN 上網，這項封鎖可能與您無關。最快的解決方法是切換網路，例如改用行動數據而非 Wi-Fi，或開啟或關閉 VPN。{appealEmail, select, null {} other {如果您認為這項封鎖有誤，請寄信至 {appealEmail}，並附上您的 IP 位址 {ipAddress}。}}",

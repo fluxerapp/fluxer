@@ -20738,6 +20738,11 @@ msgstr "Fortsett å kjøre"
 msgid "Keep subscription"
 msgstr "Behold abonnementet"
 
+#. Error under the "Quote on the wall" field when the quote has a line break.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Keep the quote on one line."
+msgstr "Skriv sitatet på én linje."
+
 #. Description text in the secrets section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection.tsx
 msgid "Keep these safe. Regenerating will break existing integrations."
@@ -26391,6 +26396,11 @@ msgstr "Alternativ to"
 msgid "Optional arguments"
 msgstr "Valgfrie argumenter"
 
+#. Text under the "Quote on the wall" field in the Operators' wall settings. The wall listing is the person's entry on the Operators' wall. Operator is the badge name.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Optional. It shows in quotes on your wall listing and with your Operator badge."
+msgstr "Valgfritt. Det vises i anførselstegn ved oppføringen din på veggen og ved Operator-merket ditt."
+
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx
 msgid "Options"
@@ -28670,6 +28680,11 @@ msgstr "Avslutt {appName}"
 msgid "Quit {appName}, make sure no other copy is running, and open it again."
 msgstr "Avslutt {appName}, forsikre deg om at ingen andre kopier kjører, og åpne den igjen."
 
+#. Label of the optional text field for a short quote that shows with the person's listing on the Operators' wall and with their Operator badge. The wall is the list of Operators on the Operator Pass page.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Quote on the wall"
+msgstr "Sitat på veggen"
+
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx
 msgid "Quotes: <0>{countLabel}</0>"
 msgstr "Sitater: <0>{countLabel}</0>"
@@ -29486,6 +29501,11 @@ msgstr "Fjern klistremerke"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Remove tag {tag}"
 msgstr "Fjern taggen {tag}"
+
+#. Error under the "Quote on the wall" field when the quote has invisible characters, text direction controls or stacked accent marks.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Remove the hidden or special characters from the quote."
+msgstr "Fjern de skjulte eller spesielle tegnene fra sitatet."
 
 #. Error message in the linked accounts tab. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
@@ -36694,6 +36714,11 @@ msgstr "Den oppgitte redirect_uri er ikke registrert for denne appen."
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Den oppgitte redirect_uri må bruke HTTP eller HTTPS."
 
+#. Error under the "Quote on the wall" field when the quote looks like a link, a web address such as example.com, an email address, an @mention or a community invite.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "The quote can't have links, web addresses, email addresses, @mentions or invites."
+msgstr "Sitatet kan ikke inneholde lenker, nettadresser, e-postadresser, @omtaler eller invitasjoner."
+
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
 msgid "The report form changed. Please start again."
@@ -40481,6 +40506,11 @@ msgstr "Bruk 32 tegn eller færre."
 #: src/features/premium/components/operator_pass/OperatorPassCertificateNamesField.tsx
 msgid "Use 48 characters or fewer."
 msgstr "Bruk høyst 48 tegn."
+
+#. Error under the "Quote on the wall" field when the quote is longer than 80 characters. An emoji counts as one character.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Use 80 characters or fewer."
+msgstr "Bruk 80 tegn eller færre."
 
 #. Text button on the browser approval page that goes back to choosing which account signs in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

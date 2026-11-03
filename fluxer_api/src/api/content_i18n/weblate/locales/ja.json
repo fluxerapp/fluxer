@@ -130,7 +130,6 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator、{count, plural, other {Operator Pass #枚}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {Operator Pass #枚}}",
-	"profile_badge.operator_pass_recognition_v2": "このアカウントが持っているパスと、購入して他の人に譲ったパスの数です。",
 	"profile_badge.operator_pass_since": "{since_date}からOperator Pass",
 	"profile_badge.operator_pass_since_count": "{since_date}からOperator Pass、{count, plural, other {パス#枚}}",
 	"profile_badge.operator_pass_since_line": "{since_date}からOperator Pass",

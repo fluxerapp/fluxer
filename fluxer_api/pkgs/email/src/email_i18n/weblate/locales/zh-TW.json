@@ -431,6 +431,22 @@
 		"signoff": "{product_name} 團隊",
 		"subject": "我們已從 {product_name} Operators 牆上移除您的名字或大頭貼"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {請在 60 天內回覆這封電子郵件，告訴我們您不同意的理由。申訴不收費用，由我們團隊的人員閱讀並作出決定。} other {請在 60 天內聯絡此實例的管理員，告訴他們您不同意的理由。}}",
+		"appeal_title": "如何申訴",
+		"automated_text": "此情況並非由自動偵測發現，決定由我們團隊的一名成員做出。",
+		"facts_label": "我們依據的事實",
+		"footer_reason": "您收到這封電子郵件，是因為我們對您在 {product_name} Operators 牆上的展示做出了一項決定。",
+		"ground": "服務條款第 6.2 條",
+		"ground_label": "依據",
+		"intro": "我們已從您在 Operators 牆上的位置移除這句話。您的位置的其餘部分保持不變，您的徽章和購買也不受影響。",
+		"next": "您可以在<settings>設定</settings>中新增新的一句話，內容需要符合社群規範。",
+		"reason_label": "原因",
+		"reason_value": "{reason, select, impersonation {冒充他人} rights {未經授權使用他人的文字} age_suitability {不適合年齡較小的使用者} other {違反社群規範}}",
+		"redress_v2": "您也可以向法院提起訴訟。如果您在歐盟，可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助。如果您是歐盟或歐洲經濟區的消費者，也可以將爭議提交給瑞典國家消費者爭議委員會（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
+		"signoff": "{product_name} 團隊",
+		"subject": "我們已從 {product_name} Operators 牆上移除您的一句話"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "您的徽章已顯示在個人檔案上。您可以在<settings>設定</settings>中隱藏它。",
 		"bonus_heading": "通行證還附帶",

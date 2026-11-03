@@ -431,6 +431,22 @@
 		"signoff": "Equipe do {product_name}",
 		"subject": "Tiramos seu nome ou avatar do mural de Operators do {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Responda a este e-mail em até 60 dias e diga por que você não concorda. O recurso é gratuito, e uma pessoa da nossa equipe lê o recurso e decide sobre ele.} other {Fale com os administradores desta instância em até 60 dias e diga por que você não concorda.}}",
+		"appeal_title": "Como recorrer",
+		"automated_text": "Isso não foi identificado de forma automática, e uma pessoa da nossa equipe tomou a decisão.",
+		"facts_label": "Fatos em que nos baseamos",
+		"footer_reason": "Você recebeu este e-mail por causa de uma decisão sobre sua presença no mural de Operators do {product_name}.",
+		"ground": "Seção 6.2 dos termos de serviço",
+		"ground_label": "Fundamento",
+		"intro": "Tiramos a citação da sua presença no mural de Operators. O resto da sua presença continua como está, e seu selo e sua compra não são afetados.",
+		"next": "Você pode adicionar uma nova citação que siga as diretrizes da comunidade nas suas <settings>configurações</settings>.",
+		"reason_label": "Motivo",
+		"reason_value": "{reason, select, impersonation {Se passa por outra pessoa} rights {Usa o texto de outra pessoa sem ter os direitos} age_suitability {Não é adequado para usuários mais jovens} other {Viola as diretrizes da comunidade}}",
+		"redress_v2": "Você também pode recorrer à Justiça. Se você estiver na UE, pode recorrer a um <dsa>organismo de resolução extrajudicial de litígios</dsa> certificado. Se você for consumidor na UE ou no EEE, também pode levar a disputa ao Conselho Nacional de Reclamações de Consumo da Suécia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suécia.",
+		"signoff": "Equipe do {product_name}",
+		"subject": "Tiramos sua citação do mural de Operators do {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Seu selo está no seu perfil. Você pode ocultá-lo nas suas <settings>configurações</settings>.",
 		"bonus_heading": "Também com o seu passe",

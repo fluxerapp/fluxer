@@ -130,7 +130,6 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, other {# Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {# Operator Pass}}",
-	"profile_badge.operator_pass_recognition_v2": "Menghitung pass yang dimiliki akun ini dan pass yang dibelinya lalu diteruskan kepada orang lain.",
 	"profile_badge.operator_pass_since": "Operator Pass sejak {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass sejak {since_date}, {count, plural, other {# pass}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass sejak {since_date}",

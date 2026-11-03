@@ -638,6 +638,13 @@ const previews: Record<string, Preview> = {
 			},
 			locale,
 		),
+	wall_quote_cleared: (locale) =>
+		service.send(
+			'operator_pass_wall_quote_cleared',
+			USER,
+			{reason: 'guidelines', note: 'The quote insults another Operator by name.'},
+			locale,
+		),
 	perks_removed: (locale) =>
 		service.send(
 			'operator_pass_perks_removed',

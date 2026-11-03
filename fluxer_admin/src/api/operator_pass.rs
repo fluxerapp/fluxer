@@ -129,6 +129,21 @@ impl AdminApiClient {
         .await
     }
 
+    pub async fn clear_operator_pass_wall_quote(
+        &self,
+        user_id: &str,
+        decision: &WallDecision<'_>,
+        quote: &str,
+    ) -> ApiResult<AdminOperatorPassWallEntryResponse> {
+        self.send(
+            Method::POST,
+            &format!("/admin/users/{user_id}/operator-pass/wall/clear-quote"),
+            Some(&json!({"reason": decision.reason, "note": decision.note, "quote": quote})),
+            None,
+        )
+        .await
+    }
+
     pub async fn set_operator_pass_wall_business_listing(
         &self,
         user_id: &str,

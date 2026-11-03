@@ -171,6 +171,41 @@ export class OperatorPassWallModerationService {
 		return {entry: next, revision: null, decision};
 	}
 
+	async clearQuote(
+		userId: UserID,
+		adminId: UserID,
+		reviewed: string,
+		input: OperatorPassWallDecisionInput,
+	): Promise<OperatorPassWallDecisionResult> {
+		const now = operatorPassNow();
+		const next = await this.entries.mutateExisting(userId, now, adminId, (current) => {
+			if (current.quote == null) {
+				throw new UnknownOperatorPassWallEntryError();
+			}
+			if (current.quote !== reviewed) {
+				throw InputValidationError.create(
+					'quote',
+					'The holder changed the quote after this page loaded. Reload the page and review the new quote.',
+				);
+			}
+			return {
+				patch: {quote: Db.set(null), updated_at: Db.set(now)},
+				events: [{kind: 'quote_cleared', reason: input.reason}],
+			};
+		});
+		const decision = await this.entries.appendDecision(userId, {
+			kind: 'clear_quote',
+			revisionId: null,
+			decidedBy: adminId,
+			decidedAt: now,
+			reason: input.reason,
+			note: input.note,
+			statementId: randomUUID(),
+		});
+		await this.publication.publishChanges([userId], 'preserve');
+		return {entry: next, revision: null, decision};
+	}
+
 	async lastPersonalRevision(userId: UserID): Promise<OperatorPassWallRevisionRow | null> {
 		const [revisions, decisions] = await Promise.all([
 			this.repository.listWallRevisions(userId),

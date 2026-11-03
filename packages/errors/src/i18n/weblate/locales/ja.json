@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "このウェイトリストのリンクは無効です。",
 	"operator_pass.wall_name_rejected": "この名前はOperatorsウォールに表示できません。別の名前を選んでください。",
 	"operator_pass.wall_name_required": "Operatorsウォールに載せる名前を入力するか、掲載しないことを選んでください。",
+	"operator_pass.wall_quote_invalid": "ひとことは1行で80文字まで入力でき、隠し文字や制御文字は使えません。",
+	"operator_pass.wall_quote_rejected": "ひとことにはリンク、メールアドレス、@メンションを含めることはできません。",
 	"operator_pass.withdrawal_unavailable": "この購入は、ここからは撤回できなくなりました。",
 	"permissions.global_ip_banned": "{reason, select, shown {{product_name}は、ルールに違反する活動があったため、このネットワークからのアクセスをブロックしました。} other {{product_name}は、このネットワークからのアクセスをブロックしました。}}学校、職場、公共Wi-Fi、モバイルキャリア、VPNなどでこのネットワークを他の人と共有している場合、このブロックはあなたとは関係ないかもしれません。いちばん早い解決策は、Wi-Fiからモバイルデータに切り替えるなどしてネットワークを変えるか、VPNをオンまたはオフにすることです。{appealEmail, select, null {} other {このブロックが誤りだと思われる場合は、IPアドレス（{ipAddress}）を記載して{appealEmail}までメールでご連絡ください。}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {{product_name}は、ルールに違反する活動があったため、このネットワークからのアクセスをブロックしました。} other {{product_name}は、このネットワークからのアクセスをブロックしました。}}ブロックは{expiresAt}に解除されます。学校、職場、公共Wi-Fi、モバイルキャリア、VPNなどでこのネットワークを他の人と共有している場合、このブロックはあなたとは関係ないかもしれません。いちばん早い解決策は、Wi-Fiからモバイルデータに切り替えるなどしてネットワークを変えるか、VPNをオンまたはオフにすることです。{appealEmail, select, null {} other {このブロックが誤りだと思われる場合は、IPアドレス（{ipAddress}）を記載して{appealEmail}までメールでご連絡ください。}}",

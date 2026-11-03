@@ -216,9 +216,7 @@ test('profile and holdings APIs expose separate recognition and ownership counts
 			.execute();
 		const badge = profile.profile_badges?.find((entry) => entry.kind === 'operator_pass');
 		expect(badge).toMatchObject({count: 10});
-		expect(badge?.details?.lines).toContain(
-			'Counts the passes on this account and the passes it bought and passed on.',
-		);
+		expect(badge?.details?.lines).toEqual(expect.not.arrayContaining([expect.stringContaining('passed on')]));
 		const holdings = await createBuilder<OperatorPassPassesResponse>(harness, account.token)
 			.get('/operator-pass/passes')
 			.expect(200)

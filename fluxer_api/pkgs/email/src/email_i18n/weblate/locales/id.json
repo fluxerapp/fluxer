@@ -431,6 +431,22 @@
 		"signoff": "Tim {product_name}",
 		"subject": "Kami menghapus nama atau avatarmu dari dinding Operators {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Balas email ini dalam 60 hari dan jelaskan mengapa kamu tidak setuju. Banding ini gratis, dan seseorang dari tim kami membaca dan memutuskan banding kamu.} other {Hubungi admin instance ini dalam 60 hari dan jelaskan mengapa kamu tidak setuju.}}",
+		"appeal_title": "Cara mengajukan banding",
+		"automated_text": "Ini tidak terdeteksi secara otomatis, dan keputusannya diambil oleh seseorang di tim kami.",
+		"facts_label": "Fakta yang kami jadikan dasar",
+		"footer_reason": "Kamu menerima email ini karena ada keputusan tentang pencantumanmu di dinding Operators {product_name}.",
+		"ground": "Bagian 6.2 ketentuan layanan",
+		"ground_label": "Dasar",
+		"intro": "Kami menghapus kutipan dari tempatmu di dinding Operators. Bagian lain tempatmu tetap seperti semula, dan lencana serta pembelianmu tidak terpengaruh.",
+		"next": "Kamu bisa menambahkan kutipan baru yang mengikuti panduan komunitas di <settings>pengaturanmu</settings>.",
+		"reason_label": "Alasan",
+		"reason_value": "{reason, select, impersonation {Menyamar sebagai orang lain} rights {Memakai teks orang lain tanpa hak atasnya} age_suitability {Tidak sesuai untuk pengguna yang lebih muda} other {Melanggar panduan komunitas}}",
+		"redress_v2": "Kamu juga bisa menempuh jalur pengadilan. Jika kamu berada di UE, kamu bisa menggunakan <dsa>badan penyelesaian sengketa di luar pengadilan</dsa> yang tersertifikasi. Jika kamu konsumen di UE atau EEA, kamu juga bisa membawa sengketa ini ke Badan Nasional Swedia untuk Sengketa Konsumen (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Swedia.",
+		"signoff": "Tim {product_name}",
+		"subject": "Kami menghapus kutipanmu dari dinding Operators {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Lencanamu ada di profilmu. Kamu bisa menyembunyikannya di <settings>pengaturanmu</settings>.",
 		"bonus_heading": "Juga bersama pass-mu",

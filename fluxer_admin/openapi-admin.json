@@ -10944,6 +10944,76 @@
 				}
 			}
 		},
+		"/admin/users/{user_id}/operator-pass/wall/clear-quote": {
+			"post": {
+				"operationId": "clear_admin_operator_pass_wall_quote",
+				"summary": "Clear Operators' wall quote",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassWallEntryResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes the quote on a listing because of its content. The rest of the listing stays as it is, and the holder can set a new quote. Fails when the listing has no quote or a quote other than the one staff reviewed. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry with the reason, the facts and the cleared quote. Only available on hosted instances. Requires USER_TEMP_BAN permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminOperatorPassWallClearQuoteRequest"}}
+					}
+				}
+			}
+		},
 		"/admin/users/{user_id}/operator-pass/wall/force-fallback": {
 			"post": {
 				"operationId": "force_admin_operator_pass_wall_fallback",
@@ -14791,6 +14861,11 @@
 						"format": "uri"
 					},
 					"wall_name": {"nullable": true, "description": "The name the holder chose for the wall", "type": "string"},
+					"wall_quote": {
+						"nullable": true,
+						"description": "The quote the holder set for their listing, shown on the wall only while the listing is shown",
+						"type": "string"
+					},
 					"wall_opt_out": {"type": "boolean"},
 					"keep_as_is": {"type": "boolean", "description": "Whether profile changes stay off the wall"},
 					"release_list_opt_in": {
@@ -14880,6 +14955,7 @@
 					"username",
 					"avatar_url",
 					"wall_name",
+					"wall_quote",
 					"wall_opt_out",
 					"keep_as_is",
 					"release_list_opt_in",
@@ -14939,6 +15015,24 @@
 					}
 				},
 				"required": ["reason", "note"]
+			},
+			"AdminOperatorPassWallClearQuoteRequest": {
+				"type": "object",
+				"properties": {
+					"reason": {"allOf": [{"$ref": "#/components/schemas/OperatorPassWallDeclineReasonSchema"}]},
+					"note": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 300,
+						"description": "The facts the decision relies on, shown to the holder"
+					},
+					"quote": {
+						"type": "string",
+						"maxLength": 2048,
+						"description": "The quote staff reviewed, the request fails when the listing now has another one"
+					}
+				},
+				"required": ["reason", "note", "quote"]
 			},
 			"AdminOperatorPassWallBusinessRequest": {
 				"type": "object",
@@ -25236,6 +25330,11 @@
 						"required": ["title", "lines"],
 						"additionalProperties": false
 					},
+					"quote": {
+						"description": "The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+						"nullable": true,
+						"type": "string"
+					},
 					"suppressed": {
 						"type": "boolean",
 						"description": "True when the public profile does not show this badge, because of a privacy setting or account state"
@@ -25866,7 +25965,8 @@
 					"DISPLAY_ADJUSTED",
 					"RELEASE_PUBLISHED",
 					"ERASED",
-					"COUNT_CHANGED"
+					"COUNT_CHANGED",
+					"QUOTE_CLEARED"
 				],
 				"x-enumDescriptions": [
 					"A pass was delivered, at payment or when a passed on pass arrived",
@@ -25884,7 +25984,8 @@
 					"Staff made a technical adjustment to how the name is shown",
 					"The name was published in a The Operators of list",
 					"Staff erased the name from a published list",
-					"The displayed wall count changed, see pass_count"
+					"The displayed wall count changed, see pass_count",
+					"Staff cleared the quote on the listing, see reason"
 				],
 				"enum": [
 					"delivered",
@@ -25902,7 +26003,8 @@
 					"display_adjusted",
 					"release_published",
 					"erased",
-					"count_changed"
+					"count_changed",
+					"quote_cleared"
 				],
 				"type": "string"
 			},
@@ -25946,7 +26048,10 @@
 				"properties": {
 					"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
 					"revision_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
-					"kind": {"type": "string", "description": "approve, decline, revert, force_fallback, hide or unhide"},
+					"kind": {
+						"type": "string",
+						"description": "approve, decline, revert, force_fallback, hide, unhide or clear_quote"
+					},
 					"decided_by": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
 					"decided_at": {
 						"type": "string",
@@ -26710,6 +26815,8 @@
 					"UNKNOWN_OPERATOR_PASS_UNIT",
 					"OPERATOR_PASS_WALL_NAME_REQUIRED",
 					"OPERATOR_PASS_WALL_NAME_REJECTED",
+					"OPERATOR_PASS_WALL_QUOTE_INVALID",
+					"OPERATOR_PASS_WALL_QUOTE_REJECTED",
 					"OPERATOR_PASS_NOT_HELD",
 					"UNKNOWN_OPERATOR_PASS_WALL_ENTRY",
 					"OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED",
@@ -27084,6 +27191,8 @@
 					"Unknown Operator Pass.",
 					"Enter a name for the Operators' wall, or choose not to be listed.",
 					"We can't show this name on the Operators' wall. Please choose another one.",
+					"A quote can have up to 80 characters on one line, without hidden or control characters.",
+					"A quote can't contain links, email addresses or @mentions.",
 					"This account doesn't have the Operator Pass.",
 					"This account has no name on the Operators' wall.",
 					"This Operators list has already been published.",

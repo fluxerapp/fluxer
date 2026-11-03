@@ -1,0 +1,18 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.count {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.countOver {
+	color: var(--status-danger);
+}
+
+.hint {
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+}

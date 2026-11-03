@@ -16,6 +16,11 @@ import {
 	type OperatorPassOfferResponse,
 	type OperatorPassPassesResponse,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
+import {
+	getOperatorPassWallQuoteProblem as getSharedOperatorPassWallQuoteProblem,
+	normalizeOperatorPassWallQuote,
+	type OperatorPassWallQuoteProblem,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 
 export const OPERATOR_PASS_LABS_INVITE_CODE = 'fluxer-labs';
 
@@ -108,6 +113,13 @@ export function getOperatorPassWallNameProblem(name: string, optOut: boolean): O
 	if (trimmed.length === 0) return 'required';
 	if (trimmed.length > OPERATOR_PASS_WALL_NAME_MAX_LENGTH) return 'too_long';
 	return null;
+}
+
+export type {OperatorPassWallQuoteProblem};
+
+export function getOperatorPassWallQuoteProblem(quote: string): OperatorPassWallQuoteProblem | null {
+	const normalized = normalizeOperatorPassWallQuote(quote);
+	return normalized === null ? null : getSharedOperatorPassWallQuoteProblem(normalized);
 }
 
 export type OperatorPassCertificateNameProblem = 'required' | 'too_long' | 'rejected';

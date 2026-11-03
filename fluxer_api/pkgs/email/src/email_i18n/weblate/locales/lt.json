@@ -431,6 +431,22 @@
 		"signoff": "{product_name} komanda",
 		"subject": "Pašalinome tavo vardą arba avatarą iš {product_name} Operators sienos"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Per 60 dienų atsakyk į šį el. laišką ir paaiškink, kodėl nesutinki. Tai nemokama, o tavo apeliaciją perskaito ir dėl jos sprendžia mūsų komandos žmogus.} other {Per 60 dienų susisiek su šios instancijos administratoriais ir paaiškink jiems, kodėl nesutinki.}}",
+		"appeal_title": "Kaip pateikti apeliaciją",
+		"automated_text": "Tai nebuvo aptikta automatiškai, o sprendimą priėmė mūsų komandos narys.",
+		"facts_label": "Faktai, kuriais rėmėmės",
+		"footer_reason": "Gavai šį el. laišką dėl sprendimo, susijusio su tavo įrašu {product_name} Operators sienoje.",
+		"ground": "Paslaugų teikimo sąlygų 6.2 skirsnis",
+		"ground_label": "Pagrindas",
+		"intro": "Pašalinome citatą iš tavo vietos Operators sienoje. Likusi tavo vietos dalis lieka tokia, kokia buvo, o tavo ženkleliui ir pirkimui tai neturi įtakos.",
+		"next": "Naują citatą, atitinkančią bendruomenės gaires, gali pridėti savo <settings>nustatymuose</settings>.",
+		"reason_label": "Priežastis",
+		"reason_value": "{reason, select, impersonation {Apsimetama kitu asmeniu} rights {Naudojamas kito asmens tekstas neturint tam teisių} age_suitability {Netinka jaunesniems naudotojams} other {Pažeidžiamos bendruomenės gairės}}",
+		"redress_v2": "Taip pat gali kreiptis į teismą. Jei esi ES, gali kreiptis į sertifikuotą <dsa>neteisminio ginčų sprendimo įstaigą</dsa>. Jei esi vartotojas ES arba EEE, ginčą taip pat gali perduoti Švedijos nacionalinei vartotojų ginčų tarybai (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švedija.",
+		"signoff": "{product_name} komanda",
+		"subject": "Pašalinome tavo citatą iš {product_name} Operators sienos"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Tavo ženklelis jau rodomas profilyje. Paslėpti jį gali <settings>nustatymuose</settings>.",
 		"bonus_heading": "Taip pat su tavo leidimu",

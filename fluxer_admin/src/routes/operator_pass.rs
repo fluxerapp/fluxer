@@ -74,11 +74,14 @@ struct WallActionForm {
     holder_name: String,
     #[serde(default)]
     reissue_reason: String,
+    #[serde(default)]
+    quote: String,
 }
 
 enum WallAction {
     Revert,
     ForceFallback,
+    ClearQuote,
     Hide,
     Show,
     LegalHold,
@@ -97,6 +100,7 @@ impl TryFrom<&str> for WallAction {
         match value {
             "revert" => Ok(Self::Revert),
             "force-fallback" => Ok(Self::ForceFallback),
+            "clear-quote" => Ok(Self::ClearQuote),
             "hide" => Ok(Self::Hide),
             "show" => Ok(Self::Show),
             "legal-hold" => Ok(Self::LegalHold),
@@ -495,6 +499,10 @@ async fn operator_pass_wall_action(
             .map(|_| {
                 "The wall shows the fallback and the statement of reasons was sent".to_owned()
             }),
+        Ok(WallAction::ClearQuote) if let Some(decision) = &decision => client
+            .clear_operator_pass_wall_quote(&user_id, decision, &form.quote)
+            .await
+            .map(|_| "Cleared the quote and sent the statement of reasons".to_owned()),
         Ok(WallAction::Hide) if decision.is_some() => client
             .set_operator_pass_wall_hidden(&user_id, true, Some(&form.reason), Some(note))
             .await
@@ -541,6 +549,7 @@ async fn operator_pass_wall_action(
             .map(|()| "Issued a new copy of the certificate page".to_owned()),
         Ok(WallAction::Revert)
         | Ok(WallAction::ForceFallback)
+        | Ok(WallAction::ClearQuote)
         | Ok(WallAction::Hide)
         | Ok(WallAction::RemovalNotice)
         | Ok(WallAction::Remove)

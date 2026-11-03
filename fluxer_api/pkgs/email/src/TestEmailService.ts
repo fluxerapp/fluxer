@@ -325,6 +325,12 @@ export class TestEmailService implements IEmailService {
 				note: params.note,
 			});
 		},
+		operator_pass_wall_quote_cleared: async (email, params) => {
+			return this.record(email, 'operator_pass_wall_quote_cleared', {
+				reason: params.reason,
+				note: params.note,
+			});
+		},
 		operator_pass_perks_removed: async (email, params) => {
 			return this.record(email, 'operator_pass_perks_removed', {
 				rule: params.rule,

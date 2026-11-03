@@ -431,6 +431,22 @@
 		"signoff": "Tým {product_name}",
 		"subject": "Odstranili jsme vaše jméno nebo avatar ze zdi Operators v {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Do 60 dnů odpovězte na tento e-mail a napište nám, proč nesouhlasíte. Je to zdarma a odvolání si přečte a rozhodne o něm člověk z našeho týmu.} other {Do 60 dnů kontaktujte správce této instance a napište jim, proč nesouhlasíte.}}",
+		"appeal_title": "Jak se odvolat",
+		"automated_text": "Automatická detekce to nenašla a rozhodl člověk z našeho týmu.",
+		"facts_label": "Skutečnosti, ze kterých jsme vycházeli",
+		"footer_reason": "Tento e-mail jste obdrželi kvůli rozhodnutí o vašem záznamu na zdi Operators v {product_name}.",
+		"ground": "§ 6.2 podmínek služby",
+		"ground_label": "Právní základ",
+		"intro": "Odstranili jsme citát z vašeho místa na zdi Operators. Zbytek vašeho místa zůstává beze změny a na váš odznak ani nákup to nemá vliv.",
+		"next": "Nový citát, který dodržuje pravidla komunity, můžete přidat ve svém <settings>nastavení</settings>.",
+		"reason_label": "Důvod",
+		"reason_value": "{reason, select, impersonation {Vydává se za někoho jiného} rights {Používá cizí text bez práv k němu} age_suitability {Není vhodné pro mladší uživatele} other {Porušuje pravidla komunity}}",
+		"redress_v2": "Můžete se také obrátit na soud. Pokud jste v EU, můžete se obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa>. Pokud jste spotřebitel v EU nebo EHP, můžete spor předložit také švédské Národní radě pro spotřebitelské spory (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švédsko.",
+		"signoff": "Tým {product_name}",
+		"subject": "Odstranili jsme váš citát ze zdi Operators v {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Váš odznak je na vašem profilu. Skrýt ho můžete ve svém <settings>nastavení</settings>.",
 		"bonus_heading": "Také s vaším passem",

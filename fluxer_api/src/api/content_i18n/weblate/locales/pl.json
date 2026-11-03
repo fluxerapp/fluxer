@@ -130,7 +130,6 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} few {# przepustki Operator Pass} many {# przepustek Operator Pass} other {# przepustki Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} few {# przepustki Operator Pass} many {# przepustek Operator Pass} other {# przepustki Operator Pass}}",
-	"profile_badge.operator_pass_recognition_v2": "Obejmuje przepustki, które ma to konto, oraz te, które kupiono na nim i przekazano innym.",
 	"profile_badge.operator_pass_since": "Operator Pass od {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass od {since_date}, {count, plural, one {# przepustka} few {# przepustki} many {# przepustek} other {# przepustki}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass od {since_date}",

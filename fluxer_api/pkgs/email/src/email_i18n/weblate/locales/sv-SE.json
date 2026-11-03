@@ -431,6 +431,22 @@
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi har tagit bort ditt namn eller din avatar från {product_name}s Operators-vägg"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
+		"appeal_title": "Så överklagar du",
+		"automated_text": "Inga automatiska verktyg hittade det här, och en person i vårt team fattade beslutet.",
+		"facts_label": "Fakta vi grundar oss på",
+		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på {product_name}s Operators-vägg.",
+		"ground": "Avsnitt 6.2 i användarvillkoren",
+		"ground_label": "Grund",
+		"intro": "Vi har tagit bort citatet från din plats på Operators-väggen. Resten av din plats finns kvar som den är, och ditt märke och ditt köp påverkas inte.",
+		"next": "Du kan lägga till ett nytt citat som följer communityriktlinjerna i dina <settings>inställningar</settings>.",
+		"reason_label": "Skäl",
+		"reason_value": "{reason, select, impersonation {Utger sig för att vara någon annan} rights {Använder någon annans text utan rätt till den} age_suitability {Passar inte yngre användare} other {Bryter mot communityriktlinjerna}}",
+		"redress_v2": "Du kan också vända dig till domstol. Om du är i EU kan du vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa>. Om du är konsument i EU eller EES kan du också ta tvisten till Allmänna reklamationsnämnden (<arn>ARN</arn>), Box 174, 101 23 Stockholm.",
+		"signoff": "{product_name}-teamet",
+		"subject": "Vi har tagit bort ditt citat från {product_name}s Operators-vägg"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Ditt märke syns på din profil. Du kan dölja det i dina <settings>inställningar</settings>.",
 		"bonus_heading": "Det här följer också med passet",

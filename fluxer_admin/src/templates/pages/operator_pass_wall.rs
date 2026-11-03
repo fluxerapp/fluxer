@@ -101,6 +101,7 @@ fn event_label(kind: &str) -> &str {
         "release_published" => "Published in a release list",
         "erased" => "Erased from a release list",
         "count_changed" => "Number of passes changed",
+        "quote_cleared" => "Staff cleared the quote",
         other => other,
     }
 }
@@ -342,6 +343,7 @@ fn decision_label(kind: &str) -> &str {
         "force_fallback" => "Forced the fallback",
         "hide" => "Hidden",
         "unhide" => "Put back on the wall",
+        "clear_quote" => "Cleared the quote",
         other => other,
     }
 }
@@ -495,6 +497,19 @@ fn listing_actions(
                     (reason_select())
                     (facts_field(true))
                         (danger_button("Force the fallback"))
+                })))
+            }
+            @if let Some(quote) = &entry.wall_quote {
+                (collapsed_form("Clear the quote", post_form(&action("clear-quote"), PostFormOptions {
+                    class: Some("flex flex-col gap-2"),
+                    onsubmit: Some("return confirm('Delete the quote on this listing and email a statement of reasons?')"),
+                    ..form_options
+                }, html! {
+                    p class="text-sm text-neutral-600" { "Sends a statement of reasons. Deletes the quote, the rest of the listing stays as it is, and the holder can set a new quote." }
+                    input type="hidden" name="quote" value=(quote);
+                    (reason_select())
+                    (facts_field(true))
+                    (danger_button("Clear the quote"))
                 })))
             }
             @if entry.hidden {
@@ -1064,6 +1079,7 @@ fn entry_rows(
         (detail_row("State", html! { (state_label(entry, display)) }))
         (detail_row("Business listing", html! { (if entry.business { "Yes, in the Companies group" } else { "No" }) }))
         (detail_row("Chosen name", html! { (entry.wall_name.as_deref().unwrap_or("None")) }))
+        (detail_row("Quote", html! { (entry.wall_quote.as_deref().unwrap_or("None")) }))
         @if let Some(reason) = &entry.decline_reason {
             (detail_row("Reason taken off", html! { (reason.label()) }))
         }

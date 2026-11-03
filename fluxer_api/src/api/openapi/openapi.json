@@ -14004,7 +14004,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is or release_list_opt_in. A new name goes on the wall at once, together with the current profile avatar. An already listed holder can send only keep_as_is or release_list_opt_in.",
+				"description": "Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is, release_list_opt_in or wall_quote. A new name or quote goes on the wall at once, the name together with the current profile avatar. An already listed holder can leave out wall_name and send only keep_as_is, release_list_opt_in or wall_quote.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -33689,6 +33689,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWallNameType"}, {"type": "null"}]
 					},
 					"wall_opt_out": {"type": "boolean", "description": "Whether to stay off the Operators' wall"},
+					"wall_quote": {
+						"description": "A short quote for the wall listing, up to 80 characters on one line with no links or contact handles. A character is a grapheme cluster, counted after Unicode NFC normalization. Null or an empty string clears it, and so does leaving the wall with wall_opt_out true. Unchanged when omitted",
+						"anyOf": [{"type": "string", "maxLength": 2048}, {"type": "null"}]
+					},
 					"keep_as_is": {
 						"description": "Whether profile name and avatar changes stay off the wall, unchanged when omitted",
 						"type": "boolean"
@@ -33705,6 +33709,10 @@
 				"properties": {
 					"wall_name": {
 						"description": "The name the holder chose for the wall, null when not listed",
+						"type": ["string", "null"]
+					},
+					"wall_quote": {
+						"description": "The quote the holder set for their wall listing, null when there is none or the holder is not listed",
 						"type": ["string", "null"]
 					},
 					"wall_opt_out": {"type": "boolean", "description": "Whether the holder chose not to be listed"},
@@ -33754,6 +33762,7 @@
 				},
 				"required": [
 					"wall_name",
+					"wall_quote",
 					"wall_opt_out",
 					"keep_as_is",
 					"release_list_opt_in",
@@ -43892,6 +43901,10 @@
 						"description": "Present on a business listing, which shows a company name and logo at one fixed size after every listing of a person, ordered by first pass date",
 						"type": "boolean",
 						"const": true
+					},
+					"quote": {
+						"description": "The quote the Operator set for their listing, plain text to show in straight double quotes and never parse as markup. Left out when there is none",
+						"type": "string"
 					}
 				},
 				"required": ["id", "name", "avatar", "avatar_url", "tier"],
@@ -45721,6 +45734,10 @@
 							{"type": "null"}
 						]
 					},
+					"quote": {
+						"description": "The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+						"type": ["string", "null"]
+					},
 					"hidden": {
 						"type": "boolean",
 						"description": "True when the badge key is in your hidden_profile_badges, so other people do not see it"
@@ -45799,6 +45816,10 @@
 							},
 							{"type": "null"}
 						]
+					},
+					"quote": {
+						"description": "The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["key", "kind", "label", "asset", "asset_url", "aspect_ratio", "caption", "href"],
@@ -46511,6 +46532,8 @@
 					"UNKNOWN_OPERATOR_PASS_UNIT",
 					"OPERATOR_PASS_WALL_NAME_REQUIRED",
 					"OPERATOR_PASS_WALL_NAME_REJECTED",
+					"OPERATOR_PASS_WALL_QUOTE_INVALID",
+					"OPERATOR_PASS_WALL_QUOTE_REJECTED",
 					"OPERATOR_PASS_NOT_HELD",
 					"UNKNOWN_OPERATOR_PASS_WALL_ENTRY",
 					"OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED",
@@ -46885,6 +46908,8 @@
 					"Unknown Operator Pass.",
 					"Enter a name for the Operators' wall, or choose not to be listed.",
 					"We can't show this name on the Operators' wall. Please choose another one.",
+					"A quote can have up to 80 characters on one line, without hidden or control characters.",
+					"A quote can't contain links, email addresses or @mentions.",
 					"This account doesn't have the Operator Pass.",
 					"This account has no name on the Operators' wall.",
 					"This Operators list has already been published.",

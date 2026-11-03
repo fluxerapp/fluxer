@@ -66,6 +66,7 @@ import {
 	AdminOperatorPassWallAsOfResponse,
 	AdminOperatorPassWallAvatarParam,
 	AdminOperatorPassWallBusinessRequest,
+	AdminOperatorPassWallClearQuoteRequest,
 	AdminOperatorPassWallDecisionRequest,
 	AdminOperatorPassWallEntryResponse,
 	AdminOperatorPassWallFreezeRequest,
@@ -147,6 +148,24 @@ async function sendHiddenStatement(
 		.get('emailService')
 		.send(
 			'operator_pass_wall_hidden',
+			user.email,
+			{reason: result.decision.reason, note: result.decision.note ?? ''},
+			user.locale,
+		);
+}
+
+async function sendQuoteClearedStatement(
+	ctx: Context<HonoEnv>,
+	user: User | null,
+	result: OperatorPassWallDecisionResult,
+): Promise<boolean> {
+	if (!user?.email || !result.decision.reason) {
+		return false;
+	}
+	return ctx
+		.get('emailService')
+		.send(
+			'operator_pass_wall_quote_cleared',
 			user.email,
 			{reason: result.decision.reason, note: result.decision.note ?? ''},
 			user.locale,
@@ -744,6 +763,46 @@ export function OperatorPassAdminController(app: HonoApp) {
 					targetId: userId,
 					action: 'hide_operator_pass_wall_entry',
 					metadata: {hidden: body.hidden, reason: body.reason ?? null, note: body.note ?? null, notified},
+				}),
+			);
+			return ctx.json(mapWallEntry(result.entry, user));
+		},
+	);
+	app.post(
+		'/admin/users/:user_id/operator-pass/wall/clear-quote',
+		HostedOnlyRoute,
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_TEMP_BAN),
+		Validator('param', UserIdParam),
+		Validator('json', AdminOperatorPassWallClearQuoteRequest),
+		OpenAPI({
+			operationId: 'clear_admin_operator_pass_wall_quote',
+			summary: "Clear Operators' wall quote",
+			responseSchema: AdminOperatorPassWallEntryResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: TAG,
+			description:
+				'Deletes the quote on a listing because of its content. The rest of the listing stays as it is, and the holder can set a new quote. Fails when the listing has no quote or a quote other than the one staff reviewed. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry with the reason, the facts and the cleared quote. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+		}),
+		async (ctx) => {
+			const userId = createUserID(ctx.req.valid('param').user_id);
+			const user = await ctx.get('userRepository').findUnique(userId);
+			const body = ctx.req.valid('json');
+			const result = await getOperatorPassWallService().moderation.clearQuote(
+				userId,
+				ctx.get('adminUserId'),
+				body.quote,
+				{reason: body.reason, note: body.note},
+			);
+			const notified = await sendQuoteClearedStatement(ctx, user, result);
+			await indexWallAudit(
+				userId,
+				recordAdminWrite(ctx, {
+					targetType: 'user',
+					targetId: userId,
+					action: 'clear_operator_pass_wall_quote',
+					metadata: {reason: body.reason, note: body.note, quote: body.quote, notified},
 				}),
 			);
 			return ctx.json(mapWallEntry(result.entry, user));

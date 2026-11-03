@@ -431,6 +431,22 @@
 		"signoff": "Das {product_name}-Team",
 		"subject": "Wir haben deinen Namen oder Avatar von der {product_name} Operators-Wand genommen"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Antworte innerhalb von 60 Tagen auf diese E-Mail und sag uns, warum du nicht einverstanden bist. Das ist kostenlos, und eine Person aus unserem Team liest deinen Einspruch und entscheidet darüber.} other {Wende dich innerhalb von 60 Tagen an die Admins dieser Instanz und sag ihnen, warum du nicht einverstanden bist.}}",
+		"appeal_title": "So legst du Einspruch ein",
+		"automated_text": "Das wurde nicht automatisch erkannt, und eine Person aus unserem Team hat die Entscheidung getroffen.",
+		"facts_label": "Fakten, auf die wir uns gestützt haben",
+		"footer_reason": "Du hast diese E-Mail wegen einer Entscheidung über deinen Eintrag auf der {product_name} Operators-Wand erhalten.",
+		"ground": "Abschnitt 6.2 der Nutzungsbedingungen",
+		"ground_label": "Grundlage",
+		"intro": "Wir haben das Zitat von deinem Platz an der Operators-Wand genommen. Der Rest deines Platzes bleibt, wie er ist, und dein Abzeichen und dein Kauf sind davon nicht betroffen.",
+		"next": "Du kannst in deinen <settings>Einstellungen</settings> ein neues Zitat hinzufügen, das die Community-Richtlinien einhält.",
+		"reason_label": "Begründung",
+		"reason_value": "{reason, select, impersonation {Gibt sich als jemand anderes aus} rights {Nutzt fremden Text ohne die Rechte daran} age_suitability {Nicht für jüngere Nutzer geeignet} other {Verstößt gegen die Community-Richtlinien}}",
+		"redress_v2": "Du kannst auch vor Gericht gehen. Wenn du in der EU bist, kannst du dich an eine zertifizierte <dsa>außergerichtliche Streitbeilegungsstelle</dsa> wenden. Als Verbraucher in der EU oder im EWR kannst du den Streit auch vor den schwedischen Ausschuss für Verbraucherstreitigkeiten (<arn>ARN</arn>) bringen, Box 174, 101 23 Stockholm, Schweden.",
+		"signoff": "Das {product_name}-Team",
+		"subject": "Wir haben dein Zitat von der {product_name} Operators-Wand genommen"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Dein Abzeichen ist in deinem Profil zu sehen. Du kannst es in deinen <settings>Einstellungen</settings> ausblenden.",
 		"bonus_heading": "Außerdem zu deinem Pass",

@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "이 대기자 명단 링크가 올바르지 않아요.",
 	"operator_pass.wall_name_rejected": "이 이름은 Operators 벽에 표시할 수 없습니다. 다른 이름을 선택해 주세요.",
 	"operator_pass.wall_name_required": "Operators 벽에 표시할 이름을 입력하거나, 목록에 표시하지 않기를 선택해 주세요.",
+	"operator_pass.wall_quote_invalid": "인용구는 한 줄에 최대 80자까지 쓸 수 있으며, 숨겨진 문자나 제어 문자는 쓸 수 없습니다.",
+	"operator_pass.wall_quote_rejected": "인용구에는 링크, 이메일 주소, @멘션을 넣을 수 없습니다.",
 	"operator_pass.withdrawal_unavailable": "이 구매는 더 이상 여기서 철회할 수 없어요.",
 	"permissions.global_ip_banned": "{reason, select, shown {규칙을 위반한 활동 때문에 {product_name}에서 이 네트워크의 접속을 차단했어요.} other {{product_name}에서 이 네트워크의 접속을 차단했어요.}} 학교, 직장, 공용 Wi-Fi, 이동통신사, VPN 등으로 이 네트워크를 다른 사람과 함께 쓰고 있다면 이 차단은 본인과 관계없을 수도 있어요. 가장 빠른 해결 방법은 Wi-Fi 대신 모바일 데이터를 쓰는 등 네트워크를 바꾸거나, VPN을 켜거나 끄는 거예요.{appealEmail, select, null {} other { 이 차단이 잘못되었다고 생각하면 IP 주소({ipAddress})를 적어 {appealEmail} 주소로 이메일을 보내 주세요.}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {규칙을 위반한 활동 때문에 {product_name}에서 이 네트워크의 접속을 차단했어요.} other {{product_name}에서 이 네트워크의 접속을 차단했어요.}} 차단은 {expiresAt}에 해제돼요. 학교, 직장, 공용 Wi-Fi, 이동통신사, VPN 등으로 이 네트워크를 다른 사람과 함께 쓰고 있다면 이 차단은 본인과 관계없을 수도 있어요. 가장 빠른 해결 방법은 Wi-Fi 대신 모바일 데이터를 쓰는 등 네트워크를 바꾸거나, VPN을 켜거나 끄는 거예요.{appealEmail, select, null {} other { 이 차단이 잘못되었다고 생각하면 IP 주소({ipAddress})를 적어 {appealEmail} 주소로 이메일을 보내 주세요.}}",

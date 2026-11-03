@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "קישור רשימת ההמתנה הזה לא תקין.",
 	"operator_pass.wall_name_rejected": "איננו יכולים להציג את השם הזה בקיר ה-Operators. בחרו שם אחר.",
 	"operator_pass.wall_name_required": "הזן שם לקיר ה-Operators, או בחר שלא להופיע בו.",
+	"operator_pass.wall_quote_invalid": "ציטוט יכול להכיל עד 80 תווים בשורה אחת, בלי תווים מוסתרים או תווי בקרה.",
+	"operator_pass.wall_quote_rejected": "ציטוט לא יכול לכלול קישורים, כתובות אימייל או אזכורי @.",
 	"operator_pass.withdrawal_unavailable": "כבר אי אפשר לבטל את הרכישה הזו מכאן.",
 	"permissions.global_ip_banned": "{reason, select, shown {{product_name} חסם את הגישה מהרשת הזו בגלל פעילות שהפרה את הכללים שלו.} other {{product_name} חסם את הגישה מהרשת הזו.}} אם אתם חולקים את הרשת הזו עם אחרים, למשל בבית הספר, בעבודה, ב-Wi-Fi ציבורי, דרך ספק הסלולר או דרך VPN, ייתכן שלחסימה הזו אין שום קשר אליכם. הפתרון המהיר ביותר הוא לעבור לרשת אחרת, למשל לגלישה סלולרית במקום Wi-Fi, או להפעיל או לכבות את ה-VPN.{appealEmail, select, null {} other { אם לדעתכם החסימה הזו היא טעות, שלחו אימייל אל {appealEmail} וציינו את כתובת ה-IP שלכם, {ipAddress}.}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {{product_name} חסם את הגישה מהרשת הזו בגלל פעילות שהפרה את הכללים שלו.} other {{product_name} חסם את הגישה מהרשת הזו.}} החסימה מסתיימת ב-{expiresAt}. אם אתם חולקים את הרשת הזו עם אחרים, למשל בבית הספר, בעבודה, ב-Wi-Fi ציבורי, דרך ספק הסלולר או דרך VPN, ייתכן שלחסימה הזו אין שום קשר אליכם. הפתרון המהיר ביותר הוא לעבור לרשת אחרת, למשל לגלישה סלולרית במקום Wi-Fi, או להפעיל או לכבות את ה-VPN.{appealEmail, select, null {} other { אם לדעתכם החסימה הזו היא טעות, שלחו אימייל אל {appealEmail} וציינו את כתובת ה-IP שלכם, {ipAddress}.}}",

@@ -28,6 +28,7 @@ import {
 import {
 	mapOperatorPassListing,
 	normalizeOperatorPassWallChoice,
+	parseOperatorPassWallQuote,
 } from '@app/api/operator_pass/OperatorPassWallPresentation';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {OperatorPassRateLimitConfigs} from '@app/api/rate_limit_configs/OperatorPassRateLimitConfig';
@@ -402,7 +403,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'update_operator_pass_listing',
 			summary: "Update Operators' wall listing",
 			description:
-				"Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is or release_list_opt_in. A new name goes on the wall at once, together with the current profile avatar. An already listed holder can send only keep_as_is or release_list_opt_in.",
+				"Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is, release_list_opt_in or wall_quote. A new name or quote goes on the wall at once, the name together with the current profile avatar. An already listed holder can leave out wall_name and send only keep_as_is, release_list_opt_in or wall_quote.",
 			responseSchema: OperatorPassListingResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -422,9 +423,12 @@ export function OperatorPassController(app: HonoApp) {
 				!body.wall_opt_out && !body.wall_name && current && !current.opted_out
 					? {name: null, optedOut: false}
 					: normalizeOperatorPassWallChoice({name: body.wall_name, optOut: body.wall_opt_out});
+			const quote =
+				body.wall_quote === undefined || choice.optedOut ? undefined : parseOperatorPassWallQuote(body.wall_quote);
 			await wallService.setChoice(user.id, choice, user.id, {
 				keepAsIs: body.keep_as_is,
 				releaseListOptIn: body.release_list_opt_in,
+				quote,
 			});
 			return ctx.json(mapOperatorPassListing(await wallService.getEntry(user.id), holder.count));
 		},
