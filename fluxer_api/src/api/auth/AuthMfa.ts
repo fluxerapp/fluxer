@@ -217,13 +217,14 @@ export async function generateWebAuthnRegistrationOptions(
 	ctx: ApiContext,
 	userId: UserID,
 	origin: string | null | undefined,
+	requestedRpId?: string | null,
 ): Promise<PublicKeyCredentialCreationOptionsJSON> {
 	const existingCredentials = await ctx.services.users.listWebAuthnCredentials(userId);
 	if (visibleWebAuthnCredentials(existingCredentials).length >= 10) {
 		throw new WebAuthnCredentialLimitReachedError();
 	}
 	return createWebAuthnRegistrationOptions(ctx, userId, {
-		rpId: originRpId(ctx, origin),
+		rpId: originRpId(ctx, origin, requestedRpId),
 		context: 'registration',
 		excludeCredentials: existingCredentials,
 	});
@@ -451,8 +452,9 @@ function selectCredentialRpOrThrow(
 	ctx: ApiContext,
 	origin: string | null | undefined,
 	credentials: Array<WebAuthnCredential>,
+	requestedRpId?: string | null,
 ): CredentialRpSelection {
-	const selection = selectCredentialRp(ctx, origin, credentials);
+	const selection = selectCredentialRp(ctx, origin, credentials, requestedRpId);
 	if (selection.credentials.length === 0) {
 		throw new NoPasskeysRegisteredError();
 	}
@@ -462,9 +464,10 @@ function selectCredentialRpOrThrow(
 export async function generateWebAuthnAuthenticationOptionsDiscoverable(
 	ctx: ApiContext,
 	origin: string | null | undefined,
+	requestedRpId?: string | null,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	return generateWebAuthnAuthenticationOptions(ctx, {
-		selection: {rpId: originRpId(ctx, origin), credentials: null},
+		selection: {rpId: originRpId(ctx, origin, requestedRpId), credentials: null},
 		context: 'discoverable',
 	});
 }
@@ -488,6 +491,7 @@ export async function generateWebAuthnAuthenticationOptionsForMfa(
 	ctx: ApiContext,
 	ticket: string,
 	origin: string | null | undefined,
+	requestedRpId?: string | null,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	const {users, cache} = ctx.services;
 	const userIdStr = await cache.get<string>(`mfa-ticket:${ticket}`);
@@ -497,7 +501,7 @@ export async function generateWebAuthnAuthenticationOptionsForMfa(
 	const userId = createUserID(BigInt(userIdStr));
 	const credentials = await users.listWebAuthnCredentials(userId);
 	return generateWebAuthnAuthenticationOptions(ctx, {
-		selection: selectCredentialRpOrThrow(ctx, origin, credentials),
+		selection: selectCredentialRpOrThrow(ctx, origin, credentials, requestedRpId),
 		context: 'mfa',
 		userId,
 		ticket,
@@ -578,10 +582,11 @@ export async function generateWebAuthnOptionsForSudo(
 	ctx: ApiContext,
 	userId: UserID,
 	origin: string | null | undefined,
+	requestedRpId?: string | null,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	const credentials = await ctx.services.users.listWebAuthnCredentials(userId);
 	return generateWebAuthnAuthenticationOptions(ctx, {
-		selection: selectCredentialRpOrThrow(ctx, origin, credentials),
+		selection: selectCredentialRpOrThrow(ctx, origin, credentials, requestedRpId),
 		context: 'sudo',
 		userId,
 	});

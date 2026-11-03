@@ -64,3 +64,15 @@ export const WebAuthnAuthenticationOptions = z.looseObject({
 		})
 		.optional(),
 }) satisfies z.ZodType<PublicKeyCredentialRequestOptionsJSON>;
+
+export const WebAuthnRpIdQuery = z.object({
+	rp_id: z
+		.string()
+		.max(253)
+		.nullish()
+		.describe(
+			'Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored',
+		),
+});
+
+export type WebAuthnRpIdQuery = z.infer<typeof WebAuthnRpIdQuery>;
