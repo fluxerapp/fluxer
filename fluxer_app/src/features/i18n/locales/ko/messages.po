@@ -42042,11 +42042,6 @@ msgstr "이 이름은 인증서에 인쇄할 수 없습니다. 다른 이름을 
 msgid "We can't show this name on the Operators' wall. Please choose another one."
 msgstr "이 이름은 Operators 벽에 표시할 수 없습니다. 다른 이름을 선택해 주세요."
 
-#. Hint under the Operators' wall name field. Go live means showing on the Operators' wall, the list of Operators on the homepage.
-#: src/features/premium/components/operator_pass/OperatorPassWallNameField.tsx
-msgid "We check new names before they go live."
-msgstr "새 이름은 공개 전에 확인합니다."
-
 #. Plutonium page hero subtitle while a failed renewal is in its grace period.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "We could not renew your subscription. Update your payment method to keep your perks."

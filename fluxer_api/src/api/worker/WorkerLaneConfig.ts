@@ -116,6 +116,7 @@ const LANE_CONFIG = {
 			'operatorPassWaitlistCleanup',
 			'operatorPassRemovalExpiry',
 			'operatorPassOfferCompletion',
+			'operatorPassWallAutoApprove',
 			'operatorPassWallRetention',
 			'scanBillingNotices',
 			'importLegacyBillingDocuments',

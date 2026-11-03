@@ -2,6 +2,8 @@
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {
 	OperatorPassWallEntryRow,
@@ -40,6 +42,7 @@ import {
 } from '@app/api/operator_pass/OperatorPassWallPublicationService';
 import {OperatorPassWallRetentionService} from '@app/api/operator_pass/OperatorPassWallRetentionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {UnknownOperatorPassWallEntryError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassWallEntryError';
 
 export class OperatorPassWallService {
 	private readonly entries: OperatorPassWallEntryStore;
@@ -159,6 +162,8 @@ export class OperatorPassWallService {
 			const latest = entry.pending_name ?? entry.live_name;
 			if (latest !== choice.name) {
 				await this.submitRevision(userId, choice.name, 'settings', actorId, {useProfileAvatar: true});
+			} else {
+				await this.autoApprovePending(userId);
 			}
 		}
 		await this.publication.publishChanges([userId]);
@@ -242,7 +247,39 @@ export class OperatorPassWallService {
 			},
 			events: source === 'checkout' ? [] : [{kind: 'changed', name}],
 		}));
+		if (source !== 'admin') {
+			await this.autoApprovePending(userId);
+		}
 		return revision;
+	}
+
+	async approvePendingRevisions(): Promise<number> {
+		let approved = 0;
+		for (const userId of await this.repository.listWallPending()) {
+			if (await this.autoApprovePending(userId)) {
+				approved += 1;
+			}
+		}
+		return approved;
+	}
+
+	private async autoApprovePending(userId: UserID): Promise<boolean> {
+		if (!Config.operatorPass.wallAutoApprove) {
+			return false;
+		}
+		const entry = await this.repository.findWallEntry(userId);
+		if (!entry || entry.pending_revision_id == null || !isOperatorPassWallListed(entry)) {
+			return false;
+		}
+		try {
+			await this.moderation.approve(userId, SYSTEM_USER_ID, entry.pending_revision_id);
+			return true;
+		} catch (error) {
+			if (!(error instanceof UnknownOperatorPassWallEntryError)) {
+				throw error;
+			}
+			return false;
+		}
 	}
 
 	async setBusinessListing(

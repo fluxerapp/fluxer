@@ -56,6 +56,7 @@ export interface OperatorPassConfig {
 	standardPricesMinor: OperatorPassPriceTable | null;
 	releaseLists: OperatorPassReleaseListTable;
 	transferLockMs: number;
+	wallAutoApprove: boolean;
 	withdrawalCountries: OperatorPassWithdrawalCountryTable;
 	disabledCurrencies: ReadonlySet<OperatorPassCurrency>;
 	wallTierMinimums: ReadonlyArray<number>;

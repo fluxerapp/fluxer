@@ -21,11 +21,6 @@ const WALL_NAME_SETTINGS_LABEL_DESCRIPTOR = msg({
 	comment:
 		"Label of the text field for the name shown on the Operators' wall, in the settings. The wall is the list of Operators on the homepage.",
 });
-const WALL_NAME_HINT_DESCRIPTOR = msg({
-	message: 'We check new names before they go live.',
-	comment:
-		"Hint under the Operators' wall name field. Go live means showing on the Operators' wall, the list of Operators on the homepage.",
-});
 export const DONT_LIST_ME_DESCRIPTOR = msg({
 	message: "Don't list me",
 	comment:
@@ -85,12 +80,6 @@ export const OperatorPassWallNameField = observer(function OperatorPassWallNameF
 				dir="auto"
 				onChange={(event) => onNameChange(event.target.value)}
 				error={error}
-				aria-describedby={`${id}-hint`}
-				footer={
-					<span id={`${id}-hint`} className={styles.hint} data-flx="premium.operator-pass-wall-name-field.hint">
-						{i18n._(WALL_NAME_HINT_DESCRIPTOR)}
-					</span>
-				}
 				maxLength={OPERATOR_PASS_WALL_NAME_MAX_LENGTH + WALL_NAME_INPUT_OVERFLOW_ALLOWANCE}
 				autoComplete="off"
 				disabled={disabled || optOut}

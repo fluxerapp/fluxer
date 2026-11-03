@@ -128,6 +128,7 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 			enabled: isLabsAutoJoinConfigured,
 		});
 		cron.upsert('operatorPassOfferCompletion', 'operatorPassOfferCompletion', {}, '30 */5 * * * *', {ledger: false});
+		cron.upsert('operatorPassWallAutoApprove', 'operatorPassWallAutoApprove', {}, '20 * * * * *', {ledger: false});
 		cron.upsert('operatorPassFulfilmentSweep', 'operatorPassFulfilmentSweep', {}, '45 */15 * * * *', {
 			ledger: false,
 			enabled: () => getStripeClient() !== null,

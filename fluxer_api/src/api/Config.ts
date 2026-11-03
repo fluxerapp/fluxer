@@ -334,6 +334,7 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		standardPricesMinor,
 		releaseLists: parseOperatorPassReleaseLists(source.release_lists),
 		transferLockMs: parseOperatorPassTransferLockHours(source.transfer_lock_hours) * 60 * 60 * 1000,
+		wallAutoApprove: source.wall_auto_approve ?? true,
 		withdrawalCountries: parseOperatorPassWithdrawalCountries(source.withdrawal_countries),
 		wallTierMinimums: parseOperatorPassWallTiers(source.wall_tiers),
 		maxQuantity: parseOperatorPassMaxQuantity(source.max_quantity),

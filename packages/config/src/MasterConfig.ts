@@ -343,6 +343,7 @@ export interface MasterConfig {
 		standard_prices_minor?: Partial<Record<string, number>>;
 		release_lists?: string;
 		transfer_lock_hours?: number;
+		wall_auto_approve?: boolean;
 		withdrawal_countries?: string;
 		localized_prices_enabled?: Partial<Record<string, boolean>>;
 		wall_tiers?: string;

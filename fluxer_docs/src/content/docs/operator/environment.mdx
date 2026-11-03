@@ -2495,7 +2495,11 @@ The standard Operator Pass price in USD.
 
 #### `FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS`
 
-How long an Operator Pass transfer stays locked, in hours.
+How long an Operator Pass transfer stays locked, in hours. The default is 0, and with 0 a pass moves as soon as the recipient accepts it.
+
+#### `FLUXER_OPERATOR_PASS_WALL_AUTO_APPROVE`
+
+Whether a new name or avatar for the Operators' wall goes live as soon as an Operator changes it. The default is true. With false, our team approves each change first.
 
 #### `FLUXER_OPERATOR_PASS_WALL_TIERS`
 
