@@ -51,7 +51,7 @@ Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel
 
 Calls don't go through a tunnel, and they need a TURN server on a machine with a public address, as [Voice behind a tunnel](/operator/reverse-proxy/#voice-behind-a-tunnel) explains.
 
-To run Fluxer only on your own network, use a name that isn't on the public internet, such as `chat.home.arpa` or `fluxer.internal`. rexctl skips the DNS check for names like these and for IP addresses. Make the name resolve to the machine on every device, through your router's DNS or each device's hosts file. Only devices on your network can open the instance.
+To run Fluxer only on your own network, use a name that isn't on the public internet, such as `chat.home.arpa` or `fluxer.internal`. rexctl skips the DNS check for names like these. It doesn't take an IP address or a name without a dot, such as `localhost`. Make the name resolve to the machine on every device, through your router's DNS or each device's hosts file. Only devices on your network can open the instance.
 
 Fluxer gets certificates for names ending in `.home.arpa`, `.internal`, `.local` or `.localhost` from its own local certificate authority. Browsers and apps don't trust it until you install its root certificate on each device. This command copies the root certificate out of the instance.
 

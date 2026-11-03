@@ -55,6 +55,25 @@ type upgradeNotice struct {
 	Release  string `json:"release"`
 	Text     string `json:"text"`
 	Content  string `json:"content"`
+	Message  string `json:"message"`
+	Body     string `json:"body"`
+	Title    string `json:"title"`
+	Type     string `json:"type"`
+}
+
+func (n *upgradeNotice) fill() {
+	if n.Instance != "" {
+		n.Text = n.Instance + ": " + n.Text
+	}
+	n.Content, n.Message, n.Body = n.Text, n.Text, n.Text
+	switch n.Status {
+	case "upgraded":
+		n.Title, n.Type = "Fluxer upgraded", "success"
+	case "failed":
+		n.Title, n.Type = "Fluxer upgrade failed", "failure"
+	default:
+		n.Title, n.Type = "Fluxer test notice", "info"
+	}
 }
 
 func newAutoUpgradeCmd(app *App) *cobra.Command {
@@ -73,7 +92,7 @@ func newAutoUpgradeCmd(app *App) *cobra.Command {
 		Use:   "on",
 		Short: "Upgrade Fluxer by itself every day or once a week",
 		Long: "Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Pass several times to --at, like 06:00,18:00, to run more than once on those days. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the first upgrade time of the day. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.\n\n" +
-			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m={{.text}} to the topic address. Run rexctl auto-upgrade test-notify to send a test notice.",
+			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, the message as text, content, message and body, a title, and a type (success, failure or info). Slack and Discord webhooks, Gotify and the Apprise API show it as it is, so pass a Gotify address like https://gotify.example.com/message?token=... or an Apprise address like https://apprise.example.com/notify/your-key. For ntfy, add ?tpl=1&m={{.text}} to the topic address. Run rexctl auto-upgrade test-notify to send a test notice.",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeOn(c.Context(), app, o)
@@ -115,10 +134,7 @@ func runAutoUpgradeTestNotify(ctx context.Context, app *App) error {
 		return ui.Refused("rexctl has no address to send notices to.", "Run rexctl auto-upgrade on with --notify and your address.")
 	}
 	n := upgradeNotice{Instance: inst.Domain(), Status: "test", Release: inst.State.Release, Text: "This is a test notice from rexctl. It posts here when an upgrade installs a new release or fails."}
-	if n.Instance != "" {
-		n.Text = n.Instance + ": " + n.Text
-	}
-	n.Content = n.Text
+	n.fill()
 	if err := postNotice(ctx, inst.State.NotifyURL, n); err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't send a test notice to %s.", maskURL(inst.State.NotifyURL)), "Check the address, then run rexctl auto-upgrade on with --notify and the right one.")
 	}
@@ -542,10 +558,7 @@ func notifyUpgrade(ctx context.Context, app *App, runErr error) {
 		return
 	}
 	n.Text = strings.Join(append([]string{n.Text}, app.putBack...), " ")
-	if n.Instance != "" {
-		n.Text = n.Instance + ": " + n.Text
-	}
-	n.Content = n.Text
+	n.fill()
 	if err := postNotice(ctx, inst.State.NotifyURL, n); err != nil {
 		app.UI.Warn(fmt.Sprintf("Couldn't tell %s how the upgrade went (%v).", maskURL(inst.State.NotifyURL), err), "")
 		return

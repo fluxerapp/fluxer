@@ -23,14 +23,18 @@ let cachedConfig: MasterConfig | null = null;
 
 const MAX_REPORT_RETENTION_DAYS = 36_500;
 
+const OFFICIAL_ANDROID_PASSKEY_ORIGINS = [
+	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
+	'android:apk-key-hash:Ld4qnT0TfBeHMT3Yu2H0WTwqlxgFs-32uDmwqtLndsk',
+];
+
 const DEFAULT_PASSKEY_ORIGINS = [
 	'https://fluxer.app',
 	'https://web.fluxer.app',
 	'https://web.canary.fluxer.app',
 	'https://fluxer.com',
 	'https://canary.fluxer.com',
-	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
-	'android:apk-key-hash:Ld4qnT0TfBeHMT3Yu2H0WTwqlxgFs-32uDmwqtLndsk',
+	...OFFICIAL_ANDROID_PASSKEY_ORIGINS,
 ];
 
 function defaultConfig(): MasterConfig {
@@ -894,6 +898,9 @@ function normalizePasskeys(config: MasterConfig, useDefaultOrigins: boolean): vo
 			...new Set([...passkeys.additional_allowed_origins, new URL(config.endpoints.app).origin]),
 		];
 	}
+	passkeys.additional_allowed_origins = [
+		...new Set([...passkeys.additional_allowed_origins, ...OFFICIAL_ANDROID_PASSKEY_ORIGINS]),
+	];
 }
 
 export async function loadConfig(): Promise<MasterConfig> {
