@@ -551,7 +551,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Visionary comes with an Operator Pass. From November 1, 2026, you can turn it on at any time in your settings, under "Operator Pass". You choose the name for your certificate then, and its page shows the date you got Visionary instead of a payment date.',
+			text: 'Visionary comes with an Operator Pass. From November 1, 2026, you can turn it on under "Operator Pass" in your settings. You choose the name for your certificate then, and its page shows the date you got Visionary instead of a payment date.',
 		},
 		{
 			kind: 'paragraph',
@@ -1128,7 +1128,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Med Visionary följer ett Operator Pass. Från den 1 november 2026 kan du slå på det när du vill i dina inställningar, under "Operator Pass". Du väljer namnet på ditt certifikat då, och sidan visar dagen då du fick Visionary i stället för en betalningsdag.',
+			text: 'Med Visionary följer ett Operator Pass. Från den 1 november 2026 kan du slå på det under "Operator Pass" i dina inställningar. Du väljer namnet på ditt certifikat då, och sidan visar dagen då du fick Visionary i stället för en betalningsdag.',
 		},
 		{
 			kind: 'paragraph',
@@ -1708,7 +1708,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'O Visionary vem com um Operator Pass. A partir de 1 de novembro de 2026, você pode ativá-lo quando quiser nas suas configurações, em "Operator Pass". Você escolhe o nome do seu certificado quando ativa o passe, e a página dele mostra a data em que você recebeu o Visionary em vez de uma data de pagamento.',
+			text: 'O Visionary vem com um Operator Pass. A partir de 1 de novembro de 2026, você pode ativá-lo em "Operator Pass" nas suas configurações. Você escolhe o nome do seu certificado quando ativa o passe, e a página dele mostra a data em que você recebeu o Visionary em vez de uma data de pagamento.',
 		},
 		{
 			kind: 'paragraph',
