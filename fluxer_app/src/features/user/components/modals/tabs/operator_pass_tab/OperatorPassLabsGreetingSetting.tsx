@@ -11,7 +11,6 @@ import {
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {showsOperatorPassLabsSettings} from '@app/features/premium/utils/BillingTabVisibility';
 import {WALL_SAVE_FAILED_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.module.css';
@@ -67,7 +66,6 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 			<div className={styles.actions} data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.actions">
 				<OpenOperatorsButton
 					variant="secondary"
-					onOpened={() => ModalCommands.popByModalType('user-settings')}
 					data-flx="user.operator-pass-tab.operator-pass-labs-greeting-setting.button.open-operators"
 				/>
 			</div>
