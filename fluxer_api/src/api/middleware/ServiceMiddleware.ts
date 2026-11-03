@@ -906,6 +906,7 @@ class RequestServices implements RequestScopedServices {
 				getUserCacheService(),
 				getGatewayService(),
 				Config.instance.selfHosted ? null : getOperatorPassEntitlementService(),
+				Config.instance.selfHosted ? null : this.operatorPassServices.roleService,
 			);
 		}
 		return this.cachedUserAccountRequestService;

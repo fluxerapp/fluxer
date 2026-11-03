@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildID, createRoleID, type GuildID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {
+	createChannelID,
+	createGuildID,
+	createRoleID,
+	type GuildID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {OperatorPassLabsLeftReason} from '@app/api/database/types/OperatorPassTypes';
@@ -17,8 +24,9 @@ import {
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {isAccountLimited} from '@app/api/user/AccountLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {ProfileBadgeKey} from '@fluxer/constants/src/BadgeConstants';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
 import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
 import {ms} from 'itty-time';
@@ -93,7 +101,19 @@ type LabsAccount = Pick<
 	| 'deletionStartedAt'
 	| 'contentHiddenSince'
 	| 'tempBannedUntil'
+	| 'premiumFlags'
+	| 'hiddenProfileBadges'
 >;
+
+type VisionaryAccount = Pick<User, 'id' | 'premiumType' | 'premiumFlags' | 'hiddenProfileBadges'>;
+
+export function showsVisionaryInLabs(user: Omit<VisionaryAccount, 'id'>): boolean {
+	return (
+		user.premiumType === UserPremiumTypes.LIFETIME &&
+		!user.hiddenProfileBadges.has('visionary') &&
+		(user.premiumFlags & PremiumFlags.BADGE_MASKED) === 0
+	);
+}
 
 export function isBlockedFromLabsAutoJoin(user: Omit<LabsAccount, 'id' | 'premiumType'>, now: Date): boolean {
 	return (
@@ -202,7 +222,7 @@ export async function resolveOperatorPassJoinRoleIds(
 	}
 	const candidates: Array<RoleID> = [];
 	const visionaryRoleId = getLabsVisionaryRoleId();
-	if (visionaryRoleId && user.premiumType === UserPremiumTypes.LIFETIME) {
+	if (visionaryRoleId && showsVisionaryInLabs(user)) {
 		candidates.push(visionaryRoleId);
 	}
 	if (isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id))) {
@@ -440,7 +460,7 @@ export class OperatorPassLabsRoleService {
 		return true;
 	}
 
-	async syncVisionaryRole(user: Pick<User, 'id' | 'premiumType'>): Promise<void> {
+	async syncVisionaryRole(user: VisionaryAccount): Promise<void> {
 		const labs = getLabsOperatorRole();
 		const visionaryRoleId = getLabsVisionaryRoleId();
 		if (!labs || !visionaryRoleId) {
@@ -450,6 +470,7 @@ export class OperatorPassLabsRoleService {
 			const member = await this.guildRepository.getMember(labs.guildId, user.id);
 			if (member) {
 				await this.applyVisionaryRole(labs.guildId, visionaryRoleId, member, user);
+				await this.applyVisionaryChannelAccess(labs.guildId, visionaryRoleId, user);
 			}
 		} catch (error) {
 			Logger.error(
@@ -481,12 +502,14 @@ export class OperatorPassLabsRoleService {
 			);
 			for (const member of members) {
 				try {
-					const change = await this.applyVisionaryRole(
-						labs.guildId,
-						visionaryRoleId,
-						member,
-						users.get(member.userId) ?? {id: member.userId, premiumType: null},
-					);
+					const user = users.get(member.userId) ?? {
+						id: member.userId,
+						premiumType: null,
+						premiumFlags: 0,
+						hiddenProfileBadges: new Set<ProfileBadgeKey>(),
+					};
+					const change = await this.applyVisionaryRole(labs.guildId, visionaryRoleId, member, user);
+					await this.applyVisionaryChannelAccess(labs.guildId, visionaryRoleId, user);
 					if (change) {
 						summary[change]++;
 					}
@@ -509,9 +532,9 @@ export class OperatorPassLabsRoleService {
 		guildId: GuildID,
 		visionaryRoleId: RoleID,
 		member: {roleIds: ReadonlySet<RoleID>},
-		user: Pick<User, 'id' | 'premiumType'>,
+		user: VisionaryAccount,
 	): Promise<'granted' | 'removed' | null> {
-		const visionary = user.premiumType === UserPremiumTypes.LIFETIME;
+		const visionary = showsVisionaryInLabs(user);
 		const hasRole = member.roleIds.has(visionaryRoleId);
 		if (visionary === hasRole) {
 			return null;
@@ -529,6 +552,25 @@ export class OperatorPassLabsRoleService {
 		}
 		await this.guildService.members.systemRemoveMemberRole(change);
 		return 'removed';
+	}
+
+	private async applyVisionaryChannelAccess(
+		guildId: GuildID,
+		visionaryRoleId: RoleID,
+		user: VisionaryAccount,
+	): Promise<void> {
+		const channelId = getLabsOperatorsChannelId();
+		if (channelId === null) {
+			return;
+		}
+		const hidden = user.premiumType === UserPremiumTypes.LIFETIME && !showsVisionaryInLabs(user);
+		await this.guildService.channels.systemSetMemberAccess({
+			guildId,
+			channelId: createChannelID(channelId),
+			userId: user.id,
+			mirrorRoleId: hidden ? visionaryRoleId : null,
+			requestCache: createRequestCache(),
+		});
 	}
 
 	async syncOperatorRole(userId: UserID, entitled: boolean): Promise<void> {

@@ -21,6 +21,7 @@ import {
 	profileOperatorPassSince,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
+import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import type {AuthTokenType, HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {
@@ -132,6 +133,7 @@ export class UserAccountRequestService {
 		private readonly userCacheService: UserCacheService,
 		private readonly gatewayService: IGatewayService,
 		private readonly operatorPassEntitlementService: OperatorPassEntitlementService | null = null,
+		private readonly labsRoleService: OperatorPassLabsRoleService | null = null,
 	) {}
 
 	async getCurrentUserResponse(params: {
@@ -285,6 +287,13 @@ export class UserAccountRequestService {
 			} catch (error) {
 				Logger.warn({error, userId: updatedUser.id}, 'Failed to issue email revert token');
 			}
+		}
+		if (
+			this.labsRoleService &&
+			(user.hiddenProfileBadges.has('visionary') !== updatedUser.hiddenProfileBadges.has('visionary') ||
+				userUpdateData.premium_badge_masked !== undefined)
+		) {
+			await this.labsRoleService.syncVisionaryRole(updatedUser);
 		}
 		if (
 			(user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||

@@ -37,7 +37,12 @@ import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverw
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {
+	ALL_PERMISSIONS,
+	ChannelOverwriteTypes,
+	ChannelTypes,
+	Permissions,
+} from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, GuildFeatures, resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_CHANNELS, VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
@@ -636,6 +641,51 @@ export class ChannelOperationsService {
 				}),
 			),
 		});
+	}
+
+	async systemSetMemberAccess(params: {
+		guildId: GuildID;
+		channelId: ChannelID;
+		userId: UserID;
+		mirrorRoleId: RoleID | null;
+		requestCache: RequestCache;
+	}): Promise<boolean> {
+		const channel = await this.channelRepository.channelData.findUnique(params.channelId);
+		if (!channel || channel.guildId !== params.guildId) {
+			return false;
+		}
+		const overwrites = new Map(channel.permissionOverwrites ?? []);
+		const existing = overwrites.get(params.userId);
+		const source = params.mirrorRoleId === null ? undefined : overwrites.get(params.mirrorRoleId);
+		if (!source) {
+			if (!existing) {
+				return false;
+			}
+			overwrites.delete(params.userId);
+		} else {
+			if (existing && existing.allow === source.allow && existing.deny === 0n) {
+				return false;
+			}
+			overwrites.set(
+				params.userId,
+				new ChannelPermissionOverwrite({type: ChannelOverwriteTypes.MEMBER, allow_: source.allow, deny_: 0n}),
+			);
+		}
+		const updated = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				permission_overwrites: new Map(
+					Array.from(overwrites.entries()).map(([id, overwrite]) => [id, overwrite.toPermissionOverwrite()]),
+				),
+			},
+			channel.toRow(),
+		);
+		await this.dispatchChannelUpdateBulk({
+			guildId: params.guildId,
+			channels: [updated],
+			requestCache: params.requestCache,
+		});
+		return true;
 	}
 
 	private async dispatchChannelUpdateBulk({
