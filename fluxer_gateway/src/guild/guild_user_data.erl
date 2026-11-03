@@ -96,7 +96,7 @@ maybe_update_cached_user_data(_, _, State) ->
 
 -spec maybe_update_author_data(map(), guild_state()) -> guild_state().
 maybe_update_author_data(AuthorData, State) ->
-    case snowflake_id:parse_optional(maps:get(<<"id">>, AuthorData, undefined)) of
+    case snowflake_id:parse_maybe(maps:get(<<"id">>, AuthorData, undefined)) of
         undefined ->
             State;
         UserId ->
