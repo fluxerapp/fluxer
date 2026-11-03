@@ -66,7 +66,7 @@ lookup_member(UserId, {map, Members}) ->
 -spec author_id(map()) -> integer() | undefined.
 author_id(MessageData) ->
     case maps:get(<<"author">>, MessageData, undefined) of
-        #{<<"id">> := Id} -> snowflake_id:parse_optional(Id);
+        #{<<"id">> := Id} -> snowflake_id:parse_maybe(Id);
         _ -> undefined
     end.
 
