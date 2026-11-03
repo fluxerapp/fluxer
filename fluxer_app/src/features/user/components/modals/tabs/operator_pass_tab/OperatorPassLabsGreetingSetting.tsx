@@ -9,6 +9,7 @@ import {
 	LABS_GREETING_LABEL_DESCRIPTOR,
 } from '@app/features/premium/components/operator_pass/OperatorPassLabsGreetingField';
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
+import {showsOperatorPassLabsSettings} from '@app/features/premium/utils/BillingTabVisibility';
 import {WALL_SAVE_FAILED_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -35,7 +36,7 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 	const {i18n} = useLingui();
 	const [saving, setSaving] = useState(false);
 	const labs = OperatorPassHoldings.passes?.labs;
-	if (!labs || Users.currentUser?.operatorPassSince == null) return null;
+	if (!labs || !showsOperatorPassLabsSettings(Users.currentUser, OperatorPassHoldings.passes)) return null;
 	const handleChange = async (greeting: boolean) => {
 		setSaving(true);
 		try {

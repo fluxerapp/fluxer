@@ -139,7 +139,8 @@ export function profileOperatorPassSince(params: {
 	const holder = resolveOperatorPassHolder(state);
 	if (
 		!holder ||
-		(!isOwner && (user.hiddenProfileBadges.has('operator_pass') || isOperatorPassTimestampHidden(user.premiumFlags)))
+		isOperatorPassTimestampHidden(user.premiumFlags) ||
+		(!isOwner && user.hiddenProfileBadges.has('operator_pass'))
 	) {
 		return null;
 	}

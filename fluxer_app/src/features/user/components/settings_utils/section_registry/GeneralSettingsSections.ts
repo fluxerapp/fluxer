@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
+import {
+	showsOperatorPassLabsSettings,
+	showsOperatorPassWallSettings,
+} from '@app/features/premium/utils/BillingTabVisibility';
 import {
 	OPERATOR_PASS_LABS_SECTION_DESCRIPTOR,
 	OPERATOR_PASS_PASSES_SECTION_DESCRIPTOR,
@@ -22,6 +27,7 @@ import {
 	SPELL_CHECK_DESCRIPTOR as SPELLCHECK_DESCRIPTOR,
 	TIME_FORMAT_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import Users from '@app/features/user/state/Users';
 import {
 	INTERFACE_LANGUAGE_DESCRIPTOR,
 	PROFILE_BADGES_DESCRIPTOR,
@@ -84,6 +90,7 @@ export const generalSettingsSections = [
 		label: OPERATOR_PASS_WALL_SECTION_DESCRIPTOR,
 		keywords: [],
 		isAdvanced: false,
+		isVisible: () => showsOperatorPassWallSettings(Users.currentUser, OperatorPassHoldings.passes),
 	},
 	{
 		id: 'operator-pass-labs',
@@ -91,6 +98,7 @@ export const generalSettingsSections = [
 		label: OPERATOR_PASS_LABS_SECTION_DESCRIPTOR,
 		keywords: [],
 		isAdvanced: false,
+		isVisible: () => showsOperatorPassLabsSettings(Users.currentUser, OperatorPassHoldings.passes),
 	},
 	{id: 'redeem-gift', tabType: 'gift_inventory', label: REDEEM_A_GIFT_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{
