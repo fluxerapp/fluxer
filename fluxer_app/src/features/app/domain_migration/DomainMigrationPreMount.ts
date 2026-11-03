@@ -37,6 +37,7 @@ import {
 	isCompletedDomainMigrationMarker,
 	isDomainMigrationOneShotRoute,
 	isExportableLocalStorageKey,
+	isForwardableOneShotRoute,
 	keepValidTargetSession,
 	markDomainMigrationCompleted,
 	markDomainMigrationFailed,
@@ -485,10 +486,11 @@ async function startEnrolledSource(side: DomainMigrationSide): Promise<boolean> 
 
 async function forwardFromSource(side: DomainMigrationSide): Promise<boolean> {
 	const {pathname, search, hash} = readCurrentPath();
-	if (isDomainMigrationOneShotRoute(pathname)) {
+	const oneShotRoute = isDomainMigrationOneShotRoute(pathname);
+	if (oneShotRoute && !isForwardableOneShotRoute(pathname)) {
 		return false;
 	}
-	if (await startEnrolledSource(side)) {
+	if (!oneShotRoute && (await startEnrolledSource(side))) {
 		return true;
 	}
 	const environment = readDomainMigrationEnvironment();

@@ -11,6 +11,7 @@ import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FormUtils from '@app/lib/forms';
+import {officialClientApiEndpointForAlias} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {DesktopHandoffReturnMethod} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatDesktopHandoffCode, parseDesktopHandoffCode} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {msg} from '@lingui/core/macro';
@@ -77,6 +78,12 @@ function hostOf(endpoint: string): string {
 	} catch {
 		return endpoint;
 	}
+}
+
+function isSameInstanceOrigin(left: string, right: string): boolean {
+	if (left === right) return true;
+	const official = officialClientApiEndpointForAlias(`${left}/api`);
+	return official !== null && official === officialClientApiEndpointForAlias(`${right}/api`);
 }
 
 function matchesIdentifier(identifier: string, userData: UserData): boolean {
@@ -177,7 +184,11 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 			setReturnMethod(null);
 			setReturnUrl(null);
 			const accountOrigin = originOf(runtimeSnapshot.apiEndpoint);
-			if (request.apiOrigin != null && accountOrigin != null && request.apiOrigin !== accountOrigin) {
+			if (
+				request.apiOrigin != null &&
+				accountOrigin != null &&
+				!isSameInstanceOrigin(request.apiOrigin, accountOrigin)
+			) {
 				failWith(
 					i18n._(INSTANCE_MISMATCH_DESCRIPTOR, {
 						accountHost: hostOf(accountOrigin),
