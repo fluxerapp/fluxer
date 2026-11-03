@@ -366,7 +366,10 @@ export class EmbedService {
 		if (this.isRenderableMediaType(directMetadata?.content_type)) {
 			return {url: stored, metadata: directMetadata};
 		}
-		const unfurled = await this.unfurlerService.unfurl(url, nsfwMode);
+		const unfurled = await this.unfurlerService.unfurl(url, nsfwMode).catch((error: unknown) => {
+			Logger.warn({error, url}, 'Failed to unfurl embed media URL, keeping it without metadata');
+			return [];
+		});
 		for (const embed of unfurled) {
 			const candidates = [embed.video?.url, embed.audio?.url, embed.image?.url, embed.thumbnail?.url];
 			for (const candidate of candidates) {
