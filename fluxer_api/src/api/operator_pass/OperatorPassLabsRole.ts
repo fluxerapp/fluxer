@@ -18,7 +18,7 @@ import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassReposit
 import {isAccountLimited} from '@app/api/user/AccountLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
 import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
 import {ms} from 'itty-time';
@@ -93,7 +93,19 @@ type LabsAccount = Pick<
 	| 'deletionStartedAt'
 	| 'contentHiddenSince'
 	| 'tempBannedUntil'
+	| 'premiumFlags'
+	| 'hiddenProfileBadges'
 >;
+
+type VisionaryAccount = Pick<User, 'id' | 'premiumType' | 'premiumFlags' | 'hiddenProfileBadges'>;
+
+function showsVisionaryInLabs(user: Omit<VisionaryAccount, 'id'>): boolean {
+	return (
+		user.premiumType === UserPremiumTypes.LIFETIME &&
+		!user.hiddenProfileBadges.has('visionary') &&
+		(user.premiumFlags & PremiumFlags.BADGE_MASKED) === 0
+	);
+}
 
 export function isBlockedFromLabsAutoJoin(user: Omit<LabsAccount, 'id' | 'premiumType'>, now: Date): boolean {
 	return (
@@ -187,6 +199,28 @@ function getLabsVisionaryRoleId(): RoleID | null {
 	return getLabsOperatorRole() && labsVisionaryRoleId != null ? createRoleID(labsVisionaryRoleId) : null;
 }
 
+function getLabsAccessRoleId(): RoleID | null {
+	const {labsAccessRoleId} = Config.operatorPass;
+	return getLabsOperatorRole() && labsAccessRoleId != null ? createRoleID(labsAccessRoleId) : null;
+}
+
+interface LabsRoleWants {
+	operator: boolean;
+	visionary: boolean;
+	access: boolean;
+}
+
+export function labsRolesFor(user: Omit<VisionaryAccount, 'id'> | null, entitled: boolean): LabsRoleWants {
+	const lifetime = user?.premiumType === UserPremiumTypes.LIFETIME;
+	const split = getLabsAccessRoleId() !== null;
+	return {
+		operator: entitled && (!split || !user?.hiddenProfileBadges.has('operator_pass')),
+		visionary:
+			getLabsVisionaryRoleId() !== null && lifetime && (!split || (user !== null && showsVisionaryInLabs(user))),
+		access: split && (entitled || lifetime),
+	};
+}
+
 export function keepsOperatorsThroughVisionary(user: Pick<User, 'premiumType'> | null): boolean {
 	return getLabsVisionaryRoleId() !== null && user?.premiumType === UserPremiumTypes.LIFETIME;
 }
@@ -200,14 +234,13 @@ export async function resolveOperatorPassJoinRoleIds(
 	if (!labs || labs.guildId !== guildId) {
 		return null;
 	}
-	const candidates: Array<RoleID> = [];
-	const visionaryRoleId = getLabsVisionaryRoleId();
-	if (visionaryRoleId && user.premiumType === UserPremiumTypes.LIFETIME) {
-		candidates.push(visionaryRoleId);
-	}
-	if (isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id))) {
-		candidates.push(labs.roleId);
-	}
+	const wants = labsRolesFor(
+		user,
+		isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id)),
+	);
+	const candidates = labsRoleTargets(labs.roleId)
+		.filter(({key}) => wants[key])
+		.map(({roleId}) => roleId);
 	const roleIds = new Set<RoleID>();
 	for (const roleId of candidates) {
 		if (await guildRepository.getRole(roleId, guildId)) {
@@ -215,6 +248,15 @@ export async function resolveOperatorPassJoinRoleIds(
 		}
 	}
 	return roleIds.size > 0 ? roleIds : null;
+}
+
+function labsRoleTargets(operatorRoleId: RoleID): Array<{key: keyof LabsRoleWants; roleId: RoleID}> {
+	const targets: Array<{key: keyof LabsRoleWants; roleId: RoleID}> = [{key: 'operator', roleId: operatorRoleId}];
+	const visionaryRoleId = getLabsVisionaryRoleId();
+	if (visionaryRoleId) targets.push({key: 'visionary', roleId: visionaryRoleId});
+	const accessRoleId = getLabsAccessRoleId();
+	if (accessRoleId) targets.push({key: 'access', roleId: accessRoleId});
+	return targets;
 }
 
 export class OperatorPassLabsRoleService {
@@ -301,7 +343,8 @@ export class OperatorPassLabsRoleService {
 					continue;
 				}
 				const member = await this.guildRepository.getMember(labs.guildId, user.id);
-				if (member?.roleIds.has(labs.roleId)) {
+				const accessRoleId = getLabsAccessRoleId();
+				if (member && (member.roleIds.has(labs.roleId) || (accessRoleId && member.roleIds.has(accessRoleId)))) {
 					continue;
 				}
 				if (!isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id))) {
@@ -352,8 +395,7 @@ export class OperatorPassLabsRoleService {
 	}
 
 	private async finishLabsMembership(user: LabsAccount, now: Date): Promise<void> {
-		await this.grantOperatorRoleIfMember(user.id);
-		await this.syncVisionaryRole(user);
+		await this.resyncLabsRoles(user);
 		await this.queueGreetingIfDue(user, now);
 	}
 
@@ -421,51 +463,32 @@ export class OperatorPassLabsRoleService {
 		return labs !== null && (await this.guildRepository.getMember(labs.guildId, userId)) !== null;
 	}
 
-	private async grantOperatorRoleIfMember(userId: UserID): Promise<boolean> {
-		const labs = getLabsOperatorRole();
-		if (!labs) {
-			return false;
-		}
-		const member = await this.guildRepository.getMember(labs.guildId, userId);
-		if (!member || member.roleIds.has(labs.roleId)) {
-			return false;
-		}
-		await this.guildService.members.systemAddMemberRole({
-			targetId: userId,
-			guildId: labs.guildId,
-			roleId: labs.roleId,
-			initiatorId: SYSTEM_USER_ID,
-			requestCache: createRequestCache(),
-		});
-		return true;
+	async resyncLabsRoles(user: VisionaryAccount): Promise<void> {
+		const entitled = isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, user.id));
+		await this.syncLabsRoles(user.id, user, entitled);
 	}
 
-	async syncVisionaryRole(user: Pick<User, 'id' | 'premiumType'>): Promise<void> {
+	async syncLabsRoles(userId: UserID, user: VisionaryAccount | null, entitled: boolean): Promise<void> {
 		const labs = getLabsOperatorRole();
-		const visionaryRoleId = getLabsVisionaryRoleId();
-		if (!labs || !visionaryRoleId) {
+		if (!labs) {
 			return;
 		}
 		try {
-			const member = await this.guildRepository.getMember(labs.guildId, user.id);
+			const member = await this.guildRepository.getMember(labs.guildId, userId);
 			if (member) {
-				await this.applyVisionaryRole(labs.guildId, visionaryRoleId, member, user);
+				await this.applyLabsRoles(labs, member, userId, labsRolesFor(user, entitled));
 			}
 		} catch (error) {
-			Logger.error(
-				{userId: user.id, guildId: labs.guildId, roleId: visionaryRoleId, error},
-				'Failed to update the Visionary role in Fluxer Labs',
-			);
+			Logger.error({userId, guildId: labs.guildId, error}, 'Failed to update the Fluxer Labs roles');
 		}
 	}
 
-	async syncVisionaryRoleForLabsMembers(
+	async syncLabsRolesForMembers(
 		userRepository: Pick<UserRepository, 'listUsers'>,
 		pageSize: number,
 	): Promise<LabsVisionaryRoleSyncSummary | null> {
 		const labs = getLabsOperatorRole();
-		const visionaryRoleId = getLabsVisionaryRoleId();
-		if (!labs || !visionaryRoleId || !(await this.guildRepository.getRole(visionaryRoleId, labs.guildId))) {
+		if (!labs) {
 			return null;
 		}
 		const summary: LabsVisionaryRoleSyncSummary = {granted: 0, removed: 0, failed: 0};
@@ -481,21 +504,16 @@ export class OperatorPassLabsRoleService {
 			);
 			for (const member of members) {
 				try {
-					const change = await this.applyVisionaryRole(
-						labs.guildId,
-						visionaryRoleId,
-						member,
-						users.get(member.userId) ?? {id: member.userId, premiumType: null},
-					);
-					if (change) {
-						summary[change]++;
-					}
+					const user = users.get(member.userId) ?? null;
+					const entitled =
+						user !== null &&
+						isOperatorPassEntitled(await loadOperatorPassEntitlementState(labsRepository, member.userId));
+					const changes = await this.applyLabsRoles(labs, member, member.userId, labsRolesFor(user, entitled));
+					summary.granted += changes.granted;
+					summary.removed += changes.removed;
 				} catch (error) {
 					summary.failed++;
-					Logger.error(
-						{userId: member.userId, guildId: labs.guildId, roleId: visionaryRoleId, error},
-						'Failed to update the Visionary role in Fluxer Labs',
-					);
+					Logger.error({userId: member.userId, guildId: labs.guildId, error}, 'Failed to update the Fluxer Labs roles');
 				}
 			}
 			if (members.length < pageSize) {
@@ -505,66 +523,32 @@ export class OperatorPassLabsRoleService {
 		return summary;
 	}
 
-	private async applyVisionaryRole(
-		guildId: GuildID,
-		visionaryRoleId: RoleID,
+	private async applyLabsRoles(
+		labs: LabsOperatorRole,
 		member: {roleIds: ReadonlySet<RoleID>},
-		user: Pick<User, 'id' | 'premiumType'>,
-	): Promise<'granted' | 'removed' | null> {
-		const visionary = user.premiumType === UserPremiumTypes.LIFETIME;
-		const hasRole = member.roleIds.has(visionaryRoleId);
-		if (visionary === hasRole) {
-			return null;
-		}
-		const change = {
-			targetId: user.id,
-			guildId,
-			roleId: visionaryRoleId,
-			initiatorId: SYSTEM_USER_ID,
-			requestCache: createRequestCache(),
-		};
-		if (visionary) {
-			await this.guildService.members.systemAddMemberRole(change);
-			return 'granted';
-		}
-		await this.guildService.members.systemRemoveMemberRole(change);
-		return 'removed';
-	}
-
-	async syncOperatorRole(userId: UserID, entitled: boolean): Promise<void> {
-		if (!entitled) {
-			await this.removeOperatorRole(userId);
-			return;
-		}
-		try {
-			await this.grantOperatorRoleIfMember(userId);
-		} catch (error) {
-			Logger.error({userId, error}, 'Failed to give the Operator role back in Fluxer Labs');
-		}
-	}
-
-	private async removeOperatorRole(userId: UserID): Promise<void> {
-		const labs = getLabsOperatorRole();
-		if (!labs) {
-			return;
-		}
-		try {
-			const member = await this.guildRepository.getMember(labs.guildId, userId);
-			if (!member?.roleIds.has(labs.roleId)) {
-				return;
+		userId: UserID,
+		wants: LabsRoleWants,
+	): Promise<{granted: number; removed: number}> {
+		const changes = {granted: 0, removed: 0};
+		for (const {key, roleId} of labsRoleTargets(labs.roleId)) {
+			if (wants[key] === member.roleIds.has(roleId)) {
+				continue;
 			}
-			await this.guildService.members.systemRemoveMemberRole({
+			const change = {
 				targetId: userId,
 				guildId: labs.guildId,
-				roleId: labs.roleId,
+				roleId,
 				initiatorId: SYSTEM_USER_ID,
 				requestCache: createRequestCache(),
-			});
-		} catch (error) {
-			Logger.error(
-				{userId, guildId: labs.guildId, roleId: labs.roleId, error},
-				'Failed to remove the Operator role in Fluxer Labs',
-			);
+			};
+			if (wants[key]) {
+				await this.guildService.members.systemAddMemberRole(change);
+				changes.granted++;
+			} else {
+				await this.guildService.members.systemRemoveMemberRole(change);
+				changes.removed++;
+			}
 		}
+		return changes;
 	}
 }

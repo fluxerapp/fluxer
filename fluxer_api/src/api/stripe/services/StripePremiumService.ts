@@ -385,9 +385,12 @@ export class StripePremiumService {
 	}
 
 	private async syncLabsVisionaryRole(userId: UserID): Promise<void> {
-		await new OperatorPassLabsRoleService(this.guildRepository, this.guildService).syncVisionaryRole({
+		const user = await this.userRepository.findUnique(userId);
+		await new OperatorPassLabsRoleService(this.guildRepository, this.guildService).resyncLabsRoles({
 			id: userId,
 			premiumType: UserPremiumTypes.LIFETIME,
+			premiumFlags: user?.premiumFlags ?? 0,
+			hiddenProfileBadges: user?.hiddenProfileBadges ?? new Set(),
 		});
 	}
 }

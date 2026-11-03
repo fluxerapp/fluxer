@@ -297,6 +297,10 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	if (labsVisionaryRoleId !== null && labsGuildId === null) {
 		throw new Error('FLUXER_LABS_VISIONARY_ROLE_ID needs FLUXER_LABS_GUILD_ID');
 	}
+	const labsAccessRoleId = parseOptionalSnowflake(source.labs_access_role_id, 'FLUXER_LABS_ACCESS_ROLE_ID');
+	if (labsAccessRoleId !== null && labsGuildId === null) {
+		throw new Error('FLUXER_LABS_ACCESS_ROLE_ID needs FLUXER_LABS_GUILD_ID');
+	}
 	const labsOperatorsChannelId = parseOptionalSnowflake(
 		source.labs_operators_channel_id,
 		'FLUXER_LABS_OPERATORS_CHANNEL_ID',
@@ -330,6 +334,7 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		labsGuildId,
 		labsOperatorRoleId,
 		labsVisionaryRoleId,
+		labsAccessRoleId,
 		labsOperatorsChannelId,
 		standardPricesMinor,
 		releaseLists: parseOperatorPassReleaseLists(source.release_lists),

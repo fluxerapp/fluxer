@@ -297,7 +297,7 @@ export class OperatorPassRemovalService {
 		const user = await this.userRepository.findUnique(userId);
 		const entitled =
 			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.repository, userId));
-		await this.roleService.syncOperatorRole(userId, entitled);
+		await this.roleService.syncLabsRoles(userId, user, entitled);
 		await dispatchOperatorPassUserUpdate(
 			{repository: this.repository, userRepository: this.userRepository, gatewayService: this.gatewayService},
 			userId,
