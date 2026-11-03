@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/api/Logger';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {isMultipartUploadRequest} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
@@ -128,8 +129,7 @@ const ContentFilterMiddleware = createMiddleware(async (ctx, next) => {
 	if (shouldSkipContentFilterPath(path)) {
 		return next();
 	}
-	const contentType = ctx.req.header('content-type') ?? '';
-	if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+	if (isMultipartUploadRequest(ctx)) {
 		return next();
 	}
 	const body = await readRequestJsonBody(ctx.req);

@@ -14,6 +14,7 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {isMultipartFormData} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
@@ -368,7 +369,7 @@ export async function parseMessageRequestBody<T extends z.ZodType<MessageRequest
 	channelId: ChannelID,
 	schema: T,
 ): Promise<z.output<T>> {
-	if (ctx.req.header('content-type')?.includes('multipart/form-data'))
+	if (isMultipartFormData(ctx.req.header('content-type')))
 		return (await parseMultipartMessageData(ctx, user, channelId, schema)) as z.output<T>;
 	const result = schema.safeParse(normalizeMessageRequestPayload(await readMessageJsonBody(ctx)));
 	if (!result.success) throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);

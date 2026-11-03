@@ -9,6 +9,7 @@ import {ChannelThreadsRouteGuard} from '@app/api/channel/threads/ChannelThreadsR
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {BotOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {isMultipartFormData, MultipartUploadRoute} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
@@ -53,7 +54,7 @@ const EXPERIMENT = 'channel_threads';
 const TAGS = 'Channels';
 
 function isMultipart(ctx: Context<HonoEnv>): boolean {
-	return (ctx.req.header('content-type') ?? '').includes('multipart/form-data');
+	return isMultipartFormData(ctx.req.header('content-type'));
 }
 
 async function readPayloadJson(ctx: Context<HonoEnv>): Promise<unknown> {
@@ -171,6 +172,7 @@ export function ThreadController(app: HonoApp) {
 	);
 	app.post(
 		'/channels/:channel_id/threads',
+		MultipartUploadRoute(),
 		ChannelThreadsRouteGuard(),
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_THREAD_CREATE),
 		LoginRequired,

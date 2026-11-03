@@ -28,6 +28,7 @@ const largestJsonAssetKind = (Object.keys(ASSET_FORMAT_POLICY) as Array<AssetKin
 export const DEFAULT_REQUEST_BODY_LIMIT = jsonAssetBodyLimit({[largestJsonAssetKind]: 1});
 
 const routeBodyLimits = new WeakMap<object, number>();
+const multipartUploadRoutes = new WeakSet<object>();
 const limiters = new Map<number, MiddlewareHandler>();
 
 export function RequestBodyLimit(maxBytes: number): MiddlewareHandler<HonoEnv> {
@@ -38,13 +39,38 @@ export function RequestBodyLimit(maxBytes: number): MiddlewareHandler<HonoEnv> {
 	return marker;
 }
 
-function resolveRouteBodyLimit(ctx: Context<HonoEnv>): number {
-	for (const route of matchedRoutes(ctx)) {
+export function MultipartUploadRoute(): MiddlewareHandler<HonoEnv> {
+	const marker: MiddlewareHandler<HonoEnv> = async (_ctx, next) => {
+		await next();
+	};
+	multipartUploadRoutes.add(marker);
+	return marker;
+}
+
+export function isMultipartFormData(contentType: string | undefined): boolean {
+	return (contentType ?? '').split(';')[0]!.trim().toLowerCase() === 'multipart/form-data';
+}
+
+function matchedRouteHandlers(ctx: Context<HonoEnv>): Array<object> {
+	return matchedRoutes(ctx).map((route) => {
 		const handler = route.handler as MiddlewareHandler & {[COMPOSED_HANDLER]?: MiddlewareHandler};
-		const limit = routeBodyLimits.get(handler[COMPOSED_HANDLER] ?? handler);
+		return handler[COMPOSED_HANDLER] ?? handler;
+	});
+}
+
+function resolveRouteBodyLimit(ctx: Context<HonoEnv>): number {
+	for (const handler of matchedRouteHandlers(ctx)) {
+		const limit = routeBodyLimits.get(handler);
 		if (limit !== undefined) return limit;
 	}
 	return DEFAULT_REQUEST_BODY_LIMIT;
+}
+
+export function isMultipartUploadRequest(ctx: Context<HonoEnv>): boolean {
+	return (
+		isMultipartFormData(ctx.req.header('content-type')) &&
+		matchedRouteHandlers(ctx).some((handler) => multipartUploadRoutes.has(handler))
+	);
 }
 
 function limiterFor(maxSize: number): MiddlewareHandler {
@@ -68,7 +94,7 @@ export const RequestBodyLimitMiddleware = createMiddleware<HonoEnv>(async (ctx, 
 		await next();
 		return;
 	}
-	if ((ctx.req.header('content-type') ?? '').includes('multipart/form-data')) {
+	if (isMultipartUploadRequest(ctx)) {
 		await next();
 		return;
 	}
