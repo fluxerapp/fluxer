@@ -425,7 +425,11 @@ export const UserAreaPopout = observer(() => {
 	return (
 		<FocusRingScope containerRef={popoutContainerRef} data-flx="app.floating.user-area-popout.focus-ring-scope">
 			<div ref={popoutContainerRef} className={styles.container} data-flx="app.floating.user-area-popout.container">
-				<ProfileCardLayout borderColor={borderColor} data-flx="app.floating.user-area-popout.profile-card-layout">
+				<ProfileCardLayout
+					borderColor={borderColor}
+					className={userProfilePopoutStyles.profilePopoutCard}
+					data-flx="app.floating.user-area-popout.profile-card-layout"
+				>
 					<ProfileCardBanner
 						bannerUrl={bannerUrl}
 						hoverBannerUrl={hoverBannerUrl}
