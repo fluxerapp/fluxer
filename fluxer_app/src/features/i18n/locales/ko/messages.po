@@ -2135,6 +2135,11 @@ msgstr "{productName}에서 기기 목록을 보려면 마이크 접근 권한�
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName}에 화면 녹화 접근 권한이 필요합니다. 운영체제 개인 정보 보호 설정에서 화면 녹화를 허용하고 앱을 다시 시작하세요."
 
+#. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr "{productName}은(는) 생년월일만 묻고, 신분증이나 얼굴 스캔은 절대 요구하지 않습니다. 생년월일은 거주 국가의 최소 연령과 연령 제한 콘텐츠를 확인하는 데 사용되며 누구에게도 표시되지 않습니다. 나중에 변경할 수 없으니 정확한지 확인해 주세요."
+
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "{productName} recovery kit"
@@ -2169,11 +2174,6 @@ msgstr "{productName}에서 잠재적인 레이드를 감지했습니다. 초대
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background."
 msgstr "{productName}은(는) 모바일 PWA로 설치된 경우 푸시 알림을 사용합니다. 등록하면 앱이 백그라운드에 있을 때도 게이트웨이가 기기에 연결할 수 있습니다."
-
-#. Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.
-#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later."
-msgstr "{productName}은(는) 생년월일을 바탕으로 콘텐츠와 설정을 나이에 맞춥니다. 생년월일은 누구에게도 표시되지 않습니다. 나중에 변경할 수 없습니다."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -42753,6 +42753,11 @@ msgstr "단어 전체"
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
 msgid "Why"
 msgstr "사유"
+
+#. Link after the date of birth text that opens the help article about why the app asks for a date of birth.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "Why we ask"
+msgstr "묻는 이유"
 
 #. Link after the hidden status in the Operators' wall settings. It opens the Operator Pass terms.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx
