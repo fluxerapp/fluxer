@@ -49,6 +49,15 @@ handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
+handle_cast({async, {subscribe, UserId, Pid}}, State) when is_integer(UserId), is_pid(Pid) ->
+    _ = do_subscribe(maps:get(scope, State), UserId, Pid),
+    {noreply, State};
+handle_cast({async, {unsubscribe, UserId, Pid}}, State) when is_integer(UserId), is_pid(Pid) ->
+    _ = do_unsubscribe(maps:get(scope, State), UserId, Pid),
+    {noreply, State};
+handle_cast({async, {publish, UserId, Payload}}, State) when is_integer(UserId) ->
+    _ = do_publish(maps:get(scope, State), UserId, Payload),
+    {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
