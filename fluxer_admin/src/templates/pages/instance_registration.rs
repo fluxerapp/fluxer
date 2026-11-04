@@ -72,7 +72,7 @@ fn registration_policy_form(
                         (allowed_domains_input(
                             REGISTRATION_ALLOWED_EMAIL_DOMAINS_FIELD,
                             &registration.allowed_email_domains.join("\n"),
-                            "Only email addresses on these domains (one per line) can sign up, claim an account or become an account's new email. People with an admin-issued registration URL can use any domain. Leave empty to allow any domain.",
+                            "Only email addresses on these domains (one per line) can sign up, claim an account or become an account's new email. People with an admin-issued registration URL can use any domain. While this is set, everyone else needs an email address to sign up. Leave empty to allow any domain.",
                         ))
                     }
                     (form_actions(html! {

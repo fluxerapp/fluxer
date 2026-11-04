@@ -888,6 +888,7 @@ services:
       FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
       FLUXER_ADMIN_SSO_CLIENT_SECRET: ${FLUXER_ADMIN_SSO_CLIENT_SECRET:-}
       FLUXER_ADMIN_SSO_DISPLAY_NAME: ${FLUXER_ADMIN_SSO_DISPLAY_NAME:-}
+      FLUXER_ADMIN_SSO_ONLY: ${FLUXER_ADMIN_SSO_ONLY:-}
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health HTTP/1.0\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck

@@ -190,6 +190,7 @@ var envVars = []envVar{
 	{"FLUXER_ADMIN_SSO_CLIENT_ID", "sso", "The client ID of the admin panel at the provider in FLUXER_ADMIN_SSO_ISSUER. Register the admin address followed by /sso/callback as its redirect URL."},
 	{"FLUXER_ADMIN_SSO_CLIENT_SECRET", "sso", "The client secret that goes with FLUXER_ADMIN_SSO_CLIENT_ID. Only the admin service uses it."},
 	{"FLUXER_ADMIN_SSO_DISPLAY_NAME", "sso", "The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`."},
+	{"FLUXER_ADMIN_SSO_ONLY", "sso", "Whether staff can sign in to the admin panel only with single sign-on. Use `true` or `false`. With `true`, the login page hides the button for signing in with a Fluxer account, and the admin panel refuses new sign-ins that way. Staff who are already signed in stay signed in. It needs FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET, and the admin service won't start without them. When it's empty, it's `false`."},
 	{"FLUXER_EMAIL_ENABLED", "email", "The older way to turn email on. Use FLUXER_EMAIL_DELIVERY."},
 	{"FLUXER_EMAIL_PROVIDER", "email", "The older way to pick the email transport, which takes `smtp` or `none`. Use FLUXER_EMAIL_DELIVERY."},
 	{"FLUXER_EMAIL_DELIVERY", "email", "How Fluxer sends email. Use `smtp` or `off`. When it's empty, FLUXER_EMAIL_ENABLED and FLUXER_EMAIL_PROVIDER decide, and email is off when those are empty too."},

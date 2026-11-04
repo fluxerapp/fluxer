@@ -2904,16 +2904,19 @@ export class InstanceConfigRepository {
 	async getInstantAccountAvailability(
 		registrationUrl: {approvalRequired: boolean} | null = null,
 	): Promise<InstantAccountAvailability> {
-		const [auth, captcha, registration] = await Promise.all([
+		const [auth, captcha, registration, identityMode] = await Promise.all([
 			this.getAuthConfig(),
 			this.getCaptchaConfig(),
 			this.getRegistrationConfig(),
+			this.getAccountIdentityMode(),
 		]);
 		return resolveInstantAccountAvailability({
 			enabled: auth.instant_accounts.enabled,
 			captchaProvider: captcha.provider,
 			registrationMode: registration.mode,
 			registrationUrl,
+			emailDomainsRestricted:
+				identityMode !== AccountIdentityModes.USERNAME && registration.allowed_email_domains.length > 0,
 		});
 	}
 

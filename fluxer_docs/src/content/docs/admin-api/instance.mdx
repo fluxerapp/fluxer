@@ -268,7 +268,7 @@ The registration policy and every issued registration URL. [List pending registr
 | --- | --- | --- |
 | mode | string | [Registration mode](#registration-modes) |
 | admin_registration_urls_enabled | boolean | Whether issued registration URLs work |
-| allowed_email_domains | array[string] | Email domains that new accounts and email changes must use, or empty for any. Registration URLs aren't checked |
+| allowed_email_domains | array[string] | Email domains that new accounts and email changes must use, or empty for any. While set, an email mode instance turns down public sign-ups without an email. Registration URLs aren't checked |
 | urls | array[[registration URL](#registration-url-object) object] | Every issued registration URL, newest first, including revoked and used-up ones |
 
 ## Registration modes

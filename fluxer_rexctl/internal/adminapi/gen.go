@@ -1238,11 +1238,12 @@ func (e InstanceRegistrationModeSchema) Valid() bool {
 
 // Defines values for InstantAccountAvailabilitySchema.
 const (
-	APPROVALREQUIRED   InstantAccountAvailabilitySchema = "approval_required"
-	AVAILABLE          InstantAccountAvailabilitySchema = "available"
-	CAPTCHAOFF         InstantAccountAvailabilitySchema = "captcha_off"
-	DISABLED           InstantAccountAvailabilitySchema = "disabled"
-	REGISTRATIONCLOSED InstantAccountAvailabilitySchema = "registration_closed"
+	APPROVALREQUIRED       InstantAccountAvailabilitySchema = "approval_required"
+	AVAILABLE              InstantAccountAvailabilitySchema = "available"
+	CAPTCHAOFF             InstantAccountAvailabilitySchema = "captcha_off"
+	DISABLED               InstantAccountAvailabilitySchema = "disabled"
+	EMAILDOMAINSRESTRICTED InstantAccountAvailabilitySchema = "email_domains_restricted"
+	REGISTRATIONCLOSED     InstantAccountAvailabilitySchema = "registration_closed"
 )
 
 // Valid indicates whether the value is a known member of the InstantAccountAvailabilitySchema enum.
@@ -1255,6 +1256,8 @@ func (e InstantAccountAvailabilitySchema) Valid() bool {
 	case CAPTCHAOFF:
 		return true
 	case DISABLED:
+		return true
+	case EMAILDOMAINSRESTRICTED:
 		return true
 	case REGISTRATIONCLOSED:
 		return true
