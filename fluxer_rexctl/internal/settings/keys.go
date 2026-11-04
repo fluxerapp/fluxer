@@ -60,6 +60,7 @@ const (
 	SSOPrivate      = "sso.allow_private_addresses"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
+	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
 )
@@ -145,6 +146,8 @@ func buildNamed() []Key {
 			Help: "A registry mirror for the database, cache, queue, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),
 			Help: "A fixed amount of memory for Fluxer's services, or empty to size them to this machine on every start"},
+		{Name: DiskProfile, Type: "choice", Options: []string{stack.DiskProfileSmall}, Validate: oneOf(stack.DiskProfileSmall),
+			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
 	}
@@ -255,6 +258,9 @@ func otherName(name, use string) error {
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
 	if k.Name == MemoryProfile {
 		return len(set.Profiles) > 0
+	}
+	if k.Name == DiskProfile {
+		return slices.Contains(set.Vars, stack.SpoolTotalVar)
 	}
 	for _, v := range k.Vars {
 		if !slices.Contains(set.Vars, v) && !slices.Contains(custom, v) {

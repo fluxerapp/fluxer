@@ -27,6 +27,14 @@ func FreeDisk(path string) (uint64, error) {
 	return st.Bavail * uint64(st.Bsize), nil
 }
 
+func DiskSize(path string) (uint64, error) {
+	var st unix.Statfs_t
+	if err := unix.Statfs(existingParent(path), &st); err != nil {
+		return 0, err
+	}
+	return st.Blocks * uint64(st.Bsize), nil
+}
+
 func DiskID(path string) (string, error) {
 	var st unix.Stat_t
 	if err := unix.Stat(existingParent(path), &st); err != nil {

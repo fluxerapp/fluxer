@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -224,6 +225,15 @@ func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, erro
 		return "", false, &Error{Op: "image", Class: ClassOf(err), Err: err}
 	}
 	return res.ID, true, nil
+}
+
+func ImageStore(dir string, e *Engine) string {
+	if e != nil && e.DataRoot != "" {
+		if _, err := os.Stat(e.DataRoot); err == nil {
+			return e.DataRoot
+		}
+	}
+	return dir
 }
 
 func (e *Engine) LocalDiffIDs(ctx context.Context) (map[string]bool, error) {
