@@ -37282,11 +37282,6 @@ msgstr "此頻道已與父類別 <0>{0}</0> 同步。"
 msgid "This channel no longer exists. It may have already been deleted."
 msgstr "此頻道已不存在。它可能已被刪除。"
 
-#. Error shown when signing in or signing up on a self-hosted instance opened over plain HTTP or a bare IP address, where the browser blocks the automatic background check. HTTPS and localhost are technical terms, keep them as is.
-#: src/features/auth/altcha/CaptchaInterceptor.ts
-msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
-msgstr "此檢查僅在透過 HTTPS 或 localhost 開啟應用程式時執行。請要求執行個體擁有者透過 HTTPS 提供服務，或從 localhost 開啟。"
-
 #. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
 #: src/features/theme_settings/editor/CssLint.ts
 msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."

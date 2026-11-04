@@ -186,6 +186,7 @@
 		"@lingui/core": "catalog:",
 		"@lingui/react": "catalog:",
 		"@livekit/components-react": "catalog:",
+		"@noble/hashes": "catalog:",
 		"@phosphor-icons/react": "catalog:",
 		"@radix-ui/react-checkbox": "catalog:",
 		"@radix-ui/react-radio-group": "catalog:",

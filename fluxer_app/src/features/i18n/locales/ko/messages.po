@@ -37282,11 +37282,6 @@ msgstr "이 채널은 상위 카테고리 <0>{0}</0>과(와) 동기화되어 있
 msgid "This channel no longer exists. It may have already been deleted."
 msgstr "이 채널은 더 이상 존재하지 않습니다. 이미 삭제되었을 수 있습니다."
 
-#. Error shown when signing in or signing up on a self-hosted instance opened over plain HTTP or a bare IP address, where the browser blocks the automatic background check. HTTPS and localhost are technical terms, keep them as is.
-#: src/features/auth/altcha/CaptchaInterceptor.ts
-msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
-msgstr "이 확인은 앱이 HTTPS 또는 localhost를 통해 열릴 때만 실행됩니다. 인스턴스 소유자에게 HTTPS를 통해 제공하도록 요청하거나 localhost에서 열어주세요."
-
 #. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
 #: src/features/theme_settings/editor/CssLint.ts
 msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
