@@ -4311,6 +4311,11 @@ msgstr "Autorisez {PRODUCT_NAME} à accéder à votre microphone. Vérifiez la b
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Autoriser {productName} dans « Enregistrement de l’écran » dans les Réglages Système. S’il est déjà autorisé, relancez {productName2} pour que macOS l’applique."
 
+#. Switch in the sensitive content settings. Turns on 18+ communities and channels and the "Show" sensitive media option in the Fluxer app for iPhone and iPad.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Allow 18+ content on iPhone and iPad"
+msgstr "Autoriser le contenu 18+ sur iPhone et iPad"
+
 #. Private thread setting that lets non-moderators add other members.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Allow anyone to invite"
@@ -21216,6 +21221,11 @@ msgstr "Permet aux autres de vous voir en vidéo."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets push-to-talk and keybinds work in other apps."
 msgstr "Permet aux fonctions « appuyer pour parler » et aux raccourcis de fonctionner dans d’autres applications."
+
+#. Helper text under the "Allow 18+ content on iPhone and iPad" switch. "Show" is the sensitive media option name and must match its translation.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Lets you open communities and channels marked 18+ in the Fluxer app for iPhone and iPad, and choose \"Show\" for sensitive media there. You can only change this on the web or on desktop."
+msgstr "Vous permet d'ouvrir les communautés et les salons marqués 18+ dans l'application Fluxer pour iPhone et iPad, et d'y choisir « Afficher » pour les médias sensibles. Vous ne pouvez modifier ce réglage que sur le web ou sur ordinateur."
 
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx
 msgid "Lets you reset your password if you forget it."

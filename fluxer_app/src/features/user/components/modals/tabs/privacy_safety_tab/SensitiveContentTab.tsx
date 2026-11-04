@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
+import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
@@ -65,6 +66,17 @@ const OTHERS_DESCRIPTION_DESCRIPTOR = msg({
 const COMMUNITY_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Media in channels that are not marked 18+. Channels marked 18+ always show it.',
 	comment: 'Helper text under "Messages in community channels" in the sensitive content settings.',
+});
+const ALLOW_MATURE_CONTENT_ON_IOS_DESCRIPTOR = msg({
+	message: 'Allow 18+ content on iPhone and iPad',
+	comment:
+		'Switch in the sensitive content settings. Turns on 18+ communities and channels and the "Show" sensitive media option in the Fluxer app for iPhone and iPad.',
+});
+const ALLOW_MATURE_CONTENT_ON_IOS_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Lets you open communities and channels marked 18+ in the Fluxer app for iPhone and iPad, and choose "Show" for sensitive media there. You can only change this on the web or on desktop.',
+	comment:
+		'Helper text under the "Allow 18+ content on iPhone and iPad" switch. "Show" is the sensitive media option name and must match its translation.',
 });
 const SENSITIVE_CONTENT_TAB_ID = 'privacy_safety';
 
@@ -191,15 +203,19 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 	const [friendDmFilter, setFriendDmFilter] = useState(UserSettings.sensitiveContentFriendDmFilter);
 	const [nonFriendDmFilter, setNonFriendDmFilter] = useState(UserSettings.sensitiveContentNonFriendDmFilter);
 	const [guildFilter, setGuildFilter] = useState(UserSettings.sensitiveContentGuildFilter);
+	const [allowMatureContentOnIos, setAllowMatureContentOnIos] = useState(UserSettings.allowMatureContentOnIos);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const hasUnsavedChanges =
 		friendDmFilter !== UserSettings.sensitiveContentFriendDmFilter ||
 		nonFriendDmFilter !== UserSettings.sensitiveContentNonFriendDmFilter ||
-		(isMatureContentAllowed && guildFilter !== UserSettings.sensitiveContentGuildFilter);
+		(isMatureContentAllowed &&
+			(guildFilter !== UserSettings.sensitiveContentGuildFilter ||
+				allowMatureContentOnIos !== UserSettings.allowMatureContentOnIos));
 	const handleReset = useCallback(() => {
 		setFriendDmFilter(UserSettings.sensitiveContentFriendDmFilter);
 		setNonFriendDmFilter(UserSettings.sensitiveContentNonFriendDmFilter);
 		setGuildFilter(UserSettings.sensitiveContentGuildFilter);
+		setAllowMatureContentOnIos(UserSettings.allowMatureContentOnIos);
 	}, []);
 	const handleSave = useCallback(async () => {
 		setIsSubmitting(true);
@@ -209,6 +225,7 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 					sensitiveContentFriendDmFilter: friendDmFilter,
 					sensitiveContentNonFriendDmFilter: nonFriendDmFilter,
 					sensitiveContentGuildFilter: guildFilter,
+					allowMatureContentOnIos,
 				});
 			} else {
 				await UserSettingsCommands.update({
@@ -219,7 +236,7 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 		} finally {
 			setIsSubmitting(false);
 		}
-	}, [isMatureContentAllowed, friendDmFilter, nonFriendDmFilter, guildFilter]);
+	}, [isMatureContentAllowed, friendDmFilter, nonFriendDmFilter, guildFilter, allowMatureContentOnIos]);
 	useEffect(() => {
 		UnsavedChangesCommands.setUnsavedChanges(SENSITIVE_CONTENT_TAB_ID, hasUnsavedChanges);
 	}, [hasUnsavedChanges]);
@@ -306,6 +323,15 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 					data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-guild-filter"
 				/>
 			</div>
+			{isMatureContentAllowed && (
+				<Switch
+					label={i18n._(ALLOW_MATURE_CONTENT_ON_IOS_DESCRIPTOR)}
+					description={i18n._(ALLOW_MATURE_CONTENT_ON_IOS_DESCRIPTION_DESCRIPTOR)}
+					value={allowMatureContentOnIos}
+					onChange={setAllowMatureContentOnIos}
+					data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.switch.allow-mature-content-on-ios"
+				/>
+			)}
 		</div>
 	);
 });
