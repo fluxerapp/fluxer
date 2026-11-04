@@ -359,6 +359,7 @@ export function mapUserSettingsToResponse(params: {settings: UserSettings}): Use
 		sensitive_content_friend_dm_filter: settings.sensitiveContentFriendDmFilter,
 		sensitive_content_non_friend_dm_filter: settings.sensitiveContentNonFriendDmFilter,
 		sensitive_content_guild_filter: settings.sensitiveContentGuildFilter as 0 | 1,
+		allow_mature_content_on_ios: settings.allowMatureContentOnIos,
 		suppress_unprivileged_self_mentions: settings.suppressUnprivilegedSelfMentions,
 		suppress_unprivileged_self_mentions_bypass_user_ids: sortUserIds(
 			settings.suppressUnprivilegedSelfMentionBypassUserIds,

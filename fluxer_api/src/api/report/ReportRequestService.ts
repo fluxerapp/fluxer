@@ -11,6 +11,7 @@ import {
 	resolveReportFlowAnswers,
 	resolveReportFlowLocale,
 } from '@app/api/report/flows/ReportFlowRegistry';
+import {reasonSkipsReporterCaps} from '@app/api/report/flows/ReportReasonCatalog';
 import {admitLimitedReport, isLimitedReporter, type LimitedReportTarget} from '@app/api/report/LimitedReporterPolicy';
 import {ReportStatus, reportStatusToString} from '@app/api/report/ReportModels';
 import type {ReportFlowRecord, ReportService} from '@app/api/report/ReportService';
@@ -18,6 +19,7 @@ import {assertTierAllows, getAccountTier, NO_TIER_CONTEXT} from '@app/api/user/A
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {
+	ReportFlowGuildSubmissionRequest,
 	ReportFlowMessageSubmissionRequest,
 	ReportFlowResponse,
 	ReportFlowStep,
@@ -132,11 +134,17 @@ export class ReportRequestService {
 	}: ReportFlowSubmissionContext<ReportFlowMessageSubmissionRequest> & {
 		viewer: ThreadViewer;
 	}): Promise<ReportResponse> {
-		const admission = await this.admitReporter(user, request, {type: 'message', id: BigInt(data.message_id)});
+		const capExempt = this.isCapExemptWalk('message', data);
+		const admission = await this.admitReporter(
+			user,
+			request,
+			{type: 'message', id: BigInt(data.message_id)},
+			capExempt,
+		);
 		if (admission) return admission;
 		const flow = this.resolveInAppFlow('message', data, locale);
 		const report = await this.reportService.reportMessage(
-			this.createReporter(user),
+			this.createReporter(user, capExempt),
 			viewer,
 			createChannelID(data.channel_id),
 			createMessageID(data.message_id),
@@ -152,14 +160,35 @@ export class ReportRequestService {
 		locale,
 		request,
 	}: ReportFlowSubmissionContext<ReportFlowUserSubmissionRequest>): Promise<ReportResponse> {
-		const admission = await this.admitReporter(user, request, {type: 'user', id: BigInt(data.user_id)});
+		const capExempt = this.isCapExemptWalk('user', data);
+		const admission = await this.admitReporter(user, request, {type: 'user', id: BigInt(data.user_id)}, capExempt);
 		if (admission) return admission;
 		const flow = this.resolveInAppFlow('user', data, locale);
 		const report = await this.reportService.reportUser(
-			this.createReporter(user),
+			this.createReporter(user, capExempt),
 			createUserID(data.user_id),
 			flow.category,
 			data.guild_id ? createGuildID(data.guild_id) : undefined,
+			flow.record,
+		);
+		return this.toReportResponse(report);
+	}
+
+	async submitGuildReportFlow({
+		user,
+		data,
+		locale,
+		request,
+	}: ReportFlowSubmissionContext<ReportFlowGuildSubmissionRequest>): Promise<ReportResponse> {
+		const capExempt = this.isCapExemptWalk('guild', data);
+		const admission = await this.admitReporter(user, request, {type: 'guild', id: BigInt(data.guild_id)}, capExempt);
+		if (admission) return admission;
+		const flow = this.resolveInAppFlow('guild', data, locale);
+		const report = await this.reportService.reportGuild(
+			this.createReporter(user, capExempt),
+			createGuildID(data.guild_id),
+			flow.category,
+			data.invite_code ? createInviteCode(data.invite_code) : undefined,
 			flow.record,
 		);
 		return this.toReportResponse(report);
@@ -211,12 +240,27 @@ export class ReportRequestService {
 		};
 	}
 
+	private isCapExemptWalk(target: ReportFlowTargetType, data: ReportFlowAnswersInput): boolean {
+		try {
+			const {reason} = resolveReportFlowAnswers({
+				target,
+				surface: 'in_app',
+				revisionHash: data.revision_hash,
+				steps: data.steps,
+			});
+			return reasonSkipsReporterCaps(reason);
+		} catch {
+			return false;
+		}
+	}
+
 	private async admitReporter(
 		user: User,
 		request: Request,
 		target: LimitedReportTarget,
+		capExempt = false,
 	): Promise<ReportResponse | null> {
-		if (!isLimitedReporter(user)) {
+		if (!isLimitedReporter(user, capExempt)) {
 			assertTierAllows(user, TierGatedActions.REPORT, NO_TIER_CONTEXT);
 			return null;
 		}
@@ -234,13 +278,14 @@ export class ReportRequestService {
 		};
 	}
 
-	private createReporter(user: User) {
+	private createReporter(user: User, capExempt = false) {
 		return {
 			id: user.id,
 			email: user.email,
 			fullLegalName: null,
 			countryOfResidence: null,
 			tier: getAccountTier(user),
+			capExempt,
 		};
 	}
 

@@ -683,6 +683,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		storeBilling: {
 			sandboxUserIds: master.integrations.store_billing.sandbox_user_ids ?? [],
 			sandboxEntitlesAll: master.integrations.store_billing.sandbox_entitles_all,
+			sandboxSubscriptions: master.integrations.store_billing.sandbox_subscriptions,
 		},
 		worker: {
 			mode: apiWorkerConfig?.mode ?? 'all_lanes',

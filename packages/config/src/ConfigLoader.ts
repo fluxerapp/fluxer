@@ -253,6 +253,7 @@ function defaultConfig(): MasterConfig {
 			store_billing: {
 				sandbox_user_ids: [],
 				sandbox_entitles_all: false,
+				sandbox_subscriptions: true,
 			},
 		},
 		instance: {
@@ -646,6 +647,7 @@ function validateStoreBillingConfig(config: MasterConfig): void {
 		}
 	}
 	assertBoolean(config.integrations.store_billing.sandbox_entitles_all, 'FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL');
+	assertBoolean(config.integrations.store_billing.sandbox_subscriptions, 'FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS');
 }
 
 const AGE_POLICY_REGION_PATTERN = /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/u;

@@ -8,6 +8,7 @@ import bulkScheduleUserDeletion from '@app/api/worker/tasks/admin_bulk/BulkSched
 import bulkUpdateGuildFeatures from '@app/api/worker/tasks/admin_bulk/BulkUpdateGuildFeatures';
 import bulkUpdateUserFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateUserFlags';
 import backfillDeletedUsers from '@app/api/worker/tasks/BackfillDeletedUsers';
+import backfillFavoriteMemeNsfw from '@app/api/worker/tasks/BackfillFavoriteMemeNsfw';
 import backfillHiddenProfileBadges from '@app/api/worker/tasks/BackfillHiddenProfileBadges';
 import backfillPasskeyTrait from '@app/api/worker/tasks/BackfillPasskeyTrait';
 import backfillUserAclIndex from '@app/api/worker/tasks/BackfillUserAclIndex';
@@ -102,6 +103,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	syncThreadSearchDocument,
 	backfillThreadSearch,
 	backfillDeletedUsers,
+	backfillFavoriteMemeNsfw,
 	backfillHiddenProfileBadges,
 	backfillPasskeyTrait,
 	backfillUserAclIndex,

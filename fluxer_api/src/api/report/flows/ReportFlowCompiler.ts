@@ -166,7 +166,6 @@ function computeRevisionHash(
 				kind: screen.kind,
 				title: screen.def.title,
 				subtitle: screen.subtitle,
-				options_heading: screen.options.length > 0 ? (screen.def.optionsHeading ?? null) : null,
 				urgent: screen.def.urgent === true,
 				next: screen.def.nextScreenId ?? null,
 				options: screen.options.map((option) => ({
@@ -197,11 +196,8 @@ export function buildReportFlowVariant(
 	target: ReportFlowTargetType,
 	surface: ReportFlowSurface,
 	instance: ReportFlowInstance,
-): ReportFlowVariant | null {
+): ReportFlowVariant {
 	const startScreenId = library.flows[target].start[surface];
-	if (startScreenId === undefined) {
-		return null;
-	}
 	const screenDefs = new Map(library.screens.map((screen) => [screen.id, screen]));
 	const screens = new Map<string, ReportFlowVariantScreen>();
 	const noticeIds = new Set<string>();
@@ -281,7 +277,6 @@ function collectDefinitionErrors(library: ReportFlowLibrary): Array<string> {
 		checkKey(screen.subtitle, where);
 		checkKey(screen.subtitleVariants?.dsa ?? undefined, where);
 		checkKey(screen.subtitleVariants?.selfHosted ?? undefined, where);
-		checkKey(screen.optionsHeading, where);
 		const options = screen.options ?? [];
 		const kind = getReportFlowScreenKind(screen);
 		if (kind === 'checklist' && (options.length > 0 || screen.nextScreenId !== undefined)) {
@@ -348,7 +343,7 @@ function collectDefinitionErrors(library: ReportFlowLibrary): Array<string> {
 	}
 	for (const {target, surface} of REPORT_FLOW_VARIANTS) {
 		const start = library.flows[target].start[surface];
-		if (start !== undefined && !screenIds.has(start)) {
+		if (!screenIds.has(start)) {
 			errors.push(`flow ${target}/${surface}: start screen ${start} is not defined`);
 		}
 	}
@@ -358,14 +353,8 @@ function collectDefinitionErrors(library: ReportFlowLibrary): Array<string> {
 function collectVariantErrors(variant: ReportFlowVariant): Array<string> {
 	const errors: Array<string> = [];
 	const name = `flow ${variant.target}/${variant.surface}`;
-	const startKind = variant.screens.get(variant.startScreenId)?.kind;
-	const mustStartWithInfo = variant.target === 'user' && variant.surface === 'in_app';
-	if (mustStartWithInfo !== (startKind === 'info')) {
-		errors.push(
-			mustStartWithInfo
-				? `${name}: the start screen must be an info screen`
-				: `${name}: the start screen must not be an info screen`,
-		);
+	if (variant.screens.get(variant.startScreenId)?.kind === 'info') {
+		errors.push(`${name}: the start screen must not be an info screen`);
 	}
 	for (const screen of variant.screens.values()) {
 		if (screen.kind === 'choice' && !screen.options.some((option) => option.outcome.type !== 'link')) {
@@ -429,9 +418,6 @@ export function assertValidReportFlowLibrary(library: ReportFlowLibrary): void {
 	for (const instance of REPORT_FLOW_CHECKED_INSTANCES) {
 		for (const {target, surface} of REPORT_FLOW_VARIANTS) {
 			const variant = buildReportFlowVariant(library, target, surface, instance);
-			if (!variant) {
-				continue;
-			}
 			errors.push(...collectVariantErrors(variant));
 			for (const screenId of variant.screens.keys()) {
 				reachable.add(screenId);

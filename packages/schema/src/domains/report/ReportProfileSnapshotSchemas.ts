@@ -16,6 +16,7 @@ export const ReportProfileUserSnapshot = z.object({
 	global_name: z.string().nullable(),
 	bio: z.string().nullable(),
 	pronouns: z.string().nullable(),
+	custom_status: z.string().nullable().default(null),
 	avatar: ReportProfileAssetSnapshot.nullable(),
 	banner: ReportProfileAssetSnapshot.nullable(),
 });

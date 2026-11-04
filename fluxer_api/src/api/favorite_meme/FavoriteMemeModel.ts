@@ -28,5 +28,6 @@ export function mapFavoriteMemeToResponse(meme: FavoriteMeme): FavoriteMemeRespo
 		gif_provider: meme.gifProvider ?? null,
 		media: meme.mediaFormats ?? null,
 		placeholder: meme.placeholder ?? null,
+		nsfw: meme.nsfw === true,
 	};
 }

@@ -6,6 +6,13 @@
 		"signoff": "Tim {product_name}",
 		"subject": "Akun {product_name} kamu tidak jadi dihapus"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Kamu menerima email ini karena kamu meminta untuk menghapus akun {product_name} kamu.",
+		"intro": "Kami telah menghapus akun {product_name} kamu sesuai permintaanmu.",
+		"note": "Pesan-pesanmu telah dihapus atau tidak lagi terhubung denganmu, sesuai pilihanmu. Jika kamu ingin menggunakan {product_name} lagi, kamu bisa membuat akun baru.",
+		"signoff": "Tim {product_name}",
+		"subject": "Akun {product_name} kamu telah dihapus"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Kamu menerima email ini karena akun {product_name} kamu sudah lama tidak aktif.",
 		"intro": "Akun {product_name} kamu sudah lama tidak aktif, jadi kami akan menghapusnya pada {deletion_date}.",

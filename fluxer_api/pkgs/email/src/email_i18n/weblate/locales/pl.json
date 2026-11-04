@@ -6,6 +6,13 @@
 		"signoff": "Zespół {product_name}",
 		"subject": "Twoje konto {product_name} nie zostanie usunięte"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ wpłynęła Twoja prośba o usunięcie konta {product_name}.",
+		"intro": "Zgodnie z Twoją prośbą usunęliśmy Twoje konto {product_name}.",
+		"note": "W zależności od Twojego wyboru Twoje wiadomości zostały usunięte lub nie są już powiązane z Tobą. Jeśli zechcesz ponownie korzystać z {product_name}, możesz założyć nowe konto.",
+		"signoff": "Zespół {product_name}",
+		"subject": "Twoje konto {product_name} zostało usunięte"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Otrzymujesz tę wiadomość e-mail, ponieważ Twoje konto {product_name} od dawna jest nieaktywne.",
 		"intro": "Twoje konto {product_name} od dawna jest nieaktywne, więc usuniemy je dnia {deletion_date}.",

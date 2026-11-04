@@ -6,6 +6,13 @@
 		"signoff": "El equipo de {product_name}",
 		"subject": "Tu cuenta de {product_name} no se eliminará"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Recibiste este correo electrónico porque solicitaste eliminar tu cuenta de {product_name}.",
+		"intro": "Eliminamos tu cuenta de {product_name}, como lo solicitaste.",
+		"note": "Tus mensajes se eliminaron o dejaron de estar vinculados a ti, según lo que elegiste. Si quieres volver a usar {product_name}, puedes crear una cuenta nueva.",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Se eliminó tu cuenta de {product_name}"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Recibiste este correo electrónico porque tu cuenta de {product_name} lleva mucho tiempo inactiva.",
 		"intro": "Tu cuenta de {product_name} lleva mucho tiempo inactiva, así que la eliminaremos el {deletion_date}.",

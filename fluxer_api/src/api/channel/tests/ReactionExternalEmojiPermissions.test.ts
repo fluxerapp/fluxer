@@ -6,12 +6,14 @@ import {
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {createEmoji, createTestGuild, getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {updateGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {setLimitOverride} from '@app/api/test/LimitTestUtils';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
 
 describe('Reactions without USE_EXTERNAL_EMOJIS', () => {
@@ -54,6 +56,28 @@ describe('Reactions without USE_EXTERNAL_EMOJIS', () => {
 				image: getPngDataUrl(),
 			});
 			await react(externalEmoji).expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS).execute();
+		} finally {
+			await restore();
+		}
+	});
+
+	it('refuses emojis from an 18+ community outside it', async () => {
+		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const [reactor] = members;
+		const message = await sendChannelMessage(harness, owner.token, systemChannel.id, 'react to me');
+		const restore = await setLimitOverride(harness, {feature_global_expressions: 1});
+		try {
+			const matureGuild = await createTestGuild(harness, reactor.token);
+			const matureEmoji = await createEmoji(harness, reactor.token, matureGuild.id, {
+				name: 'mature',
+				image: getPngDataUrl(),
+			});
+			await updateGuild(harness, reactor.token, matureGuild.id, {nsfw_level: GuildNSFWLevel.AGE_RESTRICTED});
+			await createBuilder(harness, reactor.token)
+				.put(`/channels/${systemChannel.id}/messages/${message.id}/reactions/${matureEmoji.name}:${matureEmoji.id}/@me`)
+				.body(null)
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.execute();
 		} finally {
 			await restore();
 		}

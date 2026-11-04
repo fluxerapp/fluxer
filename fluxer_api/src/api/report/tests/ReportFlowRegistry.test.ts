@@ -57,8 +57,9 @@ const LEDGER_PATH = path.join(THIS_DIR, '../flows/ReportFlowIds.snapshot.json');
 const VARIANTS: ReadonlyArray<[ReportFlowTargetType, ReportFlowSurface, 'choice' | 'checklist' | 'info']> = [
 	['message', 'in_app', 'choice'],
 	['message', 'dsa', 'choice'],
-	['user', 'in_app', 'info'],
+	['user', 'in_app', 'choice'],
 	['user', 'dsa', 'checklist'],
+	['guild', 'in_app', 'checklist'],
 	['guild', 'dsa', 'checklist'],
 ];
 
@@ -93,9 +94,6 @@ function buildReportFlowLedger(library: ReportFlowLibrary): Record<string, strin
 	);
 	for (const {target, surface} of variants) {
 		const variant = buildReportFlowVariant(library, target, surface, HOSTED);
-		if (!variant) {
-			continue;
-		}
 		for (const screen of variant.screens.values()) {
 			const prefix = `${target}/${screen.def.id}`;
 			for (const option of screen.options) {
@@ -171,11 +169,7 @@ function variantOf(
 	library: ReportFlowLibrary = REPORT_FLOW_LIBRARY,
 	instance: ReportFlowInstance = HOSTED,
 ): ReportFlowVariant {
-	const variant = buildReportFlowVariant(library, target, surface, instance);
-	if (!variant) {
-		throw new Error(`no variant ${target}/${surface}`);
-	}
-	return variant;
+	return buildReportFlowVariant(library, target, surface, instance);
 }
 
 function variantReasons(variant: ReportFlowVariant): Set<string> {
@@ -264,7 +258,6 @@ describe('report flow definitions', () => {
 				expect(variant.screens.get(variant.startScreenId)?.kind).toBe(expectedStartKind);
 			}
 		}
-		expect(buildReportFlowVariant(REPORT_FLOW_LIBRARY, 'guild', 'in_app', HOSTED)).toBeNull();
 	});
 
 	test('DSA variants omit in-app options and no-report outcomes', () => {
@@ -525,7 +518,7 @@ describe('report flow walks', () => {
 			name: 'P1 to P3 harassment',
 			target: 'user',
 			steps: [
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['photo', 'profile_text']},
 				{screen_id: 'root_user', option_id: 'abuse'},
 				{screen_id: 'profile_abuse', option_id: 'harassment'},
@@ -537,7 +530,7 @@ describe('report flow walks', () => {
 			name: 'P4 self-harm worry',
 			target: 'user',
 			steps: [
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['profile_text']},
 				{screen_id: 'root_user', option_id: 'something_else'},
 				{screen_id: 'something_else_user', option_id: 'self_harm'},
@@ -551,7 +544,7 @@ describe('report flow walks', () => {
 			name: 'P5 private information',
 			target: 'user',
 			steps: [
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['profile_text']},
 				{screen_id: 'root_user', option_id: 'something_else'},
 				{screen_id: 'something_else_user', option_id: 'private_info'},
@@ -657,7 +650,7 @@ describe('report flow walks', () => {
 			'user',
 			'in_app',
 			[
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['profile_text']},
 				{screen_id: 'root_user', option_id: 'something_else'},
 				{screen_id: 'something_else_user', option_id: 'too_young'},
@@ -679,7 +672,7 @@ describe('report flow walks', () => {
 			'user',
 			'in_app',
 			[
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['photo']},
 				{screen_id: 'root_user', option_id: 'something_else'},
 				{screen_id: 'something_else_user', option_id: 'self_harm'},
@@ -709,7 +702,7 @@ describe('report flow walks', () => {
 			],
 			1,
 		);
-		expectInvalidStep('user', 'dsa', [{screen_id: 'profile_intro'}], 0);
+		expectInvalidStep('user', 'dsa', [{screen_id: 'user_start', option_id: 'profile'}], 0);
 	});
 
 	test('broken walks report the first bad step', () => {
@@ -750,7 +743,7 @@ describe('report flow walks', () => {
 			'user',
 			'in_app',
 			[
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['photo']},
 				{screen_id: 'root_user', option_id: 'something_else'},
 				{screen_id: 'something_else_user', option_id: 'self_harm'},
@@ -762,7 +755,7 @@ describe('report flow walks', () => {
 			'user',
 			'in_app',
 			[
-				{screen_id: 'profile_intro', option_id: 'learn_more'},
+				{screen_id: 'user_start', option_id: 'learn_more'},
 				{screen_id: 'profile_parts', item_ids: ['photo']},
 			],
 			0,
@@ -801,12 +794,6 @@ describe('report flow walks', () => {
 		);
 		expect(outdated.code).toBe(APIErrorCodes.REPORT_FLOW_OUTDATED);
 		expect(outdated.status).toBe(HttpStatus.CONFLICT);
-	});
-
-	test('a flow without a variant for the surface is a validation error on surface', () => {
-		const error = captureError(() => getReportFlowResponse('guild', 'in_app', 'en-US'));
-		expect(error.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
-		expect(JSON.stringify(error.data)).toContain('"path":"surface"');
 	});
 });
 
@@ -897,7 +884,7 @@ describe('report flow rendering', () => {
 			expect(response.notices.map((notice) => notice.id)).toEqual(EXPECTED_NOTICES[target]);
 			expect(response.locale).toBe('en-US');
 		}
-		expect(getReportFlowResponse('user', 'in_app', 'en-US').start_screen_id).toBe('profile_intro');
+		expect(getReportFlowResponse('user', 'in_app', 'en-US').start_screen_id).toBe('user_start');
 		expect(getReportFlowResponse('user', 'dsa', 'en-US').start_screen_id).toBe('profile_parts');
 		expect(getReportFlowResponse('guild', 'dsa', 'en-US').start_screen_id).toBe('community_parts');
 	});
@@ -916,10 +903,8 @@ describe('report flow rendering', () => {
 		const user = getReportFlowResponse('user', 'in_app', 'en-US');
 		expect(user.guidelines_url).toBeNull();
 		expect(user.revision_hash).not.toBe(hostedUser.revision_hash);
-		const intro = user.screens[0];
-		expect(intro.options).toEqual([]);
-		expect(intro.options_heading).toBeNull();
-		expect(intro.next_screen_id).toBe('profile_parts');
+		const start = user.screens[0];
+		expect(start.options.map((option) => option.id)).toEqual(['profile', 'call']);
 		const userScreens = new Map(user.screens.map((screen) => [screen.id, screen]));
 		expect(userScreens.get('something_else_user')?.options.map((option) => option.id)).not.toContain('copyright');
 		const message = getReportFlowResponse('message', 'in_app', 'en-US');
@@ -939,7 +924,7 @@ describe('report flow rendering', () => {
 			surface: 'in_app',
 			revisionHash: user.revision_hash,
 			steps: [
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['photo']},
 				{screen_id: 'root_user', option_id: 'spam'},
 				{screen_id: 'spam_profile', option_id: 'spam_profile'},
@@ -959,10 +944,9 @@ describe('report flow rendering', () => {
 		expect(user.guidelines_url).toBe('https://rules.example.org/community');
 		expect(user.revision_hash).not.toBe(unconfigured.revision_hash);
 		expect(user.revision_hash).not.toBe(hostedUser.revision_hash);
-		const intro = user.screens[0];
-		expect(intro.options_heading).toBe('Learn more');
-		expect(intro.options.map((option) => option.id)).toEqual(['learn_more']);
-		expect(intro.options[0].outcome.url).toBe('https://rules.example.org/community');
+		const start = user.screens[0];
+		expect(start.options.map((option) => option.id)).toEqual(['profile', 'call', 'learn_more']);
+		expect(start.options[2].outcome.url).toBe('https://rules.example.org/community');
 		const userScreens = new Map(user.screens.map((screen) => [screen.id, screen]));
 		expect(userScreens.get('root_user')?.options.map((option) => option.id)).not.toContain('dsa');
 		resolveReportFlowAnswers({
@@ -970,7 +954,7 @@ describe('report flow rendering', () => {
 			surface: 'in_app',
 			revisionHash: user.revision_hash,
 			steps: [
-				{screen_id: 'profile_intro'},
+				{screen_id: 'user_start', option_id: 'profile'},
 				{screen_id: 'profile_parts', item_ids: ['photo']},
 				{screen_id: 'root_user', option_id: 'spam'},
 				{screen_id: 'spam_profile', option_id: 'spam_profile'},
@@ -979,7 +963,7 @@ describe('report flow rendering', () => {
 		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/v2'});
 		const moved = getReportFlowResponse('user', 'in_app', 'en-US');
 		expect(moved.guidelines_url).toBe('https://rules.example.org/v2');
-		expect(moved.screens[0].options[0].outcome.url).toBe('https://rules.example.org/v2');
+		expect(moved.screens[0].options[2].outcome.url).toBe('https://rules.example.org/v2');
 		expect(moved.revision_hash).toBe(user.revision_hash);
 		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
 		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(unconfigured);

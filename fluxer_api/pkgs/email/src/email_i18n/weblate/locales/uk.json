@@ -6,6 +6,13 @@
 		"signoff": "Команда {product_name}",
 		"subject": "Твій акаунт {product_name} не буде видалено"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Ти отримав цей лист, оскільки попросив видалити свій акаунт {product_name}.",
+		"intro": "Ми видалили твій акаунт {product_name}, як ти й просив.",
+		"note": "Залежно від твого вибору, твої повідомлення видалено або вони більше не пов’язані з тобою. Якщо захочеш знову користуватися {product_name}, можеш створити новий акаунт.",
+		"signoff": "Команда {product_name}",
+		"subject": "Твій акаунт {product_name} видалено"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Ти отримав цей лист, оскільки твій акаунт {product_name} тривалий час був неактивним.",
 		"intro": "Твій акаунт {product_name} тривалий час неактивний, тому ми видалимо його {deletion_date}.",

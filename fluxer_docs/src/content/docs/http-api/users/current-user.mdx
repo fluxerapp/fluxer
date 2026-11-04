@@ -325,21 +325,26 @@ Schedules deletion of the account and deletes every session. Needs [sudo verific
 
 ### JSON body
 
-The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), which can be empty when you send a sudo token.
+The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), which can be empty when you send a sudo token, and these fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| immediate? | boolean | Delete the account now instead of after the grace period |
+| delete_messages? | boolean | Delete every message the account sent along with the account. Otherwise the messages stay, with the author removed |
 
 :::caution[Signing in cancels the deletion]
-The deletion happens 14 days later by default. Signing in before then cancels it, and once erasure starts it can't be cancelled.
+The deletion happens 14 days later by default, or within about a minute with `immediate`. Signing in before then cancels it, together with the message deletion, and once erasure starts it can't be cancelled.
 :::
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The deletion was scheduled |
+| 200 | object with `pending_deletion_at`, an ISO 8601 timestamp | The deletion was scheduled for that time |
 | 400 | [error response](/http-api/#error-response) | The account owns a guild, `USER_OWNS_GUILDS` |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when erasure has started |
 
-Fluxer emails the account when it has an address.
+Fluxer emails the account when it has an address, once when the deletion is scheduled for later and once when the deletion is done.
 
 The rate limit is 5 requests per hour, on the `user:account:delete` bucket.
 

@@ -392,6 +392,7 @@ export interface APIConfig {
 	storeBilling: {
 		sandboxUserIds: Array<string>;
 		sandboxEntitlesAll: boolean;
+		sandboxSubscriptions: boolean;
 	};
 	worker: {
 		mode: APIWorkerMode;

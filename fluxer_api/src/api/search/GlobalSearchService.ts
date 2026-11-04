@@ -18,7 +18,7 @@ import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/Cha
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification, getCanUserAccessNsfw} from '@app/api/search/SearchNsfwUtils';
+import {channelRequiresAgeVerification, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -84,6 +84,7 @@ export class GlobalSearchService {
 		userId: UserID;
 		viewer: ThreadViewer;
 		dmScope: DmSearchScope;
+		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 		includeChannelId?: ChannelID | null;
@@ -113,7 +114,7 @@ export class GlobalSearchService {
 		const includeNsfwRequested = params.searchParams.include_nsfw ?? false;
 		let canIncludeNsfw = false;
 		if (includeNsfwRequested) {
-			canIncludeNsfw = await getCanUserAccessNsfw(this.userRepository, params.userId);
+			canIncludeNsfw = (await getSearchNsfwAccess(this.userRepository, params.userId, params.iosApp)).allowed;
 		}
 		const finalChannelIds = validatedChannelIds.filter((channelIdStr) => {
 			const channel = accessibleChannels.get(channelIdStr) ?? threadParents.get(channelIdStr);

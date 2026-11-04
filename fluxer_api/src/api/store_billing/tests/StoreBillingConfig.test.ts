@@ -60,17 +60,32 @@ describe('store billing config', () => {
 		expect(isAppStoreConfigured()).toBe(false);
 	});
 
-	it('entitles sandbox purchases only for allowed users unless every user is allowed', () => {
+	it('entitles sandbox gifts only for allowed users unless every user is allowed', () => {
 		const allowed = createUserID(4242n);
 		const other = createUserID(4343n);
-		expect(isSandboxEntitlementAllowed(allowed)).toBe(false);
+		const now = Date.now();
+		Config.storeBilling.sandboxSubscriptions = true;
+		expect(isSandboxEntitlementAllowed(allowed, 'gift', new Date(now), now)).toBe(false);
 
 		Config.storeBilling.sandboxUserIds = ['4242'];
-		expect(isSandboxEntitlementAllowed(allowed)).toBe(true);
-		expect(isSandboxEntitlementAllowed(other)).toBe(false);
+		expect(isSandboxEntitlementAllowed(allowed, 'gift', new Date(now), now)).toBe(true);
+		expect(isSandboxEntitlementAllowed(other, 'gift', new Date(now), now)).toBe(false);
 
 		Config.storeBilling.sandboxEntitlesAll = true;
-		expect(isSandboxEntitlementAllowed(other)).toBe(true);
+		expect(isSandboxEntitlementAllowed(other, 'gift', new Date(now), now)).toBe(true);
+	});
+
+	it('entitles sandbox subscriptions for every account for seven days after each purchase', () => {
+		const user = createUserID(4242n);
+		const now = Date.now();
+		const day = 24 * 60 * 60 * 1000;
+		Config.storeBilling.sandboxSubscriptions = true;
+		expect(isSandboxEntitlementAllowed(user, 'subscription', new Date(now - 7 * day), now)).toBe(true);
+		expect(isSandboxEntitlementAllowed(user, 'subscription', new Date(now - 7 * day - 1), now)).toBe(false);
+		expect(isSandboxEntitlementAllowed(user, 'subscription', null, now)).toBe(false);
+
+		Config.storeBilling.sandboxSubscriptions = false;
+		expect(isSandboxEntitlementAllowed(user, 'subscription', new Date(now), now)).toBe(false);
 	});
 });
 

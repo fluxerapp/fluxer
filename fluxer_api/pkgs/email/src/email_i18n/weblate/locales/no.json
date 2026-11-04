@@ -6,6 +6,13 @@
 		"signoff": "{product_name}-teamet",
 		"subject": "{product_name}-kontoen din blir ikke slettet"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Du mottok denne e-posten fordi du ba om å slette {product_name}-kontoen din.",
+		"intro": "Vi har slettet {product_name}-kontoen din, slik du ba om.",
+		"note": "Meldingene dine er slettet eller ikke lenger knyttet til deg, avhengig av hva du valgte. Hvis du vil bruke {product_name} igjen, kan du opprette en ny konto.",
+		"signoff": "{product_name}-teamet",
+		"subject": "{product_name}-kontoen din er slettet"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Du mottok denne e-posten fordi {product_name}-kontoen din har vært inaktiv lenge.",
 		"intro": "{product_name}-kontoen din har vært inaktiv lenge, så vi sletter den {deletion_date}.",

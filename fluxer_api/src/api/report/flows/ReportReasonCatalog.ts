@@ -390,6 +390,13 @@ export const REPORT_REASONS = {
 		user: 'other',
 		guild: 'other',
 	},
+	rude_language: {
+		label: 'Swearing or rude remarks',
+		highestPriority: false,
+		message: 'other',
+		user: 'other',
+		guild: 'other',
+	},
 	other: {label: 'Something not listed', highestPriority: false, message: 'other', user: 'other', guild: 'other'},
 } as const satisfies Record<string, ReportReasonDef>;
 
@@ -426,4 +433,9 @@ export function findReportReason(key: string): ReportReason | null {
 
 export function listReportReasons(): Array<ReportReason> {
 	return (Object.keys(REPORT_REASONS) as Array<ReportReasonKey>).map(toReportReason);
+}
+
+export function reasonSkipsReporterCaps(reason: ReportReasonKey): boolean {
+	const def: ReportReasonDef = REPORT_REASONS[reason];
+	return def.highestPriority || def.guild === 'self_harm';
 }

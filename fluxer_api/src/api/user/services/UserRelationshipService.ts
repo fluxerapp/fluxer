@@ -571,9 +571,6 @@ export class UserRelationshipService {
 		if (targetUser.isBot && !targetIsFriendlyBot) {
 			throw new FriendRequestBlockedError();
 		}
-		if (targetUser.flags & UserFlags.APP_STORE_REVIEWER) {
-			throw new FriendRequestBlockedError();
-		}
 		const requesterBlockedTarget = await this.userRepository.getRelationship(
 			userId,
 			targetId,

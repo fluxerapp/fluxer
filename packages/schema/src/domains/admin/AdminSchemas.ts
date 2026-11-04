@@ -1743,6 +1743,7 @@ const ReportProfileSnapshotUserSchema = z.object({
 	global_name: z.string().nullable(),
 	bio: z.string().nullable(),
 	pronouns: z.string().nullable(),
+	custom_status: z.string().nullable(),
 	avatar: ReportProfileSnapshotAssetSchema.nullable(),
 	banner: ReportProfileSnapshotAssetSchema.nullable(),
 });

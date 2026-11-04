@@ -27,6 +27,7 @@ export interface CreateFavoriteMemeParams {
 	gif_provider?: string | null;
 	media_formats?: Record<string, GifMediaFormat> | null;
 	placeholder?: string | null;
+	nsfw?: boolean | null;
 }
 
 const FETCH_FAVORITE_MEME_CQL = FavoriteMemes.selectCql({
@@ -81,6 +82,7 @@ export class FavoriteMemeRepository {
 			tenor_id_str: data.gif_provider === 'tenor' ? (data.gif_slug ?? null) : null,
 			media_formats: data.media_formats ? JSON.stringify(data.media_formats) : null,
 			placeholder: data.placeholder ?? null,
+			nsfw: data.nsfw ?? null,
 			version: 1,
 		};
 		const batch = new BatchBuilder();
@@ -115,6 +117,7 @@ export class FavoriteMemeRepository {
 			tenor_id_str: data.gif_provider === 'tenor' ? (data.gif_slug ?? null) : null,
 			media_formats: data.media_formats ? JSON.stringify(data.media_formats) : null,
 			placeholder: data.placeholder ?? null,
+			nsfw: data.nsfw ?? null,
 			version: 1,
 		};
 		await upsertOne(FavoriteMemes.upsertAll(memeRow));
@@ -123,6 +126,10 @@ export class FavoriteMemeRepository {
 
 	async updatePlaceholder(userId: UserID, memeId: MemeID, placeholder: string): Promise<void> {
 		await fetchOne(FavoriteMemes.patchByPk({user_id: userId, meme_id: memeId}, {placeholder: Db.set(placeholder)}));
+	}
+
+	async updateNsfw(userId: UserID, memeId: MemeID, nsfw: boolean): Promise<void> {
+		await fetchOne(FavoriteMemes.patchByPk({user_id: userId, meme_id: memeId}, {nsfw: Db.set(nsfw)}));
 	}
 
 	async delete(userId: UserID, memeId: MemeID): Promise<void> {

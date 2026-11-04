@@ -44,10 +44,11 @@ export class SearchService {
 	async searchMessages(params: {
 		userId: UserID;
 		viewer: ThreadViewer;
+		iosApp: boolean;
 		requestCache: RequestCache;
 		data: GlobalSearchMessagesRequest;
 	}): Promise<MessageSearchResponse> {
-		const {userId, viewer, requestCache, data} = params;
+		const {userId, viewer, iosApp, requestCache, data} = params;
 		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...rawSearchParams} = data;
 		const searchParams = normalizeQuotedPhrases(rawSearchParams);
 		const contextChannelId = context_channel_id ? createChannelID(context_channel_id) : null;
@@ -61,6 +62,7 @@ export class SearchService {
 					userId,
 					viewer,
 					channelIds,
+					iosApp,
 					searchParams,
 					requestCache,
 				});
@@ -82,6 +84,7 @@ export class SearchService {
 					userId,
 					viewer,
 					dmScope: 'all_dms',
+					iosApp,
 					searchParams,
 					requestCache,
 					includeChannelId: contextChannelId,
@@ -93,6 +96,7 @@ export class SearchService {
 					userId,
 					viewer,
 					dmScope: 'open_dms',
+					iosApp,
 					searchParams,
 					requestCache,
 					includeChannelId: contextChannelId,
@@ -106,6 +110,7 @@ export class SearchService {
 						viewer,
 						guildId: contextGuildId,
 						channelIds,
+						iosApp,
 						searchParams,
 						requestCache,
 					});

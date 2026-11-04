@@ -24,6 +24,7 @@ import {markChannelAsIndexed, markGuildChannelsAsIndexed} from '@app/api/message
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
@@ -299,6 +300,29 @@ describe('Message Search Permissions', () => {
 			}
 			expect(included.messages.length).toBeGreaterThan(0);
 			expect(included.messages.some((m) => m.channel_id === systemChannelId)).toBe(true);
+		});
+		test('the iOS app gets 18+ results only after the iOS opt-in', async () => {
+			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			const guild = await createGuild(harness, owner.token, 'iOS Opt-in Search Guild');
+			const nsfwChannel = await createChannel(harness, owner.token, guild.id, 'nsfw-channel', ChannelTypes.GUILD_TEXT);
+			await updateChannel(harness, owner.token, nsfwChannel.id, {nsfw: true});
+			await sendChannelMessage(harness, owner.token, nsfwChannel.id, 'ios optin nsfw message');
+			await markGuildChannelsAsIndexed(harness, owner.token, guild.id);
+			const searchFromIos = async () => {
+				const result = await createBuilder<MessageSearchResponse>(harness, owner.token)
+					.post('/search/messages')
+					.header('User-Agent', 'Fluxer iOS/1.0.0 (stable)')
+					.body({content: 'ios optin nsfw', scope: 'all_guilds', include_nsfw: true})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				if (!isSearchResult(result)) {
+					expect.fail('Expected search result but got indexing response');
+				}
+				return result.messages.filter((m) => m.channel_id === nsfwChannel.id);
+			};
+			expect(await searchFromIos()).toHaveLength(0);
+			await updateUserSettings(harness, owner.token, {allow_mature_content_on_ios: true});
+			expect((await searchFromIos()).length).toBeGreaterThan(0);
 		});
 		test('age-restricted guild is searchable in a channel pinned to nsfw_override: false', async () => {
 			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});

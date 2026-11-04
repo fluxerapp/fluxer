@@ -9,6 +9,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {
+	ReportFlowGuildSubmissionRequest,
 	ReportFlowMessageSubmissionRequest,
 	ReportFlowPathParams,
 	ReportFlowQuery,
@@ -36,7 +37,7 @@ export function ReportController(app: HonoApp) {
 			operationId: 'get_report_flow',
 			summary: 'Get report flow',
 			description:
-				'Returns every screen of the report flow for a target type, rendered in the requested locale. Message and user flows are available in app and on the DSA form, the guild flow only on the DSA form.',
+				'Returns every screen of the report flow for a target type, rendered in the requested locale. Message, user and community flows are available in the app and on the DSA form.',
 			responseSchema: ReportFlowResponse,
 			statusCode: 200,
 			security: [],
@@ -103,6 +104,33 @@ export function ReportController(app: HonoApp) {
 		async (ctx) => {
 			return ctx.json(
 				await ctx.get('reportRequestService').submitUserReportFlow({
+					user: ctx.get('user'),
+					request: ctx.req.raw,
+					data: ctx.req.valid('json'),
+					locale: ctx.get('requestLocale') ?? null,
+				}),
+			);
+		},
+	);
+	app.post(
+		'/reports/flows/guild/submissions',
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'submit_guild_report_flow',
+			summary: 'Submit community report flow',
+			description:
+				'Files a report about a community from the answers given in the in-app community report flow. The reporter must be a member, the community must be discoverable, or the request must include an invite code.',
+			responseSchema: ReportResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Reports',
+		}),
+		Validator('json', ReportFlowGuildSubmissionRequest),
+		async (ctx) => {
+			return ctx.json(
+				await ctx.get('reportRequestService').submitGuildReportFlow({
 					user: ctx.get('user'),
 					request: ctx.req.raw,
 					data: ctx.req.valid('json'),

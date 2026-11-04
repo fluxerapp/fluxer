@@ -592,7 +592,7 @@ export class StoreEntitlementService {
 	}
 
 	private async finishClaim(userId: UserID, row: StorePurchaseRow): Promise<StorePurchaseClaimResult> {
-		if (row.environment === 'sandbox' && !isSandboxEntitlementAllowed(userId)) {
+		if (row.environment === 'sandbox' && !isSandboxEntitlementAllowed(userId, row.kind, row.purchased_at)) {
 			throw new StorePurchaseSandboxNotEntitledError();
 		}
 		if (row.revocation_reason === UNSUPPORTED_QUANTITY_REASON) {
@@ -952,7 +952,9 @@ export class StoreEntitlementService {
 		if (!snapshot.providerEntitled || ownerId === null) {
 			return false;
 		}
-		return snapshot.environment === 'production' || isSandboxEntitlementAllowed(ownerId);
+		return (
+			snapshot.environment === 'production' || isSandboxEntitlementAllowed(ownerId, snapshot.kind, snapshot.purchasedAt)
+		);
 	}
 
 	private isStoredRowEntitled(row: StorePurchaseRow, ownerId: UserID | null): boolean {
@@ -963,7 +965,9 @@ export class StoreEntitlementService {
 			row.kind === 'gift'
 				? row.state === 'purchased' || row.state === 'fulfilled'
 				: PAID_SUBSCRIPTION_STATES.has(row.state);
-		return paid && (row.environment === 'production' || isSandboxEntitlementAllowed(ownerId));
+		return (
+			paid && (row.environment === 'production' || isSandboxEntitlementAllowed(ownerId, row.kind, row.purchased_at))
+		);
 	}
 
 	private async resolveOwner(
@@ -973,6 +977,13 @@ export class StoreEntitlementService {
 	): Promise<UserID | null> {
 		const claimerId = context.claimerId;
 		if (existing?.user_id != null) {
+			if (
+				claimerId !== null &&
+				existing.environment === 'sandbox' &&
+				isSandboxEntitlementAllowed(claimerId, snapshot.kind, snapshot.purchasedAt)
+			) {
+				return claimerId;
+			}
 			const signedToken =
 				snapshot.provider === 'app_store' ? (snapshot.accountToken ?? context.hintAccountToken) : null;
 			if (signedToken && signedToken !== existing.account_token && !existing.entitled) {
@@ -983,13 +994,6 @@ export class StoreEntitlementService {
 			}
 			if (claimerId === null || existing.user_id === claimerId) {
 				return existing.user_id;
-			}
-			if (
-				existing.environment === 'sandbox' &&
-				!isSandboxEntitlementAllowed(existing.user_id) &&
-				isSandboxEntitlementAllowed(claimerId)
-			) {
-				return claimerId;
 			}
 			if (await this.isLiveUser(existing.user_id)) {
 				throw new StorePurchaseOwnedByOtherAccountError();

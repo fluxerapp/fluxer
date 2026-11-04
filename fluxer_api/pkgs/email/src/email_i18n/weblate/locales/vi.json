@@ -6,6 +6,13 @@
 		"signoff": "Đội ngũ {product_name}",
 		"subject": "Tài khoản {product_name} của bạn sẽ không bị xóa"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Bạn nhận được email này vì bạn đã yêu cầu xóa tài khoản {product_name} của mình.",
+		"intro": "Chúng tôi đã xóa tài khoản {product_name} của bạn theo yêu cầu.",
+		"note": "Tùy theo lựa chọn của bạn, tin nhắn của bạn đã bị xóa hoặc không còn liên kết với bạn nữa. Nếu muốn dùng lại {product_name}, bạn có thể tạo tài khoản mới.",
+		"signoff": "Đội ngũ {product_name}",
+		"subject": "Tài khoản {product_name} của bạn đã bị xóa"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Bạn nhận được email này vì tài khoản {product_name} của bạn đã không hoạt động trong thời gian dài.",
 		"intro": "Tài khoản {product_name} của bạn đã lâu không hoạt động, nên chúng tôi sẽ xóa tài khoản vào {deletion_date}.",

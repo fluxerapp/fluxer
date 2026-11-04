@@ -12,7 +12,7 @@ import {
 	type PartialUserChangePropagationDeps,
 	propagateUserUpdate,
 } from '@app/api/user/services/PartialUserChangePropagation';
-import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {clearPendingDeletion, resetTiedBulkMessageDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 
 export interface SuspensionStateDeps {
@@ -36,6 +36,7 @@ async function cancelHolderDeletionAndSuspend(
 		deletion_reason_code: null,
 		deletion_public_reason: null,
 		deletion_audit_log_reason: null,
+		...resetTiedBulkMessageDeletion(user),
 		temp_banned_until: until,
 		enforcement_decision_id: decisionId,
 	});

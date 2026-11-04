@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import type {ChannelID} from '@app/api/BrandedTypes';
+import {blockUser, createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {IncomingCallFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface ErrorResponse {
@@ -12,6 +16,21 @@ interface ErrorResponse {
 	errors?: Array<{
 		code?: string;
 	}>;
+}
+
+class RingRecordingGateway extends NoopGatewayService {
+	readonly ringing: Array<Array<string>> = [];
+
+	override async createCall(
+		channelId: ChannelID,
+		messageId: string,
+		region: string,
+		ringing: Array<string>,
+		recipients: Array<string>,
+	) {
+		this.ringing.push(ringing);
+		return super.createCall(channelId, messageId, region, ringing, recipients);
+	}
 }
 
 describe('Voice Call Ringing', () => {
@@ -57,6 +76,27 @@ describe('Voice Call Ringing', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 			expect(error.errors?.[0]?.code).toBe('USER_NOT_IN_CHANNEL');
+		});
+		it('a group DM call does not ring a member who blocked the caller', async () => {
+			const gateway = new RingRecordingGateway();
+			setInjectedGatewayService(gateway);
+			try {
+				const {owner, memberOne, memberTwo, groupDm} = await setupGroupDmUsers();
+				await createBuilder(harness, memberOne.token)
+					.patch('/users/@me/settings')
+					.body({incoming_call_flags: IncomingCallFlags.EVERYONE})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				await blockUser(harness, memberOne, owner.userId);
+				await createBuilder(harness, owner.token)
+					.post(`/channels/${groupDm.id}/call/ring`)
+					.body({})
+					.expect(HTTP_STATUS.NO_CONTENT)
+					.execute();
+				expect(gateway.ringing).toEqual([[memberTwo.userId]]);
+			} finally {
+				setInjectedGatewayService(new NoopGatewayService());
+			}
 		});
 	});
 });

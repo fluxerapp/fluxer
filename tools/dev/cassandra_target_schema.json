@@ -4533,6 +4533,10 @@
 				{
 					"name": "placeholder",
 					"type": "text"
+				},
+				{
+					"name": "nsfw",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((user_id), meme_id)",
@@ -10080,6 +10084,10 @@
 				{
 					"name": "sensitive_content_guild_filter",
 					"type": "int"
+				},
+				{
+					"name": "allow_mature_content_on_ios",
+					"type": "boolean"
 				},
 				{
 					"name": "version",

@@ -172,6 +172,33 @@ describe('Discovery Search and Join', () => {
 			expect(new Set(paged).size).toBe(paged.length);
 			expect([...paged].sort()).toEqual([...guildIds].sort());
 		});
+		test('an approved guild disappears from search after it is marked 18+', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Soon Adult Guild');
+			await setGuildMemberCount(harness, guild.id, 10);
+			await applyAndApprove(
+				harness,
+				owner.token,
+				admin.token,
+				guild.id,
+				'Soon Adult Guild welcomes everyone',
+				DiscoveryCategories.GAMING,
+			);
+			const searcher = await createTestAccount(harness);
+			const before = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(before.guilds.some((g) => g.id === guild.id)).toBe(true);
+			await updateGuild(harness, owner.token, guild.id, {nsfw: true});
+			const after = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(after.guilds.some((g) => g.id === guild.id)).toBe(false);
+		});
 	});
 	describe('join', () => {
 		test('should block discovery join for an email ban on a different user and IP', async () => {

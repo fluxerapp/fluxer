@@ -16374,6 +16374,63 @@
 				}
 			}
 		},
+		"/reports/flows/guild/submissions": {
+			"post": {
+				"operationId": "submit_guild_report_flow",
+				"summary": "Submit community report flow",
+				"tags": ["Reports"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Files a report about a community from the answers given in the in-app community report flow. The reporter must be a member, the community must be discoverable, or the request must include an invite code.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportFlowGuildSubmissionRequest"}}}
+				}
+			}
+		},
 		"/reports/flows/message/submissions": {
 			"post": {
 				"operationId": "submit_message_report_flow",
@@ -16531,7 +16588,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns every screen of the report flow for a target type, rendered in the requested locale. Message and user flows are available in app and on the DSA form, the guild flow only on the DSA form.",
+				"description": "Returns every screen of the report flow for a target type, rendered in the requested locale. Message, user and community flows are available in the app and on the DSA form.",
 				"parameters": [
 					{
 						"name": "target_type",
@@ -18823,7 +18880,10 @@
 				"summary": "Delete current user account",
 				"tags": ["Users"],
 				"responses": {
-					"204": {"description": "No Content"},
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserAccountDeleteResponse"}}}
+					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
@@ -18863,11 +18923,11 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Permanently deletes the current user's account and all associated data. Requires sudo mode verification. This action is irreversible and will remove all user data, messages, and connections.",
+				"description": "Schedules the deletion of the current user's account and personal data after the instance's grace period, or right away when immediate is true. Signing in before the deletion runs cancels it. Messages the account sent are anonymized unless delete_messages is true, in which case they are deleted with the account. Requires sudo mode verification. The response has the time the deletion runs.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": false,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserAccountDeleteRequest"}}}
 				}
 			}
 		},
@@ -28812,6 +28872,10 @@
 						"description": "Sensitive media filter level for DMs from non-friends"
 					},
 					"sensitive_content_guild_filter": {"$ref": "#/components/schemas/SensitiveMediaGuildFilterLevelInput"},
+					"allow_mature_content_on_ios": {
+						"type": "boolean",
+						"description": "Whether 18+ communities, channels and the \"Show\" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting."
+					},
 					"suppress_unprivileged_self_mentions": {
 						"type": "boolean",
 						"description": "Suppress direct mentions and reply mentions from unprivileged users"
@@ -28977,6 +29041,10 @@
 						"description": "Sensitive media filter level for DMs from non-friends"
 					},
 					"sensitive_content_guild_filter": {"$ref": "#/components/schemas/SensitiveMediaGuildFilterLevel"},
+					"allow_mature_content_on_ios": {
+						"type": "boolean",
+						"description": "Whether 18+ communities, channels and the \"Show\" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting."
+					},
 					"suppress_unprivileged_self_mentions": {
 						"type": "boolean",
 						"description": "Whether direct mentions and reply mentions from unprivileged users are suppressed"
@@ -29051,6 +29119,7 @@
 					"sensitive_content_friend_dm_filter",
 					"sensitive_content_non_friend_dm_filter",
 					"sensitive_content_guild_filter",
+					"allow_mature_content_on_ios",
 					"suppress_unprivileged_self_mentions",
 					"suppress_unprivileged_self_mentions_bypass_user_ids",
 					"staff_dm_access_user_ids",
@@ -30169,6 +30238,11 @@
 					"placeholder": {
 						"description": "Compact thumbhash placeholder produced by the media proxy at favorite-time. Clients render it as a low-res preview while the full media loads. Null when the proxy did not emit one.",
 						"type": ["string", "null"]
+					},
+					"nsfw": {
+						"default": false,
+						"description": "Whether the media is flagged as explicit. Clients apply the same sensitive media rules as for chat media.",
+						"type": "boolean"
 					}
 				},
 				"required": [
@@ -30181,7 +30255,8 @@
 					"content_type",
 					"size",
 					"url",
-					"is_gifv"
+					"is_gifv",
+					"nsfw"
 				],
 				"additionalProperties": false
 			},
@@ -31176,6 +31251,50 @@
 					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
 				},
 				"required": ["email_token"]
+			},
+			"UserAccountDeleteRequest": {
+				"type": "object",
+				"properties": {
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn", "Email code"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication",
+							"A 6-digit code sent to the account email address"
+						],
+						"enum": ["totp", "webauthn", "email_code"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"email_code_ticket": {
+						"description": "Ticket from POST /users/@me/sudo/email-code, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"email_code": {
+						"description": "The 6-digit code from the email, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"},
+					"immediate": {"description": "Delete the account now instead of after the grace period", "type": "boolean"},
+					"delete_messages": {"description": "Also delete every message the account sent", "type": "boolean"}
+				}
+			},
+			"UserAccountDeleteResponse": {
+				"type": "object",
+				"properties": {
+					"pending_deletion_at": {"type": "string", "description": "ISO8601 timestamp of when the account is deleted"}
+				},
+				"required": ["pending_deletion_at"],
+				"additionalProperties": false
 			},
 			"DateOfBirthUpdateRequest": {
 				"type": "object",
@@ -32515,6 +32634,22 @@
 					"message_id": {"$ref": "#/components/schemas/SnowflakeType"}
 				},
 				"required": ["revision_hash", "steps", "channel_id", "message_id"]
+			},
+			"ReportFlowGuildSubmissionRequest": {
+				"type": "object",
+				"properties": {
+					"revision_hash": {"type": "string"},
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"}
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"guild_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"invite_code": {"description": "Invite code used to access the guild", "type": "string"}
+				},
+				"required": ["revision_hash", "steps", "guild_id"]
 			},
 			"DsaReportEmailVerifyRequest": {
 				"type": "object",

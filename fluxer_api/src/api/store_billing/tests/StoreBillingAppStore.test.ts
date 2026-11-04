@@ -64,6 +64,7 @@ interface SubscriptionSeed {
 	gracePeriodExpiresDate?: number;
 	recentSubscriptionStartDate?: number;
 	productId?: string;
+	purchaseDate?: number;
 }
 
 let transactionCounter = 0;
@@ -121,7 +122,7 @@ describe('App Store purchases', () => {
 			transactionId: originalTransactionId,
 			originalTransactionId,
 			productId: seed.productId ?? MONTHLY,
-			purchaseDate: now - ms('1 day'),
+			purchaseDate: seed.purchaseDate ?? now - ms('1 day'),
 			expiresDate: seed.expiresDate,
 			...(seed.appAccountToken ? {appAccountToken: seed.appAccountToken} : {}),
 		});
@@ -490,7 +491,29 @@ describe('App Store purchases', () => {
 		expect(purchaser.isPremium()).toBe(false);
 	});
 
-	it('records a sandbox purchase without entitlement unless the account is allowed', async () => {
+	it('entitles any account to a sandbox subscription bought in the last week', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
+		const result = await claim(tester, await signStoredTransaction('sandbox', originalTransactionId));
+		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
+		expect((await findUser(tester.userId)).isPremium()).toBe(true);
+	});
+
+	it('refuses a sandbox gift for an unlisted account and mints no code', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const giftTransactionId = seedGift('sandbox');
+		await claim(
+			tester,
+			await signStoredTransaction('sandbox', giftTransactionId),
+			403,
+			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		);
+		expect(await getUserRepository().findGiftCodesByCreator((await findUser(tester.userId)).id)).toHaveLength(0);
+	});
+
+	it('refuses a sandbox subscription when sandbox subscriptions are off', async () => {
 		const tester = await createTestAccount(harness);
 		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
 		await claim(
@@ -505,26 +528,28 @@ describe('App Store purchases', () => {
 		expect(purchases).toHaveLength(1);
 		expect(purchases[0]).toMatchObject({environment: 'sandbox', entitled: false, state: 'active'});
 		expect((await findUser(tester.userId)).isPremium()).toBe(false);
-		const giftTransactionId = seedGift('sandbox');
+	});
+
+	it('refuses a sandbox subscription bought more than a week ago', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({
+			environment: 'sandbox',
+			purchaseDate: Date.now() - ms('8 days'),
+			expiresDate: Date.now() + ms('1 day'),
+		});
 		await claim(
 			tester,
-			await signStoredTransaction('sandbox', giftTransactionId),
+			await signStoredTransaction('sandbox', originalTransactionId),
 			403,
 			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
 		);
-		expect(await getUserRepository().findGiftCodesByCreator((await findUser(tester.userId)).id)).toHaveLength(0);
-
-		const allowed = await createTestAccount(harness);
-		Config.storeBilling.sandboxUserIds = [allowed.userId];
-		const allowedTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
-		const result = await claim(allowed, await signStoredTransaction('sandbox', allowedTransactionId));
-		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
-		expect((await findUser(allowed.userId)).isPremium()).toBe(true);
+		expect((await findUser(tester.userId)).isPremium()).toBe(false);
 	});
 
-	it('moves a sandbox purchase to an allowed account that restores it after another account bought it', async () => {
+	it('moves a sandbox purchase to the account that claims it after another account bought it', async () => {
 		const tester = await createTestAccount(harness);
-		const allowed = await createTestAccount(harness);
+		const claimer = await createTestAccount(harness);
 		const originalTransactionId = seedSubscription({
 			environment: 'sandbox',
 			expiresDate: Date.now() + ms('1 day'),
@@ -532,13 +557,32 @@ describe('App Store purchases', () => {
 		});
 		const jws = await signStoredTransaction('sandbox', originalTransactionId);
 		await claim(tester, jws, 403, APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED);
-		Config.storeBilling.sandboxUserIds = [allowed.userId];
-		const result = await claim(allowed, jws);
+		Config.storeBilling.sandboxSubscriptions = true;
+		const result = await claim(claimer, jws);
 		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
-		expect((await findUser(allowed.userId)).isPremium()).toBe(true);
-		expect(fake.getTransaction('sandbox', originalTransactionId)?.appAccountToken).toBe(await accountToken(allowed));
+		expect((await findUser(claimer.userId)).isPremium()).toBe(true);
+		expect(fake.getTransaction('sandbox', originalTransactionId)?.appAccountToken).toBe(await accountToken(claimer));
 		expect(await service.listStorePurchases((await findUser(tester.userId)).id)).toHaveLength(0);
 		expect((await findUser(tester.userId)).isPremium()).toBe(false);
+	});
+
+	it('moves a sandbox purchase even when it is signed with another live account token', async () => {
+		const tester = await createTestAccount(harness);
+		const tokenHolder = await createTestAccount(harness);
+		const claimer = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
+		await claim(
+			tester,
+			await signStoredTransaction('sandbox', originalTransactionId),
+			403,
+			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		);
+		fake.updateTransaction('sandbox', originalTransactionId, {appAccountToken: await accountToken(tokenHolder)});
+		Config.storeBilling.sandboxSubscriptions = true;
+		const result = await claim(claimer, await signStoredTransaction('sandbox', originalTransactionId));
+		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
+		expect((await findUser(claimer.userId)).isPremium()).toBe(true);
+		expect(await service.listStorePurchases((await findUser(tester.userId)).id)).toHaveLength(0);
 	});
 
 	it('blocks a lifetime account from a subscription without granting anything', async () => {

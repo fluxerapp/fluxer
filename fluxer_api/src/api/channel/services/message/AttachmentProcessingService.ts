@@ -397,6 +397,43 @@ export class AttachmentProcessingService {
 		return null;
 	}
 
+	async screenStoredAttachment(params: {
+		attachment: MessageAttachment;
+		message: Message;
+		nsfwMode: MediaProxyNsfwMode;
+	}): Promise<MessageAttachment> {
+		const {attachment, message, nsfwMode} = params;
+		const bucket = Config.s3.buckets.cdn;
+		const key = makeAttachmentCdnKey(message.channelId, attachment.attachment_id, attachment.filename);
+		if (attachment.content_hash) {
+			await this.scanContentModerationHash({contentHash: attachment.content_hash, bucket, key, message});
+		} else {
+			await this.scanContentModerationWithLocalFile({localPath: null, bucket, key, message});
+		}
+		if (!isSupportedMediaContentType(attachment.content_type)) {
+			return attachment;
+		}
+		let metadata: MediaProxyMetadataResponse | null;
+		try {
+			metadata = await this.mediaService.getMetadata({type: 's3', bucket, key, nsfw: nsfwMode});
+		} catch (error) {
+			if (error instanceof ExplicitContentCannotBeSentError) {
+				await this.storageService.deleteObject(bucket, key);
+				throw error;
+			}
+			Logger.warn({error, context: METADATA_PROBE_DEGRADED_CONTEXT, key}, 'Favorite meme media probe failed');
+			return attachment;
+		}
+		if (!metadata?.nsfw) {
+			return attachment;
+		}
+		return {
+			...attachment,
+			nsfw: true,
+			flags: attachment.flags | MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA,
+		};
+	}
+
 	private async getAttachmentMediaMetadata(params: {
 		index: number;
 		uploadFilename: string;

@@ -89,4 +89,15 @@ describe('RpcService user batch fanout', () => {
 		);
 		expect(rpcResponse.data[bystander.userId]).toStrictEqual([]);
 	});
+
+	test('returns only adults for get_users_adult_content_allowed', async () => {
+		const adult = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+		const teen = await createTestAccount(harness, {dateOfBirth: '2012-01-01'});
+		const rpcResponse = await createBuilder<{data: {user_ids: Array<string>}}>(harness, '')
+			.post('/test/rpc-session-init')
+			.body({type: 'get_users_adult_content_allowed', user_ids: [adult.userId, teen.userId, UNKNOWN_USER_ID]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(rpcResponse.data.user_ids).toStrictEqual([adult.userId]);
+	});
 });

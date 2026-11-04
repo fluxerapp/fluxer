@@ -6,6 +6,13 @@
 		"signoff": "ทีม {product_name}",
 		"subject": "บัญชี {product_name} ของคุณจะไม่ถูกลบ"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "คุณได้รับอีเมลนี้เนื่องจากคุณได้ขอให้ลบบัญชี {product_name} ของคุณ",
+		"intro": "เราได้ลบบัญชี {product_name} ของคุณตามที่คุณขอแล้ว",
+		"note": "ข้อความของคุณถูกลบหรือไม่ได้เชื่อมโยงกับคุณอีกต่อไป ขึ้นอยู่กับสิ่งที่คุณเลือก หากคุณต้องการใช้ {product_name} อีกครั้ง คุณสามารถสร้างบัญชีใหม่ได้",
+		"signoff": "ทีม {product_name}",
+		"subject": "บัญชี {product_name} ของคุณถูกลบแล้ว"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "คุณได้รับอีเมลนี้เนื่องจากบัญชี {product_name} ของคุณไม่มีการใช้งานมาเป็นเวลานาน",
 		"intro": "บัญชี {product_name} ของคุณไม่มีการใช้งานมานาน เราจึงจะลบบัญชีนี้ในวันที่ {deletion_date}",

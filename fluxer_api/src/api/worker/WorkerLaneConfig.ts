@@ -105,6 +105,7 @@ const LANE_CONFIG = {
 			'syncThreadSearchDocument',
 			'backfillThreadSearch',
 			'backfillPasskeyTrait',
+			'backfillFavoriteMemeNsfw',
 			'backfillUserAclIndex',
 			'backfillDeletedUsers',
 			'backfillHiddenProfileBadges',

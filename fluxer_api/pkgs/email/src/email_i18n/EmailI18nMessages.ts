@@ -8,6 +8,13 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because the deletion of your {product_name} account was canceled.',
 	},
+	account_deletion_completed: {
+		subject: 'Your {product_name} account has been deleted',
+		intro: "We've deleted your {product_name} account, as you asked.",
+		note: 'Your messages were deleted or unlinked from you, depending on what you chose. If you want to use {product_name} again, you can create a new account.',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you asked to delete your {product_name} account.',
+	},
 	account_deletion_scheduled_inactivity: {
 		subject: 'Your inactive {product_name} account will be deleted',
 		intro: "Your {product_name} account has been inactive for a long time, so we'll delete it on {deletion_date}.",

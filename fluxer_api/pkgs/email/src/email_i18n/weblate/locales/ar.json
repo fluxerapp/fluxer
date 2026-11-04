@@ -6,6 +6,13 @@
 		"signoff": "فريق {product_name}",
 		"subject": "لن يُحذف حسابك في {product_name}"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك طلبت حذف حسابك في {product_name}.",
+		"intro": "حذفنا حسابك في {product_name} بناءً على طلبك.",
+		"note": "حُذفت رسائلك أو لم تعد مرتبطة بك، بحسب ما اخترته. إذا أردت استخدام {product_name} مرة أخرى، يمكنك إنشاء حساب جديد.",
+		"signoff": "فريق {product_name}",
+		"subject": "تم حذف حسابك في {product_name}"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأن حسابك في {product_name} لم يكن نشطًا لفترة طويلة.",
 		"intro": "لم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا سنحذفه في {deletion_date}.",

@@ -303,6 +303,12 @@ export const UserPasswordUpdateResponse = z.object({
 
 export type UserPasswordUpdateResponse = z.infer<typeof UserPasswordUpdateResponse>;
 
+export const UserAccountDeleteResponse = z.object({
+	pending_deletion_at: z.string().describe('ISO8601 timestamp of when the account is deleted'),
+});
+
+export type UserAccountDeleteResponse = z.infer<typeof UserAccountDeleteResponse>;
+
 export const RecoveryKitStatusResponse = z.object({
 	has_recovery_kit: z.boolean().describe('Whether the account has a recovery kit'),
 	created_at: z.iso.datetime().nullable().describe('ISO 8601 timestamp when the current recovery kit was created'),
@@ -411,6 +417,11 @@ export const UserSettingsResponse = z.object({
 		SensitiveMediaGuildFilterLevelSchema,
 		'Sensitive media filter level for community channels',
 	),
+	allow_mature_content_on_ios: z
+		.boolean()
+		.describe(
+			'Whether 18+ communities, channels and the "Show" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting.',
+		),
 	suppress_unprivileged_self_mentions: z
 		.boolean()
 		.describe('Whether direct mentions and reply mentions from unprivileged users are suppressed'),

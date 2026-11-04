@@ -2,6 +2,7 @@
 
 export type EmailTemplateKey =
 	| 'account_deletion_cancelled'
+	| 'account_deletion_completed'
 	| 'account_deletion_scheduled_inactivity'
 	| 'account_deletion_scheduled_requested'
 	| 'bulk_message_deletion_completed'

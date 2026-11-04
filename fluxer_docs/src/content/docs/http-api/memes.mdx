@@ -39,6 +39,7 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
 | gif_provider<sup>2</sup> | ?string | The name of the GIF provider that issued `gif_slug` |
 | media<sup>3</sup> | ?map[string, [GIF media format](#gif-media-format-object) object] | The provider formats for a GIF-sourced meme |
 | placeholder | ?string | The thumbhash placeholder recorded at save time |
+| nsfw | boolean | Whether the media is flagged as explicit, from the source message or the media scan |
 
 <sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read
 
@@ -67,7 +68,8 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
   "is_gifv": true,
   "gif_slug": "party-parrot-1234",
   "gif_provider": "klipy",
-  "placeholder": "3PcNNYYONWQPFxrsUeUcRh4"
+  "placeholder": "3PcNNYYONWQPFxrsUeUcRh4",
+  "nsfw": false
 }
 ```
 
