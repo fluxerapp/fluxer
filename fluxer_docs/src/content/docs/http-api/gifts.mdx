@@ -72,7 +72,7 @@ Returns a [gift](#gift-object).
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [gift](#gift-object) object | The gift was returned |
-| 404 | [error response](/http-api/#error-response) | `UNKNOWN_GIFT_CODE` when the code does not exist or was revoked after a refund |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_GIFT_CODE` when the code does not exist or was revoked, after a refund or by an instance admin |
 
 The rate limit is 60 requests per 10 seconds, on the `gift:get` bucket.
 

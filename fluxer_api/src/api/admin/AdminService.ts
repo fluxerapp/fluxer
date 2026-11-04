@@ -256,7 +256,7 @@ export class AdminService {
 			guildRepository: this.guildRepository,
 			auditService: this.auditService,
 		});
-		this.codeGenerationService = new AdminCodeGenerationService(users);
+		this.codeGenerationService = new AdminCodeGenerationService(users, this.apiContext.services.cache);
 		this.applicationService = new AdminApplicationService({
 			apiContext: this.apiContext,
 			applicationRepository: this.applicationRepository,
