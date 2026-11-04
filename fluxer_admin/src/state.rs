@@ -29,6 +29,7 @@ pub struct AppState {
 struct AppStateInner {
     pub config: AdminConfig,
     pub http_client: reqwest::Client,
+    sso_http_client: reqwest::Client,
     premium_branding: Mutex<Option<(Instant, PremiumBranding)>>,
     account_identity: Mutex<Option<(Instant, AccountIdentitySettings)>>,
     report_reasons: Mutex<Option<Arc<[ReportReasonEntry]>>>,
@@ -41,10 +42,12 @@ impl AppState {
             .user_agent(format!("FluxerAdmin/{} (Rust)", config.build_version))
             .build()
             .expect("failed to create HTTP client");
+        let sso_http_client = sso::http_client(&config.build_version);
         Self {
             inner: Arc::new(AppStateInner {
                 config,
                 http_client,
+                sso_http_client,
                 premium_branding: Mutex::new(None),
                 account_identity: Mutex::new(None),
                 report_reasons: Mutex::new(None),
@@ -59,6 +62,10 @@ impl AppState {
 
     pub fn http_client(&self) -> &reqwest::Client {
         &self.inner.http_client
+    }
+
+    pub fn sso_http_client(&self) -> &reqwest::Client {
+        &self.inner.sso_http_client
     }
 
     pub fn cached_premium_branding(&self) -> Option<PremiumBranding> {
@@ -192,7 +199,7 @@ impl AppState {
         if let Some(metadata) = cached {
             return Some(metadata);
         }
-        let metadata = match sso::discover(self.http_client(), sso).await {
+        let metadata = match sso::discover(self.sso_http_client(), sso).await {
             Ok(metadata) => metadata,
             Err(error) => {
                 tracing::error!(%error, issuer = %sso.issuer, "SSO provider discovery failed");
