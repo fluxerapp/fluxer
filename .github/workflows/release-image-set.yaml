@@ -149,6 +149,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      packages: read
       id-token: write
       attestations: write
     env:
@@ -204,6 +205,18 @@ jobs:
           go-version: "1.27.x"
           check-latest: true
           cache-dependency-path: fluxer_rexctl/go.sum
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ${{ runner.temp }}/layer-sizes.json
+          key: layer-sizes-${{ github.run_id }}
+          restore-keys: layer-sizes-
+
+      - name: add image sizes to the image set
+        working-directory: fluxer_rexctl
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: go run ./internal/stack/layersizes -set internal/stack/imageset.json -cache "${RUNNER_TEMP}/layer-sizes.json"
 
       - name: govulncheck
         working-directory: fluxer_rexctl

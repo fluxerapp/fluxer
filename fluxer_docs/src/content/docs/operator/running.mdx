@@ -179,6 +179,8 @@ Each time rexctl starts Fluxer, it sizes memory limits, database connections and
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service. rexctl then removes the separate worker service and adds half of its memory limit to the api.
 
+When the disk that holds Fluxer's images and data is smaller than 16 GB, the install sets `disk.profile` to `small`. That's the disk with Docker's data root on Linux. With Docker Desktop or an engine on another machine, rexctl measures the disk with the instance folder. The small profile sets `FLUXER_LOG_MAX_SIZE` to `5m`, `FLUXER_LOG_MAX_FILE` to `2`, `FLUXER_POSTGRES_MAX_WAL_SIZE` to `512MB` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES` to 512 MiB, or to `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` if you set that higher. It leaves the values you set yourself as they are. To use the usual sizes, run `rexctl config unset disk.profile`.
+
 ## Change how Fluxer runs
 
 rexctl writes Fluxer's Compose files and Caddyfile to `.rexctl/generated` in your instance folder and writes them again each time it changes the instance. If you edit one of them, rexctl keeps a copy of your version in `.rexctl/edited` and puts its own version back.

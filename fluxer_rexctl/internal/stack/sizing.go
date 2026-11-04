@@ -18,16 +18,10 @@ const (
 	mib              = 1 << 20
 	smallHostBytes   = 7 << 30
 	defaultWriterMiB = 7168
-	minSpoolBytes    = 2 << 30
 )
 
 func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string {
 	out := map[string]string{}
-	spool := uint64(minSpoolBytes)
-	if body, err := strconv.ParseUint(strings.TrimSpace(fixed["FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES"]), 10, 64); err == nil {
-		spool = max(spool, body)
-	}
-	out["FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"] = strconv.FormatUint(spool, 10)
 	if hw.CPUs <= 0 {
 		return out
 	}

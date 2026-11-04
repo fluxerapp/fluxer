@@ -39,6 +39,8 @@ func Promised(set *stack.Set, custom []byte, k settings.Key) []string {
 		return slices.Clone(stack.Services)
 	case settings.MemoryProfile:
 		return settings.Services(set, custom, append(stack.ProfileKeys(set), stack.SizingKeys()...))
+	case settings.DiskProfile:
+		return settings.Services(set, custom, stack.DiskSizingKeys())
 	}
 	return settings.Services(set, custom, append(slices.Clone(k.Vars), derivedVars[k.Name]...))
 }

@@ -788,6 +788,9 @@ func (in *installer) settings() map[string]string {
 	if in.f.NoVoice {
 		out[stack.VoiceBundledKey] = "false"
 	}
+	if in.f.Storage.Endpoint != "" {
+		out[settings.StorageEndpoint] = in.f.Storage.Endpoint
+	}
 	return out
 }
 
@@ -1146,6 +1149,13 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	}
 	if in.storage != nil {
 		maps.Copy(st.Settings, in.storage.values())
+	}
+	store := engine.ImageStore(inst.Dir, in.engine)
+	if total, err := host.DiskSize(store); err == nil {
+		if profile := stack.DiskProfileFor(total); profile != "" {
+			st.Settings[settings.DiskProfile] = profile
+			in.app.UI.Info("%s is on a %s disk, so Fluxer keeps its logs, database write-ahead log and upload spool smaller. To use the usual sizes, run rexctl config unset %s.", store, ui.Bytes(int64(total)), settings.DiskProfile)
+		}
 	}
 	if _, err := secrets.Mint(st.Secrets, false); err != nil {
 		return ui.Wrap(err, "Couldn't create your instance's secrets.", "Run rexctl install again.")

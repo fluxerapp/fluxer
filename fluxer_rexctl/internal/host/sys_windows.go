@@ -46,6 +46,18 @@ func FreeDisk(path string) (uint64, error) {
 	return free, nil
 }
 
+func DiskSize(path string) (uint64, error) {
+	p, err := windows.UTF16PtrFromString(existingParent(path))
+	if err != nil {
+		return 0, err
+	}
+	var free, total, totalFree uint64
+	if err := windows.GetDiskFreeSpaceEx(p, &free, &total, &totalFree); err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func DiskID(path string) (string, error) {
 	p, err := windows.UTF16PtrFromString(existingParent(path))
 	if err != nil {

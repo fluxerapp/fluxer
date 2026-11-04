@@ -36,6 +36,10 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 		}
 	}
 
+	for v, value := range stack.DiskSizing(chosen[DiskProfile], fixed) {
+		put(v, value)
+	}
+
 	if name := chosen[MemoryProfile]; name != "" {
 		values, ok := set.Profiles[name]
 		if !ok {

@@ -249,6 +249,10 @@ var envNoRexctlVars = []string{"FLUXER_CADDY_SITE_ADDRESS", "FLUXER_AUTH_BLUESKY
 
 var envSizedNotes = map[string]string{
 	"FLUXER_EDGE_PROTOCOLS": "On a machine with little memory, rexctl turns off HTTP/3 unless you set it.",
+	stack.LogMaxSizeVar:     "When disk.profile is small, rexctl sets this to 5m unless you set it.",
+	stack.LogMaxFileVar:     "When disk.profile is small, rexctl sets this to 2 unless you set it.",
+	stack.MaxWALSizeVar:     "When disk.profile is small, rexctl sets this to 512MB unless you set it.",
+	stack.SpoolTotalVar:     "rexctl raises this to FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES if you set that higher. When disk.profile is small, rexctl sets this to 536870912, which is 512 MiB, unless you set it.",
 }
 
 func composeValues(set *stack.Set) map[string][]string {

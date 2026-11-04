@@ -996,7 +996,7 @@ The chunk size the relay uses when it writes upload bodies to its spool on disk,
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
+The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl raises this to `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` if you set that higher. When disk.profile is small, rexctl sets this to 536870912, which is 512 MiB, unless you set it. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
 
 ### `FLUXER_CACHE_PURGE_ADAPTER`
 
@@ -1454,7 +1454,7 @@ Postgres `min_wal_size`, the write-ahead log space Postgres keeps for reuse afte
 
 ### `FLUXER_POSTGRES_MAX_WAL_SIZE`
 
-Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
+Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. When disk.profile is small, rexctl sets this to 512MB unless you set it. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
 
 ### `FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET`
 
@@ -1780,11 +1780,11 @@ How much LiveKit logs. Use `debug`, `info`, `warn` or `error`. The default is `i
 
 ### `FLUXER_LOG_MAX_SIZE`
 
-How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
+How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. When disk.profile is small, rexctl sets this to 5m unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
 
 ### `FLUXER_LOG_MAX_FILE`
 
-How many log files Docker keeps for each container when it rotates logs. The default is `3`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
+How many log files Docker keeps for each container when it rotates logs. The default is `3`. When disk.profile is small, rexctl sets this to 2 unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
 
 ### `FLUXER_RESTART_POLICY`
 
