@@ -6,7 +6,8 @@
 -export([
     viewable_channel_map/2,
     strip_overwrites/2,
-    guild_nsfw/1
+    guild_nsfw/1,
+    channel_effective_nsfw/3
 ]).
 
 -define(AGE_RESTRICTED_LEVEL, 3).
@@ -70,6 +71,25 @@ guild_nsfw(Data) ->
         false -> false;
         _ -> maps:get(<<"nsfw_level">>, Guild, 0) =:= ?AGE_RESTRICTED_LEVEL
     end.
+
+-spec channel_effective_nsfw(map(), integer(), integer() | undefined) -> boolean().
+channel_effective_nsfw(Data, ChannelId, ThreadParentId) ->
+    Index = guild_data_index_channels:channel_index(Data),
+    GuildNsfw = guild_nsfw(Data),
+    case maps:get(resolved_channel_id(ChannelId, ThreadParentId, Index), Index, undefined) of
+        Channel when is_map(Channel) ->
+            effective_nsfw(Channel, parent_channel(Channel, Index), GuildNsfw);
+        _ ->
+            GuildNsfw
+    end.
+
+-spec resolved_channel_id(integer(), integer() | undefined, map()) -> integer().
+resolved_channel_id(ChannelId, _ThreadParentId, Index) when is_map_key(ChannelId, Index) ->
+    ChannelId;
+resolved_channel_id(_ChannelId, ThreadParentId, _Index) when is_integer(ThreadParentId) ->
+    ThreadParentId;
+resolved_channel_id(ChannelId, _ThreadParentId, _Index) ->
+    ChannelId.
 
 -spec everyone_permissions(map(), integer()) -> non_neg_integer().
 everyone_permissions(Data, GuildId) ->

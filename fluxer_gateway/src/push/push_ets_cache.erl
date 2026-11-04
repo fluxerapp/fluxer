@@ -11,6 +11,7 @@
     get_blocked_ids/1,
     put_blocked_ids_fetched/3,
     reserve_blocked_ids/1,
+    delete_blocked_ids/1,
     release/1,
     rebalance/0,
     cache_stats/0,
@@ -93,6 +94,14 @@ put_blocked_ids_fetched(UserId, BlockedIds, {?BLOCKED_IDS, _, _} = Fill) ->
 -spec reserve_blocked_ids([integer()]) -> fill().
 reserve_blocked_ids(UserIds) ->
     reserve(?BLOCKED_IDS, UserIds).
+
+-spec delete_blocked_ids(integer()) -> ok.
+delete_blocked_ids(UserId) ->
+    try ets:delete(?BLOCKED_IDS, UserId) of
+        true -> ok
+    catch
+        error:badarg -> ok
+    end.
 
 -spec blocked_ids_ttl_seconds() -> pos_integer().
 blocked_ids_ttl_seconds() ->
