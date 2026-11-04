@@ -40774,7 +40774,7 @@
 								"items": {
 									"type": "object",
 									"properties": {
-										"name": {"description": "Name of the field", "type": "string"},
+										"name": {"description": "Name of the field (0-256 characters)", "type": "string"},
 										"value": {"description": "Value of the field (0-1024 characters)", "type": "string"},
 										"inline": {
 											"default": false,

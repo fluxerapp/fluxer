@@ -88,7 +88,7 @@ function buildEmbedNotificationPreview(embeds: ReadonlyArray<MessageEmbed> | nul
 	}
 	if (embed.fields?.length) {
 		const field = embed.fields[0];
-		return `${field.name}: ${field.value}`;
+		return [field.name, field.value].filter(Boolean).join(': ');
 	}
 	return '';
 }
