@@ -463,6 +463,16 @@ pub struct AppBrandingConfigResponse {
     pub premium_product_name: String,
     pub premium_info_url: Option<String>,
     pub sign_in_backdrop_url: Option<String>,
+    #[serde(default)]
+    pub premium_page_color: Option<String>,
+    #[serde(default)]
+    pub premium_showcase_expressions_url: Option<String>,
+    #[serde(default)]
+    pub premium_showcase_profile_url: Option<String>,
+    #[serde(default)]
+    pub premium_showcase_stream_url: Option<String>,
+    #[serde(default)]
+    pub premium_showcase_upload_url: Option<String>,
     pub custom_css: Option<String>,
     #[serde(default)]
     pub upload_limit_message: Option<String>,
@@ -486,6 +496,11 @@ impl Default for AppBrandingConfigResponse {
             premium_product_name: default_premium_product_name(),
             premium_info_url: None,
             sign_in_backdrop_url: None,
+            premium_page_color: None,
+            premium_showcase_expressions_url: None,
+            premium_showcase_profile_url: None,
+            premium_showcase_stream_url: None,
+            premium_showcase_upload_url: None,
             custom_css: None,
             upload_limit_message: None,
             trusted_domains: Vec::new(),
@@ -873,6 +888,9 @@ pub const BRANDING_ASSET_ACCEPT: &str = ".png,.jpeg,.webp,.gif,.apng,.avif,.heic
      image/png,image/jpeg,image/webp,image/gif,image/apng,image/avif,image/heic,image/heif,\
      image/jxl,image/svg+xml";
 
+pub const BRANDING_BACKDROP_ACCEPT: &str =
+    ".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif";
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum BrandingAssetKind {
@@ -883,10 +901,14 @@ pub enum BrandingAssetKind {
     Favicon,
     FaviconDark,
     SignInBackdrop,
+    PremiumShowcaseExpressions,
+    PremiumShowcaseProfile,
+    PremiumShowcaseStream,
+    PremiumShowcaseUpload,
 }
 
 impl BrandingAssetKind {
-    pub const ALL: [Self; 7] = [
+    pub const ALL: [Self; 11] = [
         Self::Icon,
         Self::Symbol,
         Self::Logo,
@@ -894,6 +916,17 @@ impl BrandingAssetKind {
         Self::Favicon,
         Self::FaviconDark,
         Self::SignInBackdrop,
+        Self::PremiumShowcaseExpressions,
+        Self::PremiumShowcaseProfile,
+        Self::PremiumShowcaseStream,
+        Self::PremiumShowcaseUpload,
+    ];
+
+    pub const PREMIUM_SHOWCASE: [Self; 4] = [
+        Self::PremiumShowcaseExpressions,
+        Self::PremiumShowcaseProfile,
+        Self::PremiumShowcaseStream,
+        Self::PremiumShowcaseUpload,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -905,6 +938,10 @@ impl BrandingAssetKind {
             Self::Favicon => "favicon",
             Self::FaviconDark => "favicon_dark",
             Self::SignInBackdrop => "sign_in_backdrop",
+            Self::PremiumShowcaseExpressions => "premium_showcase_expressions",
+            Self::PremiumShowcaseProfile => "premium_showcase_profile",
+            Self::PremiumShowcaseStream => "premium_showcase_stream",
+            Self::PremiumShowcaseUpload => "premium_showcase_upload",
         }
     }
 
@@ -921,6 +958,10 @@ impl BrandingAssetKind {
             Self::Favicon => "Favicon",
             Self::FaviconDark => "Dark mode favicon",
             Self::SignInBackdrop => "Sign-in background",
+            Self::PremiumShowcaseExpressions => "Emoji card image",
+            Self::PremiumShowcaseProfile => "Profile card image",
+            Self::PremiumShowcaseStream => "Stream card image",
+            Self::PremiumShowcaseUpload => "Upload card image",
         }
     }
 
@@ -933,7 +974,21 @@ impl BrandingAssetKind {
             Self::Favicon => branding.favicon_url.as_deref(),
             Self::FaviconDark => branding.favicon_dark_url.as_deref(),
             Self::SignInBackdrop => branding.sign_in_backdrop_url.as_deref(),
+            Self::PremiumShowcaseExpressions => {
+                branding.premium_showcase_expressions_url.as_deref()
+            }
+            Self::PremiumShowcaseProfile => branding.premium_showcase_profile_url.as_deref(),
+            Self::PremiumShowcaseStream => branding.premium_showcase_stream_url.as_deref(),
+            Self::PremiumShowcaseUpload => branding.premium_showcase_upload_url.as_deref(),
         }
+    }
+
+    pub fn is_premium_showcase(self) -> bool {
+        Self::PREMIUM_SHOWCASE.contains(&self)
+    }
+
+    pub fn is_photo(self) -> bool {
+        self == Self::SignInBackdrop || self.is_premium_showcase()
     }
 }
 
@@ -1168,6 +1223,8 @@ pub struct AppBrandingConfigUpdateRequest {
     pub premium_info_url: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sign_in_backdrop_url: Option<Option<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub premium_page_color: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_css: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]

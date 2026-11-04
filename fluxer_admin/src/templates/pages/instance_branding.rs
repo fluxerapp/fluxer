@@ -4,7 +4,7 @@ use crate::templates::pages::instance_config::ConfigForm;
 use crate::{
     api::types::{
         AppPublicConfigResponse, BRANDING_ASSET_ACCEPT, BRANDING_ASSET_MAX_IMAGE_CHARS,
-        BrandingAssetKind, CUSTOM_CSS_MAX_CHARS,
+        BRANDING_BACKDROP_ACCEPT, BrandingAssetKind, CUSTOM_CSS_MAX_CHARS,
     },
     config::AdminConfig,
     templates::components::form::{
@@ -67,8 +67,26 @@ fn asset_guidance(kind: BrandingAssetKind) -> AssetGuidance {
             help: "Browsers set to a dark theme show this instead of the favicon. Add one when your favicon is too dark to see on a dark tab. Use a square PNG, at least 64 by 64 pixels and up to 10 MB.",
             empty: "If you leave it empty, the tab shows the same favicon in light and dark themes.",
         },
+        BrandingAssetKind::PremiumShowcaseExpressions => AssetGuidance {
+            help: "Shows next to \"Your emojis, everywhere\" on the premium page. Use a JPEG, PNG, WebP or AVIF between 480 and 2400 pixels on each side, up to 4 MB. A landscape image around 1100 by 800 pixels fits best.",
+            empty: PREMIUM_SHOWCASE_EMPTY,
+        },
+        BrandingAssetKind::PremiumShowcaseProfile => AssetGuidance {
+            help: "Shows next to \"A profile that stands out\" on the premium page. Use a JPEG, PNG, WebP or AVIF between 480 and 2400 pixels on each side, up to 4 MB. A landscape image around 1100 by 800 pixels fits best.",
+            empty: PREMIUM_SHOWCASE_EMPTY,
+        },
+        BrandingAssetKind::PremiumShowcaseStream => AssetGuidance {
+            help: "Shows next to \"Stream in 4K at 60 FPS\" on the premium page. Use a JPEG, PNG, WebP or AVIF between 480 and 2400 pixels on each side, up to 4 MB. A landscape image around 1100 by 800 pixels fits best.",
+            empty: PREMIUM_SHOWCASE_EMPTY,
+        },
+        BrandingAssetKind::PremiumShowcaseUpload => AssetGuidance {
+            help: "Shows next to the card about file size limits on the premium page. Use a JPEG, PNG, WebP or AVIF between 480 and 2400 pixels on each side, up to 4 MB. A landscape image around 1100 by 800 pixels fits best.",
+            empty: PREMIUM_SHOWCASE_EMPTY,
+        },
     }
 }
+
+const PREMIUM_SHOWCASE_EMPTY: &str = "If you leave it empty, this card shows text only.";
 
 pub(super) fn branding_section(
     config: &AdminConfig,
@@ -112,6 +130,9 @@ pub(super) fn branding_section(
                         @for kind in ASSET_ORDER {
                             (branding_asset_field(config, kind, kind.url(&app_public.branding)))
                         }
+                    }
+                    @if config.self_hosted {
+                        (premium_page_fields(config, app_public))
                     }
                     div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {
                         (custom_css_field(app_public.branding.custom_css.as_deref().unwrap_or("")))
@@ -190,6 +211,28 @@ pub(super) fn branding_section(
     }
 }
 
+fn premium_page_fields(config: &AdminConfig, app_public: &AppPublicConfigResponse) -> Markup {
+    html! {
+        div class="space-y-4 border-t border-neutral-200 pt-6" {
+            h3 class="text-sm font-semibold text-neutral-900" { "Premium page" }
+            div class="flex flex-col gap-2" {
+                (text_input(
+                    "app_premium_page_color",
+                    "Premium page color (hex)",
+                    app_public.branding.premium_page_color.as_deref().unwrap_or(""),
+                    "#4641d9",
+                ))
+                p class="text-xs leading-5 text-neutral-500" {
+                    "Recolors the premium page with this hue. The page keeps its own light and dark shades, so a light color shows up darker than the one you enter. A gray color makes the page gray. Text keeps the same contrast as with the default colors, so it stays easy to read. Leave it empty to keep the default colors."
+                }
+            }
+            @for kind in BrandingAssetKind::PREMIUM_SHOWCASE {
+                (branding_asset_field(config, kind, kind.url(&app_public.branding)))
+            }
+        }
+    }
+}
+
 fn custom_css_count_text(length: usize) -> String {
     format!(
         "{} of {} characters",
@@ -243,10 +286,15 @@ pub fn branding_asset_field(
         Some(url) if config.shows_image(url) => UNLOADABLE_IMAGE_NOTE,
         _ => UNPREVIEWABLE_IMAGE_NOTE,
     };
-    let thumbnail_class = if kind == BrandingAssetKind::SignInBackdrop {
+    let thumbnail_class = if kind.is_photo() {
         "h-16 w-28"
     } else {
         "h-16 w-16"
+    };
+    let accept = if kind.is_photo() {
+        BRANDING_BACKDROP_ACCEPT
+    } else {
+        BRANDING_ASSET_ACCEPT
     };
     html! {
         div id=(branding_asset_field_id(kind))
@@ -263,14 +311,14 @@ pub fn branding_asset_field(
                     @if let Some(url) = url {
                         img src=(url) alt={(kind.label()) " preview"}
                             onerror=(THUMBNAIL_ONERROR)
-                            class={"max-h-full max-w-full " (if kind == BrandingAssetKind::SignInBackdrop { "h-full w-full object-cover" } else { "object-contain" })};
+                            class={"max-h-full max-w-full " (if kind.is_photo() { "h-full w-full object-cover" } else { "object-contain" })};
                         span class="h-6 w-6 text-neutral-400" data-branding-asset-placeholder hidden {
                             (PreEscaped(IMAGE_PLACEHOLDER_SVG))
                         }
                     }
                 }
                 div class="flex flex-wrap items-center gap-2" {
-                    input type="file" accept=(BRANDING_ASSET_ACCEPT) class="hidden"
+                    input type="file" accept=(accept) class="hidden"
                         data-branding-asset-file
                         aria-label={"Upload " (kind.label())};
                     button type="button" data-branding-asset-upload
@@ -292,7 +340,9 @@ pub fn branding_asset_field(
                     (failed_note)
                 }
             }
-            (text_input(&name, &format!("{} URL", kind.label()), url.unwrap_or(""), &placeholder))
+            @if !kind.is_premium_showcase() {
+                (text_input(&name, &format!("{} URL", kind.label()), url.unwrap_or(""), &placeholder))
+            }
         }
     }
 }
