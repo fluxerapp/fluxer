@@ -226,6 +226,16 @@ impl AdminApiClient {
         Ok(resp.user)
     }
 
+    pub async fn remove_premium(&self, user_id: &str, reason: &str) -> ApiResult<AdminUser> {
+        let response = self
+            .generated_with_reason(Some(reason))?
+            .remove_admin_user_premium(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
+        Ok(resp.user)
+    }
+
     pub async fn set_user_acls(&self, user_id: &str, acls: &[String]) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserAclsRequest {
             acls: super::admin_api_keys::parse_acls(acls),
