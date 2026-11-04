@@ -2135,6 +2135,11 @@ msgstr "{productName} heeft microfoontoegang nodig om je apparaten weer te geven
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} heeft toestemming nodig om het scherm op te nemen. Sta schermopname toe in de privacyinstellingen van je besturingssysteem en start de app opnieuw."
 
+#. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr "{productName} vraagt alleen je geboortedatum, nooit een identiteitsbewijs of gezichtsscan. Hiermee wordt de minimumleeftijd in je land en de toegang tot content met een leeftijdsgrens gecontroleerd, en niemand anders ziet hem. Je kunt hem later niet wijzigen, dus controleer of hij klopt."
+
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "{productName} recovery kit"
@@ -2169,11 +2174,6 @@ msgstr "{productName} heeft hier een mogelijke raid gedetecteerd. Uitnodigingen 
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background."
 msgstr "{productName} gebruikt pushmeldingen wanneer het is geïnstalleerd als een mobiele PWA. Registreren zorgt ervoor dat de gateway je apparaat kan bereiken, zelfs wanneer de app op de achtergrond draait."
-
-#. Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.
-#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later."
-msgstr "{productName} gebruikt je geboortedatum om content en instellingen af te stemmen op je leeftijd. Niemand anders ziet hem. Je kunt hem later niet wijzigen."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -42753,6 +42753,11 @@ msgstr "Hele woord"
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
 msgid "Why"
 msgstr "Waarom"
+
+#. Link after the date of birth text that opens the help article about why the app asks for a date of birth.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "Why we ask"
+msgstr "Waarom we dit vragen"
 
 #. Link after the hidden status in the Operators' wall settings. It opens the Operator Pass terms.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx

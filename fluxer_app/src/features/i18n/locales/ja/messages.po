@@ -2135,6 +2135,11 @@ msgstr "{productName}がデバイスを一覧表示するには、マイクへ�
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName}には画面収録へのアクセスが必要です。OSのプライバシー設定で画面収録を許可し、アプリを再起動してください。"
 
+#. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr "{productName} が求めるのは生年月日だけで、身分証明書や顔のスキャンを求めることはありません。生年月日は、お住まいの国の最低年齢と年齢制限のあるコンテンツの確認に使われ、他の人に表示されることはありません。あとから変更できないため、正しいことを確認してください。"
+
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "{productName} recovery kit"
@@ -2169,11 +2174,6 @@ msgstr "{productName}がここでレイドの可能性を検出しました。�
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background."
 msgstr "{productName}をモバイルPWAとしてインストールすると、プッシュ通知が使用されます。登録すると、アプリがバックグラウンドにある場合でもゲートウェイがデバイスに到達できるようになります。"
-
-#. Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.
-#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later."
-msgstr "{productName} は生年月日をもとに、コンテンツや設定を年齢に合わせます。生年月日が他の人に表示されることはありません。あとから変更することはできません。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -42753,6 +42753,11 @@ msgstr "単語単位"
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
 msgid "Why"
 msgstr "理由"
+
+#. Link after the date of birth text that opens the help article about why the app asks for a date of birth.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "Why we ask"
+msgstr "確認する理由"
 
 #. Link after the hidden status in the Operators' wall settings. It opens the Operator Pass terms.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx

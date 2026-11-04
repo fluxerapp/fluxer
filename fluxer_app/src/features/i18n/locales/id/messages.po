@@ -2135,6 +2135,11 @@ msgstr "{productName} memerlukan akses mikrofon untuk menampilkan daftar perangk
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} memerlukan akses perekaman layar. Izinkan perekaman layar di pengaturan privasi sistem operasimu dan mulai ulang aplikasi."
 
+#. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr "{productName} hanya meminta tanggal lahirmu, tidak pernah meminta KTP atau pemindaian wajah. Tanggal ini dipakai untuk memeriksa usia minimum di negaramu dan untuk konten dengan batasan usia, dan tidak ditampilkan kepada siapa pun. Kamu tidak bisa mengubahnya nanti, jadi pastikan tanggalnya benar."
+
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "{productName} recovery kit"
@@ -2169,11 +2174,6 @@ msgstr "{productName} mendeteksi kemungkinan serangan di sini. Undangan dijeda. 
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background."
 msgstr "{productName} menggunakan notifikasi push saat diinstal sebagai PWA seluler. Pendaftaran memastikan gateway dapat menjangkau perangkatmu meski aplikasi berada di latar belakang."
-
-#. Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.
-#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later."
-msgstr "{productName} memakai tanggal lahirmu untuk menyesuaikan konten dan setelan dengan usiamu. Tanggal ini tidak ditampilkan kepada siapa pun. Kamu tidak bisa mengubahnya nanti."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -42753,6 +42753,11 @@ msgstr "Kata penuh"
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
 msgid "Why"
 msgstr "Alasan"
+
+#. Link after the date of birth text that opens the help article about why the app asks for a date of birth.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "Why we ask"
+msgstr "Mengapa kami bertanya"
 
 #. Link after the hidden status in the Operators' wall settings. It opens the Operator Pass terms.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx

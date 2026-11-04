@@ -2135,6 +2135,11 @@ msgstr "{productName} cần quyền truy cập micrô để liệt kê thiết b
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} cần quyền truy cập ghi màn hình. Hãy cho phép ghi màn hình trong cài đặt quyền riêng tư của hệ điều hành và khởi động lại ứng dụng."
 
+#. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr "{productName} chỉ hỏi ngày sinh của bạn, không bao giờ yêu cầu giấy tờ tùy thân hay quét khuôn mặt. Ngày sinh được dùng để kiểm tra độ tuổi tối thiểu tại quốc gia của bạn và nội dung giới hạn độ tuổi, và không hiển thị với bất kỳ ai. Bạn không thể thay đổi ngày sinh sau này, vì vậy hãy kiểm tra kỹ."
+
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "{productName} recovery kit"
@@ -2169,11 +2174,6 @@ msgstr "{productName} đã phát hiện một cuộc tấn công tiềm ẩn t�
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background."
 msgstr "{productName} sử dụng thông báo đẩy khi được cài đặt dưới dạng PWA di động. Việc đăng ký đảm bảo gateway có thể tiếp cận thiết bị của bạn ngay cả khi ứng dụng chạy nền."
-
-#. Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.
-#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later."
-msgstr "{productName} dùng ngày sinh của bạn để điều chỉnh nội dung và cài đặt phù hợp với độ tuổi. Ngày sinh không hiển thị với bất kỳ ai. Bạn không thể thay đổi ngày sinh sau này."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -42753,6 +42753,11 @@ msgstr "Từ nguyên vẹn"
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
 msgid "Why"
 msgstr "Lý do"
+
+#. Link after the date of birth text that opens the help article about why the app asks for a date of birth.
+#: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
+msgid "Why we ask"
+msgstr "Vì sao chúng tôi hỏi"
 
 #. Link after the hidden status in the Operators' wall settings. It opens the Operator Pass terms.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.tsx

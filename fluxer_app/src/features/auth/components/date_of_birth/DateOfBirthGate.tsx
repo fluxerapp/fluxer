@@ -2,6 +2,8 @@
 
 import {LogoutModal} from '@app/features/app/components/dialogs/components/LogoutModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
+import {HelpCenterArticleSlug} from '@app/features/app/config/HelpCenterConstants';
 import KeybindManager from '@app/features/app/keybindings/KeybindManager';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
@@ -19,6 +21,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import ModalState from '@app/features/ui/state/Modal';
+import * as HelpCenterUtils from '@app/features/ui/utils/HelpCenterUtils';
 import {
 	ModalStackContext,
 	type ModalStackContextValue,
@@ -39,9 +42,13 @@ const DATE_OF_BIRTH_TITLE_DESCRIPTOR = msg({
 });
 const DATE_OF_BIRTH_TEXT_DESCRIPTOR = msg({
 	message:
-		"{productName} uses your date of birth to match content and settings to your age. It isn't shown to anyone. You can't change it later.",
+		"{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right.",
 	comment:
-		'Text under the date of birth heading. productName is the app name. The last sentence says the date of birth cannot be changed once entered.',
+		'Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.',
+});
+const DATE_OF_BIRTH_WHY_DESCRIPTOR = msg({
+	message: 'Why we ask',
+	comment: 'Link after the date of birth text that opens the help article about why the app asks for a date of birth.',
 });
 const SIGN_OUT_DESCRIPTOR = msg({
 	message: 'Sign out',
@@ -94,6 +101,8 @@ export const DateOfBirthGate = observer(() => {
 		}
 	};
 	const title = i18n._(DATE_OF_BIRTH_TITLE_DESCRIPTOR);
+	const helpUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.AgeVerification);
+	const whyUrl = helpUrl === null ? null : `${helpUrl}#date-of-birth`;
 	const stackPlacement = ModalState.hasModalOpen() ? BEHIND_STACKED_MODAL_PLACEMENT : UNSTACKED_MODAL_CONTEXT;
 	return (
 		<ModalStackContext.Provider value={stackPlacement}>
@@ -120,6 +129,14 @@ export const DateOfBirthGate = observer(() => {
 						</h1>
 						<p className={styles.description} dir="auto" data-flx="auth.date-of-birth-gate.description">
 							{i18n._(DATE_OF_BIRTH_TEXT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+							{whyUrl && (
+								<>
+									{' '}
+									<ExternalLink href={whyUrl} data-flx="auth.date-of-birth-gate.why-link">
+										{i18n._(DATE_OF_BIRTH_WHY_DESCRIPTOR)}
+									</ExternalLink>
+								</>
+							)}
 						</p>
 						<DateOfBirthField
 							selectedMonth={month}
