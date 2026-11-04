@@ -4216,6 +4216,65 @@
 				}
 			}
 		},
+		"/admin/gift-codes/{code}": {
+			"delete": {
+				"operationId": "revoke_admin_gift_code",
+				"summary": "Revoke gift code",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Revoke a gift code that nobody has redeemed, so it can no longer be redeemed. Pass the code, which is the last part of the redemption link. Returns 404 when the code is unknown or already revoked, and 400 when it was redeemed, in which case Remove user premium ends the premium it gave, or when a customer bought it. Creates audit log entry. Requires GIFT_CODES_GENERATE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "code",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The gift code", "type": "string"},
+						"description": "The gift code"
+					}
+				]
+			}
+		},
 		"/admin/guilds": {
 			"get": {
 				"operationId": "list_admin_guilds",

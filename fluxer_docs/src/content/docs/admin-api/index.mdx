@@ -89,7 +89,7 @@ Each route needs one or more ACLs, and the caller needs at least one of them. Th
 | enforcement:view | Reads [enforcement decisions](/admin-api/enforcement/). Ending one needs this ACL plus the ACL for its kind |
 | gateway:memory_stats | Reads main [Gateway](/admin-api/gateway/) statistics, memory statistics and voice state counts |
 | gateway:reload_all | Reloads guilds across the main Gateway |
-| gift_codes:generate | Generates [gift codes](/admin-api/gift-codes/) |
+| gift_codes:generate | Generates and revokes [gift codes](/admin-api/gift-codes/) |
 | guild:audit_log:view | Reads a guild's ordinary audit log |
 | guild:ban_member | Bans a guild member and removes a guild ban |
 | guild:delete | Deletes a guild |
@@ -274,7 +274,7 @@ Expect values that aren't in this table.
 | report | User report |
 | search_index | Search index |
 | system_dm | System DM broadcast |
-| gift_code | Batch of generated gift codes |
+| gift_code | Batch of generated gift codes, or one revoked gift code |
 | bulk_job | Background job |
 | admin_api_key | Admin API key |
 | audit_log | Admin audit entry |
@@ -459,6 +459,7 @@ These entries have `access` set to `write`.
 | reset_built_in_badge_image | A built-in badge went back to its built-in image |
 | resolve_report | A report was updated or resolved |
 | revoke_admin_api_key | An Admin API key was revoked |
+| revoke_gift_code | A gift code nobody had redeemed was revoked |
 | revoke_recovery_kit | The recovery kit of an account was revoked |
 | revoke_registration_url | A registration URL was revoked |
 | revoke_voice_join_token | A voice join token was revoked |
