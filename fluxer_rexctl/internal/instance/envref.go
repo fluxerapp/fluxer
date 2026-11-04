@@ -181,7 +181,7 @@ func envDocs() envDocList {
 		required[s.Key] = s
 	}
 	sized := map[string]bool{}
-	for _, v := range append(stack.SizingKeys(), stack.SpoolTotalVar) {
+	for _, v := range stack.SizingKeys() {
 		sized[v] = true
 	}
 	for _, p := range set.Profiles {
@@ -252,6 +252,7 @@ var envSizedNotes = map[string]string{
 	stack.LogMaxSizeVar:     "When disk.profile is small, rexctl sets this to 5m unless you set it.",
 	stack.LogMaxFileVar:     "When disk.profile is small, rexctl sets this to 2 unless you set it.",
 	stack.MaxWALSizeVar:     "When disk.profile is small, rexctl sets this to 512MB unless you set it.",
+	stack.SpoolTotalVar:     "rexctl raises this to FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES if you set that higher. When disk.profile is small, rexctl sets this to 536870912, which is 512 MiB, unless you set it.",
 }
 
 func composeValues(set *stack.Set) map[string][]string {
