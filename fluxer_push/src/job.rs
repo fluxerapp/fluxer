@@ -43,6 +43,18 @@ pub struct NotificationFields {
     pub url: String,
     #[serde(default)]
     pub image_url: Option<String>,
+    #[serde(default)]
+    pub author_name: Option<String>,
+    #[serde(default)]
+    pub guild_name: Option<String>,
+    #[serde(default)]
+    pub conversation_name: Option<String>,
+    #[serde(default)]
+    pub conversation_kind: Option<String>,
+    #[serde(default)]
+    pub preview_kind: Option<String>,
+    #[serde(default)]
+    pub preview_arg: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
