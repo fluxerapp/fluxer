@@ -431,6 +431,22 @@
 		"signoff": "{product_name} ekibi",
 		"subject": "Adınızı veya avatarınızı {product_name} Operators duvarından kaldırdık"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {60 gün içinde bu e-postayı yanıtlayın ve neden katılmadığınızı bize anlatın. İtiraz ücretsizdir ve ekibimizden biri itirazınızı okuyup karar verir.} other {60 gün içinde bu kurulumun yöneticileriyle iletişime geçin ve neden katılmadığınızı onlara anlatın.}}",
+		"appeal_title": "Nasıl itiraz edebilirsiniz",
+		"automated_text": "Bu otomatik olarak tespit edilmedi ve kararı ekibimizden bir kişi verdi.",
+		"facts_label": "Dayandığımız olgular",
+		"footer_reason": "Bu e-postayı, {product_name} Operators duvarındaki kaydınızla ilgili bir karar nedeniyle aldınız.",
+		"ground": "Hizmet şartlarının 6.2. bölümü",
+		"ground_label": "Gerekçe",
+		"intro": "Operators duvarındaki yerinizden alıntıyı kaldırdık. Yerinizin geri kalanı olduğu gibi kalır, rozetiniz ve satın alımınız da bundan etkilenmez.",
+		"next": "Topluluk kurallarına uyan yeni bir alıntıyı <settings>ayarlarınızdan</settings> ekleyebilirsiniz.",
+		"reason_label": "Neden",
+		"reason_value": "{reason, select, impersonation {Başka biri gibi davranıyor} rights {Hakları olmadan başkasının metnini kullanıyor} age_suitability {Genç kullanıcılar için uygun değil} other {Topluluk kurallarını ihlal ediyor}}",
+		"redress_v2": "Mahkemeye de başvurabilirsiniz. AB'deyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> başvurabilirsiniz. AB'de veya AEA'da tüketiciyseniz uyuşmazlığı İsveç Ulusal Tüketici Uyuşmazlıkları Kurulu’na (<arn>ARN</arn>, Box 174, 101 23 Stockholm, İsveç) da taşıyabilirsiniz.",
+		"signoff": "{product_name} ekibi",
+		"subject": "Alıntınızı {product_name} Operators duvarından kaldırdık"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Rozetiniz profilinizde. <settings>Ayarlarınızdan</settings> gizleyebilirsiniz.",
 		"bonus_heading": "Pass'inizle ayrıca gelenler",

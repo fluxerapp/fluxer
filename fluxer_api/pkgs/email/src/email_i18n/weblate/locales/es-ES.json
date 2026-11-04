@@ -431,6 +431,22 @@
 		"signoff": "El equipo de {product_name}",
 		"subject": "Hemos quitado tu nombre o avatar del muro de Operators de {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Responde a este correo en un plazo de 60 días y cuéntanos por qué no estás de acuerdo. Es gratis, y una persona de nuestro equipo lee tu apelación y decide sobre ella.} other {Contacta con los administradores de esta instancia en un plazo de 60 días y explícales por qué no estás de acuerdo.}}",
+		"appeal_title": "Cómo apelar",
+		"automated_text": "Esto no se detectó de forma automática, y la decisión la tomó una persona de nuestro equipo.",
+		"facts_label": "Hechos en los que nos basamos",
+		"footer_reason": "Has recibido este correo electrónico debido a una decisión sobre tu entrada en el muro de Operators de {product_name}.",
+		"ground": "Sección 6.2 de las condiciones del servicio",
+		"ground_label": "Fundamento",
+		"intro": "Hemos quitado la cita de tu sitio en el muro de Operators. El resto de tu sitio se queda como está, y tu insignia y tu compra no se ven afectadas.",
+		"next": "Puedes añadir una nueva cita que siga las normas de la comunidad en tus <settings>ajustes</settings>.",
+		"reason_label": "Motivo",
+		"reason_value": "{reason, select, impersonation {Se hace pasar por otra persona} rights {Usa un texto ajeno sin tener los derechos} age_suitability {No es adecuado para usuarios más jóvenes} other {Infringe las normas de la comunidad}}",
+		"redress_v2": "También puedes acudir a los tribunales. Si estás en la UE, puedes acudir a un <dsa>órgano de resolución extrajudicial de litigios</dsa> certificado. Si eres consumidor en la UE o el EEE, también puedes llevar el litigio a la Junta Nacional de Reclamaciones de los Consumidores de Suecia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suecia.",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Hemos quitado tu cita del muro de Operators de {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Tu insignia está en tu perfil. Puedes ocultarla en tus <settings>ajustes</settings>.",
 		"bonus_heading": "También con tu pase",

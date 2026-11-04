@@ -431,6 +431,22 @@
 		"signoff": "Tim {product_name}a",
 		"subject": "Uklonili smo tvoje ime ili avatar sa zida Operators {product_name}a"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Odgovori na ovu e-poruku u roku od 60 dana i napiši nam zašto se ne slažeš. Besplatno je, a žalbu čita i o njoj odlučuje osoba iz našeg tima.} other {Javi se administratorima ove instance u roku od 60 dana i reci im zašto se ne slažeš.}}",
+		"appeal_title": "Kako se žaliti",
+		"automated_text": "Ovo nije otkriveno automatski, a odluku je donijela osoba iz našeg tima.",
+		"facts_label": "Činjenice na koje smo se oslonili",
+		"footer_reason": "Ovu si e-poruku primio zbog odluke o tvom unosu na zidu Operators {product_name}a.",
+		"ground": "Odjeljak 6.2 Uvjeta pružanja usluge",
+		"ground_label": "Osnova",
+		"intro": "Uklonili smo citat s tvog mjesta na zidu Operators. Ostatak tvog mjesta ostaje nepromijenjen, a na tvoju značku i kupnju to ne utječe.",
+		"next": "Novi citat koji poštuje smjernice zajednice možeš dodati u <settings>postavkama</settings>.",
+		"reason_label": "Razlog",
+		"reason_value": "{reason, select, impersonation {Lažno se predstavlja kao netko drugi} rights {Koristi tuđi tekst bez prava na njega} age_suitability {Nije prikladno za mlađe korisnike} other {Krši smjernice zajednice}}",
+		"redress_v2": "Možeš se obratiti i sudu. Ako si u EU-u, možeš se obratiti certificiranom <dsa>tijelu za izvansudsko rješavanje sporova</dsa>. Ako si potrošač u EU-u ili EGP-u, spor možeš iznijeti i pred švedski Nacionalni odbor za potrošačke sporove (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Švedska.",
+		"signoff": "Tim {product_name}a",
+		"subject": "Uklonili smo tvoj citat sa zida Operators {product_name}a"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Tvoja značka je na tvom profilu. Možeš je sakriti u <settings>postavkama</settings>.",
 		"bonus_heading": "Također uz tvoju propusnicu",

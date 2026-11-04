@@ -431,6 +431,22 @@
 		"signoff": "Teamet bag {product_name}",
 		"subject": "Vi har fjernet dit navn eller din avatar fra Operators-væggen på {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Svar på denne e-mail inden for 60 dage, og fortæl os, hvorfor du er uenig. Det er gratis, og en person i vores team læser og afgør din klage.} other {Kontakt administratorerne af denne instans inden for 60 dage, og fortæl dem, hvorfor du er uenig.}}",
+		"appeal_title": "Sådan klager du",
+		"automated_text": "Det blev ikke fundet automatisk, og en person fra vores team traf beslutningen.",
+		"facts_label": "Fakta, vi har lagt til grund",
+		"footer_reason": "Du modtog denne e-mail på grund af en beslutning om din plads på Operators-væggen på {product_name}.",
+		"ground": "Afsnit 6.2 i servicevilkårene",
+		"ground_label": "Grundlag",
+		"intro": "Vi har fjernet citatet fra din plads på Operators-væggen. Resten af din plads forbliver, som den er, og dit badge og dit køb påvirkes ikke.",
+		"next": "Du kan tilføje et nyt citat, der følger retningslinjerne for fællesskabet, i dine <settings>indstillinger</settings>.",
+		"reason_label": "Begrundelse",
+		"reason_value": "{reason, select, impersonation {Udgiver sig for at være en anden} rights {Bruger en andens tekst uden rettigheder til den} age_suitability {Ikke egnet til yngre brugere} other {Bryder retningslinjerne for fællesskabet}}",
+		"redress_v2": "Du kan også gå til domstolene. Hvis du er i EU, kan du bruge et certificeret <dsa>organ for udenretslig tvistbilæggelse</dsa>. Hvis du er forbruger i EU eller EØS, kan du også indbringe tvisten for Sveriges nationale forbrugerklagenævn (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sverige.",
+		"signoff": "Teamet bag {product_name}",
+		"subject": "Vi har fjernet dit citat fra Operators-væggen på {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Dit badge er på din profil. Du kan skjule det i dine <settings>indstillinger</settings>.",
 		"bonus_heading": "Også med dit pass",

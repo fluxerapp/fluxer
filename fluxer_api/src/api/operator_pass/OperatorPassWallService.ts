@@ -95,6 +95,7 @@ export class OperatorPassWallService {
 			if (params.choice.optedOut) {
 				patch.opted_out = Db.set(true);
 				patch.listed_at = Db.set(null);
+				patch.quote = Db.set(null);
 				patch.left_wall_at = Db.set(current.left_wall_at ?? params.deliveredAt);
 				events.push({kind: 'opted_out'});
 				if (isOperatorPassWallListed(current)) {
@@ -126,7 +127,7 @@ export class OperatorPassWallService {
 		userId: UserID,
 		choice: OperatorPassWallChoice,
 		actorId: UserID = userId,
-		{keepAsIs, releaseListOptIn}: {keepAsIs?: boolean; releaseListOptIn?: boolean} = {},
+		{keepAsIs, releaseListOptIn, quote}: {keepAsIs?: boolean; releaseListOptIn?: boolean; quote?: string | null} = {},
 	): Promise<OperatorPassWallEntryRow> {
 		const now = operatorPassNow();
 		let before: OperatorPassWallEntryRow | null = null;
@@ -139,6 +140,10 @@ export class OperatorPassWallService {
 			}
 			if (releaseListOptIn !== undefined && releaseListOptIn !== (current.release_list_opt_in ?? false)) {
 				patch.release_list_opt_in = Db.set(releaseListOptIn);
+			}
+			const nextQuote = choice.optedOut ? null : quote;
+			if (nextQuote !== undefined && nextQuote !== (current.quote ?? null)) {
+				patch.quote = Db.set(nextQuote);
 			}
 			if (choice.optedOut) {
 				if (!current.opted_out) {
@@ -331,6 +336,7 @@ export class OperatorPassWallService {
 						...(business ? liveRevisionPatch(personal) : {}),
 						listed_at: Db.set(null),
 						delivered_at: Db.set(null),
+						quote: Db.set(null),
 						left_wall_at: Db.set(current.left_wall_at ?? now),
 						updated_at: Db.set(now),
 					},
@@ -359,12 +365,13 @@ export class OperatorPassWallService {
 		}
 		await this.entries.appendEvent(userId, now, {kind: 'taken_down', name: null, cause: 'deletion'}, null);
 		const entry = await this.entries.mutate(userId, now, null, (current) => {
-			if (current.name == null && current.listed_at == null && current.delivered_at == null) {
+			if (current.name == null && current.quote == null && current.listed_at == null && current.delivered_at == null) {
 				return null;
 			}
 			return {
 				patch: {
 					name: Db.set(null),
+					quote: Db.set(null),
 					opted_out: Db.set(true),
 					listed_at: Db.set(null),
 					left_wall_at: Db.set(current.left_wall_at ?? now),

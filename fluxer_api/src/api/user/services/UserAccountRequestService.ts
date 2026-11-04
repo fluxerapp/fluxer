@@ -12,16 +12,19 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getOperatorPassWallService} from '@app/api/middleware/ServiceSingletons';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {
 	dispatchOperatorPassUserUpdate,
 	type OperatorPassEntitlementService,
+	type OperatorPassHolder,
 	operatorPassPrivateFields,
 	profileOperatorPassSince,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
 import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {isOperatorPassWallStanding} from '@app/api/operator_pass/OperatorPassWallPresentation';
 import type {AuthTokenType, HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {
@@ -419,9 +422,11 @@ export class UserAccountRequestService {
 				})
 			: null;
 		const viewerIsSelf = params.currentUserId === profileUser.id;
+		const operatorPass = profileUser.isBot || !operatorPassState ? null : resolveOperatorPassHolder(operatorPassState);
 		const badgeInput = {
 			user: profileUser,
-			operatorPass: profileUser.isBot || !operatorPassState ? null : resolveOperatorPassHolder(operatorPassState),
+			operatorPass,
+			operatorPassQuote: await this.operatorPassWallQuote(profileUser, operatorPass),
 			locale: params.requestLocale,
 			environment: badgeEnvironment,
 			restricted: restrictProfile,
@@ -452,6 +457,13 @@ export class UserAccountRequestService {
 		};
 	}
 
+	private async operatorPassWallQuote(user: User, holder: OperatorPassHolder | null): Promise<string | null> {
+		if (!holder || !this.operatorPassEntitlementService || !isOperatorPassWallStanding(user)) {
+			return null;
+		}
+		return getOperatorPassWallService().publication.shownQuote(user.id);
+	}
+
 	async previewProfileBadges(params: {
 		user: User;
 		settings: ProfileBadgePreviewRequest;
@@ -463,6 +475,7 @@ export class UserAccountRequestService {
 			loadProfileBadgeEnvironment(user.badgeIds),
 		]);
 		const expired = shouldStripExpiredPremium(user);
+		const operatorPass = operatorPassState ? resolveOperatorPassHolder(operatorPassState) : null;
 		const input = {
 			user: {
 				flags: user.flags,
@@ -473,7 +486,8 @@ export class UserAccountRequestService {
 				badgeIds: user.badgeIds,
 				hiddenProfileBadges: resolveHiddenProfileBadges(user.hiddenProfileBadges, settings) ?? user.hiddenProfileBadges,
 			},
-			operatorPass: operatorPassState ? resolveOperatorPassHolder(operatorPassState) : null,
+			operatorPass,
+			operatorPassQuote: await this.operatorPassWallQuote(user, operatorPass),
 			locale: params.requestLocale,
 			environment,
 			profileHidden: isProfileHidden(user),

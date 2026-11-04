@@ -431,6 +431,22 @@
 		"signoff": "{product_name} csapata",
 		"subject": "Levettük a nevedet vagy a profilképedet a(z) {product_name} Operators-faláról"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Válaszolj erre az e-mailre 60 napon belül, és írd meg, miért nem értesz egyet. Ez ingyenes, és a csapatunk egyik tagja elolvassa a fellebbezésedet, és dönt róla.} other {Fordulj ennek a példánynak az adminisztrátoraihoz 60 napon belül, és mondd el nekik, miért nem értesz egyet.}}",
+		"appeal_title": "Hogyan fellebbezhetsz",
+		"automated_text": "Ezt nem automatikus észlelés találta meg, a döntést pedig csapatunk egyik tagja hozta meg.",
+		"facts_label": "Tények, amelyekre támaszkodtunk",
+		"footer_reason": "Ezt az e-mailt a(z) {product_name} Operators-falán való megjelenéseddel kapcsolatos döntés miatt kaptad.",
+		"ground": "A szolgáltatási feltételek 6.2. pontja",
+		"ground_label": "Jogalap",
+		"intro": "Levettük az idézetet a helyedről az Operators-falon. A helyed többi része változatlan marad, és ez a jelvényedet és a vásárlásodat nem érinti.",
+		"next": "A <settings>beállításaidban</settings> új idézetet adhatsz hozzá, amely betartja a közösségi irányelveket.",
+		"reason_label": "Indok",
+		"reason_value": "{reason, select, impersonation {Más személynek adja ki magát} rights {Jogosultság nélkül használja más szövegét} age_suitability {Nem alkalmas fiatalabb felhasználóknak} other {Sérti a közösségi irányelveket}}",
+		"redress_v2": "Bírósághoz is fordulhatsz. Ha az EU-ban vagy, egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, a vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
+		"signoff": "{product_name} csapata",
+		"subject": "Levettük az idézetedet a(z) {product_name} Operators-faláról"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "A jelvényed megjelenik a profilodon. A <settings>beállításaidban</settings> elrejtheted.",
 		"bonus_heading": "A passod mellé",

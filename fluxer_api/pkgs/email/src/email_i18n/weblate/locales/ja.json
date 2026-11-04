@@ -431,6 +431,22 @@
 		"signoff": "{product_name}チーム",
 		"subject": "{product_name} Operatorsウォールから名前またはアバターを外しました"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {60日以内にこのメールに返信して、同意できない理由をお知らせください。異議申し立ては無料で、チームの担当者が内容を読んで判断します。} other {60日以内にこのインスタンスの管理者に連絡して、同意できない理由を伝えてください。}}",
+		"appeal_title": "異議申し立ての方法",
+		"automated_text": "この件は自動検出によるものではなく、判断は当社の担当者が行いました。",
+		"facts_label": "判断の根拠とした事実",
+		"footer_reason": "このメールは、{product_name}のOperatorsウォールにあるあなたの掲載に関する判断のためにお送りしています。",
+		"ground": "利用規約第6.2条",
+		"ground_label": "根拠",
+		"intro": "Operatorsウォール上のあなたの枠からひとことを外しました。枠のほかの部分はそのままで、バッジやご購入にも影響はありません。",
+		"next": "<settings>設定</settings>から、コミュニティガイドラインに沿った新しいひとことを追加できます。",
+		"reason_label": "理由",
+		"reason_value": "{reason, select, impersonation {他人になりすましている} rights {権利のない他人の文章を使用している} age_suitability {年少のユーザーにふさわしくない} other {コミュニティガイドラインに違反している}}",
+		"redress_v2": "裁判所に訴えることもできます。EUにお住まいの方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用できます。EUまたはEEAの消費者の方は、スウェーデン消費者紛争委員会（<arn>ARN</arn>、Box 174, 101 23 Stockholm, スウェーデン）に紛争を申し立てることもできます。",
+		"signoff": "{product_name}チーム",
+		"subject": "{product_name} Operatorsウォールからひとことを外しました"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "バッジはプロフィールに表示されています。<settings>設定</settings>で非表示にできます。",
 		"bonus_heading": "パスに付いてくるその他のもの",

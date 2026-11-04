@@ -407,6 +407,9 @@ export const ERROR_I18N_MESSAGES = {
 	'operator_pass.certificate_name_rejected': "We can't print this name on a certificate. Please choose another one.",
 	'operator_pass.wall_name_required': "Enter a name for the Operators' wall, or choose not to be listed.",
 	'operator_pass.wall_name_rejected': "We can't show this name on the Operators' wall. Please choose another one.",
+	'operator_pass.wall_quote_invalid':
+		'A quote can have up to 80 characters on one line, without hidden or control characters.',
+	'operator_pass.wall_quote_rejected': "A quote can't contain links, email addresses or @mentions.",
 	'operator_pass.not_held': "This account doesn't have the Operator Pass.",
 	'operator_pass.unknown_wall_entry': "This account has no name on the Operators' wall.",
 	'operator_pass.release_already_published': 'This Operators list has already been published.',

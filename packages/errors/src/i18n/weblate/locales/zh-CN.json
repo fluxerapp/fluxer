@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "此等候名单链接无效。",
 	"operator_pass.wall_name_rejected": "我们无法在 Operators 墙上显示这个名字。请换一个名字。",
 	"operator_pass.wall_name_required": "请为 Operators 墙输入一个名字，或选择不展示。",
+	"operator_pass.wall_quote_invalid": "引言最多 80 个字符，只能写一行，不能包含隐藏字符或控制字符。",
+	"operator_pass.wall_quote_rejected": "引言不能包含链接、电子邮件地址或 @提及。",
 	"operator_pass.withdrawal_unavailable": "此购买已无法在此处撤回。",
 	"permissions.global_ip_banned": "{reason, select, shown {由于存在违反规则的活动，{product_name} 已封锁来自此网络的访问。} other {{product_name} 已封锁来自此网络的访问。}}如果你与他人共用此网络，例如在学校、在公司、使用公共 Wi-Fi、通过移动运营商或 VPN 上网，此封锁可能与你无关。最快的解决方法是切换网络，例如改用移动数据而不是 Wi-Fi，或者开启或关闭 VPN。{appealEmail, select, null {} other {如果你认为此封锁有误，请发送邮件至 {appealEmail}，并附上你的 IP 地址 {ipAddress}。}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {由于存在违反规则的活动，{product_name} 已封锁来自此网络的访问。} other {{product_name} 已封锁来自此网络的访问。}}此封锁将于 {expiresAt} 结束。如果你与他人共用此网络，例如在学校、在公司、使用公共 Wi-Fi、通过移动运营商或 VPN 上网，此封锁可能与你无关。最快的解决方法是切换网络，例如改用移动数据而不是 Wi-Fi，或者开启或关闭 VPN。{appealEmail, select, null {} other {如果你认为此封锁有误，请发送邮件至 {appealEmail}，并附上你的 IP 地址 {ipAddress}。}}",

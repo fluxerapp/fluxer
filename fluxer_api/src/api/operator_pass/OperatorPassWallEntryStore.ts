@@ -49,6 +49,7 @@ function emptyEntry(userId: UserID, now: Date): OperatorPassWallEntryRow {
 	return {
 		user_id: userId,
 		name: null,
+		quote: null,
 		opted_out: true,
 		keep_as_is: false,
 		release_list_opt_in: false,

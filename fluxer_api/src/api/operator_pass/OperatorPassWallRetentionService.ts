@@ -100,7 +100,7 @@ export class OperatorPassWallRetentionService {
 					});
 				}
 				for (const logId of await this.repository.listWallAuditLogIds(entry.user_id)) {
-					await this.redactAuditLog(logId, token, ['sha256', 'note']);
+					await this.redactAuditLog(logId, token, ['sha256', 'note', 'quote']);
 				}
 				await this.repository.saveWallTombstone({token_: token, left_at: entry.left_wall_at!, purged_at: now});
 				await this.repository.deleteWallPartitions(entry.user_id);
@@ -137,7 +137,7 @@ export class OperatorPassWallRetentionService {
 	): Promise<boolean> {
 		const userId = entry.user_id;
 		const copies = revisions.filter((revision) => revision.name !== '' || revision.avatar != null);
-		if (copies.length === 0 && entry.name == null) {
+		if (copies.length === 0 && entry.name == null && entry.quote == null) {
 			return false;
 		}
 		for (const avatar of new Set(copies.flatMap((revision) => (revision.avatar ? [revision.avatar] : [])))) {
@@ -157,11 +157,12 @@ export class OperatorPassWallRetentionService {
 			}
 		}
 		for (const logId of await this.repository.listWallAuditLogIds(userId)) {
-			await this.redactAuditLog(logId, userId, ['sha256', 'note']);
+			await this.redactAuditLog(logId, userId, ['sha256', 'note', 'quote']);
 		}
 		await this.entries.mutateExisting(userId, operatorPassNow(), null, () => ({
 			patch: {
 				name: Db.set(null),
+				quote: Db.set(null),
 				...liveRevisionPatch(null),
 				decline_note: Db.set(null),
 			},

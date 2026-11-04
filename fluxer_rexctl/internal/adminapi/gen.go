@@ -1603,6 +1603,9 @@ type AdminProfileBadgeResponse struct {
 	// Label Full badge description, localized for the viewer. Use it as the tooltip, and as alt text when there is no caption
 	Label string `json:"label"`
 
+	// Quote The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it
+	Quote *string `json:"quote,omitempty"`
+
 	// SmallAsset Image hash drawn for 20 pixels and smaller, served like asset. Use it instead of asset at those sizes. Absent when asset reads well small
 	SmallAsset *HexString16Type `json:"small_asset,omitempty"`
 

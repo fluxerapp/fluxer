@@ -2,6 +2,7 @@
 
 import {PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import {OPERATOR_PASS_WALL_QUOTE_MAX_CODE_UNITS} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 import {CnpjSchema} from '@fluxer/schema/src/domains/premium/Cnpj';
 import {
 	createNamedStringLiteralUnion,
@@ -799,6 +800,10 @@ export const OperatorPassWallDisplayStateSchema = createNamedStringLiteralUnion(
 
 export const OperatorPassListingResponse = z.object({
 	wall_name: z.string().nullable().describe('The name the holder chose for the wall, null when not listed'),
+	wall_quote: z
+		.string()
+		.nullable()
+		.describe('The quote the holder set for their wall listing, null when there is none or the holder is not listed'),
 	wall_opt_out: z.boolean().describe('Whether the holder chose not to be listed'),
 	keep_as_is: z.boolean().describe('Whether profile name and avatar changes stay off the wall'),
 	release_list_opt_in: z
@@ -830,6 +835,13 @@ export type OperatorPassListingResponse = z.infer<typeof OperatorPassListingResp
 export const OperatorPassListingUpdateRequest = z.object({
 	wall_name: OperatorPassWallNameType.nullish().describe('The name to list, required unless wall_opt_out is true'),
 	wall_opt_out: z.boolean().describe("Whether to stay off the Operators' wall"),
+	wall_quote: z
+		.string()
+		.max(OPERATOR_PASS_WALL_QUOTE_MAX_CODE_UNITS)
+		.nullish()
+		.describe(
+			'A short quote for the wall listing, up to 80 characters on one line with no links or contact handles. A character is a grapheme cluster, counted after Unicode NFC normalization. Null or an empty string clears it, and so does leaving the wall with wall_opt_out true. Unchanged when omitted',
+		),
 	keep_as_is: z
 		.boolean()
 		.optional()
@@ -863,6 +875,12 @@ export const OperatorPassWallOperatorResponse = z.object({
 		.optional()
 		.describe(
 			'Present on a business listing, which shows a company name and logo at one fixed size after every listing of a person, ordered by first pass date',
+		),
+	quote: z
+		.string()
+		.optional()
+		.describe(
+			'The quote the Operator set for their listing, plain text to show in straight double quotes and never parse as markup. Left out when there is none',
 		),
 });
 

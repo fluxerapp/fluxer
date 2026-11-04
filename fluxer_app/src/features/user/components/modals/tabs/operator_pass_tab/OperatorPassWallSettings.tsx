@@ -7,12 +7,15 @@ import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
 import {OperatorPassWallNameField} from '@app/features/premium/components/operator_pass/OperatorPassWallNameField';
+import {OperatorPassWallQuoteField} from '@app/features/premium/components/operator_pass/OperatorPassWallQuoteField';
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {
 	getOperatorPassWallNameProblem,
+	getOperatorPassWallQuoteProblem,
 	isOperatorPassAvailable,
 	normalizeOperatorPassWallName,
 	type OperatorPassWallNameProblem,
+	type OperatorPassWallQuoteProblem,
 } from '@app/features/premium/utils/OperatorPassUtils';
 import {
 	OPERATOR_PASS_WALL_SECTION_DESCRIPTOR,
@@ -26,6 +29,7 @@ import Users from '@app/features/user/state/Users';
 import {getDefaultAvatarURL} from '@app/features/user/utils/AvatarUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {OperatorPassListingResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
+import {normalizeOperatorPassWallQuote} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -198,13 +202,16 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 	const {i18n} = useLingui();
 	const [listing, setListing] = useState<OperatorPassListingResponse | null>(null);
 	const [name, setName] = useState('');
+	const [quote, setQuote] = useState('');
 	const [optOut, setOptOut] = useState(false);
 	const [sendChanges, setSendChanges] = useState(true);
 	const [releaseListOptIn, setReleaseListOptIn] = useState(false);
 	const [problem, setProblem] = useState<OperatorPassWallNameProblem | null>(null);
+	const [quoteProblem, setQuoteProblem] = useState<OperatorPassWallQuoteProblem | null>(null);
 	const [saving, setSaving] = useState(false);
 	const appliedRef = useRef<{
 		name: string;
+		quote: string;
 		optOut: boolean;
 		sendChanges: boolean;
 		releaseListOptIn: boolean;
@@ -214,12 +221,14 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 	editedRef.current =
 		applied !== null &&
 		(name !== applied.name ||
+			quote !== applied.quote ||
 			optOut !== applied.optOut ||
 			sendChanges !== applied.sendChanges ||
 			releaseListOptIn !== applied.releaseListOptIn);
 	const apply = (result: OperatorPassListingResponse) => {
 		const next = {
 			name: result.wall_name ?? Users.currentUser?.displayName ?? '',
+			quote: result.wall_quote ?? '',
 			optOut: result.wall_opt_out,
 			sendChanges: !result.keep_as_is,
 			releaseListOptIn: result.release_list_opt_in,
@@ -227,6 +236,7 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 		appliedRef.current = next;
 		setListing(result);
 		setName(next.name);
+		setQuote(next.quote);
 		setOptOut(next.optOut);
 		setSendChanges(next.sendChanges);
 		setReleaseListOptIn(next.releaseListOptIn);
@@ -253,17 +263,22 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 	if (!listing || (!listing.has_wall && !removed)) return null;
 	const nameChanged =
 		optOut !== listing.wall_opt_out || (!optOut && normalizeOperatorPassWallName(name) !== (listing.wall_name ?? ''));
+	const quoteChanged =
+		!optOut && (listing.wall_opt_out || normalizeOperatorPassWallQuote(quote) !== (listing.wall_quote ?? null));
 	const switchChanged =
 		!optOut && (sendChanges === listing.keep_as_is || releaseListOptIn !== listing.release_list_opt_in);
 	const handleSave = async () => {
 		const nextProblem = getOperatorPassWallNameProblem(name, optOut);
+		const nextQuoteProblem = optOut ? null : getOperatorPassWallQuoteProblem(quote);
 		setProblem(nextProblem);
-		if (nextProblem) return;
+		setQuoteProblem(nextQuoteProblem);
+		if (nextProblem || nextQuoteProblem) return;
 		setSaving(true);
 		try {
 			const result = await OperatorPassCommands.updateListing({
 				...(nameChanged ? {wall_name: optOut ? null : normalizeOperatorPassWallName(name)} : {}),
 				wall_opt_out: optOut,
+				...(quoteChanged ? {wall_quote: normalizeOperatorPassWallQuote(quote)} : {}),
 				...(optOut ? {} : {keep_as_is: !sendChanges, release_list_opt_in: releaseListOptIn}),
 			});
 			apply(result);
@@ -274,6 +289,10 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 				setProblem('required');
 			} else if (code === APIErrorCodes.OPERATOR_PASS_WALL_NAME_REJECTED) {
 				setProblem('rejected');
+			} else if (code === APIErrorCodes.OPERATOR_PASS_WALL_QUOTE_REJECTED) {
+				setQuoteProblem('link');
+			} else if (code === APIErrorCodes.OPERATOR_PASS_WALL_QUOTE_INVALID) {
+				setQuoteProblem(getOperatorPassWallQuoteProblem(quote) ?? 'characters');
 			} else {
 				ToastCommands.error(i18n._(WALL_SAVE_FAILED_DESCRIPTOR));
 			}
@@ -306,10 +325,26 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 						}}
 						onOptOutChange={(value) => {
 							setOptOut(value);
-							if (value) setProblem(null);
+							if (value) {
+								setProblem(null);
+								setQuoteProblem(null);
+							}
 						}}
 						data-flx="user.operator-pass-tab.operator-pass-wall-settings.operator-pass-settings-wall-name"
 					/>
+					{!optOut && (
+						<OperatorPassWallQuoteField
+							id="operator-pass-settings-wall-quote"
+							quote={quote}
+							problem={quoteProblem}
+							disabled={saving}
+							onQuoteChange={(value) => {
+								setQuote(value);
+								if (quoteProblem) setQuoteProblem(getOperatorPassWallQuoteProblem(value));
+							}}
+							data-flx="user.operator-pass-tab.operator-pass-wall-settings.operator-pass-settings-wall-quote"
+						/>
+					)}
 					{!optOut && (
 						<Switch
 							label={i18n._(WALL_SEND_CHANGES_DESCRIPTOR)}
@@ -335,7 +370,7 @@ export const OperatorPassWallSettings = observer(function OperatorPassWallSettin
 							variant="primary"
 							onClick={() => void handleSave()}
 							submitting={saving}
-							disabled={!nameChanged && !switchChanged}
+							disabled={!nameChanged && !quoteChanged && !switchChanged}
 							data-flx="user.operator-pass-tab.operator-pass-wall-settings.button.save"
 						>
 							{i18n._(WALL_SAVE_DESCRIPTOR)}

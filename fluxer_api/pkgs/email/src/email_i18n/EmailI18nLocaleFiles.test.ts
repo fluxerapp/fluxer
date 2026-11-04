@@ -147,6 +147,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	operator_pass_purchase_refused: {},
 	operator_pass_wall_hidden: {reason: 'guidelines'},
 	operator_pass_wall_name_replaced: {target: 'both', shown: 'operator', reason: 'rights'},
+	operator_pass_wall_quote_cleared: {reason: 'rights'},
 	operator_pass_visionary_turned_on: {
 		badge: 'no',
 		wallName: 'Ada',

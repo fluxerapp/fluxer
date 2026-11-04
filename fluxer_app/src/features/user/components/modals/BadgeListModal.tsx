@@ -18,6 +18,7 @@ export interface BadgeListItem {
 	readonly caption: string | null;
 	readonly title: string;
 	readonly lines: ReadonlyArray<string>;
+	readonly quote: string | null;
 	readonly href: string | null;
 }
 
@@ -60,6 +61,11 @@ export const BadgeListModal = observer(function BadgeListModal({
 											{line}
 										</span>
 									))}
+									{item.quote && (
+										<span className={styles.quote} dir="auto" data-flx={`${dataFlx}.quote`}>
+											{`"${item.quote}"`}
+										</span>
+									)}
 								</span>
 							</>
 						);

@@ -431,6 +431,22 @@
 		"signoff": "L’équipe {product_name}",
 		"subject": "Nous avons retiré votre nom ou votre avatar du mur des Operators de {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Répondez à cet e-mail dans les 60 jours et expliquez-nous pourquoi vous n’êtes pas d’accord. C’est gratuit, et une personne de notre équipe lit votre contestation et statue dessus.} other {Contactez les administrateurs de cette instance dans les 60 jours et expliquez-leur pourquoi vous n’êtes pas d’accord.}}",
+		"appeal_title": "Comment faire appel",
+		"automated_text": "Cela n’a pas été repéré automatiquement, et un membre de notre équipe a pris la décision.",
+		"facts_label": "Faits sur lesquels nous nous sommes appuyés",
+		"footer_reason": "Vous avez reçu cet e-mail en raison d'une décision concernant votre inscription sur le mur des Operators de {product_name}.",
+		"ground": "Section 6.2 des conditions d'utilisation",
+		"ground_label": "Motif",
+		"intro": "Nous avons retiré la citation de votre place sur le mur des Operators. Le reste de votre place reste tel quel, et votre badge et votre achat ne sont pas concernés.",
+		"next": "Vous pouvez ajouter une nouvelle citation qui respecte les règles de la communauté dans vos <settings>paramètres</settings>.",
+		"reason_label": "Raison",
+		"reason_value": "{reason, select, impersonation {Se fait passer pour quelqu'un d'autre} rights {Utilise le texte de quelqu'un d'autre sans en avoir les droits} age_suitability {Ne convient pas aux jeunes utilisateurs} other {Enfreint les règles de la communauté}}",
+		"redress_v2": "Vous pouvez aussi saisir la justice. Si vous êtes dans l'UE, vous pouvez vous adresser à un <dsa>organe de règlement extrajudiciaire des litiges</dsa> certifié. Si vous êtes consommateur dans l'UE ou l'EEE, vous pouvez aussi soumettre le litige à la Commission nationale suédoise des litiges de consommation (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suède.",
+		"signoff": "L’équipe {product_name}",
+		"subject": "Nous avons retiré votre citation du mur des Operators de {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Votre badge est sur votre profil. Vous pouvez le masquer dans vos <settings>paramètres</settings>.",
 		"bonus_heading": "Également avec votre pass",

@@ -30,6 +30,7 @@ export interface ProfileBadgeEnvironment {
 export interface VisibleOperatorPass {
 	since: Date | null;
 	count: number | null;
+	quote: string | null;
 }
 
 export interface ProfileBadgeView {
@@ -46,6 +47,7 @@ interface ProfileBadgeContent {
 	count?: number;
 	accessibleLabel?: string;
 	details?: {title: string; lines: Array<string>};
+	quote?: string;
 	caption?: string;
 	asset?: string | null;
 	smallAsset?: string | null;
@@ -125,7 +127,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 		href: marketing('pass'),
 		qualify: (view) => {
 			if (!view.operatorPass) return null;
-			const {since, count} = view.operatorPass;
+			const {since, count, quote} = view.operatorPass;
 			const stacked = count != null && count >= 2;
 			const sinceDate = since ? formatSinceDate(since, view.locale) : null;
 			const lines: Array<string> = [];
@@ -138,7 +140,6 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 			}
 			if (stacked) {
 				lines.push(getContentMessage('profile_badge.operator_pass_count', view.locale, {count}));
-				lines.push(getContentMessage('profile_badge.operator_pass_recognition_v2', view.locale));
 			}
 			let label: string;
 			if (sinceDate && stacked) {
@@ -163,6 +164,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 					? getContentMessage('profile_badge.operator_pass_accessible_count', view.locale, {count})
 					: title,
 				details: {title, lines},
+				...(quote ? {quote} : {}),
 			};
 		},
 	},

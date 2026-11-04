@@ -431,6 +431,22 @@
 		"signoff": "{product_name}-tiimi",
 		"subject": "Poistimme nimesi tai avatarisi {product_name}-palvelun Operators-seinältä"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Vastaa tähän sähköpostiin 60 päivän kuluessa ja kerro, miksi olet eri mieltä. Se on maksutonta, ja joku tiimistämme lukee valituksesi ja ratkaisee sen.} other {Ota yhteyttä tämän instanssin ylläpitäjiin 60 päivän kuluessa ja kerro heille, miksi olet eri mieltä.}}",
+		"appeal_title": "Näin valitat",
+		"automated_text": "Tätä ei havaittu automaattisesti, ja päätöksen teki tiimimme jäsen.",
+		"facts_label": "Tosiasiat, joihin päätös perustuu",
+		"footer_reason": "Sait tämän sähköpostin, koska teimme päätöksen, joka koskee listaustasi {product_name}-palvelun Operators-seinällä.",
+		"ground": "Käyttöehtojen kohta 6.2",
+		"ground_label": "Peruste",
+		"intro": "Poistimme lainauksen paikaltasi Operators-seinällä. Muu osa paikastasi pysyy ennallaan, eikä tämä vaikuta merkkiisi tai ostokseesi.",
+		"next": "Voit lisätä yhteisön sääntöjä noudattavan uuden lainauksen <settings>asetuksissasi</settings>.",
+		"reason_label": "Syy",
+		"reason_value": "{reason, select, impersonation {Esittää jotakuta toista} rights {Käyttää toisen tekstiä ilman oikeutta siihen} age_suitability {Ei sovi nuoremmille käyttäjille} other {Rikkoo yhteisön sääntöjä}}",
+		"redress_v2": "Voit myös viedä asian tuomioistuimeen. Jos olet EU:ssa, voit kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen. Jos olet kuluttaja EU:ssa tai ETA-alueella, voit myös saattaa riidan Ruotsin kuluttajariitalautakunnan (<arn>ARN</arn>) käsiteltäväksi, Box 174, 101 23 Stockholm, Ruotsi.",
+		"signoff": "{product_name}-tiimi",
+		"subject": "Poistimme lainauksesi {product_name}-palvelun Operators-seinältä"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Merkkisi näkyy profiilissasi. Voit piilottaa sen <settings>asetuksissasi</settings>.",
 		"bonus_heading": "Passisi mukana myös",

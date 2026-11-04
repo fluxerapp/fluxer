@@ -130,7 +130,6 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator，{count, plural, other {# 張 Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {# 張 Operator Pass}}",
-	"profile_badge.operator_pass_recognition_v2": "包括此帳號持有的通行證，以及它購買後轉交給他人的通行證。",
 	"profile_badge.operator_pass_since": "Operator Pass，自 {since_date} 起",
 	"profile_badge.operator_pass_since_count": "Operator Pass，自 {since_date} 起，{count, plural, other {# 張通行證}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass，自 {since_date} 起",

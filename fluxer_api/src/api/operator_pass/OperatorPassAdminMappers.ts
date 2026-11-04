@@ -169,6 +169,7 @@ export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null)
 			? `${Config.endpoints.media}/avatars/${user.id}/${user.avatarHash}.${getAnimatedAssetExtension(user.avatarHash)}`
 			: null,
 		wall_name: entry.name ?? null,
+		wall_quote: entry.quote ?? null,
 		wall_opt_out: entry.opted_out,
 		keep_as_is: entry.keep_as_is,
 		release_list_opt_in: entry.release_list_opt_in ?? false,

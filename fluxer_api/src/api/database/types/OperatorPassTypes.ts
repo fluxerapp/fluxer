@@ -25,7 +25,14 @@ export type OperatorPassWallRevisionSource = 'checkout' | 'profile' | 'settings'
 
 export type OperatorPassWallRevisionStatus = 'pending' | 'approved' | 'declined' | 'superseded' | 'reverted';
 
-export type OperatorPassWallDecisionKind = 'approve' | 'decline' | 'revert' | 'force_fallback' | 'hide' | 'unhide';
+export type OperatorPassWallDecisionKind =
+	| 'approve'
+	| 'decline'
+	| 'revert'
+	| 'force_fallback'
+	| 'hide'
+	| 'unhide'
+	| 'clear_quote';
 
 export type OperatorPassWallDeclineReason = 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
 
@@ -45,7 +52,8 @@ export type OperatorPassWallEventKind =
 	| 'legal_hold_cleared'
 	| 'release_published'
 	| 'erased'
-	| 'count_changed';
+	| 'count_changed'
+	| 'quote_cleared';
 
 export type OperatorPassWallTakeDownCause =
 	| 'withdrawal'
@@ -253,6 +261,7 @@ export interface OperatorPassRemovalHistoryRow {
 export interface OperatorPassWallEntryRow {
 	user_id: UserID;
 	name: Nullish<string>;
+	quote: Nullish<string>;
 	opted_out: boolean;
 	keep_as_is: boolean;
 	release_list_opt_in: boolean;
@@ -631,6 +640,7 @@ export const OPERATOR_PASS_REMOVAL_HISTORY_COLUMNS = [
 export const OPERATOR_PASS_WALL_ENTRY_COLUMNS = [
 	'user_id',
 	'name',
+	'quote',
 	'opted_out',
 	'keep_as_is',
 	'release_list_opt_in',

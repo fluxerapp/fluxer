@@ -315,6 +315,8 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNKNOWN_OPERATOR_PASS_UNIT]: 'operator_pass.unknown_pass',
 	[APIErrorCodes.OPERATOR_PASS_WALL_NAME_REQUIRED]: 'operator_pass.wall_name_required',
 	[APIErrorCodes.OPERATOR_PASS_WALL_NAME_REJECTED]: 'operator_pass.wall_name_rejected',
+	[APIErrorCodes.OPERATOR_PASS_WALL_QUOTE_INVALID]: 'operator_pass.wall_quote_invalid',
+	[APIErrorCodes.OPERATOR_PASS_WALL_QUOTE_REJECTED]: 'operator_pass.wall_quote_rejected',
 	[APIErrorCodes.OPERATOR_PASS_NOT_HELD]: 'operator_pass.not_held',
 	[APIErrorCodes.UNKNOWN_OPERATOR_PASS_WALL_ENTRY]: 'operator_pass.unknown_wall_entry',
 	[APIErrorCodes.OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED]: 'operator_pass.release_already_published',

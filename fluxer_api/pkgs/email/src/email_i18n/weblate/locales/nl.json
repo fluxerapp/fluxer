@@ -431,6 +431,22 @@
 		"signoff": "Het team van {product_name}",
 		"subject": "We hebben je naam of avatar van de Operators-muur van {product_name} gehaald"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Beantwoord deze e-mail binnen 60 dagen en vertel ons waarom je het er niet mee eens bent. Het is gratis, en iemand van ons team leest je bezwaar en beslist erover.} other {Neem binnen 60 dagen contact op met de beheerders van deze instantie en vertel hun waarom je het er niet mee eens bent.}}",
+		"appeal_title": "Zo maak je bezwaar",
+		"automated_text": "Dit is niet automatisch gevonden, en iemand van ons team heeft de beslissing genomen.",
+		"facts_label": "Feiten waarop we ons hebben gebaseerd",
+		"footer_reason": "Je hebt deze e-mail ontvangen vanwege een beslissing over je vermelding op de Operators-muur van {product_name}.",
+		"ground": "Artikel 6.2 van de gebruiksvoorwaarden",
+		"ground_label": "Grondslag",
+		"intro": "We hebben het citaat van je plek op de Operators-muur gehaald. De rest van je plek blijft zoals hij is, en je badge en je aankoop veranderen niet.",
+		"next": "Je kunt in je <settings>instellingen</settings> een nieuw citaat toevoegen dat de communityrichtlijnen volgt.",
+		"reason_label": "Reden",
+		"reason_value": "{reason, select, impersonation {Doet zich voor als iemand anders} rights {Gebruikt andermans tekst zonder de rechten daarop} age_suitability {Niet geschikt voor jongere gebruikers} other {Overtreedt de communityrichtlijnen}}",
+		"redress_v2": "Je kunt ook naar de rechter stappen. Als je in de EU bent, kun je naar een gecertificeerd <dsa>orgaan voor buitengerechtelijke geschillenbeslechting</dsa> gaan. Als consument in de EU of de EER kun je het geschil ook voorleggen aan de Zweedse Nationale Raad voor Consumentengeschillen (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Zweden.",
+		"signoff": "Het team van {product_name}",
+		"subject": "We hebben je citaat van de Operators-muur van {product_name} gehaald"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Je badge staat op je profiel. Je kunt hem verbergen in je <settings>instellingen</settings>.",
 		"bonus_heading": "Ook bij je pass",

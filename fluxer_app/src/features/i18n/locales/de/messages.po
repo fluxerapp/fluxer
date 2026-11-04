@@ -20738,6 +20738,11 @@ msgstr "Weiter ausführen"
 msgid "Keep subscription"
 msgstr "Abo behalten"
 
+#. Error under the "Quote on the wall" field when the quote has a line break.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Keep the quote on one line."
+msgstr "Schreib das Zitat in eine Zeile."
+
 #. Description text in the secrets section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection.tsx
 msgid "Keep these safe. Regenerating will break existing integrations."
@@ -26391,6 +26396,11 @@ msgstr "Option zwei"
 msgid "Optional arguments"
 msgstr "Optionale Argumente"
 
+#. Text under the "Quote on the wall" field in the Operators' wall settings. The wall listing is the person's entry on the Operators' wall. Operator is the badge name.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Optional. It shows in quotes on your wall listing and with your Operator badge."
+msgstr "Optional. Es erscheint in Anführungszeichen bei deinem Eintrag auf der Wand und bei deinem Operator-Abzeichen."
+
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx
 msgid "Options"
@@ -28670,6 +28680,11 @@ msgstr "{appName} beenden"
 msgid "Quit {appName}, make sure no other copy is running, and open it again."
 msgstr "Beende {appName}, stelle sicher, dass keine andere Kopie läuft, und öffne es erneut."
 
+#. Label of the optional text field for a short quote that shows with the person's listing on the Operators' wall and with their Operator badge. The wall is the list of Operators on the Operator Pass page.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Quote on the wall"
+msgstr "Zitat auf der Wand"
+
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx
 msgid "Quotes: <0>{countLabel}</0>"
 msgstr "Zitate: <0>{countLabel}</0>"
@@ -29486,6 +29501,11 @@ msgstr "Sticker entfernen"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Remove tag {tag}"
 msgstr "Tag \"{tag}\" entfernen"
+
+#. Error under the "Quote on the wall" field when the quote has invisible characters, text direction controls or stacked accent marks.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Remove the hidden or special characters from the quote."
+msgstr "Entferne die versteckten oder besonderen Zeichen aus dem Zitat."
 
 #. Error message in the linked accounts tab. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
@@ -36694,6 +36714,11 @@ msgstr "Die angegebene redirect_uri ist für diese Anwendung nicht registriert."
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Die angegebene redirect_uri muss HTTP oder HTTPS verwenden."
 
+#. Error under the "Quote on the wall" field when the quote looks like a link, a web address such as example.com, an email address, an @mention or a community invite.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "The quote can't have links, web addresses, email addresses, @mentions or invites."
+msgstr "Das Zitat darf keine Links, Webadressen, E-Mail-Adressen, @Erwähnungen oder Einladungen enthalten."
+
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
 msgid "The report form changed. Please start again."
@@ -40481,6 +40506,11 @@ msgstr "Verwende höchstens 32 Zeichen."
 #: src/features/premium/components/operator_pass/OperatorPassCertificateNamesField.tsx
 msgid "Use 48 characters or fewer."
 msgstr "Verwende höchstens 48 Zeichen."
+
+#. Error under the "Quote on the wall" field when the quote is longer than 80 characters. An emoji counts as one character.
+#: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
+msgid "Use 80 characters or fewer."
+msgstr "Verwende höchstens 80 Zeichen."
 
 #. Text button on the browser approval page that goes back to choosing which account signs in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

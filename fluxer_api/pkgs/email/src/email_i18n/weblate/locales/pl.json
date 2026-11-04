@@ -431,6 +431,22 @@
 		"signoff": "Zespół {product_name}",
 		"subject": "Usunęliśmy Twoją nazwę lub awatar ze ściany Operators w {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Odpowiedz na tę wiadomość w ciągu 60 dni i napisz, dlaczego się nie zgadzasz. To nic nie kosztuje, a odwołanie czyta i rozstrzyga osoba z naszego zespołu.} other {Skontaktuj się z administratorami tej instancji w ciągu 60 dni i napisz im, dlaczego się nie zgadzasz.}}",
+		"appeal_title": "Jak się odwołać",
+		"automated_text": "Nie wykryto tego automatycznie, a decyzję podjęła osoba z naszego zespołu.",
+		"facts_label": "Fakty, na których się opieraliśmy",
+		"footer_reason": "Otrzymujesz tę wiadomość z powodu decyzji dotyczącej Twojego wpisu na ścianie Operators w {product_name}.",
+		"ground": "Sekcja 6.2 warunków korzystania z usługi",
+		"ground_label": "Podstawa",
+		"intro": "Usunęliśmy cytat z Twojego miejsca na ścianie Operators. Reszta Twojego miejsca pozostaje bez zmian, a nie ma to wpływu na Twoją odznakę ani zakup.",
+		"next": "Nowy cytat zgodny z wytycznymi społeczności możesz dodać w <settings>ustawieniach</settings>.",
+		"reason_label": "Powód",
+		"reason_value": "{reason, select, impersonation {Podszywanie się pod kogoś innego} rights {Użycie cudzego tekstu bez praw do niego} age_suitability {Nieodpowiednie dla młodszych użytkowników} other {Naruszenie wytycznych społeczności}}",
+		"redress_v2": "Możesz też wystąpić do sądu. Jeśli jesteś w UE, możesz skorzystać z certyfikowanego <dsa>organu pozasądowego rozstrzygania sporów</dsa>. Jeśli jesteś konsumentem w UE lub EOG, możesz też skierować spór do szwedzkiej Krajowej Komisji ds. Sporów Konsumenckich (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Szwecja.",
+		"signoff": "Zespół {product_name}",
+		"subject": "Usunęliśmy Twój cytat ze ściany Operators w {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Twoja odznaka jest widoczna w profilu. Możesz ją ukryć w <settings>ustawieniach</settings>.",
 		"bonus_heading": "Razem z przepustką",

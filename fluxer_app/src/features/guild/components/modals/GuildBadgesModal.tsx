@@ -19,6 +19,7 @@ export function GuildBadgesModal({
 				caption: null,
 				title: badge.name,
 				lines: badge.description === null ? [] : [badge.description],
+				quote: null,
 				href: badge.href,
 			}))}
 			data-flx={dataFlx}

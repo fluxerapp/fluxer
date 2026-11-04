@@ -431,6 +431,22 @@
 		"signoff": "{product_name} 团队",
 		"subject": "我们已从 {product_name} Operators 墙上撤下你的名字或头像"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {请在 60 天内回复此邮件，告诉我们你不同意的理由。申诉是免费的，由我们团队的工作人员阅读并作出决定。} other {请在 60 天内联系此实例的管理员，告诉他们你不同意的理由。}}",
+		"appeal_title": "如何申诉",
+		"automated_text": "此情况并非由自动检测发现，决定由我们团队的一名成员做出。",
+		"facts_label": "我们依据的事实",
+		"footer_reason": "你收到此邮件是因为我们对你在 {product_name} Operators 墙上的展示做出了一项决定。",
+		"ground": "服务条款第 6.2 条",
+		"ground_label": "依据",
+		"intro": "我们已从你在 Operators 墙上的位置撤下这句话。你的位置的其余部分保持不变，你的徽章和购买也不受影响。",
+		"next": "你可以在<settings>设置</settings>中添加新的一句话，内容需要符合社区准则。",
+		"reason_label": "原因",
+		"reason_value": "{reason, select, impersonation {冒充他人} rights {未经授权使用他人的文字} age_suitability {不适合年龄较小的用户} other {违反社区准则}}",
+		"redress_v2": "你也可以向法院提起诉讼。如果你在欧盟，可以求助于经认证的<dsa>庭外争议解决机构</dsa>。如果你是欧盟或欧洲经济区的消费者，也可以将争议提交给瑞典国家消费者争议委员会（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
+		"signoff": "{product_name} 团队",
+		"subject": "我们已从 {product_name} Operators 墙上撤下你的一句话"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "你的徽章已显示在个人资料上。你可以在<settings>设置</settings>中隐藏它。",
 		"bonus_heading": "通行证还附带",

@@ -431,6 +431,22 @@
 		"signoff": "Il team di {product_name}",
 		"subject": "Abbiamo tolto il tuo nome o avatar dalla bacheca degli Operators di {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Rispondi a questa email entro 60 giorni e spiegaci perché non sei d'accordo. È gratuito, e una persona del nostro team legge il tuo ricorso e decide.} other {Contatta gli amministratori di questa istanza entro 60 giorni e spiega loro perché non sei d'accordo.}}",
+		"appeal_title": "Come presentare ricorso",
+		"automated_text": "Non è stato individuato in modo automatico, e la decisione è stata presa da una persona del nostro team.",
+		"facts_label": "Fatti su cui ci siamo basati",
+		"footer_reason": "Hai ricevuto questa email a causa di una decisione relativa alla tua voce nella bacheca degli Operators di {product_name}.",
+		"ground": "Sezione 6.2 dei termini di servizio",
+		"ground_label": "Motivazione",
+		"intro": "Abbiamo tolto la citazione dal tuo posto sulla bacheca degli Operators. Il resto del tuo posto resta com'è, e il tuo badge e il tuo acquisto non cambiano.",
+		"next": "Puoi aggiungere una nuova citazione che rispetti le linee guida della community nelle tue <settings>impostazioni</settings>.",
+		"reason_label": "Motivo",
+		"reason_value": "{reason, select, impersonation {Si spaccia per qualcun altro} rights {Usa il testo di qualcun altro senza averne i diritti} age_suitability {Non adatto agli utenti più giovani} other {Viola le linee guida della community}}",
+		"redress_v2": "Puoi anche rivolgerti a un tribunale. Se sei nell'UE, puoi rivolgerti a un <dsa>organismo di risoluzione extragiudiziale delle controversie</dsa> certificato. Se sei un consumatore nell'UE o nel SEE, puoi anche sottoporre la controversia alla Commissione nazionale svedese per i reclami dei consumatori (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Svezia.",
+		"signoff": "Il team di {product_name}",
+		"subject": "Abbiamo tolto la tua citazione dalla bacheca degli Operators di {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Il tuo badge è sul tuo profilo. Puoi nasconderlo nelle tue <settings>impostazioni</settings>.",
 		"bonus_heading": "Anche con il tuo pass",

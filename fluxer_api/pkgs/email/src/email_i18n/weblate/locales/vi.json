@@ -431,6 +431,22 @@
 		"signoff": "Đội ngũ {product_name}",
 		"subject": "Chúng tôi đã gỡ tên hoặc ảnh đại diện của bạn khỏi bức tường Operators của {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Hãy trả lời email này trong vòng 60 ngày và cho chúng tôi biết lý do bạn không đồng ý. Việc này miễn phí, và một người trong đội ngũ của chúng tôi sẽ đọc và quyết định kháng nghị của bạn.} other {Hãy liên hệ quản trị viên của máy chủ này trong vòng 60 ngày và cho họ biết lý do bạn không đồng ý.}}",
+		"appeal_title": "Cách kháng nghị",
+		"automated_text": "Việc này không được phát hiện tự động, và một người trong đội ngũ của chúng tôi đã đưa ra quyết định.",
+		"facts_label": "Các dữ kiện chúng tôi dựa vào",
+		"footer_reason": "Bạn nhận được email này vì một quyết định về mục của bạn trên bức tường Operators của {product_name}.",
+		"ground": "Mục 6.2 của điều khoản dịch vụ",
+		"ground_label": "Căn cứ",
+		"intro": "Chúng tôi đã gỡ câu trích dẫn khỏi vị trí của bạn trên bức tường Operators. Phần còn lại của vị trí vẫn giữ nguyên, và huy hiệu cũng như giao dịch mua của bạn không bị ảnh hưởng.",
+		"next": "Bạn có thể thêm câu trích dẫn mới tuân theo nguyên tắc cộng đồng trong <settings>cài đặt</settings>.",
+		"reason_label": "Lý do",
+		"reason_value": "{reason, select, impersonation {Mạo danh người khác} rights {Dùng văn bản của người khác mà không có quyền sử dụng} age_suitability {Không phù hợp với người dùng nhỏ tuổi} other {Vi phạm nguyên tắc cộng đồng}}",
+		"redress_v2": "Bạn cũng có thể khởi kiện ra tòa. Nếu bạn ở EU, bạn có thể dùng một <dsa>cơ quan giải quyết tranh chấp ngoài tòa án</dsa> đã được chứng nhận. Nếu bạn là người tiêu dùng ở EU hoặc EEA, bạn cũng có thể đưa tranh chấp đến Hội đồng Quốc gia Thụy Điển về Tranh chấp Tiêu dùng (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Thụy Điển.",
+		"signoff": "Đội ngũ {product_name}",
+		"subject": "Chúng tôi đã gỡ câu trích dẫn của bạn khỏi bức tường Operators của {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Huy hiệu đã có trên hồ sơ của bạn. Bạn có thể ẩn nó trong phần <settings>cài đặt</settings>.",
 		"bonus_heading": "Cũng đi kèm pass của bạn",

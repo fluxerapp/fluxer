@@ -431,6 +431,22 @@
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} Operators 벽에서 이름 또는 아바타를 내렸어요"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {60일 이내에 이 이메일에 회신해 동의하지 않는 이유를 알려 주세요. 이의 제기는 무료이며, 저희 팀의 담당자가 직접 읽고 결정해요.} other {60일 이내에 이 인스턴스의 관리자에게 문의해 동의하지 않는 이유를 알려 주세요.}}",
+		"appeal_title": "이의 제기 방법",
+		"automated_text": "이 건은 자동 감지로 발견된 것이 아니며, 결정은 저희 팀 담당자가 내렸어요.",
+		"facts_label": "근거로 삼은 사실",
+		"footer_reason": "{product_name} Operators 벽 표시에 관한 결정 때문에 이 이메일을 받으셨어요.",
+		"ground": "서비스 약관 제6.2조",
+		"ground_label": "근거",
+		"intro": "Operators 벽의 내 자리에서 한마디를 내렸어요. 자리의 나머지 부분은 그대로이며, 배지와 구매에도 영향이 없어요.",
+		"next": "<settings>설정</settings>에서 커뮤니티 가이드라인을 따르는 새 한마디를 추가할 수 있어요.",
+		"reason_label": "사유",
+		"reason_value": "{reason, select, impersonation {다른 사람을 사칭함} rights {권리가 없는 다른 사람의 글을 사용함} age_suitability {어린 사용자에게 적합하지 않음} other {커뮤니티 가이드라인을 위반함}}",
+		"redress_v2": "법원에 소송을 제기할 수도 있어요. EU에 있다면 인증된 <dsa>법원 외 분쟁 해결 기관</dsa>을 이용할 수 있어요. EU 또는 EEA의 소비자라면 스웨덴 소비자분쟁위원회(<arn>ARN</arn>, Box 174, 101 23 Stockholm, 스웨덴)에 분쟁을 제기할 수도 있어요.",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} Operators 벽에서 한마디를 내렸어요"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "배지가 프로필에 표시되어 있어요. <settings>설정</settings>에서 숨길 수 있어요.",
 		"bonus_heading": "패스와 함께 제공되는 것",

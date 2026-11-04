@@ -431,6 +431,22 @@
 		"signoff": "Echipa {product_name}",
 		"subject": "Am scos numele sau avatarul tău de pe peretele Operators {product_name}"
 	},
+	"operator_pass_wall_quote_cleared": {
+		"appeal_body_v2": "{reply, select, yes {Răspunde la acest e-mail în cel mult 60 de zile și spune-ne de ce nu ești de acord. Contestația este gratuită, iar o persoană din echipa noastră o citește și decide asupra ei.} other {Contactează administratorii acestei instanțe în cel mult 60 de zile și spune-le de ce nu ești de acord.}}",
+		"appeal_title": "Cum depui o contestație",
+		"automated_text": "Acest lucru nu a fost detectat automat, iar decizia a fost luată de o persoană din echipa noastră.",
+		"facts_label": "Faptele pe care ne-am bazat",
+		"footer_reason": "Ai primit acest e-mail din cauza unei decizii privind înscrierea ta de pe peretele Operators {product_name}.",
+		"ground": "Secțiunea 6.2 din termenii și condițiile de utilizare",
+		"ground_label": "Temei",
+		"intro": "Am scos citatul de pe locul tău de pe peretele Operators. Restul locului tău rămâne așa cum este, iar insigna și achiziția ta nu sunt afectate.",
+		"next": "Poți adăuga un citat nou care respectă regulile comunității din <settings>setări</settings>.",
+		"reason_label": "Motiv",
+		"reason_value": "{reason, select, impersonation {Se dă drept altcineva} rights {Folosește textul altcuiva fără a avea drepturile asupra lui} age_suitability {Nu este potrivit pentru utilizatorii mai tineri} other {Încalcă regulile comunității}}",
+		"redress_v2": "Te poți adresa și instanței. Dacă ești în UE, te poți adresa unui <dsa>organism certificat de soluționare extrajudiciară a litigiilor</dsa>. Dacă ești consumator în UE sau în SEE, poți duce disputa și la Comisia Națională pentru Litigii de Consum din Suedia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suedia.",
+		"signoff": "Echipa {product_name}",
+		"subject": "Am scos citatul tău de pe peretele Operators {product_name}"
+	},
 	"operator_pass_welcome": {
 		"badge_line": "Insigna ta apare pe profil. O poți ascunde din <settings>setări</settings>.",
 		"bonus_heading": "Tot cu pass-ul tău",

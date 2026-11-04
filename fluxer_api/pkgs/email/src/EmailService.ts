@@ -303,6 +303,7 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	operator_pass_visionary_turned_on: 'support',
 	operator_pass_wall_hidden: 'appeals',
 	operator_pass_wall_name_replaced: 'appeals',
+	operator_pass_wall_quote_cleared: 'appeals',
 	operator_pass_welcome: 'support',
 	operator_pass_withdrawal_receipt: 'support',
 	password_change_verification: 'support',
@@ -1079,6 +1080,27 @@ export class EmailService implements IEmailService {
 				'operator_pass_wall_name_replaced',
 				locale,
 				{target: params.target, shown: params.shown, reason: params.reason},
+				{
+					slots: (template) => ({
+						...facts(
+							[template.reason_label, template.reason_value],
+							[template.facts_label, params.note],
+							[template.ground_label, template.ground, termsUrl],
+						),
+						text_1: template.automated_text,
+						text_2: template.next,
+						...appealSection(template),
+					}),
+				},
+			);
+		},
+		operator_pass_wall_quote_cleared: async (email, params, locale) => {
+			const termsUrl = `${this.config.marketingBaseUrl}/terms#6-2-enforcement-by-fluxer`;
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_wall_quote_cleared',
+				locale,
+				{reason: params.reason},
 				{
 					slots: (template) => ({
 						...facts(

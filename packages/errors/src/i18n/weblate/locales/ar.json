@@ -488,6 +488,8 @@
 	"operator_pass.waitlist_token_invalid": "رابط قائمة الانتظار هذا غير صالح.",
 	"operator_pass.wall_name_rejected": "لا يمكننا عرض هذا الاسم على جدار Operators. يُرجى اختيار اسم آخر.",
 	"operator_pass.wall_name_required": "أدخل اسمًا لجدار Operators، أو اختر عدم الظهور عليه.",
+	"operator_pass.wall_quote_invalid": "يمكن أن يحتوي الاقتباس على 80 حرفًا كحد أقصى في سطر واحد، بدون أحرف مخفية أو أحرف تحكم.",
+	"operator_pass.wall_quote_rejected": "لا يمكن أن يحتوي الاقتباس على روابط أو عناوين بريد إلكتروني أو إشارات @.",
 	"operator_pass.withdrawal_unavailable": "لم يعد بالإمكان الانسحاب من هذا الشراء من هنا.",
 	"permissions.global_ip_banned": "{reason, select, shown {حجب {product_name} الوصول من هذه الشبكة بسبب نشاط خالف قواعده.} other {حجب {product_name} الوصول من هذه الشبكة.}} إذا كنت تشارك هذه الشبكة مع آخرين، كما في المدرسة أو العمل أو على شبكة Wi-Fi عامة أو عبر شركة الاتصالات أو شبكة VPN، فقد لا يكون لهذا الحجب أي علاقة بك. أسرع حل هو تغيير الشبكة، مثل استخدام بيانات الجوال بدلًا من Wi-Fi، أو تشغيل شبكة VPN أو إيقافها.{appealEmail, select, null {} other { إذا كنت تعتقد أن هذا الحجب خطأ، فراسل {appealEmail} واذكر عنوان IP الخاص بك، {ipAddress}.}}",
 	"permissions.global_ip_temporarily_banned": "{reason, select, shown {حجب {product_name} الوصول من هذه الشبكة بسبب نشاط خالف قواعده.} other {حجب {product_name} الوصول من هذه الشبكة.}} ينتهي الحجب في {expiresAt}. إذا كنت تشارك هذه الشبكة مع آخرين، كما في المدرسة أو العمل أو على شبكة Wi-Fi عامة أو عبر شركة الاتصالات أو شبكة VPN، فقد لا يكون لهذا الحجب أي علاقة بك. أسرع حل هو تغيير الشبكة، مثل استخدام بيانات الجوال بدلًا من Wi-Fi، أو تشغيل شبكة VPN أو إيقافها.{appealEmail, select, null {} other { إذا كنت تعتقد أن هذا الحجب خطأ، فراسل {appealEmail} واذكر عنوان IP الخاص بك، {ipAddress}.}}",

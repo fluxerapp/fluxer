@@ -237,6 +237,9 @@ export interface EmailTemplateVariables {
 		shown: 'previous' | 'username' | 'operator';
 		reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
 	};
+	operator_pass_wall_quote_cleared: {
+		reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
+	};
 	operator_pass_visionary_turned_on: {
 		badge: YesNo;
 		wallName: string;
