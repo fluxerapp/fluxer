@@ -102,6 +102,9 @@ async fn login_page(
 
 async fn auth_start(State(state): State<AppState>) -> Response {
     let config = state.config();
+    if let Some(response) = sso_only_redirect(config) {
+        return response;
+    }
     let verifier = random_nonce();
     let oauth_state = generate_oauth_state(&config.secret_key_base, OAUTH_STATE_PURPOSE, &verifier);
     let authorize_url = oauth2::authorize_url(config, &oauth_state);
@@ -248,6 +251,9 @@ async fn oauth2_callback_page(
     Query(query): Query<CallbackQuery>,
 ) -> Response {
     let config = state.config();
+    if let Some(response) = sso_only_redirect(config) {
+        return response;
+    }
     Html(oauth_callback_page(
         config,
         OAUTH_FLOW_STORAGE_KEY,
@@ -266,6 +272,14 @@ async fn oauth2_callback_finish(
 ) -> Response {
     let config = state.config();
     let base = &config.base_path;
+
+    if config.sso.as_ref().is_some_and(|sso| sso.only) {
+        return oauth_finish_response(
+            StatusCode::FORBIDDEN,
+            &format!("{base}/login?error=sso_only"),
+            &[],
+        );
+    }
 
     if !has_finish_header(&headers) {
         return oauth_finish_response(
@@ -686,8 +700,15 @@ fn sso_sign_in_error_code(err: &ApiError) -> &'static str {
     }
 }
 
+fn sso_only_redirect(config: &crate::config::AdminConfig) -> Option<Response> {
+    config.sso.as_ref().filter(|sso| sso.only).map(|_| {
+        Redirect::to(&format!("{}/login?error=sso_only", config.base_path)).into_response()
+    })
+}
+
 fn login_error_message(code: &str) -> &'static str {
     match code {
+        "sso_only" => "Signing in with your Fluxer account is turned off here. Use single sign-on.",
         "oauth_failed" => "Authentication failed. Please try again.",
         "sso_failed" => "Single sign-on failed. Try again.",
         "sso_unavailable" => "Could not reach the sign-on provider. Try again in a moment.",

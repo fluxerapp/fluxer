@@ -682,6 +682,10 @@ The client secret that goes with `FLUXER_ADMIN_SSO_CLIENT_ID`. Only the admin se
 
 The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_DISPLAY_NAME`.
 
+### `FLUXER_ADMIN_SSO_ONLY`
+
+Whether staff can sign in to the admin panel only with single sign-on. Use `true` or `false`. With `true`, the login page hides the button for signing in with a Fluxer account, and the admin panel refuses new sign-ins that way. Staff who are already signed in stay signed in. It needs `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET`, and the admin service won't start without them. When it's empty, it's `false`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ONLY`.
+
 ## Email
 
 The admin panel can also save the delivery mode, the sender and the SMTP server. A value saved there is used first.
