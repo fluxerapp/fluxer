@@ -3,9 +3,12 @@
 -module(push_job_fields).
 -typing([eqwalizer]).
 
--export([notification/7, thread/2, caller/1]).
+-export([notification/7, thread/2, caller/1, is_mature/1]).
 
 -define(MAX_CALLER_NAME_BYTES, 128).
+-define(MATURE_TITLE, <<"Fluxer">>).
+-define(MATURE_CHANNEL_BODY, <<"Message in an 18+ channel">>).
+-define(MATURE_GROUP_DM_BODY, <<"Message in an 18+ group DM">>).
 
 -spec caller(map()) -> map().
 caller(#{caller_id := CallerId, caller_name := Name} = Caller) when
@@ -34,20 +37,60 @@ caller_avatar_url(CallerIdBin, _Hash) ->
         <<"id">> => CallerIdBin, <<"avatar">> => null
     }).
 
+-spec is_mature(map()) -> boolean().
+is_mature(#{<<"__push_mature">> := true}) -> true;
+is_mature(#{<<"channel_nsfw">> := true}) -> true;
+is_mature(_MessageData) -> false.
+
 -spec notification(
     map(), map(), integer(), integer(), integer(), binary() | undefined, binary() | undefined
 ) -> map().
 notification(
     MessageData, MarkdownContext, GuildId, ChannelId, MessageId, GuildName, ChannelName
 ) ->
+    ChannelIdBin = integer_to_binary(ChannelId),
+    MessageIdBin = integer_to_binary(MessageId),
+    Common = #{
+        <<"tag">> => <<"channel:", ChannelIdBin/binary, ":", MessageIdBin/binary>>,
+        <<"notification_tag">> => <<"channel:", ChannelIdBin/binary>>,
+        <<"url">> => push_notification_format:build_url(GuildId, ChannelId, MessageId)
+    },
+    Fields =
+        case is_mature(MessageData) of
+            true ->
+                mature_fields(GuildId);
+            false ->
+                message_fields(
+                    MessageData, MarkdownContext, GuildId, GuildName, ChannelName
+                )
+        end,
+    with_badge(maps:merge(Common, Fields)).
+
+-spec mature_fields(integer()) -> map().
+mature_fields(GuildId) ->
+    {Kind, Body} =
+        case GuildId of
+            0 -> {<<"group_dm">>, ?MATURE_GROUP_DM_BODY};
+            _ -> {<<"guild">>, ?MATURE_CHANNEL_BODY}
+        end,
+    #{
+        <<"title">> => ?MATURE_TITLE,
+        <<"body">> => Body,
+        <<"icon">> => push_notification_format:resolve_author_avatar_url(#{}),
+        <<"image_url">> => null,
+        <<"conversation_kind">> => Kind,
+        <<"preview_kind">> => <<"mature">>
+    }.
+
+-spec message_fields(map(), map(), integer(), binary() | undefined, binary() | undefined) ->
+    map().
+message_fields(MessageData, MarkdownContext, GuildId, GuildName, ChannelName) ->
     AuthorData = maps:get(<<"author">>, MessageData, #{}),
     AuthorUsername = maps:get(<<"username">>, AuthorData, <<"Unknown">>),
     AuthorName = push_notification_format:resolve_author_name(
         MessageData, MarkdownContext, AuthorUsername
     ),
-    ChannelIdBin = integer_to_binary(ChannelId),
-    MessageIdBin = integer_to_binary(MessageId),
-    with_badge(#{
+    Fields = #{
         <<"title">> => push_notification:build_notification_title(
             AuthorName, MessageData, GuildId, GuildName, ChannelName
         ),
@@ -55,11 +98,43 @@ notification(
             MessageData, MarkdownContext
         ),
         <<"icon">> => push_notification_format:resolve_author_avatar_url(AuthorData),
-        <<"tag">> => <<"channel:", ChannelIdBin/binary, ":", MessageIdBin/binary>>,
-        <<"notification_tag">> => <<"channel:", ChannelIdBin/binary>>,
-        <<"url">> => push_notification_format:build_url(GuildId, ChannelId, MessageId),
         <<"image_url">> => nullable(push_image_url:extract(MessageData))
+    },
+    maps:merge(
+        Fields,
+        maps:merge(
+            identity(AuthorName, MessageData, GuildId, GuildName, ChannelName),
+            push_notification_format:preview_fields(MessageData, MarkdownContext)
+        )
+    ).
+
+-spec identity(binary(), map(), integer(), binary() | undefined, binary() | undefined) -> map().
+identity(AuthorName, MessageData, 0, _GuildName, ChannelName) ->
+    Kind =
+        case maps:get(<<"channel_type">>, MessageData, 1) of
+            3 -> <<"group_dm">>;
+            _ -> <<"dm">>
+        end,
+    binaries(#{
+        <<"author_name">> => AuthorName,
+        <<"conversation_kind">> => Kind,
+        <<"conversation_name">> => group_name(Kind, ChannelName)
+    });
+identity(AuthorName, MessageData, _GuildId, GuildName, ChannelName) ->
+    binaries(#{
+        <<"author_name">> => AuthorName,
+        <<"conversation_kind">> => <<"guild">>,
+        <<"guild_name">> => GuildName,
+        <<"conversation_name">> => push_notification:channel_label(MessageData, ChannelName)
     }).
+
+-spec group_name(binary(), term()) -> binary() | undefined.
+group_name(<<"group_dm">>, Name) when is_binary(Name), byte_size(Name) > 0 -> Name;
+group_name(_Kind, _Name) -> undefined.
+
+-spec binaries(map()) -> map().
+binaries(Map) ->
+    maps:filter(fun(_Key, Value) -> is_binary(Value) andalso byte_size(Value) > 0 end, Map).
 
 -spec with_badge(map()) -> map().
 with_badge(Fields) ->
@@ -78,7 +153,17 @@ with_badge(Fields) ->
 thread(MessageData, ChannelName) ->
     case push_notification:thread_fields(MessageData, ChannelName) of
         Fields when map_size(Fields) =:= 0 -> Fields;
-        Fields -> Fields#{<<"kind">> => thread_job_kind(MessageData)}
+        Fields ->
+            without_mature_names(MessageData, Fields#{
+                <<"kind">> => thread_job_kind(MessageData)
+            })
+    end.
+
+-spec without_mature_names(map(), map()) -> map().
+without_mature_names(MessageData, Fields) ->
+    case is_mature(MessageData) of
+        true -> maps:without([<<"channel_name">>, <<"parent_name">>], Fields);
+        false -> Fields
     end.
 
 -spec thread_job_kind(map()) -> binary().

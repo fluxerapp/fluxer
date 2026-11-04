@@ -57,7 +57,34 @@ filter_eligible(
         end,
         Candidates
     ),
-    drop_blocked_recipients(EligibleUsers, AuthorId, fetch_missing_blocked_ids(EligibleUsers)).
+    Unblocked = drop_blocked_recipients(
+        EligibleUsers, AuthorId, fetch_missing_blocked_ids(EligibleUsers)
+    ),
+    case push_job_fields:is_mature(MessageData) of
+        true -> adult_recipients(Unblocked);
+        false -> Unblocked
+    end.
+
+-spec adult_recipients([integer()]) -> [integer()].
+adult_recipients([]) ->
+    [];
+adult_recipients(UserIds) ->
+    Chunks = chunk_user_ids(UserIds, blocked_ids_fetch_chunk(), []),
+    lists:append([adult_recipients_chunk(Chunk) || Chunk <- Chunks]).
+
+-spec adult_recipients_chunk([integer()]) -> [integer()].
+adult_recipients_chunk(UserIds) ->
+    Request = #{
+        <<"type">> => <<"get_users_adult_content_allowed">>,
+        <<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds]
+    },
+    case rpc_client:call(Request) of
+        {ok, #{<<"user_ids">> := Allowed}} when is_list(Allowed) ->
+            AllowedIds = lists:filtermap(fun snowflake_id:filter/1, Allowed),
+            [UserId || UserId <- UserIds, lists:member(UserId, AllowedIds)];
+        _ ->
+            []
+    end.
 
 -spec resolve_large_guild_metadata(integer(), map() | undefined) -> map() | undefined.
 resolve_large_guild_metadata(0, _SuppliedMetadata) ->
