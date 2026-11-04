@@ -63,6 +63,11 @@ export const InstantAccountAvailabilitySchema = withOpenApiType(
 				'APPROVAL_REQUIRED',
 				'New accounts need approval, so they need credentials to sign in once approved',
 			],
+			[
+				InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED,
+				'EMAIL_DOMAINS_RESTRICTED',
+				'Public sign-ups must use an email address on an allowed domain',
+			],
 		],
 		'Whether accounts can be created from just a display name, and why not',
 	),

@@ -610,6 +610,7 @@ describe('resolveInstantAccountAvailability', () => {
 		captchaProvider: CaptchaProviders.ALTCHA,
 		registrationMode: RegistrationModes.OPEN,
 		registrationUrl: null,
+		emailDomainsRestricted: false,
 	};
 
 	it('is available while enabled, with a captcha and open sign-ups', () => {
@@ -629,6 +630,19 @@ describe('resolveInstantAccountAvailability', () => {
 		expect(resolveInstantAccountAvailability({...open, registrationMode: RegistrationModes.CLOSED})).toBe(
 			InstantAccountAvailability.REGISTRATION_CLOSED,
 		);
+	});
+
+	it('needs an email for public sign-ups while allowed email domains are set', () => {
+		expect(resolveInstantAccountAvailability({...open, emailDomainsRestricted: true})).toBe(
+			InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED,
+		);
+		expect(
+			resolveInstantAccountAvailability({
+				...open,
+				emailDomainsRestricted: true,
+				registrationUrl: {approvalRequired: false},
+			}),
+		).toBe(InstantAccountAvailability.AVAILABLE);
 	});
 
 	it('follows a registration URL over the registration mode', () => {
