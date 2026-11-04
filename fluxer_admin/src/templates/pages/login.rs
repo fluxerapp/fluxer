@@ -43,20 +43,45 @@ pub fn login_page(
                                         div { (error) }
                                     }
                                 }
-                                a href={(base) "/auth/start"} role="button"
-                                    class="inline-flex items-center justify-center gap-2 \
-                                           font-medium rounded-lg transition-all duration-150 \
-                                           focus:outline-none focus:ring-2 focus:ring-offset-2 \
-                                           bg-neutral-900 text-white hover:bg-neutral-800 \
-                                           px-4 py-2 text-base w-full sm:w-fit \
-                                           focus:ring-offset-white" {
-                                    span { "Sign in with " (product_name(branding)) }
+                                @if let Some(sso) = &config.sso {
+                                    div class="flex flex-col gap-3 items-center w-full" {
+                                        (fluxer_sign_in_button(base, branding))
+                                        a href={(base) "/sso/start"} role="button"
+                                            class="inline-flex items-center justify-center gap-2 \
+                                                   font-medium rounded-lg transition-all duration-150 \
+                                                   focus:outline-none focus:ring-2 focus:ring-offset-2 \
+                                                   bg-neutral-50 text-neutral-700 hover:text-neutral-900 \
+                                                   border border-neutral-300 hover:border-neutral-400 \
+                                                   px-4 py-2 text-base w-full sm:w-fit \
+                                                   focus:ring-offset-white" {
+                                            span {
+                                                "Sign in with "
+                                                (sso.display_name.as_deref().unwrap_or("single sign-on"))
+                                            }
+                                        }
+                                    }
+                                } @else {
+                                    (fluxer_sign_in_button(base, branding))
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+fn fluxer_sign_in_button(base: &str, branding: Option<&PremiumBranding>) -> Markup {
+    html! {
+        a href={(base) "/auth/start"} role="button"
+            class="inline-flex items-center justify-center gap-2 \
+                   font-medium rounded-lg transition-all duration-150 \
+                   focus:outline-none focus:ring-2 focus:ring-offset-2 \
+                   bg-neutral-900 text-white hover:bg-neutral-800 \
+                   px-4 py-2 text-base w-full sm:w-fit \
+                   focus:ring-offset-white" {
+            span { "Sign in with " (product_name(branding)) }
         }
     }
 }

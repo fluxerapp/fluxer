@@ -290,6 +290,10 @@ export interface APIConfig {
 	};
 	admin: {
 		oauthClientSecret?: string;
+		sso: {
+			issuer: string;
+			clientId: string;
+		};
 	};
 	auth: {
 		sudoModeSecret: string;

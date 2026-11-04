@@ -3,6 +3,7 @@
 import {registerAdminControllers} from '@app/api/admin/controllers/index';
 import {AdminApiKeyAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AdminApiKeyAdminAuditCases';
 import {adminAuditCaseShape} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
+import {AdminSsoAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AdminSsoAdminAuditCases';
 import {ApplicationAdminAuditCases} from '@app/api/admin/tests/audit_coverage/ApplicationAdminAuditCases';
 import {ArchiveAdminAuditCases} from '@app/api/admin/tests/audit_coverage/ArchiveAdminAuditCases';
 import {AssetAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AssetAdminAuditCases';
@@ -36,6 +37,7 @@ import {describe, expect, test} from 'vitest';
 
 const ALL_CASES = [
 	...AdminApiKeyAdminAuditCases,
+	...AdminSsoAdminAuditCases,
 	...ApplicationAdminAuditCases,
 	...ArchiveAdminAuditCases,
 	...AssetAdminAuditCases,

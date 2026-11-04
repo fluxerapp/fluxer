@@ -64,6 +64,8 @@ function setDefaultTestEnv(): void {
 		FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 		FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 		FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
+		FLUXER_ADMIN_SSO_ISSUER: 'https://1.1.1.1/admin-sso',
+		FLUXER_ADMIN_SSO_CLIENT_ID: 'admin-sso-test-client',
 		FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-rpc-token',
 		FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 		FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',

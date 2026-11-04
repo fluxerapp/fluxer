@@ -42,7 +42,12 @@ pub async fn require_auth(
     let config = state.config();
     let session = extract_session(&request, &config.secret_key_base);
     let Some(session) = session else {
-        return Redirect::to(&format!("{}/auth/start", config.base_path)).into_response();
+        let entry = if config.sso.is_some() {
+            "login"
+        } else {
+            "auth/start"
+        };
+        return Redirect::to(&format!("{}/{entry}", config.base_path)).into_response();
     };
     let (admin_user, pending_registration_count) =
         match fetch_admin_user(state.http_client(), config, &session).await {

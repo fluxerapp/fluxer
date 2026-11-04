@@ -111,7 +111,7 @@ export function isTemporarilyBanned(user: Pick<User, 'flags' | 'tempBannedUntil'
 	);
 }
 
-function isAccountDisabled(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
+export function isAccountDisabled(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
 	if ((user.flags & UserFlags.DISABLED) === 0n) return false;
 	return user.tempBannedUntil == null || user.tempBannedUntil.getTime() > now;
 }

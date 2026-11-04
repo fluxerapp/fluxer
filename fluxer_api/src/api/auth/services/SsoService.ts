@@ -8,6 +8,7 @@ import {assertAccountCreationPastSetup, maybeAutoJoinInvite} from '@app/api/auth
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {assertEmailNotBlocklisted, isEmailBlocklisted} from '@app/api/auth/EmailBlocklist';
+import {getOidcJwks, resetOidcJwksCachesForTests} from '@app/api/auth/services/OidcJwks';
 import {
 	isLinkedToSsoProvider,
 	ssoIdentityTrait,
@@ -20,6 +21,7 @@ import {
 	type DiscoveredOidcProviderMetadata,
 	parseTokenEndpointResponse,
 	sanitizeSsoRedirectTo,
+	sendProviderRequest,
 	tryDiscoverOidcProviderMetadata,
 } from '@app/api/auth/services/SsoUtils';
 import {userHasMfa} from '@app/api/auth/services/SudoMethods';
@@ -38,12 +40,7 @@ import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
 import {canJoinSingleCommunity, type SingleCommunityService} from '@app/api/instance/SingleCommunityService';
-import {
-	deriveSsoRedirectUri,
-	getSsoRequestUrlPolicy,
-	isHttpsSsoUrl,
-	isTestSsoProvider,
-} from '@app/api/instance/SsoConfigValidation';
+import {deriveSsoRedirectUri, isHttpsSsoUrl, isTestSsoProvider} from '@app/api/instance/SsoConfigValidation';
 import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
@@ -65,7 +62,7 @@ import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {randomBase64Url} from '@app/api/utils/SecretHash';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
@@ -83,18 +80,8 @@ import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import type {StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
-import {HttpError, type HttpErrorType} from '@pkgs/http_client/src/HttpError';
 import {ms, seconds} from 'itty-time';
-import {
-	type CryptoKey,
-	createLocalJWKSet,
-	type FlattenedJWSInput,
-	errors as JoseErrors,
-	type JSONWebKeySet,
-	type JWSHeaderParameters,
-	type JWTPayload,
-	jwtVerify,
-} from 'jose';
+import {type JWTPayload, jwtVerify} from 'jose';
 
 interface SsoStatePayload {
 	codeVerifier: string;
@@ -164,24 +151,10 @@ interface ResolvedSsoClaims {
 	groupsOverage: boolean;
 }
 
-interface RemoteJwkSetResolver {
-	(protectedHeader?: JWSHeaderParameters, token?: FlattenedJWSInput): Promise<CryptoKey>;
-	coolingDown: boolean;
-	fresh: boolean;
-	reloading: boolean;
-	reload: () => Promise<void>;
-	jwks: () => JSONWebKeySet | undefined;
-}
-
 interface DiscoveryCacheEntry {
 	metadata: DiscoveredOidcProviderMetadata | null;
 	fetchedAt: number;
 	failed: boolean;
-}
-
-interface JwksCacheEntry {
-	jwks: RemoteJwkSetResolver;
-	cachedAt: number;
 }
 
 type ClientAuthMethod = 'client_secret_basic' | 'client_secret_post';
@@ -208,18 +181,14 @@ const DISCOVERY_FAILURE_FRESH_MS = ms('1 minute');
 const TOKEN_ERROR_BODY_MAX_BYTES = 4 * 1024;
 const PROVIDER_ERROR_TEXT_MAX_LENGTH = 300;
 const MISCONFIGURED_CLIENT_ERRORS = new Set(['invalid_client', 'unauthorized_client']);
-const PROVIDER_UNAVAILABLE_ERROR_TYPES = new Set<HttpErrorType>(['aborted', 'network_error', 'unresolvable_host']);
 
 const discoveryRefreshes = new Map<string, Promise<DiscoveredOidcProviderMetadata | null>>();
-const jwksCache = new Map<string, JwksCacheEntry>();
-const jwksCreations = new Map<string, Promise<RemoteJwkSetResolver>>();
 const workingClientAuthMethods = new Map<string, ClientAuthMethod>();
 const MISSING_ISSUER_WARNING_INTERVAL_MS = ms('1 hour');
 let missingIssuerWarnedAt = 0;
 
 export function resetSsoProviderCachesForTests(): void {
-	jwksCache.clear();
-	jwksCreations.clear();
+	resetOidcJwksCachesForTests();
 	workingClientAuthMethods.clear();
 }
 
@@ -271,20 +240,6 @@ function clientAuthMethodsToTry(tokenUrl: string, supported: Array<string> | nul
 		!supported?.length || (supported.includes('client_secret_basic') && !supported.includes('client_secret_post'));
 	const first = workingClientAuthMethods.get(tokenUrl) ?? (basicFirst ? 'client_secret_basic' : 'client_secret_post');
 	return [first, first === 'client_secret_post' ? 'client_secret_basic' : 'client_secret_post'];
-}
-
-async function sendProviderRequest(
-	request: Parameters<typeof FetchUtils.sendRequest>[0],
-): Promise<Awaited<ReturnType<typeof FetchUtils.sendRequest>>> {
-	try {
-		return await FetchUtils.sendRequest(request, {requestUrlPolicy: getSsoRequestUrlPolicy(), maxRedirects: 0});
-	} catch (error) {
-		getLogger().warn({url: formatUrlForDiagnostics(request.url), error}, 'SSO provider request failed');
-		if (error instanceof HttpError && error.errorType && PROVIDER_UNAVAILABLE_ERROR_TYPES.has(error.errorType)) {
-			throw new SsoProviderUnavailableError();
-		}
-		throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_MISCONFIGURED);
-	}
 }
 
 function formEncode(value: string): string {
@@ -547,15 +502,8 @@ function warnAboutMissingIssuer(): void {
 	);
 }
 
-function isJsonWebKeySet(value: unknown): value is JSONWebKeySet {
-	if (!isJsonRecord(value)) return false;
-	const keys = value['keys'];
-	return Array.isArray(keys) && keys.every(isJsonRecord);
-}
-
 export class SsoService {
 	private static readonly STATE_TTL_SECONDS = seconds('10 minutes');
-	private static readonly JWKS_CACHE_TTL_MS = ms('1 hour');
 	private readonly ssoIdentityRepository = new SsoIdentityRepository();
 
 	constructor(
@@ -1271,7 +1219,7 @@ export class SsoService {
 			if (!config.jwksUrl || !config.issuerForVerification) {
 				throw new Error('id_token cannot be verified without a JWKS URL and an issuer');
 			}
-			const jwks = await this.getOrCreateJwks(config.jwksUrl);
+			const jwks = await getOidcJwks(config.jwksUrl);
 			const {payload} = await jwtVerify(idToken, jwks, {
 				issuer: acceptedIssuers(config.issuerForVerification),
 				audience: config.clientId ?? undefined,
@@ -1291,119 +1239,6 @@ export class SsoService {
 			getLogger().error({error}, 'Failed to verify SSO id_token');
 			throw InputValidationError.fromCode('id_token', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
-	}
-
-	private async getOrCreateJwks(jwksUrl: string): Promise<RemoteJwkSetResolver> {
-		const cached = jwksCache.get(jwksUrl);
-		if (cached && Date.now() - cached.cachedAt < SsoService.JWKS_CACHE_TTL_MS) {
-			return cached.jwks;
-		}
-		let creation = jwksCreations.get(jwksUrl);
-		if (!creation) {
-			creation = this.createJwks(jwksUrl).finally(() => jwksCreations.delete(jwksUrl));
-			jwksCreations.set(jwksUrl, creation);
-		}
-		return creation;
-	}
-
-	private async createJwks(jwksUrl: string): Promise<RemoteJwkSetResolver> {
-		const now = Date.now();
-		const fetchJwks = async (): Promise<JSONWebKeySet> => {
-			const response = await sendProviderRequest({
-				url: jwksUrl,
-				method: 'GET',
-				headers: {Accept: 'application/json'},
-				timeout: ms('15 seconds'),
-				serviceName: 'sso_jwks',
-			});
-			if (response.status < 200 || response.status >= 300) {
-				FetchUtils.discardResponseBody(response.stream, response.status);
-				if (response.status >= 500) {
-					getLogger().warn({status: response.status, url: formatUrlForDiagnostics(jwksUrl)}, 'SSO keys request failed');
-					throw new SsoProviderUnavailableError();
-				}
-				throw new Error(`Failed to fetch JWKS: HTTP ${response.status}`);
-			}
-			const rawBody = await FetchUtils.streamToStringWithLimit(response.stream, {
-				maxBytes: EXTERNAL_RESPONSE_LIMITS.ssoJwksBytes,
-				headers: response.headers,
-				url: jwksUrl,
-				description: 'SSO JWKS response',
-			});
-			const parsed = parseJsonWithGuard(rawBody, isJsonWebKeySet);
-			if (!parsed) {
-				throw new Error('SSO JWKS response was not a JSON Web Key Set');
-			}
-			return parsed;
-		};
-		let currentJwks = await fetchJwks();
-		let currentResolver = createLocalJWKSet(currentJwks);
-		let fetchedAt = now;
-		let pendingReload: Promise<void> | null = null;
-		let jwks!: RemoteJwkSetResolver;
-		const reload = async (): Promise<void> => {
-			pendingReload ??= (async () => {
-				currentJwks = await fetchJwks();
-				currentResolver = createLocalJWKSet(currentJwks);
-				fetchedAt = Date.now();
-				jwksCache.set(jwksUrl, {jwks, cachedAt: fetchedAt});
-			})().finally(() => {
-				pendingReload = null;
-			});
-			await pendingReload;
-		};
-		jwks = (async (protectedHeader?: JWSHeaderParameters, token?: FlattenedJWSInput) => {
-			if (Date.now() - fetchedAt >= SsoService.JWKS_CACHE_TTL_MS) {
-				await reload();
-			}
-			try {
-				return await currentResolver(protectedHeader, token);
-			} catch (error) {
-				if (error instanceof JoseErrors.JWKSNoMatchingKey) {
-					await reload();
-					return currentResolver(protectedHeader, token);
-				}
-				throw error;
-			}
-		}) as RemoteJwkSetResolver;
-		Object.defineProperties(jwks, {
-			coolingDown: {
-				get: () => false,
-				enumerable: true,
-				configurable: false,
-			},
-			fresh: {
-				get: () => Date.now() - fetchedAt < SsoService.JWKS_CACHE_TTL_MS,
-				enumerable: true,
-				configurable: false,
-			},
-			reloading: {
-				get: () => pendingReload != null,
-				enumerable: true,
-				configurable: false,
-			},
-			reload: {
-				value: reload,
-				enumerable: true,
-				configurable: false,
-				writable: false,
-			},
-			jwks: {
-				value: () => currentJwks,
-				enumerable: true,
-				configurable: false,
-				writable: false,
-			},
-		});
-		jwksCache.set(jwksUrl, {jwks, cachedAt: now});
-		if (jwksCache.size > 10) {
-			for (const [url, entry] of jwksCache.entries()) {
-				if (now - entry.cachedAt >= SsoService.JWKS_CACHE_TTL_MS) {
-					jwksCache.delete(url);
-				}
-			}
-		}
-		return jwks;
 	}
 
 	private async fetchUserInfo(userInfoUrl: string, accessToken: string): Promise<Record<string, unknown>> {

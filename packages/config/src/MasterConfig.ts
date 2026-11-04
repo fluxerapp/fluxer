@@ -170,6 +170,10 @@ export interface MasterConfig {
 		admin: {
 			secret_key_base: string;
 			oauth_client_secret: string;
+			sso: {
+				issuer: string;
+				client_id: string;
+			};
 		};
 	};
 	auth: {

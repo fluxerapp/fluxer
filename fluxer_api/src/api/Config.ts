@@ -575,6 +575,10 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		admin: {
 			oauthClientSecret: master.services.admin.oauth_client_secret,
+			sso: {
+				issuer: master.services.admin.sso.issuer,
+				clientId: master.services.admin.sso.client_id,
+			},
 		},
 		auth: {
 			sudoModeSecret: master.auth.sudo_mode_secret,
