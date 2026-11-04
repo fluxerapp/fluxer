@@ -87,6 +87,7 @@ export interface APIConfig {
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 	maxInflightRequests: number;
+	maxConcurrentFormUploads: number;
 	automatedMessageDeletionDelayDays: number;
 	ipBanExemptIps: Array<string>;
 	cassandra: {

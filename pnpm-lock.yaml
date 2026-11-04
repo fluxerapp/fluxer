@@ -48,6 +48,9 @@ catalogs:
     '@elastic/elasticsearch':
       specifier: 9.5.1
       version: 9.5.1
+    '@fastify/busboy':
+      specifier: 3.2.4
+      version: 3.2.4
     '@floating-ui/react':
       specifier: 0.27.20
       version: 0.27.20
@@ -527,6 +530,9 @@ importers:
       '@elastic/elasticsearch':
         specifier: 'catalog:'
         version: 9.5.1(supports-color@7.2.0)
+      '@fastify/busboy':
+        specifier: 'catalog:'
+        version: 3.2.4
       '@fluxer/config':
         specifier: workspace:*
         version: link:../packages/config
@@ -4495,6 +4501,9 @@ packages:
 
   '@expressive-code/plugin-text-markers@0.44.3':
     resolution: {integrity: sha512-4Ae2xRSDV5kdWPsi40xWbOtoihbzM0zLVjQKkDAnD5KzFXl+6/kd+VhuWOlTRVaJ5cqGk++vCbAaf0MR1XbZlw==}
+
+  '@fastify/busboy@3.2.4':
+    resolution: {integrity: sha512-lQS8xcXT54rdJb+wlG/Q7SMSdtkZEpLPHooSDUZyyZm9LJD7X1kONPhVoPaHq+dsPtWUGGLIz9gBNhs9qKbylw==}
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -14190,6 +14199,8 @@ snapshots:
   '@expressive-code/plugin-text-markers@0.44.3':
     dependencies:
       '@expressive-code/core': 0.44.3
+
+  '@fastify/busboy@3.2.4': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:

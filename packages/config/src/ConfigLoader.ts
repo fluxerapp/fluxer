@@ -109,6 +109,7 @@ function defaultConfig(): MasterConfig {
 				headers_timeout_ms: 30_000,
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
+				max_concurrent_form_uploads: 16,
 				automated_message_deletion_delay_days: 7,
 				ip_ban_exempt_ips: [],
 				donation_proxy_key: '',
@@ -746,6 +747,12 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	normalizeAppOriginAliases(config);
 	normalizeAgePolicyConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
+	assertIntegerInRange(
+		config.services.api.max_concurrent_form_uploads,
+		'FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS',
+		1,
+		10_000,
+	);
 	assertIntegerInRange(
 		config.services.api.automated_message_deletion_delay_days,
 		'FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS',

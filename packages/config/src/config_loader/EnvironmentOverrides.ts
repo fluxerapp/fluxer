@@ -72,6 +72,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_API_HEADERS_TIMEOUT_MS: {path: ['services', 'api', 'headers_timeout_ms'], parse: parseInteger},
 	FLUXER_API_REQUEST_TIMEOUT_MS: {path: ['services', 'api', 'request_timeout_ms'], parse: parseInteger},
 	FLUXER_API_MAX_INFLIGHT_REQUESTS: {path: ['services', 'api', 'max_inflight_requests'], parse: parseInteger},
+	FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS: {
+		path: ['services', 'api', 'max_concurrent_form_uploads'],
+		parse: parseInteger,
+	},
 	FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS: {
 		path: ['services', 'api', 'automated_message_deletion_delay_days'],
 		parse: parseInteger,

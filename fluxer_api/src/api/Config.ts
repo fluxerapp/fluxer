@@ -363,6 +363,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		headersTimeoutMs: master.services.api.headers_timeout_ms,
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
+		maxConcurrentFormUploads: master.services.api.max_concurrent_form_uploads,
 		automatedMessageDeletionDelayDays: master.services.api.automated_message_deletion_delay_days,
 		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
 		cassandra: {
