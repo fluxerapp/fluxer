@@ -2,6 +2,7 @@
 
 import {
 	ADMIN_CLIENT_BASIC_AUTH,
+	ADMIN_SSO_ISSUER,
 	ADMIN_SSO_KID,
 	ADMIN_SSO_NONCE,
 	type AdminSsoProvider,
@@ -12,8 +13,10 @@ import {
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {server} from '@app/api/test/msw/server';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {generateKeyPair} from 'jose';
+import {HttpResponse, http} from 'msw';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface SignInBody {
@@ -83,6 +86,15 @@ describe('Admin SSO sign-in', () => {
 		expect(body.user_id).toBe(admin.userId);
 	});
 
+	it.each([
+		{aud: 'admin-sso-test-client'},
+		{aud: ['admin-sso-test-client']},
+		{aud: ['admin-sso-test-client', 'other-client']},
+	])('accepts the admin client as the authorized party with audience %j', async ({aud}) => {
+		const {status} = await signIn(idTokenClaimsJson(admin.userId, {aud, azp: 'admin-sso-test-client'}));
+		expect(status).toBe(200);
+	});
+
 	it.each(['1.5', '-1', '1e21', '"abc"', '"0"', 'null'])('refuses fluxer_id %s', async (fluxerId) => {
 		const {status, body} = await signIn(idTokenClaimsJson(fluxerId));
 		expect(status).toBe(400);
@@ -103,6 +115,12 @@ describe('Admin SSO sign-in', () => {
 		['a missing nonce', {nonce: undefined}],
 		['an access token', {type: 'access-token'}],
 		['a second audience without azp', {aud: ['admin-sso-test-client', 'other-client']}],
+		['another authorized party with a string audience', {azp: 'other-client'}],
+		['another authorized party with a single audience array', {aud: ['admin-sso-test-client'], azp: 'other-client'}],
+		[
+			'another authorized party with multiple audiences',
+			{aud: ['admin-sso-test-client', 'other-client'], azp: 'other-client'},
+		],
 	])('refuses %s', async (_label, overrides) => {
 		const {status} = await signIn(idTokenClaimsJson(admin.userId, overrides));
 		expect(status).toBe(400);
@@ -191,4 +209,45 @@ describe('Admin SSO sign-in', () => {
 			Config.admin.sso.issuer = previous;
 		}
 	});
+
+	it('refuses signing keys supplied through unauthenticated HTTP discovery', async () => {
+		const previous = Config.admin.sso.issuer;
+		const issuer = ADMIN_SSO_ISSUER.replace('https:', 'http:');
+		let discoveryRequests = 0;
+		server.use(
+			http.get(`${issuer}/.well-known/openid-configuration`, () => {
+				discoveryRequests += 1;
+				return HttpResponse.json({
+					issuer,
+					jwks_uri: `${ADMIN_SSO_ISSUER}/jwks.json`,
+					id_token_signing_alg_values_supported: ['RS256'],
+				});
+			}),
+		);
+		Config.admin.sso.issuer = issuer;
+		try {
+			const {status} = await signIn(idTokenClaimsJson(admin.userId, {iss: issuer}));
+			expect(status).toBe(400);
+			expect(discoveryRequests).toBe(0);
+			expect(provider.jwksRequests()).toBe(0);
+		} finally {
+			Config.admin.sso.issuer = previous;
+		}
+	});
+
+	it.each(['http://1.1.1.1/admin-sso', 'https://1.1.1.1/admin-sso?tenant=admin'])(
+		'refuses insecure or invalid issuer %s',
+		async (issuer) => {
+			const previous = Config.admin.sso.issuer;
+			Config.admin.sso.issuer = issuer;
+			try {
+				const {status, body} = await signIn(idTokenClaimsJson(admin.userId));
+				expect(status).toBe(400);
+				expect(body.code).toBe('INVALID_FORM_BODY');
+				expect(provider.jwksRequests()).toBe(0);
+			} finally {
+				Config.admin.sso.issuer = previous;
+			}
+		},
+	);
 });

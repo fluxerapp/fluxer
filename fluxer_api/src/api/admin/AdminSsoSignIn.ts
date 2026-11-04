@@ -71,7 +71,11 @@ class AdminSsoTokenRejected extends Error {}
 
 function adminSsoConfig(): AdminSsoConfig | null {
 	const {issuer, clientId} = Config.admin.sso;
-	return issuer && clientId ? {issuer, clientId} : null;
+	if (!issuer || !clientId) return null;
+	if (!isHttpsSsoUrl(issuer) || issuer.includes('?')) {
+		throw misconfigured('issuer must be an https URL without credentials, query or fragment');
+	}
+	return {issuer, clientId};
 }
 
 function misconfigured(reason: string): InputValidationError {
@@ -153,7 +157,9 @@ async function verifyAdminSsoIdToken(
 			maxTokenAge: '10 minutes',
 			requiredClaims: ['iat', 'exp', 'nonce'],
 		});
-		if (Array.isArray(payload.aud) && payload.aud.length > 1 && payload['azp'] !== config.clientId) {
+		const authorizedParty = payload['azp'];
+		const requiresAuthorizedParty = Array.isArray(payload.aud) && payload.aud.length > 1;
+		if ((authorizedParty !== undefined || requiresAuthorizedParty) && authorizedParty !== config.clientId) {
 			throw new AdminSsoTokenRejected('azp does not match the client ID');
 		}
 		if (!nonceMatches(payload['nonce'], expectedNonce)) {

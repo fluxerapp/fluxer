@@ -172,6 +172,7 @@ fn sso_config_from_env(admin_endpoint: &str) -> anyhow::Result<Option<SsoConfig>
             "set FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET together, or none of them"
         ),
     };
+    crate::sso::validate_issuer_url(&issuer)?;
     let redirect_uri = normalize_public_endpoint_from_env(&read_env(
         "FLUXER_ADMIN_SSO_REDIRECT_URI",
         &format!("{admin_endpoint}/sso/callback"),

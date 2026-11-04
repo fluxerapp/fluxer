@@ -206,7 +206,7 @@ async fn sso_callback_finish(
         return failed(StatusCode::BAD_GATEWAY, SSO_UNAVAILABLE);
     };
     let id_token = match sso::exchange_code(
-        state.http_client(),
+        state.sso_http_client(),
         &metadata,
         sso_config,
         &body.code,

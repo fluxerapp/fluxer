@@ -668,7 +668,7 @@ Every origin where passkeys work, separated by commas. When it's empty, Docker C
 
 ### `FLUXER_ADMIN_SSO_ISSUER`
 
-The issuer URL of an OpenID Connect provider that staff can also use to sign in to the admin panel. Admin single sign-on is on when `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET` are all set. The admin service won't start when only some of them are set. The api and admin services must have the same issuer and client ID. The provider's ID token must have a `fluxer_id` claim with the ID of the Fluxer account, and access still comes from the admin ACLs of that account. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ISSUER`.
+The HTTPS issuer URL of an OpenID Connect provider that staff can also use to sign in to the admin panel. The issuer must not contain credentials, a query or a fragment. Discovery and token endpoints must serve responses directly without redirects. Admin single sign-on is on when `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET` are all set. The admin service won't start when only some of them are set. The api and admin services must have the same issuer and client ID. The provider's ID token must have a `fluxer_id` claim with the ID of the Fluxer account, and access still comes from the admin ACLs of that account. Only trusted provider administrators may set this claim; users must not be able to change it. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ISSUER`.
 
 ### `FLUXER_ADMIN_SSO_CLIENT_ID`
 
