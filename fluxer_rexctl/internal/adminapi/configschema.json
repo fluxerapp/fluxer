@@ -132,6 +132,12 @@
     "nullable": true
   },
   {
+    "key": "app_public.branding.premium_page_color",
+    "type": "string",
+    "help": "Branding premium page color",
+    "nullable": true
+  },
+  {
     "key": "app_public.branding.premium_product_name",
     "type": "string",
     "help": "Branding premium product name",

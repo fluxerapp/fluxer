@@ -93,6 +93,7 @@ interface PrepareAssetUploadOptions {
 	base64Image: string | null;
 	errorPath: string;
 	uploader?: User | null;
+	enforceDimensions?: boolean;
 }
 
 type LimitConfigSnapshotProvider = Pick<LimitConfigService, 'getConfigSnapshot'>;
@@ -127,7 +128,17 @@ export class EntityAssetService {
 	}
 
 	async prepareAssetUpload(options: PrepareAssetUploadOptions): Promise<PreparedAssetUpload> {
-		const {assetType, entityType, entityId, guildId, previousHash, base64Image, errorPath, uploader} = options;
+		const {
+			assetType,
+			entityType,
+			entityId,
+			guildId,
+			previousHash,
+			base64Image,
+			errorPath,
+			uploader,
+			enforceDimensions,
+		} = options;
 		const s3KeyBase = this.buildS3KeyBase(assetType, entityType, entityId, guildId);
 		const cdnUrlBase = `${Config.endpoints.media}/${s3KeyBase}`;
 		const previousS3Key = previousHash ? `${s3KeyBase}/${stripAnimationPrefix(previousHash)}` : null;
@@ -158,7 +169,13 @@ export class EntityAssetService {
 			width,
 			contentType,
 			animated: isAnimated,
-		} = await this.validateAndProcessImage(base64Image, errorPath, assetType, uploader ?? null);
+		} = await this.validateAndProcessImage(
+			base64Image,
+			errorPath,
+			assetType,
+			uploader ?? null,
+			enforceDimensions ?? false,
+		);
 		const imageHash = crypto.createHash('md5').update(Buffer.from(imageBuffer)).digest('hex');
 		const imageHashShort = imageHash.slice(0, 8);
 		const newHash = isAnimated ? `a_${imageHashShort}` : imageHashShort;
@@ -358,6 +375,7 @@ export class EntityAssetService {
 		errorPath: string,
 		assetType: AssetType,
 		uploader: User | null,
+		enforceDimensions: boolean,
 	): Promise<{
 		imageBuffer: Uint8Array;
 		format: string;
@@ -376,7 +394,7 @@ export class EntityAssetService {
 					? getPolicy(kind).maxBytes
 					: resolveAssetSizeLimit(this.limitConfigService, 'avatar_max_size', AVATAR_MAX_SIZE, null, uploader),
 		});
-		if (kind === 'role_icon') {
+		if (kind === 'role_icon' || enforceDimensions) {
 			requireDimensionsWithinPolicy(metadata, kind, errorPath);
 		}
 		const isAnimatedImage = metadata.animated ?? false;

@@ -617,6 +617,11 @@ const AppPublicConfigResponse = z.object({
 		premium_product_name: z.string(),
 		premium_info_url: z.string().nullable(),
 		sign_in_backdrop_url: z.string().nullable(),
+		premium_page_color: z.string().nullable(),
+		premium_showcase_expressions_url: z.string().nullable(),
+		premium_showcase_profile_url: z.string().nullable(),
+		premium_showcase_stream_url: z.string().nullable(),
+		premium_showcase_upload_url: z.string().nullable(),
 		custom_css: z.string().nullable(),
 		upload_limit_message: z.string().nullable(),
 		trusted_domains: z.array(z.string()),
@@ -665,6 +670,7 @@ const AppPublicConfigUpdateRequest = z.object({
 			premium_product_name: z.string().trim().min(1).max(40).nullable().optional(),
 			premium_info_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
 			sign_in_backdrop_url: z.string().trim().max(2048).nullish(),
+			premium_page_color: z.string().trim().regex(HEX_THEME_COLOR_PATTERN).nullish(),
 			custom_css: z.string().trim().max(32_768).nullish(),
 			upload_limit_message: z.string().trim().max(UPLOAD_LIMIT_MESSAGE_MAX_LENGTH).nullish(),
 			trusted_domains: z.array(z.string().max(255)).max(TRUSTED_DOMAINS_MAX).nullish(),
@@ -1039,7 +1045,19 @@ export const InstanceConfigUpdateRequest = z.object({
 export type InstanceConfigUpdateRequest = z.infer<typeof InstanceConfigUpdateRequest>;
 
 export const BrandingAssetUploadRequest = z.object({
-	kind: z.enum(['icon', 'symbol', 'logo', 'wordmark', 'favicon', 'favicon_dark', 'sign_in_backdrop']),
+	kind: z.enum([
+		'icon',
+		'symbol',
+		'logo',
+		'wordmark',
+		'favicon',
+		'favicon_dark',
+		'sign_in_backdrop',
+		'premium_showcase_expressions',
+		'premium_showcase_profile',
+		'premium_showcase_stream',
+		'premium_showcase_upload',
+	]),
 	image: z.string().max(16_000_000).nullish(),
 });
 

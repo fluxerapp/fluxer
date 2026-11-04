@@ -5682,7 +5682,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Uploads a branding image served by the media proxy and stores its URL, or clears it when no image is provided. Requires INSTANCE_CONFIG_UPDATE permission.",
+				"description": "Uploads a branding image served by the media proxy and stores its URL, or clears it when no image is provided. The favicon_dark, sign_in_backdrop and premium_showcase_* kinds are only available on self-hosted instances. Requires INSTANCE_CONFIG_UPDATE permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -18007,6 +18007,11 @@
 									"premium_product_name": {"type": "string"},
 									"premium_info_url": {"nullable": true, "type": "string"},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string"},
+									"premium_page_color": {"nullable": true, "type": "string"},
+									"premium_showcase_expressions_url": {"nullable": true, "type": "string"},
+									"premium_showcase_profile_url": {"nullable": true, "type": "string"},
+									"premium_showcase_stream_url": {"nullable": true, "type": "string"},
+									"premium_showcase_upload_url": {"nullable": true, "type": "string"},
 									"custom_css": {"nullable": true, "type": "string"},
 									"upload_limit_message": {"nullable": true, "type": "string"},
 									"trusted_domains": {"type": "array", "items": {"type": "string"}}
@@ -18025,6 +18030,11 @@
 									"premium_product_name",
 									"premium_info_url",
 									"sign_in_backdrop_url",
+									"premium_page_color",
+									"premium_showcase_expressions_url",
+									"premium_showcase_profile_url",
+									"premium_showcase_stream_url",
+									"premium_showcase_upload_url",
 									"custom_css",
 									"upload_limit_message",
 									"trusted_domains"
@@ -18561,7 +18571,19 @@
 				"properties": {
 					"kind": {
 						"type": "string",
-						"enum": ["icon", "symbol", "logo", "wordmark", "favicon", "favicon_dark", "sign_in_backdrop"]
+						"enum": [
+							"icon",
+							"symbol",
+							"logo",
+							"wordmark",
+							"favicon",
+							"favicon_dark",
+							"sign_in_backdrop",
+							"premium_showcase_expressions",
+							"premium_showcase_profile",
+							"premium_showcase_stream",
+							"premium_showcase_upload"
+						]
 					},
 					"image": {"nullable": true, "type": "string", "maxLength": 16000000}
 				},
@@ -18685,6 +18707,11 @@
 									"premium_product_name": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 40},
 									"premium_info_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"premium_page_color": {
+										"nullable": true,
+										"type": "string",
+										"pattern": "^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$"
+									},
 									"custom_css": {"nullable": true, "type": "string", "maxLength": 32768},
 									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500},
 									"trusted_domains": {

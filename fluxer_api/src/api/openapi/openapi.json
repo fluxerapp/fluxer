@@ -39099,6 +39099,26 @@
 						"description": "Optional image URL drawn behind the sign-in card on a self-hosted instance",
 						"type": ["string", "null"]
 					},
+					"premium_page_color": {
+						"description": "Optional hex color a self-hosted instance uses to recolor its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_expressions_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"Your emojis, everywhere\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_profile_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"A profile that stands out\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_stream_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"Stream in 4K at 60 FPS\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_upload_url": {
+						"description": "Optional image a self-hosted instance shows next to the card about file size limits on its premium page",
+						"type": ["string", "null"]
+					},
 					"custom_css": {
 						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages",
 						"type": ["string", "null"]
@@ -39128,6 +39148,11 @@
 					"premium_product_name",
 					"premium_info_url",
 					"sign_in_backdrop_url",
+					"premium_page_color",
+					"premium_showcase_expressions_url",
+					"premium_showcase_profile_url",
+					"premium_showcase_stream_url",
+					"premium_showcase_upload_url",
 					"custom_css",
 					"upload_limit_message",
 					"trusted_domains"
