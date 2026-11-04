@@ -834,6 +834,12 @@ fn snapshot_user_group(
                     snapshot_text(user.bio.as_deref()),
                 ))
                 (snapshot_row(
+                    "user.custom_status",
+                    "Custom Status",
+                    SnapshotChange::Unknown,
+                    snapshot_text(user.custom_status.as_deref()),
+                ))
+                (snapshot_row(
                     "user.avatar",
                     "Avatar",
                     compare_asset(user.avatar.as_ref(), field(|live| live.avatar.as_deref())),

@@ -213,6 +213,8 @@ pub struct ReportProfileSnapshotUser {
     #[serde(default)]
     pub pronouns: Option<String>,
     #[serde(default)]
+    pub custom_status: Option<String>,
+    #[serde(default)]
     pub avatar: Option<ReportProfileSnapshotAsset>,
     #[serde(default)]
     pub banner: Option<ReportProfileSnapshotAsset>,
