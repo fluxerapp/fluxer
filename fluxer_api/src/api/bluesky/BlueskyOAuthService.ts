@@ -15,6 +15,7 @@ import type {
 import type {BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
 import {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
 import type {ExternalFetchResponse, IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
+import {Logger} from '@app/api/Logger';
 import {JoseKey} from '@atproto/jwk-jose';
 import {
 	AtprotoHandleResolver,
@@ -40,6 +41,7 @@ const NULL_BODY_STATUSES = new Set([204, 205, 304]);
 
 const HANDLE_LOOKUP_TIMEOUT_MS = 3000;
 const HANDLE_INVALID = 'handle.invalid';
+const SESSION_TTL_SECONDS = 300;
 
 function createUnfurlerFetch(unfurler: IUnfurlerService): Fetch {
 	return async (input, init) => {
@@ -197,19 +199,25 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 		});
 		const {session} = await client.callback(params);
 		const grantOwner = requireOwner();
-		const handle = await this.resolveHandle(client, session.did);
-		return {
-			...grantOwner,
-			did: session.did,
-			handle,
-		};
+		try {
+			const handle = await this.resolveHandle(client, session.did);
+			return {
+				...grantOwner,
+				did: session.did,
+				handle,
+			};
+		} finally {
+			await session.signOut().catch((error: unknown) => {
+				Logger.warn({error}, 'Bluesky OAuth sign-out after verification failed');
+			});
+		}
 	}
 
 	private createClient(
 		resolveOwner: () => BlueskyOAuthGrantOwner,
 		onConsume?: (owner: BlueskyOAuthGrantOwner) => void,
 	): BlueskyClientSession {
-		const sessionStore = createSessionStore(this.credentials, 86400, resolveOwner);
+		const sessionStore = createSessionStore(this.credentials, SESSION_TTL_SECONDS, resolveOwner);
 		const client = new NodeOAuthClient({
 			...this.configuration,
 			stateStore: createStateStore(this.kvClient, this.credentials, 3600, resolveOwner, onConsume),

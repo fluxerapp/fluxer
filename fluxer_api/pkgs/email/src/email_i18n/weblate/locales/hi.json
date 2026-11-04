@@ -6,6 +6,13 @@
 		"signoff": "{product_name} टीम",
 		"subject": "आपका {product_name} अकाउंट डिलीट नहीं होगा"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "आपको यह ईमेल इसलिए मिला है क्योंकि आपने अपना {product_name} अकाउंट डिलीट करने का अनुरोध किया था।",
+		"intro": "आपके अनुरोध के अनुसार, हमने आपका {product_name} अकाउंट डिलीट कर दिया है।",
+		"note": "आपकी पसंद के अनुसार, आपके मैसेज डिलीट कर दिए गए हैं या अब आपसे जुड़े नहीं हैं। अगर आप {product_name} फिर से इस्तेमाल करना चाहते हैं, तो आप नया अकाउंट बना सकते हैं।",
+		"signoff": "{product_name} टीम",
+		"subject": "आपका {product_name} अकाउंट डिलीट कर दिया गया है"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "आपको यह ईमेल इसलिए मिला है क्योंकि आपका {product_name} अकाउंट लंबे समय से इनएक्टिव है।",
 		"intro": "आपका {product_name} अकाउंट लंबे समय से इनएक्टिव है, इसलिए हम इसे {deletion_date} को डिलीट कर देंगे।",

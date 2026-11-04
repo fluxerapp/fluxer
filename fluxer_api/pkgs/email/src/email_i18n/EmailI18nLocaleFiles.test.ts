@@ -12,6 +12,7 @@ const DATE = new Date('2026-10-01T23:30:00Z');
 
 const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	account_deletion_cancelled: {},
+	account_deletion_completed: {},
 	account_deletion_scheduled_inactivity: {deletion_date: 'Dec 1, 2026'},
 	account_deletion_scheduled_requested: {deletion_date: 'Dec 14, 2026'},
 

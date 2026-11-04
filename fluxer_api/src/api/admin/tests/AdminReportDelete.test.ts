@@ -155,6 +155,7 @@ describe('DELETE /admin/reports/:report_id', () => {
 					global_name: null,
 					bio: null,
 					pronouns: null,
+					custom_status: null,
 					avatar: {hash: `abc${id}`, key: profileKey},
 					banner: null,
 				},

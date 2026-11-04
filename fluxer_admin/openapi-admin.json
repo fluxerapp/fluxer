@@ -16591,6 +16591,7 @@
 									"global_name": {"nullable": true, "type": "string"},
 									"bio": {"nullable": true, "type": "string"},
 									"pronouns": {"nullable": true, "type": "string"},
+									"custom_status": {"nullable": true, "type": "string"},
 									"avatar": {
 										"nullable": true,
 										"type": "object",
@@ -16624,7 +16625,17 @@
 										"additionalProperties": false
 									}
 								},
-								"required": ["id", "username", "discriminator", "global_name", "bio", "pronouns", "avatar", "banner"],
+								"required": [
+									"id",
+									"username",
+									"discriminator",
+									"global_name",
+									"bio",
+									"pronouns",
+									"custom_status",
+									"avatar",
+									"banner"
+								],
 								"additionalProperties": false
 							},
 							"member": {

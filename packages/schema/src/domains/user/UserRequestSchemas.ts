@@ -397,6 +397,11 @@ export const UserSettingsUpdateRequest = z
 			SensitiveMediaGuildFilterLevelSchema,
 			'Sensitive media filter level for community channels',
 		),
+		allow_mature_content_on_ios: z
+			.boolean()
+			.describe(
+				'Whether 18+ communities, channels and the "Show" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting.',
+			),
 		suppress_unprivileged_self_mentions: z
 			.boolean()
 			.describe('Suppress direct mentions and reply mentions from unprivileged users'),
@@ -812,6 +817,13 @@ export const BulkDeleteSelfMessagesFilter = z
 	});
 
 export type BulkDeleteSelfMessagesFilter = z.infer<typeof BulkDeleteSelfMessagesFilter>;
+
+export const UserAccountDeleteRequest = SudoVerificationSchema.extend({
+	immediate: z.boolean().optional().describe('Delete the account now instead of after the grace period'),
+	delete_messages: z.boolean().optional().describe('Also delete every message the account sent'),
+});
+
+export type UserAccountDeleteRequest = z.infer<typeof UserAccountDeleteRequest>;
 
 export const BulkDeleteSelfMessagesRequest = BulkDeleteSelfMessagesFilter.safeExtend(SudoVerificationSchema.shape);
 

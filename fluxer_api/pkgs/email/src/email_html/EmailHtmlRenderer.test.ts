@@ -222,6 +222,11 @@ const EMAILS: Array<[string, string | null, Send]> = [
 		(service, locale) => service.send('account_deletion_cancelled', USER, {}, locale),
 	],
 	[
+		'account_deletion_completed',
+		null,
+		(service, locale) => service.send('account_deletion_completed', USER, {}, locale),
+	],
+	[
 		'account_deletion_scheduled_requested',
 		null,
 		(service, locale) =>

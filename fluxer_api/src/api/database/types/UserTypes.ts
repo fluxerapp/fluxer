@@ -277,6 +277,7 @@ export interface UserSettingsRow {
 	sensitive_content_friend_dm_filter: number | null;
 	sensitive_content_non_friend_dm_filter: number | null;
 	sensitive_content_guild_filter: number | null;
+	allow_mature_content_on_ios: boolean | null;
 	suppress_unprivileged_self_mentions: boolean | null;
 	suppress_unprivileged_self_mentions_bypass_user_ids: Set<UserID> | null;
 	staff_dm_access_user_ids: Set<UserID> | null;
@@ -367,6 +368,7 @@ export interface FavoriteMemeRow {
 	tenor_id_str: string | null;
 	media_formats: string | null;
 	placeholder: string | null;
+	nsfw: boolean | null;
 	version: number;
 }
 
@@ -389,6 +391,7 @@ export const FAVORITE_MEME_COLUMNS = [
 	'tenor_id_str',
 	'media_formats',
 	'placeholder',
+	'nsfw',
 	'version',
 ] as const satisfies ReadonlyArray<keyof FavoriteMemeRow>;
 
@@ -518,6 +521,7 @@ export const USER_SETTINGS_COLUMNS = [
 	'sensitive_content_friend_dm_filter',
 	'sensitive_content_non_friend_dm_filter',
 	'sensitive_content_guild_filter',
+	'allow_mature_content_on_ios',
 	'suppress_unprivileged_self_mentions',
 	'suppress_unprivileged_self_mentions_bypass_user_ids',
 	'staff_dm_access_user_ids',

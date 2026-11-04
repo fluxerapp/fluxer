@@ -58,6 +58,7 @@ type FavoriteMemeMedia = {
 	placeholder: string | null;
 	gifSlug: string | null;
 	gifProvider: string | null;
+	nsfw: boolean;
 };
 
 type ResolvedFavoriteMemeMetadata = {
@@ -69,6 +70,7 @@ type ResolvedFavoriteMemeMetadata = {
 	duration: number | null;
 	isGifv: boolean;
 	placeholder: string | null;
+	nsfw: boolean;
 };
 
 function isAnimatedAttachment(contentType: string, flags: number | undefined): boolean {
@@ -209,6 +211,7 @@ export class FavoriteMemeService {
 			gif_slug: media.gifSlug,
 			gif_provider: media.gifProvider,
 			placeholder: resolved.placeholder,
+			nsfw: resolved.nsfw,
 		});
 		const responseData = mapFavoriteMemeToResponse(favoriteMeme);
 		await this.apiContext.services.gateway.dispatchPresence({
@@ -247,6 +250,7 @@ export class FavoriteMemeService {
 			duration: metadata?.duration && metadata.duration > 0 ? metadata.duration : media.duration,
 			isGifv: resolveFavoriteMemeAnimationFlag(media, metadata),
 			placeholder: metadata?.placeholder ?? media.placeholder,
+			nsfw: media.nsfw || metadata?.nsfw === true,
 		};
 	}
 
@@ -296,6 +300,7 @@ export class FavoriteMemeService {
 			duration: metadata.duration && metadata.duration > 0 ? metadata.duration : null,
 			isGifv: resolveFavoriteMemeAnimationFlag(media, metadata),
 			placeholder: metadata.placeholder ?? null,
+			nsfw: media.nsfw || metadata.nsfw === true,
 		};
 	}
 
@@ -379,6 +384,7 @@ export class FavoriteMemeService {
 			gif_provider: resolvedGif?.provider.meta.name ?? null,
 			media_formats: resolvedGif && media && Object.keys(media).length > 0 ? media : null,
 			placeholder: metadata.placeholder ?? null,
+			nsfw: metadata.nsfw === true,
 		});
 		const responseData = mapFavoriteMemeToResponse(favoriteMeme);
 		await this.apiContext.services.gateway.dispatchPresence({
@@ -428,6 +434,7 @@ export class FavoriteMemeService {
 			gif_provider: existingMeme.gifProvider,
 			media_formats: existingMeme.mediaFormats,
 			placeholder: existingMeme.placeholder,
+			nsfw: existingMeme.nsfw,
 			version: existingMeme.version,
 		};
 		const updatedMeme = await this.favoriteMemeRepository.update(user.id, memeId, updatedRow);
@@ -620,6 +627,7 @@ export class FavoriteMemeService {
 			placeholder: attachment.placeholder ?? null,
 			gifSlug: null,
 			gifProvider: null,
+			nsfw: (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0 || attachment.nsfw === true,
 		};
 	}
 
@@ -657,6 +665,7 @@ export class FavoriteMemeService {
 			placeholder: media.placeholder ?? null,
 			gifSlug: detectedGif?.slug ?? null,
 			gifProvider: detectedGif?.provider.meta.name ?? null,
+			nsfw: embed.nsfw === true || (media.flags & EmbedMediaFlags.CONTAINS_EXPLICIT_MEDIA) !== 0,
 		};
 	}
 

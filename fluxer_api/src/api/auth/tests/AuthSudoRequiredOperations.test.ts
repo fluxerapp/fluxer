@@ -137,7 +137,7 @@ describe('Auth sudo required operations', () => {
 			.body({
 				password: testUser.password,
 			})
-			.expect(204)
+			.expect(200)
 			.execute();
 	});
 });

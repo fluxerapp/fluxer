@@ -142,6 +142,11 @@ async function setupProfile(
 		bio: 'Original guild bio',
 		avatar: FIRST_IMAGE,
 	});
+	await createBuilder(harness, target.token)
+		.patch('/users/@me/settings')
+		.body({custom_status: {text: 'Original status'}})
+		.expect(HTTP_STATUS.OK)
+		.execute();
 	return {owner, target, guild, profile};
 }
 
@@ -179,6 +184,7 @@ describe('Report profile snapshots', () => {
 				global_name: 'Original Name',
 				bio: 'Original bio',
 				pronouns: 'they/them',
+				custom_status: 'Original status',
 				avatar: {
 					hash: profile.avatar,
 					key: `reports/${result.report_id}/profile/user_avatar/${profile.avatar}`,
@@ -300,6 +306,7 @@ describe('Report profile snapshots', () => {
 				global_name: null,
 				bio: null,
 				pronouns: null,
+				custom_status: null,
 				avatar: null,
 				banner: null,
 			},

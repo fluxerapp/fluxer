@@ -6,6 +6,13 @@
 		"signoff": "{product_name}-teamet",
 		"subject": "Ditt {product_name}-konto kommer inte att raderas"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Du fick det här mejlet eftersom du begärde att ditt {product_name}-konto skulle raderas.",
+		"intro": "Vi har raderat ditt {product_name}-konto, som du bad om.",
+		"note": "Dina meddelanden har raderats eller är inte längre kopplade till dig, beroende på vad du valde. Om du vill använda {product_name} igen kan du skapa ett nytt konto.",
+		"signoff": "{product_name}-teamet",
+		"subject": "Ditt {product_name}-konto har raderats"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Du fick det här mejlet eftersom ditt {product_name}-konto har varit inaktivt länge.",
 		"intro": "Ditt {product_name}-konto har varit inaktivt länge, så vi raderar det den {deletion_date}.",

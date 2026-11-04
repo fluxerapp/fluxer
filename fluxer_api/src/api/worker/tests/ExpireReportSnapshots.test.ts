@@ -247,6 +247,7 @@ describe('report retention', () => {
 					global_name: null,
 					bio: 'bio at report time',
 					pronouns: null,
+					custom_status: null,
 					avatar: {hash: `abc${id}`, key: profileKey},
 					banner: null,
 				},

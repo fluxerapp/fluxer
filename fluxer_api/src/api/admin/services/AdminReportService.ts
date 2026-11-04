@@ -529,6 +529,7 @@ export class AdminReportService {
 				global_name: user.global_name,
 				bio: user.bio,
 				pronouns: user.pronouns,
+				custom_status: user.custom_status,
 				avatar: await asset(user.avatar),
 				banner: await asset(user.banner),
 			};

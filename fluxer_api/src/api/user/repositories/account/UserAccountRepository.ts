@@ -38,6 +38,9 @@ export interface UserDeletionScheduleUpdate {
 	temp_banned_until?: Date | null;
 	enforcement_decision_id?: bigint | null;
 	first_refund_at?: Date | null;
+	pending_bulk_message_deletion_at?: Date | null;
+	pending_bulk_message_deletion_channel_count?: number | null;
+	pending_bulk_message_deletion_message_count?: number | null;
 }
 
 const USER_FLAGS_WRITE_ATTEMPTS = 3;

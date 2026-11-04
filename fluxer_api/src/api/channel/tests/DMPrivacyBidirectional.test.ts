@@ -155,6 +155,24 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 				.execute();
 		});
 	});
+	describe('teen defaults', () => {
+		it('blocks a non-friend member of a community the teen joined after sign-up', async () => {
+			const sender = await createTestAccount(harness);
+			const teen = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			await ensureSessionStarted(harness, sender.token);
+			await ensureSessionStarted(harness, teen.token);
+			const guild = await createGuild(harness, sender.token, 'Shared Community');
+			const systemChannel = await getChannel(harness, sender.token, guild.system_channel_id!);
+			const invite = await createChannelInvite(harness, sender.token, systemChannel.id);
+			await acceptInvite(harness, teen.token, invite.code);
+			const channel = await createDmChannel(harness, sender.token, teen.userId);
+			await createBuilder(harness, sender.token)
+				.post(`/channels/${channel.id}/messages`)
+				.body({content: 'hello'})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
+				.execute();
+		});
+	});
 	describe('friends bypass sender restrictions', () => {
 		it('allows message when sender has defaultGuildsRestricted but users are friends', async () => {
 			const sender = await createTestAccount(harness);

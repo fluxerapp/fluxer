@@ -6,6 +6,13 @@
 		"signoff": "{product_name}-tiimi",
 		"subject": "{product_name}-tiliäsi ei poisteta"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Sait tämän sähköpostin, koska pyysit {product_name}-tilisi poistamista.",
+		"intro": "Poistimme {product_name}-tilisi pyyntösi mukaisesti.",
+		"note": "Viestisi on valintasi mukaan poistettu tai niitä ei enää yhdistetä sinuun. Jos haluat käyttää palvelua {product_name} uudelleen, voit luoda uuden tilin.",
+		"signoff": "{product_name}-tiimi",
+		"subject": "{product_name}-tilisi on poistettu"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Sait tämän sähköpostin, koska {product_name}-tilisi on ollut pitkään käyttämättä.",
 		"intro": "{product_name}-tilisi on ollut pitkään käyttämättä, joten poistamme sen {deletion_date}.",

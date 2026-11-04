@@ -131,6 +131,9 @@ export class TestEmailService implements IEmailService {
 		account_deletion_cancelled: async (email, _params) => {
 			return this.record(email, 'account_deletion_cancelled');
 		},
+		account_deletion_completed: async (email, _params) => {
+			return this.record(email, 'account_deletion_completed');
+		},
 		inactivity_warning: async (email, {deletionDate, lastActiveDate}) => {
 			return this.record(email, 'inactivity_warning', {
 				deletion_date: deletionDate.toISOString(),

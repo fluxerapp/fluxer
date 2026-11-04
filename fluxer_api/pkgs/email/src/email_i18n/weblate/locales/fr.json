@@ -6,6 +6,13 @@
 		"signoff": "L’équipe {product_name}",
 		"subject": "Votre compte {product_name} ne sera pas supprimé"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Vous avez reçu cet e-mail car vous avez demandé la suppression de votre compte {product_name}.",
+		"intro": "Nous avons supprimé votre compte {product_name}, comme vous l’avez demandé.",
+		"note": "Selon votre choix, vos messages ont été supprimés ou ne vous sont plus associés. Si vous souhaitez utiliser à nouveau {product_name}, vous pouvez créer un nouveau compte.",
+		"signoff": "L’équipe {product_name}",
+		"subject": "Votre compte {product_name} a été supprimé"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Vous avez reçu cet e-mail car votre compte {product_name} est inactif depuis longtemps.",
 		"intro": "Votre compte {product_name} est inactif depuis longtemps. Nous le supprimerons donc le {deletion_date}.",

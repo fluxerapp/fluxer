@@ -7,7 +7,7 @@ import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSeriali
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
 
-function guildRow(features: Set<string>): GuildRow {
+function guildRow(features: Set<string>, nsfw = false): GuildRow {
 	return {
 		guild_id: createGuildID(1472623911696138261n),
 		owner_id: createUserID(1472623911696138262n),
@@ -28,7 +28,7 @@ function guildRow(features: Set<string>): GuildRow {
 		verification_level: 0,
 		mfa_level: 0,
 		nsfw_level: 0,
-		nsfw: false,
+		nsfw,
 		content_warning_level: 0,
 		content_warning_text: null,
 		explicit_content_filter: 0,
@@ -78,5 +78,16 @@ describe('GuildSearchSerializer', () => {
 		expect(result.isDiscoverable).toBe(false);
 		expect(result.discoveryDescription).toBeNull();
 		expect(result.discoveryTags).toEqual([]);
+	});
+	it('an 18+ guild with DISCOVERABLE is not discoverable', () => {
+		const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
+		const result = convertToSearchableGuild(guild, {
+			description: 'Adults only.',
+			categoryId: 8,
+			primaryLanguage: 'en-US',
+			tags: ['adults'],
+		});
+		expect(result.isDiscoverable).toBe(false);
+		expect(result.discoveryDescription).toBeNull();
 	});
 });

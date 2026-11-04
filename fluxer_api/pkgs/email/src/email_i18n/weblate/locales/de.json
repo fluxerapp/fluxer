@@ -6,6 +6,13 @@
 		"signoff": "Das {product_name}-Team",
 		"subject": "Dein {product_name}-Account wird nicht gelöscht"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Du hast diese E-Mail erhalten, weil du die Löschung deines {product_name}-Accounts beantragt hast.",
+		"intro": "Wir haben deinen {product_name}-Account wie gewünscht gelöscht.",
+		"note": "Deine Nachrichten wurden je nach deiner Auswahl gelöscht oder sind nicht mehr mit dir verknüpft. Wenn du {product_name} wieder nutzen möchtest, kannst du einen neuen Account erstellen.",
+		"signoff": "Das {product_name}-Team",
+		"subject": "Dein {product_name}-Account wurde gelöscht"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Du hast diese E-Mail erhalten, weil dein {product_name}-Account lange inaktiv war.",
 		"intro": "Dein {product_name}-Account ist seit Langem inaktiv, deshalb löschen wir ihn am {deletion_date}.",

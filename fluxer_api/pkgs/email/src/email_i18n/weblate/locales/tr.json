@@ -6,6 +6,13 @@
 		"signoff": "{product_name} ekibi",
 		"subject": "{product_name} hesabınız silinmeyecek"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Bu e-postayı, {product_name} hesabınızın silinmesini istediğiniz için aldınız.",
+		"intro": "İsteğiniz üzerine {product_name} hesabınızı sildik.",
+		"note": "Mesajlarınız, seçiminize bağlı olarak silindi ya da artık sizinle ilişkilendirilmiyor. {product_name} hizmetini yeniden kullanmak isterseniz yeni bir hesap oluşturabilirsiniz.",
+		"signoff": "{product_name} ekibi",
+		"subject": "{product_name} hesabınız silindi"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Bu e-postayı, {product_name} hesabınız uzun süredir kullanılmadığı için aldınız.",
 		"intro": "{product_name} hesabınız uzun süredir kullanılmıyor, bu yüzden hesabınızı {deletion_date} tarihinde sileceğiz.",

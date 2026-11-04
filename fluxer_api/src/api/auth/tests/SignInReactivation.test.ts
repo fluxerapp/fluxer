@@ -56,7 +56,7 @@ describe('Signing in again reactivates the account on every sign-in path', () =>
 		await createBuilder(harness, account.token)
 			.post('/users/@me/delete')
 			.body({password: account.password})
-			.expect(HTTP_STATUS.NO_CONTENT)
+			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect((await readUser(account)).pendingDeletionAt).not.toBeNull();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);

@@ -266,6 +266,7 @@ type ReplyInbox = 'appeals' | 'privacy' | 'safety' | 'support';
 
 const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	account_deletion_cancelled: 'safety',
+	account_deletion_completed: 'support',
 	account_deletion_scheduled_inactivity: 'support',
 	account_deletion_scheduled_requested: 'safety',
 	bulk_message_deletion_completed: 'privacy',
@@ -611,6 +612,9 @@ export class EmailService implements IEmailService {
 		},
 		account_deletion_cancelled: async (email, _params, locale) => {
 			return this.sendTemplatedEmail(email, 'account_deletion_cancelled', locale, {});
+		},
+		account_deletion_completed: async (email, _params, locale) => {
+			return this.sendTemplatedEmail(email, 'account_deletion_completed', locale, {});
 		},
 		inactivity_warning: async (email, {deletionDate, lastActiveDate}, locale) => {
 			const loginUrl = `${this.config.appBaseUrl}/login`;

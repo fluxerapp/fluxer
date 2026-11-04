@@ -122,7 +122,7 @@ export async function fetchUserSettings(
 }
 
 export async function deleteAccount(harness: ApiTestHarness, token: string, password: string): Promise<void> {
-	await createBuilder<void>(harness, token).post('/users/@me/delete').body({password}).expect(204).execute();
+	await createBuilder<void>(harness, token).post('/users/@me/delete').body({password}).expect(200).execute();
 }
 
 export async function expectDataExists(

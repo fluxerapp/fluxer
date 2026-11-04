@@ -68,7 +68,12 @@ function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | 
 	const [from, to] = adult ? [teen, adultDefaults] : [adultDefaults, teen];
 	const row = settings.toRow();
 	let changed = false;
-	for (const key of ['explicit_content_filter', 'friend_source_flags', 'sensitive_content_friend_dm_filter'] as const) {
+	for (const key of [
+		'explicit_content_filter',
+		'friend_source_flags',
+		'sensitive_content_friend_dm_filter',
+		'default_guilds_restricted',
+	] as const) {
 		if (row[key] === from[key] && row[key] !== to[key]) {
 			Object.assign(row, {[key]: to[key]});
 			changed = true;
@@ -84,6 +89,10 @@ function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | 
 				Object.assign(row, {[key]: teen[key]});
 				changed = true;
 			}
+		}
+		if (row.allow_mature_content_on_ios === true) {
+			row.allow_mature_content_on_ios = false;
+			changed = true;
 		}
 	}
 	return changed ? new UserSettings(row) : null;

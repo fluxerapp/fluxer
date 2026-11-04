@@ -5,7 +5,7 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import type {User} from '@app/api/models/User';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {propagateUserUpdate} from '@app/api/user/services/PartialUserChangePropagation';
-import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {clearPendingDeletion, resetTiedBulkMessageDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 
 export interface ClosureStateDeps extends SuspensionStateDeps {
@@ -23,6 +23,7 @@ export async function cancelClosure(
 		deletion_public_reason: null,
 		deletion_audit_log_reason: null,
 		enforcement_decision_id: null,
+		...resetTiedBulkMessageDeletion(user),
 	});
 	await clearPendingDeletion({userId: user.id, deletionQueue: kvDeletionQueue});
 	await propagateUserUpdate(userUpdateDeps, user, updated);

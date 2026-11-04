@@ -36,10 +36,24 @@ export function channelRequiresAgeVerification(
 	);
 }
 
-export async function getCanUserAccessNsfw(userRepository: UserRepository, userId: UserID): Promise<boolean> {
+export interface SearchNsfwAccess {
+	adult: boolean;
+	allowed: boolean;
+}
+
+export async function getSearchNsfwAccess(
+	userRepository: UserRepository,
+	userId: UserID,
+	iosApp: boolean,
+): Promise<SearchNsfwAccess> {
 	const user = await userRepository.findUnique(userId);
 	if (!user) {
 		throw new UnknownUserError();
 	}
-	return canUserAccessNsfwContent(user);
+	const adult = canUserAccessNsfwContent(user);
+	if (!adult || !iosApp) {
+		return {adult, allowed: adult};
+	}
+	const settings = await userRepository.findSettings(userId);
+	return {adult, allowed: settings?.allowMatureContentOnIos ?? false};
 }

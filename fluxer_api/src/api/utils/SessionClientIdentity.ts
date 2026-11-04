@@ -100,6 +100,13 @@ function decodeClientProperties(headerValue: string | null): Record<string, unkn
 	}
 }
 
+export function isFluxerIosAppRequest(userAgent: string | null, clientPropertiesHeader: string | null): boolean {
+	const nativeMatch = NATIVE_UA_REGEX.exec(userAgent?.trim() ?? '');
+	if (!nativeMatch) return false;
+	if (nativeMatch[1] === 'iOS') return true;
+	return parseReportedClientApp(clientPropertiesHeader)?.platform === 'ios';
+}
+
 export function parseReportedClientOs(headerValue: string | null): OsToken | null {
 	const os = decodeClientProperties(headerValue)?.os;
 	return typeof os === 'string' ? narrowOsToken(os) : null;

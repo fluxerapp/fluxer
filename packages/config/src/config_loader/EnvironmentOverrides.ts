@@ -309,6 +309,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['integrations', 'store_billing', 'sandbox_entitles_all'],
 		parse: parseBoolean,
 	},
+	FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS: {
+		path: ['integrations', 'store_billing', 'sandbox_subscriptions'],
+		parse: parseBoolean,
+	},
 	FLUXER_SELF_HOSTED: {path: ['instance', 'self_hosted'], parse: parseBoolean},
 	FLUXER_AUTO_JOIN_INVITE_CODE: {path: ['instance', 'auto_join_invite_code']},
 	FLUXER_VISIONARIES_GUILD_ID: {path: ['instance', 'visionaries_guild_id']},

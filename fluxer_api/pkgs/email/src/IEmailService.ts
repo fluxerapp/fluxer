@@ -404,6 +404,7 @@ export interface EmailSendParams {
 	account_deletion_scheduled_requested: {deletionDate: string};
 	account_deletion_scheduled_inactivity: {deletionDate: string};
 	account_deletion_cancelled: Record<string, never>;
+	account_deletion_completed: Record<string, never>;
 	inactivity_warning: {deletionDate: Date; lastActiveDate: Date};
 	enforcement_notice: EmailTemplateVariables['enforcement_notice'];
 	enforcement_ended: EmailTemplateVariables['enforcement_ended'];

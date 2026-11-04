@@ -329,7 +329,7 @@ describe('Account closure and credentials', () => {
 		smtp.release();
 		const response = await deletionRequest;
 		const respondedAt = Date.now();
-		expect(response.status).toBe(HTTP_STATUS.NO_CONTENT);
+		expect(response.status).toBe(HTTP_STATUS.OK);
 		expect(smtp.delivered).toEqual([]);
 		expect(await new AuthSessionRepository().listAuthSessions(userId)).toEqual([]);
 		const user = await storedUser(userId);

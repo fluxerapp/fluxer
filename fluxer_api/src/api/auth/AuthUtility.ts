@@ -11,6 +11,7 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {followOperatorPassWallStanding} from '@app/api/operator_pass/OperatorPassWallStanding';
+import {resetTiedBulkMessageDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {isAccountClosed, isSignInRefused} from '@app/api/user/UserHelpers';
 import * as AgeUtils from '@app/api/utils/AgeUtils';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
@@ -136,6 +137,7 @@ export async function reactivateOnSignIn(
 			deletion_reason_code: null,
 			deletion_public_reason: null,
 			deletion_audit_log_reason: null,
+			...resetTiedBulkMessageDeletion(currentUser),
 		});
 		await deletionQueue.removeFromQueue(currentUser.id);
 		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on sign-in');

@@ -99,6 +99,12 @@ export const FavoriteMemeResponse = z.object({
 		.describe(
 			'Compact thumbhash placeholder produced by the media proxy at favorite-time. Clients render it as a low-res preview while the full media loads. Null when the proxy did not emit one.',
 		),
+	nsfw: z
+		.boolean()
+		.default(false)
+		.describe(
+			'Whether the media is flagged as explicit. Clients apply the same sensitive media rules as for chat media.',
+		),
 });
 
 export type FavoriteMemeResponse = z.infer<typeof FavoriteMemeResponse>;

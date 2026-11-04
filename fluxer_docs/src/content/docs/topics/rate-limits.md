@@ -91,7 +91,7 @@ These return 429 with the [rate limit response object](#rate-limit-response-obje
 | [Request password recovery](/http-api/authentication/#request-password-recovery) | 5 per 30 minutes for one email address and 20 per 30 minutes for one IP address |
 | [Start email change](/http-api/users/email-and-password/#start-email-change) | 3 code sends to the current address and 5 to the new one per 15 minutes, and one every 30 seconds per ticket |
 | [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 code sends per 15 minutes, and one every 30 seconds per ticket |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 5 reports per hour for one reporter, 3 in one channel, 4 in one community and 20 for one message from all reporters |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 5 reports per hour for one reporter, 3 in one channel, 4 in one community and 20 for one message from all reporters. A report with a highest-priority reason only counts toward the limit for one message |
 | [Create DSA report](/http-api/reports/#create-dsa-report) | 5 reports per hour for one reporter, shared with the other report routes |
 
 On an instance where people sign in with a username, a password login allows 5 attempts per 15 minutes for one username from one IP address and 100 failed logins per hour for one username, and the IP address limit still applies.

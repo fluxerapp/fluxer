@@ -315,6 +315,7 @@ export interface MasterConfig {
 		store_billing: {
 			sandbox_user_ids?: Array<string>;
 			sandbox_entitles_all: boolean;
+			sandbox_subscriptions: boolean;
 		};
 	};
 	instance: {

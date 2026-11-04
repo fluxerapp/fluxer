@@ -6,6 +6,13 @@
 		"signoff": "Echipa {product_name}",
 		"subject": "Contul tău {product_name} nu va mai fi șters"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Ai primit acest e-mail deoarece ai solicitat ștergerea contului tău {product_name}.",
+		"intro": "Am șters contul tău {product_name}, așa cum ai cerut.",
+		"note": "Mesajele tale au fost șterse sau nu mai sunt asociate cu tine, în funcție de ce ai ales. Dacă vrei să folosești din nou {product_name}, poți crea un cont nou.",
+		"signoff": "Echipa {product_name}",
+		"subject": "Contul tău {product_name} a fost șters"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Ai primit acest e-mail deoarece contul tău {product_name} a fost inactiv o perioadă lungă.",
 		"intro": "Contul tău {product_name} este inactiv de mult timp, așa că îl vom șterge pe {deletion_date}.",

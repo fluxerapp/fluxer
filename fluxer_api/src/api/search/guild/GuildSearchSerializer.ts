@@ -23,7 +23,8 @@ function hasIndexableDiscoveryContext(
 export function convertToSearchableGuild(guild: Guild, discovery?: GuildDiscoveryContext): SearchableGuild {
 	const createdAt = Math.floor(snowflakeToDate(BigInt(guild.id)).getTime() / 1000);
 	const isDiscoverable = guild.features.has(GuildFeatures.DISCOVERABLE) && hasIndexableDiscoveryContext(discovery);
-	const discoveryContext = isDiscoverable ? discovery : undefined;
+	const listed = isDiscoverable && !guild.nsfw;
+	const discoveryContext = listed ? discovery : undefined;
 	const tags = (discoveryContext?.tags ?? []).map((t) => normalizeDiscoveryTag(t)).filter((t) => t.length > 0);
 	return {
 		id: guild.id.toString(),
@@ -44,6 +45,6 @@ export function convertToSearchableGuild(guild: Guild, discovery?: GuildDiscover
 		discoveryCategory: discoveryContext?.categoryId ?? null,
 		discoveryPrimaryLanguage: discoveryContext?.primaryLanguage ?? null,
 		discoveryTags: tags,
-		isDiscoverable,
+		isDiscoverable: listed,
 	};
 }

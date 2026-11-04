@@ -211,6 +211,9 @@ export class MessageOperationsHelpers {
 		if (this.isFavoriteMemeAnimated(favoriteMeme, metadata)) {
 			flags |= MessageAttachmentFlags.IS_ANIMATED;
 		}
+		if (favoriteMeme.nsfw === true) {
+			flags |= MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA;
+		}
 		return {
 			attachment_id: memeAttachmentId,
 			filename: favoriteMeme.filename,
@@ -224,7 +227,7 @@ export class MessageOperationsHelpers {
 			placeholder,
 			flags,
 			duration: favoriteMeme.duration,
-			nsfw: null,
+			nsfw: favoriteMeme.nsfw === true ? true : null,
 			waveform: null,
 		};
 	}

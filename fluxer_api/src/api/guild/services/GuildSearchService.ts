@@ -17,7 +17,7 @@ import {getMessageSearchService} from '@app/api/SearchFactory';
 import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/ChannelIndexingUtils';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification, getCanUserAccessNsfw} from '@app/api/search/SearchNsfwUtils';
+import {channelRequiresAgeVerification, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
 import {accessibleRequestedThreadIds, accessibleThreadIds} from '@app/api/search/ThreadSearchScope';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
@@ -55,10 +55,11 @@ export class GuildSearchService {
 		viewer: ThreadViewer;
 		guildId: GuildID;
 		channelIds: Array<ChannelID>;
+		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const {userId, viewer, guildId, searchParams, requestCache} = params;
+		const {userId, viewer, guildId, iosApp, searchParams, requestCache} = params;
 		let {channelIds} = params;
 		const guildData = await this.gatewayService.getGuildData({guildId, userId});
 		const guildIsAgeRestricted = guildData?.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
@@ -73,12 +74,17 @@ export class GuildSearchService {
 			channelIds = channels.filter((c) => threadsVisible || !c.isThreadOnly()).map((c) => c.id);
 		}
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
-		const canUserAccessNsfw =
-			guildIsAgeRestricted || includeNsfwRequested ? await getCanUserAccessNsfw(this.userRepository, userId) : false;
-		if (guildIsAgeRestricted && !canUserAccessNsfw) {
+		const nsfwAccess =
+			guildIsAgeRestricted || includeNsfwRequested
+				? await getSearchNsfwAccess(this.userRepository, userId, iosApp)
+				: {adult: false, allowed: false};
+		if (guildIsAgeRestricted && !nsfwAccess.adult) {
 			throw new NsfwContentRequiresAgeVerificationError();
 		}
-		const canIncludeNsfw = canUserAccessNsfw && (includeNsfwRequested || guildIsAgeRestricted);
+		if (guildIsAgeRestricted && !nsfwAccess.allowed) {
+			return emptyMessageSearchResponse(searchParams);
+		}
+		const canIncludeNsfw = nsfwAccess.allowed && (includeNsfwRequested || guildIsAgeRestricted);
 		const guildNsfw = guildData?.nsfw ?? false;
 		const channels = await this.channelRepository.channelData.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
@@ -180,10 +186,11 @@ export class GuildSearchService {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelIds: Array<ChannelID>;
+		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const {userId, viewer, channelIds, searchParams, requestCache} = params;
+		const {userId, viewer, channelIds, iosApp, searchParams, requestCache} = params;
 		const searchService = getMessageSearchService();
 		if (!searchService) {
 			throw new FeatureTemporarilyDisabledError();
@@ -207,7 +214,7 @@ export class GuildSearchService {
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
 		let canIncludeNsfw = false;
 		if (includeNsfwRequested) {
-			canIncludeNsfw = await getCanUserAccessNsfw(this.userRepository, userId);
+			canIncludeNsfw = (await getSearchNsfwAccess(this.userRepository, userId, iosApp)).allowed;
 		}
 		searchChannelIds = searchChannelIds.filter((channelIdStr) => {
 			const channel = accessibleChannels.get(channelIdStr) ?? threadParents.get(channelIdStr);

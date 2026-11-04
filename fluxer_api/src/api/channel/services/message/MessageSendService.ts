@@ -838,7 +838,7 @@ export class MessageSendService {
 					attachments: attachmentsToProcess,
 					attachmentUploadUserId: user.id,
 					uploadChannelId,
-					processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+					favoriteMemeAttachment,
 					stickerIds: data.sticker_ids
 						? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId))
 						: undefined,
@@ -1315,7 +1315,7 @@ export class MessageSendService {
 					embeds: data.embeds,
 					attachments: attachmentsToProcess,
 					attachmentUploadUserId: user.id,
-					processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+					favoriteMemeAttachment,
 					stickerIds: data.sticker_ids
 						? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId))
 						: undefined,
