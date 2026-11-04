@@ -10,7 +10,7 @@ rexctl installs Fluxer on one machine and keeps it running. To run Fluxer on a K
 
 ## What you need
 
-- A 64-bit Linux, macOS or Windows machine with at least 2 CPU cores, 4 GB of memory and 20 GB of free disk space. That's enough for about 1,000 people online at the same time. rexctl sizes Fluxer to the machine's memory and CPUs every time it starts, and a bigger machine needs no extra settings.
+- A 64-bit Linux, macOS or Windows machine with at least 4 GB of memory. Before it installs, rexctl checks the free disk space and tells you how much this install needs. rexctl sizes Fluxer to the machine's memory and CPUs every time it starts, and a bigger machine needs no extra settings.
 - On macOS and Windows, [Docker Desktop](https://docs.docker.com/desktop/). On Linux, rexctl installs Docker for you if it's missing.
 - A domain or subdomain for your instance, such as `chat.example.com`.
 - An `A` record for that domain pointing to the machine's public IP address. rexctl checks it before it asks for a certificate.
@@ -69,7 +69,7 @@ Fluxer uses three places on the machine:
 - Docker's data root has the images and all of Fluxer's data, such as the database, uploads and search index. It's `/var/lib/docker` on most Linux machines.
 - The backup folder is `backups` in the instance folder unless you choose another one with `rexctl backup location <folder>`.
 
-The install needs 20 GB free on the disk with the instance folder and on the disk with Docker's data root. If either one is short, rexctl says which path it is.
+Before the install, rexctl checks free space on the disk with the instance folder and on the disk with Docker's data root, and says which one is short and by how much.
 
 To put Fluxer on a second drive, set `data-root` in `/etc/docker/daemon.json` to a folder on that drive and restart Docker before you install. Docker then keeps the images and data on that drive. Start the install with `--dir` and a folder on the same drive.
 
