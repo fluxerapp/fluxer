@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createMultipartFormData, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
+import {THREADS_FEATURE, THREADS_FEATURE_HEADER} from '@app/api/channel/tests/ThreadTestUtils';
 import {VALID_PNG_BASE64} from '@app/api/emoji/tests/EmojiTestUtils';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
-import {DEFAULT_REQUEST_BODY_LIMIT, jsonAssetBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
+import {
+	DEFAULT_REQUEST_BODY_LIMIT,
+	isMultipartFormData,
+	jsonAssetBodyLimit,
+} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {AVATAR_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -19,6 +25,19 @@ function jsonBodyOfLength(length: number): string {
 	const suffix = '"}';
 	return `${prefix}${'a'.repeat(length - prefix.length - suffix.length)}${suffix}`;
 }
+
+const MIB = 1024 * 1024;
+
+describe('isMultipartFormData', () => {
+	it('matches only the multipart/form-data media type', () => {
+		expect(isMultipartFormData('multipart/form-data; boundary=x')).toBe(true);
+		expect(isMultipartFormData(' Multipart/Form-Data ;boundary=x')).toBe(true);
+		expect(isMultipartFormData('application/json; x=multipart/form-data')).toBe(false);
+		expect(isMultipartFormData('multipart/form-data-ish')).toBe(false);
+		expect(isMultipartFormData('multipart/mixed')).toBe(false);
+		expect(isMultipartFormData(undefined)).toBe(false);
+	});
+});
 
 describe('request body size limit', () => {
 	let harness: ApiTestHarness;
@@ -105,5 +124,73 @@ describe('request body size limit', () => {
 
 		expect((await send(path, 'POST', jsonBodyOfLength(DEFAULT_REQUEST_BODY_LIMIT + 1))).status).not.toBe(413);
 		expect((await send(path, 'POST', jsonBodyOfLength(25 * 1024 * 1024 + 1))).status).toBe(413);
+	});
+
+	it('applies the default limit to multipart bodies on routes that do not take uploads', async () => {
+		const {body, contentType} = createMultipartFormData({}, [], {
+			includePayloadJson: false,
+			fields: {grant_type: 'authorization_code', code: 'a'.repeat(DEFAULT_REQUEST_BODY_LIMIT)},
+		});
+		expect(body.length).toBeGreaterThan(DEFAULT_REQUEST_BODY_LIMIT);
+
+		const response = await harness.app.request('/oauth2/token', {
+			method: 'POST',
+			headers: {'Content-Type': contentType, 'x-forwarded-for': '127.0.0.1'},
+			body,
+		});
+
+		expect(response.status).toBe(413);
+		expect(await response.json()).toMatchObject({code: 'FILE_SIZE_TOO_LARGE'});
+	});
+
+	it('does not treat a content type that only mentions multipart/form-data as multipart', async () => {
+		const response = await harness.app.request('/webhooks/livekit', {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json; x=multipart/form-data', 'x-forwarded-for': '127.0.0.1'},
+			body: Buffer.alloc(20 * MIB),
+		});
+
+		expect(response.status).toBe(413);
+	});
+
+	it('applies the default limit to multipart bodies when starting a thread from a message', async () => {
+		const {body, contentType} = createMultipartFormData({name: 'thread'}, [
+			{index: 0, filename: 'big.bin', data: Buffer.alloc(20 * MIB)},
+		]);
+
+		const response = await harness.app.request(`/channels/${channelId}/messages/1/threads`, {
+			method: 'POST',
+			headers: {
+				Authorization: owner.token,
+				'Content-Type': contentType,
+				[THREADS_FEATURE_HEADER]: THREADS_FEATURE,
+				'x-forwarded-for': '127.0.0.1',
+			},
+			body,
+		});
+
+		expect(response.status).toBe(413);
+	});
+
+	it('keeps the default limit for JSON bodies on upload routes', async () => {
+		const response = await send(
+			`/channels/${channelId}/messages`,
+			'POST',
+			jsonBodyOfLength(DEFAULT_REQUEST_BODY_LIMIT + 1),
+		);
+
+		expect(response.status).toBe(413);
+	});
+
+	it('lets multipart uploads above the default limit through on upload routes', async () => {
+		const {response} = await sendMessageWithAttachments(
+			harness,
+			owner.token,
+			channelId,
+			{content: 'upload', attachments: [{id: 0, filename: 'big.bin'}]},
+			[{index: 0, filename: 'big.bin', data: Buffer.alloc(DEFAULT_REQUEST_BODY_LIMIT + MIB)}],
+		);
+
+		expect(response.status).toBe(200);
 	});
 });

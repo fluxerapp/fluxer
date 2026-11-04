@@ -8,6 +8,7 @@ import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesC
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {MultipartUploadRoute} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -161,6 +162,7 @@ export function MessageController(app: HonoApp) {
 	);
 	app.post(
 		'/channels/:channel_id/messages',
+		MultipartUploadRoute(),
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_CREATE),
 		LoginRequired,
 		Validator('param', ChannelIdParam),
@@ -256,6 +258,7 @@ export function MessageController(app: HonoApp) {
 	);
 	app.patch(
 		'/channels/:channel_id/messages/:message_id',
+		MultipartUploadRoute(),
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_UPDATE),
 		LoginRequired,
 		Validator('param', ChannelIdMessageIdParam),

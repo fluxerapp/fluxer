@@ -15,7 +15,11 @@ import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {BlockAppOriginMiddleware} from '@app/api/middleware/BlockAppOriginMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
-import {RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
+import {
+	isMultipartFormData,
+	MultipartUploadRoute,
+	RequestBodyLimit,
+} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
@@ -377,6 +381,7 @@ export function WebhookController(app: HonoApp) {
 	);
 	app.post(
 		'/webhooks/:webhook_id/:token',
+		MultipartUploadRoute(),
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
 		BlockAppOriginMiddleware,
 		OpenAPI({
@@ -395,8 +400,7 @@ export function WebhookController(app: HonoApp) {
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
 			const {wait} = ctx.req.valid('query');
-			const contentType = ctx.req.header('content-type') ?? '';
-			const data = contentType.includes('multipart/form-data')
+			const data = isMultipartFormData(ctx.req.header('content-type'))
 				? await parseWebhookMultipartMessageData(ctx, webhookId, token)
 				: await parseWebhookJsonMessageData(ctx);
 			const response = await ctx.get('webhookRequestService').executeWebhook({
