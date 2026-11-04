@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminApiKeyAdminController} from '@app/api/admin/controllers/AdminApiKeyAdminController';
+import {AdminSsoAdminController} from '@app/api/admin/controllers/AdminSsoAdminController';
 import {ApplicationAdminController} from '@app/api/admin/controllers/ApplicationAdminController';
 import {ArchiveAdminController} from '@app/api/admin/controllers/ArchiveAdminController';
 import {AssetAdminController} from '@app/api/admin/controllers/AssetAdminController';
@@ -32,6 +33,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 
 export function registerAdminControllers(app: HonoApp) {
 	AdminApiKeyAdminController(app);
+	AdminSsoAdminController(app);
 	ApplicationAdminController(app);
 	UserAdminController(app);
 	BadgeAdminController(app);

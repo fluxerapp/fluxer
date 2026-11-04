@@ -149,6 +149,10 @@ function defaultConfig(): MasterConfig {
 			admin: {
 				secret_key_base: '',
 				oauth_client_secret: '',
+				sso: {
+					issuer: '',
+					client_id: '',
+				},
 			},
 		},
 		auth: {

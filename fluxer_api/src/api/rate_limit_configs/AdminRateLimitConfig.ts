@@ -4,6 +4,11 @@ import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware
 import {ms} from 'itty-time';
 
 export const AdminRateLimitConfigs = {
+	ADMIN_SSO_SIGN_IN: {
+		bucket: 'admin:sso:sign_in',
+		config: {limit: 15, windowMs: ms('10 seconds')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
 	ADMIN_LOOKUP: {
 		bucket: 'admin:lookup',
 		config: {limit: 200, windowMs: ms('1 minute')},

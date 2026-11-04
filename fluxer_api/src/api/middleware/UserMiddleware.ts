@@ -22,6 +22,7 @@ interface ParsedAuthHeader {
 
 const SKIP_PATHS = new Set([
 	'/_health',
+	'/admin/sso/sign-in',
 	'/webhooks/livekit',
 	'/voice/join/preview',
 	'/voice/join',

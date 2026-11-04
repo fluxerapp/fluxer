@@ -8607,6 +8607,54 @@
 				}
 			}
 		},
+		"/admin/sso/sign-in": {
+			"post": {
+				"operationId": "exchange_admin_sso_token",
+				"summary": "Exchange admin SSO ID token",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminSsoSignInResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verifies an ID token from the admin sign-on provider and returns an admin panel access token for the Fluxer account in its fluxer_id claim. Only the admin panel calls it, with its OAuth2 client ID and secret as HTTP Basic auth. The account must already have admin:authenticate.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminSsoSignInRequest"}}}
+				}
+			}
+		},
 		"/admin/system-dms": {
 			"post": {
 				"operationId": "create_admin_system_dm",
@@ -16094,6 +16142,43 @@
 					}
 				},
 				"required": ["recipient_count"],
+				"additionalProperties": false
+			},
+			"AdminSsoSignInRequest": {
+				"type": "object",
+				"properties": {
+					"id_token": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 16384,
+						"description": "The ID token the admin panel got from the sign-on provider"
+					},
+					"nonce": {
+						"type": "string",
+						"minLength": 16,
+						"maxLength": 256,
+						"description": "The nonce the admin panel sent to the sign-on provider, which the ID token must have"
+					}
+				},
+				"required": ["id_token", "nonce"]
+			},
+			"AdminSsoSignInResponse": {
+				"type": "object",
+				"properties": {
+					"access_token": {"type": "string", "description": "The access token for API authorization"},
+					"token_type": {"type": "string", "description": "The type of token, typically \"Bearer\""},
+					"expires_in": {
+						"description": "The number of seconds until the access token expires",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"refresh_token": {"type": "string", "description": "The refresh token for obtaining new access tokens"},
+					"scope": {"type": "string", "description": "The space-separated list of granted scopes"},
+					"user_id": {
+						"description": "The account the admin signed in as",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					}
+				},
+				"required": ["access_token", "token_type", "expires_in", "refresh_token", "scope", "user_id"],
 				"additionalProperties": false
 			},
 			"AdminSsoIdentityMigrateRequest": {

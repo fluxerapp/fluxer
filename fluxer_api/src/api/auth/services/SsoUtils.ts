@@ -19,6 +19,7 @@ export interface DiscoveredOidcProviderMetadata {
 	userinfo_endpoint?: string;
 	jwks_uri?: string;
 	token_endpoint_auth_methods_supported?: Array<string>;
+	id_token_signing_alg_values_supported?: Array<string>;
 }
 
 const PROVIDER_UNAVAILABLE_ERROR_TYPES = new Set<HttpErrorType>(['aborted', 'network_error', 'unresolvable_host']);
@@ -147,6 +148,7 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 			userinfo_endpoint: typeof json['userinfo_endpoint'] === 'string' ? json['userinfo_endpoint'] : undefined,
 			jwks_uri: typeof json['jwks_uri'] === 'string' ? json['jwks_uri'] : undefined,
 			token_endpoint_auth_methods_supported: readStringList(json['token_endpoint_auth_methods_supported']),
+			id_token_signing_alg_values_supported: readStringList(json['id_token_signing_alg_values_supported']),
 		};
 	} catch (error) {
 		return discoveryFailed(issuer, 'request failed', {error});

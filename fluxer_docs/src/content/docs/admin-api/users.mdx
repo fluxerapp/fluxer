@@ -646,6 +646,31 @@ Returns a [sign-in link](#sign-in-link-object) for an account that has `*`. Only
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
+## Exchange admin SSO ID token
+
+<RouteHeader method="POST" path="/v1/admin/sso/sign-in" />
+
+Checks an ID token from the admin single sign-on provider and returns an [OAuth2 token](/http-api/oauth2/#oauth2-token-object) object for the admin panel, with `user_id` added. Only the admin panel calls it, with its OAuth2 client ID and secret as HTTP Basic auth. The ID token must be signed by the provider, be for the admin panel's client ID and have a `fluxer_id` claim with the ID of an account that has `admin:authenticate`. Each ID token works once.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id_token | string | The ID token the admin panel got from the provider (1-16384 characters) |
+| nonce | string | The nonce the admin panel sent to the provider (16-256 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 token](/http-api/oauth2/#oauth2-token-object) object with `user_id` | The admin was signed in |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with the validation code `INVALID_SSO_TOKEN` when the ID token was refused or already used, or `SSO_MISCONFIGURED` when the API can't use the provider's settings |
+| 400 | [OAuth2 error](/http-api/oauth2/#oauth2-error-response-object) object | `invalid_client` when the client ID or secret is wrong |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` when the account doesn't exist, can't sign in or lacks `admin:authenticate`, `FEATURE_TEMPORARILY_DISABLED` when admin single sign-on is off |
+| 503 | [error response](/admin-api/#error-response) | `SSO_PROVIDER_UNAVAILABLE` when the API can't get the provider's settings |
+
+The rate limit is 15 requests per 10 seconds, on the `admin:sso:sign_in` bucket.
+
 ## Revoke user recovery kit
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/recovery-kit" auditReason />

@@ -174,7 +174,7 @@ The origin Fluxer serves static assets such as the favicon and app icons from. W
 
 ### `FLUXER_ADMIN_ENDPOINT`
 
-The public address of the admin panel. When it's empty, Fluxer uses the public origin followed by `FLUXER_ADMIN_BASE_PATH`. The admin sign-in redirect is this address followed by `/oauth2_callback`, and the admin panel uses secure cookies when the address starts with `https`. With rexctl, use `rexctl config set FLUXER_ADMIN_ENDPOINT`.
+The public address of the admin panel. When it's empty, Fluxer uses the public origin followed by `FLUXER_ADMIN_BASE_PATH`. The admin sign-in redirect is this address followed by `/oauth2_callback`, the single sign-on redirect is this address followed by `/sso/callback`, and the admin panel uses secure cookies when the address starts with `https`. With rexctl, use `rexctl config set FLUXER_ADMIN_ENDPOINT`.
 
 ### `FLUXER_MARKETING_ENDPOINT`
 
@@ -665,6 +665,22 @@ The title browsers show for Fluxer when someone creates or uses a passkey. When 
 ### `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`
 
 Every origin where passkeys work, separated by commas. When it's empty, Docker Compose uses `FLUXER_PUBLIC_ORIGIN`, or `FLUXER_PUBLIC_SCHEME` followed by `://` and `FLUXER_DOMAIN`. A list you set replaces it and must include the web app origin. Set a list when `FLUXER_APP_ENDPOINT` is on another origin. Each entry is an http or https origin or an Android app, written as `android:apk-key-hash:` followed by its signing certificate's SHA-256 hash in unpadded base64url. With rexctl, use `rexctl config set FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`.
+
+### `FLUXER_ADMIN_SSO_ISSUER`
+
+The issuer URL of an OpenID Connect provider that staff can also use to sign in to the admin panel. Admin single sign-on is on when `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET` are all set. The admin service won't start when only some of them are set. The api and admin services must have the same issuer and client ID. The provider's ID token must have a `fluxer_id` claim with the ID of the Fluxer account, and access still comes from the admin ACLs of that account. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ISSUER`.
+
+### `FLUXER_ADMIN_SSO_CLIENT_ID`
+
+The client ID of the admin panel at the provider in `FLUXER_ADMIN_SSO_ISSUER`. Register the admin address followed by `/sso/callback` as its redirect URL. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_CLIENT_ID`.
+
+### `FLUXER_ADMIN_SSO_CLIENT_SECRET`
+
+The client secret that goes with `FLUXER_ADMIN_SSO_CLIENT_ID`. Only the admin service uses it. Keep it secret. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_CLIENT_SECRET`.
+
+### `FLUXER_ADMIN_SSO_DISPLAY_NAME`
+
+The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_DISPLAY_NAME`.
 
 ## Email
 
@@ -2144,6 +2160,10 @@ The OAuth2 client ID the admin panel signs in with. The stack uses the built-in 
 ### `FLUXER_ADMIN_OAUTH_REDIRECT_URI`
 
 The OAuth2 redirect URL of the admin panel. The admin service works it out from its own address.
+
+### `FLUXER_ADMIN_SSO_REDIRECT_URI`
+
+The single sign-on redirect URL of the admin panel. The admin service works it out from its own address.
 
 ### `FLUXER_API_WORKER_LANE`
 

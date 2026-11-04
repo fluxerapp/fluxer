@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {OAuth2TokenResponse} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
@@ -71,3 +72,20 @@ export const AdminSsoIdentityMigrateResponse = z.object({
 });
 
 export type AdminSsoIdentityMigrateResponse = z.infer<typeof AdminSsoIdentityMigrateResponse>;
+
+export const AdminSsoSignInRequest = z.object({
+	id_token: z.string().min(1).max(16384).describe('The ID token the admin panel got from the sign-on provider'),
+	nonce: z
+		.string()
+		.min(16)
+		.max(256)
+		.describe('The nonce the admin panel sent to the sign-on provider, which the ID token must have'),
+});
+
+export type AdminSsoSignInRequest = z.infer<typeof AdminSsoSignInRequest>;
+
+export const AdminSsoSignInResponse = OAuth2TokenResponse.extend({
+	user_id: SnowflakeStringType.describe('The account the admin signed in as'),
+});
+
+export type AdminSsoSignInResponse = z.infer<typeof AdminSsoSignInResponse>;
