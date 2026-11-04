@@ -204,9 +204,13 @@ func backupCreateErr(err error) error {
 			"Run docker volume ls to see your volumes, then run rexctl backup again.",
 		)
 	case errors.As(err, &disk):
+		fix := "Free up some space, then run rexctl backup again."
+		if list, lerr := backup.List(disk.Dir); lerr == nil && len(list) > 1 {
+			fix = fmt.Sprintf("Free up some space, or run rexctl backup keep %d to keep fewer backups. Then run rexctl backup again.", len(list)-1)
+		}
 		return ui.Failed(
 			fmt.Sprintf("There isn't enough free space for a backup. It needs about %s and %s is free.", ui.Bytes(int64(disk.Need)), ui.Bytes(int64(disk.Available))),
-			"Free up some space, then run rexctl backup again.",
+			fix,
 		)
 	case errors.As(err, &dump):
 		return ui.Wrap(fmt.Errorf("%w %s", err, dump.Output), "Couldn't save the database.", "Run rexctl doctor to find the problem.")

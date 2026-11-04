@@ -20,6 +20,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
@@ -76,6 +77,37 @@ func (e *PullError) Error() string {
 
 func (e *PullError) Unwrap() error { return e.Err }
 
+const DiskReserve = 1 << 30
+
+type RestoreSpaceError struct {
+	Dir       string
+	Need      uint64
+	Available uint64
+}
+
+func (e *RestoreSpaceError) Error() string {
+	return fmt.Sprintf("backup: restoring needs %d bytes in %s and %d are free", e.Need, e.Dir, e.Available)
+}
+
+func RestoreNeed(m *Manifest) uint64 {
+	var n uint64
+	for _, en := range m.Entries {
+		n += uint64(max(en.Size, 0))
+	}
+	return n + DiskReserve
+}
+
+func checkRestoreSpace(dir string, m *Manifest) error {
+	free, err := host.FreeDisk(dir)
+	if err != nil {
+		return nil
+	}
+	if need := RestoreNeed(m); free < need {
+		return &RestoreSpaceError{Dir: dir, Need: need, Available: free}
+	}
+	return nil
+}
+
 func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts RestoreOptions) (*instance.Instance, error) {
 	progress := opts.Progress
 	if progress == nil {
@@ -99,6 +131,11 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	}
 	if err := checkProjectFree(ctx, e, m.Project, dir); err != nil {
 		return nil, err
+	}
+	if existing == nil {
+		if err := checkRestoreSpace(engine.ImageStore(dir, e), m); err != nil {
+			return nil, err
+		}
 	}
 
 	progress(StagePulling)

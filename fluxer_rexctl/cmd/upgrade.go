@@ -643,17 +643,29 @@ func embeddedRefs() map[string]string {
 
 func upgradeSpace(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, next map[string]string, f *upgradeFlags) []checks.Space {
 	old := e.Named(inst.Project(), inst.Dir)
-	pull, err := checks.PullNeed(ctx, e, inst.State.Images.Refs, next)
-	if err != nil {
-		app.UI.Detail("%v", err)
-	}
+	pull := upgradePull(ctx, inst, e, next)
 	var saved uint64
 	if !f.Prefetch && !f.NoBackup {
+		var err error
 		if saved, err = estimateBackup(ctx, inst, old, upgradeScope(f)); err != nil {
 			app.UI.Detail("%v", err)
 		}
 	}
 	return checkEnv(ctx, inst, e, old).Space(pull, saved)
+}
+
+func upgradePull(ctx context.Context, inst *instance.Instance, e *engine.Engine, next map[string]string) uint64 {
+	images, _ := stack.EmbeddedImages()
+	if next == nil {
+		return checks.ReleaseSize(ctx, e, images, slices.Sorted(maps.Values(inst.State.Images.Refs)))
+	}
+	chosen := inst.State.Settings
+	run := checks.Running{
+		Voice:         stack.VoiceBundled(chosen[settings.VoiceBundled]),
+		ExternalStore: strings.TrimSpace(chosen[settings.StorageEndpoint]) != "",
+		Chosen:        func(k string) string { return chosen[k] },
+	}
+	return checks.PullNeed(ctx, e, images, checks.RunningRefs(stack.Embedded(), next, run))
 }
 
 func spaceLine(sp checks.Space, to string) string {
@@ -665,6 +677,96 @@ func spaceFix(e *engine.Engine, sp checks.Space) string {
 		return fmt.Sprintf("Free up space there, for example with %s image prune -a, which removes the images no container uses. Then run rexctl upgrade again.", strings.ToLower(e.Kind.Name()))
 	}
 	return "Free up space there, then run rexctl upgrade again."
+}
+
+func upgradeSpaceFix(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, next map[string]string, f *upgradeFlags, sp checks.Space) string {
+	fix := spaceFix(e, sp)
+	if f.NoBackup || !holdsBackups(inst, sp) {
+		return fix
+	}
+	fix = strings.TrimSuffix(fix, " Then run rexctl upgrade again.")
+	fix = strings.TrimSuffix(fix, ", then run rexctl upgrade again.")
+	if f.Backup != backup.ScopeWithoutUploads {
+		lean := *f
+		lean.Backup = backup.ScopeWithoutUploads
+		for _, alt := range upgradeSpace(ctx, app, inst, e, next, &lean) {
+			if holdsBackups(inst, alt) && !alt.Short() {
+				fix += fmt.Sprintf(" Or run rexctl upgrade --backup without-uploads, which needs about %s there.", ui.Bytes(int64(alt.Need)))
+			}
+		}
+	}
+	if list, err := backup.List(inst.BackupDir()); err == nil && len(list) > 1 {
+		fix += fmt.Sprintf(" Or run rexctl backup keep %d to keep fewer backups.", len(list)-1)
+	}
+	return fix + " To upgrade with no backup, run rexctl upgrade --no-backup. If the upgrade then goes wrong, there is no backup from before it to restore."
+}
+
+func holdsBackups(inst *instance.Instance, sp checks.Space) bool {
+	a, errA := host.DiskID(sp.Path)
+	b, errB := host.DiskID(inst.BackupDir())
+	if errA != nil || errB != nil {
+		return sp.Path == inst.BackupDir()
+	}
+	return a == b
+}
+
+func makeRoom(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, room []checks.Space, from, to string) bool {
+	older := inst.State.PreviousRelease
+	if older == "" || older == from || older == to {
+		return false
+	}
+	for _, sp := range room {
+		if !sp.Images || !sp.Short() {
+			continue
+		}
+		refs := release.OnlyIn(inst, older, from, to)
+		var freed uint64
+		for _, ref := range refs {
+			if n, found, err := e.ImageSize(ctx, ref); err == nil && found {
+				freed += n
+			}
+		}
+		if freed == 0 || sp.Free+freed < sp.Need {
+			return false
+		}
+		if err := e.RemoveImages(ctx, refs); err != nil {
+			app.UI.Detail("%v", err)
+			return false
+		}
+		olderShort, _ := versionPair(older, to)
+		_, toShort := versionPair(from, to)
+		app.UI.Info("Removed the images of %s to make room for Fluxer %s. If you roll back to it, rexctl downloads them again.", fluxerName(olderShort), toShort)
+		return true
+	}
+	return false
+}
+
+func dropRollbackImages(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) {
+	prev := inst.State.PreviousRelease
+	if prev == "" {
+		return
+	}
+	short := false
+	for _, sp := range checkEnv(ctx, inst, e, e.Named(inst.Project(), inst.Dir)).NextUpgradeNeed(ctx) {
+		short = short || sp.Short()
+	}
+	refs := release.OnlyIn(inst, prev)
+	if !short || len(refs) == 0 {
+		return
+	}
+	store := engine.ImageStore(inst.Dir, e)
+	before, _ := host.FreeDisk(store)
+	if err := e.RemoveImages(ctx, refs); err != nil {
+		app.UI.Detail("%v", err)
+		return
+	}
+	after, _ := host.FreeDisk(store)
+	prevShort, _ := versionPair(prev, inst.State.Release)
+	if after > before {
+		app.UI.Info("Removed the images of %s to free %s, because this disk is low on space. rexctl rollback downloads them again if you need them.", fluxerName(prevShort), ui.Bytes(int64(after-before)))
+		return
+	}
+	app.UI.Info("Removed the images of %s, because this disk is low on space. rexctl rollback downloads them again if you need them.", fluxerName(prevShort))
 }
 
 func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, f *upgradeFlags) error {
@@ -720,10 +822,14 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	}
 	f = backupFlagsFor(app, inst, from, set, next, f, toShort)
 	old := e.Named(inst.Project(), inst.Dir)
-	for _, sp := range upgradeSpace(ctx, app, inst, e, next.Images.Refs, f) {
+	room := upgradeSpace(ctx, app, inst, e, next.Images.Refs, f)
+	if makeRoom(ctx, app, inst, e, room, from, to) {
+		room = upgradeSpace(ctx, app, inst, e, next.Images.Refs, f)
+	}
+	for _, sp := range room {
 		if sp.Short() {
 			clearUpgrade(inst)
-			return ui.Refused(spaceLine(sp, toShort)+" "+capitalise(fluxerName(fromShort))+" is still running.", spaceFix(e, sp))
+			return ui.Refused(spaceLine(sp, toShort)+" "+capitalise(fluxerName(fromShort))+" is still running.", upgradeSpaceFix(ctx, app, inst, e, next.Images.Refs, f, sp))
 		}
 	}
 	if !f.Prefetch {
@@ -1464,9 +1570,10 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 			app.UI.Detail("%v", err)
 		}
 	}
-	if err := release.Prune(ctx, inst, e); err != nil {
+	if err := release.PruneOlder(ctx, inst, e); err != nil {
 		app.UI.Detail("%v", err)
 	}
+	dropRollbackImages(ctx, app, inst, e)
 	_, toShort := versionPair(pend.From, pend.To)
 	app.outcome = fmt.Sprintf("Upgraded to Fluxer %s.", toShort)
 	app.UI.OK("Your instance is on Fluxer %s.", toShort)

@@ -376,7 +376,31 @@ func CheckPostgres(fromRef, toRef string) error {
 	return nil
 }
 
-func Prune(ctx context.Context, inst *instance.Instance, e *engine.Engine) error {
+func OnlyIn(inst *instance.Instance, version string, keep ...string) []string {
+	refs, err := Images(inst, version)
+	if err != nil {
+		return nil
+	}
+	kept := map[string]bool{}
+	for _, r := range inst.State.Images.Refs {
+		kept[r] = true
+	}
+	for _, v := range keep {
+		other, _ := Images(inst, v)
+		for _, r := range other {
+			kept[r] = true
+		}
+	}
+	var out []string
+	for _, r := range refs {
+		if !kept[r] && !slices.Contains(out, r) {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func PruneOlder(ctx context.Context, inst *instance.Instance, e *engine.Engine) error {
 	remove, err := pruneReleases(inst)
 	if err != nil || len(remove) == 0 || e == nil {
 		return err
