@@ -166,6 +166,7 @@ export default defineConfig({
 						'operator/running',
 						'operator/voice-servers',
 						'operator/reverse-proxy',
+						'operator/upload-limits',
 						'operator/sign-in',
 						'operator/kubernetes',
 						'operator/docker-compose',
