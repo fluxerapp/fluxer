@@ -626,7 +626,7 @@ function readHiddenRoleIds(value: unknown): ReadonlyArray<string> {
 	if (!Array.isArray(value) || !value.every((id) => typeof id === 'string')) {
 		invalid('hiddenRoleIds', 'must be an array of strings');
 	}
-	return value;
+	return [...value];
 }
 
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
