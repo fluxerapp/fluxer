@@ -170,6 +170,15 @@ pub async fn dispatch(
                 "Failed to update premium flags",
             )
         }
+        "remove_premium" => {
+            let Some(internal_note) = get("internal_note") else {
+                return DispatchOutcome::error("Add an internal note");
+            };
+            match client.remove_premium(user_id, &internal_note).await {
+                Ok(_) => DispatchOutcome::success("Premium removed"),
+                Err(error) => decision_failure("Failed to remove premium", user_id, &error),
+            }
+        }
         "update_acls" => {
             let acls = form.list_values_any(&["acls[]", "acls"]);
             DispatchOutcome::from_result(

@@ -28,7 +28,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {expect, onTestFinished} from 'vitest';
 
 async function loadUser(account: TestAccount): Promise<User> {
@@ -661,6 +661,37 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						add_flags: PremiumFlags.BADGE_MASKED.toString(),
 						remove_flags: PremiumFlags.PURCHASE_DISABLED.toString(),
 						new_flags: ((premiumFlags | PremiumFlags.BADGE_MASKED) & ~PremiumFlags.PURCHASE_DISABLED).toString(),
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/premium',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const user = await loadUser(target);
+			const giftEnd = new Date(Date.now() + 30 * 86_400_000);
+			await getUserRepository().patchUpsert(
+				user.id,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					premium_since: new Date(),
+					premium_gift_extension_ends_at: giftEnd,
+				},
+				user.toRow(),
+			);
+			return {
+				request: {path: `/admin/users/${target.userId}/premium`},
+				expected: {
+					action: 'remove_premium',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						previous_premium_type: UserPremiumTypes.SUBSCRIPTION.toString(),
+						previous_premium_until: giftEnd.toISOString(),
+						removed_enabled_override: 'false',
 					},
 				},
 			};

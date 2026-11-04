@@ -901,7 +901,7 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/premium-flags" auditReason />
 
-Adds and removes [premium flags](#premium-flags) and returns the account. You need `user:update:flags`. These flags don't grant or end premium. To block purchases, use [Limit user features](#limit-user-features).
+Adds and removes [premium flags](#premium-flags) and returns the account. You need `user:update:flags`. These flags don't grant or end premium. To end premium, use [Remove user premium](#remove-user-premium). To block purchases, use [Limit user features](#limit-user-features).
 
 ### JSON body
 
@@ -925,6 +925,44 @@ Adds and removes [premium flags](#premium-flags) and returns the account. You ne
 | 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a feature limit set the purchase block |
 
 Fluxer sends [User Update](/gateway/events/#user-update).
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Remove user premium
+
+<RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/premium" auditReason />
+
+Ends the premium of an account right away and returns the account. You need `user:update:flags`, and the `X-Audit-Log-Reason` header is required. Use it to take back premium from a [gift code](/admin-api/gift-codes/) or from `ENABLED_OVERRIDE`.
+
+Fluxer ends premium the same way it does when premium expires. It clears the premium type, start, end, gift extension, grace period and billing cycle, and removes `ENABLED_OVERRIDE`. It then sanitizes the account's profile perks in each community, such as a community avatar and banner, and sets `PERKS_SANITIZED`. An animated avatar and banner stop showing at once. When the [tag style](/http-api/instance/#tag-styles) is `random`, a premium discriminator is replaced the next time the account starts a session, as it is when premium expires. Gift codes the account redeemed stay redeemed.
+
+Fluxer refuses the request, and changes nothing, in these cases.
+
+| Case | What to do |
+| --- | --- |
+| The account has a Stripe subscription | Cancel the subscription in Stripe first. Removing premium alone would leave the subscription charging the account. |
+| The account has an App Store or Google Play subscription | Wait until the store subscription ends. Fluxer can't cancel it for the account. |
+| The account has Visionary lifetime premium on the hosted instance | Visionary is a paid purchase, so this route doesn't end it. On a self-hosted instance, lifetime premium from a gift code can be removed. |
+| The account is a bot or has no premium | There is nothing to remove. |
+| The [premium mode](/admin-api/instance/#premium-modes) is `everyone` | Every account has premium in this mode. Switch the premium mode to `mirror` to remove premium from one account. |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The updated account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Premium was removed |
+| 400 | [error response](/admin-api/#error-response) | `ENFORCEMENT_INTERNAL_NOTE_REQUIRED` when `X-Audit-Log-Reason` is missing |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a message that says what to do, for each case in the table above |
+
+The request records a `remove_premium` [audit entry](/admin-api/#admin-audit-entry-object) with the earlier premium type and end date, and whether `ENABLED_OVERRIDE` was removed.
+
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) for each community where perks were sanitized.
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 

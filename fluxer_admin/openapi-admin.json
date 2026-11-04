@@ -11476,6 +11476,68 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/premium": {
+			"delete": {
+				"operationId": "remove_admin_user_premium",
+				"summary": "Remove user premium",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "End the premium of an account right away, the same way premium ends when it expires. The premium fields are cleared, ENABLED_OVERRIDE is removed, the guild profile perks of the account are sanitized and PERKS_SANITIZED is set. Returns 400 with a message that says what to do instead when the account has a Stripe subscription, an App Store or Google Play subscription, Visionary lifetime premium on the hosted instance, or no premium, when it is a bot, and when the premium mode is everyone. The X-Audit-Log-Reason header is required. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
 		"/admin/users/{user_id}/premium-flags": {
 			"patch": {
 				"operationId": "update_admin_user_premium_flags",

@@ -101,6 +101,9 @@ export class AdminUserService {
 			apiContext: deps.apiContext,
 			auditService: deps.auditService,
 			userUpdateDeps: this.userUpdateDeps,
+			guildRepository: deps.guildRepository,
+			userCacheService: deps.userCacheService,
+			storeEntitlementService: deps.storeEntitlementService,
 		});
 		this.creationService = new AdminUserCreationService({
 			apiContext: deps.apiContext,

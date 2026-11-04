@@ -144,6 +144,7 @@ const RESTRICTION_USER_FLAGS: u64 = user_flag_bits::DISABLED
     | user_flag_bits::SPAMMER
     | user_flag_bits::REPORT_BANNED;
 const PURCHASE_DISABLED: i32 = 1 << 6;
+pub const PREMIUM_ENABLED_OVERRIDE: i32 = 1 << 7;
 const OPERATORS_CHANNEL_HIDDEN: i32 = 1 << 13;
 
 pub fn user_flag_is_editable(flag: u64, current_flags: u64, suspended: bool) -> bool {
@@ -178,7 +179,7 @@ pub const PREMIUM_FLAGS: &[I32Flag] = &[
     },
     I32Flag {
         name: "ENABLED_OVERRIDE",
-        value: 1 << 7,
+        value: PREMIUM_ENABLED_OVERRIDE,
     },
     I32Flag {
         name: "PERKS_DISABLED",

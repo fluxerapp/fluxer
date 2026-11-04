@@ -2,12 +2,10 @@
 
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
-import {sanitizeExpiredPremiumMemberPerks} from '@app/api/guild/services/member/PremiumMemberSanitization';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
-import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {
 	isAppStoreConfigured,
@@ -18,9 +16,9 @@ import {resolveStoreAccessEnd} from '@app/api/store_billing/StoreBillingMappers'
 import {isTerminalStorePurchaseState} from '@app/api/store_billing/StoreBillingTypes';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
+import {endPremium} from '@app/api/user/PremiumEnd';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {checkIsPremium, createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
-import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {checkIsPremium, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -133,38 +131,10 @@ async function processUser(user: User, deps: SweepDeps, result: SweepResult): Pr
 		return;
 	}
 	try {
-		let currentUser = await deps.userRepository.patchUpsert(user.id, createPremiumClearPatch(), user.toRow());
-		deps.userCacheService.setUserPartialResponseFromUserInBackground(currentUser);
-		await dispatchUserUpdate(deps.gatewayService, currentUser);
+		const {sanitized} = await endPremium(user, deps);
 		result.stripped += 1;
-		const hasBeenSanitized = !!(user.premiumFlags & PremiumFlags.PERKS_SANITIZED);
-		if (!hasBeenSanitized) {
-			try {
-				const didSanitize = await sanitizeExpiredPremiumMemberPerks({
-					userId: user.id,
-					guildIds: await deps.userRepository.getUserGuildIds(user.id),
-					guildRepository: deps.guildRepository,
-					gatewayService: deps.gatewayService,
-					userCacheService: deps.userCacheService,
-					requestCache: createRequestCache(),
-				});
-				if (didSanitize) {
-					result.sanitized += 1;
-				}
-			} catch (error) {
-				Logger.error(
-					{userId: user.id.toString(), error},
-					'Failed to sanitize guild member perks during expired premium sweep',
-				);
-			}
-			const flaggedUser = await deps.userRepository.patchUpsert(
-				currentUser.id,
-				{premium_flags: currentUser.premiumFlags | PremiumFlags.PERKS_SANITIZED},
-				currentUser.toRow(),
-			);
-			currentUser = flaggedUser;
-			deps.userCacheService.setUserPartialResponseFromUserInBackground(currentUser);
-			await dispatchUserUpdate(deps.gatewayService, currentUser);
+		if (sanitized) {
+			result.sanitized += 1;
 		}
 	} catch (error) {
 		Logger.error({userId: user.id.toString(), error}, 'Failed to strip expired premium during sweep');

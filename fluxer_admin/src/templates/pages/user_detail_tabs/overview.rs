@@ -9,7 +9,8 @@ use crate::{
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
-        form::{Checkbox, csrf_input, form_actions, submit_button},
+        enforcement_fields::internal_note_field,
+        form::{Checkbox, csrf_input, danger_button, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
     },
     templates::pages::{
@@ -370,8 +371,35 @@ fn flags_card(
                     }
                 },
             ))
+            @if can_update_flags && has_premium(user) {
+                (remove_premium_card(config, user, csrf_token))
+            }
         }
     }
+}
+
+fn has_premium(user: &AdminUser) -> bool {
+    user.premium_type.is_some_and(|value| value > 0)
+        || user.premium_flags & admin_flags::PREMIUM_ENABLED_OVERRIDE != 0
+}
+
+fn remove_premium_card(config: &AdminConfig, user: &AdminUser, csrf_token: &str) -> Markup {
+    card_with_header(
+        "Remove premium",
+        html! {
+            form method="post" action={(config.base_path) "/users/" (user.id) "?action=remove_premium&tab=overview"}
+                onsubmit="return confirm('Remove premium from this account now?')" class="space-y-4" {
+                (csrf_input(csrf_token))
+                p class="text-sm text-neutral-700" {
+                    "Ends premium now, the same way it ends when it expires. ENABLED_OVERRIDE is removed and \
+                     community profile perks are sanitized. Accounts with a Stripe or store subscription, \
+                     and Visionary on the hosted instance, are refused with what to do instead."
+                }
+                (internal_note_field("remove-premium", "Staff only. Saved in the audit log."))
+                (form_actions(danger_button("Remove premium")))
+            }
+        },
+    )
 }
 
 fn flag_form_shell(
