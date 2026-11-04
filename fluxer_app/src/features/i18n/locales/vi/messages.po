@@ -21020,6 +21020,11 @@ msgstr "Tìm hiểu về bản xem trước chia sẻ màn hình"
 msgid "Learn more"
 msgstr "Tìm hiểu thêm"
 
+#. Link under the Plutonium page hero buttons on self-hosted instances. premiumProductName is the paid tier name set by the instance. Opens a page about the tier that the instance admin chose.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+msgid "Learn more about {premiumProductName}"
+msgstr "Tìm hiểu thêm về {premiumProductName}"
+
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Learn more about Visionary"

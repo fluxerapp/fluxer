@@ -21020,6 +21020,11 @@ msgstr "Läs mer om förhandsvisningar av skärmdelning"
 msgid "Learn more"
 msgstr "Läs mer"
 
+#. Link under the Plutonium page hero buttons on self-hosted instances. premiumProductName is the paid tier name set by the instance. Opens a page about the tier that the instance admin chose.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+msgid "Learn more about {premiumProductName}"
+msgstr "Läs mer om {premiumProductName}"
+
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Learn more about Visionary"
