@@ -784,7 +784,7 @@ The rate limit is 100 requests per 10 seconds, on the `channel:message:read::cha
 
 Returns upload URLs for 1 to 10 files, as described in [Attachment upload objects](#attachment-upload-objects). In a guild channel you need `SEND_MESSAGES` and `ATTACH_FILES`.
 
-Each file can be up to the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit, which defaults to 524288000 bytes (500 MiB), or 26214400 bytes (25 MiB) without premium on an instance with premium tiers. Bots get at most 52428800 bytes (50 MiB).
+Each file can be up to the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit, which defaults to 524288000 bytes (500 MiB), or 26214400 bytes (25 MiB) without premium on an instance with premium tiers. A bot gets the lower of that limit and [`max_bot_attachment_file_size`](/http-api/instance/#limit-keys), which defaults to 52428800 bytes (50 MiB).
 
 ### JSON body
 

@@ -17451,6 +17451,7 @@
 							"max_attachments_per_message",
 							"max_bio_length",
 							"max_bookmarks",
+							"max_bot_attachment_file_size",
 							"max_channels_per_category",
 							"max_custom_backgrounds",
 							"max_embeds_per_message",
