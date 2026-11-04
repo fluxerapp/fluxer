@@ -38,7 +38,6 @@ type Engine struct {
 	Desktop    string
 	DataRoot   string
 	Platform   string
-	KeepsBlobs bool
 	TooOld     bool
 }
 

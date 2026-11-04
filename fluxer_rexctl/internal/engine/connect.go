@@ -294,7 +294,6 @@ func dial(ctx context.Context, host string) (*Engine, *conn, error) {
 		OSType:     info.Info.OSType,
 		Desktop:    desktopName(info.Info.OperatingSystem),
 		Platform:   platform(info.Info.Architecture),
-		KeepsBlobs: containerdStore(info.Info.DriverStatus),
 	}
 	for _, comp := range ver.Components {
 		if comp.Name == "Podman Engine" {
@@ -325,15 +324,6 @@ func platform(arch string) string {
 		return "linux/arm64"
 	}
 	return ""
-}
-
-func containerdStore(status [][2]string) bool {
-	for _, kv := range status {
-		if kv[0] == "driver-type" && strings.HasPrefix(kv[1], "io.containerd.snapshotter") {
-			return true
-		}
-	}
-	return false
 }
 
 func dialError(host string, err error) error {

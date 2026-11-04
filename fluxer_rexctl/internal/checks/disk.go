@@ -20,8 +20,6 @@ import (
 const (
 	firstStartBytes = 256 << 20
 	diskReserve     = backup.DiskReserve
-	imageGuess      = 1 << 30
-	pullScratch     = 3
 )
 
 const vmDiskNote = "The container engine keeps its data in a virtual machine disk, and rexctl can only check this machine's disk."
@@ -51,10 +49,18 @@ func runDisk(ctx context.Context, e *Env) Result {
 	}
 	if r.Status == "" {
 		img := spaces[0]
-		r = pass(fmt.Sprintf("%s has %s of free disk space, and this install needs about %s.", e.diskRole(img.Path), size(img.Free), size(img.Need)))
-		if growth := e.growthCap(img.Path); img.Free < img.Need+growth {
-			r = warn(fmt.Sprintf("%s has %s of free disk space. Fluxer fits, but its logs and database can grow by up to %s as it runs, before counting messages and uploads.", e.diskRole(img.Path), size(img.Free), size(growth)),
-				fmt.Sprintf("Free up space on the disk that holds %s.", img.Path))
+		growth := e.growthCap(img.Path)
+		next := e.nextReleaseNeed()
+		has := fmt.Sprintf("%s has %s of free disk space and this install needs about %s.", e.diskRole(img.Path), size(img.Free), size(img.Need))
+		switch {
+		case img.Free < img.Need+growth:
+			r = warn(fmt.Sprintf("%s Fluxer's logs, database write-ahead log, upload spool and message queue can then use up to %s more as it runs, plus the space for messages and uploads.", has, size(growth)),
+				fmt.Sprintf("Free up about %s more on the disk that holds %s.", size(img.Need+growth-img.Free), img.Path))
+		case img.Free < img.Need+next:
+			r = warn(fmt.Sprintf("%s The next upgrade needs about %s more to download the new release.", has, size(next)),
+				fmt.Sprintf("Free up about %s more on the disk that holds %s before you upgrade.", size(img.Need+next-img.Free), img.Path))
+		default:
+			r = pass(has)
 		}
 	}
 	e.noteVMDisk(&r)
@@ -90,7 +96,7 @@ func (e *Env) reserveDisk(spaces []Space) Result {
 	}
 	r := pass(fmt.Sprintf("%s has %s of free disk space.", e.diskRole(lowest.Path), size(lowest.Free)))
 	if lowest.Free < diskReserve {
-		r = fail(fmt.Sprintf("%s has only %s of free disk space left, and Fluxer needs at least %s free to keep its database writing.", e.diskRole(lowest.Path), size(lowest.Free), size(diskReserve)),
+		r = fail(fmt.Sprintf("%s has only %s of free disk space left. Fluxer needs at least %s free so the database can keep saving changes.", e.diskRole(lowest.Path), size(lowest.Free), size(diskReserve)),
 			fmt.Sprintf("Free up space on the disk that holds %s, then run rexctl doctor.", lowest.Path))
 	}
 	e.noteVMDisk(&r)
@@ -133,8 +139,8 @@ type Space struct {
 
 func (s Space) Short() bool { return s.Free < s.Need }
 
-func (e *Env) Space(pull, backup uint64) []Space {
-	wants := []Space{{Path: e.imageStore(), Images: true, Need: pull}, {Path: e.Dir}}
+func (e *Env) UpgradeSpace(pull, backup uint64) []Space {
+	wants := []Space{{Path: e.imageStore(), Images: true, Need: pull + e.startAllowance()}, {Path: e.Dir}}
 	if e.Instance != nil {
 		wants = append(wants, Space{Path: e.Instance.BackupDir(), Need: backup})
 	}
@@ -165,11 +171,27 @@ func spaces(wants []Space) []Space {
 	return out
 }
 
-func (e *Env) InstallNeed(ctx context.Context) []Space {
+func (e *Env) startAllowance() uint64 {
+	if !e.installed() {
+		return firstStartBytes
+	}
+	return firstStartBytes + stack.WALCap(stack.Embedded(), e.effective())
+}
+
+func (e *Env) installRefs() (stack.ImageSet, []string) {
 	images, _ := stack.EmbeddedImages()
-	refs := RunningRefs(stack.Embedded(), images.Images, e.runningSet())
-	need := ImageNeed(images, e.platform(), refs, e.localDiffIDs(ctx), e.keepsBlobs())
+	return images, RunningRefs(stack.Embedded(), images.Images, e.runningSet())
+}
+
+func (e *Env) InstallNeed(ctx context.Context) []Space {
+	images, refs := e.installRefs()
+	need := images.Need(e.platform(), refs, e.localDiffIDs(ctx))
 	return spaces([]Space{{Path: e.imageStore(), Images: true, Need: need + firstStartBytes}, {Path: e.Dir}})
+}
+
+func (e *Env) nextReleaseNeed() uint64 {
+	images, refs := e.installRefs()
+	return images.Need(e.platform(), refs, nil)
 }
 
 func (e *Env) NextUpgradeNeed(ctx context.Context) []Space {
@@ -182,7 +204,7 @@ func (e *Env) NextUpgradeNeed(ctx context.Context) []Space {
 	if e.Instance != nil && e.Project != nil && !e.Instance.State.IsVoice() {
 		saved, _ = backup.Estimate(ctx, e.Instance, e.Project, backup.ScopeFull)
 	}
-	return e.Space(pull, saved)
+	return e.UpgradeSpace(pull, saved)
 }
 
 func ReleaseSize(ctx context.Context, en *engine.Engine, set stack.ImageSet, refs []string) uint64 {
@@ -197,9 +219,22 @@ func ReleaseSize(ctx context.Context, en *engine.Engine, set stack.ImageSet, ref
 			need += n
 			continue
 		}
-		need += imageGuess
+		need += stack.ImageGuess
 	}
-	return need + ImageNeed(set, en.Platform, known, nil, en.KeepsBlobs)
+	return need + set.Need(en.Platform, known, nil)
+}
+
+func PullSpace(ctx context.Context, en *engine.Engine, dir string, refs []string, sizes map[string]uint64) (Space, bool) {
+	images, _ := stack.EmbeddedImages()
+	need := en.PullNeed(ctx, images, refs, sizes)
+	if need == 0 {
+		return Space{}, false
+	}
+	out := spaces([]Space{{Path: engine.ImageStore(dir, en), Images: true, Need: need}})
+	if len(out) == 0 {
+		return Space{}, false
+	}
+	return out[0], true
 }
 
 func (e *Env) chosen(key string) string {
@@ -223,8 +258,6 @@ func (e *Env) platform() string {
 	}
 	return e.Engine.Platform
 }
-
-func (e *Env) keepsBlobs() bool { return e.Engine != nil && e.Engine.KeepsBlobs }
 
 func (e *Env) localDiffIDs(ctx context.Context) map[string]bool {
 	if e.Engine == nil {
@@ -306,53 +339,4 @@ func imageFor(svc, value string, fluxer map[string]string, chosen func(string) s
 		}
 	}
 	return def
-}
-
-func ImageNeed(set stack.ImageSet, platform string, refs []string, local map[string]bool, keepsBlobs bool) uint64 {
-	var need uint64
-	var downloads []uint64
-	seen := map[string]bool{}
-	guessed := map[string]bool{}
-	for _, ref := range refs {
-		layers, ok := set.LayersFor(platform, ref)
-		if !ok {
-			if !guessed[ref] {
-				guessed[ref] = true
-				need += imageGuess
-			}
-			continue
-		}
-		for _, l := range layers {
-			if local[l.DiffID] || seen[l.DiffID] {
-				continue
-			}
-			seen[l.DiffID] = true
-			need += l.Unpacked
-			if keepsBlobs {
-				need += l.Compressed
-			} else {
-				downloads = append(downloads, l.Compressed)
-			}
-		}
-	}
-	slices.Sort(downloads)
-	for i := 0; i < pullScratch && i < len(downloads); i++ {
-		need += downloads[len(downloads)-1-i]
-	}
-	return need
-}
-
-func PullNeed(ctx context.Context, e *engine.Engine, set stack.ImageSet, refs []string) uint64 {
-	var local map[string]bool
-	var missing []string
-	if ids, err := e.LocalDiffIDs(ctx); err == nil {
-		local = ids
-	}
-	for _, ref := range refs {
-		if _, found, err := e.LocalImage(ctx, ref); err == nil && found {
-			continue
-		}
-		missing = append(missing, ref)
-	}
-	return ImageNeed(set, e.Platform, missing, local, e.KeepsBlobs)
 }

@@ -44,8 +44,9 @@ func (e *PostgresMajorError) Error() string {
 func (e *PostgresMajorError) Is(target error) bool { return target == ErrPostgresMajor }
 
 type imageList struct {
-	Release string   `json:"release"`
-	Images  []string `json:"images"`
+	Release string            `json:"release"`
+	Images  []string          `json:"images"`
+	Sizes   map[string]uint64 `json:"sizes,omitempty"`
 }
 
 func DirName(version string) string {
@@ -329,16 +330,43 @@ func writeImages(dir, version string, refs []string) error {
 	return writeFile(filepath.Join(dir, imagesFile), append(data, '\n'), private(version))
 }
 
-func Images(inst *instance.Instance, version string) ([]string, error) {
+func readImages(inst *instance.Instance, version string) (imageList, error) {
+	var list imageList
 	data, err := os.ReadFile(filepath.Join(Dir(inst, version), imagesFile))
+	if err != nil {
+		return list, err
+	}
+	err = json.Unmarshal(data, &list)
+	return list, err
+}
+
+func Images(inst *instance.Instance, version string) ([]string, error) {
+	list, err := readImages(inst, version)
 	if err != nil {
 		return nil, err
 	}
-	var list imageList
-	if err := json.Unmarshal(data, &list); err != nil {
-		return nil, err
-	}
 	return list.Images, nil
+}
+
+func ImageSizes(inst *instance.Instance, version string) map[string]uint64 {
+	list, _ := readImages(inst, version)
+	return list.Sizes
+}
+
+func RecordImageSizes(inst *instance.Instance, version string, sizes map[string]uint64) error {
+	list, err := readImages(inst, version)
+	if err != nil {
+		return err
+	}
+	if list.Sizes == nil {
+		list.Sizes = map[string]uint64{}
+	}
+	maps.Copy(list.Sizes, sizes)
+	data, err := json.MarshalIndent(list, "", "  ")
+	if err != nil {
+		return err
+	}
+	return writeFile(filepath.Join(Dir(inst, version), imagesFile), append(data, '\n'), private(version))
 }
 
 func KeptImages(inst *instance.Instance) []string {

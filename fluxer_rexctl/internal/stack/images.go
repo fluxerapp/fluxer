@@ -59,6 +59,32 @@ func (s ImageSet) LayersFor(platform, ref string) ([]Layer, bool) {
 	return out, true
 }
 
+const ImageGuess = 1 << 30
+
+func (s ImageSet) Need(platform string, refs []string, local map[string]bool) uint64 {
+	var need uint64
+	seen := map[string]bool{}
+	guessed := map[string]bool{}
+	for _, ref := range refs {
+		layers, ok := s.LayersFor(platform, ref)
+		if !ok {
+			if !guessed[ref] {
+				guessed[ref] = true
+				need += ImageGuess
+			}
+			continue
+		}
+		for _, l := range layers {
+			if local[l.DiffID] || seen[l.DiffID] {
+				continue
+			}
+			seen[l.DiffID] = true
+			need += l.Unpacked + l.Compressed
+		}
+	}
+	return need
+}
+
 func EmbeddedImages() (ImageSet, error) {
 	var s ImageSet
 	data := imageSetJSON

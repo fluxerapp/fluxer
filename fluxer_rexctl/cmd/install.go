@@ -1150,10 +1150,11 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	if in.storage != nil {
 		maps.Copy(st.Settings, in.storage.values())
 	}
-	if total, err := host.DiskSize(engine.ImageStore(inst.Dir, in.engine)); err == nil {
+	store := engine.ImageStore(inst.Dir, in.engine)
+	if total, err := host.DiskSize(store); err == nil {
 		if profile := stack.DiskProfileFor(total); profile != "" {
 			st.Settings[settings.DiskProfile] = profile
-			in.app.UI.Info("This disk has %s of space in all, so Fluxer keeps its logs, database write-ahead log and upload spool smaller. To use the usual sizes, run rexctl config unset %s.", ui.Bytes(int64(total)), settings.DiskProfile)
+			in.app.UI.Info("%s is on a %s disk, so Fluxer keeps its logs, database write-ahead log and upload spool smaller. To use the usual sizes, run rexctl config unset %s.", store, ui.Bytes(int64(total)), settings.DiskProfile)
 		}
 	}
 	if _, err := secrets.Mint(st.Secrets, false); err != nil {
