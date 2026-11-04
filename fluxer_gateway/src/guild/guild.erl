@@ -10,6 +10,8 @@
 
 -define(HIBERNATE_AFTER_MS, 15000).
 -define(FULLSWEEP_AFTER, 100).
+-define(LARGE_GUILD_MEMBERS, 10000).
+-define(LARGE_GUILD_MIN_BIN_VHEAP_WORDS, 16_000_000).
 
 -type guild_state() :: map().
 -type call_reply() ::
@@ -35,6 +37,7 @@ init(GuildState) ->
     State0 = guild_init:init_base_state(GuildState),
     State1 = guild_init:init_member_list(State0),
     State2 = guild_init:init_counts(State1),
+    ok = apply_gc_tuning(State2),
     State3 = guild_init:init_caches_and_timers(State2),
     State4 = guild_init:init_voice_server(State3),
     erlang:garbage_collect(),
@@ -488,8 +491,19 @@ terminate(_Reason, _State) ->
 -spec code_change(term(), guild_state(), term()) -> {ok, guild_state()}.
 code_change(_OldVsn, State, _Extra) ->
     erlang:process_flag(fullsweep_after, ?FULLSWEEP_AFTER),
+    ok = apply_gc_tuning(State),
     erlang:garbage_collect(),
     {ok, State}.
+
+-spec apply_gc_tuning(guild_state()) -> ok.
+apply_gc_tuning(State) ->
+    case maps:get(member_count, State, 0) of
+        Count when is_integer(Count), Count >= ?LARGE_GUILD_MEMBERS ->
+            _ = erlang:process_flag(min_bin_vheap_size, ?LARGE_GUILD_MIN_BIN_VHEAP_WORDS),
+            ok;
+        _ ->
+            ok
+    end.
 
 -spec retire_thread_store(term(), guild_state()) -> ok.
 retire_thread_store(Tab, State) ->
