@@ -5,7 +5,11 @@ import {Logger} from '@app/api/Logger';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {SsoProviderUnavailableError} from '@fluxer/errors/src/domains/auth/SsoProviderUnavailableError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
+import {HttpError, type HttpErrorType} from '@pkgs/http_client/src/HttpError';
 import {ms} from 'itty-time';
 
 export interface DiscoveredOidcProviderMetadata {
@@ -15,6 +19,22 @@ export interface DiscoveredOidcProviderMetadata {
 	userinfo_endpoint?: string;
 	jwks_uri?: string;
 	token_endpoint_auth_methods_supported?: Array<string>;
+}
+
+const PROVIDER_UNAVAILABLE_ERROR_TYPES = new Set<HttpErrorType>(['aborted', 'network_error', 'unresolvable_host']);
+
+export async function sendProviderRequest(
+	request: Parameters<typeof FetchUtils.sendRequest>[0],
+): Promise<Awaited<ReturnType<typeof FetchUtils.sendRequest>>> {
+	try {
+		return await FetchUtils.sendRequest(request, {requestUrlPolicy: getSsoRequestUrlPolicy(), maxRedirects: 0});
+	} catch (error) {
+		Logger.warn({url: formatUrlForDiagnostics(request.url), error}, 'SSO provider request failed');
+		if (error instanceof HttpError && error.errorType && PROVIDER_UNAVAILABLE_ERROR_TYPES.has(error.errorType)) {
+			throw new SsoProviderUnavailableError();
+		}
+		throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_MISCONFIGURED);
+	}
 }
 
 const SSO_REDIRECT_BASE = 'https://sso-redirect.invalid';
