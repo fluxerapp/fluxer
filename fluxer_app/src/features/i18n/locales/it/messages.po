@@ -4311,6 +4311,11 @@ msgstr "Consenti a {PRODUCT_NAME} di accedere al microfono. Controlla la barra d
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Consenti a {productName} in Registrazione schermo nelle Impostazioni di sistema. Se è già consentito, riavvia {productName2} affinché macOS lo applichi."
 
+#. Switch in the sensitive content settings. Turns on 18+ communities and channels and the "Show" sensitive media option in the Fluxer app for iPhone and iPad.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Allow 18+ content on iPhone and iPad"
+msgstr "Consenti contenuti 18+ su iPhone e iPad"
+
 #. Private thread setting that lets non-moderators add other members.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Allow anyone to invite"
@@ -21216,6 +21221,11 @@ msgstr "Permette agli altri di vederti in video."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets push-to-talk and keybinds work in other apps."
 msgstr "Permette a push-to-talk e alle scorciatoie di funzionare in altre app."
+
+#. Helper text under the "Allow 18+ content on iPhone and iPad" switch. "Show" is the sensitive media option name and must match its translation.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Lets you open communities and channels marked 18+ in the Fluxer app for iPhone and iPad, and choose \"Show\" for sensitive media there. You can only change this on the web or on desktop."
+msgstr "Ti permette di aprire le community e i canali contrassegnati come 18+ nell'app Fluxer per iPhone e iPad e di scegliere \"Mostra\" per i contenuti multimediali sensibili. Puoi modificare questa opzione solo sul web o su desktop."
 
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx
 msgid "Lets you reset your password if you forget it."

@@ -4311,6 +4311,11 @@ msgstr "{PRODUCT_NAME}에서 마이크에 접근하도록 허용해 주세요. �
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "{productName}을(를) 시스템 설정의 '스크린 타임'에서 허용해 주세요. 이미 허용된 경우, macOS가 적용하도록 {productName2}을(를) 다시 시작하세요."
 
+#. Switch in the sensitive content settings. Turns on 18+ communities and channels and the "Show" sensitive media option in the Fluxer app for iPhone and iPad.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Allow 18+ content on iPhone and iPad"
+msgstr "iPhone 및 iPad에서 18+ 콘텐츠 허용"
+
 #. Private thread setting that lets non-moderators add other members.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Allow anyone to invite"
@@ -21216,6 +21221,11 @@ msgstr "동영상으로 사용자를 볼 수 있게 합니다."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets push-to-talk and keybinds work in other apps."
 msgstr "다른 앱에서 푸시 투 토크 및 단축키가 작동하도록 합니다."
+
+#. Helper text under the "Allow 18+ content on iPhone and iPad" switch. "Show" is the sensitive media option name and must match its translation.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Lets you open communities and channels marked 18+ in the Fluxer app for iPhone and iPad, and choose \"Show\" for sensitive media there. You can only change this on the web or on desktop."
+msgstr "iPhone 및 iPad용 Fluxer 앱에서 18+로 표시된 커뮤니티와 채널을 열 수 있고, 민감한 미디어에 \"표시\"를 선택할 수 있습니다. 이 설정은 웹이나 데스크톱에서만 변경할 수 있습니다."
 
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx
 msgid "Lets you reset your password if you forget it."

@@ -129,6 +129,7 @@ export interface UserSettings {
 	sensitiveContentFriendDmFilter: number;
 	sensitiveContentNonFriendDmFilter: number;
 	sensitiveContentGuildFilter: number;
+	allowMatureContentOnIos: boolean;
 	suppressUnprivilegedSelfMentions: boolean;
 	suppressUnprivilegedSelfMentionsBypassUserIds: Array<string>;
 	staffDmAccessUserIds: Array<string>;
@@ -330,6 +331,7 @@ class UserSettingsState {
 	sensitiveContentFriendDmFilter: number = SensitiveMediaFilterLevel.SHOW;
 	sensitiveContentNonFriendDmFilter: number = SensitiveMediaFilterLevel.SHOW;
 	sensitiveContentGuildFilter: number = SensitiveMediaFilterLevel.SHOW;
+	allowMatureContentOnIos: boolean = false;
 	suppressUnprivilegedSelfMentions: boolean = false;
 	suppressUnprivilegedSelfMentionsBypassUserIds: Array<string> = [];
 	staffDmAccessUserIds: Array<string> = [];
@@ -695,6 +697,9 @@ class UserSettingsState {
 		if (camelCaseSettings.sensitiveContentGuildFilter !== undefined) {
 			this.sensitiveContentGuildFilter = camelCaseSettings.sensitiveContentGuildFilter;
 		}
+		if (camelCaseSettings.allowMatureContentOnIos !== undefined) {
+			this.allowMatureContentOnIos = camelCaseSettings.allowMatureContentOnIos;
+		}
 		if (camelCaseSettings.suppressUnprivilegedSelfMentions !== undefined) {
 			this.suppressUnprivilegedSelfMentions = camelCaseSettings.suppressUnprivilegedSelfMentions;
 		}
@@ -773,6 +778,7 @@ class UserSettingsState {
 			sensitiveContentFriendDmFilter: this.sensitiveContentFriendDmFilter,
 			sensitiveContentNonFriendDmFilter: this.sensitiveContentNonFriendDmFilter,
 			sensitiveContentGuildFilter: this.sensitiveContentGuildFilter,
+			allowMatureContentOnIos: this.allowMatureContentOnIos,
 			suppressUnprivilegedSelfMentions: this.suppressUnprivilegedSelfMentions,
 			suppressUnprivilegedSelfMentionsBypassUserIds: [...this.suppressUnprivilegedSelfMentionsBypassUserIds],
 			staffDmAccessUserIds: [...this.staffDmAccessUserIds],
