@@ -226,6 +226,31 @@ func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, erro
 	return res.ID, true, nil
 }
 
+func (e *Engine) LocalDiffIDs(ctx context.Context) (map[string]bool, error) {
+	c, err := e.api()
+	if err != nil {
+		return nil, err
+	}
+	list, err := c.ImageList(ctx, client.ImageListOptions{})
+	if err != nil {
+		return nil, &Error{Op: "images", Class: ClassOf(err), Err: err}
+	}
+	out := map[string]bool{}
+	for _, img := range list.Items {
+		res, err := c.ImageInspect(ctx, img.ID)
+		if err != nil {
+			if cerrdefs.IsNotFound(err) {
+				continue
+			}
+			return nil, &Error{Op: "image", Class: ClassOf(err), Err: err}
+		}
+		for _, l := range res.RootFS.Layers {
+			out[l] = true
+		}
+	}
+	return out, nil
+}
+
 func (e *Engine) ImageSize(ctx context.Context, ref string) (uint64, bool, error) {
 	c, err := e.api()
 	if err != nil {

@@ -21,8 +21,42 @@ const ImageSetEnv = "REXCTL_IMAGE_SET"
 var imageSetJSON []byte
 
 type ImageSet struct {
-	Release string            `json:"release"`
-	Images  map[string]string `json:"images"`
+	Release   string                         `json:"release"`
+	Images    map[string]string              `json:"images"`
+	Tags      map[string]string              `json:"tags,omitempty"`
+	Layers    map[string]Layer               `json:"layers,omitempty"`
+	Platforms map[string]map[string][]string `json:"platforms,omitempty"`
+}
+
+type Layer struct {
+	DiffID     string `json:"diff_id"`
+	Compressed uint64 `json:"compressed"`
+	Unpacked   uint64 `json:"unpacked"`
+}
+
+func (s ImageSet) LayersFor(platform, ref string) ([]Layer, bool) {
+	refs := s.Platforms[platform]
+	digests, ok := refs[ref]
+	if _, digest, pinned := strings.Cut(ref, "@"); !ok && pinned {
+		for k, v := range refs {
+			if strings.HasSuffix(k, "@"+digest) {
+				digests, ok = v, true
+				break
+			}
+		}
+	}
+	if !ok || len(digests) == 0 {
+		return nil, false
+	}
+	out := make([]Layer, 0, len(digests))
+	for _, d := range digests {
+		l, ok := s.Layers[d]
+		if !ok {
+			return nil, false
+		}
+		out = append(out, l)
+	}
+	return out, true
 }
 
 func EmbeddedImages() (ImageSet, error) {
@@ -170,6 +204,11 @@ func UnpinImages(compose []byte) []byte {
 		lines[i] = lines[i][:img.column-1] + prefix + path.Base(repo) + suffix
 	}
 	return []byte(strings.Join(lines, "\n"))
+}
+
+func ImageDefault(value string) (string, bool) {
+	_, def, ok := defaultedVar(value)
+	return def, ok
 }
 
 func defaultedVar(value string) (name, def string, ok bool) {
