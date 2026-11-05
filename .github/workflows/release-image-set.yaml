@@ -185,17 +185,20 @@ jobs:
           manifest = json.load(open(f"release-out/fluxer-release-{version}.json"))
           compose = open(f"release-out/fluxer-release-{version}.yml").read()
           images = {c["component"]: f'{c["image"]}@{c["digest"]}' for c in manifest["components"]}
+          versions = {c["component"]: c["build_version"] for c in manifest["components"]}
           pattern = re.compile(r"^  ([a-z0-9-]+):\n    image: \S*/([a-z0-9-]+)@\$\{[A-Z0-9_]+:-(sha256:[0-9a-f]{64})\}$", re.M)
           services = {}
+          builds = {}
           for service, component, digest in pattern.findall(compose):
               ref = images.get(component)
               if ref is None or not ref.endswith("@" + digest):
                   sys.exit(f"service {service} does not match component {component} in the manifest")
               services[service] = ref
+              builds[service] = versions[component]
           if not services or len(services) != compose.count("\n    image: "):
               sys.exit("could not map every service in the compose override to an image")
           with open("fluxer_rexctl/internal/stack/imageset.json", "w") as f:
-              json.dump({"release": version, "images": dict(sorted(services.items()))}, f, indent=2)
+              json.dump({"release": version, "images": dict(sorted(services.items())), "builds": dict(sorted(builds.items()))}, f, indent=2)
               f.write("\n")
           print(f"embedded {len(services)} service images for {version}")
           EOF

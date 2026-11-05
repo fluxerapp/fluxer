@@ -508,10 +508,10 @@ func joinImage(app *App, preview *voice.Preview, f *voiceFlags) (string, string)
 	switch {
 	case preview.Release == "" || !release.Valid(preview.Release):
 		return own, "the pin of this rexctl, because the instance runs a development build"
-	case preview.Release == app.Version:
-		return own, "matches " + preview.Release
+	case preview.Release == ownAPIBuild():
+		return own, "matches the release the instance runs"
 	default:
-		return own, fmt.Sprintf("the pin of rexctl %s. The instance runs %s, and rexctl upgrade brings this machine to it", app.Version, preview.Release)
+		return own, fmt.Sprintf("the pin of rexctl %s. The instance runs another release, and rexctl upgrade follows it", app.Version)
 	}
 }
 
