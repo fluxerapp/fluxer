@@ -19,6 +19,7 @@ pub const PUBLIC_KEY_LEN: usize = 65;
 const ROOT_CA_PEM: &str = include_str!("Apple_App_Attestation_Root_CA.pem");
 const FORMAT: &str = "apple-appattest";
 const MAX_CHAIN_LEN: usize = 4;
+const MAX_MAP_ENTRIES: usize = 16;
 const RP_ID_HASH_END: usize = 32;
 const FLAGS_INDEX: usize = 32;
 const COUNTER_END: usize = 37;
@@ -433,6 +434,9 @@ fn decode_single(bytes: &[u8]) -> Option<Value> {
 
 fn as_map(value: &Value) -> Option<&[(Value, Value)]> {
     let map = value.as_map()?;
+    if map.len() > MAX_MAP_ENTRIES {
+        return None;
+    }
     let distinct = map
         .iter()
         .enumerate()
@@ -974,6 +978,18 @@ mod tests {
         let mut trailing = vector.object.clone();
         trailing.push(0);
         assert_eq!(verify(&vector, &trailing), Err(AttestationError::Malformed));
+        let padded = |extra: usize| {
+            rewrite(&vector.object, |map| {
+                map.extend(
+                    (0..extra).map(|index| (Value::Text(format!("extra{index}")), Value::Null)),
+                );
+            })
+        };
+        assert!(verify(&vector, &padded(MAX_MAP_ENTRIES - 3)).is_ok());
+        assert_eq!(
+            verify(&vector, &padded(MAX_MAP_ENTRIES - 2)),
+            Err(AttestationError::Malformed)
+        );
     }
 
     fn assertion_vector() -> Assertion {

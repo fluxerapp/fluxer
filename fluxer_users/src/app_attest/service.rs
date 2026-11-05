@@ -14,7 +14,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const MAX_KEYS_PER_USER: usize = 10;
 const CHALLENGE_BYTES: usize = 32;
 const CHALLENGE_TEXT_LEN: usize = 43;
-const MAX_ATTESTATION_BYTES: usize = 64 * 1024;
+const MAX_ATTESTATION_BYTES: usize = 16 * 1024;
 const MAX_ASSERTION_BYTES: usize = 4 * 1024;
 const MAX_CLIENT_DATA_BYTES: usize = 1024;
 
