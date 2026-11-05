@@ -26,7 +26,9 @@ var errIPv6NotApplied = errors.New("deploy: the network kept its old IPv6 settin
 
 var derivedVars = map[string][]string{
 	settings.Domain:         {"FLUXER_PUBLIC_ORIGIN", "FLUXER_EDGE_SITE_ADDRESS"},
+	settings.EdgeHTTPPort:   {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN"},
 	settings.EdgeHTTPSPort:  {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN"},
+	"FLUXER_PUBLIC_SCHEME":  {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN", "FLUXER_EDGE_SITE_ADDRESS"},
 	settings.EdgePublicPort: {"FLUXER_PUBLIC_ORIGIN"},
 	stack.EmbeddedWorkerVar: {"FLUXER_WORKER_REPLICAS"},
 }
