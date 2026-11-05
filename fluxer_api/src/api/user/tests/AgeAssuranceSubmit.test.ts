@@ -7,9 +7,11 @@ import {
 	type IUsersServiceClient,
 	setInjectedUsersServiceClient,
 } from '@app/api/infrastructure/UsersServiceClient';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
 import {type AttestedAgeFloor, AttestedAgeFloors} from '@fluxer/constants/src/AgeAssuranceConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
@@ -54,16 +56,33 @@ describe('Age assurance submit', () => {
 		await harness?.shutdown();
 	});
 
-	async function adultAccount(): Promise<string> {
+	async function deferredAccount(): Promise<string> {
 		const {token} = await createBuilderWithoutAuth<{token: string}>(harness)
 			.post('/auth/register')
 			.body({username: 'attested', consent: true})
 			.execute();
+		return token;
+	}
+
+	async function setAdultDateOfBirth(token: string): Promise<void> {
 		await createBuilder(harness, token)
 			.put('/users/@me/date-of-birth')
 			.body({date_of_birth: yearsAgo(30)})
 			.execute();
+	}
+
+	async function adultAccount(): Promise<string> {
+		const token = await deferredAccount();
+		await setAdultDateOfBirth(token);
 		return token;
+	}
+
+	async function friendDmFilter(token: string): Promise<number> {
+		return (
+			await createBuilder<{sensitive_content_friend_dm_filter: number}>(harness, token)
+				.get('/users/@me/settings')
+				.execute()
+		).sensitive_content_friend_dm_filter;
 	}
 
 	async function submit(token: string, floor: AttestedAgeFloor, attestedAt: Date): Promise<void> {
@@ -101,15 +120,21 @@ describe('Age assurance submit', () => {
 
 		await submit(token, AttestedAgeFloors.MINOR, new Date());
 		expect(await nsfwAllowed(token)).toBe(false);
-		const settings = await createBuilder<{sensitive_content_friend_dm_filter: number}>(harness, token)
-			.get('/users/@me/settings')
-			.execute();
-		expect(settings.sensitive_content_friend_dm_filter).not.toBe(SensitiveMediaFilterLevel.SHOW);
+		expect(await friendDmFilter(token)).not.toBe(SensitiveMediaFilterLevel.SHOW);
 
 		await submit(token, AttestedAgeFloors.ADULT, new Date(Date.now() - 60_000));
 		expect(await nsfwAllowed(token)).toBe(false);
 
 		await submit(token, AttestedAgeFloors.ADULT, new Date(Date.now() + 1000));
 		expect(await nsfwAllowed(token)).toBe(true);
+	});
+
+	it('keeps teen settings when an attested minor sets an adult date of birth', async () => {
+		await getInstanceConfigRepository().updateAccountsConfig({date_of_birth: DateOfBirthPolicies.ASK});
+		const token = await deferredAccount();
+		await submit(token, AttestedAgeFloors.MINOR, new Date());
+		await setAdultDateOfBirth(token);
+		expect(await nsfwAllowed(token)).toBe(false);
+		expect(await friendDmFilter(token)).not.toBe(SensitiveMediaFilterLevel.SHOW);
 	});
 });

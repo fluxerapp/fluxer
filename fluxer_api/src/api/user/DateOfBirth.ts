@@ -17,7 +17,7 @@ import {deriveAvailableUsername} from '@app/api/user/UniqueUsernames';
 import {mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {BELOW_MINIMUM_AGE_TRAIT, DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
-import {calculateAge, parseDateOfBirth} from '@app/api/utils/AgeUtils';
+import {calculateAge, canUserAccessNsfwContent, parseDateOfBirth} from '@app/api/utils/AgeUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
@@ -171,7 +171,7 @@ export async function setDateOfBirth(
 	);
 	const adult = age >= ADULT_AGE;
 	const settings = await ctx.services.users.findSettings(user.id);
-	const adjusted = settings ? settingsForAge(settings, adult) : null;
+	const adjusted = settings ? settingsForAge(settings, canUserAccessNsfwContent(updated)) : null;
 	if (adjusted) {
 		const saved = await ctx.services.users.upsertSettings(adjusted.toRow());
 		await ctx.services.gateway.dispatchPresence({
