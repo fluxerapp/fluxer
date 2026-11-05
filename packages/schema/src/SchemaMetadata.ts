@@ -21,6 +21,7 @@ interface SchemaMetadata {
 	preserveEmptyValues?: boolean;
 	preserveNullFields?: boolean;
 	experiment?: string;
+	base64Binary?: boolean;
 }
 
 export const schemaMetadata = z.registry<SchemaMetadata>();

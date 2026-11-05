@@ -14,6 +14,7 @@ import {
 	HIDEABLE_BUILT_IN_BADGE_KINDS,
 } from '@fluxer/constants/src/BadgeConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createNamedStringLiteralUnion,
@@ -41,10 +42,9 @@ const CustomBadgeHrefType = URLType.refine(
 	ValidationErrorCodes.INVALID_URL_FORMAT,
 ).describe('Absolute https URL opened when the badge is clicked');
 
-const CustomBadgeImageType = z
-	.string()
-	.max(16_000_000)
-	.describe('The badge image as a base64 data URL. PNG, JPEG, GIF, WebP and SVG images are accepted');
+const CustomBadgeImageType = withBase64Binary(z.string().max(16_000_000)).describe(
+	'The badge image as a base64 data URL. PNG, JPEG, GIF, WebP and SVG images are accepted',
+);
 
 export const CustomBadgePositionType = z
 	.string()
