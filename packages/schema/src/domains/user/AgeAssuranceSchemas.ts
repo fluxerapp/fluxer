@@ -10,6 +10,7 @@ import {
 	AttestedAgeFloors,
 } from '@fluxer/constants/src/AgeAssuranceConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {base64LengthForBytes, isValidBase64} from '@fluxer/schema/src/primitives/FileValidators';
 import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -24,31 +25,33 @@ function decodedBase64Length(value: string): number {
 function base64BytesType(minBytes: number, maxBytes: number) {
 	const minLength = base64LengthForBytes(minBytes);
 	const maxLength = base64LengthForBytes(maxBytes);
-	return z
-		.string()
-		.superRefine((value, ctx) => {
-			if (value.length < minLength || value.length > maxLength) {
-				ctx.addIssue({
-					code: 'custom',
-					message: ValidationErrorCodes.BASE64_LENGTH_INVALID,
-					params: {min: minLength, maxLength},
-				});
-				return;
-			}
-			if (!isValidBase64(value)) {
-				ctx.addIssue({code: 'custom', message: ValidationErrorCodes.INVALID_BASE64_FORMAT});
-				return;
-			}
-			const bytes = decodedBase64Length(value);
-			if (bytes < minBytes || bytes > maxBytes) {
-				ctx.addIssue({
-					code: 'custom',
-					message: ValidationErrorCodes.BASE64_LENGTH_INVALID,
-					params: {min: minLength, maxLength},
-				});
-			}
-		})
-		.meta({minLength, maxLength});
+	return withBase64Binary(
+		z
+			.string()
+			.superRefine((value, ctx) => {
+				if (value.length < minLength || value.length > maxLength) {
+					ctx.addIssue({
+						code: 'custom',
+						message: ValidationErrorCodes.BASE64_LENGTH_INVALID,
+						params: {min: minLength, maxLength},
+					});
+					return;
+				}
+				if (!isValidBase64(value)) {
+					ctx.addIssue({code: 'custom', message: ValidationErrorCodes.INVALID_BASE64_FORMAT});
+					return;
+				}
+				const bytes = decodedBase64Length(value);
+				if (bytes < minBytes || bytes > maxBytes) {
+					ctx.addIssue({
+						code: 'custom',
+						message: ValidationErrorCodes.BASE64_LENGTH_INVALID,
+						params: {min: minLength, maxLength},
+					});
+				}
+			})
+			.meta({minLength, maxLength}),
+	);
 }
 
 const CHALLENGE_LENGTH = Math.ceil((APP_ATTEST_CHALLENGE_BYTES * 4) / 3);
