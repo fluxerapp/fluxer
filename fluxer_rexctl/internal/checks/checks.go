@@ -101,6 +101,7 @@ var order = []string{
 	"boot-unit",
 	"origin",
 	"vapid",
+	"attachment-signatures",
 	"services",
 	"stale-containers",
 	"health",
