@@ -17856,6 +17856,10 @@
 						"description": "Forbidden - You do not have permission to perform this action",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
 					"429": {
 						"description": "Too Many Requests - You are being rate limited",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
@@ -17913,6 +17917,10 @@
 						"description": "Forbidden - You do not have permission to perform this action",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
 					"429": {
 						"description": "Too Many Requests - You are being rate limited",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
@@ -17965,6 +17973,14 @@
 					},
 					"403": {
 						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"409": {
+						"description": "Conflict - The request conflicts with the current state of the resource",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
 					"429": {

@@ -27,6 +27,7 @@ export function UserAgeAssuranceController(app: HonoApp) {
 			summary: 'Create App Attest challenge',
 			responseSchema: AppAttestChallengeResponse,
 			statusCode: 200,
+			errorStatusCodes: [404],
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
@@ -47,6 +48,7 @@ export function UserAgeAssuranceController(app: HonoApp) {
 			summary: 'Register App Attest key',
 			responseSchema: null,
 			statusCode: 204,
+			errorStatusCodes: [404, 409],
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
@@ -68,6 +70,7 @@ export function UserAgeAssuranceController(app: HonoApp) {
 			summary: 'Submit attested age floor',
 			responseSchema: AgeAssuranceSubmitResponse,
 			statusCode: 200,
+			errorStatusCodes: [404],
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
