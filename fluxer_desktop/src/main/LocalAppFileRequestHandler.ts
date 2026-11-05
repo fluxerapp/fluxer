@@ -31,7 +31,7 @@ const METHOD_NOT_ALLOWED_HEADERS: Readonly<Record<string, string>> = Object.free
 export interface LocalAppIndexContext {
 	readonly prebootTheme: string | null;
 	readonly productName: string | null;
-	readonly cleartextInstanceOrigins?: ReadonlyArray<string>;
+	readonly instanceOrigins?: ReadonlyArray<string>;
 }
 
 interface LocalAppFileRequestLogger {
@@ -149,10 +149,7 @@ export class DesktopLocalAppFileRequestHandler {
 			prebootTheme: context.prebootTheme,
 			productName: context.productName,
 		});
-		headers.set(
-			'Content-Security-Policy',
-			buildLocalAppCSP({nonce, cleartextInstanceOrigins: context.cleartextInstanceOrigins}),
-		);
+		headers.set('Content-Security-Policy', buildLocalAppCSP({nonce, instanceOrigins: context.instanceOrigins}));
 		return buildRewrittenResponse(request, headers, file, html);
 	}
 }

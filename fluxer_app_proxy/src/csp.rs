@@ -125,12 +125,16 @@ const SCRIPT_SOURCES: &[&str] = &["https://*.fluxer.app"];
 
 const STYLE_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://*.fluxer.com",
+    "https://fluxer.com",
     "https://fonts.googleapis.com",
     "https://api.fonts.coollabs.io",
 ];
 
 const FONT_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://*.fluxer.com",
+    "https://fluxer.com",
     "https://fonts.gstatic.com",
     "https://cdn.fonts.coollabs.io",
 ];

@@ -195,7 +195,7 @@ export class DesktopLocalAppProtocol {
 		return {
 			prebootTheme: readPrebootTheme(),
 			productName: getLaunchProductName(),
-			cleartextInstanceOrigins: getDesktopOutboundHTTP().registeredCleartextOrigins(),
+			instanceOrigins: getDesktopOutboundHTTP().registeredInstanceOrigins(),
 		};
 	}
 
