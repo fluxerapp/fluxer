@@ -699,10 +699,13 @@ export class DesktopOutboundHTTP {
 		return this.registeredRequirements.has(requireDesktopHTTPOrigin(origin));
 	}
 
-	public registeredCleartextOrigins(): Array<string> {
+	public registeredInstanceOrigins(): Array<string> {
 		const origins: Array<string> = [];
 		for (const [origin, requirement] of this.registeredRequirements) {
-			if (requirement === DesktopAddressRequirement.ANY && origin.startsWith('http://')) {
+			if (
+				origin.startsWith('https://') ||
+				(requirement === DesktopAddressRequirement.ANY && origin.startsWith('http://'))
+			) {
 				origins.push(origin);
 			}
 		}
