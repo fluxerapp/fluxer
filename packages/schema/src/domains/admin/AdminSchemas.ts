@@ -67,6 +67,7 @@ import {
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
 	ContentWarningLevelSchema,
@@ -1064,7 +1065,7 @@ export const BrandingAssetUploadRequest = z.object({
 		'premium_showcase_stream',
 		'premium_showcase_upload',
 	]),
-	image: z.string().max(16_000_000).nullish(),
+	image: withBase64Binary(z.string().max(16_000_000)).nullish(),
 });
 
 export type BrandingAssetUploadRequest = z.infer<typeof BrandingAssetUploadRequest>;

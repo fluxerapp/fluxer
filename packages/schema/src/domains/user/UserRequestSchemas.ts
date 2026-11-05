@@ -23,6 +23,7 @@ import {
 	isValidSyncedPreferencesEncoding,
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
@@ -430,12 +431,14 @@ export const UserSettingsUpdateRequest = z
 			.describe(
 				'Version of the privacy setup the user just reviewed. The server also records privacy_setup_completed_at as the current time.',
 			),
-		synced_preferences: z
-			.string()
-			.max(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH)
-			.refine((value) => isValidSyncedPreferencesEncoding(value), {
-				message: ValidationErrorCodes.INVALID_FORMAT,
-			})
+		synced_preferences: withBase64Binary(
+			z
+				.string()
+				.max(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH)
+				.refine((value) => isValidSyncedPreferencesEncoding(value), {
+					message: ValidationErrorCodes.INVALID_FORMAT,
+				}),
+		)
 			.nullish()
 			.describe(
 				'Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it.',

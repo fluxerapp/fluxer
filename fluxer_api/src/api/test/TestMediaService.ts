@@ -102,8 +102,13 @@ export class TestMediaService extends IMediaService {
 		return image;
 	}
 
-	async getAudioDurationSeconds(_base64: string): Promise<number | null> {
-		return null;
+	async getAudioDurationSeconds(base64: string): Promise<number | null> {
+		const buffer = Buffer.from(base64, 'base64');
+		if (!this.isWav(buffer) || buffer.length < 44) {
+			return null;
+		}
+		const byteRate = buffer.readUInt32LE(28);
+		return byteRate > 0 ? buffer.readUInt32LE(40) / byteRate : null;
 	}
 
 	private analyzeBase64Image(base64: string): MediaProxyMetadataResponse | null {
@@ -112,7 +117,7 @@ export class TestMediaService extends IMediaService {
 			if (buffer.length === 0) {
 				return null;
 			}
-			const format = this.detectImageFormat(buffer);
+			const format = this.detectImageFormat(buffer) ?? (this.isWav(buffer) ? 'wav' : null);
 			if (!format) {
 				return null;
 			}
@@ -202,6 +207,10 @@ export class TestMediaService extends IMediaService {
 		);
 	}
 
+	private isWav(bytes: Buffer): boolean {
+		return bytes.toString('latin1', 0, 4) === 'RIFF' && bytes.toString('latin1', 8, 12) === 'WAVE';
+	}
+
 	private isJpeg(bytes: Buffer): boolean {
 		return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
 	}
@@ -224,6 +233,7 @@ export class TestMediaService extends IMediaService {
 	private contentTypeForFormat(format: string): string {
 		if (format === 'jpeg') return 'image/jpeg';
 		if (format === 'svg') return 'image/svg+xml';
+		if (format === 'wav') return 'audio/wav';
 		return `image/${format}`;
 	}
 }

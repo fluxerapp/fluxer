@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MessageAttachmentFlags, MessageAttachmentFlagsDescriptions} from '@fluxer/constants/src/ChannelConstants';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	coerceNumberFromString,
@@ -26,7 +27,7 @@ const ClientAttachmentBase = z.object({
 		),
 	).default(0),
 	duration: Int32Type.nullish().describe('The duration of the audio file in seconds'),
-	waveform: createStringType(1, 4096).nullish().describe('Base64 encoded audio waveform data'),
+	waveform: withBase64Binary(createStringType(1, 4096)).nullish().describe('Base64 encoded audio waveform data'),
 });
 export const ClientAttachmentRequest = ClientAttachmentBase.extend({
 	id: coerceNumberFromString(Int32Type).describe('The client-side identifier for this attachment'),
