@@ -10,6 +10,10 @@ export const BRANDING_ASSET_FIELDS = [
 	'favicon_url',
 	'favicon_dark_url',
 	'sign_in_backdrop_url',
+	'premium_showcase_expressions_url',
+	'premium_showcase_profile_url',
+	'premium_showcase_stream_url',
+	'premium_showcase_upload_url',
 ] as const;
 
 export type BrandingAssetField = (typeof BRANDING_ASSET_FIELDS)[number];

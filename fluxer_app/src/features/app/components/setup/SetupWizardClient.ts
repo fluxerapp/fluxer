@@ -19,7 +19,7 @@ import type {
 
 const logger = new Logger('SetupWizardClient');
 
-export type SetupBrandingAssetKind = BrandingAssetUploadRequest['kind'];
+export type SetupBrandingAssetKind = Exclude<BrandingAssetUploadRequest['kind'], `premium_showcase_${string}`>;
 
 export async function fetchInstanceConfig(): Promise<InstanceConfigResponse> {
 	const response = await http.get<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG);

@@ -485,13 +485,17 @@ func (e BillingCatalogModeSchema) Valid() bool {
 
 // Defines values for BrandingAssetUploadRequestKind.
 const (
-	Favicon        BrandingAssetUploadRequestKind = "favicon"
-	FaviconDark    BrandingAssetUploadRequestKind = "favicon_dark"
-	Icon           BrandingAssetUploadRequestKind = "icon"
-	Logo           BrandingAssetUploadRequestKind = "logo"
-	SignInBackdrop BrandingAssetUploadRequestKind = "sign_in_backdrop"
-	Symbol         BrandingAssetUploadRequestKind = "symbol"
-	Wordmark       BrandingAssetUploadRequestKind = "wordmark"
+	Favicon                    BrandingAssetUploadRequestKind = "favicon"
+	FaviconDark                BrandingAssetUploadRequestKind = "favicon_dark"
+	Icon                       BrandingAssetUploadRequestKind = "icon"
+	Logo                       BrandingAssetUploadRequestKind = "logo"
+	PremiumShowcaseExpressions BrandingAssetUploadRequestKind = "premium_showcase_expressions"
+	PremiumShowcaseProfile     BrandingAssetUploadRequestKind = "premium_showcase_profile"
+	PremiumShowcaseStream      BrandingAssetUploadRequestKind = "premium_showcase_stream"
+	PremiumShowcaseUpload      BrandingAssetUploadRequestKind = "premium_showcase_upload"
+	SignInBackdrop             BrandingAssetUploadRequestKind = "sign_in_backdrop"
+	Symbol                     BrandingAssetUploadRequestKind = "symbol"
+	Wordmark                   BrandingAssetUploadRequestKind = "wordmark"
 )
 
 // Valid indicates whether the value is a known member of the BrandingAssetUploadRequestKind enum.
@@ -504,6 +508,14 @@ func (e BrandingAssetUploadRequestKind) Valid() bool {
 	case Icon:
 		return true
 	case Logo:
+		return true
+	case PremiumShowcaseExpressions:
+		return true
+	case PremiumShowcaseProfile:
+		return true
+	case PremiumShowcaseStream:
+		return true
+	case PremiumShowcaseUpload:
 		return true
 	case SignInBackdrop:
 		return true
@@ -2242,22 +2254,27 @@ type InstanceConfigResponse struct {
 	Accounts  AccountsConfigSchema `json:"accounts"`
 	AppPublic struct {
 		Branding struct {
-			CustomCss                    *string  `json:"custom_css"`
-			FaviconDarkUrl               *string  `json:"favicon_dark_url"`
-			FaviconUrl                   *string  `json:"favicon_url"`
-			IconUrl                      *string  `json:"icon_url"`
-			LogoUrl                      *string  `json:"logo_url"`
-			PremiumInfoUrl               *string  `json:"premium_info_url"`
-			PremiumProductName           string   `json:"premium_product_name"`
-			ProductName                  string   `json:"product_name"`
-			SignInBackdropUrl            *string  `json:"sign_in_backdrop_url"`
-			StatusPageIncidentHistoryUrl *string  `json:"status_page_incident_history_url"`
-			StatusPageUrl                *string  `json:"status_page_url"`
-			SymbolUrl                    *string  `json:"symbol_url"`
-			ThemeColor                   *string  `json:"theme_color"`
-			TrustedDomains               []string `json:"trusted_domains"`
-			UploadLimitMessage           *string  `json:"upload_limit_message"`
-			WordmarkUrl                  *string  `json:"wordmark_url"`
+			CustomCss                     *string  `json:"custom_css"`
+			FaviconDarkUrl                *string  `json:"favicon_dark_url"`
+			FaviconUrl                    *string  `json:"favicon_url"`
+			IconUrl                       *string  `json:"icon_url"`
+			LogoUrl                       *string  `json:"logo_url"`
+			PremiumInfoUrl                *string  `json:"premium_info_url"`
+			PremiumPageColor              *string  `json:"premium_page_color"`
+			PremiumProductName            string   `json:"premium_product_name"`
+			PremiumShowcaseExpressionsUrl *string  `json:"premium_showcase_expressions_url"`
+			PremiumShowcaseProfileUrl     *string  `json:"premium_showcase_profile_url"`
+			PremiumShowcaseStreamUrl      *string  `json:"premium_showcase_stream_url"`
+			PremiumShowcaseUploadUrl      *string  `json:"premium_showcase_upload_url"`
+			ProductName                   string   `json:"product_name"`
+			SignInBackdropUrl             *string  `json:"sign_in_backdrop_url"`
+			StatusPageIncidentHistoryUrl  *string  `json:"status_page_incident_history_url"`
+			StatusPageUrl                 *string  `json:"status_page_url"`
+			SymbolUrl                     *string  `json:"symbol_url"`
+			ThemeColor                    *string  `json:"theme_color"`
+			TrustedDomains                []string `json:"trusted_domains"`
+			UploadLimitMessage            *string  `json:"upload_limit_message"`
+			WordmarkUrl                   *string  `json:"wordmark_url"`
 		} `json:"branding"`
 		Legal struct {
 			GuidelinesUrl *string `json:"guidelines_url"`
@@ -2489,6 +2506,7 @@ type InstanceConfigUpdateRequest struct {
 			IconUrl                      *string   `json:"icon_url,omitempty"`
 			LogoUrl                      *string   `json:"logo_url,omitempty"`
 			PremiumInfoUrl               *string   `json:"premium_info_url,omitempty"`
+			PremiumPageColor             *string   `json:"premium_page_color,omitempty"`
 			PremiumProductName           *string   `json:"premium_product_name,omitempty"`
 			ProductName                  *string   `json:"product_name,omitempty"`
 			SignInBackdropUrl            *string   `json:"sign_in_backdrop_url,omitempty"`

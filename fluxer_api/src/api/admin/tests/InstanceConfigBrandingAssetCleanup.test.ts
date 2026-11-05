@@ -21,10 +21,10 @@ import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/Admi
 import sharp from 'sharp';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
-type BrandingKind = 'icon' | 'logo' | 'sign_in_backdrop';
+type BrandingKind = 'icon' | 'logo' | 'premium_showcase_stream';
 
-async function solidPng(background: string): Promise<string> {
-	const buffer = await sharp({create: {width: 4, height: 4, channels: 4, background}})
+async function solidPng(background: string, size = 4): Promise<string> {
+	const buffer = await sharp({create: {width: size, height: size, channels: 4, background}})
 		.png()
 		.toBuffer();
 	return getPngDataUrl(buffer.toString('base64'));
@@ -117,5 +117,13 @@ describe('branding image cleanup', () => {
 		await upload('icon', null);
 		await upload('logo', image);
 		expect(await storedAfterCleanup(key)).toBe(true);
+	});
+
+	it('releases the old premium page card image when it is replaced', async () => {
+		const first = (await upload('premium_showcase_stream', await solidPng('#ff0000', 480))).app_public.branding;
+		const key = storageKey(first.premium_showcase_stream_url);
+		const second = (await upload('premium_showcase_stream', await solidPng('#00ff00', 480))).app_public.branding;
+		expect(storageKey(second.premium_showcase_stream_url)).not.toBe(key);
+		expect(await storedAfterCleanup(key)).toBe(false);
 	});
 });

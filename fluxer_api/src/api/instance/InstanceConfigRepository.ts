@@ -109,7 +109,7 @@ import {
 import {resolveSmtpTlsMode, type SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
+import {normalizeHexColor, normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
 import {
 	type AccountsConfig,
 	AccountsConfigSchema,
@@ -511,6 +511,16 @@ function normalizeOptionalPublicString(value: string | null | undefined, fallbac
 	return value === undefined ? fallback : normalizeOptionalString(value);
 }
 
+function normalizePremiumShowcaseAsset(value: string | null | undefined): string | null {
+	if (!Config.instance.selfHosted || typeof value !== 'string') return null;
+	const reference = toStoredBrandingAsset(value.trim(), Config.endpoints.media);
+	return typeof reference === 'string' &&
+		reference.startsWith('branding-backdrops/') &&
+		isBrandingAssetReference(reference)
+		? reference
+		: null;
+}
+
 function getDefaultPremiumProductName(): string {
 	return Config.instance.selfHosted ? 'Premium' : 'Plutonium';
 }
@@ -533,6 +543,11 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			premium_product_name: getDefaultPremiumProductName(),
 			premium_info_url: null,
 			sign_in_backdrop_url: normalizeOptionalString(Config.instance.branding.signInBackdropUrl),
+			premium_page_color: null,
+			premium_showcase_expressions_url: null,
+			premium_showcase_profile_url: null,
+			premium_showcase_stream_url: null,
+			premium_showcase_upload_url: null,
 			custom_css: null,
 			upload_limit_message: null,
 			trusted_domains: [],
@@ -1056,6 +1071,11 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 				branding.sign_in_backdrop_url,
 				defaults.branding.sign_in_backdrop_url,
 			),
+			premium_page_color: Config.instance.selfHosted ? normalizeHexColor(branding.premium_page_color) : null,
+			premium_showcase_expressions_url: normalizePremiumShowcaseAsset(branding.premium_showcase_expressions_url),
+			premium_showcase_profile_url: normalizePremiumShowcaseAsset(branding.premium_showcase_profile_url),
+			premium_showcase_stream_url: normalizePremiumShowcaseAsset(branding.premium_showcase_stream_url),
+			premium_showcase_upload_url: normalizePremiumShowcaseAsset(branding.premium_showcase_upload_url),
 			custom_css: normalizeOptionalPublicString(branding.custom_css, defaults.branding.custom_css),
 			upload_limit_message: normalizeOptionalPublicString(
 				branding.upload_limit_message,
