@@ -361,7 +361,7 @@ func voiceProbeTarget(inst *instance.Instance, srv *instance.VoiceServer) (strin
 	case inst.State.IsVoice():
 		return voice.HTTPBase(srv.Endpoint), "127.0.0.1:443"
 	}
-	return voice.InstanceEdge(srv.Endpoint, inst.State.Settings[settings.EdgeMode], inst.Setting("FLUXER_HTTPS_PORT"), inst.Setting("FLUXER_EDGE_BIND"))
+	return voice.InstanceEdge(srv.Endpoint, inst.State.Settings[settings.EdgeMode], inst.Setting("FLUXER_HTTPS_PORT"), inst.Setting("FLUXER_EDGE_BIND"), inst.Setting(settings.EdgeListenVar))
 }
 
 func waitForEndpoint(ctx context.Context, base, edgeAddr string, insecure bool, limit time.Duration) error {

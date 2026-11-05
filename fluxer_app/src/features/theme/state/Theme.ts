@@ -90,9 +90,13 @@ class Theme {
 		if (!window.matchMedia) {
 			return;
 		}
-		this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-		this.systemPrefersDark = this.mediaQuery.matches;
-		this.mediaQuery.addEventListener('change', this.handleSystemThemeChange);
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		this.systemPrefersDark = mediaQuery.matches;
+		if (typeof mediaQuery.addEventListener !== 'function') {
+			return;
+		}
+		this.mediaQuery = mediaQuery;
+		mediaQuery.addEventListener('change', this.handleSystemThemeChange);
 	}
 
 	private handleSystemThemeChange = (event: MediaQueryListEvent): void => {

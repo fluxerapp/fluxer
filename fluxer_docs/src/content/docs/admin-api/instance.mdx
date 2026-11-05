@@ -32,6 +32,7 @@ The full runtime configuration. A setting that was never saved uses the default 
 | integrations | [instance integrations](#instance-integrations-object) object | Third-party provider settings |
 | media | [instance media](#instance-media-object) object | Attachment retention settings |
 | billing | [instance billing](#instance-billing-object) object | Premium billing settings |
+| distribution_pricing | [distribution pricing](#distribution-pricing-object) object | Channel prices for app builds sold through a store |
 | auth | [auth configuration](#auth-configuration-object) object | Email-first sign-in and instant accounts |
 | accounts | [accounts configuration](#accounts-configuration-object) object | Date of birth step, account tiers and cleanup |
 | guild_visits | [guild visits configuration](#guild-visits-configuration-object) object | Rollout of visiting communities before joining |
@@ -496,6 +497,40 @@ The Stripe price IDs for one currency.
 | gift_1_month | ?string | Price ID of the one-month gift |
 | gift_1_year | ?string | Price ID of the one-year gift |
 
+## Distribution pricing object
+
+The rules behind [distributions](/http-api/premium/#distributions). On fluxer.com it holds one rule for `ios_marketplace` until an admin saves it. Self-hosted instances start with none.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| rules | array[[distribution rule](#distribution-rule-object) object] | Up to 32 rules with unique ids |
+
+## Distribution rule object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Distribution id clients send (1-32 lowercase letters, digits or underscores) |
+| active | boolean | Whether quotes and checkouts use the channel price |
+| rate_bps | integer | The store's share in basis points (1-3000) |
+| products | array[string] | `plutonium_subscription`, `plutonium_gift` or both |
+| rule_version | integer | Starts at 1 and goes up when `rate_bps` changes |
+| prices | map[string, [channel price](#distribution-channel-price-object) object] | Channel prices keyed by `<rule_version>:<standard price ID>`, added at first checkout and never removed |
+
+## Distribution channel price object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| price_id | string | The Stripe price ID charged |
+| rate_bps | integer | The rate the price was made with |
+| base_unit_amount | integer | The standard price amount, in minor units |
+| unit_amount | integer | The channel price amount, in minor units |
+
 ## Instance media object
 
 Attachment retention overrides and the values in use.
@@ -658,6 +693,7 @@ Merges the body into the saved configuration and returns the [instance configura
 | media? | object | `attachment_decay` overrides, null to restore a default |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium and gating policy |
 | billing?<sup>4</sup> | object | [Instance billing](#instance-billing-object) fields, plus `stripe_secret_key` and `stripe_webhook_secret` |
+| distribution_pricing?<sup>6</sup> | object | `rules`, each with `id`, `active`, `rate_bps` and `products` from the [distribution rule](#distribution-rule-object) |
 | auth? | object | `identifier_first` and any `instant_accounts` fields from the [auth configuration](#auth-configuration-object) |
 | accounts? | object | Any [accounts configuration](#accounts-configuration-object) fields |
 | guild_visits? | object | Any [guild visits configuration](#guild-visits-configuration-object) fields |
@@ -672,6 +708,8 @@ Merges the body into the saved configuration and returns the [instance configura
 <sup>4</sup> `prices`, `country_currencies` and `legacy_prices` replace the saved value, and an empty `prices` object goes back to the environment prices. Billing can't be on while the premium mode is `everyone`
 
 <sup>5</sup> `message` is up to 1000 characters, and null or an empty string removes the notice. A request replaces the whole notice
+
+<sup>6</sup> `rules` replaces the saved list. Fluxer keeps `rule_version` and `prices` for ids it already has, and raises `rule_version` when `rate_bps` changes. A rule left out that already has channel prices stays saved with `active` false, so its subscriptions keep renewing
 
 Fluxer checks the merged settings before it writes anything, and refuses these combinations with 400 `INVALID_FORM_BODY`.
 

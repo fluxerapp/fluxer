@@ -23,6 +23,7 @@ var imageSetJSON []byte
 type ImageSet struct {
 	Release   string                         `json:"release"`
 	Images    map[string]string              `json:"images"`
+	Builds    map[string]string              `json:"builds,omitempty"`
 	Tags      map[string]string              `json:"tags,omitempty"`
 	Layers    map[string]Layer               `json:"layers,omitempty"`
 	Platforms map[string]map[string][]string `json:"platforms,omitempty"`

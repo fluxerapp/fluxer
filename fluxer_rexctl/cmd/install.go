@@ -541,7 +541,7 @@ func (in *installer) startPodman(ctx context.Context) error {
 		in.plan = append(in.plan, "Start Podman's API socket.")
 		return nil
 	}
-	if err := host.FixPodman(ctx, s); err != nil {
+	if err := host.RunSteps(ctx, s.Steps()); err != nil {
 		return ui.Wrap(err, "Couldn't start Podman's API socket.", "Run rexctl install --verbose to see why.")
 	}
 	e, err := engine.Connect(ctx, engine.ConnectOptions{Prefer: engine.Podman, AllowOld: true})
@@ -597,7 +597,7 @@ func (in *installer) setupPodman(ctx context.Context) error {
 		in.plan = append(in.plan, "Set up Podman for Fluxer.")
 		return nil
 	}
-	if err := host.FixPodman(ctx, s); err != nil {
+	if err := host.RunSteps(ctx, s.Steps()); err != nil {
 		return ui.Wrap(err, "Couldn't set up Podman for Fluxer.", "Run rexctl install --verbose to see why.")
 	}
 	in.app.UI.OK("Set up Podman for Fluxer.")
@@ -622,7 +622,7 @@ func (in *installer) allowLowPorts(ctx context.Context) error {
 		in.plan = append(in.plan, "Let programs that don't run as root use ports 80 and up.")
 		return nil
 	}
-	if err := host.AllowLowPorts(ctx); err != nil {
+	if err := host.RunSteps(ctx, host.LowPortsSysctl.Steps()); err != nil {
 		return ui.Wrap(err, "Couldn't open ports 80 and up to programs that don't run as root.", "Run rexctl install --verbose to see why.")
 	}
 	in.app.UI.OK("Programs that don't run as root can use ports 80 and up.")
@@ -1342,7 +1342,11 @@ func installBootUnit(ctx context.Context, inst *instance.Instance, e *engine.Eng
 	if err != nil {
 		return err
 	}
-	return host.InstallBootUnit(ctx, u)
+	steps, err := u.InstallSteps(ctx)
+	if err != nil {
+		return err
+	}
+	return host.RunSteps(ctx, steps)
 }
 
 func refreshBootUnit(ctx context.Context, inst *instance.Instance, e *engine.Engine, p *engine.Project) error {

@@ -32,10 +32,10 @@ func (c EnvChange) Command() string {
 	if c.Secret {
 		return "rexctl config set " + c.Key + " -"
 	}
-	return "rexctl config set " + c.Key + " " + shellQuote(c.Value)
+	return "rexctl config set " + c.Key + " " + ShellQuote(c.Value)
 }
 
-func shellQuote(v string) string {
+func ShellQuote(v string) string {
 	if v == "" {
 		return "''"
 	}

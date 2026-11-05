@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	overcommit       = host.Overcommit
-	enableOvercommit = host.EnableOvercommit
-	freeMemory       = host.FreeMemory
+	overcommit = host.Overcommit
+	freeMemory = host.FreeMemory
 )
 
 const (
@@ -35,17 +34,17 @@ func runOvercommit(_ context.Context, e *Env) Result {
 	case host.OvercommitUnknown:
 		return skip("")
 	case host.OvercommitLocked:
-		return warn(overcommitOff, "This machine is a container and can't change it. Run this on the container host: "+host.OvercommitCommand)
+		return warn(overcommitOff, "This machine is a container and can't change it. Run this on the container host: "+host.OvercommitSysctl.HostCommand())
 	case host.OvercommitOff:
 		r := fixable(warn(overcommitOff, "Run rexctl doctor --fix to turn it on."))
-		r.Manual = "Run this as an administrator, or on the container host if this machine is a container: " + host.OvercommitCommand
+		r.Manual = "Run this as an administrator, or on the container host if this machine is a container: " + host.OvercommitSysctl.HostCommand()
 		return r
 	}
 	return pass("Memory overcommit is on.")
 }
 
-func fixOvercommit(ctx context.Context, _ *Env) error {
-	return enableOvercommit(ctx)
+func fixOvercommit(ctx context.Context, e *Env) error {
+	return e.run(ctx, host.OvercommitSysctl.Steps()...)
 }
 
 func enoughForValkey(e *Env) bool {

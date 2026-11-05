@@ -18364,6 +18364,7 @@
 						"additionalProperties": false
 					},
 					"billing": {"$ref": "#/components/schemas/InstanceBillingResponse"},
+					"distribution_pricing": {"$ref": "#/components/schemas/DistributionPricingConfigResponse"},
 					"notice": {
 						"nullable": true,
 						"description": "Notice shown to everyone on the instance, or null",
@@ -18394,6 +18395,7 @@
 					"integrations",
 					"media",
 					"billing",
+					"distribution_pricing",
 					"notice",
 					"warnings"
 				],
@@ -18912,6 +18914,10 @@
 						}
 					},
 					"billing": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/InstanceBillingUpdateRequest"}]},
+					"distribution_pricing": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/DistributionPricingUpdateRequest"}]
+					},
 					"notice": {
 						"description": "Notice shown to everyone on the instance, such as planned maintenance",
 						"nullable": true,
@@ -24198,6 +24204,45 @@
 				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
 				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
 			},
+			"DistributionPricingUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"rules": {
+						"maxItems": 32,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string",
+									"pattern": "^[a-z0-9_]{1,32}$",
+									"description": "Distribution id sent by clients built for that distribution, for example ios_marketplace"
+								},
+								"active": {
+									"type": "boolean",
+									"description": "Whether checkouts and quotes for this distribution use the channel price"
+								},
+								"rate_bps": {
+									"type": "integer",
+									"minimum": 1,
+									"maximum": 3000,
+									"description": "Share of the channel price that goes to the distribution, in basis points. 500 means 5%"
+								},
+								"products": {
+									"minItems": 1,
+									"maxItems": 2,
+									"type": "array",
+									"items": {"$ref": "#/components/schemas/DistributionProductSchema"},
+									"description": "Products that get the channel price"
+								}
+							},
+							"required": ["id", "active", "rate_bps", "products"]
+						},
+						"description": "Full list of distribution rules. A left-out rule that already has channel prices stays stored as inactive so its subscriptions keep renewing"
+					}
+				},
+				"required": ["rules"]
+			},
 			"InstanceBillingUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -24563,6 +24608,7 @@
 			},
 			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
 			"StripePriceIdSchema": {"type": "string", "maxLength": 255, "pattern": "^price_[A-Za-z0-9]+$"},
+			"DistributionProductSchema": {"type": "string", "enum": ["plutonium_subscription", "plutonium_gift"]},
 			"EmailType": {"type": "string"},
 			"PendingRegistrationResponse": {
 				"type": "object",
@@ -24621,6 +24667,19 @@
 				"required": ["id", "message", "url", "starts_at", "ends_at"],
 				"additionalProperties": false,
 				"description": "Notice from the instance administrator shown to everyone, such as planned maintenance"
+			},
+			"DistributionPricingConfigResponse": {
+				"type": "object",
+				"properties": {
+					"rules": {
+						"default": [],
+						"maxItems": 32,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/DistributionRuleSchema"}
+					}
+				},
+				"required": ["rules"],
+				"additionalProperties": false
 			},
 			"InstanceBillingResponse": {
 				"type": "object",
@@ -25051,6 +25110,78 @@
 					"gift_1_year": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]}
 				},
 				"required": ["monthly", "yearly", "gift_1_month", "gift_1_year"],
+				"additionalProperties": false
+			},
+			"DistributionRuleSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"pattern": "^[a-z0-9_]{1,32}$",
+						"description": "Distribution id sent by clients built for that distribution, for example ios_marketplace"
+					},
+					"active": {
+						"type": "boolean",
+						"description": "Whether checkouts and quotes for this distribution use the channel price"
+					},
+					"rate_bps": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 3000,
+						"description": "Share of the channel price that goes to the distribution, in basis points. 500 means 5%"
+					},
+					"products": {
+						"minItems": 1,
+						"maxItems": 2,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/DistributionProductSchema"},
+						"description": "Products that get the channel price"
+					},
+					"rule_version": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 9007199254740991,
+						"description": "Bumped by the server whenever rate_bps changes. Prices made under a version keep it"
+					},
+					"prices": {
+						"default": {},
+						"description": "Channel Stripe prices keyed by \"<rule_version>:<base price ID>\". Managed by the server and never removed",
+						"type": "object",
+						"additionalProperties": {"$ref": "#/components/schemas/DistributionChannelPriceSchema"}
+					}
+				},
+				"required": ["id", "active", "rate_bps", "products", "rule_version", "prices"],
+				"additionalProperties": false
+			},
+			"DistributionChannelPriceSchema": {
+				"type": "object",
+				"properties": {
+					"price_id": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 255,
+						"description": "Stripe price ID charged through the distribution"
+					},
+					"rate_bps": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 3000,
+						"description": "Share of the channel price that goes to the distribution, in basis points. 500 means 5%"
+					},
+					"base_unit_amount": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Unit amount of the base price, in minor units"
+					},
+					"unit_amount": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"description": "Unit amount of the channel price, in minor units"
+					}
+				},
+				"required": ["price_id", "rate_bps", "base_unit_amount", "unit_amount"],
 				"additionalProperties": false
 			},
 			"JobLedgerEntrySchema": {

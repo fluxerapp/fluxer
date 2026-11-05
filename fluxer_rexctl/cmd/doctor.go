@@ -5,6 +5,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -22,21 +24,22 @@ type doctorJSON struct {
 }
 
 func newDoctorCmd(app *App) *cobra.Command {
-	var fix bool
+	var fix, dryRun bool
 	c := &cobra.Command{
 		Use:   "doctor",
 		Short: "Check your instance and this machine for problems",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runDoctor(c.Context(), app, fix)
+			return runDoctor(c.Context(), app, fix || dryRun, dryRun)
 		},
 	}
 	c.Flags().BoolVar(&fix, "fix", false, "fix the problems rexctl can fix safely")
+	c.Flags().BoolVar(&dryRun, "dry-run", false, "show what --fix would change without changing anything")
 	app.jsonFlag(c)
 	return c
 }
 
-func runDoctor(ctx context.Context, app *App, fix bool) error {
+func runDoctor(ctx context.Context, app *App, fix, dryRun bool) error {
 	l, err := app.Locate()
 	if err != nil {
 		return err
@@ -45,9 +48,11 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 	env := &checks.Env{Dir: dir}
 	phase := checks.Installed
 	inst, err := instance.Find(dir)
+	var se *instance.SettingError
 	switch {
 	case err == nil:
 		env.Instance = inst
+		app.saveRepaired(inst)
 		app.UI.Info("Using %s (%s).", inst.Dir, l.Why())
 		if inst.State.IsVoice() {
 			phase = checks.Voice
@@ -56,6 +61,8 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 		phase = checks.Preinstall
 	case errors.Is(err, instance.ErrLegacy):
 		return ui.Refused("rexctl doesn't manage the instance in "+dir+" yet.", "Run "+app.takeOverCommand()+" to hand it to rexctl.")
+	case errors.As(err, &se):
+		return settingRefusal(dir, se)
 	default:
 		return ui.Wrap(err, "rexctl can't read the instance in "+dir+".", "Run rexctl doctor as the account that installed Fluxer.")
 	}
@@ -76,7 +83,7 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 		}
 	}
 	run := func() error {
-		results := diagnose(ctx, app, env, phase, fix)
+		results := diagnose(ctx, app, env, phase, fix, dryRun)
 		if env.Instance != nil {
 			warnUnusedRootFiles(ctx, app, env.Instance)
 		}
@@ -87,15 +94,15 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 		if errors.As(env.Instance.Managed(), &ej) && !app.Flags.JSON {
 			defer app.UI.Info("%s %s", ej.Error(), ej.Fix())
 		}
-		return reportDoctor(app, results)
+		return reportDoctor(app, results, fix, dryRun)
 	}
-	if fix && env.Instance != nil {
+	if fix && !dryRun && env.Instance != nil {
 		return app.Locked(ctx, env.Instance, run)
 	}
 	return run()
 }
 
-func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase, fix bool) []checks.Result {
+func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase, fix, dryRun bool) []checks.Result {
 	check := func() []checks.Result {
 		var results []checks.Result
 		_ = app.UI.Step(ctx, "Checking your instance", func(ctx context.Context, _ *ui.Step) error {
@@ -106,6 +113,16 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 	}
 	results := check()
 	if !fix {
+		return results
+	}
+	if dryRun {
+		for _, i := range fixOrder(results) {
+			if !results[i].Fixable {
+				continue
+			}
+			p := planFix(ctx, env, results[i].ID)
+			results[i].Plan = &p
+		}
 		return results
 	}
 	fixed := map[string]bool{}
@@ -126,6 +143,7 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 				}
 				if !app.UI.Yes() {
 					app.UI.Warn(r.Message, r.Fix)
+					printPlan(app.UI, planFix(ctx, env, r.ID), true)
 				}
 				ok, err := app.UI.Confirm("Fix this?", true)
 				if err != nil || !ok {
@@ -208,7 +226,56 @@ func fixOrder(results []checks.Result) []int {
 	return append(first, last...)
 }
 
-func reportDoctor(app *App, results []checks.Result) error {
+func planFix(ctx context.Context, env *checks.Env, id string) checks.Plan {
+	p, err := checks.PlanFix(ctx, env, id)
+	if err != nil {
+		p.Steps, p.Error = []host.Step{}, err.Error()
+	}
+	return p
+}
+
+func printPlan(u *ui.UI, p checks.Plan, prompt bool) {
+	if p.Error != "" {
+		u.Info("  rexctl can't show what this fix does. Run rexctl doctor --fix --dry-run --verbose to see why.")
+		u.Detail("  %s", p.Error)
+		return
+	}
+	if len(p.Steps) == 0 {
+		return
+	}
+	u.Info("  rexctl doctor --fix does this:")
+	for _, s := range p.Steps {
+		u.Info("    %s", s.Do)
+		if s.Command != "" {
+			u.Info("      %s", s.Command)
+		}
+	}
+	if p.Settings {
+		u.Info("  rexctl applies these settings changes together with the other fixes and restarts the services that use them.")
+	}
+	switch {
+	case prompt:
+	case p.Asks:
+		u.Info("  rexctl asks before it does this, unless you pass --yes.")
+	default:
+		u.Info("  rexctl does this without asking when you run rexctl doctor --fix.")
+	}
+	var undo []string
+	for i := len(p.Steps) - 1; i >= 0; i-- {
+		if p.Steps[i].Undo != "" {
+			undo = append(undo, p.Steps[i].Undo)
+		}
+	}
+	if len(undo) == 0 {
+		return
+	}
+	u.Info("  To undo it, run:")
+	for _, c := range undo {
+		u.Info("      %s", c)
+	}
+}
+
+func reportDoctor(app *App, results []checks.Result, fix, dryRun bool) error {
 	for _, r := range results {
 		if app.Flags.JSON {
 			break
@@ -231,6 +298,17 @@ func reportDoctor(app *App, results []checks.Result) error {
 		}
 		for _, d := range r.Details {
 			app.UI.Detail("  %s", d)
+		}
+		if r.Plan != nil {
+			printPlan(app.UI, *r.Plan, false)
+		}
+	}
+	if !app.Flags.JSON {
+		switch {
+		case dryRun:
+			app.UI.Info("Dry run. Nothing changed.")
+		case !fix && slices.ContainsFunc(results, func(r checks.Result) bool { return r.Fixable }):
+			app.UI.Info("To see what rexctl doctor --fix changes before you run it, run rexctl doctor --fix --dry-run.")
 		}
 	}
 	if app.Flags.JSON {

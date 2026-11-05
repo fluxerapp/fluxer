@@ -65,5 +65,5 @@ func fixPodmanSetup(ctx context.Context, e *Env) error {
 	if !ok {
 		return nil
 	}
-	return host.FixPodman(ctx, s)
+	return e.run(ctx, s.Steps()...)
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -36,8 +37,15 @@ func runLiveKitIP(ctx context.Context, e *Env) Result {
 		}
 		ip := net.ParseIP(nodeIP)
 		if perr == nil && ip != nil && !ip.IsPrivate() && !ip.Equal(net.ParseIP(public)) {
+			port := e.value("FLUXER_LIVEKIT_TCP_PORT")
+			if port == "" {
+				port = "7881"
+			}
+			if acceptsVoice(ctx, nodeIP, port) {
+				return pass(fmt.Sprintf("Voice calls use %s, which accepts voice connections on port %s.", nodeIP, port))
+			}
 			return fixable(warn(fmt.Sprintf("Voice calls use %s and this machine's public IP address is %s.", nodeIP, public),
-				"Run rexctl doctor --fix to use "+public+"."))
+				fmt.Sprintf("If %s forwards the voice ports to this machine, also forward TCP port %s, then run rexctl doctor. Otherwise run rexctl doctor --fix to use %s.", nodeIP, port, public)))
 		}
 		return pass(fmt.Sprintf("Voice calls use %s.", nodeIP))
 	}
@@ -63,4 +71,15 @@ func fixLiveKitIP(ctx context.Context, e *Env) error {
 	}
 	e.stage(settings.VoicePublicIP, &public)
 	return nil
+}
+
+func acceptsVoice(ctx context.Context, host, port string) bool {
+	dialCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	conn, err := (&net.Dialer{}).DialContext(dialCtx, "tcp", net.JoinHostPort(host, port))
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
 }

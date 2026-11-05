@@ -140,7 +140,11 @@ func removeBootUnit(ctx context.Context, inst *instance.Instance, e *engine.Engi
 	if e != nil {
 		u.Podman, u.Rootless = e.Kind == engine.Podman, e.Rootless
 	}
-	if err := host.RemoveBootUnit(ctx, u); err != nil {
+	steps, err := u.RemoveSteps(ctx)
+	if err == nil {
+		err = host.RunSteps(ctx, steps)
+	}
+	if err != nil {
 		return fmt.Errorf("removing the boot unit: %w", err)
 	}
 	return nil

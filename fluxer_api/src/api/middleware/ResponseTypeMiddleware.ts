@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {registerRequestBodySchema} from '@app/api/middleware/RequestBodyBinaryFields';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
@@ -105,6 +106,9 @@ function validateOperationId(operationId: string): void {
 
 export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv> {
 	validateOperationId(metadata.operationId);
+	if (metadata.requestSchema) {
+		registerRequestBodySchema(metadata.requestSchema);
+	}
 	const {bodylessStatusCodes, responseContentType} = metadata;
 	const schema = metadata.responseSchema;
 	const mediaType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase();

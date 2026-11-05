@@ -540,7 +540,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		>();
 		for (const reaction of reactions) {
 			const emojiId = reaction.emojiId.toString() === '0' ? null : reaction.emojiId.toString();
-			const key = `${emojiId ?? ''}:${reaction.emojiName}`;
+			const key = emojiId ? `custom_${emojiId}` : `unicode_${reaction.emojiName}`;
 			const entry = byEmoji.get(key) ?? {
 				id: emojiId,
 				name: reaction.emojiName,

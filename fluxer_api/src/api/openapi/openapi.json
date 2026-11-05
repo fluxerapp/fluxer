@@ -15376,6 +15376,13 @@
 							"type": "string"
 						},
 						"description": "Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
+					},
+					{
+						"name": "distribution",
+						"in": "query",
+						"required": false,
+						"schema": {"$ref": "#/components/schemas/DistributionQueryParam"},
+						"description": "Distribution the client build was sold through. Unknown or inactive values fall back to the standard price"
 					}
 				]
 			}
@@ -15599,6 +15606,13 @@
 							"type": "string"
 						},
 						"description": "Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
+					},
+					{
+						"name": "distribution",
+						"in": "query",
+						"required": false,
+						"schema": {"$ref": "#/components/schemas/DistributionQueryParam"},
+						"description": "Distribution the client build was sold through. Unknown or inactive values fall back to the standard price"
 					}
 				]
 			}
@@ -32209,7 +32223,9 @@
 						"description": "Whether the purchase is for a business. When true, Stripe Checkout requires a billing address for the invoice. When false or omitted, billing address collection is left to Stripe (auto).",
 						"type": "boolean"
 					},
-					"cnpj": {"$ref": "#/components/schemas/CnpjSchema"}
+					"cnpj": {"$ref": "#/components/schemas/CnpjSchema"},
+					"distribution": {"$ref": "#/components/schemas/DistributionQueryParam"},
+					"distribution_token": {"$ref": "#/components/schemas/DistributionTokenParam"}
 				},
 				"required": ["price_id"]
 			},
@@ -32987,6 +33003,11 @@
 				"required": ["app_account_token", "app_store", "google_play", "purchase_blocked_reason", "blocking_provider"],
 				"additionalProperties": false
 			},
+			"DistributionQueryParam": {
+				"description": "Distribution the client build was sold through. Unknown or inactive values fall back to the standard price",
+				"type": "string",
+				"maxLength": 64
+			},
 			"PremiumStateResponse": {
 				"type": "object",
 				"properties": {
@@ -33257,9 +33278,13 @@
 					"gift_currency": {
 						"anyOf": [{"$ref": "#/components/schemas/PremiumCurrency"}, {"type": "null"}],
 						"description": "Currency for gift prices, null when no gift prices are configured"
+					},
+					"distribution": {
+						"anyOf": [{"$ref": "#/components/schemas/PriceDistributionResponse"}, {"type": "null"}],
+						"description": "Distribution whose channel price the amounts include, or null for the standard price"
 					}
 				},
-				"required": ["currency", "gift_currency"],
+				"required": ["currency", "gift_currency", "distribution"],
 				"additionalProperties": false
 			},
 			"UpdatePremiumPerksDisabledRequest": {
@@ -44086,6 +44111,16 @@
 				"additionalProperties": false
 			},
 			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+			"PriceDistributionResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "pattern": "^[a-z0-9_]{1,32}$"},
+					"rate_bps": {"type": "integer", "minimum": 1, "maximum": 3000},
+					"rule_version": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+				},
+				"required": ["id", "rate_bps", "rule_version"],
+				"additionalProperties": false
+			},
 			"SelfServeRefundProvider": {"type": "string", "enum": ["stripe", "google_play"]},
 			"SelfServeRefundIneligibilityReason": {
 				"type": "string",
@@ -45376,6 +45411,11 @@
 				"x-enumDescriptions": ["A regular user account", "An automated bot account", "A webhook-generated message"],
 				"enum": ["user", "bot", "webhook"],
 				"type": "string"
+			},
+			"DistributionTokenParam": {
+				"description": "Opaque purchase token from the distribution, kept for reporting",
+				"type": "string",
+				"maxLength": 4096
 			},
 			"CheckoutPaymentMethodEnum": {"type": "string", "enum": ["card", "pix", "upi"]},
 			"GifCategoryTagResponse": {

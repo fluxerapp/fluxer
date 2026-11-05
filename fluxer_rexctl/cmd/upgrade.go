@@ -414,6 +414,11 @@ func runUpgradeCheck(ctx context.Context, app *App, f *upgradeFlags) error {
 			return ierr
 		}
 		return err
+	case inst.State.IsVoice():
+		if f.To != "" {
+			return ui.Usage("A voice machine follows the release its instance runs. Run rexctl upgrade --check without --to.")
+		}
+		return runVoiceMachineCheck(ctx, app, inst)
 	default:
 		cur = inst.State.Release
 	}

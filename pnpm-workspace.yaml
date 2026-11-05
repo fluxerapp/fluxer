@@ -204,6 +204,7 @@ patchedDependencies:
   eslint-plugin-react-google-translate@1.0.4: patches/eslint-plugin-react-google-translate@1.0.4.patch
   gifuct-js@2.1.2: patches/gifuct-js@2.1.2.patch
   hunspell-asm@4.0.2: patches/hunspell-asm@4.0.2.patch
+  react-aria@3.53.1: patches/react-aria@3.53.1.patch
   upng-js@2.1.0: patches/upng-js@2.1.0.patch
 
 peerDependencyRules:

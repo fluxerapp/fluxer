@@ -50,7 +50,7 @@ func (e *Env) voiceProbeTarget(s instance.VoiceServer) (string, string) {
 	case e.Instance.State.IsVoice():
 		return voice.HTTPBase(s.Endpoint), "127.0.0.1:443"
 	}
-	return voice.InstanceEdge(s.Endpoint, e.setting(settings.EdgeMode), e.value("FLUXER_HTTPS_PORT"), e.value("FLUXER_EDGE_BIND"))
+	return voice.InstanceEdge(s.Endpoint, e.setting(settings.EdgeMode), e.value("FLUXER_HTTPS_PORT"), e.value("FLUXER_EDGE_BIND"), e.value(settings.EdgeListenVar))
 }
 
 func (e *Env) voiceProject(s instance.VoiceServer) *engine.Project {
@@ -122,8 +122,19 @@ func fixVoiceEndpoints(ctx context.Context, e *Env) error {
 	if e.Admin == nil {
 		return ErrNoFix
 	}
-	_, err := deploy.MoveVoiceEndpoints(ctx, e.Admin, e.Instance)
-	return err
+	origin := voice.WSOrigin(e.Instance.Origin())
+	var steps []host.Step
+	for _, id := range deploy.StaleVoiceEndpoints(e.Instance) {
+		steps = append(steps, host.Step{Do: fmt.Sprintf("Tells your instance that %s now uses %s.", id, origin+voice.Path(id))})
+	}
+	if len(steps) == 0 {
+		return nil
+	}
+	steps[len(steps)-1].Run = func(ctx context.Context) error {
+		_, err := deploy.MoveVoiceEndpoints(ctx, e.Admin, e.Instance)
+		return err
+	}
+	return e.run(ctx, steps...)
 }
 
 func runVoicePorts(ctx context.Context, e *Env) Result {

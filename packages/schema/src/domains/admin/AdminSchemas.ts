@@ -47,6 +47,10 @@ import {
 	InstanceBillingResponse,
 	InstanceBillingUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
+import {
+	DistributionPricingConfigResponse,
+	DistributionPricingUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/InstanceDistributionPricingSchemas';
 import {PushRelayConfigResponse, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {VoiceP2pConfigResponse, VoiceP2pConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {
@@ -63,6 +67,7 @@ import {
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
 	ContentWarningLevelSchema,
@@ -839,6 +844,7 @@ export const InstanceConfigResponse = z.object({
 	integrations: InstanceIntegrationsResponse,
 	media: InstanceMediaResponse,
 	billing: InstanceBillingResponse,
+	distribution_pricing: DistributionPricingConfigResponse,
 	notice: InstanceNoticeSchema.nullable().describe('Notice shown to everyone on the instance, or null'),
 	warnings: z
 		.array(z.string())
@@ -1014,6 +1020,7 @@ export const InstanceConfigUpdateRequest = z.object({
 		.nullish(),
 	policy: InstancePolicyUpdateSchema.nullish(),
 	billing: InstanceBillingUpdateRequest.nullish(),
+	distribution_pricing: DistributionPricingUpdateRequest.nullish(),
 	notice: z
 		.object({
 			message: z
@@ -1058,7 +1065,7 @@ export const BrandingAssetUploadRequest = z.object({
 		'premium_showcase_stream',
 		'premium_showcase_upload',
 	]),
-	image: z.string().max(16_000_000).nullish(),
+	image: withBase64Binary(z.string().max(16_000_000)).nullish(),
 });
 
 export type BrandingAssetUploadRequest = z.infer<typeof BrandingAssetUploadRequest>;

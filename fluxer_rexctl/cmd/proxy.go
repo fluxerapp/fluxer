@@ -118,7 +118,7 @@ func allowLowPorts(ctx context.Context, app *App, inst *instance.Instance) error
 	if !ok {
 		return ui.Refused(fmt.Sprintf("Fluxer can't serve HTTPS until %s can use ports 80 and 443.", name), "Run rexctl proxy off again and let rexctl allow them.")
 	}
-	if err := host.AllowLowPorts(ctx); err != nil {
+	if err := host.RunSteps(ctx, host.LowPortsSysctl.Steps()); err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't let %s use ports 80 and 443.", name), "Run rexctl proxy off --verbose to see why.")
 	}
 	app.UI.OK("Let %s use ports 80 and 443.", name)

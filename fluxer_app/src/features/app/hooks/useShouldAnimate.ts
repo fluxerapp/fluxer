@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useSaveData} from '@app/features/app/hooks/useSaveData';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
@@ -57,6 +58,7 @@ interface ShouldAnimateDecisionInput {
 	keptUnderReducedMotion: boolean;
 	isInteracting: boolean;
 	saveData: boolean;
+	windowActive: boolean;
 }
 
 function resolveShouldAnimateDecision({
@@ -66,8 +68,10 @@ function resolveShouldAnimateDecision({
 	keptUnderReducedMotion,
 	isInteracting,
 	saveData,
+	windowActive,
 }: ShouldAnimateDecisionInput): boolean {
 	if (!isAnimated) return false;
+	if (!windowActive) return false;
 	if (saveData) return false;
 	if (allowance === 'NEVER') return false;
 	if (reducedMotion && !keptUnderReducedMotion) return isInteracting;
@@ -82,6 +86,7 @@ export function useShouldAnimate({
 	isFocused = false,
 }: UseShouldAnimateOptions): boolean {
 	const saveData = useSaveData();
+	const windowActive = useAnimatedMediaPlaybackAllowed({isAnimated});
 	const allowance = getKindAllowance(kind);
 	return resolveShouldAnimateDecision({
 		isAnimated,
@@ -90,5 +95,6 @@ export function useShouldAnimate({
 		keptUnderReducedMotion: isKeptUnderReducedMotion(kind),
 		isInteracting: isHovering || isFocused,
 		saveData,
+		windowActive,
 	});
 }

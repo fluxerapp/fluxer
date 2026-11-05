@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {
-	EXAMPLE_INVITE_CODE,
-	EXAMPLE_REPORT_USER_TAG,
-	EXAMPLE_REPORT_USERNAME,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_INVITE_CODE} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
@@ -147,7 +143,8 @@ export const ReportStepDetails: React.FC<Props> = ({
 }) => {
 	const {i18n} = useLingui();
 	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
-	const userTagPlaceholder = usernameOnly ? EXAMPLE_REPORT_USERNAME : EXAMPLE_REPORT_USER_TAG;
+	const productName = RuntimeConfig.productName;
+	const userTagPlaceholder = usernameOnly ? productName : `${productName}#0000`;
 	const hasFieldErrors = Object.values(fieldErrors).some((value) => Boolean(value));
 	const showGeneralError = Boolean(errorMessage && (answersRejected || !hasFieldErrors));
 	const errorBoxRef = useRef<HTMLDivElement>(null);

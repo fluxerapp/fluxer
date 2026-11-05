@@ -19,6 +19,7 @@ import {
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -76,7 +77,7 @@ const WebhookMultipartAttachmentRequest = z.object({
 	width: z.number().int().optional().describe('Width of the image/video in pixels'),
 	ephemeral: z.boolean().optional().describe('Whether this attachment is ephemeral'),
 	duration: z.number().optional().describe('Duration of audio file in seconds'),
-	waveform: createStringType().optional().describe('Base64-encoded bytearray of audio waveform'),
+	waveform: withBase64Binary(createStringType()).optional().describe('Base64-encoded bytearray of audio waveform'),
 	flags: createBitflagInt32Type(
 		MessageAttachmentFlags,
 		MessageAttachmentFlagsDescriptions,

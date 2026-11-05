@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {registerRequestBodySchema} from '@app/api/middleware/RequestBodyBinaryFields';
 import {requireRequestJsonBody} from '@app/api/utils/RequestJsonBody';
 import {initializeFluxerErrorMap} from '@app/api/ZodErrorMap';
 import type {ValidationErrorCode} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -169,6 +170,9 @@ export const Validator = <
 ): MiddlewareHandler<E, P, V> => {
 	const options: ValidatorOptions<T, E, P, Target, V> =
 		typeof hookOrOptions === 'function' ? {post: hookOrOptions} : (hookOrOptions ?? {});
+	if (target === 'json') {
+		registerRequestBodySchema(schema);
+	}
 	return async (c, next): Promise<Response | undefined> => {
 		let value: unknown;
 		switch (target) {
