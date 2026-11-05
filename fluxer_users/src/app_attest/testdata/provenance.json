@@ -337,6 +337,20 @@
 			"now": "2026-04-21T18:13:12Z",
 			"expected": "accept",
 			"independent_python_result": "accept"
+		},
+		{
+			"id": "synthetic-untrusted-root-attestation",
+			"file": "synthetic-untrusted-root-attestation.cbor",
+			"file_sha256": "ea870aabd88ef0374ba4e75fbaa08eec4de6a0c95913cb0703a4c20238cc60d1",
+			"kind": "attestation",
+			"source": "generated for this project with freshly made P-384 root and intermediate keys and a P-256 leaf key, using the subject names of the Apple App Attestation Root CA and intermediate",
+			"license": "AGPL-3.0-or-later",
+			"app_id": "3G5837T29K.com.fluxer",
+			"environment": "development",
+			"challenge": "fake-challenge",
+			"now": "2026-11-05T00:00:00.000Z",
+			"expected": "reject untrusted chain",
+			"independent_python_result": "reject"
 		}
 	],
 	"independent_checker": {
