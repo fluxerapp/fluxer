@@ -1096,4 +1096,198 @@ mod tests {
             Err(AssertionError::KeyNotAccepted)
         );
     }
+
+    fn next_random(state: &mut u64) -> u64 {
+        *state ^= *state << 13;
+        *state ^= *state >> 7;
+        *state ^= *state << 17;
+        *state
+    }
+
+    fn mutate(seed: &[u8], state: &mut u64) -> Vec<u8> {
+        let mut bytes = seed.to_vec();
+        for _ in 0..=next_random(state) % 4 {
+            let pick = next_random(state) as usize;
+            let at = pick % bytes.len().max(1);
+            match next_random(state) % 6 {
+                0 if !bytes.is_empty() => bytes[at] = next_random(state) as u8,
+                1 if !bytes.is_empty() => bytes.truncate(pick % bytes.len()),
+                2 => bytes.insert(pick % (bytes.len() + 1), next_random(state) as u8),
+                3 if !bytes.is_empty() => {
+                    bytes.remove(pick % bytes.len());
+                }
+                4 if !bytes.is_empty() => bytes[at] ^= 1 << (next_random(state) % 8),
+                _ => bytes = (0..pick % 300).map(|_| next_random(state) as u8).collect(),
+            }
+        }
+        bytes
+    }
+
+    #[test]
+    fn malformed_input_is_rejected_without_a_panic() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let attestations = attestations();
+        let assertions = assertions();
+        for round in 0..4000 {
+            let vector = &attestations[round % attestations.len()];
+            let object = mutate(&vector.object, &mut state);
+            let accepted = config(&vector.app_id, true);
+            let _ = verify_attestation(
+                &object,
+                &vector.key_id,
+                &vector.client_data_hash,
+                vector.now,
+                &accepted,
+            );
+            let mutated_auth_data = mutate(&auth_data(&vector.object), &mut state);
+            let _ = check_attested_auth_data(&mutated_auth_data, &vector.key_id, &accepted);
+            let assertion = &assertions[round % assertions.len()];
+            let object = mutate(&assertion.object, &mut state);
+            let key = KeyForAssertion {
+                public_key: &assertion.public_key,
+                app_id: &assertion.app_id,
+                environment: assertion.environment,
+            };
+            let _ = verify_assertion(
+                &object,
+                &assertion.client_data,
+                key,
+                0,
+                &config(&assertion.app_id, true),
+            );
+            let point = mutate(&assertion.public_key, &mut state);
+            let _ = verify_assertion(
+                &assertion.object,
+                &assertion.client_data,
+                KeyForAssertion {
+                    public_key: &point,
+                    ..key
+                },
+                0,
+                &config(&assertion.app_id, true),
+            );
+        }
+    }
+
+    #[test]
+    fn attestation_rejects_a_chain_that_copies_apple_names_under_another_root() {
+        let object = testdata("synthetic-untrusted-root-attestation.cbor");
+        let key_id = STANDARD
+            .decode("G+TdKKtHTrJ9RAqGkJl/1YfvudeyG7u/uHZRWyJct8Y=")
+            .expect("key id");
+        let config = config("3G5837T29K.com.fluxer", true);
+        assert!(check_attested_auth_data(&auth_data(&object), &key_id, &config).is_ok());
+        assert_eq!(
+            verify_attestation(
+                &object,
+                &key_id,
+                &sha256(b"fake-challenge"),
+                SystemTime::UNIX_EPOCH + Duration::from_secs(1_793_836_800),
+                &config,
+            ),
+            Err(AttestationError::UntrustedChain)
+        );
+    }
+
+    #[test]
+    fn assertion_accepts_only_a_signature_over_the_nonce() {
+        use ring::rand::SystemRandom;
+        use ring::signature::{ECDSA_P256_SHA256_ASN1_SIGNING, EcdsaKeyPair, KeyPair};
+        let random = SystemRandom::new();
+        let pkcs8 =
+            EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &random).expect("key");
+        let pair =
+            EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8.as_ref(), &random)
+                .expect("pair");
+        let app_id = "3G5837T29K.com.fluxer";
+        let config = config(app_id, false);
+        let client_data =
+            br#"{"challenge":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","age_floor":"minor"}"#;
+        let authenticator_data = |counter: u32, tail: &[u8]| {
+            let mut data = sha256(app_id.as_bytes()).to_vec();
+            data.push(0x40);
+            data.extend_from_slice(&counter.to_be_bytes());
+            data.extend_from_slice(tail);
+            data
+        };
+        let assertion = |data: &[u8], message: &[u8]| {
+            let signature = pair.sign(&random, message).expect("sign");
+            let value = Value::Map(vec![
+                (
+                    Value::Text("signature".to_owned()),
+                    Value::Bytes(signature.as_ref().to_vec()),
+                ),
+                (
+                    Value::Text("authenticatorData".to_owned()),
+                    Value::Bytes(data.to_vec()),
+                ),
+            ]);
+            let mut out = Vec::new();
+            ciborium::ser::into_writer(&value, &mut out).expect("encode");
+            out
+        };
+        let nonce = |data: &[u8]| sha256_concat(data, &sha256(client_data));
+        let key = KeyForAssertion {
+            public_key: pair.public_key().as_ref(),
+            app_id,
+            environment: Environment::Production,
+        };
+        let check = |object: &[u8], previous: u32| {
+            verify_assertion(object, client_data, key, previous, &config)
+        };
+        let data = authenticator_data(1, &[]);
+        assert_eq!(check(&assertion(&data, &nonce(&data)), 0), Ok(1));
+        let mut concatenated = data.clone();
+        concatenated.extend_from_slice(&sha256(client_data));
+        assert_eq!(
+            check(&assertion(&data, &concatenated), 0),
+            Err(AssertionError::Signature)
+        );
+        assert_eq!(
+            check(&assertion(&data, client_data), 0),
+            Err(AssertionError::Signature)
+        );
+        let data = authenticator_data(u32::MAX, &[]);
+        let object = assertion(&data, &nonce(&data));
+        assert_eq!(check(&object, u32::MAX - 1), Ok(u32::MAX));
+        assert_eq!(check(&object, u32::MAX), Err(AssertionError::Counter));
+        let data = authenticator_data(0, &[]);
+        assert_eq!(
+            check(&assertion(&data, &nonce(&data)), 0),
+            Err(AssertionError::Counter)
+        );
+        for (tail, expected) in [
+            (&[0xa0][..], Ok(1)),
+            (&[0xa0, 0x00][..], Err(AssertionError::Malformed)),
+            (&[0x01][..], Err(AssertionError::Malformed)),
+            (
+                &[0xa2, 0x01, 0x01, 0x01, 0x02][..],
+                Err(AssertionError::Malformed),
+            ),
+        ] {
+            let data = authenticator_data(1, tail);
+            assert_eq!(
+                check(&assertion(&data, &nonce(&data)), 0),
+                expected,
+                "{tail:?}"
+            );
+        }
+        let data = authenticator_data(1, &[]);
+        assert_eq!(
+            verify_assertion(
+                &assertion(&data, &nonce(&data)),
+                client_data,
+                KeyForAssertion {
+                    app_id: "3G5837T29K.com.fluxer.canary",
+                    ..key
+                },
+                0,
+                &AppAttestConfig {
+                    app_ids: vec![app_id.to_owned(), "3G5837T29K.com.fluxer.canary".to_owned()],
+                    allow_development: false,
+                },
+            ),
+            Err(AssertionError::AppId)
+        );
+    }
 }
