@@ -4,10 +4,10 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {messageActionMenuItemIds, useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
 import {getEffectiveContent, triggerAddReaction} from '@app/features/channel/components/MessageActionUtils';
 import {
+	QuickReactionEmoji,
 	REACT_WITH_EMOJI_DESCRIPTOR,
-	renderQuickReactionEmoji,
+	useReactionMenuEmojiSrc,
 	useReactionMenuImagePreload,
-	useReactionSubmenuEmojiSrc,
 } from '@app/features/channel/components/QuickReactionsRow';
 import type {Channel} from '@app/features/channel/models/Channel';
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
@@ -196,7 +196,7 @@ RemoveReactionsSubmenu.displayName = 'RemoveReactionsSubmenu';
 const AddReactionSubmenuItem = observer(
 	({emoji, onSelect}: {emoji: FlatEmoji; onSelect: (emoji: FlatEmoji) => void}) => {
 		const reactionEmoji = useMemo(() => toReactionEmoji(emoji), [emoji]);
-		const emojiUrl = useReactionSubmenuEmojiSrc(emoji);
+		const emojiUrl = useReactionMenuEmojiSrc(emoji);
 		const label = getEmojiNameWithColons(reactionEmoji);
 		const renderEmojiPreview = () => {
 			if (emojiUrl) {
@@ -270,7 +270,7 @@ const QuickReactionContextMenuItem = observer(
 					data-menu-shortcut={shortcut}
 					data-flx="ui.action-menu.message-context-menu.quick-reaction-context-menu-item.aria-menu-item"
 				>
-					{renderQuickReactionEmoji(emoji)}
+					<QuickReactionEmoji emoji={emoji} />
 					{shouldShowShortcut && (
 						<span
 							className={contextMenuStyles.quickReactionShortcut}

@@ -4,8 +4,8 @@ import styles from '@app/features/channel/components/MessageActionBottomSheet.mo
 import {useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
 import {MessageReactionsSheet} from '@app/features/channel/components/MessageReactionsSheet';
 import {
+	QuickReactionEmoji,
 	REACT_WITH_EMOJI_DESCRIPTOR,
-	renderQuickReactionEmoji,
 	useReactionMenuImagePreload,
 } from '@app/features/channel/components/QuickReactionsRow';
 import quickReactionStyles from '@app/features/channel/components/QuickReactionsRow.module.css';
@@ -135,7 +135,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 								className={quickReactionStyles.button}
 								data-flx="channel.message-action-bottom-sheet.button.track-emoji"
 							>
-								{renderQuickReactionEmoji(emoji)}
+								<QuickReactionEmoji emoji={emoji} />
 							</button>
 						);
 					})}

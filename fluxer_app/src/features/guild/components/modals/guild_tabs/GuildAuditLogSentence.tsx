@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EVERYONE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Channels from '@app/features/channel/state/Channels';
 import Emoji from '@app/features/emoji/state/Emoji';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTab.module.css';
@@ -180,6 +181,19 @@ function renderText(value: string): React.ReactNode {
 	);
 }
 
+const AuditLogEmojiImage: React.FC<{id: string; animated: boolean}> = ({id, animated}) => {
+	const shouldAnimate = useShouldAnimate({kind: 'emoji', isAnimated: animated});
+	return (
+		<img
+			src={getEmojiURL({id, animated: animated && shouldAnimate})}
+			alt=""
+			draggable={false}
+			className={styles.inlineEmojiImage}
+			data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji-image"
+		/>
+	);
+};
+
 function renderEmoji({id, name}: EmojiPlaceholder): React.ReactNode {
 	const label = `:${name}:`;
 	const emoji = id === null ? undefined : Emoji.getEmojiById(id);
@@ -188,13 +202,7 @@ function renderEmoji({id, name}: EmojiPlaceholder): React.ReactNode {
 	}
 	return (
 		<span className={styles.inlineEmoji} data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji">
-			<img
-				src={getEmojiURL({id, animated: emoji.animated})}
-				alt=""
-				draggable={false}
-				className={styles.inlineEmojiImage}
-				data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji-image"
-			/>
+			<AuditLogEmojiImage id={id} animated={emoji.animated === true} />
 			<strong data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.strong--2">{label}</strong>
 		</span>
 	);
