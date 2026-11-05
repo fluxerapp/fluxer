@@ -920,7 +920,7 @@ The web origins, separated by commas, that may load media through CORS when `FLU
 
 ### `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`
 
-Whether attachment downloads need a signed URL. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`.
+Whether attachment downloads need a signed link. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and rexctl makes a key the first time you turn it on if that's empty. With rexctl, use `rexctl config set media.signed_attachments`.
 
 ### `FLUXER_MEDIA_PROXY_READ_ONLY`
 

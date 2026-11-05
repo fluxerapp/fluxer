@@ -58,6 +58,7 @@ const (
 	NoProxy         = "network.no_proxy"
 	IPv6            = "network.ipv6"
 	SSOPrivate      = "sso.allow_private_addresses"
+	SignedMedia     = "media.signed_attachments"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
 	DiskProfile     = "disk.profile"
@@ -88,6 +89,16 @@ var ImageVars = map[string]string{
 	"seaweedfs":   "FLUXER_SEAWEEDFS_IMAGE",
 	"livekit":     "FLUXER_LIVEKIT_IMAGE",
 	"edge":        "FLUXER_CADDY_IMAGE",
+}
+
+const (
+	SignatureModeVar    = "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"
+	SignatureSecretsVar = "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"
+)
+
+func SignsAttachments(mode string) bool {
+	m := strings.ToLower(strings.TrimSpace(mode))
+	return m == "report" || m == "enforce"
 }
 
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
@@ -142,6 +153,9 @@ func buildNamed() []Key {
 			Help: "Whether Fluxer's network uses IPv6"},
 		{Name: SSOPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
 			Help: "Whether single sign-on can use a provider on a private or local network address"},
+		{Name: SignedMedia, Type: "choice", Vars: []string{SignatureModeVar}, Options: []string{"off", "report", "enforce"}, Validate: oneOf("off", "report", "enforce"),
+			Confirm: "With enforce, attachment links without a valid signature stop working. That includes links copied out of Fluxer more than a day ago, links a bot saved and data packages made before signing was on. Fluxer's apps get new links by themselves.",
+			Help:    "Whether attachment downloads need a signed link"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
 			Help: "A registry mirror for the database, cache, queue, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),
@@ -236,8 +250,11 @@ func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi
 		return Key{}, unknown(name)
 	}
 	validate := validText
-	if name == TurnServersVar {
+	switch name {
+	case TurnServersVar:
 		validate = validTurnServers
+	case SignatureSecretsVar:
+		validate = validSignatureSecrets
 	}
 	return Key{Name: name, Kind: Raw, Type: "text", Vars: []string{name}, Secret: SecretName(name),
 		Stateful: generatedStateful(name), Validate: validate}, nil

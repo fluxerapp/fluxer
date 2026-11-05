@@ -148,6 +148,11 @@ func (v *configView) fallback(k settings.Key, inst *instance.Instance) string {
 		return settings.EdgeBundled
 	case settings.IPv6:
 		return "false"
+	case settings.SignedMedia:
+		if mode := inst.Setting(settings.SignatureModeVar); mode != "" {
+			return mode
+		}
+		return "off"
 	}
 	if len(k.Vars) == 0 {
 		return ""
