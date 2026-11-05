@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod app_attest;
 mod pseudonym;
 mod router_impl;
 mod shard_impl;
@@ -41,6 +42,12 @@ async fn main() -> anyhow::Result<()> {
 
 async fn build_shard(config: &ServiceConfig) -> anyhow::Result<UsersShard> {
     pseudonym::configure_from_env()?;
+    let app_attest = app_attest::AppAttestConfig::from_env()?;
+    tracing::info!(
+        app_ids = app_attest.app_ids.len(),
+        allow_development = app_attest.allow_development,
+        "app attest configuration"
+    );
     match config.database_backend {
         DatabaseBackend::Postgres => {
             let postgres_config = fluxer_svc::postgres::PostgresConfig::from_service_config(config);
@@ -50,6 +57,7 @@ async fn build_shard(config: &ServiceConfig) -> anyhow::Result<UsersShard> {
                 kv,
                 config.cache_max_entries,
                 config.cache_ttl,
+                app_attest,
             ))
         }
         DatabaseBackend::Cassandra => {
@@ -57,7 +65,8 @@ async fn build_shard(config: &ServiceConfig) -> anyhow::Result<UsersShard> {
             {
                 let scylla_config = fluxer_svc::scylla::ScyllaConfig::from_service_config(config);
                 let db = fluxer_svc::scylla::connect(&scylla_config).await?;
-                UsersShard::new_scylla(db, config.cache_max_entries, config.cache_ttl).await
+                UsersShard::new_scylla(db, config.cache_max_entries, config.cache_ttl, app_attest)
+                    .await
             }
             #[cfg(not(feature = "scylla"))]
             {

@@ -496,6 +496,7 @@ pub struct KvClient {
     get_partition_rows_sql: String,
     get_ordered_rows_sql: String,
     delete_row_sql: String,
+    table: String,
     sort_ids: Arc<SortIdState>,
 }
 
@@ -518,6 +519,7 @@ impl KvClient {
                 "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
             ),
             delete_row_sql: format!("DELETE FROM {table} WHERE table_name = $1 AND row_key = $2"),
+            table,
             sort_ids: Arc::new(SortIdState {
                 ready: AtomicBool::new(false),
                 started: Instant::now(),
@@ -799,6 +801,80 @@ impl KvClient {
         )
         .await?;
         Ok(())
+    }
+
+    pub async fn insert_row_if_absent(
+        &self,
+        table_name: &str,
+        partition_key: &str,
+        row_key: &str,
+        row_data: &Value,
+        expires_at_ms: Option<i64>,
+    ) -> anyhow::Result<bool> {
+        let table = &self.table;
+        let sql = format!(
+            "INSERT INTO {table} AS kv (table_name, partition_key, row_key, row_data, expires_at) VALUES ($1, $2, $3, $4, to_timestamp($5::bigint / 1000.0)) ON CONFLICT (table_name, row_key) DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_data, expires_at = EXCLUDED.expires_at, updated_at = now() WHERE kv.expires_at IS NOT NULL AND kv.expires_at <= now()"
+        );
+        let client = self.pool.get().await?;
+        let inserted = self
+            .execute(
+                &client,
+                &sql,
+                &[
+                    (&table_name, Type::TEXT),
+                    (&partition_key, Type::TEXT),
+                    (&row_key, Type::TEXT),
+                    (row_data, Type::JSONB),
+                    (&expires_at_ms, Type::INT8),
+                ],
+            )
+            .await?;
+        Ok(inserted == 1)
+    }
+
+    pub async fn take_row(&self, table_name: &str, row_key: &str) -> anyhow::Result<Option<Value>> {
+        let table = &self.table;
+        let sql = format!(
+            "DELETE FROM {table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) RETURNING row_data"
+        );
+        let client = self.pool.get().await?;
+        let row = self
+            .query_row(
+                &client,
+                &sql,
+                &[(&table_name, Type::TEXT), (&row_key, Type::TEXT)],
+            )
+            .await?;
+        Ok(row.map(|row| row.get::<_, Value>("row_data")))
+    }
+
+    pub async fn merge_row_if_bigint_below(
+        &self,
+        table_name: &str,
+        row_key: &str,
+        field_name: &str,
+        below: i64,
+        patch: &Value,
+    ) -> anyhow::Result<bool> {
+        let field_expr = json_field_expr(field_name)?;
+        let table = &self.table;
+        let sql = format!(
+            "UPDATE {table} SET row_data = row_data || $3, updated_at = now() WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) AND {field_expr} < $4"
+        );
+        let client = self.pool.get().await?;
+        let updated = self
+            .execute(
+                &client,
+                &sql,
+                &[
+                    (&table_name, Type::TEXT),
+                    (&row_key, Type::TEXT),
+                    (patch, Type::JSONB),
+                    (&below, Type::INT8),
+                ],
+            )
+            .await?;
+        Ok(updated == 1)
     }
 
     pub async fn query(

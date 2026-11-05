@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::app_attest::AppAttestConfig;
+use crate::app_attest::service::AppAttestService;
+use crate::app_attest::store::AppAttestStore;
 use crate::types::{ApiUserPartial, UserPartial, UserRequest, UserResponse};
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, Utc};
@@ -25,7 +28,7 @@ use std::future::Future;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 #[cfg(feature = "scylla")]
 type OptionalTimestamp = Option<MaybeEmpty<DateTime<Utc>>>;
@@ -45,6 +48,7 @@ const USER_CACHE_MAX_GENERATION_STRIPES: usize = 1 << 20;
 pub struct UsersShard {
     storage: UsersStorage,
     caches: UserCaches,
+    app_attest: AppAttestService,
 }
 
 struct UserCaches {
@@ -230,8 +234,14 @@ impl UserCaches {
 }
 
 impl UsersShard {
-    pub fn new_postgres(kv: postgres::KvClient, max_entries: u64, ttl: Duration) -> Self {
+    pub fn new_postgres(
+        kv: postgres::KvClient,
+        max_entries: u64,
+        ttl: Duration,
+        app_attest: AppAttestConfig,
+    ) -> Self {
         Self {
+            app_attest: AppAttestService::new(app_attest, AppAttestStore::Postgres(kv.clone())),
             storage: UsersStorage::Postgres(PostgresUsersStorage { kv }),
             caches: UserCaches::new(max_entries, ttl),
         }
@@ -242,6 +252,7 @@ impl UsersShard {
         db: Arc<Session>,
         max_entries: u64,
         ttl: Duration,
+        app_attest: AppAttestConfig,
     ) -> anyhow::Result<Self> {
         let stmt_partial = db
             .prepare(format!(
@@ -254,7 +265,11 @@ impl UsersShard {
             ))
             .await?;
 
+        let app_attest_store = AppAttestStore::Scylla(Arc::new(
+            crate::app_attest::store::ScyllaAppAttestStore::new(db.clone()),
+        ));
         Ok(Self {
+            app_attest: AppAttestService::new(app_attest, app_attest_store),
             storage: UsersStorage::Scylla(Arc::new(ScyllaUsersStorage {
                 db,
                 stmt_partial,
@@ -522,6 +537,43 @@ impl ShardService for UsersShard {
             UserRequest::Invalidate { user_id } => {
                 self.caches.invalidate(user_id).await;
                 Ok(UserResponse::Invalidated)
+            }
+            UserRequest::AppAttestCreateChallenge { user_id, purpose } => {
+                self.app_attest
+                    .create_challenge(user_id, purpose, SystemTime::now())
+                    .await
+            }
+            UserRequest::AppAttestRegisterKey {
+                user_id,
+                key_id,
+                attestation_base64,
+                challenge,
+            } => {
+                self.app_attest
+                    .register_key(
+                        user_id,
+                        &key_id,
+                        &attestation_base64,
+                        &challenge,
+                        SystemTime::now(),
+                    )
+                    .await
+            }
+            UserRequest::AppAttestSubmitAge {
+                user_id,
+                key_id,
+                assertion_base64,
+                client_data_base64,
+            } => {
+                self.app_attest
+                    .submit_age(
+                        user_id,
+                        &key_id,
+                        &assertion_base64,
+                        &client_data_base64,
+                        SystemTime::now(),
+                    )
+                    .await
             }
         }
     }
