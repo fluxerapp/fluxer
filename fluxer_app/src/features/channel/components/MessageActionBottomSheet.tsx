@@ -135,7 +135,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 								className={quickReactionStyles.button}
 								data-flx="channel.message-action-bottom-sheet.button.track-emoji"
 							>
-								<QuickReactionEmoji emoji={emoji} />
+								<QuickReactionEmoji emoji={emoji} data-flx="channel.message-action-bottom-sheet.quick-reaction-emoji" />
 							</button>
 						);
 					})}
