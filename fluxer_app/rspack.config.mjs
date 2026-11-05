@@ -776,10 +776,12 @@ export default () => {
 					});
 				},
 			},
-			...(isProduction ? moduleMapPlugin({
-				root: MONOREPO_ROOT,
-				build: {...buildInfo, desktopRenderer: isDesktopRenderer},
-			}) : []),
+			...(isProduction
+				? moduleMapPlugin({
+						root: MONOREPO_ROOT,
+						build: {...buildInfo, desktopRenderer: isDesktopRenderer},
+					})
+				: []),
 		],
 		optimization: {
 			splitChunks: isProduction
