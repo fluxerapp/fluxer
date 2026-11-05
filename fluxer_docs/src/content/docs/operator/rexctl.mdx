@@ -360,11 +360,11 @@ rexctl install [flags]
 
 - `--behind-proxy`
 
-  Serve plain HTTP for your own reverse proxy.
+  Serve plain HTTP for your own reverse proxy or tunnel.
 
 - `--bind string`
 
-  Address your proxy connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
+  Address your proxy or tunnel connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
 
 - `--confirm string`
 
@@ -567,7 +567,7 @@ rexctl logs [service] [flags]
 
 ## rexctl proxy
 
-Use your own reverse proxy in front of Fluxer.
+Use your own reverse proxy or tunnel in front of Fluxer.
 
 ### rexctl proxy off
 
@@ -579,7 +579,7 @@ rexctl proxy off
 
 ### rexctl proxy on
 
-Serve plain HTTP for your own proxy.
+Serve plain HTTP for your own proxy or tunnel.
 
 ```sh
 rexctl proxy on [flags]
@@ -587,7 +587,7 @@ rexctl proxy on [flags]
 
 - `--bind string`
 
-  Address your proxy connects to, kept when left out (127.0.0.1:8080 the first time).
+  Address your proxy or tunnel connects to, kept when left out (127.0.0.1:8080 the first time).
 
 ## rexctl registration
 

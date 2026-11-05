@@ -3,6 +3,7 @@
 package checks
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 func init() {
@@ -21,6 +24,16 @@ func runDNS(ctx context.Context, e *Env) Result {
 	if privateDomain(e.Domain) {
 		return skip("")
 	}
+	if overlayDomain(e.Domain) {
+		if e.mode() != modeBundled || strings.EqualFold(e.value("FLUXER_PUBLIC_SCHEME"), "http") || strings.EqualFold(e.value("FLUXER_EDGE_TLS"), "internal") {
+			return skip(fmt.Sprintf("rexctl doesn't check DNS for %s because public DNS can't look it up.", e.Domain))
+		}
+		fix := "Run rexctl install --behind-proxy, then point your tunnel at http://127.0.0.1:8080."
+		if e.installed() {
+			fix = fmt.Sprintf("Run rexctl proxy on, point your tunnel at http://%s, then run rexctl doctor.", cmp.Or(e.setting(settings.EdgeBind), "127.0.0.1:8080"))
+		}
+		return fail(fmt.Sprintf("Let's Encrypt can't give %s a certificate because public DNS can't look it up.", e.Domain), fix)
+	}
 	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	addrs, err := net.DefaultResolver.LookupIPAddr(lookupCtx, e.Domain)
@@ -30,8 +43,8 @@ func runDNS(ctx context.Context, e *Env) Result {
 	}
 	if e.mode() != modeBundled {
 		if len(addrs) == 0 {
-			return fail(fmt.Sprintf("%s doesn't point anywhere yet.", e.Domain),
-				"Add a DNS record for it that points to your proxy, then run rexctl doctor.")
+			return warn(fmt.Sprintf("This machine can't find %s in DNS.", e.Domain),
+				"If only your proxy or tunnel can look it up, you can ignore this. Otherwise, add a DNS record for it that points to your proxy or tunnel. rexctl doctor checks it again.")
 		}
 		return pass(fmt.Sprintf("%s points to %s.", e.Domain, addrs[0].IP))
 	}

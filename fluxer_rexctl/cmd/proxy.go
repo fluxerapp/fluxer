@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -19,13 +20,13 @@ import (
 func newProxyCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "proxy",
-		Short: "Use your own reverse proxy in front of Fluxer",
+		Short: "Use your own reverse proxy or tunnel in front of Fluxer",
 		Args:  noArgs,
 	}
 	var bind string
 	on := &cobra.Command{
 		Use:   "on",
-		Short: "Serve plain HTTP for your own proxy",
+		Short: "Serve plain HTTP for your own proxy or tunnel",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			mode := settings.EdgeProxy
@@ -36,7 +37,7 @@ func newProxyCmd(app *App) *cobra.Command {
 			return setProxy(c.Context(), app, changes)
 		},
 	}
-	on.Flags().StringVar(&bind, "bind", "", "address your proxy connects to, kept when left out (127.0.0.1:8080 the first time)")
+	on.Flags().StringVar(&bind, "bind", "", "address your proxy or tunnel connects to, kept when left out (127.0.0.1:8080 the first time)")
 	off := &cobra.Command{
 		Use:   "off",
 		Short: "Serve HTTPS directly with a certificate from Let's Encrypt",
@@ -59,6 +60,11 @@ func setProxy(ctx context.Context, app *App, changes map[string]*string) error {
 		bind := cmp.Or(inst.State.Settings[settings.EdgeBind], "127.0.0.1:8080")
 		changes[settings.EdgeBind] = &bind
 	}
+	plainHTTP := on && checks.PlainHTTPDomain(inst.Domain()) && inst.State.Settings[publicSchemeVar] == ""
+	if plainHTTP {
+		scheme := "http"
+		changes[publicSchemeVar] = &scheme
+	}
 	if mode := inst.State.Settings[settings.EdgeMode]; !on && mode != "" && mode != settings.EdgeBundled {
 		if err := allowLowPorts(ctx, app, inst); err != nil {
 			return err
@@ -80,7 +86,10 @@ func setProxy(ctx context.Context, app *App, changes map[string]*string) error {
 			app.UI.OK("Fluxer already serves HTTPS itself.")
 		case on:
 			app.UI.OK("Fluxer serves plain HTTP on %s.", *changes[settings.EdgeBind])
-			app.UI.Info("Send all traffic for %s from your proxy to %s.", inst.Domain(), *changes[settings.EdgeBind])
+			app.UI.Info("Send all traffic for %s from your proxy or tunnel to %s.", inst.Domain(), *changes[settings.EdgeBind])
+			if plainHTTP {
+				app.UI.Info(plainHTTPNote, inst.Domain())
+			}
 		default:
 			app.UI.OK("Fluxer serves HTTPS for %s itself.", inst.Domain())
 			app.UI.Info("Keep ports 80 and 443 open to this machine for the certificate.")
