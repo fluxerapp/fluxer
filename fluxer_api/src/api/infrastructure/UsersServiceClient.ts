@@ -9,6 +9,11 @@ import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {compareText} from '@app/api/utils/StringComparison';
+import {
+	type AppAttestChallengePurpose,
+	type AttestedAgeFloor,
+	isAttestedAgeFloor,
+} from '@fluxer/constants/src/AgeAssuranceConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
@@ -21,6 +26,46 @@ const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
 export interface IUsersServiceClient {
 	getUserPartialResponses(userIds: Array<UserID>): Promise<Map<UserID, UserPartialResponse>>;
 	invalidateUserCache(userId: UserID): Promise<void>;
+	appAttestCreateChallenge(
+		userId: UserID,
+		purpose: AppAttestChallengePurpose,
+	): Promise<AppAttestOutcome<AppAttestChallengeIssued>>;
+	appAttestRegisterKey(params: {
+		userId: UserID;
+		keyId: string;
+		attestationBase64: string;
+		challenge: string;
+	}): Promise<AppAttestOutcome<true>>;
+	appAttestSubmitAge(params: {
+		userId: UserID;
+		keyId: string;
+		assertionBase64: string;
+		clientDataBase64: string;
+	}): Promise<AppAttestOutcome<AppAttestAgeAccepted>>;
+}
+
+const APP_ATTEST_REJECTION_CODES = [
+	'not_configured',
+	'invalid_request',
+	'invalid_challenge',
+	'invalid_attestation',
+	'key_in_use',
+	'unknown_key',
+	'invalid_assertion',
+] as const;
+
+export type AppAttestRejectionCode = (typeof APP_ATTEST_REJECTION_CODES)[number];
+
+export type AppAttestOutcome<T> = {ok: true; value: T} | {ok: false; code: AppAttestRejectionCode};
+
+export interface AppAttestChallengeIssued {
+	challenge: string;
+	expires_at: string;
+}
+
+export interface AppAttestAgeAccepted {
+	age_floor: AttestedAgeFloor;
+	attested_at: string;
 }
 
 type PendingUserPartials = Promise<Map<UserID, UserPartialResponse>>;
@@ -34,6 +79,25 @@ type UsersServiceRequest =
 	| {
 			op: 'Invalidate';
 			user_id: string;
+	  }
+	| {
+			op: 'AppAttestCreateChallenge';
+			user_id: string;
+			purpose: AppAttestChallengePurpose;
+	  }
+	| {
+			op: 'AppAttestRegisterKey';
+			user_id: string;
+			key_id: string;
+			attestation_base64: string;
+			challenge: string;
+	  }
+	| {
+			op: 'AppAttestSubmitAge';
+			user_id: string;
+			key_id: string;
+			assertion_base64: string;
+			client_data_base64: string;
 	  };
 
 interface UserPartialsResponse {
@@ -48,6 +112,32 @@ function isUserPartialsResponse(value: unknown): value is UserPartialsResponse {
 	return (
 		isJsonRecord(value) && Array.isArray(value.FoundApiPartials) && value.FoundApiPartials.every(isUserPartialResponse)
 	);
+}
+
+function isAppAttestRejectionCode(value: unknown): value is AppAttestRejectionCode {
+	return typeof value === 'string' && (APP_ATTEST_REJECTION_CODES as ReadonlyArray<string>).includes(value);
+}
+
+function rejectedCode(value: unknown): AppAttestRejectionCode | null {
+	if (!isJsonRecord(value) || !isJsonRecord(value.AppAttestRejected)) return null;
+	const code = value.AppAttestRejected.code;
+	return isAppAttestRejectionCode(code) ? code : null;
+}
+
+function acceptChallenge(value: unknown): AppAttestChallengeIssued | null {
+	if (!isJsonRecord(value) || !isJsonRecord(value.AppAttestChallenge)) return null;
+	const {challenge, expires_at} = value.AppAttestChallenge;
+	return typeof challenge === 'string' && typeof expires_at === 'string' ? {challenge, expires_at} : null;
+}
+
+function acceptKeyRegistered(value: unknown): true | null {
+	return value === 'AppAttestKeyRegistered' ? true : null;
+}
+
+function acceptAge(value: unknown): AppAttestAgeAccepted | null {
+	if (!isJsonRecord(value) || !isJsonRecord(value.AppAttestAgeAccepted)) return null;
+	const {age_floor, attested_at} = value.AppAttestAgeAccepted;
+	return isAttestedAgeFloor(age_floor) && typeof attested_at === 'string' ? {age_floor, attested_at} : null;
 }
 
 export class NatsUsersServiceClient implements IUsersServiceClient {
@@ -154,6 +244,67 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 		} finally {
 			this.inflightPartials.delete(userId);
 		}
+	}
+
+	async appAttestCreateChallenge(
+		userId: UserID,
+		purpose: AppAttestChallengePurpose,
+	): Promise<AppAttestOutcome<AppAttestChallengeIssued>> {
+		return this.appAttestRequest(
+			{op: 'AppAttestCreateChallenge', user_id: userId.toString(), purpose},
+			acceptChallenge,
+		);
+	}
+
+	async appAttestRegisterKey(params: {
+		userId: UserID;
+		keyId: string;
+		attestationBase64: string;
+		challenge: string;
+	}): Promise<AppAttestOutcome<true>> {
+		return this.appAttestRequest(
+			{
+				op: 'AppAttestRegisterKey',
+				user_id: params.userId.toString(),
+				key_id: params.keyId,
+				attestation_base64: params.attestationBase64,
+				challenge: params.challenge,
+			},
+			acceptKeyRegistered,
+		);
+	}
+
+	async appAttestSubmitAge(params: {
+		userId: UserID;
+		keyId: string;
+		assertionBase64: string;
+		clientDataBase64: string;
+	}): Promise<AppAttestOutcome<AppAttestAgeAccepted>> {
+		return this.appAttestRequest(
+			{
+				op: 'AppAttestSubmitAge',
+				user_id: params.userId.toString(),
+				key_id: params.keyId,
+				assertion_base64: params.assertionBase64,
+				client_data_base64: params.clientDataBase64,
+			},
+			acceptAge,
+		);
+	}
+
+	private async appAttestRequest<T>(
+		payload: UsersServiceRequest,
+		accept: (value: unknown) => T | null,
+	): Promise<AppAttestOutcome<T>> {
+		const reply = await this.request(
+			payload,
+			(value): value is unknown => rejectedCode(value) !== null || accept(value) !== null,
+		);
+		const code = rejectedCode(reply);
+		if (code !== null) return {ok: false, code};
+		const accepted = accept(reply);
+		if (accepted === null) throw new Error('[users-service] invalid App Attest response payload');
+		return {ok: true, value: accepted};
 	}
 
 	private async request<T>(payload: UsersServiceRequest, responseGuard: (value: unknown) => value is T): Promise<T> {

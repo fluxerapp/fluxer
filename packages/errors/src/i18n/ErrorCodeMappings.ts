@@ -11,6 +11,13 @@ type AllErrorCodes = APIErrorCode | ValidationErrorCode;
 export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.ACCESS_DENIED]: 'permissions.missing_access',
 	[APIErrorCodes.ACCOUNT_LIMITED]: 'account.limited',
+	[APIErrorCodes.APP_ATTEST_NOT_AVAILABLE]: 'account.app_attest_not_available',
+	[APIErrorCodes.APP_ATTEST_KEY_NOT_REGISTERED]: 'account.app_attest_key_not_registered',
+	[APIErrorCodes.APP_ATTEST_KEY_IN_USE]: 'account.app_attest_key_in_use',
+	[APIErrorCodes.APP_ATTEST_CHALLENGE_INVALID]: 'account.app_attest_challenge_invalid',
+	[APIErrorCodes.APP_ATTEST_ATTESTATION_INVALID]: 'account.app_attest_attestation_invalid',
+	[APIErrorCodes.APP_ATTEST_ASSERTION_INVALID]: 'account.app_attest_assertion_invalid',
+	[APIErrorCodes.APP_ATTEST_REQUEST_INVALID]: 'account.app_attest_request_invalid',
 	[APIErrorCodes.ACCOUNT_VERIFICATION_REQUIRED]: 'account.verification_required',
 	[APIErrorCodes.DATE_OF_BIRTH_REQUIRED]: 'account.date_of_birth_required',
 	[APIErrorCodes.DATE_OF_BIRTH_ALREADY_SET]: 'account.date_of_birth_already_set',

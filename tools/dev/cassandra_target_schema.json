@@ -1011,6 +1011,83 @@
 			"options": ""
 		},
 		{
+			"name": "app_attest_challenges",
+			"columns": [
+				{
+					"name": "challenge",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "purpose",
+					"type": "text"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "(challenge)",
+			"options": ""
+		},
+		{
+			"name": "app_attest_key_lookup",
+			"columns": [
+				{
+					"name": "key_id",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "(key_id)",
+			"options": ""
+		},
+		{
+			"name": "app_attest_keys",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "key_id",
+					"type": "text"
+				},
+				{
+					"name": "public_key",
+					"type": "blob"
+				},
+				{
+					"name": "environment",
+					"type": "text"
+				},
+				{
+					"name": "app_id",
+					"type": "text"
+				},
+				{
+					"name": "counter",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "last_used_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), key_id)",
+			"options": ""
+		},
+		{
 			"name": "applications",
 			"columns": [
 				{
@@ -10427,6 +10504,14 @@
 				{
 					"name": "enforcement_decision_id",
 					"type": "bigint"
+				},
+				{
+					"name": "attested_age_floor",
+					"type": "text"
+				},
+				{
+					"name": "age_attested_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id))",

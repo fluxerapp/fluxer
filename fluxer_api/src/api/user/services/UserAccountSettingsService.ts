@@ -86,10 +86,10 @@ export class UserAccountSettingsService {
 	async updateSettings(params: {
 		userId: UserID;
 		data: UserSettingsUpdateRequest;
-		dateOfBirth?: string | null;
+		ageUser: Pick<User, 'dateOfBirth' | 'attestedAgeFloor'>;
 		flags?: bigint;
 	}): Promise<UserSettings> {
-		const {userId, data, dateOfBirth, flags = 0n} = params;
+		const {userId, data, ageUser, flags = 0n} = params;
 		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) {
 			throw new UnknownUserError();
@@ -206,7 +206,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth});
+		const userIsAdult = canUserAccessNsfwContent({isBot: false, ...ageUser});
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;

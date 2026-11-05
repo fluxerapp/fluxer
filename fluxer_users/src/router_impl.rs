@@ -17,7 +17,10 @@ impl RouterService for UsersRouter {
 
     fn route_key(req: &UserRequest) -> String {
         match req {
-            UserRequest::Invalidate { user_id } => user_id.to_string(),
+            UserRequest::Invalidate { user_id }
+            | UserRequest::AppAttestCreateChallenge { user_id, .. }
+            | UserRequest::AppAttestRegisterKey { user_id, .. }
+            | UserRequest::AppAttestSubmitAge { user_id, .. } => user_id.to_string(),
             UserRequest::GetPartialsByIds { user_ids, .. } => user_ids
                 .iter()
                 .min()
@@ -57,7 +60,10 @@ impl RouterService for UsersRouter {
                 ids.dedup();
                 Some(format!("api_partials:{instance_name}:{}", ids.join(",")))
             }
-            UserRequest::Invalidate { .. } => None,
+            UserRequest::Invalidate { .. }
+            | UserRequest::AppAttestCreateChallenge { .. }
+            | UserRequest::AppAttestRegisterKey { .. }
+            | UserRequest::AppAttestSubmitAge { .. } => None,
         }
     }
 

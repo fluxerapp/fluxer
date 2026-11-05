@@ -68,6 +68,14 @@ const COMMON_RESPONSES: Record<string, OpenAPIResponse> = {
 			},
 		},
 	},
+	'409': {
+		description: 'Conflict - The request conflicts with the current state of the resource',
+		content: {
+			'application/json': {
+				schema: {$ref: '#/components/schemas/Error'},
+			},
+		},
+	},
 	'429': {
 		description: 'Too Many Requests - You are being rate limited',
 		content: {
