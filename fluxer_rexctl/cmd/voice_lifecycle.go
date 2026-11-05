@@ -21,6 +21,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -215,7 +216,7 @@ func voiceMachinesUsing(inst *instance.Instance) []*instance.Instance {
 	return out
 }
 
-func instanceRelease(ctx context.Context, domain string) (string, error) {
+func instanceBuild(ctx context.Context, domain string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+domain+"/.well-known/fluxer", nil)
 	if err != nil {
 		return "", err
@@ -231,26 +232,108 @@ func instanceRelease(ctx context.Context, domain string) (string, error) {
 	return resp.Header.Get("X-Fluxer-Version"), nil
 }
 
+func ownAPIBuild() string {
+	images, err := stack.EmbeddedImages()
+	if err != nil {
+		return ""
+	}
+	return images.Builds["api"]
+}
+
+func compareInstanceBuild(build, own string) int {
+	if !release.Valid(build) || !release.Valid(own) {
+		return 0
+	}
+	return release.Compare(build, own)
+}
+
+type voiceMachinePlan struct {
+	domain  string
+	image   string
+	update  *release.Release
+	older   bool
+	pending []*instance.VoiceServer
+}
+
+func planVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instance, report bool) (*voiceMachinePlan, error) {
+	p := &voiceMachinePlan{domain: inst.State.Voice[0].Instance, image: ownLiveKitImage()}
+	build, err := instanceBuild(ctx, p.domain)
+	if err != nil {
+		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't connect to %s. Nothing changed.", p.domain), "Run rexctl upgrade again once the instance answers.")
+	}
+	switch compareInstanceBuild(build, ownAPIBuild()) {
+	case -1:
+		p.older = true
+		return p, nil
+	case 1:
+		rel, err := resolveRelease(ctx, "")
+		if err != nil {
+			return nil, err
+		}
+		if release.Compare(rel.Version, app.Version) > 0 {
+			p.update = rel
+			return p, nil
+		}
+	}
+	refreshJoinedServers(ctx, app, inst, report)
+	p.pending = staleVoiceServers(inst, p.image)
+	return p, nil
+}
+
+func printVoiceMachinePlan(app *App, p *voiceMachinePlan) {
+	switch {
+	case p.update != nil:
+		app.UI.Info("%s runs a newer release than this rexctl. rexctl would update itself to %s, then upgrade the voice servers once %s runs that release or a newer one.", p.domain, p.update.Version, p.domain)
+	case p.older:
+		app.UI.Info("%s runs an older release than this rexctl. Voice servers stay on their LiveKit release until the instance catches up.", p.domain)
+	case len(p.pending) == 0:
+		app.UI.OK("Every voice server on this machine is up to date.")
+	default:
+		for _, s := range p.pending {
+			app.UI.Info("rexctl would drain %s and start it again with %s.", s.ID, voiceTargetImage(s, p.image))
+		}
+	}
+}
+
+func runVoiceMachineCheck(ctx context.Context, app *App, inst *instance.Instance) error {
+	if len(inst.State.Voice) == 0 {
+		if app.Flags.JSON {
+			return app.UI.JSON(upgradeCheckJSON{Current: app.Version, Latest: app.Version})
+		}
+		app.UI.OK("This machine runs no voice servers.")
+		return nil
+	}
+	p, err := planVoiceMachineUpgrade(ctx, app, inst, false)
+	if err != nil {
+		return err
+	}
+	if app.Flags.JSON {
+		out := upgradeCheckJSON{Current: app.Version, Latest: app.Version, Available: len(p.pending) > 0}
+		if p.update != nil {
+			out.Latest, out.Available = p.update.Version, true
+		}
+		return app.UI.JSON(out)
+	}
+	printVoiceMachinePlan(app, p)
+	return nil
+}
+
 func runVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instance, dryRun bool) error {
 	if len(inst.State.Voice) == 0 {
 		app.UI.OK("This machine runs no voice servers.")
 		return nil
 	}
-	domain := inst.State.Voice[0].Instance
-	target, err := instanceRelease(ctx, domain)
+	p, err := planVoiceMachineUpgrade(ctx, app, inst, !dryRun)
 	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("rexctl can't connect to %s. Nothing changed.", domain), "Run rexctl upgrade again once the instance answers.")
+		return err
 	}
-	if release.Valid(target) && release.Valid(app.Version) && release.Compare(target, app.Version) > 0 {
-		rel, err := resolveRelease(ctx, target)
-		if err != nil {
-			return err
-		}
-		if dryRun {
-			app.UI.Info("rexctl would update itself to %s, the release %s runs, then upgrade the voice servers.", target, domain)
-			return nil
-		}
-		asset, err := rel.AssetFor(runtime.GOOS, runtime.GOARCH)
+	if dryRun || p.older {
+		printVoiceMachinePlan(app, p)
+		return nil
+	}
+	if p.update != nil {
+		target := p.update.Version
+		asset, err := p.update.AssetFor(runtime.GOOS, runtime.GOARCH)
 		if err != nil {
 			return ui.Failed(fmt.Sprintf("There's no rexctl %s for this machine.", target), "")
 		}
@@ -265,22 +348,6 @@ func runVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instan
 		}
 		if err := reexec(os.Args[1:]); err != nil {
 			return ui.Wrap(err, "Updated rexctl but couldn't start it again.", "Run rexctl upgrade again.")
-		}
-		return nil
-	}
-	image := ownLiveKitImage()
-	if release.Valid(target) && release.Valid(app.Version) && release.Compare(target, app.Version) < 0 {
-		app.UI.Info("%s runs %s, older than this rexctl. Voice servers stay on their LiveKit release until the instance catches up.", domain, target)
-		return nil
-	}
-	refreshJoinedServers(ctx, app, inst, !dryRun)
-	pending := staleVoiceServers(inst, image)
-	if dryRun {
-		for _, s := range pending {
-			app.UI.Info("rexctl would drain %s and start it again with %s.", s.ID, voiceTargetImage(s, image))
-		}
-		if len(pending) == 0 {
-			app.UI.OK("Every voice server on this machine is up to date.")
 		}
 		return nil
 	}
@@ -303,12 +370,12 @@ func runVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instan
 				return err
 			}
 		}
-		for _, srv := range pending {
-			if err := upgradeVoiceServer(ctx, app, e, nil, inst, srv, voiceTargetImage(srv, image), defaultDrainTimeout); err != nil {
+		for _, srv := range p.pending {
+			if err := upgradeVoiceServer(ctx, app, e, nil, inst, srv, voiceTargetImage(srv, p.image), defaultDrainTimeout); err != nil {
 				return err
 			}
 		}
-		if len(pending) == 0 {
+		if len(p.pending) == 0 {
 			app.UI.OK("Every voice server on this machine is up to date.")
 		}
 		return nil

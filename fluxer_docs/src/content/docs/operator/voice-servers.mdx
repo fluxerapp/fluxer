@@ -321,7 +321,7 @@ rexctl doctor
 
 `rexctl upgrade` on the Fluxer machine upgrades Fluxer first. Then it moves each voice server on the machine to the new LiveKit release, one at a time. It marks the server as draining. New calls then go elsewhere, and calls on it keep going. Docker then replaces the container, and LiveKit waits until those calls end, for up to 15 minutes. The server then takes new calls again, also when the upgrade fails or you stop it. A server you turned off or marked as draining in the admin panel stays that way.
 
-On a voice machine, `rexctl upgrade` updates rexctl to the release your instance runs, then upgrades the servers the same way. It never goes past your instance's release, and it refuses `--prefetch` and `--to`. It also updates the edge.
+On a voice machine, `rexctl upgrade` first checks the release your instance runs. When that release is newer than rexctl, rexctl updates itself to the latest release. It then upgrades the servers the same way, and updates the edge, once your instance runs the release of that rexctl or a newer one. Until then, the servers stay as they are. It refuses `--prefetch` and `--to`, and `rexctl upgrade --check` shows what it would do.
 
 rexctl upgrades a server when the release has a new LiveKit image, and also when the release changes the server's files or settings. A server added with `--image` keeps that image.
 
