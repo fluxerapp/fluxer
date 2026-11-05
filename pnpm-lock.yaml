@@ -476,6 +476,7 @@ patchedDependencies:
   eslint-plugin-react-google-translate@1.0.4: 343c47e52467ec6018beff92d73b6ca2cf231399d98116925687451e8bd527d8
   gifuct-js@2.1.2: ea6e8ed3084100883f9206acf5b9031ef6aeaf25236ff59a9cb3dbea3b77ed10
   hunspell-asm@4.0.2: 594ff55f398ab3a575ba1b4d090c4838a26e4251a2f1d65ba0f02d5b098d02ae
+  react-aria@3.53.1: 37413adf8946bee83eb7f1f053ac96764e0bdcbe851af11bf6e4e9221437bcd0
   upng-js@2.1.0: 34ef83d86b7cdf910a393193e3321a239470e7c5e5c7755fd14c30e30db4ea8e
 
 importers:
@@ -15667,7 +15668,7 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.23
       react: 19.3.1
-      react-aria: 3.53.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react-aria: 3.53.1(patch_hash=37413adf8946bee83eb7f1f053ac96764e0bdcbe851af11bf6e4e9221437bcd0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react-dom: 19.3.1(react@19.3.1)
 
   '@react-dnd/asap@5.0.2': {}
@@ -20863,12 +20864,12 @@ snapshots:
       '@swc/helpers': 0.5.23
       client-only: 0.0.1
       react: 19.3.1
-      react-aria: 3.53.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react-aria: 3.53.1(patch_hash=37413adf8946bee83eb7f1f053ac96764e0bdcbe851af11bf6e4e9221437bcd0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react-dom: 19.3.1(react@19.3.1)
       react-stately: 3.51.0(react@19.3.1)
       use-sync-external-store: 1.7.0(react@19.3.1)
 
-  react-aria@3.53.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  react-aria@3.53.1(patch_hash=37413adf8946bee83eb7f1f053ac96764e0bdcbe851af11bf6e4e9221437bcd0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
       '@internationalized/date': 3.12.4
       '@internationalized/number': 3.6.9

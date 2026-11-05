@@ -1023,9 +1023,13 @@ class Accessibility {
 
 	private initializeMotionDetection() {
 		if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-			this.mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-			this.systemReducedMotion = this.mediaQuery.matches;
-			this.mediaQuery.addEventListener('change', this.handleSystemMotionChange);
+			const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+			this.systemReducedMotion = mediaQuery.matches;
+			if (typeof mediaQuery.addEventListener !== 'function') {
+				return;
+			}
+			this.mediaQuery = mediaQuery;
+			mediaQuery.addEventListener('change', this.handleSystemMotionChange);
 		}
 	}
 

@@ -48,16 +48,29 @@ func runDNS(ctx context.Context, e *Env) Result {
 		}
 		return pass(fmt.Sprintf("%s points to %s.", e.Domain, addrs[0].IP))
 	}
-	public, perr := e.publicAddress(ctx)
+	var public string
+	var perr error
+	here := "this machine is"
+	listen := e.publicListenIP()
+	if listen != nil {
+		public, here = listen.String(), "Fluxer listens on"
+	} else {
+		public, perr = e.publicAddress(ctx)
+	}
+	record := "A"
+	if ip := net.ParseIP(public); ip != nil && ip.To4() == nil {
+		record = "AAAA"
+	}
 	if len(addrs) == 0 {
 		if perr != nil {
 			return fail(fmt.Sprintf("%s doesn't point to this machine yet.", e.Domain),
 				"Add an A record for it pointing to this machine's public IP address, then run rexctl doctor.")
 		}
 		return fail(fmt.Sprintf("%s doesn't point to this machine yet.", e.Domain),
-			fmt.Sprintf("Add an A record for it pointing to %s, then run rexctl doctor.", public))
+			fmt.Sprintf("Add an %s record for it pointing to %s, then run rexctl doctor.", record, public))
 	}
-	if matched := matchHere(addrs, public); len(matched) > 0 {
+	matched := matchHere(addrs, public, listen == nil)
+	if len(matched) > 0 {
 		return pass(fmt.Sprintf("%s points to this machine (%s).", e.Domain, strings.Join(matched, ", ")))
 	}
 	forwards, reason := e.forwardsHere(ctx)
@@ -67,18 +80,26 @@ func runDNS(ctx context.Context, e *Env) Result {
 	if perr != nil {
 		return skip(fmt.Sprintf("Couldn't find this machine's public IP address to compare with %s.", e.Domain))
 	}
-	problem := fmt.Sprintf("%s points to %s and this machine is %s.", e.Domain, addrs[0].IP, public)
+	problem := fmt.Sprintf("%s points to %s and %s %s.", e.Domain, addrs[0].IP, here, public)
 	if reason != "" {
 		return fail(problem+" "+reason,
-			fmt.Sprintf("If a proxy such as Cloudflare is in front of this machine, let requests to https://%s/_edge through without a challenge, then run rexctl doctor. Otherwise, change the A record to %s.", e.Domain, public))
+			fmt.Sprintf("If a proxy such as Cloudflare is in front of this machine, let requests to https://%s/_edge through without a challenge, then run rexctl doctor. Otherwise, change the %s record to %s.", e.Domain, record, public))
 	}
-	return fail(problem, fmt.Sprintf("Change its A record to %s, then run rexctl doctor.", public))
+	return fail(problem, fmt.Sprintf("Change its %s record to %s, then run rexctl doctor.", record, public))
 }
 
-func matchHere(addrs []net.IPAddr, public string) []string {
+func (e *Env) publicListenIP() net.IP {
+	ip := net.ParseIP(e.value(settings.EdgeListenVar))
+	if ip == nil || !ip.IsGlobalUnicast() || ip.IsPrivate() {
+		return nil
+	}
+	return ip
+}
+
+func matchHere(addrs []net.IPAddr, public string, anyLocal bool) []string {
 	pub := net.ParseIP(public)
 	local := map[string]bool{}
-	if ifaces, err := net.InterfaceAddrs(); err == nil {
+	if ifaces, err := net.InterfaceAddrs(); anyLocal && err == nil {
 		for _, a := range ifaces {
 			if n, ok := a.(*net.IPNet); ok && !n.IP.IsLoopback() && !n.IP.IsPrivate() && !n.IP.IsLinkLocalUnicast() {
 				local[n.IP.String()] = true

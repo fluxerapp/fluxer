@@ -39,6 +39,7 @@ const (
 	Domain          = "domain"
 	EdgeMode        = "edge.mode"
 	EdgeBind        = "edge.bind"
+	EdgeListen      = "edge.listen_address"
 	EdgeHTTPPort    = "edge.http_port"
 	EdgeHTTPSPort   = "edge.https_port"
 	EdgePublicPort  = "edge.public_port"
@@ -91,6 +92,8 @@ var ImageVars = map[string]string{
 	"edge":        "FLUXER_CADDY_IMAGE",
 }
 
+const EdgeListenVar = "FLUXER_EDGE_LISTEN_ADDRESS"
+
 const (
 	SignatureModeVar    = "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"
 	SignatureSecretsVar = "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"
@@ -114,6 +117,8 @@ func buildNamed() []Key {
 			Help: "Whether Fluxer serves HTTPS itself or runs behind your reverse proxy or a tunnel"},
 		{Name: EdgeBind, Type: "address", Vars: []string{"FLUXER_EDGE_BIND"}, Validate: validBind,
 			Help: "The address your reverse proxy or tunnel connects to"},
+		{Name: EdgeListen, Type: "ip", Vars: []string{EdgeListenVar}, Validate: validIP,
+			Help: "The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address"},
 		{Name: EdgeHTTPPort, Type: "port", Vars: []string{"FLUXER_HTTP_PORT"}, Validate: validPort,
 			Help: "The port Fluxer listens on for HTTP"},
 		{Name: EdgeHTTPSPort, Type: "port", Vars: []string{"FLUXER_HTTPS_PORT"}, Validate: validPort,

@@ -24,3 +24,18 @@ func TestDerivedFollowsPublicScheme(t *testing.T) {
 		}
 	}
 }
+
+func TestEdgeDialAddrFollowsListenAddress(t *testing.T) {
+	cases := map[string]string{
+		"":            "127.0.0.1:443",
+		"0.0.0.0":     "127.0.0.1:443",
+		"::":          "[::1]:443",
+		"203.0.113.7": "203.0.113.7:443",
+		"2001:db8::7": "[2001:db8::7]:443",
+	}
+	for listen, want := range cases {
+		if got := EdgeDialAddr(listen, "443"); got != want {
+			t.Fatalf("EdgeDialAddr(%q) = %q, want %q", listen, got, want)
+		}
+	}
+}

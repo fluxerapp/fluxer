@@ -220,6 +220,10 @@ The port Fluxer listens on for HTTPS. If people connect to this port directly, s
 
 The address your reverse proxy or tunnel connects to. The default is `127.0.0.1:8080` with `docker-compose.proxy.yml`, or `127.0.0.1:80` with `tunnel.compose.yml`. With rexctl, use `rexctl config set edge.bind`.
 
+### `FLUXER_EDGE_LISTEN_ADDRESS`
+
+The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address. Write an IPv6 address without brackets. `docker-compose.proxy.yml` and `tunnel.compose.yml` ignore it and use `FLUXER_EDGE_BIND`. With rexctl, use `rexctl config set edge.listen_address`.
+
 ### `FLUXER_ADMIN_BASE_PATH`
 
 The path the admin panel is served under, with a leading slash and no trailing slash, such as `/panel`. The edge serves the admin panel under this path, the admin service builds its links with it, and the default `FLUXER_ADMIN_ENDPOINT` follows it. The default is `/admin`. With rexctl, use `rexctl config set FLUXER_ADMIN_BASE_PATH`.
@@ -1067,6 +1071,10 @@ How many NATS RPC requests the gateway works on at once. When it's empty, the ga
 ### `FLUXER_GATEWAY_ZSTD_WINDOW_LOG`
 
 The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `17`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
+
+### `FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`
+
+The most times one token can identify on one gateway node in a minute. The gateway does not answer identifies over the limit. A value of `0` turns off this limit. When it's empty, the gateway uses `0`. With rexctl, use `rexctl config set FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`.
 
 ### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 

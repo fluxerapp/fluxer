@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"net"
 	"slices"
 	"strconv"
 	"strings"
@@ -47,7 +48,11 @@ func portKeyChanged(changed []string) bool {
 }
 
 func portOf(env map[string]string, v portVar) int {
-	if n, err := strconv.Atoi(strings.TrimSpace(env[v.name])); err == nil && n > 0 && n <= 65535 {
+	raw := strings.TrimSpace(env[v.name])
+	if _, port, err := net.SplitHostPort(raw); err == nil {
+		raw = port
+	}
+	if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 65535 {
 		return n
 	}
 	return v.def

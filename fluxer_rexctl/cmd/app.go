@@ -24,6 +24,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -235,6 +236,9 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 			return nil, ui.Refused(fmt.Sprintf("%s holds voice servers that joined %s, not a Fluxer instance.", dir, voiceInstances(inst)), "On a voice machine, use rexctl voice status, rexctl doctor or rexctl upgrade.")
 		}
 		a.warnUnknown(inst)
+		if len(keys) == 0 {
+			a.saveRepaired(inst)
+		}
 		a.rememberFirst(inst)
 		return inst, nil
 	case errors.Is(err, instance.ErrNotFound):
@@ -244,9 +248,34 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 	case errors.Is(err, instance.ErrNewerState):
 		return nil, ui.Refused(fmt.Sprintf("A newer rexctl manages the instance in %s.", dir), "Download the latest rexctl, then try again.")
 	case errors.As(err, &se):
-		return nil, &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("The setting %s in %s isn't valid.", se.Key, dir), Fix: se.Fix(), Err: err}
+		return nil, settingRefusal(dir, se)
 	}
 	return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s.", dir), "Run rexctl as the account that installed Fluxer.")
+}
+
+func settingRefusal(dir string, se *instance.SettingError) error {
+	msg := fmt.Sprintf("The setting %s in %s isn't valid.", se.Key, dir)
+	if se.Remedy != "" {
+		msg = se.Problem
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: se.Fix(), Err: se}
+}
+
+func (a *App) saveRepaired(inst *instance.Instance) {
+	if len(inst.State.Repaired) == 0 {
+		return
+	}
+	l, err := inst.Lock(context.Background())
+	if err != nil {
+		return
+	}
+	defer l.Release()
+	if err := inst.Save(); err != nil {
+		a.UI.Detail("%v", err)
+		return
+	}
+	a.UI.Info("rexctl moved the address in %s to %s=%s.", ui.JoinAnd(inst.State.Repaired), settings.EdgeListen, inst.State.Settings[settings.EdgeListen])
+	inst.State.Repaired = nil
 }
 
 func (a *App) warnUnknown(inst *instance.Instance) {
