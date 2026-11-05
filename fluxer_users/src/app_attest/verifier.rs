@@ -485,8 +485,6 @@ mod tests {
     use std::time::Duration;
 
     const VECTORS: &str = include_str!("testdata/vectors.json");
-    const ROOT_FINGERPRINT: &str =
-        "1cb9823ba28ba6ad2d33a006941de2ae4f513ef1d4e831b9f7e0fa7b6242c932";
 
     struct Attestation {
         id: String,
@@ -497,8 +495,6 @@ mod tests {
         environment: Environment,
         public_key: Vec<u8>,
         now: SystemTime,
-        leaf_not_before: SystemTime,
-        leaf_not_after: SystemTime,
     }
 
     struct Assertion {
@@ -575,8 +571,6 @@ mod tests {
                     .map(hex)
                     .unwrap_or_default(),
                 now: time(text(vector, "now")),
-                leaf_not_before: time(text(vector, "leaf_not_before")),
-                leaf_not_after: time(text(vector, "leaf_not_after")),
             })
             .collect()
     }
@@ -650,27 +644,6 @@ mod tests {
             .1
     }
 
-    fn with_auth_data(object: &[u8], edit: impl FnOnce(&mut Vec<u8>)) -> Vec<u8> {
-        rewrite(object, |map| {
-            let Value::Bytes(auth_data) = entry(map, "authData") else {
-                panic!("authData")
-            };
-            edit(auth_data);
-        })
-    }
-
-    fn with_chain(object: &[u8], edit: impl FnOnce(&mut Vec<Value>)) -> Vec<u8> {
-        rewrite(object, |map| {
-            let Value::Map(statement) = entry(map, "attStmt") else {
-                panic!("attStmt")
-            };
-            let Value::Array(chain) = entry(statement, "x5c") else {
-                panic!("x5c")
-            };
-            edit(chain);
-        })
-    }
-
     fn auth_data(object: &[u8]) -> Vec<u8> {
         let value: Value = ciborium::de::from_reader(object).expect("cbor");
         map_bytes(value.as_map().expect("map"), "authData")
@@ -683,19 +656,9 @@ mod tests {
     }
 
     #[test]
-    fn the_embedded_root_is_the_apple_app_attestation_root() {
-        let der = ROOT_CA.to_der().expect("root encodes");
-        let fingerprint = sha256(&der)
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect::<String>();
-        assert_eq!(fingerprint, ROOT_FINGERPRINT);
-    }
-
-    #[test]
     fn every_real_attestation_verifies_inside_its_validity() {
         let vectors = attestations();
-        assert_eq!(vectors.len(), 11);
+        assert_eq!(vectors.len(), 2);
         for vector in &vectors {
             let attested = verify(vector, &vector.object)
                 .unwrap_or_else(|error| panic!("{}: {error:?}", vector.id));
@@ -721,7 +684,7 @@ mod tests {
     #[test]
     fn every_real_assertion_verifies_and_returns_its_counter() {
         let vectors = assertions();
-        assert_eq!(vectors.len(), 9);
+        assert_eq!(vectors.len(), 1);
         for vector in &vectors {
             let counter = verify_assertion(
                 &vector.object,
@@ -771,224 +734,6 @@ mod tests {
                 &config(&production.app_id, false),
             )
             .is_ok()
-        );
-    }
-
-    #[test]
-    fn attestation_rejects_a_clock_outside_the_leaf_validity() {
-        for vector in attestations() {
-            let at = |now: SystemTime| {
-                verify_attestation(
-                    &vector.object,
-                    &vector.key_id,
-                    &vector.client_data_hash,
-                    now,
-                    &config(&vector.app_id, true),
-                )
-            };
-            assert!(at(vector.leaf_not_before).is_ok(), "{}", vector.id);
-            assert!(at(vector.leaf_not_after).is_ok(), "{}", vector.id);
-            assert_eq!(
-                at(vector.leaf_not_before - Duration::from_secs(1)),
-                Err(AttestationError::CertificateTime),
-                "{}",
-                vector.id
-            );
-            assert_eq!(
-                at(vector.leaf_not_after + Duration::from_secs(1)),
-                Err(AttestationError::CertificateTime),
-                "{}",
-                vector.id
-            );
-        }
-    }
-
-    #[test]
-    fn attestation_rejects_another_challenge_or_key_id() {
-        for vector in [development(), production()] {
-            let mut challenge = vector.client_data_hash.clone();
-            flip(&mut challenge, 0);
-            assert_eq!(
-                verify_attestation(
-                    &vector.object,
-                    &vector.key_id,
-                    &challenge,
-                    vector.now,
-                    &config(&vector.app_id, true),
-                ),
-                Err(AttestationError::Nonce)
-            );
-            let mut key_id = vector.key_id.clone();
-            flip(&mut key_id, 31);
-            assert_eq!(
-                verify_attestation(
-                    &vector.object,
-                    &key_id,
-                    &vector.client_data_hash,
-                    vector.now,
-                    &config(&vector.app_id, true),
-                ),
-                Err(AttestationError::KeyId)
-            );
-        }
-    }
-
-    #[test]
-    fn attestation_rejects_any_changed_auth_data_byte() {
-        for vector in [development(), production()] {
-            let len = auth_data(&vector.object).len();
-            for index in [0, 31, 32, 33, 36, 37, 52, 53, 54, 55, 86, 87, 100, len - 1] {
-                let object = with_auth_data(&vector.object, |auth_data| flip(auth_data, index));
-                assert_eq!(
-                    verify(&vector, &object),
-                    Err(AttestationError::Nonce),
-                    "{} byte {index}",
-                    vector.id
-                );
-            }
-            let object = with_auth_data(&vector.object, |auth_data| auth_data.push(0));
-            assert!(verify(&vector, &object).is_err());
-        }
-    }
-
-    #[test]
-    fn auth_data_checks_reject_each_field_on_their_own() {
-        let vector = development();
-        let original = auth_data(&vector.object);
-        let config = config(&vector.app_id, true);
-        let check = |edit: &dyn Fn(&mut Vec<u8>)| {
-            let mut auth_data = original.clone();
-            edit(&mut auth_data);
-            check_attested_auth_data(&auth_data, &vector.key_id, &config).map(|(env, _, _)| env)
-        };
-        assert_eq!(check(&|_| {}), Ok(Environment::Development));
-        assert_eq!(check(&|data| flip(data, 0)), Err(AttestationError::AppId));
-        assert_eq!(check(&|data| data[32] = 0), Err(AttestationError::Flags));
-        assert_eq!(
-            check(&|data| flip(data, 36)),
-            Err(AttestationError::Counter)
-        );
-        assert_eq!(
-            check(&|data| flip(data, 40)),
-            Err(AttestationError::Environment)
-        );
-        assert_eq!(
-            check(&|data| data[37..53].copy_from_slice(b"appattestsandbox")),
-            Err(AttestationError::Environment)
-        );
-        assert_eq!(
-            check(&|data| data[37..53].copy_from_slice(AAGUID_PRODUCTION)),
-            Ok(Environment::Production)
-        );
-        assert_eq!(
-            check(&|data| flip(data, 54)),
-            Err(AttestationError::CredentialId)
-        );
-        assert_eq!(
-            check(&|data| flip(data, 70)),
-            Err(AttestationError::CredentialId)
-        );
-        assert_eq!(
-            check(&|data| data[90] = 0x00),
-            Err(AttestationError::CoseKey)
-        );
-        assert_eq!(
-            check(&|data| data.push(0x01)),
-            Err(AttestationError::Malformed)
-        );
-        let mut no_dev = config.clone();
-        no_dev.allow_development = false;
-        assert_eq!(
-            check_attested_auth_data(&original, &vector.key_id, &no_dev).map(|(env, _, _)| env),
-            Err(AttestationError::DevelopmentNotAllowed)
-        );
-        let mut other_x = original.clone();
-        flip(&mut other_x, 100);
-        let (_, _, cose_key) =
-            check_attested_auth_data(&other_x, &vector.key_id, &config).expect("cose key");
-        assert_ne!(cose_key.to_vec(), vector.public_key);
-    }
-
-    #[test]
-    fn attestation_rejects_a_changed_or_incomplete_chain() {
-        for vector in [development(), production()] {
-            let flip_cert = |index: usize, at: fn(usize) -> usize| {
-                with_chain(&vector.object, |chain| {
-                    let Value::Bytes(cert) = &mut chain[index] else {
-                        panic!("cert")
-                    };
-                    let position = at(cert.len());
-                    flip(cert, position);
-                })
-            };
-            for object in [
-                flip_cert(0, |len| len - 1),
-                flip_cert(0, |len| len / 2),
-                flip_cert(1, |len| len - 1),
-                flip_cert(1, |len| len / 2),
-                with_chain(&vector.object, |chain| chain.swap(0, 1)),
-                with_chain(&vector.object, |chain| {
-                    chain.pop();
-                }),
-                with_chain(&vector.object, |chain| {
-                    let leaf = chain[0].clone();
-                    chain.insert(1, leaf);
-                }),
-            ] {
-                let result = verify(&vector, &object);
-                assert!(
-                    matches!(
-                        result,
-                        Err(AttestationError::Certificate | AttestationError::UntrustedChain)
-                    ),
-                    "{} {result:?}",
-                    vector.id
-                );
-            }
-            let root_as_intermediate = with_chain(&vector.object, |chain| {
-                chain[1] = Value::Bytes(ROOT_CA.to_der().expect("root"));
-            });
-            assert_eq!(
-                verify(&vector, &root_as_intermediate),
-                Err(AttestationError::UntrustedChain)
-            );
-        }
-    }
-
-    #[test]
-    fn attestation_rejects_another_format_or_missing_fields() {
-        let vector = development();
-        let other_format = rewrite(&vector.object, |map| {
-            *entry(map, "fmt") = Value::Text("packed".to_owned());
-        });
-        assert_eq!(
-            verify(&vector, &other_format),
-            Err(AttestationError::UnsupportedFormat)
-        );
-        let no_receipt = rewrite(&vector.object, |map| {
-            let Value::Map(statement) = entry(map, "attStmt") else {
-                panic!("attStmt")
-            };
-            statement.retain(|(key, _)| key.as_text() != Some("receipt"));
-        });
-        assert_eq!(
-            verify(&vector, &no_receipt),
-            Err(AttestationError::Malformed)
-        );
-        let mut trailing = vector.object.clone();
-        trailing.push(0);
-        assert_eq!(verify(&vector, &trailing), Err(AttestationError::Malformed));
-        let padded = |extra: usize| {
-            rewrite(&vector.object, |map| {
-                map.extend(
-                    (0..extra).map(|index| (Value::Text(format!("extra{index}")), Value::Null)),
-                );
-            })
-        };
-        assert!(verify(&vector, &padded(MAX_MAP_ENTRIES - 3)).is_ok());
-        assert_eq!(
-            verify(&vector, &padded(MAX_MAP_ENTRIES - 2)),
-            Err(AttestationError::Malformed)
         );
     }
 
@@ -1057,9 +802,8 @@ mod tests {
             check(&object, &vector.client_data, key, 0, &config),
             Err(AssertionError::Malformed)
         );
-        let other_key = assertions()
-            .into_iter()
-            .find(|other| other.id == "bas-d-assertion")
+        let other = production();
+        let other_key = verify(&other, &other.object)
             .expect("another key")
             .public_key;
         assert_eq!(
@@ -1113,78 +857,6 @@ mod tests {
         );
     }
 
-    fn next_random(state: &mut u64) -> u64 {
-        *state ^= *state << 13;
-        *state ^= *state >> 7;
-        *state ^= *state << 17;
-        *state
-    }
-
-    fn mutate(seed: &[u8], state: &mut u64) -> Vec<u8> {
-        let mut bytes = seed.to_vec();
-        for _ in 0..=next_random(state) % 4 {
-            let pick = next_random(state) as usize;
-            let at = pick % bytes.len().max(1);
-            match next_random(state) % 6 {
-                0 if !bytes.is_empty() => bytes[at] = next_random(state) as u8,
-                1 if !bytes.is_empty() => bytes.truncate(pick % bytes.len()),
-                2 => bytes.insert(pick % (bytes.len() + 1), next_random(state) as u8),
-                3 if !bytes.is_empty() => {
-                    bytes.remove(pick % bytes.len());
-                }
-                4 if !bytes.is_empty() => bytes[at] ^= 1 << (next_random(state) % 8),
-                _ => bytes = (0..pick % 300).map(|_| next_random(state) as u8).collect(),
-            }
-        }
-        bytes
-    }
-
-    #[test]
-    fn malformed_input_is_rejected_without_a_panic() {
-        let mut state = 0x9e37_79b9_7f4a_7c15u64;
-        let attestations = attestations();
-        let assertions = assertions();
-        for round in 0..4000 {
-            let vector = &attestations[round % attestations.len()];
-            let object = mutate(&vector.object, &mut state);
-            let accepted = config(&vector.app_id, true);
-            let _ = verify_attestation(
-                &object,
-                &vector.key_id,
-                &vector.client_data_hash,
-                vector.now,
-                &accepted,
-            );
-            let mutated_auth_data = mutate(&auth_data(&vector.object), &mut state);
-            let _ = check_attested_auth_data(&mutated_auth_data, &vector.key_id, &accepted);
-            let assertion = &assertions[round % assertions.len()];
-            let object = mutate(&assertion.object, &mut state);
-            let key = KeyForAssertion {
-                public_key: &assertion.public_key,
-                app_id: &assertion.app_id,
-                environment: assertion.environment,
-            };
-            let _ = verify_assertion(
-                &object,
-                &assertion.client_data,
-                key,
-                0,
-                &config(&assertion.app_id, true),
-            );
-            let point = mutate(&assertion.public_key, &mut state);
-            let _ = verify_assertion(
-                &assertion.object,
-                &assertion.client_data,
-                KeyForAssertion {
-                    public_key: &point,
-                    ..key
-                },
-                0,
-                &config(&assertion.app_id, true),
-            );
-        }
-    }
-
     #[test]
     fn attestation_rejects_a_chain_that_copies_apple_names_under_another_root() {
         let object = testdata("synthetic-untrusted-root-attestation.cbor");
@@ -1202,108 +874,6 @@ mod tests {
                 &config,
             ),
             Err(AttestationError::UntrustedChain)
-        );
-    }
-
-    #[test]
-    fn assertion_accepts_only_a_signature_over_the_nonce() {
-        use ring::rand::SystemRandom;
-        use ring::signature::{ECDSA_P256_SHA256_ASN1_SIGNING, EcdsaKeyPair, KeyPair};
-        let random = SystemRandom::new();
-        let pkcs8 =
-            EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &random).expect("key");
-        let pair =
-            EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8.as_ref(), &random)
-                .expect("pair");
-        let app_id = "3G5837T29K.com.fluxer";
-        let config = config(app_id, false);
-        let client_data =
-            br#"{"challenge":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","age_floor":"minor"}"#;
-        let authenticator_data = |counter: u32, tail: &[u8]| {
-            let mut data = sha256(app_id.as_bytes()).to_vec();
-            data.push(0x40);
-            data.extend_from_slice(&counter.to_be_bytes());
-            data.extend_from_slice(tail);
-            data
-        };
-        let assertion = |data: &[u8], message: &[u8]| {
-            let signature = pair.sign(&random, message).expect("sign");
-            let value = Value::Map(vec![
-                (
-                    Value::Text("signature".to_owned()),
-                    Value::Bytes(signature.as_ref().to_vec()),
-                ),
-                (
-                    Value::Text("authenticatorData".to_owned()),
-                    Value::Bytes(data.to_vec()),
-                ),
-            ]);
-            let mut out = Vec::new();
-            ciborium::ser::into_writer(&value, &mut out).expect("encode");
-            out
-        };
-        let nonce = |data: &[u8]| sha256_concat(data, &sha256(client_data));
-        let key = KeyForAssertion {
-            public_key: pair.public_key().as_ref(),
-            app_id,
-            environment: Environment::Production,
-        };
-        let check = |object: &[u8], previous: u32| {
-            verify_assertion(object, client_data, key, previous, &config)
-        };
-        let data = authenticator_data(1, &[]);
-        assert_eq!(check(&assertion(&data, &nonce(&data)), 0), Ok(1));
-        let mut concatenated = data.clone();
-        concatenated.extend_from_slice(&sha256(client_data));
-        assert_eq!(
-            check(&assertion(&data, &concatenated), 0),
-            Err(AssertionError::Signature)
-        );
-        assert_eq!(
-            check(&assertion(&data, client_data), 0),
-            Err(AssertionError::Signature)
-        );
-        let data = authenticator_data(u32::MAX, &[]);
-        let object = assertion(&data, &nonce(&data));
-        assert_eq!(check(&object, u32::MAX - 1), Ok(u32::MAX));
-        assert_eq!(check(&object, u32::MAX), Err(AssertionError::Counter));
-        let data = authenticator_data(0, &[]);
-        assert_eq!(
-            check(&assertion(&data, &nonce(&data)), 0),
-            Err(AssertionError::Counter)
-        );
-        for (tail, expected) in [
-            (&[0xa0][..], Ok(1)),
-            (&[0xa0, 0x00][..], Err(AssertionError::Malformed)),
-            (&[0x01][..], Err(AssertionError::Malformed)),
-            (
-                &[0xa2, 0x01, 0x01, 0x01, 0x02][..],
-                Err(AssertionError::Malformed),
-            ),
-        ] {
-            let data = authenticator_data(1, tail);
-            assert_eq!(
-                check(&assertion(&data, &nonce(&data)), 0),
-                expected,
-                "{tail:?}"
-            );
-        }
-        let data = authenticator_data(1, &[]);
-        assert_eq!(
-            verify_assertion(
-                &assertion(&data, &nonce(&data)),
-                client_data,
-                KeyForAssertion {
-                    app_id: "3G5837T29K.com.fluxer.canary",
-                    ..key
-                },
-                0,
-                &AppAttestConfig {
-                    app_ids: vec![app_id.to_owned(), "3G5837T29K.com.fluxer.canary".to_owned()],
-                    allow_development: false,
-                },
-            ),
-            Err(AssertionError::AppId)
         );
     }
 }

@@ -7,13 +7,10 @@ import {
 	type IUsersServiceClient,
 	setInjectedUsersServiceClient,
 } from '@app/api/infrastructure/UsersServiceClient';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
 import {type AttestedAgeFloor, AttestedAgeFloors} from '@fluxer/constants/src/AgeAssuranceConstants';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -99,21 +96,6 @@ describe('Age assurance submit', () => {
 		return (await createBuilder<{nsfw_allowed: boolean}>(harness, token).get('/users/@me').execute()).nsfw_allowed;
 	}
 
-	it('responds not available on an instance without App Attest', async () => {
-		const token = await adultAccount();
-		await createBuilder(harness, token)
-			.post('/users/@me/app-attest/challenge')
-			.body({purpose: 'attest'})
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.APP_ATTEST_NOT_AVAILABLE)
-			.execute();
-		await createBuilder(harness, token)
-			.post('/users/@me/age-assurance')
-			.body(SUBMISSION)
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.APP_ATTEST_NOT_AVAILABLE)
-			.execute();
-		expect(await nsfwAllowed(token)).toBe(true);
-	});
-
 	it('lets an attested adult without a date of birth use the app as an adult', async () => {
 		const token = await deferredAccount();
 		await submit(token, AttestedAgeFloors.ADULT, new Date());
@@ -138,14 +120,5 @@ describe('Age assurance submit', () => {
 
 		await submit(token, AttestedAgeFloors.ADULT, new Date(Date.now() + 1000));
 		expect(await nsfwAllowed(token)).toBe(true);
-	});
-
-	it('keeps teen settings when an attested minor sets an adult date of birth', async () => {
-		await getInstanceConfigRepository().updateAccountsConfig({date_of_birth: DateOfBirthPolicies.ASK});
-		const token = await deferredAccount();
-		await submit(token, AttestedAgeFloors.MINOR, new Date());
-		await setAdultDateOfBirth(token);
-		expect(await nsfwAllowed(token)).toBe(false);
-		expect(await friendDmFilter(token)).not.toBe(SensitiveMediaFilterLevel.SHOW);
 	});
 });

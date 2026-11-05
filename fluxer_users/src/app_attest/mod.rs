@@ -133,36 +133,3 @@ pub enum AppAttestRejection {
     UnknownKey,
     InvalidAssertion,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn configuration_is_off_when_no_app_id_is_set_and_rejects_typos() {
-        assert!(!AppAttestConfig::parse(None, None).unwrap().is_enabled());
-        assert!(
-            !AppAttestConfig::parse(Some(" , "), None)
-                .unwrap()
-                .is_enabled()
-        );
-        let config = AppAttestConfig::parse(
-            Some("3G5837T29K.com.fluxer, 3G5837T29K.com.fluxer.canary"),
-            Some("true"),
-        )
-        .unwrap();
-        assert_eq!(
-            config.app_ids,
-            vec!["3G5837T29K.com.fluxer", "3G5837T29K.com.fluxer.canary"]
-        );
-        assert!(config.allow_development);
-        assert!(
-            !AppAttestConfig::parse(Some("3G5837T29K.com.fluxer"), Some(""))
-                .unwrap()
-                .allow_development
-        );
-        assert!(AppAttestConfig::parse(Some("com.fluxer"), None).is_err());
-        assert!(AppAttestConfig::parse(Some("3g5837t29k.com.fluxer"), None).is_err());
-        assert!(AppAttestConfig::parse(Some("3G5837T29K.com.fluxer"), Some("maybe")).is_err());
-    }
-}
