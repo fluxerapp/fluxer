@@ -2,6 +2,7 @@
 
 import {LocalDate} from '@app/api/database/LocalDate';
 import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
+import {type AttestedAgeFloor, AttestedAgeFloors} from '@fluxer/constants/src/AgeAssuranceConstants';
 import {isPlausibleDateOfBirth} from '@fluxer/constants/src/RegionalMinimumAge';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -63,11 +64,22 @@ interface NsfwEligibilityUser {
 		  }
 		| string
 		| null;
+	attestedAgeFloor: AttestedAgeFloor | null;
+}
+
+export function hasAttestedAge(attestedAgeFloor: AttestedAgeFloor | null | undefined): boolean {
+	return attestedAgeFloor === AttestedAgeFloors.ADULT || attestedAgeFloor === AttestedAgeFloors.MINOR;
 }
 
 export function canUserAccessNsfwContent(user: NsfwEligibilityUser): boolean {
 	if (user.isBot) {
 		return true;
+	}
+	if (user.attestedAgeFloor === AttestedAgeFloors.ADULT) {
+		return true;
+	}
+	if (user.attestedAgeFloor != null) {
+		return false;
 	}
 	if (!instanceCollectsDateOfBirth()) {
 		return true;

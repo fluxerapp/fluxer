@@ -4,6 +4,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import {LocalDate} from '@app/api/database/LocalDate';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {checkIsPremium, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {type AttestedAgeFloor, isAttestedAgeFloor} from '@fluxer/constants/src/AgeAssuranceConstants';
 import {isProfileBadgeKey, type ProfileBadgeKey} from '@fluxer/constants/src/BadgeConstants';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
@@ -79,6 +80,8 @@ export class User {
 	readonly premiumOnboardingDismissedAt: Date | null;
 	readonly mentionFlags: MentionReplyPreference;
 	readonly lastVoiceActivitySharingChangeAt: Date | null;
+	readonly attestedAgeFloor: AttestedAgeFloor | null;
+	readonly ageAttestedAt: Date | null;
 	readonly version: number;
 
 	constructor(row: UserRow) {
@@ -150,6 +153,8 @@ export class User {
 		this.premiumOnboardingDismissedAt = row.premium_onboarding_dismissed_at ?? null;
 		this.mentionFlags = row.mention_flags ?? 0;
 		this.lastVoiceActivitySharingChangeAt = row.last_voice_activity_sharing_change_at ?? null;
+		this.attestedAgeFloor = isAttestedAgeFloor(row.attested_age_floor) ? row.attested_age_floor : null;
+		this.ageAttestedAt = row.age_attested_at ?? null;
 		this.version = row.version;
 	}
 
@@ -231,6 +236,8 @@ export class User {
 			premium_onboarding_dismissed_at: this.premiumOnboardingDismissedAt,
 			mention_flags: this.mentionFlags,
 			last_voice_activity_sharing_change_at: this.lastVoiceActivitySharingChangeAt,
+			attested_age_floor: this.attestedAgeFloor,
+			age_attested_at: this.ageAttestedAt,
 			version: this.version,
 		};
 	}

@@ -17,7 +17,7 @@ export const REACT_WITH_EMOJI_DESCRIPTOR = msg({
 		'Accessible label for a quick reaction emoji button. Preserve {emojiShortcode}; it is inserted by code, usually like :smile:.',
 });
 
-export const QuickReactionEmoji: React.FC<{emoji: FlatEmoji}> = ({emoji}) => {
+export const QuickReactionEmoji: React.FC<{emoji: FlatEmoji; 'data-flx'?: string}> = ({emoji, 'data-flx': dataFlx}) => {
 	const emojiSrc = useReactionMenuEmojiSrc(emoji);
 	return (
 		<ReactionImage
@@ -26,7 +26,7 @@ export const QuickReactionEmoji: React.FC<{emoji: FlatEmoji}> = ({emoji}) => {
 			aria-hidden={true}
 			draggable={false}
 			className={styles.emojiImg}
-			data-flx="channel.quick-reactions-row.render-quick-reaction-emoji.emoji-img"
+			data-flx={dataFlx ?? 'channel.quick-reactions-row.render-quick-reaction-emoji.emoji-img'}
 		/>
 	);
 };

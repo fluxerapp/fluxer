@@ -1,5 +1,12 @@
 {
 	"account.already_claimed": "이 계정은 이미 다른 기기에서 로그인할 수 있도록 설정되어 있어요.",
+	"account.app_attest_assertion_invalid": "We couldn't confirm this age check from your device.",
+	"account.app_attest_attestation_invalid": "We couldn't confirm this device key.",
+	"account.app_attest_challenge_invalid": "This check has expired or was already used. Try again.",
+	"account.app_attest_key_in_use": "This device key is already registered to another account.",
+	"account.app_attest_key_not_registered": "This device key isn't registered with your account.",
+	"account.app_attest_not_available": "Age checks from the app aren't available on this instance.",
+	"account.app_attest_request_invalid": "This age check request isn't valid.",
 	"account.below_minimum_age": "이곳에서 계정을 만들 수 있는 나이가 아니에요.",
 	"account.communication_disabled": "메시지 보내기가 비활성화되었어요.",
 	"account.date_of_birth_already_set": "생년월일이 이미 설정되어 있어요.",

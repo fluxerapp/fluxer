@@ -1904,18 +1904,22 @@ name = "fluxer-users"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.23.1",
  "chrono",
+ "ciborium",
  "fluxer-svc",
  "fluxer_common",
  "futures",
  "hmac",
  "moka",
+ "ring",
  "scylla",
  "serde",
  "serde_json",
  "sha2 0.11.1",
  "tokio",
  "tracing",
+ "x509-cert",
 ]
 
 [[package]]

@@ -17,7 +17,7 @@ import {deriveAvailableUsername} from '@app/api/user/UniqueUsernames';
 import {mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {BELOW_MINIMUM_AGE_TRAIT, DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
-import {calculateAge, parseDateOfBirth} from '@app/api/utils/AgeUtils';
+import {calculateAge, canUserAccessNsfwContent, hasAttestedAge, parseDateOfBirth} from '@app/api/utils/AgeUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
@@ -33,12 +33,15 @@ import type {DateOfBirthUpdateResponse} from '@fluxer/schema/src/domains/user/Ac
 const UNDERAGE_DELETION_DELAY_MS = 72 * 3600 * 1000;
 const ADULT_AGE = 18;
 
-type DateOfBirthUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth'> & {traits: ReadonlySet<string>};
+type DateOfBirthUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth' | 'attestedAgeFloor'> & {
+	traits: ReadonlySet<string>;
+};
 
 export function isDateOfBirthMissing(user: DateOfBirthUser): boolean {
 	return (
 		instanceCollectsDateOfBirth() &&
 		user.dateOfBirth === null &&
+		!hasAttestedAge(user.attestedAgeFloor) &&
 		!user.isBot &&
 		!user.isSystem &&
 		!user.traits.has(BELOW_MINIMUM_AGE_TRAIT)
@@ -58,7 +61,7 @@ export function isDateOfBirthEnforced(user: DateOfBirthUser): boolean {
 	}
 }
 
-function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | null {
+export function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | null {
 	const teen = UserSettings.getDefaultUserSettings({userId: settings.userId, locale: settings.locale, isAdult: false});
 	const adultDefaults = UserSettings.getDefaultUserSettings({
 		userId: settings.userId,
@@ -171,7 +174,7 @@ export async function setDateOfBirth(
 	);
 	const adult = age >= ADULT_AGE;
 	const settings = await ctx.services.users.findSettings(user.id);
-	const adjusted = settings ? settingsForAge(settings, adult) : null;
+	const adjusted = settings ? settingsForAge(settings, canUserAccessNsfwContent(updated)) : null;
 	if (adjusted) {
 		const saved = await ctx.services.users.upsertSettings(adjusted.toRow());
 		await ctx.services.gateway.dispatchPresence({

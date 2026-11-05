@@ -1,5 +1,12 @@
 {
 	"account.already_claimed": "Αυτός ο λογαριασμός έχει ήδη ρυθμιστεί για σύνδεση από άλλες συσκευές.",
+	"account.app_attest_assertion_invalid": "We couldn't confirm this age check from your device.",
+	"account.app_attest_attestation_invalid": "We couldn't confirm this device key.",
+	"account.app_attest_challenge_invalid": "This check has expired or was already used. Try again.",
+	"account.app_attest_key_in_use": "This device key is already registered to another account.",
+	"account.app_attest_key_not_registered": "This device key isn't registered with your account.",
+	"account.app_attest_not_available": "Age checks from the app aren't available on this instance.",
+	"account.app_attest_request_invalid": "This age check request isn't valid.",
 	"account.below_minimum_age": "Δεν έχετε ακόμη την απαιτούμενη ηλικία για να έχετε λογαριασμό εδώ.",
 	"account.communication_disabled": "Η επικοινωνία είναι απενεργοποιημένη.",
 	"account.date_of_birth_already_set": "Η ημερομηνία γέννησής σας έχει ήδη οριστεί.",

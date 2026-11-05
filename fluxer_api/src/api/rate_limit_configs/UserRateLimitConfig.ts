@@ -256,6 +256,18 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:entrance_sound:mutate',
 		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_APP_ATTEST_CHALLENGE: {
+		bucket: 'user:app_attest:challenge',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_APP_ATTEST_KEY_REGISTER: {
+		bucket: 'user:app_attest:key_register',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_AGE_ASSURANCE_SUBMIT: {
+		bucket: 'user:age_assurance:submit',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_DATE_OF_BIRTH: {
 		bucket: 'user:date_of_birth',
 		config: {limit: 5, windowMs: ms('1 hour')},

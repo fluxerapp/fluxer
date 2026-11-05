@@ -17834,6 +17834,190 @@
 				}
 			}
 		},
+		"/users/@me/age-assurance": {
+			"post": {
+				"operationId": "submit_age_assurance",
+				"summary": "Submit attested age floor",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeAssuranceSubmitResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Submits the age floor the device reported, signed by a registered App Attest key. client_data holds the exact JSON bytes the app signed, with the challenge from a challenge with purpose assert and the age_floor. The newest accepted floor replaces the stored one. The stored floor decides the age of the account in place of its date of birth: adult makes age-restricted content available, and minor or under_minimum makes it unavailable. An adult or minor floor also counts as a date of birth for routes that need one. Returns APP_ATTEST_KEY_NOT_REGISTERED when the key is unknown, in which case the app should register a new key. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeAssuranceSubmitRequest"}}}
+				}
+			}
+		},
+		"/users/@me/app-attest/challenge": {
+			"post": {
+				"operationId": "create_app_attest_challenge",
+				"summary": "Create App Attest challenge",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppAttestChallengeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a single use challenge for the iOS app, valid for 5 minutes. Use purpose attest before registering a new App Attest key, and purpose assert before submitting an age floor. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppAttestChallengeRequest"}}}
+				}
+			}
+		},
+		"/users/@me/app-attest/keys": {
+			"post": {
+				"operationId": "register_app_attest_key",
+				"summary": "Register App Attest key",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"404": {
+						"description": "Not Found - The requested resource was not found",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"409": {
+						"description": "Conflict - The request conflicts with the current state of the resource",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Registers an App Attest key for the current user. The attestation must be made with clientDataHash set to the SHA-256 of the UTF-8 challenge string from a challenge with purpose attest. The server keeps the key id, public key, environment, App ID and counter, and does not keep the attestation itself. Registering the same key again for the same user succeeds and changes nothing. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppAttestKeyRegisterRequest"}}}
+				}
+			}
+		},
 		"/users/@me/applications": {
 			"get": {
 				"operationId": "list_user_applications",
@@ -31655,6 +31839,90 @@
 				"items": {"$ref": "#/components/schemas/BillingDocumentResponse"}
 			},
 			"ApplicationListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ApplicationResponse"}},
+			"AppAttestKeyRegisterRequest": {
+				"type": "object",
+				"properties": {
+					"key_id": {
+						"type": "string",
+						"minLength": 44,
+						"maxLength": 44,
+						"description": "App Attest key identifier from DCAppAttestService, 32 bytes as standard base64"
+					},
+					"attestation": {
+						"type": "string",
+						"minLength": 4,
+						"maxLength": 21848,
+						"description": "Attestation object from DCAppAttestService.attestKey as standard base64"
+					},
+					"challenge": {
+						"type": "string",
+						"minLength": 43,
+						"maxLength": 43,
+						"description": "Challenge from the challenge endpoint, 32 bytes as unpadded base64url"
+					}
+				},
+				"required": ["key_id", "attestation", "challenge"]
+			},
+			"AppAttestChallengeRequest": {
+				"type": "object",
+				"properties": {
+					"purpose": {
+						"description": "What the challenge will be used for",
+						"x-enumNames": ["ATTEST", "ASSERT"],
+						"x-enumDescriptions": [
+							"Challenge for registering a new App Attest key",
+							"Challenge for an assertion signed by a registered key"
+						],
+						"enum": ["attest", "assert"],
+						"type": "string"
+					}
+				},
+				"required": ["purpose"]
+			},
+			"AppAttestChallengeResponse": {
+				"type": "object",
+				"properties": {
+					"challenge": {"type": "string", "description": "Single use challenge, 32 bytes as unpadded base64url"},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the challenge stops working"
+					}
+				},
+				"required": ["challenge", "expires_at"],
+				"additionalProperties": false
+			},
+			"AgeAssuranceSubmitRequest": {
+				"type": "object",
+				"properties": {
+					"key_id": {
+						"type": "string",
+						"minLength": 44,
+						"maxLength": 44,
+						"description": "App Attest key identifier from DCAppAttestService, 32 bytes as standard base64"
+					},
+					"assertion": {
+						"type": "string",
+						"minLength": 4,
+						"maxLength": 5464,
+						"description": "Assertion from DCAppAttestService.generateAssertion as standard base64"
+					},
+					"client_data": {
+						"type": "string",
+						"minLength": 4,
+						"maxLength": 1368,
+						"description": "The exact UTF-8 JSON bytes the app signed, as standard base64. The JSON holds challenge and age_floor"
+					}
+				},
+				"required": ["key_id", "assertion", "client_data"]
+			},
+			"AgeAssuranceSubmitResponse": {
+				"type": "object",
+				"properties": {"age_floor": {"$ref": "#/components/schemas/AttestedAgeFloorSchema"}},
+				"required": ["age_floor"],
+				"additionalProperties": false
+			},
 			"UserUpdateWithVerificationRequest": {
 				"type": "object",
 				"properties": {
@@ -45557,6 +45825,17 @@
 				},
 				"description": "The full list of badge keys to hide from other people. It replaces the stored list, takes precedence over the deprecated hide fields, and keys of custom badges that no longer exist are dropped"
 			},
+			"AttestedAgeFloorSchema": {
+				"description": "Age floor reported by the device",
+				"x-enumNames": ["ADULT", "MINOR", "UNDER_MINIMUM"],
+				"x-enumDescriptions": [
+					"The device reports an adult",
+					"The device reports someone under 18",
+					"The device reports someone under 13"
+				],
+				"enum": ["adult", "minor", "under_minimum"],
+				"type": "string"
+			},
 			"ConfirmEmailClaimAccountResponse": {
 				"type": "object",
 				"properties": {
@@ -46504,6 +46783,13 @@
 					"ACLS_MUST_BE_NON_EMPTY",
 					"ADMIN_API_KEY_NOT_FOUND",
 					"ALREADY_FRIENDS",
+					"APP_ATTEST_NOT_AVAILABLE",
+					"APP_ATTEST_KEY_NOT_REGISTERED",
+					"APP_ATTEST_KEY_IN_USE",
+					"APP_ATTEST_CHALLENGE_INVALID",
+					"APP_ATTEST_ATTESTATION_INVALID",
+					"APP_ATTEST_ASSERTION_INVALID",
+					"APP_ATTEST_REQUEST_INVALID",
 					"BOTS_CANNOT_CREATE_GUILDS",
 					"BOTS_CANNOT_SEND_FRIEND_REQUESTS",
 					"BOT_ALREADY_IN_GUILD",
@@ -46880,6 +47166,13 @@
 					"ACLs must be non-empty.",
 					"Admin API key wasn't found.",
 					"You're already friends with this user.",
+					"Age checks from the app aren't available on this instance.",
+					"This device key isn't registered with your account.",
+					"This device key is already registered to another account.",
+					"This check has expired or was already used. Try again.",
+					"We couldn't confirm this device key.",
+					"We couldn't confirm this age check from your device.",
+					"This age check request isn't valid.",
 					"Bots can't create communities.",
 					"Bots can't send friend requests.",
 					"This bot is already in the community.",

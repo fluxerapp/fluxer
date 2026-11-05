@@ -14,7 +14,7 @@ import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserTraits} from '@app/api/user/UserTraits';
-import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent, hasAttestedAge} from '@app/api/utils/AgeUtils';
 import {EmailDeliveryStates, InteractionTierModes} from '@fluxer/constants/src/AccountConfigConstants';
 import {
 	type AccountTier,
@@ -239,11 +239,17 @@ export function resolvePurchaseEligibility(user: TierUser): PurchaseEligibility 
 	return blocked === null ? {allowed: true} : {allowed: false, blocked};
 }
 
-type VisitUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth'> & {traits: ReadonlySet<string>};
+type VisitUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth' | 'attestedAgeFloor'> & {traits: ReadonlySet<string>};
 
 export function assertCanVisit(user: VisitUser, guild: {nsfw: boolean}): {adult_content_allowed: boolean} {
 	if (user.traits.has(UserTraits.BELOW_MINIMUM_AGE)) throw new AccountBelowMinimumAgeError();
-	if (!user.isBot && !user.isSystem && instanceCollectsDateOfBirth() && user.dateOfBirth === null) {
+	if (
+		!user.isBot &&
+		!user.isSystem &&
+		instanceCollectsDateOfBirth() &&
+		user.dateOfBirth === null &&
+		!hasAttestedAge(user.attestedAgeFloor)
+	) {
 		throw new DateOfBirthRequiredError();
 	}
 	const adultContentAllowed = canUserAccessNsfwContent(user);
