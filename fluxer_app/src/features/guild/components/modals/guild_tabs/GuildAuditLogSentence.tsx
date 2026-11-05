@@ -181,7 +181,11 @@ function renderText(value: string): React.ReactNode {
 	);
 }
 
-const AuditLogEmojiImage: React.FC<{id: string; animated: boolean}> = ({id, animated}) => {
+const AuditLogEmojiImage: React.FC<{id: string; animated: boolean; 'data-flx'?: string}> = ({
+	id,
+	animated,
+	'data-flx': dataFlx,
+}) => {
 	const shouldAnimate = useShouldAnimate({kind: 'emoji', isAnimated: animated});
 	return (
 		<img
@@ -189,7 +193,7 @@ const AuditLogEmojiImage: React.FC<{id: string; animated: boolean}> = ({id, anim
 			alt=""
 			draggable={false}
 			className={styles.inlineEmojiImage}
-			data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji-image"
+			data-flx={dataFlx ?? 'guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji-image'}
 		/>
 	);
 };
@@ -202,7 +206,11 @@ function renderEmoji({id, name}: EmojiPlaceholder): React.ReactNode {
 	}
 	return (
 		<span className={styles.inlineEmoji} data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.inline-emoji">
-			<AuditLogEmojiImage id={id} animated={emoji.animated === true} />
+			<AuditLogEmojiImage
+				id={id}
+				animated={emoji.animated === true}
+				data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.audit-log-emoji-image"
+			/>
 			<strong data-flx="guild.guild-tabs.guild-audit-log-sentence.render-emoji.strong--2">{label}</strong>
 		</span>
 	);

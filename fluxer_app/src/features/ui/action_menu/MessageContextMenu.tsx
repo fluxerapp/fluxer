@@ -270,7 +270,10 @@ const QuickReactionContextMenuItem = observer(
 					data-menu-shortcut={shortcut}
 					data-flx="ui.action-menu.message-context-menu.quick-reaction-context-menu-item.aria-menu-item"
 				>
-					<QuickReactionEmoji emoji={emoji} />
+					<QuickReactionEmoji
+						emoji={emoji}
+						data-flx="ui.action-menu.message-context-menu.quick-reaction-context-menu-item.quick-reaction-emoji"
+					/>
 					{shouldShowShortcut && (
 						<span
 							className={contextMenuStyles.quickReactionShortcut}
