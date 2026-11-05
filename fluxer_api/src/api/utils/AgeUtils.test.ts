@@ -69,11 +69,11 @@ describe('canUserAccessNsfwContent', () => {
 		}
 	});
 
-	it('never lets an attested adult floor override a minor or missing date of birth', () => {
+	it('lets an attested adult floor decide over a minor or missing date of birth', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
 		const attestedAgeFloor = AttestedAgeFloors.ADULT;
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH, attestedAgeFloor})).toBe(false);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor})).toBe(false);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH, attestedAgeFloor})).toBe(true);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor})).toBe(true);
 		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH, attestedAgeFloor})).toBe(true);
 	});
 });

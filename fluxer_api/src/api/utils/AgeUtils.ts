@@ -67,11 +67,18 @@ interface NsfwEligibilityUser {
 	attestedAgeFloor: AttestedAgeFloor | null;
 }
 
+export function hasAttestedAge(attestedAgeFloor: AttestedAgeFloor | null | undefined): boolean {
+	return attestedAgeFloor === AttestedAgeFloors.ADULT || attestedAgeFloor === AttestedAgeFloors.MINOR;
+}
+
 export function canUserAccessNsfwContent(user: NsfwEligibilityUser): boolean {
 	if (user.isBot) {
 		return true;
 	}
-	if (user.attestedAgeFloor != null && user.attestedAgeFloor !== AttestedAgeFloors.ADULT) {
+	if (user.attestedAgeFloor === AttestedAgeFloors.ADULT) {
+		return true;
+	}
+	if (user.attestedAgeFloor != null) {
 		return false;
 	}
 	if (!instanceCollectsDateOfBirth()) {

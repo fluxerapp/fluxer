@@ -114,7 +114,18 @@ describe('Age assurance submit', () => {
 		expect(await nsfwAllowed(token)).toBe(true);
 	});
 
-	it('lets an attested minor floor win over an adult date of birth and never the other way', async () => {
+	it('lets an attested adult without a date of birth use the app as an adult', async () => {
+		const token = await deferredAccount();
+		await submit(token, AttestedAgeFloors.ADULT, new Date());
+		const me = await createBuilder<{nsfw_allowed: boolean; date_of_birth_required: boolean}>(harness, token)
+			.get('/users/@me')
+			.execute();
+		expect(me.nsfw_allowed).toBe(true);
+		expect(me.date_of_birth_required).toBe(false);
+		await createBuilder(harness, token).get('/users/@me/guilds').expect(HTTP_STATUS.OK).execute();
+	});
+
+	it('lets the newest attested floor decide over the date of birth', async () => {
 		const token = await adultAccount();
 		expect(await nsfwAllowed(token)).toBe(true);
 

@@ -97,9 +97,9 @@ export async function submitAttestedAge(
 		{attested_age_floor: accepted.age_floor, age_attested_at: attestedAt},
 		user.toRow(),
 	);
-	if (!canUserAccessNsfwContent(updated)) {
+	if (canUserAccessNsfwContent(user) !== canUserAccessNsfwContent(updated)) {
 		const settings = await ctx.services.users.findSettings(user.id);
-		const adjusted = settings ? settingsForAge(settings, false) : null;
+		const adjusted = settings ? settingsForAge(settings, canUserAccessNsfwContent(updated)) : null;
 		if (adjusted) {
 			const saved = await ctx.services.users.upsertSettings(adjusted.toRow());
 			await ctx.services.gateway.dispatchPresence({
