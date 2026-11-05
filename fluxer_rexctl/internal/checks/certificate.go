@@ -17,7 +17,7 @@ func init() {
 }
 
 func runCertificate(ctx context.Context, e *Env) Result {
-	if e.Instance == nil || e.mode() != modeBundled || privateDomain(e.Domain) {
+	if e.Instance == nil || e.mode() != modeBundled || privateDomain(e.Domain) || overlayDomain(e.Domain) {
 		return skip("")
 	}
 	if strings.EqualFold(e.value("FLUXER_PUBLIC_SCHEME"), "http") || strings.EqualFold(e.value("FLUXER_EDGE_TLS"), "internal") {

@@ -931,3 +931,19 @@ export const SAVE_PERCENT_DESCRIPTOR = msg({
 	comment:
 		'Short caption next to a yearly price, in the gift purchase dialog and under the yearly Plutonium price, saying how much the yearly plan saves over paying monthly. Shown as written, never uppercased, so use normal sentence case. percent is a whole number such as 17.',
 });
+export const INSTANCE_WITHOUT_HTTPS_DESCRIPTOR = msg({
+	message: "This instance doesn't use HTTPS",
+	comment:
+		'Title of the dialog shown when someone tries to use the microphone, camera or screen sharing on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.',
+});
+export const MEDIA_NEEDS_HTTPS_DESCRIPTOR = msg({
+	message:
+		"Browsers only allow the microphone, camera and screen sharing on sites that use HTTPS, and this instance doesn't use HTTPS. You can still join voice channels and listen.",
+	comment:
+		'Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.',
+});
+export const FEATURE_NEEDS_HTTPS_DESCRIPTOR = msg({
+	message: "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS.",
+	comment:
+		'Short note next to a setting or button that browsers turn off on a self-hosted instance opened over plain HTTP, such as notifications or passkeys. HTTPS is a technical term, keep it as is.',
+});

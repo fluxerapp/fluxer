@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {getElectronAPI, supportsDesktopScreenShareAudioCapture} from '@app/features/ui/utils/NativeUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
@@ -785,6 +787,10 @@ export async function startConfiguredDisplayScreenShare(
 	sourceId?: string | null,
 	options?: ConfiguredDisplayScreenShareOptions,
 ): Promise<boolean> {
+	if (isInsecureBrowserContext()) {
+		handleMediaPermissionBlocked('screen');
+		return false;
+	}
 	return scheduleConfiguredScreenShareMutation(async () => {
 		let didStart = false;
 		await executeScreenShareOperation(async () => {

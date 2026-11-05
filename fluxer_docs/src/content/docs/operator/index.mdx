@@ -47,7 +47,9 @@ Once you've created the admin account, people can open your instance's address i
 
 ## Without a public IP address
 
-Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel such as Cloudflare Tunnel. Start the install with the [`--behind-proxy` command](#install) and point the tunnel at `http://127.0.0.1:8080`. In this mode rexctl only checks that your domain resolves to some address.
+Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel such as Cloudflare Tunnel. Start the install with the [`--behind-proxy` command](#install) and point the tunnel at `http://127.0.0.1:8080`. In this mode rexctl only checks that this machine can look up your domain, and it warns instead of stopping when it can't.
+
+For a Tor, I2P or Lokinet address, or a name ending in `.alt`, also use `--behind-proxy` and point the tunnel at `http://127.0.0.1:8080`. rexctl doesn't check DNS for these names because public DNS can't look them up. Tor and I2P browsers open `.onion` and `.i2p` addresses over plain HTTP, and rexctl makes Fluxer use http links for them. For a Lokinet or `.alt` address that people open over plain HTTP, run `rexctl config set FLUXER_PUBLIC_SCHEME=http` after the install. Some features don't work without HTTPS, as [Without HTTPS](#without-https) explains.
 
 Calls don't go through a tunnel, and they need a TURN server on a machine with a public address, as [Voice behind a tunnel](/operator/reverse-proxy/#voice-behind-a-tunnel) explains.
 
@@ -60,6 +62,19 @@ docker cp "$(docker ps --format '{{.Names}}' | grep -m1 edge)":/data/caddy/pki/a
 ```
 
 For any other private name, run `rexctl config set FLUXER_EDGE_TLS internal` to use the same local certificate authority.
+
+## Without HTTPS
+
+Browsers turn off some features on sites that don't use HTTPS, unless the site is on `localhost`. On an instance that people open over plain HTTP, such as a Tor or I2P address, the web app can't use these features.
+
+- Passkeys
+- Microphone, camera and screen sharing. People can still join voice channels and listen.
+- End-to-end encrypted calls
+- Notifications and push notifications
+- Opening the web app while offline
+- Installing the web app
+
+Everything else works over plain HTTP, including signing up, signing in, messages, uploads and the admin panel.
 
 ## Where Fluxer keeps its files
 

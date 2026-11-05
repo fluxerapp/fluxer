@@ -2,6 +2,11 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {
+	INSTANCE_WITHOUT_HTTPS_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -71,6 +76,15 @@ const bodyDescriptorForKind = (kind: MediaPermissionBlockedKind, desktop: boolea
 
 export const MediaPermissionBlockedModal = observer(({kind}: {kind: MediaPermissionBlockedKind}) => {
 	const {i18n} = useLingui();
+	if (isInsecureBrowserContext()) {
+		return (
+			<GenericErrorModal
+				title={i18n._(INSTANCE_WITHOUT_HTTPS_DESCRIPTOR)}
+				message={i18n._(MEDIA_NEEDS_HTTPS_DESCRIPTOR)}
+				data-flx="permissions.media-permission-blocked-modal.confirm-modal"
+			/>
+		);
+	}
 	const desktop = isDesktop();
 	return (
 		<GenericErrorModal

@@ -4,7 +4,11 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	INSTANCE_WITHOUT_HTTPS_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
+	VOLUME_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
@@ -12,6 +16,7 @@ import {openMacPermissionsModal} from '@app/features/permissions/system/commands
 import {macPermissionNameDescriptor} from '@app/features/permissions/system/components/useMacPermissionControl';
 import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -514,18 +519,21 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 		</div>
 	);
 	const devicesSectionTitle = i18n._(INPUT_AND_OUTPUT_DESCRIPTOR);
+	const mediaBlocked = isInsecureBrowserContext();
 	let deviceNotice: React.ReactNode = null;
 	if (inputDevices.length === 0 && permissionStatus !== 'loading') {
 		const noticeClassName = styles.deviceNotice;
 		const noticeTextClassName = styles.deviceNoticeText;
 		const noticeTitle = (
 			<div className={styles.deviceNoticeTitle} data-flx="user.voice-tab.device-notice-title">
-				<Trans>No microphone found</Trans>
+				{mediaBlocked ? i18n._(INSTANCE_WITHOUT_HTTPS_DESCRIPTOR) : <Trans>No microphone found</Trans>}
 			</div>
 		);
 		const descriptionClassName = styles.deviceNoticeDescription;
 		let noticeDescription: React.ReactNode;
-		if (permissionStatus === 'denied' && isNativeDesktop) {
+		if (mediaBlocked) {
+			noticeDescription = i18n._(MEDIA_NEEDS_HTTPS_DESCRIPTOR);
+		} else if (permissionStatus === 'denied' && isNativeDesktop) {
 			noticeDescription = (
 				<Trans comment="Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
 					Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your microphone in System Settings → Privacy &
@@ -552,7 +560,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 						{noticeDescription}
 					</p>
 				</div>
-				{permissionStatus !== 'granted' ? (
+				{permissionStatus !== 'granted' && !mediaBlocked ? (
 					<Button
 						variant="secondary"
 						small={true}

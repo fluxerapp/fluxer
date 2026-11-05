@@ -413,8 +413,26 @@ func privateDomain(domain string) bool {
 	if net.ParseIP(d) != nil {
 		return true
 	}
-	for _, suffix := range []string{".localhost", ".local", ".test", ".internal", ".lan", ".home.arpa", ".example", ".invalid"} {
-		if strings.HasSuffix(d, suffix) {
+	return hasDomainSuffix(d, privateSuffixes)
+}
+
+var (
+	privateSuffixes   = []string{".localhost", ".local", ".test", ".internal", ".lan", ".home.arpa", ".example", ".invalid"}
+	overlaySuffixes   = []string{".onion", ".i2p", ".alt", ".loki"}
+	plainHTTPSuffixes = []string{".onion", ".i2p"}
+)
+
+func overlayDomain(domain string) bool {
+	return hasDomainSuffix(strings.ToLower(strings.TrimSuffix(domain, ".")), overlaySuffixes)
+}
+
+func PlainHTTPDomain(domain string) bool {
+	return hasDomainSuffix(strings.ToLower(strings.TrimSuffix(domain, ".")), plainHTTPSuffixes)
+}
+
+func hasDomainSuffix(domain string, suffixes []string) bool {
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(domain, suffix) {
 			return true
 		}
 	}

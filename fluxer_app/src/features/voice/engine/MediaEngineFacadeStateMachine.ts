@@ -89,7 +89,7 @@ export type MediaEngineFacadeGatewayErrorDecision =
 			unavailableChannelId: string | null;
 			showUnavailableToast: boolean;
 			disconnectReason: 'server' | null;
-			toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | null;
+			toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | 'e2ee-required' | null;
 			p2pRefusal: MediaEngineFacadeP2pRefusal | null;
 	  };
 
@@ -409,6 +409,7 @@ const voiceGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
 	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
 	GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED,
+	GatewayErrorCodes.VOICE_E2EE_REQUIRED,
 ]);
 
 const unavailableGatewayErrorCodes = new Set<GatewayErrorCode>([
@@ -431,6 +432,7 @@ const preConnectAbortGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
 	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
 	GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED,
+	GatewayErrorCodes.VOICE_E2EE_REQUIRED,
 ]);
 
 const p2pRefusalsByGatewayErrorCode = new Map<GatewayErrorCode, MediaEngineFacadeP2pRefusal>([
@@ -471,11 +473,13 @@ export function selectMediaEngineGatewayErrorDecision(
 		}
 	}
 
-	let toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | null = null;
+	let toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | 'e2ee-required' | null = null;
 	if (input.code === GatewayErrorCodes.VOICE_MEMBER_TIMED_OUT) {
 		toast = 'timed-out';
 	} else if (input.code === GatewayErrorCodes.VOICE_CONNECTION_LIMIT_REACHED) {
 		toast = 'connection-limit';
+	} else if (input.code === GatewayErrorCodes.VOICE_E2EE_REQUIRED) {
+		toast = 'e2ee-required';
 	} else if (
 		input.code === GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT ||
 		input.code === GatewayErrorCodes.VOICE_ACCOUNT_VERIFICATION_REQUIRED

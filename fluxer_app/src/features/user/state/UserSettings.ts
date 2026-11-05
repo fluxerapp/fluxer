@@ -62,6 +62,8 @@ import {
 	decodeSyncedPreferencesLenient,
 	encodeSyncedPreferences,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+import {sha256} from '@noble/hashes/sha2.js';
+import {bytesToHex} from '@noble/hashes/utils.js';
 import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
@@ -223,11 +225,9 @@ function writePersistedRecentAck(entries: ReadonlyMap<SyncedPreferencesField, nu
 	}
 }
 
-async function syncedPreferencesBaseHash(encoded: string): Promise<string> {
+function syncedPreferencesBaseHash(encoded: string): string {
 	const binary = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
-	const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-	return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	return bytesToHex(sha256(Uint8Array.from(binary, (char) => char.charCodeAt(0))));
 }
 
 function readSyncedPreferencesFromBody(body: unknown): string | null | undefined {
@@ -995,7 +995,7 @@ class UserSettingsState {
 		const baseAtFlush = this.wireSyncedPreferencesBase;
 		const isStale = (): boolean => this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush;
 		try {
-			const baseHash = baseAtFlush === null ? null : await syncedPreferencesBaseHash(baseAtFlush);
+			const baseHash = baseAtFlush === null ? null : syncedPreferencesBaseHash(baseAtFlush);
 			if (isStale()) {
 				completeAll();
 				return;

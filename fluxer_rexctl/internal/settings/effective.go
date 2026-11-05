@@ -136,16 +136,19 @@ func derived(chosen map[string]string) map[string]string {
 	if mode == "" {
 		mode = EdgeBundled
 	}
-	port := "443"
-	if mode == EdgeBundled && chosen[EdgeHTTPSPort] != "" {
-		port = chosen[EdgeHTTPSPort]
-	}
-	out["FLUXER_PUBLIC_SCHEME"] = "https"
-	out["FLUXER_PUBLIC_PORT"] = port
 	scheme := "https"
 	if raw := strings.ToLower(strings.TrimSpace(chosen["FLUXER_PUBLIC_SCHEME"])); raw != "" {
 		scheme = raw
 	}
+	port, listenPort := "443", EdgeHTTPSPort
+	if scheme == "http" {
+		port, listenPort = "80", EdgeHTTPPort
+	}
+	if mode == EdgeBundled && chosen[listenPort] != "" {
+		port = chosen[listenPort]
+	}
+	out["FLUXER_PUBLIC_SCHEME"] = scheme
+	out["FLUXER_PUBLIC_PORT"] = port
 	if raw := strings.TrimSpace(chosen[EdgePublicPort]); raw != "" {
 		port = raw
 	}
@@ -156,7 +159,7 @@ func derived(chosen map[string]string) map[string]string {
 		}
 		out["FLUXER_PUBLIC_ORIGIN"] = origin
 		if mode == EdgeBundled {
-			out["FLUXER_EDGE_SITE_ADDRESS"] = "https://" + domain
+			out["FLUXER_EDGE_SITE_ADDRESS"] = scheme + "://" + domain
 		}
 	}
 	return out

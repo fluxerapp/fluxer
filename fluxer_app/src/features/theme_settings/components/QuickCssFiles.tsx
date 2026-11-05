@@ -35,10 +35,11 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {writeClipboardText} from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {copyText, readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
+import {readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {QUICK_CSS_SECTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/ThemesSections';
 import type {EditorView} from '@codemirror/view';
 import {msg} from '@lingui/core/macro';
@@ -272,7 +273,7 @@ const QuickCssFile: React.FC<QuickCssFileProps> = observer(({filePicker, target,
 			);
 	};
 	const handleCopy = () => {
-		void copyText(draft)
+		void writeClipboardText(draft)
 			.then(() => ToastCommands.success(i18n._(QUICK_CSS_COPIED_TO_CLIPBOARD_DESCRIPTOR)))
 			.catch(() =>
 				showThemeSettingsErrorModal(

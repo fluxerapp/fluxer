@@ -17,7 +17,7 @@ const FAILED_TO_COPY_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'Failed to copy to clipboard',
 });
 const logger = new Logger('Clipboard');
-const writeWithFallback = async (text: string): Promise<void> => {
+export async function writeClipboardText(text: string): Promise<void> {
 	const electronApi = getElectronAPI();
 	if (electronApi?.clipboardWriteText) {
 		logger.debug('Using Electron clipboard');
@@ -41,7 +41,7 @@ const writeWithFallback = async (text: string): Promise<void> => {
 	document.body.removeChild(textarea);
 	if (success) return;
 	throw new Error('No clipboard API available');
-};
+}
 
 export async function copy(i18n: I18n, text: string, suppressToast = false): Promise<boolean> {
 	try {
@@ -49,7 +49,7 @@ export async function copy(i18n: I18n, text: string, suppressToast = false): Pro
 		if (!isDesktop()) {
 			logger.debug('Desktop runtime not detected; continuing with web clipboard');
 		}
-		await writeWithFallback(text);
+		await writeClipboardText(text);
 		logger.debug('Text successfully copied to clipboard');
 		if (!suppressToast) {
 			ToastCommands.createToast({

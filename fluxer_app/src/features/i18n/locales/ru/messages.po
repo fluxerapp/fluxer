@@ -6783,6 +6783,16 @@ msgstr "Браузеры не позволяют {productName} заранее п
 msgid "Browsers do not list cameras in the screen-share picker. Choose them from the Devices tab instead. If nothing appears here, allow camera access or connect a device."
 msgstr "Браузеры не показывают камеры в окне выбора экрана. Выберите их на вкладке «Устройства». Если здесь ничего не отображается, разрешите доступ к камере или подключите устройство."
 
+#. Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow the microphone, camera and screen sharing on sites that use HTTPS, and this instance doesn't use HTTPS. You can still join voice channels and listen."
+msgstr "Браузеры разрешают микрофон, камеру и демонстрацию экрана только на сайтах с HTTPS, а этот инстанс не использует HTTPS. Вы всё равно можете заходить в голосовые каналы и слушать."
+
+#. Short note next to a setting or button that browsers turn off on a self-hosted instance opened over plain HTTP, such as notifications or passkeys. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Браузеры разрешают это только на сайтах с HTTPS, а этот инстанс не использует HTTPS."
+
 #. Where the dark mode favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "Browsers set to a dark theme show this instead of the favicon. Add one when your favicon is too dark to see on a dark tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
@@ -37287,11 +37297,6 @@ msgstr "Этот канал синхронизирован с родительс
 msgid "This channel no longer exists. It may have already been deleted."
 msgstr "Этого канала больше не существует. Возможно, он уже был удален."
 
-#. Error shown when signing in or signing up on a self-hosted instance opened over plain HTTP or a bare IP address, where the browser blocks the automatic background check. HTTPS and localhost are technical terms, keep them as is.
-#: src/features/auth/altcha/CaptchaInterceptor.ts
-msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
-msgstr "Эта проверка выполняется только при открытии приложения через HTTPS или с localhost. Попросите владельца инстанса настроить его через HTTPS или откройте его с localhost."
-
 #. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
 #: src/features/theme_settings/editor/CssLint.ts
 msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
@@ -37634,6 +37639,11 @@ msgstr "Этот экземпляр не использует почту, и в�
 #: src/features/moderation/components/report/ReportStepUnavailable.tsx
 msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
 msgstr "Этот экземпляр не использует электронную почту, поэтому не может принимать жалобы через эту форму. Пожалуйтесь на контент в приложении или свяжитесь с администраторами этого экземпляра."
+
+#. Title of the dialog shown when someone tries to use the microphone, camera or screen sharing on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "This instance doesn't use HTTPS"
+msgstr "Этот инстанс не использует HTTPS"
 
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
@@ -38155,6 +38165,16 @@ msgstr "Этот голосовой канал помечен как содер�
 #: src/features/voice/engine/media_engine_facade/shared.ts
 msgid "This voice channel is no longer available."
 msgstr "Этот голосовой канал больше недоступен."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel from a browser that cannot encrypt calls.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption, and this browser can't join encrypted calls."
+msgstr "Этот голосовой канал использует сквозное шифрование, а этот браузер не может подключаться к зашифрованным звонкам."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption. Browsers only allow encrypted calls on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Этот голосовой канал использует сквозное шифрование. Браузеры разрешают зашифрованные звонки только на сайтах с HTTPS, а этот инстанс не использует HTTPS."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
 #: src/features/channel/components/UserMessage.tsx

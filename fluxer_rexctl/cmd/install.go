@@ -75,7 +75,6 @@ type installer struct {
 	findErr      error
 	ran          map[string]bool
 	plan         []string
-	offered      bool
 	lowPortsSaid bool
 }
 
@@ -92,8 +91,8 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl := c.Flags()
 	fl.StringVar(&f.Domain, "domain", "", "address people will use to open your instance, like chat.example.com")
 	fl.StringVar(&f.Engine, "engine", "", "container engine to use (docker or podman)")
-	fl.BoolVar(&f.BehindProxy, "behind-proxy", false, "serve plain HTTP for your own reverse proxy")
-	fl.StringVar(&f.Bind, "bind", "127.0.0.1:8080", "address your proxy connects to, with --behind-proxy")
+	fl.BoolVar(&f.BehindProxy, "behind-proxy", false, "serve plain HTTP for your own reverse proxy or tunnel")
+	fl.StringVar(&f.Bind, "bind", "127.0.0.1:8080", "address your proxy or tunnel connects to, with --behind-proxy")
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
 	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "pin small, medium or large instead of sizing Fluxer to this machine on every start")
 	fl.BoolVar(&f.InstallDocker, "install-docker", true, "install Docker if it's missing")
@@ -617,7 +616,7 @@ func (in *installer) allowLowPorts(ctx context.Context) error {
 		return err
 	}
 	if !ok {
-		return ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", "Run rexctl install --behind-proxy to use your own reverse proxy instead.")
+		return ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", "Run rexctl install --behind-proxy to use your own reverse proxy or tunnel instead.")
 	}
 	if in.f.DryRun {
 		in.plan = append(in.plan, "Let programs that don't run as root use ports 80 and up.")
@@ -701,31 +700,40 @@ func (in *installer) offerProxy() error {
 	if !ok {
 		return nil
 	}
-	in.offered, in.lowPortsSaid = true, len(h.Busy) == 0
+	in.lowPortsSaid = len(h.Busy) == 0
 	in.app.UI.Info("%s", reason)
-	yes, err := in.app.UI.Confirm("Use your own reverse proxy in front of Fluxer?", def)
+	yes, err := in.app.UI.Confirm("Use your own reverse proxy or tunnel in front of Fluxer, as with --behind-proxy?", def)
 	if err != nil || !yes {
 		return err
 	}
 	if err := in.app.UI.Ask(in.c, ui.Field{
 		Flag:     "bind",
-		Title:    "Which address should your proxy connect to?",
+		Title:    "Which address should your proxy or tunnel connect to?",
 		Value:    &in.f.Bind,
 		Validate: validateBind,
 	}); err != nil {
 		return err
 	}
 	in.f.BehindProxy = true
-	in.plan = append(in.plan, fmt.Sprintf("Serve Fluxer over plain HTTP on %s for your reverse proxy.", in.f.Bind))
+	in.plan = append(in.plan, fmt.Sprintf("Serve Fluxer over plain HTTP on %s for your reverse proxy or tunnel.", in.f.Bind))
 	return nil
 }
 
+const (
+	publicSchemeVar = "FLUXER_PUBLIC_SCHEME"
+	plainHTTPNote   = "Fluxer uses http links for %s because Tor and I2P browsers open it over plain HTTP. To use https, run rexctl config set FLUXER_PUBLIC_SCHEME=https."
+)
+
+func (in *installer) plainHTTP() bool {
+	return in.f.BehindProxy && checks.PlainHTTPDomain(in.f.Domain)
+}
+
 func (in *installer) proxyNote() {
-	if !in.offered || !in.f.BehindProxy {
+	if !in.f.BehindProxy {
 		return
 	}
-	in.app.UI.Info("Set up your proxy to forward https://%s to http://%s.", normaliseDomain(in.f.Domain), in.f.Bind)
-	in.app.UI.Info("See %sreverse-proxy/ for what your proxy needs to do.", docsURL)
+	in.app.UI.Info("Set up your proxy or tunnel to forward %s to http://%s.", normaliseDomain(in.f.Domain), in.f.Bind)
+	in.app.UI.Info("See %sreverse-proxy/ for what your proxy or tunnel needs to do.", docsURL)
 }
 
 func (in *installer) installDocker(ctx context.Context) error {
@@ -1104,7 +1112,11 @@ func (in *installer) printPlan() error {
 	if in.f.NoStart {
 		steps = append(steps, "Leave Fluxer stopped.")
 	} else {
-		steps = append(steps, fmt.Sprintf("Download Fluxer and start it at https://%s.", domain))
+		scheme := "https"
+		if in.plainHTTP() {
+			scheme = "http"
+		}
+		steps = append(steps, fmt.Sprintf("Download Fluxer and start it at %s://%s.", scheme, domain))
 		if in.answers != nil {
 			steps = append(steps, fmt.Sprintf("Create the admin account %s and finish setup.", in.answers.Username))
 		} else if in.f.SetupWhere == "terminal" {
@@ -1131,6 +1143,10 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	if f.BehindProxy {
 		st.Settings[settings.EdgeMode] = settings.EdgeProxy
 		st.Settings[settings.EdgeBind] = f.Bind
+	}
+	if in.plainHTTP() {
+		st.Settings[publicSchemeVar] = "http"
+		in.app.UI.Info(plainHTTPNote, normaliseDomain(f.Domain))
 	}
 	if f.VoiceTCPPort > 0 {
 		st.Settings[settings.VoiceTCPPort] = strconv.Itoa(f.VoiceTCPPort)
