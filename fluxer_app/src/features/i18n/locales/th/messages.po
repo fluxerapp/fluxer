@@ -6783,6 +6783,16 @@ msgstr "เบราว์เซอร์ไม่อนุญาตให้ {p
 msgid "Browsers do not list cameras in the screen-share picker. Choose them from the Devices tab instead. If nothing appears here, allow camera access or connect a device."
 msgstr "เบราว์เซอร์ไม่แสดงกล้องในตัวเลือกการแชร์หน้าจอ ให้เลือกจากแท็บอุปกรณ์แทน หากไม่มีอะไรปรากฏที่นี่ ให้เปิดการเข้าถึงกล้องหรือเชื่อมต่ออุปกรณ์"
 
+#. Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow the microphone, camera and screen sharing on sites that use HTTPS, and this instance doesn't use HTTPS. You can still join voice channels and listen."
+msgstr "เบราว์เซอร์อนุญาตให้ใช้ไมโครโฟน กล้อง และการแชร์หน้าจอเฉพาะในเว็บไซต์ที่ใช้ HTTPS เท่านั้น และอินสแตนซ์นี้ไม่ได้ใช้ HTTPS คุณยังเข้าร่วมช่องเสียงและฟังได้"
+
+#. Short note next to a setting or button that browsers turn off on a self-hosted instance opened over plain HTTP, such as notifications or passkeys. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "เบราว์เซอร์อนุญาตสิ่งนี้เฉพาะในเว็บไซต์ที่ใช้ HTTPS เท่านั้น และอินสแตนซ์นี้ไม่ได้ใช้ HTTPS"
+
 #. Where the dark mode favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "Browsers set to a dark theme show this instead of the favicon. Add one when your favicon is too dark to see on a dark tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
@@ -37625,6 +37635,11 @@ msgstr "อินสแตนซ์นี้ไม่ใช้อีเมล �
 msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
 msgstr "อินสแตนซ์นี้ไม่ได้ใช้อีเมล จึงรับรายงานผ่านแบบฟอร์มนี้ไม่ได้ โปรดรายงานเนื้อหาจากภายในแอป หรือติดต่อผู้ดูแลระบบของอินสแตนซ์นี้"
 
+#. Title of the dialog shown when someone tries to use the microphone, camera or screen sharing on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "This instance doesn't use HTTPS"
+msgstr "อินสแตนซ์นี้ไม่ได้ใช้ HTTPS"
+
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
@@ -38145,6 +38160,16 @@ msgstr "ช่องเสียงนี้ถูกระบุว่ามี
 #: src/features/voice/engine/media_engine_facade/shared.ts
 msgid "This voice channel is no longer available."
 msgstr "ช่องเสียงนี้ไม่พร้อมใช้งานแล้ว"
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel from a browser that cannot encrypt calls.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption, and this browser can't join encrypted calls."
+msgstr "ช่องเสียงนี้ใช้การเข้ารหัสตั้งแต่ต้นทางถึงปลายทาง และเบราว์เซอร์นี้เข้าร่วมการโทรที่เข้ารหัสไม่ได้"
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption. Browsers only allow encrypted calls on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "ช่องเสียงนี้ใช้การเข้ารหัสตั้งแต่ต้นทางถึงปลายทาง เบราว์เซอร์อนุญาตการโทรที่เข้ารหัสเฉพาะในเว็บไซต์ที่ใช้ HTTPS เท่านั้น และอินสแตนซ์นี้ไม่ได้ใช้ HTTPS"
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
 #: src/features/channel/components/UserMessage.tsx

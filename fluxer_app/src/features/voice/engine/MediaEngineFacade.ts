@@ -20,6 +20,7 @@ import {SoundType, setSoundOutputDeviceIdResolver} from '@app/features/notificat
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
@@ -56,6 +57,8 @@ import {
 	VOICE_CHANNEL_NO_LONGER_AVAILABLE_DESCRIPTOR,
 	VOICE_CONNECTION_FAILED_DESCRIPTOR,
 	VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
+	VOICE_E2EE_NEEDS_HTTPS_DESCRIPTOR,
+	VOICE_E2EE_REQUIRED_DESCRIPTOR,
 	YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR,
 } from '@app/features/voice/engine/media_engine_facade/shared';
 import {
@@ -2658,10 +2661,14 @@ class MediaEngineFacade extends Store {
 				this.promptAccountForVoice(TierGatedActions.VOICE);
 				return;
 			}
-			const descriptor =
-				decision.toast === 'timed-out'
-					? YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR
-					: VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR;
+			const descriptors = {
+				'timed-out': YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR,
+				'connection-limit': VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
+				'e2ee-required': isInsecureBrowserContext()
+					? VOICE_E2EE_NEEDS_HTTPS_DESCRIPTOR
+					: VOICE_E2EE_REQUIRED_DESCRIPTOR,
+			};
+			const descriptor = descriptors[decision.toast];
 			this.showVoiceErrorModal(descriptor, `voice.media-engine-facade.gateway-${decision.toast}-error-modal`);
 		}
 		if (decision.p2pRefusal) {

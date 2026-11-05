@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {ENABLE_NOTIFICATIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	ENABLE_NOTIFICATIONS_DESCRIPTOR,
+	FEATURE_NEEDS_HTTPS_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import * as NotificationCommands from '@app/features/ui/commands/NotificationCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -160,14 +164,19 @@ export const Notifications: FC<NotificationsProps> = observer(
 			notificationsLabel = i18n._(ENABLE_BROWSER_NOTIFICATIONS_DESCRIPTOR);
 			notificationsDescription = i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR);
 		}
+		const notificationsBlocked = isInsecureBrowserContext();
+		if (notificationsBlocked) {
+			notificationsDescription = i18n._(FEATURE_NEEDS_HTTPS_DESCRIPTOR);
+		}
 		return (
 			<div className={styles.container} data-flx="user.notifications-tab.notifications.container">
 				<div className={styles.switchesContainer} data-flx="user.notifications-tab.notifications.switches-container">
 					<Switch
 						label={notificationsLabel}
 						description={notificationsDescription}
-						value={browserNotificationsEnabled}
+						value={browserNotificationsEnabled && !notificationsBlocked}
 						onChange={handleToggleNotifications}
+						disabled={notificationsBlocked}
 						data-flx="user.notifications-tab.notifications.switch.toggle-notifications"
 					/>
 					<Switch

@@ -6783,6 +6783,16 @@ msgstr "Браузърите не позволяват на {productName} да �
 msgid "Browsers do not list cameras in the screen-share picker. Choose them from the Devices tab instead. If nothing appears here, allow camera access or connect a device."
 msgstr "Браузърите не показват камери в инструмента за избор на споделяне на екран. Вместо това ги избери от раздела „Устройства“. Ако тук не се появи нищо, разреши достъп до камерата или свържи устройство."
 
+#. Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow the microphone, camera and screen sharing on sites that use HTTPS, and this instance doesn't use HTTPS. You can still join voice channels and listen."
+msgstr "Браузърите позволяват микрофона, камерата и споделянето на екрана само на сайтове с HTTPS, а тази инстанция не използва HTTPS. Все пак можете да влизате в гласови канали и да слушате."
+
+#. Short note next to a setting or button that browsers turn off on a self-hosted instance opened over plain HTTP, such as notifications or passkeys. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Браузърите позволяват това само на сайтове с HTTPS, а тази инстанция не използва HTTPS."
+
 #. Where the dark mode favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "Browsers set to a dark theme show this instead of the favicon. Add one when your favicon is too dark to see on a dark tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
@@ -37625,6 +37635,11 @@ msgstr "Тази инстанция не използва имейл, а ти с
 msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
 msgstr "Тази инстанция не използва имейл, затова не може да приема сигнали чрез тази форма. Подай сигнал за съдържание от приложението или се свържи с администраторите на тази инстанция."
 
+#. Title of the dialog shown when someone tries to use the microphone, camera or screen sharing on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "This instance doesn't use HTTPS"
+msgstr "Тази инстанция не използва HTTPS"
+
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
@@ -38145,6 +38160,16 @@ msgstr "Този гласов канал е маркиран за съдържа
 #: src/features/voice/engine/media_engine_facade/shared.ts
 msgid "This voice channel is no longer available."
 msgstr "Този гласов канал вече не е наличен."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel from a browser that cannot encrypt calls.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption, and this browser can't join encrypted calls."
+msgstr "Този гласов канал използва криптиране от край до край, а този браузър не може да се присъединява към криптирани разговори."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption. Browsers only allow encrypted calls on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Този гласов канал използва криптиране от край до край. Браузърите позволяват криптирани разговори само на сайтове с HTTPS, а тази инстанция не използва HTTPS."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
 #: src/features/channel/components/UserMessage.tsx
