@@ -717,6 +717,24 @@ func (e DeletionReasonCode) Valid() bool {
 	}
 }
 
+// Defines values for DistributionProductSchema.
+const (
+	PlutoniumGift         DistributionProductSchema = "plutonium_gift"
+	PlutoniumSubscription DistributionProductSchema = "plutonium_subscription"
+)
+
+// Valid indicates whether the value is a known member of the DistributionProductSchema enum.
+func (e DistributionProductSchema) Valid() bool {
+	switch e {
+	case PlutoniumGift:
+		return true
+	case PlutoniumSubscription:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EmailDeliveryModeSchema.
 const (
 	EmailDeliveryModeSchemaOFF  EmailDeliveryModeSchema = "off"
@@ -1999,6 +2017,68 @@ type DeleteVoiceResponse struct {
 // DeletionReasonCode Reason the account was scheduled for deletion
 type DeletionReasonCode int32
 
+// DistributionChannelPriceSchema defines model for DistributionChannelPriceSchema.
+type DistributionChannelPriceSchema struct {
+	// BaseUnitAmount Unit amount of the base price, in minor units
+	BaseUnitAmount int `json:"base_unit_amount"`
+
+	// PriceId Stripe price ID charged through the distribution
+	PriceId string `json:"price_id"`
+
+	// RateBps Share of the channel price that goes to the distribution, in basis points. 500 means 5%
+	RateBps int `json:"rate_bps"`
+
+	// UnitAmount Unit amount of the channel price, in minor units
+	UnitAmount int `json:"unit_amount"`
+}
+
+// DistributionPricingConfigResponse defines model for DistributionPricingConfigResponse.
+type DistributionPricingConfigResponse struct {
+	Rules []DistributionRuleSchema `json:"rules"`
+}
+
+// DistributionPricingUpdateRequest defines model for DistributionPricingUpdateRequest.
+type DistributionPricingUpdateRequest struct {
+	// Rules Full list of distribution rules. A left-out rule that already has channel prices stays stored as inactive so its subscriptions keep renewing
+	Rules []struct {
+		// Active Whether checkouts and quotes for this distribution use the channel price
+		Active bool `json:"active"`
+
+		// Id Distribution id sent by clients built for that distribution, for example ios_marketplace
+		Id string `json:"id"`
+
+		// Products Products that get the channel price
+		Products []DistributionProductSchema `json:"products"`
+
+		// RateBps Share of the channel price that goes to the distribution, in basis points. 500 means 5%
+		RateBps int `json:"rate_bps"`
+	} `json:"rules"`
+}
+
+// DistributionProductSchema defines model for DistributionProductSchema.
+type DistributionProductSchema string
+
+// DistributionRuleSchema defines model for DistributionRuleSchema.
+type DistributionRuleSchema struct {
+	// Active Whether checkouts and quotes for this distribution use the channel price
+	Active bool `json:"active"`
+
+	// Id Distribution id sent by clients built for that distribution, for example ios_marketplace
+	Id string `json:"id"`
+
+	// Prices Channel Stripe prices keyed by "<rule_version>:<base price ID>". Managed by the server and never removed
+	Prices map[string]DistributionChannelPriceSchema `json:"prices"`
+
+	// Products Products that get the channel price
+	Products []DistributionProductSchema `json:"products"`
+
+	// RateBps Share of the channel price that goes to the distribution, in basis points. 500 means 5%
+	RateBps int `json:"rate_bps"`
+
+	// RuleVersion Bumped by the server whenever rate_bps changes. Prices made under a version keep it
+	RuleVersion int `json:"rule_version"`
+}
+
 // DomainMigrationConfigResponse defines model for DomainMigrationConfigResponse.
 type DomainMigrationConfigResponse struct {
 	AnonymousRolloutBasisPoints int                                 `json:"anonymous_rollout_basis_points"`
@@ -2302,13 +2382,14 @@ type InstanceConfigResponse struct {
 			PowEscalationPerHour int `json:"pow_escalation_per_hour"`
 		} `json:"instant_accounts"`
 	} `json:"auth"`
-	Billing            InstanceBillingResponse          `json:"billing"`
-	Captcha            CaptchaConfigResponse            `json:"captcha"`
-	DomainMigration    DomainMigrationConfigResponse    `json:"domain_migration"`
-	ExperimentDelivery ExperimentDeliveryConfigResponse `json:"experiment_delivery"`
-	GatewayRollout     GatewayRolloutConfigResponse     `json:"gateway_rollout"`
-	GuildVisits        GuildVisitsConfigResponse        `json:"guild_visits"`
-	Integrations       struct {
+	Billing             InstanceBillingResponse           `json:"billing"`
+	Captcha             CaptchaConfigResponse             `json:"captcha"`
+	DistributionPricing DistributionPricingConfigResponse `json:"distribution_pricing"`
+	DomainMigration     DomainMigrationConfigResponse     `json:"domain_migration"`
+	ExperimentDelivery  ExperimentDeliveryConfigResponse  `json:"experiment_delivery"`
+	GatewayRollout      GatewayRolloutConfigResponse      `json:"gateway_rollout"`
+	GuildVisits         GuildVisitsConfigResponse         `json:"guild_visits"`
+	Integrations        struct {
 		Bluesky struct {
 			ClientName       *string `json:"client_name"`
 			ClientUri        *string `json:"client_uri"`
@@ -2531,14 +2612,15 @@ type InstanceConfigUpdateRequest struct {
 			Configured *bool `json:"configured,omitempty"`
 		} `json:"setup,omitempty"`
 	} `json:"app_public,omitempty"`
-	Auth               *AuthConfigUpdateRequest               `json:"auth,omitempty"`
-	Billing            *InstanceBillingUpdateRequest          `json:"billing,omitempty"`
-	Captcha            *CaptchaConfigUpdateRequest            `json:"captcha,omitempty"`
-	DomainMigration    *DomainMigrationConfigUpdateRequest    `json:"domain_migration,omitempty"`
-	ExperimentDelivery *ExperimentDeliveryConfigUpdateRequest `json:"experiment_delivery,omitempty"`
-	GatewayRollout     *GatewayRolloutConfigUpdateRequest     `json:"gateway_rollout,omitempty"`
-	GuildVisits        *GuildVisitsConfigUpdateRequest        `json:"guild_visits,omitempty"`
-	Integrations       *struct {
+	Auth                *AuthConfigUpdateRequest               `json:"auth,omitempty"`
+	Billing             *InstanceBillingUpdateRequest          `json:"billing,omitempty"`
+	Captcha             *CaptchaConfigUpdateRequest            `json:"captcha,omitempty"`
+	DistributionPricing *DistributionPricingUpdateRequest      `json:"distribution_pricing,omitempty"`
+	DomainMigration     *DomainMigrationConfigUpdateRequest    `json:"domain_migration,omitempty"`
+	ExperimentDelivery  *ExperimentDeliveryConfigUpdateRequest `json:"experiment_delivery,omitempty"`
+	GatewayRollout      *GatewayRolloutConfigUpdateRequest     `json:"gateway_rollout,omitempty"`
+	GuildVisits         *GuildVisitsConfigUpdateRequest        `json:"guild_visits,omitempty"`
+	Integrations        *struct {
 		Bluesky *struct {
 			ClientName *string `json:"client_name,omitempty"`
 			ClientUri  *string `json:"client_uri,omitempty"`

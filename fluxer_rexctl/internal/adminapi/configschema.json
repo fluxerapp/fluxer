@@ -322,6 +322,12 @@
     ]
   },
   {
+    "key": "distribution_pricing",
+    "type": "json",
+    "help": "Distribution pricing",
+    "nullable": true
+  },
+  {
     "key": "domain_migration.anonymous_rollout_basis_points",
     "type": "integer",
     "help": "Domain migration anonymous rollout basis points"
