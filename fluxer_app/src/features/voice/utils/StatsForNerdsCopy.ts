@@ -49,6 +49,8 @@ import {
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {NativeAudioApplication, VirtmicNode} from '@app/types/electron.d';
+import {sha256} from '@noble/hashes/sha2.js';
+import {bytesToHex, utf8ToBytes} from '@noble/hashes/utils.js';
 
 const SNAPSHOT_TIMEOUT_MS = 3000;
 const MAX_INCLUDED_TARGETS = 200;
@@ -92,22 +94,8 @@ async function withTimeout<T>(
 	}
 }
 
-async function hashString(value: string | null | undefined): Promise<string | null> {
-	if (!value) return null;
-	try {
-		const data = new TextEncoder().encode(value);
-		const digest = await crypto.subtle.digest('SHA-256', data);
-		return Array.from(new Uint8Array(digest))
-			.map((byte) => byte.toString(16).padStart(2, '0'))
-			.join('');
-	} catch {
-		let hash = 0;
-		for (let index = 0; index < value.length; index += 1) {
-			hash = (hash << 5) - hash + value.charCodeAt(index);
-			hash |= 0;
-		}
-		return `fallback-${Math.abs(hash).toString(16)}`;
-	}
+function hashString(value: string | null | undefined): string | null {
+	return value ? bytesToHex(sha256(utf8ToBytes(value))) : null;
 }
 
 async function queryPermission(name: string): Promise<string> {
@@ -131,18 +119,16 @@ async function collectMediaDevices(): Promise<Record<string, unknown>> {
 		return {
 			supported: true,
 			count: devices.length,
-			devices: await Promise.all(
-				devices.map(async (device) => ({
-					kind: device.kind,
-					label: device.label || '',
-					hasLabel: Boolean(device.label),
-					deviceIdHash: await hashString(device.deviceId),
-					deviceIdLength: device.deviceId?.length ?? 0,
-					groupIdHash: await hashString(device.groupId),
-					groupIdLength: device.groupId?.length ?? 0,
-					isDefaultDeviceId: device.deviceId === 'default',
-				})),
-			),
+			devices: devices.map((device) => ({
+				kind: device.kind,
+				label: device.label || '',
+				hasLabel: Boolean(device.label),
+				deviceIdHash: hashString(device.deviceId),
+				deviceIdLength: device.deviceId?.length ?? 0,
+				groupIdHash: hashString(device.groupId),
+				groupIdLength: device.groupId?.length ?? 0,
+				isDefaultDeviceId: device.deviceId === 'default',
+			})),
 		};
 	} catch (error) {
 		return {supported: true, error: safeError(error)};
@@ -284,11 +270,11 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		hasHigherVideoQuality(),
 	);
 	return {
-		inputDeviceIdHash: await hashString(VoiceSettings.getInputDeviceId()),
-		outputDeviceIdHash: await hashString(VoiceSettings.getOutputDeviceId()),
-		videoDeviceIdHash: await hashString(VoiceSettings.getVideoDeviceId()),
-		screenShareAudioDeviceIdHash: await hashString(VoiceSettings.getScreenShareAudioDeviceId()),
-		effectiveScreenShareAudioDeviceIdHash: await hashString(VoiceSettings.getEffectiveScreenShareAudioDeviceId()),
+		inputDeviceIdHash: hashString(VoiceSettings.getInputDeviceId()),
+		outputDeviceIdHash: hashString(VoiceSettings.getOutputDeviceId()),
+		videoDeviceIdHash: hashString(VoiceSettings.getVideoDeviceId()),
+		screenShareAudioDeviceIdHash: hashString(VoiceSettings.getScreenShareAudioDeviceId()),
+		effectiveScreenShareAudioDeviceIdHash: hashString(VoiceSettings.getEffectiveScreenShareAudioDeviceId()),
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
 		...readVoiceInputDiagnostics(),

@@ -492,7 +492,7 @@ const defaultHost: AccountEngineHost = {
 	currentAccountKey: () => SessionManager.currentAccountKey,
 	expireAccount: async (accountKey, tokenTag) => {
 		const token = SessionManager.getAccount(accountKey)?.token;
-		if (!token || (await accountEngineTokenTag(token)) !== tokenTag) {
+		if (!token || accountEngineTokenTag(token) !== tokenTag) {
 			return;
 		}
 		SessionManager.markAccountInvalid(accountKey, token);
@@ -500,7 +500,7 @@ const defaultHost: AccountEngineHost = {
 	reloadAccount: (accountKey) => SessionManager.reloadStoredAccount(accountKey),
 	adoptRotatedToken: async (accountKey, previousTokenTag, token) => {
 		const previous = SessionManager.getAccount(accountKey)?.token;
-		if (!previous || previous === token || (await accountEngineTokenTag(previous)) !== previousTokenTag) {
+		if (!previous || previous === token || accountEngineTokenTag(previous) !== previousTokenTag) {
 			return;
 		}
 		await SessionManager.adoptRotatedAccountToken(accountKey, previous, token);

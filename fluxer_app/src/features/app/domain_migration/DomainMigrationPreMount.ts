@@ -442,7 +442,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		if (sealed.payload.length > MAX_HANDOFF_PAYLOAD_LENGTH) {
 			sealed = await encryptDomainMigrationPayload(withoutOptionalPayloadData(payload));
 		}
-		const handoffId = await createHandoff(instance.apiEndpoint, token, await sha256Hex(nonce), sealed.payload);
+		const handoffId = await createHandoff(instance.apiEndpoint, token, sha256Hex(nonce), sealed.payload);
 		writeDomainMigrationIntent(sessionStorage, {at: intent.at, handoff_id: handoffId, nonce});
 		markDomainMigrationHandedOff(storage, side.target, Date.now(), attempts);
 		const landing: DomainMigrationLanding = environmentMayForward(

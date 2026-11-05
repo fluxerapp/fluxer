@@ -96,6 +96,9 @@ catalogs:
     '@nats-io/transport-node':
       specifier: 3.4.0
       version: 3.4.0
+    '@noble/ciphers':
+      specifier: 2.4.0
+      version: 2.4.0
     '@noble/hashes':
       specifier: 2.4.0
       version: 2.4.0
@@ -1460,6 +1463,9 @@ importers:
       '@livekit/components-react':
         specifier: 'catalog:'
         version: 2.9.24(livekit-client@fluxer_app+pkgs+livekit-client)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tslib@2.8.1)
+      '@noble/ciphers':
+        specifier: 'catalog:'
+        version: 2.4.0
       '@noble/hashes':
         specifier: 'catalog:'
         version: 2.4.0
@@ -5357,6 +5363,10 @@ packages:
 
   '@neon-rs/load@0.2.6':
     resolution: {integrity: sha512-7p8j+guEhGTJNJISgmHO0homqGYAc0SDfmgGZfluMcQnimcceMY87b4hdqufp+7YmsOVC4W/JvT3/Tpi3/gy+Q==}
+
+  '@noble/ciphers@2.4.0':
+    resolution: {integrity: sha512-AnjFn0Jv92laAkvMrghlFZq4qQCIN/4DxFV/eooqtC2YTjB7kBeLMS2T9KJX4Dn+ZVXLOwK0lSgqDtx9gvxtiw==}
+    engines: {node: '>= 20.19.0'}
 
   '@noble/hashes@1.4.0':
     resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
@@ -15067,6 +15077,8 @@ snapshots:
       '@nats-io/nuid': 3.0.0
 
   '@neon-rs/load@0.2.6': {}
+
+  '@noble/ciphers@2.4.0': {}
 
   '@noble/hashes@1.4.0': {}
 
