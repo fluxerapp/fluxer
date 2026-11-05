@@ -7,14 +7,16 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppPublicConfigUpdateRequest,
             BILLING_MAX_COUNTRY_CURRENCIES, BILLING_MAX_CURRENCIES,
             BILLING_MAX_LEGACY_PRICES_PER_SLOT, BILLING_MAX_LEGACY_SLOTS, BILLING_PRICE_SLOTS,
-            BillingPriceSet, InstanceBillingUpdateRequest, InstanceConfigUpdateRequest,
+            BillingPriceSet, DISTRIBUTION_PRODUCTS_ALL, DISTRIBUTION_RATE_BPS_MAX,
+            DistributionPricingUpdateRequest, DistributionProduct, DistributionRuleUpdate,
+            InstanceBillingUpdateRequest, InstanceConfigUpdateRequest,
             PREMIUM_PRODUCT_NAME_MAX_CHARS, TRI_STATE_DEFAULT, TRI_STATE_OFF, TRI_STATE_ON,
         },
     },
     middleware::flash::FlashData,
     utils::forms::MultiValueForm,
 };
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, num::NonZeroU64};
 
 const PRICE_ID_MAX_CHARS: usize = 255;
 const INFO_URL_MAX_CHARS: usize = 2048;
@@ -332,4 +334,95 @@ fn parse_legacy_prices(value: &str) -> Result<Option<BTreeMap<String, Vec<String
         ));
     }
     Ok((!legacy.is_empty()).then_some(legacy))
+}
+
+pub(super) fn build_distribution_pricing_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    let ids = form.values("distribution_id");
+    let column = |key: &str, index: usize| {
+        form.values(key)
+            .get(index)
+            .map(|value| value.trim())
+            .unwrap_or("")
+    };
+    let mut rules: Vec<DistributionRuleUpdate> = Vec::new();
+    for (index, id) in ids.iter().enumerate() {
+        let id = id.trim();
+        if id.is_empty() {
+            continue;
+        }
+        let parsed = id.parse().map_err(|_| {
+            format!(
+                "\"{id}\" is not a valid distribution id. Use 1 to 32 lowercase letters, digits or underscores"
+            )
+        })?;
+        if rules.iter().any(|rule| rule.id == parsed) {
+            return Err(format!("{id} appears more than once"));
+        }
+        rules.push(DistributionRuleUpdate {
+            rate_bps: parse_distribution_rate(column("distribution_rate", index), id)?,
+            products: parse_distribution_products(column("distribution_products", index), id)?,
+            active: column("distribution_active", index) == TRI_STATE_ON,
+            id: parsed,
+        });
+    }
+    Ok(InstanceConfigUpdateRequest {
+        distribution_pricing: Some(DistributionPricingUpdateRequest { rules }),
+        ..Default::default()
+    })
+}
+
+fn parse_distribution_rate(value: &str, id: &str) -> Result<NonZeroU64, String> {
+    let invalid =
+        || format!("Rate for {id} must be a percentage between 0.01 and 30, like 5 or 2.5");
+    let (whole, fraction) = value.split_once('.').unwrap_or((value, ""));
+    if whole.is_empty()
+        || fraction.len() > 2
+        || !whole.bytes().all(|byte| byte.is_ascii_digit())
+        || !fraction.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return Err(invalid());
+    }
+    let whole: u64 = whole.parse().map_err(|_| invalid())?;
+    let fraction: u64 = format!("{fraction:0<2}").parse().map_err(|_| invalid())?;
+    let bps = whole
+        .checked_mul(100)
+        .and_then(|bps| bps.checked_add(fraction))
+        .filter(|bps| *bps <= DISTRIBUTION_RATE_BPS_MAX)
+        .and_then(NonZeroU64::new)
+        .ok_or_else(invalid)?;
+    Ok(bps)
+}
+
+fn parse_distribution_products(value: &str, id: &str) -> Result<Vec<DistributionProduct>, String> {
+    if value == DISTRIBUTION_PRODUCTS_ALL {
+        return Ok(vec![
+            DistributionProduct::PlutoniumSubscription,
+            DistributionProduct::PlutoniumGift,
+        ]);
+    }
+    value
+        .parse()
+        .map(|product| vec![product])
+        .map_err(|_| format!("Invalid products choice \"{value}\" for {id}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_distribution_rate;
+    use std::num::NonZeroU64;
+
+    #[test]
+    fn distribution_rate_reads_percent_into_basis_points() {
+        let bps = |value| parse_distribution_rate(value, "x").map(NonZeroU64::get);
+        assert_eq!(bps("5"), Ok(500));
+        assert_eq!(bps("2.5"), Ok(250));
+        assert_eq!(bps("0.01"), Ok(1));
+        assert_eq!(bps("30"), Ok(3000));
+        assert!(parse_distribution_rate("0", "x").is_err());
+        assert!(parse_distribution_rate("30.01", "x").is_err());
+        assert!(parse_distribution_rate("1.234", "x").is_err());
+        assert!(parse_distribution_rate("-5", "x").is_err());
+    }
 }

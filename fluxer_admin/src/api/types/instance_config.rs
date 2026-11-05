@@ -2,7 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{InstanceBillingResponse, InstanceBillingUpdateRequest};
+use super::{
+    DistributionPricingResponse, DistributionPricingUpdateRequest, InstanceBillingResponse,
+    InstanceBillingUpdateRequest,
+};
 use crate::api::generated::types as generated_types;
 
 pub use generated_types::{
@@ -50,6 +53,7 @@ pub struct InstanceConfigResponse {
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
     #[serde(default)]
     pub billing: InstanceBillingResponse,
+    pub distribution_pricing: DistributionPricingResponse,
     pub auth: AuthConfigResponse,
     pub accounts: AccountsConfigResponse,
     #[serde(default)]
@@ -1026,6 +1030,8 @@ pub struct InstanceConfigUpdateRequest {
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub billing: Option<InstanceBillingUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub distribution_pricing: Option<DistributionPricingUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth: Option<AuthConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]

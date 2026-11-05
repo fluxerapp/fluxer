@@ -46,6 +46,7 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {mergeDistributionRules} from '@app/api/stripe/DistributionPricing';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {scheduleSystemDeletion} from '@app/api/user/AccountCleanup';
 import {noticeEmailAddress} from '@app/api/user/services/SystemDmMessage';
@@ -258,6 +259,7 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 		accountIdentityLockReason,
 		instantAccountAvailability,
 		notice,
+		distributionPricing,
 	] = await Promise.all([
 		instanceConfigRepository.getAppPublicConfig(),
 		instanceConfigRepository.getInstancePolicyConfig(),
@@ -269,6 +271,7 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 		instanceConfigRepository.getAccountIdentityLockReason(),
 		instanceConfigRepository.getInstantAccountAvailability(),
 		instanceConfigRepository.getInstanceNotice(),
+		instanceConfigRepository.getDistributionPricingConfig(),
 	]);
 	return {
 		sso: {
@@ -336,6 +339,7 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 		integrations,
 		media,
 		billing,
+		distribution_pricing: distributionPricing,
 		notice,
 		warnings,
 	};
@@ -664,6 +668,14 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 					...patch,
 					config_version: current.config_version + 1,
 				}),
+			);
+		},
+	),
+	distribution_pricing: createInstanceConfigSectionApplier(
+		({data}) => data.distribution_pricing,
+		async (update, {instanceConfigRepository}) => {
+			await instanceConfigRepository.updateDistributionPricingConfig((current) =>
+				mergeDistributionRules(current, update.rules),
 			);
 		},
 	),

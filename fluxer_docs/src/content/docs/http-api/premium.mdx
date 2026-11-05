@@ -47,8 +47,23 @@ The recurring and gift checkout prices for one country.
 | gift_1_year_amount_minor? | ?integer | The one-year gift amount, in the minor unit of `gift_currency` |
 | currency | string | [Display currency](#display-currencies) of the recurring prices |
 | gift_currency<sup>1</sup> | ?string | [Display currency](#display-currencies) of the gift prices |
+| distribution | ?[price distribution](#price-distribution-object) object | The distribution whose channel prices these are, or null for the standard prices |
 
 <sup>1</sup> Null when no currency has both gift prices set up, and gift checkout is unavailable then.
+
+## Distributions
+
+An app build sold through a store that keeps a share of each sale sends its distribution id, such as `ios_marketplace`, with [get price IDs](#get-price-ids), [get premium state](#get-premium-state) and the [checkout routes](/http-api/billing/#create-subscription-checkout). When the instance has an active rule for that id, the amounts and checkout use its channel price. The channel price is the standard price divided by one minus the rule's rate, rounded up to an amount Stripe accepts in that currency, so the amount left after the store's share is at least the standard price. An unknown, malformed or inactive id gets the standard price and never an error. Self-hosted instances have no rules until an admin adds one.
+
+## Price distribution object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The distribution id |
+| rate_bps | integer | The store's share in basis points, where 500 is 5% |
+| rule_version | integer | The version of the rule the prices come from |
 
 ## Current subscription price object
 
@@ -237,6 +252,7 @@ Returns the [price IDs](#price-ids-object) object for the request's country.
 | Field | Type | Description |
 | --- | --- | --- |
 | country_code? | string | A two-letter country code, used when Fluxer can't locate the request |
+| distribution? | string | The [distribution](#distributions) the app build was sold through (up to 64 characters) |
 
 ### Response
 
@@ -258,6 +274,7 @@ Returns the [premium state](#premium-state-object) object for the current accoun
 | Field | Type | Description |
 | --- | --- | --- |
 | country_code? | string | A two-letter country code for `pricing`, used when Fluxer can't locate the request |
+| distribution? | string | The [distribution](#distributions) for `pricing` (up to 64 characters) |
 
 ### Response
 

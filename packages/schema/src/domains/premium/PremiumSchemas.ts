@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BillingDocumentResponse} from '@fluxer/schema/src/domains/billing_documents/BillingDocumentSchemas';
+import {
+	DistributionQueryParam,
+	PriceDistributionResponse,
+} from '@fluxer/schema/src/domains/premium/DistributionSchemas';
 import {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
 import {createStringType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
@@ -41,6 +45,9 @@ export const PriceIdsResponse = z.object({
 	gift_currency: PremiumCurrency.nullable().describe(
 		'Currency for gift prices, null when no gift prices are configured',
 	),
+	distribution: PriceDistributionResponse.nullable().describe(
+		'Distribution whose channel price the amounts include, or null for the standard price',
+	),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
@@ -51,6 +58,7 @@ export const PriceIdsQueryRequest = z.object({
 		.describe(
 			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
 		),
+	distribution: DistributionQueryParam,
 });
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;

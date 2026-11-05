@@ -11,6 +11,13 @@ import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import {assertNoOpenPaymentDispute} from '@app/api/payment_disputes/PaymentDisputeReviews';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import type {DistributionPriceSync} from '@app/api/stripe/DistributionPriceSync';
+import {
+	findChannelPrice,
+	resolveDistributionRule,
+	resolveListPriceId,
+	subscriptionDistributionMetadata,
+} from '@app/api/stripe/DistributionPricing';
 import type {ProductInfo, RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
 import {
 	buildGiftTrialMetadata,
@@ -136,7 +143,29 @@ export class StripeSubscriptionService {
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
 		private storeEntitlementService: StoreEntitlementService | null = null,
+		private distributionPriceSync: DistributionPriceSync | null = null,
 	) {}
+
+	private distributionMetadataForPriceChange(
+		currentPriceId: string,
+		targetPriceId: string,
+	): Record<string, string> | null {
+		return findChannelPrice(currentPriceId) || findChannelPrice(targetPriceId)
+			? subscriptionDistributionMetadata(targetPriceId)
+			: null;
+	}
+
+	private async resolveCycleChangeTargetPriceId(currentPriceId: string, baseTargetPriceId: string): Promise<string> {
+		const current = findChannelPrice(currentPriceId);
+		if (!current || !this.distributionPriceSync) {
+			return baseTargetPriceId;
+		}
+		const rule = resolveDistributionRule(current.id, 'plutonium_subscription');
+		if (!rule) {
+			return baseTargetPriceId;
+		}
+		return (await this.distributionPriceSync.ensureChannelPrice(rule, baseTargetPriceId)).price_id;
+	}
 
 	async cancelSubscriptionAtPeriodEnd(userId: UserID, source: BillingCancelSource): Promise<void> {
 		if (!this.stripe) {
@@ -483,10 +512,11 @@ export class StripeSubscriptionService {
 				);
 				return;
 			}
-			const targetPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, item.price.currency);
-			if (!targetPriceId) {
+			const baseTargetPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, item.price.currency);
+			if (!baseTargetPriceId) {
 				throw new StripeInvalidProductConfigurationError();
 			}
+			const targetPriceId = await this.resolveCycleChangeTargetPriceId(item.price.id, baseTargetPriceId);
 			const scheduledChange = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (scheduledChange && this.subscriptionScheduleHasFutureTargetPrice(scheduledChange, targetPriceId)) {
 				const patch: Record<string, unknown> = {
@@ -526,8 +556,11 @@ export class StripeSubscriptionService {
 				return;
 			}
 			const clearCancellationParams = this.getClearCancellationUpdateParams(subscription) ?? {};
+			const distributionMetadata = this.distributionMetadataForPriceChange(item.price.id, targetPriceId);
+			const distributionMetadataPatch = distributionMetadata ? {metadata: distributionMetadata} : {};
 			const updatedSubscription = await this.stripe.subscriptions.update(user.stripeSubscriptionId, {
 				...clearCancellationParams,
+				...distributionMetadataPatch,
 				items: [
 					{
 						id: item.id,
@@ -628,7 +661,8 @@ export class StripeSubscriptionService {
 				return {status: 'ineligible', reason: 'unsupported_subscription'};
 			}
 			const currency = item.price.currency.toUpperCase() as Currency;
-			const targetPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+			const baseListPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+			const targetPriceId = resolveListPriceId(item.price.id, baseListPriceId);
 			if (!targetPriceId) {
 				return {status: 'ineligible', reason: 'no_list_price'};
 			}
@@ -793,6 +827,10 @@ export class StripeSubscriptionService {
 				first_invoice_credit_amount_minor: String(firstInvoiceCreditAmountMinor),
 				first_invoice_credit_source: 'current_period_payment',
 			};
+		}
+		const distributionMetadata = this.distributionMetadataForPriceChange(item.price.id, targetPriceId);
+		if (distributionMetadata) {
+			targetPhase.metadata = {...targetPhase.metadata, ...distributionMetadata};
 		}
 		await this.stripe.subscriptionSchedules.update(schedule.id, {
 			end_behavior: clearCancellation ? 'release' : schedule.end_behavior,
@@ -1212,7 +1250,8 @@ export class StripeSubscriptionService {
 			return null;
 		}
 		const currency = price.currency.toUpperCase() as Currency;
-		const listPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+		const baseListPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+		const listPriceId = resolveListPriceId(price.id, baseListPriceId);
 		const listAmountMinor = listPriceId ? await this.getListPriceAmountMinor(listPriceId) : null;
 		const isGrandfathered = listPriceId != null && listPriceId !== price.id;
 		return {

@@ -41,6 +41,13 @@ export interface PaymentRow {
 	eu_withdrawal_waiver_accepted: boolean;
 	eu_withdrawal_waiver_accepted_at: Date | null;
 	eu_withdrawal_waiver_text_version: string | null;
+	distribution?: string | null;
+	distribution_rate_bps?: number | null;
+	distribution_rule_version?: number | null;
+	distribution_base_amount_minor?: number | null;
+	distribution_purchase_ref?: string | null;
+	tax_amount_minor?: number | null;
+	tax_country?: string | null;
 	created_at: Date;
 	completed_at: Date | null;
 	version: number;
@@ -79,6 +86,13 @@ export const PAYMENT_COLUMNS = [
 	'eu_withdrawal_waiver_accepted',
 	'eu_withdrawal_waiver_accepted_at',
 	'eu_withdrawal_waiver_text_version',
+	'distribution',
+	'distribution_rate_bps',
+	'distribution_rule_version',
+	'distribution_base_amount_minor',
+	'distribution_purchase_ref',
+	'tax_amount_minor',
+	'tax_country',
 	'created_at',
 	'completed_at',
 	'version',

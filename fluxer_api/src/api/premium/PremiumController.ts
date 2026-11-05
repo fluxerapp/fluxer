@@ -32,9 +32,11 @@ export function PremiumController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const {country_code} = ctx.req.valid('query');
+			const {country_code, distribution} = ctx.req.valid('query');
 			const geoip = await lookupGeoip(ctx.req.raw);
-			const state = await ctx.get('stripeService').premiumState.getState(userId, geoip.countryCode ?? country_code);
+			const state = await ctx
+				.get('stripeService')
+				.premiumState.getState(userId, geoip.countryCode ?? country_code, distribution);
 			return ctx.json(state);
 		},
 	);

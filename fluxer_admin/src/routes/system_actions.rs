@@ -217,6 +217,10 @@ pub async fn instance_config_post(
             "update_billing" => {
                 super::billing_actions::build_billing_update(&form).map_err(FlashData::error)
             }
+            "update_distribution_pricing" => {
+                super::billing_actions::build_distribution_pricing_update(&form)
+                    .map_err(FlashData::error)
+            }
             "update_push_relay" => Ok(build_push_relay_update(&form)),
             "update_domain_migration" => {
                 experiments::build_domain_migration_update(&form).map_err(FlashData::error)

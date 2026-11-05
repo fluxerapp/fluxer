@@ -75,10 +75,14 @@ If the account already has an `active` or `trialing` subscription and `price_id`
 | eu_withdrawal_waiver_accepted? | boolean | Whether the user accepted the EU withdrawal waiver for digital content |
 | payment_method?<sup>2</sup> | string | Either `card`, `pix` or `upi` (default `card`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
+| distribution?<sup>3</sup> | string | [Distribution](/http-api/premium/#distributions) the app build was sold through, such as `ios_marketplace` (up to 64 characters) |
+| distribution_token? | string | Purchase token from that distribution, kept for reporting (up to 4096 characters) |
 
 <sup>1</sup> Fluxer uses this only when it can't find the request's country. With prices set in environment config, a price in a currency other than USD or EUR needs it.
 
 <sup>2</sup> With prices set in environment config, `pix` needs a BRL price and `upi` needs an INR price. Prices saved in the instance billing settings accept only `card`.
+
+<sup>3</sup> With an active rule for the distribution, checkout charges its channel price, and `price_id` can be the standard price or the channel price from [get price IDs](/http-api/premium/#get-price-ids). Any other value pays the standard price.
 
 ### Response
 
@@ -120,8 +124,12 @@ Creates a one-time premium gift checkout session and returns a [redirect URL](#r
 | eu_withdrawal_waiver_accepted? | boolean | Whether the user accepted the EU withdrawal waiver for digital content |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 | payment_method? | string | Ignored by this route (`card`, `pix` or `upi`) |
+| distribution?<sup>2</sup> | string | [Distribution](/http-api/premium/#distributions) the app build was sold through, such as `ios_marketplace` (up to 64 characters) |
+| distribution_token? | string | Purchase token from that distribution, kept for reporting (up to 4096 characters) |
 
 <sup>1</sup> Fluxer uses this only when it can't find the request's country. With prices set in environment config, a price in a currency other than USD or EUR needs it.
+
+<sup>2</sup> With an active rule for the distribution, checkout charges its channel price, and `price_id` can be the standard price or the channel price from [get price IDs](/http-api/premium/#get-price-ids). Any other value pays the standard price.
 
 ### Response
 

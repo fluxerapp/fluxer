@@ -8,6 +8,7 @@ import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/e
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
+import {distributionRefundMetadata} from '@app/api/stripe/DistributionStripeMetadata';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -335,6 +336,7 @@ export class StripePaymentFraudService {
 							rejection_reason: 'stripe_early_fraud_warning',
 							source: 'stripe_early_fraud_warning',
 							warning_id: warningId,
+							...(await distributionRefundMetadata(stripe, {charge: charge.id})),
 						},
 						reason: 'fraudulent',
 					},

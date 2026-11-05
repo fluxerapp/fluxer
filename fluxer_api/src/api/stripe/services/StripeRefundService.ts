@@ -11,6 +11,7 @@ import {
 	isGooglePlaySelfServiceRefundEnabled,
 } from '@app/api/store_billing/GooglePlayRefundTarget';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {distributionRefundMetadata} from '@app/api/stripe/DistributionStripeMetadata';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {getInvoicePaymentRef} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
@@ -881,6 +882,10 @@ export class StripeRefundService {
 							? {withdrawal_received_at: withdrawalReceivedAt.toISOString()}
 							: {refund_window_days: String(SELF_SERVE_REFUND_WINDOW_DAYS)}),
 						...(target.subscriptionId ? {subscription_id: target.subscriptionId} : {}),
+						...(await distributionRefundMetadata(stripe, {
+							payment_intent: target.paymentIntentId,
+							charge: target.chargeId,
+						})),
 					},
 				},
 				{idempotencyKey},

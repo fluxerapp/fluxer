@@ -2,6 +2,7 @@
 
 import {GIFT_CODE_DURATION_TYPE_DEFINITIONS} from '@fluxer/constants/src/GiftCodeConstants';
 import {CnpjSchema} from '@fluxer/schema/src/domains/premium/Cnpj';
+import {DistributionQueryParam, DistributionTokenParam} from '@fluxer/schema/src/domains/premium/DistributionSchemas';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {createNamedStringLiteralUnion, createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -34,6 +35,8 @@ export const CreateCheckoutSessionRequest = z.object({
 			'Whether the purchase is for a business. When true, Stripe Checkout requires a billing address for the invoice. When false or omitted, billing address collection is left to Stripe (auto).',
 		),
 	cnpj: CnpjSchema.optional(),
+	distribution: DistributionQueryParam,
+	distribution_token: DistributionTokenParam,
 });
 
 export type CreateCheckoutSessionRequest = z.infer<typeof CreateCheckoutSessionRequest>;

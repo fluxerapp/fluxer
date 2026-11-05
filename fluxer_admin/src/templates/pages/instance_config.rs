@@ -25,7 +25,8 @@ use crate::{
         },
         layout::admin_layout,
         pages::{
-            instance_billing::premium_billing_section, instance_branding::branding_section,
+            instance_billing::{distribution_pricing_section, premium_billing_section},
+            instance_branding::branding_section,
             instance_registration::registration_config_section,
         },
     },
@@ -234,6 +235,11 @@ pub fn instance_config_page(
                             ),
                     ))
                 }
+                (config_group(
+                    "Distribution pricing",
+                    "Channel prices for app builds sold through a store that takes a share of each sale.",
+                    distribution_pricing_section(base, config_form, &instance_config.distribution_pricing),
+                ))
                 (config_group(
                     "Runtime integrations",
                     "Credentials and provider choices that override environment variables at runtime.",

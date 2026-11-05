@@ -20,6 +20,7 @@ import {PaymentDisputeRepository} from '@app/api/payment_disputes/PaymentDispute
 import {PaymentDisputeReviewService} from '@app/api/payment_disputes/PaymentDisputeReviews';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
+import {tagChargeDistribution, tagInvoiceDistribution} from '@app/api/stripe/DistributionStripeMetadata';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {extractId} from '@app/api/stripe/StripeUtils';
@@ -223,6 +224,7 @@ export class StripeWebhookService {
 				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentSucceeded(event.id, inv);
 				await this.queueBillingEmail(inv.id ? {kind: 'invoice_paid', id: inv.id} : null);
+				if (event.type === 'invoice.paid' && this.stripe) await tagInvoiceDistribution(this.stripe, inv);
 				break;
 			}
 			case 'invoice.payment_failed': {
@@ -369,6 +371,7 @@ export class StripeWebhookService {
 			case 'charge.captured': {
 				const c = event.data.object as Stripe.Charge;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.charges.upsertFromStripe(c));
+				if (event.type === 'charge.succeeded' && this.stripe) await tagChargeDistribution(this.stripe, c);
 				break;
 			}
 			case 'refund.created':
