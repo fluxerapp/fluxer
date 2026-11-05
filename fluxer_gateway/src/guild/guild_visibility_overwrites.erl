@@ -312,8 +312,11 @@ dispatch_per_channel_changes(
             {Memoised, Memo1} = guild_visibility_memo:pairs(
                 ChannelIds, OldState, NewState, ChangeContext, Memo
             ),
-            {FinalMap, StateAfter} = process_channel_list(
+            {FinalMap0, StateAfter} = process_channel_list(
                 ChannelIds, Memoised, InitialViewableMap, NewState, ChangeContext
+            ),
+            FinalMap = reconcile_parent_categories(
+                ChannelIds, FinalMap0, StateAfter, ChangeContext
             ),
             {
                 guild_sessions:set_session_viewable_channels(SessionId, FinalMap, StateAfter),
@@ -467,3 +470,97 @@ gated_channel_create(ChId, Sid, SD, New, GId, VMap) ->
 -spec guild_id(guild_state()) -> integer() | undefined.
 guild_id(State) ->
     snowflake_id:parse_optional(maps:get(id, State, undefined)).
+
+-spec reconcile_parent_categories([channel_id()], map(), guild_state(), map()) -> map().
+reconcile_parent_categories(ChannelIds, ViewableMap, NewState, ChangeContext) ->
+    case application:get_env(fluxer_gateway, reconcile_parent_categories, true) of
+        true ->
+            do_reconcile_parent_categories(ChannelIds, ViewableMap, NewState, ChangeContext);
+        _ ->
+            ViewableMap
+    end.
+
+-spec do_reconcile_parent_categories([channel_id()], map(), guild_state(), map()) -> map().
+do_reconcile_parent_categories(ChannelIds, ViewableMap, NewState, ChangeContext) ->
+    #{
+        user_id := UserId,
+        pid := Pid,
+        old_member := OldMember,
+        new_member := NewMember,
+        old_state := OldState,
+        guild_id := GuildId
+    } = ChangeContext,
+    lists:foldl(
+        fun(CategoryId, MapAcc) ->
+            OwnOld = guild_permissions_check:can_view_channel(
+                UserId, CategoryId, OldMember, OldState
+            ),
+            OwnNew = guild_permissions_check:can_view_channel(
+                UserId, CategoryId, NewMember, NewState
+            ),
+            ShownOld =
+                OwnOld orelse
+                    any_child_visible(CategoryId, UserId, OldMember, OldState),
+            ShownNew =
+                OwnNew orelse
+                    any_child_visible(CategoryId, UserId, NewMember, NewState),
+            HandledByTransition = OwnOld andalso lists:member(CategoryId, ChannelIds),
+            case {ShownOld, ShownNew, HandledByTransition} of
+                {true, false, false} ->
+                    guild_visibility_roles:dispatch_channel_delete(
+                        CategoryId, Pid, OldState, GuildId
+                    ),
+                    maps:remove(CategoryId, MapAcc);
+                {_, false, _} ->
+                    maps:remove(CategoryId, MapAcc);
+                {_, true, _} ->
+                    MapAcc#{CategoryId => true}
+            end
+        end,
+        ViewableMap,
+        candidate_categories(ChannelIds, OldState, NewState)
+    ).
+
+-spec candidate_categories([channel_id()], guild_state(), guild_state()) -> [channel_id()].
+candidate_categories(ChannelIds, OldState, NewState) ->
+    lists:usort(
+        lists:append([
+            category_ids_for(ChannelId, OldState) ++ category_ids_for(ChannelId, NewState)
+         || ChannelId <- ChannelIds
+        ])
+    ).
+
+-spec category_ids_for(channel_id(), guild_state()) -> [channel_id()].
+category_ids_for(ChannelId, State) ->
+    case guild_permissions_check:find_channel_by_id(ChannelId, State) of
+        undefined ->
+            [];
+        Channel ->
+            case maps:get(<<"type">>, Channel, undefined) of
+                4 ->
+                    [ChannelId];
+                _ ->
+                    case
+                        snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined))
+                    of
+                        ParentId when is_integer(ParentId) -> [ParentId];
+                        _ -> []
+                    end
+            end
+    end.
+
+-spec any_child_visible(channel_id(), user_id(), term(), guild_state()) -> boolean().
+any_child_visible(CategoryId, UserId, Member, State) ->
+    Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
+    Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
+    lists:any(
+        fun(Channel) ->
+            snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)) =:=
+                CategoryId andalso
+                maps:get(<<"type">>, Channel, undefined) =/= 4 andalso
+                guild_permissions_check:can_view_channel(
+                    UserId, maps:get(<<"id">>, Channel), Member, State
+                )
+        end,
+        Channels
+    ).
