@@ -50,7 +50,7 @@ func (e *Env) voiceProbeTarget(s instance.VoiceServer) (string, string) {
 	case e.Instance.State.IsVoice():
 		return voice.HTTPBase(s.Endpoint), "127.0.0.1:443"
 	}
-	return voice.InstanceEdge(s.Endpoint, e.setting(settings.EdgeMode), e.value("FLUXER_HTTPS_PORT"), e.value("FLUXER_EDGE_BIND"))
+	return voice.InstanceEdge(s.Endpoint, e.setting(settings.EdgeMode), e.value("FLUXER_HTTPS_PORT"), e.value("FLUXER_EDGE_BIND"), e.value(settings.EdgeListenVar))
 }
 
 func (e *Env) voiceProject(s instance.VoiceServer) *engine.Project {

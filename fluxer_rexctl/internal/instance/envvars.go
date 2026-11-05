@@ -82,6 +82,7 @@ var envVars = []envVar{
 	{"FLUXER_HTTP_PORT", "edge", "docker-compose.proxy.yml and tunnel.compose.yml ignore it and use FLUXER_EDGE_BIND."},
 	{"FLUXER_HTTPS_PORT", "edge", "If people connect to this port directly, set FLUXER_PUBLIC_PORT to the same port. docker-compose.proxy.yml and tunnel.compose.yml ignore it and use FLUXER_EDGE_BIND."},
 	{"FLUXER_EDGE_BIND", "edge", ""},
+	{"FLUXER_EDGE_LISTEN_ADDRESS", "edge", "Write an IPv6 address without brackets. docker-compose.proxy.yml and tunnel.compose.yml ignore it and use FLUXER_EDGE_BIND."},
 	{"FLUXER_ADMIN_BASE_PATH", "edge", "The path the admin panel is served under, with a leading slash and no trailing slash, such as /panel. The edge serves the admin panel under this path, the admin service builds its links with it, and the default FLUXER_ADMIN_ENDPOINT follows it."},
 	{"FLUXER_EDGE_SITE_ADDRESS", "edge", "The site address the edge serves in its Caddyfile, including the scheme. When it's empty, Docker Compose uses FLUXER_CADDY_SITE_ADDRESS, or FLUXER_PUBLIC_SCHEME followed by `://` and FLUXER_DOMAIN. docker-compose.proxy.yml and tunnel.compose.yml set their own value."},
 	{"FLUXER_CADDY_SITE_ADDRESS", "edge", "The old name for FLUXER_EDGE_SITE_ADDRESS. Docker Compose uses it only without rexctl and when FLUXER_EDGE_SITE_ADDRESS is empty. rexctl takeover and rexctl upgrade move it to FLUXER_EDGE_SITE_ADDRESS."},

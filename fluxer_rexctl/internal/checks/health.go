@@ -3,6 +3,7 @@
 package checks
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"net"
@@ -10,6 +11,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 func init() {
@@ -22,6 +25,10 @@ func (e *Env) localAddr(key, def string) string {
 		v = def
 	}
 	return localHostPort(v)
+}
+
+func (e *Env) edgeAddr(key, def string) string {
+	return settings.EdgeDialAddr(e.value(settings.EdgeListenVar), cmp.Or(e.value(key), def))
 }
 
 func localHostPort(v string) string {
@@ -43,11 +50,11 @@ func (e *Env) healthURLs() []string {
 		return []string{"http://" + e.localAddr("FLUXER_HTTP_PORT", "127.0.0.1:80") + "/_health"}
 	}
 	if strings.EqualFold(e.value("FLUXER_PUBLIC_SCHEME"), "http") {
-		return []string{"http://" + e.localAddr("FLUXER_HTTP_PORT", "80") + "/_health"}
+		return []string{"http://" + e.edgeAddr("FLUXER_HTTP_PORT", "80") + "/_health"}
 	}
 	return []string{
-		"https://" + e.localAddr("FLUXER_HTTPS_PORT", "443") + "/_health",
-		"http://" + e.localAddr("FLUXER_HTTP_PORT", "80") + "/_health",
+		"https://" + e.edgeAddr("FLUXER_HTTPS_PORT", "443") + "/_health",
+		"http://" + e.edgeAddr("FLUXER_HTTP_PORT", "80") + "/_health",
 	}
 }
 

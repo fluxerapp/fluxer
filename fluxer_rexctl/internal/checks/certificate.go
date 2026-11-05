@@ -29,7 +29,7 @@ func runCertificate(ctx context.Context, e *Env) Result {
 	}
 	dialCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	conn, err := d.DialContext(dialCtx, "tcp", e.localAddr("FLUXER_HTTPS_PORT", "443"))
+	conn, err := d.DialContext(dialCtx, "tcp", e.edgeAddr("FLUXER_HTTPS_PORT", "443"))
 	if err != nil {
 		var opErr *net.OpError
 		if errors.As(err, &opErr) && opErr.Op == "dial" {
