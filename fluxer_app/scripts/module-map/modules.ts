@@ -45,11 +45,13 @@ export const getModuleFiles = (compilation: Compilation, module: CompilationModu
 };
 
 export const getModuleResource = (module: CompilationModule): string | undefined => {
-	if (!('resource' in module) || typeof module.resource !== 'string') {
-		return undefined;
+	if ('resource' in module && typeof module.resource === 'string') {
+		return module.resource;
 	}
 
-	return module.resource;
+	const {rootModule} = module as CompilationModule & {rootModule?: {resource?: string | null} | null};
+
+	return typeof rootModule?.resource === 'string' ? rootModule.resource : undefined;
 };
 
 export const isAssetFile = (file: string): boolean => ASSET_FILE_REGEX.test(file);
