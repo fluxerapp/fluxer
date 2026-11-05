@@ -19,7 +19,9 @@ unmaintained = "all"
 # Placeholder for future per-advisory ignores. Prefer fixing/upgrading the
 # crate before adding an entry here. Each entry should be a string ID, e.g.
 # "RUSTSEC-2024-0000", optionally as { id = "...", reason = "..." }.
-ignore = []
+ignore = [
+	{ id = "RUSTSEC-2026-0441", reason = "pin-utils is unmaintained, not vulnerable. Only wasmtimer uses it, through reqwest-retry, and wasmtimer 0.4.3 is the newest release" },
+]
 
 # ---------------------------------------------------------------------------
 # Licenses

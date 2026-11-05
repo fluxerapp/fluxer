@@ -62,6 +62,7 @@ export class UserSettings {
 	readonly sensitiveContentFriendDmFilter: SensitiveMediaFilterLevelValue;
 	readonly sensitiveContentNonFriendDmFilter: SensitiveMediaFilterLevelValue;
 	readonly sensitiveContentGuildFilter: SensitiveMediaFilterLevelValue;
+	readonly allowMatureContentOnIos: boolean;
 	readonly suppressUnprivilegedSelfMentions: boolean;
 	readonly suppressUnprivilegedSelfMentionBypassUserIds: Set<UserID>;
 	readonly staffDmAccessUserIds: Set<UserID>;
@@ -110,6 +111,7 @@ export class UserSettings {
 			SensitiveMediaFilterLevel.SHOW) as SensitiveMediaFilterLevelValue;
 		this.sensitiveContentGuildFilter = (row.sensitive_content_guild_filter ??
 			SensitiveMediaFilterLevel.SHOW) as SensitiveMediaFilterLevelValue;
+		this.allowMatureContentOnIos = row.allow_mature_content_on_ios ?? false;
 		this.suppressUnprivilegedSelfMentions = row.suppress_unprivileged_self_mentions ?? false;
 		this.suppressUnprivilegedSelfMentionBypassUserIds =
 			row.suppress_unprivileged_self_mentions_bypass_user_ids ?? new Set<UserID>();
@@ -158,6 +160,7 @@ export class UserSettings {
 			sensitive_content_friend_dm_filter: this.sensitiveContentFriendDmFilter,
 			sensitive_content_non_friend_dm_filter: this.sensitiveContentNonFriendDmFilter,
 			sensitive_content_guild_filter: this.sensitiveContentGuildFilter,
+			allow_mature_content_on_ios: this.allowMatureContentOnIos,
 			suppress_unprivileged_self_mentions: this.suppressUnprivilegedSelfMentions,
 			suppress_unprivileged_self_mentions_bypass_user_ids:
 				this.suppressUnprivilegedSelfMentionBypassUserIds.size > 0
@@ -214,7 +217,7 @@ export class UserSettings {
 			friend_source_flags: friendSourceFlags,
 			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
-			default_guilds_restricted: false,
+			default_guilds_restricted: !isAdult,
 			bot_default_guilds_restricted: false,
 			restricted_guilds: new Set(),
 			bot_restricted_guilds: new Set(),
@@ -236,6 +239,7 @@ export class UserSettings {
 			sensitive_content_friend_dm_filter: isAdult ? SensitiveMediaFilterLevel.SHOW : SensitiveMediaFilterLevel.BLUR,
 			sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
 			sensitive_content_guild_filter: SensitiveMediaFilterLevel.BLUR,
+			allow_mature_content_on_ios: false,
 			suppress_unprivileged_self_mentions: false,
 			suppress_unprivileged_self_mentions_bypass_user_ids: null,
 			staff_dm_access_user_ids: null,

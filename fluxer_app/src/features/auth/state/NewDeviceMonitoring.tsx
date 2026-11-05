@@ -210,14 +210,14 @@ class NewDeviceMonitoring {
 				if (deviceType === 'input') {
 					description = (
 						<Trans>
-							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio input device named{' '}
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio input device called{' '}
 							<strong data-flx="auth.new-device-monitoring.strong">{deviceName}</strong>. Do you want to switch to it?
 						</Trans>
 					);
 				} else if (deviceType === 'output') {
 					description = (
 						<Trans>
-							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio output device named{' '}
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio output device called{' '}
 							<strong data-flx="auth.new-device-monitoring.strong--2">{deviceName}</strong>. Do you want to switch to
 							it?
 						</Trans>
@@ -225,7 +225,7 @@ class NewDeviceMonitoring {
 				} else {
 					description = (
 						<Trans>
-							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio device named{' '}
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio device called{' '}
 							<strong data-flx="auth.new-device-monitoring.strong--3">{deviceName}</strong>. Do you want to switch to
 							it?
 						</Trans>

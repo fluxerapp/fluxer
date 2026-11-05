@@ -6,6 +6,7 @@ import {deleteRecoveryKit} from '@app/api/auth/AuthRecoveryKit';
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
 import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
@@ -43,8 +44,10 @@ import {
 } from '@app/api/user/UserHelpers';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
@@ -72,6 +75,7 @@ interface UserDeletionDependencies {
 	storeEntitlementService: StoreEntitlementService;
 	adminRepository: AdminRepository;
 	cacheService: ICacheService;
+	emailService: IEmailService;
 }
 
 async function releaseSsoIdentitiesOf(user: User, deletionReasonCode: number): Promise<void> {
@@ -214,6 +218,10 @@ export async function processUserDeletion(
 		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
 		return;
 	}
+	const completionNotice =
+		deletionReasonCode === DeletionReasons.USER_REQUESTED && user.email
+			? {email: user.email, locale: user.locale}
+			: null;
 	await removeNetworkBlocksOf(userId, deps);
 	await releaseSsoIdentitiesOf(user, deletionReasonCode);
 	await withdrawPendingRegistrationOf(user);
@@ -476,13 +484,14 @@ export async function processUserDeletion(
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
-		endOperatorPassesForDeletion(operatorPassRepository, userId).then(async (buyers) => {
+		endOperatorPassesForDeletion(operatorPassRepository, deps.cacheService, userId).then(async (buyers) => {
 			await operatorPassRepository.deleteOperatorPass(userId);
 			for (const buyer of buyers) {
 				await deps.operatorPassServices.holdingService.syncHolding(buyer);
 			}
 		}),
 		deps.operatorPassServices.wallService.forgetForDeletion(userId),
+		new BillingDocumentRepository().removeUserIndex(userId),
 	]);
 	await userRepository.deleteUserSecondaryIndices(userId);
 	const userForAnonymization = await userRepository.findUniqueAssert(userId);
@@ -494,6 +503,13 @@ export async function processUserDeletion(
 
 	await userCacheService.setUserPartialResponseFromUser(anonymisedUser);
 	await userRepository.completeDeletion(anonymisedUser);
+	if (completionNotice) {
+		await deps.emailService
+			.send('account_deletion_completed', completionNotice.email, {}, completionNotice.locale)
+			.catch((error: unknown) => {
+				Logger.error({userId, error}, 'Failed to send the account deletion confirmation email');
+			});
+	}
 	await emitActivity('account_deleted', userId.toString(), {user_id: userId.toString()}, null, userId.toString());
 	Logger.debug({userId, deletionReasonCode}, 'User account anonymization completed successfully');
 }

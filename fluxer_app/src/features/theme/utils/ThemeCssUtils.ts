@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {readBlobAsDataUrl as blobToDataUrl} from '@app/features/platform/utils/BlobDataUrl';
-
 import type {ThemeLibraryAsset, ThemeLibraryLocalFileReference} from '@app/features/theme/state/ThemeLibrary';
+import {REJECTED_CSS_URL} from '@app/features/theme/utils/ThemeCssUrlGate';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 
 export interface ThemeMetadata {
@@ -57,6 +57,7 @@ const ASSET_FUNCTION_PATTERN = /fluxer-theme-asset\(\s*(['"])(.*?)\1\s*\)/g;
 const ASSET_URL_PATTERN = /url\(\s*(['"]?)fluxer-theme-asset:\/\/([^'")\s]+)\1\s*\)/g;
 const LOCAL_FILE_FUNCTION_PATTERN = /fluxer-local-file\(\s*(['"])(.*?)\1\s*\)/g;
 const LOCAL_FILE_URL_PATTERN = /url\(\s*(['"]?)fluxer-local-file:\/\/([^'")]+)\1\s*\)/g;
+const LOCAL_FONT_DATA_URL_PREFIX = 'data:font/';
 
 function normalizeMetadataKey(key: string): keyof ThemeMetadata | null {
 	const normalized = key
@@ -250,7 +251,7 @@ async function resolveAssetUrls(
 		const asset = assetMap.get(reference) ?? assetMap.get(reference.toLowerCase());
 		if (!asset?.data) {
 			missing.add(reference);
-			return cssUrl(`about:blank#missing-theme-asset-${encodeURIComponent(reference)}`);
+			return cssUrl(REJECTED_CSS_URL);
 		}
 		const cached = urlCache.get(asset.id);
 		if (cached) {
@@ -272,6 +273,7 @@ async function resolveLocalFileUrls(
 	localFiles: ReadonlyArray<ThemeLibraryLocalFileReference>,
 ): Promise<{
 	css: string;
+	objectUrls: Array<string>;
 	missing: Array<string>;
 }> {
 	const referenceMap = getLocalFileReferenceMap(localFiles);
@@ -289,12 +291,18 @@ async function resolveLocalFileUrls(
 	};
 	css.replace(LOCAL_FILE_FUNCTION_PATTERN, collectReference).replace(LOCAL_FILE_URL_PATTERN, collectReference);
 	const electronApi = getElectronAPI();
-	const dataByPath = new Map<string, string>();
+	const urlByPath = new Map<string, string>();
+	const objectUrls: Array<string> = [];
 	if (electronApi?.readThemeLocalFiles && requestedReferences.size > 0) {
 		const files = await electronApi.readThemeLocalFiles([...requestedReferences]);
 		for (const file of files) {
-			if (file.dataUrl) {
-				dataByPath.set(file.path, file.dataUrl);
+			if (file.dataUrl?.startsWith(LOCAL_FONT_DATA_URL_PREFIX)) {
+				urlByPath.set(file.path, file.dataUrl);
+			} else if (file.dataUrl) {
+				const blob = await (await fetch(file.dataUrl)).blob();
+				const objectUrl = URL.createObjectURL(blob);
+				objectUrls.push(objectUrl);
+				urlByPath.set(file.path, objectUrl);
 			} else {
 				missing.add(file.path);
 			}
@@ -307,19 +315,13 @@ async function resolveLocalFileUrls(
 	const resolveLocalFile = (rawReference: string): string => {
 		const reference = decodeReferenceValue(rawReference);
 		const path = referenceMap.get(reference) ?? referenceMap.get(reference.toLowerCase());
-		if (!path) {
-			return cssUrl(`about:blank#missing-theme-local-file-${encodeURIComponent(reference)}`);
-		}
-		const dataUrl = dataByPath.get(path);
-		if (!dataUrl) {
-			return cssUrl(`about:blank#missing-theme-local-file-${encodeURIComponent(path)}`);
-		}
-		return cssUrl(dataUrl);
+		const url = path ? urlByPath.get(path) : undefined;
+		return cssUrl(url ?? REJECTED_CSS_URL);
 	};
 	const nextCss = css
 		.replace(LOCAL_FILE_FUNCTION_PATTERN, (_match, _quote: string, reference: string) => resolveLocalFile(reference))
 		.replace(LOCAL_FILE_URL_PATTERN, (_match, _quote: string, reference: string) => resolveLocalFile(reference));
-	return {css: nextCss, missing: [...missing]};
+	return {css: nextCss, objectUrls, missing: [...missing]};
 }
 
 export async function resolveThemeCssReferences(
@@ -331,7 +333,7 @@ export async function resolveThemeCssReferences(
 	const localFileResolution = await resolveLocalFileUrls(assetResolution.css, localFiles);
 	return {
 		css: localFileResolution.css,
-		objectUrls: assetResolution.objectUrls,
+		objectUrls: [...assetResolution.objectUrls, ...localFileResolution.objectUrls],
 		missingAssetReferences: assetResolution.missing,
 		missingLocalFileReferences: localFileResolution.missing,
 	};

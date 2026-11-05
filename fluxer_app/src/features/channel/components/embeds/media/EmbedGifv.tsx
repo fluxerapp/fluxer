@@ -146,6 +146,7 @@ interface ThumbHashCurtainState {
 	curtainLifted: boolean;
 	fastFade: boolean;
 	posterRevealed: boolean;
+	onPosterError: () => void;
 }
 
 function useThumbHashCurtain(source: string, enabled: boolean): ThumbHashCurtainState {
@@ -153,18 +154,28 @@ function useThumbHashCurtain(source: string, enabled: boolean): ThumbHashCurtain
 	const [cachedAtMount] = useState(() => ImageCacheUtils.hasImage(source));
 	const [curtainLifted, setCurtainLifted] = useState(false);
 	const [fastFade, setFastFade] = useState(false);
+	const [failedSource, setFailedSource] = useState<string | null>(null);
+	const onPosterError = useAttachmentRefreshOnError(source);
 	useLayoutEffect(() => {
 		if (!enabled || source.length === 0) return;
-		return ImageCacheUtils.loadImage(source, () => {
-			setFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
-			setCurtainLifted(true);
-		});
-	}, [enabled, mountedAt, source]);
+		return ImageCacheUtils.loadImage(
+			source,
+			() => {
+				setFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
+				setCurtainLifted(true);
+			},
+			() => {
+				onPosterError();
+				setFailedSource(source);
+			},
+		);
+	}, [enabled, mountedAt, onPosterError, source]);
 	return {
 		shouldMount: !cachedAtMount,
 		curtainLifted,
 		fastFade,
-		posterRevealed: source.length === 0 || cachedAtMount || curtainLifted,
+		posterRevealed: source.length === 0 || cachedAtMount || curtainLifted || failedSource === source,
+		onPosterError,
 	};
 }
 
@@ -767,6 +778,7 @@ export const EmbedGifv: FC<
 							height={dimensions.height}
 							loading="eager"
 							tabIndex={-1}
+							onError={thumbHashCurtain.onPosterError}
 							data-embed-media="gifv-still"
 							data-flx="channel.embeds.media.embed-gifv.still-element"
 						/>

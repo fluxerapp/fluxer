@@ -118,6 +118,36 @@ export const BadgeAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'PUT',
+		route: '/admin/badges/built-in/:kind/hidden',
+		async prepare() {
+			return {
+				request: {path: '/admin/badges/built-in/guild_discoverable/hidden'},
+				expected: {
+					action: 'hide_built_in_badge',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {kind: 'guild_discoverable'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/badges/built-in/:kind/hidden',
+		async prepare() {
+			return {
+				request: {path: '/admin/badges/built-in/guild_discoverable/hidden'},
+				expected: {
+					action: 'show_built_in_badge',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {kind: 'guild_discoverable'},
+				},
+			};
+		},
+	},
+	{
 		method: 'PATCH',
 		route: '/admin/badges/:badge_id',
 		async prepare({harness, admin}) {

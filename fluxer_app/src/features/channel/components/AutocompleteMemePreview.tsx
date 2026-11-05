@@ -22,7 +22,7 @@ const AutocompleteMemeVideo = ({src}: {src: string}) => {
 			loop
 			playsInline
 			preload="auto"
-			src={src}
+			src={src || undefined}
 			data-flx="channel.autocomplete-meme-preview.meme-video"
 		/>
 	);
@@ -33,7 +33,7 @@ export const AutocompleteMemePreview = observer(({meme}: {meme: FavoriteMeme}) =
 	const isVideoMeme = contentType.startsWith('video/');
 	const isAnimatedImageMeme = !isVideoMeme && !isAudioMeme && contentType.includes('gif');
 	const motionAllowed = useShouldAnimate({kind: 'gif', isAnimated: isVideoMeme || isAnimatedImageMeme});
-	const memeUrl = AttachmentUrlRefresher.fresh(meme.url, {refreshUnsigned: true});
+	const memeUrl = AttachmentUrlRefresher.freshWhenReady(meme.url, {refreshUnsigned: true}) ?? '';
 	if (isAudioMeme) {
 		return (
 			<div className={styles.audioIconWrapper} data-flx="channel.autocomplete-meme-preview.audio-icon-wrapper">
@@ -53,7 +53,7 @@ export const AutocompleteMemePreview = observer(({meme}: {meme: FavoriteMeme}) =
 		<img
 			draggable={false}
 			className={styles.memeIcon}
-			src={needsStillFrame ? buildStaticGifPreviewURL(memeUrl) : memeUrl}
+			src={(needsStillFrame && memeUrl ? buildStaticGifPreviewURL(memeUrl) : memeUrl) || undefined}
 			alt={meme.name}
 			aria-hidden={true}
 			data-flx="channel.autocomplete-meme-preview.meme-icon"

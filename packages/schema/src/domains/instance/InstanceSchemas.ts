@@ -7,6 +7,7 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {
+	BUILT_IN_GUILD_BADGE_KINDS,
 	CUSTOM_BADGE_LOOKUP_IDS_MAX,
 	CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
 	CUSTOM_BADGE_PAGE_LIMIT_MAX,
@@ -80,10 +81,40 @@ export const InstanceBrandingSchema = z
 			.string()
 			.nullable()
 			.describe('Optional image URL drawn behind the sign-in card on a self-hosted instance'),
+		premium_page_color: z
+			.string()
+			.nullable()
+			.describe('Optional hex color a self-hosted instance uses to recolor its premium page'),
+		premium_showcase_expressions_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Your emojis, everywhere" card on its premium page',
+			),
+		premium_showcase_profile_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "A profile that stands out" card on its premium page',
+			),
+		premium_showcase_stream_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Stream in 4K at 60 FPS" card on its premium page',
+			),
+		premium_showcase_upload_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the card about file size limits on its premium page',
+			),
 		custom_css: z
 			.string()
 			.nullable()
-			.describe('Optional stylesheet a self-hosted instance applies to every page of its web and desktop app'),
+			.describe(
+				'Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages',
+			),
 		upload_limit_message: z
 			.string()
 			.nullable()
@@ -172,6 +203,10 @@ export const InstanceEndpointsSchema = z
 		api: z.string().describe('Base URL for authenticated API requests'),
 		api_client: z.string().describe('Base URL for client API requests'),
 		api_public: z.string().describe('Base URL for public API requests'),
+		api_transport: z
+			.string()
+			.optional()
+			.describe('Base URL that official desktop clients send API requests to instead of api_client'),
 		gateway: z.string().describe('WebSocket URL for the gateway'),
 		media: z.string().describe('Base URL for the media proxy'),
 		upload_relay: z.string().optional().describe('Base URL for proxied attachment and preview uploads'),
@@ -463,6 +498,15 @@ export const InstanceBuiltInGuildBadgeImagesSchema = z.object({
 
 export type InstanceBuiltInGuildBadgeImages = z.infer<typeof InstanceBuiltInGuildBadgeImagesSchema>;
 
+export const InstanceHiddenBuiltInGuildBadgesSchema = z
+	.array(z.enum(BUILT_IN_GUILD_BADGE_KINDS))
+	.max(BUILT_IN_GUILD_BADGE_KINDS.length)
+	.describe(
+		'Built-in community badges this instance does not show. The community keeps the feature, such as being listed in discovery',
+	);
+
+export type InstanceHiddenBuiltInGuildBadges = z.infer<typeof InstanceHiddenBuiltInGuildBadgesSchema>;
+
 export const WellKnownFluxerResponse = z.object({
 	codename: z.string().optional().describe('Protocol generation spoken by this instance'),
 	api_code_version: z.number().int().describe('Version of the API server code'),
@@ -477,7 +521,7 @@ export const WellKnownFluxerResponse = z.object({
 	limits: LimitConfigResponse.describe('Limit configuration with rules and trait definitions'),
 	push: InstancePushSchema,
 	app_public: InstanceAppPublicSchema.describe('Public application configuration for client-side features'),
-	age_policy: InstanceAgePolicySchema.optional().describe('Regional age policy for this instance'),
+	age_policy: InstanceAgePolicySchema,
 	notice: InstanceNoticeSchema.nullable()
 		.optional()
 		.describe('Notice from the instance administrator, or null when there is none'),
@@ -499,11 +543,21 @@ export const WellKnownFluxerResponse = z.object({
 	built_in_guild_badge_images: InstanceBuiltInGuildBadgeImagesSchema.optional().describe(
 		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
 	),
+	hidden_built_in_guild_badges: InstanceHiddenBuiltInGuildBadgesSchema.optional(),
+	hidden_role_ids: z
+		.array(SnowflakeStringType)
+		.max(16)
+		.optional()
+		.describe(
+			"IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
+		),
 	voice_origins: z
 		.array(z.string())
 		.max(1000)
 		.optional()
-		.describe('Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies'),
+		.describe(
+			'Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com',
+		),
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;

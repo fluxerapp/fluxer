@@ -34,6 +34,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
+import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useState} from 'react';
 
@@ -49,8 +50,10 @@ interface PerkOverlay {
 	backdrop?: string;
 }
 
+type PerkCardId = 'expressions' | 'profile' | 'stream' | 'upload';
+
 interface PerkCard {
-	id: string;
+	id: PerkCardId;
 	icon: PlutoniumPageIconName;
 	title: MessageDescriptor;
 	body: MessageDescriptor;
@@ -62,6 +65,26 @@ interface PerkCard {
 }
 
 const SHOT_WIDTHS = [640, 1120, 1600] as const;
+const CUSTOM_SHOT_SIZES = [640, 1024, 1536] as const;
+
+const CUSTOM_SHOT_FIELDS = {
+	expressions: 'premium_showcase_expressions_url',
+	profile: 'premium_showcase_profile_url',
+	stream: 'premium_showcase_stream_url',
+	upload: 'premium_showcase_upload_url',
+} as const satisfies Record<PerkCardId, string>;
+
+type PerkArtSource = {kind: 'flagship'} | {kind: 'custom'; url: string};
+
+function perkArtSource(card: PerkCard): PerkArtSource | null {
+	if (!RuntimeConfig.isSelfHosted()) return {kind: 'flagship'};
+	const url = RuntimeConfig.appPublic.branding[CUSTOM_SHOT_FIELDS[card.id]];
+	return url ? {kind: 'custom', url} : null;
+}
+
+function customSrcSet(url: string): string {
+	return CUSTOM_SHOT_SIZES.map((size) => `${url}?size=${size} ${size}w`).join(', ');
+}
 
 const EXPRESSIONS_OVERLAYS: ReadonlyArray<PerkOverlay> = [
 	{src: EMOJI_CATVIBE, left: 65.22, top: 11.241, width: 4.372, height: 5.128, backdrop: CHAT_SURFACE},
@@ -241,7 +264,7 @@ function ProfileOverlay() {
 	);
 }
 
-function PerkArt({card, eager}: {card: PerkCard; eager: boolean}) {
+function PerkArt({card, source, eager}: {card: PerkCard; source: PerkArtSource; eager: boolean}) {
 	const [status, setStatus] = useState<'pending' | 'loaded' | 'failed'>('pending');
 	const imageRef = useCallback((image: HTMLImageElement | null) => {
 		if (image?.complete) setStatus(image.naturalWidth > 0 ? 'loaded' : 'failed');
@@ -250,6 +273,7 @@ function PerkArt({card, eager}: {card: PerkCard; eager: boolean}) {
 		<div
 			className={clsx(
 				styles.perkArt,
+				source.kind === 'custom' && styles.perkArtCustom,
 				status === 'pending' && styles.perkArtPending,
 				status === 'failed' && styles.perkArtFailed,
 			)}
@@ -264,6 +288,48 @@ function PerkArt({card, eager}: {card: PerkCard; eager: boolean}) {
 					/>
 				</div>
 			)}
+			{source.kind === 'custom' ? (
+				<img
+					ref={imageRef}
+					draggable={false}
+					className={styles.perkArtImage}
+					src={`${source.url}?size=${CUSTOM_SHOT_SIZES[1]}`}
+					srcSet={customSrcSet(source.url)}
+					sizes={PERK_SHOT_SIZES}
+					loading={eager ? 'eager' : 'lazy'}
+					fetchPriority={eager ? 'high' : undefined}
+					decoding="async"
+					alt=""
+					onLoad={() => setStatus('loaded')}
+					onError={() => setStatus('failed')}
+					data-flx="premium.plutonium-page.perk-art.custom-image"
+				/>
+			) : (
+				<FlagshipPerkArt
+					card={card}
+					eager={eager}
+					imageRef={imageRef}
+					onStatus={setStatus}
+					data-flx="premium.plutonium-page.plutonium-page-showcase.perk-art.flagship-perk-art"
+				/>
+			)}
+		</div>
+	);
+}
+
+function FlagshipPerkArt({
+	card,
+	eager,
+	imageRef,
+	onStatus,
+}: {
+	card: PerkCard;
+	eager: boolean;
+	imageRef: (image: HTMLImageElement | null) => void;
+	onStatus: (status: 'loaded' | 'failed') => void;
+}) {
+	return (
+		<>
 			<picture data-flx="premium.plutonium-page.plutonium-page-showcase.perk-art.picture">
 				<source
 					type="image/avif"
@@ -288,8 +354,8 @@ function PerkArt({card, eager}: {card: PerkCard; eager: boolean}) {
 					fetchPriority={eager ? 'high' : undefined}
 					decoding="async"
 					alt=""
-					onLoad={() => setStatus('loaded')}
-					onError={() => setStatus('failed')}
+					onLoad={() => onStatus('loaded')}
+					onError={() => onStatus('failed')}
 					data-flx="premium.plutonium-page.perk-art.image"
 				/>
 			</picture>
@@ -318,7 +384,7 @@ function PerkArt({card, eager}: {card: PerkCard; eager: boolean}) {
 			{card.profileOverlay && (
 				<ProfileOverlay data-flx="premium.plutonium-page.plutonium-page-showcase.perk-art.profile-overlay" />
 			)}
-		</div>
+		</>
 	);
 }
 
@@ -329,18 +395,21 @@ interface PlutoniumPageShowcaseProps {
 	onFootnoteClick: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-export function PlutoniumPageShowcase({
+export const PlutoniumPageShowcase = observer(function PlutoniumPageShowcase({
 	uploadSize,
 	freeUploadSize,
 	footnoteId,
 	onFootnoteClick,
 }: PlutoniumPageShowcaseProps) {
 	const {i18n} = useLingui();
-	const showArt = !RuntimeConfig.isSelfHosted();
+	let artIndex = 0;
 	return (
 		<div className={styles.featureRows} data-flx="premium.plutonium-page.feature-rows">
-			{PERK_CARDS.map((card, index) => {
-				const flipped = index % 2 === 1;
+			{PERK_CARDS.map((card) => {
+				const source = perkArtSource(card);
+				const artPosition = source ? artIndex++ : -1;
+				const eager = artPosition === 0;
+				const flipped = artPosition % 2 === 1;
 				let body: React.ReactNode;
 				if (card.id === 'profile' && RuntimeConfig.usesUniqueUsernames) {
 					body = i18n._(SHOWCASE_PROFILE_BODY_WITHOUT_TAG_DESCRIPTOR);
@@ -357,18 +426,20 @@ export function PlutoniumPageShowcase({
 				return (
 					<article
 						key={card.id}
-						className={clsx(styles.perkRow, showArt ? flipped && styles.perkRowFlipped : styles.perkRowTextOnly)}
+						className={clsx(styles.perkRow, source ? flipped && styles.perkRowFlipped : styles.perkRowTextOnly)}
 						data-flx={`premium.plutonium-page.perk-row.${card.id}`}
 					>
-						{showArt && (
+						{source && (
 							<div className={styles.perkArtColumn} data-flx="premium.plutonium-page.perk-row.art-column">
 								<div
 									className={clsx(styles.tilt, flipped && styles.tiltReverse)}
 									data-flx="premium.plutonium-page.perk-row.tilt"
 								>
 									<PerkArt
+										key={source.kind === 'custom' ? source.url : 'flagship'}
 										card={card}
-										eager={index === 0}
+										source={source}
+										eager={eager}
 										data-flx="premium.plutonium-page.plutonium-page-showcase.perk-art"
 									/>
 								</div>
@@ -387,7 +458,7 @@ export function PlutoniumPageShowcase({
 			})}
 		</div>
 	);
-}
+});
 
 function renderProfileBody(
 	text: string,

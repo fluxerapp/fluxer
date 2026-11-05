@@ -208,9 +208,10 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
         on_off(billing.effective_terms_consent_required)
     );
     let billing_emails = format!(
-        "Sends receipts, refund notices and failed payment notices from this instance. Turn off Stripe's own \
-         customer emails for successful payments, refunds and failed card payments when you turn this on, or buyers \
-         get both. Currently {}.",
+        "Sends emails about payments, refunds and failed payments from this instance. This instance issues no \
+         invoices or receipt documents, so buyers get those from your own Stripe receipt settings. Stripe can also \
+         email buyers about the same events, so check your Stripe customer email settings if you don't want buyers \
+         to get both. The customer portal uses your Stripe Dashboard settings. Currently {}.",
         on_off(billing.effective_billing_emails)
     );
     html! {
@@ -379,7 +380,8 @@ pub(crate) fn premium_billing_section(
                         }
                         p class="text-xs text-neutral-500" {
                             "Clients show this name wherever the premium tier is mentioned. Clear it to use the default. \
-                             The info URL is an optional page that describes the tier."
+                             The info URL is an optional page about the tier. The premium page and the premium badge on \
+                             profiles link to it. The comparison chart on the premium page comes from your limit settings."
                         }
                         @if matches!(premium_mode, PremiumMode::Everyone) {
                             p class="text-sm text-amber-700" {

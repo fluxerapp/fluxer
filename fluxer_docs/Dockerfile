@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		python3 && \
 	rm -rf /var/lib/apt/lists/*
 
-ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.app
+ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.com
 ENV FLUXER_DOCS_SEARCH_INDEXING=true
 
 COPY . .
@@ -46,8 +46,8 @@ LABEL org.opencontainers.image.title="fluxer-docs"
 LABEL org.opencontainers.image.description="Fluxer API and protocol reference"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 LABEL org.opencontainers.image.vendor="Fluxer"
-LABEL org.opencontainers.image.url="https://fluxer.app"
-LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.url="https://fluxer.com"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.com"
 LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
 LABEL org.opencontainers.image.revision="${SOURCE_SHA}"
@@ -64,7 +64,7 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS="--enable-source-maps"
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV BUILD_VERSION=${BUILD_VERSION}
-ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.app
+ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.com
 ENV FLUXER_DOCS_SEARCH_INDEXING=true
 
 USER 65532:65532

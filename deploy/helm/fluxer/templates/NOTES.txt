@@ -69,4 +69,4 @@ To move to the latest v1 images, pull the repository and upgrade with your value
 
 Leave out --reuse-values, which keeps the defaults of the old chart version.
 
-Documentation: https://docs.fluxer.app/operator/kubernetes/
+Documentation: https://docs.fluxer.com/operator/kubernetes/

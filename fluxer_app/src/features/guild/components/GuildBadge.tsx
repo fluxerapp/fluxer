@@ -204,9 +204,13 @@ const BuiltInGuildBadge = observer(function BuiltInGuildBadge({
 	onLightSurface,
 }: BuiltInGuildBadgeProps) {
 	const {i18n} = useLingui();
-	const isVerified = hasFeature(features, GuildFeatures.VERIFIED);
-	const isPartnered = hasFeature(features, GuildFeatures.PARTNERED);
-	const isDiscoverable = hasFeature(features, GuildFeatures.DISCOVERABLE) && RuntimeConfig.discoveryAvailable;
+	const hidden = RuntimeConfig.hiddenBuiltInGuildBadges;
+	const isVerified = hasFeature(features, GuildFeatures.VERIFIED) && !hidden.includes('verified');
+	const isPartnered = hasFeature(features, GuildFeatures.PARTNERED) && !hidden.includes('partnered');
+	const isDiscoverable =
+		hasFeature(features, GuildFeatures.DISCOVERABLE) &&
+		RuntimeConfig.discoveryAvailable &&
+		!hidden.includes('discoverable');
 	if (!isVerified && !isPartnered && !isDiscoverable) {
 		return null;
 	}

@@ -142,7 +142,8 @@ async fn reports_list(
     let search_query = query.q.as_deref().and_then(clean_string);
     let (sort_by, sort_order) = decode_sort(query.sort.as_deref());
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let status = query.status.as_deref().and_then(|s| s.parse::<i32>().ok());
+    let status_filter = status_filter(&query);
+    let status = status_filter.parse::<i32>().ok();
     let report_type = query
         .report_type
         .as_deref()
@@ -178,7 +179,7 @@ async fn reports_list(
         reports.as_ref(),
         &templates::pages::reports_list::ReportFilters {
             query: search_query.as_deref(),
-            status: query.status.as_deref(),
+            status: Some(status_filter),
             report_type: query.report_type.as_deref(),
             category: query.category.as_deref(),
             reason: reason.as_deref(),
@@ -197,6 +198,40 @@ async fn reports_list(
     );
     Html(markup.into_string()).into_response()
 }
+
+fn status_filter(query: &ReportsQuery) -> &str {
+    match query.status.as_deref().map(str::trim) {
+        Some("") | Some(STATUS_ALL) => STATUS_ALL,
+        Some(status) => status,
+        None if has_entity_filter(query) => STATUS_ALL,
+        None => STATUS_PENDING,
+    }
+}
+
+fn has_entity_filter(query: &ReportsQuery) -> bool {
+    [
+        &query.q,
+        &query.report_type,
+        &query.category,
+        &query.reason,
+        &query.reporter_id,
+        &query.reported_user_id,
+        &query.reported_webhook_id,
+        &query.reported_guild_id,
+        &query.reported_channel_id,
+        &query.guild_context_id,
+        &query.resolved_by_admin_id,
+    ]
+    .into_iter()
+    .any(|value| {
+        value
+            .as_deref()
+            .is_some_and(|value| !value.trim().is_empty())
+    })
+}
+
+const STATUS_ALL: &str = "all";
+const STATUS_PENDING: &str = "0";
 
 fn reports_error_page(config: &AdminConfig, auth: &AuthContext, message: &str) -> Response {
     let markup = templates::layout::admin_layout(
@@ -364,8 +399,7 @@ async fn report_resolve(
     let duplicate_of = form
         .duplicate_of
         .as_deref()
-        .map(str::trim)
-        .filter(|value| is_snowflake(value))
+        .and_then(duplicate_report_id)
         .map(str::to_owned);
     let missing = match resolution {
         UpdateReportRequestResolution::Actioned if outcome.is_none() => Some(OUTCOME_REQUIRED),
@@ -395,7 +429,19 @@ async fn report_resolve(
         Ok(_) => FlashData::success(format!("Report resolved: {label}")),
         Err(error) => {
             tracing::warn!(%error, report_id, "admin API request failed: resolve report");
-            FlashData::error("Failed to resolve report")
+            match (&error, duplicate_of.as_deref()) {
+                (
+                    ApiError::Http {
+                        status: 404,
+                        message,
+                        ..
+                    },
+                    Some(target),
+                ) if message.contains("UNKNOWN_REPORT") => FlashData::error(format!(
+                    "No report has the ID {target}. Copy the Report ID from that report's page, not a message, user or decision ID."
+                )),
+                _ => FlashData::error(error.refusal_message("Failed to resolve report")),
+            }
         }
     };
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
@@ -430,9 +476,18 @@ async fn report_note(
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }
 
+fn duplicate_report_id(value: &str) -> Option<&str> {
+    let value = value.trim();
+    let candidate = match value.split_once("/reports/") {
+        Some((_, rest)) => rest.split(['/', '?', '#']).next().unwrap_or(""),
+        None => value.trim_start_matches('#'),
+    };
+    is_snowflake(candidate).then_some(candidate)
+}
+
 const RESOLUTION_REQUIRED: &str = "Choose a resolution";
 const OUTCOME_REQUIRED: &str = "Choose what happened to the reported content or account";
-const DUPLICATE_OF_REQUIRED: &str = "Enter the ID of the report this one repeats";
+const DUPLICATE_OF_REQUIRED: &str = "Enter the ID or link of the report this one repeats";
 
 async fn report_legal_hold(
     State(state): State<AppState>,

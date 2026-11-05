@@ -21,7 +21,7 @@ export interface GuildSubscriptionSyncRequest {
 export class GatewayGuildSubscriptionSynchronizer {
 	private pendingGuildId: string | null = null;
 	private readonly syncedSessionByGuild = new Map<string, string | null>();
-	private readonly completedSessionByGuild = new Map<string, string | null>();
+	private readonly completedSessionsByGuild = new Map<string, Set<string>>();
 	private initialGuildIdAtIdentify: string | null = null;
 
 	constructor(private readonly host: GatewayGuildSubscriptionHost) {}
@@ -65,7 +65,7 @@ export class GatewayGuildSubscriptionSynchronizer {
 		if (!sessionId) {
 			return false;
 		}
-		return this.completedSessionByGuild.get(guildId) === sessionId;
+		return this.completedSessionsByGuild.get(guildId)?.has(sessionId) ?? false;
 	}
 
 	markCompleted(guildId: string): void {
@@ -77,7 +77,7 @@ export class GatewayGuildSubscriptionSynchronizer {
 			return;
 		}
 		this.syncedSessionByGuild.set(guildId, sessionId);
-		this.completedSessionByGuild.set(guildId, sessionId);
+		this.recordCompleted(guildId, sessionId);
 		if (this.pendingGuildId === guildId) {
 			this.pendingGuildId = null;
 		}
@@ -105,12 +105,20 @@ export class GatewayGuildSubscriptionSynchronizer {
 			return;
 		}
 		this.syncedSessionByGuild.set(guildId, sessionId);
-		this.completedSessionByGuild.set(guildId, sessionId);
+		this.recordCompleted(guildId, sessionId);
+	}
+
+	private recordCompleted(guildId: string, sessionId: string): void {
+		let sessions = this.completedSessionsByGuild.get(guildId);
+		if (!sessions) {
+			sessions = new Set();
+			this.completedSessionsByGuild.set(guildId, sessions);
+		}
+		sessions.add(sessionId);
 	}
 
 	resetSessionTracking(): void {
 		this.syncedSessionByGuild.clear();
-		this.completedSessionByGuild.clear();
 	}
 
 	resetConnectionTracking(): void {

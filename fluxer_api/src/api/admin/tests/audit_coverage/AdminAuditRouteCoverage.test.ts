@@ -3,12 +3,14 @@
 import {registerAdminControllers} from '@app/api/admin/controllers/index';
 import {AdminApiKeyAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AdminApiKeyAdminAuditCases';
 import {adminAuditCaseShape} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
+import {AdminSsoAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AdminSsoAdminAuditCases';
 import {ApplicationAdminAuditCases} from '@app/api/admin/tests/audit_coverage/ApplicationAdminAuditCases';
 import {ArchiveAdminAuditCases} from '@app/api/admin/tests/audit_coverage/ArchiveAdminAuditCases';
 import {AssetAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AssetAdminAuditCases';
 import {AuditLogAdminAuditCases} from '@app/api/admin/tests/audit_coverage/AuditLogAdminAuditCases';
 import {BadgeAdminAuditCases} from '@app/api/admin/tests/audit_coverage/BadgeAdminAuditCases';
 import {BanAdminAuditCases} from '@app/api/admin/tests/audit_coverage/BanAdminAuditCases';
+import {BillingDocumentAdminAuditCases} from '@app/api/admin/tests/audit_coverage/BillingDocumentAdminAuditCases';
 import {BulkAdminAuditCases} from '@app/api/admin/tests/audit_coverage/BulkAdminAuditCases';
 import {CodesAdminAuditCases} from '@app/api/admin/tests/audit_coverage/CodesAdminAuditCases';
 import {DiscoveryAdminAuditCases} from '@app/api/admin/tests/audit_coverage/DiscoveryAdminAuditCases';
@@ -35,12 +37,14 @@ import {describe, expect, test} from 'vitest';
 
 const ALL_CASES = [
 	...AdminApiKeyAdminAuditCases,
+	...AdminSsoAdminAuditCases,
 	...ApplicationAdminAuditCases,
 	...ArchiveAdminAuditCases,
 	...AssetAdminAuditCases,
 	...AuditLogAdminAuditCases,
 	...BadgeAdminAuditCases,
 	...BanAdminAuditCases,
+	...BillingDocumentAdminAuditCases,
 	...BulkAdminAuditCases,
 	...CodesAdminAuditCases,
 	...DiscoveryAdminAuditCases,

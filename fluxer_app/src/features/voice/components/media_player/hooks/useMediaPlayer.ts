@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {
 	armPendingSeekTarget,
 	clampMediaTime,
@@ -111,6 +113,8 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	} = options;
 	const mediaRef = useRef<HTMLMediaElement | null>(null);
 	useInAppMediaSoundCapture(mediaRef);
+	const sourceResumeRef = useMediaSourceResume(mediaRef);
+	const refreshedSourceRef = useRef<string | null>(null);
 	const callbacksRef = useRef({onEnded, onError, onPlay, onLoadedMetadata});
 	callbacksRef.current = {onEnded, onError, onPlay, onLoadedMetadata};
 	const initialElementSettingsRef = useRef({loop});
@@ -251,6 +255,10 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 				: new Error('Unknown media error');
 			recoverPlaybackWhenReadyRef.current = false;
 			setState((prev) => ({...prev, isBuffering: false, error: errorMessage, failureCode: 'error'}));
+			if (refreshedSourceRef.current !== media.currentSrc) {
+				refreshedSourceRef.current = media.currentSrc;
+				void AttachmentUrlRefresher.refresh(media.currentSrc, {force: true});
+			}
 			callbacksRef.current.onError?.(errorMessage, 'error');
 		};
 		media.addEventListener('play', handlePlay);
@@ -314,6 +322,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			});
 		};
 		const attemptAutoplayOnSource = () => {
+			if (sourceResumeRef.current !== null) return;
 			attempted = false;
 			attemptAutoplay();
 		};
@@ -322,7 +331,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		return () => {
 			media.removeEventListener('loadstart', attemptAutoplayOnSource);
 		};
-	}, [autoPlay]);
+	}, [autoPlay, sourceResumeRef]);
 	useLayoutEffect(() => {
 		const media = mediaRef.current;
 		return () => {

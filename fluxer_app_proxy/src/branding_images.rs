@@ -128,7 +128,7 @@ fn voice_origins(discovery: &serde_json::Value) -> Vec<String> {
     for origin in values
         .iter()
         .filter_map(serde_json::Value::as_str)
-        .filter_map(|value| connect_origin(value.trim()))
+        .filter_map(|value| voice_source(value.trim()))
     {
         let twin = origin
             .strip_prefix("wss://")
@@ -142,6 +142,14 @@ fn voice_origins(discovery: &serde_json::Value) -> Vec<String> {
         out.extend(twin);
     }
     out
+}
+
+fn voice_source(value: &str) -> Option<String> {
+    let Some((scheme, rest)) = value.split_once("://*.") else {
+        return connect_origin(value);
+    };
+    let origin = connect_origin(&format!("{scheme}://{rest}"))?;
+    Some(origin.replacen("://", "://*.", 1))
 }
 
 fn connect_origin(value: &str) -> Option<String> {

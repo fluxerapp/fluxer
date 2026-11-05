@@ -6,6 +6,9 @@ import type {AppStoreAppConfig} from '@app/api/config/APIConfig';
 import {hasText} from '@app/api/store_billing/StoreBillingCredentials';
 import type {StorePurchaseKind, StoreSlot} from '@app/api/store_billing/StoreBillingTypes';
 import type {RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {ms} from 'itty-time';
+
+const SANDBOX_SUBSCRIPTION_WINDOW_MS = ms('7 days');
 
 interface StoreProductSlotShape {
 	kind: StorePurchaseKind;
@@ -102,7 +105,20 @@ export function isGooglePlaySubscriptionProduct(productId: string): boolean {
 	);
 }
 
-export function isSandboxEntitlementAllowed(userId: UserID): boolean {
+export function isSandboxEntitlementAllowed(
+	userId: UserID,
+	kind: StorePurchaseKind,
+	purchasedAt: Date | null,
+	now: number = Date.now(),
+): boolean {
 	const cfg = Config.storeBilling;
-	return cfg.sandboxEntitlesAll || cfg.sandboxUserIds.includes(userId.toString());
+	if (cfg.sandboxEntitlesAll || cfg.sandboxUserIds.includes(userId.toString())) {
+		return true;
+	}
+	return (
+		kind === 'subscription' &&
+		cfg.sandboxSubscriptions &&
+		purchasedAt !== null &&
+		now - purchasedAt.getTime() <= SANDBOX_SUBSCRIPTION_WINDOW_MS
+	);
 }

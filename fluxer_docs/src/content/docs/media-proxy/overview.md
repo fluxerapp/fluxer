@@ -60,7 +60,7 @@ Under `enforce`, an `Origin` must match an entry in `FLUXER_MEDIA_PROXY_CORS_ALL
 
 A preflight `OPTIONS` request from an allowed origin gets a 204 that allows `GET` and `HEAD` with the `Range` header, and a refused origin gets the same 403 as a read.
 
-The policy applies to `mp` and `upload` processes and not to the upload relay or the operator endpoints. If a shared cache sits in front of the Media Proxy, purge `/attachments/` when you switch from `off` to `enforce`.
+The policy applies to `mp` and `upload` processes and not to the upload relay or the operator endpoints. If a shared cache is in front of the Media Proxy, purge `/attachments/` when you switch from `off` to `enforce`.
 
 ## Signed attachment URLs
 
@@ -84,9 +84,9 @@ A [data package URL](/http-api/messages/#data-package-attachment-urls) never exp
 ?ex=0&is={issued}&hm={signature}&uc=dp
 ```
 
-Keep `ex`, `is`, `hm` and `uc` as issued, and you can add or change any other parameter. One signed URL works for every [transformation](/media-proxy/transformations/) and `download` variant of its file. A read is refused when a signature parameter is missing or malformed, the signature doesn't match a configured secret, or the URL has expired. A shared cache must leave `ex`, `is`, `hm` and `uc` out of its cache key.
+Keep `ex`, `is`, `hm` and `uc` as issued, and you can add or change any other parameter. One signed URL works for every [transformation](/media-proxy/transformations/) and `download` variant of its file. A request is refused when a signature parameter is missing or malformed, the signature doesn't match a configured secret, or the URL has expired. A shared cache must leave `ex`, `is`, `hm` and `uc` out of its cache key. If a shared cache is in front of the Media Proxy, purge `/attachments/` after every `mp` and `upload` process runs `enforce`, because entries stored under `off` keep their year-long cache lifetime.
 
-Under `enforce`, a refused read returns the same 404 as a missing file, with the body `This content is no longer available.` Under `report`, each read that `enforce` would refuse logs a warning with the reason `attachment_signature_would_deny`. The policy covers `/attachments/` paths on `mp` and `upload` processes.
+Under `enforce`, a refused request returns the same 404 as a missing file, with the body `This content is no longer available.`, and the Media Proxy logs a warning with the reason `attachment_signature_refused`. Under `report`, the Media Proxy logs a warning with the reason `attachment_signature_would_deny` for each request that `enforce` would refuse, and the response has `Cache-Control: no-store`. These warnings are limited to 20 a second. The policy applies to `/attachments/` paths on `mp` and `upload` processes.
 
 Any signed-in user or bot can re-sign an attachment URL with [Refresh attachment URLs](/http-api/messages/#refresh-attachment-urls). A signature limits how long a copied URL works and not who can open the file.
 

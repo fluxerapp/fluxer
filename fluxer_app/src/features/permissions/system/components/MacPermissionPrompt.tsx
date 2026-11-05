@@ -33,7 +33,7 @@ const SCREEN_RECORDING_PURPOSE_DESCRIPTOR = msg({
 	comment: 'One sentence explaining what the macOS screen recording permission is used for.',
 });
 const INPUT_MONITORING_PURPOSE_DESCRIPTOR = msg({
-	message: 'Lets push-to-talk and shortcuts work in other apps.',
+	message: 'Lets push-to-talk and keybinds work in other apps.',
 	comment: 'One sentence explaining what the macOS Input Monitoring permission is used for.',
 });
 const NOT_NOW_DESCRIPTOR = msg({

@@ -140,6 +140,7 @@ pub struct MastodonPollOption {
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonInstance {
     pub domain: Option<String>,
+    pub account_domain: Option<String>,
     pub title: Option<String>,
     pub thumbnail: Option<MastodonThumbnail>,
 }
@@ -165,7 +166,7 @@ impl From<MastodonInstance> for InstanceInfo {
     fn from(inst: MastodonInstance) -> Self {
         let thumbnail_url = inst.thumbnail_url();
         Self {
-            domain: inst.domain,
+            domain: inst.account_domain.or(inst.domain),
             title: inst.title,
             thumbnail_url,
         }

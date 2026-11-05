@@ -17,6 +17,7 @@ const fullSnapshot: ReportProfileSnapshot = {
 		global_name: 'Target',
 		bio: 'Original bio',
 		pronouns: 'they/them',
+		custom_status: 'Status',
 		avatar: {hash: 'a_user', key: 'reports/1/profile/avatar/a_user'},
 		banner: {hash: 'user-banner', key: null},
 	},
@@ -54,6 +55,7 @@ describe('ReportProfileSnapshot', () => {
 				global_name: null,
 				bio: null,
 				pronouns: null,
+				custom_status: null,
 				avatar: null,
 				banner: null,
 			},
@@ -61,6 +63,12 @@ describe('ReportProfileSnapshot', () => {
 			guild: null,
 		};
 		expect(parseReportProfileSnapshot(JSON.stringify(userOnly))).toEqual(userOnly);
+	});
+
+	it('reads a snapshot stored before custom status as having none', () => {
+		const {custom_status: _omitted, ...storedUser} = fullSnapshot.user!;
+		const parsed = parseReportProfileSnapshot(JSON.stringify({...fullSnapshot, user: storedUser}));
+		expect(parsed?.user?.custom_status).toBeNull();
 	});
 
 	it('drops unknown keys', () => {

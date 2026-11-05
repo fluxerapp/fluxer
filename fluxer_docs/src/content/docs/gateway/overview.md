@@ -82,13 +82,13 @@ A connection that goes over the [open connections per IP](/gateway/limits-and-ra
 
 ## Identify
 
-Identify creates a session and the Gateway answers with Ready. These failures close the connection.
+Identify creates a session and the Gateway responds with Ready. These failures close the connection.
 
 | Close | Reason | Cause |
 | --- | --- | --- |
 | 4004 | `Invalid token` | The token is not valid |
 | 4008 | `Too many sessions` | The user already has 100 live sessions (bots have no limit) |
-| 4008 | `Identify rate limited` | The instance is starting too many sessions at once, so try again after a backoff |
+| 4008 | `Identify rate limited` | The instance is starting too many sessions at once. Try again after a backoff |
 | 4010 | `Invalid shard` | The `shard` pair is malformed |
 | 4011 | `Sharding required` | A bot shard owns more than 2,500 guilds |
 | 4000 | `Failed to start session` | The session could not be created for another reason |
@@ -106,7 +106,7 @@ Send opcode 1 with the sequence of the last Dispatch you processed, or `null` be
 }
 ```
 
-The server answers with opcode 11 Heartbeat ACK. Once a session exists, a `d` that is neither `null` nor an integer closes with `4007`. If 90 percent of the interval passes without an acknowledgment, the server sends its own opcode 1 with `d: null`, and you answer with a heartbeat right away. After 45,000 ms with no acknowledgment the connection closes with `4009`.
+The server responds with opcode 11 Heartbeat ACK. Once a session exists, a `d` that is neither `null` nor an integer closes with `4007`. If 90 percent of the interval passes without an acknowledgment, the server sends its own opcode 1 with `d: null`, and you respond with a heartbeat right away. After 45,000 ms with no acknowledgment the connection closes with `4009`.
 
 The Gateway drops replayable Dispatches up to the sequence in your heartbeat. Only send a sequence you have finished processing.
 
@@ -132,7 +132,7 @@ The Gateway replays every Dispatch above `seq` in order and then sends [Resumed]
 | The session is unknown or expired, or `seq` is below the replay floor | [Invalid Session](#invalid-session), and the socket can Identify |
 | `seq` is above the session sequence or below the acknowledged one | Close with `4007` and reason `Invalid sequence` |
 | The token does not own the session | Close with `4004` and reason `Invalid token` |
-| The session does not answer | Close with `4000` and reason `Session unavailable` |
+| The session does not respond | Close with `4000` and reason `Session unavailable` |
 
 ## Reconnect
 

@@ -25,42 +25,42 @@ import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo} from 'react';
 
 const PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR = msg({
-	message: 'Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription.',
+	message: 'Welcome to {premiumProductFullName}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.',
 });
 const PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks.',
+		'Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. See all {premiumProductName} features.',
 	comment:
 		'Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.',
 });
 const PREMIUM_ONBOARDING_LIFETIME_MESSAGE_DESCRIPTOR = msg({
-	message: 'Welcome to {premiumProductFullName}. You have lifetime access. Explore your {premiumProductName} perks.',
+	message: 'Welcome to {premiumProductFullName}. You have lifetime access. See all {premiumProductName} features.',
 	comment:
 		'Premium onboarding nagbar body for lifetime premium users on a self-hosted instance. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.',
 });
 const PREMIUM_ONBOARDING_CANCELING_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_MONTHLY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_YEARLY_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription.',
+		'Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. See all {premiumProductName} features and manage your subscription.',
 	comment:
 		'Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });
 const PREMIUM_ONBOARDING_GIFT_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks.',
+		'Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. See all {premiumProductName} features.',
 	comment:
 		'Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.',
 });

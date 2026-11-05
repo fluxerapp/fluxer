@@ -41,12 +41,12 @@ const HIDE_KEYBOARD_HINTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TOOLTIP_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Tooltip shortcuts',
+	message: 'Tooltip keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
 const CHOOSE_WHETHER_TOOLTIPS_SHOW_KEYBOARD_SHORTCUT_HINTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcut hints in tooltips',
+	message: 'Keybind hints in tooltips',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
 const SHOW_OR_HIDE_NEKO_THAT_CHASES_THE_CURSOR_DESCRIPTOR = msg({

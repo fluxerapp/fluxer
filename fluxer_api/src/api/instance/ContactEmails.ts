@@ -23,7 +23,8 @@ const SELF_HOSTED_CONTACT_EMAILS: ContactEmails = {
 	supportEmail: null,
 };
 
-const HOSTED_LEGAL_ADDRESS = 'Fluxer Platform AB, c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden';
+const HOSTED_LEGAL_ADDRESS =
+	'Fluxer Platform AB (org. no. 559537-3993, registered office Haninge, Sweden), c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden';
 
 export function resolveLegalAddress(): string | null {
 	return Config.instance.selfHosted ? null : HOSTED_LEGAL_ADDRESS;

@@ -18,6 +18,9 @@
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
 		"@fluxer/number_utils": "workspace:*",
+		"@pdf-lib/fontkit": "catalog:",
+		"bidi-js": "catalog:",
+		"harfbuzzjs": "catalog:",
 		"itty-time": "catalog:",
 		"nodemailer": "catalog:",
 		"pdf-lib": "catalog:"

@@ -20,9 +20,11 @@ import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {EmailDeliveryOffError} from '@fluxer/errors/src/domains/auth/EmailDeliveryOffError';
 import {UsernameSignInOnlyError} from '@fluxer/errors/src/domains/auth/UsernameSignInOnlyError';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
@@ -1027,7 +1029,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the evidence messages after they are snapshotted. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.',
+				'Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the reported messages and the evidence you listed after they are snapshotted, and keeps the other messages from the reports. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.',
 		}),
 		async (ctx) => {
 			const {user_id: userId} = ctx.req.valid('param');
@@ -1328,6 +1330,39 @@ export function UserAdminController(app: HonoApp) {
 					adminUserId,
 					auditLogReason,
 					acls: adminUserAcls,
+				}),
+			);
+		},
+	);
+	app.delete(
+		'/admin/users/:user_id/premium',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_UPDATE_FLAGS),
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'remove_admin_user_premium',
+			summary: 'Remove user premium',
+			responseSchema: UserMutationResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'End the premium of an account right away, the same way premium ends when it expires. The premium fields are cleared, ENABLED_OVERRIDE is removed, the guild profile perks of the account are sanitized and PERKS_SANITIZED is set. Returns 400 with a message that says what to do instead when the account has a Stripe subscription, an App Store or Google Play subscription, Visionary lifetime premium on the hosted instance, or no premium, when it is a bot, and when the premium mode is everyone. The X-Audit-Log-Reason header is required. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.',
+		}),
+		async (ctx) => {
+			const auditLogReason = ctx.get('auditLogReason');
+			if (!auditLogReason) {
+				throw InputValidationError.fromCode(
+					'X-Audit-Log-Reason',
+					ValidationErrorCodes.ENFORCEMENT_INTERNAL_NOTE_REQUIRED,
+				);
+			}
+			return ctx.json(
+				await ctx.get('adminService').userService.securityService.removePremium({
+					userId: createUserID(ctx.req.valid('param').user_id),
+					adminUserId: ctx.get('adminUserId'),
+					auditLogReason,
+					acls: ctx.get('adminUserAcls'),
 				}),
 			);
 		},

@@ -3,27 +3,30 @@
 import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {OPERATOR_PASS_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {OPERATOR_PASS_NAME, PRODUCT_LABS_COMMUNITY_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {isolateBidi, isolateChannelNames} from '@app/features/i18n/utils/BidiIsolate';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
+import {
+	asksOperatorPassLabsGreeting,
+	getStoredOperatorPassLabsGreeting,
+	OperatorPassLabsGreetingField,
+} from '@app/features/premium/components/operator_pass/OperatorPassLabsGreetingField';
 import styles from '@app/features/premium/components/operator_pass/OperatorPassOfferModal.module.css';
 import {OperatorPassWallNameField} from '@app/features/premium/components/operator_pass/OperatorPassWallNameField';
 import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {
 	focusFirstInvalidOperatorPassField,
 	focusOperatorPassField,
-	formatOperatorPassDateTime,
-	formatOperatorPassUnlockDay,
 	getOperatorPassErrorCode,
 	getOperatorPassOfferUserName,
 	getOperatorPassWallNameProblem,
-	hasOperatorPassTimePassed,
 	normalizeOperatorPassWallName,
 	type OperatorPassWallNameProblem,
 } from '@app/features/premium/utils/OperatorPassUtils';
 import {
-	OPERATOR_PASS_CHARACTERISTICS_DESCRIPTOR,
 	OPERATOR_PASS_LISTING_UNCHANGED_DESCRIPTOR,
+	OPERATOR_PASS_OFFER_BONUS_DESCRIPTOR,
 	OPERATOR_PASS_REQUIRED_BOX_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
@@ -48,15 +51,9 @@ const OFFER_TITLE_DESCRIPTOR = msg({
 	comment:
 		'Title of the dialog where you accept or decline an Operator Pass another person passed on to you. {senderName} is their display name. Operator Pass is a product name and stays untranslated.',
 });
-const OFFER_ARRIVES_DESCRIPTOR = msg({
-	message: 'It arrives on {date} if you accept.',
-	comment:
-		'Line in the dialog for an Operator Pass someone passed on to you, while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.',
-});
 const OFFER_ARRIVES_NOW_DESCRIPTOR = msg({
 	message: 'It arrives as soon as you accept.',
-	comment:
-		'Line in the dialog for an Operator Pass someone passed on to you, once the waiting period after payment has ended. It is the pass.',
+	comment: 'Line in the dialog for an Operator Pass someone passed on to you. It is the pass.',
 });
 const ACCEPT_DESCRIPTOR = msg({
 	message: 'Accept',
@@ -67,9 +64,9 @@ const DECLINE_DESCRIPTOR = msg({
 	comment: 'Button that declines an incoming Operator Pass offer.',
 });
 const ACCEPTED_DESCRIPTOR = msg({
-	message: 'Accepted. It arrives on {date}.',
+	message: 'Accepted. The pass moves to you soon.',
 	comment:
-		'Toast after accepting an Operator Pass offer while the waiting period after payment runs. It is the pass. {date} is a date such as Nov 23, 2026.',
+		'Toast after accepting an Operator Pass offer when the pass could not move to your account right away, for example while a check on its payment is still open.',
 });
 const ARRIVED_DESCRIPTOR = msg({
 	message: 'The pass is yours now.',
@@ -97,6 +94,7 @@ const logger = new Logger('OperatorPassOfferModal');
 const WALL_NAME_FIELD_ID = 'operator-pass-offer-wall-name';
 const TERMS_BOX_ID = 'operator-pass-offer-terms';
 const TERMS_ERROR_ID = 'operator-pass-offer-terms-error';
+const LABS_GREETING_FIELD_ID = 'operator-pass-offer-labs-greeting';
 
 type Notice = 'gone' | 'failed' | 'load_failed';
 
@@ -114,6 +112,8 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 	const [wallName, setWallName] = useState(() => Users.currentUser?.displayName ?? '');
 	const [wallOptOut, setWallOptOut] = useState(false);
 	const [wallNameProblem, setWallNameProblem] = useState<OperatorPassWallNameProblem | null>(null);
+	const [labsGreeting, setLabsGreeting] = useState(getStoredOperatorPassLabsGreeting);
+	const asksLabsGreeting = asksOperatorPassLabsGreeting();
 	const [submitting, setSubmitting] = useState<'accept' | 'decline' | null>(null);
 	const [notice, setNotice] = useState<Notice | null>(null);
 	const [wallChosen, setWallChosen] = useState<boolean | null>(null);
@@ -151,9 +151,12 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 	const handleError = (error: unknown) => {
 		logger.error('Operator Pass offer answer failed', error);
 		const code = getOperatorPassErrorCode(error);
-		if (code === APIErrorCodes.OPERATOR_PASS_WALL_NAME_REQUIRED) {
+		if (
+			code === APIErrorCodes.OPERATOR_PASS_WALL_NAME_REQUIRED ||
+			code === APIErrorCodes.OPERATOR_PASS_WALL_NAME_REJECTED
+		) {
 			setRevealWallField(true);
-			setWallNameProblem('required');
+			setWallNameProblem(code === APIErrorCodes.OPERATOR_PASS_WALL_NAME_REJECTED ? 'rejected' : 'required');
 			focusOperatorPassField(WALL_NAME_FIELD_ID);
 			return;
 		}
@@ -187,22 +190,15 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 		setSubmitting('accept');
 		setNotice(null);
 		try {
-			const result = await OperatorPassCommands.acceptOffer(
-				offer.id,
-				asksWallChoice
-					? {
-							accept_terms: true,
-							wall_name: wallOptOut ? null : normalizeOperatorPassWallName(wallName),
-							wall_opt_out: wallOptOut,
-						}
-					: {accept_terms: true},
-			);
-			ToastCommands.success(
-				result.status === 'completed'
-					? i18n._(ARRIVED_DESCRIPTOR)
-					: i18n._(ACCEPTED_DESCRIPTOR, {date: formatOperatorPassUnlockDay(result.arrives_at)}),
-			);
-			ModalCommands.pop();
+			const result = await OperatorPassCommands.acceptOffer(offer.id, {
+				accept_terms: true,
+				...(asksWallChoice
+					? {wall_name: wallOptOut ? null : normalizeOperatorPassWallName(wallName), wall_opt_out: wallOptOut}
+					: {}),
+				...(asksLabsGreeting ? {labs_greeting: labsGreeting} : {}),
+			});
+			ToastCommands.success(i18n._(result.status === 'completed' ? ARRIVED_DESCRIPTOR : ACCEPTED_DESCRIPTOR));
+			ModalCommands.popWithKey(`${OFFER_MODAL_KEY_PREFIX}${offerId}`);
 		} catch (error) {
 			handleError(error);
 		} finally {
@@ -216,7 +212,7 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 		try {
 			await OperatorPassCommands.declineOffer(offer.id);
 			ToastCommands.success(i18n._(DECLINED_DESCRIPTOR));
-			ModalCommands.pop();
+			ModalCommands.popWithKey(`${OFFER_MODAL_KEY_PREFIX}${offerId}`);
 		} catch (error) {
 			handleError(error);
 		} finally {
@@ -251,17 +247,8 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 					)}
 					{offer && (
 						<>
-							<Modal.Description
-								title={
-									hasOperatorPassTimePassed(offer.arrives_at) ? undefined : formatOperatorPassDateTime(offer.arrives_at)
-								}
-								data-flx="premium.operator-pass-offer-modal.body"
-							>
-								{`${isOperator ? '' : `${i18n._(OPERATOR_PASS_CHARACTERISTICS_DESCRIPTOR, {productName: PRODUCT_NAME})} `}${
-									hasOperatorPassTimePassed(offer.arrives_at)
-										? i18n._(OFFER_ARRIVES_NOW_DESCRIPTOR)
-										: i18n._(OFFER_ARRIVES_DESCRIPTOR, {date: formatOperatorPassUnlockDay(offer.arrives_at)})
-								}`}
+							<Modal.Description data-flx="premium.operator-pass-offer-modal.body">
+								{`${isOperator ? '' : `${isolateChannelNames(i18n._(OPERATOR_PASS_OFFER_BONUS_DESCRIPTOR, {labsName: isolateBidi(PRODUCT_LABS_COMMUNITY_NAME)}))} `}${i18n._(OFFER_ARRIVES_NOW_DESCRIPTOR)}`}
 							</Modal.Description>
 							{pending &&
 								(!asksWallChoice ? (
@@ -287,6 +274,15 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 										data-flx="premium.operator-pass.operator-pass-offer-modal.operator-pass-wall-name-field"
 									/>
 								))}
+							{pending && asksLabsGreeting && (
+								<OperatorPassLabsGreetingField
+									id={LABS_GREETING_FIELD_ID}
+									checked={labsGreeting}
+									disabled={submitting != null}
+									onChange={setLabsGreeting}
+									data-flx="premium.operator-pass-offer-modal.labs-greeting"
+								/>
+							)}
 							{pending && (
 								<div
 									id={TERMS_BOX_ID}
@@ -305,7 +301,7 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 										data-flx="premium.operator-pass-offer-modal.checkbox.terms"
 									>
 										<span className={styles.consentLabel} data-flx="premium.operator-pass-offer-modal.terms-label">
-											<Trans comment="Required checkbox next to Accept in the dialog for an Operator Pass someone passed on to you. Consumer law text, translate faithfully and keep every condition. The linked text names the Operator Pass terms document. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Its payment is reversed means the payment for the pass is refunded or charged back.">
+											<Trans comment="Required checkbox next to Accept in the dialog for an Operator Pass someone passed on to you. Consumer law text, translate faithfully and keep every condition. The linked text names the Operator Pass terms document. {OPERATOR_PASS_NAME} is a product name and stays untranslated. The buyer is the person who paid for the pass. Reversed means charged back through a bank or card company.">
 												I accept the{' '}
 												<ExternalLink
 													href={Routes.operatorPassTerms()}
@@ -313,7 +309,8 @@ const OperatorPassOfferModal = observer(function OperatorPassOfferModal({offerId
 												>
 													{OPERATOR_PASS_NAME} terms
 												</ExternalLink>
-												. This pass can't be passed on again, and it ends if its payment is reversed.
+												. Each pass can be passed on only once, so you can't pass this one on again. It ends if the
+												buyer's payment for it is refunded or reversed, because the purchase stays theirs.
 											</Trans>
 										</span>
 									</Checkbox>

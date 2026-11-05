@@ -88,11 +88,12 @@ export class OperatorPassWallPublicationService {
 		return {
 			entry: {
 				id: operatorPassWallPublicId(entry.user_id),
-				name: operatorPassWallShownName(entry, user),
+				name: operatorPassWallShownName(entry),
 				avatar: entry.live_avatar ?? null,
 				tier: getOperatorPassWallTier(entry.live_business ? 1 : holder.count, Config.operatorPass.wallTierMinimums),
 				...(isOperatorPassCountHidden(user.premiumFlags) ? {} : {count: holder.count}),
 				...(entry.live_business ? {business: true as const} : {}),
+				...(entry.quote ? {quote: entry.quote} : {}),
 			},
 			since: holder.since.getTime(),
 		};
@@ -121,6 +122,17 @@ export class OperatorPassWallPublicationService {
 		throw new Error("Operators' wall version changed too often to snapshot");
 	}
 
+	async shownQuote(userId: UserID): Promise<string | null> {
+		const state = await this.repository.findWallState(WALL_STATE_ID);
+		if (state?.frozen && state.frozen_snapshot) {
+			const id = operatorPassWallPublicId(userId);
+			const frozen = JSON.parse(state.frozen_snapshot) as OperatorPassWallSnapshot;
+			return frozen.entries.find((item) => item.id === id)?.quote ?? null;
+		}
+		const entry = await this.repository.findWallEntry(userId);
+		return entry && isOperatorPassWallListed(entry) && !entry.hidden ? (entry.quote ?? null) : null;
+	}
+
 	async listPublicWall(): Promise<OperatorPassWallResponse> {
 		const snapshot = await this.snapshot();
 		const size = Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES);
@@ -134,6 +146,7 @@ export class OperatorPassWallPublicationService {
 				...(entry.count !== undefined ? {count: entry.count} : {}),
 				tier: entry.tier,
 				...(entry.business ? {business: true as const} : {}),
+				...(entry.quote !== undefined ? {quote: entry.quote} : {}),
 			})),
 		};
 	}
@@ -284,7 +297,7 @@ export class OperatorPassWallPublicationService {
 	async isAvatarServed(sha256: string): Promise<boolean> {
 		for (const userId of await this.repository.listWallAvatarRefs(sha256)) {
 			const entry = await this.repository.findWallEntry(userId);
-			if (entry?.live_avatar === sha256 && (await this.buildPublicEntry(entry)) !== null) {
+			if (entry?.live_avatar === sha256 && (await this.buildPublicEntry(entry, operatorPassNow())) !== null) {
 				return true;
 			}
 		}
@@ -314,20 +327,24 @@ export class OperatorPassWallPublicationService {
 	}
 
 	async publishAvatarIfServed(entry: OperatorPassWallEntryRow): Promise<void> {
-		if (entry.live_avatar && (await this.buildPublicEntry(entry)) !== null) {
+		if (entry.live_avatar && (await this.buildPublicEntry(entry, operatorPassNow())) !== null) {
 			await getOperatorPassWallInfrastructure().avatarStore.publish(entry.live_avatar);
 		}
 	}
 
 	private async dropFromFrozenSnapshot(userIds: ReadonlyArray<UserID>): Promise<void> {
-		const gone: Array<string> = [];
+		const gone = new Set<string>();
+		const quotes = new Map<string, string | undefined>();
 		for (const userId of new Set(userIds)) {
 			const entry = await this.repository.findWallEntry(userId);
-			if (!entry || (await this.buildPublicEntry(entry)) === null) {
-				gone.push(operatorPassWallPublicId(userId));
+			const item = entry ? await this.buildPublicEntry(entry) : null;
+			if (item) {
+				quotes.set(item.id, item.quote);
+			} else {
+				gone.add(operatorPassWallPublicId(userId));
 			}
 		}
-		if (gone.length === 0) {
+		if (gone.size === 0 && quotes.size === 0) {
 			return;
 		}
 		for (let attempt = 0; attempt < OPERATOR_PASS_WALL_UPDATE_ATTEMPTS; attempt++) {
@@ -336,8 +353,20 @@ export class OperatorPassWallPublicationService {
 				return;
 			}
 			const frozen = JSON.parse(state.frozen_snapshot) as OperatorPassWallSnapshot;
-			const entries = frozen.entries.filter((item) => !gone.includes(item.id));
-			if (entries.length === frozen.entries.length) {
+			let changed = false;
+			const entries = frozen.entries.flatMap((item) => {
+				if (gone.has(item.id)) {
+					changed = true;
+					return [];
+				}
+				if (item.quote !== undefined && quotes.has(item.id) && quotes.get(item.id) !== item.quote) {
+					changed = true;
+					const {quote: _quote, ...rest} = item;
+					return [rest];
+				}
+				return [item];
+			});
+			if (!changed) {
 				return;
 			}
 			const updated = await this.repository.updateWallState(state, {

@@ -29,15 +29,18 @@ The public description of one instance.
 | limits | [limit configuration](#limit-configuration-object) object | Limit rules and trait names |
 | push | [push configuration](#push-configuration-object) object | Web Push identity |
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, setup state and legal links |
-| age_policy? | [age policy](#age-policy-object) object | Regional age policy |
+| age_policy | [age policy](#age-policy-object) object | Regional age policy |
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
 | guild_badges?<sup>1</sup> | array[[guild badge](#guild-badge-object) object] | The first custom badges that guilds can show next to their name, in display order (at most 100) |
 | guild_badges_partial? | boolean | True when the instance has more guild badges than `guild_badges` lists |
 | custom_badges_version? | string | The badge catalog version. It changes whenever a badge is created, edited, deleted or moved |
 | built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
-| voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies (at most 1000) |
+| hidden_built_in_guild_badges?<sup>2</sup> | array[string] | The built-in guild badges the instance doesn't show: any of `verified`, `partnered` and `discoverable` |
+| voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as `wss://*.example.com` (at most 1000) |
 
 <sup>1</sup> An instance can have any number of guild badges. Discovery lists the first 100 in display order, and [List guild badges](#list-guild-badges) serves every one. A client that knows only `guild_badges` can't show a badge past the first 100
+
+<sup>2</sup> Guilds keep the feature behind a hidden badge, so a discoverable guild is still listed in discovery. When a guild has more than one of these badges, clients show the next one that isn't hidden
 
 ## Guild badge object
 
@@ -102,6 +105,7 @@ Each value is an absolute URL. Use it exactly as published, including its scheme
 | api | string | Base URL of the client API, the same as `api_client` |
 | api_client | string | Base URL of the client API, used by the Fluxer apps |
 | api_public | string | Base URL of the public API, used by bots and other clients |
+| api_transport? | string | Base URL the official desktop app sends API requests to instead of `api_client`. Only Fluxer.app lists it, and the app ignores any address other than the matching fluxer.com one |
 | gateway | string | The [Gateway](/gateway/overview/) WebSocket URL, with a `ws` or `wss` scheme |
 | media | string | [Media Proxy](/media-proxy/overview/) base URL |
 | upload_relay? | string | Attachment [upload relay](/media-proxy/upload-relay/) base URL |
@@ -172,6 +176,7 @@ When `emails_enabled` is false, email verification, password recovery and IP aut
 | captcha_off | Instant accounts are on, but the CAPTCHA they need is off |
 | registration_closed | Public registration is closed |
 | approval_required | New accounts wait for admin approval |
+| email_domains_restricted | Public sign-ups must use an email address on an allowed domain |
 
 ### Email delivery states
 
@@ -350,6 +355,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_attachments_per_message | Maximum attachments per message (user and guild) |
 | max_bio_length | Maximum characters in a bio, at most 320 (user) |
 | max_bookmarks | Maximum bookmarked messages (user) |
+| max_bot_attachment_file_size | Maximum size of each attachment a bot uploads in bytes, 52428800 by default. A bot gets the lower of this and `max_attachment_file_size` (user and guild) |
 | max_channels_per_category | Maximum channels per category (guild) |
 | max_custom_backgrounds | Maximum custom profile backgrounds (user) |
 | max_embeds_per_message | Maximum embeds per message (user and guild) |
@@ -416,7 +422,12 @@ What a client needs before anyone signs in.
 | premium_product_name | string | The name of the premium tier, `Premium` unless an admin sets one |
 | premium_info_url | ?string | URL of a page about the premium tier, or null |
 | sign_in_backdrop_url | ?string | Image shown behind the sign-in screens, or null for the default |
-| custom_css | ?string | CSS the web and desktop app apply before the person's own theme, or null |
+| premium_page_color | ?string | Premium page color of a self-hosted instance as lowercase `#rrggbb`, or null |
+| premium_showcase_expressions_url | ?string | Image next to the emoji card on the premium page of a self-hosted instance, or null |
+| premium_showcase_profile_url | ?string | Image next to the profile card on the premium page of a self-hosted instance, or null |
+| premium_showcase_stream_url | ?string | Image next to the stream card on the premium page of a self-hosted instance, or null |
+| premium_showcase_upload_url | ?string | Image next to the upload card on the premium page of a self-hosted instance, or null |
+| custom_css | ?string | CSS the web and desktop app apply before the person's own theme, except on sign-in pages, or null |
 | upload_limit_message | ?string | Markdown shown when a file is over the upload limit, or null for the default text |
 | trusted_domains | string[] | Extra domains whose links open without a warning. Entries are hostnames, and a `*.` prefix also covers subdomains |
 

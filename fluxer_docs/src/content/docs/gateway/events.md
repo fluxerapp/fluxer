@@ -4,7 +4,7 @@ title: Gateway events
 description: Every Gateway Dispatch event with its payload and who receives it.
 ---
 
-A Dispatch tells a [Gateway](/gateway/overview/) session that something changed or answers one of its commands. It has [opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, an event name in `t` and the payload in `d`.
+A Dispatch tells a [Gateway](/gateway/overview/) session that something changed or replies to one of its commands. It has [opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, an event name in `t` and the payload in `d`.
 
 ## Dispatch envelope
 
@@ -850,7 +850,7 @@ A participant's voice state changed. The payload is a [voice state object](#voic
 | is_mobile | boolean | Whether the participant is on a mobile app |
 | suppress | boolean | Whether the participant is suppressed |
 | viewer_stream_keys | array[string] | Streams this connection is watching |
-| e2ee_capable | boolean | Whether the participant's app supports end-to-end encrypted voice |
+| e2ee_capable | boolean | Whether the participant's app supports encrypted call media |
 | p2p | boolean | Whether this connection sends media [peer-to-peer](#peer-to-peer-voice) |
 | version | integer | Version of this participant's voice state, which only goes up |
 
@@ -869,13 +869,13 @@ The session got a voice grant, sent only to the session that asked. A LiveKit gr
 | connection_id | string | The voice connection the grant is for |
 | channel_id | snowflake | The channel the grant is for |
 | guild_id? | snowflake | The guild the channel belongs to, absent for a call |
-| e2ee_key?<sup>3</sup> | string | Key for the channel's end-to-end encryption |
+| e2ee_key?<sup>3</sup> | string | Room key for the channel's call media, issued by the server |
 
 <sup>1</sup> On a LiveKit grant
 
 <sup>2</sup> On a peer-to-peer grant
 
-<sup>3</sup> On a LiveKit grant for an end-to-end encrypted channel
+<sup>3</sup> On a LiveKit grant for a channel with encrypted call media. The server creates the key, so this isn't end-to-end encryption
 
 A new grant comes when the connection opens, moves to another channel or changes region. A LiveKit grant for a connection that had a peer-to-peer grant means the call switched to LiveKit. Close your peer connections and connect with the new grant.
 
@@ -979,7 +979,7 @@ A call ended or became unavailable. Keep an unavailable call until a new [Call C
 
 ### <span id="guild-counts-update"></span>GUILD_COUNTS_UPDATE
 
-The answer to [Request Guild Counts](/gateway/commands/#request-guild-counts). A guild that isn't connected or didn't answer in time has no entry.
+The answer to [Request Guild Counts](/gateway/commands/#request-guild-counts). A guild that isn't connected or didn't respond in time has no entry.
 
 | Field | Type | Description |
 | --- | --- | --- |

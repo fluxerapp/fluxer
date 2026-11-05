@@ -4,7 +4,11 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	INSTANCE_WITHOUT_HTTPS_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
+	VOLUME_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
@@ -12,6 +16,7 @@ import {openMacPermissionsModal} from '@app/features/permissions/system/commands
 import {macPermissionNameDescriptor} from '@app/features/permissions/system/components/useMacPermissionControl';
 import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -98,7 +103,7 @@ const CUSTOM_DESCRIPTOR = msg({
 	comment: 'Voice input processing profile where the user configures processing manually.',
 });
 const CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Adjust each setting yourself: noise suppression, echo cancellation, and gain.',
+	message: 'Adjust noise suppression, echo cancellation, and gain yourself.',
 	comment: 'Description for the custom profile option in the voice tab.',
 });
 const PUSH_TO_TALK_LIMITED_DESCRIPTOR = msg({
@@ -342,12 +347,12 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 				<div className={styles.pttSettings} data-flx="user.voice-tab.render-ptt-controls.ptt-settings">
 					<p className={styles.pttSettingDescription} data-flx="user.voice-tab.render-ptt-controls.ptt-mute-note">
 						<Trans>
-							While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled.
+							While push-to-talk is on, your keybind controls your microphone, so the mute button is disabled.
 						</Trans>
 					</p>
 					<div className={styles.pttSettingRow} data-flx="user.voice-tab.render-ptt-controls.ptt-setting-row">
 						<KeybindRecorder
-							label={<Trans>Shortcut</Trans>}
+							label={<Trans>Keybind</Trans>}
 							labelPlacement="inline"
 							action="voice_push_to_talk"
 							value={pttCombo}
@@ -514,18 +519,21 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 		</div>
 	);
 	const devicesSectionTitle = i18n._(INPUT_AND_OUTPUT_DESCRIPTOR);
+	const mediaBlocked = isInsecureBrowserContext();
 	let deviceNotice: React.ReactNode = null;
 	if (inputDevices.length === 0 && permissionStatus !== 'loading') {
 		const noticeClassName = styles.deviceNotice;
 		const noticeTextClassName = styles.deviceNoticeText;
 		const noticeTitle = (
 			<div className={styles.deviceNoticeTitle} data-flx="user.voice-tab.device-notice-title">
-				<Trans>No microphone found</Trans>
+				{mediaBlocked ? i18n._(INSTANCE_WITHOUT_HTTPS_DESCRIPTOR) : <Trans>No microphone found</Trans>}
 			</div>
 		);
 		const descriptionClassName = styles.deviceNoticeDescription;
 		let noticeDescription: React.ReactNode;
-		if (permissionStatus === 'denied' && isNativeDesktop) {
+		if (mediaBlocked) {
+			noticeDescription = i18n._(MEDIA_NEEDS_HTTPS_DESCRIPTOR);
+		} else if (permissionStatus === 'denied' && isNativeDesktop) {
 			noticeDescription = (
 				<Trans comment="Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
 					Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your microphone in System Settings → Privacy &
@@ -552,7 +560,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 						{noticeDescription}
 					</p>
 				</div>
-				{permissionStatus !== 'granted' ? (
+				{permissionStatus !== 'granted' && !mediaBlocked ? (
 					<Button
 						variant="secondary"
 						small={true}
@@ -736,7 +744,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 					description={
 						<Trans>
 							Show the ID of each voice connection next to people in calls and in voice channels. With it off, each
-							device is named by its type instead.
+							device shows its type.
 						</Trans>
 					}
 					value={voiceSettings.showVoiceConnectionId}

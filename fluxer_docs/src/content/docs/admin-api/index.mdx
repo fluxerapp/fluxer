@@ -89,7 +89,7 @@ Each route needs one or more ACLs, and the caller needs at least one of them. Th
 | enforcement:view | Reads [enforcement decisions](/admin-api/enforcement/). Ending one needs this ACL plus the ACL for its kind |
 | gateway:memory_stats | Reads main [Gateway](/admin-api/gateway/) statistics, memory statistics and voice state counts |
 | gateway:reload_all | Reloads guilds across the main Gateway |
-| gift_codes:generate | Generates [gift codes](/admin-api/gift-codes/) |
+| gift_codes:generate | Generates and revokes [gift codes](/admin-api/gift-codes/) |
 | guild:audit_log:view | Reads a guild's ordinary audit log |
 | guild:ban_member | Bans a guild member and removes a guild ban |
 | guild:delete | Deletes a guild |
@@ -274,7 +274,7 @@ Expect values that aren't in this table.
 | report | User report |
 | search_index | Search index |
 | system_dm | System DM broadcast |
-| gift_code | Batch of generated gift codes |
+| gift_code | Batch of generated gift codes, or one revoked gift code |
 | bulk_job | Background job |
 | admin_api_key | Admin API key |
 | audit_log | Admin audit entry |
@@ -430,11 +430,13 @@ These entries have `access` set to `write`.
 | end_enforcement_decision | An enforcement decision was ended as lifted or reversed |
 | force_add_to_guild | An account was added to a guild while bypassing the ban check |
 | generate_gift_codes | Gift codes were generated |
+| hide_built_in_badge | A built-in community badge was hidden on this instance |
 | kick_member | A member was removed from a guild |
 | limit_features | A feature limit decision was recorded for an account |
 | link_sso_identity | A single sign-on subject was bound to an account by hand |
 | migrate_sso_identities | Single sign-on subjects were moved from an earlier provider ID to the provider in use |
 | move_badge | One custom badge was moved in the display order |
+| preview_message_shred | The messages a shred would delete were listed |
 | purge_asset | A stored media asset was purged |
 | purge_guild_emoji_asset | A guild emoji asset was purged |
 | purge_guild_sticker_asset | A guild sticker asset was purged |
@@ -446,6 +448,7 @@ These entries have `access` set to `write`.
 | reload_guild | One guild was reloaded on the main Gateway |
 | reload_guilds | Many guilds were reloaded on the main Gateway |
 | remove_discovery_listing | A guild was removed from discovery |
+| remove_premium | Premium was removed from an account |
 | remove_relationship | One relationship was removed from an account |
 | remove_registration_url | A revoked registration URL was removed from the list |
 | remove_relationships_by_category | Every relationship in one category was removed from an account |
@@ -456,6 +459,7 @@ These entries have `access` set to `write`.
 | reset_built_in_badge_image | A built-in badge went back to its built-in image |
 | resolve_report | A report was updated or resolved |
 | revoke_admin_api_key | An Admin API key was revoked |
+| revoke_gift_code | A gift code nobody had redeemed was revoked |
 | revoke_recovery_kit | The recovery kit of an account was revoked |
 | revoke_registration_url | A registration URL was revoked |
 | revoke_voice_join_token | A voice join token was revoked |
@@ -467,6 +471,8 @@ These entries have `access` set to `write`.
 | set_system_status | The system flag of an account was changed |
 | set_traits | Account traits were replaced |
 | shutdown_guild | One guild was stopped on the main Gateway |
+| show_built_in_badge | A hidden built-in community badge was shown again |
+| sso_sign_in | An admin signed in to the admin panel through single sign-on |
 | system_dm.send | A system DM broadcast was created |
 | temp_ban | An account was suspended for a time or permanently |
 | terminate_sessions | Every login session of an account was revoked |

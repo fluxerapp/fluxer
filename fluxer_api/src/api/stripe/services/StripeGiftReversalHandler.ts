@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
@@ -7,6 +8,7 @@ import {Logger} from '@app/api/Logger';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {addGiftCodeDuration, type GiftCode} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import {OPERATOR_PASS_LABS_VISIONARY_ROLE_SYNC_TASK} from '@app/api/operator_pass/OperatorPassLabsRole';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {
@@ -479,7 +481,25 @@ export class StripeGiftReversalHandler {
 			throw error;
 		}
 		await dispatchUserUpdate(this.gatewayService, updatedUser);
+		if (redeemer.premiumType === UserPremiumTypes.LIFETIME && updatedUser.premiumType !== UserPremiumTypes.LIFETIME) {
+			await this.queueLabsVisionaryRoleSync(redeemer.id);
+		}
 		return true;
+	}
+
+	private async queueLabsVisionaryRoleSync(userId: UserID): Promise<void> {
+		try {
+			await getWorkerService().addJob(
+				OPERATOR_PASS_LABS_VISIONARY_ROLE_SYNC_TASK,
+				{user_id: userId.toString()},
+				{jobKey: `operator-pass-labs-visionary:${userId}`},
+			);
+		} catch (error) {
+			Logger.error(
+				{userId, error},
+				'Could not queue the Labs Visionary role update after a gift reversal, the daily sync removes it',
+			);
+		}
 	}
 
 	private async releaseReversalClaim(redeemer: User, giftCode: GiftCode, seconds: number): Promise<void> {

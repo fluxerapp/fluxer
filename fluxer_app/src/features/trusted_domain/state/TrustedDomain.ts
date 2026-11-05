@@ -45,6 +45,7 @@ function configuredTrustedDomainPatterns(): Array<string> {
 			RuntimeConfig.giftEndpoint,
 			RuntimeConfig.mediaEndpoint,
 			RuntimeConfig.staticCdnEndpoint,
+			RuntimeConfig.statusPageUrl,
 		].flatMap(domainPatternFromUrl),
 		...RuntimeConfig.appPublic.branding.trusted_domains.filter((domain) => domain !== TRUST_EVERYTHING_PATTERN),
 	]);

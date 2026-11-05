@@ -2,19 +2,19 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {useSubscriptionActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions';
-import type {GracePeriodInfo} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
 import {ScheduledSubscriptionChangeDescription} from '@app/features/app/components/dialogs/components/plutonium/ScheduledSubscriptionChangeDescription';
 import {SubscriptionActions} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionActions';
 import {SubscriptionBillingChangeDescription} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionBillingChangeDescription';
 import styles from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard.module.css';
 import {SubscriptionDescription} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionDescription';
-import {SubscriptionStatusBadge} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionStatusBadge';
+import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {
 	CLAIM_ACCOUNT_TO_PURCHASE_OR_REDEEM_PREMIUM_DESCRIPTOR,
 	PREMIUM_SUBSCRIPTION_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
+import type {GracePeriodInfo} from '@app/features/premium/utils/SubscriptionStatus';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
@@ -61,6 +61,11 @@ const SWITCH_TO_THE_NEW_PRICE_TITLE_DESCRIPTOR = msg({
 const SWITCH_PRICE_DESCRIPTOR = msg({
 	message: 'Switch price',
 	comment: 'Button confirming a move of an active subscription down to the current price.',
+});
+const VISIONARY_DESCRIPTOR = msg({
+	message: 'Visionary',
+	comment:
+		'Name of the Visionary plan, shown as the heading of the Subscriptions settings tab for a Visionary. Keep it as is.',
 });
 const NOT_NOW_DESCRIPTOR = msg({
 	message: 'Not now',
@@ -109,10 +114,7 @@ interface SubscriptionCardProps {
 	handleReactivateSubscription: () => void;
 	handleCancelSubscription: () => void;
 	handleEndPremiumGracePeriod: () => void;
-	handleChangeSubscriptionBillingCycle: (
-		billingCycle: 'monthly' | 'yearly',
-		effectiveAt?: 'now' | 'period_end',
-	) => void;
+	handleChangeSubscriptionBillingCycle: (billingCycle: 'monthly' | 'yearly') => void;
 	handleCancelPendingSubscriptionChange: () => void;
 	handleCommunityButtonClick: () => void;
 	purchaseDisabled?: boolean;
@@ -264,11 +266,8 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 			(targetCycle: 'monthly' | 'yearly') => {
 				const isSwitchingToYearly = targetCycle === 'yearly';
 				const renewalPrice = isSwitchingToYearly ? effectiveYearlyPrice : effectiveMonthlyPrice;
-				const effectiveAt =
-					premiumWillCancel || (billingCycle === 'monthly' && isSwitchingToYearly) ? 'period_end' : 'now';
 				const targetAmountMinor = isSwitchingToYearly ? yearlyAmountMinor : monthlyAmountMinor;
 				const firstInvoiceCreditAmountMinor =
-					effectiveAt === 'period_end' &&
 					billingCycle === 'monthly' &&
 					isSwitchingToYearly &&
 					currentSubscriptionCurrency === priceCurrency &&
@@ -299,7 +298,6 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							}
 							description={
 								<SubscriptionBillingChangeDescription
-									effectiveAt={effectiveAt}
 									isSwitchingToYearly={isSwitchingToYearly}
 									firstRenewalPriceLabel={firstRenewalPriceLabel}
 									creditLabel={creditLabel}
@@ -313,7 +311,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							primaryVariant="primary"
 							secondaryText={i18n._(NOT_NOW_DESCRIPTOR)}
 							onPrimary={async () => {
-								await handleChangeSubscriptionBillingCycle(targetCycle, effectiveAt);
+								await handleChangeSubscriptionBillingCycle(targetCycle);
 							}}
 							data-flx="app.plutonium.subscription-card.handle-confirm-billing-cycle-change.confirm-modal"
 						/>
@@ -331,7 +329,6 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 				i18n,
 				locale,
 				monthlyAmountMinor,
-				premiumWillCancel,
 				priceCurrency,
 				yearlyAmountMinor,
 			],
@@ -364,190 +361,163 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		}, [handleSwitchToListPrice, i18n, listPriceCurrentLabel, listPriceEffectiveDate, listPriceNewLabel]);
 
 		return (
-			<div className={styles.card} data-flx="app.plutonium.subscription-card.card">
-				<div className={styles.grid} data-flx="app.plutonium.subscription-card.grid">
-					<div className={styles.content} data-flx="app.plutonium.subscription-card.content">
-						<div className={styles.header} data-flx="app.plutonium.subscription-card.header">
-							<h3 className={styles.title} data-flx="app.plutonium.subscription-card.title">
-								{isVisionary ? (
-									<Trans>Visionary</Trans>
-								) : (
-									i18n._(PREMIUM_SUBSCRIPTION_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
-								)}
-							</h3>
-							<SubscriptionStatusBadge
-								isFullyExpired={isFullyExpired}
-								isInGracePeriod={isInGracePeriod}
-								perksDisabled={perksDisabled}
-								premiumWillCancel={premiumWillCancel}
-								hasPendingSubscriptionChange={hasPendingSubscriptionChange}
-								isVisionary={isVisionary}
-								isGiftSubscription={isGiftSubscription}
-								data-flx="app.plutonium.subscription-card.subscription-status-badge"
+			<SettingsSection
+				id="subscription"
+				title={
+					isVisionary
+						? i18n._(VISIONARY_DESCRIPTOR)
+						: i18n._(PREMIUM_SUBSCRIPTION_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
+				}
+				description={
+					<SubscriptionDescription
+						locale={locale}
+						isFullyExpired={isFullyExpired}
+						isInGracePeriod={isInGracePeriod}
+						graceEndDate={graceEndDate}
+						gracePeriodInfo={gracePeriodInfo}
+						isGiftGrace={isGiftGrace}
+						storeSubscription={storeSubscription}
+						premiumWillCancel={premiumWillCancel}
+						premiumUntil={premiumUntil}
+						isGiftSubscription={isGiftSubscription}
+						perksDisabled={perksDisabled}
+						isVisionary={isVisionary}
+						billingCycle={billingCycle}
+						effectiveMonthlyPrice={effectiveMonthlyPrice}
+						effectiveYearlyPrice={effectiveYearlyPrice}
+						isCurrentSubscriptionGrandfathered={isCurrentSubscriptionGrandfathered}
+						grandfatheredTooltip={grandfatheredTooltip}
+						scrollToPerks={scrollToPerks}
+						data-flx="app.plutonium.subscription-card.subscription-description"
+					/>
+				}
+				data-flx="app.plutonium.subscription-card.section"
+			>
+				{!isVisionary &&
+					(hasPendingSubscriptionChange || hasPendingListPriceSwitch) &&
+					pendingChangeDate &&
+					!isInGracePeriod &&
+					!isFullyExpired &&
+					!isGiftSubscription && (
+						<div className={styles.note} data-flx="app.plutonium.subscription-card.pending-change-info">
+							<ScheduledSubscriptionChangeDescription
+								hasPendingListPriceSwitch={hasPendingListPriceSwitch}
+								pendingTargetPriceLabel={pendingTargetPriceLabel}
+								pendingChangeDate={pendingChangeDate}
+								pendingSubscriptionChange={pendingSubscriptionChange}
+								pendingInitialPriceLabel={pendingInitialPriceLabel}
+								pendingRecurringPriceLabel={pendingRecurringPriceLabel}
+								pendingCreditPriceLabel={pendingCreditPriceLabel}
+								data-flx="app.plutonium.subscription-card.scheduled-subscription-change-description"
 							/>
 						</div>
-						<div className={styles.description} data-flx="app.plutonium.subscription-card.description">
-							<SubscriptionDescription
-								locale={locale}
-								isFullyExpired={isFullyExpired}
-								isInGracePeriod={isInGracePeriod}
-								graceEndDate={graceEndDate}
-								gracePeriodInfo={gracePeriodInfo}
-								isGiftGrace={isGiftGrace}
-								storeSubscription={storeSubscription}
-								premiumWillCancel={premiumWillCancel}
-								premiumUntil={premiumUntil}
-								isGiftSubscription={isGiftSubscription}
-								perksDisabled={perksDisabled}
-								isVisionary={isVisionary}
-								billingCycle={billingCycle}
-								effectiveMonthlyPrice={effectiveMonthlyPrice}
-								effectiveYearlyPrice={effectiveYearlyPrice}
-								isCurrentSubscriptionGrandfathered={isCurrentSubscriptionGrandfathered}
-								grandfatheredTooltip={grandfatheredTooltip}
-								scrollToPerks={scrollToPerks}
-								data-flx="app.plutonium.subscription-card.subscription-description"
-							/>
+					)}
+				{!isVisionary &&
+					shouldSuggestCancelingPendingChange &&
+					!isInGracePeriod &&
+					!isFullyExpired &&
+					!isGiftSubscription && (
+						<div className={styles.note} data-flx="app.plutonium.subscription-card.list-price-switch-blocked-info">
+							<Trans comment="Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.">
+								Cancel the scheduled change to move to the current price instead.
+							</Trans>
 						</div>
-						{!isVisionary &&
-							(hasPendingSubscriptionChange || hasPendingListPriceSwitch) &&
-							pendingChangeDate &&
-							!isInGracePeriod &&
-							!isFullyExpired &&
-							!isGiftSubscription && (
-								<div
-									className={styles.pendingChangeInfo}
-									data-flx="app.plutonium.subscription-card.pending-change-info"
-								>
-									<ScheduledSubscriptionChangeDescription
-										hasPendingListPriceSwitch={hasPendingListPriceSwitch}
-										pendingTargetPriceLabel={pendingTargetPriceLabel}
-										pendingChangeDate={pendingChangeDate}
-										pendingSubscriptionChange={pendingSubscriptionChange}
-										pendingInitialPriceLabel={pendingInitialPriceLabel}
-										pendingRecurringPriceLabel={pendingRecurringPriceLabel}
-										pendingCreditPriceLabel={pendingCreditPriceLabel}
-										data-flx="app.plutonium.subscription-card.scheduled-subscription-change-description"
-									/>
-								</div>
-							)}
-						{!isVisionary &&
-							shouldSuggestCancelingPendingChange &&
-							!isInGracePeriod &&
-							!isFullyExpired &&
-							!isGiftSubscription && (
-								<div
-									className={styles.pendingChangeInfo}
-									data-flx="app.plutonium.subscription-card.list-price-switch-blocked-info"
-								>
-									<Trans comment="Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.">
-										Cancel the scheduled change to move to the current price instead.
-									</Trans>
-								</div>
-							)}
-						{!isVisionary &&
-							shouldMentionListPriceWhileCancelling &&
-							listPriceNewLabel &&
-							premiumUntil &&
-							!isInGracePeriod &&
-							!isFullyExpired &&
-							!isGiftSubscription &&
-							(() => {
-								const cancelDate = getFormattedLongDate(premiumUntil, locale);
-								return (
-									<div
-										className={styles.pendingChangeInfo}
-										data-flx="app.plutonium.subscription-card.list-price-switch-cancelling-info"
-									>
-										<Trans comment="Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.">
-											Your subscription still ends on{' '}
-											<strong data-flx="app.plutonium.subscription-card.strong--15">{cancelDate}</strong>. The current
-											price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here.
-										</Trans>
-									</div>
-								);
-							})()}
-						{!isVisionary &&
-							canSwitchToListPrice &&
-							listPriceEffectiveDate &&
-							!isInGracePeriod &&
-							!isFullyExpired &&
-							!isGiftSubscription && (
-								<div
-									className={styles.pendingChangeInfo}
-									data-flx="app.plutonium.subscription-card.list-price-switch-info"
-								>
-									<Trans comment="Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.">
-										A lower price is available. Switching takes effect on{' '}
-										<strong data-flx="app.plutonium.subscription-card.strong--14">{listPriceEffectiveDate}</strong> and
-										changes nothing else.
-									</Trans>
-								</div>
-							)}
-						{!isVisionary &&
-							renewsAt &&
-							!premiumWillCancel &&
-							!isInGracePeriod &&
-							!isFullyExpired &&
-							!isGiftSubscription &&
-							(() => {
-								const renewalDate = getFormattedLongDate(renewsAt, locale);
-								return (
-									<div className={styles.renewalInfo} data-flx="app.plutonium.subscription-card.renewal-info">
-										<Trans>
-											Renews on <strong data-flx="app.plutonium.subscription-card.strong--11">{renewalDate}.</strong>
-										</Trans>
-									</div>
-								);
-							})()}
-					</div>
-					<div className={styles.actions} data-flx="app.plutonium.subscription-card.actions">
-						<SubscriptionActions
-							storeSubscription={storeSubscription}
-							isInGracePeriod={isInGracePeriod}
-							premiumWillCancel={premiumWillCancel}
-							isGiftSubscription={isGiftSubscription}
-							isGiftGrace={isGiftGrace}
-							billingUnavailable={billingUnavailable}
-							canSubscribe={canSubscribe}
-							purchaseDisabled={purchaseDisabled}
-							tooltipText={tooltipText}
-							isFullyExpired={isFullyExpired}
-							hasEverPurchased={hasEverPurchased}
-							shouldUseReactivateQuickAction={shouldUseReactivateQuickAction}
-							loadingReactivate={loadingReactivate}
-							loadingPortal={loadingPortal}
-							isVisionary={isVisionary}
-							loadingRejoinCommunity={loadingRejoinCommunity}
-							shouldUseChangePlanQuickAction={shouldUseChangePlanQuickAction}
-							targetBillingCycle={targetBillingCycle}
-							hasPendingSubscriptionChange={hasPendingSubscriptionChange}
-							hasPendingListPriceSwitch={hasPendingListPriceSwitch}
-							loadingChangeBillingCycle={loadingChangeBillingCycle}
-							canSwitchToListPrice={canSwitchToListPrice}
-							listPriceNewLabel={listPriceNewLabel}
-							loadingSwitchToListPrice={loadingSwitchToListPrice}
-							loadingCancelPendingChange={loadingCancelPendingChange}
-							pendingSubscriptionChange={pendingSubscriptionChange}
-							shouldUseCancelQuickAction={shouldUseCancelQuickAction}
-							loadingCancel={loadingCancel}
-							gracePeriodInfo={gracePeriodInfo}
-							loadingEndGrace={loadingEndGrace}
-							handleStartSubscription={handleStartSubscription}
-							navigateToRedeemGift={navigateToRedeemGift}
-							handleReactivateSubscription={handleReactivateSubscription}
-							handleOpenCustomerPortal={handleOpenCustomerPortal}
-							handleCommunityButtonClick={handleCommunityButtonClick}
-							handleConfirmBillingCycleChange={handleConfirmBillingCycleChange}
-							handleConfirmSwitchToListPrice={handleConfirmSwitchToListPrice}
-							handleCancelPendingSubscriptionChange={handleCancelPendingSubscriptionChange}
-							handleCancelSubscription={handleCancelSubscription}
-							handleEndPremiumGracePeriod={handleEndPremiumGracePeriod}
-							data-flx="app.plutonium.subscription-card.subscription-actions"
-						/>
-					</div>
+					)}
+				{!isVisionary &&
+					shouldMentionListPriceWhileCancelling &&
+					listPriceNewLabel &&
+					premiumUntil &&
+					!isInGracePeriod &&
+					!isFullyExpired &&
+					!isGiftSubscription &&
+					(() => {
+						const cancelDate = getFormattedLongDate(premiumUntil, locale);
+						return (
+							<div className={styles.note} data-flx="app.plutonium.subscription-card.list-price-switch-cancelling-info">
+								<Trans comment="Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.">
+									Your subscription still ends on{' '}
+									<strong data-flx="app.plutonium.subscription-card.strong--15">{cancelDate}</strong>. The current price
+									is now {listPriceNewLabel}. If you reactivate, you can switch to it from here.
+								</Trans>
+							</div>
+						);
+					})()}
+				{!isVisionary &&
+					canSwitchToListPrice &&
+					listPriceEffectiveDate &&
+					!isInGracePeriod &&
+					!isFullyExpired &&
+					!isGiftSubscription && (
+						<div className={styles.note} data-flx="app.plutonium.subscription-card.list-price-switch-info">
+							<Trans comment="Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.">
+								A lower price is available. Switching takes effect on{' '}
+								<strong data-flx="app.plutonium.subscription-card.strong--14">{listPriceEffectiveDate}</strong> and
+								changes nothing else.
+							</Trans>
+						</div>
+					)}
+				{!isVisionary &&
+					renewsAt &&
+					!premiumWillCancel &&
+					!isInGracePeriod &&
+					!isFullyExpired &&
+					!isGiftSubscription &&
+					(() => {
+						const renewalDate = getFormattedLongDate(renewsAt, locale);
+						return (
+							<div className={styles.note} data-flx="app.plutonium.subscription-card.renewal-info">
+								<Trans>
+									Renews on <strong data-flx="app.plutonium.subscription-card.strong--11">{renewalDate}.</strong>
+								</Trans>
+							</div>
+						);
+					})()}
+				<div className={styles.actions} data-flx="app.plutonium.subscription-card.actions">
+					<SubscriptionActions
+						storeSubscription={storeSubscription}
+						isInGracePeriod={isInGracePeriod}
+						premiumWillCancel={premiumWillCancel}
+						isGiftSubscription={isGiftSubscription}
+						isGiftGrace={isGiftGrace}
+						billingUnavailable={billingUnavailable}
+						canSubscribe={canSubscribe}
+						purchaseDisabled={purchaseDisabled}
+						tooltipText={tooltipText}
+						isFullyExpired={isFullyExpired}
+						hasEverPurchased={hasEverPurchased}
+						shouldUseReactivateQuickAction={shouldUseReactivateQuickAction}
+						loadingReactivate={loadingReactivate}
+						loadingPortal={loadingPortal}
+						isVisionary={isVisionary}
+						loadingRejoinCommunity={loadingRejoinCommunity}
+						shouldUseChangePlanQuickAction={shouldUseChangePlanQuickAction}
+						targetBillingCycle={targetBillingCycle}
+						hasPendingSubscriptionChange={hasPendingSubscriptionChange}
+						hasPendingListPriceSwitch={hasPendingListPriceSwitch}
+						loadingChangeBillingCycle={loadingChangeBillingCycle}
+						canSwitchToListPrice={canSwitchToListPrice}
+						listPriceNewLabel={listPriceNewLabel}
+						loadingSwitchToListPrice={loadingSwitchToListPrice}
+						loadingCancelPendingChange={loadingCancelPendingChange}
+						pendingSubscriptionChange={pendingSubscriptionChange}
+						shouldUseCancelQuickAction={shouldUseCancelQuickAction}
+						loadingCancel={loadingCancel}
+						gracePeriodInfo={gracePeriodInfo}
+						loadingEndGrace={loadingEndGrace}
+						handleStartSubscription={handleStartSubscription}
+						navigateToRedeemGift={navigateToRedeemGift}
+						handleReactivateSubscription={handleReactivateSubscription}
+						handleOpenCustomerPortal={handleOpenCustomerPortal}
+						handleCommunityButtonClick={handleCommunityButtonClick}
+						handleConfirmBillingCycleChange={handleConfirmBillingCycleChange}
+						handleConfirmSwitchToListPrice={handleConfirmSwitchToListPrice}
+						handleCancelPendingSubscriptionChange={handleCancelPendingSubscriptionChange}
+						handleCancelSubscription={handleCancelSubscription}
+						handleEndPremiumGracePeriod={handleEndPremiumGracePeriod}
+						data-flx="app.plutonium.subscription-card.subscription-actions"
+					/>
 				</div>
-			</div>
+			</SettingsSection>
 		);
 	},
 );

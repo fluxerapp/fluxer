@@ -61,7 +61,7 @@ const GifIndicator = observer(() => (
 const VideoPoster = ({src, placeholder}: {src: string; placeholder: string | null}) => {
 	return (
 		<PickerThumbnail
-			src={buildMediaProxyURL(src, {format: 'webp'})}
+			src={src && buildMediaProxyURL(src, {format: 'webp'})}
 			alt=""
 			className={gifStyles.gif}
 			placeholder={placeholder}
@@ -104,10 +104,10 @@ export const MemeGridItem = observer(
 			isHovering: isVideoPreviewActive,
 		});
 		const shouldRenderVideoPreview = !isAudio && isVideo && isVideoPreviewActive && shouldAnimateGif;
-		const memeUrl = AttachmentUrlRefresher.fresh(meme.url, {refreshUnsigned: true});
+		const memeUrl = AttachmentUrlRefresher.freshWhenReady(meme.url, {refreshUnsigned: true}) ?? '';
 		const thumbnailSrc =
 			isGifImage && !shouldAnimateGif
-				? AttachmentUrlRefresher.fresh(buildStaticGifPreviewURL(meme.url), {refreshUnsigned: true})
+				? (AttachmentUrlRefresher.freshWhenReady(buildStaticGifPreviewURL(meme.url), {refreshUnsigned: true}) ?? '')
 				: memeUrl;
 		const videoPreviewStartTime = meme.duration && meme.duration > 0 ? meme.duration / 2 : null;
 		usePooledVideo({

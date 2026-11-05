@@ -123,7 +123,7 @@ interface InlineLink {
 
 type InlinePart = string | InlineLink;
 
-const INLINE_PATTERN = /<(mail|settings|dsa|arn)>([^<]*)<\/\1>|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+const INLINE_PATTERN = /<(mail|settings|dsa|arn|labs)>([^<]*)<\/\1>|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
 const CITED_LINK_HOSTS = ['digital-strategy.ec.europa.eu', 'www.arn.se'];
 
 export function emailLinkHosts(baseUrls: ReadonlyArray<string>): ReadonlySet<string> {
@@ -383,11 +383,7 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 		].filter(Boolean);
 		sections.push(`${title}\n${blocks.join('\n\n')}`);
 	}
-	const footer = textBlock(
-		textParagraphs(slots.footer_reason, slots, links),
-		textLink(slots.unsubscribe, slots.unsubscribe_url, links),
-		slots.legal_address,
-	);
+	const footer = textBlock(textParagraphs(slots.footer_reason, slots, links), slots.legal_address);
 	const text = [
 		slots.heading,
 		textParagraphs(slots.intro, slots, links),

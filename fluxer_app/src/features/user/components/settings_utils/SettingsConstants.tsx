@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {OPERATOR_PASS_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
+import PremiumState from '@app/features/premium/state/PremiumState';
+import {
+	hasPaymentHistory,
+	hasSubscriptionToManage,
+	holdsOperatorPass,
+} from '@app/features/premium/utils/BillingTabVisibility';
+import {isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {guessPlatform, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
@@ -28,11 +37,12 @@ import {
 	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR as DESKTOP_SETTINGS_DESCRIPTOR,
 	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR,
 	EMBED_DEBUGGER_DESCRIPTOR,
+	KEYBINDS_DESCRIPTOR,
 	LANGUAGE_DESCRIPTOR as LANGUAGE_AND_TIME_DESCRIPTOR,
 	DEVICES_DESCRIPTOR as LINKED_DEVICES_DESCRIPTOR,
 	PRIVACY_DESCRIPTOR as PRIVACY_SAFETY_DESCRIPTOR,
-	SHORTCUTS_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import Users from '@app/features/user/state/Users';
 import {
 	GIFTS_DESCRIPTOR as GIFTS_AND_CODES_DESCRIPTOR,
 	LOOK_AND_FEEL_DESCRIPTOR,
@@ -42,6 +52,7 @@ import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
 import {
+	ArrowsClockwiseIcon,
 	AtomIcon,
 	BellIcon,
 	ChatCircleIcon,
@@ -59,9 +70,11 @@ import {
 	PaletteIcon,
 	PersonSimpleCircleIcon,
 	ProhibitIcon,
+	ReceiptIcon,
 	RobotIcon,
 	ShieldIcon,
 	SwatchesIcon,
+	TicketIcon,
 	TranslateIcon,
 	UserIcon,
 	UserListIcon,
@@ -83,6 +96,17 @@ const MACOS_SETTINGS_DESCRIPTOR = msg({
 const PROFILE_DESCRIPTOR = msg({
 	message: 'Profile',
 	comment: 'User settings tab for editing the current user profile.',
+});
+
+const SUBSCRIPTIONS_DESCRIPTOR = msg({
+	message: 'Subscriptions',
+	comment:
+		'User settings tab under Billing where the user manages a Plutonium subscription, its renewal and cancellation.',
+});
+const PAYMENTS_DESCRIPTOR = msg({
+	message: 'Payments',
+	comment:
+		'User settings tab under Billing that holds the payment methods on file, refunds and the receipts for past payments.',
 });
 
 const CONNECTIONS_DESCRIPTOR = msg({
@@ -200,11 +224,32 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		isVisible: shouldShowPremiumFeatures,
 	},
 	{
+		type: 'subscriptions',
+		category: 'billing',
+		label: SUBSCRIPTIONS_DESCRIPTOR,
+		icon: ArrowsClockwiseIcon,
+		isVisible: () => shouldShowPremiumFeatures() && hasSubscriptionToManage(PremiumState, Users.currentUser),
+	},
+	{
+		type: 'operator_pass',
+		category: 'billing',
+		label: OPERATOR_PASS_NAME,
+		icon: TicketIcon,
+		isVisible: () => isOperatorPassAvailable() && holdsOperatorPass(Users.currentUser, OperatorPassHoldings.passes),
+	},
+	{
 		type: 'gift_inventory',
 		category: 'billing',
 		label: GIFTS_AND_CODES_DESCRIPTOR,
 		icon: GiftIcon,
 		isVisible: shouldShowPremiumFeatures,
+	},
+	{
+		type: 'payments',
+		category: 'billing',
+		label: PAYMENTS_DESCRIPTOR,
+		icon: ReceiptIcon,
+		isVisible: () => shouldShowPremiumFeatures() && hasPaymentHistory(PremiumState, Users.currentUser),
 	},
 	{
 		type: 'appearance',
@@ -252,7 +297,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 	{
 		type: 'keybinds',
 		category: 'app_settings',
-		label: SHORTCUTS_DESCRIPTOR,
+		label: KEYBINDS_DESCRIPTOR,
 		icon: KeyboardIcon,
 	},
 	{

@@ -8,6 +8,7 @@ import {AccountEntryController} from '@app/api/auth/AccountEntryController';
 import {AuthController} from '@app/api/auth/AuthController';
 import {OriginHandoffController} from '@app/api/auth/OriginHandoffController';
 import {PasskeyBridgeController} from '@app/api/auth/PasskeyBridgeController';
+import {BillingDocumentController} from '@app/api/billing_documents/BillingDocumentController';
 import {BlueskyOAuthController} from '@app/api/bluesky/BlueskyOAuthController';
 import {registerChannelControllers} from '@app/api/channel/controllers/index';
 import type {APIConfig} from '@app/api/config/APIConfig';
@@ -88,6 +89,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	if (!config.instance.selfHosted) {
 		DonationController(routes);
 		OperatorPassController(routes);
+		BillingDocumentController(routes);
 	}
 	StripeController(routes);
 }

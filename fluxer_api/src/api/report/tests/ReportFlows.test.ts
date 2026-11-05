@@ -4,7 +4,9 @@ import {createTestAccount, type TestAccount, unclaimAccount} from '@app/api/auth
 import {createReportID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {
+	acceptInvite,
 	createChannel,
+	createChannelInvite,
 	createDmChannel,
 	createFriendship,
 	getChannel,
@@ -38,12 +40,6 @@ interface ReportResponse {
 	reported_at: string;
 }
 
-interface ErrorResponse {
-	code: string;
-	step_index?: number;
-	errors?: Array<{path: string; code: string}>;
-}
-
 interface MessageTarget {
 	reporter: TestAccount;
 	author: TestAccount;
@@ -57,7 +53,7 @@ const RATE_LIMIT_HEADER = 'x-fluxer-test-enable-rate-limits';
 
 const SPAM_WALK: ReadonlyArray<ReportFlowStep> = [{screen_id: 'root_message', option_id: 'spam'}];
 const USER_SPAM_WALK: ReadonlyArray<ReportFlowStep> = [
-	{screen_id: 'profile_intro'},
+	{screen_id: 'user_start', option_id: 'profile'},
 	{screen_id: 'profile_parts', item_ids: ['name']},
 	{screen_id: 'root_user', option_id: 'spam'},
 	{screen_id: 'spam_profile', option_id: 'spam_profile'},
@@ -72,8 +68,25 @@ const CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'sexual', option_id: 'minor_sexual'},
 	{screen_id: 'minor_sexual', option_id: 'csam'},
 ];
+const CALL_CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'user_start', option_id: 'call'},
+	{screen_id: 'root_call', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'minor_sexual'},
+	{screen_id: 'minor_sexual', option_id: 'csam'},
+];
+const SELF_HARM_PROMOTION_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'something_else'},
+	{screen_id: 'something_else_message', option_id: 'self_harm'},
+	{screen_id: 'self_harm', option_id: 'self_harm_promotion'},
+];
+const GUILD_HARASSMENT_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'community_parts', item_ids: ['icon']},
+	{screen_id: 'root_guild', option_id: 'abuse'},
+	{screen_id: 'abuse_guild', option_id: 'harassment'},
+];
 const USER_PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStep> = [
-	{screen_id: 'profile_intro'},
+	{screen_id: 'user_start', option_id: 'profile'},
 	{screen_id: 'profile_parts', item_ids: ['profile_text']},
 	{screen_id: 'root_user', option_id: 'something_else'},
 	{screen_id: 'something_else_user', option_id: 'private_info'},
@@ -149,6 +162,10 @@ function submitUser(harness: ApiTestHarness, token: string, body: unknown) {
 	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/user/submissions').body(body);
 }
 
+function submitGuild(harness: ApiTestHarness, token: string, body: unknown) {
+	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/guild/submissions').body(body);
+}
+
 function legacyMessage(harness: ApiTestHarness, token: string, target: {channelId: string; messageId: string}) {
 	return createBuilder<ReportResponse>(harness, token)
 		.post('/reports/message')
@@ -197,24 +214,35 @@ describe('Report flows', () => {
 				.get('/reports/flows/user')
 				.expect(HTTP_STATUS.OK)
 				.executeWithResponse();
-			expect(json.start_screen_id).toBe('profile_intro');
+			expect(json.start_screen_id).toBe('user_start');
 			expect(response.headers.get('cache-control')).toBe('private, no-cache');
 			expect(response.headers.get('vary')).toContain('Accept-Language');
 		});
 
-		test('the guild flow exists only on the DSA surface', async () => {
-			for (const path of ['/reports/flows/guild', '/reports/flows/guild?surface=in_app']) {
-				const error = await createBuilderWithoutAuth<ErrorResponse>(harness)
+		test('the guild flow is served in the app and on the DSA form', async () => {
+			for (const path of ['/reports/flows/guild', '/reports/flows/guild?surface=dsa']) {
+				const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
 					.get(path)
-					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+					.expect(HTTP_STATUS.OK)
 					.execute();
-				expect(error.errors?.map((entry) => entry.path)).toEqual(['surface']);
+				expect(flow.start_screen_id).toBe('community_parts');
 			}
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/guild?surface=dsa')
+		});
+	});
+
+	describe('Submit, guild', () => {
+		test('a member files the in-app community flow and the walk is stored', async () => {
+			const {members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const result = await submitGuild(harness, members[0].token, {
+				guild_id: guild.id,
+				revision_hash: currentHash('guild'),
+				steps: GUILD_HARASSMENT_WALK,
+			})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(flow.start_screen_id).toBe('community_parts');
+			const report = await readReport(result.report_id);
+			expect(report.reportedGuildId?.toString()).toBe(guild.id);
+			expect(report.reason).toBe('harassment');
 		});
 	});
 
@@ -264,6 +292,32 @@ describe('Report flows', () => {
 			expect(await countReports()).toBe(0);
 			await submitUser(harness, outsider.token, userBody(target.userId)).expect(HTTP_STATUS.OK).execute();
 			expect(await countReports()).toBe(1);
+		});
+	});
+
+	describe('Submit, message and call reasons', () => {
+		test('swearing is filed as a report', async () => {
+			const target = await setupMessage(harness);
+			const result = await submitMessage(
+				harness,
+				target.reporter.token,
+				messageBody(target, [
+					{screen_id: 'root_message', option_id: 'abuse'},
+					{screen_id: 'abuse', option_id: 'swearing'},
+				]),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('rude_language');
+		});
+
+		test('a call report leads to the child safety reasons', async () => {
+			const reporter = await createTestAccount(harness);
+			const reported = await createTestAccount(harness);
+			const result = await submitUser(harness, reporter.token, userBody(reported.userId, CALL_CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('csam');
 		});
 	});
 
@@ -382,6 +436,17 @@ describe('Report flows', () => {
 			await submitUser(harness, unverified.token, userBody(target.author.userId))
 				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED)
 				.execute();
+		});
+
+		test('an unverified reporter can file a highest priority report', async () => {
+			const target = await setupMessage(harness);
+			const unverified = await createTestAccount(harness, {skipEmailVerification: true});
+			const invite = await createChannelInvite(harness, target.reporter.token, target.channelId);
+			await acceptInvite(harness, unverified.token, invite.code);
+			const result = await submitMessage(harness, unverified.token, messageBody(target, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('csam');
 		});
 
 		test('an unclaimed reporter is refused', async () => {
@@ -627,6 +692,40 @@ describe('Report flows', () => {
 				.expect(429, APIErrorCodes.RATE_LIMITED)
 				.execute();
 			expect(await countReports()).toBe(5);
+		});
+
+		test('child safety and self-harm reports are filed past the reporter allowances', async () => {
+			const reporter = await createTestAccount(harness);
+			const dm = await setupDmMessages(harness, reporter, 5);
+			for (const messageId of dm.messageIds.slice(0, 3)) {
+				await submitMessage(harness, reporter.token, messageBody({channelId: dm.channelId, messageId}))
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			}
+			const users = await Promise.all([0, 1, 2].map(() => createTestAccount(harness)));
+			for (const user of users.slice(0, 2)) {
+				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
+			}
+			await submitUser(harness, reporter.token, userBody(users[2].userId))
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			const urgent = {channelId: dm.channelId, messageId: dm.messageIds[3]};
+			const result = await submitMessage(harness, reporter.token, messageBody(urgent, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('csam');
+			await submitUser(harness, reporter.token, userBody(users[2].userId, CALL_CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const selfHarm = await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dm.channelId, messageId: dm.messageIds[4]}, SELF_HARM_PROMOTION_WALK),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(selfHarm.report_id)).reason).toBe('self_harm_promotion');
+			expect(await countReports()).toBe(8);
 		});
 
 		test('the route bucket is shared and invalid walks spend a route token but no service token', async () => {

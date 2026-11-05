@@ -35,6 +35,7 @@ import {
 	getInstanceConfigRepository,
 	getLimitConfigService,
 } from '@app/api/middleware/ServiceSingletons';
+import {getLabsOperatorsChannelId, isLabsAutoJoinConfigured} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {accountStateDepsFromContext} from '@app/api/user/services/AccountStateApplier';
@@ -45,6 +46,7 @@ import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartu
 import {CronScheduler} from '@app/api/worker/CronScheduler';
 import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
 import {queueDeletedUsersBackfill} from '@app/api/worker/tasks/BackfillDeletedUsers';
+import {queueFavoriteMemeNsfwBackfill} from '@app/api/worker/tasks/BackfillFavoriteMemeNsfw';
 import {queueHiddenProfileBadgesBackfill} from '@app/api/worker/tasks/BackfillHiddenProfileBadges';
 import {queuePasskeyTraitBackfill} from '@app/api/worker/tasks/BackfillPasskeyTrait';
 import {queueUserAclIndexBackfill} from '@app/api/worker/tasks/BackfillUserAclIndex';
@@ -109,11 +111,27 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		cron.upsert('pollAppStoreNotificationHistory', 'pollAppStoreNotificationHistory', {}, '0 45 4 * * *', {
 			ledger: false,
 		});
-		cron.upsert('operatorPassSaleBroadcast', 'operatorPassSaleBroadcast', {}, '0 * * * * *', {ledger: false});
 		cron.upsert('operatorPassWaitlistCleanup', 'operatorPassWaitlistCleanup', {}, '0 20 * * * *', {ledger: false});
 		cron.upsert('operatorPassRemovalExpiry', 'operatorPassRemovalExpiry', {}, '0 */5 * * * *', {ledger: false});
 		cron.upsert('operatorPassWallRetention', 'operatorPassWallRetention', {}, '0 40 3 * * *', {ledger: false});
+		cron.upsert('operatorPassConsentRetention', 'operatorPassConsentRetention', {}, '0 50 3 * * *', {ledger: false});
+		cron.upsert('operatorPassLabsVisionaryRoleSync', 'operatorPassLabsVisionaryRoleSync', {}, '0 55 3 * * *', {
+			ledger: false,
+			enabled: () => Config.operatorPass.labsVisionaryRoleId !== null,
+		});
+		cron.upsert('operatorPassLabsGreeting', 'operatorPassLabsGreeting', {}, '15 */5 * * * *', {
+			ledger: false,
+			enabled: () => getLabsOperatorsChannelId() !== null,
+		});
+		cron.upsert('operatorPassLabsDelivery', 'operatorPassLabsDelivery', {}, '0 10 4 * * *', {
+			ledger: false,
+			enabled: isLabsAutoJoinConfigured,
+		});
 		cron.upsert('operatorPassOfferCompletion', 'operatorPassOfferCompletion', {}, '30 */5 * * * *', {ledger: false});
+		cron.upsert('operatorPassFulfilmentSweep', 'operatorPassFulfilmentSweep', {}, '45 */15 * * * *', {
+			ledger: false,
+			enabled: () => getStripeClient() !== null,
+		});
 	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
@@ -238,6 +256,7 @@ export async function startWorkerRuntime(options: WorkerRuntimeOptions): Promise
 		await queueUserAclIndexBackfill(dependencies.kvClient, workerService);
 		await queueDeletedUsersBackfill(dependencies.kvClient, workerService);
 		await queueHiddenProfileBadgesBackfill(dependencies.kvClient, workerService);
+		await queueFavoriteMemeNsfwBackfill(dependencies.kvClient, workerService);
 		try {
 			const normalized = await getInstanceConfigRepository().normalizeStoredBrandingAssets(dependencies.storageService);
 			if (normalized > 0) {

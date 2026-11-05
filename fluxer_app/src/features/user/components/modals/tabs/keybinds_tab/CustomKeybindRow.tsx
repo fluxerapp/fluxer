@@ -27,23 +27,23 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const DISABLE_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Disable shortcut',
+	message: 'Disable keybind',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const ENABLE_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Enable shortcut',
+	message: 'Enable keybind',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const DELETE_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Delete shortcut',
+	message: 'Delete keybind',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.',
 });
 const CUSTOM_SHORTCUT_OPTIONS_DESCRIPTOR = msg({
-	message: 'Custom shortcut options',
+	message: 'Custom keybind options',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
 const CUSTOM_SHORTCUT_ACTION_DESCRIPTOR = msg({
-	message: 'Custom shortcut action',
+	message: 'Custom keybind action',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
 export const CustomKeybindRow = observer(
@@ -82,7 +82,7 @@ export const CustomKeybindRow = observer(
 								closeOnChange
 								data-flx="user.keybinds-tab.open-row-menu.checkbox-item.global"
 							>
-								<Trans>Global shortcut</Trans>
+								<Trans>Global keybind</Trans>
 							</CheckboxItem>
 						</MenuGroup>
 					) : null}
@@ -122,7 +122,7 @@ export const CustomKeybindRow = observer(
 						/>
 					</div>
 					<KeybindRecorder
-						label={<Trans>Shortcut</Trans>}
+						label={<Trans>Keybind</Trans>}
 						action={entryAction ?? 'voice_push_to_talk'}
 						value={entry.combo}
 						onChange={handleCombo}

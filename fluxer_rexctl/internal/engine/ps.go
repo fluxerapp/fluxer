@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/distribution/reference"
 	"github.com/docker/compose/v5/pkg/api"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
@@ -224,6 +226,88 @@ func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, erro
 		return "", false, &Error{Op: "image", Class: ClassOf(err), Err: err}
 	}
 	return res.ID, true, nil
+}
+
+func ImageStore(dir string, e *Engine) string {
+	if e != nil && e.DataRoot != "" {
+		if _, err := os.Stat(e.DataRoot); err == nil {
+			return e.DataRoot
+		}
+	}
+	return dir
+}
+
+func (e *Engine) LocalDiffIDs(ctx context.Context) (map[string]bool, error) {
+	c, err := e.api()
+	if err != nil {
+		return nil, err
+	}
+	list, err := c.ImageList(ctx, client.ImageListOptions{})
+	if err != nil {
+		return nil, &Error{Op: "images", Class: ClassOf(err), Err: err}
+	}
+	out := map[string]bool{}
+	for _, img := range list.Items {
+		res, err := c.ImageInspect(ctx, img.ID)
+		if err != nil {
+			if cerrdefs.IsNotFound(err) {
+				continue
+			}
+			return nil, &Error{Op: "image", Class: ClassOf(err), Err: err}
+		}
+		for _, l := range res.RootFS.Layers {
+			out[l] = true
+		}
+	}
+	return out, nil
+}
+
+func (e *Engine) PullNeed(ctx context.Context, set stack.ImageSet, refs []string, sizes map[string]uint64) uint64 {
+	local, _ := e.LocalDiffIDs(ctx)
+	var missing []string
+	var need uint64
+	for _, ref := range refs {
+		if _, found, err := e.LocalImage(ctx, ref); err == nil && found {
+			continue
+		}
+		if _, known := set.LayersFor(e.Platform, ref); !known && sizes[ref] > 0 {
+			need += 2 * sizes[ref]
+			continue
+		}
+		missing = append(missing, ref)
+	}
+	return need + set.Need(e.Platform, missing, local)
+}
+
+func (e *Engine) UniqueSize(ctx context.Context, refs []string) (uint64, error) {
+	c, err := e.api()
+	if err != nil {
+		return 0, err
+	}
+	ids := map[string]bool{}
+	for _, ref := range refs {
+		id, found, err := e.LocalImage(ctx, ref)
+		if err != nil {
+			return 0, err
+		}
+		if found {
+			ids[id] = true
+		}
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	list, err := c.ImageList(ctx, client.ImageListOptions{SharedSize: true})
+	if err != nil {
+		return 0, &Error{Op: "images", Class: ClassOf(err), Err: err}
+	}
+	var n uint64
+	for _, img := range list.Items {
+		if ids[img.ID] && img.SharedSize >= 0 && img.Size > img.SharedSize {
+			n += uint64(img.Size - img.SharedSize)
+		}
+	}
+	return n, nil
 }
 
 func (e *Engine) ImageSize(ctx context.Context, ref string) (uint64, bool, error) {

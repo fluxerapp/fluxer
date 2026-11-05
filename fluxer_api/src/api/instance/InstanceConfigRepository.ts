@@ -103,11 +103,13 @@ import {
 	CustomBadgeTypes,
 	DEFAULT_CUSTOM_BADGES_PER_GUILD,
 	DEFAULT_CUSTOM_BADGES_PER_USER,
+	HIDEABLE_BUILT_IN_BADGE_KINDS,
+	type HideableBuiltInBadgeKind,
 } from '@fluxer/constants/src/BadgeConstants';
 import {resolveSmtpTlsMode, type SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
+import {normalizeHexColor, normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
 import {
 	type AccountsConfig,
 	AccountsConfigSchema,
@@ -509,6 +511,16 @@ function normalizeOptionalPublicString(value: string | null | undefined, fallbac
 	return value === undefined ? fallback : normalizeOptionalString(value);
 }
 
+function normalizePremiumShowcaseAsset(value: string | null | undefined): string | null {
+	if (!Config.instance.selfHosted || typeof value !== 'string') return null;
+	const reference = toStoredBrandingAsset(value.trim(), Config.endpoints.media);
+	return typeof reference === 'string' &&
+		reference.startsWith('branding-backdrops/') &&
+		isBrandingAssetReference(reference)
+		? reference
+		: null;
+}
+
 function getDefaultPremiumProductName(): string {
 	return Config.instance.selfHosted ? 'Premium' : 'Plutonium';
 }
@@ -531,6 +543,11 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			premium_product_name: getDefaultPremiumProductName(),
 			premium_info_url: null,
 			sign_in_backdrop_url: normalizeOptionalString(Config.instance.branding.signInBackdropUrl),
+			premium_page_color: null,
+			premium_showcase_expressions_url: null,
+			premium_showcase_profile_url: null,
+			premium_showcase_stream_url: null,
+			premium_showcase_upload_url: null,
 			custom_css: null,
 			upload_limit_message: null,
 			trusted_domains: [],
@@ -940,6 +957,7 @@ const StoredBuiltInBadgeImagesSchema = z
 const StoredCustomBadgesSchema = z.object({
 	badges: z.array(z.unknown()).default([]),
 	built_in: StoredBuiltInBadgeImagesSchema,
+	hidden_built_in: z.array(z.enum(HIDEABLE_BUILT_IN_BADGE_KINDS)).default([]),
 });
 
 const StoredLegacyCustomBadgesSchema = StoredCustomBadgesSchema.extend({
@@ -1053,6 +1071,11 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 				branding.sign_in_backdrop_url,
 				defaults.branding.sign_in_backdrop_url,
 			),
+			premium_page_color: Config.instance.selfHosted ? normalizeHexColor(branding.premium_page_color) : null,
+			premium_showcase_expressions_url: normalizePremiumShowcaseAsset(branding.premium_showcase_expressions_url),
+			premium_showcase_profile_url: normalizePremiumShowcaseAsset(branding.premium_showcase_profile_url),
+			premium_showcase_stream_url: normalizePremiumShowcaseAsset(branding.premium_showcase_stream_url),
+			premium_showcase_upload_url: normalizePremiumShowcaseAsset(branding.premium_showcase_upload_url),
 			custom_css: normalizeOptionalPublicString(branding.custom_css, defaults.branding.custom_css),
 			upload_limit_message: normalizeOptionalPublicString(
 				branding.upload_limit_message,
@@ -2225,6 +2248,24 @@ export class InstanceConfigRepository {
 		return config.built_in;
 	}
 
+	async getHiddenBuiltInBadges(): Promise<ReadonlySet<HideableBuiltInBadgeKind>> {
+		return new Set((await this.getStoredCustomBadges()).hidden_built_in);
+	}
+
+	async setBuiltInBadgeHidden(kind: HideableBuiltInBadgeKind, hidden: boolean): Promise<void> {
+		await this.updateStoredConfig(CUSTOM_BADGES_CONFIG_KEY, (raw) => {
+			const current = parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges');
+			const next = new Set(current.hidden_built_in);
+			if (hidden) next.add(kind);
+			else next.delete(kind);
+			return validateStoredConfig(
+				StoredCustomBadgesSchema,
+				{...current, hidden_built_in: HIDEABLE_BUILT_IN_BADGE_KINDS.filter((item) => next.has(item))},
+				'custom badges',
+			);
+		});
+	}
+
 	async readLegacyCustomBadges(): Promise<ReadonlyArray<LegacyCustomBadge>> {
 		const cache = this.configCache;
 		cache.assertActive();
@@ -2883,16 +2924,19 @@ export class InstanceConfigRepository {
 	async getInstantAccountAvailability(
 		registrationUrl: {approvalRequired: boolean} | null = null,
 	): Promise<InstantAccountAvailability> {
-		const [auth, captcha, registration] = await Promise.all([
+		const [auth, captcha, registration, identityMode] = await Promise.all([
 			this.getAuthConfig(),
 			this.getCaptchaConfig(),
 			this.getRegistrationConfig(),
+			this.getAccountIdentityMode(),
 		]);
 		return resolveInstantAccountAvailability({
 			enabled: auth.instant_accounts.enabled,
 			captchaProvider: captcha.provider,
 			registrationMode: registration.mode,
 			registrationUrl,
+			emailDomainsRestricted:
+				identityMode !== AccountIdentityModes.USERNAME && registration.allowed_email_domains.length > 0,
 		});
 	}
 

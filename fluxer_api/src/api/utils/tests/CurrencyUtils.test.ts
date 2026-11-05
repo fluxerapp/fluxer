@@ -40,6 +40,12 @@ describe('getCurrencyPreferences first choice', () => {
 			'ES',
 			'LI',
 			'AX',
+			'GF',
+			'GP',
+			'MF',
+			'MQ',
+			'RE',
+			'YT',
 		];
 		for (const country of eeaCountries) {
 			it(`returns EUR for ${country}`, () => {
@@ -80,21 +86,14 @@ describe('getCurrencyPreferences first choice', () => {
 });
 
 describe('shouldDisableAdaptivePricing', () => {
-	it('disables adaptive pricing for the native Nordic currencies', () => {
-		for (const currency of ['SEK', 'NOK', 'DKK', 'ISK', 'sek']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(true);
-		}
-	});
-	it('leaves adaptive pricing alone for every other currency', () => {
-		for (const currency of ['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(false);
-		}
+	it('turns adaptive pricing off on the official instance for every currency', () => {
+		expect(shouldDisableAdaptivePricing()).toBe(true);
 	});
 	it('leaves adaptive pricing alone on a self-hosted instance', () => {
 		const originalSelfHosted = Config.instance.selfHosted;
 		Config.instance.selfHosted = true;
 		try {
-			expect(shouldDisableAdaptivePricing('SEK')).toBe(false);
+			expect(shouldDisableAdaptivePricing()).toBe(false);
 		} finally {
 			Config.instance.selfHosted = originalSelfHosted;
 		}

@@ -76,6 +76,12 @@ export const ProfileBadgeResponse = z.object({
 		})
 		.nullish()
 		.describe('Content for the richer vertical tooltip, null or absent when label is the whole tooltip'),
+	quote: z
+		.string()
+		.nullish()
+		.describe(
+			"The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+		),
 });
 
 export type ProfileBadgeResponse = z.infer<typeof ProfileBadgeResponse>;

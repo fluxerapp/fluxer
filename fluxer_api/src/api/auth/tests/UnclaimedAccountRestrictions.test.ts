@@ -115,11 +115,7 @@ describe('Unclaimed Account Restrictions', () => {
 	test('unclaimed account can delete without password', async () => {
 		const unclaimed = await createTestAccount(harness);
 		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token)
-			.post('/users/@me/delete')
-			.body({})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
+		await createBuilder(harness, unclaimed.token).post('/users/@me/delete').body({}).expect(HTTP_STATUS.OK).execute();
 	});
 	test('unclaimed account cannot create guild', async () => {
 		const unclaimed = await createTestAccount(harness);

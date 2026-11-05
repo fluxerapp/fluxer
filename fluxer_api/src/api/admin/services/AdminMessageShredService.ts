@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import type {UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {EnforcementDecisionRow} from '@app/api/database/types/EnforcementTypes';
 import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import {Logger} from '@app/api/Logger';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {
+	AdminUserMessageShredPreviewRequest,
 	AdminUserMessageShredRequest,
+	MessageShredPreviewResponse,
 	MessageShredResponse,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
 type MessageShredStatusCacheEntry = {
@@ -30,8 +37,18 @@ type MessageShredStatusResult =
 			status: 'not_found';
 	  };
 
+type ShredEntry = {channel_id: bigint; message_id: bigint};
+
+const PREVIEW_CONTENT_LENGTH = 200;
+
+interface ShredPlan {
+	deletable: Array<ShredEntry>;
+	preview: MessageShredPreviewResponse;
+}
+
 interface AdminMessageShredServiceDeps {
 	apiContext: ApiContext;
+	channelRepository: ChannelRepository;
 	auditService: AdminAuditService;
 	enforcement: EnforcementDecisionService;
 }
@@ -71,15 +88,83 @@ export async function queueMessageShredJob(
 	return jobId;
 }
 
+function previewToken(userId: UserID, deletable: ReadonlyArray<ShredEntry>): string {
+	const hash = createHash('sha256').update(userId.toString());
+	for (const entry of deletable) {
+		hash.update(`\n${entry.channel_id}:${entry.message_id}`);
+	}
+	return hash.digest('hex');
+}
+
 export class AdminMessageShredService {
 	constructor(private readonly deps: AdminMessageShredServiceDeps) {}
 
+	private async plan(userId: UserID, entries: ReadonlyArray<ShredEntry>): Promise<ShredPlan> {
+		const seen = new Set<string>();
+		const deletable: Array<ShredEntry> = [];
+		const messages: MessageShredPreviewResponse['messages'] = [];
+		const skipped: MessageShredPreviewResponse['skipped'] = [];
+		for (const entry of entries) {
+			const ids = {channel_id: entry.channel_id.toString(), message_id: entry.message_id.toString()};
+			const key = `${ids.channel_id}:${ids.message_id}`;
+			if (seen.has(key)) {
+				skipped.push({...ids, reason: 'duplicate'});
+				continue;
+			}
+			seen.add(key);
+			const message = await this.deps.channelRepository.messages.getMessage(
+				createChannelID(entry.channel_id),
+				createMessageID(entry.message_id),
+			);
+			if (!message || message.channelId !== entry.channel_id || message.id !== entry.message_id) {
+				skipped.push({...ids, reason: 'not_found'});
+				continue;
+			}
+			if (message.authorId !== userId) {
+				skipped.push({...ids, reason: 'other_author'});
+				continue;
+			}
+			deletable.push({channel_id: entry.channel_id, message_id: entry.message_id});
+			messages.push({
+				...ids,
+				timestamp: snowflakeToDate(entry.message_id).toISOString(),
+				content: [...(message.content ?? '')].slice(0, PREVIEW_CONTENT_LENGTH).join(''),
+				attachment_count: message.attachments?.length ?? 0,
+			});
+		}
+		return {
+			deletable,
+			preview: {
+				requested: entries.length,
+				message_count: deletable.length,
+				messages,
+				skipped,
+				preview_token: previewToken(userId, deletable),
+			},
+		};
+	}
+
+	async previewMessageShred(
+		userId: UserID,
+		{entries}: AdminUserMessageShredPreviewRequest,
+	): Promise<MessageShredPreviewResponse> {
+		return (await this.plan(userId, entries)).preview;
+	}
+
 	async queueMessageShred(
 		userId: UserID,
-		{entries, basis}: AdminUserMessageShredRequest,
+		{entries: requested, basis, preview_token}: AdminUserMessageShredRequest,
 		actor: EnforcementActor,
 	): Promise<MessageShredResponse> {
 		const {apiContext, auditService, enforcement} = this.deps;
+		let entries: ReadonlyArray<ShredEntry> = requested;
+		if (preview_token !== undefined) {
+			const {deletable, preview} = await this.plan(userId, requested);
+			if (preview.preview_token !== preview_token || deletable.length === 0) {
+				throw InputValidationError.fromCode('preview_token', ValidationErrorCodes.MESSAGE_SHRED_PREVIEW_CHANGED);
+			}
+			entries = deletable;
+		}
 		let jobId = '';
 		const queue = async () => {
 			jobId = await queueMessageShredJob(apiContext, actor.adminUserId, userId, entries);
@@ -109,7 +194,8 @@ export class AdminMessageShredService {
 			metadata: new Map([
 				['user_id', userId.toString()],
 				['job_id', jobId],
-				['requested_entries', entries.length.toString()],
+				['requested_entries', requested.length.toString()],
+				...(preview_token === undefined ? [] : [['previewed_messages', entries.length.toString()] as [string, string]]),
 				['basis', basis.type],
 				...(decision ? decisionAuditMetadata(decision) : []),
 			]),
@@ -117,7 +203,7 @@ export class AdminMessageShredService {
 		return {
 			success: true,
 			job_id: jobId,
-			requested: entries.length,
+			requested: requested.length,
 			...(decision ? {decision_id: decision.decision_id.toString()} : {}),
 		};
 	}

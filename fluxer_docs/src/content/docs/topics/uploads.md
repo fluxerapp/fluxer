@@ -13,6 +13,16 @@ You can send attachments as `files[n]` parts in a [multipart message](/http-api/
 
 Uploading first needs `presigned_attachment_uploads` set to true in [instance features](/http-api/instance/#instance-features-object). When it is off, the plan and completion requests return 403 `FEATURE_TEMPORARILY_DISABLED`.
 
+## Choose how to upload
+
+Each file can be up to the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit. A bot gets the lower of that limit and [`max_bot_attachment_file_size`](/http-api/instance/#limit-keys), which is 52428800 bytes (50 MiB) unless the instance admins change it.
+
+In a multipart message, Fluxer checks each file part while it arrives. When a part goes over the limit, the request fails with 400 `FILE_SIZE_TOO_LARGE`. When `Content-Length` is larger than every allowed file plus the rest of the message, the request fails with 413 `FILE_SIZE_TOO_LARGE` and Fluxer saves none of it. In both cases Fluxer reads up to 64 MiB of the rest of the body before it answers. If more is left, it answers right away and closes the connection, and some HTTP clients then report a connection reset instead of the response. Check file sizes against the limit before you send to avoid this.
+
+When the instance is already streaming many files, a file part can wait up to 10 seconds and then fail with 503 and a `Retry-After` header. A multipart request also has to finish within the instance's request timeout, which is 120 seconds by default.
+
+The web and desktop apps upload files first whenever the instance has `presigned_attachment_uploads` on, and bots should do the same for large files. The bytes go to storage or the upload relay in parts of 10 MiB or more, and the API request timeout doesn't apply to them.
+
 ## Request an upload plan
 
 Call [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) with up to 10 files, each with its exact byte count. Each file in the plan has an `upload_mode` that decides which fields it gets.

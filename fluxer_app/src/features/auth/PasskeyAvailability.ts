@@ -2,8 +2,9 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {isOfficialInstanceHost} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 
-const DESKTOP_PASSKEY_RELYING_PARTIES: ReadonlyArray<string> = Object.freeze(['fluxer.app']);
+const DESKTOP_PASSKEY_RELYING_PARTIES: ReadonlyArray<string> = Object.freeze(['fluxer.app', 'fluxer.com']);
 
 function hostFromEndpoint(endpoint: string | undefined): string | null {
 	if (endpoint == null || endpoint.length === 0) {
@@ -51,7 +52,10 @@ function isPasskeyAvailableForInstance({snapshot, currentHost, desktop}: Passkey
 	if (desktop) {
 		return DESKTOP_PASSKEY_RELYING_PARTIES.includes(relyingPartyId);
 	}
-	return isRelyingPartyAssertableFromHost(relyingPartyId, currentHost);
+	return (
+		(isOfficialInstanceHost(currentHost) && isOfficialInstanceHost(relyingPartyId)) ||
+		isRelyingPartyAssertableFromHost(relyingPartyId, currentHost)
+	);
 }
 
 export function isPasskeyAvailableForCurrentClient(snapshot: RuntimeConfigSnapshot | null | undefined): boolean {

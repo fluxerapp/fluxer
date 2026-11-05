@@ -56,6 +56,9 @@ pub(super) fn build_app_public_update(
                 sign_in_backdrop_url: form
                     .contains_key("app_sign_in_backdrop_url")
                     .then(|| form.clean("app_sign_in_backdrop_url")),
+                premium_page_color: form
+                    .contains_key("app_premium_page_color")
+                    .then(|| form.clean("app_premium_page_color")),
                 custom_css,
                 upload_limit_message: form
                     .contains_key(UPLOAD_LIMIT_MESSAGE_FIELD)

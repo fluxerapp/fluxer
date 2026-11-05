@@ -58,11 +58,11 @@ const DATE_OF_BIRTH_WITHOUT_USERNAME_DESCRIPTOR = msg({
 	message: 'Date of birth',
 	comment: 'Short label in the authentication auth minimal register form core. Keep the tone plain and specific.',
 });
-const USERNAME_MUST_BE_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
+export const USERNAME_MUST_BE_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
 	message: 'Username must be {maxUsernameLength} characters or fewer',
 	comment: 'Registration form validation error when the username exceeds the maximum length. Limit is interpolated.',
 });
-const ONLY_LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg({
+export const ONLY_LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg({
 	message: 'Only letters, numbers, and underscores',
 	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
 });
@@ -78,16 +78,16 @@ const USERNAME_SIGN_IN_HINT_DESCRIPTOR = msg({
 	message: 'You sign in with this username. Pick one you will remember.',
 	comment: 'Helper text under the required username field when the instance uses usernames to sign in.',
 });
-const USERNAME_TAKEN_DESCRIPTOR = msg({
+export const USERNAME_TAKEN_DESCRIPTOR = msg({
 	message: 'This username is already taken',
 	comment: 'Registration form message when the chosen username belongs to someone else.',
 });
-const USERNAME_AVAILABLE_DESCRIPTOR = msg({
+export const USERNAME_AVAILABLE_DESCRIPTOR = msg({
 	message: 'This username is available',
 	comment: 'Registration form message when the chosen username is free to use.',
 });
-const MAX_USERNAME_LENGTH = 32;
-const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
+export const MAX_USERNAME_LENGTH = 32;
+export const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
 
 interface AuthRegisterFormCoreProps {
 	fields?: RegisterFormFields;

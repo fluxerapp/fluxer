@@ -14,6 +14,7 @@ import {
 	AccountIdentityModes,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {BUILT_IN_GUILD_BADGE_KINDS} from '@fluxer/constants/src/BadgeConstants';
 import {LIMIT_KEYS, type LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {NO_BUILT_IN_GUILD_BADGE_IMAGES} from '@fluxer/instance_bootstrap/src/ClientRuntimeDiscovery';
 import {
@@ -25,7 +26,7 @@ import {
 } from '@fluxer/instance_bootstrap/src/Discovery';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {CanonicalNetworkProtocol} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
-import {normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
+import {normalizeHexColor, normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
 import {
 	AGE_POLICY_ACTIONS,
 	type InstanceAgePolicy,
@@ -36,6 +37,7 @@ import {
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGuildBadge,
+	type InstanceHiddenBuiltInGuildBadges,
 	type InstanceNotice,
 	type InstanceRegistration,
 	type InstanceServices,
@@ -81,6 +83,8 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly guildBadgesPartial: boolean;
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
+	readonly hiddenRoleIds: ReadonlyArray<string>;
 }
 
 export class InvalidRuntimeConfigSnapshotError extends Error {
@@ -495,6 +499,35 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 			sign_in_backdrop_url: Object.hasOwn(branding, 'sign_in_backdrop_url')
 				? readNullableAbsoluteHttpUrl(branding, 'sign_in_backdrop_url', 'appPublic.branding.sign_in_backdrop_url')
 				: null,
+			premium_page_color: normalizeHexColor(branding.premium_page_color),
+			premium_showcase_expressions_url: Object.hasOwn(branding, 'premium_showcase_expressions_url')
+				? readNullableAbsoluteHttpUrl(
+						branding,
+						'premium_showcase_expressions_url',
+						'appPublic.branding.premium_showcase_expressions_url',
+					)
+				: null,
+			premium_showcase_profile_url: Object.hasOwn(branding, 'premium_showcase_profile_url')
+				? readNullableAbsoluteHttpUrl(
+						branding,
+						'premium_showcase_profile_url',
+						'appPublic.branding.premium_showcase_profile_url',
+					)
+				: null,
+			premium_showcase_stream_url: Object.hasOwn(branding, 'premium_showcase_stream_url')
+				? readNullableAbsoluteHttpUrl(
+						branding,
+						'premium_showcase_stream_url',
+						'appPublic.branding.premium_showcase_stream_url',
+					)
+				: null,
+			premium_showcase_upload_url: Object.hasOwn(branding, 'premium_showcase_upload_url')
+				? readNullableAbsoluteHttpUrl(
+						branding,
+						'premium_showcase_upload_url',
+						'appPublic.branding.premium_showcase_upload_url',
+					)
+				: null,
 			custom_css: readOptionalText(branding, 'custom_css'),
 			upload_limit_message: readOptionalText(branding, 'upload_limit_message'),
 			trusted_domains: Object.hasOwn(branding, 'trusted_domains')
@@ -605,6 +638,26 @@ function readBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadgeI
 	return {verified: read('verified'), partnered: read('partnered'), discoverable: read('discoverable')};
 }
 
+function readHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuildBadges {
+	if (value === undefined) {
+		return [];
+	}
+	if (!Array.isArray(value)) {
+		invalid('hiddenBuiltInGuildBadges', 'must be an array');
+	}
+	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
+}
+
+function readHiddenRoleIds(value: unknown): ReadonlyArray<string> {
+	if (value === undefined) {
+		return [];
+	}
+	if (!Array.isArray(value) || !value.every((id) => typeof id === 'string')) {
+		invalid('hiddenRoleIds', 'must be an array of strings');
+	}
+	return [...value];
+}
+
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
 	const source = readRecord(value, 'root');
 	return {
@@ -641,5 +694,7 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 				? null
 				: readNonEmptyString(source, 'customBadgesVersion', 'customBadgesVersion'),
 		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
+		hiddenBuiltInGuildBadges: readHiddenBuiltInGuildBadges(source.hiddenBuiltInGuildBadges),
+		hiddenRoleIds: readHiddenRoleIds(source.hiddenRoleIds),
 	};
 }

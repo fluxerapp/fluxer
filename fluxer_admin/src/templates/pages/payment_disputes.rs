@@ -316,7 +316,7 @@ pub fn payment_disputes_page(
     let content = html! {
         (page_header(
             "Payment Disputes",
-            Some("Open payment disputes, the latest warning deadline first. Unjustified warns the account by email and system message, and only a dispute that ends with the money returned after the warning date closes the account through an enforcement decision."),
+            Some("Open payment disputes, the latest warning deadline first. Unjustified warns the account by email and system message, and only a dispute that ends with the money returned after the warning date has a consequence: for Plutonium an enforcement decision closes the account, and for the Operator Pass the bonus is removed permanently under section 8, so the account can't buy or receive a pass again."),
         ))
         div id="payment-disputes" {
             @match reviews {

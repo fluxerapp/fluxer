@@ -70,7 +70,7 @@ export const ChannelRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	ATTACHMENT_URLS_REFRESH: {
 		bucket: 'attachment:refresh_urls',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	CHANNEL_TYPING: {
 		bucket: 'channel:typing::channel_id',

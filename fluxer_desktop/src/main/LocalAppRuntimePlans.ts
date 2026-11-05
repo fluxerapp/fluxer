@@ -13,6 +13,7 @@ const ROUTE_CACHE_KEY_PREFIX = 'route:';
 
 interface LocalAppRuntimeEndpoints {
 	readonly apiEndpoint: string;
+	readonly apiTransportEndpoint: string | null;
 	readonly apiPublicEndpoint: string | null;
 	readonly webAppEndpoint: string | null;
 	readonly mediaEndpoint: string | null;
@@ -130,6 +131,7 @@ export function runtimePlanTrustedHTTPOrigins(plan: LocalAppRuntimePlan): Array<
 	const endpoints = plan.endpoints;
 	const httpEndpoints: ReadonlyArray<string | null> = [
 		endpoints.apiEndpoint,
+		endpoints.apiTransportEndpoint,
 		endpoints.apiPublicEndpoint,
 		endpoints.mediaEndpoint,
 		endpoints.uploadRelayEndpoint,
@@ -209,6 +211,7 @@ function runtimeEndpointsFromDiscovery(discovery: ClientRuntimeDiscovery): Local
 	const endpoints = discovery.endpoints;
 	return {
 		apiEndpoint: endpoints.apiEndpoint,
+		apiTransportEndpoint: endpoints.apiTransportEndpoint,
 		apiPublicEndpoint: endpoints.apiPublicEndpoint,
 		webAppEndpoint: endpoints.webAppEndpoint,
 		mediaEndpoint: endpoints.mediaEndpoint,

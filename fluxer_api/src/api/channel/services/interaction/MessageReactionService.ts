@@ -16,7 +16,7 @@ import type {User} from '@app/api/models/User';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
-import {checkUserGlobalExpressions} from '@app/api/utils/EmojiUtils';
+import {checkUserGlobalExpressions, isExpressionSourceAgeRestricted} from '@app/api/utils/EmojiUtils';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
@@ -407,6 +407,9 @@ export class MessageReactionService {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.CUSTOM_EMOJI_NOT_FOUND);
 			}
 			const isExternalEmoji = emoji.guildId.toString() !== guildId;
+			if (isExternalEmoji && (await isExpressionSourceAgeRestricted(this.guildRepository, emoji.guildId))) {
+				throw new MissingPermissionsError();
+			}
 			if (hasGlobalExpressions === 0 && isExternalEmoji) {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE);
 			}

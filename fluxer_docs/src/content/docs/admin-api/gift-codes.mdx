@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Gift codes
-description: Generate one-use premium gift codes.
+description: Generate and revoke one-use premium gift codes.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -52,5 +52,29 @@ The request records a `generate_gift_codes` [audit entry](/admin-api/#admin-audi
 The rate limit is 30 requests per minute, on the `admin:code:generation` bucket.
 
 :::caution[The codes are returned once]
-Save the response. No Admin API route lists or revokes the codes later. If a request fails partway, codes generated before the failure stay redeemable but aren't returned, so a retry creates additional codes.
+Save the response. No Admin API route lists the codes later. If a request fails partway, codes generated before the failure stay redeemable but aren't returned, so a retry creates additional codes. To stop a code you still have from working, [revoke it](#revoke-a-gift-code).
 :::
+
+## Revoke a gift code
+
+<RouteHeader method="DELETE" path="/v1/admin/gift-codes/{code}" auditReason />
+
+Revokes a gift code that nobody has redeemed, so it can't be redeemed anymore. You need `gift_codes:generate`. Pass the code itself, which is the last part of the redemption link.
+
+A redeemed code can't be revoked, because the premium it gave already belongs to the account that redeemed it. To take that premium back, use [Remove user premium](/admin-api/users/#remove-user-premium) on that account. The error message names the account.
+
+A code a customer bought can't be revoked here either. Refund the purchase instead, which revokes the code.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | none | The code was revoked |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the code was redeemed or a customer bought it |
+| 400 | [error response](/admin-api/#error-response) | `STRIPE_GIFT_REDEMPTION_IN_PROGRESS` when someone is redeeming the code right now |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GIFT_CODE` when the code doesn't exist or was already revoked |
+
+The request records a `revoke_gift_code` [audit entry](/admin-api/#admin-audit-entry-object) with the code and its duration. A revoked code can't be redeemed, so the entry doesn't give premium to anyone who reads it.
+
+The rate limit is 30 requests per minute, on the `admin:code:generation` bucket.
+

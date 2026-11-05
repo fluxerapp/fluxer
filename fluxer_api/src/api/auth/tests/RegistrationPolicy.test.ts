@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createAuthHarness, createUniqueEmail, createUniqueUsername} from '@app/api/auth/tests/AuthTestUtils';
+import {getConfig} from '@app/api/Config';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface PendingRegistrationResponse {
 	registration_pending_approval: true;
@@ -31,6 +33,7 @@ function registrationBody(prefix: string): Record<string, unknown> {
 
 describe('Auth registration policy', () => {
 	let harness: ApiTestHarness;
+	let originalSelfHosted: boolean;
 
 	beforeAll(async () => {
 		harness = await createAuthHarness();
@@ -38,6 +41,11 @@ describe('Auth registration policy', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
+		originalSelfHosted = getConfig().instance.selfHosted;
+	});
+
+	afterEach(() => {
+		getConfig().instance.selfHosted = originalSelfHosted;
 	});
 
 	afterAll(async () => {
@@ -189,6 +197,52 @@ describe('Auth registration policy', () => {
 		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
 			.post('/auth/register')
 			.body({...registrationBody('guest'), registration_url_code: code})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('refuses a public sign-up without an email while allowed email domains are set', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		expect(await repository.getInstantAccountAvailability()).toBe('email_domains_restricted');
+		const {json} = await createBuilderWithoutAuth<{errors: Array<{path: string; code: string}>}>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Domain Guest', date_of_birth: '2000-01-01', consent: true})
+			.expect(400, APIErrorCodes.INVALID_FORM_BODY)
+			.executeWithResponse();
+		expect(json.errors).toEqual([
+			expect.objectContaining({path: 'email', code: ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED}),
+		]);
+	});
+
+	it('lets a registration URL start an account without an email while allowed email domains are set', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		const {code} = await repository.createRegistrationUrl({
+			label: 'Guest link',
+			createdByUserId: '1',
+			expiresAt: null,
+			maxUses: 1,
+			approvalRequired: false,
+		});
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Linked Guest', date_of_birth: '2000-01-01', consent: true, registration_url_code: code})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('keeps accounts without an email on username instances with allowed email domains set', async () => {
+		getConfig().instance.selfHosted = true;
+		const repository = getInstanceConfigRepository();
+		await repository.setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+		await repository.setAppPublicConfig({setup: {configured: true}});
+		await repository.updateAuthConfig({instant_accounts: {enabled: true}});
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		expect(await repository.getInstantAccountAvailability()).toBe('available');
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Username Guest', date_of_birth: '2000-01-01', consent: true})
 			.execute();
 		expect(registration.token.length).toBeGreaterThan(0);
 	});

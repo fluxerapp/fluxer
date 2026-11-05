@@ -6,11 +6,11 @@ description: Routes for saving, listing, changing and deleting your memes, and f
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A meme is an image, video or audio file you save to your account. Fluxer keeps its own copy, so the meme still works after the source message or URL is gone. Bot tokens get 403 `ACCESS_DENIED` on these routes, and you send a saved meme with `favorite_meme_id` in [Create message](/http-api/messages/#create-message).
+A meme is an image, video or audio file you save to your account. Fluxer keeps its own copy, and the meme still works after the source message or URL is gone. Bot tokens get 403 `ACCESS_DENIED` on these routes, and you send a saved meme with `favorite_meme_id` in [Create message](/http-api/messages/#create-message).
 
 ## Limits
 
-You can save up to `max_favorite_memes` memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). See [instance limits](/http-api/instance/#limit-keys). Fluxer compares the stored bytes, so saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
+You can save up to `max_favorite_memes` memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). See [instance limits](/http-api/instance/#limit-keys). Fluxer compares the stored bytes, and saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
 
 ## Meme object
 
@@ -39,6 +39,7 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
 | gif_provider<sup>2</sup> | ?string | The name of the GIF provider that issued `gif_slug` |
 | media<sup>3</sup> | ?map[string, [GIF media format](#gif-media-format-object) object] | The provider formats for a GIF-sourced meme |
 | placeholder | ?string | The thumbhash placeholder recorded at save time |
+| nsfw | boolean | Whether the media is flagged as explicit, from the source message or the media scan |
 
 <sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read
 
@@ -59,7 +60,7 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
   "filename": "party_parrot.gif",
   "content_type": "image/gif",
   "size": 40213,
-  "url": "https://media.example.com/attachments/1501314428688998183/party_parrot.gif?ex=6a1b2c3d&sig=4f9e2a",
+  "url": "https://media.example.com/attachments/1501314428688998182/1501314428688998183/party_parrot.gif?ex=69fba4b5&is=69fa5335&hm=5586be3ae70411fe6582431649e2f28abc6c201e4f12a4f43a3256b72b90d3de",
   "content_hash": "b3f1c2e4a5d6978812ab34cd56ef7890",
   "width": 320,
   "height": 240,
@@ -67,7 +68,8 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
   "is_gifv": true,
   "gif_slug": "party-parrot-1234",
   "gif_provider": "klipy",
-  "placeholder": "3PcNNYYONWQPFxrsUeUcRh4"
+  "placeholder": "3PcNNYYONWQPFxrsUeUcRh4",
+  "nsfw": false
 }
 ```
 

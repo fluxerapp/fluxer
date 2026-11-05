@@ -8,6 +8,7 @@ import bulkScheduleUserDeletion from '@app/api/worker/tasks/admin_bulk/BulkSched
 import bulkUpdateGuildFeatures from '@app/api/worker/tasks/admin_bulk/BulkUpdateGuildFeatures';
 import bulkUpdateUserFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateUserFlags';
 import backfillDeletedUsers from '@app/api/worker/tasks/BackfillDeletedUsers';
+import backfillFavoriteMemeNsfw from '@app/api/worker/tasks/BackfillFavoriteMemeNsfw';
 import backfillHiddenProfileBadges from '@app/api/worker/tasks/BackfillHiddenProfileBadges';
 import backfillPasskeyTrait from '@app/api/worker/tasks/BackfillPasskeyTrait';
 import backfillUserAclIndex from '@app/api/worker/tasks/BackfillUserAclIndex';
@@ -35,15 +36,20 @@ import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
 import handleMentions from '@app/api/worker/tasks/HandleMentions';
 import harvestGuildData from '@app/api/worker/tasks/HarvestGuildData';
 import harvestUserData from '@app/api/worker/tasks/HarvestUserData';
+import importLegacyBillingDocuments from '@app/api/worker/tasks/ImportLegacyBillingDocuments';
 import indexChannelMessages from '@app/api/worker/tasks/IndexChannelMessages';
 import indexGuildMembers from '@app/api/worker/tasks/IndexGuildMembers';
 import joinSingleCommunityMembers from '@app/api/worker/tasks/JoinSingleCommunityMembers';
 import liftExpiredGuildInvitePauses from '@app/api/worker/tasks/LiftExpiredGuildInvitePauses';
 import messageShred from '@app/api/worker/tasks/MessageShred';
 import notifyRegistrationApprovers from '@app/api/worker/tasks/NotifyRegistrationApprovers';
+import operatorPassConsentRetention from '@app/api/worker/tasks/OperatorPassConsentRetention';
+import operatorPassFulfilmentSweep from '@app/api/worker/tasks/OperatorPassFulfilmentSweep';
+import operatorPassLabsDelivery from '@app/api/worker/tasks/OperatorPassLabsDelivery';
+import operatorPassLabsGreeting from '@app/api/worker/tasks/OperatorPassLabsGreeting';
+import operatorPassLabsVisionaryRoleSync from '@app/api/worker/tasks/OperatorPassLabsVisionaryRoleSync';
 import operatorPassOfferCompletion from '@app/api/worker/tasks/OperatorPassOfferCompletion';
 import operatorPassRemovalExpiry from '@app/api/worker/tasks/OperatorPassRemovalExpiry';
-import operatorPassSaleBroadcast from '@app/api/worker/tasks/OperatorPassSaleBroadcast';
 import operatorPassWaitlistCleanup from '@app/api/worker/tasks/OperatorPassWaitlistCleanup';
 import operatorPassWallRetention from '@app/api/worker/tasks/OperatorPassWallRetention';
 import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
@@ -61,12 +67,14 @@ import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from '@app/api/worker/tasks/PrunePostgresKvTtl';
 import reconcileAttachmentDecay from '@app/api/worker/tasks/ReconcileAttachmentDecay';
 import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
+import recordOperatorPassDelivery from '@app/api/worker/tasks/RecordOperatorPassDelivery';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
 import scanBillingNotices from '@app/api/worker/tasks/ScanBillingNotices';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
+import sendOperatorPassWithdrawalReceipt from '@app/api/worker/tasks/SendOperatorPassWithdrawalReceipt';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -95,6 +103,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	syncThreadSearchDocument,
 	backfillThreadSearch,
 	backfillDeletedUsers,
+	backfillFavoriteMemeNsfw,
 	backfillHiddenProfileBadges,
 	backfillPasskeyTrait,
 	backfillUserAclIndex,
@@ -133,7 +142,11 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	operatorPassOfferCompletion,
 	operatorPassRemovalExpiry,
 	operatorPassWallRetention,
-	operatorPassSaleBroadcast,
+	operatorPassConsentRetention,
+	operatorPassFulfilmentSweep,
+	operatorPassLabsDelivery,
+	operatorPassLabsGreeting,
+	operatorPassLabsVisionaryRoleSync,
 	operatorPassWaitlistCleanup,
 	processAssetDeletionQueue,
 	processCachePurgeQueue,
@@ -155,9 +168,12 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	refreshSearchIndex,
 	seedThreadPermissions,
 	scanBillingNotices,
+	importLegacyBillingDocuments,
 	sendBillingEmail,
 	removeChannelFollowers,
 	sendSystemDm,
+	sendOperatorPassWithdrawalReceipt,
+	recordOperatorPassDelivery,
 	syncStripeCustomerEmail,
 	syncFileShaBlocklists,
 	syncUrlBlocklists,

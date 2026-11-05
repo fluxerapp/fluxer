@@ -57,7 +57,7 @@ The user needs the `admin:authenticate` ACL or `*`, otherwise the request return
 
 A protected operation returns 401 `UNAUTHORIZED` for a missing, malformed, unknown, expired or revoked credential, and the response doesn't say which. A valid identity that the operation denies returns 403 `ACCESS_DENIED`.
 
-Requests to [threads](/http-api/threads/), [thread members](/http-api/thread-members/) and [forums](/http-api/forums/) need a bot token, or a session token with the `channel_threads` [client capability](/http-api/threads/#client-capability). Any other request to them gets 404 `NOT_FOUND` instead of 401.
+Requests to [threads](/http-api/threads/), [thread members](/http-api/thread-members/) and [forums](/http-api/forums/) need a bot token, or a session token with the `channel_threads` [client capability](/http-api/threads/#client-capability). Any other request to them gets 404 `NOT_FOUND`.
 
 A credential on an unauthenticated operation selects account-based [rate limits](/topics/rate-limits/) and can waive a [CAPTCHA](/topics/captcha/).
 

@@ -76,7 +76,7 @@ The shared secret for Erlang distribution in the gateway. Anyone who can connect
 
 ### `FLUXER_MEDIA_PROXY_SECRET_KEY`
 
-The key that signs media proxy URLs. The api, worker, media-proxy, gifs and unfurl services must have the same value. Keep it secret.
+The key that signs the `/external/` URLs for third-party media, such as link preview images and GIF results. The API also uses it to call the media proxy's internal endpoints. It doesn't sign uploaded attachments, which use `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. The api, worker, media-proxy, gifs and unfurl services must have the same value, so change it on all of them and restart them together. Changing it doesn't affect anything stored, but proxy URLs that were already handed out stop working, such as link preview images in clients that are already open, until they reload. Keep it secret.
 
 ### `FLUXER_ADMIN_SECRET_KEY_BASE`
 
@@ -148,6 +148,10 @@ The public base URL of the API. When it's empty, Fluxer uses the public origin f
 
 The API base URL Fluxer hands to clients. When it's empty, Fluxer uses the public origin followed by `/api`. With rexctl, use `rexctl config set FLUXER_API_CLIENT_ENDPOINT`.
 
+### `FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT`
+
+The public API base URL Fluxer lists in instance discovery as `api_public`. The ActivityPub actor and its key ID use the same address, so its host must serve `/.well-known/webfinger`, and changing it on an instance with a signing key gives remote servers a new actor. When it's empty, Fluxer uses `FLUXER_API_ENDPOINT`. Webhooks, signed links and Bluesky sign-in always use `FLUXER_API_ENDPOINT`. With rexctl, use `rexctl config set FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT`.
+
 ### `FLUXER_APP_ENDPOINT`
 
 The address of the web app, which Fluxer allows through CORS and uses in links. When it's empty, Fluxer uses the public origin. With rexctl, use `rexctl config set FLUXER_APP_ENDPOINT`.
@@ -170,7 +174,7 @@ The origin Fluxer serves static assets such as the favicon and app icons from. W
 
 ### `FLUXER_ADMIN_ENDPOINT`
 
-The public address of the admin panel. When it's empty, Fluxer uses the public origin followed by `FLUXER_ADMIN_BASE_PATH`. The admin sign-in redirect is this address followed by `/oauth2_callback`, and the admin panel uses secure cookies when the address starts with `https`. With rexctl, use `rexctl config set FLUXER_ADMIN_ENDPOINT`.
+The public address of the admin panel. When it's empty, Fluxer uses the public origin followed by `FLUXER_ADMIN_BASE_PATH`. The admin sign-in redirect is this address followed by `/oauth2_callback`, the single sign-on redirect is this address followed by `/sso/callback`, and the admin panel uses secure cookies when the address starts with `https`. With rexctl, use `rexctl config set FLUXER_ADMIN_ENDPOINT`.
 
 ### `FLUXER_MARKETING_ENDPOINT`
 
@@ -215,6 +219,10 @@ The port Fluxer listens on for HTTPS. If people connect to this port directly, s
 ### `FLUXER_EDGE_BIND`
 
 The address your reverse proxy or tunnel connects to. The default is `127.0.0.1:8080` with `docker-compose.proxy.yml`, or `127.0.0.1:80` with `tunnel.compose.yml`. With rexctl, use `rexctl config set edge.bind`.
+
+### `FLUXER_EDGE_LISTEN_ADDRESS`
+
+The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address. Write an IPv6 address without brackets. `docker-compose.proxy.yml` and `tunnel.compose.yml` ignore it and use `FLUXER_EDGE_BIND`. With rexctl, use `rexctl config set edge.listen_address`.
 
 ### `FLUXER_ADMIN_BASE_PATH`
 
@@ -318,7 +326,7 @@ These go in the settings file of a voice server from the voice folder of the com
 
 ### `FLUXER_VOICE_ID`
 
-The ID of the voice server, such as `fra-server-2`. Use lowercase letters, digits and dashes. The container answers as `voice-` followed by this ID on the voice network, and the edge routes `/livekit-` followed by this ID to it.
+The ID of the voice server, such as `fra-server-2`. Use lowercase letters, digits and dashes. The container uses `voice-` followed by this ID as its host name on the voice network, and the edge routes `/livekit-` followed by this ID to it.
 
 ### `FLUXER_VOICE_API_KEY`
 
@@ -346,7 +354,7 @@ The public addresses LiveKit gives to clients. Give an IPv4 address, an IPv6 add
 
 ### `FLUXER_VOICE_ICE_IPS`
 
-The address ranges LiveKit may offer to clients, as a JSON array of ranges such as `["::/0"]`. rexctl sets it to the families in `FLUXER_VOICE_NODE_IP`, so a server with only IPv6 offers no private IPv4 address of its container. Use `[]` to offer every address.
+The address ranges LiveKit may offer to clients, as a JSON array of ranges such as `["::/0"]`. rexctl sets it to the families in `FLUXER_VOICE_NODE_IP`, and a server with only IPv6 then offers no private IPv4 address of its container. Use `[]` to offer every address.
 
 ### `FLUXER_VOICE_USE_EXTERNAL_IP`
 
@@ -386,7 +394,7 @@ These go in `edge.env` next to `voice-edge.compose.yml` in the voice folder of t
 
 ### `FLUXER_VOICE_EDGE_IP`
 
-The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then answers clients that send no server name with the certificate for that address, which browsers need.
+The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then gives clients that send no server name the certificate for that address, which browsers need.
 
 ### `FLUXER_VOICE_NETWORK_IPV6`
 
@@ -462,7 +470,7 @@ Whether data export and admin download links are presigned URLs to the object st
 
 ### `FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`
 
-Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent straight to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off. With rexctl, use `rexctl config set FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`.
+Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent directly to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off. With rexctl, use `rexctl config set FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`.
 
 ### `FLUXER_API_STORAGE_CHANGE_FEED_STREAM`
 
@@ -642,7 +650,7 @@ Hosts the Rust services other than the app-proxy connect to without the proxy, s
 
 ### `FLUXER_NODE_EXTRA_CA_CERTS`
 
-The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their containers. With Docker Compose they see the ca folder of your instance at `/etc/fluxer/ca`, and nothing else from the instance folder. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can hold only your own CA. The Rust services don't use it and take their CA certificates from `SSL_CERT_FILE`. The default is `/etc/ssl/certs/ca-certificates.crt`. With rexctl, use `rexctl config set FLUXER_NODE_EXTRA_CA_CERTS`.
+The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their containers. With Docker Compose they see the ca folder of your instance at `/etc/fluxer/ca`, and nothing else from the instance folder. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can have only your own CA. The Rust services don't use it and take their CA certificates from `SSL_CERT_FILE`. The default is `/etc/ssl/certs/ca-certificates.crt`. With rexctl, use `rexctl config set FLUXER_NODE_EXTRA_CA_CERTS`.
 
 ## Sign-in
 
@@ -661,6 +669,26 @@ The title browsers show for Fluxer when someone creates or uses a passkey. When 
 ### `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`
 
 Every origin where passkeys work, separated by commas. When it's empty, Docker Compose uses `FLUXER_PUBLIC_ORIGIN`, or `FLUXER_PUBLIC_SCHEME` followed by `://` and `FLUXER_DOMAIN`. A list you set replaces it and must include the web app origin. Set a list when `FLUXER_APP_ENDPOINT` is on another origin. Each entry is an http or https origin or an Android app, written as `android:apk-key-hash:` followed by its signing certificate's SHA-256 hash in unpadded base64url. With rexctl, use `rexctl config set FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`.
+
+### `FLUXER_ADMIN_SSO_ISSUER`
+
+The HTTPS issuer URL of an OpenID Connect provider that staff can also use to sign in to the admin panel. The issuer must not contain credentials, a query or a fragment. Discovery and token endpoints must serve responses directly without redirects. Admin single sign-on is on when `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET` are all set. The admin service won't start when only some of them are set. The api and admin services must have the same issuer and client ID. The provider's ID token must have a `fluxer_id` claim with the ID of the Fluxer account, and access still comes from the admin ACLs of that account. Only trusted provider administrators may set this claim; users must not be able to change it. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ISSUER`.
+
+### `FLUXER_ADMIN_SSO_CLIENT_ID`
+
+The client ID of the admin panel at the provider in `FLUXER_ADMIN_SSO_ISSUER`. Register the admin address followed by `/sso/callback` as its redirect URL. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_CLIENT_ID`.
+
+### `FLUXER_ADMIN_SSO_CLIENT_SECRET`
+
+The client secret that goes with `FLUXER_ADMIN_SSO_CLIENT_ID`. Only the admin service uses it. Keep it secret. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_CLIENT_SECRET`.
+
+### `FLUXER_ADMIN_SSO_DISPLAY_NAME`
+
+The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_DISPLAY_NAME`.
+
+### `FLUXER_ADMIN_SSO_ONLY`
+
+Whether staff can sign in to the admin panel only with single sign-on. Use `true` or `false`. With `true`, the login page hides the button for signing in with a Fluxer account, and the admin panel refuses new sign-ins that way. Staff who are already signed in stay signed in. It needs `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET`, and the admin service won't start without them. When it's empty, it's `false`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ONLY`.
 
 ## Email
 
@@ -838,7 +866,7 @@ Hostnames, separated by commas, of the push relay that Fluxer runs. When it's em
 
 ### `FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`
 
-Hostnames, separated by commas, of a push relay your instance runs itself. The push service sends mobile app notifications addressed to these hosts straight to APNs or FCM with its own credentials. With rexctl, use `rexctl config set FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`.
+Hostnames, separated by commas, of a push relay your instance runs itself. The push service sends mobile app notifications addressed to these hosts directly to APNs or FCM with its own credentials. With rexctl, use `rexctl config set FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`.
 
 ### `FLUXER_PUSH_SERVICE_PRIVATE_HOSTS`
 
@@ -868,7 +896,7 @@ Whether uploads go through when a ClamAV scan fails, such as when Fluxer can't c
 
 ### `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`
 
-Keys that sign attachment URLs, separated by commas. Each is standard base64 that decodes to at least 32 bytes. The first entry signs and every entry verifies. To rotate keys, put the new key first. When it's empty, Fluxer returns unsigned attachment URLs. Keep it secret. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`.
+Keys that sign attachment URLs, separated by commas. Each is standard base64 that decodes to at least 32 bytes. The first entry signs and every entry verifies. To rotate keys, add the new key last and restart the stack. Then move it first and restart again. Every process can then verify the new key before any process signs with it. Remove the old key 24 hours later. Removing a key ends the data package links it signed. When it's empty, Fluxer returns unsigned attachment URLs. Keep it secret. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`.
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`
 
@@ -876,7 +904,7 @@ The upload relay URL the API hands to clients. When it's empty, the API uses the
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`
 
-The largest upload the relay accepts, in bytes from 1 to 5 GiB. It can't be more than `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`. When it's empty, the relay uses `524288000`, which is 500 MiB. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`.
+The largest single request body the relay accepts, which is one object or one part of a multipart upload, in bytes from 1 to 5 GiB. It can't be more than `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`. When it's empty, the relay uses `524288000`, which is 500 MiB. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`.
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS`
 
@@ -896,7 +924,7 @@ The web origins, separated by commas, that may load media through CORS when `FLU
 
 ### `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`
 
-Whether attachment downloads need a signed URL. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`.
+Whether attachment downloads need a signed link. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and rexctl makes a key the first time you turn it on if that's empty. With rexctl, use `rexctl config set media.signed_attachments`.
 
 ### `FLUXER_MEDIA_PROXY_READ_ONLY`
 
@@ -972,7 +1000,7 @@ The chunk size the relay uses when it writes upload bodies to its spool on disk,
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
+The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl raises this to `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` if you set that higher. When disk.profile is small, rexctl sets this to 536870912, which is 512 MiB, unless you set it. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
 
 ### `FLUXER_CACHE_PURGE_ADAPTER`
 
@@ -1022,7 +1050,7 @@ Whether the gateway asks the push service to clear a channel's push notification
 
 ### `FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`
 
-How long the gateway waits for the push service to answer one push request, in milliseconds. When it's empty, the gateway uses `100000`. With rexctl, use `rexctl config set FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`.
+How long the gateway waits for the push service to respond to one push request, in milliseconds. When it's empty, the gateway uses `100000`. With rexctl, use `rexctl config set FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`.
 
 ### `FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES`
 
@@ -1043,6 +1071,10 @@ How many NATS RPC requests the gateway works on at once. When it's empty, the ga
 ### `FLUXER_GATEWAY_ZSTD_WINDOW_LOG`
 
 The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `17`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
+
+### `FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`
+
+The most times one token can identify on one gateway node in a minute. The gateway does not answer identifies over the limit. A value of `0` turns off this limit. When it's empty, the gateway uses `0`. With rexctl, use `rexctl config set FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`.
 
 ### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
@@ -1146,7 +1178,11 @@ How long a client may take over a whole request to the API, in milliseconds from
 
 ### `FLUXER_API_MAX_INFLIGHT_REQUESTS`
 
-How many requests the API handles at once before it answers new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`. With rexctl, use `rexctl config set FLUXER_API_MAX_INFLIGHT_REQUESTS`.
+How many requests the API handles at once before it responds to new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`. With rexctl, use `rexctl config set FLUXER_API_MAX_INFLIGHT_REQUESTS`.
+
+### `FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS`
+
+How many attachment files sent as multipart form data the API streams to the object store at once, from 1 to 10000. Each one can use up to about 25 MiB of memory. A file that waits more than 10 seconds for a turn gets 503 with a Retry-After header. When it's empty, the API uses `16`. With rexctl, use `rexctl config set FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS`.
 
 ### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
@@ -1166,7 +1202,7 @@ How often the API reloads its IP ban list, in milliseconds. When it's empty, the
 
 ### `FLUXER_API_DONATION_PROXY_KEY`
 
-An older way to add one trusted caller that may pass the client address for the donation and Operator Pass rate limits. Fluxer's marketing site uses it. It must be at least 32 characters. Your own instance can leave it empty. Keep it secret. With rexctl, use `rexctl config set FLUXER_API_DONATION_PROXY_KEY`.
+An older way to add one trusted caller that may pass the client address for the donation and purchase rate limits. Fluxer's marketing site uses it. It must be at least 32 characters. Your own instance can leave it empty. Keep it secret. With rexctl, use `rexctl config set FLUXER_API_DONATION_PROXY_KEY`.
 
 ### `FLUXER_API_TRUSTED_CALLERS`
 
@@ -1259,6 +1295,14 @@ How many days the daily retention job keeps a resolved report, from 1 to 36500. 
 ### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
 Whether the report retention job only counts what it would delete and changes nothing. Use `true` or `false`. When it's empty, the worker uses `false`. With rexctl, use `rexctl config set FLUXER_REPORT_RETENTION_DRY_RUN`.
+
+### `FLUXER_AGE_POLICY_ENABLED`
+
+Whether the apps need an age check before they show mature content to people in the regions in `FLUXER_AGE_POLICY_RESTRICTED_REGIONS`. Use `true` or `false`. When it's empty, the age check is on only when `FLUXER_AGE_POLICY_RESTRICTED_REGIONS` is set. With rexctl, use `rexctl config set FLUXER_AGE_POLICY_ENABLED`.
+
+### `FLUXER_AGE_POLICY_RESTRICTED_REGIONS`
+
+The regions where the apps need an age check before they show mature content, separated by commas. Use a country code such as `GB` or a country and region code such as `US-MS`. When it's empty and `FLUXER_AGE_POLICY_ENABLED` is `true`, Fluxer uses `GB` and `BR`. With rexctl, use `rexctl config set FLUXER_AGE_POLICY_RESTRICTED_REGIONS`.
 
 ## Billing
 
@@ -1418,7 +1462,7 @@ Postgres `min_wal_size`, the write-ahead log space Postgres keeps for reuse afte
 
 ### `FLUXER_POSTGRES_MAX_WAL_SIZE`
 
-Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
+Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. When disk.profile is small, rexctl sets this to 512MB unless you set it. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
 
 ### `FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET`
 
@@ -1538,7 +1582,7 @@ The share of deleted space in a volume that makes SeaweedFS compact it, as a fra
 
 ### `FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`
 
-How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress holds up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this. The default is `5`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`.
+How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress uses up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this. The default is `5`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`.
 
 ### `FLUXER_SEAWEEDFS_VOLUME_MAX`
 
@@ -1744,11 +1788,11 @@ How much LiveKit logs. Use `debug`, `info`, `warn` or `error`. The default is `i
 
 ### `FLUXER_LOG_MAX_SIZE`
 
-How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
+How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. When disk.profile is small, rexctl sets this to 5m unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
 
 ### `FLUXER_LOG_MAX_FILE`
 
-How many log files Docker keeps for each container when it rotates logs. The default is `3`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
+How many log files Docker keeps for each container when it rotates logs. The default is `3`. When disk.profile is small, rexctl sets this to 2 unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
 
 ### `FLUXER_RESTART_POLICY`
 
@@ -1887,7 +1931,7 @@ The join token for `rexctl voice join` when the command line doesn't have one. O
 
 ### `REXCTL_RELEASE_URL`
 
-The URL of the release index that rexctl and its install scripts download releases from. When it's empty, they use `https://fluxer.dev/rexctl/release.json`. Another server must answer the same queries as that address, including `version` and `format=sh`.
+The URL of the release index that rexctl and its install scripts download releases from. When it's empty, they use `https://fluxer.dev/rexctl/release.json`. Another server must respond to the same queries as that address, including `version` and `format=sh`.
 
 ### `REXCTL_IMAGE_SET`
 
@@ -1911,11 +1955,11 @@ Set it to any value to make rexctl ask questions as plain text prompts and print
 
 ### `DOCKER_HOST`
 
-The engine address rexctl tries first, such as `unix:///run/user/1000/podman/podman.sock`. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't answer. When it's empty, rexctl uses the current Docker context and then looks for a Docker or Podman socket.
+The engine address rexctl tries first, such as `unix:///run/user/1000/podman/podman.sock`. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't respond. When it's empty, rexctl uses the current Docker context and then looks for a Docker or Podman socket.
 
 ### `DOCKER_CONTEXT`
 
-The Docker context rexctl tries first when `DOCKER_HOST` is empty. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't answer. When it's empty, rexctl uses the current context of the Docker CLI.
+The Docker context rexctl tries first when `DOCKER_HOST` is empty. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't respond. When it's empty, rexctl uses the current context of the Docker CLI.
 
 ### `DOCKER_CONFIG`
 
@@ -2129,6 +2173,10 @@ The OAuth2 client ID the admin panel signs in with. The stack uses the built-in 
 
 The OAuth2 redirect URL of the admin panel. The admin service works it out from its own address.
 
+### `FLUXER_ADMIN_SSO_REDIRECT_URI`
+
+The single sign-on redirect URL of the admin panel. The admin service works it out from its own address.
+
 ### `FLUXER_API_WORKER_LANE`
 
 The job lane a worker runs when `FLUXER_API_WORKER_MODE` is `single_lane`. Each worker container in the stack runs every lane.
@@ -2159,7 +2207,7 @@ The URL the gateway sends API RPC requests to. When it's empty, the gateway uses
 
 ### `FLUXER_GATEWAY_NATS_RPC_ENABLED`
 
-Whether the gateway answers RPC requests over NATS. The gateway answers the API only over NATS RPC and must keep it turned on.
+Whether the gateway responds to RPC requests over NATS. The gateway responds to the API only over NATS RPC and must keep it turned on.
 
 ### `FLUXER_GIF_SERVICE_SUBJECT`
 
@@ -2377,121 +2425,17 @@ The path to the Google Play service account JSON file.
 
 The OAuth token URL for Google Play.
 
-#### `FLUXER_LABS_GUILD_ID`
-
-The community Operator Pass holders join.
-
-#### `FLUXER_LABS_OPERATOR_ROLE_ID`
-
-The role Operator Pass holders get in that community.
-
-#### `FLUXER_OPERATOR_PASS_GRACE_MINUTES`
-
-The grace period of the Operator Pass sale, in minutes.
-
-#### `FLUXER_OPERATOR_PASS_MAX_QUANTITY`
-
-The largest Operator Pass quantity in one purchase.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_BRL_ENABLED`
-
-Whether the Operator Pass is sold in BRL.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_DKK_ENABLED`
-
-Whether the Operator Pass is sold in DKK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_INR_ENABLED`
-
-Whether the Operator Pass is sold in INR.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_NOK_ENABLED`
-
-Whether the Operator Pass is sold in NOK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_PLN_ENABLED`
-
-Whether the Operator Pass is sold in PLN.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_RISES_AT`
-
-When the Operator Pass price rises.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_SEK_ENABLED`
-
-Whether the Operator Pass is sold in SEK.
-
-#### `FLUXER_OPERATOR_PASS_PRICE_TRY_ENABLED`
-
-Whether the Operator Pass is sold in TRY.
-
-#### `FLUXER_OPERATOR_PASS_RELEASE_LISTS`
-
-The release lists of the Operator Pass sale.
-
-#### `FLUXER_OPERATOR_PASS_SALE_OPENS_AT`
-
-When the Operator Pass sale opens.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_BRL`
-
-The standard Operator Pass price in BRL.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_DKK`
-
-The standard Operator Pass price in DKK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_EUR`
-
-The standard Operator Pass price in EUR.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_INR`
-
-The standard Operator Pass price in INR.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_NOK`
-
-The standard Operator Pass price in NOK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_PLN`
-
-The standard Operator Pass price in PLN.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_SEK`
-
-The standard Operator Pass price in SEK.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_TRY`
-
-The standard Operator Pass price in TRY.
-
-#### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_USD`
-
-The standard Operator Pass price in USD.
-
-#### `FLUXER_OPERATOR_PASS_STOPPED_COUNTRIES`
-
-Countries where Operator Pass sales are stopped.
-
-#### `FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS`
-
-How long an Operator Pass transfer stays locked, in hours.
-
-#### `FLUXER_OPERATOR_PASS_WALL_TIERS`
-
-The wall tiers of the Operator Pass sale.
-
-#### `FLUXER_OPERATOR_PASS_WITHDRAWAL_COUNTRIES`
-
-The Operator Pass withdrawal rules for each country.
-
 #### `FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT`
 
 When account closures for payment disputes take effect.
 
 #### `FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL`
 
-Whether sandbox store purchases count for every account.
+Whether sandbox store purchases, gifts included, count for every account with no time limit.
+
+#### `FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS`
+
+Whether sandbox App Store and Google Play subscriptions count for every account for 7 days after each purchase. On by default.
 
 #### `FLUXER_STORE_BILLING_SANDBOX_USER_IDS`
 
@@ -2816,10 +2760,6 @@ Only tests and development use these.
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
 Whether rate limits are off.
-
-#### `FLUXER_OPERATOR_PASS_NOW`
-
-A clock override for the Operator Pass sale.
 
 #### `FLUXER_OPERATOR_SOCKET`
 

@@ -3,15 +3,14 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {offerAuthenticatorCalmly} from '@app/features/auth/components/modals/AuthenticatorOfferModal';
 import Accounts from '@app/features/auth/state/Accounts';
-import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
 import * as OperatorPassModalCommands from '@app/features/premium/commands/OperatorPassModalCommands';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import OperatorPassCheckoutSession from '@app/features/premium/state/OperatorPassCheckoutSession';
+import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import {isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import {
 	consumeCompletedPremiumCheckoutReturnIntent,
-	consumeOperatorPassCheckoutReturnIntent,
-	getCurrentOperatorPassCount,
 	getCurrentPremiumActive,
 	getPendingPremiumCheckoutReturnIntent,
 } from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
@@ -23,11 +22,6 @@ import {useCallback, useEffect, useRef} from 'react';
 
 const REFRESH_COOLDOWN_MS = 2000;
 
-function reopenOperatorPassCheckout(): void {
-	if (!isOperatorPassAvailable()) return;
-	OperatorPassModalCommands.reopenCheckoutModalAfterReturn();
-}
-
 interface ActivePremiumCheckoutReturnWatcherProps {
 	readonly currentUserId: string;
 	readonly showPremiumFeatures: boolean;
@@ -38,7 +32,9 @@ const ActivePremiumCheckoutReturnWatcher = observer(function ActivePremiumChecko
 	showPremiumFeatures,
 }: ActivePremiumCheckoutReturnWatcherProps) {
 	const isPremium = getCurrentPremiumActive();
-	const operatorPassCount = getCurrentOperatorPassCount();
+	const operatorPassRun = OperatorPassCheckoutSession.run;
+	const operatorPassArrived =
+		operatorPassRun !== null && (OperatorPassHoldings.count ?? 0) > operatorPassRun.startedPassCount;
 	const isFocused = WindowState.focused;
 	const isVisible = WindowState.visible;
 	const refreshInFlightRef = useRef(false);
@@ -51,15 +47,7 @@ const ActivePremiumCheckoutReturnWatcher = observer(function ActivePremiumChecko
 		if (refreshInFlightRef.current || now - lastRefreshAtRef.current < REFRESH_COOLDOWN_MS) return;
 		lastRefreshAtRef.current = now;
 		refreshInFlightRef.current = true;
-		const refresh =
-			intent.source === 'operator_pass'
-				? OperatorPassCommands.fetchState().then((state) => {
-						if (consumeOperatorPassCheckoutReturnIntent(state)) {
-							reopenOperatorPassCheckout();
-						}
-					})
-				: PremiumCommands.refreshPremiumState();
-		void refresh
+		void PremiumCommands.refreshPremiumState()
 			.catch(() => undefined)
 			.finally(() => {
 				refreshInFlightRef.current = false;
@@ -72,16 +60,16 @@ const ActivePremiumCheckoutReturnWatcher = observer(function ActivePremiumChecko
 	}, [isFocused, isVisible, maybeRefreshPremiumState, showPremiumFeatures]);
 	useEffect(() => {
 		if (!showPremiumFeatures) return;
-		if (!isPremium && operatorPassCount === 0) return;
+		if (!isPremium) return;
 		const intent = consumeCompletedPremiumCheckoutReturnIntent();
 		if (!intent) return;
-		if (intent.source === 'operator_pass') {
-			reopenOperatorPassCheckout();
-			return;
-		}
 		PlutoniumPageCommands.openPlutoniumPage();
 		void offerAuthenticatorCalmly();
-	}, [isPremium, operatorPassCount, currentUserId, showPremiumFeatures]);
+	}, [isPremium, currentUserId, showPremiumFeatures]);
+	useEffect(() => {
+		if (!operatorPassArrived || !isOperatorPassAvailable()) return;
+		OperatorPassModalCommands.reopenCheckoutModalAfterReturn();
+	}, [operatorPassArrived]);
 	return null;
 });
 

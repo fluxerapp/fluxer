@@ -65,3 +65,10 @@ a.row:hover {
 	line-height: 1.125rem;
 	overflow-wrap: anywhere;
 }
+
+.quote {
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	overflow-wrap: anywhere;
+}

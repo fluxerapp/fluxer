@@ -268,13 +268,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 [acl::GIFT_CODES_GENERATE]
             ),
             item!(
-                "Operator Pass Waitlist",
-                "/operator-pass-waitlist",
-                "operator-pass-waitlist",
-                [acl::OPERATOR_PASS_WAITLIST_STATS],
-                hosted
-            ),
-            item!(
                 "Operators' Wall",
                 "/operator-pass-wall",
                 "operator-pass-wall",

@@ -3,6 +3,7 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
 import type {OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {HostedOnlyRoute} from '@app/api/middleware/BillingRouteAvailability';
@@ -21,12 +22,14 @@ import {
 	mapRemoval,
 	mapRemovalHistory,
 	mapUnit,
+	mapVisionaryActivation,
 	mapWallDecision,
 	mapWallEntry,
 	mapWallEvent,
 	wallAvatarRoute,
 } from '@app/api/operator_pass/OperatorPassAdminMappers';
 import {requireOperatorPassBusinessPurchase} from '@app/api/operator_pass/OperatorPassBusinessListing';
+import {buildOperatorPassDeliveryExport} from '@app/api/operator_pass/OperatorPassDeliveryExport';
 import {resolveOperatorPassHolder} from '@app/api/operator_pass/OperatorPassEntitlementService';
 import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {mapOperatorPassPurchaseToResponse} from '@app/api/operator_pass/OperatorPassPurchaseRules';
@@ -43,6 +46,11 @@ import {UnknownOperatorPassPurchaseError} from '@fluxer/errors/src/domains/opera
 import {UnknownOperatorPassWallEntryError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassWallEntryError';
 import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
 import {
+	AdminOperatorPassCertificatePassIdParam,
+	AdminOperatorPassCertificateReissueRequest,
+	AdminOperatorPassCertificateReissueResponse,
+	AdminOperatorPassDeliveriesCsvResponse,
+	AdminOperatorPassDeliveriesQuery,
 	AdminOperatorPassNoticeRequest,
 	AdminOperatorPassPurchaseIdParam,
 	AdminOperatorPassReleaseEraseParam,
@@ -53,20 +61,17 @@ import {
 	AdminOperatorPassRemovalRequest,
 	AdminOperatorPassRemovalResponse,
 	AdminOperatorPassUserResponse,
-	AdminOperatorPassWaitlistFollowupTextsResponse,
-	AdminOperatorPassWaitlistStatsResponse,
+	AdminOperatorPassVisionaryActivationsCsvResponse,
 	AdminOperatorPassWallAsOfQuery,
 	AdminOperatorPassWallAsOfResponse,
 	AdminOperatorPassWallAvatarParam,
-	AdminOperatorPassWallBulkRequest,
-	AdminOperatorPassWallBulkResponse,
 	AdminOperatorPassWallBusinessRequest,
+	AdminOperatorPassWallClearQuoteRequest,
 	AdminOperatorPassWallDecisionRequest,
 	AdminOperatorPassWallEntryResponse,
 	AdminOperatorPassWallFreezeRequest,
 	AdminOperatorPassWallHideRequest,
 	AdminOperatorPassWallLegalHoldRequest,
-	AdminOperatorPassWallQueueResponse,
 	AdminOperatorPassWallRevisionIdParam,
 	AdminOperatorPassWallStateResponse,
 	AdminOperatorPassWallTimelineResponse,
@@ -77,6 +82,8 @@ import {OperatorPassPurchaseResponse} from '@fluxer/schema/src/domains/operator_
 import type {Context} from 'hono';
 
 const TAG = 'Admin';
+
+const WITHDRAWAL_RECEIVED_AT_SKEW_MS = 5 * 60 * 1000;
 
 function requireFulfilment(ctx: Context<HonoEnv>): OperatorPassFulfilmentService {
 	const fulfilment = ctx.get('stripeService').operatorPassFulfilment;
@@ -118,12 +125,7 @@ async function sendWallStatement(
 	} else if (avatarChanged) {
 		target = 'avatar';
 	}
-	let shown: 'previous' | 'operator' | 'username' = 'username';
-	if (result.entry.live_revision_id != null) {
-		shown = 'previous';
-	} else if (result.entry.username_declined) {
-		shown = 'operator';
-	}
+	const shown: 'previous' | 'operator' = result.entry.live_revision_id != null ? 'previous' : 'operator';
 	return ctx
 		.get('emailService')
 		.send(
@@ -152,6 +154,24 @@ async function sendHiddenStatement(
 		);
 }
 
+async function sendQuoteClearedStatement(
+	ctx: Context<HonoEnv>,
+	user: User | null,
+	result: OperatorPassWallDecisionResult,
+): Promise<boolean> {
+	if (!user?.email || !result.decision.reason) {
+		return false;
+	}
+	return ctx
+		.get('emailService')
+		.send(
+			'operator_pass_wall_quote_cleared',
+			user.email,
+			{reason: result.decision.reason, note: result.decision.note ?? ''},
+			user.locale,
+		);
+}
+
 async function indexWallAudit(userId: UserID, logId: Promise<bigint>): Promise<void> {
 	await getOperatorPassRepository().addWallAuditLog(userId, await logId);
 }
@@ -171,22 +191,24 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Returns the Operator Pass of a user with any section 8 removal and the removal history, and the purchases the user paid for. Only available on hosted instances. Requires USER_LOOKUP permission.',
+				'Returns the Operator Pass of a user with any section 8 removal and the removal history, and the purchases the user paid for. The consent IP address and browser details are null unless the admin also has USER_VIEW_IP. Only available on hosted instances. Requires USER_LOOKUP permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
 			const user = await ctx.get('userRepository').findUniqueAssert(userId);
 			const repository = getOperatorPassRepository();
-			const [pass, removal, removalHistory, purchases, wallEntry, wallHistory, heldUnits, offers] = await Promise.all([
-				repository.findOperatorPass(userId),
-				repository.findRemoval(userId),
-				repository.listRemovalHistory(userId),
-				repository.listPurchasesByPurchaser(userId),
-				repository.findWallEntry(userId),
-				repository.listWallEvents(userId),
-				repository.listUnitsByHolder(userId),
-				repository.listOffersByUser(userId),
-			]);
+			const [pass, removal, removalHistory, purchases, wallEntry, wallHistory, heldUnits, offers, activation] =
+				await Promise.all([
+					repository.findOperatorPass(userId),
+					repository.findRemoval(userId),
+					repository.listRemovalHistory(userId),
+					repository.listPurchasesByPurchaser(userId),
+					repository.findWallEntry(userId),
+					repository.listWallEvents(userId),
+					repository.listUnitsByHolder(userId),
+					repository.listOffersByUser(userId),
+					repository.findVisionaryActivation(userId),
+				]);
 			const unitsByPurchase = new Map<string, Array<OperatorPassUnitRow>>();
 			for (const purchase of purchases) {
 				unitsByPurchase.set(
@@ -204,6 +226,8 @@ export function OperatorPassAdminController(app: HonoApp) {
 			const unitEvents = await Promise.all(sortedUnits.map((unit) => repository.listUnitEvents(unit.pass_id)));
 			const now = operatorPassNow();
 			const holder = resolveOperatorPassHolder({pass, removal}, now);
+			const acls = ctx.get('adminUserAcls');
+			const canViewIp = acls.has(AdminACLs.USER_VIEW_IP) || acls.has(AdminACLs.WILDCARD);
 			await recordAdminRead(ctx, {
 				targetType: 'user',
 				targetId: userId,
@@ -220,18 +244,24 @@ export function OperatorPassAdminController(app: HonoApp) {
 							wall_chosen: hasOperatorPassWallChoice(await repository.findWallEntry(userId)),
 						}
 					: null,
-				pass: pass ? mapPass(pass, purchases) : null,
+				pass: pass ? mapPass(pass, purchases, canViewIp) : null,
 				removal: removal ? mapRemoval(removal) : null,
 				removal_history: removalHistory.map(mapRemovalHistory),
 				purchases: purchases
 					.sort((left, right) => right.created_at.getTime() - left.created_at.getTime())
 					.map((purchase) =>
-						mapOperatorPassPurchaseToResponse(purchase, unitsByPurchase.get(purchase.checkout_session_id) ?? [], now),
+						mapOperatorPassPurchaseToResponse(
+							purchase,
+							unitsByPurchase.get(purchase.checkout_session_id) ?? [],
+							now,
+							new Map(),
+						),
 					),
 				units: sortedUnits.map((unit, index) => mapUnit(unit, unitEvents[index] ?? [])),
 				offers: offers.sort((left, right) => left.created_at.getTime() - right.created_at.getTime()).map(mapOffer),
 				wall: wallEntry ? mapWallEntry(wallEntry, user) : null,
 				wall_history: wallHistory.map(mapWallEvent),
+				visionary_activation: activation ? mapVisionaryActivation(activation) : null,
 			});
 		},
 	);
@@ -280,13 +310,13 @@ export function OperatorPassAdminController(app: HonoApp) {
 		Validator('json', AdminOperatorPassRemovalRequest),
 		OpenAPI({
 			operationId: 'remove_admin_operator_pass_perks',
-			summary: 'Remove Operator Pass perks',
+			summary: 'Remove the Operator Pass bonus',
 			responseSchema: AdminOperatorPassRemovalResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Removes the Operator Pass perks of a user under section 8 of the Operator Pass terms, for a number of days or permanently, and emails the statement of reasons with the appeal route. A limited removal ends on its own. A permanent removal for a breach that is not serious needs an earlier limited removal and a removal notice sent after it and at least 7 days earlier. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Removes the bonus that comes with the Operator Pass of a user under section 8 of the Operator Pass terms, for a number of days or permanently, and emails the statement of reasons with the appeal route. A limited removal ends on its own. A permanent removal for a breach that is not serious needs an earlier limited removal and a removal notice sent after it and at least 7 days earlier. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -325,13 +355,13 @@ export function OperatorPassAdminController(app: HonoApp) {
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'restore_admin_operator_pass_perks',
-			summary: 'Restore Operator Pass perks',
+			summary: 'Restore the Operator Pass bonus',
 			responseSchema: null,
 			statusCode: 204,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Ends a removal or a pending notice, for example after an appeal under section 6.2 of the terms of service. The perks come back with the original date on the badge. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Ends a removal or a pending notice, for example after an appeal under section 6.2 of the terms of service. The bonus comes back with the original date on the badge. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -373,6 +403,11 @@ export function OperatorPassAdminController(app: HonoApp) {
 			}
 			const purchaser = await ctx.get('userRepository').findUniqueAssert(found.purchaser_id);
 			const receivedAt = new Date(body.received_at);
+			if (receivedAt.getTime() > operatorPassNow().getTime() + WITHDRAWAL_RECEIVED_AT_SKEW_MS) {
+				throw new InputValidationError([
+					{path: 'received_at', message: 'The withdrawal can not be received in the future'},
+				]);
+			}
 			const purchase = await fulfilment.withdraw({
 				purchaser,
 				purchaseId,
@@ -395,177 +430,168 @@ export function OperatorPassAdminController(app: HonoApp) {
 					purchase,
 					await fulfilment.repository.listUnitsByPurchase(purchase.checkout_session_id),
 					operatorPassNow(),
+					new Map(),
 				),
 			);
 		},
 	);
-	app.get(
-		'/admin/operator-pass/waitlist/stats',
+	app.post(
+		'/admin/operator-pass/certificates/:pass_id/reissue',
 		HostedOnlyRoute,
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAdminACL(AdminACLs.OPERATOR_PASS_WAITLIST_STATS),
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_TEMP_BAN),
+		Validator('param', AdminOperatorPassCertificatePassIdParam),
+		Validator('json', AdminOperatorPassCertificateReissueRequest),
 		OpenAPI({
-			operationId: 'get_admin_operator_pass_waitlist_stats',
-			summary: 'Get Operator Pass waitlist statistics',
-			responseSchema: AdminOperatorPassWaitlistStatsResponse,
+			operationId: 'reissue_admin_operator_pass_certificate',
+			summary: 'Issue a new copy of an Operator certificate page',
+			responseSchema: AdminOperatorPassCertificateReissueResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Counts Operator Pass waitlist signups by status and the price bracket answers per currency, for confirmed signups and for all signups. Returns counts only, never addresses. Only available on hosted instances. Requires OPERATOR_PASS_WAITLIST_STATS permission.',
+				'Issues a new copy of one Operator certificate page with the given name and the same number, payment date and terms version, for a name change under section 3 or a correction under section 6 of the Operator Pass terms, or with a name the buyer gives after the person named on the page objected successfully under section 5 of the Operator Pass privacy notice. Runs the same name checks as checkout. Earlier copies stay in the records, except after an objection, when the name and the PDF file of every earlier copy are erased and only the number, the fingerprint and the issue time stay. For a page that is cancelled after a withdrawal, a refund or a payment dispute, an objection issues no new copy. It erases the name and the PDF file of every copy and the name of that page on the purchase, keeps the number, the fingerprint, the issue times and the cancellation, and ignores holder_name. The page keeps its link, which opens the newest copy, and the purchase lists the new name for that page. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
-			const waitlistService = ctx.get('operatorPassWaitlistService');
-			if (!waitlistService) {
-				throw new Error('Operator Pass waitlist service is not available');
+			const {pass_id: passId} = ctx.req.valid('param');
+			const body = ctx.req.valid('json');
+			const fulfilment = requireFulfilment(ctx);
+			const previous = await fulfilment.repository.findLatestCertificate(passId);
+			const purchase = previous?.purchase_id ? await fulfilment.repository.findPurchase(previous.purchase_id) : null;
+			const targetId =
+				previous?.source === 'visionary'
+					? (await fulfilment.repository.findUnit(passId))?.holder_id
+					: purchase?.purchaser_id;
+			if (!previous || !targetId) {
+				throw new UnknownOperatorPassPurchaseError();
 			}
-			const stats = await waitlistService.getStats();
-			await recordAdminRead(ctx, {
-				targetType: 'operator_pass_waitlist',
-				targetId: 0n,
-				action: AdminAuditReadActions.GET_OPERATOR_PASS_WAITLIST_STATS,
-				metadata: {total: stats.total, currency_count: stats.price_feedback.filter((entry) => entry.all > 0).length},
+			const row = await fulfilment.reissueCertificatePage({
+				passId,
+				holderName: body.holder_name,
+				reason: body.reason,
 			});
-			return ctx.json(stats);
+			await recordAdminWrite(ctx, {
+				targetType: 'user',
+				targetId,
+				action: 'reissue_operator_pass_certificate',
+				metadata: {
+					pass_id: row.pass_id,
+					number: row.number,
+					version: row.version,
+					previous_version: previous.version,
+					reason: body.reason,
+					erased_only: row.version === previous.version,
+				},
+			});
+			return ctx.json({
+				pass_id: row.pass_id,
+				number: row.number,
+				version: row.version,
+				holder_name: row.holder_name,
+				issued_at: row.issued_at.toISOString(),
+				reissue_reason: body.reason,
+			});
 		},
 	);
 	app.get(
-		'/admin/operator-pass/waitlist/followup-texts',
-		HostedOnlyRoute,
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAdminACL(AdminACLs.OPERATOR_PASS_WAITLIST_STATS),
-		OpenAPI({
-			operationId: 'list_admin_operator_pass_waitlist_followup_texts',
-			summary: 'List Operator Pass waitlist follow-up answers in their own words',
-			responseSchema: AdminOperatorPassWaitlistFollowupTextsResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: TAG,
-			description:
-				'Lists every answer visitors wrote under other in the waitlist follow-up question, newest first, with the options picked alongside and the signup status. The text is plain text as the visitor typed it and must be escaped wherever it is shown. Never returns addresses. Only available on hosted instances. Requires OPERATOR_PASS_WAITLIST_STATS permission.',
-		}),
-		async (ctx) => {
-			const waitlistService = ctx.get('operatorPassWaitlistService');
-			if (!waitlistService) {
-				throw new Error('Operator Pass waitlist service is not available');
-			}
-			const entries = await waitlistService.listFollowupTexts();
-			await recordAdminRead(ctx, {
-				targetType: 'operator_pass_waitlist',
-				targetId: 0n,
-				action: AdminAuditReadActions.LIST_OPERATOR_PASS_WAITLIST_FOLLOWUP_TEXTS,
-				metadata: {count: entries.length},
-			});
-			return ctx.json({entries});
-		},
-	);
-	app.get(
-		'/admin/operator-pass/wall/review-queue',
+		'/admin/operator-pass/visionary/activations.csv',
 		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.USER_LOOKUP),
 		OpenAPI({
-			operationId: 'list_admin_operator_pass_wall_review_queue',
-			summary: "List Operators' wall changes to review",
-			responseSchema: AdminOperatorPassWallQueueResponse,
+			operationId: 'get_admin_operator_pass_visionary_activations',
+			summary: 'Download Visionary Operator Pass turn-ons',
+			responseSchema: AdminOperatorPassVisionaryActivationsCsvResponse,
+			responseContentType: 'text/csv',
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Lists the pending wall revisions, oldest first, with the live and pending name and avatar side by side for the diff. Nothing pending shows on the wall until staff approve it. The approval target is 72 hours. Only available on hosted instances. Requires USER_LOOKUP permission.',
+				'Returns a CSV with one row for each account that turned on the Operator Pass that comes with Visionary, for the books: user_id, visionary_sequence, visionary_since, activated_at, terms_version, certificate_number, issued_at of the first certificate copy, ended_at and end_reason. Leaves out names, IP addresses and browser details. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.',
 		}),
 		async (ctx) => {
-			const queue = await getOperatorPassWallService().moderation.listPending();
+			const repository = getOperatorPassRepository();
+			const lines = [
+				'user_id,visionary_sequence,visionary_since,activated_at,terms_version,certificate_number,issued_at,ended_at,end_reason',
+			];
+			let pageState: string | null = null;
+			do {
+				const page = await repository.scanVisionaryActivations(500, pageState);
+				for (const row of page.rows) {
+					if (!row.activated_at) continue;
+					const [first] = row.pass_id ? await repository.listCertificateVersions(row.pass_id) : [];
+					lines.push(
+						[
+							row.user_id.toString(),
+							row.visionary_sequence?.toString() ?? '',
+							row.visionary_since?.toISOString() ?? '',
+							row.activated_at.toISOString(),
+							row.terms_version ?? '',
+							row.certificate_number?.toString() ?? '',
+							first?.issued_at.toISOString() ?? '',
+							row.ended_at?.toISOString() ?? '',
+							row.end_reason ?? '',
+						].join(','),
+					);
+				}
+				pageState = page.pageState;
+			} while (pageState);
 			await recordAdminRead(ctx, {
-				targetType: 'operator_pass_wall',
+				targetType: 'operator_pass_visionary_activations',
 				targetId: 0n,
-				action: AdminAuditReadActions.LIST_OPERATOR_PASS_WALL_REVIEW_QUEUE,
-				metadata: {count: queue.length},
+				action: AdminAuditReadActions.GET_OPERATOR_PASS_VISIONARY_ACTIVATIONS,
+				metadata: {rows: lines.length - 1},
 			});
-			return ctx.json({entries: queue.map(({entry, user}) => mapWallEntry(entry, user))});
+			const body = `${lines.join('\n')}\n`;
+			return new Response(body, {
+				status: 200,
+				headers: {
+					'Content-Type': 'text/csv; charset=utf-8',
+					'Content-Disposition': 'attachment; filename="operator-pass-visionary-activations.csv"',
+					'Cache-Control': 'private, no-store',
+				},
+			});
 		},
 	);
-	app.post(
-		'/admin/users/:user_id/operator-pass/wall/revisions/:revision_id/approve',
+	app.get(
+		'/admin/operator-pass/deliveries.csv',
 		HostedOnlyRoute,
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_TEMP_BAN),
-		Validator('param', AdminOperatorPassWallRevisionIdParam),
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.USER_LOOKUP),
 		OpenAPI({
-			operationId: 'approve_admin_operator_pass_wall_revision',
-			summary: "Approve Operators' wall revision",
-			responseSchema: AdminOperatorPassWallEntryResponse,
+			operationId: 'get_admin_operator_pass_deliveries',
+			summary: 'Download Operator Pass deliveries for the books',
+			responseSchema: AdminOperatorPassDeliveriesCsvResponse,
+			responseContentType: 'text/csv',
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Approves a pending wall revision. Its name and avatar go live on the wall and the avatar is published to the public snapshot store. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Returns operator-pass-leveranser-YYYY-MM.csv for one calendar month of delivered_at in UTC, with one row per pass of every purchase delivered in that month. The columns bokfor reads are pass_id, source, charge_id, payment_intent_id, delivered_at, holder_had_pass, is_business, withdrawal_country and confirmation_sent_at, followed by the purchase, consent, withdrawal and after-sale columns of the full export. Columns with no stored source yet are empty. Leaves out names, IP addresses and browser details. Creates audit log entry. Only available on hosted instances. Requires USER_LOOKUP permission.',
 		}),
+		Validator('query', AdminOperatorPassDeliveriesQuery),
 		async (ctx) => {
-			const userId = createUserID(BigInt(ctx.req.valid('param').user_id));
-			const user = await ctx.get('userRepository').findUniqueAssert(userId);
-			const result = await getOperatorPassWallService().moderation.approve(
-				userId,
-				ctx.get('adminUserId'),
-				BigInt(ctx.req.valid('param').revision_id),
+			const {month} = ctx.req.valid('query');
+			const exported = await buildOperatorPassDeliveryExport(
+				getOperatorPassRepository(),
+				month,
+				new BillingDocumentRepository(),
+				ctx.get('stripeService').getStripe(),
 			);
-			const notified = false;
-			await indexWallAudit(
-				userId,
-				recordAdminWrite(ctx, {
-					targetType: 'user',
-					targetId: userId,
-					action: 'approve_operator_pass_wall_revision',
-					metadata: {revision_id: ctx.req.valid('param').revision_id, notified},
-				}),
-			);
-			return ctx.json(mapWallEntry(result.entry, user));
-		},
-	);
-	app.post(
-		'/admin/users/:user_id/operator-pass/wall/revisions/:revision_id/decline',
-		HostedOnlyRoute,
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_TEMP_BAN),
-		Validator('param', AdminOperatorPassWallRevisionIdParam),
-		Validator('json', AdminOperatorPassWallDecisionRequest),
-		OpenAPI({
-			operationId: 'decline_admin_operator_pass_wall_revision',
-			summary: "Decline Operators' wall revision",
-			responseSchema: AdminOperatorPassWallEntryResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: TAG,
-			description:
-				'Declines a pending wall revision because of its content, with a reason code and the facts. The wall keeps the last approved version or the fallback, and the listing keeps its tier, place and badge. Fluxer emails a statement of reasons with the appeal route under section 6.2 of the terms of service. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
-		}),
-		async (ctx) => {
-			const userId = createUserID(BigInt(ctx.req.valid('param').user_id));
-			const user = await ctx.get('userRepository').findUniqueAssert(userId);
-			const before = await getOperatorPassWallService().getEntry(userId);
-			const body = ctx.req.valid('json');
-			if (before?.pending_revision_id?.toString() !== ctx.req.valid('param').revision_id) {
-				throw new UnknownOperatorPassWallEntryError();
-			}
-			const result = await getOperatorPassWallService().moderation.decline(userId, ctx.get('adminUserId'), {
-				reason: body.reason,
-				note: body.note,
-				usernameDeclined: body.username_declined === true,
+			await recordAdminRead(ctx, {
+				targetType: 'operator_pass_deliveries',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_OPERATOR_PASS_DELIVERIES,
+				metadata: {month, rows: exported.rows, purchases: exported.purchases},
 			});
-			const notified = await sendWallStatement(ctx, user, result, {
-				name: before?.live_name ?? null,
-				avatar: before?.live_avatar ?? null,
+			return new Response(exported.csv, {
+				status: 200,
+				headers: {
+					'Content-Type': 'text/csv; charset=utf-8',
+					'Content-Disposition': `attachment; filename="${exported.filename}"`,
+					'Cache-Control': 'private, no-store',
+				},
 			});
-			await indexWallAudit(
-				userId,
-				recordAdminWrite(ctx, {
-					targetType: 'user',
-					targetId: userId,
-					action: 'decline_operator_pass_wall_revision',
-					metadata: {revision_id: ctx.req.valid('param').revision_id, reason: body.reason, note: body.note, notified},
-				}),
-			);
-			return ctx.json(mapWallEntry(result.entry, user));
 		},
 	);
 	app.post(
@@ -582,7 +608,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Puts an earlier approved revision back on the wall. A business revision cannot be put back this way, so the purchase is checked again whenever a business listing returns. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Puts an earlier revision back on the wall. A business revision cannot be put back this way, so the purchase is checked again whenever a business listing returns. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(BigInt(ctx.req.valid('param').user_id));
@@ -620,7 +646,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Takes the approved name and avatar off the wall because of their content and shows the fallback: the username, or Operator when the username also breaks the rules, with the default avatar. A business listing instead goes back to the last approved personal name and avatar when there is one. The listing keeps its tier, place and badge. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Takes the live name and avatar off the wall because of their content and shows the fallback: the word Operator with the default avatar. A business listing instead goes back to the last personal name and avatar when there is one. The listing keeps its tier, place and badge. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -630,7 +656,6 @@ export function OperatorPassAdminController(app: HonoApp) {
 			const result = await getOperatorPassWallService().moderation.forceFallback(userId, ctx.get('adminUserId'), {
 				reason: body.reason,
 				note: body.note,
-				usernameDeclined: body.username_declined === true,
 			});
 			const notified = await sendWallStatement(ctx, user, result, {
 				name: before?.live_name ?? null,
@@ -663,7 +688,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Lists a business on the wall with its company name and logo under section 2.2 of the Operator Pass terms, or replaces its logo. The account must hold a pass and have a purchase with a tax ID, verified when it is an EU VAT number from outside Sweden, paid at least 7 days ago with no refund, open dispute or fraud warning. The logo must be a square PNG, JPEG or WebP image of at least 256 pixels, under 2 MB and not animated. The listing is approved at once, does not follow profile changes, and shows at one fixed size after the listings of people. An approved settings change, a revert or a forced fallback takes it back to a personal listing, and so does a refund, dispute or withdrawal that leaves no qualifying purchase, a section 8 removal, or losing the last pass. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Lists a business on the wall with its company name and logo under section 3.2 of the Operator Pass terms, or replaces its logo. The account must hold a pass and have a purchase with a tax ID, verified when it is an EU VAT number from outside Sweden, paid at least 7 days ago with no refund, open dispute or fraud warning. The logo must be a square PNG, JPEG or WebP image of at least 256 pixels, under 2 MB and not animated. The listing goes live at once, does not follow profile changes, and shows at one fixed size after the listings of people. A settings change, a revert or a forced fallback takes it back to a personal listing, and so does a refund, dispute or withdrawal that leaves no qualifying purchase, a section 8 removal, or losing the last pass. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -710,7 +735,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Hides a listing from the wall for now, or shows it again. Hiding needs a reason and the facts, sends a statement of reasons, stops serving the avatar and purges it from the CDN. Removal from the wall for good is a section 8 removal. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Hides a listing from the wall under section 3.1 of the Operator Pass terms while a report or possible breach is looked into, or shows it again. Hiding needs a reason and the facts, sends a statement of reasons, stops serving the avatar and purges it from the CDN. Removal from the wall for good is a section 8 removal. Records a decision. Creates audit log entry. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -744,78 +769,43 @@ export function OperatorPassAdminController(app: HonoApp) {
 		},
 	);
 	app.post(
-		'/admin/operator-pass/wall/bulk',
+		'/admin/users/:user_id/operator-pass/wall/clear-quote',
 		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_TEMP_BAN),
-		Validator('json', AdminOperatorPassWallBulkRequest),
+		Validator('param', UserIdParam),
+		Validator('json', AdminOperatorPassWallClearQuoteRequest),
 		OpenAPI({
-			operationId: 'bulk_admin_operator_pass_wall_revisions',
-			summary: 'Approve or decline wall revisions in bulk',
-			responseSchema: AdminOperatorPassWallBulkResponse,
+			operationId: 'clear_admin_operator_pass_wall_quote',
+			summary: "Clear Operators' wall quote",
+			responseSchema: AdminOperatorPassWallEntryResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Approves or declines up to 100 pending revisions at once. Declining needs a reason and the facts and sends each holder a statement of reasons. Revisions that are no longer pending, or whose account no longer exists, are skipped. Creates one audit log entry per revision. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
+				'Deletes the quote on a listing because of its content. The rest of the listing stays as it is, and the holder can set a new quote. Fails when the listing has no quote or a quote other than the one staff reviewed. Fluxer emails a statement of reasons. Records a decision. Creates audit log entry with the reason, the facts and the cleared quote. Only available on hosted instances. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
+			const userId = createUserID(ctx.req.valid('param').user_id);
+			const user = await ctx.get('userRepository').findUnique(userId);
 			const body = ctx.req.valid('json');
-			if (body.action === 'decline' && (!body.reason || !body.note)) {
-				throw new InputValidationError([{path: 'reason', message: 'A reason and the facts are required to decline'}]);
-			}
-			const service = getOperatorPassWallService();
-			const done: Array<string> = [];
-			const skipped: Array<string> = [];
-			for (const item of body.revisions) {
-				const userId = createUserID(BigInt(item.user_id));
-				const before = await service.getEntry(userId);
-				if (before?.pending_revision_id?.toString() !== item.revision_id) {
-					skipped.push(item.revision_id);
-					continue;
-				}
-				const user = await ctx.get('userRepository').findUnique(userId);
-				if (!user) {
-					skipped.push(item.revision_id);
-					continue;
-				}
-				let result: OperatorPassWallDecisionResult;
-				try {
-					result =
-						body.action === 'approve'
-							? await service.moderation.approve(userId, ctx.get('adminUserId'), BigInt(item.revision_id))
-							: await service.moderation.decline(userId, ctx.get('adminUserId'), {
-									reason: body.reason!,
-									note: body.note!,
-									usernameDeclined: false,
-								});
-				} catch (error) {
-					if (error instanceof UnknownOperatorPassWallEntryError) {
-						skipped.push(item.revision_id);
-						continue;
-					}
-					throw error;
-				}
-				const notified =
-					body.action === 'decline'
-						? await sendWallStatement(ctx, user, result, {
-								name: before.live_name ?? null,
-								avatar: before.live_avatar ?? null,
-							})
-						: false;
-				await indexWallAudit(
-					userId,
-					recordAdminWrite(ctx, {
-						targetType: 'user',
-						targetId: userId,
-						action:
-							body.action === 'approve' ? 'approve_operator_pass_wall_revision' : 'decline_operator_pass_wall_revision',
-						metadata: {revision_id: item.revision_id, bulk: true, reason: body.reason ?? null, notified},
-					}),
-				);
-				done.push(item.revision_id);
-			}
-			return ctx.json({done, skipped});
+			const result = await getOperatorPassWallService().moderation.clearQuote(
+				userId,
+				ctx.get('adminUserId'),
+				body.quote,
+				{reason: body.reason, note: body.note},
+			);
+			const notified = await sendQuoteClearedStatement(ctx, user, result);
+			await indexWallAudit(
+				userId,
+				recordAdminWrite(ctx, {
+					targetType: 'user',
+					targetId: userId,
+					action: 'clear_operator_pass_wall_quote',
+					metadata: {reason: body.reason, note: body.note, quote: body.quote, notified},
+				}),
+			);
+			return ctx.json(mapWallEntry(result.entry, user));
 		},
 	);
 	app.get(
@@ -852,7 +842,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 				revisions: timeline.revisions.map(({revision, status}) => ({
 					id: revision.revision_id.toString(),
 					name: revision.name,
-					avatar_url: wallAvatarRoute(userId, revision.avatar),
+					avatar_url: wallAvatarRoute(revision.avatar),
 					business: revision.business ?? false,
 					source: revision.source,
 					status,
@@ -865,7 +855,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/admin/users/:user_id/operator-pass/wall/avatars/:sha256',
+		'/admin/operator-pass/wall/avatars/:sha256',
 		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.USER_LOOKUP),
@@ -878,28 +868,20 @@ export function OperatorPassAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Returns the private copy of a wall avatar snapshot of a holder, including pending and declined ones that are never public. Only available on hosted instances. Requires USER_LOOKUP permission.',
+				'Returns the private copy of a wall avatar snapshot, including ones the public wall no longer serves. Only available on hosted instances. Requires USER_LOOKUP permission.',
 		}),
 		async (ctx) => {
-			const {user_id: rawUserId, sha256} = ctx.req.valid('param');
-			const userId = createUserID(BigInt(rawUserId));
-			const revisions = await getOperatorPassRepository().listWallRevisions(userId);
-			if (!revisions.some((revision) => revision.avatar === sha256)) {
-				throw new UnknownOperatorPassWallEntryError();
-			}
+			const {sha256} = ctx.req.valid('param');
 			const body = await getOperatorPassWallInfrastructure().avatarStore.readPrivate(sha256);
 			if (!body) {
 				throw new UnknownOperatorPassWallEntryError();
 			}
-			await indexWallAudit(
-				userId,
-				recordAdminRead(ctx, {
-					targetType: 'user',
-					targetId: userId,
-					action: AdminAuditReadActions.GET_OPERATOR_PASS_WALL_AVATAR,
-					metadata: {sha256},
-				}),
-			);
+			await recordAdminRead(ctx, {
+				targetType: 'operator_pass_wall',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_OPERATOR_PASS_WALL_AVATAR,
+				metadata: {sha256},
+			});
 			return new Response(body, {
 				status: 200,
 				headers: {'content-type': 'image/webp', 'cache-control': 'private, no-store'},
@@ -936,7 +918,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 				entries: entries.map((entry) => ({
 					user_id: entry.deleted ? null : entry.userId.toString(),
 					name: entry.name,
-					avatar_url: entry.deleted ? null : wallAvatarRoute(entry.userId, entry.avatar),
+					avatar_url: entry.deleted ? null : wallAvatarRoute(entry.avatar),
 					count: entry.count,
 					tier: entry.tier,
 					first_pass_at: entry.firstPassAt.toISOString(),

@@ -2,16 +2,25 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {isolateBidi} from '@app/features/i18n/utils/BidiIsolate';
+import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
 import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {
+	countOperatorPassCertificateNameCharacters,
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
 	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
 	type OperatorPassOfferResponse,
 	type OperatorPassPassesResponse,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
+import {
+	getOperatorPassWallQuoteProblem as getSharedOperatorPassWallQuoteProblem,
+	normalizeOperatorPassWallQuote,
+	type OperatorPassWallQuoteProblem,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 
 export const OPERATOR_PASS_LABS_INVITE_CODE = 'fluxer-labs';
 
@@ -35,8 +44,8 @@ export function isOperatorPassAvailable(): boolean {
 	return !RuntimeConfig.isSelfHosted();
 }
 
-export function hasOperatorPassProfileBadge(user: {operatorPassSince: unknown}): boolean {
-	return isOperatorPassAvailable() && user.operatorPassSince != null;
+export function keepsOperatorsThroughVisionary(user: {premiumType: number | null} | null | undefined): boolean {
+	return isOperatorPassAvailable() && user?.premiumType === UserPremiumTypes.LIFETIME;
 }
 
 export function formatOperatorPassDateTime(iso: string): string {
@@ -48,38 +57,26 @@ export function formatOperatorPassDateTime(iso: string): string {
 	}).format(new Date(iso));
 }
 
-export function formatOperatorPassLongDate(iso: string): string {
-	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long'}).format(new Date(iso));
+export function formatOperatorPassLongDate(iso: string, timeZone?: string): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long', timeZone}).format(new Date(iso));
 }
 
-export function formatOperatorPassDate(iso: string): string {
-	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'medium'}).format(new Date(iso));
+export function formatOperatorPassDate(iso: string, timeZone?: string): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'medium', timeZone}).format(new Date(iso));
+}
+
+export const OPERATOR_PASS_VISIONARY_DATE_TIME_ZONE = 'UTC';
+
+export function formatOperatorPassCertificateNumbers(numbers: ReadonlyArray<number>): string {
+	return getCachedListFormat(getCurrentOrDetectedLocale(), {type: 'unit', style: 'short'}).format(
+		numbers.map((value) => String(value).padStart(6, '0')),
+	);
 }
 
 interface OperatorPassCalendarDay {
 	year: number;
 	month: number;
 	day: number;
-}
-
-function getZonedTime(at: number, timeZone?: string): OperatorPassCalendarDay & {startOfDay: boolean} {
-	const parts = new Intl.DateTimeFormat('en-US', {
-		timeZone,
-		hourCycle: 'h23',
-		year: 'numeric',
-		month: 'numeric',
-		day: 'numeric',
-		hour: 'numeric',
-		minute: 'numeric',
-		second: 'numeric',
-	}).formatToParts(new Date(at));
-	const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0);
-	return {
-		year: value('year'),
-		month: value('month'),
-		day: value('day'),
-		startOfDay: value('hour') === 0 && value('minute') === 0 && value('second') === 0 && at % 1000 === 0,
-	};
 }
 
 function formatCalendarDay(
@@ -104,30 +101,38 @@ export function formatOperatorPassEarlyBirdEnd(priceRisesAt: string): string {
 	return formatCalendarDay(parseCalendarDay(getOperatorPassEarlyBirdEndsOn(priceRisesAt)), 'long');
 }
 
-export function formatOperatorPassUnlockDay(iso: string, timeZone?: string): string {
-	const zoned = getZonedTime(Date.parse(iso), timeZone);
-	if (zoned.startOfDay) return formatCalendarDay(zoned);
-	const next = new Date(Date.UTC(zoned.year, zoned.month - 1, zoned.day + 1));
-	return formatCalendarDay({year: next.getUTCFullYear(), month: next.getUTCMonth() + 1, day: next.getUTCDate()});
-}
-
-export function hasOperatorPassTimePassed(iso: string | null | undefined, now: number = Date.now()): boolean {
-	if (!iso) return true;
-	const at = Date.parse(iso);
-	return Number.isNaN(at) || at <= now;
-}
-
 export function formatOperatorPassSinceDate(iso: string | Date): string {
 	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long'}).format(new Date(iso));
 }
 
-export type OperatorPassWallNameProblem = 'required' | 'too_long';
+export type OperatorPassWallNameProblem = 'required' | 'too_long' | 'rejected';
 
 export function getOperatorPassWallNameProblem(name: string, optOut: boolean): OperatorPassWallNameProblem | null {
 	if (optOut) return null;
 	const trimmed = normalizeOperatorPassWallName(name);
 	if (trimmed.length === 0) return 'required';
 	if (trimmed.length > OPERATOR_PASS_WALL_NAME_MAX_LENGTH) return 'too_long';
+	return null;
+}
+
+export type {OperatorPassWallQuoteProblem};
+
+export function getOperatorPassWallQuoteProblem(quote: string): OperatorPassWallQuoteProblem | null {
+	const normalized = normalizeOperatorPassWallQuote(quote);
+	return normalized === null ? null : getSharedOperatorPassWallQuoteProblem(normalized);
+}
+
+export type OperatorPassCertificateNameProblem = 'required' | 'too_long' | 'rejected';
+
+export function normalizeOperatorPassCertificateName(name: string): string {
+	return normalizeOperatorPassWallName(name.normalize('NFC'));
+}
+
+export function getOperatorPassCertificateNameProblem(name: string): OperatorPassCertificateNameProblem | null {
+	const trimmed = normalizeOperatorPassCertificateName(name);
+	if (trimmed.length === 0) return 'required';
+	if (countOperatorPassCertificateNameCharacters(trimmed) > OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH)
+		return 'too_long';
 	return null;
 }
 
@@ -161,4 +166,15 @@ export function isOperatorPassLastFreePass(
 		(offer) => offer.status === 'pending' || offer.status === 'accepted',
 	).length;
 	return holdings.count - offered <= 1;
+}
+
+export function isOperatorPassLastPurchase(
+	holdings: Pick<OperatorPassPassesResponse, 'count' | 'passes'> | null,
+	purchaseId: string,
+): boolean {
+	if (!holdings || holdings.count === 0) return false;
+	const fromPurchase = holdings.passes.filter(
+		(pass) => pass.purchase_id === purchaseId && pass.status === 'held',
+	).length;
+	return holdings.count - fromPurchase <= 0;
 }

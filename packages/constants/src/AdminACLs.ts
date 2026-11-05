@@ -78,7 +78,6 @@ export const AdminACLs = {
 	MESSAGE_DELETE: 'message:delete',
 	MESSAGE_LOOKUP: 'message:lookup',
 	MESSAGE_SHRED: 'message:shred',
-	OPERATOR_PASS_WAITLIST_STATS: 'operator_pass:waitlist_stats',
 	REGISTRATION_REVIEW: 'registration:review',
 	REPORT_DELETE: 'report:delete',
 	REPORT_RESOLVE: 'report:resolve',

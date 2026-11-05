@@ -13,17 +13,24 @@ import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {
 	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
+import type {TierContext} from '@app/api/user/AccountTier';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
+import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
+import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
+import {MaxGuildMembersError} from '@fluxer/errors/src/domains/guild/MaxGuildMembersError';
+import {MaxGuildsError} from '@fluxer/errors/src/domains/guild/MaxGuildsError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
+import {AccountLimitedError} from '@fluxer/errors/src/domains/user/AccountLimitedError';
 import type Stripe from 'stripe';
 
 export class StripePremiumService {
@@ -283,9 +290,10 @@ export class StripePremiumService {
 		return true;
 	}
 
-	async rejoinVisionariesGuild(userId: UserID): Promise<void> {
+	async rejoinVisionariesGuild(userId: UserID, tierContext: TierContext): Promise<void> {
 		await this.assertHasVisionaryCommunityAccess(userId);
-		await this.addToVisionariesGuild(userId);
+		await this.joinVisionariesGuild(userId, tierContext);
+		await this.syncLabsVisionaryRole(userId);
 	}
 
 	private async assertHasVisionaryCommunityAccess(userId: UserID): Promise<void> {
@@ -317,6 +325,25 @@ export class StripePremiumService {
 	}
 
 	private async addToVisionariesGuild(userId: UserID): Promise<void> {
+		try {
+			await this.joinVisionariesGuild(userId);
+		} catch (error) {
+			if (
+				error instanceof BannedFromGuildError ||
+				error instanceof IpBannedFromGuildError ||
+				error instanceof AccountLimitedError ||
+				error instanceof MaxGuildsError ||
+				error instanceof MaxGuildMembersError
+			) {
+				Logger.info({userId, error}, 'Visionary was not added to the visionaries guild');
+			} else {
+				throw error;
+			}
+		}
+		await this.syncLabsVisionaryRole(userId);
+	}
+
+	private async joinVisionariesGuild(userId: UserID, tierContext?: TierContext): Promise<void> {
 		if (Config.instance.selfHosted && !Config.instance.visionariesGuildId) {
 			return;
 		}
@@ -335,9 +362,8 @@ export class StripePremiumService {
 				userId,
 				guildId: visionariesGuildId,
 				sendJoinMessage: true,
-				skipBanCheck: true,
-				skipAccountLimitCheck: true,
 				requestCache,
+				tierContext,
 			});
 			Logger.debug({userId, guildId: visionariesGuildId}, 'Added visionary user to visionaries guild');
 		}
@@ -356,5 +382,15 @@ export class StripePremiumService {
 				'Failed to add visionary role to a rejoining visionary.',
 			);
 		}
+	}
+
+	private async syncLabsVisionaryRole(userId: UserID): Promise<void> {
+		const user = await this.userRepository.findUnique(userId);
+		await new OperatorPassLabsRoleService(this.guildRepository, this.guildService).resyncLabsRoles({
+			id: userId,
+			premiumType: UserPremiumTypes.LIFETIME,
+			premiumFlags: user?.premiumFlags ?? 0,
+			hiddenProfileBadges: user?.hiddenProfileBadges ?? new Set(),
+		});
 	}
 }

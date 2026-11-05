@@ -5,12 +5,14 @@ import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config, getConfig} from '@app/api/Config';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {OperatorPassPurchaseRow, OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
 import type {PaymentDisputeReviewRow} from '@app/api/database/types/PaymentDisputeTypes';
 import {getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {getEmailService, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {shouldCloseAfterPaymentDispute} from '@app/api/payment_disputes/PaymentDisputeEnforcement';
 import {PaymentDisputeRepository} from '@app/api/payment_disputes/PaymentDisputeRepository';
 import {
+	getOperatorPassDisputeSubject,
 	getPaymentDisputeReviewBlockers,
 	PaymentDisputeReviewService,
 	type PaymentDisputeSubject,
@@ -191,6 +193,60 @@ describe('the closure terms effective date', () => {
 	test('blocks a dispute after the date about a payment made before it', () => {
 		Config.paymentDisputes.closureEffectiveAt = new Date(PAID_AT.getTime() + MS_PER_DAY);
 		expect(getPaymentDisputeReviewBlockers(review())).toEqual(['before_terms_effective']);
+	});
+});
+
+describe('an Operator Pass dispute after a partial refund', () => {
+	const purchase = {
+		checkout_session_id: 'cs_op_partial',
+		purchaser_id: PURCHASER_ID,
+		payment_intent_id: 'pi_op_partial',
+		amount_minor: 3000,
+		currency: 'EUR',
+		quantity: 3,
+		status: 'disputed',
+		purchased_at: PAID_AT,
+		delivered_at: PAID_AT,
+		disputed_at: DISPUTED_AT,
+		refunded_at: null,
+		withdrawn_at: null,
+	} as OperatorPassPurchaseRow;
+	const refundedAt = new Date(DISPUTED_AT.getTime() - 5 * MS_PER_DAY);
+	const unit = (index: number, ended: boolean): OperatorPassUnitRow =>
+		({
+			pass_id: `op_partial_${index}`,
+			purchase_id: purchase.checkout_session_id,
+			holder_id: PURCHASER_ID,
+			status: ended ? 'revoked' : 'held',
+			ended_at: ended ? refundedAt : null,
+			end_reason: ended ? 'refund' : null,
+		}) as OperatorPassUnitRow;
+
+	function blockersFor(units: ReadonlyArray<OperatorPassUnitRow>) {
+		const subject = getOperatorPassDisputeSubject(purchase, lostDispute(), [], units);
+		return {
+			subject,
+			blockers: getPaymentDisputeReviewBlockers(
+				review({
+					product: 'operator_pass',
+					perks_started_at: subject.perksStartedAt,
+					withdrawal_ends_at: subject.withdrawalEndsAt,
+					refunded_at: subject.refundedAt,
+				}),
+			),
+		};
+	}
+
+	test('one of three passes refunded before the dispute blocks an unjustified decision', () => {
+		const {subject, blockers} = blockersFor([unit(0, true), unit(1, false), unit(2, false)]);
+		expect(subject.refundedAt).toEqual(refundedAt);
+		expect(blockers).toEqual(['refunded_before_dispute']);
+	});
+
+	test('no refunded pass leaves the review open to a decision', () => {
+		const {subject, blockers} = blockersFor([unit(0, false), unit(1, false), unit(2, false)]);
+		expect(subject.refundedAt).toBeNull();
+		expect(blockers).toEqual([]);
 	});
 });
 

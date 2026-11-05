@@ -95,19 +95,22 @@ pub async fn fetch_user_info(
     Ok(user)
 }
 
+pub(crate) fn admin_client_basic_auth(config: &AdminConfig) -> String {
+    let credentials = format!("{}:{}", config.oauth_client_id, config.oauth_client_secret);
+    format!("Basic {}", STANDARD.encode(credentials.as_bytes()))
+}
+
 pub async fn revoke_token(
     http_client: &reqwest::Client,
     config: &AdminConfig,
     token: &str,
 ) -> anyhow::Result<()> {
-    let credentials = format!("{}:{}", config.oauth_client_id, config.oauth_client_secret);
-    let basic = format!("Basic {}", STANDARD.encode(credentials.as_bytes()));
     let response = with_proxy_client_ip_header(
         http_client.post(format!("{}/oauth2/token/revoke", config.api_endpoint)),
         config,
     )
     .header("Content-Type", "application/x-www-form-urlencoded")
-    .header("Authorization", basic)
+    .header("Authorization", admin_client_basic_auth(config))
     .body(format!(
         "token={}&token_type_hint=access_token",
         urlencoding::encode(token)

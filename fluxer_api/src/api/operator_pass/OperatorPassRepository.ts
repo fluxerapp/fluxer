@@ -13,6 +13,12 @@ import {
 import {Db, type DbOp, nextVersion, type PatchObject} from '@app/api/database/CassandraTypes';
 import {applyPatchToRow} from '@app/api/database/CassandraVersionedUpdate';
 import type {
+	OperatorPassCertificateLinkRow,
+	OperatorPassCertificateNumberRow,
+	OperatorPassCertificateRow,
+	OperatorPassLabsGreetingRow,
+	OperatorPassLabsLeftReason,
+	OperatorPassLabsMemberRow,
 	OperatorPassOfferRow,
 	OperatorPassPurchaseByPaymentIntentRow,
 	OperatorPassPurchaseByPurchaserRow,
@@ -24,6 +30,7 @@ import type {
 	OperatorPassRow,
 	OperatorPassUnitEventRow,
 	OperatorPassUnitRow,
+	OperatorPassVisionaryActivationRow,
 	OperatorPassWaitlistByEntryIdRow,
 	OperatorPassWaitlistRow,
 	OperatorPassWallDecisionRow,
@@ -33,9 +40,14 @@ import type {
 	OperatorPassWallStateRow,
 	OperatorPassWallTombstoneRow,
 } from '@app/api/database/types/OperatorPassTypes';
-import {OPERATOR_PASS_WAITLIST_COLUMNS} from '@app/api/database/types/OperatorPassTypes';
 import {
+	OperatorPassCertificateLinks,
+	OperatorPassCertificateNumbers,
+	OperatorPassCertificates,
+	OperatorPassCertificatesByPurchase,
 	OperatorPasses,
+	OperatorPassLabsGreetings,
+	OperatorPassLabsMembers,
 	OperatorPassOffers,
 	OperatorPassOffersByUser,
 	OperatorPassPurchases,
@@ -48,6 +60,7 @@ import {
 	OperatorPassUnits,
 	OperatorPassUnitsByHolder,
 	OperatorPassUnitsByPurchase,
+	OperatorPassVisionaryActivations,
 	OperatorPassWaitlist,
 	OperatorPassWaitlistByEntryId,
 	OperatorPassWallAuditLogs,
@@ -55,7 +68,6 @@ import {
 	OperatorPassWallDecisions,
 	OperatorPassWallEntries,
 	OperatorPassWallEvents,
-	OperatorPassWallPending,
 	OperatorPassWallRevisions,
 	OperatorPassWallState,
 	OperatorPassWallTombstones,
@@ -67,11 +79,21 @@ type RowPatch<Row, PK extends keyof Row> = Partial<{
 	[K in Exclude<keyof Row, PK | 'version'>]: DbOp<Row[K]>;
 }>;
 
-export type OperatorPassWaitlistPatch = RowPatch<OperatorPassWaitlistRow, 'email'>;
 export type OperatorPassPurchasePatch = RowPatch<OperatorPassPurchaseRow, 'checkout_session_id'>;
 export type OperatorPassUnitPatch = RowPatch<OperatorPassUnitRow, 'pass_id'>;
 export type OperatorPassOfferPatch = RowPatch<OperatorPassOfferRow, 'offer_id'>;
 export type OperatorPassWallEntryPatch = RowPatch<OperatorPassWallEntryRow, 'user_id'>;
+export type OperatorPassVisionaryActivationPatch = RowPatch<OperatorPassVisionaryActivationRow, 'user_id'>;
+
+export type OperatorPassCertificatePageSummary = Pick<
+	OperatorPassCertificateRow,
+	'pass_id' | 'version' | 'purchase_id' | 'holder_name' | 'paid_at' | 'cancelled_at'
+>;
+
+export type OperatorPassCertificateLinkSummary = Pick<
+	OperatorPassCertificateRow,
+	'pass_id' | 'number' | 'link_token' | 'cancelled_at'
+>;
 
 export interface OperatorPassScanPage<Row> {
 	rows: Array<Row>;
@@ -100,6 +122,8 @@ const FETCH_PURCHASE = OperatorPassPurchases.selectCql({
 	where: OperatorPassPurchases.where.eq('checkout_session_id'),
 	limit: 1,
 });
+const SCAN_PASSES = OperatorPasses.selectCql();
+const SCAN_PURCHASES = OperatorPassPurchases.selectCql();
 const FETCH_PURCHASE_BY_PAYMENT_INTENT = OperatorPassPurchasesByPaymentIntent.selectCql({
 	where: OperatorPassPurchasesByPaymentIntent.where.eq('payment_intent_id'),
 	limit: 1,
@@ -137,10 +161,6 @@ const FETCH_WALL_AUDIT_LOGS = OperatorPassWallAuditLogs.selectCql({
 const FETCH_WALL_AVATAR_REFS = OperatorPassWallAvatarRefs.selectCql({
 	where: OperatorPassWallAvatarRefs.where.eq('avatar'),
 });
-const FETCH_WALL_PENDING = OperatorPassWallPending.selectCql({
-	where: OperatorPassWallPending.where.eq('bucket'),
-});
-const WALL_PENDING_BUCKET = 'pending';
 const SCAN_WALL_TOMBSTONES = OperatorPassWallTombstones.selectCql();
 const FETCH_WALL_STATE = OperatorPassWallState.selectCql({
 	where: OperatorPassWallState.where.eq('id'),
@@ -150,6 +170,32 @@ const FETCH_RELEASE = OperatorPassReleases.selectCql({
 	limit: 1,
 });
 const SCAN_RELEASES = OperatorPassReleases.selectCql();
+
+const FETCH_CERTIFICATE_VERSIONS = OperatorPassCertificates.selectCql({
+	where: OperatorPassCertificates.where.eq('pass_id'),
+});
+const SCAN_CERTIFICATE_PAGES = OperatorPassCertificates.selectCql({
+	columns: ['pass_id', 'version', 'purchase_id', 'holder_name', 'paid_at', 'cancelled_at'],
+});
+const FETCH_CERTIFICATE_IDS_BY_PURCHASE = OperatorPassCertificatesByPurchase.selectCql({
+	columns: ['pass_id'],
+	where: OperatorPassCertificatesByPurchase.where.eq('purchase_id'),
+});
+const FETCH_LATEST_CERTIFICATE_LINK = OperatorPassCertificates.selectCql({
+	columns: ['pass_id', 'version', 'number', 'link_token', 'cancelled_at'],
+	where: OperatorPassCertificates.where.eq('pass_id'),
+	orderBy: {col: 'version', direction: 'DESC'},
+	limit: 1,
+});
+const FETCH_CERTIFICATE_LINK = OperatorPassCertificateLinks.selectCql({
+	where: OperatorPassCertificateLinks.where.eq('token_'),
+	limit: 1,
+});
+const FETCH_CERTIFICATE_NUMBER = OperatorPassCertificateNumbers.selectCql({
+	where: OperatorPassCertificateNumbers.where.eq('number'),
+	limit: 1,
+});
+const SCAN_CERTIFICATE_NUMBERS = OperatorPassCertificateNumbers.selectCql({columns: ['number']});
 
 const FETCH_UNIT = OperatorPassUnits.selectCql({where: OperatorPassUnits.where.eq('pass_id'), limit: 1});
 const FETCH_UNIT_IDS_BY_HOLDER = OperatorPassUnitsByHolder.selectCql({
@@ -167,6 +213,19 @@ const FETCH_OFFER_IDS_BY_USER = OperatorPassOffersByUser.selectCql({
 	where: OperatorPassOffersByUser.where.eq('user_id'),
 });
 const FETCH_UNIT_EVENTS = OperatorPassUnitEvents.selectCql({where: OperatorPassUnitEvents.where.eq('pass_id')});
+const FETCH_VISIONARY_ACTIVATION = OperatorPassVisionaryActivations.selectCql({
+	where: OperatorPassVisionaryActivations.where.eq('user_id'),
+	limit: 1,
+});
+const SCAN_VISIONARY_ACTIVATIONS = OperatorPassVisionaryActivations.selectCql();
+const FETCH_LABS_MEMBER = OperatorPassLabsMembers.selectCql({
+	where: OperatorPassLabsMembers.where.eq('user_id'),
+	limit: 1,
+});
+const FETCH_LABS_GREETINGS = OperatorPassLabsGreetings.selectCql({
+	where: OperatorPassLabsGreetings.where.eq('bucket'),
+});
+const LABS_GREETING_BUCKET = 'pending';
 
 function withPatch<Row extends {version: number}>(current: Row, patch: object, version: number): Row {
 	return {...applyPatchToRow<Row>(current, patch as PatchObject), version} as Row;
@@ -188,61 +247,12 @@ export class OperatorPassRepository {
 		return entry?.entry_id === entryId ? entry : null;
 	}
 
-	async saveWaitlistEntry(
-		entry: OperatorPassWaitlistRow,
-		previous: OperatorPassWaitlistRow | null = null,
-	): Promise<boolean> {
-		const applied = previous
-			? await executeConditional(
-					OperatorPassWaitlist.conditionalPatchByPk(
-						{email: entry.email},
-						waitlistRowPatch(entry),
-						expectedWaitlistVersion(previous),
-					),
-				)
-			: await executeConditional(OperatorPassWaitlist.insertIfNotExists(entry));
-		if (!applied) return false;
-		await upsertOne(OperatorPassWaitlistByEntryId.upsertAll({entry_id: entry.entry_id, email: entry.email}));
-		if (previous && previous.entry_id !== entry.entry_id) {
-			await deleteOneOrMany(OperatorPassWaitlistByEntryId.deleteByPk({entry_id: previous.entry_id}));
-		}
-		return true;
-	}
-
-	async probeWaitlistEntry(email: string, entryId: string): Promise<void> {
-		await executeConditional(
-			OperatorPassWaitlist.conditionalPatchByPk({email}, {updated_at: Db.set(new Date(0))}, {version: 0}),
-		);
-		await fetchOne<OperatorPassWaitlistByEntryIdRow>(FETCH_WAITLIST_EMAIL_BY_ENTRY_ID, {entry_id: entryId});
-	}
-
-	async updateWaitlistEntry(
-		current: OperatorPassWaitlistRow,
-		patch: OperatorPassWaitlistPatch,
-	): Promise<OperatorPassWaitlistRow | null> {
-		const version = nextVersion(current.version);
-		const applied = await executeConditional(
-			OperatorPassWaitlist.conditionalPatchByPk(
-				{email: current.email},
-				{...patch, version: Db.set(version)},
-				expectedWaitlistVersion(current),
-			),
-		);
-		return applied ? withPatch(current, patch, version) : null;
-	}
-
 	async deleteWaitlistEntry(entry: OperatorPassWaitlistRow): Promise<boolean> {
 		const applied = await executeConditional(
 			OperatorPassWaitlist.conditionalDeleteByPk({email: entry.email}, expectedWaitlistVersion(entry)),
 		);
 		if (applied) await deleteOneOrMany(OperatorPassWaitlistByEntryId.deleteByPk({entry_id: entry.entry_id}));
 		return applied;
-	}
-
-	async markWaitlistSaleEmailSent(email: string, sentAt: Date): Promise<boolean> {
-		return executeConditional(
-			OperatorPassWaitlist.conditionalPatchByPk({email}, {sale_email_sent_at: Db.set(sentAt)}, {status: 'confirmed'}),
-		);
 	}
 
 	async scanWaitlistPage(pageSize: number, pageState?: string | null): Promise<OperatorPassWaitlistPage> {
@@ -264,6 +274,39 @@ export class OperatorPassRepository {
 			return false;
 		}
 		return executeConditional(OperatorPasses.conditionalDeleteByPk({user_id: userId}, {version: current.version}));
+	}
+
+	async scanOperatorPasses(
+		pageSize: number,
+		pageState?: string | null,
+	): Promise<OperatorPassScanPage<OperatorPassRow>> {
+		const page = await fetchPage<OperatorPassRow>(
+			SCAN_PASSES,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: page.rows, pageState: page.pageState};
+	}
+
+	async clearOperatorPassConsentDetails(userId: UserID): Promise<void> {
+		await upsertOne(
+			OperatorPasses.patchByPk(
+				{user_id: userId},
+				{waiver_consent_ip: Db.clear(), waiver_consent_user_agent: Db.clear()},
+			),
+		);
+	}
+
+	async scanPurchases(
+		pageSize: number,
+		pageState?: string | null,
+	): Promise<OperatorPassScanPage<OperatorPassPurchaseRow>> {
+		const page = await fetchPage<OperatorPassPurchaseRow>(
+			SCAN_PURCHASES,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: page.rows, pageState: page.pageState};
 	}
 
 	async createPurchase(purchase: OperatorPassPurchaseRow): Promise<void> {
@@ -486,19 +529,6 @@ export class OperatorPassRepository {
 		return rows.map((row) => row.user_id);
 	}
 
-	async setWallPending(userId: UserID, pending: boolean): Promise<void> {
-		if (pending) {
-			await upsertOne(OperatorPassWallPending.upsertAll({bucket: WALL_PENDING_BUCKET, user_id: userId}));
-		} else {
-			await deleteOneOrMany(OperatorPassWallPending.deleteByPk({bucket: WALL_PENDING_BUCKET, user_id: userId}));
-		}
-	}
-
-	async listWallPending(): Promise<Array<UserID>> {
-		const rows = await fetchMany<{user_id: UserID}>(FETCH_WALL_PENDING, {bucket: WALL_PENDING_BUCKET});
-		return rows.map((row) => row.user_id);
-	}
-
 	async addWallAuditLog(userId: UserID, logId: bigint): Promise<void> {
 		await upsertOne(OperatorPassWallAuditLogs.upsertAll({user_id: userId, log_id: logId}));
 	}
@@ -513,7 +543,12 @@ export class OperatorPassRepository {
 		await deleteOneOrMany(OperatorPassWallRevisions.deletePartition({user_id: userId}));
 		await deleteOneOrMany(OperatorPassWallDecisions.deletePartition({user_id: userId}));
 		await deleteOneOrMany(OperatorPassWallEvents.deletePartition({user_id: userId}));
-		await deleteOneOrMany(OperatorPassWallEntries.deleteByPk({user_id: userId}));
+		const entry = await this.findWallEntry(userId);
+		if (entry) {
+			await executeConditional(
+				OperatorPassWallEntries.conditionalDeleteByPk({user_id: userId}, {version: entry.version}),
+			);
+		}
 	}
 
 	async saveWallTombstone(row: OperatorPassWallTombstoneRow): Promise<void> {
@@ -602,6 +637,10 @@ export class OperatorPassRepository {
 		await batch.execute();
 	}
 
+	async indexUnitHolder(passId: string, holderId: UserID): Promise<void> {
+		await upsertOne(OperatorPassUnitsByHolder.upsertAll({holder_id: holderId, pass_id: passId}));
+	}
+
 	async removeUnitFromHolder(passId: string, holderId: UserID): Promise<void> {
 		await deleteOneOrMany(OperatorPassUnitsByHolder.deleteByPk({holder_id: holderId, pass_id: passId}));
 	}
@@ -612,6 +651,123 @@ export class OperatorPassRepository {
 		return units
 			.filter((unit): unit is OperatorPassUnitRow => unit !== null && unit.holder_id === holderId)
 			.sort((left, right) => left.first_delivered_at.getTime() - right.first_delivered_at.getTime());
+	}
+
+	async listCertificateVersions(passId: string): Promise<Array<OperatorPassCertificateRow>> {
+		const rows = await fetchMany<OperatorPassCertificateRow>(FETCH_CERTIFICATE_VERSIONS, {pass_id: passId});
+		return rows.sort((left, right) => left.version - right.version);
+	}
+
+	async findLatestCertificate(passId: string): Promise<OperatorPassCertificateRow | null> {
+		return (await this.listCertificateVersions(passId)).at(-1) ?? null;
+	}
+
+	async scanCertificatePages(
+		pageSize: number,
+		pageState?: string | null,
+	): Promise<OperatorPassScanPage<OperatorPassCertificatePageSummary>> {
+		const page = await fetchPage<OperatorPassCertificatePageSummary>(
+			SCAN_CERTIFICATE_PAGES,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: page.rows, pageState: page.pageState};
+	}
+
+	async listCertificatesByPurchase(purchaseId: string): Promise<Array<OperatorPassCertificateRow>> {
+		const ids = await fetchMany<{pass_id: string}>(FETCH_CERTIFICATE_IDS_BY_PURCHASE, {purchase_id: purchaseId});
+		const rows = await Promise.all(ids.map(({pass_id}) => this.findLatestCertificate(pass_id)));
+		return rows
+			.filter((row): row is OperatorPassCertificateRow => row !== null)
+			.sort((left, right) => left.number - right.number);
+	}
+
+	async createCertificate(row: OperatorPassCertificateRow): Promise<boolean> {
+		const created = await executeConditional(OperatorPassCertificates.insertIfNotExists(row));
+		if (created) {
+			await this.indexCertificate(row);
+		}
+		return created;
+	}
+
+	async indexCertificate(
+		row: Pick<OperatorPassCertificateRow, 'purchase_id' | 'pass_id' | 'link_token'>,
+	): Promise<void> {
+		if (row.purchase_id) {
+			await upsertOne(
+				OperatorPassCertificatesByPurchase.upsertAll({purchase_id: row.purchase_id, pass_id: row.pass_id}),
+			);
+		}
+		if (row.link_token) {
+			await upsertOne(OperatorPassCertificateLinks.upsertAll({token_: row.link_token, pass_id: row.pass_id}));
+		}
+	}
+
+	async findCertificateLink(token: string): Promise<OperatorPassCertificateLinkRow | null> {
+		return fetchOne<OperatorPassCertificateLinkRow>(FETCH_CERTIFICATE_LINK, {token_: token});
+	}
+
+	async deleteCertificateLink(token: string): Promise<void> {
+		await deleteOneOrMany(OperatorPassCertificateLinks.deleteByPk({token_: token}));
+	}
+
+	async findLatestCertificateLink(passId: string): Promise<OperatorPassCertificateLinkSummary | null> {
+		return fetchOne<OperatorPassCertificateLinkSummary>(FETCH_LATEST_CERTIFICATE_LINK, {pass_id: passId});
+	}
+
+	async listCertificateLinksByPurchase(purchaseId: string): Promise<Array<OperatorPassCertificateLinkSummary>> {
+		const ids = await fetchMany<{pass_id: string}>(FETCH_CERTIFICATE_IDS_BY_PURCHASE, {purchase_id: purchaseId});
+		const rows = await Promise.all(ids.map(({pass_id}) => this.findLatestCertificateLink(pass_id)));
+		return rows.filter((row): row is OperatorPassCertificateLinkSummary => row !== null);
+	}
+
+	async claimCertificateNumber(number: number, passId: string): Promise<boolean> {
+		return executeConditional(OperatorPassCertificateNumbers.insertIfNotExists({number, pass_id: passId}));
+	}
+
+	async findCertificateNumber(number: number): Promise<OperatorPassCertificateNumberRow | null> {
+		return fetchOne<OperatorPassCertificateNumberRow>(FETCH_CERTIFICATE_NUMBER, {number});
+	}
+
+	async findHighestCertificateNumber(): Promise<number> {
+		let highest = 0;
+		let pageState: string | null = null;
+		do {
+			const page: {rows: Array<{number: number}>; pageState: string | null} = await fetchPage<{number: number}>(
+				SCAN_CERTIFICATE_NUMBERS,
+				{},
+				{pageSize: 1000, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+			);
+			for (const row of page.rows) {
+				highest = Math.max(highest, row.number);
+			}
+			pageState = page.pageState;
+		} while (pageState);
+		return highest;
+	}
+
+	async markCertificateCancelled(passId: string, cancelledAt: Date): Promise<void> {
+		for (const row of await this.listCertificateVersions(passId)) {
+			if (row.cancelled_at) continue;
+			await upsertOne(
+				OperatorPassCertificates.patchByPk(
+					{pass_id: row.pass_id, version: row.version},
+					{cancelled_at: Db.set(cancelledAt)},
+				),
+			);
+		}
+	}
+
+	async clearCertificatePersonalData(passId: string, beforeVersion = Number.POSITIVE_INFINITY): Promise<void> {
+		for (const row of await this.listCertificateVersions(passId)) {
+			if (row.version >= beforeVersion || (row.pdf.length === 0 && row.holder_name === '')) continue;
+			await upsertOne(
+				OperatorPassCertificates.patchByPk(
+					{pass_id: row.pass_id, version: row.version},
+					{pdf: Db.set(Buffer.alloc(0)), holder_name: Db.set('')},
+				),
+			);
+		}
 	}
 
 	async listUnitsByPurchase(purchaseId: string): Promise<Array<OperatorPassUnitRow>> {
@@ -632,6 +788,41 @@ export class OperatorPassRepository {
 			(left, right) =>
 				left.occurred_at.getTime() - right.occurred_at.getTime() || left.event_id.localeCompare(right.event_id),
 		);
+	}
+
+	async findVisionaryActivation(userId: UserID): Promise<OperatorPassVisionaryActivationRow | null> {
+		return fetchOne<OperatorPassVisionaryActivationRow>(FETCH_VISIONARY_ACTIVATION, {user_id: userId});
+	}
+
+	async createVisionaryActivation(row: OperatorPassVisionaryActivationRow): Promise<boolean> {
+		return executeConditional(OperatorPassVisionaryActivations.insertIfNotExists(row));
+	}
+
+	async updateVisionaryActivation(
+		current: OperatorPassVisionaryActivationRow,
+		patch: OperatorPassVisionaryActivationPatch,
+	): Promise<OperatorPassVisionaryActivationRow | null> {
+		const version = nextVersion(current.version);
+		const applied = await executeConditional(
+			OperatorPassVisionaryActivations.conditionalPatchByPk(
+				{user_id: current.user_id},
+				{...patch, version: Db.set(version)},
+				{version: current.version},
+			),
+		);
+		return applied ? withPatch(current, patch, version) : null;
+	}
+
+	async scanVisionaryActivations(
+		pageSize: number,
+		pageState?: string | null,
+	): Promise<OperatorPassScanPage<OperatorPassVisionaryActivationRow>> {
+		const page = await fetchPage<OperatorPassVisionaryActivationRow>(
+			SCAN_VISIONARY_ACTIVATIONS,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: page.rows, pageState: page.pageState};
 	}
 
 	async createOffer(offer: OperatorPassOfferRow): Promise<boolean> {
@@ -684,18 +875,63 @@ export class OperatorPassRepository {
 	async saveOperatorPass(pass: OperatorPassRow): Promise<void> {
 		await upsertOne(OperatorPasses.upsertAll(pass));
 	}
+
+	async findLabsMember(userId: UserID): Promise<OperatorPassLabsMemberRow | null> {
+		return fetchOne<OperatorPassLabsMemberRow>(FETCH_LABS_MEMBER, {user_id: userId});
+	}
+
+	async setLabsGreeting(userId: UserID, greeting: boolean): Promise<void> {
+		await upsertOne(OperatorPassLabsMembers.patchByPk({user_id: userId}, {greeting: Db.set(greeting)}));
+	}
+
+	async recordLabsAdded(userId: UserID, at: Date): Promise<void> {
+		await upsertOne(OperatorPassLabsMembers.patchByPk({user_id: userId}, {added_at: Db.set(at)}));
+	}
+
+	async recordLabsLeft(userId: UserID, at: Date, reason: OperatorPassLabsLeftReason): Promise<void> {
+		await upsertOne(
+			OperatorPassLabsMembers.patchByPk({user_id: userId}, {left_at: Db.set(at), left_reason: Db.set(reason)}),
+		);
+	}
+
+	async recordLabsGreeted(userId: UserID, at: Date, messageId: bigint): Promise<void> {
+		await upsertOne(
+			OperatorPassLabsMembers.patchByPk(
+				{user_id: userId},
+				{greeted_at: Db.set(at), greeting_message_id: Db.set(messageId)},
+			),
+		);
+	}
+
+	async deleteLabsMember(userId: UserID): Promise<void> {
+		await deleteOneOrMany(OperatorPassLabsMembers.deleteByPk({user_id: userId}));
+		await this.removeLabsGreeting(userId);
+	}
+
+	async queueLabsGreeting(userId: UserID, at: Date): Promise<void> {
+		await upsertOne(
+			OperatorPassLabsGreetings.patchByPk({bucket: LABS_GREETING_BUCKET, user_id: userId}, {queued_at: Db.set(at)}),
+		);
+	}
+
+	async listLabsGreetings(): Promise<Array<OperatorPassLabsGreetingRow>> {
+		return fetchMany<OperatorPassLabsGreetingRow>(FETCH_LABS_GREETINGS, {bucket: LABS_GREETING_BUCKET});
+	}
+
+	async claimLabsGreeting(userId: UserID, messageId: bigint): Promise<void> {
+		await upsertOne(
+			OperatorPassLabsGreetings.patchByPk(
+				{bucket: LABS_GREETING_BUCKET, user_id: userId},
+				{message_id: Db.set(messageId)},
+			),
+		);
+	}
+
+	async removeLabsGreeting(userId: UserID): Promise<void> {
+		await deleteOneOrMany(OperatorPassLabsGreetings.deleteByPk({bucket: LABS_GREETING_BUCKET, user_id: userId}));
+	}
 }
 
 function expectedWaitlistVersion(row: OperatorPassWaitlistRow): Partial<OperatorPassWaitlistRow> {
 	return row.version == null ? {entry_id: row.entry_id} : {version: row.version};
-}
-
-function waitlistRowPatch(entry: OperatorPassWaitlistRow): OperatorPassWaitlistPatch {
-	const patch: Record<string, DbOp<unknown>> = {};
-	for (const column of OPERATOR_PASS_WAITLIST_COLUMNS) {
-		if (column === 'email') continue;
-		const value = entry[column];
-		patch[column] = value == null ? Db.clear() : Db.set(value);
-	}
-	return patch as OperatorPassWaitlistPatch;
 }

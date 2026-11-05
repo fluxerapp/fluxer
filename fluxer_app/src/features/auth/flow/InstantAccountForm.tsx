@@ -22,15 +22,15 @@ import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {type FormEvent, useId, useState} from 'react';
 
-const DISPLAY_NAME_DESCRIPTOR = msg({
+export const DISPLAY_NAME_DESCRIPTOR = msg({
 	message: 'Display name',
 	comment: 'Label of the name field when creating an account. It is the name other people see.',
 });
-const NAME_LENGTH_DESCRIPTOR = msg({
+export const NAME_LENGTH_DESCRIPTOR = msg({
 	message: 'Use 1 to 32 characters.',
 	comment: 'Calm error under the display name field on account creation when the name is empty or too long.',
 });
-const NAME_NOT_ALLOWED_DESCRIPTOR = msg({
+export const NAME_NOT_ALLOWED_DESCRIPTOR = msg({
 	message: 'Try a different name.',
 	comment: 'Calm error under the display name field on account creation when the name is reserved or not allowed.',
 });

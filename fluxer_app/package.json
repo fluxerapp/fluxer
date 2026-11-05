@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"description": "Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.",
-	"homepage": "https://fluxer.app",
+	"homepage": "https://fluxer.com",
 	"author": "Fluxer Platform AB <support@fluxer.com>",
 	"sideEffects": [
 		"*.css",
@@ -165,6 +165,7 @@
 		"@codemirror/search": "^6.7.2",
 		"@codemirror/state": "^6.7.6",
 		"@codemirror/view": "^6.43.15",
+		"@csstools/css-tokenizer": "4.0.2",
 		"@floating-ui/react": "catalog:",
 		"@floating-ui/react-dom": "catalog:",
 		"@fluxer/constants": "workspace:*",
@@ -185,6 +186,8 @@
 		"@lingui/core": "catalog:",
 		"@lingui/react": "catalog:",
 		"@livekit/components-react": "catalog:",
+		"@noble/ciphers": "catalog:",
+		"@noble/hashes": "catalog:",
 		"@phosphor-icons/react": "catalog:",
 		"@radix-ui/react-checkbox": "catalog:",
 		"@radix-ui/react-radio-group": "catalog:",
@@ -241,6 +244,7 @@
 	},
 	"devDependencies": {
 		"@babel/parser": "8.0.8",
+		"@babel/types": "^8.1.0",
 		"@lingui/cli": "catalog:",
 		"@lingui/format-po": "catalog:",
 		"@lingui/swc-plugin": "catalog:",

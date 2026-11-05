@@ -12,7 +12,9 @@ import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
 import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
@@ -59,7 +61,9 @@ function firstMedia(message: WireMessage | null | undefined): {src: string; vide
 	const attachment = message?.attachments?.find(isVisualAttachment);
 	const source = attachment?.proxy_url ?? attachment?.url;
 	if (!attachment || !source) return null;
-	return {src: source, video: (attachment.content_type ?? '').startsWith('video/')};
+	const src = AttachmentUrlRefresher.freshWhenReady(source);
+	if (src === null) return null;
+	return {src, video: (attachment.content_type ?? '').startsWith('video/')};
 }
 
 function defaultReactionState(
@@ -159,6 +163,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 				height: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 			})
 		: null;
+	const handleThumbnailError = useAttachmentRefreshOnError(media?.src);
 	return (
 		<>
 			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
@@ -186,6 +191,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 									className={styles.cardMediaImage}
 									loading="lazy"
 									draggable={false}
+									onError={handleThumbnailError}
 									data-flx="forum.forum-post-card.card-media-image"
 								/>
 							) : (
@@ -276,6 +282,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 								className={styles.cardMediaImage}
 								loading="lazy"
 								draggable={false}
+								onError={handleThumbnailError}
 								data-flx="forum.forum-post-card.card-media-image--2"
 							/>
 							{media?.video && (

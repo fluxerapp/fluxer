@@ -34,13 +34,13 @@ const WE_COULDN_T_REMOVE_THIS_ACCOUNT_PLEASE_TRY_DESCRIPTOR = msg({
 });
 const INSTANCE_UNAVAILABLE_NAMED_BODY_DESCRIPTOR = msg({
 	message:
-		"We couldn't reach {instanceLabel} to switch accounts. Your current account is still active. Try again when the instance is back online.",
+		"We couldn't connect to {instanceLabel} to switch accounts. Your current account is still active. Try again when the instance is back online.",
 	comment:
 		'Modal body shown when switching to an account on a named unreachable instance fails. instanceLabel is a hostname or endpoint label.',
 });
 const INSTANCE_UNAVAILABLE_UNNAMED_BODY_DESCRIPTOR = msg({
 	message:
-		"We couldn't reach that account's instance to switch accounts. Your current account is still active. Try again when the instance is back online.",
+		"We couldn't connect to that account's instance to switch accounts. Your current account is still active. Try again when the instance is back online.",
 	comment: 'Modal body shown when switching to an account on an unreachable instance fails.',
 });
 

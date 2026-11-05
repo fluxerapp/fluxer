@@ -2,7 +2,14 @@
 
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {trustableSiteOf} from '@app/features/theme/utils/ThemeCssUrlGate';
 import {readCustomCssOff, writeCustomCssOff} from '@app/features/theme_settings/state/CustomCssOff';
+import {
+	MAX_TRUSTED_SITES,
+	parseTrustedSite,
+	readTrustedSites,
+	writeTrustedSites,
+} from '@app/features/theme_settings/state/TrustedSites';
 import {makeAutoObservable} from 'mobx';
 
 const EXPANDED_GROUPS_STORAGE_KEY = 'ThemeStudio:expandedGroups';
@@ -53,8 +60,10 @@ class ThemeSettingsState {
 	editorDirty = false;
 	missingReferences: ReadonlyArray<string> = [];
 	blockedUrls: ReadonlyArray<string> = [];
+	cssRejected = false;
 	themePreview: ThemePreview | null = null;
 	customCssOff = readCustomCssOff();
+	trustedSites: ReadonlyArray<string> = readTrustedSites();
 	editorWindow: Window | null = null;
 	editorFileRequestHandler: ((file: string) => void) | null = null;
 	quickCssWriteFlusher: (() => void) | null = null;
@@ -179,9 +188,30 @@ class ThemeSettingsState {
 		this.blockedUrls = [...this.blockedUrls, url].slice(-BLOCKED_URL_LIMIT);
 	}
 
+	setCssRejected(rejected: boolean): void {
+		this.cssRejected = rejected;
+	}
+
 	setCustomCssOff(off: boolean): void {
 		this.customCssOff = off;
 		writeCustomCssOff(off);
+	}
+
+	trustSite(site: string): boolean {
+		const origin = parseTrustedSite(site);
+		if (origin === null) return false;
+		if (!this.trustedSites.includes(origin)) {
+			if (this.trustedSites.length >= MAX_TRUSTED_SITES) return false;
+			this.trustedSites = [...this.trustedSites, origin];
+			writeTrustedSites(this.trustedSites);
+		}
+		this.blockedUrls = this.blockedUrls.filter((url) => trustableSiteOf(url) !== origin);
+		return true;
+	}
+
+	untrustSite(origin: string): void {
+		this.trustedSites = this.trustedSites.filter((site) => site !== origin);
+		writeTrustedSites(this.trustedSites);
 	}
 
 	setThemePreview(preview: ThemePreview | null): void {

@@ -24,9 +24,8 @@ export const MaxGuildsModal = observer(({user}: MaxGuildsModalProps) => {
 			message={plural(
 				{count: maxGuilds},
 				{
-					one: "You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.",
-					other:
-						"You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.",
+					one: "You're in # community, the most you can join. Leave a community before joining another one.",
+					other: "You're in # communities, the most you can join. Leave a community before joining another one.",
 				},
 			)}
 			data-flx="guild.max-guilds-modal.confirm-modal"

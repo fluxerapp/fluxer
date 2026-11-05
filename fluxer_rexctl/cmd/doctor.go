@@ -45,9 +45,11 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 	env := &checks.Env{Dir: dir}
 	phase := checks.Installed
 	inst, err := instance.Find(dir)
+	var se *instance.SettingError
 	switch {
 	case err == nil:
 		env.Instance = inst
+		app.saveRepaired(inst)
 		app.UI.Info("Using %s (%s).", inst.Dir, l.Why())
 		if inst.State.IsVoice() {
 			phase = checks.Voice
@@ -56,6 +58,8 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 		phase = checks.Preinstall
 	case errors.Is(err, instance.ErrLegacy):
 		return ui.Refused("rexctl doesn't manage the instance in "+dir+" yet.", "Run "+app.takeOverCommand()+" to hand it to rexctl.")
+	case errors.As(err, &se):
+		return settingRefusal(dir, se)
 	default:
 		return ui.Wrap(err, "rexctl can't read the instance in "+dir+".", "Run rexctl doctor as the account that installed Fluxer.")
 	}

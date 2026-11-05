@@ -236,16 +236,52 @@ describe('operator billing catalog', () => {
 			setStoredBillingConfig(operatorBilling({terms_consent_required: false, automatic_tax: false}));
 			const token = await createPurchaser();
 			await createBuilder(harness, token)
+				.post('/stripe/checkout/subscription')
+				.body({price_id: 'price_envmonthlyusd', client_geoip_country_code: 'SE'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const session = stripeHandlers.spies.createdCheckoutSessions[0];
+			expect(session?.line_items?.[0]?.price).toBe('price_envmonthlyusd');
+			expect(session?.custom_text?.terms_of_service_acceptance?.message).toContain('Fluxer Plutonium');
+			expect(session?.consent_collection?.terms_of_service).toBe('required');
+			expect(sessionField(session, 'automatic_tax')).toEqual({enabled: 'true'});
+			expect(sessionField(session, 'tax_id_collection')).toEqual({enabled: 'true'});
+		});
+
+		test('charges no tax on a gift checkout, because a gift code is a multi-purpose voucher', async () => {
+			const token = await createPurchaser();
+			await createBuilder(harness, token)
 				.post('/stripe/checkout/gift')
 				.body({price_id: 'price_envgiftmonthusd'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const session = stripeHandlers.spies.createdCheckoutSessions[0];
-			expect(session?.line_items?.[0]?.price).toBe('price_envgiftmonthusd');
-			expect(session?.custom_text?.terms_of_service_acceptance?.message).toContain('Fluxer Plutonium');
-			expect(session?.consent_collection?.terms_of_service).toBe('required');
-			expect(sessionField(session, 'automatic_tax')).toEqual({enabled: 'true'});
+			expect(sessionField(session, 'automatic_tax')).toEqual({enabled: 'false'});
 			expect(sessionField(session, 'tax_id_collection')).toEqual({enabled: 'true'});
+			expect(session?.line_items).toEqual([{price: 'price_envgiftmonthusd', quantity: '1'}]);
+		});
+
+		test('asks for a billing address on a gift or subscription checkout only when the buyer says it is for a business', async () => {
+			const token = await createPurchaser();
+			await createBuilder(harness, token)
+				.post('/stripe/checkout/gift')
+				.body({price_id: 'price_envgiftmonthusd'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await createBuilder(harness, token)
+				.post('/stripe/checkout/gift')
+				.body({price_id: 'price_envgiftmonthusd', is_business: true})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await createBuilder(harness, token)
+				.post('/stripe/checkout/subscription')
+				.body({price_id: 'price_envmonthlyusd'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const [consumerGift, businessGift, subscription] = stripeHandlers.spies.createdCheckoutSessions;
+			expect(consumerGift?.billing_address_collection).toBe('auto');
+			expect(businessGift?.billing_address_collection).toBe('required');
+			expect(subscription?.billing_address_collection).toBe('auto');
 		});
 
 		test('leaves a premium checkout at the lifetime Stripe gives it by default', async () => {
@@ -500,13 +536,14 @@ describe('operator billing catalog', () => {
 			const token = await createPurchaser();
 			await createBuilder(harness, token)
 				.post('/stripe/checkout/gift')
-				.body({price_id: 'price_opgbpgiftmonth'})
+				.body({price_id: 'price_opgbpgiftmonth', client_geoip_country_code: 'DE'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const message =
 				stripeHandlers.spies.createdCheckoutSessions[0]?.custom_text?.terms_of_service_acceptance?.message;
 			expect(message).toContain('Premium');
 			expect(message).not.toContain('Plutonium');
+			expect(stripeHandlers.spies.createdCheckoutSessions[0]?.payment_method_types).toBeUndefined();
 		});
 
 		test('blocks checkout for an account with the purchases limit but lets it redeem a gift', async () => {

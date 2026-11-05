@@ -37,7 +37,7 @@ export type ProfileBadgeKey = ProfileBadgeKind | `custom:${string}`;
 
 export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + CUSTOM_BADGES_PER_USER_CEILING;
 
-const BUILT_IN_GUILD_BADGE_KINDS = ['verified', 'partnered', 'discoverable'] as const;
+export const BUILT_IN_GUILD_BADGE_KINDS = ['verified', 'partnered', 'discoverable'] as const;
 
 export type BuiltInGuildBadgeKind = (typeof BUILT_IN_GUILD_BADGE_KINDS)[number];
 
@@ -53,6 +53,18 @@ export const BUILT_IN_BADGE_KINDS = [
 	'guild_partnered',
 	'guild_discoverable',
 ] as const satisfies ReadonlyArray<BuiltInBadgeKind>;
+
+export const HIDEABLE_BUILT_IN_BADGE_KINDS = [
+	'guild_verified',
+	'guild_partnered',
+	'guild_discoverable',
+] as const satisfies ReadonlyArray<BuiltInBadgeKind>;
+
+export type HideableBuiltInBadgeKind = (typeof HIDEABLE_BUILT_IN_BADGE_KINDS)[number];
+
+export function isHideableBuiltInBadgeKind(kind: BuiltInBadgeKind): kind is HideableBuiltInBadgeKind {
+	return (HIDEABLE_BUILT_IN_BADGE_KINDS as ReadonlyArray<string>).includes(kind);
+}
 
 export function isReplaceableProfileBadgeKind(kind: ProfileBadgeKind): kind is ReplaceableProfileBadgeKind {
 	return (REPLACEABLE_PROFILE_BADGE_KINDS as ReadonlyArray<string>).includes(kind);

@@ -375,6 +375,17 @@ export class StripeSubscriptionWebhookHandler {
 			);
 			return;
 		}
+		if (subscriptionId && targetUser.stripeSubscriptionId !== subscriptionId) {
+			const mirrored = await this.billingRepository.subscriptions.findById(subscriptionId);
+			const status = mirrored?.status ?? (await this.reconciler.getSubscriptionSnapshotById(subscriptionId))?.status;
+			if (status && TERMINAL_SUBSCRIPTION_STATUSES.has(status as Stripe.Subscription.Status)) {
+				Logger.info(
+					{userId: targetUser.id, invoiceId: invoice.id, subscriptionId, status, reason: context.reason},
+					'Ignoring a collection issue on a subscription that has already ended',
+				);
+				return;
+			}
+		}
 		const updatedUser = await this.markSubscriptionPaymentIssue(targetUser, {
 			subscriptionId,
 			customerId: this.reconciler.getCustomerIdFromInvoice(invoice),

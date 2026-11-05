@@ -12,6 +12,7 @@ import type {
 import {getOperatorPassWallInfrastructure} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {validateOperatorPassBusinessLogo} from '@app/api/operator_pass/OperatorPassBusinessListing';
+import {isOperatorPassReservedName} from '@app/api/operator_pass/OperatorPassCertificateNames';
 import {
 	loadOperatorPassEntitlementState,
 	resolveOperatorPassHolder,
@@ -25,10 +26,7 @@ import {
 	type WallEventDraft,
 } from '@app/api/operator_pass/OperatorPassWallEntryStore';
 import {OperatorPassWallHistoryService} from '@app/api/operator_pass/OperatorPassWallHistoryService';
-import {
-	type OperatorPassWallDecisionResult,
-	OperatorPassWallModerationService,
-} from '@app/api/operator_pass/OperatorPassWallModerationService';
+import {OperatorPassWallModerationService} from '@app/api/operator_pass/OperatorPassWallModerationService';
 import {
 	hasOperatorPassWallChoice,
 	isOperatorPassWallListed,
@@ -58,7 +56,7 @@ export class OperatorPassWallService {
 		this.publication = new OperatorPassWallPublicationService(repository, userRepository, this.entries);
 		this.retention = new OperatorPassWallRetentionService(repository, this.entries, this.publication, this.auditLogs);
 		this.history = new OperatorPassWallHistoryService(repository, userRepository, this.entries);
-		this.moderation = new OperatorPassWallModerationService(repository, userRepository, this.entries, this.publication);
+		this.moderation = new OperatorPassWallModerationService(repository, this.entries, this.publication);
 	}
 
 	private readonly auditLogs = new AdminRepository();
@@ -76,6 +74,7 @@ export class OperatorPassWallService {
 		purchaseId: string | null;
 		choice: OperatorPassWallChoice | null;
 		deliveredAt: Date;
+		revisionSource?: OperatorPassWallRevisionSource;
 	}): Promise<void> {
 		let before: OperatorPassWallEntryRow | null = null;
 		const entry = await this.entries.mutate(params.userId, params.deliveredAt, params.userId, (current) => {
@@ -96,6 +95,7 @@ export class OperatorPassWallService {
 			if (params.choice.optedOut) {
 				patch.opted_out = Db.set(true);
 				patch.listed_at = Db.set(null);
+				patch.quote = Db.set(null);
 				patch.left_wall_at = Db.set(current.left_wall_at ?? params.deliveredAt);
 				events.push({kind: 'opted_out'});
 				if (isOperatorPassWallListed(current)) {
@@ -109,19 +109,26 @@ export class OperatorPassWallService {
 			}
 			return {patch, events};
 		});
-		if (params.choice && !params.choice.optedOut && params.choice.name) {
-			await this.submitRevision(params.userId, params.choice.name, 'checkout', params.userId, {useProfileAvatar: true});
-		}
+		const submitted =
+			params.choice && !params.choice.optedOut && params.choice.name
+				? await this.submitRevision(
+						params.userId,
+						params.choice.name,
+						params.revisionSource ?? 'checkout',
+						params.userId,
+						{useProfileAvatar: true},
+					)
+				: null;
 		await this.publication.publishChanges([params.userId]);
-		await this.syncListedAvatar(before, entry);
+		await this.syncListedAvatar(before, submitted?.entry ?? entry);
 	}
 
 	async setChoice(
 		userId: UserID,
 		choice: OperatorPassWallChoice,
 		actorId: UserID = userId,
-		{keepAsIs, releaseListOptIn}: {keepAsIs?: boolean; releaseListOptIn?: boolean} = {},
-	): Promise<void> {
+		{keepAsIs, releaseListOptIn, quote}: {keepAsIs?: boolean; releaseListOptIn?: boolean; quote?: string | null} = {},
+	): Promise<OperatorPassWallEntryRow> {
 		const now = operatorPassNow();
 		let before: OperatorPassWallEntryRow | null = null;
 		const entry = await this.entries.mutate(userId, now, actorId, (current) => {
@@ -133,6 +140,10 @@ export class OperatorPassWallService {
 			}
 			if (releaseListOptIn !== undefined && releaseListOptIn !== (current.release_list_opt_in ?? false)) {
 				patch.release_list_opt_in = Db.set(releaseListOptIn);
+			}
+			const nextQuote = choice.optedOut ? null : quote;
+			if (nextQuote !== undefined && nextQuote !== (current.quote ?? null)) {
+				patch.quote = Db.set(nextQuote);
 			}
 			if (choice.optedOut) {
 				if (!current.opted_out) {
@@ -152,14 +163,13 @@ export class OperatorPassWallService {
 			}
 			return Object.keys(patch).length > 1 || events.length > 0 ? {patch, events} : null;
 		});
-		if (!choice.optedOut && choice.name) {
-			const latest = entry.pending_name ?? entry.live_name;
-			if (latest !== choice.name) {
-				await this.submitRevision(userId, choice.name, 'settings', actorId, {useProfileAvatar: true});
-			}
-		}
+		const latest =
+			!choice.optedOut && choice.name && entry.live_name !== choice.name
+				? (await this.submitRevision(userId, choice.name, 'settings', actorId, {useProfileAvatar: true})).entry
+				: entry;
 		await this.publication.publishChanges([userId]);
-		await this.syncListedAvatar(before, entry);
+		await this.syncListedAvatar(before, latest);
+		return latest;
 	}
 
 	private async syncListedAvatar(
@@ -186,12 +196,16 @@ export class OperatorPassWallService {
 		const avatarChanged = (previous.avatarHash ?? null) !== (user.avatarHash ?? null);
 		const previousDisplay = previous.globalName ?? previous.username;
 		const currentDisplay = user.globalName ?? user.username;
-		const latestName = entry.pending_name ?? entry.live_name ?? entry.name ?? currentDisplay;
-		const followsName = latestName === previousDisplay && previousDisplay !== currentDisplay;
+		const latestName = entry.live_name ?? entry.name ?? currentDisplay;
+		const followsName =
+			latestName === previousDisplay &&
+			previousDisplay !== currentDisplay &&
+			!isOperatorPassReservedName(currentDisplay);
+		const takenDown = entry.live_revision_id == null && entry.decline_statement_id != null;
 		if (entry.live_revision_id == null && previous.username !== user.username) {
 			await this.publication.publishChanges([user.id], 'preserve');
 		}
-		if (entry.keep_as_is || entry.live_business || (!avatarChanged && !followsName)) {
+		if (entry.keep_as_is || entry.live_business || takenDown || (!avatarChanged && !followsName)) {
 			return;
 		}
 		await this.submitRevision(user.id, followsName ? currentDisplay : latestName, 'profile', user.id, {
@@ -206,7 +220,7 @@ export class OperatorPassWallService {
 		source: OperatorPassWallRevisionSource,
 		actorId: UserID | null,
 		options: {useProfileAvatar?: boolean; avatar?: string | null; user?: User; business?: boolean} = {},
-	): Promise<OperatorPassWallRevisionRow> {
+	): Promise<{entry: OperatorPassWallEntryRow; revision: OperatorPassWallRevisionRow}> {
 		const now = operatorPassNow();
 		let avatar = options.avatar ?? null;
 		if (options.useProfileAvatar) {
@@ -227,31 +241,45 @@ export class OperatorPassWallService {
 		if (avatar) {
 			await this.repository.addWallAvatarRef(avatar, userId);
 		}
-		await this.entries.mutate(userId, now, actorId, () => ({
-			patch: {
-				name: Db.set(name),
-				pending_revision_id: Db.set(revision.revision_id),
-				pending_name: Db.set(name),
-				pending_avatar: Db.set(avatar),
-				pending_source: Db.set(source),
-				pending_since: Db.set(now),
-				updated_at: Db.set(now),
-			},
-			events: source === 'checkout' ? [] : [{kind: 'changed', name}],
-		}));
-		return revision;
+		let previousAvatar: string | null = null;
+		const entry = await this.entries.mutate(userId, now, actorId, (current) => {
+			previousAvatar = current.live_avatar ?? null;
+			return {
+				patch: {
+					name: Db.set(name),
+					...liveRevisionPatch(revision),
+					decline_reason: Db.set(null),
+					decline_note: Db.set(null),
+					decline_statement_id: Db.set(null),
+					updated_at: Db.set(now),
+				},
+				events: source === 'checkout' ? [] : [{kind: 'changed', name}],
+			};
+		});
+		await this.entries.appendDecision(userId, {
+			kind: 'approve',
+			revisionId: revision.revision_id,
+			decidedBy: actorId,
+			decidedAt: now,
+		});
+		await this.publication.publishAvatarIfServed(entry);
+		await this.publication.publishChanges([userId], 'preserve');
+		if (previousAvatar && previousAvatar !== avatar) {
+			await this.publication.releaseAvatar(previousAvatar);
+		}
+		return {entry, revision};
 	}
 
 	async setBusinessListing(
 		userId: UserID,
 		adminId: UserID,
 		input: {name: string; logo: Uint8Array},
-	): Promise<OperatorPassWallDecisionResult> {
+	): Promise<{entry: OperatorPassWallEntryRow; revision: OperatorPassWallRevisionRow}> {
 		await validateOperatorPassBusinessLogo(input.logo);
 		const avatar = await getOperatorPassWallInfrastructure().avatarStore.storePrivate(input.logo);
-		await this.submitRevision(userId, input.name, 'admin', adminId, {avatar, business: true});
-		await this.setChoice(userId, {name: input.name, optedOut: false}, adminId);
-		return this.moderation.approve(userId, adminId);
+		const {revision} = await this.submitRevision(userId, input.name, 'admin', adminId, {avatar, business: true});
+		const entry = await this.setChoice(userId, {name: input.name, optedOut: false}, adminId);
+		return {entry, revision};
 	}
 
 	async endBusinessListing(userId: UserID): Promise<void> {
@@ -308,6 +336,7 @@ export class OperatorPassWallService {
 						...(business ? liveRevisionPatch(personal) : {}),
 						listed_at: Db.set(null),
 						delivered_at: Db.set(null),
+						quote: Db.set(null),
 						left_wall_at: Db.set(current.left_wall_at ?? now),
 						updated_at: Db.set(now),
 					},
@@ -336,12 +365,13 @@ export class OperatorPassWallService {
 		}
 		await this.entries.appendEvent(userId, now, {kind: 'taken_down', name: null, cause: 'deletion'}, null);
 		const entry = await this.entries.mutate(userId, now, null, (current) => {
-			if (current.name == null && current.listed_at == null && current.delivered_at == null) {
+			if (current.name == null && current.quote == null && current.listed_at == null && current.delivered_at == null) {
 				return null;
 			}
 			return {
 				patch: {
 					name: Db.set(null),
+					quote: Db.set(null),
 					opted_out: Db.set(true),
 					listed_at: Db.set(null),
 					left_wall_at: Db.set(current.left_wall_at ?? now),

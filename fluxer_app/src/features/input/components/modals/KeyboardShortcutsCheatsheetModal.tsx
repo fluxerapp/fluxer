@@ -20,11 +20,11 @@ import type React from 'react';
 import {useMemo, useRef} from 'react';
 
 const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
+	message: 'Keybinds',
 	comment: 'Modal title for the keyboard shortcuts cheatsheet.',
 });
 const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
+	message: 'Default keybinds',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
 });
 const MESSAGES_DESCRIPTOR = msg({

@@ -10,6 +10,7 @@ import * as AccountEntryCommands from '@app/features/auth/commands/AccountEntryC
 import {EmailCodeField} from '@app/features/auth/flow/EmailCodeField';
 import type {AuthIdentifierFirstStepProps} from '@app/features/auth/flow/identifier_first/AuthIdentifierFirstStep';
 import styles from '@app/features/auth/flow/identifier_first/AuthIdentifierFirstStep.module.css';
+import {isProfileRejection} from '@app/features/auth/flow/identifier_first/AuthIdentifierProfileStep';
 import {type IdentifierStep, isCompleteEmailCode} from '@app/features/auth/flow/identifier_first/IdentifierFirstState';
 import {QuietButton} from '@app/features/auth/flow/QuietButton';
 import {
@@ -68,6 +69,8 @@ interface AuthIdentifierCodeStepProps
 	readonly run: (work: () => Promise<void>) => Promise<void>;
 	readonly finishEntry: (result: AccountEntryResult) => Promise<void>;
 	readonly sendCode: (request: CodeDeliveryRequest) => Promise<void>;
+	readonly profile: AccountEntryCommands.NewAccountProfile | null;
+	readonly onProfileRejected: (error: unknown) => void;
 	readonly onBack: () => void;
 }
 
@@ -88,6 +91,8 @@ export const AuthIdentifierCodeStep = observer(function AuthIdentifierCodeStep({
 	run,
 	finishEntry,
 	sendCode,
+	profile,
+	onProfileRejected,
 	onBack,
 }: AuthIdentifierCodeStepProps) {
 	const {i18n} = useLingui();
@@ -96,15 +101,24 @@ export const AuthIdentifierCodeStep = observer(function AuthIdentifierCodeStep({
 	const handleCodeSubmit = (value: string) => {
 		if (!isCompleteEmailCode(value)) return;
 		const {ticket, purpose} = step;
+		const signUpProfile = purpose === 'sign_up' ? profile : null;
 		void run(async () => {
-			const result = await AccountEntryCommands.verifyEmailCode({
-				ticket,
-				code: value,
-				consent: purpose === 'sign_up',
-				inviteCode,
-				registrationUrlCode,
-				snapshot: runtimeSnapshot,
-			});
+			let result: AccountEntryResult;
+			try {
+				result = await AccountEntryCommands.verifyEmailCode({
+					ticket,
+					code: value,
+					consent: purpose === 'sign_up',
+					inviteCode,
+					registrationUrlCode,
+					profile: signUpProfile,
+					snapshot: runtimeSnapshot,
+				});
+			} catch (caught) {
+				if (signUpProfile === null || !isProfileRejection(caught)) throw caught;
+				onProfileRejected(caught);
+				return;
+			}
 			await finishEntry(result);
 		});
 	};

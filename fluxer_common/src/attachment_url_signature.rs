@@ -41,6 +41,7 @@ impl Verdict {
 pub struct Verification {
     pub verdict: Verdict,
     pub remaining_secs: Option<u64>,
+    pub expired_secs: Option<u64>,
 }
 
 impl Verification {
@@ -48,6 +49,7 @@ impl Verification {
         Self {
             verdict,
             remaining_secs: None,
+            expired_secs: None,
         }
     }
 }
@@ -190,11 +192,16 @@ pub fn verify(
         return Verification::without_expiry(Verdict::Valid);
     }
     if now_secs >= expires {
-        return Verification::without_expiry(Verdict::Expired);
+        return Verification {
+            verdict: Verdict::Expired,
+            remaining_secs: None,
+            expired_secs: Some(now_secs - expires),
+        };
     }
     Verification {
         verdict: Verdict::Valid,
         remaining_secs: Some(expires - now_secs),
+        expired_secs: None,
     }
 }
 

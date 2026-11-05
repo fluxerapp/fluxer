@@ -11,6 +11,7 @@ import {
 	CUSTOM_BADGES_PER_GUILD_CEILING,
 	CUSTOM_BADGES_PER_USER_CEILING,
 	CustomBadgeTypes,
+	HIDEABLE_BUILT_IN_BADGE_KINDS,
 } from '@fluxer/constants/src/BadgeConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
@@ -76,6 +77,15 @@ export const BuiltInBadgeKindSchema = withOpenApiType(
 	'BuiltInBadgeKind',
 );
 
+export const HideableBuiltInBadgeKindSchema = withOpenApiType(
+	z
+		.enum(HIDEABLE_BUILT_IN_BADGE_KINDS)
+		.describe(
+			'A built-in community badge that this instance can stop showing: guild_verified, guild_partnered or guild_discoverable',
+		),
+	'HideableBuiltInBadgeKind',
+);
+
 export const AdminBuiltInBadgeImageResponse = z.object({
 	kind: BuiltInBadgeKindSchema,
 	asset_url: z
@@ -87,6 +97,11 @@ export const AdminBuiltInBadgeImageResponse = z.object({
 		.nullable()
 		.describe(
 			'Hash of the built-in artwork at {static_cdn}/badges/{hash}.webp, or null for a guild badge, which clients draw themselves',
+		),
+	hidden: z
+		.boolean()
+		.describe(
+			'True when clients do not show this badge. Only community badges can be hidden, so profile badges are always false',
 		),
 });
 
@@ -246,3 +261,7 @@ export const ReplaceBuiltInBadgeImageRequest = z.object({
 });
 
 export type ReplaceBuiltInBadgeImageRequest = z.infer<typeof ReplaceBuiltInBadgeImageRequest>;
+
+export const HideableBuiltInBadgeKindParam = z.object({
+	kind: HideableBuiltInBadgeKindSchema,
+});

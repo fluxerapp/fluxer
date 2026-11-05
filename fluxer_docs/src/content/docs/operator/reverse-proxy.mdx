@@ -121,7 +121,7 @@ If Cloudflare proxies your domain, change these settings in the Cloudflare dashb
 
 ### Purging deleted media
 
-Cloudflare keeps serving cached copies of media after someone deletes it, until the cached copy expires. Fluxer can ask Cloudflare to purge those copies straight away. Create an API token with the Zone Cache Purge permission for your zone, find the zone ID on the zone's overview page, and set these variables.
+Cloudflare keeps serving cached copies of media after someone deletes it, until the cached copy expires. Fluxer can ask Cloudflare to purge those copies right away. Create an API token with the Zone Cache Purge permission for your zone, find the zone ID on the zone's overview page, and set these variables.
 
 ```bash
 rexctl config set FLUXER_CACHE_PURGE_ADAPTER http

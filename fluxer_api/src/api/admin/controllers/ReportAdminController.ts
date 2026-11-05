@@ -51,22 +51,6 @@ const REPORT_SORT_FIELD_BY_QUERY = {
 	resolved_at: 'resolvedAt',
 } as const;
 
-function usesReportSearchIndex(query: ListReportsQuery): boolean {
-	return (
-		query.q !== undefined ||
-		query.report_type !== undefined ||
-		query.category !== undefined ||
-		query.reason !== undefined ||
-		query.reporter_id !== undefined ||
-		query.reported_user_id !== undefined ||
-		query.reported_webhook_id !== undefined ||
-		query.reported_guild_id !== undefined ||
-		query.reported_channel_id !== undefined ||
-		query.guild_context_id !== undefined ||
-		query.resolved_by_admin_id !== undefined
-	);
-}
-
 function toSearchReportsRequest(query: ListReportsQuery): SearchReportsRequest {
 	return {
 		query: query.q,
@@ -98,7 +82,7 @@ export function ReportAdminController(app: HonoApp) {
 			operationId: 'list_admin_reports',
 			summary: 'List reports',
 			description:
-				'Lists user and content reports from the report search index with pagination. Without a status filter the list covers reports of every status. A request that filters by status alone lists the reports with that status newest first and ignores sort_by and sort_order. A free-text query and the entity, category, reason and resolver filters narrow the results. Every response includes the total, offset and limit of the page. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.',
+				'Lists user and content reports from the report search index with pagination. Without a status filter the list covers reports of every status. A free-text query and the entity, category, reason and resolver filters narrow the results. Every response includes the total, offset and limit of the page. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.',
 			responseSchema: AdminReportListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -109,15 +93,10 @@ export function ReportAdminController(app: HonoApp) {
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const query = ctx.req.valid('query');
 			const status = query.status;
-			const searched = status === undefined || usesReportSearchIndex(query);
-			const response = searched
-				? await adminService.reportServiceAggregate.searchReports(toSearchReportsRequest(query), adminUserAcls)
-				: await adminService.reportServiceAggregate.listReports(
-						REPORT_STATUS_BY_FILTER[status],
-						adminUserAcls,
-						query.limit,
-						query.offset,
-					);
+			const response = await adminService.reportServiceAggregate.searchReports(
+				toSearchReportsRequest(query),
+				adminUserAcls,
+			);
 			await recordAdminRead(ctx, {
 				targetType: 'report',
 				targetId: 0n,
@@ -135,8 +114,8 @@ export function ReportAdminController(app: HonoApp) {
 					reported_channel_id: query.reported_channel_id,
 					context_guild_id: query.guild_context_id,
 					resolved_by_admin_user_id: query.resolved_by_admin_id,
-					sort_by: searched ? query.sort_by : undefined,
-					sort_order: searched ? query.sort_order : undefined,
+					sort_by: query.sort_by,
+					sort_order: query.sort_order,
 					limit: query.limit,
 					offset: query.offset,
 					result_count: response.reports.length,

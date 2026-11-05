@@ -11,11 +11,11 @@ const INVITES_PAUSED_DESCRIPTOR = msg({
 	comment: 'Button or menu action label in the invites disabled modal. Keep it concise.',
 });
 const DETECTED_A_POTENTIAL_RAID_IN_THIS_COMMUNITY_SO_DESCRIPTOR = msg({
-	message: '{productName} spotted a possible raid here. Invites are paused — try again later.',
+	message: '{productName} spotted a possible raid here. Invites are paused. Try again later.',
 	comment: 'Label in the invites disabled modal.',
 });
 const COMMUNITY_ADMINS_HAVE_PAUSED_INVITES_SO_YOU_CAN_DESCRIPTOR = msg({
-	message: "Admins paused invites — you can't join right now.",
+	message: "Admins paused invites. You can't join right now.",
 	comment: 'Error message in the invites disabled modal.',
 });
 

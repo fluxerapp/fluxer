@@ -30,7 +30,7 @@ const LEAVE_SILENTLY_DESCRIPTOR = msg({
 		'Switch label in the leave-group confirmation modal. Suppresses the system leave notice so other members are not pinged.',
 });
 const LEAVE_SILENTLY_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Skip the system leave notice — nobody gets pinged.',
+	message: 'Skip the system leave notice. Nobody gets pinged.',
 	comment:
 		'Switch description in the leave-group confirmation modal. Explains that silently leaving avoids posting a system leave notice.',
 });

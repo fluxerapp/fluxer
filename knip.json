@@ -23,14 +23,15 @@
 		},
 		"fluxer_api": {
 			"ignoreDependencies": [
-				"@messageformat/core",
 				"@messageformat/parser",
+				"@pdf-lib/fontkit",
 				"@vvo/tzdb",
+				"bidi-js",
 				"emoji-regex",
+				"harfbuzzjs",
 				"ioredis",
 				"maxmind",
 				"nodemailer",
-				"pdf-lib",
 				"pg",
 				"pino",
 				"undici",

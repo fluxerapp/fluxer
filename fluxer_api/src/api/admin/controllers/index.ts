@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminApiKeyAdminController} from '@app/api/admin/controllers/AdminApiKeyAdminController';
+import {AdminSsoAdminController} from '@app/api/admin/controllers/AdminSsoAdminController';
 import {ApplicationAdminController} from '@app/api/admin/controllers/ApplicationAdminController';
 import {ArchiveAdminController} from '@app/api/admin/controllers/ArchiveAdminController';
 import {AssetAdminController} from '@app/api/admin/controllers/AssetAdminController';
 import {AuditLogAdminController} from '@app/api/admin/controllers/AuditLogAdminController';
 import {BadgeAdminController} from '@app/api/admin/controllers/BadgeAdminController';
 import {BanAdminController} from '@app/api/admin/controllers/BanAdminController';
+import {BillingDocumentAdminController} from '@app/api/admin/controllers/BillingDocumentAdminController';
 import {BulkAdminController} from '@app/api/admin/controllers/BulkAdminController';
 import {CodesAdminController} from '@app/api/admin/controllers/CodesAdminController';
 import {DiscoveryAdminController} from '@app/api/admin/controllers/DiscoveryAdminController';
@@ -31,11 +33,13 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 
 export function registerAdminControllers(app: HonoApp) {
 	AdminApiKeyAdminController(app);
+	AdminSsoAdminController(app);
 	ApplicationAdminController(app);
 	UserAdminController(app);
 	BadgeAdminController(app);
 	EnforcementAdminController(app);
 	StoreBillingAdminController(app);
+	BillingDocumentAdminController(app);
 	OperatorPassAdminController(app);
 	PaymentDisputeAdminController(app);
 	CodesAdminController(app);

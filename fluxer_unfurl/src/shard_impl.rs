@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::activity_pub::signature::{self, RequestSigner};
+use crate::activity_pub::signature::{self, HostKey, RequestSigner};
 use crate::cache_policy::{
     UnfurlEntryExpiry, default_empty_entry_lifetime, provider_capability, unfurl_cache_key,
 };
@@ -28,6 +28,7 @@ pub struct UnfurlShard {
     youtube_api_key: Option<String>,
     klipy_api_key: Option<String>,
     activity_pub_key: Option<Arc<RsaKeyPair>>,
+    activity_pub_host_key: Option<HostKey>,
 }
 
 impl UnfurlShard {
@@ -82,6 +83,22 @@ impl UnfurlShard {
                 tracing::info!("ActivityPub request signing enabled");
                 Arc::new(key)
             });
+        let activity_pub_host_key = match (
+            optional_env("FLUXER_ACTIVITYPUB_HOST_KEY_ID"),
+            optional_env("FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64"),
+        ) {
+            (Some(key_id), Some(encoded)) => {
+                let host_key = signature::parse_signing_key(&encoded)
+                    .and_then(|key| HostKey::new(key, key_id))
+                    .unwrap_or_else(|err| panic!("invalid ActivityPub host key: {err}"));
+                tracing::info!("ActivityPub host key enabled");
+                Some(host_key)
+            }
+            (None, None) => None,
+            _ => panic!(
+                "FLUXER_ACTIVITYPUB_HOST_KEY_ID and FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64 must be set together"
+            ),
+        };
 
         Self {
             cache: build_l2_cache(lifetime, default_empty_entry_lifetime()),
@@ -95,6 +112,7 @@ impl UnfurlShard {
             klipy_api_key: optional_env("FLUXER_KLIPY_API_KEY")
                 .or_else(|| optional_env("KLIPY_API_KEY")),
             activity_pub_key,
+            activity_pub_host_key,
         }
     }
 
@@ -127,11 +145,11 @@ impl UnfurlShard {
             klipy_api_key: klipy_api_key
                 .map(str::to_owned)
                 .or_else(|| self.klipy_api_key.clone()),
-            activity_pub_signer: self
-                .activity_pub_key
-                .clone()
-                .zip(activity_pub_key_id)
-                .map(|(key, key_id)| RequestSigner::new(key, key_id.to_owned())),
+            activity_pub_signer: self.activity_pub_key.clone().zip(activity_pub_key_id).map(
+                |(key, key_id)| {
+                    RequestSigner::new(key, key_id.to_owned(), self.activity_pub_host_key.clone())
+                },
+            ),
         };
 
         if let Some(idx) = matched_resolver_idx {
@@ -226,7 +244,7 @@ fn build_l2_cache(
 
 fn base_http_client_builder() -> reqwest::ClientBuilder {
     reqwest::Client::builder()
-        .user_agent("Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)")
+        .user_agent("Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)")
         .timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::none())
         .no_gzip()

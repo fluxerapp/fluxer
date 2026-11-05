@@ -15,13 +15,17 @@ import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {BlockAppOriginMiddleware} from '@app/api/middleware/BlockAppOriginMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
-import {RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
+import {
+	isMultipartFormData,
+	MultipartUploadRoute,
+	RequestBodyLimit,
+} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
-import {Validator} from '@app/api/Validator';
+import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import type {WebhookExecuteMessageData} from '@app/api/webhook/WebhookService';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -68,7 +72,7 @@ const WebhookMultipartMessagePayload = WebhookMultipartMessageRequest.omit(FORUM
 function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMessagePayload> {
 	const validationResult = WebhookMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }
@@ -76,7 +80,7 @@ function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMes
 function validateWebhookMultipartMessagePayload(data: unknown): z.infer<typeof WebhookMultipartMessagePayload> {
 	const validationResult = WebhookMultipartMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }
@@ -377,6 +381,7 @@ export function WebhookController(app: HonoApp) {
 	);
 	app.post(
 		'/webhooks/:webhook_id/:token',
+		MultipartUploadRoute(),
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
 		BlockAppOriginMiddleware,
 		OpenAPI({
@@ -395,8 +400,7 @@ export function WebhookController(app: HonoApp) {
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
 			const {wait} = ctx.req.valid('query');
-			const contentType = ctx.req.header('content-type') ?? '';
-			const data = contentType.includes('multipart/form-data')
+			const data = isMultipartFormData(ctx.req.header('content-type'))
 				? await parseWebhookMultipartMessageData(ctx, webhookId, token)
 				: await parseWebhookJsonMessageData(ctx);
 			const response = await ctx.get('webhookRequestService').executeWebhook({

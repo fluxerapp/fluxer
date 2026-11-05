@@ -55,15 +55,35 @@ impl AdminApiClient {
         self.generated_value(response.into_inner())
     }
 
+    pub async fn preview_message_shred(
+        &self,
+        user_id: &str,
+        entries: Vec<generated_types::AdminUserMessageShredPreviewRequestEntriesItem>,
+    ) -> ApiResult<generated_types::MessageShredPreviewResponse> {
+        let body = generated_types::AdminUserMessageShredPreviewRequest { entries };
+        self.send(
+            Method::POST,
+            &format!(
+                "/admin/users/{}/message-shreds/preview",
+                urlencoding::encode(user_id)
+            ),
+            Some(&body),
+            None,
+        )
+        .await
+    }
+
     pub async fn queue_message_shred(
         &self,
         user_id: &str,
         entries: Vec<generated_types::AdminUserMessageShredRequestEntriesItem>,
         basis: &BasisSubmission,
+        preview_token: generated_types::AdminUserMessageShredRequestPreviewToken,
     ) -> ApiResult<generated_types::MessageShredResponse> {
         let body = generated_types::AdminUserMessageShredRequest {
             basis: basis.moderation_basis(),
             entries,
+            preview_token: Some(preview_token),
         };
         self.send(
             Method::POST,

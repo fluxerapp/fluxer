@@ -100,10 +100,9 @@ export class OperatorPassWallRetentionService {
 					});
 				}
 				for (const logId of await this.repository.listWallAuditLogIds(entry.user_id)) {
-					await this.redactAuditLog(logId, token, ['sha256', 'note']);
+					await this.redactAuditLog(logId, token, ['sha256', 'note', 'quote']);
 				}
 				await this.repository.saveWallTombstone({token_: token, left_at: entry.left_wall_at!, purged_at: now});
-				await this.repository.setWallPending(entry.user_id, false);
 				await this.repository.deleteWallPartitions(entry.user_id);
 				purged += 1;
 				continue;
@@ -138,7 +137,7 @@ export class OperatorPassWallRetentionService {
 	): Promise<boolean> {
 		const userId = entry.user_id;
 		const copies = revisions.filter((revision) => revision.name !== '' || revision.avatar != null);
-		if (copies.length === 0 && entry.name == null) {
+		if (copies.length === 0 && entry.name == null && entry.quote == null) {
 			return false;
 		}
 		for (const avatar of new Set(copies.flatMap((revision) => (revision.avatar ? [revision.avatar] : [])))) {
@@ -158,20 +157,13 @@ export class OperatorPassWallRetentionService {
 			}
 		}
 		for (const logId of await this.repository.listWallAuditLogIds(userId)) {
-			await this.redactAuditLog(logId, userId, ['sha256', 'note']);
+			await this.redactAuditLog(logId, userId, ['sha256', 'note', 'quote']);
 		}
 		await this.entries.mutateExisting(userId, operatorPassNow(), null, () => ({
 			patch: {
 				name: Db.set(null),
+				quote: Db.set(null),
 				...liveRevisionPatch(null),
-				pending_revision_id: Db.set(null),
-				pending_name: Db.set(null),
-				pending_avatar: Db.set(null),
-				pending_source: Db.set(null),
-				pending_since: Db.set(null),
-				declined_revision_id: Db.set(null),
-				declined_name: Db.set(null),
-				declined_avatar: Db.set(null),
 				decline_note: Db.set(null),
 			},
 			events: [],
@@ -196,24 +188,8 @@ export class OperatorPassWallRetentionService {
 			}
 		}
 		await this.repository.saveWallRevision({...revision, name: '', avatar: null});
-		if (entry.declined_revision_id === revision.revision_id) {
-			await this.entries.mutateExisting(userId, operatorPassNow(), null, (current) =>
-				current.declined_revision_id === revision.revision_id
-					? {
-							patch: {
-								declined_name: Db.set(null),
-								declined_avatar: Db.set(null),
-								decline_note: Db.set(null),
-							},
-							events: [],
-						}
-					: null,
-			);
-		}
 		const keptNames = new Set(
-			[entry.live_name, entry.pending_name, ...others.map((row) => row.name)].filter((name): name is string =>
-				Boolean(name),
-			),
+			[entry.live_name, ...others.map((row) => row.name)].filter((name): name is string => Boolean(name)),
 		);
 		if (revision.name && !keptNames.has(revision.name)) {
 			for (const event of await this.repository.listWallEvents(userId)) {

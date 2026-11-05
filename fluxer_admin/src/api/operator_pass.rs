@@ -5,10 +5,8 @@ use super::generated::snowflake;
 use super::generated::types::{
     AdminOperatorPassReleaseFileResponse, AdminOperatorPassReleasePreviewResponse,
     AdminOperatorPassReleasePublishRequest, AdminOperatorPassReleasePublishRequestTag,
-    AdminOperatorPassUserResponse, AdminOperatorPassWaitlistFollowupTextsResponse,
-    AdminOperatorPassWaitlistStatsResponse, AdminOperatorPassWallAsOfResponse,
-    AdminOperatorPassWallBulkResponse, AdminOperatorPassWallDecisionResponse,
-    AdminOperatorPassWallEntryResponse, AdminOperatorPassWallQueueResponse,
+    AdminOperatorPassUserResponse, AdminOperatorPassWallAsOfResponse,
+    AdminOperatorPassWallDecisionResponse, AdminOperatorPassWallEntryResponse,
     AdminOperatorPassWallRevisionResponse, AdminOperatorPassWallStateResponse,
     AdminOperatorPassWithdrawRequest, AdminOperatorPassWithdrawRequestName,
     AdminOperatorPassWithdrawalChannelSchema, OperatorPassPurchaseResponse,
@@ -24,30 +22,6 @@ use serde_json::json;
 pub struct WallDecision<'a> {
     pub reason: OperatorPassWallDeclineReasonSchema,
     pub note: &'a str,
-    pub username_declined: bool,
-}
-
-#[derive(Serialize)]
-#[serde(tag = "action", rename_all = "snake_case")]
-pub enum WallBulkAction<'a> {
-    Approve,
-    Decline {
-        reason: OperatorPassWallDeclineReasonSchema,
-        note: &'a str,
-    },
-}
-
-#[derive(Serialize)]
-struct WallRevision<'a> {
-    user_id: &'a str,
-    revision_id: &'a str,
-}
-
-#[derive(Serialize)]
-struct WallBulkRequest<'a> {
-    #[serde(flatten)]
-    action: &'a WallBulkAction<'a>,
-    revisions: Vec<WallRevision<'a>>,
 }
 
 pub struct PerkRemoval<'a> {
@@ -98,26 +72,21 @@ fn parse<T, E: std::fmt::Display>(value: Result<T, E>) -> ApiResult<T> {
 }
 
 impl AdminApiClient {
-    pub async fn get_operator_pass_waitlist_stats(
+    pub async fn get_operator_pass_visionary_activations_csv(
         &self,
-    ) -> ApiResult<AdminOperatorPassWaitlistStatsResponse> {
-        let response = self
-            .generated()
-            .get_admin_operator_pass_waitlist_stats()
+    ) -> ApiResult<(String, Vec<u8>)> {
+        self.get_bytes("/admin/operator-pass/visionary/activations.csv")
             .await
-            .map_err(|e| self.generated_error(e))?;
-        Ok(response.into_inner())
     }
 
-    pub async fn list_operator_pass_waitlist_followup_texts(
+    pub async fn get_operator_pass_deliveries_csv(
         &self,
-    ) -> ApiResult<AdminOperatorPassWaitlistFollowupTextsResponse> {
-        let response = self
-            .generated()
-            .list_admin_operator_pass_waitlist_followup_texts()
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        Ok(response.into_inner())
+        month: &str,
+    ) -> ApiResult<(String, Vec<u8>)> {
+        self.get_bytes(&format!(
+            "/admin/operator-pass/deliveries.csv?month={month}"
+        ))
+        .await
     }
 
     pub async fn get_user_operator_pass(
@@ -130,46 +99,6 @@ impl AdminApiClient {
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(response.into_inner())
-    }
-
-    pub async fn list_operator_pass_wall_review_queue(
-        &self,
-    ) -> ApiResult<AdminOperatorPassWallQueueResponse> {
-        let response = self
-            .generated()
-            .list_admin_operator_pass_wall_review_queue()
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        Ok(response.into_inner())
-    }
-
-    pub async fn approve_operator_pass_wall_revision(
-        &self,
-        user_id: &str,
-        revision_id: &str,
-    ) -> ApiResult<AdminOperatorPassWallEntryResponse> {
-        self.send(
-            Method::POST,
-            &format!("/admin/users/{user_id}/operator-pass/wall/revisions/{revision_id}/approve"),
-            None::<&()>,
-            None,
-        )
-        .await
-    }
-
-    pub async fn decline_operator_pass_wall_revision(
-        &self,
-        user_id: &str,
-        revision_id: &str,
-        decision: &WallDecision<'_>,
-    ) -> ApiResult<AdminOperatorPassWallEntryResponse> {
-        self.send(
-            Method::POST,
-            &format!("/admin/users/{user_id}/operator-pass/wall/revisions/{revision_id}/decline"),
-            Some(decision),
-            None,
-        )
-        .await
     }
 
     pub async fn revert_operator_pass_wall_revision(
@@ -195,6 +124,21 @@ impl AdminApiClient {
             Method::POST,
             &format!("/admin/users/{user_id}/operator-pass/wall/force-fallback"),
             Some(decision),
+            None,
+        )
+        .await
+    }
+
+    pub async fn clear_operator_pass_wall_quote(
+        &self,
+        user_id: &str,
+        decision: &WallDecision<'_>,
+        quote: &str,
+    ) -> ApiResult<AdminOperatorPassWallEntryResponse> {
+        self.send(
+            Method::POST,
+            &format!("/admin/users/{user_id}/operator-pass/wall/clear-quote"),
+            Some(&json!({"reason": decision.reason, "note": decision.note, "quote": quote})),
             None,
         )
         .await
@@ -318,25 +262,16 @@ impl AdminApiClient {
         Ok(response.into_inner())
     }
 
-    pub async fn bulk_operator_pass_wall_revisions(
+    pub async fn reissue_operator_pass_certificate(
         &self,
-        action: &WallBulkAction<'_>,
-        revisions: &[(String, String)],
-    ) -> ApiResult<AdminOperatorPassWallBulkResponse> {
-        let body = WallBulkRequest {
-            action,
-            revisions: revisions
-                .iter()
-                .map(|(user_id, revision_id)| WallRevision {
-                    user_id,
-                    revision_id,
-                })
-                .collect(),
-        };
-        self.send(
+        pass_id: &str,
+        holder_name: &str,
+        reason: &str,
+    ) -> ApiResult<()> {
+        self.send_void(
             Method::POST,
-            "/admin/operator-pass/wall/bulk",
-            Some(&body),
+            &format!("/admin/operator-pass/certificates/{pass_id}/reissue"),
+            Some(&json!({"holder_name": holder_name, "reason": reason})),
             None,
         )
         .await
@@ -352,13 +287,10 @@ impl AdminApiClient {
 
     pub async fn get_operator_pass_wall_avatar(
         &self,
-        user_id: &str,
         sha256: &str,
     ) -> ApiResult<(String, Vec<u8>)> {
-        self.get_bytes(&format!(
-            "/admin/users/{user_id}/operator-pass/wall/avatars/{sha256}"
-        ))
-        .await
+        self.get_bytes(&format!("/admin/operator-pass/wall/avatars/{sha256}"))
+            .await
     }
 
     pub async fn get_operator_pass_wall_as_of(

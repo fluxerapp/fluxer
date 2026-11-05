@@ -307,8 +307,9 @@ const GridItem = observer(
 		const isAudio = contentType.startsWith('audio/');
 		const isGifImage = !isVideo && contentType.toLowerCase().includes('gif');
 		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isAnimated: !isAudio && (isVideo || isGifImage)});
-		const memeUrl = AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
-		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
+		const memeUrl = AttachmentUrlRefresher.freshWhenReady(url, {refreshUnsigned: true});
+		const thumbnailSrc =
+			memeUrl !== null && isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
 		const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {
 			enabled: isVisible && !isAudio && isVideo,
 			shouldPlay: shouldAnimateGif,
@@ -351,14 +352,14 @@ const GridItem = observer(
 								disablePictureInPicture={true}
 								disableRemotePlayback={true}
 								preload={shouldAnimateGif ? 'auto' : 'metadata'}
-								src={memeUrl}
+								src={memeUrl ?? undefined}
 								data-flx="channel.mobile-memes-picker.grid-item.gif"
 							/>
 						)}
 						{isVisible && !isAudio && !isVideo && (
 							<img
 								className={styles.gif}
-								src={thumbnailSrc}
+								src={thumbnailSrc ?? undefined}
 								alt={title}
 								data-flx="channel.mobile-memes-picker.grid-item.gif--2"
 							/>

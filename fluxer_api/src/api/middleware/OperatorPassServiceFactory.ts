@@ -26,6 +26,7 @@ export interface OperatorPassServices {
 	readonly wallService: OperatorPassWallService;
 	readonly holdingService: OperatorPassHoldingService;
 	readonly removalService: OperatorPassRemovalService;
+	readonly roleService: OperatorPassLabsRoleService;
 }
 
 class LazyOperatorPassServices implements OperatorPassServices {
@@ -39,7 +40,7 @@ class LazyOperatorPassServices implements OperatorPassServices {
 		return this.dependencies.operatorPassRepository;
 	}
 
-	private get roleService(): OperatorPassLabsRoleService {
+	get roleService(): OperatorPassLabsRoleService {
 		this.cachedRoleService ??= new OperatorPassLabsRoleService(
 			this.dependencies.guildRepository,
 			this.dependencies.guildService,

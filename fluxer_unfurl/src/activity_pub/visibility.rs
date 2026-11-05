@@ -18,9 +18,10 @@ enum WebVisibility {
 pub fn is_hidden_from_unauthed_web(
     post: &ActivityPubPost,
     author: Option<&ActivityPubActor>,
+    signed: bool,
 ) -> bool {
     let Some(author) = author else {
-        return false;
+        return signed;
     };
     if author.hides_to_public_from_unauthed_web.is_none()
         && author.hides_cc_public_from_unauthed_web.is_none()

@@ -10,6 +10,8 @@ const API_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(API_ROOT, 'dist');
 const WORKSPACE_PREFIXES = ['@app/', '@pkgs/', '@fluxer/'];
 const BUNDLED_LOCALES_DIR = './locales/';
+const BUNDLED_FONTS_DIR = './fonts/';
+const CERTIFICATE_FONTS = join(API_ROOT, 'pkgs/email/src/operator_pass_certificate/fonts');
 const LOCALE_CATALOGS = {
 	errors: join(API_ROOT, '../packages/errors/src/i18n/weblate/locales'),
 	email: join(API_ROOT, 'pkgs/email/src/email_i18n/weblate/locales'),
@@ -57,13 +59,18 @@ await build({
 	sourcesContent: false,
 	logLevel: 'info',
 	banner: {js: '// SPDX-License-Identifier: AGPL-3.0-or-later'},
-	define: {FLUXER_BUNDLED_LOCALES_DIR: JSON.stringify(BUNDLED_LOCALES_DIR)},
+	define: {
+		FLUXER_BUNDLED_LOCALES_DIR: JSON.stringify(BUNDLED_LOCALES_DIR),
+		FLUXER_BUNDLED_FONTS_DIR: JSON.stringify(BUNDLED_FONTS_DIR),
+	},
 	plugins: [workspacePlugin],
 });
 
 for (const [catalog, directory] of Object.entries(LOCALE_CATALOGS)) {
 	cpSync(directory, join(OUT_DIR, BUNDLED_LOCALES_DIR, catalog), {recursive: true});
 }
+
+cpSync(CERTIFICATE_FONTS, join(OUT_DIR, BUNDLED_FONTS_DIR), {recursive: true});
 
 for (const file of readdirSync(OUT_DIR).filter((name) => name.endsWith('.js'))) {
 	const source = readFileSync(join(OUT_DIR, file), 'utf-8');

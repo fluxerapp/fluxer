@@ -10,17 +10,19 @@ const EMAIL_CODE_LENGTH = 6;
 
 type EmailCodePurpose = 'sign_in' | 'sign_up';
 
+interface SentCode {
+	readonly email: string;
+	readonly ticket: string;
+	readonly purpose: EmailCodePurpose;
+	readonly existingAccount: boolean;
+	readonly resendAvailableAt: number;
+}
+
 export type IdentifierStep =
 	| {readonly kind: 'email'}
 	| {readonly kind: 'name'}
-	| {
-			readonly kind: 'code';
-			readonly email: string;
-			readonly ticket: string;
-			readonly purpose: EmailCodePurpose;
-			readonly existingAccount: boolean;
-			readonly resendAvailableAt: number;
-	  }
+	| ({readonly kind: 'profile'} & SentCode)
+	| ({readonly kind: 'code'} & SentCode)
 	| {readonly kind: 'password'; readonly email: string; readonly ticket: string | null}
 	| {readonly kind: 'create_password'; readonly email: string};
 
@@ -79,6 +81,7 @@ export function offersInstantAccount(
 	return (
 		registrationUrlCode !== null &&
 		(availability === InstantAccountAvailability.REGISTRATION_CLOSED ||
-			availability === InstantAccountAvailability.APPROVAL_REQUIRED)
+			availability === InstantAccountAvailability.APPROVAL_REQUIRED ||
+			availability === InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED)
 	);
 }

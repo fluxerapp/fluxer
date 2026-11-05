@@ -76,6 +76,8 @@ pub fn router() -> Router<AppState> {
         .route("/badges/{badge_id}/move/{direction}", post(move_badge))
         .route("/badges/built-in/{kind}", post(replace_built_in_image))
         .route("/badges/built-in/{kind}/reset", post(reset_built_in_image))
+        .route("/badges/built-in/{kind}/hide", post(hide_built_in_badge))
+        .route("/badges/built-in/{kind}/show", post(show_built_in_badge))
         .layer(DefaultBodyLimit::max(BADGE_IMAGE_MAX_BYTES + 64 * 1024))
 }
 
@@ -348,6 +350,43 @@ async fn reset_built_in_image(
     let flash = match client.reset_built_in_badge_image(&kind).await {
         Ok(_) => FlashData::success("Badge uses the built-in image again"),
         Err(error) => failure("reset the image of", &error),
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
+}
+
+async fn hide_built_in_badge(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(kind): Path<String>,
+    Query(query): Query<BadgePageQuery>,
+) -> Response {
+    set_built_in_badge_hidden(state, auth, kind, query, true).await
+}
+
+async fn show_built_in_badge(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(kind): Path<String>,
+    Query(query): Query<BadgePageQuery>,
+) -> Response {
+    set_built_in_badge_hidden(state, auth, kind, query, false).await
+}
+
+async fn set_built_in_badge_hidden(
+    state: AppState,
+    auth: axum::Extension<AuthContext>,
+    kind: String,
+    query: BadgePageQuery,
+    hidden: bool,
+) -> Response {
+    let config = state.config();
+    let back = query.back(config);
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let flash = match client.set_built_in_badge_hidden(&kind, hidden).await {
+        Ok(_) if hidden => FlashData::success("Badge hidden"),
+        Ok(_) => FlashData::success("Badge shown again"),
+        Err(error) if hidden => failure("hide", &error),
+        Err(error) => failure("show", &error),
     };
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }

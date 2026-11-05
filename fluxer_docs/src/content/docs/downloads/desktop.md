@@ -41,4 +41,4 @@ The macOS and Windows desktop apps check these files in `/desktop/{channel}/{pla
 | macOS | `RELEASES.json`, `releases.json` |
 | Windows | `RELEASES`, `releases.win.json`, `assets.win.json` |
 
-Linux has no update feed. Installed packages update through the [Linux repositories](/downloads/linux-repositories/).
+On Linux, the AppImage updates itself from `latest` when it's in a folder you can write to. Packages update through the [Linux repositories](/downloads/linux-repositories/), and the tar.gz doesn't update itself.

@@ -23,13 +23,18 @@ let cachedConfig: MasterConfig | null = null;
 
 const MAX_REPORT_RETENTION_DAYS = 36_500;
 
+const OFFICIAL_ANDROID_PASSKEY_ORIGINS = [
+	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
+	'android:apk-key-hash:Ld4qnT0TfBeHMT3Yu2H0WTwqlxgFs-32uDmwqtLndsk',
+];
+
 const DEFAULT_PASSKEY_ORIGINS = [
 	'https://fluxer.app',
 	'https://web.fluxer.app',
 	'https://web.canary.fluxer.app',
 	'https://fluxer.com',
 	'https://canary.fluxer.com',
-	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
+	...OFFICIAL_ANDROID_PASSKEY_ORIGINS,
 ];
 
 function defaultConfig(): MasterConfig {
@@ -104,6 +109,7 @@ function defaultConfig(): MasterConfig {
 				headers_timeout_ms: 30_000,
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
+				max_concurrent_form_uploads: 16,
 				automated_message_deletion_delay_days: 7,
 				ip_ban_exempt_ips: [],
 				donation_proxy_key: '',
@@ -112,6 +118,8 @@ function defaultConfig(): MasterConfig {
 				presigned_harvest_downloads_enabled: true,
 				unfurl_ignored_hosts: [],
 				app_origin_aliases: [],
+				discovery_public_endpoint: '',
+				discovery_transport_endpoint: '',
 				storage_change_feed: {
 					enabled: false,
 					stream: 'STORAGE_CHANGES',
@@ -141,6 +149,10 @@ function defaultConfig(): MasterConfig {
 			admin: {
 				secret_key_base: '',
 				oauth_client_secret: '',
+				sso: {
+					issuer: '',
+					client_id: '',
+				},
 			},
 		},
 		auth: {
@@ -241,6 +253,7 @@ function defaultConfig(): MasterConfig {
 			store_billing: {
 				sandbox_user_ids: [],
 				sandbox_entitles_all: false,
+				sandbox_subscriptions: true,
 			},
 		},
 		instance: {
@@ -253,6 +266,7 @@ function defaultConfig(): MasterConfig {
 			},
 			account_identity: null,
 			tag_style: null,
+			age_policy: {},
 		},
 		payment_disputes: {},
 		operator_pass: {
@@ -327,9 +341,9 @@ function applyProfilePseudonymSecret(config: MasterConfig): void {
 	config.auth.profile_pseudonym_secret = DEVELOPMENT_PROFILE_PSEUDONYM_SECRET;
 }
 
-function validateReplyToEmail(value: string): void {
+function validateSingleEmail(value: string, name: string): void {
 	if (value !== '' && !/^[^\s@<>,;"]+@[^\s@<>,;"]+$/.test(value)) {
-		throw new Error('FLUXER_EMAIL_REPLY_TO_EMAIL must be a single email address such as support@example.com');
+		throw new Error(`${name} must be a single email address such as support@example.com`);
 	}
 }
 
@@ -633,6 +647,33 @@ function validateStoreBillingConfig(config: MasterConfig): void {
 		}
 	}
 	assertBoolean(config.integrations.store_billing.sandbox_entitles_all, 'FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL');
+	assertBoolean(config.integrations.store_billing.sandbox_subscriptions, 'FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS');
+}
+
+const AGE_POLICY_REGION_PATTERN = /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/u;
+
+function normalizeAgePolicyRegions(regions: Array<string> | undefined, envName: string): Array<string> | undefined {
+	if (regions === undefined) return undefined;
+	const normalized = regions.map((region) => region.trim().toUpperCase());
+	for (const region of normalized) {
+		if (!AGE_POLICY_REGION_PATTERN.test(region)) {
+			throw new Error(
+				`${envName} entry ${JSON.stringify(region)} must be a country code such as GB or a country and region code such as US-MS`,
+			);
+		}
+	}
+	return [...new Set(normalized)];
+}
+
+function normalizeAgePolicyConfig(config: MasterConfig): void {
+	const agePolicy = config.instance.age_policy;
+	if (agePolicy.enabled !== undefined) {
+		assertBoolean(agePolicy.enabled, 'FLUXER_AGE_POLICY_ENABLED');
+	}
+	config.instance.age_policy = {
+		enabled: agePolicy.enabled,
+		restricted_regions: normalizeAgePolicyRegions(agePolicy.restricted_regions, 'FLUXER_AGE_POLICY_RESTRICTED_REGIONS'),
+	};
 }
 
 function validateDomain(value: string, envName: string): void {
@@ -706,10 +747,18 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateReportRetentionConfig(config);
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);
-	validateReplyToEmail(config.integrations.email.reply_to_email);
+	validateSingleEmail(config.integrations.email.reply_to_email, 'FLUXER_EMAIL_REPLY_TO_EMAIL');
+	validateSingleEmail(config.integrations.email.support_alert_email ?? '', 'FLUXER_EMAIL_SUPPORT_ALERT_EMAIL');
 	normalizeEmailFallbackConfig(config);
 	normalizeAppOriginAliases(config);
+	normalizeAgePolicyConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
+	assertIntegerInRange(
+		config.services.api.max_concurrent_form_uploads,
+		'FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS',
+		1,
+		10_000,
+	);
 	assertIntegerInRange(
 		config.services.api.automated_message_deletion_delay_days,
 		'FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS',
@@ -862,6 +911,9 @@ function normalizePasskeys(config: MasterConfig, useDefaultOrigins: boolean): vo
 			...new Set([...passkeys.additional_allowed_origins, new URL(config.endpoints.app).origin]),
 		];
 	}
+	passkeys.additional_allowed_origins = [
+		...new Set([...passkeys.additional_allowed_origins, ...OFFICIAL_ANDROID_PASSKEY_ORIGINS]),
+	];
 }
 
 export async function loadConfig(): Promise<MasterConfig> {

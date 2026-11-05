@@ -172,6 +172,9 @@ export async function instantAccountsAvailable(
 export function assertInstantAccountAvailable(availability: InstantAccountAvailability): void {
 	if (availability === InstantAccountAvailability.AVAILABLE) return;
 	if (availability === InstantAccountAvailability.REGISTRATION_CLOSED) throw new RegistrationClosedError();
+	if (availability === InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED) {
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED);
+	}
 	throw new InstantAccountsDisabledError();
 }
 
@@ -577,6 +580,23 @@ export async function assertInstanceAcceptsEmailDomain(email: string, field: str
 function usernameFromEmail(email: string): string | undefined {
 	const localPart = email.split('@')[0] ?? '';
 	return deriveUsernameFromDisplayName(localPart) ?? undefined;
+}
+
+export async function assertRequestedProfileAllowed(
+	ctx: ApiContext,
+	deps: Pick<RegistrationDependencies, 'instanceConfigRepository'>,
+	params: {username: string | undefined; globalName: string | undefined},
+): Promise<void> {
+	const {username, globalName} = params;
+	if (username && isBlockedUsername(username)) throw new ContentBlockedError();
+	if (globalName && profileSubstringBlocklistCache.containsBannedSubstring('global_name', globalName)) {
+		throw new ContentBlockedError();
+	}
+	if (!username) return;
+	const accountIdentity = await deps.instanceConfigRepository.getAccountIdentity();
+	if (accountIdentity.tagStyle === TagStyles.NONE && (await isUsernameTaken(ctx.services.users, username))) {
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_ALREADY_TAKEN);
+	}
 }
 
 export async function resolveRegistrationUsername(params: {

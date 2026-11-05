@@ -26,6 +26,7 @@ type MessageCreateBroadcastData = MessageResponse & {
 	channel_type: Channel['type'];
 	nicks?: Record<string, string>;
 	mention_here?: true;
+	channel_nsfw?: true;
 };
 
 export async function buildBroadcastMessageData({
@@ -56,6 +57,7 @@ async function buildBroadcastMessageCreateData(
 		channel_type: params.channel.type,
 		...(groupDmNicks ? {nicks: groupDmNicks} : {}),
 		...(params.mentionHere ? {mention_here: true} : {}),
+		...(params.channel.type === ChannelTypes.GROUP_DM && params.channel.isNsfw ? {channel_nsfw: true} : {}),
 	};
 }
 

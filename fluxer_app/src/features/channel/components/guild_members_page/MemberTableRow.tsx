@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GuildMembersPage.module.css';
 import {VANITY_URL_DESCRIPTOR} from '@app/features/channel/components/guild_members_page/GuildMembersPageDescriptors';
 import {formatRecentOrFallback} from '@app/features/channel/components/guild_members_page/GuildMembersPageFormatting';
@@ -21,6 +22,7 @@ import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
+import {filterDisplayRoles} from '@fluxer/constants/src/RoleDisplayUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CrownIcon, DotsThreeVerticalIcon} from '@phosphor-icons/react';
@@ -96,10 +98,10 @@ export const MemberTableRow: React.FC<MemberTableRowProps> = observer(
 		const roles = Guilds.getGuildRoles(guildId);
 		const memberRoles = useMemo(() => {
 			const roleIds = member ? Array.from(member.roles) : data.roleIds;
-			return roleIds
-				.map((id) => roles.find((r) => r.id === id))
-				.filter((r): r is GuildRole => r != null)
-				.sort((a, b) => b.position - a.position);
+			return filterDisplayRoles(
+				roleIds.map((id) => roles.find((r) => r.id === id)).filter((r): r is GuildRole => r != null),
+				RuntimeConfig.hiddenRoleIds,
+			).sort((a, b) => b.position - a.position);
 		}, [member, data.roleIds, roles]);
 		const topRole = memberRoles[0];
 		const extraRolesCount = memberRoles.length - 1;

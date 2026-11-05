@@ -15,7 +15,10 @@ import {
 	isOperatorPassEntitled,
 	loadOperatorPassEntitlementState,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
-import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {
+	keepsOperatorsThroughVisionary,
+	type OperatorPassLabsRoleService,
+} from '@app/api/operator_pass/OperatorPassLabsRole';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -37,6 +40,12 @@ interface OperatorPassRemovalParams {
 	serious: boolean;
 	durationDays: number | null;
 	notifyUser: boolean;
+	dispute?: OperatorPassRemovalDispute | null;
+}
+
+interface OperatorPassRemovalDispute {
+	id: string;
+	deadline: Date;
 }
 
 function hasServedLimitedRemoval(history: ReadonlyArray<OperatorPassRemovalHistoryRow>, before: Date): boolean {
@@ -93,6 +102,7 @@ export class OperatorPassRemovalService {
 						rule: params.rule,
 						facts: params.facts,
 						replyBy: new Date(now.getTime() + OPERATOR_PASS_REMOVAL_NOTICE_PERIOD_MS),
+						visionary: keepsOperatorsThroughVisionary(params.user),
 					},
 					params.user.locale,
 				)
@@ -145,31 +155,81 @@ export class OperatorPassRemovalService {
 			ended_at: null,
 			end_reason: null,
 		});
-		await this.repository.saveRemoval(removal);
-		if (existing?.removal_state !== 'removed') {
-			await this.services.wallService.recordHidden(params.user.id, 'removal');
+		return this.applyRemoval(params.user, removal, existing, params.notifyUser, params.dispute ?? null);
+	}
+
+	async resumeRemoval(
+		user: User,
+		entry: OperatorPassRemovalHistoryRow,
+		notifyUser: boolean,
+		dispute: OperatorPassRemovalDispute | null = null,
+		existingEndReason: OperatorPassRemovalEndReason | null = 'replaced',
+	): Promise<OperatorPassRemovalResult> {
+		const existing = await this.repository.findRemoval(user.id);
+		if (
+			existingEndReason !== null &&
+			existing?.removal_state === 'removed' &&
+			existing.removed_at &&
+			existing.removed_at.getTime() !== entry.removed_at.getTime()
+		) {
+			await this.repository.endRemovalHistory(user.id, existing.removed_at, operatorPassNow(), existingEndReason);
 		}
-		await this.services.wallService.endBusinessListing(params.user.id);
-		await this.syncHolder(params.user.id);
+		const removal: OperatorPassRemovalRow = {
+			user_id: user.id,
+			removal_state: 'removed',
+			rule: entry.rule,
+			facts: entry.facts,
+			automated: entry.automated,
+			serious: entry.serious,
+			removed_until: entry.removed_until ?? null,
+			notice_sent_at: entry.notice_sent_at ?? null,
+			removed_at: entry.removed_at,
+			admin_user_id: entry.admin_user_id,
+			created_at: existing?.created_at ?? entry.removed_at,
+			updated_at: operatorPassNow(),
+			version: (existing?.version ?? 0) + 1,
+		};
+		return this.applyRemoval(user, removal, existing, notifyUser, dispute);
+	}
+
+	private async applyRemoval(
+		user: User,
+		removal: OperatorPassRemovalRow,
+		existing: OperatorPassRemovalRow | null,
+		notifyUser: boolean,
+		dispute: OperatorPassRemovalDispute | null,
+	): Promise<OperatorPassRemovalResult> {
+		const alreadySaved =
+			existing?.removal_state === 'removed' && existing.removed_at?.getTime() === removal.removed_at?.getTime();
+		if (!alreadySaved) {
+			await this.repository.saveRemoval(removal);
+		}
+		if (existing?.removal_state !== 'removed') {
+			await this.services.wallService.recordHidden(user.id, 'removal');
+		}
+		await this.services.wallService.endBusinessListing(user.id);
+		await this.syncHolder(user.id);
 		const notified =
-			params.notifyUser && params.user.email
+			notifyUser && user.email
 				? await this.emailService.send(
 						'operator_pass_perks_removed',
-						params.user.email,
+						user.email,
 						{
 							until: removal.removed_until ?? null,
-							rule: params.rule,
-							facts: params.facts,
-							automated: params.automated,
+							rule: removal.rule,
+							facts: removal.facts,
+							automated: removal.automated,
+							visionary: keepsOperatorsThroughVisionary(user),
+							dispute,
 						},
-						params.user.locale,
+						user.locale,
 					)
 				: false;
 		Logger.info(
-			{userId: params.user.id, permanent, removedUntil: removal.removed_until},
+			{userId: user.id, permanent: removal.removed_until == null, removedUntil: removal.removed_until},
 			'Removed Operator Pass perks under section 8',
 		);
-		return {removal, notified};
+		return {removal: alreadySaved && existing ? existing : removal, notified};
 	}
 
 	async restore(userId: UserID): Promise<boolean> {
@@ -182,7 +242,15 @@ export class OperatorPassRemovalService {
 			return false;
 		}
 		if (existing.removal_state === 'removed' && existing.removed_at) {
-			await this.repository.endRemovalHistory(userId, existing.removed_at, operatorPassNow(), reason);
+			const endedAt = operatorPassNow();
+			await this.repository.endRemovalHistory(userId, existing.removed_at, endedAt, reason);
+			const next = await this.findOpenRemoval(userId, endedAt);
+			const user = next ? await this.userRepository.findUnique(userId) : null;
+			if (next && user) {
+				await this.resumeRemoval(user, next, true, null, null);
+				Logger.info({userId, reason}, 'Ended an Operator Pass removal, and another open removal took its place');
+				return true;
+			}
 		}
 		await this.repository.deleteRemoval(userId);
 		if (existing.removal_state === 'removed') {
@@ -191,6 +259,16 @@ export class OperatorPassRemovalService {
 		await this.syncHolder(userId);
 		Logger.info({userId, state: existing.removal_state, reason}, 'Restored Operator Pass perks');
 		return true;
+	}
+
+	private async findOpenRemoval(userId: UserID, now: Date): Promise<OperatorPassRemovalHistoryRow | null> {
+		const history = await this.repository.listRemovalHistory(userId);
+		return (
+			history.findLast(
+				(entry) =>
+					entry.ended_at == null && (entry.removed_until == null || entry.removed_until.getTime() > now.getTime()),
+			) ?? null
+		);
 	}
 
 	async restoreExpired(): Promise<number> {
@@ -219,7 +297,7 @@ export class OperatorPassRemovalService {
 		const user = await this.userRepository.findUnique(userId);
 		const entitled =
 			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.repository, userId));
-		await this.roleService.syncOperatorRole(userId, entitled);
+		await this.roleService.syncLabsRoles(userId, user, entitled);
 		await dispatchOperatorPassUserUpdate(
 			{repository: this.repository, userRepository: this.userRepository, gatewayService: this.gatewayService},
 			userId,

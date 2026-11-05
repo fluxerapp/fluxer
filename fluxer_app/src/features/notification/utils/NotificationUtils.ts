@@ -9,6 +9,7 @@ import type {NotificationAlertOptions} from '@app/features/platform/notification
 import {getNotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {readBlobAsDataUrl as readBlobAsDataURL} from '@app/features/platform/utils/BlobDataUrl';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import Sound from '@app/features/ui/state/Sound';
@@ -99,7 +100,7 @@ async function resolveNativeNotificationIcon(icon: string | undefined): Promise<
 export function hasNotification(): boolean {
 	if (hasUnavailableElectronNativeContext()) return false;
 	if (isDesktop()) return true;
-	return typeof Notification !== 'undefined';
+	return typeof Notification !== 'undefined' && !isInsecureBrowserContext();
 }
 
 export function isMacOSDesktopNotification(): boolean {

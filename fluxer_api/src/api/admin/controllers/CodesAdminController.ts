@@ -14,6 +14,7 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {CodesResponse, GenerateGiftCodesRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {GiftCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 function trimTrailingSlash(value: string): string {
 	return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -64,6 +65,36 @@ export function CodesAdminController(app: HonoApp) {
 			return ctx.json({
 				codes: codes.map((code) => `${baseUrl}/${code}`),
 			});
+		},
+	);
+	app.delete(
+		'/admin/gift-codes/:code',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_CODE_GENERATION),
+		requireAdminACL(AdminACLs.GIFT_CODES_GENERATE),
+		Validator('param', GiftCodeParam),
+		OpenAPI({
+			operationId: 'revoke_admin_gift_code',
+			summary: 'Revoke gift code',
+			description:
+				'Revoke a gift code that nobody has redeemed, so it can no longer be redeemed. Pass the code, which is the last part of the redemption link. Returns 404 when the code is unknown or already revoked, and 400 when it was redeemed, in which case Remove user premium ends the premium it gave, or when a customer bought it. Creates audit log entry. Requires GIFT_CODES_GENERATE permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const giftCode = await ctx.get('adminService').codeGenerationService.revokeGiftCode(ctx.req.valid('param').code);
+			await recordAdminWrite(ctx, {
+				targetType: 'gift_code',
+				targetId: BigInt(0),
+				action: 'revoke_gift_code',
+				metadata: {
+					code: giftCode.code,
+					duration_type: giftCode.durationType,
+					duration_quantity: giftCode.durationQuantity.toString(),
+				},
+			});
+			return ctx.body(null, 204);
 		},
 	);
 }

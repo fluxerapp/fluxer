@@ -478,7 +478,7 @@ const APP_LOAD_FAILED_TITLE_DESCRIPTOR = msg({
 		'Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.',
 });
 const APP_LOAD_FAILED_MESSAGE_DESCRIPTOR = msg({
-	message: "{appName} can't reach its servers. It will keep trying in the background.",
+	message: "{appName} can't connect to its servers. It will keep trying in the background.",
 	comment:
 		'Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.',
 });

@@ -25,19 +25,29 @@ import {
 	loadOperatorPassEntitlementState,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {
-	getOperatorPassTransferLockEndsAt,
 	isOperatorPassOfferOpen,
 	OperatorPassHoldingQueryService,
 } from '@app/api/operator_pass/OperatorPassHoldingQueryService';
-import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {
+	keepsOperatorsThroughVisionary,
+	type LabsJoinStatus,
+	type OperatorPassLabsRoleService,
+} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {operatorPassPurchaseLockKey, withOperatorPassLock} from '@app/api/operator_pass/OperatorPassLocks';
 import {OPERATOR_PASS_WITHDRAWAL_RULE_VERSION} from '@app/api/operator_pass/OperatorPassPrices';
+import {
+	getOperatorPassPassId,
+	getOperatorPassUnitIndex,
+	listOperatorPassPassIds,
+} from '@app/api/operator_pass/OperatorPassPurchaseRules';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
+import {getOperatorPassVisionaryPassId} from '@app/api/operator_pass/OperatorPassVisionaryService';
 import type {OperatorPassWallChoice} from '@app/api/operator_pass/OperatorPassWallPresentation';
 import {invalidateOperatorPassPublicWall} from '@app/api/operator_pass/OperatorPassWallPublicationService';
 import type {OperatorPassWallService} from '@app/api/operator_pass/OperatorPassWallService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {OperatorPassLastPassConfirmationRequiredError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassLastPassConfirmationRequiredError';
 import {OperatorPassOfferUnavailableError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassOfferUnavailableError';
 import {OperatorPassPassNotTransferableError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassPassNotTransferableError';
@@ -49,6 +59,7 @@ import {UnknownOperatorPassOfferError} from '@fluxer/errors/src/domains/operator
 import {UnknownOperatorPassUnitError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassUnitError';
 import {InvalidDiscriminatorError} from '@fluxer/errors/src/domains/user/InvalidDiscriminatorError';
 import {NoUsersWithFluxertagError} from '@fluxer/errors/src/domains/user/NoUsersWithFluxertagError';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService, OperatorPassOfferEnd} from '@pkgs/email/src/IEmailService';
 import {OPERATOR_PASS_TERMS_VERSION} from '@pkgs/email/src/operator_pass_terms/OperatorPassTerms';
 import {ms} from 'itty-time';
@@ -131,11 +142,36 @@ function isTransferUnderway(
 
 export async function endOperatorPassesForDeletion(
 	repository: OperatorPassRepository,
+	cacheService: ICacheService,
 	userId: UserID,
 ): Promise<Array<UserID>> {
 	const now = operatorPassNow();
 	const buyers = new Set<UserID>();
-	for (const offer of await repository.listOffersByUser(userId)) {
+	for (const listed of await repository.listPurchasesByPurchaser(userId)) {
+		await withOperatorPassLock(
+			cacheService,
+			operatorPassPurchaseLockKey(listed.checkout_session_id),
+			async () => {
+				const purchase = (await repository.findPurchase(listed.checkout_session_id)) ?? listed;
+				const passIds = new Set(listOperatorPassPassIds(purchase));
+				for (const certificate of await repository.listCertificatesByPurchase(purchase.checkout_session_id)) {
+					passIds.add(certificate.pass_id);
+				}
+				for (const passId of passIds) {
+					await repository.clearCertificatePersonalData(passId);
+				}
+				if (purchase.certificate_names != null || purchase.wall_name != null) {
+					await repository.updatePurchase(purchase, {certificate_names: Db.clear(), wall_name: Db.clear()});
+				}
+			},
+			() => new Error(`Operator Pass purchase ${listed.checkout_session_id} is busy, so account deletion retries`),
+		);
+	}
+	for (const listed of await repository.listOffersByUser(userId)) {
+		let offer = listed;
+		if (offer.recipient_id === userId && offer.wall_name != null) {
+			offer = (await repository.updateOffer(offer, {wall_name: Db.clear()})) ?? offer;
+		}
 		if (!isOperatorPassOfferOpen(offer)) {
 			continue;
 		}
@@ -147,7 +183,13 @@ export async function endOperatorPassesForDeletion(
 			}
 			continue;
 		}
-		if (await repository.updateOffer(offer, {status: Db.set('cancelled'), ended_at: Db.set(now)})) {
+		if (
+			await repository.updateOffer(offer, {
+				status: Db.set('cancelled'),
+				ended_at: Db.set(now),
+				wall_name: Db.clear(),
+			})
+		) {
 			await appendUnitEvent(repository, offer.pass_id, now, {
 				kind: 'offer_cancelled',
 				offerId: offer.offer_id,
@@ -164,6 +206,20 @@ export async function endOperatorPassesForDeletion(
 		if (await revokeForDeletion(repository, unit, userId, now)) {
 			if (unit.buyer_id != null && unit.buyer_id !== userId) buyers.add(unit.buyer_id);
 		}
+	}
+	await repository.deleteLabsMember(userId);
+	const activation = await repository.findVisionaryActivation(userId);
+	if (activation) {
+		await repository.clearCertificatePersonalData(getOperatorPassVisionaryPassId(userId));
+		const ending = activation.activated_at != null && activation.ended_at == null;
+		await repository.updateVisionaryActivation(activation, {
+			terms_box_text: Db.clear(),
+			terms_version: Db.clear(),
+			age_confirmed_at: Db.clear(),
+			consent_ip: Db.clear(),
+			consent_user_agent: Db.clear(),
+			...(ending ? {ended_at: Db.set(now), end_reason: Db.set('deletion')} : {}),
+		});
 	}
 	return [...buyers];
 }
@@ -192,20 +248,51 @@ async function revokeForDeletion(
 	return true;
 }
 
-function operatorPassUnitIndex(passId: string): number {
-	const index = Number(passId.slice(passId.lastIndexOf(':') + 1));
-	return Number.isFinite(index) ? index : 0;
-}
-
 export class OperatorPassHoldingService {
 	readonly queries: OperatorPassHoldingQueryService;
 
 	constructor(private readonly deps: OperatorPassHoldingDependencies) {
-		this.queries = new OperatorPassHoldingQueryService(deps);
+		this.queries = new OperatorPassHoldingQueryService({
+			...deps,
+			isLabsMember: (userId) => deps.roleService.isLabsMember(userId),
+		});
 	}
 
 	private async appendEvent(passId: string, at: Date, event: OperatorPassUnitEventDraft): Promise<void> {
 		await appendUnitEvent(this.deps.repository, passId, at, event);
+	}
+
+	async updateLabsGreeting(user: User, greeting: boolean): Promise<void> {
+		await this.deps.repository.setLabsGreeting(user.id, greeting);
+		if (greeting) {
+			await this.deps.roleService.queueGreetingIfDue(user);
+		}
+		await this.dispatchPassesUpdate([user.id]);
+	}
+
+	async updateLabsOperatorsChannel(user: User, show: boolean): Promise<User> {
+		const current = (await this.deps.userRepository.findUnique(user.id)) ?? user;
+		const premiumFlags = show
+			? current.premiumFlags & ~PremiumFlags.OPERATORS_CHANNEL_HIDDEN
+			: current.premiumFlags | PremiumFlags.OPERATORS_CHANNEL_HIDDEN;
+		const updated =
+			premiumFlags === current.premiumFlags
+				? current
+				: await this.deps.userRepository.patchUpsert(current.id, {premium_flags: premiumFlags}, current.toRow());
+		await this.deps.roleService.resyncLabsRoles(updated);
+		if (show) {
+			await this.deps.roleService.queueGreetingIfDue(updated);
+		}
+		await this.dispatchPassesUpdate([updated.id]);
+		return updated;
+	}
+
+	async joinLabs(user: User): Promise<LabsJoinStatus> {
+		const status = await this.deps.roleService.joinFromCheckout(user);
+		if (status === 'joined') {
+			await this.dispatchPassesUpdate([user.id]);
+		}
+		return status;
 	}
 
 	async deliverPurchase(params: {
@@ -220,7 +307,7 @@ export class OperatorPassHoldingService {
 		const units: Array<OperatorPassUnitRow> = [];
 		for (let index = 1; index <= quantity; index++) {
 			const unit: OperatorPassUnitRow = {
-				pass_id: `${purchase.checkout_session_id}:${index}`,
+				pass_id: getOperatorPassPassId(purchase.checkout_session_id, index),
 				purchase_id: purchase.checkout_session_id,
 				buyer_id: buyer.id,
 				holder_id: buyer.id,
@@ -264,7 +351,7 @@ export class OperatorPassHoldingService {
 			deliveredAt,
 		});
 		await this.syncHolding(buyer.id, deliveredAt, purchase);
-		await this.deps.roleService.ensureOperatorRole(buyer.id);
+		await this.deps.roleService.deliver(buyer, purchase.labs_greeting ?? null);
 		return units;
 	}
 
@@ -285,12 +372,10 @@ export class OperatorPassHoldingService {
 			await this.syncRoleAndPresence(userId);
 			return null;
 		}
-		let source: OperatorPassUnitSource = 'admin';
-		if (held.some((unit) => unit.source === 'purchase')) {
-			source = 'purchase';
-		} else if (held.some((unit) => unit.source === 'transfer')) {
-			source = 'transfer';
-		}
+		const source: OperatorPassUnitSource =
+			(['purchase', 'transfer', 'visionary'] as const).find((candidate) =>
+				held.some((unit) => unit.source === candidate),
+			) ?? 'admin';
 		const ownPurchaseId = first.buyer_id === userId ? (first.purchase_id ?? null) : null;
 		let firstPurchase: OperatorPassPurchaseRow | null = null;
 		if (ownPurchaseId && ownPurchaseId === purchase?.checkout_session_id) {
@@ -368,7 +453,14 @@ export class OperatorPassHoldingService {
 		const holders = new Set<UserID>();
 		const held = (await this.deps.repository.listUnitsByPurchase(purchase.checkout_session_id))
 			.filter((unit) => unit.status === 'held' && (only === null || only.has(unit.pass_id)))
-			.sort((left, right) => operatorPassUnitIndex(right.pass_id) - operatorPassUnitIndex(left.pass_id))
+			.sort((left, right) => {
+				if (cause === 'refund') {
+					const buyerOrder =
+						Number(left.holder_id !== purchase.purchaser_id) - Number(right.holder_id !== purchase.purchaser_id);
+					if (buyerOrder !== 0) return buyerOrder;
+				}
+				return getOperatorPassUnitIndex(right.pass_id) - getOperatorPassUnitIndex(left.pass_id);
+			})
 			.slice(0, limit);
 		for (const unit of held) {
 			await this.endUnit(unit, status, cause, purchase.payment_intent_id ?? null);
@@ -452,10 +544,11 @@ export class OperatorPassHoldingService {
 			status: 'pending',
 			created_at: now,
 			accepted_at: null,
-			completes_at: getOperatorPassTransferLockEndsAt(purchase, unit),
+			completes_at: null,
 			ended_at: null,
 			wall_name: null,
 			wall_opt_out: null,
+			labs_greeting: null,
 			terms_version: null,
 			version: 1,
 		};
@@ -473,11 +566,7 @@ export class OperatorPassHoldingService {
 			await this.deps.emailService.send(
 				'operator_pass_offer_received',
 				recipient.email,
-				{
-					senderName: sender.globalName ?? sender.username,
-					arrivesAt: offer.completes_at,
-					timeZone: recipient.timezone,
-				},
+				{senderName: sender.globalName ?? sender.username},
 				recipient.locale,
 			);
 		}
@@ -532,6 +621,7 @@ export class OperatorPassHoldingService {
 		offerId: string;
 		acceptedTerms: boolean;
 		choice: OperatorPassWallChoice | null;
+		labsGreeting: boolean | null;
 	}): Promise<OperatorPassOfferRow> {
 		const {recipient, offerId} = params;
 		const offer = await this.queries.requireOffer(offerId);
@@ -558,6 +648,7 @@ export class OperatorPassHoldingService {
 			accepted_at: Db.set(now),
 			wall_name: Db.set(choice && !choice.optedOut ? choice.name : null),
 			wall_opt_out: Db.set(choice ? choice.optedOut : null),
+			labs_greeting: Db.set(params.labsGreeting),
 			terms_version: Db.set(OPERATOR_PASS_TERMS_VERSION),
 		});
 		if (!accepted) {
@@ -622,6 +713,7 @@ export class OperatorPassHoldingService {
 			const ended = await this.deps.repository.updateOffer(offer, {
 				status: Db.set('cancelled'),
 				ended_at: Db.set(operatorPassNow()),
+				wall_name: Db.clear(),
 			});
 			if (ended) {
 				await this.announceOfferEnded(ended, 'offer_cancelled', offer.recipient_id, 'cancelled');
@@ -654,9 +746,8 @@ export class OperatorPassHoldingService {
 			}
 			return this.endOffer(offer, 'cancelled', 'offer_cancelled', offer.recipient_id, 'cancelled');
 		}
-		const lockEndsAt = getOperatorPassTransferLockEndsAt(purchase, unit);
-		if (lockEndsAt.getTime() > now.getTime()) {
-			return offer;
+		if (!(await this.canReceivePass(offer.recipient_id))) {
+			return this.endOffer(offer, 'cancelled', 'offer_cancelled', offer.sender_id, 'unavailable');
 		}
 		const moved = await this.deps.repository.updateUnit(unit, {
 			holder_id: Db.set(offer.recipient_id),
@@ -670,6 +761,15 @@ export class OperatorPassHoldingService {
 			return stillOpen ? null : this.endOffer(offer, 'cancelled', 'offer_cancelled', offer.recipient_id, 'cancelled');
 		}
 		return this.finishTransfer(offer, moved, purchase, now);
+	}
+
+	private async canReceivePass(userId: UserID): Promise<boolean> {
+		const user = await this.deps.userRepository.findUnique(userId);
+		if (!user || user.isBot || (user.flags & UserFlags.DELETED) !== 0n || user.pendingDeletionAt) {
+			return false;
+		}
+		const state = await loadOperatorPassEntitlementState(this.deps.repository, userId);
+		return !isOperatorPassPermanentlyRemoved(state.removal);
 	}
 
 	private async finishTransfer(
@@ -710,18 +810,19 @@ export class OperatorPassHoldingService {
 		}
 		await wallService.deliver(delivery);
 		await this.syncHolding(offer.recipient_id, movedAt);
-		await this.deps.roleService.ensureOperatorRole(offer.recipient_id);
+		const recipient = await this.deps.userRepository.findUnique(offer.recipient_id);
+		if (recipient) {
+			await this.deps.roleService.deliver(recipient, offer.labs_greeting ?? null);
+		}
 		const completed = await this.deps.repository.updateOffer(offer, {
 			status: Db.set('completed'),
 			ended_at: Db.set(movedAt),
+			wall_name: Db.clear(),
 		});
 		if (!completed) {
 			return null;
 		}
-		const [sender, recipient] = await Promise.all([
-			this.deps.userRepository.findUnique(offer.sender_id),
-			this.deps.userRepository.findUnique(offer.recipient_id),
-		]);
+		const sender = await this.deps.userRepository.findUnique(offer.sender_id);
 		if (sender?.email) {
 			await this.deps.emailService.send(
 				'operator_pass_offer_accepted',
@@ -729,6 +830,7 @@ export class OperatorPassHoldingService {
 				{
 					recipientName: recipient ? (recipient.globalName ?? recipient.username) : '',
 					remainingCount: (await this.queries.listHeldUnits(offer.sender_id)).length,
+					visionary: keepsOperatorsThroughVisionary(sender),
 				},
 				sender.locale,
 			);
@@ -746,6 +848,7 @@ export class OperatorPassHoldingService {
 		const ended = await this.deps.repository.updateOffer(offer, {
 			status: Db.set(status),
 			ended_at: Db.set(operatorPassNow()),
+			wall_name: Db.clear(),
 		});
 		if (!ended) {
 			throw new OperatorPassOfferUnavailableError();
@@ -807,6 +910,42 @@ export class OperatorPassHoldingService {
 		});
 	}
 
+	async appendVisionaryEvents(passId: string, holderId: UserID, at: Date): Promise<void> {
+		await this.appendEvent(passId, at, {
+			kind: 'visionary_turned_on',
+			eventId: `${passId}-1-visionary_turned_on`,
+			recipientId: holderId,
+		});
+		await this.appendEvent(passId, at, {kind: 'delivered', eventId: `${passId}-2-delivered`, recipientId: holderId});
+	}
+
+	async endVisionaryUnit(holderId: UserID, passId: string): Promise<void> {
+		const unit = await this.deps.repository.findUnit(passId);
+		const held = unit?.status === 'held' && unit.source === 'visionary' && unit.holder_id === holderId ? unit : null;
+		if (held) {
+			await this.endUnit(held, 'revoked', 'visionary_ended', null);
+		}
+		await this.deps.repository.markCertificateCancelled(passId, operatorPassNow());
+		await this.afterHolderLostUnits(holderId, 'refund', null);
+		if (!held) {
+			return;
+		}
+		const holder = await this.deps.userRepository.findUnique(holderId);
+		if (!holder?.email || holder.emailBounced) {
+			return;
+		}
+		await this.deps.emailService.send(
+			'operator_pass_revoked',
+			holder.email,
+			{
+				cause: 'visionary',
+				lastPass: (await this.queries.listHeldUnits(holderId)).length === 0,
+				visionary: false,
+			},
+			holder.locale,
+		);
+	}
+
 	private async afterHolderLostUnits(
 		holderId: UserID,
 		cause: OperatorPassWallTakeDownCause,
@@ -829,6 +968,7 @@ export class OperatorPassHoldingService {
 			{
 				cause: cause === 'dispute' || cause === 'withdrawal' ? cause : 'refund',
 				lastPass: (await this.queries.listHeldUnits(holderId)).length === 0,
+				visionary: keepsOperatorsThroughVisionary(holder),
 			},
 			holder.locale,
 		);
@@ -838,7 +978,7 @@ export class OperatorPassHoldingService {
 		const user = await this.deps.userRepository.findUnique(userId);
 		const entitled =
 			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.deps.repository, userId));
-		await this.deps.roleService.syncOperatorRole(userId, entitled);
+		await this.deps.roleService.syncLabsRoles(userId, user, entitled);
 		await this.dispatchPassesUpdate([userId]);
 		await dispatchOperatorPassUserUpdate(
 			{

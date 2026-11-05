@@ -4,11 +4,17 @@ import {type ChannelID, createChannelID, createGuildID, createMessageID, createU
 import type {MessageRequest} from '@app/api/channel/MessageTypes';
 import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
 import {parseMultipartMessageData, readMessageJsonBody} from '@app/api/channel/services/message/MessageRequestParser';
+import {readMultipartStream} from '@app/api/channel/services/message/MultipartStreamReader';
 import type {ForumPostInput} from '@app/api/channel/services/thread/ThreadCreationService';
 import {ChannelThreadsRouteGuard} from '@app/api/channel/threads/ChannelThreadsRouteGuard';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {BotOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {
+	DEFAULT_REQUEST_BODY_LIMIT,
+	isMultipartFormData,
+	MultipartUploadRoute,
+} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
@@ -53,23 +59,28 @@ const EXPERIMENT = 'channel_threads';
 const TAGS = 'Channels';
 
 function isMultipart(ctx: Context<HonoEnv>): boolean {
-	return (ctx.req.header('content-type') ?? '').includes('multipart/form-data');
+	return isMultipartFormData(ctx.req.header('content-type'));
 }
 
 async function readPayloadJson(ctx: Context<HonoEnv>): Promise<unknown> {
-	let payloadJson: unknown;
-	try {
-		payloadJson = (await ctx.req.parseBody())['payload_json'];
-	} catch {
-		throw InputValidationError.fromCode('multipart_form', ValidationErrorCodes.FAILED_TO_PARSE_MULTIPART_FORM_DATA);
-	}
+	let payloadJson: string | undefined;
+	await readMultipartStream(ctx, {
+		maxFiles: 0,
+		maxFileSize: DEFAULT_REQUEST_BODY_LIMIT,
+		maxFieldBytes: DEFAULT_REQUEST_BODY_LIMIT,
+		onField(name, value) {
+			if (name === 'payload_json') payloadJson = value;
+		},
+		async onFile({stream}) {
+			stream.resume();
+		},
+	});
 	if (payloadJson === undefined) return {};
-	if (typeof payloadJson === 'string') {
-		try {
-			return parseJsonPreservingLargeIntegers(payloadJson);
-		} catch {}
+	try {
+		return parseJsonPreservingLargeIntegers(payloadJson);
+	} catch {
+		throw InputValidationError.fromCode('payload_json', ValidationErrorCodes.INVALID_JSON_IN_PAYLOAD_JSON);
 	}
-	throw InputValidationError.fromCode('payload_json', ValidationErrorCodes.INVALID_JSON_IN_PAYLOAD_JSON);
 }
 
 async function readJsonBody(ctx: Context<HonoEnv>): Promise<unknown> {
@@ -171,6 +182,7 @@ export function ThreadController(app: HonoApp) {
 	);
 	app.post(
 		'/channels/:channel_id/threads',
+		MultipartUploadRoute(),
 		ChannelThreadsRouteGuard(),
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_THREAD_CREATE),
 		LoginRequired,

@@ -91,6 +91,67 @@ fn safe_link(url: &str) -> Option<&str> {
     (url.starts_with("https://") || url.starts_with("http://")).then_some(url)
 }
 
+enum ContentPart<'a> {
+    Text(&'a str),
+    MaskedLink { label: &'a str, url: &'a str },
+}
+
+fn masked_link_at(text: &str) -> Option<(&str, &str, usize)> {
+    let rest = text.strip_prefix('[')?;
+    let label_end = rest.find(']')?;
+    let label = &rest[..label_end];
+    if label.is_empty() || label.contains('\n') || label.contains('[') {
+        return None;
+    }
+    let after = rest[label_end + 1..].strip_prefix('(')?;
+    let url_end = after.find(')')?;
+    let url = &after[..url_end];
+    if safe_link(url).is_none() || url.chars().any(char::is_whitespace) {
+        return None;
+    }
+    Some((label, url, 1 + label_end + 2 + url_end + 1))
+}
+
+fn content_parts(content: &str) -> Vec<ContentPart<'_>> {
+    let mut parts = Vec::new();
+    let mut text_start = 0;
+    let mut index = 0;
+    while let Some(offset) = content[index..].find('[') {
+        let start = index + offset;
+        match masked_link_at(&content[start..]) {
+            Some((label, url, len)) => {
+                if start > text_start {
+                    parts.push(ContentPart::Text(&content[text_start..start]));
+                }
+                parts.push(ContentPart::MaskedLink { label, url });
+                index = start + len;
+                text_start = index;
+            }
+            None => index = start + 1,
+        }
+    }
+    if text_start < content.len() {
+        parts.push(ContentPart::Text(&content[text_start..]));
+    }
+    parts
+}
+
+fn render_content(content: &str) -> Markup {
+    html! {
+        @for part in content_parts(content) {
+            @match part {
+                ContentPart::Text(text) => (text),
+                ContentPart::MaskedLink { label, url } => {
+                    a href=(url) target="_blank" rel="noopener noreferrer" title=(url)
+                        class="text-blue-600 hover:underline" data-masked-link="" { (label) }
+                    " "
+                    span class="text-neutral-500 text-xs break-all" data-masked-link-url="" { "(" (url) ")" }
+                },
+            }
+        }
+    }
+}
+
 fn render_embed_image(url: &str, alt: &str, class: &str) -> Markup {
     match safe_link(url) {
         Some(href) => html! {
@@ -286,7 +347,7 @@ fn message_row(
                 div class="min-w-0" style="grid-column:4;" {
                     @if !msg.content.is_empty() {
                         div class="whitespace-pre-wrap break-words text-neutral-800 \
-                                   text-sm leading-snug" { (msg.content) }
+                                   text-sm leading-snug" { (render_content(&msg.content)) }
                     }
                     @if !msg.attachments.is_empty() {
                         (render_image_attachments(msg, include_delete))
@@ -368,7 +429,7 @@ fn message_row(
                 }
                 @if !msg.content.is_empty() {
                     div class="mt-0.5 whitespace-pre-wrap break-words text-neutral-800 \
-                               text-sm leading-snug" { (msg.content) }
+                               text-sm leading-snug" { (render_content(&msg.content)) }
                 }
                 @if !msg.attachments.is_empty() {
                     (render_image_attachments(msg, include_delete))

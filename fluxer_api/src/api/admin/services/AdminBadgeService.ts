@@ -32,6 +32,8 @@ import {
 	type BuiltInBadgeKind,
 	CUSTOM_BADGE_PAGE_LIMIT_MAX,
 	type CustomBadgeType,
+	type HideableBuiltInBadgeKind,
+	isHideableBuiltInBadgeKind,
 } from '@fluxer/constants/src/BadgeConstants';
 import {MaxBadgesError} from '@fluxer/errors/src/domains/badge/MaxBadgesError';
 import {UnknownBadgeError} from '@fluxer/errors/src/domains/badge/UnknownBadgeError';
@@ -51,7 +53,10 @@ import type {UserMutationResponse} from '@fluxer/schema/src/domains/admin/AdminU
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 interface AdminBadgeServiceDeps {
-	instanceConfigRepository: Pick<InstanceConfigRepository, 'getBuiltInBadgeImages' | 'updateBuiltInBadgeImages'>;
+	instanceConfigRepository: Pick<
+		InstanceConfigRepository,
+		'getBuiltInBadgeImages' | 'updateBuiltInBadgeImages' | 'getHiddenBuiltInBadges' | 'setBuiltInBadgeHidden'
+	>;
 	catalog: CustomBadgeCatalog;
 	entityAssetService: EntityAssetService;
 	assetDeletionQueue: IAssetDeletionQueue;
@@ -76,13 +81,17 @@ function builtInBadgeAsset(kind: BuiltInBadgeKind): string | null {
 	return kind === 'staff' || kind === 'premium' ? PROFILE_BADGE_ASSETS[kind] : null;
 }
 
-function mapBuiltInBadgeImages(images: BuiltInBadgeImages): Array<AdminBuiltInBadgeImageResponse> {
+function mapBuiltInBadgeImages(
+	images: BuiltInBadgeImages,
+	hidden: ReadonlySet<HideableBuiltInBadgeKind>,
+): Array<AdminBuiltInBadgeImageResponse> {
 	return BUILT_IN_BADGE_KINDS.map((kind) => {
 		const asset = images[kind];
 		return {
 			kind,
 			asset_url: asset ? customBadgeImageUrl(asset, Config.endpoints.media) : null,
 			built_in_asset: builtInBadgeAsset(kind),
+			hidden: isHideableBuiltInBadgeKind(kind) && hidden.has(kind),
 		};
 	});
 }
@@ -131,17 +140,18 @@ export class AdminBadgeService {
 		if (query.ids !== undefined && (query.query !== undefined || query.after !== undefined)) {
 			throw InputValidationError.create('ids', 'Send ids without query and after');
 		}
-		const [page, state, builtIn] = await Promise.all([
+		const [page, state, builtIn, hiddenBuiltIn] = await Promise.all([
 			this.readListPage(query),
 			catalog.state(),
 			instanceConfigRepository.getBuiltInBadgeImages(),
+			instanceConfigRepository.getHiddenBuiltInBadges(),
 		]);
 		return {
 			badges: page.badges.map(mapCustomBadgeToAdminResponse),
 			next: page.next,
 			version: catalog.clientVersion(state.version),
 			settings: mapSettings(state),
-			built_in: mapBuiltInBadgeImages(builtIn),
+			built_in: mapBuiltInBadgeImages(builtIn, hiddenBuiltIn),
 		};
 	}
 
@@ -182,6 +192,11 @@ export class AdminBadgeService {
 		if (replaced.asset) {
 			await this.releaseAsset(replaced.asset);
 		}
+		return this.firstPage();
+	}
+
+	async setBuiltInBadgeHidden(kind: HideableBuiltInBadgeKind, hidden: boolean): Promise<AdminCustomBadgeListResponse> {
+		await this.deps.instanceConfigRepository.setBuiltInBadgeHidden(kind, hidden);
 		return this.firstPage();
 	}
 

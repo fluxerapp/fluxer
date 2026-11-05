@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GracePeriodInfo} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
-import styles from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard.module.css';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {PlutoniumPageButton} from '@app/features/premium/components/plutonium_page/PlutoniumPageButton';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import type {GracePeriodInfo} from '@app/features/premium/utils/SubscriptionStatus';
+import {Button} from '@app/features/ui/button/Button';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import type {PendingSubscriptionChangeResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
@@ -110,15 +109,14 @@ export const SubscriptionActions = observer(
 			);
 		if (storeSubscription) {
 			return (
-				<PlutoniumPageButton
+				<Button
 					variant={isInGracePeriod || premiumWillCancel ? 'primary' : 'secondary'}
 					onClick={() => void openExternalUrl(storeSubscription.manage_url)}
 					small
-					className={styles.actionButton}
 					data-flx="app.plutonium.subscription-card.action-button.open-store-subscription"
 				>
 					{i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
-				</PlutoniumPageButton>
+				</Button>
 			);
 		}
 		if (isGiftSubscription || isGiftGrace || billingUnavailable) {
@@ -127,40 +125,37 @@ export const SubscriptionActions = observer(
 					{canSubscribe &&
 						!billingUnavailable &&
 						wrapIfDisabled(
-							<PlutoniumPageButton
+							<Button
 								variant="primary"
 								onClick={handleStartSubscription}
 								small
-								className={styles.actionButton}
 								disabled={purchaseDisabled}
 								data-flx="app.plutonium.subscription-card.action-button.start-subscription"
 							>
 								<Trans comment="Billing button that starts a recurring subscription for someone on gifted premium time.">
 									Subscribe
 								</Trans>
-							</PlutoniumPageButton>,
+							</Button>,
 							{key: 'start-subscription', disabled: purchaseDisabled},
 						)}
-					<PlutoniumPageButton
+					<Button
 						variant={canSubscribe && !billingUnavailable ? 'secondary' : 'primary'}
 						onClick={navigateToRedeemGift}
 						small
-						className={styles.actionButton}
 						data-flx="app.plutonium.subscription-card.action-button.navigate-to-redeem-gift"
 					>
 						<Trans comment="Billing button for entering a premium gift code.">Redeem gift code</Trans>
-					</PlutoniumPageButton>
+					</Button>
 				</>
 			);
 		}
 		let primaryAction: ReactNode = false;
 		if ((isFullyExpired || isInGracePeriod) && canSubscribe) {
 			primaryAction = wrapIfDisabled(
-				<PlutoniumPageButton
+				<Button
 					variant="primary"
 					onClick={handleStartSubscription}
 					small
-					className={styles.actionButton}
 					disabled={purchaseDisabled}
 					data-flx="app.plutonium.subscription-card.action-button.resubscribe"
 				>
@@ -171,7 +166,7 @@ export const SubscriptionActions = observer(
 							Subscribe
 						</Trans>
 					)}
-				</PlutoniumPageButton>,
+				</Button>,
 				{key: 'resubscribe', disabled: purchaseDisabled},
 			);
 		} else if (hasEverPurchased) {
@@ -194,31 +189,29 @@ export const SubscriptionActions = observer(
 				manageLabel = i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR);
 			}
 			primaryAction = wrapIfDisabled(
-				<PlutoniumPageButton
+				<Button
 					variant={isFullyExpired || isInGracePeriod || premiumWillCancel ? 'primary' : 'secondary'}
 					onClick={shouldUseReactivateQuickAction ? handleReactivateSubscription : handleOpenCustomerPortal}
-					loading={shouldUseReactivateQuickAction ? loadingReactivate : loadingPortal}
+					submitting={shouldUseReactivateQuickAction ? loadingReactivate : loadingPortal}
 					small
-					className={styles.actionButton}
 					disabled={purchaseDisabled && shouldUseReactivateQuickAction}
 					data-flx="app.plutonium.subscription-card.action-button.reactivate-subscription"
 				>
 					{manageLabel}
-				</PlutoniumPageButton>,
+				</Button>,
 				{key: 'manage-reactivate', disabled: purchaseDisabled && shouldUseReactivateQuickAction},
 			);
 		}
 		const communityAction = isVisionary && (
-			<PlutoniumPageButton
+			<Button
 				variant="secondary"
 				onClick={handleCommunityButtonClick}
-				loading={loadingRejoinCommunity}
+				submitting={loadingRejoinCommunity}
 				small
-				className={styles.actionButton}
 				data-flx="app.plutonium.subscription-card.action-button.community-button-click"
 			>
 				{i18n._(JOIN_COMMUNITY_DESCRIPTOR)}
-			</PlutoniumPageButton>
+			</Button>
 		);
 		const changePlanAction =
 			shouldUseChangePlanQuickAction &&
@@ -226,12 +219,11 @@ export const SubscriptionActions = observer(
 			!hasPendingSubscriptionChange &&
 			!hasPendingListPriceSwitch &&
 			wrapIfDisabled(
-				<PlutoniumPageButton
+				<Button
 					variant="secondary"
 					onClick={() => handleConfirmBillingCycleChange(targetBillingCycle)}
-					loading={loadingChangeBillingCycle === targetBillingCycle}
+					submitting={loadingChangeBillingCycle === targetBillingCycle}
 					small
-					className={styles.actionButton}
 					disabled={purchaseDisabled}
 					data-flx="app.plutonium.subscription-card.action-button.confirm-billing-cycle-change"
 				>
@@ -244,22 +236,21 @@ export const SubscriptionActions = observer(
 							Switch to monthly
 						</Trans>
 					)}
-				</PlutoniumPageButton>,
+				</Button>,
 				{key: 'change-plan', disabled: purchaseDisabled},
 			);
 		const listPriceAction = canSwitchToListPrice && listPriceNewLabel && (
-			<PlutoniumPageButton
+			<Button
 				variant="secondary"
 				onClick={handleConfirmSwitchToListPrice}
-				loading={loadingSwitchToListPrice}
+				submitting={loadingSwitchToListPrice}
 				small
-				className={styles.actionButton}
 				data-flx="app.plutonium.subscription-card.action-button.confirm-switch-to-list-price"
 			>
 				<Trans comment="Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.">
 					Switch to {listPriceNewLabel}
 				</Trans>
-			</PlutoniumPageButton>
+			</Button>
 		);
 		let cancelPendingAction: ReactNode = false;
 		if (hasPendingSubscriptionChange || hasPendingListPriceSwitch) {
@@ -280,16 +271,15 @@ export const SubscriptionActions = observer(
 				);
 			}
 			cancelPendingAction = (
-				<PlutoniumPageButton
+				<Button
 					variant="secondary"
 					onClick={handleCancelPendingSubscriptionChange}
-					loading={loadingCancelPendingChange}
+					submitting={loadingCancelPendingChange}
 					small
-					className={styles.actionButton}
 					data-flx="app.plutonium.subscription-card.action-button.cancel-pending-subscription-change"
 				>
 					{cancelLabel}
-				</PlutoniumPageButton>
+				</Button>
 			);
 		}
 		return (
@@ -300,28 +290,26 @@ export const SubscriptionActions = observer(
 				{listPriceAction}
 				{cancelPendingAction}
 				{shouldUseCancelQuickAction && (
-					<PlutoniumPageButton
+					<Button
 						variant="danger"
 						onClick={handleCancelSubscription}
-						loading={loadingCancel}
+						submitting={loadingCancel}
 						small
-						className={styles.actionButton}
 						data-flx="app.plutonium.subscription-card.action-button.cancel-subscription"
 					>
 						<Trans comment="Billing button that starts subscription cancellation.">Cancel subscription</Trans>
-					</PlutoniumPageButton>
+					</Button>
 				)}
 				{isInGracePeriod && !gracePeriodInfo.isPaymentRecovery && (
-					<PlutoniumPageButton
+					<Button
 						variant="danger"
 						onClick={handleEndPremiumGracePeriod}
-						loading={loadingEndGrace}
+						submitting={loadingEndGrace}
 						small
-						className={styles.actionButton}
 						data-flx="app.plutonium.subscription-card.action-button.end-premium-grace-period"
 					>
 						<Trans comment="Billing button that ends premium grace period immediately.">End grace now</Trans>
-					</PlutoniumPageButton>
+					</Button>
 				)}
 			</>
 		);

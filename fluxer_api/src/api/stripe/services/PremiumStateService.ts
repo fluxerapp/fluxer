@@ -2,6 +2,8 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {mapBillingDocument} from '@app/api/billing_documents/BillingDocumentMappers';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
 import {Config} from '@app/api/Config';
 import type {
 	BillingInvoiceRow,
@@ -34,6 +36,7 @@ import {getPrimarySubscriptionItem, loadSubscriptionSchedule} from '@app/api/str
 import {extractId} from '@app/api/stripe/StripeUtils';
 import {
 	buildRefundEligibility,
+	combinedRefundTarget,
 	googlePlayRefundEligibilityTarget,
 	latestRefundTarget,
 	type RefundEligibilityTarget,
@@ -51,7 +54,6 @@ import type {
 	ListPriceSwitchState,
 	PendingSubscriptionChangeKind,
 	PendingSubscriptionChangeResponse,
-	PremiumBillingInvoiceResponse,
 	PremiumBillingPaymentMethodResponse,
 	PremiumBillingSubscriptionResponse,
 	PremiumPricingState,
@@ -64,6 +66,7 @@ import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
 
 const INVOICE_LIMIT = 12;
+const DOCUMENT_LIST_LIMIT = 50;
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
 const RELEVANT_SUBSCRIPTION_STATUSES = new Set(['past_due', 'unpaid', 'incomplete']);
 const REFUND_BLOCKING_STATUSES = new Set(['pending', 'succeeded', 'requires_action']);
@@ -175,23 +178,6 @@ function resolveSubscriptionProvider(
 	return stripeEnd ? 'stripe' : null;
 }
 
-function mapInvoice(row: BillingInvoiceRow): PremiumBillingInvoiceResponse {
-	return {
-		id: row.provider_id,
-		number: row.number ?? null,
-		amount_due: toNumber(row.amount_due),
-		amount_paid: toNumber(row.amount_paid),
-		currency: row.currency ?? 'usd',
-		status: row.status ?? null,
-		created_at: toIsoOrNull(row.stripe_created_at),
-		paid_at: toIsoOrNull(row.paid_at),
-		billing_reason: row.billing_reason ?? null,
-		subscription_id: row.subscription_id ?? null,
-		hosted_invoice_url: row.hosted_invoice_url ?? null,
-		invoice_pdf: row.invoice_pdf ?? null,
-	};
-}
-
 function mapPaymentMethod(row: BillingPaymentMethodRow): PremiumBillingPaymentMethodResponse {
 	return {
 		id: row.provider_id,
@@ -300,8 +286,11 @@ export class PremiumStateService {
 				pending_subscription_change: pendingBillingCycleChange,
 				list_price_switch: listPriceSwitch,
 				subscription: subscription ? await this.mapSubscription(subscription) : null,
-				invoices: invoices.rows.map(mapInvoice),
-				invoices_has_more: invoices.hasMore,
+				documents: Config.instance.selfHosted
+					? []
+					: (await new BillingDocumentRepository().listUserDocuments(user.id, null, DOCUMENT_LIST_LIMIT)).map(
+							mapBillingDocument,
+						),
 				payment_methods: paymentMethods.map(mapPaymentMethod),
 				refund_eligibility: refundEligibilityState,
 			},
@@ -831,6 +820,7 @@ export class PremiumStateService {
 
 	private async resolveStripeRefundTarget(invoices: Array<BillingInvoiceRow>): Promise<RefundEligibilityTarget | null> {
 		const paidInvoices = invoices.filter((invoice) => invoice.status === 'paid' && toNumber(invoice.amount_paid) > 0);
+		const targets: Array<RefundEligibilityTarget> = [];
 		for (const invoice of paidInvoices) {
 			if (await this.invoiceHasBlockingRefund(invoice)) {
 				continue;
@@ -839,16 +829,17 @@ export class PremiumStateService {
 			if (!paidAt) {
 				continue;
 			}
-			return {
+			targets.push({
 				provider: 'stripe',
 				invoiceId: invoice.provider_id,
 				amountPaidCents: nullableNumber(invoice.amount_paid),
 				currency: invoice.currency,
 				paidAt,
 				subscriptionId: invoice.subscription_id,
-			};
+			});
 		}
-		return null;
+		const latest = latestRefundTarget(...targets);
+		return latest ? combinedRefundTarget(latest, targets) : null;
 	}
 
 	private async resolveGooglePlayRefundTarget(

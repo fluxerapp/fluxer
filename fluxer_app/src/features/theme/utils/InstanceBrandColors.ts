@@ -306,3 +306,60 @@ export function getInstanceBrandVariables(
 		'--instance-text-on-brand-tint': tint.text.css,
 	};
 }
+
+export const PREMIUM_PAGE_STOPS = {
+	'--pl-indigo-0': '#ffffff',
+	'--pl-indigo-1': '#e3e2ff',
+	'--pl-indigo-2': '#c9c7ff',
+	'--pl-indigo-3': '#b0adff',
+	'--pl-indigo-8': '#5352df',
+	'--pl-indigo-9': '#4641d9',
+	'--pl-indigo-10': '#3d38c6',
+	'--pl-indigo-11': '#3530b4',
+	'--pl-indigo-12': '#2e29a4',
+	'--pl-indigo-13': '#282394',
+	'--pl-indigo-14': '#231e84',
+	'--pl-indigo-15': '#1f1b76',
+	'--pl-indigo-16': '#1c1865',
+	'--pl-indigo-17': '#1b1754',
+	'--pl-indigo-21': '#0f0d2d',
+	'--pl-indigo-23': '#0b0921',
+	'--pl-layout-face': '#0a0822',
+} as const;
+
+export type PremiumPageVariable = keyof typeof PREMIUM_PAGE_STOPS;
+
+const PREMIUM_PAGE_MID_LUMINANCE = 0.18;
+
+const PREMIUM_PAGE_STOP_LUMINANCE = Object.entries(PREMIUM_PAGE_STOPS).map(
+	([name, stop]) => [name as PremiumPageVariable, relativeLuminance(parseHexColor(stop) ?? BLACK)] as const,
+);
+
+function toHex(rgb: Rgb): string {
+	return `#${rgb.map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`;
+}
+
+function matchLuminance(hue: number, saturation: number, target: number): Rgb {
+	let low = 0;
+	let high = 100;
+	for (let step = 0; step < 32; step++) {
+		const middle = (low + high) / 2;
+		if (relativeLuminance(hslToRgb(hue, saturation, middle)) < target) {
+			low = middle;
+		} else {
+			high = middle;
+		}
+	}
+	return hslToRgb(hue, saturation, target >= PREMIUM_PAGE_MID_LUMINANCE ? high : low);
+}
+
+export function getPremiumPageVariables(color: string | null): Record<PremiumPageVariable, string> | null {
+	const rgb = color === null ? null : parseHexColor(color);
+	if (rgb === null) return null;
+	const {hue, saturation} = rgbToHsl(rgb);
+	const variables = {} as Record<PremiumPageVariable, string>;
+	for (const [name, luminance] of PREMIUM_PAGE_STOP_LUMINANCE) {
+		variables[name] = toHex(matchLuminance(hue, saturation, luminance));
+	}
+	return variables;
+}

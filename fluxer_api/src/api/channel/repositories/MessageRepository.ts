@@ -51,15 +51,16 @@ export class MessageRepository {
 	}
 
 	async upsertMessage(data: MessageRow, oldData?: MessageRow | null, opts?: UpsertMessageOptions): Promise<Message> {
-		const message = await this.dataRepo.upsertMessage(data, oldData);
-		if (!oldData && !opts?.skipParentLastMessageId) {
-			await this.channelDataRepo.updateLastMessageId(
+		if (oldData || opts?.skipParentLastMessageId) {
+			return this.dataRepo.upsertMessage(data, oldData);
+		}
+		return this.dataRepo.upsertMessage(data, oldData, () =>
+			this.channelDataRepo.updateLastMessageId(
 				data.channel_id,
 				data.message_id,
 				opts?.isInsert ? {isInsert: true} : undefined,
-			);
-		}
-		return message;
+			),
+		);
 	}
 
 	async deleteMessage(

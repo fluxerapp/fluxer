@@ -27,6 +27,7 @@ export type {
 	InstanceFeatures,
 	InstanceGif,
 	InstanceGuildBadge,
+	InstanceHiddenBuiltInGuildBadges,
 	InstanceNotice,
 	InstancePush,
 	InstanceRegistration,

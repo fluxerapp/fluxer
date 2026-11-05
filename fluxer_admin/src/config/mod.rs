@@ -27,6 +27,17 @@ pub struct AdminConfig {
     pub build_version: String,
     pub self_hosted: bool,
     pub proxy: ProxyConfig,
+    pub sso: Option<SsoConfig>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SsoConfig {
+    pub issuer: String,
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_uri: String,
+    pub display_name: Option<String>,
+    pub only: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -46,6 +57,7 @@ impl AdminConfig {
             "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
             &format!("{admin_endpoint}/oauth2_callback"),
         ));
+        let sso = sso_config_from_env(&admin_endpoint)?;
         let secret_key_base = read_env("FLUXER_ADMIN_SECRET_KEY_BASE", "");
         anyhow::ensure!(
             !secret_key_base.trim().is_empty(),
@@ -97,6 +109,7 @@ impl AdminConfig {
                     .trim()
                     .to_ascii_lowercase(),
             },
+            sso,
         })
     }
 
@@ -146,6 +159,38 @@ impl AdminConfig {
         let origin = origin.ascii_serialization();
         self.admin_origin().as_ref() == Some(&origin) || self.image_origins().contains(&origin)
     }
+}
+
+fn sso_config_from_env(admin_endpoint: &str) -> anyhow::Result<Option<SsoConfig>> {
+    let issuer =
+        env_value("FLUXER_ADMIN_SSO_ISSUER").map(|value| trim_trailing_slash(value.trim()));
+    let client_id = env_value("FLUXER_ADMIN_SSO_CLIENT_ID");
+    let client_secret = env_value("FLUXER_ADMIN_SSO_CLIENT_SECRET");
+    let only = read_bool_env("FLUXER_ADMIN_SSO_ONLY", false);
+    let (issuer, client_id, client_secret) = match (issuer, client_id, client_secret) {
+        (Some(issuer), Some(client_id), Some(client_secret)) => (issuer, client_id, client_secret),
+        (None, None, None) if only => anyhow::bail!(
+            "FLUXER_ADMIN_SSO_ONLY needs FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET"
+        ),
+        (None, None, None) => return Ok(None),
+        _ => anyhow::bail!(
+            "set FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET together, or none of them"
+        ),
+    };
+    crate::sso::validate_issuer_url(&issuer)?;
+    let redirect_uri = normalize_public_endpoint_from_env(&read_env(
+        "FLUXER_ADMIN_SSO_REDIRECT_URI",
+        &format!("{admin_endpoint}/sso/callback"),
+    ));
+    Ok(Some(SsoConfig {
+        issuer,
+        client_id: client_id.trim().to_owned(),
+        client_secret,
+        redirect_uri,
+        display_name: env_value("FLUXER_ADMIN_SSO_DISPLAY_NAME")
+            .map(|value| value.trim().to_owned()),
+        only,
+    }))
 }
 
 fn endpoint_origin(endpoint: &str) -> Option<String> {

@@ -107,7 +107,7 @@ const FAILED_TO_UPLOAD_BACKGROUND_IMAGE_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	comment: 'Error message in the background image gallery modal.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_OF_BACKGROUNDS_REMOVE_DESCRIPTOR = msg({
-	message: "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background.",
+	message: "You can't have more than {maxBackgroundImages} backgrounds. Remove one to add a new background.",
 	comment:
 		'Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.',
 });

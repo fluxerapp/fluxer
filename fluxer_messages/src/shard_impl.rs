@@ -3105,6 +3105,10 @@ fn own_attachment_key(input_url: &str, media_endpoint: &str) -> Option<(String, 
     if !path.starts_with("/attachments/") {
         return None;
     }
+    let parsed_url = Url::parse(input_url).ok()?;
+    if !fluxer_common::external_media_path::is_own_media_url(media_endpoint, &parsed_url) {
+        return None;
+    }
     let storage_key = fluxer_common::attachment_url_signature::decode_key(path)?;
     let attachment_id = attachment_key_id(&storage_key)?;
     Some((storage_key, attachment_id))

@@ -238,6 +238,8 @@ where
             nsfw_ms,
             reason = code,
             source = %source,
+            referer = referer.as_deref().unwrap_or(""),
+            user_agent = user_agent.as_deref().unwrap_or(""),
             "request rejected"
         ),
     }

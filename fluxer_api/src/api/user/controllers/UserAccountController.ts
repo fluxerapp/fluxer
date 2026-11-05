@@ -69,6 +69,7 @@ import {
 	RegisterMobileDeviceRequest,
 	SubscriptionIdParam,
 	UnregisterMobileDeviceRequest,
+	UserAccountDeleteRequest,
 	UserGuildSettingsUpdateRequest,
 	UserNoteUpdateRequest,
 	UserPasswordUpdateRequest,
@@ -91,6 +92,7 @@ import {
 	PushSubscribeResponse,
 	PushSubscriptionsListResponse,
 	RegisterMobileDeviceResponse,
+	UserAccountDeleteResponse,
 	UserGuildSettingsResponse,
 	UserNoteResponse,
 	UserNotesRecordResponse,
@@ -951,24 +953,27 @@ export function UserAccountController(app: HonoApp) {
 		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
-		Validator('json', SudoVerificationSchema),
+		Validator('json', UserAccountDeleteRequest),
 		OpenAPI({
 			operationId: 'delete_current_user_account',
 			summary: 'Delete current user account',
-			responseSchema: null,
-			statusCode: 204,
+			responseSchema: UserAccountDeleteResponse,
+			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				"Permanently deletes the current user's account and all associated data. Requires sudo mode verification. This action is irreversible and will remove all user data, messages, and connections.",
+				"Schedules the deletion of the current user's account and personal data after the instance's grace period, or right away when immediate is true. Signing in before the deletion runs cancels it. Messages the account sent are anonymized unless delete_messages is true, in which case they are deleted with the account. Requires sudo mode verification. The response has the time the deletion runs.",
 		}),
 		async (ctx) => {
 			const userService = ctx.get('userService');
 			const user = ctx.get('user');
 			const body = ctx.req.valid('json');
 			await requireSudoMode(ctx, user, body);
-			await userService.accountService.lifecycleService.selfDelete(user.id);
-			return ctx.body(null, 204);
+			const pendingDeletionAt = await userService.accountService.lifecycleService.selfDelete(user.id, {
+				immediate: body.immediate === true,
+				deleteMessages: body.delete_messages === true,
+			});
+			return ctx.json({pending_deletion_at: pendingDeletionAt.toISOString()}, 200);
 		},
 	);
 	app.post(

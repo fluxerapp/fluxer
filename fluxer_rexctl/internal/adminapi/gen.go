@@ -178,7 +178,6 @@ const (
 	MessageDeleteAll              AdminAclType = "message:delete_all"
 	MessageLookup                 AdminAclType = "message:lookup"
 	MessageShred                  AdminAclType = "message:shred"
-	OperatorPassWaitlistStats     AdminAclType = "operator_pass:waitlist_stats"
 	RegistrationReview            AdminAclType = "registration:review"
 	ReportDelete                  AdminAclType = "report:delete"
 	ReportResolve                 AdminAclType = "report:resolve"
@@ -379,8 +378,6 @@ func (e AdminAclType) Valid() bool {
 		return true
 	case MessageShred:
 		return true
-	case OperatorPassWaitlistStats:
-		return true
 	case RegistrationReview:
 		return true
 	case ReportDelete:
@@ -488,13 +485,17 @@ func (e BillingCatalogModeSchema) Valid() bool {
 
 // Defines values for BrandingAssetUploadRequestKind.
 const (
-	Favicon        BrandingAssetUploadRequestKind = "favicon"
-	FaviconDark    BrandingAssetUploadRequestKind = "favicon_dark"
-	Icon           BrandingAssetUploadRequestKind = "icon"
-	Logo           BrandingAssetUploadRequestKind = "logo"
-	SignInBackdrop BrandingAssetUploadRequestKind = "sign_in_backdrop"
-	Symbol         BrandingAssetUploadRequestKind = "symbol"
-	Wordmark       BrandingAssetUploadRequestKind = "wordmark"
+	Favicon                    BrandingAssetUploadRequestKind = "favicon"
+	FaviconDark                BrandingAssetUploadRequestKind = "favicon_dark"
+	Icon                       BrandingAssetUploadRequestKind = "icon"
+	Logo                       BrandingAssetUploadRequestKind = "logo"
+	PremiumShowcaseExpressions BrandingAssetUploadRequestKind = "premium_showcase_expressions"
+	PremiumShowcaseProfile     BrandingAssetUploadRequestKind = "premium_showcase_profile"
+	PremiumShowcaseStream      BrandingAssetUploadRequestKind = "premium_showcase_stream"
+	PremiumShowcaseUpload      BrandingAssetUploadRequestKind = "premium_showcase_upload"
+	SignInBackdrop             BrandingAssetUploadRequestKind = "sign_in_backdrop"
+	Symbol                     BrandingAssetUploadRequestKind = "symbol"
+	Wordmark                   BrandingAssetUploadRequestKind = "wordmark"
 )
 
 // Valid indicates whether the value is a known member of the BrandingAssetUploadRequestKind enum.
@@ -507,6 +508,14 @@ func (e BrandingAssetUploadRequestKind) Valid() bool {
 	case Icon:
 		return true
 	case Logo:
+		return true
+	case PremiumShowcaseExpressions:
+		return true
+	case PremiumShowcaseProfile:
+		return true
+	case PremiumShowcaseStream:
+		return true
+	case PremiumShowcaseUpload:
 		return true
 	case SignInBackdrop:
 		return true
@@ -1241,11 +1250,12 @@ func (e InstanceRegistrationModeSchema) Valid() bool {
 
 // Defines values for InstantAccountAvailabilitySchema.
 const (
-	APPROVALREQUIRED   InstantAccountAvailabilitySchema = "approval_required"
-	AVAILABLE          InstantAccountAvailabilitySchema = "available"
-	CAPTCHAOFF         InstantAccountAvailabilitySchema = "captcha_off"
-	DISABLED           InstantAccountAvailabilitySchema = "disabled"
-	REGISTRATIONCLOSED InstantAccountAvailabilitySchema = "registration_closed"
+	APPROVALREQUIRED       InstantAccountAvailabilitySchema = "approval_required"
+	AVAILABLE              InstantAccountAvailabilitySchema = "available"
+	CAPTCHAOFF             InstantAccountAvailabilitySchema = "captcha_off"
+	DISABLED               InstantAccountAvailabilitySchema = "disabled"
+	EMAILDOMAINSRESTRICTED InstantAccountAvailabilitySchema = "email_domains_restricted"
+	REGISTRATIONCLOSED     InstantAccountAvailabilitySchema = "registration_closed"
 )
 
 // Valid indicates whether the value is a known member of the InstantAccountAvailabilitySchema enum.
@@ -1258,6 +1268,8 @@ func (e InstantAccountAvailabilitySchema) Valid() bool {
 	case CAPTCHAOFF:
 		return true
 	case DISABLED:
+		return true
+	case EMAILDOMAINSRESTRICTED:
 		return true
 	case REGISTRATIONCLOSED:
 		return true
@@ -1606,6 +1618,9 @@ type AdminProfileBadgeResponse struct {
 	// Label Full badge description, localized for the viewer. Use it as the tooltip, and as alt text when there is no caption
 	Label string `json:"label"`
 
+	// Quote The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it
+	Quote *string `json:"quote,omitempty"`
+
 	// SmallAsset Image hash drawn for 20 pixels and smaller, served like asset. Use it instead of asset at those sizes. Absent when asset reads well small
 	SmallAsset *HexString16Type `json:"small_asset,omitempty"`
 
@@ -1636,7 +1651,7 @@ type AdminUserBanRequest struct {
 	// DurationHours Duration of the suspension in hours. Use 0 for a permanent suspension
 	DurationHours int `json:"duration_hours"`
 
-	// RemoveEvidence Remove the evidence messages after they are snapshotted into the decision
+	// RemoveEvidence Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept
 	RemoveEvidence *bool `json:"remove_evidence,omitempty"`
 }
 
@@ -1670,7 +1685,7 @@ type AdminUserDeletionScheduleRequest struct {
 	// Immediate Self-hosted instances only. Delete the account now instead of after days_until_deletion, with no notice email. This cannot be undone
 	Immediate *bool `json:"immediate,omitempty"`
 
-	// RemoveEvidence Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only
+	// RemoveEvidence Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept. Enforcement basis only
 	RemoveEvidence *bool `json:"remove_evidence,omitempty"`
 
 	// ReplacePendingDeletionAt pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account
@@ -2239,22 +2254,27 @@ type InstanceConfigResponse struct {
 	Accounts  AccountsConfigSchema `json:"accounts"`
 	AppPublic struct {
 		Branding struct {
-			CustomCss                    *string  `json:"custom_css"`
-			FaviconDarkUrl               *string  `json:"favicon_dark_url"`
-			FaviconUrl                   *string  `json:"favicon_url"`
-			IconUrl                      *string  `json:"icon_url"`
-			LogoUrl                      *string  `json:"logo_url"`
-			PremiumInfoUrl               *string  `json:"premium_info_url"`
-			PremiumProductName           string   `json:"premium_product_name"`
-			ProductName                  string   `json:"product_name"`
-			SignInBackdropUrl            *string  `json:"sign_in_backdrop_url"`
-			StatusPageIncidentHistoryUrl *string  `json:"status_page_incident_history_url"`
-			StatusPageUrl                *string  `json:"status_page_url"`
-			SymbolUrl                    *string  `json:"symbol_url"`
-			ThemeColor                   *string  `json:"theme_color"`
-			TrustedDomains               []string `json:"trusted_domains"`
-			UploadLimitMessage           *string  `json:"upload_limit_message"`
-			WordmarkUrl                  *string  `json:"wordmark_url"`
+			CustomCss                     *string  `json:"custom_css"`
+			FaviconDarkUrl                *string  `json:"favicon_dark_url"`
+			FaviconUrl                    *string  `json:"favicon_url"`
+			IconUrl                       *string  `json:"icon_url"`
+			LogoUrl                       *string  `json:"logo_url"`
+			PremiumInfoUrl                *string  `json:"premium_info_url"`
+			PremiumPageColor              *string  `json:"premium_page_color"`
+			PremiumProductName            string   `json:"premium_product_name"`
+			PremiumShowcaseExpressionsUrl *string  `json:"premium_showcase_expressions_url"`
+			PremiumShowcaseProfileUrl     *string  `json:"premium_showcase_profile_url"`
+			PremiumShowcaseStreamUrl      *string  `json:"premium_showcase_stream_url"`
+			PremiumShowcaseUploadUrl      *string  `json:"premium_showcase_upload_url"`
+			ProductName                   string   `json:"product_name"`
+			SignInBackdropUrl             *string  `json:"sign_in_backdrop_url"`
+			StatusPageIncidentHistoryUrl  *string  `json:"status_page_incident_history_url"`
+			StatusPageUrl                 *string  `json:"status_page_url"`
+			SymbolUrl                     *string  `json:"symbol_url"`
+			ThemeColor                    *string  `json:"theme_color"`
+			TrustedDomains                []string `json:"trusted_domains"`
+			UploadLimitMessage            *string  `json:"upload_limit_message"`
+			WordmarkUrl                   *string  `json:"wordmark_url"`
 		} `json:"branding"`
 		Legal struct {
 			GuidelinesUrl *string `json:"guidelines_url"`
@@ -2486,6 +2506,7 @@ type InstanceConfigUpdateRequest struct {
 			IconUrl                      *string   `json:"icon_url,omitempty"`
 			LogoUrl                      *string   `json:"logo_url,omitempty"`
 			PremiumInfoUrl               *string   `json:"premium_info_url,omitempty"`
+			PremiumPageColor             *string   `json:"premium_page_color,omitempty"`
 			PremiumProductName           *string   `json:"premium_product_name,omitempty"`
 			ProductName                  *string   `json:"product_name,omitempty"`
 			SignInBackdropUrl            *string   `json:"sign_in_backdrop_url,omitempty"`

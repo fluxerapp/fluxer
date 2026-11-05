@@ -16,13 +16,11 @@ import {ms} from 'itty-time';
 
 export type OperatorPassSchedule = Pick<
 	OperatorPassConfig,
-	'saleOpensAt' | 'priceRisesAt' | 'graceMs' | 'clockOffsetMs' | 'standardPricesMinor'
+	'priceRisesAt' | 'graceMs' | 'clockOffsetMs' | 'standardPricesMinor'
 >;
 
-export type OperatorPassPricedPhase = Exclude<OperatorPassPhase, 'waitlist'>;
-
 const STRIPE_CHECKOUT_MIN_EXPIRY_MS = ms('30 minutes');
-const STRIPE_CHECKOUT_MAX_EXPIRY_MS = ms('24 hours');
+const OPERATOR_PASS_CHECKOUT_EXPIRY_MS = ms('2 hours');
 const STRIPE_CHECKOUT_EXPIRY_MARGIN_MS = ms('1 minute');
 
 const QUOTE_VERSION = 2;
@@ -44,18 +42,7 @@ export function getOperatorPassPhase(
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 ): OperatorPassPhase {
-	const at = now.getTime();
-	if (!schedule.saleOpensAt || !schedule.priceRisesAt || at < schedule.saleOpensAt.getTime()) {
-		return 'waitlist';
-	}
-	if (at < schedule.priceRisesAt.getTime()) {
-		return 'early_bird';
-	}
-	return 'standard';
-}
-
-function getOperatorPassPricedPhase(phase: OperatorPassPhase): OperatorPassPricedPhase {
-	return phase === 'standard' ? 'standard' : 'early_bird';
+	return schedule.priceRisesAt && now.getTime() >= schedule.priceRisesAt.getTime() ? 'standard' : 'early_bird';
 }
 
 export function getOperatorPassPriceMinor(
@@ -63,7 +50,7 @@ export function getOperatorPassPriceMinor(
 	currency: OperatorPassCurrency,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 ): number {
-	if (getOperatorPassPricedPhase(phase) === 'standard' && schedule.standardPricesMinor) {
+	if (phase === 'standard' && schedule.standardPricesMinor) {
 		return schedule.standardPricesMinor[currency];
 	}
 	return OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR[currency];
@@ -184,7 +171,7 @@ export interface OperatorPassCheckoutPriceInput {
 
 export interface OperatorPassCheckoutPrice {
 	phase: OperatorPassPhase;
-	pricedPhase: OperatorPassPricedPhase;
+	pricedPhase: OperatorPassPhase;
 	amountMinor: number;
 	quoteHonored: boolean;
 	priceChanged: boolean;
@@ -227,7 +214,7 @@ export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPric
 	const amountMinor = getOperatorPassPriceMinor(phase, input.currency, schedule);
 	return {
 		phase,
-		pricedPhase: getOperatorPassPricedPhase(phase),
+		pricedPhase: phase,
 		amountMinor,
 		quoteHonored: false,
 		priceChanged: quote !== null && (quote.currency !== input.currency || quote.amountMinor !== amountMinor),
@@ -235,18 +222,18 @@ export function resolveOperatorPassCheckoutPrice(input: OperatorPassCheckoutPric
 }
 
 export function getOperatorPassSessionExpiresAt(
-	pricedPhase: OperatorPassPricedPhase,
+	pricedPhase: OperatorPassPhase,
 	now: Date,
 	schedule: OperatorPassSchedule = getOperatorPassSchedule(),
 	realNowMs = Date.now(),
-): number | undefined {
-	if (pricedPhase !== 'early_bird' || !schedule.priceRisesAt) {
-		return undefined;
+): number {
+	let lifetimeMs = OPERATOR_PASS_CHECKOUT_EXPIRY_MS;
+	if (pricedPhase === 'early_bird' && schedule.priceRisesAt) {
+		const untilGraceEndMs = schedule.priceRisesAt.getTime() + schedule.graceMs - now.getTime();
+		lifetimeMs = Math.max(
+			STRIPE_CHECKOUT_MIN_EXPIRY_MS + STRIPE_CHECKOUT_EXPIRY_MARGIN_MS,
+			Math.min(lifetimeMs, untilGraceEndMs),
+		);
 	}
-	const untilGraceEndMs = schedule.priceRisesAt.getTime() + schedule.graceMs - now.getTime();
-	const lifetimeMs = Math.min(
-		STRIPE_CHECKOUT_MAX_EXPIRY_MS - STRIPE_CHECKOUT_EXPIRY_MARGIN_MS,
-		Math.max(STRIPE_CHECKOUT_MIN_EXPIRY_MS + STRIPE_CHECKOUT_EXPIRY_MARGIN_MS, untilGraceEndMs),
-	);
 	return Math.floor((realNowMs + lifetimeMs) / 1000);
 }

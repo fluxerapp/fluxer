@@ -184,6 +184,7 @@ export const PasswordChangeModal = observer(() => {
 					placeholder="XXXX-XXXX"
 					required={true}
 					error={codeError ?? undefined}
+					sensitive
 					data-flx="user.password-change-modal.input.set-code"
 				/>
 			</Modal.InputGroup>

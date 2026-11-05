@@ -153,6 +153,8 @@ secrets:
     # FLUXER_PUSH_APNS_PRIVATE_KEY: ""
     # FCM private key for Android push.
     # FLUXER_PUSH_FCM_PRIVATE_KEY: ""
+    # Client secret of the admin single sign-on provider.
+    # FLUXER_ADMIN_SSO_CLIENT_SECRET: ""
 
 # Extra non-secret settings for every Fluxer service, as NAME: value. The names
 # and meanings are on the configuration page of the operator docs. An empty

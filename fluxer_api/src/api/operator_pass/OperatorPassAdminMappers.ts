@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {
 	OperatorPassOfferRow,
@@ -11,6 +10,7 @@ import type {
 	OperatorPassRow,
 	OperatorPassUnitEventRow,
 	OperatorPassUnitRow,
+	OperatorPassVisionaryActivationRow,
 	OperatorPassWallDecisionRow,
 	OperatorPassWallEntryRow,
 	OperatorPassWallEventRow,
@@ -20,11 +20,9 @@ import {
 	OPERATOR_PASS_WALL_AVATAR_SIZES,
 	operatorPassWallSnapshotUrl,
 } from '@app/api/operator_pass/OperatorPassWallAvatarStore';
-import {OPERATOR_PASS_WALL_REVIEW_TARGET_MS} from '@app/api/operator_pass/OperatorPassWallConstants';
 import {
 	isOperatorPassWallListed,
 	operatorPassWallDisplayState,
-	operatorPassWallReviewState,
 	operatorPassWallShownName,
 } from '@app/api/operator_pass/OperatorPassWallPresentation';
 import {getAnimatedAssetExtension} from '@app/api/worker/utils/AssetArchiveHelpers';
@@ -33,6 +31,7 @@ import type {
 	AdminOperatorPassReleaseFileResponse,
 	AdminOperatorPassRemovalResponse,
 	AdminOperatorPassUserResponse,
+	AdminOperatorPassVisionaryActivationResponse,
 	AdminOperatorPassWallEntryResponse,
 	AdminOperatorPassWallEventResponse,
 	AdminOperatorPassWallTimelineResponse,
@@ -73,6 +72,7 @@ export function mapRemovalHistory(
 export function mapPass(
 	pass: OperatorPassRow,
 	purchases: ReadonlyArray<OperatorPassPurchaseRow>,
+	canViewIp: boolean,
 ): NonNullable<AdminOperatorPassUserResponse['pass']> {
 	return {
 		granted_at: pass.granted_at.toISOString(),
@@ -85,8 +85,25 @@ export function mapPass(
 		terms_version: pass.terms_version ?? null,
 		waiver_consent_at: toIsoOrNull(pass.waiver_consent_at),
 		waiver_consent_version: pass.waiver_consent_version ?? null,
-		waiver_consent_ip: pass.waiver_consent_ip ?? null,
-		waiver_user_agent: pass.waiver_consent_user_agent ?? null,
+		waiver_consent_ip: canViewIp ? (pass.waiver_consent_ip ?? null) : null,
+		waiver_user_agent: canViewIp ? (pass.waiver_consent_user_agent ?? null) : null,
+	};
+}
+
+export function mapVisionaryActivation(
+	row: OperatorPassVisionaryActivationRow,
+): AdminOperatorPassVisionaryActivationResponse {
+	return {
+		visionary_since: toIsoOrNull(row.visionary_since),
+		visionary_sequence: row.visionary_sequence ?? null,
+		activated_at: toIsoOrNull(row.activated_at),
+		terms_version: row.terms_version ?? null,
+		terms_box_text: row.terms_box_text ?? null,
+		age_confirmed_at: toIsoOrNull(row.age_confirmed_at),
+		pass_id: row.pass_id ?? null,
+		certificate_number: row.certificate_number ?? null,
+		ended_at: toIsoOrNull(row.ended_at),
+		end_reason: row.end_reason ?? null,
 	};
 }
 
@@ -134,14 +151,13 @@ export function mapOffer(offer: OperatorPassOfferRow): AdminOperatorPassUserResp
 		recipient_id: offer.recipient_id.toString(),
 		created_at: offer.created_at.toISOString(),
 		accepted_at: toIsoOrNull(offer.accepted_at),
-		arrives_at: toIsoOrNull(offer.completes_at),
 		ended_at: toIsoOrNull(offer.ended_at),
 		terms_version: offer.terms_version ?? null,
 	};
 }
 
-export function wallAvatarRoute(userId: UserID | string, sha256: string | null | undefined): string | null {
-	return sha256 ? `/admin/users/${userId}/operator-pass/wall/avatars/${sha256}` : null;
+export function wallAvatarRoute(sha256: string | null | undefined): string | null {
+	return sha256 ? `/admin/operator-pass/wall/avatars/${sha256}` : null;
 }
 
 export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null): AdminOperatorPassWallEntryResponse {
@@ -153,35 +169,24 @@ export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null)
 			? `${Config.endpoints.media}/avatars/${user.id}/${user.avatarHash}.${getAnimatedAssetExtension(user.avatarHash)}`
 			: null,
 		wall_name: entry.name ?? null,
+		wall_quote: entry.quote ?? null,
 		wall_opt_out: entry.opted_out,
 		keep_as_is: entry.keep_as_is,
 		release_list_opt_in: entry.release_list_opt_in ?? false,
 		display_state: listed ? operatorPassWallDisplayState(entry, {removed: false}) : null,
-		review_state: listed ? operatorPassWallReviewState(entry) : null,
-		shown_name: listed && user ? operatorPassWallShownName(entry, user) : null,
-		shown_avatar_url: entry.live_avatar
-			? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))
-			: null,
+		shown_name: listed ? operatorPassWallShownName(entry) : null,
+		shown_avatar_url:
+			listed && !entry.hidden && entry.live_avatar
+				? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))
+				: null,
 		live_revision_id: entry.live_revision_id?.toString() ?? null,
-		pending_revision_id: entry.pending_revision_id?.toString() ?? null,
-		pending_name: entry.pending_name ?? null,
-		pending_avatar_url: wallAvatarRoute(entry.user_id, entry.pending_avatar),
-		live_avatar_private_url: wallAvatarRoute(entry.user_id, entry.live_avatar),
+		live_avatar_private_url: wallAvatarRoute(entry.live_avatar),
 		business: entry.live_business ?? false,
-		pending_source: entry.pending_source ?? null,
-		pending_since: toIsoOrNull(entry.pending_since),
-		review_due_at: entry.pending_since
-			? new Date(entry.pending_since.getTime() + OPERATOR_PASS_WALL_REVIEW_TARGET_MS).toISOString()
-			: null,
-		declined_revision_id: entry.declined_revision_id?.toString() ?? null,
-		declined_name: entry.declined_name ?? null,
 		decline_reason: entry.decline_reason ?? null,
 		decline_note: entry.decline_note ?? null,
-		username_declined: entry.username_declined,
 		hidden: entry.hidden,
 		legal_hold: entry.legal_hold,
 		left_wall_at: toIsoOrNull(entry.left_wall_at),
-		reviewed_at: toIsoOrNull(entry.reviewed_at),
 		listed_at: toIsoOrNull(entry.listed_at),
 		delivered_at: toIsoOrNull(entry.delivered_at),
 		release_published_year: entry.release_published_year ?? null,

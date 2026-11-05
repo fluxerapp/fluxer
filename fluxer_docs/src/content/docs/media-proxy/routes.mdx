@@ -64,7 +64,7 @@ Not every parameter starts a [transformation](/media-proxy/transformations/#when
 
 Returns a third-party file through Fluxer, optionally transformed. The HTTP API returns these URLs in `proxy_url` on [embed media](/http-api/messages/#embed-media-object), `proxy_icon_url` on [embed authors](/http-api/messages/#embed-author-object) and [footers](/http-api/messages/#embed-footer-object), and `proxy_url` and `proxy_src` on [GIF results](/http-api/memes/#resolved-gif-entry-object). Use each URL exactly as the API returns it, and don't build `/external/` paths yourself.
 
-The signature covers only the target and works until `FLUXER_MEDIA_PROXY_SECRET_KEY` changes. Fluxer fetches the target with the user agent `Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)` and follows at most five redirects to public `http` or `https` addresses.
+The signature covers only the target and works until `FLUXER_MEDIA_PROXY_SECRET_KEY` changes. Fluxer fetches the target with the user agent `Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)` and follows at most five redirects to public `http` or `https` addresses.
 
 ### Query parameters
 
@@ -77,14 +77,14 @@ The signature covers only the target and works until `FLUXER_MEDIA_PROXY_SECRET_
 | animated? | boolean | Whether animated output is requested |
 | download? | boolean | Whether the response has attachment disposition |
 
-When no transformation runs, Fluxer forwards `Range` to the origin, which can answer 200 or 206.
+When no transformation runs, Fluxer forwards `Range` to the origin, which can respond with 200 or 206.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | Complete external representation | The origin returned the file |
-| 206 | Selected external bytes | The origin or Fluxer answered a range |
+| 206 | Selected external bytes | The origin or Fluxer returned a range |
 | 400 | Bad Request | The path, target, redirect or transformation is invalid or not allowed |
 | 401 | Unauthorized | The signature is invalid |
 | 413 | Payload Too Large | The origin sent more than 500 MiB |

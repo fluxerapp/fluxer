@@ -117,10 +117,10 @@ fn filters_card(
                 ))
                 div class=(select_grid_class) {
                     (select_input("status", "Status", &[
-                        ("", "All"),
+                        ("all", "All"),
                         ("0", "Pending"),
                         ("1", "Resolved"),
-                    ], filters.status.unwrap_or("")))
+                    ], filters.status.unwrap_or("all")))
                     (select_input("type", "Type", &[
                         ("", "All"),
                         ("0", "Message"),

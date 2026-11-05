@@ -178,11 +178,11 @@ const ALLOW_PRESSING_ESCAPE_TO_EXIT_KEYBOARD_NAVIGATION_MODE_DESCRIPTOR = msg({
 });
 
 const MENU_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Menu shortcuts',
+	message: 'Menu keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const DISPLAY_KEYBOARD_SHORTCUT_INDICATORS_NEXT_TO_CONTEXT_MENU_DESCRIPTOR = msg({
-	message: 'Display keyboard shortcut indicators next to context menu items',
+	message: 'Display keybind indicators next to context menu items',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 

@@ -4,8 +4,11 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	CAMERA_DESCRIPTOR as CAMERA_2_DESCRIPTOR,
 	GET_PREMIUM_DESCRIPTOR,
+	INSTANCE_WITHOUT_HTTPS_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -229,18 +232,21 @@ export const VideoTab: React.FC<VideoTabProps> = observer(({voiceSettings}) => {
 		});
 	}, []);
 	const contentClassName = styles.content;
+	const mediaBlocked = isInsecureBrowserContext();
 	let deviceNotice: React.ReactNode = null;
 	if (devices.length === 0 && permissionStatus !== 'loading') {
 		const noticeClassName = styles.deviceNotice;
 		const noticeTextClassName = styles.deviceNoticeText;
 		const noticeTitle = (
 			<div className={styles.deviceNoticeTitle} data-flx="user.video-tab.device-notice-title">
-				<Trans>No camera found</Trans>
+				{mediaBlocked ? i18n._(INSTANCE_WITHOUT_HTTPS_DESCRIPTOR) : <Trans>No camera found</Trans>}
 			</div>
 		);
 		const descriptionClassName = styles.deviceNoticeDescription;
 		let noticeDescription: React.ReactNode;
-		if (permissionStatus === 'denied') {
+		if (mediaBlocked) {
+			noticeDescription = i18n._(MEDIA_NEEDS_HTTPS_DESCRIPTOR);
+		} else if (permissionStatus === 'denied') {
 			noticeDescription = (
 				<Trans comment="Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
 					Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your camera in System Settings → Privacy &
@@ -260,7 +266,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(({voiceSettings}) => {
 						{noticeDescription}
 					</p>
 				</div>
-				{permissionStatus !== 'granted' ? (
+				{permissionStatus !== 'granted' && !mediaBlocked ? (
 					<Button
 						variant="secondary"
 						small={true}

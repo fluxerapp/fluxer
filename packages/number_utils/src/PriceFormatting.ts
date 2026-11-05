@@ -203,6 +203,13 @@ export function formatMinorUnitPrice(
 	return formatPrice(amountMinor, currency, locale, countryCode, false);
 }
 
+export function stripeCurrencyExponent(currency: string): number {
+	const code = currency.toUpperCase();
+	return STRIPE_TWO_DECIMAL_WHOLE_UNIT_CURRENCIES.has(code) || STRIPE_TWO_DECIMAL_CURRENCIES.has(code)
+		? 2
+		: currencyFractionDigits(code);
+}
+
 export function formatMinorUnitPriceWithFraction(
 	amountMinor: number,
 	currency: string,
@@ -221,8 +228,7 @@ function formatPrice(
 	const code = currency.toUpperCase();
 	const resolvedLocale = resolveLocale(locale);
 	const wholeUnitDisplay = STRIPE_TWO_DECIMAL_WHOLE_UNIT_CURRENCIES.has(code);
-	const twoDecimal = STRIPE_TWO_DECIMAL_CURRENCIES.has(code);
-	const exponent = wholeUnitDisplay || twoDecimal ? 2 : currencyFractionDigits(code);
+	const exponent = stripeCurrencyExponent(code);
 	const fractionDigits = wholeUnitDisplay ? 0 : exponent;
 	const digits = !keepFraction && amountMinor % 10 ** exponent === 0 ? 0 : fractionDigits;
 	const formatted = formatWithCurrency(amountMinor / 10 ** exponent, code, resolvedLocale, digits, countryCode);

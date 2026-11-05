@@ -42,26 +42,29 @@ export type ProfileBadgeSubject = Pick<
 export interface ProfileBadgeInput {
 	user: ProfileBadgeSubject;
 	operatorPass: OperatorPassHolder | null;
+	operatorPassQuote?: string | null;
 	locale: string | null | undefined;
 	environment: ProfileBadgeEnvironment;
 	restricted?: boolean;
 	profileHidden?: boolean;
-	viewerIsSelf?: boolean;
 }
 
 type ViewSource = Omit<ProfileBadgeView, 'shown'> & {customBadgeIds: ReadonlySet<bigint>};
 
 const NO_HIDDEN_BADGES: ReadonlySet<ProfileBadgeKey> = new Set();
 
-function publicOperatorPass(
-	holder: OperatorPassHolder | null,
-	user: ProfileBadgeSubject,
-	viewerIsSelf: boolean,
-): VisibleOperatorPass | null {
-	if (!holder || user.hiddenProfileBadges.has('operator_pass')) return null;
-	const since = !viewerIsSelf && isOperatorPassTimestampHidden(user.premiumFlags) ? null : holder.since;
-	const count = !viewerIsSelf && isOperatorPassCountHidden(user.premiumFlags) ? null : holder.count;
-	return {since, count};
+function visibleOperatorPass(holder: OperatorPassHolder, input: ProfileBadgeInput): VisibleOperatorPass {
+	const {premiumFlags} = input.user;
+	return {
+		since: isOperatorPassTimestampHidden(premiumFlags) ? null : holder.since,
+		count: isOperatorPassCountHidden(premiumFlags) ? null : holder.count,
+		quote: input.operatorPassQuote ?? null,
+	};
+}
+
+function publicOperatorPass(input: ProfileBadgeInput): VisibleOperatorPass | null {
+	if (!input.operatorPass || input.user.hiddenProfileBadges.has('operator_pass')) return null;
+	return visibleOperatorPass(input.operatorPass, input);
 }
 
 function publicViewSource(input: ProfileBadgeInput): ViewSource | null {
@@ -77,7 +80,7 @@ function publicViewSource(input: ProfileBadgeInput): ViewSource | null {
 			selfHosted: environment.selfHosted,
 			restricted,
 		}),
-		operatorPass: restricted ? null : publicOperatorPass(input.operatorPass, user, input.viewerIsSelf === true),
+		operatorPass: restricted ? null : publicOperatorPass(input),
 		environment,
 		locale: resolveContentLocale(input.locale),
 		customBadgeIds: new Set([...user.badgeIds].filter((id) => !hidden.has(customProfileBadgeKey(id.toString())))),
@@ -94,7 +97,7 @@ function heldViewSource(input: ProfileBadgeInput, premiumFlags: number): ViewSou
 			selfHosted: environment.selfHosted,
 			restricted: false,
 		}),
-		operatorPass: input.operatorPass ? {since: input.operatorPass.since, count: input.operatorPass.count} : null,
+		operatorPass: input.operatorPass ? visibleOperatorPass(input.operatorPass, input) : null,
 		environment,
 		locale: resolveContentLocale(input.locale),
 		customBadgeIds: user.badgeIds,
@@ -133,6 +136,7 @@ function render(source: ViewSource | null): Array<KeyedProfileBadge> {
 			...(content.count !== undefined ? {count: content.count} : {}),
 			...(content.accessibleLabel !== undefined ? {accessible_label: content.accessibleLabel} : {}),
 			...(content.details !== undefined ? {details: content.details} : {}),
+			...(content.quote !== undefined ? {quote: content.quote} : {}),
 		});
 	}
 	for (const badge of source.environment.customBadges) {

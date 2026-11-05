@@ -205,6 +205,26 @@ export const MessageAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	},
 	{
 		method: 'POST',
+		route: '/admin/users/:user_id/message-shreds/preview',
+		async prepare({harness}) {
+			const {author, channelId} = await createAuthorChannel(harness);
+			const message = await sendMessage(harness, author.token, channelId, 'shred target');
+			return {
+				request: {
+					path: `/admin/users/${author.userId}/message-shreds/preview`,
+					body: {entries: [{channel_id: channelId, message_id: message.id}]},
+				},
+				expected: {
+					action: 'preview_message_shred',
+					targetType: 'message_shred',
+					targetId: author.userId,
+					metadata: {user_id: author.userId, requested_entries: '1', message_count: '1', skipped_entries: '0'},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
 		route: '/admin/users/:user_id/message-shreds',
 		async prepare({harness}) {
 			const {author, channelId} = await createAuthorChannel(harness);

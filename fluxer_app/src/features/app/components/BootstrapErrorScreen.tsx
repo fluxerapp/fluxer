@@ -140,7 +140,7 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 	if (unreachable && instanceHost) {
 		description = (
 			<Trans comment="Startup screen text when the current account's instance cannot be reached. instanceHost is its host, such as chat.example.com.">
-				We couldn't reach {instanceHost}. Check your connection and try again.
+				We couldn't connect to {instanceHost}. Check your connection and try again.
 			</Trans>
 		);
 	} else if (unreachable) {

@@ -9,8 +9,12 @@ import {MfaTotpDisableModal} from '@app/features/auth/components/modals/MfaTotpD
 import {MfaTotpEnableModal} from '@app/features/auth/components/modals/MfaTotpEnableModal';
 import {PasskeyNameModal} from '@app/features/auth/components/modals/PasskeyNameModal';
 import {startPasskeyRegistration} from '@app/features/auth/utils/PasskeyRegistrationFlow';
-import {TWO_FACTOR_AUTHENTICATION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	FEATURE_NEEDS_HTTPS_DESCRIPTOR,
+	TWO_FACTOR_AUTHENTICATION_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -153,7 +157,8 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 		const needsEmailVerification = !mfaGate.allowed && mfaGate.need === AccountVerificationNeeds.CONFIRM_EMAIL;
 		const hasReachedPasskeyLimit = passkeys.length >= 10;
 		const canAddSecurityCredential = !needsEmailVerification;
-		const canAddPasskey = canAddSecurityCredential && !hasReachedPasskeyLimit;
+		const passkeysBlocked = isInsecureBrowserContext();
+		const canAddPasskey = canAddSecurityCredential && !hasReachedPasskeyLimit && !passkeysBlocked;
 		const handleAddPasskey = () => {
 			if (!canAddPasskey) {
 				return;
@@ -396,7 +401,13 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				</AccountSecurityCard>
 				<AccountSecurityCard
 					title={<Trans>Passkeys</Trans>}
-					description={<Trans>Use passkeys to sign in without a password</Trans>}
+					description={
+						passkeysBlocked ? (
+							i18n._(FEATURE_NEEDS_HTTPS_DESCRIPTOR)
+						) : (
+							<Trans>Use passkeys to sign in without a password</Trans>
+						)
+					}
 					action={
 						<Button
 							small={true}
@@ -410,7 +421,7 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 					}
 					data-flx="user.account-security-tab.security-tab.passkeys-card"
 				>
-					{passkeys.length === 0 && !needsEmailVerification && (
+					{passkeys.length === 0 && !needsEmailVerification && !passkeysBlocked && (
 						<AccountSecurityEmptyRow data-flx="user.account-security-tab.security-tab.passkeys-empty">
 							<Trans>No passkeys yet. Add one to sign in with your fingerprint, face or a security key.</Trans>
 						</AccountSecurityEmptyRow>

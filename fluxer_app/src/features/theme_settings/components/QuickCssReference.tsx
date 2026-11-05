@@ -11,9 +11,9 @@ import {MoreOptionsVerticalIcon} from '@app/features/ui/action_menu/ContextMenuI
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
+import {writeClipboardText} from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
-import {copyText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CopyIcon, MagnifyingGlassIcon, PlusIcon} from '@phosphor-icons/react';
@@ -91,7 +91,7 @@ const VariableRow: React.FC<{name: string}> = ({name}) => {
 							<CopyIcon size={remFromPx(16)} data-flx="theme-settings.quick-css-reference.variable-row.copy-icon" />
 						}
 						onClick={select(() => {
-							void copyText(name).then(() => ToastCommands.success(i18n._(COPIED_DESCRIPTOR, {text: name})));
+							void writeClipboardText(name).then(() => ToastCommands.success(i18n._(COPIED_DESCRIPTOR, {text: name})));
 						})}
 						data-flx="theme-settings.quick-css-reference.variable-row.copy"
 					>

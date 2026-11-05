@@ -16,6 +16,7 @@ export interface OperatorPassWallBlobEntry {
 	tier: number;
 	count?: number;
 	business?: true;
+	quote?: string;
 }
 
 export interface OperatorPassWallDelta {

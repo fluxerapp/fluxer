@@ -16,10 +16,6 @@ interface ISweegoUserRepository {
 	patchUpsert(userId: UserID, patch: Partial<UserRow>, currentRow: UserRow): Promise<User | null>;
 }
 
-interface ISweegoWaitlistSuppression {
-	suppress(email: string, reason: 'bounced' | 'unsubscribed'): Promise<boolean>;
-}
-
 interface ISweegoGatewayService {
 	dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
 }
@@ -74,7 +70,6 @@ export class SweegoWebhookService {
 	constructor(
 		private readonly userRepository: ISweegoUserRepository,
 		private readonly gatewayService: ISweegoGatewayService,
-		private readonly waitlist: ISweegoWaitlistSuppression | null = null,
 	) {}
 
 	verifySignature(body: string, webhookId: string, timestamp: string, signature: string, secret: string): boolean {
@@ -129,16 +124,11 @@ export class SweegoWebhookService {
 	}
 
 	async processEvent(event: SweegoEvent): Promise<void> {
-		if (event.event_type === 'list_unsub') {
-			await this.suppressWaitlistEntry(event, 'unsubscribed');
-			return;
-		}
 		if (event.event_type !== 'soft-bounce' && event.event_type !== 'hard_bounce' && event.event_type !== 'complaint') {
 			Logger.debug({eventType: event.event_type, recipient: event.recipient}, 'Sweego event received (ignored)');
 			return;
 		}
 		if (event.event_type === 'hard_bounce' || event.event_type === 'complaint') {
-			await this.suppressWaitlistEntry(event, 'bounced');
 			await this.handleHardBounceOrComplaint(event);
 			return;
 		}
@@ -146,10 +136,6 @@ export class SweegoWebhookService {
 			{recipient: event.recipient, details: event.details, eventType: event.event_type},
 			'Sweego soft bounce received',
 		);
-	}
-
-	private async suppressWaitlistEntry(event: SweegoEvent, reason: 'bounced' | 'unsubscribed'): Promise<void> {
-		await this.waitlist?.suppress(event.recipient, reason);
 	}
 
 	private async handleHardBounceOrComplaint(event: SweegoEvent): Promise<void> {

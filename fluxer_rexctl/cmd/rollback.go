@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
@@ -133,6 +134,13 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 			}
 			app.UI.Info("Dry run. Nothing changed.")
 			return nil
+		}
+		refs, _ := release.Images(inst, prev)
+		if sp, ok := checks.PullSpace(ctx, e, inst.Dir, refs, release.ImageSizes(inst, prev)); ok && sp.Short() {
+			return ui.Refused(
+				fmt.Sprintf("Going back to Fluxer %s downloads its images again, which needs about %s of free disk space in %s, and %s is free.", prevShort, ui.Bytes(int64(sp.Need)), sp.Path, ui.Bytes(int64(sp.Free))),
+				spaceFix(e, sp, "rexctl rollback"),
+			)
 		}
 		if schemaChanged {
 			app.UI.Warn(fmt.Sprintf("Fluxer %s may have changed the database in a way %s can't read.", curShort, prevShort), "If it doesn't start, run rexctl rollback --restore-database.")

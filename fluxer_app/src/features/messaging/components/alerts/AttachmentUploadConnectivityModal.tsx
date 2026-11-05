@@ -23,16 +23,17 @@ export const AttachmentUploadConnectivityModal = observer(() => {
 			message={
 				RuntimeConfig.isSelfHosted() ? (
 					<Trans>
-						We couldn't reach the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can fall
-						back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments
-						exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact the
-						administrators of this instance if this keeps happening.
+						We couldn't connect to the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can
+						fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these
+						attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or
+						contact the administrators of this instance if this keeps happening.
 					</Trans>
 				) : (
 					<Trans>
-						We couldn't reach the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can fall
-						back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments
-						exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact{' '}
+						We couldn't connect to the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can
+						fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these
+						attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or
+						contact{' '}
 						<ExternalLink
 							href={SUPPORT_EMAIL_MAILTO}
 							data-flx="messaging.attachment-upload-connectivity-modal.external-link"

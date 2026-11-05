@@ -46,7 +46,6 @@ export interface ReportFlowScreenDef {
 	subtitleVariants?: ReportFlowSubtitleVariantsDef;
 	urgent?: true;
 	options?: ReadonlyArray<ReportFlowOptionDef>;
-	optionsHeading?: ReportFlowCopyKey;
 	checklist?: ReportFlowChecklistDef;
 	nextScreenId?: string;
 }
@@ -121,7 +120,12 @@ export const REPORT_FLOW_SCREENS: ReadonlyArray<ReportFlowScreenDef> = [
 			{id: 'harassment', label: 'report_flow.label.harassment', outcome: {type: 'screen', screenId: 'harassment'}},
 			{id: 'hate', label: 'report_flow.label.hate', outcome: {type: 'screen', screenId: 'hate'}},
 			{id: 'sexual', label: 'report_flow.label.sexual', outcome: {type: 'screen', screenId: 'sexual'}},
-			{id: 'rude_language', label: 'report_flow.label.rude_language', outcome: {type: 'end'}, surface: 'in_app'},
+			{
+				id: 'swearing',
+				label: 'report_flow.label.rude_language',
+				outcome: {type: 'submit', reason: 'rude_language'},
+				surface: 'in_app',
+			},
 		],
 	},
 	{
@@ -473,12 +477,27 @@ export const REPORT_FLOW_SCREENS: ReadonlyArray<ReportFlowScreenDef> = [
 		],
 	},
 	{
-		id: 'profile_intro',
-		title: 'report_flow.screen.profile_intro.title',
-		subtitle: 'report_flow.screen.profile_intro.subtitle',
-		optionsHeading: 'report_flow.screen.profile_intro.options_heading',
-		options: [{id: 'learn_more', label: 'report_flow.label.learn_more', outcome: {type: 'link', link: 'guidelines'}}],
-		nextScreenId: 'profile_parts',
+		id: 'user_start',
+		title: 'report_flow.screen.user_start.title',
+		subtitle: 'report_flow.screen.user_start.subtitle',
+		options: [
+			{id: 'profile', label: 'report_flow.label.their_profile', outcome: {type: 'screen', screenId: 'profile_parts'}},
+			{id: 'call', label: 'report_flow.label.call_activity', outcome: {type: 'screen', screenId: 'root_call'}},
+			{id: 'learn_more', label: 'report_flow.label.learn_more', outcome: {type: 'link', link: 'guidelines'}},
+		],
+	},
+	{
+		id: 'root_call',
+		title: 'report_flow.screen.root_call.title',
+		options: [
+			{id: 'abuse', label: 'report_flow.label.abuse', outcome: {type: 'screen', screenId: 'abuse'}},
+			{
+				id: 'violence_misinfo',
+				label: 'report_flow.label.violence_misinfo',
+				outcome: {type: 'screen', screenId: 'violence_misinfo'},
+			},
+			{id: 'self_harm', label: 'report_flow.label.self_harm', outcome: {type: 'screen', screenId: 'self_harm'}},
+		],
 	},
 	{
 		id: 'profile_parts',

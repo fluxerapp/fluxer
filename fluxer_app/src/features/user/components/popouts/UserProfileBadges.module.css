@@ -122,6 +122,14 @@
 	line-height: 1.125rem;
 }
 
+.detailsQuote {
+	max-width: 100%;
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	overflow-wrap: anywhere;
+}
+
 .editButton {
 	display: inline-flex;
 	align-items: center;

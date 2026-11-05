@@ -151,7 +151,6 @@ function BadgeArt({badge}: {badge: OwnProfileBadgeResponse}) {
 		<img
 			src={imageUrl}
 			alt=""
-			loading="lazy"
 			decoding="async"
 			className={styles.art}
 			style={badge.aspect_ratio ? {width: 'auto', aspectRatio: badge.aspect_ratio} : undefined}

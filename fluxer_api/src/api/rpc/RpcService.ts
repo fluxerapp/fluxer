@@ -406,6 +406,11 @@ export class RpcService {
 						userIds: request.user_ids.map(createUserID),
 					}),
 				};
+			case 'get_users_adult_content_allowed':
+				return {
+					type: 'get_users_adult_content_allowed',
+					data: {user_ids: await this.getUsersAdultContentAllowed(request.user_ids.map(createUserID))},
+				};
 			case 'voice_get_token': {
 				Logger.debug(
 					{type: 'voice_get_token', guildId: request.guild_id, channelId: request.channel_id, userId: request.user_id},
@@ -877,6 +882,7 @@ export class RpcService {
 				{
 					tokenType,
 					tokenHashPrefix,
+					ip,
 					retryAfter: rateLimitResult.retryAfter,
 					limit: rateLimitResult.limit,
 					resetTime: rateLimitResult.resetTime,
@@ -908,6 +914,7 @@ export class RpcService {
 				{
 					tokenType,
 					tokenHashPrefix,
+					ip,
 				},
 				'RPC session token validation failed',
 			);
@@ -1950,6 +1957,11 @@ export class RpcService {
 			result[userIds[index]!.toString()] = settledBlockedIds.value.map((blockedUserId) => blockedUserId.toString());
 		}
 		return result;
+	}
+
+	private async getUsersAdultContentAllowed(userIds: Array<UserID>): Promise<Array<string>> {
+		const users = await this.userRepository.listUsers(userIds);
+		return users.filter((user) => canUserAccessNsfwContent(user)).map((user) => user.id.toString());
 	}
 
 	private async kickTemporaryMember(params: {userId: UserID; guildIds: Array<GuildID>}): Promise<boolean> {

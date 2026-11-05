@@ -88,7 +88,7 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
         (
             "FLUXER_MARKETING_ENDPOINT".to_owned(),
             std::env::var("FLUXER_MARKETING_ENDPOINT")
-                .unwrap_or_else(|_| "https://fluxer.app".to_owned()),
+                .unwrap_or_else(|_| "https://fluxer.com".to_owned()),
         ),
         (
             "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),

@@ -25,7 +25,7 @@ export const LegacyPriceOptInNagbar = observer(function LegacyPriceOptInNagbar({
 	const resolved = resolvePriceAnnouncementCampaign(premiumState);
 	const campaignId = resolved?.campaign.id ?? null;
 	const handleOpenPremiumSettings = useCallback(() => {
-		PlutoniumPageCommands.openPlutoniumPage();
+		PlutoniumPageCommands.openSubscriptionSettings();
 	}, []);
 	const handleDismiss = useCallback(() => {
 		if (campaignId == null) return;

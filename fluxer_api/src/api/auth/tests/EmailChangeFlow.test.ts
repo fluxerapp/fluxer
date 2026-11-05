@@ -354,11 +354,11 @@ describe('Email change flow', () => {
 	});
 
 	it('refuses to claim an account with an address outside the allowed email domains', async () => {
-		await getInstanceConfigRepository().setRegistrationConfig({allowed_email_domains: ['example.com']});
 		const holder = await createBuilderWithoutAuth<{token: string}>(harness)
 			.post('/auth/register')
 			.body({username: 'outsideclaimer', consent: true, date_of_birth: '1995-05-05'})
 			.execute();
+		await getInstanceConfigRepository().setRegistrationConfig({allowed_email_domains: ['example.com']});
 		const {json} = await createBuilder<{errors: Array<{path: string; code: string}>}>(harness, holder.token)
 			.post('/users/@me/claim')
 			.body({email: `integration-claim-${Date.now()}@elsewhere.test`})

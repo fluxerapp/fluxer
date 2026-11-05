@@ -3,11 +3,12 @@
 use crate::{
     config::AttachmentSignatureConfig,
     metrics::now_ms,
+    public_net_policy::external_url_for_log,
     request_log::{self, HEADER_LOG_BYTES_MAX, RequestId, clip},
-    server::response::error::text_with_source,
+    server::{response::error::text_with_source, transform::cache::forbid_storing},
 };
 use axum::{
-    http::{HeaderMap, HeaderValue, Method, StatusCode, header},
+    http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header},
     response::Response,
 };
 use fluxer_common::attachment_url_signature::{
@@ -63,18 +64,21 @@ pub(in crate::server) fn check(
         return Verification {
             verdict: Verdict::Malformed,
             remaining_secs: None,
+            expired_secs: None,
         };
     };
     verify(&key, raw_query, &cfg.secrets(), now_secs())
 }
 
 pub(in crate::server) fn limit_cache_lifetime(response: &mut Response, verification: Verification) {
-    if verification.verdict != Verdict::Valid
-        || !matches!(
-            response.status(),
-            StatusCode::OK | StatusCode::PARTIAL_CONTENT
-        )
-    {
+    if !matches!(
+        response.status(),
+        StatusCode::OK | StatusCode::PARTIAL_CONTENT
+    ) {
+        return;
+    }
+    if verification.verdict != Verdict::Valid {
+        forbid_storing(response);
         return;
     }
     let headers = response.headers_mut();
@@ -124,25 +128,46 @@ pub(in crate::server) fn masked_not_found_response(key: &str) -> Response {
     )
 }
 
-pub(in crate::server) fn log_would_deny(
+pub(in crate::server) fn log_refusal(
     budget: &WouldDenyLog,
+    enforced: bool,
     method: &Method,
-    verdict: Verdict,
+    verification: Verification,
     headers: &HeaderMap,
     request_id: Option<&RequestId>,
 ) {
     let Some(suppressed) = budget.admit(now_ms()) else {
         return;
     };
+    let (reason, message) = if enforced {
+        ("attachment_signature_refused", "attachment read refused")
+    } else {
+        (
+            "attachment_signature_would_deny",
+            "attachment read would be refused",
+        )
+    };
+    let referer = headers
+        .get(header::REFERER)
+        .and_then(|value| value.to_str().ok())
+        .map(external_url_for_log)
+        .unwrap_or_default();
     tracing::warn!(
-        reason = "attachment_signature_would_deny",
+        reason,
         kind = request_log::classify_route(ATTACHMENT_PATH).label(),
         method = %method,
-        verdict = verdict.label(),
+        verdict = verification.verdict.label(),
+        expired_for_secs = verification.expired_secs,
         req = request_id.map(RequestId::as_str).unwrap_or(""),
         suppressed,
-        user_agent = %user_agent_for_log(headers),
-        "attachment read would be refused"
+        user_agent = %header_for_log(headers, header::USER_AGENT),
+        referer = %clip(&referer, HEADER_LOG_BYTES_MAX),
+        origin = %header_for_log(headers, header::ORIGIN),
+        sec_fetch_dest = %header_for_log(headers, HeaderName::from_static("sec-fetch-dest")),
+        sec_fetch_mode = %header_for_log(headers, HeaderName::from_static("sec-fetch-mode")),
+        sec_fetch_site = %header_for_log(headers, HeaderName::from_static("sec-fetch-site")),
+        has_range = headers.contains_key(header::RANGE),
+        "{message}"
     );
 }
 
@@ -156,9 +181,9 @@ fn refusal_code(verdict: Verdict) -> &'static str {
     }
 }
 
-fn user_agent_for_log(headers: &HeaderMap) -> String {
+fn header_for_log(headers: &HeaderMap, name: HeaderName) -> String {
     headers
-        .get(header::USER_AGENT)
+        .get(name)
         .and_then(|value| value.to_str().ok())
         .map(|value| clip(value, HEADER_LOG_BYTES_MAX))
         .unwrap_or_default()

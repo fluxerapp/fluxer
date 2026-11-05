@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import {formatMinorUnitPrice, formatMinorUnitPriceWithFraction} from '@fluxer/number_utils/src/PriceFormatting';
 import type {
 	EmailAttachment,
 	EmailConfig,
-	EmailListUnsubscribe,
 	IEmailProvider,
 	UserBouncedEmailChecker,
 } from '@pkgs/email/src/EmailProviderTypes';
@@ -23,35 +21,37 @@ import {getEmailTemplate, resolveEmailTimeZone} from '@pkgs/email/src/email_i18n
 import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplate, EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 import type {
+	BillingDocumentAttachment,
 	BillingEndedInvoiceStatus,
-	BillingInvoiceDocument,
 	BillingPaymentMethod,
 	BillingTotals,
 	EmailSendParams,
-	IBulkEmailSession,
 	IEmailService,
 	PaymentDisputeWarningEmail,
+	PlutoniumPurchaseTerms,
 } from '@pkgs/email/src/IEmailService';
-import {getOperatorPassUnlockDay} from '@pkgs/email/src/OperatorPassUnlockDay';
 import {
+	getOperatorPassSellerAddress,
 	getOperatorPassTermsUrl,
-	OPERATOR_PASS_TERMS_VERSION,
+	hasOperatorPassTermsVersion,
 	OPERATOR_PASS_TRADER_EMAIL,
+	OPERATOR_PASS_TRADER_PHONE,
 	resolveOperatorPassTermsLanguage,
 } from '@pkgs/email/src/operator_pass_terms/OperatorPassTerms';
 import {ms} from 'itty-time';
 
 const OPERATOR_PASS_WELCOME_FOUNDER_NAME = 'Hampus';
+const OPERATOR_PASS_LABS_NAME = 'Fluxer Labs';
 const PAYMENT_DISPUTE_REVIEW_LOCALE = 'en-US';
 
 const logger = createLogger('email-service');
+const operatorPassTermsPdfCache = new Map<string, Promise<Uint8Array>>();
 const EMAIL_ASSETS_PATH = '/email';
 
 type EmailSlots = Record<string, string | null | undefined>;
 
 interface TemplatedEmailOptions {
 	slots?: (template: EmailTemplate) => EmailSlots;
-	listUnsubscribe?: EmailListUnsubscribe;
 	attachments?: ReadonlyArray<EmailAttachment>;
 	timeZone?: string | null;
 }
@@ -88,7 +88,6 @@ type SummaryRow = readonly [string | undefined, string | null | undefined];
 const SUMMARY_ROWS_BEFORE_TOTAL = 5;
 const SUMMARY_ROWS_AFTER_TOTAL = 2;
 const POP_DIRECTIONAL_ISOLATE = '\u2069';
-const SELLER_ADDRESS = 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden';
 
 function summary(
 	rows: Array<SummaryRow>,
@@ -163,8 +162,15 @@ function taxLine(template: EmailTemplate, totals: BillingTotals): string | null 
 	return totals.tax.behavior === 'inclusive' ? template.tax_included : template.tax_added;
 }
 
-function invoiceSlots(template: EmailTemplate, invoice: BillingInvoiceDocument | null): EmailSlots {
-	return invoice ? {cta_url: invoice.url, expiry: template.link_expiry} : {lead: null, cta: null};
+function plutoniumWithdrawalBody(template: EmailTemplate, purchase: PlutoniumPurchaseTerms): string {
+	if (purchase.withdrawalRule === 'brazil') {
+		return template.withdrawal_body_brazil;
+	}
+	return purchase.withdrawalProRata ? template.withdrawal_body_pro_rata : template.withdrawal_body;
+}
+
+function documentAttachments(document: BillingDocumentAttachment | null | undefined): Array<EmailAttachment> {
+	return document ? [document.pdf] : [];
 }
 
 function yesNo(value: boolean): 'yes' | 'no' {
@@ -208,8 +214,8 @@ function paymentMethodVariables(method: BillingPaymentMethod) {
 	};
 }
 
-function sellerVariables() {
-	return {sellerAddress: SELLER_ADDRESS, sellerEmail: OPERATOR_PASS_TRADER_EMAIL};
+function sellerVariables(locale: string | null) {
+	return {sellerAddress: getOperatorPassSellerAddress(locale), sellerEmail: OPERATOR_PASS_TRADER_EMAIL};
 }
 
 function formatWithLocale(date: Date, locale: string | null, options: Intl.DateTimeFormatOptions): string {
@@ -251,8 +257,8 @@ function paragraphsOf(...lines: Array<string | null | undefined>): string {
 function appealSection(template: EmailTemplate): EmailSlots {
 	return {
 		section_1_title: template.appeal_title,
-		section_1_body: template.appeal_body,
-		section_1_note: template.redress,
+		section_1_body: template.appeal_body_v2,
+		section_1_note: template.redress_v2,
 	};
 }
 
@@ -260,9 +266,9 @@ type ReplyInbox = 'appeals' | 'privacy' | 'safety' | 'support';
 
 const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	account_deletion_cancelled: 'safety',
+	account_deletion_completed: 'support',
 	account_deletion_scheduled_inactivity: 'support',
 	account_deletion_scheduled_requested: 'safety',
-	billing_credit_note: 'support',
 	bulk_message_deletion_completed: 'privacy',
 	donation_cancellation_confirmation: 'support',
 	donation_card_expiring: 'support',
@@ -286,7 +292,6 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	inactivity_warning: 'support',
 	ip_authorization: 'support',
 	mfa_backup_codes_view: 'support',
-	operator_pass_invoice: 'support',
 	operator_pass_offer_accepted: 'support',
 	operator_pass_offer_ended: 'support',
 	operator_pass_offer_received: 'support',
@@ -295,10 +300,11 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	operator_pass_refund_receipt: 'support',
 	operator_pass_removal_notice: 'appeals',
 	operator_pass_revoked: 'support',
-	operator_pass_sale_open: 'support',
-	operator_pass_waitlist_verification: 'support',
+	operator_pass_purchase_refused: 'support',
+	operator_pass_visionary_turned_on: 'support',
 	operator_pass_wall_hidden: 'appeals',
 	operator_pass_wall_name_replaced: 'appeals',
+	operator_pass_wall_quote_cleared: 'appeals',
 	operator_pass_welcome: 'support',
 	operator_pass_withdrawal_receipt: 'support',
 	password_change_verification: 'support',
@@ -311,6 +317,7 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	plutonium_payment_failed: 'support',
 	plutonium_payment_receipt: 'support',
 	plutonium_refund_receipt: 'support',
+	plutonium_withdrawal_receipt: 'support',
 	plutonium_renewal_notice: 'support',
 	reauth_code: 'support',
 	registration_approved: 'support',
@@ -394,14 +401,14 @@ export function paymentDisputeWarningSlots(
 			[template.ground_label, template.ground, getPaymentDisputeTermsUrl(params.product, marketingBaseUrl)],
 			[template.deadline_label, template.deadline_value],
 		),
-		lead: template.deadline_body,
+		lead: params.product === 'operator_pass' ? template.deadline_body_operator_pass : template.deadline_body,
 		section_1_title: template.why_title,
 		section_1_body: template.why_body,
 		section_1_note: params.note?.trim() || null,
 		section_2_title: template.next_title,
 		section_2_body: template.next_body,
 		section_3_title: template.appeal_title,
-		section_3_body: template.appeal_body,
+		section_3_body: template.appeal_body_v2,
 	};
 }
 
@@ -462,6 +469,13 @@ function getOwnHttpOrigins(config: EmailConfig): ReadonlySet<string> {
 		}
 	}
 	return origins;
+}
+
+function welcomeLabsState(member: boolean, visionary: boolean): 'visionary' | 'member' | 'none' {
+	if (!member) {
+		return 'none';
+	}
+	return visionary ? 'visionary' : 'member';
 }
 
 export class EmailService implements IEmailService {
@@ -599,6 +613,9 @@ export class EmailService implements IEmailService {
 		account_deletion_cancelled: async (email, _params, locale) => {
 			return this.sendTemplatedEmail(email, 'account_deletion_cancelled', locale, {});
 		},
+		account_deletion_completed: async (email, _params, locale) => {
+			return this.sendTemplatedEmail(email, 'account_deletion_completed', locale, {});
+		},
 		inactivity_warning: async (email, {deletionDate, lastActiveDate}, locale) => {
 			const loginUrl = `${this.config.appBaseUrl}/login`;
 			return this.sendTemplatedEmail(
@@ -666,6 +683,7 @@ export class EmailService implements IEmailService {
 					amount: formatMinorUnitPrice(params.amountCents, params.currency, locale),
 					interval: params.interval,
 					paidAt: params.paidAt ?? new Date(),
+					documentNumber: params.document?.number ?? '',
 				},
 				{
 					slots: (template) => ({
@@ -676,14 +694,15 @@ export class EmailService implements IEmailService {
 							[template.date_label, once && params.paidAt ? template.date_value : null],
 							[template.reference_label, once ? params.reference : null],
 						),
-						...(once && params.receiptUrl ? {end_link: template.receipt_link, end_link_url: params.receiptUrl} : {}),
+						lead: once && params.document ? null : template.lead,
+						text_1: params.document ? template.document_attached : null,
 					}),
+					attachments: params.document ? [params.document.pdf] : undefined,
 				},
 			);
 		},
 		donation_receipt: async (email, params, locale) => {
 			const totals = formatTotals(params.totals, locale);
-			const invoice = params.invoice;
 			return this.sendTemplatedEmail(
 				email,
 				'donation_receipt',
@@ -694,24 +713,24 @@ export class EmailService implements IEmailService {
 					periodStart: params.period?.start ?? params.paidAt,
 					periodEnd: params.period?.end ?? params.paidAt,
 					amountFormatted: totals.total,
-					pdf: yesNo(invoice?.pdf != null),
-					invoiceLinkUntil: invoice?.linkUntil ?? params.paidAt,
+					document: yesNo(Boolean(params.document)),
+					documentNumber: params.document?.number ?? '',
 				},
 				{
 					slots: (template) => ({
 						...summary(
 							[
-								[template.invoice_label, params.invoiceNumber],
 								[template.date_label, template.date_value],
 								[template.period_label, params.period ? template.period_value : null],
 							],
 							[template.total_label, totals.totalWithCode],
 						),
-						...invoiceSlots(template, invoice),
+						lead: params.document ? template.document_attached : null,
+						cta: null,
 						end_link: template.manage_link,
 						end_link_url: params.manageUrl,
 					}),
-					attachments: invoice?.pdf ? [invoice.pdf] : undefined,
+					attachments: params.document ? [params.document.pdf] : undefined,
 				},
 			);
 		},
@@ -728,11 +747,14 @@ export class EmailService implements IEmailService {
 							[
 								[template.reference_label, params.reference],
 								[template.date_label, template.date_value],
+								[template.refund_note_label, params.creditNote?.number],
 							],
 							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
-						...(params.refundUrl ? {cta_url: params.refundUrl} : {cta: null}),
+						cta: null,
+						text_1: params.creditNote ? template.refund_note_attached : null,
 					}),
+					attachments: params.creditNote ? [params.creditNote.pdf] : undefined,
 				},
 			);
 		},
@@ -749,13 +771,9 @@ export class EmailService implements IEmailService {
 				{
 					slots: (template) => ({
 						...summary(
-							[
-								[template.invoice_label, params.invoiceNumber],
-								[template.date_label, template.date_value],
-							],
+							[[template.date_label, template.date_value]],
 							[template.amount_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
-						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
 						end_link: template.manage_link,
 						end_link_url: params.manageUrl,
 						...(params.reminder ? {subject: template.reminder_subject} : {}),
@@ -810,6 +828,7 @@ export class EmailService implements IEmailService {
 					deliveredAt: params.deliveredAt,
 					wallName: params.wallName ?? '',
 					wallOptOut: params.wallName ? 'no' : 'yes',
+					labs: welcomeLabsState(params.labsMember, params.visionary),
 				},
 				{
 					slots: (template) => ({
@@ -818,73 +837,94 @@ export class EmailService implements IEmailService {
 							[template.delivered_label, template.delivered_value],
 							[template.pass_count_label, params.passCount > 1 ? String(params.passCount) : null],
 						),
-						points_list: `${template.wall_line}\n${template.badge_line}`,
-						lead: template.labs_line,
-						cta_url: params.labsInviteUrl,
+						lead: template.certificate_line,
+						cta: null,
+						section_1_title: template.bonus_heading,
+						section_1_list: [template.wall_line_v2, template.badge_line, template.labs_line_v2].join('\n'),
+						section_1_link: params.labsMember ? template.cta : null,
+						section_1_link_url: params.labsMember ? params.labsInviteUrl : null,
 						end_link: template.terms_link,
 						end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
 					}),
+					...(params.certificate ? {attachments: [params.certificate]} : {}),
 					timeZone: params.timeZone,
 				},
 			);
 		},
-		operator_pass_purchase_confirmation: async (email, params, locale) => {
-			const attachment = await this.renderTermsAttachment(locale);
+		operator_pass_purchase_confirmation: async (email, params, requestedLocale) => {
+			const locale = params.withdrawalCountry === 'BR' ? 'pt-BR' : requestedLocale;
+			const attachment = await this.renderTermsAttachment(
+				locale ?? null,
+				params.withdrawalCountry,
+				params.termsVersion,
+			);
 			if (!attachment) {
 				return false;
 			}
-			const countryRule = params.withdrawalDays !== null && params.withdrawalEndsOn !== null;
+			const totals = formatTotals(params.totals, locale ?? null);
+			const currency = params.totals.currency;
 			return this.sendTemplatedEmail(
 				email,
 				'operator_pass_purchase_confirmation',
 				locale,
 				{
-					termsVersion: OPERATOR_PASS_TERMS_VERSION,
+					termsVersion: params.termsVersion,
 					orderDate: params.orderDate,
 					quantity: params.quantity,
-					priceFormatted: formatMinorUnitPrice(params.amountMinor, params.currency, locale),
+					priceFormatted: totals.totalWithCode,
+					taxFormatted: totals.tax ?? '',
+					business: yesNo(params.business),
+					document: yesNo(Boolean(params.document)),
+					documentNumber: params.document?.number ?? '',
 					withdrawalEndsOn: params.withdrawalEndsOn ?? params.orderDate.toISOString().slice(0, 10),
-					waiverConsentAt: params.waiverConsentAt ?? params.orderDate,
-					consentText: params.consentText ?? '',
+					consentAt: params.consentAt ?? params.orderDate,
+					labs_name: OPERATOR_PASS_LABS_NAME,
 					wallName: params.wallName ?? '',
 					wallOptOut: params.wallName ? 'no' : 'yes',
+					sellerAddress: getOperatorPassSellerAddress(locale),
+					sellerPhone: OPERATOR_PASS_TRADER_PHONE,
 					sellerEmail: OPERATOR_PASS_TRADER_EMAIL,
 				},
 				{
-					slots: (template) => {
-						let withdrawalBodyKey = 'withdrawal_waived';
-						if (countryRule) {
-							withdrawalBodyKey = params.countryConsent ? 'withdrawal_cancel_until' : 'withdrawal_rule_cancel_until';
-						}
-						return {
-							...facts(
-								[template.order_number_label, params.invoiceNumber],
-								[template.order_date_label, template.order_date_value],
-								[template.product_label, template.product_value],
+					slots: (template) => ({
+						...facts(
+							[template.order_number_label, params.invoiceNumber],
+							[template.order_date_label, template.order_date_value],
+							[template.product_label, template.product_value],
+							[template.currency_label, currency.toUpperCase()],
+							[template.payment_label, params.paymentMethod],
+						),
+						...summary(
+							[
 								[
 									template.unit_price_label,
-									params.quantity > 1 ? formatMinorUnitPrice(params.unitAmountMinor, params.currency, locale) : null,
+									params.quantity > 1 ? formatMinorUnitPrice(params.unitAmountMinor, currency, locale) : null,
 								],
-								[template.price_label, template.price_value],
-								[template.currency_label, params.currency.toUpperCase()],
-								[template.payment_label, params.paymentMethod],
-							),
-							section_1_title: template.included_heading,
-							section_1_list: [template.included_perks, template.included_pass_on].join('\n'),
-							section_1_note: template.wall_status,
-							section_2_title: template.bonus_heading,
-							section_2_body: template.bonus_line,
-							...(params.consentText
-								? {section_3_title: template.consent_heading, section_3_body: template.consent_line}
-								: {}),
-							section_4_title: template.withdrawal_heading,
-							section_4_body: template[withdrawalBodyKey],
-							note: template.seller,
-							end_link: template.terms_link,
-							end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
-						};
-					},
-					attachments: [attachment],
+							],
+							[template.price_label, template.price_value],
+							taxLine(template, params.totals),
+						),
+						lead: params.document ? template.document_attached : null,
+						cta: null,
+						section_1_title: template.paid_for_heading,
+						section_1_body: template.paid_for_v2,
+						section_2_title: template.bonus_heading,
+						section_2_body: template.bonus_line_v2,
+						section_2_note: template.wall_status_v2,
+						...(params.deliveryBoxText
+							? {
+									section_3_title: template.boxes_heading,
+									section_3_body: template.delivery_box,
+									section_3_list: `"${params.deliveryBoxText}"`,
+								}
+							: {}),
+						section_4_title: template.withdrawal_heading,
+						section_4_body: params.withdrawalEndsOn ? template.withdrawal_country_v4 : template.withdrawal_waiver,
+						note: template.seller,
+						end_link: template.terms_link,
+						end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
+					}),
+					attachments: [attachment, ...documentAttachments(params.document)],
 					timeZone: params.timeZone,
 				},
 			);
@@ -896,12 +936,14 @@ export class EmailService implements IEmailService {
 				'operator_pass_withdrawal_receipt',
 				locale,
 				{
-					cancellation: params.cancellation ? 'yes' : 'no',
 					receivedAt: params.receivedAt,
 					orderDate: params.orderDate,
 					amountFormatted,
+					delivered: params.delivered ? 'yes' : 'no',
+					passCount: params.passCount,
 					lastPass: params.lastPass ? 'yes' : 'no',
-					refundViaDispute: params.refundViaDispute ? 'yes' : 'no',
+					visionary: params.visionary ? 'yes' : 'no',
+					refund: params.refund,
 				},
 				{
 					slots: (template) => ({
@@ -911,31 +953,32 @@ export class EmailService implements IEmailService {
 							[template.order_date_label, template.order_date_value],
 							[template.refund_label, amountFormatted],
 							[template.currency_label, params.currency.toUpperCase()],
+							[template.credit_note_label, params.creditNote?.number],
 						),
-						lead: params.hasDonation ? `${template.refund}\n\n${template.donation}` : template.refund,
-						...(params.hasDonation ? {cta_url: `${this.config.marketingBaseUrl}/donate/manage`} : {cta: null}),
+						lead: template.refund,
+						cta: null,
+						text_1: params.creditNote ? template.credit_note_attached : null,
 					}),
+					attachments: params.creditNote ? [params.creditNote.pdf] : undefined,
 					timeZone: params.timeZone,
 				},
 			);
 		},
 		operator_pass_offer_received: async (email, params, locale) => {
-			const appUrl = `${this.config.appBaseUrl}/channels/@operator-pass`;
+			const appUrl = `${this.config.appBaseUrl}/channels/@operator-pass?view=passes`;
 			return this.sendTemplatedEmail(
 				email,
 				'operator_pass_offer_received',
 				locale,
-				{
-					senderName: params.senderName,
-					arrivesAt: getOperatorPassUnlockDay(params.arrivesAt ?? new Date(), new Date(), params.timeZone),
-				},
-				{slots: () => ({cta_url: appUrl})},
+				{senderName: params.senderName},
+				{slots: (template) => ({lead: template.lead_v2, cta_url: appUrl})},
 			);
 		},
 		operator_pass_offer_accepted: async (email, params, locale) => {
 			return this.sendTemplatedEmail(email, 'operator_pass_offer_accepted', locale, {
 				recipientName: params.recipientName,
 				remainingCount: params.remainingCount,
+				visionary: params.visionary ? 'yes' : 'no',
 			});
 		},
 		operator_pass_offer_ended: async (email, params, locale) => {
@@ -948,7 +991,50 @@ export class EmailService implements IEmailService {
 			return this.sendTemplatedEmail(email, 'operator_pass_revoked', locale, {
 				cause: params.cause,
 				lastPass: params.lastPass ? 'yes' : 'no',
+				visionary: params.visionary ? 'yes' : 'no',
 			});
+		},
+		operator_pass_visionary_turned_on: async (email, params, locale) => {
+			const terms = await this.renderTermsAttachment(locale ?? null, null, params.termsVersion);
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_visionary_turned_on',
+				locale,
+				{
+					badge: yesNo(params.badgeShown),
+					wallName: params.wallName ?? '',
+					wallOptOut: yesNo(!params.wallName),
+					member: yesNo(params.labsMember),
+					termsVersion: params.termsVersion,
+				},
+				{
+					slots: (template) => ({
+						lead: [template.badge_line, template.wall_line, template.labs_line].join('\n'),
+						cta: params.labsMember ? template.cta : null,
+						cta_url: params.labsMember ? params.labsInviteUrl : null,
+						note: terms ? template.terms_attached : null,
+						end_link: template.terms_link,
+						end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
+					}),
+					attachments: terms ? [params.certificate, terms] : [params.certificate],
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		operator_pass_purchase_refused: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_purchase_refused',
+				locale,
+				{},
+				{
+					slots: (template) => ({
+						...facts([template.credit_note_label, params.creditNote?.number]),
+						text_1: params.creditNote ? template.credit_note_attached : null,
+					}),
+					attachments: params.creditNote ? [params.creditNote.pdf] : undefined,
+				},
+			);
 		},
 		operator_pass_removal_notice: async (email, params, locale) => {
 			const termsUrl = getOperatorPassTermsUrl(this.config.marketingBaseUrl);
@@ -956,7 +1042,7 @@ export class EmailService implements IEmailService {
 				email,
 				'operator_pass_removal_notice',
 				locale,
-				{replyDays: daysUntil(params.replyBy)},
+				{replyDays: daysUntil(params.replyBy), visionary: params.visionary ? 'yes' : 'no'},
 				{
 					slots: (template) => ({
 						...facts(
@@ -965,7 +1051,7 @@ export class EmailService implements IEmailService {
 							[template.ground_label, template.ground, termsUrl],
 						),
 						text_1: template.reply,
-						text_2: template.next,
+						text_2: template.next_v2,
 					}),
 				},
 			);
@@ -1012,6 +1098,27 @@ export class EmailService implements IEmailService {
 				},
 			);
 		},
+		operator_pass_wall_quote_cleared: async (email, params, locale) => {
+			const termsUrl = `${this.config.marketingBaseUrl}/terms#6-2-enforcement-by-fluxer`;
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_wall_quote_cleared',
+				locale,
+				{reason: params.reason},
+				{
+					slots: (template) => ({
+						...facts(
+							[template.reason_label, template.reason_value],
+							[template.facts_label, params.note],
+							[template.ground_label, template.ground, termsUrl],
+						),
+						text_1: template.automated_text,
+						text_2: template.next,
+						...appealSection(template),
+					}),
+				},
+			);
+		},
 		operator_pass_perks_removed: async (email, params, locale) => {
 			const termsUrl = getOperatorPassTermsUrl(this.config.marketingBaseUrl);
 			return this.sendTemplatedEmail(
@@ -1022,12 +1129,16 @@ export class EmailService implements IEmailService {
 					scope: params.until ? 'temporary' : 'permanent',
 					until: params.until ?? new Date(0),
 					automated: params.automated ? 'yes' : 'no',
+					visionary: params.visionary ? 'yes' : 'no',
+					cause: params.dispute ? 'dispute' : 'other',
+					disputeId: params.dispute?.id ?? '',
+					deadline: params.dispute?.deadline ?? new Date(0),
 				},
 				{
 					slots: (template) => ({
 						...facts(
-							[template.rule_label, params.rule],
-							[template.facts_label, params.facts],
+							[template.rule_label, params.dispute ? template.dispute_rule : params.rule],
+							[template.facts_label, params.dispute ? template.dispute_facts : params.facts],
 							[template.ground_label, template.ground, termsUrl],
 						),
 						text_1: template.automated_text,
@@ -1048,8 +1159,9 @@ export class EmailService implements IEmailService {
 		},
 		payment_dispute_review_alert: async (email, params) => {
 			const product = params.product === 'operator_pass' ? 'Operator Pass' : 'Plutonium';
+			const article = params.product === 'operator_pass' ? 'An' : 'A';
 			const lines = [
-				`A ${product} payment dispute opened and needs a review.`,
+				`${article} ${product} payment dispute opened and needs a review.`,
 				'',
 				`Dispute: ${params.disputeId}`,
 				...(params.invoiceNumber ? [`Invoice: ${params.invoiceNumber}`] : []),
@@ -1065,13 +1177,16 @@ export class EmailService implements IEmailService {
 			];
 			return this.sendPlainEmail(email, `${product} payment dispute ${params.disputeId}`, lines.join('\n'));
 		},
+		billing_support_alert: async (email, {subject, text}) => {
+			return this.sendPlainEmail(email, subject, text);
+		},
 		plutonium_payment_receipt: async (email, params, locale) => {
 			const gift = isGiftPlan(params.plan);
 			const totals = formatTotals(params.totals, locale);
-			const invoice = params.invoice;
+			const document = params.document;
 			const purchase = params.purchase;
 			const renewal = purchase?.renewal ?? null;
-			const withdrawal = purchase?.seller && purchase.withdrawalEndsAt ? purchase.withdrawalEndsAt : null;
+			const withdrawal = purchase?.seller && purchase.withdrawalEndsOn ? purchase.withdrawalEndsOn : null;
 			return this.sendTemplatedEmail(
 				email,
 				'plutonium_payment_receipt',
@@ -1085,22 +1200,23 @@ export class EmailService implements IEmailService {
 					periodEnd: params.period?.end ?? params.paidAt,
 					amountFormatted: totals.total,
 					taxFormatted: totals.tax ?? '',
-					pdf: yesNo(invoice?.pdf != null),
-					invoiceLinkUntil: invoice?.linkUntil ?? params.paidAt,
+					business: yesNo(params.business),
+					document: yesNo(Boolean(document)),
+					documentNumber: document?.number ?? '',
 					renewal: renewal?.interval ?? 'none',
 					renewalFormatted: renewal ? formatMinorUnitPrice(renewal.amountMinor, params.totals.currency, locale) : '',
 					renewalTax: renewal?.tax ?? 'none',
 					consentAt: purchase?.consentAt ?? params.paidAt,
-					withdrawalEndsAt: withdrawal ?? params.paidAt,
+					withdrawalEndsAt: withdrawal ?? params.paidAt.toISOString().slice(0, 10),
 					invoiceNumber: params.invoiceNumber ?? '',
-					sellerAddress: SELLER_ADDRESS,
+					sellerAddress: getOperatorPassSellerAddress(locale),
 					sellerEmail: OPERATOR_PASS_TRADER_EMAIL,
 				},
 				{
 					slots: (template) => ({
 						...summary(
 							[
-								[template.invoice_label, params.invoiceNumber],
+								[template.invoice_label, gift ? null : params.invoiceNumber],
 								[template.date_label, template.date_value],
 								[template.product_label, template.product_value],
 								[template.period_label, params.period && !gift ? template.period_value : null],
@@ -1112,20 +1228,27 @@ export class EmailService implements IEmailService {
 								[template.paid_label, totals.paid],
 							],
 						),
-						...invoiceSlots(template, invoice),
+						cta: null,
 						lead:
-							[gift ? template.gift_note : null, invoice ? template.lead : null].filter(Boolean).join('\n\n') || null,
+							[gift ? template.gift_note : null, document ? template.document_attached : null]
+								.filter(Boolean)
+								.join('\n\n') || null,
 						...(purchase
 							? {
 									section_1_title: template.plan_title,
 									section_1_body: template.plan_body,
 									...(withdrawal && purchase.consentAt
-										? {section_2_title: template.consent_title, section_2_body: template.consent_body}
+										? {
+												section_2_title: template.consent_title,
+												section_2_body: purchase.withdrawalProRata
+													? template.consent_body_pro_rata
+													: template.consent_body,
+											}
 										: {}),
 									...(withdrawal
 										? {
 												section_3_title: template.withdrawal_title,
-												section_3_body: template.withdrawal_body,
+												section_3_body: plutoniumWithdrawalBody(template, purchase),
 												section_3_note: template.withdrawal_note,
 												section_4_title: template.form_title,
 												section_4_body: template.form_body,
@@ -1137,7 +1260,7 @@ export class EmailService implements IEmailService {
 						end_link: gift ? null : template.manage_link,
 						end_link_url: gift ? null : plutoniumUrl(this.config.appBaseUrl),
 					}),
-					attachments: invoice?.pdf ? [invoice.pdf] : undefined,
+					attachments: document ? [document.pdf] : undefined,
 					timeZone: params.timeZone,
 				},
 			);
@@ -1169,11 +1292,45 @@ export class EmailService implements IEmailService {
 								[template.product_label, template.product_value],
 								[template.original_label, template.original_value],
 								[template.date_label, template.date_value],
+								[template.credit_note_label, params.creditNote?.number],
 							],
 							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
-						...(params.refundUrl ? {cta_url: params.refundUrl} : {cta: null}),
+						cta: null,
 						lead: params.subscriptionEnded ? template.ended_line : null,
+						text_1: params.creditNote ? template.credit_note_attached : null,
+					}),
+					attachments: params.creditNote ? [params.creditNote.pdf] : undefined,
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_withdrawal_receipt: async (email, params, locale) => {
+			const amountFormatted = formatMinorUnitPrice(params.amountMinor, params.currency, locale);
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_withdrawal_receipt',
+				locale,
+				{
+					premiumName: params.premiumName,
+					receivedAt: params.receivedAt,
+					purchasedAt: params.purchasedAt,
+					gift: yesNo(params.gift),
+					amountFormatted,
+					refund: params.refund,
+					brazil: yesNo(params.brazil),
+				},
+				{
+					slots: (template) => ({
+						...facts(
+							[template.statement_label, template.statement_value],
+							[template.name_label, params.name],
+							[template.reference_label, params.reference],
+							[template.refund_label, amountFormatted],
+							[template.currency_label, params.currency.toUpperCase()],
+						),
+						lead: params.proRata ? template.refund_pro_rata : template.refund,
+						cta: null,
 					}),
 					timeZone: params.timeZone,
 				},
@@ -1195,13 +1352,9 @@ export class EmailService implements IEmailService {
 				{
 					slots: (template) => ({
 						...summary(
-							[
-								[template.invoice_label, params.invoiceNumber],
-								[template.date_label, template.date_value],
-							],
+							[[template.date_label, template.date_value]],
 							[template.amount_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
-						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
 						end_link: template.manage_link,
 						end_link_url: plutoniumUrl(this.config.appBaseUrl),
 						...(params.reminder ? {subject: template.reminder_subject} : {}),
@@ -1298,6 +1451,8 @@ export class EmailService implements IEmailService {
 					...this.cancellationVariables(params, locale),
 					premiumName: params.premiumName,
 					plan: params.plan,
+					unpaid: yesNo(params.unpaid != null),
+					unpaidFormatted: params.unpaid ? chargeFormatted(params.unpaid, locale) : '',
 				},
 				{
 					slots: (template) => ({
@@ -1318,7 +1473,7 @@ export class EmailService implements IEmailService {
 				this.cancellationVariables(params, locale),
 				{
 					slots: (template) => ({
-						intro: paragraphsOf(template.intro, template.ends_line, template.charge_line),
+						intro: paragraphsOf(template.intro, template.ends_line, template.charge_line_v2),
 						cta_url: params.manageUrl,
 						text_1: template.reference_line,
 						note: params.seller ? template.seller : null,
@@ -1334,10 +1489,8 @@ export class EmailService implements IEmailService {
 				'plutonium_ended_unpaid',
 				locale,
 				{
-					...sellerVariables(),
+					...sellerVariables(locale),
 					premiumName: params.premiumName,
-					numbered: yesNo(params.invoiceNumber != null),
-					invoiceNumber: params.invoiceNumber ?? '',
 					owed,
 					amountFormatted: amountWithCode(params.amountMinor, params.currency, locale),
 				},
@@ -1346,9 +1499,6 @@ export class EmailService implements IEmailService {
 						intro: paragraphsOf(template.intro, template.owed_line),
 						cta_url: plutoniumUrl(this.config.appBaseUrl),
 						note: params.seller ? template.seller : null,
-						...(owed === 'open' && params.invoiceUrl
-							? {end_link: template.invoice_link, end_link_url: params.invoiceUrl}
-							: {}),
 					}),
 				},
 			);
@@ -1359,7 +1509,7 @@ export class EmailService implements IEmailService {
 				'plutonium_gift_applied',
 				locale,
 				{
-					...sellerVariables(),
+					...sellerVariables(locale),
 					...paymentMethodVariables(params.paymentMethod),
 					premiumName: params.premiumName,
 					plan: params.plan,
@@ -1377,56 +1527,6 @@ export class EmailService implements IEmailService {
 				},
 			);
 		},
-		billing_credit_note: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'billing_credit_note',
-				locale,
-				{
-					...sellerVariables(),
-					amountFormatted: amountWithCode(params.amountMinor, params.currency, locale),
-					numbered: yesNo(params.invoiceNumber != null),
-					invoiceNumber: params.invoiceNumber ?? '',
-					upcoming: yesNo(params.upcomingInvoice),
-				},
-				{
-					slots: (template) => ({
-						note: params.seller ? template.seller : null,
-						...(params.pdfUrl ? {end_link: template.credit_note_link, end_link_url: params.pdfUrl} : {}),
-					}),
-				},
-			);
-		},
-		operator_pass_invoice: async (email, params, locale) => {
-			const totals = formatTotals(params.totals, locale);
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_invoice',
-				locale,
-				{
-					paidAt: params.paidAt,
-					amountFormatted: totals.total,
-					taxFormatted: totals.tax ?? '',
-					pdf: yesNo(params.invoice.pdf != null),
-					invoiceLinkUntil: params.invoice.linkUntil,
-				},
-				{
-					slots: (template) => ({
-						...summary(
-							[
-								[template.invoice_label, params.invoiceNumber],
-								[template.date_label, template.date_value],
-							],
-							[template.total_label, totals.totalWithCode],
-							taxLine(template, params.totals),
-						),
-						...invoiceSlots(template, params.invoice),
-					}),
-					attachments: params.invoice.pdf ? [params.invoice.pdf] : undefined,
-					timeZone: params.timeZone,
-				},
-			);
-		},
 		operator_pass_refund_receipt: async (email, params, locale) => {
 			return this.sendTemplatedEmail(
 				email,
@@ -1436,7 +1536,10 @@ export class EmailService implements IEmailService {
 					orderDate: params.orderDate,
 					refundedAt: params.refundedAt,
 					amountFormatted: formatMinorUnitPrice(params.amountMinor, params.currency, locale),
-					full: yesNo(params.full),
+					delivered: yesNo(params.delivered),
+					passCount: params.passCount,
+					lastPass: yesNo(params.lastPass),
+					visionary: yesNo(params.visionary),
 				},
 				{
 					slots: (template) => ({
@@ -1445,81 +1548,58 @@ export class EmailService implements IEmailService {
 								[template.order_number_label, params.invoiceNumber],
 								[template.order_date_label, template.order_date_value],
 								[template.date_label, template.date_value],
+								[template.credit_note_label, params.creditNote?.number],
 							],
 							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
+						text_1: params.creditNote ? template.credit_note_attached : null,
 					}),
+					attachments: params.creditNote ? [params.creditNote.pdf] : undefined,
 					timeZone: params.timeZone,
-				},
-			);
-		},
-		operator_pass_waitlist_verification: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_waitlist_verification',
-				locale,
-				{},
-				{slots: () => ({cta_url: params.confirmUrl})},
-			);
-		},
-		operator_pass_sale_open: async (email, params, locale) => {
-			return this.sendTemplatedEmail(
-				email,
-				'operator_pass_sale_open',
-				locale,
-				{
-					priceFormatted: params.priceFormatted,
-					priceEndsOn: getOperatorPassEarlyBirdEndsOn(params.priceRisesAt),
-				},
-				{
-					slots: (template) => ({
-						...facts([template.price_label, template.price_value]),
-						points_list: `${template.included_perks}\n${template.included_bonus}`,
-						cta_url: params.checkoutUrl,
-						end_link: template.terms_link,
-						end_link_url: getOperatorPassTermsUrl(this.config.marketingBaseUrl),
-						unsubscribe_url: params.unsubscribePageUrl,
-					}),
-					listUnsubscribe: {url: params.unsubscribeUrl, post: true},
 				},
 			);
 		},
 	};
 
-	private async renderTermsAttachment(locale: string | null): Promise<EmailAttachment | null> {
-		const language = resolveOperatorPassTermsLanguage(locale);
+	private async renderTermsAttachment(
+		locale: string | null,
+		withdrawalCountry: string | null,
+		termsVersion: string,
+	): Promise<EmailAttachment | null> {
+		const language = resolveOperatorPassTermsLanguage(locale, withdrawalCountry);
+		if (!hasOperatorPassTermsVersion(termsVersion)) {
+			logger.error({language, termsVersion}, 'No Operator Pass terms text for the version the purchase accepted');
+			return null;
+		}
 		try {
 			const {getOperatorPassTermsPdfFilename, renderOperatorPassTermsPdf} = await import(
 				'@pkgs/email/src/operator_pass_terms/OperatorPassTermsPdf'
 			);
+			const cacheKey = `${termsVersion}|${language}|${this.config.marketingBaseUrl}`;
+			let content = operatorPassTermsPdfCache.get(cacheKey);
+			if (!content) {
+				const rendering = renderOperatorPassTermsPdf(language, termsVersion, this.config.marketingBaseUrl);
+				operatorPassTermsPdfCache.set(cacheKey, rendering);
+				rendering.catch(() => {
+					if (operatorPassTermsPdfCache.get(cacheKey) === rendering) {
+						operatorPassTermsPdfCache.delete(cacheKey);
+					}
+				});
+				content = rendering;
+			}
 			return {
-				filename: getOperatorPassTermsPdfFilename(language),
-				content: await renderOperatorPassTermsPdf(language, this.config.marketingBaseUrl),
+				filename: getOperatorPassTermsPdfFilename(language, termsVersion),
+				content: await content,
 				contentType: 'application/pdf',
 			};
 		} catch (error) {
-			logger.error({language, error}, 'Failed to render the Operator Pass terms PDF');
+			logger.error({language, termsVersion, error}, 'Failed to render the Operator Pass terms PDF');
 			return null;
 		}
 	}
 
 	async isEmailBounced(email: string): Promise<boolean> {
 		return (await this.bouncedEmailChecker?.isEmailBounced(email)) ?? false;
-	}
-
-	async openBulkSession(): Promise<IBulkEmailSession> {
-		const bulkProvider = this.config.enabled ? this.provider?.openBulk?.() : undefined;
-		if (!bulkProvider) {
-			return {
-				send: (templateKey, email, params, locale) => this.send(templateKey, email, params, locale),
-				close: async () => {},
-			};
-		}
-		const pooled = new EmailService(this.config, bulkProvider, this.bouncedEmailChecker);
-		return {
-			send: (templateKey, email, params, locale) => pooled.send(templateKey, email, params, locale),
-			close: () => bulkProvider.close(),
-		};
 	}
 
 	private async sendPlainEmail(email: string, subject: string, text: string): Promise<boolean> {
@@ -1540,7 +1620,7 @@ export class EmailService implements IEmailService {
 		locale: string | null,
 	) {
 		return {
-			...sellerVariables(),
+			...sellerVariables(locale),
 			...paymentMethodVariables(params.paymentMethod),
 			chargeAt: params.chargeAt,
 			nextFormatted: chargeFormatted(params.next ?? params.regular, locale),
@@ -1557,7 +1637,7 @@ export class EmailService implements IEmailService {
 	) {
 		const brand = cardBrandName(params.brand);
 		return {
-			...sellerVariables(),
+			...sellerVariables(locale),
 			branded: yesNo(brand != null),
 			brand: brand ?? '',
 			last4: params.last4,
@@ -1575,12 +1655,10 @@ export class EmailService implements IEmailService {
 		locale: string | null,
 	) {
 		return {
-			...sellerVariables(),
+			...sellerVariables(locale),
 			receivedFormatted: formatMoment(params.receivedAt, locale, params.timeZone),
 			endsAt: params.endsAt,
 			reference: params.reference,
-			unpaid: yesNo(params.unpaid != null),
-			unpaidFormatted: params.unpaid ? chargeFormatted(params.unpaid, locale) : '',
 		};
 	}
 
@@ -1646,7 +1724,6 @@ export class EmailService implements IEmailService {
 			subject,
 			text,
 			...(html ? {html} : {}),
-			...(options.listUnsubscribe ? {listUnsubscribe: options.listUnsubscribe} : {}),
 			...(attachments?.length ? {attachments} : {}),
 		});
 	}

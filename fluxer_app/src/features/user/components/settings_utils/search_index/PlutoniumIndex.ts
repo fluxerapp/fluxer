@@ -8,41 +8,9 @@ import {
 import {GIFTS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Subscription',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
 const PREMIUM_DESCRIPTOR = msg({
 	message: 'Premium',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const UPGRADE_DESCRIPTOR = msg({
-	message: 'Upgrade',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const PLAN_DESCRIPTOR = msg({
-	message: 'Plan',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const BILLING_DESCRIPTOR = msg({
-	message: 'Billing',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CANCEL_SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Cancel subscription',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const REACTIVATE_SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Reactivate subscription',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CUSTOMER_PORTAL_DESCRIPTOR = msg({
-	message: 'Customer portal',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const MANAGE_YOUR_SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Manage your subscription',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const PRICING_DESCRIPTOR = msg({
 	message: 'Pricing',
@@ -97,30 +65,6 @@ const PURCHASE_PREMIUM_GIFTS_FOR_SOMEONE_ELSE_DESCRIPTOR = msg({
 	comment:
 		'Settings search entry description. One-line summary of what the settings search entry controls. Preserve {premiumProductName}; it is inserted by code.',
 });
-const PURCHASE_HISTORY_DESCRIPTOR = msg({
-	message: 'Purchase history',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const BILLING_HISTORY_DESCRIPTOR = msg({
-	message: 'Billing history',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const INVOICE_DESCRIPTOR = msg({
-	message: 'Invoice',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const RECEIPT_DESCRIPTOR = msg({
-	message: 'Receipt',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const REFUND_DESCRIPTOR = msg({
-	message: 'Refund',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const REVIEW_PAST_PURCHASES_AND_REFUND_OPTIONS_DESCRIPTOR = msg({
-	message: 'Review past purchases and refund options',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
 const FREE_VS_PREMIUM_DESCRIPTOR = msg({
 	message: 'Free vs {premiumProductName}',
 	comment:
@@ -153,23 +97,6 @@ const VIEW_PREMIUM_PERKS_DESCRIPTOR = msg({
 });
 export const plutoniumIndex: Array<SearchableSettingDescriptor> = [
 	{
-		id: 'plutonium-subscription',
-		tabType: 'plutonium',
-		label: SUBSCRIPTION_DESCRIPTOR,
-		keywords: [
-			PREMIUM_PRODUCT_NAME_KEYWORD,
-			PREMIUM_DESCRIPTOR,
-			SUBSCRIPTION_DESCRIPTOR,
-			UPGRADE_DESCRIPTOR,
-			PLAN_DESCRIPTOR,
-			BILLING_DESCRIPTOR,
-			CANCEL_SUBSCRIPTION_DESCRIPTOR,
-			REACTIVATE_SUBSCRIPTION_DESCRIPTOR,
-			CUSTOMER_PORTAL_DESCRIPTOR,
-		],
-		description: MANAGE_YOUR_SUBSCRIPTION_DESCRIPTOR,
-	},
-	{
 		id: 'plutonium-pricing',
 		tabType: 'plutonium',
 		label: PRICING_DESCRIPTOR,
@@ -199,23 +126,11 @@ export const plutoniumIndex: Array<SearchableSettingDescriptor> = [
 		description: PURCHASE_PREMIUM_GIFTS_FOR_SOMEONE_ELSE_DESCRIPTOR,
 	},
 	{
-		id: 'plutonium-purchase-history',
-		tabType: 'plutonium',
-		label: PURCHASE_HISTORY_DESCRIPTOR,
-		keywords: [
-			PURCHASE_HISTORY_DESCRIPTOR,
-			BILLING_HISTORY_DESCRIPTOR,
-			INVOICE_DESCRIPTOR,
-			RECEIPT_DESCRIPTOR,
-			REFUND_DESCRIPTOR,
-		],
-		description: REVIEW_PAST_PURCHASES_AND_REFUND_OPTIONS_DESCRIPTOR,
-	},
-	{
 		id: 'plutonium-perks',
 		tabType: 'plutonium',
 		label: FREE_VS_PREMIUM_DESCRIPTOR,
 		keywords: [
+			PREMIUM_PRODUCT_NAME_KEYWORD,
 			PERKS_DESCRIPTOR,
 			BENEFITS_DESCRIPTOR,
 			FEATURES_DESCRIPTOR,

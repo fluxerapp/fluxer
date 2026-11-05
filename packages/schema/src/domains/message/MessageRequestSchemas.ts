@@ -20,6 +20,7 @@ import {
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {AttachmentURLType, URLType} from '@fluxer/schema/src/primitives/UrlValidators';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 const RICH_EMBED_AUTHOR_NAME_MAX_LENGTH = 256 as const;
@@ -84,13 +85,17 @@ export const RichEmbedFooterRequest = z.preprocess(
 
 export type RichEmbedFooterRequest = z.infer<typeof RichEmbedFooterRequest>;
 
-const RichEmbedFieldRequest = z.object({
-	name: createStringType(1, RICH_EMBED_FIELD_NAME_MAX_LENGTH).describe('Name of the field'),
-	value: createStringType(0, RICH_EMBED_FIELD_VALUE_MAX_LENGTH).describe(
-		`Value of the field (0-${RICH_EMBED_FIELD_VALUE_MAX_LENGTH} characters)`,
-	),
-	inline: z.boolean().default(false).describe('Whether the field should display inline'),
-});
+const RichEmbedFieldRequest = z
+	.object({
+		name: createStringType(0, RICH_EMBED_FIELD_NAME_MAX_LENGTH).describe(
+			`Name of the field (0-${RICH_EMBED_FIELD_NAME_MAX_LENGTH} characters)`,
+		),
+		value: createStringType(0, RICH_EMBED_FIELD_VALUE_MAX_LENGTH).describe(
+			`Value of the field (0-${RICH_EMBED_FIELD_VALUE_MAX_LENGTH} characters)`,
+		),
+		inline: z.boolean().default(false).describe('Whether the field should display inline'),
+	})
+	.register(schemaMetadata, {preserveEmptyValues: true});
 
 export const RichEmbedRequest = z.object({
 	url: URLType.nullish().describe('URL of the embed'),

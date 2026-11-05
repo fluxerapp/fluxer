@@ -3,7 +3,7 @@
 -module(push_notification).
 -typing([eqwalizer]).
 
--export([build_notification_title/5, thread_fields/2]).
+-export([build_notification_title/5, channel_label/2, thread_fields/2]).
 
 -define(THREAD_PUSH_KEY, <<"__thread_push">>).
 

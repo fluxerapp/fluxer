@@ -209,7 +209,8 @@ export const premiumCallbackRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'premiumCallback',
 	path: Routes.PREMIUM_CALLBACK,
-	onEnter: requireAuthentication,
+	onEnter: (context) =>
+		context.url.searchParams.get('product') === 'operator_pass' ? requireAuthentication(context) : undefined,
 	preload: PremiumCallbackPage.preload,
 	component: () => <PremiumCallbackPage data-flx="app.router.app-routes.premium-callback-page" />,
 });

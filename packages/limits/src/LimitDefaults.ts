@@ -2,6 +2,7 @@
 
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {
+	ATTACHMENT_MAX_SIZE_BOT,
 	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	ATTACHMENT_MAX_SIZE_PREMIUM,
 	AVATAR_MAX_SIZE,
@@ -59,6 +60,7 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	max_attachments_per_message: MAX_ATTACHMENTS_PER_MESSAGE,
 	max_bio_length: MAX_BIO_LENGTH,
 	max_bookmarks: MAX_BOOKMARKS_NON_PREMIUM,
+	max_bot_attachment_file_size: ATTACHMENT_MAX_SIZE_BOT,
 	max_channels_per_category: MAX_CHANNELS_PER_CATEGORY,
 	max_custom_backgrounds: 1,
 	max_embeds_per_message: MAX_EMBEDS_PER_MESSAGE,

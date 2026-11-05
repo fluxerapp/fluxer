@@ -12,6 +12,7 @@ import {
 	measureSkeletonTextWidthPx,
 	useSkeletonLayoutReport,
 } from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GuildHeaderBottomSheet} from '@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildHeaderPopout} from '@app/features/guild/components/popouts/GuildHeaderPopout';
@@ -21,6 +22,7 @@ import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Popout from '@app/features/ui/state/Popout';
+import type {BuiltInGuildBadgeKind} from '@fluxer/constants/src/BadgeConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -35,14 +37,15 @@ const OPEN_COMMUNITY_MENU_FOR_DESCRIPTOR = msg({
 	message: 'Open community menu for {guildName}',
 	comment: 'Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.',
 });
-const GUILD_BADGE_FEATURES: ReadonlyArray<string> = [
-	GuildFeatures.VERIFIED,
-	GuildFeatures.PARTNERED,
-	GuildFeatures.DISCOVERABLE,
+const GUILD_BADGE_FEATURES: ReadonlyArray<[string, BuiltInGuildBadgeKind]> = [
+	[GuildFeatures.VERIFIED, 'verified'],
+	[GuildFeatures.PARTNERED, 'partnered'],
+	[GuildFeatures.DISCOVERABLE, 'discoverable'],
 ];
 
 function resolveGuildBadgeVisible(features: ReadonlySet<string>): boolean {
-	return GUILD_BADGE_FEATURES.some((feature) => features.has(feature));
+	const hidden = RuntimeConfig.hiddenBuiltInGuildBadges;
+	return GUILD_BADGE_FEATURES.some(([feature, kind]) => features.has(feature) && !hidden.includes(kind));
 }
 
 function resolveSkeletonBannerPlacement(hasBanner: boolean, isDetachedBanner: boolean): SkeletonGuildBannerPlacement {

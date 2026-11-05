@@ -11,7 +11,8 @@
     handle_buffered_message_creates/1,
     sync_user_guild_settings_local/3,
     clear_channel_notifications/3,
-    clear_notifications_enabled/0
+    clear_notifications_enabled/0,
+    invalidate_blocked_ids/1
 ]).
 -export([get_cache_stats/0]).
 
@@ -136,6 +137,10 @@ clear_notifications_enabled() ->
         OperatorChoice when is_boolean(OperatorChoice) -> OperatorChoice;
         _ -> env_boolean(push_enrolled_clear_notifications_enabled, true)
     end.
+
+-spec invalidate_blocked_ids(integer()) -> ok.
+invalidate_blocked_ids(UserId) ->
+    erpc:multicast([node() | nodes()], push_ets_cache, delete_blocked_ids, [UserId]).
 
 -spec get_cache_stats() -> {ok, map()}.
 get_cache_stats() ->

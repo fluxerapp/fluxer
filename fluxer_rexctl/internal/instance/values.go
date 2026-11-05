@@ -3,6 +3,7 @@
 package instance
 
 import (
+	"errors"
 	"maps"
 	"slices"
 	"strconv"
@@ -128,6 +129,11 @@ func importValues(in valueInput) (*valueResult, error) {
 		default:
 			r.dropped = append(r.dropped, k)
 		}
+	}
+
+	var conflict *settings.ListenConflict
+	if _, err := settings.SplitListenAddress(r.settings, nil); errors.As(err, &conflict) {
+		return nil, &AdoptError{Msg: "FLUXER_HTTP_PORT and FLUXER_HTTPS_PORT in .env use different addresses, and rexctl runs Fluxer on one address for both.", Fix: "Give FLUXER_HTTP_PORT and FLUXER_HTTPS_PORT in .env the same address, then run rexctl takeover again."}
 	}
 
 	for _, o := range in.overlays {

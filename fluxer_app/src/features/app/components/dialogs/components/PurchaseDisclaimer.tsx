@@ -3,8 +3,15 @@
 import {Routes} from '@app/app/Routes';
 import styles from '@app/features/app/components/dialogs/components/PurchaseDisclaimer.module.css';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {OPERATOR_PASS_NAME, PAYMENT_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {
+	OPERATOR_PASS_NAME,
+	OPERATOR_PASS_SELLER_ADDRESS,
+	OPERATOR_PASS_SELLER_PHONE,
+	PAYMENT_PROVIDER_NAME,
+	SUPPORT_EMAIL,
+} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Trans} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -61,7 +68,7 @@ export const PurchaseDisclaimer = observer(
 						</Trans>
 					)}{' '}
 					{privacyUrl ? (
-						<Trans comment="Sentence after the line that starts with By paying in the Operator Pass checkout dialog. Both linked texts name legal documents: the privacy policy and the Operator Pass privacy notice, which covers the name and avatar people send for the Operators' wall. People never agree to either, they only inform. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked texts the way your language does at their position in the sentence.">
+						<Trans comment="Sentence after the line that starts with By paying in the Operator Pass checkout dialog. Both linked texts name legal documents: the privacy policy and the Operator Pass privacy notice, which covers the certificate name, the checkout record and the name and avatar people send for the Operators' wall. People never agree to either, they only inform. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked texts the way your language does at their position in the sentence.">
 							The{' '}
 							<ExternalLink href={privacyUrl} data-flx="app.purchase-disclaimer.operator-pass.privacy-link">
 								privacy policy
@@ -76,7 +83,7 @@ export const PurchaseDisclaimer = observer(
 							explain how we handle your data.
 						</Trans>
 					) : (
-						<Trans comment="Sentence after the line that starts with By paying in the Operator Pass checkout dialog on an instance that links no privacy policy. The linked text names the Operator Pass privacy notice, which covers the name and avatar people send for the Operators' wall. People never agree to it, it only informs. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked text the way your language does at its position in the sentence.">
+						<Trans comment="Sentence after the line that starts with By paying in the Operator Pass checkout dialog on an instance that links no privacy policy. The linked text names the Operator Pass privacy notice, which covers the certificate name, the checkout record and the name and avatar people send for the Operators' wall. People never agree to it, it only informs. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked text the way your language does at its position in the sentence.">
 							The{' '}
 							<ExternalLink
 								href={operatorPassPrivacyUrl}
@@ -86,7 +93,11 @@ export const PurchaseDisclaimer = observer(
 							</ExternalLink>{' '}
 							explains how we handle your data.
 						</Trans>
-					)}
+					)}{' '}
+					<Trans comment="Sentence after the privacy sentence in the Operator Pass checkout dialog that names the company selling the pass. Fluxer Platform AB is the company name and 559537-3993 its Swedish organization number, keep both as is. Haninge is the Swedish municipality where the company is registered and stays as is. Translate registered office with the legal term your language uses for the registered seat of a company, and keep the Swedish word säte in parentheses. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.">
+						Seller: Fluxer Platform AB, 559537-3993, registered office (säte) Haninge, Sweden,{' '}
+						{OPERATOR_PASS_SELLER_ADDRESS}, {OPERATOR_PASS_SELLER_PHONE}, {SUPPORT_EMAIL}.
+					</Trans>
 				</p>
 			);
 		}
@@ -169,13 +180,26 @@ export const PurchaseDisclaimer = observer(
 						{PAYMENT_PROVIDER_NAME} handles payment securely.
 					</Trans>
 				) : (
-					<Trans comment="Purchase disclaimer in the premium subscription checkout. Consumer law text, translate faithfully. {premiumProductName} is a product name and stays untranslated. {PAYMENT_PROVIDER_NAME} is the payment processor name. Withdraw means using the consumer right of withdrawal to cancel the purchase, never taking money out. A payment dispute is a chargeback filed with a bank or card company. Permanent deletion of the account applies only to disputes we review and find unjustified. Disputes about a wrong or unauthorized charge never lead to it.">
+					<Trans comment="Purchase disclaimer in the premium subscription checkout. Consumer law text, translate faithfully. {premiumProductName} is a product name and stays untranslated. {PAYMENT_PROVIDER_NAME} is the payment processor name. Withdraw means using the consumer right of withdrawal to cancel the purchase, never taking money out. The first withdraw is a link to the section of the terms that explains how to withdraw and has the withdrawal form, so wrap the words your language uses for that action. The UK is the United Kingdom. The terms set how long each withdrawal period lasts and how much comes back, so the sentence names no number of days and no refund amount. A payment dispute is a chargeback filed with a bank or card company. The second link, our terms, goes to the section of the terms of service on payment disputes. Action against the account means enforcement such as suspension or deletion.">
 						Self-serve refunds are available within 3 days of payment, once every 30 days. Refunding a subscription
-						cancels it. If you are a consumer in the EU or the EEA, you can withdraw for a full refund until your
-						withdrawal period ends, even after {premiumProductName} starts. Please ask for a refund before you dispute a
-						charge. A payment dispute we find unjustified after a review can lead to the permanent deletion of your
-						account, and a dispute about a wrong or unauthorized charge never does. {PAYMENT_PROVIDER_NAME} handles
-						payment securely. We never see your full card number.
+						cancels it. If you are a consumer in the EU, the EEA, the UK or Brazil, you can{' '}
+						<ExternalLink
+							href={`${marketingUrl('terms')}#4-3-eu-and-eea-withdrawal-right`}
+							data-flx="app.purchase-disclaimer.withdrawal-link"
+						>
+							withdraw
+						</ExternalLink>{' '}
+						until your withdrawal period ends, even after {premiumProductName} starts. Please ask for a refund before
+						you dispute a charge. A dispute about a wrong or unauthorized charge never leads to action against your
+						account, and{' '}
+						<ExternalLink
+							href={`${marketingUrl('terms')}#4-4-failed-payments-and-disputes`}
+							data-flx="app.purchase-disclaimer.disputes-link"
+						>
+							our terms
+						</ExternalLink>{' '}
+						list the only cases where a dispute can. {PAYMENT_PROVIDER_NAME} handles payment securely. We never see your
+						full card number.
 					</Trans>
 				)}
 			</p>

@@ -49,6 +49,7 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {startEarly} from '@app/api/utils/ConcurrencyUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GUILD_VISITOR_PERMISSIONS_MASK} from '@fluxer/constants/src/GuildVisitConstants';
 import {
@@ -330,6 +331,13 @@ export abstract class BaseChannelAuthService {
 			return this.getThreadChannelAuth({channel, userId, skipNsfwValidation});
 		}
 		const guildId = channel.guildId!;
+		const channelPermissionsTask = startEarly(
+			this.gatewayService.getUserPermissions({
+				guildId,
+				userId,
+				channelId: channel.id,
+			}),
+		);
 		const [authContextResult, guildMemberResult] = await Promise.all([
 			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(channel)}),
 			this.fetchGuildMemberOrThrow({guildId, userId}),
@@ -351,11 +359,7 @@ export abstract class BaseChannelAuthService {
 			guildData: guildDataResult,
 			userId,
 		});
-		const channelPermissions = await this.gatewayService.getUserPermissions({
-			guildId,
-			userId,
-			channelId: channel.id,
-		});
+		const channelPermissions = await channelPermissionsTask;
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
 			const allowed = (channelPermissions & permission) === permission;
 			if (allowed) enforceGuildMfa(permission);

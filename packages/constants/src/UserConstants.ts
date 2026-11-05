@@ -108,6 +108,7 @@ export const PremiumFlags = {
 	PERKS_DISABLED: 1 << 8,
 	OPERATOR_PASS_BADGE_TIMESTAMP_HIDDEN: 1 << 11,
 	OPERATOR_PASS_BADGE_COUNT_HIDDEN: 1 << 12,
+	OPERATORS_CHANNEL_HIDDEN: 1 << 13,
 } as const;
 export const PremiumFlagsDescriptions: Record<keyof typeof PremiumFlags, string> = {
 	DISCRIMINATOR: 'User has a premium discriminator',
@@ -119,6 +120,7 @@ export const PremiumFlagsDescriptions: Record<keyof typeof PremiumFlags, string>
 	PERKS_DISABLED: 'User has temporarily disabled premium perks',
 	OPERATOR_PASS_BADGE_TIMESTAMP_HIDDEN: 'User has hidden when they first got the Operator Pass',
 	OPERATOR_PASS_BADGE_COUNT_HIDDEN: 'User has hidden how many Operator Passes they hold',
+	OPERATORS_CHANNEL_HIDDEN: 'User turned off the Fluxer Labs roles that open #operators',
 };
 const LEGACY_PREMIUM_BADGE_HIDDEN = 1 << 1;
 const LEGACY_PREMIUM_BADGE_SEQUENCE_HIDDEN = 1 << 4;

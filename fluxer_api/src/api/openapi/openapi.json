@@ -1098,6 +1098,18 @@
 					}
 				},
 				"description": "Retrieve WebAuthn challenge and options for multi-factor authentication. Requires the MFA ticket from initial login.",
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaTicketRequest"}}}
@@ -2471,7 +2483,19 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys."
+				"description": "Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys.",
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				]
 			}
 		},
 		"/channels/messages/bulk": {
@@ -13538,6 +13562,124 @@
 				"security": [{"oauth2Token": ["identify"]}]
 			}
 		},
+		"/operator-pass/certificates/{token}": {
+			"get": {
+				"operationId": "get_operator_pass_certificate",
+				"summary": "Get an Operator certificate page by its link",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassCertificateResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the public details of one Operator certificate page by the token in its link, as the link page on the marketing site shows them. A cancelled page has no name. An unknown token, a token replaced by a new link, or a page whose file was deleted returns 404.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{22}$",
+							"description": "The random code in the link of a certificate page"
+						},
+						"description": "The random code in the link of a certificate page"
+					}
+				]
+			}
+		},
+		"/operator-pass/certificates/{token}/pdf": {
+			"get": {
+				"operationId": "get_operator_pass_certificate_pdf",
+				"summary": "Get the PDF of an Operator certificate page by its link",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/pdf": {"schema": {"$ref": "#/components/schemas/OperatorPassCertificateFileResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the newest stored copy of one Operator certificate page as a PDF to show in the browser, by the token in its link. A cancelled page, an unknown token, a token replaced by a new link, or a page whose file was deleted returns 404.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{22}$",
+							"description": "The random code in the link of a certificate page"
+						},
+						"description": "The random code in the link of a certificate page"
+					}
+				]
+			}
+		},
 		"/operator-pass/checkout": {
 			"post": {
 				"operationId": "create_operator_pass_checkout",
@@ -13587,12 +13729,179 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a Stripe checkout session for one or more Operator Passes with an optional monthly donation. Every pass is delivered to the current account as soon as the payment settles. Buying more passes while holding some adds to the count.",
+				"description": "Creates a Stripe checkout session in payment mode for one or more Operator Passes and nothing else. Every pass is delivered to the current account as soon as the payment settles. Buying more passes while holding some adds to the count.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassCheckoutRequest"}}}
 				}
+			}
+		},
+		"/operator-pass/labs-greeting": {
+			"put": {
+				"operationId": "update_operator_pass_labs_greeting",
+				"summary": "Update the #operators greeting",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassPassesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Turns the welcome in #operators on or off. When a pass is delivered, the system user welcomes everyone who has it on by name in #operators in Fluxer Labs, soon after and only once. Turning it on after delivery queues the welcome when the account is in Fluxer Labs and has not been welcomed yet. Turning it off before the welcome is sent means no welcome.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassLabsGreetingRequest"}}}
+				}
+			}
+		},
+		"/operator-pass/labs-operators": {
+			"put": {
+				"operationId": "update_operator_pass_labs_operators",
+				"summary": "Show or hide #operators",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassPassesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Turns the Fluxer Labs roles that open #operators on or off for the current account. These are the Operator role, the Visionary role and the access role. Turning it off removes them at once, and no later role update adds them back. Turning it on gives back the roles the account is entitled to at once. It does not change passes, badges, the Operators wall, Fluxer Labs membership or other roles.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassLabsOperatorsRequest"}}}
+				}
+			}
+		},
+		"/operator-pass/labs/join": {
+			"post": {
+				"operationId": "join_operator_pass_labs",
+				"summary": "Join Fluxer Labs with the Operator Pass",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassLabsJoinResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Adds the current account to Fluxer Labs with the Operator role, the same way a delivered pass does, and returns the IDs of the community and #operators. Needs at least one pass. An account that is already in Fluxer Labs gets the Operator role if it is missing, unless it turned off #operators. An account that left Fluxer Labs or was removed from it is never added again and gets status left, so it can join with the invite. A banned account gets status banned.",
+				"security": [{"sessionToken": []}]
 			}
 		},
 		"/operator-pass/listing": {
@@ -13644,7 +13953,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns what the Operators' wall shows for the current account right now, the name it submitted, the review state, why staff declined a name or avatar, and how many passes the account holds. The review state and the reason are only for the holder, the public wall never shows them.",
+				"description": "Returns what the Operators' wall shows for the current account right now, the name it chose and how many passes the account holds.",
 				"security": [{"sessionToken": []}]
 			},
 			"put": {
@@ -13695,7 +14004,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is or release_list_opt_in. A new name, together with the current profile avatar, waits for review and the wall keeps showing the last approved version, or the fallback, until staff approve it. A declined name can be replaced at any time. An already listed holder can send only keep_as_is or release_list_opt_in.",
+				"description": "Submits a new name for the Operators' wall, takes the listing off the wall, or sets keep_as_is, release_list_opt_in or wall_quote. A new name or quote goes on the wall at once, the name together with the current profile avatar. An already listed holder can leave out wall_name and send only keep_as_is, release_list_opt_in or wall_quote.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -13874,7 +14183,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Accepts an offer to the current account with the Operator Pass terms and a choice for the Operators' wall. The pass moves at arrives_at, at once when the transfer lock has already ended. A received pass cannot be passed on again, and it ends if the payment for it is reversed.",
+				"description": "Accepts an offer to the current account with the Operator Pass terms and a choice for the Operators' wall. The pass moves at once. Once it moves, the account is added to Fluxer Labs unless it left or was removed from Labs before, and is welcomed in #operators when labs_greeting allows. A received pass cannot be passed on again, and it ends if the payment for it is reversed.",
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
@@ -14006,6 +14315,70 @@
 				"security": [{"sessionToken": []}]
 			}
 		},
+		"/operator-pass/passes/{pass_id}/certificate-link/reset": {
+			"post": {
+				"operationId": "reset_operator_pass_certificate_link",
+				"summary": "Replace the link of an Operator certificate page",
+				"tags": ["Operator Pass"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassCertificateLinkResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Replaces the private link of a certificate page the current account paid for, or of its Visionary page. Issues a new copy of the page with the new link printed on it, with the same number, payment date and name, and the old link stops working at once. A page of another account, including a pass passed on to the current account, returns 404, and a cancelled page returns 400.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "pass_id",
+						"in": "path",
+						"required": true,
+						"schema": {"type": "string", "minLength": 1, "maxLength": 256, "description": "The pass ID"},
+						"description": "The pass ID"
+					}
+				]
+			}
+		},
 		"/operator-pass/passes/{pass_id}/offers": {
 			"post": {
 				"operationId": "create_operator_pass_offer",
@@ -14055,7 +14428,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Offers a pass the current account bought to another user. The offer stays pending until the recipient accepts or declines, and the sender can withdraw it until then. Once accepted, the pass moves when the transfer lock ends, and only while the payment has no early fraud warning, open dispute or refund. Passing on the last pass needs confirm_last_pass, because it removes the badge and the wall listing.",
+				"description": "Offers a pass the current account bought to another user. The offer stays pending until the recipient accepts or declines, and the sender can withdraw it until then. The pass moves as soon as the recipient accepts, and only while the payment has no early fraud warning, open dispute or refund. Passing on the last pass needs confirm_last_pass, because it removes the badge, the wall listing and #operators from the account.",
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
@@ -14121,7 +14494,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Withdraws one delivered pass bought in a country whose withdrawal right cannot be waived, within the days the rule gives. Refunds the price of that pass in full, ends the pass and emails a timestamped receipt to the account email.",
+				"description": "Withdraws one pass the account bought while a country rule keeps the right of withdrawal after delivery. Refunds the price of that pass in full, ends the pass, marks its certificate page cancelled and emails a timestamped receipt to the account email.",
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
@@ -14190,7 +14563,21 @@
 					}
 				},
 				"description": "Lists the Operator Pass purchases the current account paid for, with the quantity, the delivery time and whether the withdraw button for the whole purchase is available.",
-				"security": [{"sessionToken": []}]
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "session_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Checkout session the buyer just returned from. If it is paid and the payment webhook has not arrived yet, the purchase is fulfilled before the list is returned.",
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 256
+						},
+						"description": "Checkout session the buyer just returned from. If it is paid and the payment webhook has not arrived yet, the purchase is fulfilled before the list is returned."
+					}
+				]
 			}
 		},
 		"/operator-pass/purchases/{purchase_id}/withdraw": {
@@ -14242,7 +14629,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Withdraws from a paid Operator Pass purchase whose passes are not delivered yet. Refunds the passes in full to the original payment method and emails a timestamped receipt to the account email. A monthly donation added at checkout keeps running. Delivered passes in a withdrawal_rule country are withdrawn one by one with the pass withdraw route.",
+				"description": "Withdraws from a paid Operator Pass purchase while the right of withdrawal lasts: before the certificate is delivered, or after delivery while a country rule keeps the right. Refunds every pass still on the account of the buyer in full to the original payment method, marks their certificate pages cancelled and emails a timestamped receipt to the account email. Single passes are withdrawn with the pass withdraw route.",
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
@@ -14346,7 +14733,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns the sale phase, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.",
+				"description": "Returns whether the early bird or the standard price applies, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.",
 				"parameters": [
 					{
 						"name": "country_code",
@@ -14361,68 +14748,26 @@
 				]
 			}
 		},
-		"/operator-pass/waitlist": {
+		"/operator-pass/visionary/turn-on": {
 			"post": {
-				"operationId": "join_operator_pass_waitlist",
-				"summary": "Join Operator Pass waitlist",
-				"tags": ["Operator Pass"],
-				"responses": {
-					"202": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Sends a confirmation email to the address and stores how the visitor feels about the early bird price they were shown. The response is the same whether or not the address is already on the waitlist, and always carries a followup_token for the follow-up question. Addresses are matched without plus tags, and Gmail addresses without dots. A later signup by the same pending address replaces the stored answer, a confirmed address keeps its first answer, a bounced address gets no email and an unsubscribed address gets at most one new confirmation email every 30 days. Requires a solved captcha challenge (X-Captcha-Token).",
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistRequest"}}}
-				}
-			}
-		},
-		"/operator-pass/waitlist/challenge": {
-			"get": {
-				"operationId": "get_operator_pass_waitlist_challenge",
-				"summary": "Get Operator Pass waitlist captcha challenge",
+				"operationId": "turn_on_operator_pass_visionary",
+				"summary": "Turn on the Operator Pass that comes with Visionary",
 				"tags": ["Operator Pass"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistChallengeResponse"}}
-						}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassPassesResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
 					"429": {
@@ -14452,104 +14797,12 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns the captcha challenge to solve before joining the Operator Pass waitlist."
-			}
-		},
-		"/operator-pass/waitlist/confirm": {
-			"post": {
-				"operationId": "confirm_operator_pass_waitlist",
-				"summary": "Confirm Operator Pass waitlist email",
-				"tags": ["Operator Pass"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistConfirmResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Confirms a waitlist email address with the token from the confirmation email.",
+				"description": "Turns on the Operator Pass that comes with Visionary for the current account under section 13 of the Operator Pass terms. Needs Visionary, the terms box and the age box, and opens when Operator Pass sales open. Adds one pass that cannot be passed on, dated the day the account got Visionary, and issues its certificate page. The Operator badge stays hidden unless show_badge is true, and the account is listed on the Operators' wall only when it asks to be. The account is added to Fluxer Labs with the Operator role unless it left or was removed from Labs before, and is welcomed in #operators when labs_greeting allows. Nothing is charged. Calling it again returns the same pass and certificate.",
+				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
 					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistConfirmRequest"}}
-					}
-				}
-			}
-		},
-		"/operator-pass/waitlist/followup": {
-			"post": {
-				"operationId": "answer_operator_pass_waitlist_followup",
-				"summary": "Answer Operator Pass waitlist follow-up question",
-				"tags": ["Operator Pass"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Stores what is most important to the visitor about the Operator Pass and which descriptions fit them, with the followup_token from the waitlist signup response. A new answer replaces the stored one while the token is valid, for 30 minutes after the signup. An answer without about keeps the descriptions stored before. A token from a signup whose address was already on the waitlist is accepted and stores nothing, so the response never shows whether an address is on the waitlist. other_text is plain text and only goes with other in picks.",
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassWaitlistFollowupRequest"}}
+						"application/json": {"schema": {"$ref": "#/components/schemas/OperatorPassVisionaryTurnOnRequest"}}
 					}
 				}
 			}
@@ -14592,21 +14845,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Redirects a mail client that opens the unsubscribe link to the page where the address can leave the waitlist. Nothing changes until that page is submitted.",
-				"parameters": [
-					{
-						"name": "token",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"description": "Unsubscribe token from the email",
-							"type": "string",
-							"minLength": 1,
-							"maxLength": 256
-						},
-						"description": "Unsubscribe token from the email"
-					}
-				]
+				"description": "Redirects a mail client that opens the unsubscribe link of the Operator Pass launch email to the unsubscribe page. Nothing changes until a mail client sends the one-click POST."
 			},
 			"post": {
 				"operationId": "unsubscribe_operator_pass_waitlist",
@@ -14650,7 +14889,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Removes an address from the waitlist with the token from a waitlist email. Supports one-click unsubscribe from mail clients.",
+				"description": "Deletes the waitlist entry that the token from the Operator Pass launch email belongs to. Supports one-click unsubscribe from mail clients.",
 				"parameters": [
 					{
 						"name": "token",
@@ -14708,7 +14947,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Lists every Operator on the Operators' wall with the name and avatar the wall shows, the time the listing went up, the time of the first pass, how many passes the Operator holds and the size tier, with the highest tier first and the earliest first pass first within a tier. A declined name or avatar shows as the last accepted version, or the username, or Operator, with the default avatar. Review states and reasons are never included. Holders who chose not to be listed and paused or removed passes are left out. The response is cached for up to a minute."
+				"description": "Lists every Operator on the Operators' wall with the name and avatar the wall shows, the time the listing went up, the time of the first pass, how many passes the Operator holds and the size tier, with the highest tier first and the earliest first pass first within a tier. A listing whose name or avatar staff took off shows the holder's earlier name and avatar, or Operator with the default avatar. Holders who chose not to be listed and paused or removed passes are left out. The response is cached for up to a minute."
 			}
 		},
 		"/premium/cancel-pending-subscription-change": {
@@ -15242,14 +15481,14 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns whether the authenticated user can self-serve refund their most recent purchase, including the refund window and cooldown timestamps.",
+				"description": "Returns whether the authenticated user can self-serve refund their recent purchases, including the refund window and cooldown timestamps. The amount covers every payment made in the last 3 days.",
 				"security": [{"sessionToken": []}]
 			}
 		},
 		"/premium/refund-latest": {
 			"post": {
 				"operationId": "self_serve_refund_latest_purchase",
-				"summary": "Refund latest purchase",
+				"summary": "Refund recent purchases",
 				"tags": ["Billing"],
 				"responses": {
 					"200": {
@@ -15295,7 +15534,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Refunds the authenticated user's most recent paid invoice if it is within 3 days and the user is not in a 30-day cooldown. If the invoice was tied to a subscription, the subscription is cancelled immediately.",
+				"description": "Refunds every payment the authenticated user made in the last 3 days, when the most recent one is within that window and the user is not in a 30-day cooldown. A Plutonium upgrade paid shortly after the first payment is refunded together with it. If a refunded payment was tied to a subscription, the subscription is cancelled immediately. A Google Play purchase is refunded on its own. Fluxer issues a credit note for each refunded payment.",
 				"security": [{"sessionToken": []}]
 			}
 		},
@@ -15750,6 +15989,132 @@
 				"security": [{"sessionToken": []}]
 			}
 		},
+		"/premium/withdrawals": {
+			"get": {
+				"operationId": "list_plutonium_withdrawals",
+				"summary": "List Plutonium purchases open for withdrawal",
+				"tags": ["Billing"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PlutoniumWithdrawalListResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the Plutonium subscriptions and gifts paid through Stripe that the authenticated user can withdraw from right now, with the amount a withdrawal refunds and when the withdrawal period ends. Consumers in the EU, the EEA and the UK get 14 days from the first payment of a subscription, a plan switch or a renewal at a new price. In the EU and the EEA the period is extended past weekends and Swedish public holidays, and in the UK it ends at midnight UK time. A purchase made with the immediate-start consent (checkout metadata withdrawal_pro_rata) refunds the payments less the share for the days of Plutonium used. An EU or EEA subscription bought without that consent also gets a new period on each renewal and a full refund, and a UK purchase without it is refunded in full. Brazilian consumers get 7 days from the first payment of a subscription or a plan switch, not from a renewal, ending at 23:59 UTC-5, with a full refund. A business purchase is not listed, and in Brazil only one made with a CNPJ.",
+				"security": [{"sessionToken": []}]
+			}
+		},
+		"/premium/withdrawals/{purchase_id}": {
+			"post": {
+				"operationId": "withdraw_plutonium_purchase",
+				"summary": "Withdraw from a Plutonium purchase",
+				"tags": ["Billing"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SelfServeRefundResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Withdraws from a Plutonium subscription or gift paid through Stripe while its withdrawal period lasts, as the withdrawals list describes. Refunds the payments made since the withdrawal period started to the original payment method: less the share for the days of Plutonium used for a purchase made with the immediate-start consent (the amount quoted at quoted_at when it is at most one day old), and in full otherwise, including every Brazilian withdrawal. Ends a subscription immediately and emails a receipt with the time the withdrawal was received. The 3-day self-serve refund window and its 30-day cooldown do not apply. Fluxer issues a credit note for each refunded payment.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "purchase_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"maxLength": 255,
+							"pattern": "^(sub|cs)_[A-Za-z0-9_]+$",
+							"description": "The id of a purchase from the withdrawals list of the premium state"
+						},
+						"description": "The id of a purchase from the withdrawals list of the premium state"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PlutoniumWithdrawRequest"}}}
+				}
+			}
+		},
 		"/read-states/ack": {
 			"post": {
 				"operationId": "ack_read_states",
@@ -16009,6 +16374,63 @@
 				}
 			}
 		},
+		"/reports/flows/guild/submissions": {
+			"post": {
+				"operationId": "submit_guild_report_flow",
+				"summary": "Submit community report flow",
+				"tags": ["Reports"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Files a report about a community from the answers given in the in-app community report flow. The reporter must be a member, the community must be discoverable, or the request must include an invite code.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportFlowGuildSubmissionRequest"}}}
+				}
+			}
+		},
 		"/reports/flows/message/submissions": {
 			"post": {
 				"operationId": "submit_message_report_flow",
@@ -16166,7 +16588,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns every screen of the report flow for a target type, rendered in the requested locale. Message and user flows are available in app and on the DSA form, the guild flow only on the DSA form.",
+				"description": "Returns every screen of the report flow for a target type, rendered in the requested locale. Message, user and community flows are available in the app and on the DSA form.",
 				"parameters": [
 					{
 						"name": "target_type",
@@ -17505,6 +17927,148 @@
 				}
 			}
 		},
+		"/users/@me/billing/documents": {
+			"get": {
+				"operationId": "list_billing_documents",
+				"summary": "List billing documents",
+				"tags": ["Billing"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BillingDocumentListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the invoices, receipts, credit notes and refund notes Fluxer issued to the current account, newest first. Each one can be downloaded as the PDF that was issued.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Only documents issued before this time",
+							"type": "string",
+							"format": "date-time",
+							"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+						},
+						"description": "Only documents issued before this time"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"default": 50,
+							"description": "How many documents to return",
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 100
+						},
+						"description": "How many documents to return"
+					}
+				]
+			}
+		},
+		"/users/@me/billing/documents/{document_id}/pdf": {
+			"get": {
+				"operationId": "download_billing_document",
+				"summary": "Download a billing document",
+				"tags": ["Billing"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/pdf": {"schema": {"$ref": "#/components/schemas/BillingDocumentFileResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the stored PDF of one billing document issued to the current account, byte for byte as it was issued. A document of another account returns 404.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "document_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The document ID", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The document ID"
+					}
+				]
+			}
+		},
 		"/users/@me/channels": {
 			"get": {
 				"operationId": "list_private_channels",
@@ -18316,7 +18880,10 @@
 				"summary": "Delete current user account",
 				"tags": ["Users"],
 				"responses": {
-					"204": {"description": "No Content"},
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserAccountDeleteResponse"}}}
+					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
@@ -18356,11 +18923,11 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Permanently deletes the current user's account and all associated data. Requires sudo mode verification. This action is irreversible and will remove all user data, messages, and connections.",
+				"description": "Schedules the deletion of the current user's account and personal data after the instance's grace period, or right away when immediate is true. Signing in before the deletion runs cancels it. Messages the account sent are anonymized unless delete_messages is true, in which case they are deleted with the account. Requires sudo mode verification. The response has the time the deletion runs.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": false,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserAccountDeleteRequest"}}}
 				}
 			}
 		},
@@ -21515,6 +22082,18 @@
 				},
 				"description": "Generate challenge and options to register a new WebAuthn credential. Requires sudo mode verification.",
 				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				],
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
@@ -24162,7 +24741,19 @@
 					}
 				},
 				"description": "Generate WebAuthn challenge for sudo mode verification using a registered security key or biometric device.",
-				"security": [{"sessionToken": []}]
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "rp_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored",
+							"anyOf": [{"type": "string", "maxLength": 253}, {"type": "null"}]
+						},
+						"description": "Relying party ID to use instead of the one picked from the Origin header. Only the instance relying party and the migration relying party are honoured, and only on the official instance. Any other value is ignored"
+					}
+				]
 			}
 		},
 		"/users/@me/terms-acceptance": {
@@ -28281,6 +28872,10 @@
 						"description": "Sensitive media filter level for DMs from non-friends"
 					},
 					"sensitive_content_guild_filter": {"$ref": "#/components/schemas/SensitiveMediaGuildFilterLevelInput"},
+					"allow_mature_content_on_ios": {
+						"type": "boolean",
+						"description": "Whether 18+ communities, channels and the \"Show\" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting."
+					},
 					"suppress_unprivileged_self_mentions": {
 						"type": "boolean",
 						"description": "Suppress direct mentions and reply mentions from unprivileged users"
@@ -28446,6 +29041,10 @@
 						"description": "Sensitive media filter level for DMs from non-friends"
 					},
 					"sensitive_content_guild_filter": {"$ref": "#/components/schemas/SensitiveMediaGuildFilterLevel"},
+					"allow_mature_content_on_ios": {
+						"type": "boolean",
+						"description": "Whether 18+ communities, channels and the \"Show\" sensitive media option are allowed in the iOS app. Only adults can turn this on. The iOS app never offers this setting."
+					},
 					"suppress_unprivileged_self_mentions": {
 						"type": "boolean",
 						"description": "Whether direct mentions and reply mentions from unprivileged users are suppressed"
@@ -28520,6 +29119,7 @@
 					"sensitive_content_friend_dm_filter",
 					"sensitive_content_non_friend_dm_filter",
 					"sensitive_content_guild_filter",
+					"allow_mature_content_on_ios",
 					"suppress_unprivileged_self_mentions",
 					"suppress_unprivileged_self_mentions_bypass_user_ids",
 					"staff_dm_access_user_ids",
@@ -29638,6 +30238,11 @@
 					"placeholder": {
 						"description": "Compact thumbhash placeholder produced by the media proxy at favorite-time. Clients render it as a low-res preview while the full media loads. Null when the proxy did not emit one.",
 						"type": ["string", "null"]
+					},
+					"nsfw": {
+						"default": false,
+						"description": "Whether the media is flagged as explicit. Clients apply the same sensitive media rules as for chat media.",
+						"type": "boolean"
 					}
 				},
 				"required": [
@@ -29650,7 +30255,8 @@
 					"content_type",
 					"size",
 					"url",
-					"is_gifv"
+					"is_gifv",
+					"nsfw"
 				],
 				"additionalProperties": false
 			},
@@ -30646,6 +31252,50 @@
 				},
 				"required": ["email_token"]
 			},
+			"UserAccountDeleteRequest": {
+				"type": "object",
+				"properties": {
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn", "Email code"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication",
+							"A 6-digit code sent to the account email address"
+						],
+						"enum": ["totp", "webauthn", "email_code"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"email_code_ticket": {
+						"description": "Ticket from POST /users/@me/sudo/email-code, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"email_code": {
+						"description": "The 6-digit code from the email, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"},
+					"immediate": {"description": "Delete the account now instead of after the grace period", "type": "boolean"},
+					"delete_messages": {"description": "Also delete every message the account sent", "type": "boolean"}
+				}
+			},
+			"UserAccountDeleteResponse": {
+				"type": "object",
+				"properties": {
+					"pending_deletion_at": {"type": "string", "description": "ISO8601 timestamp of when the account is deleted"}
+				},
+				"required": ["pending_deletion_at"],
+				"additionalProperties": false
+			},
 			"DateOfBirthUpdateRequest": {
 				"type": "object",
 				"properties": {"date_of_birth": {"description": "Date of birth in YYYY-MM-DD format", "type": "string"}},
@@ -30980,6 +31630,16 @@
 				"additionalProperties": false
 			},
 			"ChannelListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ChannelResponse"}},
+			"BillingDocumentFileResponse": {
+				"type": "string",
+				"format": "binary",
+				"contentEncoding": "binary",
+				"description": "The stored PDF of the document, byte for byte as issued"
+			},
+			"BillingDocumentListResponse": {
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/BillingDocumentResponse"}
+			},
 			"ApplicationListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ApplicationResponse"}},
 			"UserUpdateWithVerificationRequest": {
 				"type": "object",
@@ -31546,9 +32206,10 @@
 						"$ref": "#/components/schemas/CheckoutPaymentMethodEnum"
 					},
 					"is_business": {
-						"description": "Whether the purchase is for a business. When true, Stripe Checkout requires a billing address (needed for tax invoicing). When false or omitted, billing address collection is left to Stripe (auto).",
+						"description": "Whether the purchase is for a business. When true, Stripe Checkout requires a billing address for the invoice. When false or omitted, billing address collection is left to Stripe (auto).",
 						"type": "boolean"
-					}
+					},
+					"cnpj": {"$ref": "#/components/schemas/CnpjSchema"}
 				},
 				"required": ["price_id"]
 			},
@@ -31974,6 +32635,22 @@
 				},
 				"required": ["revision_hash", "steps", "channel_id", "message_id"]
 			},
+			"ReportFlowGuildSubmissionRequest": {
+				"type": "object",
+				"properties": {
+					"revision_hash": {"type": "string"},
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"}
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"guild_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"invite_code": {"description": "Invite code used to access the guild", "type": "string"}
+				},
+				"required": ["revision_hash", "steps", "guild_id"]
+			},
 			"DsaReportEmailVerifyRequest": {
 				"type": "object",
 				"properties": {
@@ -32081,6 +32758,71 @@
 				},
 				"required": ["read_states"],
 				"additionalProperties": false
+			},
+			"PlutoniumWithdrawRequest": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 200,
+						"description": "Name of the buyer who withdraws"
+					},
+					"quoted_at": {
+						"description": "quoted_at of the withdrawal list entry the buyer saw. A refund less the days used uses the amount quoted then, if it is at most one day old",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					}
+				},
+				"required": ["name"]
+			},
+			"SelfServeRefundResponse": {
+				"type": "object",
+				"properties": {
+					"invoice_id": {"type": "string"},
+					"payment_intent_id": {"type": ["string", "null"]},
+					"charge_id": {"type": ["string", "null"]},
+					"refund_id": {"type": ["string", "null"]},
+					"refunded_amount_cents": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "Amount actually refunded so far across every refunded payment, in the currency minor unit; 0 until the provider confirms success, null when the store does not report it"
+					},
+					"invoice_amount_paid_cents": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
+					},
+					"currency": {"type": ["string", "null"]},
+					"subscription_id": {
+						"description": "Subscription that was cancelled along with the refund, when applicable",
+						"type": ["string", "null"]
+					},
+					"status": {
+						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded",
+						"type": ["string", "null"]
+					},
+					"provider": {
+						"description": "Who took the payment that was refunded",
+						"$ref": "#/components/schemas/SelfServeRefundProvider"
+					}
+				},
+				"required": [
+					"invoice_id",
+					"payment_intent_id",
+					"charge_id",
+					"refund_id",
+					"refunded_amount_cents",
+					"invoice_amount_paid_cents",
+					"currency",
+					"subscription_id",
+					"status",
+					"provider"
+				],
+				"additionalProperties": false
+			},
+			"PlutoniumWithdrawalListResponse": {
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/PlutoniumWithdrawalResponse"},
+				"description": "Plutonium purchases paid through Stripe that the account can withdraw from right now, newest first"
 			},
 			"SwitchToListPriceResponse": {
 				"oneOf": [
@@ -32400,8 +33142,11 @@
 							"subscription": {
 								"anyOf": [{"$ref": "#/components/schemas/PremiumBillingSubscriptionResponse"}, {"type": "null"}]
 							},
-							"invoices": {"type": "array", "items": {"$ref": "#/components/schemas/PremiumBillingInvoiceResponse"}},
-							"invoices_has_more": {"type": "boolean"},
+							"documents": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/BillingDocumentResponse"},
+								"description": "Invoices, receipts, credit notes and refund notes Fluxer issued to the account, newest first"
+							},
 							"payment_methods": {
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/PremiumBillingPaymentMethodResponse"}
@@ -32414,8 +33159,7 @@
 							"pending_subscription_change",
 							"list_price_switch",
 							"subscription",
-							"invoices",
-							"invoices_has_more",
+							"documents",
 							"payment_methods",
 							"refund_eligibility"
 						],
@@ -32434,54 +33178,12 @@
 				"required": ["actual", "effective", "billing", "pricing", "subscription_provider"],
 				"additionalProperties": false
 			},
-			"SelfServeRefundResponse": {
-				"type": "object",
-				"properties": {
-					"invoice_id": {"type": "string"},
-					"payment_intent_id": {"type": ["string", "null"]},
-					"charge_id": {"type": ["string", "null"]},
-					"refund_id": {"type": ["string", "null"]},
-					"refunded_amount_cents": {
-						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
-						"description": "Amount actually refunded so far, in the currency minor unit; 0 until the provider confirms success, null when the store does not report it"
-					},
-					"invoice_amount_paid_cents": {
-						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
-					},
-					"currency": {"type": ["string", "null"]},
-					"subscription_id": {
-						"description": "Subscription that was cancelled along with the refund, when applicable",
-						"type": ["string", "null"]
-					},
-					"status": {
-						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded",
-						"type": ["string", "null"]
-					},
-					"provider": {
-						"description": "Who took the payment that was refunded",
-						"$ref": "#/components/schemas/SelfServeRefundProvider"
-					}
-				},
-				"required": [
-					"invoice_id",
-					"payment_intent_id",
-					"charge_id",
-					"refund_id",
-					"refunded_amount_cents",
-					"invoice_amount_paid_cents",
-					"currency",
-					"subscription_id",
-					"status",
-					"provider"
-				],
-				"additionalProperties": false
-			},
 			"SelfServeRefundEligibilityResponse": {
 				"type": "object",
 				"properties": {
 					"eligible": {
 						"type": "boolean",
-						"description": "Whether the authenticated user can self-serve refund their latest purchase right now"
+						"description": "Whether the authenticated user can self-serve refund their recent purchases right now"
 					},
 					"reason": {
 						"anyOf": [{"$ref": "#/components/schemas/SelfServeRefundIneligibilityReason"}, {"type": "null"}],
@@ -32493,7 +33195,7 @@
 					},
 					"invoice_amount_paid_cents": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
-						"description": "Amount paid on the latest invoice in the currency minor unit"
+						"description": "Amount a self-serve refund would return in the currency minor unit: every payment made in the last 3 days when they share a currency, otherwise the latest one"
 					},
 					"currency": {"description": "Currency of the latest paid invoice", "type": ["string", "null"]},
 					"paid_at": {"description": "ISO timestamp the latest invoice was paid", "type": ["string", "null"]},
@@ -32627,7 +33329,7 @@
 						"description": "The recurring billing cycle to switch the active subscription to"
 					},
 					"effective_at": {
-						"description": "When the billing cycle change should take effect",
+						"description": "When the billing cycle change should take effect. A switch from yearly to monthly always takes effect at the end of the paid year",
 						"type": "string",
 						"enum": ["now", "period_end"]
 					}
@@ -32658,315 +33360,68 @@
 				"required": ["status"],
 				"additionalProperties": false
 			},
-			"OperatorPassWaitlistFollowupRequest": {
+			"OperatorPassVisionaryTurnOnRequest": {
 				"type": "object",
 				"properties": {
-					"token": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 256,
-						"description": "followup_token from the waitlist signup response"
+					"certificate_name": {"$ref": "#/components/schemas/OperatorPassCertificateNameType"},
+					"show_badge": {
+						"type": "boolean",
+						"description": "Whether to show the Operator badge on the profile. Ignored when the account already has the badge"
 					},
-					"picks": {
-						"maxItems": 32,
-						"type": "array",
-						"items": {"type": "string", "maxLength": 64},
-						"description": "What is most important, 0 to 7 unique keys out of wall_spot, badge, operators_channel, early_testing, yearly_list, instance_mark, other. An unknown or repeated key returns OPERATOR_PASS_WAITLIST_FOLLOWUP_INVALID"
-					},
-					"about": {
-						"description": "Which descriptions fit the visitor, 0 to 6 unique keys out of self_hosting_new, self_hosting_experienced, bots_new, bots_experienced, support_fluxer, community_owner. When omitted, the descriptions stored before stay as they are, and an empty array clears them. An unknown or repeated key returns OPERATOR_PASS_WAITLIST_FOLLOWUP_INVALID",
-						"maxItems": 32,
-						"type": "array",
-						"items": {"type": "string", "maxLength": 64}
-					},
-					"other_text": {
-						"description": "Plain text answer for other, only with other in picks. Trimmed, then 1 to 500 characters, without control characters other than line breaks and tabs",
-						"anyOf": [{"type": "string", "maxLength": 4000}, {"type": "null"}]
-					}
-				},
-				"required": ["token", "picks"],
-				"additionalProperties": false
-			},
-			"OperatorPassWaitlistConfirmRequest": {
-				"type": "object",
-				"properties": {
-					"token": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 256,
-						"description": "Token from the confirmation email"
-					}
-				},
-				"required": ["token"]
-			},
-			"OperatorPassWaitlistConfirmResponse": {
-				"type": "object",
-				"properties": {"status": {"type": "string", "const": "confirmed"}},
-				"required": ["status"],
-				"additionalProperties": false
-			},
-			"OperatorPassWaitlistChallengeResponse": {
-				"type": "object",
-				"properties": {
-					"captcha_provider": {
-						"description": "Captcha provider the waitlist expects",
-						"$ref": "#/components/schemas/CaptchaProviderSchema"
-					},
-					"altcha_challenge": {
-						"description": "ALTCHA challenge to solve when the provider is altcha",
-						"$ref": "#/components/schemas/OperatorPassAltchaChallenge"
-					}
-				},
-				"required": ["captcha_provider"],
-				"additionalProperties": false
-			},
-			"OperatorPassWaitlistRequest": {
-				"type": "object",
-				"properties": {
-					"email": {
-						"type": "string",
-						"maxLength": 254,
-						"format": "email",
-						"pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-						"description": "Email address to put on the waitlist"
-					},
-					"country_code": {
-						"description": "Two-letter country code used to pick the price currency. The request GeoIP country is used when omitted.",
-						"type": "string"
-					},
-					"price_feedback": {"$ref": "#/components/schemas/OperatorPassPriceFeedbackSchema"},
-					"currency": {
-						"description": "Currency of the early bird price the visitor was shown",
-						"$ref": "#/components/schemas/OperatorPassCurrencySchema"
-					}
-				},
-				"required": ["email", "price_feedback", "currency"],
-				"additionalProperties": false
-			},
-			"OperatorPassWaitlistResponse": {
-				"type": "object",
-				"properties": {
-					"status": {
-						"type": "string",
-						"const": "pending",
-						"description": "A confirmation email is on its way when the address can join"
-					},
-					"followup_token": {
-						"type": "string",
-						"description": "Signed token for the follow-up question, valid for 30 minutes. Every signup gets one of the same shape, and only one issued for a new waitlist entry stores an answer"
-					}
-				},
-				"required": ["status", "followup_token"],
-				"additionalProperties": false
-			},
-			"OperatorPassStateResponse": {
-				"type": "object",
-				"properties": {
-					"phase": {"$ref": "#/components/schemas/OperatorPassPhaseSchema"},
-					"now": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "The server time the state was computed at"
-					},
-					"sale_opens_at": {
-						"anyOf": [
+					"wall": {
+						"description": "The choice for the Operators' wall. Ignored when the account already made a choice, and treated as not listed when left out",
+						"oneOf": [
 							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"type": "object",
+								"properties": {"opted_out": {"type": "boolean", "const": true}},
+								"required": ["opted_out"]
 							},
-							{"type": "null"}
-						],
-						"description": "When sales open, null while no sale date is set"
-					},
-					"price_rises_at": {
-						"anyOf": [
 							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the early bird price ends, null while no sale date is set"
-					},
-					"currency": {"$ref": "#/components/schemas/OperatorPassCurrencySchema"},
-					"price_minor": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "Current price of one pass in minor units"
-					},
-					"max_quantity": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "Most passes one checkout can buy, FLUXER_OPERATOR_PASS_MAX_QUANTITY, 25 by default"
-					},
-					"withdrawal_rule": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWithdrawalRuleResponse"}, {"type": "null"}],
-						"description": "A withdrawal right that cannot be waived, for buyers in a country that has one, null otherwise. Checkout shows the matching box text then"
-					},
-					"quote": {"type": "string", "description": "Signed price quote to send back with checkout"},
-					"holder": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassHolderResponse"}, {"type": "null"}],
-						"description": "The passes held by the current account, null otherwise"
-					},
-					"purchase_blocked_reason": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassPurchaseBlockedReasonSchema"}, {"type": "null"}],
-						"description": "Why the current account cannot buy passes, null when it can"
-					},
-					"donation": {"$ref": "#/components/schemas/OperatorPassDonationOptionsResponse"}
-				},
-				"required": [
-					"phase",
-					"now",
-					"sale_opens_at",
-					"price_rises_at",
-					"currency",
-					"price_minor",
-					"max_quantity",
-					"withdrawal_rule",
-					"quote",
-					"holder",
-					"purchase_blocked_reason",
-					"donation"
-				],
-				"additionalProperties": false
-			},
-			"OperatorPassLatestReleaseResponse": {
-				"type": "object",
-				"properties": {
-					"release": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassReleaseResponse"}, {"type": "null"}],
-						"description": "The latest published list, null before the first one"
-					}
-				},
-				"required": ["release"],
-				"additionalProperties": false
-			},
-			"OperatorPassWithdrawRequest": {
-				"type": "object",
-				"properties": {
-					"name": {"type": "string", "minLength": 1, "maxLength": 200, "description": "Name of the buyer who withdraws"}
-				},
-				"required": ["name"]
-			},
-			"OperatorPassPurchaseResponse": {
-				"type": "object",
-				"properties": {
-					"id": {"type": "string", "description": "Identifier of the purchase, the Stripe checkout session ID"},
-					"status": {"$ref": "#/components/schemas/OperatorPassPurchaseStatusSchema"},
-					"quantity": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "How many passes the purchase bought"
-					},
-					"amount_minor": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "Price paid for the passes in minor units, tax included"
-					},
-					"currency": {"$ref": "#/components/schemas/OperatorPassCurrencySchema"},
-					"purchased_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the payment settled, null while pending"
-					},
-					"delivered_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the passes were delivered, null while pending"
-					},
-					"waiver_consent_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the buyer ticked the box at checkout"
-					},
-					"withdrawal_country": {
-						"description": "Country whose withdrawal right applies to the purchase, null when the waiver applies",
-						"type": ["string", "null"]
-					},
-					"withdrawal_ends_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the right of withdrawal ends, null when the purchase has none: delivered passes outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco"
-					},
-					"withdrawal_ends_on": {
-						"description": "The last day of the cancel window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-							},
-							{"type": "null"}
+								"type": "object",
+								"properties": {
+									"opted_out": {"type": "boolean", "const": false},
+									"name": {"$ref": "#/components/schemas/OperatorPassWallNameType"}
+								},
+								"required": ["opted_out", "name"]
+							}
 						]
 					},
-					"withdrawn_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the buyer last withdrew"
+					"labs_greeting": {
+						"description": "Whether the system user welcomes the account by name in #operators in Fluxer Labs once the pass is on. Left out, the choice the account made before stays, and a new account is welcomed",
+						"type": "boolean"
 					},
-					"has_donation": {"type": "boolean", "description": "Whether a monthly donation was added at checkout"},
-					"can_withdraw": {
+					"terms_accepted": {
 						"type": "boolean",
-						"description": "Whether the whole purchase can be withdrawn now, only while paid passes are not delivered yet"
+						"description": "Whether the account ticked the box that accepts the Operator Pass terms. Must be true"
+					},
+					"age_confirmed": {
+						"type": "boolean",
+						"description": "Whether the account ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true"
+					},
+					"terms_version": {
+						"type": "string",
+						"maxLength": 64,
+						"description": "The version of the Operator Pass terms the account was shown"
+					},
+					"box_text_version": {
+						"type": "string",
+						"maxLength": 64,
+						"description": "The version of the terms box text the account was shown"
+					},
+					"consent_locale": {
+						"description": "Locale the client used to show the box text. The activation records the box text in this locale",
+						"type": "string",
+						"maxLength": 16
 					}
 				},
 				"required": [
-					"id",
-					"status",
-					"quantity",
-					"amount_minor",
-					"currency",
-					"purchased_at",
-					"delivered_at",
-					"waiver_consent_at",
-					"withdrawal_country",
-					"withdrawal_ends_at",
-					"withdrawn_at",
-					"has_donation",
-					"can_withdraw"
-				],
-				"additionalProperties": false
-			},
-			"OperatorPassPurchaseListResponse": {
-				"type": "array",
-				"items": {"$ref": "#/components/schemas/OperatorPassPurchaseResponse"}
+					"certificate_name",
+					"show_badge",
+					"terms_accepted",
+					"age_confirmed",
+					"terms_version",
+					"box_text_version"
+				]
 			},
 			"OperatorPassPassesResponse": {
 				"type": "object",
@@ -33002,10 +33457,267 @@
 						"description": "Completed offers the account made, the passes it passed on, oldest first",
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/OperatorPassOfferResponse"}
+					},
+					"visionary": {
+						"description": "The Operator Pass that comes with Visionary. Left out when the account never had Visionary",
+						"$ref": "#/components/schemas/OperatorPassVisionaryResponse"
+					},
+					"labs": {
+						"description": "The place in Fluxer Labs that comes with the pass",
+						"$ref": "#/components/schemas/OperatorPassLabsResponse"
 					}
 				},
-				"required": ["count", "passes", "incoming_offers", "outgoing_offers"],
+				"required": ["count", "passes", "incoming_offers", "outgoing_offers", "labs"],
 				"additionalProperties": false
+			},
+			"OperatorPassStateResponse": {
+				"type": "object",
+				"properties": {
+					"phase": {"$ref": "#/components/schemas/OperatorPassPhaseSchema"},
+					"now": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "The server time the state was computed at"
+					},
+					"price_rises_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the early bird price ends, null while no sale date is set"
+					},
+					"currency": {"$ref": "#/components/schemas/OperatorPassCurrencySchema"},
+					"price_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Current price of one pass in minor units"
+					},
+					"max_quantity": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Most passes one checkout can buy, FLUXER_OPERATOR_PASS_MAX_QUANTITY, 25 by default"
+					},
+					"withdrawal_rule": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWithdrawalRuleResponse"}, {"type": "null"}],
+						"description": "A country rule that keeps the right of withdrawal after delivery, null when the right ends once the certificate is delivered"
+					},
+					"standard_price_minor": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "Price of one pass after the early bird phase in minor units, null when no standard price is set"
+					},
+					"quote": {"type": "string", "description": "Signed price quote to send back with checkout"},
+					"holder": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassHolderResponse"}, {"type": "null"}],
+						"description": "The passes held by the current account, null otherwise"
+					},
+					"purchase_blocked_reason": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassPurchaseBlockedReasonSchema"}, {"type": "null"}],
+						"description": "Why the current account cannot buy passes, null when it can"
+					}
+				},
+				"required": [
+					"phase",
+					"now",
+					"price_rises_at",
+					"currency",
+					"price_minor",
+					"max_quantity",
+					"withdrawal_rule",
+					"standard_price_minor",
+					"quote",
+					"holder",
+					"purchase_blocked_reason"
+				],
+				"additionalProperties": false
+			},
+			"OperatorPassLatestReleaseResponse": {
+				"type": "object",
+				"properties": {
+					"release": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassReleaseResponse"}, {"type": "null"}],
+						"description": "The latest published list, null before the first one"
+					}
+				},
+				"required": ["release"],
+				"additionalProperties": false
+			},
+			"OperatorPassWithdrawRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"type": "string", "minLength": 1, "maxLength": 200, "description": "Name of the buyer who withdraws"}
+				},
+				"required": ["name"]
+			},
+			"OperatorPassPurchaseResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "description": "Identifier of the purchase, the Stripe checkout session ID"},
+					"status": {"$ref": "#/components/schemas/OperatorPassPurchaseStatusSchema"},
+					"order_number": {
+						"description": "Order number shown on the purchase confirmation and the withdrawal receipt, null when not known",
+						"type": ["string", "null"]
+					},
+					"quantity": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "How many passes the purchase bought"
+					},
+					"amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Price paid for the passes in minor units, tax included"
+					},
+					"currency": {"$ref": "#/components/schemas/OperatorPassCurrencySchema"},
+					"purchased_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the payment settled, null while pending"
+					},
+					"delivered_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the certificate was delivered, null while pending"
+					},
+					"waiver_consent_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the buyer ticked the boxes at checkout"
+					},
+					"withdrawal_country": {
+						"description": "Country whose withdrawal right applies to the purchase, null when the waiver applies",
+						"type": ["string", "null"]
+					},
+					"withdrawal_ends_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the right of withdrawal ends, null when the purchase has none: a delivered certificate outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco"
+					},
+					"withdrawal_ends_on": {
+						"description": "The last day the buyer can withdraw, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"certificate_available": {
+						"type": "boolean",
+						"description": "Whether the purchase has at least one certificate page that is not cancelled"
+					},
+					"withdrawn_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the buyer last withdrew"
+					},
+					"pages": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"pass_id": {"type": "string", "description": "ID of the pass the page belongs to"},
+								"name": {
+									"type": "string",
+									"description": "The name on the newest copy of this page, which is the name chosen at checkout unless the page was issued again with a new name"
+								},
+								"certificate_url": {
+									"description": "The private link of this page on the marketing site, which shows the page and opens its PDF. Null when the page has no link",
+									"type": ["string", "null"]
+								}
+							},
+							"required": ["pass_id", "name", "certificate_url"],
+							"additionalProperties": false
+						},
+						"description": "Certificate pages of the purchase that are not cancelled, in page order. Empty before delivery"
+					},
+					"can_withdraw": {
+						"type": "boolean",
+						"description": "Whether the withdraw button for the purchase is available now, before delivery or while a country rule keeps the right of withdrawal"
+					},
+					"refundable_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "What withdrawing from the whole purchase now refunds, in minor units, tax included. It leaves out passes already refunded or withdrawn, and is 0 when can_withdraw is false"
+					},
+					"certificate_emailed": {
+						"type": "boolean",
+						"description": "Whether the email with the certificate attached was sent"
+					},
+					"refusal_reason": {
+						"anyOf": [
+							{"type": "string", "enum": ["removed", "names_missing", "email_undeliverable"]},
+							{"type": "null"}
+						],
+						"description": "Why the purchase was refunded before delivery, null when it was not refused. Only names_missing also sends the buyer an email that explains the refusal"
+					}
+				},
+				"required": [
+					"id",
+					"status",
+					"order_number",
+					"quantity",
+					"amount_minor",
+					"currency",
+					"purchased_at",
+					"delivered_at",
+					"waiver_consent_at",
+					"withdrawal_country",
+					"withdrawal_ends_at",
+					"certificate_available",
+					"withdrawn_at",
+					"pages",
+					"can_withdraw",
+					"refundable_minor",
+					"certificate_emailed",
+					"refusal_reason"
+				],
+				"additionalProperties": false
+			},
+			"OperatorPassPurchaseListResponse": {
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/OperatorPassPurchaseResponse"}
 			},
 			"OperatorPassOfferCreateRequest": {
 				"type": "object",
@@ -33023,7 +33735,7 @@
 						"$ref": "#/components/schemas/DiscriminatorType"
 					},
 					"confirm_last_pass": {
-						"description": "Must be true when this is the last pass on the account, because passing it on removes the badge and the wall listing",
+						"description": "Must be true when this is the last pass on the account, because passing it on removes the badge, the wall listing and #operators from the account",
 						"type": "boolean"
 					}
 				}
@@ -33059,12 +33771,6 @@
 						],
 						"description": "When the recipient accepted"
 					},
-					"arrives_at": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "The earliest time the pass can move to the recipient once accepted, when the transfer lock ends"
-					},
 					"ended_at": {
 						"anyOf": [
 							{
@@ -33077,17 +33783,15 @@
 						"description": "When the offer completed or ended"
 					}
 				},
-				"required": [
-					"id",
-					"pass_id",
-					"status",
-					"sender",
-					"recipient",
-					"created_at",
-					"accepted_at",
-					"arrives_at",
-					"ended_at"
-				],
+				"required": ["id", "pass_id", "status", "sender", "recipient", "created_at", "accepted_at", "ended_at"],
+				"additionalProperties": false
+			},
+			"OperatorPassCertificateLinkResponse": {
+				"type": "object",
+				"properties": {
+					"certificate_url": {"type": "string", "description": "The new private link of the certificate page"}
+				},
+				"required": ["certificate_url"],
 				"additionalProperties": false
 			},
 			"OperatorPassOfferAcceptRequest": {
@@ -33104,6 +33808,10 @@
 					"wall_opt_out": {
 						"description": "Whether the recipient chose not to be listed on the Operators' wall",
 						"type": "boolean"
+					},
+					"labs_greeting": {
+						"description": "Whether the system user welcomes the recipient by name in #operators in Fluxer Labs once the pass reaches them. Left out, the choice the account made before stays, and a new account is welcomed",
+						"type": "boolean"
 					}
 				},
 				"required": ["accept_terms"]
@@ -33116,6 +33824,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWallNameType"}, {"type": "null"}]
 					},
 					"wall_opt_out": {"type": "boolean", "description": "Whether to stay off the Operators' wall"},
+					"wall_quote": {
+						"description": "A short quote for the wall listing, up to 80 characters on one line with no links or contact handles. A character is a grapheme cluster, counted after Unicode NFC normalization. Null or an empty string clears it, and so does leaving the wall with wall_opt_out true. Unchanged when omitted",
+						"anyOf": [{"type": "string", "maxLength": 2048}, {"type": "null"}]
+					},
 					"keep_as_is": {
 						"description": "Whether profile name and avatar changes stay off the wall, unchanged when omitted",
 						"type": "boolean"
@@ -33131,14 +33843,15 @@
 				"type": "object",
 				"properties": {
 					"wall_name": {
-						"description": "The latest name the holder submitted, null when not listed",
+						"description": "The name the holder chose for the wall, null when not listed",
+						"type": ["string", "null"]
+					},
+					"wall_quote": {
+						"description": "The quote the holder set for their wall listing, null when there is none or the holder is not listed",
 						"type": ["string", "null"]
 					},
 					"wall_opt_out": {"type": "boolean", "description": "Whether the holder chose not to be listed"},
-					"keep_as_is": {
-						"type": "boolean",
-						"description": "Whether profile name and avatar changes stay off the wall instead of becoming new pending changes"
-					},
+					"keep_as_is": {"type": "boolean", "description": "Whether profile name and avatar changes stay off the wall"},
 					"release_list_opt_in": {
 						"type": "boolean",
 						"description": "Whether the holder chose to have their wall name in every yearly The Operators of list. Off by default"
@@ -33148,10 +33861,6 @@
 						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWallDisplayStateSchema"}, {"type": "null"}],
 						"description": "What the wall shows, null when not listed"
 					},
-					"review_state": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWallReviewStateSchema"}, {"type": "null"}],
-						"description": "Review state, null before anything was submitted"
-					},
 					"shown_name": {
 						"description": "The name the wall shows right now, null when not listed",
 						"type": ["string", "null"]
@@ -33160,41 +33869,6 @@
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}],
 						"description": "The avatar the wall shows right now, null for the default avatar"
 					},
-					"pending_name": {
-						"description": "The name waiting for review, null when nothing is pending",
-						"type": ["string", "null"]
-					},
-					"pending_since": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the pending change was submitted"
-					},
-					"review_due_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the review is due, 72 hours after submission"
-					},
-					"decline_reason": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWallDeclineReasonSchema"}, {"type": "null"}],
-						"description": "Why staff declined the latest change, null otherwise"
-					},
-					"decline_note": {
-						"description": "The facts staff gave for the decline, null otherwise",
-						"type": ["string", "null"]
-					},
-					"declined_name": {"description": "The declined name, null when none is", "type": ["string", "null"]},
 					"listed_at": {
 						"anyOf": [
 							{
@@ -33223,26 +33897,60 @@
 				},
 				"required": [
 					"wall_name",
+					"wall_quote",
 					"wall_opt_out",
 					"keep_as_is",
 					"release_list_opt_in",
 					"status",
 					"display_state",
-					"review_state",
 					"shown_name",
 					"shown_avatar_url",
-					"pending_name",
-					"pending_since",
-					"review_due_at",
-					"decline_reason",
-					"decline_note",
-					"declined_name",
 					"listed_at",
 					"release_year",
 					"has_wall",
 					"pass_count"
 				],
 				"additionalProperties": false
+			},
+			"OperatorPassLabsJoinResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["joined", "left", "banned", "unavailable"],
+						"description": "joined: the account is in Fluxer Labs with the Operator role. left: the account left Fluxer Labs or was removed from it before, so it is not added again and can join with the invite. banned: the account is banned from Fluxer Labs. unavailable: the account cannot be added right now"
+					},
+					"guild_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "ID of the Fluxer Labs community, null when it is not set up"
+					},
+					"operators_channel_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "ID of the #operators channel in Fluxer Labs, null when it is not set up"
+					}
+				},
+				"required": ["status", "guild_id", "operators_channel_id"],
+				"additionalProperties": false
+			},
+			"OperatorPassLabsOperatorsRequest": {
+				"type": "object",
+				"properties": {
+					"show_operators": {
+						"type": "boolean",
+						"description": "Whether the account gets the Fluxer Labs roles that open #operators"
+					}
+				},
+				"required": ["show_operators"]
+			},
+			"OperatorPassLabsGreetingRequest": {
+				"type": "object",
+				"properties": {
+					"greeting": {
+						"type": "boolean",
+						"description": "Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered"
+					}
+				},
+				"required": ["greeting"]
 			},
 			"OperatorPassCheckoutRequest": {
 				"type": "object",
@@ -33259,13 +33967,15 @@
 						"type": "string"
 					},
 					"quote": {"description": "Quote from the state response the buyer saw", "type": "string", "maxLength": 2048},
-					"donation_amount_minor": {
-						"description": "Optional monthly donation in minor units of the pass currency",
-						"anyOf": [{"type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991}, {"type": "null"}]
-					},
-					"waiver_consent": {
-						"description": "Whether the buyer ticked the required box asking for delivery as soon as they pay and acknowledging that the bonus is not part of what they pay for. Outside a withdrawal_rule country the box also acknowledges losing the right of withdrawal once the passes are delivered. Must be true",
+					"delivery_consent": {
+						"description": "Whether the buyer ticked the box asking for the certificate to be delivered as soon as they pay. Outside a withdrawal_rule country the box also acknowledges that the right of withdrawal ends once the certificate is delivered. Must be true",
 						"type": "boolean"
+					},
+					"certificate_names": {
+						"description": "The names printed on the certificate. Give one name to print it on every page, or one name per pass in page order. Left out or empty, every page gets the account display name, or the username when there is none",
+						"maxItems": 100,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/OperatorPassCertificateNameType"}
 					},
 					"wall_name": {
 						"description": "Name for the Operators' wall, required unless wall_opt_out is true. Keeps the current name when the account is already listed",
@@ -33275,23 +33985,84 @@
 						"description": "Whether the buyer chose not to be listed on the Operators' wall",
 						"type": "boolean"
 					},
+					"labs_greeting": {
+						"description": "Whether the system user welcomes the buyer by name in #operators in Fluxer Labs once the certificate is delivered. Left out, the choice the account made before stays, and a new account is welcomed",
+						"type": "boolean"
+					},
 					"consent_locale": {
 						"description": "Locale the client used to show the box texts. The purchase records the box text in this locale",
 						"type": "string",
 						"maxLength": 16
 					},
 					"age_confirmed": {
-						"description": "Whether the buyer ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true when quantity is above 1",
+						"description": "Whether the buyer ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true for every purchase",
 						"type": "boolean"
-					}
+					},
+					"is_business": {
+						"description": "Whether the pass is bought for a business. When true, the payment page requires a billing address for the invoice. When false or omitted, billing address collection is left to Stripe (auto)",
+						"type": "boolean"
+					},
+					"cnpj": {"$ref": "#/components/schemas/CnpjSchema"}
 				}
 			},
 			"OperatorPassCheckoutResponse": {
 				"type": "object",
 				"properties": {
-					"url": {"type": "string", "format": "uri", "description": "Stripe checkout URL to redirect the buyer to"}
+					"url": {"type": "string", "format": "uri", "description": "Stripe checkout URL to redirect the buyer to"},
+					"session_id": {
+						"type": "string",
+						"description": "ID of the Stripe checkout session, to look the purchase up with GET /operator-pass/purchases"
+					},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the checkout session expires if nobody pays"
+					}
 				},
-				"required": ["url"],
+				"required": ["url", "session_id", "expires_at"],
+				"additionalProperties": false
+			},
+			"OperatorPassCertificateFileResponse": {
+				"type": "string",
+				"format": "binary",
+				"contentEncoding": "binary",
+				"description": "The newest stored copy of one Operator certificate page as a PDF"
+			},
+			"OperatorPassCertificateResponse": {
+				"type": "object",
+				"properties": {
+					"number": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "The certificate number"
+					},
+					"status": {"$ref": "#/components/schemas/OperatorPassCertificateStatusSchema"},
+					"name": {
+						"description": "The name on the newest copy of the page, null when the page is cancelled",
+						"type": ["string", "null"]
+					},
+					"source": {"$ref": "#/components/schemas/OperatorPassCertificateSourceSchema"},
+					"paid_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the pass was paid for, or the date the account got Visionary for a Visionary page"
+					},
+					"issued_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the newest copy of the page, which carries this link, was issued, null when the page is cancelled"
+					}
+				},
+				"required": ["number", "status", "name", "source", "paid_at", "issued_at"],
 				"additionalProperties": false
 			},
 			"OAuth2UserInfoResponse": {
@@ -37755,6 +38526,14 @@
 					"invite_code": {
 						"description": "Invite to open after the date of birth step, for sign-ups",
 						"type": ["string", "null"]
+					},
+					"username": {
+						"description": "For sign-ups, the username for the new account. Ignored when signing in",
+						"$ref": "#/components/schemas/UsernameType"
+					},
+					"global_name": {
+						"description": "For sign-ups, the display name shown to other people. Ignored when signing in",
+						"type": "string"
 					}
 				},
 				"required": ["ticket", "code"]
@@ -38063,8 +38842,15 @@
 						"description": "Images this instance shows in place of the built-in verified, partnered and discoverable community badges",
 						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
 					},
+					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
+					"hidden_role_ids": {
+						"description": "IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
 					"voice_origins": {
-						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies",
+						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com",
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string"}
@@ -38082,9 +38868,17 @@
 					"services",
 					"limits",
 					"push",
-					"app_public"
+					"app_public",
+					"age_policy"
 				],
 				"additionalProperties": false
+			},
+			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
+			"InstanceHiddenBuiltInGuildBadgesSchema": {
+				"maxItems": 3,
+				"type": "array",
+				"items": {"type": "string", "enum": ["verified", "partnered", "discoverable"]},
+				"description": "Built-in community badges this instance does not show. The community keeps the feature, such as being listed in discovery"
 			},
 			"InstanceBuiltInGuildBadgeImagesSchema": {
 				"type": "object",
@@ -38305,8 +39099,28 @@
 						"description": "Optional image URL drawn behind the sign-in card on a self-hosted instance",
 						"type": ["string", "null"]
 					},
+					"premium_page_color": {
+						"description": "Optional hex color a self-hosted instance uses to recolor its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_expressions_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"Your emojis, everywhere\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_profile_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"A profile that stands out\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_stream_url": {
+						"description": "Optional image a self-hosted instance shows next to the \"Stream in 4K at 60 FPS\" card on its premium page",
+						"type": ["string", "null"]
+					},
+					"premium_showcase_upload_url": {
+						"description": "Optional image a self-hosted instance shows next to the card about file size limits on its premium page",
+						"type": ["string", "null"]
+					},
 					"custom_css": {
-						"description": "Optional stylesheet a self-hosted instance applies to every page of its web and desktop app",
+						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages",
 						"type": ["string", "null"]
 					},
 					"upload_limit_message": {
@@ -38334,6 +39148,11 @@
 					"premium_product_name",
 					"premium_info_url",
 					"sign_in_backdrop_url",
+					"premium_page_color",
+					"premium_showcase_expressions_url",
+					"premium_showcase_profile_url",
+					"premium_showcase_stream_url",
+					"premium_showcase_upload_url",
 					"custom_css",
 					"upload_limit_message",
 					"trusted_domains"
@@ -38587,6 +39406,10 @@
 					"api": {"type": "string", "description": "Base URL for authenticated API requests"},
 					"api_client": {"type": "string", "description": "Base URL for client API requests"},
 					"api_public": {"type": "string", "description": "Base URL for public API requests"},
+					"api_transport": {
+						"description": "Base URL that official desktop clients send API requests to instead of api_client",
+						"type": "string"
+					},
 					"gateway": {"type": "string", "description": "WebSocket URL for the gateway"},
 					"media": {"type": "string", "description": "Base URL for the media proxy"},
 					"upload_relay": {"description": "Base URL for proxied attachment and preview uploads", "type": "string"},
@@ -38666,15 +39489,30 @@
 			},
 			"InstantAccountAvailabilitySchema": {
 				"description": "Whether accounts can be created from just a display name, and why not",
-				"x-enumNames": ["AVAILABLE", "DISABLED", "CAPTCHA_OFF", "REGISTRATION_CLOSED", "APPROVAL_REQUIRED"],
+				"x-enumNames": [
+					"AVAILABLE",
+					"DISABLED",
+					"CAPTCHA_OFF",
+					"REGISTRATION_CLOSED",
+					"APPROVAL_REQUIRED",
+					"EMAIL_DOMAINS_RESTRICTED"
+				],
 				"x-enumDescriptions": [
 					"Accounts can be created from a display name",
 					"Instant accounts are turned off",
 					"Instant accounts need the captcha, which is off",
 					"Public registration is closed",
-					"New accounts need approval, so they need credentials to sign in once approved"
+					"New accounts need approval, so they need credentials to sign in once approved",
+					"Public sign-ups must use an email address on an allowed domain"
 				],
-				"enum": ["available", "disabled", "captcha_off", "registration_closed", "approval_required"],
+				"enum": [
+					"available",
+					"disabled",
+					"captcha_off",
+					"registration_closed",
+					"approval_required",
+					"email_domains_restricted"
+				],
 				"type": "string"
 			},
 			"TagStyleSchema": {
@@ -38741,7 +39579,6 @@
 				"pattern": "^-?[0-9]{1,19}$",
 				"description": "Display position of the badge. Badges are shown in ascending order of this value"
 			},
-			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"BotFlags": {
 				"type": "integer",
 				"minimum": 0,
@@ -40097,7 +40934,7 @@
 								"items": {
 									"type": "object",
 									"properties": {
-										"name": {"description": "Name of the field", "type": "string"},
+										"name": {"description": "Name of the field (0-256 characters)", "type": "string"},
 										"value": {"description": "Value of the field (0-1024 characters)", "type": "string"},
 										"inline": {
 											"default": false,
@@ -42790,6 +43627,28 @@
 				"enum": ["access_token", "refresh_token"],
 				"type": "string"
 			},
+			"OperatorPassCertificateSourceSchema": {
+				"description": "How the pass on an Operator certificate page was obtained",
+				"x-enumNames": ["PURCHASE", "VISIONARY"],
+				"x-enumDescriptions": ["The pass was bought", "The pass came with Visionary"],
+				"enum": ["purchase", "visionary"],
+				"type": "string"
+			},
+			"OperatorPassCertificateStatusSchema": {
+				"description": "Status of an Operator certificate page",
+				"x-enumNames": ["VALID", "CANCELLED"],
+				"x-enumDescriptions": [
+					"The page is a valid Operator certificate",
+					"The page was cancelled and is no longer a valid Operator certificate"
+				],
+				"enum": ["valid", "cancelled"],
+				"type": "string"
+			},
+			"CnpjSchema": {
+				"description": "CNPJ of the Brazilian company the purchase is for, with or without punctuation. Letters are allowed in the first 12 characters. Used only with is_business when the purchase falls under Brazilian law",
+				"type": "string",
+				"maxLength": 32
+			},
 			"OperatorPassWallNameType": {
 				"type": "string",
 				"minLength": 1,
@@ -42797,35 +43656,19 @@
 				"pattern": "^[^\\r\\n]*$",
 				"description": "Name for the Operators' wall, 1 to 32 characters without line breaks. Any display name or nickname works"
 			},
-			"OperatorPassWallDeclineReasonSchema": {
-				"description": "Why staff declined a name or avatar on the Operators' wall, under section 2.1 of the Operator Pass terms",
-				"x-enumNames": ["GUIDELINES", "IMPERSONATION", "RIGHTS", "AGE_SUITABILITY"],
-				"x-enumDescriptions": [
-					"It breaks the community guidelines",
-					"It pretends to be someone else",
-					"It uses a name or image the holder has no right to use",
-					"It is not suitable for the youngest people allowed to use Fluxer"
-				],
-				"enum": ["guidelines", "impersonation", "rights", "age_suitability"],
-				"type": "string"
-			},
-			"OperatorPassWallReviewStateSchema": {
-				"description": "Review state of the latest name and avatar",
-				"x-enumNames": ["PENDING", "APPROVED", "DECLINED"],
-				"x-enumDescriptions": [
-					"A new name or avatar waits for review, the wall keeps the last approved version",
-					"The latest name and avatar are approved",
-					"Staff declined the latest name or avatar, see decline_reason"
-				],
-				"enum": ["pending", "approved", "declined"],
-				"type": "string"
+			"OperatorPassCertificateNameType": {
+				"type": "string",
+				"minLength": 1,
+				"maxLength": 384,
+				"pattern": "^[^\\r\\n]*$",
+				"description": "Name printed on one page of the Operator certificate, 1 to 48 characters without line breaks. A character is a grapheme cluster, counted after Unicode NFC normalization"
 			},
 			"OperatorPassWallDisplayStateSchema": {
 				"description": "What the Operators' wall shows for the listing",
 				"x-enumNames": ["LIVE", "FALLBACK", "HIDDEN", "REMOVED"],
 				"x-enumDescriptions": [
-					"The wall shows the approved name and avatar",
-					"The wall shows the username, or Operator, with the default avatar until a name is approved",
+					"The wall shows the name and avatar the holder chose",
+					"The wall shows Operator with the default avatar after staff took the name or avatar off",
 					"Staff hid the listing for now",
 					"The listing is off the wall under section 8 of the Operator Pass terms"
 				],
@@ -42858,110 +43701,13 @@
 				"x-enumNames": ["PENDING", "ACCEPTED", "COMPLETED", "DECLINED", "WITHDRAWN", "CANCELLED"],
 				"x-enumDescriptions": [
 					"Waiting for the recipient to accept or decline",
-					"The recipient accepted, the pass moves at arrives_at",
+					"The recipient accepted and the pass is about to move",
 					"The pass moved to the recipient",
 					"The recipient declined",
 					"The sender withdrew the offer",
 					"The offer ended because the pass ended or its payment changed"
 				],
 				"enum": ["pending", "accepted", "completed", "declined", "withdrawn", "cancelled"],
-				"type": "string"
-			},
-			"OperatorPassUnitResponse": {
-				"type": "object",
-				"properties": {
-					"id": {"type": "string", "description": "ID of the pass"},
-					"source": {
-						"type": "string",
-						"enum": ["purchase", "transfer", "admin"],
-						"description": "How the account got the pass"
-					},
-					"status": {"$ref": "#/components/schemas/OperatorPassUnitStatusSchema"},
-					"purchase_id": {
-						"description": "The purchase that paid for the pass, null for a staff grant",
-						"type": ["string", "null"]
-					},
-					"delivered_at": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "When the pass reached this account"
-					},
-					"paused": {"type": "boolean", "description": "Whether the pass is paused while a payment dispute is open"},
-					"can_pass_on": {
-						"type": "boolean",
-						"description": "Whether the pass can be passed on. Received and staff granted passes cannot"
-					},
-					"transfer_lock_ends_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "The earliest time a passed on pass can move to the recipient, null when it cannot be passed on"
-					},
-					"can_withdraw": {
-						"type": "boolean",
-						"description": "Whether the withdraw button for this pass is available now"
-					},
-					"withdrawal_ends_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the cancel window for this pass closes, null when it has none. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco"
-					},
-					"withdrawal_ends_on": {
-						"description": "The last day of the cancel window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-							},
-							{"type": "null"}
-						]
-					},
-					"offer": {
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassOfferResponse"}, {"type": "null"}],
-						"description": "The open offer for this pass, null when none"
-					},
-					"received_from": {
-						"description": "Who passed this pass on to the account, null when the account bought it or that account is gone",
-						"anyOf": [{"$ref": "#/components/schemas/OperatorPassOfferUserResponse"}, {"type": "null"}]
-					}
-				},
-				"required": [
-					"id",
-					"source",
-					"status",
-					"purchase_id",
-					"delivered_at",
-					"paused",
-					"can_pass_on",
-					"transfer_lock_ends_at",
-					"can_withdraw",
-					"withdrawal_ends_at",
-					"offer"
-				],
-				"additionalProperties": false
-			},
-			"OperatorPassUnitStatusSchema": {
-				"description": "Operator Pass status",
-				"x-enumNames": ["HELD", "WITHDRAWN", "REVOKED"],
-				"x-enumDescriptions": [
-					"The account holds the pass",
-					"The buyer withdrew and the payment for the pass was refunded",
-					"The pass ended because its payment was refunded or reversed, or staff removed it"
-				],
-				"enum": ["held", "withdrawn", "revoked"],
 				"type": "string"
 			},
 			"OperatorPassCurrencySchema": {
@@ -43013,61 +43759,30 @@
 				"required": ["year", "tag", "released_at", "names"],
 				"additionalProperties": false
 			},
-			"OperatorPassDonationOptionsResponse": {
-				"type": "object",
-				"properties": {
-					"currency": {
-						"description": "Currency of the optional monthly donation",
-						"$ref": "#/components/schemas/OperatorPassCurrencySchema"
-					},
-					"presets_minor": {
-						"type": "array",
-						"items": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-						"description": "Suggested monthly donation amounts in minor units"
-					},
-					"min_minor": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "Smallest monthly donation in minor units"
-					},
-					"max_minor": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991,
-						"description": "Largest monthly donation in minor units"
-					}
-				},
-				"required": ["currency", "presets_minor", "min_minor", "max_minor"],
-				"additionalProperties": false
-			},
 			"OperatorPassPurchaseBlockedReasonSchema": {
 				"description": "Why the current account cannot buy passes",
 				"x-enumNames": [
-					"NOT_ON_SALE",
-					"COUNTRY_UNAVAILABLE",
 					"EMAIL_UNVERIFIED",
 					"UNCLAIMED",
 					"PURCHASE_DISABLED",
 					"PAYMENT_DISPUTE_OPEN",
+					"EMAIL_UNDELIVERABLE",
 					"REMOVED"
 				],
 				"x-enumDescriptions": [
-					"Sales have not opened yet",
-					"The pass is not on sale in the country of the buyer right now",
 					"The account email is not verified",
 					"The account is not claimed",
 					"Purchases are disabled for the account",
 					"A payment dispute the account made is open, purchases come back when it closes",
+					"Emails to the account address bounced, so the purchase confirmation cannot be delivered",
 					"The pass was removed from the account permanently under the Operator Pass terms"
 				],
 				"enum": [
-					"not_on_sale",
-					"country_unavailable",
 					"email_unverified",
 					"unclaimed",
 					"purchase_disabled",
 					"payment_dispute_open",
+					"email_undeliverable",
 					"removed"
 				],
 				"type": "string"
@@ -43110,7 +43825,7 @@
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "Days after payment the buyer can withdraw for a full refund"
+						"description": "Days the buyer can withdraw for a full refund, even after delivery. The period ends on the last of these days counted from the day the certificate is delivered, and withdrawal_ends_at and withdrawal_ends_on on each purchase give the exact deadline"
 					}
 				},
 				"required": ["country", "days"],
@@ -43118,59 +43833,216 @@
 			},
 			"OperatorPassPhaseSchema": {
 				"description": "Operator Pass sale phase",
-				"x-enumNames": ["WAITLIST", "EARLY_BIRD", "STANDARD"],
-				"x-enumDescriptions": [
-					"Sales have not opened yet, the waitlist is open",
-					"Sales are open at the early bird price",
-					"Sales are open at the standard price"
-				],
-				"enum": ["waitlist", "early_bird", "standard"],
+				"x-enumNames": ["EARLY_BIRD", "STANDARD"],
+				"x-enumDescriptions": ["Sales are open at the early bird price", "Sales are open at the standard price"],
+				"enum": ["early_bird", "standard"],
 				"type": "string"
 			},
 			"OperatorPassHolderSourceSchema": {
 				"description": "How the Operator Pass was obtained",
-				"x-enumNames": ["PURCHASE", "TRANSFER", "ADMIN"],
+				"x-enumNames": ["PURCHASE", "TRANSFER", "VISIONARY", "ADMIN"],
 				"x-enumDescriptions": [
 					"Bought the pass",
 					"Received from another holder through Pass it on",
+					"Came with Visionary and was turned on by the account",
 					"Granted by staff"
 				],
-				"enum": ["purchase", "transfer", "admin"],
+				"enum": ["purchase", "transfer", "visionary", "admin"],
 				"type": "string"
 			},
-			"OperatorPassPriceFeedbackSchema": {
-				"description": "How the visitor feels about the early bird price they were shown",
-				"x-enumNames": ["TOO_HIGH", "ABOUT_RIGHT", "COULD_PAY_MORE"],
-				"x-enumDescriptions": [
-					"The early bird price feels too high",
-					"The early bird price feels about right",
-					"The visitor would pay more than the early bird price"
-				],
-				"enum": ["too_high", "about_right", "could_pay_more"],
-				"type": "string"
-			},
-			"OperatorPassAltchaChallenge": {
+			"OperatorPassLabsResponse": {
 				"type": "object",
 				"properties": {
-					"parameters": {
-						"type": "object",
-						"properties": {
-							"algorithm": {"type": "string"},
-							"nonce": {"type": "string"},
-							"salt": {"type": "string"},
-							"cost": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-							"keyLength": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-							"keyPrefix": {"type": "string"},
-							"keySignature": {"type": "string"},
-							"expiresAt": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}
-						},
-						"required": ["algorithm", "nonce", "salt", "cost", "keyLength", "keyPrefix", "keySignature", "expiresAt"],
-						"additionalProperties": {}
+					"greeting": {
+						"type": "boolean",
+						"description": "Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered. On unless the account turned it off"
 					},
-					"signature": {"type": "string"}
+					"show_operators": {
+						"type": "boolean",
+						"description": "Whether the account gets the Fluxer Labs roles that open #operators. On unless the account turned it off. When off, no role update adds them back"
+					},
+					"greeted": {
+						"type": "boolean",
+						"description": "Whether the account was already welcomed in #operators. Nobody is welcomed twice"
+					},
+					"left": {
+						"type": "boolean",
+						"description": "Whether the account left Fluxer Labs or was removed from it, so passes no longer add it to Labs"
+					},
+					"member": {"type": "boolean", "description": "Whether the account is in Fluxer Labs now"},
+					"guild_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "ID of the Fluxer Labs community, null when it is not set up"
+					},
+					"operators_channel_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "ID of the #operators channel in Fluxer Labs, null when it is not set up"
+					}
 				},
-				"required": ["parameters", "signature"],
+				"required": ["greeting", "show_operators", "greeted", "left", "member", "guild_id", "operators_channel_id"],
 				"additionalProperties": false
+			},
+			"OperatorPassVisionaryResponse": {
+				"type": "object",
+				"properties": {
+					"state": {"$ref": "#/components/schemas/OperatorPassVisionaryStateSchema"},
+					"reason": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassVisionaryUnavailableReasonSchema"}, {"type": "null"}],
+						"description": "Why state is unavailable, null otherwise"
+					},
+					"since": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "The date the account got Visionary. The certificate, the badge and the wall order use this date"
+					},
+					"pass_id": {"description": "ID of the pass once it is turned on, null before", "type": ["string", "null"]},
+					"certificate_number": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "Number of the certificate page once the pass is turned on, null before"
+					},
+					"certificate_url": {
+						"description": "The private link of the certificate page on the marketing site once the pass is on, null before, after it ends or when the page has no link",
+						"type": ["string", "null"]
+					},
+					"labs_member": {
+						"type": "boolean",
+						"description": "Whether the account is in Fluxer Labs, where the pass gives the Operator role"
+					},
+					"terms_version": {
+						"type": "string",
+						"description": "The Operator Pass terms version to send back when turning the pass on, or the one accepted once on"
+					}
+				},
+				"required": [
+					"state",
+					"reason",
+					"since",
+					"pass_id",
+					"certificate_number",
+					"certificate_url",
+					"labs_member",
+					"terms_version"
+				],
+				"additionalProperties": false
+			},
+			"OperatorPassUnitResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "description": "ID of the pass"},
+					"source": {
+						"type": "string",
+						"enum": ["purchase", "transfer", "visionary", "admin"],
+						"description": "How the account got the pass"
+					},
+					"status": {"$ref": "#/components/schemas/OperatorPassUnitStatusSchema"},
+					"purchase_id": {
+						"description": "The purchase that paid for the pass, null for a staff grant or the pass that came with Visionary",
+						"type": ["string", "null"]
+					},
+					"delivered_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the pass reached this account"
+					},
+					"purchased_at": {
+						"description": "When the payment for the purchase settled, null when the account did not buy this pass itself",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"paused": {"type": "boolean", "description": "Whether the pass is paused while a payment dispute is open"},
+					"can_pass_on": {
+						"type": "boolean",
+						"description": "Whether the pass can be passed on. Received and staff granted passes cannot"
+					},
+					"can_withdraw": {
+						"type": "boolean",
+						"description": "Whether the withdraw button for this pass is available now"
+					},
+					"withdrawal_ends_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the withdrawal window for this pass closes, null when it has none. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco"
+					},
+					"withdrawal_ends_on": {
+						"description": "The last day of the withdrawal window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"offer": {
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassOfferResponse"}, {"type": "null"}],
+						"description": "The open offer for this pass, null when none"
+					},
+					"received_from": {
+						"description": "Who passed this pass on to the account, null when the account bought it or that account is gone",
+						"anyOf": [{"$ref": "#/components/schemas/OperatorPassOfferUserResponse"}, {"type": "null"}]
+					},
+					"certificate_number": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "Number of the certificate page of this pass, null when the pass has no page"
+					}
+				},
+				"required": [
+					"id",
+					"source",
+					"status",
+					"purchase_id",
+					"delivered_at",
+					"paused",
+					"can_pass_on",
+					"can_withdraw",
+					"withdrawal_ends_at",
+					"offer",
+					"certificate_number"
+				],
+				"additionalProperties": false
+			},
+			"OperatorPassUnitStatusSchema": {
+				"description": "Operator Pass status",
+				"x-enumNames": ["HELD", "WITHDRAWN", "REVOKED"],
+				"x-enumDescriptions": [
+					"The account holds the pass",
+					"The buyer withdrew and the payment for the pass was refunded",
+					"The pass ended because its payment was refunded or reversed, or staff removed it"
+				],
+				"enum": ["held", "withdrawn", "revoked"],
+				"type": "string"
+			},
+			"OperatorPassVisionaryUnavailableReasonSchema": {
+				"type": "string",
+				"const": "removed",
+				"description": "Why the account cannot turn on the Operator Pass that comes with Visionary. removed means the pass was removed from the account permanently under section 8 of the Operator Pass terms"
+			},
+			"OperatorPassVisionaryStateSchema": {
+				"description": "State of the Operator Pass that comes with Visionary",
+				"x-enumNames": ["AVAILABLE", "ON", "ENDED", "UNAVAILABLE"],
+				"x-enumDescriptions": [
+					"The account has Visionary and can turn on the Operator Pass that comes with it",
+					"The account turned on the Operator Pass that comes with Visionary",
+					"The pass ended because the Visionary of the account ended",
+					"The account has Visionary but cannot turn the pass on, see reason"
+				],
+				"enum": ["available", "on", "ended", "unavailable"],
+				"type": "string"
 			},
 			"OperatorPassWallOperatorResponse": {
 				"type": "object",
@@ -43178,15 +44050,15 @@
 					"id": {"type": "string", "description": "Stable public ID of the entry, not the user ID"},
 					"name": {
 						"type": "string",
-						"description": "The name shown: the approved name, or the username or Operator as fallback"
+						"description": "The name shown: the name the holder chose, or Operator as fallback"
 					},
 					"avatar": {
-						"description": "SHA-256 of the approved avatar snapshot, null for the default avatar",
+						"description": "SHA-256 of the avatar snapshot, null for the default avatar",
 						"type": ["string", "null"]
 					},
 					"avatar_url": {
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}],
-						"description": "The approved avatar snapshot at the largest size, null for the default avatar"
+						"description": "The avatar snapshot at the largest size, null for the default avatar"
 					},
 					"count": {
 						"description": "How many passes the Operator holds now. Left out when the Operator hides the number",
@@ -43204,6 +44076,10 @@
 						"description": "Present on a business listing, which shows a company name and logo at one fixed size after every listing of a person, ordered by first pass date",
 						"type": "boolean",
 						"const": true
+					},
+					"quote": {
+						"description": "The quote the Operator set for their listing, plain text to show in straight double quotes and never parse as markup. Left out when there is none",
+						"type": "string"
 					}
 				},
 				"required": ["id", "name", "avatar", "avatar_url", "tier"],
@@ -43310,36 +44186,31 @@
 				"required": ["id", "type", "card_brand", "card_last4", "card_exp_month", "card_exp_year", "is_default"],
 				"additionalProperties": false
 			},
-			"PremiumBillingInvoiceResponse": {
+			"BillingDocumentResponse": {
 				"type": "object",
 				"properties": {
-					"id": {"type": "string"},
-					"number": {"type": ["string", "null"]},
-					"amount_due": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"amount_paid": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"currency": {"type": "string"},
-					"status": {"type": ["string", "null"]},
-					"created_at": {"type": ["string", "null"]},
-					"paid_at": {"type": ["string", "null"]},
-					"billing_reason": {"type": ["string", "null"]},
-					"subscription_id": {"type": ["string", "null"]},
-					"hosted_invoice_url": {"type": ["string", "null"]},
-					"invoice_pdf": {"type": ["string", "null"]}
+					"id": {"description": "The document ID", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"number": {"type": "string", "description": "The document number, for example OP-000123"},
+					"kind": {"$ref": "#/components/schemas/BillingDocumentKind"},
+					"flow": {
+						"type": "string",
+						"enum": ["operator_pass", "plutonium", "gift", "donation"],
+						"description": "What was bought or given"
+					},
+					"issued_at": {"type": "string", "description": "When the document was issued, in ISO 8601"},
+					"total": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Total in minor units of the currency, negative for credit and refund notes"
+					},
+					"currency": {"type": "string", "description": "Three-letter ISO currency code"},
+					"original_number": {
+						"description": "For a credit or refund note, the number of the document it corrects",
+						"type": ["string", "null"]
+					}
 				},
-				"required": [
-					"id",
-					"number",
-					"amount_due",
-					"amount_paid",
-					"currency",
-					"status",
-					"created_at",
-					"paid_at",
-					"billing_reason",
-					"subscription_id",
-					"hosted_invoice_url",
-					"invoice_pdf"
-				],
+				"required": ["id", "number", "kind", "flow", "issued_at", "total", "currency", "original_number"],
 				"additionalProperties": false
 			},
 			"PremiumBillingSubscriptionResponse": {
@@ -43541,6 +44412,11 @@
 					"missing_period_end",
 					"switch_in_progress"
 				]
+			},
+			"BillingDocumentKind": {
+				"type": "string",
+				"enum": ["invoice", "receipt", "donation_receipt", "credit_note", "refund_note", "stripe_invoice"],
+				"description": "What the document is. Credit and refund notes correct an earlier document. stripe_invoice is an invoice Stripe issued before Fluxer issued its own documents, kept read-only as Stripe issued it"
 			},
 			"StoreEnvironment": {"type": "string", "enum": ["production", "sandbox"]},
 			"StorePurchaseState": {
@@ -43760,6 +44636,58 @@
 					"current_amount_minor",
 					"currency",
 					"status"
+				],
+				"additionalProperties": false
+			},
+			"PlutoniumWithdrawalResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Stripe subscription id of a subscription, or Checkout Session id of a gift, to send to the withdraw route"
+					},
+					"kind": {
+						"type": "string",
+						"enum": ["subscription", "gift"],
+						"description": "Whether the purchase is a subscription or a gift"
+					},
+					"amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Amount a withdrawal at quoted_at refunds in the currency minor unit. It is the payments the withdrawal covers, less the share for the days of Plutonium used when the purchase was made with the immediate-start consent, and in full otherwise"
+					},
+					"paid_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Sum of the payments the withdrawal covers, in the currency minor unit"
+					},
+					"quoted_at": {
+						"type": "string",
+						"description": "ISO timestamp amount_minor was worked out for. Send it back as quoted_at when withdrawing"
+					},
+					"currency": {"type": "string", "description": "Currency of the payments"},
+					"purchased_at": {
+						"type": "string",
+						"description": "ISO timestamp of the payment that started the withdrawal period: the first payment, a plan switch, a renewal at a new price, or a renewal of an EU or EEA subscription bought without the immediate-start consent"
+					},
+					"withdrawal_ends_at": {
+						"type": "string",
+						"description": "ISO timestamp after which the withdrawal period is over"
+					},
+					"withdrawal_ends_on": {"type": "string", "description": "Last day of the withdrawal period as YYYY-MM-DD"}
+				},
+				"required": [
+					"id",
+					"kind",
+					"amount_minor",
+					"paid_minor",
+					"quoted_at",
+					"currency",
+					"purchased_at",
+					"withdrawal_ends_at",
+					"withdrawal_ends_on"
 				],
 				"additionalProperties": false
 			},
@@ -44981,6 +45909,10 @@
 							{"type": "null"}
 						]
 					},
+					"quote": {
+						"description": "The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+						"type": ["string", "null"]
+					},
 					"hidden": {
 						"type": "boolean",
 						"description": "True when the badge key is in your hidden_profile_badges, so other people do not see it"
@@ -45059,6 +45991,10 @@
 							},
 							{"type": "null"}
 						]
+					},
+					"quote": {
+						"description": "The quote from the holder's Operators' wall listing, plain text to show in straight double quotes after the other tooltip lines and never parse as markup. Absent while the wall does not show it",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["key", "kind", "label", "asset", "asset_url", "aspect_ratio", "caption", "href"],
@@ -45735,6 +46671,7 @@
 					"STORE_PURCHASE_SANDBOX_NOT_ENTITLED",
 					"STREAM_KEY_CHANNEL_MISMATCH",
 					"STREAM_KEY_SCOPE_MISMATCH",
+					"STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE",
 					"STRIPE_ERROR",
 					"STRIPE_GIFT_REDEMPTION_IN_PROGRESS",
 					"STRIPE_INVALID_PRODUCT",
@@ -45758,7 +46695,8 @@
 					"DONATION_MAGIC_LINK_EXPIRED",
 					"DONATION_MAGIC_LINK_INVALID",
 					"DONATION_MAGIC_LINK_USED",
-					"OPERATOR_PASS_WAIVER_REQUIRED",
+					"OPERATOR_PASS_DELIVERY_CONSENT_REQUIRED",
+					"OPERATOR_PASS_CERTIFICATE_NAME_REJECTED",
 					"OPERATOR_PASS_AGE_CONFIRMATION_REQUIRED",
 					"OPERATOR_PASS_OFFER_UNAVAILABLE",
 					"OPERATOR_PASS_OFFER_BUSY",
@@ -45767,24 +46705,23 @@
 					"OPERATOR_PASS_LAST_PASS_CONFIRMATION_REQUIRED",
 					"UNKNOWN_OPERATOR_PASS_OFFER",
 					"UNKNOWN_OPERATOR_PASS_UNIT",
-					"OPERATOR_PASS_COUNTRY_UNAVAILABLE",
 					"OPERATOR_PASS_WALL_NAME_REQUIRED",
+					"OPERATOR_PASS_WALL_NAME_REJECTED",
+					"OPERATOR_PASS_WALL_QUOTE_INVALID",
+					"OPERATOR_PASS_WALL_QUOTE_REJECTED",
 					"OPERATOR_PASS_NOT_HELD",
 					"UNKNOWN_OPERATOR_PASS_WALL_ENTRY",
 					"OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED",
 					"OPERATOR_PASS_RELEASE_NOT_READY",
 					"UNKNOWN_OPERATOR_PASS_RELEASE_ENTRY",
-					"OPERATOR_PASS_NOT_ON_SALE",
 					"OPERATOR_PASS_PRICE_CHANGED",
-					"OPERATOR_PASS_WAITLIST_CLOSED",
-					"OPERATOR_PASS_WAITLIST_FOLLOWUP_INVALID",
-					"OPERATOR_PASS_WAITLIST_FOLLOWUP_TOKEN_INVALID",
-					"OPERATOR_PASS_WAITLIST_TOKEN_EXPIRED",
 					"OPERATOR_PASS_WAITLIST_TOKEN_INVALID",
 					"OPERATOR_PASS_REMOVAL_LIMITED_FIRST",
 					"OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED",
+					"OPERATOR_PASS_EMAIL_UNDELIVERABLE",
 					"OPERATOR_PASS_REMOVED",
 					"OPERATOR_PASS_TERMS_NOT_ACCEPTED",
+					"OPERATOR_PASS_VISIONARY_UNAVAILABLE",
 					"OPERATOR_PASS_WITHDRAWAL_UNAVAILABLE",
 					"PAYMENT_DISPUTE_EXEMPT",
 					"PAYMENT_DISPUTE_REVIEW_CLOSED",
@@ -45936,7 +46873,7 @@
 					"A connection of this type with this identifier already exists.",
 					"The connection initiation token is invalid or has expired.",
 					"The connection type is not supported.",
-					"You've reached the maximum number of connections ({limit}).",
+					"You can't have more than {limit} connections.",
 					"Unknown connection.",
 					"Connection verification failed. Make sure the verification token is correctly placed.",
 					"Conflict.",
@@ -45967,11 +46904,11 @@
 					"Email verification is required for this action.",
 					"Followed channels can only post into text channels.",
 					"This message has already been published.",
-					"This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
+					"This channel is at its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
 					"This message cannot be published.",
 					"Confirm your email address to use two-factor authentication or passkeys.",
 					"Email verification is required for this action.",
-					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
+					"This published message is at its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
@@ -46040,30 +46977,30 @@
 					"{reason, select, shown {{product_name} blocked access from this network because of activity that broke its rules.} other {{product_name} blocked access from this network.}} The block ends on {expiresAt}. If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off.{appealEmail, select, null {} other { If you think this block is a mistake, email {appealEmail} and include your IP address, {ipAddress}.}}",
 					"This IP address cannot be added to the blocklist.",
 					"This network block belongs to an enforcement decision. End the decision to remove it.",
-					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+					"You can't have more than {limit, plural, one {# application} other {# applications}}.",
 					"The limit is {count, plural, one {# badge} other {# badges}}.",
-					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
-					"This community has reached its active thread limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
-					"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
-					"You've reached the maximum of {count, plural, one {# saved media item} other {# saved media items}}.",
-					"You've reached the maximum of {count, plural, one {# friend} other {# friends}}.",
-					"This channel has reached its tag limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
-					"You've reached the maximum of {count, plural, one {# group DM} other {# group DMs}}.",
+					"You can't have more than {count, plural, one {# bookmark} other {# bookmarks}}.",
+					"This community is at its active thread limit of {count}.",
+					"You can't have more than {count, plural, one {# category channel} other {# category channels}}.",
+					"You can't have more than {count, plural, one {# emoji} other {# emojis}}.",
+					"You can't have more than {count, plural, one {# saved media item} other {# saved media items}}.",
+					"You can't have more than {count, plural, one {# friend} other {# friends}}.",
+					"This channel is at its tag limit of {count}.",
+					"You can't have more than {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
+					"You can't have more than {count, plural, one {# group DM} other {# group DMs}}.",
 					"One or more selected users can't be added to this group DM.",
 					"Not everyone in this group is eligible for mature content.",
-					"You've reached the maximum of {count, plural, one {# community channel} other {# community channels}}.",
-					"You've reached the maximum of {count, plural, one {# community member} other {# community members}}.",
-					"You've reached the maximum of {count, plural, one {# community role} other {# community roles}}.",
-					"You've reached the maximum of {count, plural, one {# community} other {# communities}}.",
-					"This channel has reached its pinned post limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
-					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
-					"You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}.",
-					"This thread has reached its member limit of {count}.",
-					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
-					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
+					"You can't have more than {count, plural, one {# community channel} other {# community channels}}.",
+					"You can't have more than {count, plural, one {# community member} other {# community members}}.",
+					"You can't have more than {count, plural, one {# community role} other {# community roles}}.",
+					"You can't have more than {count, plural, one {# community} other {# communities}}.",
+					"This channel is at its pinned post limit of {count}.",
+					"You can't have more than {count, plural, one {# invite} other {# invites}}.",
+					"You can't have more than {count, plural, one {# reaction} other {# reactions}}.",
+					"You can't have more than {count, plural, one {# sticker} other {# stickers}}.",
+					"This thread is at its member limit of {count}.",
+					"You can't have more than {count, plural, one {# webhook} other {# webhooks}} per channel.",
+					"You can't have more than {count, plural, one {# webhook} other {# webhooks}} per community.",
 					"Media metadata error.",
 					"Method not allowed.",
 					"You don't have access to this resource or feature.",
@@ -46101,7 +47038,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
-					"Your sign-in provider didn't answer. Try again in a moment.",
+					"Your sign-in provider didn't respond. Try again in a moment.",
 					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
@@ -46110,6 +47047,7 @@
 					"Test purchases cannot be applied to this account.",
 					"Stream key channel mismatch.",
 					"Stream key scope mismatch.",
+					"Subscriptions paid with Pix or UPI can't switch between monthly and yearly. Cancel your subscription, and when it ends, subscribe again on the plan you want.",
 					"{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}",
 					"Gift code redemption is in progress. Try again in a moment.",
 					"Invalid product selection.",
@@ -46133,8 +47071,9 @@
 					"Magic link has expired.",
 					"Magic link is invalid.",
 					"Magic link has already been used.",
-					"Confirm that you want the Operator Pass delivered right away.",
-					"To buy more than one pass, confirm that you are 18 or older, or that you have permission from a parent or guardian.",
+					"Confirm that you want your certificate delivered right away.",
+					"We can't print this name on a certificate. Please choose another one.",
+					"To buy a pass, confirm that you are 18 or older, or that you have permission from a parent or guardian.",
 					"This pass cannot be passed on to that account right now.",
 					"Another offer from your account is still being sent. Try again in a moment.",
 					"You can only pass this on to one of your friends on Fluxer.",
@@ -46142,24 +47081,23 @@
 					"This is your only pass. Confirm that passing it on removes your badge and your name on the Operators' wall.",
 					"Unknown Operator Pass offer.",
 					"Unknown Operator Pass.",
-					"You cannot buy the Operator Pass in your country right now.",
 					"Enter a name for the Operators' wall, or choose not to be listed.",
+					"We can't show this name on the Operators' wall. Please choose another one.",
+					"A quote can have up to 80 characters on one line, without hidden or control characters.",
+					"A quote can't contain links, email addresses or @mentions.",
 					"This account doesn't have the Operator Pass.",
 					"This account has no name on the Operators' wall.",
 					"This Operators list has already been published.",
 					"This Operators list cannot be published before its cut-off date.",
 					"This account is not in that published Operators list.",
-					"You cannot buy the Operator Pass yet.",
 					"The Operator Pass price has changed. Check the new price and try again.",
-					"The Operator Pass waitlist is closed because you can get the pass now.",
-					"Choose from the listed options. You can add your own answer only with \"Other\", in up to 500 characters.",
-					"This answer can no longer be saved. Your waitlist signup is not affected.",
-					"This waitlist link has expired.",
 					"This waitlist link is invalid.",
 					"A permanent removal for a breach that is not serious needs an earlier removal for a limited time.",
 					"A permanent removal needs a notice sent at least 7 days earlier, unless the breach is serious.",
+					"Emails to the address on this account cannot be delivered. Change your email in your settings before you buy the Operator Pass, because the purchase confirmation goes there.",
 					"The Operator Pass was removed from this account, so it cannot be bought or redeemed again.",
 					"Accept the Operator Pass terms to get this pass.",
+					"This account can't turn on the Operator Pass that comes with Visionary right now.",
 					"This purchase can no longer be withdrawn from here.",
 					"Our terms rule out any action on this payment dispute.",
 					"This payment dispute has already closed.",
@@ -46240,7 +47178,7 @@
 					"No voice server has this API key.",
 					"Another voice server already uses this API key.",
 					"Another voice server already uses this ID.",
-					"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
+					"You can't have more than {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
 					"{need, select, add_email {{action, select, message {Add an email to your account to send messages.} typing {Add an email to your account to send messages.} reaction {Add an email to your account to add reactions.} direct_message {Add an email to your account to send direct messages.} direct_message_open {Add an email to your account to start direct messages.} group_dm {Add an email to your account to join group chats.} friend_request {Add an email to your account to send friend requests.} friend_accept {Add an email to your account to accept friend requests.} invite_create {Add an email to your account to create invites.} guild_join {Add an email to your account to join this community.} guild_create {Add an email to your account to create a community.} voice {Add an email to your account to join voice channels.} call {Add an email to your account to start calls.} group_call {Add an email to your account to join group calls.} thread_join {Add an email to your account to join threads.} channel_follow {Add an email to your account to follow channels.} ownership_transfer {This person needs to add an email to their account before they can own a community.} application_create {Add an email to your account to create applications.} gift_redeem {Add an email to your account to redeem gifts.} profile_customize {Add an email to your account to change your profile.} report {Add an email to your account to submit reports.} mfa {Add an email to your account to turn on two-factor authentication.} guild_verification {Add an email to your account to talk in this community.} other {Add an email to your account to do this.}}} confirm_email {{action, select, message {Confirm your email to send messages.} typing {Confirm your email to send messages.} reaction {Confirm your email to add reactions.} direct_message {Confirm your email to send direct messages.} direct_message_open {Confirm your email to start direct messages.} group_dm {Confirm your email to join group chats.} friend_request {Confirm your email to send friend requests.} friend_accept {Confirm your email to accept friend requests.} invite_create {Confirm your email to create invites.} guild_join {Confirm your email to join this community.} guild_create {Confirm your email to create a community.} voice {Confirm your email to join voice channels.} call {Confirm your email to start calls.} group_call {Confirm your email to join group calls.} thread_join {Confirm your email to join threads.} channel_follow {Confirm your email to follow channels.} ownership_transfer {This person needs to confirm their email before they can own a community.} application_create {Confirm your email to create applications.} gift_redeem {Confirm your email to redeem gifts.} profile_customize {Confirm your email to change your profile.} report {Confirm your email to submit reports.} mfa {Confirm your email to turn on two-factor authentication.} guild_verification {Confirm your email to talk in this community.} other {Confirm your email to do this.}}} password {{action, select, message {Set a password to send messages.} typing {Set a password to send messages.} reaction {Set a password to add reactions.} direct_message {Set a password to send direct messages.} direct_message_open {Set a password to start direct messages.} group_dm {Set a password to join group chats.} friend_request {Set a password to send friend requests.} friend_accept {Set a password to accept friend requests.} invite_create {Set a password to create invites.} guild_join {Set a password to join this community.} guild_create {Set a password to create a community.} voice {Set a password to join voice channels.} call {Set a password to start calls.} group_call {Set a password to join group calls.} thread_join {Set a password to join threads.} channel_follow {Set a password to follow channels.} ownership_transfer {This person needs to set a password before they can own a community.} application_create {Set a password to create applications.} gift_redeem {Set a password to redeem gifts.} profile_customize {Set a password to change your profile.} report {Set a password to submit reports.} mfa {Set a password to turn on two-factor authentication.} guild_verification {Set a password to talk in this community.} other {Set a password to do this.}}} other {{action, select, message {Claim your account to send messages.} typing {Claim your account to send messages.} reaction {Claim your account to add reactions.} direct_message {Claim your account to send direct messages.} direct_message_open {Claim your account to start direct messages.} group_dm {Claim your account to join group chats.} friend_request {Claim your account to send friend requests.} friend_accept {Claim your account to accept friend requests.} invite_create {Claim your account to create invites.} guild_join {Claim your account to join this community.} guild_create {Claim your account to create a community.} voice {Claim your account to join voice channels.} call {Claim your account to start calls.} group_call {Claim your account to join group calls.} thread_join {Claim your account to join threads.} channel_follow {Claim your account to follow channels.} ownership_transfer {This person needs to claim their account before they can own a community.} application_create {Claim your account to create applications.} gift_redeem {Claim your account to redeem gifts.} profile_customize {Claim your account to change your profile.} report {Claim your account to submit reports.} mfa {Claim your account to turn on two-factor authentication.} guild_verification {Claim your account to talk in this community.} other {Claim your account to do this.}}}}",
 					"Enter your date of birth to continue.",
 					"Your date of birth is already set.",

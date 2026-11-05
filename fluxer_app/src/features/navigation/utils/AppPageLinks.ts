@@ -8,6 +8,7 @@ import {isInternalChannelHost} from '@app/features/navigation/utils/DeepLinkUtil
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
+import {OFFICIAL_WEB_APP_HOSTS} from '@fluxer/instance_bootstrap/src/OfficialWebAppHosts';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {AtomIcon, ChatsCircleIcon, CompassIcon, type Icon, StarIcon} from '@phosphor-icons/react';
@@ -33,7 +34,7 @@ const APP_PAGES: ReadonlyArray<AppPageDefinition> = [
 	{id: 'direct_messages', paths: [Routes.ME], icon: ChatsCircleIcon, appHostOnly: false},
 ];
 
-const OFFICIAL_WEB_APP_HOSTS = ['web.fluxer.app', 'web.canary.fluxer.app'];
+const OFFICIAL_APP_PAGE_HOSTS = new Set<string>(OFFICIAL_WEB_APP_HOSTS);
 
 function normalizePath(pathname: string): string {
 	const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
@@ -50,7 +51,7 @@ function isWebAppHost(host: string): boolean {
 	try {
 		if (normalized === new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase()) return true;
 	} catch {}
-	return !RuntimeConfig.isSelfHosted() && OFFICIAL_WEB_APP_HOSTS.includes(normalized);
+	return !RuntimeConfig.isSelfHosted() && OFFICIAL_APP_PAGE_HOSTS.has(normalized);
 }
 
 function isPageAvailable(page: AppPageDefinition): boolean {

@@ -58,6 +58,7 @@ import type {
 	InstanceCommunity,
 	InstanceFeatures,
 	InstanceGuildBadge,
+	InstanceHiddenBuiltInGuildBadges,
 	InstanceNotice,
 	InstanceServices,
 	InstanceSso as InstanceSsoConfig,
@@ -689,6 +690,8 @@ class RuntimeConfig {
 			guildBadgesPartial: resolution.snapshot.guildBadgesPartial,
 			customBadgesVersion: resolution.snapshot.customBadgesVersion,
 			builtInGuildBadgeImages: resolution.snapshot.builtInGuildBadgeImages,
+			hiddenBuiltInGuildBadges: resolution.snapshot.hiddenBuiltInGuildBadges,
+			hiddenRoleIds: resolution.snapshot.hiddenRoleIds,
 			limits: resolution.snapshot.limits,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
@@ -936,6 +939,14 @@ class RuntimeConfig {
 
 	get builtInGuildBadgeImages(): InstanceBuiltInGuildBadgeImages {
 		return this.activeRuntime?.snapshot.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES;
+	}
+
+	get hiddenBuiltInGuildBadges(): InstanceHiddenBuiltInGuildBadges {
+		return this.activeRuntime?.snapshot.hiddenBuiltInGuildBadges ?? [];
+	}
+
+	get hiddenRoleIds(): ReadonlyArray<string> {
+		return this.activeRuntime?.snapshot.hiddenRoleIds ?? [];
 	}
 
 	get gifEnabled(): boolean {

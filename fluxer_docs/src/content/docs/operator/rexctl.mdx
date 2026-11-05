@@ -46,7 +46,7 @@ rexctl admins remove <user>
 
 ### rexctl admins sign-in-link
 
-Print a link that signs an admin in once. Use it to get in when Require SSO is on and your sign-in provider is down or set up wrong. See https://docs.fluxer.app/operator/sign-in/#single-sign-on.
+Print a link that signs an admin in once. Use it to get in when Require SSO is on and your sign-in provider is down or set up wrong. See https://docs.fluxer.com/operator/sign-in/#single-sign-on.
 
 ```sh
 rexctl admins sign-in-link <user>
@@ -76,7 +76,7 @@ rexctl auto-upgrade off
 
 Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Pass several times to --at, like 06:00,18:00, to run more than once on those days. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the first upgrade time of the day. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.
 
-With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m=\{\{.text\}\} to the topic address.
+With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, the message as text, content, message and body, a title, and a type (success, failure or info). Slack and Discord webhooks, Gotify and the Apprise API show it as it is, so pass a Gotify address like https://gotify.example.com/message?token=... or an Apprise address like https://apprise.example.com/notify/your-key. For ntfy, add ?tpl=1&m=\{\{.text\}\} to the topic address. Run rexctl auto-upgrade test-notify to send a test notice.
 
 ```sh
 rexctl auto-upgrade on [flags]
@@ -102,9 +102,17 @@ rexctl auto-upgrade on [flags]
 
   Web address rexctl posts to when an upgrade installs a new release or fails.
 
+### rexctl auto-upgrade test-notify
+
+Post a test notice to the address you passed to rexctl auto-upgrade on --notify, with status test. It looks like the notice after an upgrade, so you can check that it gets to you without waiting for a new release.
+
+```sh
+rexctl auto-upgrade test-notify
+```
+
 ## rexctl backup
 
-Back up your instance in one file that restores on this machine or a new one. It holds the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.
+Back up your instance in one file that restores on this machine or a new one. It has the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.
 
 ```sh
 rexctl backup
@@ -352,11 +360,11 @@ rexctl install [flags]
 
 - `--behind-proxy`
 
-  Serve plain HTTP for your own reverse proxy.
+  Serve plain HTTP for your own reverse proxy or tunnel.
 
 - `--bind string`
 
-  Address your proxy connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
+  Address your proxy or tunnel connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
 
 - `--confirm string`
 
@@ -559,7 +567,7 @@ rexctl logs [service] [flags]
 
 ## rexctl proxy
 
-Use your own reverse proxy in front of Fluxer.
+Use your own reverse proxy or tunnel in front of Fluxer.
 
 ### rexctl proxy off
 
@@ -571,7 +579,7 @@ rexctl proxy off
 
 ### rexctl proxy on
 
-Serve plain HTTP for your own proxy.
+Serve plain HTTP for your own proxy or tunnel.
 
 ```sh
 rexctl proxy on [flags]
@@ -579,7 +587,7 @@ rexctl proxy on [flags]
 
 - `--bind string`
 
-  Address your proxy connects to, kept when left out (127.0.0.1:8080 the first time).
+  Address your proxy or tunnel connects to, kept when left out (127.0.0.1:8080 the first time).
 
 ## rexctl registration
 
@@ -843,7 +851,7 @@ rexctl upgrade [flags]
 
 ## rexctl use
 
-Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs, so you only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. The services rexctl sets up for starting and upgrading Fluxer always name their folder, so this doesn't change them.
+Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.
 
 ```sh
 rexctl use [folder]

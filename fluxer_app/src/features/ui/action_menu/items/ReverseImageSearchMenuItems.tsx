@@ -7,6 +7,7 @@ import {
 import {SearchProviderPickerModal} from '@app/features/search/components/modals/SearchProviderPickerModal';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
 import {CopyLinkIcon, OpenMediaLinkIcon, SearchIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {openReverseImageSearchWith} from '@app/features/ui/action_menu/items/SearchMenuData';
 import {SearchProviderContextMenuItems} from '@app/features/ui/action_menu/items/SearchProviderMenuItems';
 import {getSearchProviderMenuState} from '@app/features/ui/action_menu/items/SearchProviderMenuUtils';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -46,22 +47,16 @@ export const ReverseImageSearchMenuItems: React.FC<ReverseImageSearchMenuItemsPr
 		const renderDefaultLabel = defaultLabel ?? i18n._(REVERSE_IMAGE_SEARCH_DESCRIPTOR);
 		const renderCopyLabel = copyLabel ?? i18n._(COPY_IMAGE_URL_DESCRIPTOR);
 		const renderOpenLabel = openLabel ?? i18n._(OPEN_IMAGE_IN_BROWSER_DESCRIPTOR);
-		const openWith = useCallback((engineId: string, url: string) => {
-			const target = ReverseImageSearch.buildSearchUrl(engineId, url);
-			if (target) {
-				void openExternalUrl(target);
-			}
-		}, []);
 		const handleSearch = useCallback(
 			(engineId: string) => {
 				if (!imageUrl) {
 					onClose?.();
 					return;
 				}
-				openWith(engineId, imageUrl);
+				void openReverseImageSearchWith(engineId, imageUrl);
 				onClose?.();
 			},
-			[imageUrl, onClose, openWith],
+			[imageUrl, onClose],
 		);
 		const handleDefaultSearch = useCallback(() => {
 			if (!imageUrl) {
@@ -70,7 +65,7 @@ export const ReverseImageSearchMenuItems: React.FC<ReverseImageSearchMenuItemsPr
 			}
 			const defaultEngine = ReverseImageSearch.defaultEngine;
 			if (defaultEngine) {
-				openWith(defaultEngine.id, imageUrl);
+				void openReverseImageSearchWith(defaultEngine.id, imageUrl);
 				onClose?.();
 				return;
 			}
@@ -80,7 +75,7 @@ export const ReverseImageSearchMenuItems: React.FC<ReverseImageSearchMenuItemsPr
 					modal(() => (
 						<SearchProviderPickerModal
 							mode="image"
-							onPick={(engineId) => openWith(engineId, targetImageUrl)}
+							onPick={(engineId) => void openReverseImageSearchWith(engineId, targetImageUrl)}
 							data-flx="ui.action-menu.items.reverse-image-search-menu-items.handle-default-search.search-provider-picker-modal"
 						/>
 					)),
@@ -90,7 +85,7 @@ export const ReverseImageSearchMenuItems: React.FC<ReverseImageSearchMenuItemsPr
 				return;
 			}
 			openPicker();
-		}, [imageUrl, onClose, openWith]);
+		}, [imageUrl, onClose]);
 		const handleCopy = useCallback(async () => {
 			if (!imageUrl) {
 				onClose?.();

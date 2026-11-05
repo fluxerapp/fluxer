@@ -20,7 +20,7 @@ import {
 	type PartialUserChangePropagationDeps,
 	propagateUserUpdate,
 } from '@app/api/user/services/PartialUserChangePropagation';
-import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {clearPendingDeletion, resetTiedBulkMessageDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {assertNoDiscriminatorChange} from '@app/api/user/UniqueUsernames';
 import {renameUser} from '@app/api/user/UserRename';
 import {BELOW_MINIMUM_AGE_TRAIT, DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
@@ -340,6 +340,7 @@ export class AdminUserProfileService {
 				deletion_reason_code: null,
 				deletion_public_reason: null,
 				deletion_audit_log_reason: null,
+				...resetTiedBulkMessageDeletion(updatedUser),
 			});
 			await clearPendingDeletion({userId, deletionQueue: getKVAccountDeletionQueue()});
 		}

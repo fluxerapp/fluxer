@@ -10,6 +10,7 @@ pub mod middleware;
 pub mod oauth2;
 pub mod routes;
 pub mod session;
+pub mod sso;
 pub mod state;
 pub mod templates;
 pub mod utils;

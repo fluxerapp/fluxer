@@ -10,14 +10,18 @@ import {
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import {SEARCH_FRIENDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
-import styles from '@app/features/premium/components/operator_pass/OperatorPassPassItOnModal.module.css';
 import {OPERATOR_PASS_RECOGNITION_DESCRIPTOR} from '@app/features/premium/utils/OperatorPassRecognitionMessages';
-import {getOperatorPassErrorCode, getOperatorPassOfferUserName} from '@app/features/premium/utils/OperatorPassUtils';
+import {
+	getOperatorPassErrorCode,
+	getOperatorPassOfferUserName,
+	keepsOperatorsThroughVisionary,
+} from '@app/features/premium/utils/OperatorPassUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {OperatorPassUnitResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
@@ -37,10 +41,14 @@ const PASS_IT_ON_BODY_DESCRIPTOR = msg({
 	comment:
 		'Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.',
 });
+const CERTIFICATE_STAYS_DESCRIPTOR = msg({
+	message: "Your certificate doesn't change.",
+	comment:
+		'Line in the dialog where you pick who gets one of your Operator Passes. The certificate is the Operator certificate PDF with the name chosen at checkout, and passing the pass on does not change it.',
+});
 const CHOOSE_DESCRIPTOR = msg({
 	message: 'Choose',
-	comment:
-		'Button next to a person in the list of people an Operator Pass can be passed on to, and next to the username field in the same dialog.',
+	comment: 'Button next to a friend in the list of people an Operator Pass can be passed on to.',
 });
 const CONFIRM_TITLE_DESCRIPTOR = msg({
 	message: 'Pass it on to {name}?',
@@ -48,18 +56,23 @@ const CONFIRM_TITLE_DESCRIPTOR = msg({
 		'Title of the confirmation before offering an Operator Pass to someone. {name} is the display name of that person.',
 });
 const CONFIRM_BODY_DESCRIPTOR = msg({
-	message: 'It moves as soon as they accept. You can take it back until then.',
+	message: 'It moves to them as soon as they accept. You can take the offer back until then.',
 	comment:
-		'Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take it back means canceling your offer.',
+		'Body of the confirmation before offering an Operator Pass to someone. It is the pass, they is the person you offer it to. Take the offer back means canceling your offer, which you can do until they accept.',
 });
 const CONFIRM_LAST_TITLE_DESCRIPTOR = msg({
 	message: 'Pass on your last pass?',
 	comment: 'Title of the confirmation before offering the only Operator Pass you have left to someone else.',
 });
 const CONFIRM_LAST_BODY_DESCRIPTOR = msg({
-	message: 'Your badge and wall listing go as soon as {name} accepts.',
+	message: 'Your badge, wall listing and #operators go when the pass moves to {name}.',
 	comment:
-		"Body of the confirmation before offering your last Operator Pass. The badge is the Operator badge, the wall listing is your entry on the Operators' wall. {name} is the display name of the person you offer it to.",
+		"Body of the confirmation before offering your last Operator Pass. The badge is the Operator badge, the wall listing is your entry on the Operators' wall, and #operators is the channel name in Fluxer Labs, kept as is. Together they stand for everything else that comes with the pass. {name} is the display name of the person you offer it to.",
+});
+const CONFIRM_LAST_BODY_VISIONARY_DESCRIPTOR = msg({
+	message: 'Your badge and wall listing go when the pass moves to {name}. You keep #operators through your Visionary.',
+	comment:
+		"Body of the confirmation before offering your last Operator Pass, shown instead of the usual one when you have Visionary. The badge is the Operator badge and the wall listing is your entry on the Operators' wall. #operators is the channel name in Fluxer Labs and Visionary is a plan name, keep both as is. Visionary keeps access to #operators under section 13 of the Operator Pass terms. {name} is the display name of the person you offer it to.",
 });
 const CONFIRM_LAST_PRIMARY_DESCRIPTOR = msg({
 	message: 'Pass on my last pass',
@@ -79,13 +92,16 @@ const OFFER_SENT_DESCRIPTOR = msg({
 	comment: 'Toast after offering an Operator Pass to someone. {name} is a display name.',
 });
 const NOT_TRANSFERABLE_DESCRIPTOR = msg({
-	message: "Passes you received or got with Visionary can't be passed on.",
+	message:
+		"Each pass can be passed on only once, so a pass you received can't be passed on again. The pass in your Visionary can't be passed on either.",
 	comment:
 		'Error when you try to pass on an Operator Pass that cannot move. Visionary is a product name and stays untranslated.',
 });
 const OFFER_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'This pass cannot be passed on to that account right now.',
-	comment: 'Error when an Operator Pass cannot be offered to the chosen account right now.',
+	message:
+		"That account can't receive a pass right now, for example because it's being deleted or can't have an Operator Pass.",
+	comment:
+		'Error when an Operator Pass cannot be offered to the chosen account right now. Operator Pass is a product name and stays untranslated.',
 });
 const NOT_FRIEND_DESCRIPTOR = msg({
 	message: 'You can only pass this on to one of your friends on Fluxer.',
@@ -115,6 +131,13 @@ function offerErrorMessage(error: unknown): typeof OFFER_FAILED_DESCRIPTOR {
 	}
 }
 
+function confirmBody(lastPass: boolean): typeof CONFIRM_BODY_DESCRIPTOR {
+	if (!lastPass) return CONFIRM_BODY_DESCRIPTOR;
+	return keepsOperatorsThroughVisionary(Users.currentUser)
+		? CONFIRM_LAST_BODY_VISIONARY_DESCRIPTOR
+		: CONFIRM_LAST_BODY_DESCRIPTOR;
+}
+
 const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalComponent({
 	pass,
 	onlyPass,
@@ -134,7 +157,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 			modal(() => (
 				<ConfirmModal
 					title={lastPass ? i18n._(CONFIRM_LAST_TITLE_DESCRIPTOR) : i18n._(CONFIRM_TITLE_DESCRIPTOR, {name})}
-					description={`${i18n._(lastPass ? CONFIRM_LAST_BODY_DESCRIPTOR : CONFIRM_BODY_DESCRIPTOR, {name})} ${i18n._(OPERATOR_PASS_RECOGNITION_DESCRIPTOR)}`}
+					description={`${i18n._(confirmBody(lastPass), {name})} ${i18n._(OPERATOR_PASS_RECOGNITION_DESCRIPTOR)}`}
 					primaryText={i18n._(lastPass ? CONFIRM_LAST_PRIMARY_DESCRIPTOR : SEND_OFFER_DESCRIPTOR)}
 					primaryVariant={lastPass ? 'danger' : 'primary'}
 					onPrimary={async () => {
@@ -143,7 +166,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 							ToastCommands.success(
 								i18n._(OFFER_SENT_DESCRIPTOR, {name: getOperatorPassOfferUserName(offer.recipient) || name}),
 							);
-							ModalCommands.popByType(OperatorPassPassItOnModal);
+							ModalCommands.popWithKey(PASS_IT_ON_MODAL_KEY);
 						} catch (error) {
 							if (
 								!lastPass &&
@@ -165,7 +188,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 		<Modal.Root
 			size="small"
 			centered
-			className={styles.root}
+			className={selectorStyles.selectorRoot}
 			data-flx="premium.operator-pass-pass-it-on-modal.modal-root"
 		>
 			<Modal.Header
@@ -173,7 +196,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 				data-flx="premium.operator-pass-pass-it-on-modal.modal-header"
 			>
 				<Modal.Description data-flx="premium.operator-pass-pass-it-on-modal.description">
-					{i18n._(PASS_IT_ON_BODY_DESCRIPTOR)}
+					{`${i18n._(PASS_IT_ON_BODY_DESCRIPTOR)} ${i18n._(CERTIFICATE_STAYS_DESCRIPTOR)}`}
 				</Modal.Description>
 				<div className={selectorStyles.headerSearch} data-flx="premium.operator-pass-pass-it-on-modal.search">
 					<Input
@@ -216,8 +239,10 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 	);
 });
 
+const PASS_IT_ON_MODAL_KEY = 'operator-pass-pass-it-on';
+
 export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, onlyPass: boolean): void {
-	ModalCommands.push(
+	ModalCommands.pushWithKey(
 		modal(() => (
 			<OperatorPassPassItOnModal
 				pass={pass}
@@ -225,5 +250,6 @@ export function openOperatorPassPassItOnModal(pass: OperatorPassUnitResponse, on
 				data-flx="premium.operator-pass-pass-it-on-modal.open"
 			/>
 		)),
+		PASS_IT_ON_MODAL_KEY,
 	);
 }

@@ -11,7 +11,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const RATE_LIMITED_FALLBACK_BODY_DESCRIPTOR = msg({
-	message: 'Slow down — wait a moment before trying again.',
+	message: 'Slow down and wait a moment before trying again.',
 	comment: 'Modal body shown when an action is blocked by rate limiting. Keep plain.',
 });
 

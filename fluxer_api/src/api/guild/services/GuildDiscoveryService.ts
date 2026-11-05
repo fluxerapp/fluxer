@@ -364,6 +364,7 @@ export class GuildDiscoveryService {
 		if (
 			status?.status !== DiscoveryApplicationStatus.APPROVED ||
 			!guild ||
+			guild.nsfw ||
 			guild.features.has(GuildFeatures.INVITES_DISABLED) ||
 			!channel ||
 			channel.guildId !== guildId ||
@@ -376,9 +377,9 @@ export class GuildDiscoveryService {
 		const permissions = computeGuildVisitorChannelPermissions({
 			guildId: guildId.toString(),
 			everyonePermissions: everyoneRole.permissions,
-			guildNsfw: false,
+			guildNsfw: guild.nsfw,
 			channel: channelToVisitorInput(channel),
-			adultContentAllowed: true,
+			adultContentAllowed: false,
 		});
 		if ((permissions & GUILD_VISITOR_PERMISSIONS_MASK) !== GUILD_VISITOR_PERMISSIONS_MASK) {
 			throw new DiscoveryNotDiscoverableError();

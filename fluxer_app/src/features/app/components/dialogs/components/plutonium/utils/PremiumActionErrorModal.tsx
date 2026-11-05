@@ -2,7 +2,7 @@
 
 import i18n from '@app/app/I18n';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {failureCode, failureContext} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureContext, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import {
 	PAYMENT_DISPUTE_OPEN_DESCRIPTOR,
 	PURCHASES_PAUSED_TITLE_DESCRIPTOR,
@@ -83,6 +83,11 @@ function resolvePremiumActionErrorContent(
 			return {
 				title: i18n._(NOT_CANCELING_TITLE_DESCRIPTOR),
 				message: i18n._(NOT_CANCELING_MESSAGE_DESCRIPTOR),
+			};
+		case APIErrorCodes.STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE:
+			return {
+				title: i18n._(copy.fallbackTitle),
+				message: failureMessage(error) ?? i18n._(copy.fallbackMessage),
 			};
 		default:
 			return {

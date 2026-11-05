@@ -56,9 +56,6 @@ export class DMPermissionValidator {
 		if (areFriends) {
 			return;
 		}
-		if (targetUser.flags & UserFlags.APP_STORE_REVIEWER) {
-			throw new CannotSendMessagesToUserError();
-		}
 		if (this.hasStaffDmAccess({senderUser, targetUser, senderSettings, targetSettings, senderId, recipientId})) {
 			return;
 		}

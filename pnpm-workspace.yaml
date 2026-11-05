@@ -41,6 +41,7 @@ catalog:
   '@base-ui/react': 1.9.0
   '@biomejs/biome': 2.6.4
   '@elastic/elasticsearch': 9.5.1
+  '@fastify/busboy': 3.2.4
   '@floating-ui/react': 0.27.20
   '@floating-ui/react-dom': 2.1.9
   '@hono/node-server': 2.1.5
@@ -57,6 +58,9 @@ catalog:
   '@messageformat/parser': 5.2.0
   '@nats-io/jetstream': 3.4.0
   '@nats-io/transport-node': 3.4.0
+  '@noble/ciphers': 2.4.0
+  '@noble/hashes': 2.4.0
+  '@pdf-lib/fontkit': 1.1.1
   '@phosphor-icons/react': 2.1.10
   '@radix-ui/react-checkbox': 1.4.1
   '@radix-ui/react-radio-group': 1.5.1
@@ -90,6 +94,7 @@ catalog:
   argon2: 0.45.1
   astro: 7.4.4
   autoprefixer: 10.6.2
+  bidi-js: 1.0.3
   bowser: 2.15.0
   cassandra-driver: 4.10.0
   clsx: 2.1.1
@@ -101,6 +106,7 @@ catalog:
   eventemitter3: 5.0.4
   favico.js: 0.3.10
   framer-motion: 14.7.1
+  harfbuzzjs: 1.6.3
   hi-base32: 0.6.0
   hono: 4.13.14
   html-entities: 2.6.0
@@ -198,6 +204,7 @@ patchedDependencies:
   eslint-plugin-react-google-translate@1.0.4: patches/eslint-plugin-react-google-translate@1.0.4.patch
   gifuct-js@2.1.2: patches/gifuct-js@2.1.2.patch
   hunspell-asm@4.0.2: patches/hunspell-asm@4.0.2.patch
+  react-aria@3.53.1: patches/react-aria@3.53.1.patch
   upng-js@2.1.0: patches/upng-js@2.1.0.patch
 
 peerDependencyRules:

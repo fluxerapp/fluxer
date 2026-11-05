@@ -4,6 +4,7 @@ import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescripto
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	AUDIO_2_DESCRIPTOR,
+	KEYBIND_DESCRIPTOR,
 	PREMIUM_PRODUCT_NAME_KEYWORD,
 	PUSH_TO_TALK_DESCRIPTOR,
 	STREAMING_DESCRIPTOR as SCREEN_SHARING_DESCRIPTOR,
@@ -274,6 +275,7 @@ export const voiceVideoSections = [
 			VOICE_ACTIVATION_DESCRIPTOR,
 			ACTIVITY_THRESHOLD_DESCRIPTOR,
 			AUTO_SENSITIVITY_DESCRIPTOR,
+			KEYBIND_DESCRIPTOR,
 			SHORTCUT_DESCRIPTOR,
 			NOISE_DESCRIPTOR,
 			SUPPRESSION_DESCRIPTOR,

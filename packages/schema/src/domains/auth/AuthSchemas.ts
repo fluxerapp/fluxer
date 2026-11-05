@@ -705,6 +705,10 @@ export const EmailCodeVerifyRequest = z.object({
 		.nullish()
 		.describe('Admin-issued registration URL code, for sign-ups'),
 	invite_code: createStringType(0, 256).nullish().describe('Invite to open after the date of birth step, for sign-ups'),
+	username: UsernameType.optional().describe('For sign-ups, the username for the new account. Ignored when signing in'),
+	global_name: GlobalNameType.optional().describe(
+		'For sign-ups, the display name shown to other people. Ignored when signing in',
+	),
 });
 
 export type EmailCodeVerifyRequest = z.infer<typeof EmailCodeVerifyRequest>;

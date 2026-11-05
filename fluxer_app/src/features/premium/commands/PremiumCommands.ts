@@ -14,8 +14,11 @@ import {
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
+import type {CreateCheckoutSessionRequest} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import type {
 	CurrentSubscriptionPriceResponse,
+	PlutoniumWithdrawalListResponse,
+	PlutoniumWithdrawRequest,
 	PremiumStateResponse,
 	PriceIdsResponse,
 	SelfServeRefundResponse,
@@ -51,13 +54,17 @@ function checkoutSessionBody(
 	priceId: string,
 	countryCode: string | undefined,
 	isGift: boolean,
-	paymentMethod?: CheckoutPaymentMethod,
-): Record<string, string> {
+	paymentMethod: CheckoutPaymentMethod | undefined,
+	isBusiness: boolean,
+	cnpj: string | undefined,
+): CreateCheckoutSessionRequest {
 	return {
 		price_id: priceId,
 		...(countryCode ? {country_code: countryCode} : {}),
 		...(countryCode ? {client_geoip_country_code: countryCode} : {}),
 		...(paymentMethod && !isGift ? {payment_method: paymentMethod} : {}),
+		...(isBusiness ? {is_business: true} : {}),
+		...(isBusiness && cnpj ? {cnpj} : {}),
 	};
 }
 
@@ -160,13 +167,15 @@ export async function createCheckoutSession(
 	countryCode?: string,
 	isGift: boolean = false,
 	paymentMethod?: CheckoutPaymentMethod,
+	isBusiness: boolean = false,
+	cnpj?: string,
 ): Promise<string> {
 	try {
 		const country = normalizedCountryCode(countryCode);
 		const response = await http.post<UrlResponse>(checkoutEndpoint(isGift), {
-			body: checkoutSessionBody(priceId, country, isGift, paymentMethod),
+			body: checkoutSessionBody(priceId, country, isGift, paymentMethod, isBusiness, cnpj),
 		});
-		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod});
+		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod, isBusiness});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
@@ -204,18 +213,13 @@ export async function endPremiumGracePeriod(): Promise<void> {
 	}
 }
 
-export type SubscriptionBillingCycleChangeEffectiveAt = 'now' | 'period_end';
-
-export async function changeSubscriptionBillingCycle(
-	billingCycle: 'monthly' | 'yearly',
-	effectiveAt: SubscriptionBillingCycleChangeEffectiveAt = 'now',
-): Promise<void> {
+export async function changeSubscriptionBillingCycle(billingCycle: 'monthly' | 'yearly'): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_CHANGE_SUBSCRIPTION, {
 			billing_cycle: billingCycle,
-			effective_at: effectiveAt,
+			effective_at: 'period_end',
 		});
-		logger.info('Subscription billing cycle changed', {billingCycle, effectiveAt});
+		logger.info('Subscription billing cycle change scheduled', {billingCycle});
 	} catch (error) {
 		logger.error('Failed to change subscription billing cycle', error);
 		throw error;
@@ -250,6 +254,27 @@ export async function refundLatestPurchase(): Promise<SelfServeRefundResponse> {
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to issue self-serve refund', error);
+		throw error;
+	}
+}
+
+export async function fetchWithdrawals(): Promise<PlutoniumWithdrawalListResponse> {
+	const response = await http.get<PlutoniumWithdrawalListResponse>(Endpoints.PREMIUM_WITHDRAWALS);
+	return response.body;
+}
+
+export async function withdrawPurchase(
+	purchaseId: string,
+	request: PlutoniumWithdrawRequest,
+): Promise<SelfServeRefundResponse> {
+	try {
+		const response = await http.post<SelfServeRefundResponse>(Endpoints.PREMIUM_WITHDRAW(purchaseId), {
+			body: request,
+		});
+		logger.info('Plutonium purchase withdrawn', response.body);
+		return response.body;
+	} catch (error) {
+		logger.error('Plutonium withdrawal failed', error);
 		throw error;
 	}
 }

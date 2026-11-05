@@ -393,7 +393,7 @@ export const useCheckoutActions = (
 		[openCustomerPortalFromCheckoutBlock, i18n],
 	);
 	const handleSelectPlan = useCallback(
-		async (plan: Plan) => {
+		async (plan: Plan, {isBusiness = false, cnpj}: {isBusiness?: boolean; cnpj?: string} = {}) => {
 			if (loadingCheckout) return;
 			logger.info('Plan selected', {plan, hasGiftTime});
 			const showCheckoutPlanErrorModal = (message: string, flxKey: string) => {
@@ -439,7 +439,7 @@ export const useCheckoutActions = (
 			const markCheckoutLaunched = () => {
 				forgetPurchaseIntent();
 				if (!isGift) {
-					recordPremiumCheckoutReturnIntent('plutonium');
+					recordPremiumCheckoutReturnIntent();
 				}
 			};
 			const openCheckoutUrl = async (
@@ -485,6 +485,8 @@ export const useCheckoutActions = (
 						countryCode ?? undefined,
 						isGift,
 						paymentMethod,
+						isBusiness,
+						cnpj,
 					);
 					await openCheckoutUrl(checkoutUrl, {skipMobilePrompt});
 				} catch (error) {

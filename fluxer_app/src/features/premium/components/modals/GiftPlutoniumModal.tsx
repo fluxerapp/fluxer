@@ -11,6 +11,11 @@ import {
 	SAVE_PERCENT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import {
+	BusinessPurchaseField,
+	businessPurchaseCnpj,
+	CNPJ_INVALID_DESCRIPTOR,
+} from '@app/features/premium/components/BusinessPurchaseField';
 import styles from '@app/features/premium/components/modals/GiftPlutoniumModal.module.css';
 import {usePurchaseAccountGate} from '@app/features/premium/hooks/usePurchaseAccountGate';
 import PremiumState from '@app/features/premium/state/PremiumState';
@@ -75,11 +80,23 @@ export const GiftPlutoniumModal = observer(() => {
 	const {priceIds, giftMonthlyPrice, giftYearlyPrice} = usePremiumData({premiumState});
 	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, MobileLayout.enabled);
 	const [plan, setPlan] = useState<GiftPlan>('gift_1_year');
+	const [isBusiness, setIsBusiness] = useState(false);
+	const [cnpj, setCnpj] = useState('');
+	const [cnpjError, setCnpjError] = useState<string | null>(null);
+	const brazil = countryCode?.toUpperCase() === 'BR' || priceIds?.currency === 'BRL';
 	useEffect(() => {
 		if (!currentUser?.id) return;
 		void PremiumCommands.refreshPremiumState(countryCode ?? undefined);
 	}, [countryCode, currentUser?.id]);
 	const accountGate = usePurchaseAccountGate();
+	const buy = () => {
+		const companyCnpj = businessPurchaseCnpj(isBusiness, brazil, cnpj);
+		if (companyCnpj === null) {
+			setCnpjError(i18n._(CNPJ_INVALID_DESCRIPTOR));
+			return;
+		}
+		accountGate.start(() => void handleSelectPlan(plan, {isBusiness, cnpj: companyCnpj}));
+	};
 	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
 	const giftsAvailable = areGiftPurchasesAvailable(priceIds, userPurchaseDisabled);
 	const accountBlockedNote =
@@ -130,6 +147,24 @@ export const GiftPlutoniumModal = observer(() => {
 								)}
 								data-flx="premium.gift-plutonium-modal.radio-group.set-plan"
 							/>
+							<BusinessPurchaseField
+								checked={isBusiness}
+								disabled={loadingCheckout}
+								onChange={setIsBusiness}
+								cnpj={
+									brazil
+										? {
+												value: cnpj,
+												error: cnpjError,
+												onChange: (value) => {
+													setCnpj(value);
+													setCnpjError(null);
+												},
+											}
+										: undefined
+								}
+								data-flx="premium.gift-plutonium-modal.business-purchase-field"
+							/>
 							{blockedNote && (
 								<p className={styles.note} role="note" data-flx="premium.gift-plutonium-modal.blocked-note">
 									{blockedNote}
@@ -150,7 +185,7 @@ export const GiftPlutoniumModal = observer(() => {
 						{i18n._(CANCEL_DESCRIPTOR)}
 					</Button>
 					<Button
-						onClick={() => accountGate.start(() => void handleSelectPlan(plan))}
+						onClick={buy}
 						submitting={loadingCheckout}
 						disabled={blockedNote != null || !pricesLoaded}
 						variant="primary"

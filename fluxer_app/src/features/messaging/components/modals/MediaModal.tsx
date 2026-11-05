@@ -32,6 +32,7 @@ import {
 	VIDEO_PREVIEW_DESCRIPTOR,
 	type ZoomState,
 } from '@app/features/messaging/components/modals/media_modal/shared';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -622,6 +623,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 															playsInline
 															preload="metadata"
 															aria-label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)}
+															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
 															data-flx="messaging.media-modal.thumbnail-video"
 														/>
 													);
@@ -641,6 +643,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 															alt={thumb.alt ?? ''}
 															className={styles.thumbnailImage}
 															draggable={false}
+															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
 															data-flx="messaging.media-modal.thumbnail-image"
 														/>
 													);

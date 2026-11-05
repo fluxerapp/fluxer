@@ -607,10 +607,10 @@ fn resolve_report_form(base: &str, report_id: &str, csrf_token: &str) -> Markup 
             }
             fieldset class="flex flex-col gap-3" data-show-for-resolution="duplicate" hidden disabled {
                 label for="duplicate_of" class=(FORM_LABEL_CLASS) { "Duplicate of" }
-                input type="text" id="duplicate_of" name="duplicate_of" required inputmode="numeric"
-                    placeholder="Report ID" class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
+                input type="text" id="duplicate_of" name="duplicate_of" required
+                    placeholder="Report ID or link" class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
                 p class="text-neutral-500 text-xs" {
-                    "The report this one repeats. The reporter is told its outcome, or nothing while it is still open."
+                    "The report this one repeats, open or resolved. Paste its Report ID or its link. The reporter is told its outcome, or nothing while it is still open."
                 }
             }
             label for="public_comment" class=(FORM_LABEL_CLASS) {
@@ -832,6 +832,12 @@ fn snapshot_user_group(
                     "Bio",
                     compare_text(user.bio.as_deref(), field(|live| live.bio.as_deref())),
                     snapshot_text(user.bio.as_deref()),
+                ))
+                (snapshot_row(
+                    "user.custom_status",
+                    "Custom Status",
+                    SnapshotChange::Unknown,
+                    snapshot_text(user.custom_status.as_deref()),
                 ))
                 (snapshot_row(
                     "user.avatar",
@@ -1132,6 +1138,9 @@ fn message_context_section(
         div class="overflow-hidden rounded-lg border border-neutral-200 bg-white" {
             div class="px-4 pt-4 pb-2 sm:px-6 sm:pt-6" {
                 h2 class="font-semibold text-base text-neutral-900" { "Message Context" }
+                p class="mt-1 text-neutral-500 text-sm" {
+                    "Attachment links expire after 5 minutes. Reload the page for new ones."
+                }
             }
             div class="py-2" {
                 (message_list(

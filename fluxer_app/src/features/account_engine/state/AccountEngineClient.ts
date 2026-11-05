@@ -3,6 +3,8 @@
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {AccountEngineErrorCode, type AccountEngineRendererAPI} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import {isObjectLike} from '@fluxer/record_utils/src/RecordGuards';
+import {sha256} from '@noble/hashes/sha2.js';
+import {bytesToHex, utf8ToBytes} from '@noble/hashes/utils.js';
 
 const ACCOUNT_ENGINE_ERROR_CODES = Object.values(AccountEngineErrorCode);
 const TOKEN_TAG_HEX_LENGTH = 32;
@@ -21,9 +23,6 @@ export function readAccountEngineErrorCode(error: unknown): AccountEngineErrorCo
 	return ACCOUNT_ENGINE_ERROR_CODES.find((candidate) => candidate === code) ?? null;
 }
 
-export async function accountEngineTokenTag(token: string): Promise<string> {
-	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-	return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0'))
-		.join('')
-		.slice(0, TOKEN_TAG_HEX_LENGTH);
+export function accountEngineTokenTag(token: string): string {
+	return bytesToHex(sha256(utf8ToBytes(token))).slice(0, TOKEN_TAG_HEX_LENGTH);
 }

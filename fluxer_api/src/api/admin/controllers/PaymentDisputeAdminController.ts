@@ -124,7 +124,7 @@ export function PaymentDisputeAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Records whether an open payment dispute is justified. Unjustified is refused when the terms rule it out, after the dispute closed, or when the warning date, 3 days before the evidence deadline, is less than 2 days away. Unjustified emails the account and sends it a system message naming that date: if the dispute is not withdrawn by then and ends with the money returned, an enforcement decision closes the account and sends the enforcement notice. The warning counts only once both went out. When the instance has direct messages turned off, no system message is sent and the email alone counts. Deciding unjustified again on a review whose warning is incomplete sends only what is missing, with the same date. A justified dispute never leads to action against the account. A decision is final, only an appeal reverses an unjustified one. Creates audit log entry. Requires USER_DELETE permission.',
+				'Records whether an open payment dispute is justified. Unjustified is refused when the terms rule it out, after the dispute closed, or when the warning date, 3 days before the evidence deadline, is less than 2 days away. Unjustified emails the account and sends it a system message naming that date: if the dispute is not withdrawn by then and ends with the money returned, an enforcement decision closes the account and sends the enforcement notice for Plutonium, and for the Operator Pass the bonus is removed permanently under section 8, which bars the account from buying or receiving a pass and emails the statement of reasons. The warning counts only once both went out. When the instance has direct messages turned off, no system message is sent and the email alone counts. Deciding unjustified again on a review whose warning is incomplete sends only what is missing, with the same date. A justified dispute never leads to action against the account. A decision is final, only an appeal reverses an unjustified one. Creates audit log entry. Requires USER_DELETE permission.',
 		}),
 		async (ctx) => {
 			const {dispute_id: disputeId} = ctx.req.valid('param');
@@ -166,7 +166,7 @@ export function PaymentDisputeAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: TAG,
 			description:
-				'Reverses an unjustified finding when an appeal under section 6.2 of the terms shows the dispute was justified. The review becomes justified, and the enforcement decision that closed the account is reversed, which restores the account and sends the enforcement ended notice, unless the deletion already started or another unreversed unjustified dispute is linked to the same decision. Creates audit log entry. Requires USER_DELETE permission, and BAN_IP_REMOVE when the decision blocked networks.',
+				'Reverses an unjustified finding when an appeal under section 6.2 of the terms shows the dispute was justified. The review becomes justified, a permanent Operator Pass bonus removal made for this dispute is lifted, and the enforcement decision that closed the account is reversed, which restores the account and sends the enforcement ended notice, unless the deletion already started or another unreversed unjustified dispute is linked to the same decision. Creates audit log entry. Requires USER_DELETE permission, and BAN_IP_REMOVE when the decision blocked networks.',
 		}),
 		async (ctx) => {
 			const {dispute_id: disputeId} = ctx.req.valid('param');

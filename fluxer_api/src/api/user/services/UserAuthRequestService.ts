@@ -107,9 +107,10 @@ export class UserAuthRequestService {
 	async generateWebAuthnRegistrationOptions(
 		user: User,
 		origin: string | undefined,
+		requestedRpId?: string | null,
 	): Promise<WebAuthnChallengeResponse> {
 		assertCanRegisterPasskey(user);
-		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin);
+		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin, requestedRpId);
 		return {...options};
 	}
 
@@ -144,8 +145,12 @@ export class UserAuthRequestService {
 		return AuthMfa.getAvailableMfaMethods(this.apiContext, user.id);
 	}
 
-	async getSudoWebAuthnOptions(user: User, origin: string | undefined): Promise<WebAuthnChallengeResponse> {
-		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin);
+	async getSudoWebAuthnOptions(
+		user: User,
+		origin: string | undefined,
+		requestedRpId?: string | null,
+	): Promise<WebAuthnChallengeResponse> {
+		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin, requestedRpId);
 		return {...options};
 	}
 
