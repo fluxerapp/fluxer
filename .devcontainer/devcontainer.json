@@ -57,7 +57,8 @@
 				"unifiedjs.vscode-mdx",
 				"pgourlain.erlang",
 				"clinyong.vscode-css-modules",
-				"EditorConfig.EditorConfig"
+				"EditorConfig.EditorConfig",
+				"mkhl.direnv"
 			]
 		}
 	}
