@@ -244,6 +244,7 @@
 	},
 	"devDependencies": {
 		"@babel/parser": "8.0.8",
+		"@babel/types": "^8.1.0",
 		"@lingui/cli": "catalog:",
 		"@lingui/format-po": "catalog:",
 		"@lingui/swc-plugin": "catalog:",
