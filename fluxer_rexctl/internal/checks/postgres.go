@@ -7,6 +7,8 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 )
 
 const maxSCRAMIterations = 100000
@@ -116,6 +118,11 @@ func fixPostgresRole(ctx context.Context, e *Env) error {
 	if strings.ContainsAny(password, "\n\r") {
 		return errors.New("checks: the database password has a line break")
 	}
-	_, err := e.exec(ctx, "postgres", alterRoleScript(password), "sh", "-c", psqlLocal, "psql", "-f", "-")
-	return err
+	return e.run(ctx, host.Step{
+		Do: "Sets the password of Fluxer's database account to POSTGRES_PASSWORD from your settings and stores it with SCRAM-SHA-256.",
+		Run: func(ctx context.Context) error {
+			_, err := e.exec(ctx, "postgres", alterRoleScript(password), "sh", "-c", psqlLocal, "psql", "-f", "-")
+			return err
+		},
+	})
 }

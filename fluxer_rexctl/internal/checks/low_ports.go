@@ -23,12 +23,12 @@ func runLowPorts(_ context.Context, e *Env) Result {
 			proxy = "run rexctl proxy on"
 		}
 		r := fixable(fail(fmt.Sprintf("Rootless %s can't use ports 80 and 443, because only root can use ports below 1024 on this machine.", e.engineName()), "Run rexctl doctor --fix to allow them, or "+proxy+" to use your own proxy."))
-		r.Manual = "Ask an administrator to add " + host.LowPortsSetting + " to " + host.LowPortsFile + " and run sudo sysctl --system, or " + proxy + " to use your own proxy."
+		r.Manual = "Ask an administrator to run " + host.LowPortsSysctl.HostCommand() + ", or " + proxy + " to use your own proxy."
 		return r
 	}
 	return pass(fmt.Sprintf("Rootless %s can use ports 80 and 443.", e.engineName()))
 }
 
-func fixLowPorts(ctx context.Context, _ *Env) error {
-	return host.AllowLowPorts(ctx)
+func fixLowPorts(ctx context.Context, e *Env) error {
+	return e.run(ctx, host.LowPortsSysctl.Steps()...)
 }

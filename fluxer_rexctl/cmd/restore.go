@@ -317,12 +317,20 @@ func restoreBootUnit(ctx context.Context, app *App, inst *instance.Instance, e *
 		prev.Podman = old.Kind == string(engine.Podman)
 		prev.Rootless = strings.Contains(old.Host, "/run/user/")
 		if prev.Rootless != u.Rootless {
-			if err := host.RemoveBootUnit(ctx, prev); err != nil {
+			steps, err := prev.RemoveSteps(ctx)
+			if err == nil {
+				err = host.RunSteps(ctx, steps)
+			}
+			if err != nil {
 				app.UI.Detail("%v", err)
 			}
 		}
 	}
-	if err := host.InstallBootUnit(ctx, u); err != nil {
+	steps, err := u.InstallSteps(ctx)
+	if err == nil {
+		err = host.RunSteps(ctx, steps)
+	}
+	if err != nil {
 		app.UI.Warn("Fluxer won't start again after this machine restarts.", "Run rexctl doctor --fix to start it with the machine.")
 		app.UI.Detail("%v", err)
 	}

@@ -85,15 +85,22 @@ func lingering(ctx context.Context) bool {
 	return strings.TrimSpace(string(out)) == "yes"
 }
 
-func enableLinger(ctx context.Context) error {
+func lingerStep() (Step, bool) {
 	u, err := user.Current()
 	if err != nil {
-		return nil
+		return Step{}, false
 	}
-	if out, err := exec.CommandContext(ctx, "loginctl", "enable-linger", u.Username).CombinedOutput(); err != nil {
-		return &CommandError{Command: "loginctl enable-linger", Output: string(out), Err: err}
-	}
-	return nil
+	return Step{
+		Do:      "Lets your account's services keep running after you sign out, so Fluxer starts with the machine.",
+		Command: "loginctl enable-linger " + u.Username,
+		Undo:    "loginctl disable-linger " + u.Username,
+		Run: func(ctx context.Context) error {
+			if out, err := exec.CommandContext(ctx, "loginctl", "enable-linger", u.Username).CombinedOutput(); err != nil {
+				return &CommandError{Command: "loginctl enable-linger", Output: string(out), Err: err}
+			}
+			return nil
+		},
+	}, true
 }
 
 func HasSubIDs(ctx context.Context) bool {
@@ -161,28 +168,54 @@ func healthcheckEventsSet(rootless bool) bool {
 	return false
 }
 
-func FixPodman(ctx context.Context, s PodmanSetup) error {
+func (s PodmanSetup) Steps() []Step {
+	var steps []Step
 	if (s.SocketMissing || s.NoSocketStart) && s.Systemd {
-		if out, err := systemctl(ctx, s.Rootless, "enable", "--now", "podman.socket").CombinedOutput(); err != nil {
-			return &CommandError{Command: "systemctl enable --now podman.socket", Output: string(out), Err: err}
+		sys := rootCmd("systemctl")
+		if s.Rootless {
+			sys = "systemctl --user"
 		}
-		waitPodmanSocket(ctx, s.Rootless)
+		undo := sys + " disable --now podman.socket"
+		if !s.SocketMissing {
+			undo = sys + " disable podman.socket"
+		}
+		steps = append(steps, Step{
+			Do:      "Starts Podman's API socket, and starts it with the machine from now on.",
+			Command: sys + " enable --now podman.socket",
+			Undo:    undo,
+			Run: func(ctx context.Context) error {
+				if out, err := systemctl(ctx, s.Rootless, "enable", "--now", "podman.socket").CombinedOutput(); err != nil {
+					return &CommandError{Command: "systemctl enable --now podman.socket", Output: string(out), Err: err}
+				}
+				waitPodmanSocket(ctx, s.Rootless)
+				return nil
+			},
+		})
 	}
 	if s.NoLinger {
-		if err := enableLinger(ctx); err != nil {
-			return err
+		if step, ok := lingerStep(); ok {
+			steps = append(steps, step)
 		}
 	}
 	if s.EventsOn {
 		dir := filepath.Join(containersConfDirs(s.Rootless)[0], "containers.conf.d")
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return err
+		path := filepath.Join(dir, healthcheckEventsFile)
+		rm := "rm " + path
+		if !s.Rootless {
+			rm = rootCmd(rm)
 		}
-		if err := envfile.WriteFileAtomic(filepath.Join(dir, healthcheckEventsFile), []byte("[engine]\nhealthcheck_events = false\n"), false); err != nil {
-			return err
-		}
+		steps = append(steps, Step{
+			Do:   "Writes healthcheck_events = false to " + path + ", so Podman stops writing every health check to the system log.",
+			Undo: rm,
+			Run: func(context.Context) error {
+				if err := os.MkdirAll(dir, 0o755); err != nil {
+					return err
+				}
+				return envfile.WriteFileAtomic(path, []byte("[engine]\nhealthcheck_events = false\n"), false)
+			},
+		})
 	}
-	return nil
+	return steps
 }
 
 func podmanSocketPath(rootless bool) string {

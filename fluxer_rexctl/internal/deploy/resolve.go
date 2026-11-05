@@ -27,6 +27,10 @@ func Interrupted(inst *instance.Instance) string {
 		strings.Join(p.Keys[:len(p.Keys)-1], ", "), p.Keys[len(p.Keys)-1])
 }
 
+func PendingIPv6(st *instance.State) bool {
+	return st.Pending != nil && parseBool(st.Pending.Settings[settings.IPv6]) != parseBool(st.Settings[settings.IPv6])
+}
+
 func Resolve(ctx context.Context, inst *instance.Instance, e *engine.Engine) error {
 	p := inst.State.Pending
 	if p == nil {
@@ -36,7 +40,7 @@ func Resolve(ctx context.Context, inst *instance.Instance, e *engine.Engine) err
 	if err != nil {
 		return err
 	}
-	ipv6 := parseBool(p.Settings[settings.IPv6]) != parseBool(inst.State.Settings[settings.IPv6])
+	ipv6 := PendingIPv6(inst.State)
 	if _, err := render(inst, rs, inst.State.Settings); err != nil {
 		return err
 	}

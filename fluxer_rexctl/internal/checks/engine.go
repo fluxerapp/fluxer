@@ -85,9 +85,17 @@ func fixEngine(ctx context.Context, e *Env) error {
 	if !e.podmanSocketOff() {
 		return nil
 	}
-	if err := host.FixPodman(ctx, host.CheckPodman(ctx, os.Geteuid() != 0, true)); err != nil {
-		return err
+	steps := host.CheckPodman(ctx, os.Geteuid() != 0, true).Steps()
+	if len(steps) == 0 {
+		return nil
 	}
-	e.reconnect(ctx)
-	return nil
+	last := steps[len(steps)-1].Run
+	steps[len(steps)-1].Run = func(ctx context.Context) error {
+		if err := last(ctx); err != nil {
+			return err
+		}
+		e.reconnect(ctx)
+		return nil
+	}
+	return e.run(ctx, steps...)
 }

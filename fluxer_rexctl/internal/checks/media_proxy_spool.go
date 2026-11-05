@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 )
 
 const (
@@ -36,5 +37,10 @@ func fixMediaProxySpool(ctx context.Context, e *Env) error {
 	if e.Project == nil {
 		return errNoProject
 	}
-	return e.Project.Exec(ctx, "media-proxy", engine.ExecOptions{User: "0", Stdout: io.Discard, Stderr: io.Discard}, "sh", "-c", mediaProxySpoolRepair)
+	return e.run(ctx, host.Step{
+		Do: "Makes the media proxy's temporary folder and lets every account in its container write to it.",
+		Run: func(ctx context.Context) error {
+			return e.Project.Exec(ctx, "media-proxy", engine.ExecOptions{User: "0", Stdout: io.Discard, Stderr: io.Discard}, "sh", "-c", mediaProxySpoolRepair)
+		},
+	})
 }

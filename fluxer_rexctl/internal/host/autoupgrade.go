@@ -515,7 +515,9 @@ func InstallAutoUpgrade(ctx context.Context, a AutoUpgrade) error {
 		}
 	}
 	if a.Scheduler == Systemd && a.Rootless && !lingering(ctx) {
-		return enableLinger(ctx)
+		if step, ok := lingerStep(); ok {
+			return step.Run(ctx)
+		}
 	}
 	return nil
 }

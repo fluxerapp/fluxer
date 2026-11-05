@@ -95,5 +95,9 @@ func fixBootUnit(ctx context.Context, e *Env) error {
 	if !ok || !s.Needed() {
 		return nil
 	}
-	return host.InstallBootUnit(ctx, u)
+	steps, err := u.InstallSteps(ctx)
+	if err != nil {
+		return err
+	}
+	return e.run(ctx, steps...)
 }

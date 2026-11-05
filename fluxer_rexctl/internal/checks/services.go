@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
@@ -172,13 +174,22 @@ func fixServices(ctx context.Context, e *Env) error {
 		}
 	}
 	if len(restart) > 0 {
-		if err := e.Project.Restart(ctx, restart...); err != nil {
+		err := e.run(ctx, host.Step{
+			Do:  "Restarts " + ui.JoinAnd(restart) + ".",
+			Run: func(ctx context.Context) error { return e.Project.Restart(ctx, restart...) },
+		})
+		if err != nil {
 			return err
 		}
 	}
 	if err := e.up(ctx); err != nil {
 		return err
 	}
-	_ = e.Project.WaitReady(ctx, 5*time.Minute, nil)
-	return ctx.Err()
+	return e.run(ctx, host.Step{
+		Do: "Waits up to 5 minutes for Fluxer to be ready.",
+		Run: func(ctx context.Context) error {
+			_ = e.Project.WaitReady(ctx, 5*time.Minute, nil)
+			return ctx.Err()
+		},
+	})
 }

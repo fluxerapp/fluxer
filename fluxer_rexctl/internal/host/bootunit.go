@@ -232,25 +232,42 @@ func CheckBootUnit(ctx context.Context, u BootUnit) (BootUnitState, error) {
 	return s, nil
 }
 
-func InstallBootUnit(ctx context.Context, u BootUnit) error {
+func (u BootUnit) systemctl(args string) string {
+	if u.Rootless {
+		return "systemctl --user " + args
+	}
+	return rootCmd("systemctl " + args)
+}
+
+func (u BootUnit) InstallSteps(ctx context.Context) ([]Step, error) {
 	if !BootUnitSupported() {
-		return nil
+		return nil, nil
 	}
-	if err := writeBootUnit(ctx, u); err != nil {
-		return err
+	steps, path, err := u.writeSteps(ctx)
+	if err != nil {
+		return nil, err
 	}
-	if err := systemctlRun(ctx, u.Rootless, "enable", u.Name()); err != nil {
-		return err
+	if !unitIs(ctx, u.Rootless, u.Name(), "enabled") {
+		steps = append(steps, Step{
+			Do:      "Starts " + u.Name() + " with the machine from now on.",
+			Command: u.systemctl("enable " + u.Name()),
+			Undo:    u.removeSteps(path, true)[0].Command,
+			Run:     func(ctx context.Context) error { return systemctlRun(ctx, u.Rootless, "enable", u.Name()) },
+		})
 	}
 	if u.Rootless && !lingering(ctx) {
-		if err := enableLinger(ctx); err != nil {
-			return err
+		if step, ok := lingerStep(); ok {
+			steps = append(steps, step)
 		}
 	}
 	if !unitIs(ctx, u.Rootless, u.Name(), "active") {
-		return systemctlRun(ctx, u.Rootless, "start", "--no-block", u.Name())
+		steps = append(steps, Step{
+			Do:      "Starts " + u.Name() + " now.",
+			Command: u.systemctl("start --no-block " + u.Name()),
+			Run:     func(ctx context.Context) error { return systemctlRun(ctx, u.Rootless, "start", "--no-block", u.Name()) },
+		})
 	}
-	return nil
+	return steps, nil
 }
 
 func RefreshBootUnit(ctx context.Context, u BootUnit) error {
@@ -264,29 +281,53 @@ func RefreshBootUnit(ctx context.Context, u BootUnit) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
-	return writeBootUnit(ctx, u)
-}
-
-func RemoveBootUnit(ctx context.Context, u BootUnit) error {
-	if !BootUnitSupported() {
-		return nil
-	}
-	path, err := u.Path()
+	steps, _, err := u.writeSteps(ctx)
 	if err != nil {
 		return err
 	}
+	return RunSteps(ctx, steps)
+}
+
+func (u BootUnit) RemoveSteps(ctx context.Context) ([]Step, error) {
+	if !BootUnitSupported() {
+		return nil, nil
+	}
+	path, err := u.Path()
+	if err != nil {
+		return nil, err
+	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil
+		return nil, nil
 	}
-	if unitIs(ctx, u.Rootless, u.Name(), "enabled") {
-		if err := systemctlRun(ctx, u.Rootless, "disable", u.Name()); err != nil {
-			return err
-		}
+	return u.removeSteps(path, unitIs(ctx, u.Rootless, u.Name(), "enabled")), nil
+}
+
+func (u BootUnit) removeSteps(path string, enabled bool) []Step {
+	rm := "rm -f " + path
+	if !u.Rootless {
+		rm = rootCmd(rm)
 	}
-	if err := removeHostFiles(ctx, u.Rootless, path); err != nil {
-		return err
+	steps := []Step{
+		{
+			Do:      "Stops starting " + u.Name() + " with the machine.",
+			Command: u.systemctl("disable " + u.Name()),
+			Run:     func(ctx context.Context) error { return systemctlRun(ctx, u.Rootless, "disable", u.Name()) },
+		},
+		{
+			Do:      "Deletes " + path + ".",
+			Command: rm,
+			Run:     func(ctx context.Context) error { return removeHostFiles(ctx, u.Rootless, path) },
+		},
+		{
+			Do:      "Tells systemd that " + u.Name() + " is gone.",
+			Command: u.systemctl("daemon-reload"),
+			Run:     func(ctx context.Context) error { return systemctlRun(ctx, u.Rootless, "daemon-reload") },
+		},
 	}
-	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+	if !enabled {
+		return steps[1:]
+	}
+	return steps
 }
 
 func removeHostFiles(ctx context.Context, user bool, paths ...string) error {
@@ -302,24 +343,41 @@ func removeHostFiles(ctx context.Context, user bool, paths ...string) error {
 	return nil
 }
 
-func writeBootUnit(ctx context.Context, u BootUnit) error {
+func (u BootUnit) writeSteps(ctx context.Context) ([]Step, string, error) {
 	if !filepath.IsAbs(u.Binary) || !filepath.IsAbs(u.Dir) {
-		return fmt.Errorf("host: boot unit needs absolute paths, got %q and %q", u.Binary, u.Dir)
+		return nil, "", fmt.Errorf("host: boot unit needs absolute paths, got %q and %q", u.Binary, u.Dir)
 	}
 	path, err := u.Path()
 	if err != nil {
-		return err
+		return nil, "", err
 	}
-	if !u.Rootless {
-		if err := installBinary(ctx, true, u.Binary, LibexecBinary); err != nil {
-			return err
+	var steps []Step
+	if !u.Rootless && !sameFile(u.Binary, LibexecBinary) {
+		steps = append(steps, Step{
+			Do:      "Copies this rexctl to " + LibexecBinary + " for the service to use.",
+			Command: rootCmd("install " + strings.Join(installArgs(u.Binary, LibexecBinary), " ")),
+			Run:     func(ctx context.Context) error { return installBinary(ctx, true, u.Binary, LibexecBinary) },
+		})
+	}
+	content := []byte(u.content(ctx))
+	if old, err := os.ReadFile(path); err != nil || !bytes.Equal(old, content) {
+		undo := ""
+		if os.IsNotExist(err) {
+			undo = joinCommands(u.removeSteps(path, false))
 		}
+		steps = append(steps, Step{
+			Do:   "Writes " + path + ", which starts Fluxer with the machine.",
+			Undo: undo,
+			Run: func(ctx context.Context) error {
+				changed, err := writeHostFile(ctx, u.Rootless, path, content)
+				if err != nil || !changed {
+					return err
+				}
+				return systemctlRun(ctx, u.Rootless, "daemon-reload")
+			},
+		})
 	}
-	changed, err := writeHostFile(ctx, u.Rootless, path, []byte(u.content(ctx)))
-	if err != nil || !changed {
-		return err
-	}
-	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+	return steps, path, nil
 }
 
 func installBinary(ctx context.Context, system bool, src, dst string) error {
