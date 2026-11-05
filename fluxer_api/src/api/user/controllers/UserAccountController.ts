@@ -756,7 +756,7 @@ export function UserAccountController(app: HonoApp) {
 			const updatedSettings = await ctx.get('userService').accountService.settingsService.updateSettings({
 				userId: user.id,
 				data: ctx.req.valid('json'),
-				dateOfBirth: user.dateOfBirth,
+				ageUser: user,
 				flags: user.flags,
 			});
 			return ctx.json(mapUserSettingsToResponse({settings: updatedSettings}));

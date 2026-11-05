@@ -239,7 +239,7 @@ export function resolvePurchaseEligibility(user: TierUser): PurchaseEligibility 
 	return blocked === null ? {allowed: true} : {allowed: false, blocked};
 }
 
-type VisitUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth'> & {traits: ReadonlySet<string>};
+type VisitUser = Pick<User, 'isBot' | 'isSystem' | 'dateOfBirth' | 'attestedAgeFloor'> & {traits: ReadonlySet<string>};
 
 export function assertCanVisit(user: VisitUser, guild: {nsfw: boolean}): {adult_content_allowed: boolean} {
 	if (user.traits.has(UserTraits.BELOW_MINIMUM_AGE)) throw new AccountBelowMinimumAgeError();

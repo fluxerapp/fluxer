@@ -58,7 +58,7 @@ export function isDateOfBirthEnforced(user: DateOfBirthUser): boolean {
 	}
 }
 
-function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | null {
+export function settingsForAge(settings: UserSettings, adult: boolean): UserSettings | null {
 	const teen = UserSettings.getDefaultUserSettings({userId: settings.userId, locale: settings.locale, isAdult: false});
 	const adultDefaults = UserSettings.getDefaultUserSettings({
 		userId: settings.userId,

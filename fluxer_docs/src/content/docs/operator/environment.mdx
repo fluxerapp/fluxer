@@ -1264,6 +1264,14 @@ The URL of the incident history on your status page. The apps don't use it yet. 
 
 Whether a new instance starts as already set up. Use `true` or `false`. With `true`, the setup wizard is skipped and registration opens without making the first account an admin. Once a setup state is saved, this has no effect. When it's empty, Fluxer uses `false`. With rexctl, use `rexctl config set FLUXER_INSTANCE_SETUP_CONFIGURED`.
 
+### `FLUXER_APP_ATTEST_APP_IDS`
+
+The iOS apps whose age reports the users service accepts through Apple App Attest, separated by commas. Each entry is a team ID, a dot and a bundle ID, such as `ABCDE12345.com.example.app`. When it's empty, App Attest is off and its API endpoints respond that the feature isn't available. The users service doesn't start when an entry isn't in that form. With rexctl, use `rexctl config set FLUXER_APP_ATTEST_APP_IDS`.
+
+### `FLUXER_APP_ATTEST_ALLOW_DEVELOPMENT`
+
+Whether the users service also accepts App Attest keys from development builds of the apps in `FLUXER_APP_ATTEST_APP_IDS`. Use `true` or `false`. When it's empty, it uses `false`, so only App Store, TestFlight and other production builds are accepted. With rexctl, use `rexctl config set FLUXER_APP_ATTEST_ALLOW_DEVELOPMENT`.
+
 ### `FLUXER_ACCOUNT_IDENTITY`
 
 How people sign in on a new instance. Use `username` or `email`. Fluxer uses it only on the first start with no saved sign-in method. When it's empty, Fluxer uses `email` if email delivery is set up and `username` otherwise. When `FLUXER_INSTANCE_SETUP_CONFIGURED` is `true` or any account exists, Fluxer uses email sign-in with random tags and ignores this. Otherwise the setup wizard asks again, and its answer replaces this value. With rexctl, use `rexctl config set FLUXER_ACCOUNT_IDENTITY`.

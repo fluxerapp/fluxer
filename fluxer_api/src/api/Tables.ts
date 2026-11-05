@@ -1125,6 +1125,34 @@ export const WebAuthnCredentialLookup = defineTable<
 	columns: ['credential_id', 'user_id'],
 	primaryKey: ['credential_id'],
 });
+export const AppAttestKeys = defineTable<
+	{
+		user_id: UserID;
+		key_id: string;
+		public_key: Buffer;
+		environment: string;
+		app_id: string;
+		counter: bigint;
+		created_at: Date;
+		last_used_at: Date | null;
+	},
+	'user_id' | 'key_id'
+>({
+	name: 'app_attest_keys',
+	columns: ['user_id', 'key_id', 'public_key', 'environment', 'app_id', 'counter', 'created_at', 'last_used_at'],
+	primaryKey: ['user_id', 'key_id'],
+});
+export const AppAttestKeyLookup = defineTable<
+	{
+		key_id: string;
+		user_id: UserID;
+	},
+	'key_id'
+>({
+	name: 'app_attest_key_lookup',
+	columns: ['key_id', 'user_id'],
+	primaryKey: ['key_id'],
+});
 export const IpAuthorizationTokens = defineTable<IpAuthorizationTokenRow, 'token_' | 'user_id'>({
 	name: 'ip_authorization_tokens',
 	columns: IP_AUTHORIZATION_TOKEN_COLUMNS,
