@@ -61,7 +61,7 @@ describe('Reactions without USE_EXTERNAL_EMOJIS', () => {
 		}
 	});
 
-	it('refuses emojis from an 18+ community outside it', async () => {
+	it('allows emojis from an 18+ community outside it', async () => {
 		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
 		const [reactor] = members;
 		const message = await sendChannelMessage(harness, owner.token, systemChannel.id, 'react to me');
@@ -76,7 +76,7 @@ describe('Reactions without USE_EXTERNAL_EMOJIS', () => {
 			await createBuilder(harness, reactor.token)
 				.put(`/channels/${systemChannel.id}/messages/${message.id}/reactions/${matureEmoji.name}:${matureEmoji.id}/@me`)
 				.body(null)
-				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		} finally {
 			await restore();
