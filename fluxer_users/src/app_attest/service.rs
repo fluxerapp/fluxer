@@ -142,9 +142,11 @@ impl AppAttestService {
             created_at_ms: unix_ms(now),
             last_used_at_ms: None,
         };
+        let environment = key.environment;
         if self.store.insert_key_if_absent(user_id, &key).await? {
             self.enforce_key_cap(user_id).await?;
         }
+        tracing::info!(user_id, ?environment, "app attest attestation verified");
         Ok(Ok(UserResponse::AppAttestKeyRegistered))
     }
 
@@ -228,6 +230,7 @@ impl AppAttestService {
             tracing::info!(user_id, "app attest assertion counter lost a race");
             return Ok(Err(AppAttestRejection::InvalidAssertion));
         }
+        tracing::info!(user_id, counter, "app attest assertion verified");
         Ok(Ok(UserResponse::AppAttestAgeAccepted {
             age_floor: parsed.age_floor,
             attested_at: iso_millis(now_ms),
