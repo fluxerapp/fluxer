@@ -5,6 +5,7 @@ package deploy
 import (
 	"encoding/base64"
 	"maps"
+	"slices"
 	"testing"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -52,5 +53,16 @@ func TestSigningSecretsKeepsExistingKeys(t *testing.T) {
 	off := with(map[string]string{settings.SignedMedia: "off"})
 	if got, err := signingSecrets(rs, st, off); err != nil || got[settings.SignatureSecretsVar] != "" {
 		t.Fatalf("off made a key: got %q, err %v", got[settings.SignatureSecretsVar], err)
+	}
+}
+
+func TestListenAddressRestartsEdge(t *testing.T) {
+	rs := stack.Embedded()
+	k, err := Lookup(rs, nil, settings.EdgeListen)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := Promised(rs, nil, k); !slices.Equal(got, []string{"edge"}) {
+		t.Fatalf("Promised = %v, want edge", got)
 	}
 }

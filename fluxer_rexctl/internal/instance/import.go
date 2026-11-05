@@ -23,6 +23,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
@@ -53,6 +54,7 @@ type ImportReport struct {
 	Changed       []string
 	DedupedEnv    bool
 	EngineProxies bool
+	ListenAddress string
 	RemovedEnv    bool
 	Images        map[string]string
 	Release       string
@@ -291,6 +293,7 @@ func fill(r *ImportReport, vals *valueResult, minted []string) {
 	r.Defaults = vals.defaults
 	r.AdminKeys = slices.Sorted(maps.Keys(vals.admin))
 	r.EngineProxies = vals.engineProxies
+	r.ListenAddress = vals.settings[settings.EdgeListen]
 }
 
 func pin(s *State, e *engine.Engine) {

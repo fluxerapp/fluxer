@@ -3,6 +3,7 @@
 package settings
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"net"
@@ -78,6 +79,13 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 		if isRawName(name) {
 			env[name] = value
 			operator[name] = true
+		}
+	}
+	if listen := chosen[EdgeListen]; listen != "" && !reads(EdgeListenVar) && cmp.Or(chosen[EdgeMode], EdgeBundled) == EdgeBundled {
+		for v, port := range edgePortVars {
+			if reads(v) {
+				env[v] = net.JoinHostPort(listen, cmp.Or(env[v], port))
+			}
 		}
 	}
 
