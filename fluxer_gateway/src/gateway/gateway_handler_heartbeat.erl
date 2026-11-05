@@ -94,6 +94,7 @@ verify_heartbeat_ack(SeqNum, Pid) when is_integer(SeqNum), is_pid(Pid) ->
         ok -> true;
         _ -> false
     catch
+        exit:{timeout, _} -> true;
         exit:_ -> false
     end;
 verify_heartbeat_ack(_, _) ->
