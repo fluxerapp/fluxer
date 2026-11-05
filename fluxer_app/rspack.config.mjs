@@ -777,10 +777,12 @@ export default () => {
 				},
 			},
 			...(isProduction
-				? moduleMapPlugin({
-						root: MONOREPO_ROOT,
-						build: {...buildInfo, desktopRenderer: isDesktopRenderer},
-					})
+				? [
+						moduleMapPlugin({
+							root: MONOREPO_ROOT,
+							build: {...buildInfo, desktopRenderer: isDesktopRenderer},
+						}),
+					]
 				: []),
 		],
 		optimization: {
