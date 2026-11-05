@@ -11,6 +11,18 @@ import {assertNoOpenPaymentDispute} from '@app/api/payment_disputes/PaymentDispu
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {getEffectiveBillingConfig, isCurrentCatalogPriceId} from '@app/api/stripe/BillingConfigCache';
+import type {DistributionPriceSync} from '@app/api/stripe/DistributionPriceSync';
+import {
+	applyDistributionToQuote,
+	type DistributionSale,
+	decodeDistributionPurchaseRef,
+	distributionMetadata,
+	distributionPaymentFields,
+	distributionProductOf,
+	distributionSaleFromEntry,
+	parseDistributionId,
+	resolveDistributionRule,
+} from '@app/api/stripe/DistributionPricing';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {ensureStripeCustomer, isStripeResourceMissingError} from '@app/api/stripe/StripeCustomer';
 import {getPortalConfigurationId} from '@app/api/stripe/StripePortalConfiguration';
@@ -90,6 +102,8 @@ export interface CreateCheckoutSessionParams {
 	paymentMethod?: CheckoutPaymentMethod;
 	isBusiness?: boolean;
 	cnpj?: string;
+	distribution?: string;
+	distributionToken?: string;
 }
 
 const PIX_UPI_MANDATE_HEADROOM_MULTIPLIER = 1.25;
@@ -191,11 +205,12 @@ export class StripeCheckoutService {
 		private productRegistry: ProductRegistry,
 		private cacheService: ICacheService,
 		private storeEntitlementService: StoreEntitlementService | null = null,
+		private distributionPriceSync: DistributionPriceSync | null = null,
 	) {}
 
 	async createCheckoutSession({
 		userId,
-		priceId,
+		priceId: requestedPriceId,
 		isGift = false,
 		countryCode,
 		clientGeoipCountryCode,
@@ -204,14 +219,24 @@ export class StripeCheckoutService {
 		paymentMethod = 'card',
 		isBusiness = false,
 		cnpj,
+		distribution,
+		distributionToken,
 	}: CreateCheckoutSessionParams): Promise<string> {
+		const basePriceId = this.productRegistry.getBasePriceId(requestedPriceId);
 		const {customerId, productInfo, user} = await this.prepareCheckoutContext({
 			userId,
-			priceId,
+			priceId: basePriceId,
 			isGift,
 			countryCode,
 			purchaseGeoipCountryCode,
 		});
+		const distributionSale = await this.resolveDistributionSale({
+			productInfo,
+			basePriceId,
+			distribution,
+			distributionToken,
+		});
+		const priceId = distributionSale?.priceId ?? basePriceId;
 		const isRecurringSubscription = this.productRegistry.isRecurringSubscription(productInfo);
 		const checkoutMode: CheckoutSessionMode = isRecurringSubscription ? 'subscription' : 'payment';
 		const effectivePaymentMethod =
@@ -259,6 +284,7 @@ export class StripeCheckoutService {
 			...(brazilBusiness ? {cnpj} : {}),
 			...(billing.termsConsentRequired && !brazil && waiverContext.required ? {withdrawal_pro_rata: 'true'} : {}),
 			payment_method: effectivePaymentMethod,
+			...(distributionSale ? distributionMetadata(distributionSale.sale) : {}),
 		};
 		const checkoutParams: CheckoutSessionCreateParams = {
 			customer: customerId,
@@ -319,7 +345,30 @@ export class StripeCheckoutService {
 			clientGeoipCountryCode,
 			purchaseGeoipCountryCode,
 			waiverContext,
+			distributionSale: distributionSale?.sale ?? null,
 		});
+	}
+
+	private async resolveDistributionSale({
+		productInfo,
+		basePriceId,
+		distribution,
+		distributionToken,
+	}: {
+		productInfo: ProductInfo;
+		basePriceId: string;
+		distribution: string | undefined;
+		distributionToken: string | undefined;
+	}): Promise<{priceId: string; sale: DistributionSale} | null> {
+		const rule = resolveDistributionRule(parseDistributionId(distribution), distributionProductOf(productInfo));
+		if (!rule || !this.distributionPriceSync) {
+			return null;
+		}
+		const entry = await this.distributionPriceSync.ensureChannelPrice(rule, basePriceId);
+		return {
+			priceId: entry.price_id,
+			sale: distributionSaleFromEntry(rule, entry, decodeDistributionPurchaseRef(distributionToken)),
+		};
 	}
 
 	private async prepareCheckoutContext({
@@ -404,6 +453,7 @@ export class StripeCheckoutService {
 		clientGeoipCountryCode,
 		purchaseGeoipCountryCode,
 		waiverContext,
+		distributionSale,
 	}: {
 		checkoutParams: CheckoutSessionCreateParams;
 		productInfo: ProductInfo;
@@ -413,6 +463,7 @@ export class StripeCheckoutService {
 		clientGeoipCountryCode?: string | null;
 		purchaseGeoipCountryCode?: string | null;
 		waiverContext: EuWithdrawalWaiverContext;
+		distributionSale: DistributionSale | null;
 	}): Promise<string> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
@@ -437,6 +488,7 @@ export class StripeCheckoutService {
 				eu_withdrawal_waiver_accepted: waiverContext.accepted,
 				eu_withdrawal_waiver_accepted_at: waiverContext.acceptedAt,
 				eu_withdrawal_waiver_text_version: waiverContext.required ? EU_WITHDRAWAL_WAIVER_TEXT_VERSION : null,
+				...distributionPaymentFields(distributionSale),
 			});
 			Logger.debug({userId, sessionId: session.id, productType: productInfo.type}, 'Checkout session created');
 			return session.url;
@@ -676,7 +728,7 @@ export class StripeCheckoutService {
 		}
 	}
 
-	async getPriceIds(countryCode?: string): Promise<PriceIdsResponse> {
+	async getPriceIds(countryCode?: string, distribution?: string): Promise<PriceIdsResponse> {
 		const resolvedPrices = this.productRegistry.resolveLocalizedPriceIds(countryCode);
 		if (!resolvedPrices) throw new StripeError('Stripe price ids missing for supported currencies');
 		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
@@ -685,13 +737,17 @@ export class StripeCheckoutService {
 			this.getStripePriceSummary(resolvedPrices.gift_1_month),
 			this.getStripePriceSummary(resolvedPrices.gift_1_year),
 		]);
-		return {
-			...resolvedPrices,
-			monthly_amount_minor: monthlyPrice?.unitAmountMinor ?? null,
-			yearly_amount_minor: yearlyPrice?.unitAmountMinor ?? null,
-			gift_1_month_amount_minor: gift1MonthPrice?.unitAmountMinor ?? null,
-			gift_1_year_amount_minor: gift1YearPrice?.unitAmountMinor ?? null,
-		};
+		return applyDistributionToQuote(
+			{
+				...resolvedPrices,
+				monthly_amount_minor: monthlyPrice?.unitAmountMinor ?? null,
+				yearly_amount_minor: yearlyPrice?.unitAmountMinor ?? null,
+				gift_1_month_amount_minor: gift1MonthPrice?.unitAmountMinor ?? null,
+				gift_1_year_amount_minor: gift1YearPrice?.unitAmountMinor ?? null,
+				distribution: null,
+			},
+			distribution,
+		);
 	}
 
 	private async getStripePriceSummary(priceId: string | null): Promise<StripePriceSummary | null> {

@@ -29,6 +29,7 @@ import {
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {isStripeSubscriptionActive} from '@app/api/store_billing/StoreEntitlementWriter';
 import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
+import {applyDistributionToQuote, resolveListPriceId} from '@app/api/stripe/DistributionPricing';
 import {getProductRegistry, type RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {getCachedStripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
@@ -202,12 +203,12 @@ export class PremiumStateService {
 		private readonly storeBillingRepository: StoreBillingRepository | null = null,
 	) {}
 
-	async getState(userId: UserID, countryCode?: string): Promise<PremiumStateResponse> {
+	async getState(userId: UserID, countryCode?: string, distribution?: string): Promise<PremiumStateResponse> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		return this.buildState(user, countryCode);
+		return this.buildState(user, countryCode, distribution);
 	}
 
 	async setPerksDisabled(userId: UserID, disabled: boolean): Promise<PremiumStateResponse> {
@@ -228,7 +229,7 @@ export class PremiumStateService {
 		return this.buildState(updatedUser);
 	}
 
-	private async buildState(user: User, countryCode?: string): Promise<PremiumStateResponse> {
+	private async buildState(user: User, countryCode?: string, distribution?: string): Promise<PremiumStateResponse> {
 		const [customerIds, subscription, paymentDisputeOpen] = await Promise.all([
 			this.resolveCustomerIds(user),
 			this.resolvePrimarySubscription(user),
@@ -240,7 +241,7 @@ export class PremiumStateService {
 			this.resolvePaymentMethods(customerIds),
 			this.resolveSubscriptionPrice(subscription, user),
 			this.resolvePendingSubscriptionChange(user),
-			this.resolvePricing(countryCode),
+			this.resolvePricing(countryCode, distribution),
 		]);
 		const storeRow = await this.resolveActiveStoreSubscription(user);
 		const store = storeRow ? mapPremiumStoreSubscriptionState(storeRow) : null;
@@ -513,7 +514,9 @@ export class PremiumStateService {
 			return null;
 		}
 		const currency = (price?.currency ?? subscription.currency ?? 'usd').toUpperCase();
-		const listPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+		const baseListPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+		const currentPriceId = price?.provider_id ?? subscription.primary_price_id;
+		const listPriceId = resolveListPriceId(currentPriceId ?? null, baseListPriceId);
 		const listPrice = listPriceId ? await this.billingRepository.prices.findById(listPriceId) : null;
 		const itemAmount = subscription.items?.[0]?.[3] ?? null;
 		const amountMinor = nullableNumber(price?.unit_amount ?? itemAmount);
@@ -745,16 +748,22 @@ export class PremiumStateService {
 		return total;
 	}
 
-	private async resolvePricing(countryCode: string | null | undefined): Promise<PremiumPricingState> {
+	private async resolvePricing(
+		countryCode: string | null | undefined,
+		distribution: string | undefined,
+	): Promise<PremiumPricingState> {
 		const normalizedCountryCode = normalizeCountryCode(countryCode);
-		const localized = await this.resolvePriceIds(normalizedCountryCode);
+		const localized = await this.resolvePriceIds(normalizedCountryCode, distribution);
 		return {
 			country_code: normalizedCountryCode,
 			localized,
 		};
 	}
 
-	private async resolvePriceIds(countryCode: string | null): Promise<PriceIdsResponse | null> {
+	private async resolvePriceIds(
+		countryCode: string | null,
+		distribution: string | undefined,
+	): Promise<PriceIdsResponse | null> {
 		const resolved = this.productRegistry.resolveLocalizedPriceIds(countryCode);
 		if (!resolved) {
 			return null;
@@ -765,13 +774,17 @@ export class PremiumStateService {
 			this.resolvePriceAmountMinor(resolved.gift_1_month),
 			this.resolvePriceAmountMinor(resolved.gift_1_year),
 		]);
-		return {
-			...resolved,
-			monthly_amount_minor: monthlyAmount,
-			yearly_amount_minor: yearlyAmount,
-			gift_1_month_amount_minor: gift1MonthAmount,
-			gift_1_year_amount_minor: gift1YearAmount,
-		};
+		return applyDistributionToQuote(
+			{
+				...resolved,
+				monthly_amount_minor: monthlyAmount,
+				yearly_amount_minor: yearlyAmount,
+				gift_1_month_amount_minor: gift1MonthAmount,
+				gift_1_year_amount_minor: gift1YearAmount,
+				distribution: null,
+			},
+			distribution,
+		);
 	}
 
 	private async resolvePriceAmountMinor(priceId: string | null): Promise<number | null> {

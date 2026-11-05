@@ -23,6 +23,13 @@ export class Payment {
 	readonly euWithdrawalWaiverAccepted: boolean;
 	readonly euWithdrawalWaiverAcceptedAt: Date | null;
 	readonly euWithdrawalWaiverTextVersion: string | null;
+	readonly distribution: string | null;
+	readonly distributionRateBps: number | null;
+	readonly distributionRuleVersion: number | null;
+	readonly distributionBaseAmountMinor: number | null;
+	readonly distributionPurchaseRef: string | null;
+	readonly taxAmountMinor: number | null;
+	readonly taxCountry: string | null;
 	readonly createdAt: Date;
 	readonly completedAt: Date | null;
 	readonly version: number;
@@ -47,6 +54,13 @@ export class Payment {
 		this.euWithdrawalWaiverAccepted = row.eu_withdrawal_waiver_accepted ?? false;
 		this.euWithdrawalWaiverAcceptedAt = row.eu_withdrawal_waiver_accepted_at ?? null;
 		this.euWithdrawalWaiverTextVersion = row.eu_withdrawal_waiver_text_version ?? null;
+		this.distribution = row.distribution ?? null;
+		this.distributionRateBps = row.distribution_rate_bps ?? null;
+		this.distributionRuleVersion = row.distribution_rule_version ?? null;
+		this.distributionBaseAmountMinor = row.distribution_base_amount_minor ?? null;
+		this.distributionPurchaseRef = row.distribution_purchase_ref ?? null;
+		this.taxAmountMinor = row.tax_amount_minor ?? null;
+		this.taxCountry = row.tax_country ?? null;
 		this.createdAt = row.created_at;
 		this.completedAt = row.completed_at ?? null;
 		this.version = row.version;
@@ -73,6 +87,13 @@ export class Payment {
 			eu_withdrawal_waiver_accepted: this.euWithdrawalWaiverAccepted,
 			eu_withdrawal_waiver_accepted_at: this.euWithdrawalWaiverAcceptedAt,
 			eu_withdrawal_waiver_text_version: this.euWithdrawalWaiverTextVersion,
+			distribution: this.distribution,
+			distribution_rate_bps: this.distributionRateBps,
+			distribution_rule_version: this.distributionRuleVersion,
+			distribution_base_amount_minor: this.distributionBaseAmountMinor,
+			distribution_purchase_ref: this.distributionPurchaseRef,
+			tax_amount_minor: this.taxAmountMinor,
+			tax_country: this.taxCountry,
 			created_at: this.createdAt,
 			completed_at: this.completedAt,
 			version: this.version,

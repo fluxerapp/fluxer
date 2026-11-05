@@ -116,6 +116,8 @@ export function StripeController(app: HonoApp) {
 				payment_method,
 				is_business,
 				cnpj,
+				distribution,
+				distribution_token,
 			} = ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createCheckoutSession({
@@ -129,6 +131,8 @@ export function StripeController(app: HonoApp) {
 				paymentMethod: payment_method,
 				isBusiness: is_business,
 				cnpj,
+				distribution,
+				distributionToken: distribution_token,
 			});
 			return ctx.json({url: checkoutUrl});
 		},
@@ -150,8 +154,16 @@ export function StripeController(app: HonoApp) {
 		}),
 		Validator('json', CreateCheckoutSessionRequest),
 		async (ctx) => {
-			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business, cnpj} =
-				ctx.req.valid('json');
+			const {
+				price_id,
+				country_code,
+				client_geoip_country_code,
+				eu_withdrawal_waiver_accepted,
+				is_business,
+				cnpj,
+				distribution,
+				distribution_token,
+			} = ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createCheckoutSession({
 				userId,
@@ -163,6 +175,8 @@ export function StripeController(app: HonoApp) {
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
 				isBusiness: is_business,
 				cnpj,
+				distribution,
+				distributionToken: distribution_token,
 			});
 			return ctx.json({url: checkoutUrl});
 		},
@@ -263,9 +277,11 @@ export function StripeController(app: HonoApp) {
 			tags: 'Premium',
 		}),
 		async (ctx) => {
-			const {country_code} = ctx.req.valid('query');
+			const {country_code, distribution} = ctx.req.valid('query');
 			const geoipCountryCode = await getPurchaseGeoipCountryCode(ctx.req.raw);
-			const priceIds = await ctx.get('stripeService').checkout.getPriceIds(geoipCountryCode ?? country_code);
+			const priceIds = await ctx
+				.get('stripeService')
+				.checkout.getPriceIds(geoipCountryCode ?? country_code, distribution);
 			return ctx.json(priceIds);
 		},
 	);

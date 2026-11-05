@@ -61,6 +61,7 @@ import {
 	isStripeServiceable,
 	setStoredBillingConfig,
 } from '@app/api/stripe/BillingConfigCache';
+import {defaultDistributionPricingConfig, setDistributionPricingConfig} from '@app/api/stripe/DistributionPricing';
 import {AdminAuditLogs, InstanceConfiguration, Users} from '@app/api/Tables';
 import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '@app/api/utils/AttachmentDecay';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -154,6 +155,10 @@ import {
 	StoredBillingConfigSchema,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
 import {
+	type DistributionPricingConfig,
+	DistributionPricingConfigSchema,
+} from '@fluxer/schema/src/domains/admin/InstanceDistributionPricingSchemas';
+import {
 	type LegacyPushServiceDeliveryWire,
 	type PushRelayConfig,
 	PushRelayConfigSchema,
@@ -184,6 +189,7 @@ const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const VOICE_P2P_CONFIG_KEY = 'voice_p2p_config';
+const DISTRIBUTION_PRICING_CONFIG_KEY = 'distribution_pricing_config';
 const CAPTCHA_CONFIG_KEY = 'captcha_config';
 const AUTH_CONFIG_KEY = 'auth_config';
 const ACCOUNTS_CONFIG_KEY = 'accounts_config';
@@ -572,6 +578,7 @@ type StoredConfigSection =
 	| 'push relay'
 	| 'domain migration'
 	| 'voice p2p'
+	| 'distribution pricing'
 	| 'captcha'
 	| 'auth'
 	| 'accounts'
@@ -802,6 +809,15 @@ function parseStoredDomainMigrationConfig(raw: string | null): DomainMigrationCo
 
 function parseStoredVoiceP2pConfig(raw: string | null): VoiceP2pConfig {
 	return parseStoredConfigOrDefault(VoiceP2pConfigSchema, raw, 'voice p2p');
+}
+
+function parseStoredDistributionPricingConfig(raw: string | null): DistributionPricingConfig {
+	if (raw === null) return defaultDistributionPricingConfig();
+	return salvageStoredConfig(
+		DistributionPricingConfigSchema,
+		readStoredConfigValue(raw, 'distribution pricing'),
+		'distribution pricing',
+	);
 }
 
 function migrateStoredCaptchaConfig(value: unknown): unknown {
@@ -1841,6 +1857,9 @@ export class InstanceConfigRepository {
 		parseStoredPushRelayConfig(snapshot.get(PUSH_RELAY_CONFIG_KEY) ?? null);
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
 		parseStoredVoiceP2pConfig(snapshot.get(VOICE_P2P_CONFIG_KEY) ?? null);
+		setDistributionPricingConfig(
+			parseStoredDistributionPricingConfig(snapshot.get(DISTRIBUTION_PRICING_CONFIG_KEY) ?? null),
+		);
 		parseStoredCaptchaConfig(snapshot.get(CAPTCHA_CONFIG_KEY) ?? null);
 		parseStoredAuthConfig(snapshot.get(AUTH_CONFIG_KEY) ?? null);
 		setCachedAccountsConfig(
@@ -2220,6 +2239,26 @@ export class InstanceConfigRepository {
 		return this.updateStoredConfig(VOICE_P2P_CONFIG_KEY, (raw) =>
 			validateStoredConfig(VoiceP2pConfigSchema, update(parseStoredVoiceP2pConfig(raw)), 'voice p2p'),
 		);
+	}
+
+	async getDistributionPricingConfig(): Promise<DistributionPricingConfig> {
+		const config = parseStoredDistributionPricingConfig(await this.getConfig(DISTRIBUTION_PRICING_CONFIG_KEY));
+		setDistributionPricingConfig(config);
+		return config;
+	}
+
+	async updateDistributionPricingConfig(
+		update: (current: DistributionPricingConfig) => DistributionPricingConfig,
+	): Promise<DistributionPricingConfig> {
+		const next = await this.updateStoredConfig(DISTRIBUTION_PRICING_CONFIG_KEY, (raw) =>
+			validateStoredConfig(
+				DistributionPricingConfigSchema,
+				update(parseStoredDistributionPricingConfig(raw)),
+				'distribution pricing',
+			),
+		);
+		setDistributionPricingConfig(next);
+		return next;
 	}
 
 	private async getStoredCustomBadges(): Promise<StoredCustomBadges> {

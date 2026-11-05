@@ -15,6 +15,8 @@ import {
 	type OperatorPassFulfilmentService,
 } from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {flagPurchaseDuringDispute} from '@app/api/payment_disputes/PaymentDisputeReviews';
+import {distributionPaymentFields, distributionSaleFromMetadata} from '@app/api/stripe/DistributionPricing';
+import {distributionRefundMetadata} from '@app/api/stripe/DistributionStripeMetadata';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {
@@ -274,6 +276,8 @@ export class StripeCheckoutWebhookHandler {
 				payment.euWithdrawalWaiverTextVersion ??
 				session.metadata?.eu_withdrawal_waiver_text_version ??
 				EU_WITHDRAWAL_WAIVER_TEXT_VERSION,
+			tax_amount_minor: session.total_details?.amount_tax ?? null,
+			tax_country: session.customer_details?.address?.country ?? null,
 		});
 		Logger.debug(
 			{
@@ -587,6 +591,7 @@ export class StripeCheckoutWebhookHandler {
 				metadata: {
 					checkout_session_id: checkoutSessionId,
 					rejection_reason: 'duplicate_active_subscription',
+					...(await distributionRefundMetadata(this.stripe, {charge: chargeId})),
 				},
 			},
 			{idempotencyKey: `duplicate-sub-refund:${checkoutSessionId}`},
@@ -751,6 +756,7 @@ export class StripeCheckoutWebhookHandler {
 				eu_withdrawal_waiver_accepted_at: waiverAcceptedAt,
 				eu_withdrawal_waiver_text_version:
 					session.metadata?.eu_withdrawal_waiver_text_version ?? EU_WITHDRAWAL_WAIVER_TEXT_VERSION,
+				...distributionPaymentFields(distributionSaleFromMetadata(session.metadata)),
 			});
 			Logger.warn(
 				{sessionId: session.id, userId: userId.toString(), priceId, productType},

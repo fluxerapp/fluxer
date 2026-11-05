@@ -7,6 +7,7 @@ import {
 	type EffectiveBillingConfig,
 	getEffectiveBillingConfig,
 } from '@app/api/stripe/BillingConfigCache';
+import {findChannelPrice, type ProductDistribution} from '@app/api/stripe/DistributionPricing';
 import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
 
 export enum ProductType {
@@ -24,6 +25,7 @@ export interface ProductInfo {
 	isGift: boolean;
 	currency: Currency;
 	billingCycle?: RecurringBillingCycle;
+	distribution?: ProductDistribution;
 }
 
 const LEGACY_SLOT_SHAPES: Record<string, Omit<ProductInfo, 'currency'> | undefined> = {
@@ -148,7 +150,17 @@ export class ProductRegistry {
 	}
 
 	getProduct(priceId: string): ProductInfo | null {
-		return this.products.get(priceId) || null;
+		return this.products.get(priceId) ?? this.getChannelProduct(priceId);
+	}
+
+	private getChannelProduct(priceId: string): ProductInfo | null {
+		const distribution = findChannelPrice(priceId);
+		const base = distribution ? this.products.get(distribution.basePriceId) : undefined;
+		return distribution && base ? {...base, distribution} : null;
+	}
+
+	getBasePriceId(priceId: string): string {
+		return findChannelPrice(priceId)?.basePriceId ?? priceId;
 	}
 
 	isRecurringSubscription(info: ProductInfo): boolean {

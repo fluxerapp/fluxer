@@ -32,6 +32,7 @@ import {type IARSubmission, ReportStatus} from '@app/api/report/ReportModels';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {distributionRefundMetadata} from '@app/api/stripe/DistributionStripeMetadata';
 import {isEnforcementDeletionReason} from '@app/api/user/ProfileVisibility';
 import {
 	type PartialUserChangePropagationDeps,
@@ -429,6 +430,7 @@ export class AdminUserDeletionService {
 						admin_user_id: String(adminUserId),
 						target_user_id: String(userId),
 						reason: 'pending_deletion',
+						...(await distributionRefundMetadata(stripe, refundTarget)),
 					},
 				});
 				try {

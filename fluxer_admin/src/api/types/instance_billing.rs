@@ -235,3 +235,14 @@ fn favicon_url(favicon_url: Option<&str>, icon_url: Option<&str>) -> Option<Stri
         .or_else(|| non_blank(icon_url))
         .map(str::to_owned)
 }
+
+pub use crate::api::generated::types::{
+    DistributionPricingConfigResponse as DistributionPricingResponse,
+    DistributionPricingUpdateRequest,
+    DistributionPricingUpdateRequestRulesItem as DistributionRuleUpdate,
+    DistributionProductSchema as DistributionProduct,
+    DistributionRuleSchema as DistributionRuleResponse,
+};
+
+pub const DISTRIBUTION_RATE_BPS_MAX: u64 = 3000;
+pub const DISTRIBUTION_PRODUCTS_ALL: &str = "all";
