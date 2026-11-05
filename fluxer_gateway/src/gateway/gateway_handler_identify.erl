@@ -48,7 +48,7 @@ handle_identify_validated(Data, PeerIP, State) ->
     ),
     case ValidateResult of
         {ok, Token, Properties, Presence, IgnoredEvents, Flags, InitialGuildId, Shard} ->
-            do_identify(
+            identify_within_token_limit(
                 Token,
                 Properties,
                 Presence,
@@ -70,6 +70,48 @@ handle_identify_validated(Data, PeerIP, State) ->
             gateway_handler_encode:close_with_reason(
                 decode_error,
                 <<"Invalid identify payload">>,
+                State
+            )
+    end.
+
+-spec identify_within_token_limit(
+    binary(),
+    map(),
+    term(),
+    list(),
+    non_neg_integer(),
+    integer() | undefined,
+    gateway_sharding:shard() | undefined,
+    binary(),
+    gateway_timings:recorder(),
+    state()
+) -> ws_result().
+identify_within_token_limit(
+    Token,
+    Properties,
+    Presence,
+    IgnoredEvents,
+    Flags,
+    InitialGuildId,
+    Shard,
+    PeerIP,
+    GwTimings,
+    State
+) ->
+    case session_abuse_protection:check_token_identify_rate(Token) of
+        {error, identify_rate_limited} ->
+            hold_identify(<<"Identify rate limited">>, State);
+        ok ->
+            do_identify(
+                Token,
+                Properties,
+                Presence,
+                IgnoredEvents,
+                Flags,
+                InitialGuildId,
+                Shard,
+                PeerIP,
+                GwTimings,
                 State
             )
     end.
