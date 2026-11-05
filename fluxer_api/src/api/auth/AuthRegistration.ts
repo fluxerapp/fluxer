@@ -172,6 +172,9 @@ export async function instantAccountsAvailable(
 export function assertInstantAccountAvailable(availability: InstantAccountAvailability): void {
 	if (availability === InstantAccountAvailability.AVAILABLE) return;
 	if (availability === InstantAccountAvailability.REGISTRATION_CLOSED) throw new RegistrationClosedError();
+	if (availability === InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED) {
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED);
+	}
 	throw new InstantAccountsDisabledError();
 }
 

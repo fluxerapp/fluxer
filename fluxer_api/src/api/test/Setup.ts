@@ -183,6 +183,7 @@ const testApiConfig: APIConfig = {
 	storeBilling: {
 		sandboxUserIds: [],
 		sandboxEntitlesAll: false,
+		sandboxSubscriptions: false,
 	},
 };
 testApiConfig.dev.relaxRegistrationRateLimits = true;

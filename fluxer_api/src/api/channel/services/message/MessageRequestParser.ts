@@ -397,6 +397,6 @@ export async function parseMessageRequestBody<T extends z.ZodType<MessageRequest
 	if (isMultipartFormData(ctx.req.header('content-type')))
 		return (await parseMultipartMessageData(ctx, user, channelId, schema)) as z.output<T>;
 	const result = schema.safeParse(normalizeMessageRequestPayload(await readMessageJsonBody(ctx)));
-	if (!result.success) throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	if (!result.success) throw inputValidationErrorFromZodIssues(result.error.issues);
 	return result.data;
 }

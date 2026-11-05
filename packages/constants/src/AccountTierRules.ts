@@ -316,6 +316,7 @@ export function resolveInstantAccountAvailability(params: {
 	captchaProvider: CaptchaProvider;
 	registrationMode: RegistrationMode;
 	registrationUrl: {approvalRequired: boolean} | null;
+	emailDomainsRestricted: boolean;
 }): InstantAccountAvailability {
 	if (!params.enabled) return InstantAccountAvailability.DISABLED;
 	if (params.captchaProvider === CaptchaProviders.NONE) return InstantAccountAvailability.CAPTCHA_OFF;
@@ -326,7 +327,9 @@ export function resolveInstantAccountAvailability(params: {
 	}
 	switch (params.registrationMode) {
 		case RegistrationModes.OPEN:
-			return InstantAccountAvailability.AVAILABLE;
+			return params.emailDomainsRestricted
+				? InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED
+				: InstantAccountAvailability.AVAILABLE;
 		case RegistrationModes.APPROVAL:
 			return InstantAccountAvailability.APPROVAL_REQUIRED;
 		case RegistrationModes.CLOSED:

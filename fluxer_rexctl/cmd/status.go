@@ -13,7 +13,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
@@ -38,8 +37,6 @@ type statusJSON struct {
 	Healthy  bool            `json:"healthy"`
 	Services []statusService `json:"services"`
 }
-
-const statusLowDisk = 10 << 30
 
 func newStatusCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
@@ -175,8 +172,12 @@ func runStatus(ctx context.Context, app *App) error {
 			app.UI.Warn("Setup isn't finished yet.", fix)
 		}
 	}
-	if free, err := host.FreeDisk(inst.Dir); err == nil && free < statusLowDisk {
-		app.UI.Warn(fmt.Sprintf("This machine has only %s of free disk space left.", diskGB(free)), "Free up space on this machine before you upgrade.")
+	if e != nil {
+		if c, ok := checks.Get("disk"); ok {
+			if r := checks.RunIn(ctx, checkEnv(ctx, inst, e, p), checks.Installed, c); r.Status == checks.Warn || r.Status == checks.Fail {
+				app.UI.Warn(r.Message, r.Fix)
+			}
+		}
 	}
 	warnUnusedRootFiles(ctx, app, inst)
 	if len(instance.UnseenEdits(inst)) > 0 {
@@ -207,10 +208,6 @@ func withMissing(expected []string, containers []engine.Container) []engine.Cont
 		}
 	}
 	return containers
-}
-
-func diskGB(b uint64) string {
-	return fmt.Sprintf("%d GB", (b+(1<<29))>>30)
 }
 
 func warnUnusedRootFiles(ctx context.Context, app *App, inst *instance.Instance) {

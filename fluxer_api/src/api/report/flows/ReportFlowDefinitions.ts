@@ -4,11 +4,11 @@ import type {ReportFlowSurface, ReportFlowTargetType} from '@fluxer/schema/src/d
 
 export interface ReportFlowDef {
 	target: ReportFlowTargetType;
-	start: Partial<Record<ReportFlowSurface, string>>;
+	start: Record<ReportFlowSurface, string>;
 }
 
 export const REPORT_FLOWS: Record<ReportFlowTargetType, ReportFlowDef> = {
 	message: {target: 'message', start: {in_app: 'root_message', dsa: 'root_message'}},
-	user: {target: 'user', start: {in_app: 'profile_intro', dsa: 'profile_parts'}},
-	guild: {target: 'guild', start: {dsa: 'community_parts'}},
+	user: {target: 'user', start: {in_app: 'user_start', dsa: 'profile_parts'}},
+	guild: {target: 'guild', start: {in_app: 'community_parts', dsa: 'community_parts'}},
 };

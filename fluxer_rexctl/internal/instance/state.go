@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -54,6 +55,7 @@ type State struct {
 	UpdatedAt       time.Time         `json:"updated_at"`
 
 	Unknown    []string `json:"-"`
+	Repaired   []string `json:"-"`
 	rootLayout bool
 }
 
@@ -183,6 +185,7 @@ type SettingError struct {
 	Path    string
 	Key     string
 	Problem string
+	Remedy  string
 }
 
 func (e *SettingError) Error() string {
@@ -190,6 +193,9 @@ func (e *SettingError) Error() string {
 }
 
 func (e *SettingError) Fix() string {
+	if e.Remedy != "" {
+		return e.Remedy
+	}
 	return "Run rexctl config set " + e.Key + " <value>, or rexctl config unset " + e.Key + " to go back to the default."
 }
 
@@ -252,7 +258,7 @@ func parseState(data []byte, dir string, repairing []string) (*State, error) {
 			unknown = append(unknown, k)
 		}
 	}
-	values, more, err := checkSettings(raw["settings"], dir, repairing)
+	values, more, repaired, err := checkSettings(raw["settings"], dir, repairing)
 	if err != nil {
 		return nil, err
 	}
@@ -267,19 +273,20 @@ func parseState(data []byte, dir string, repairing []string) (*State, error) {
 		return nil, fmt.Errorf("instance: reading state in %s: %w", dir, err)
 	}
 	s.Settings = values
+	s.Repaired = repaired
 	slices.Sort(unknown)
 	s.Unknown = unknown
 	return &s, nil
 }
 
-func checkSettings(data json.RawMessage, dir string, repairing []string) (map[string]string, []string, error) {
+func checkSettings(data json.RawMessage, dir string, repairing []string) (map[string]string, []string, []string, error) {
 	out := map[string]string{}
 	if len(data) == 0 || string(data) == "null" {
-		return out, nil, nil
+		return out, nil, nil, nil
 	}
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, nil, fmt.Errorf("instance: reading settings in %s: %w", dir, err)
+		return nil, nil, nil, fmt.Errorf("instance: reading settings in %s: %w", dir, err)
 	}
 	keys := map[string]settings.Key{}
 	for _, k := range settings.Named() {
@@ -288,29 +295,35 @@ func checkSettings(data json.RawMessage, dir string, repairing []string) (map[st
 	path := filepath.Join(dir, StateDirName, StateFileName)
 	var unknown []string
 	for name, value := range raw {
-		k, isNamed := keys[name]
+		_, isNamed := keys[name]
 		var v string
 		if err := json.Unmarshal(value, &v); err != nil {
 			if isNamed {
-				return nil, nil, &SettingError{Path: path, Key: name, Problem: "the value is not text"}
+				return nil, nil, nil, &SettingError{Path: path, Key: name, Problem: "the value is not text"}
 			}
 			unknown = append(unknown, name)
 			continue
 		}
-		switch {
-		case isNamed && slices.Contains(repairing, name):
-		case isNamed:
-			if k.Validate != nil {
-				if err := k.Validate(v); err != nil {
-					return nil, nil, &SettingError{Path: path, Key: name, Problem: err.Error()}
-				}
-			}
-		case !isRaw(name):
+		if !isNamed && !isRaw(name) {
 			unknown = append(unknown, name)
 		}
 		out[name] = v
 	}
-	return out, unknown, nil
+	repaired, err := settings.SplitListenAddress(out, repairing)
+	var conflict *settings.ListenConflict
+	if errors.As(err, &conflict) {
+		return nil, nil, nil, &SettingError{Path: path, Key: settings.EdgeListen, Problem: conflict.Error(), Remedy: conflict.Fix()}
+	}
+	for _, name := range slices.Sorted(maps.Keys(out)) {
+		k, isNamed := keys[name]
+		if !isNamed || k.Validate == nil || slices.Contains(repairing, name) {
+			continue
+		}
+		if err := k.Validate(out[name]); err != nil {
+			return nil, nil, nil, &SettingError{Path: path, Key: name, Problem: err.Error()}
+		}
+	}
+	return out, unknown, repaired, nil
 }
 
 func isRaw(name string) bool {

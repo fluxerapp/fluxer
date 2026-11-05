@@ -6,6 +6,13 @@
 		"signoff": "צוות {product_name}",
 		"subject": "חשבון ה-{product_name} שלכם לא יימחק"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "קיבלתם את האימייל הזה כי ביקשתם למחוק את חשבון ה-{product_name} שלכם.",
+		"intro": "מחקנו את חשבון ה-{product_name} שלכם, כפי שביקשתם.",
+		"note": "ההודעות שלכם נמחקו או שכבר אינן מקושרות אליכם, בהתאם לבחירה שלכם. אם תרצו להשתמש שוב ב-{product_name}, תוכלו ליצור חשבון חדש.",
+		"signoff": "צוות {product_name}",
+		"subject": "חשבון ה-{product_name} שלכם נמחק"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "קיבלתם את האימייל הזה כי חשבון ה-{product_name} שלכם לא היה פעיל זמן רב.",
 		"intro": "חשבון ה-{product_name} שלכם לא פעיל כבר זמן רב, ולכן נמחק אותו ב-{deletion_date}.",

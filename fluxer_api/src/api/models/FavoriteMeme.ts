@@ -27,6 +27,7 @@ export class FavoriteMeme {
 	readonly gifProvider: string | null;
 	readonly mediaFormats: Record<string, GifMediaFormat> | null;
 	readonly placeholder: string | null;
+	readonly nsfw: boolean | null;
 	readonly createdAt: Date;
 	readonly version: number;
 
@@ -57,6 +58,7 @@ export class FavoriteMeme {
 		}
 		this.mediaFormats = parseMediaFormats(row.media_formats);
 		this.placeholder = row.placeholder ?? null;
+		this.nsfw = row.nsfw ?? null;
 		this.createdAt = snowflakeToDate(this.id);
 		this.version = row.version;
 	}
@@ -81,6 +83,7 @@ export class FavoriteMeme {
 			tenor_id_str: this.gifProvider === 'tenor' ? this.gifSlug : null,
 			media_formats: this.mediaFormats ? JSON.stringify(this.mediaFormats) : null,
 			placeholder: this.placeholder,
+			nsfw: this.nsfw,
 			version: this.version,
 		};
 	}

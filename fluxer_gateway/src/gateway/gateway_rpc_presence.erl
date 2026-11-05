@@ -26,12 +26,21 @@ execute_method(Method, _P) -> gateway_rpc_error:raise(<<"Unknown method: ", Meth
 handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> := Data}) ->
     UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
     EventAtom = dispatch_event_atom_or_error(Event),
+    ok = maybe_invalidate_push_blocked_ids(EventAtom, UserId),
     case dispatch_to_owner(UserId, EventAtom, Data) of
         ok -> true;
         {error, not_found} -> handle_offline_dispatch(EventAtom, UserId, Data);
         {error, unavailable} -> handle_unreachable_dispatch(EventAtom, UserId, Data);
         _ -> gateway_rpc_error:raise(<<"presence_dispatch_error">>)
     end.
+
+-spec maybe_invalidate_push_blocked_ids(atom(), integer()) -> ok.
+maybe_invalidate_push_blocked_ids(relationship_add, UserId) ->
+    push:invalidate_blocked_ids(UserId);
+maybe_invalidate_push_blocked_ids(relationship_remove, UserId) ->
+    push:invalidate_blocked_ids(UserId);
+maybe_invalidate_push_blocked_ids(_EventAtom, _UserId) ->
+    ok.
 
 -spec handle_unreachable_dispatch(atom(), integer(), map()) -> no_return().
 handle_unreachable_dispatch(message_create, UserId, Data) ->
@@ -327,12 +336,6 @@ handle_offline_dispatch(message_create, UserId, Data) when is_map(Data) ->
             })
     end,
     true;
-handle_offline_dispatch(relationship_add, UserId, _Data) ->
-    sync_blocked_ids_for_user(UserId),
-    true;
-handle_offline_dispatch(relationship_remove, UserId, _Data) ->
-    sync_blocked_ids_for_user(UserId),
-    true;
 handle_offline_dispatch(_Event, _UserId, _Data) ->
     true.
 
@@ -351,7 +354,3 @@ validate_offline_message_author_id(AuthorId) ->
         {ok, ParsedAuthorId} -> {ok, ParsedAuthorId};
         _ -> invalid
     end.
-
--spec sync_blocked_ids_for_user(integer()) -> ok.
-sync_blocked_ids_for_user(_UserId) ->
-    ok.

@@ -6,6 +6,13 @@
 		"signoff": "{product_name} 团队",
 		"subject": "你的 {product_name} 账号不会被删除"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "你收到此邮件是因为你曾申请删除你的 {product_name} 账号。",
+		"intro": "我们已按你的要求删除了你的 {product_name} 账号。",
+		"note": "根据你的选择，你的消息已被删除，或已不再与你关联。如果你想再次使用 {product_name}，可以创建一个新账号。",
+		"signoff": "{product_name} 团队",
+		"subject": "你的 {product_name} 账号已删除"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "你收到此邮件是因为你的 {product_name} 账号已长时间未使用。",
 		"intro": "你的 {product_name} 账号已长时间未使用，我们将在 {deletion_date} 删除它。",

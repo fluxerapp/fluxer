@@ -6,6 +6,13 @@
 		"signoff": "Команда {product_name}",
 		"subject": "Ваш аккаунт {product_name} не будет удалён"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Вы получили это письмо, потому что запросили удаление своего аккаунта {product_name}.",
+		"intro": "Мы удалили ваш аккаунт {product_name} по вашему запросу.",
+		"note": "В зависимости от вашего выбора ваши сообщения удалены или больше не связаны с вами. Если вы захотите снова пользоваться {product_name}, вы можете создать новый аккаунт.",
+		"signoff": "Команда {product_name}",
+		"subject": "Ваш аккаунт {product_name} удалён"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Вы получили это письмо, потому что ваш аккаунт {product_name} долгое время был неактивен.",
 		"intro": "Вы давно не пользовались аккаунтом {product_name}, поэтому мы удалим его {deletion_date}.",

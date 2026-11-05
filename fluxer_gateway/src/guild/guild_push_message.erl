@@ -31,9 +31,10 @@ send(
             ok;
         AuthorId ->
             ChannelIdBin = maps:get(<<"channel_id">>, MessageData),
-            {PushMessageData, ChannelName} = push_message_data(
+            {PushMessageData0, ChannelName} = push_message_data(
                 MessageData, ChannelIdBin, EligibleUserIds ++ element(1, Held), Data
             ),
+            PushMessageData = mark_mature(PushMessageData0, ChannelIdBin, Data),
             RoleNames = build_role_names_map(Data),
             Params = push_params(Request#{
                 message_data := PushMessageData,
@@ -43,6 +44,25 @@ send(
             }),
             ok = guild_push_engagement:send(EligibleUserIds, Params),
             guild_push_engagement:hold(Held, Params)
+    end.
+
+-spec mark_mature(event_data(), term(), map()) -> event_data().
+mark_mature(PushMessageData, ChannelIdBin, Data) ->
+    case guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin) of
+        undefined ->
+            PushMessageData;
+        ChannelId ->
+            ThreadParentId = maps:get(
+                <<"parent_id">>, maps:get(<<"__thread_push">>, PushMessageData, #{}), undefined
+            ),
+            case
+                guild_visitor_permissions:channel_effective_nsfw(
+                    Data, ChannelId, ThreadParentId
+                )
+            of
+                true -> PushMessageData#{<<"__push_mature">> => true};
+                false -> PushMessageData
+            end
     end.
 
 -spec push_message_data(event_data(), term(), [user_id()], map()) -> {event_data(), binary()}.

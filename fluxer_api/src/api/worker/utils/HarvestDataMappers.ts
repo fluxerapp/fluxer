@@ -73,6 +73,7 @@ interface ArchivedUserSettings {
 	inline_embed_media: boolean;
 	explicit_content_filter: number;
 	friend_source_flags: number;
+	allow_mature_content_on_ios: boolean;
 	default_guilds_restricted: boolean;
 	bot_default_guilds_restricted: boolean;
 	restricted_guilds: Array<string>;
@@ -370,6 +371,7 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			inline_embed_media: userSettings.inlineEmbedMedia,
 			explicit_content_filter: userSettings.explicitContentFilter,
 			friend_source_flags: userSettings.friendSourceFlags,
+			allow_mature_content_on_ios: userSettings.allowMatureContentOnIos,
 			default_guilds_restricted: userSettings.defaultGuildsRestricted,
 			bot_default_guilds_restricted: userSettings.botDefaultGuildsRestricted,
 			restricted_guilds: Array.from(userSettings.restrictedGuilds).map((id) => id.toString()),

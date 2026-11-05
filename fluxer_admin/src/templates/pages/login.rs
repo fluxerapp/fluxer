@@ -45,7 +45,9 @@ pub fn login_page(
                                 }
                                 @if let Some(sso) = &config.sso {
                                     div class="flex flex-col gap-3 items-center w-full" {
-                                        (fluxer_sign_in_button(base, branding))
+                                        @if !sso.only {
+                                            (fluxer_sign_in_button(base, branding))
+                                        }
                                         a href={(base) "/sso/start"} role="button"
                                             class="inline-flex items-center justify-center gap-2 \
                                                    font-medium rounded-lg transition-all duration-150 \

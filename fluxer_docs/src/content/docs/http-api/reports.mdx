@@ -6,7 +6,7 @@ description: Report flows, report submission, the reason catalog and Digital Ser
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A report tells the instance's moderators that a message, a user profile or a guild breaks the rules. A signed-in user reports a message or a profile by answering a [report flow](#report-flows), and anyone with a verified email address can file a Digital Services Act notice without an account. Moderators work with stored reports through the [Admin Reports API](/admin-api/reports/).
+A report tells the instance's moderators that a message, a user profile or a guild breaks the rules. A signed-in user reports a message, a profile or a guild by answering a [report flow](#report-flows), and anyone with a verified email address can file a Digital Services Act notice without an account. Moderators work with stored reports through the [Admin Reports API](/admin-api/reports/).
 
 A Digital Services Act notice takes three calls, [Send DSA report email](#send-dsa-report-email), [Verify DSA report email](#verify-dsa-report-email) and [Create DSA report](#create-dsa-report), and the reporter gets a receipt email with the report ID when the notice is filed.
 
@@ -205,7 +205,7 @@ A step is one answered screen in a submission. A choice screen's step sends `opt
 | --- | --- |
 | message | A message |
 | user | A user profile |
-| guild | A guild, on the `dsa` surface only |
+| guild | A guild |
 
 ## Report flow surfaces
 
@@ -284,6 +284,7 @@ A report filed through a flow stores one of these reasons. Each reason maps to a
 | ban_evasion | Getting around a ban |
 | permits_violations | Community allows serious rule-breaking |
 | copyright | Copyright or trademark complaint |
+| rude_language | Swearing or rude remarks |
 | other | Something not listed |
 
 ## Report categories
@@ -361,7 +362,7 @@ Returns the [report flow object](#report-flow-object) for one [target type](#rep
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [report flow](#report-flow-object) object | The flow was returned |
-| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` for an unknown target type or surface, or `guild` outside the `dsa` surface |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` for an unknown target type or surface |
 
 The rate limit is 40 requests per 10 seconds, on the `report:list` bucket.
 
@@ -397,7 +398,7 @@ Files a report about a message from the reporter's answers to the `in_app` messa
 | 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this message in the last 365 days |
 
-The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and [Rate limits](/topics/rate-limits/#limits-that-return-429) lists the lower limits for one channel, guild or message. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address.
+The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and [Rate limits](/topics/rate-limits/#limits-that-return-429) lists the lower limits for one channel, guild or message. A report whose reason is one of the highest-priority reasons doesn't count toward the reporter's hourly, channel or guild limits. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
 
 ## Submit user report flow
 
@@ -430,7 +431,40 @@ Files a report about a user's profile from the reporter's answers to the `in_app
 | 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this user in the last 24 hours |
 
-The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address.
+The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count toward that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
+
+## Submit community report flow
+
+<RouteHeader method="POST" path="/v1/reports/flows/guild/submissions" />
+
+Files a report about a guild from the reporter's answers to the `in_app` guild flow and returns a [report object](#report-object). It needs a user session token, and the reporter must be a member of the guild, the guild must be discoverable, or the request must include an invite code for the guild.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the reported guild |
+| invite_code? | string | An invite code for the guild that the reporter used to see it (1-64 characters) |
+| revision_hash | string | The [revision hash](#revision-hash) of the flow the reporter answered (1-64 characters) |
+| steps | array[[report flow step](#report-flow-step-object) object] | The answered screens in walk order (1-16 steps) |
+| locale? | string | The language tag the reporter saw the flow in (1-35 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report](#report-object) object | The report was filed |
+| 400 | [error response](/http-api/#error-response) | `INVALID_REPORT_FLOW_ANSWERS` when the answers don't fit the current flow |
+| 400 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS` for an unclaimed account while `interaction_tier` is `legacy` |
+| 400 | [error response](/http-api/#error-response) | `CANNOT_REPORT_OWN_GUILD` when the reporter owns the guild |
+| 403 | [error response](/http-api/#error-response) | `REPORT_EMAIL_VERIFICATION_REQUIRED` for an unverified email while `interaction_tier` is `legacy` |
+| 403 | [error response](/http-api/#error-response) | `REPORT_BANNED` when the account is banned from reporting |
+| 403 | [error response](/http-api/#error-response) | `CANNOT_REPORT_GUILD` when the reporter isn't a member, the guild isn't discoverable and no invite code for it was sent |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_GUILD` when `guild_id` isn't a guild |
+| 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
+| 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this guild in the last 24 hours |
+
+The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count toward that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
 
 ## Send DSA report email
 
@@ -482,7 +516,7 @@ The rate limit is 10 requests per hour, on the `dsa:report:email:verify` bucket.
 
 <RouteHeader method="POST" path="/v1/reports/dsa" unauthenticated />
 
-Files a Digital Services Act notice about a message, user or guild and returns a [report object](#report-object). This is the only way to report a guild. Walk the flow with `surface=dsa` and send the fields for your `report_type`. The ticket is used up only when the notice is filed.
+Files a Digital Services Act notice about a message, user or guild and returns a [report object](#report-object). Walk the flow with `surface=dsa` and send the fields for your `report_type`. The ticket is used up only when the notice is filed.
 
 ### JSON body
 

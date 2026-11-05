@@ -81,6 +81,34 @@ export const InstanceBrandingSchema = z
 			.string()
 			.nullable()
 			.describe('Optional image URL drawn behind the sign-in card on a self-hosted instance'),
+		premium_page_color: z
+			.string()
+			.nullable()
+			.describe('Optional hex color a self-hosted instance uses to recolor its premium page'),
+		premium_showcase_expressions_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Your emojis, everywhere" card on its premium page',
+			),
+		premium_showcase_profile_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "A profile that stands out" card on its premium page',
+			),
+		premium_showcase_stream_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Stream in 4K at 60 FPS" card on its premium page',
+			),
+		premium_showcase_upload_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the card about file size limits on its premium page',
+			),
 		custom_css: z
 			.string()
 			.nullable()

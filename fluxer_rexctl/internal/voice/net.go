@@ -459,7 +459,7 @@ func dialHost(bind string) string {
 	return a.String()
 }
 
-func InstanceEdge(endpoint, mode, httpsPort, bind string) (string, string) {
+func InstanceEdge(endpoint, mode, httpsPort, bind, listen string) (string, string) {
 	base := HTTPBase(endpoint)
 	switch mode {
 	case settings.EdgeProxy, settings.EdgeTunnel:
@@ -480,7 +480,7 @@ func InstanceEdge(endpoint, mode, httpsPort, bind string) (string, string) {
 	if v := usable(httpsPort); v != "" {
 		port = v
 	}
-	return base, "127.0.0.1:" + port
+	return base, settings.EdgeDialAddr(usable(listen), port)
 }
 
 func usable(v string) string {

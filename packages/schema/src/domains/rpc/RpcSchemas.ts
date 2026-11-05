@@ -126,6 +126,12 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch blocked lists for'),
 	}),
 	z.object({
+		type: z
+			.literal('get_users_adult_content_allowed')
+			.describe('Request type for checking which users may see 18+ content'),
+		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to check'),
+	}),
+	z.object({
 		type: z.literal('voice_get_token').describe('Request type for getting voice connection token'),
 		guild_id: SnowflakeType.optional().describe('ID of the guild for the voice channel'),
 		channel_id: SnowflakeType.describe('ID of the voice channel'),
@@ -454,6 +460,12 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Response type for blocked user IDs'),
 		data: z.record(SnowflakeStringType, z.array(SnowflakeStringType)).describe('Blocked user IDs keyed by user ID'),
+	}),
+	z.object({
+		type: z.literal('get_users_adult_content_allowed').describe('Response type for the 18+ content check'),
+		data: z
+			.object({user_ids: z.array(SnowflakeStringType).describe('IDs of the requested users who may see 18+ content')})
+			.describe('Users who may see 18+ content'),
 	}),
 	z.object({
 		type: z.literal('voice_get_token').describe('Response type for voice connection token'),

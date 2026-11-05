@@ -44,8 +44,10 @@ import {
 } from '@app/api/user/UserHelpers';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
@@ -73,6 +75,7 @@ interface UserDeletionDependencies {
 	storeEntitlementService: StoreEntitlementService;
 	adminRepository: AdminRepository;
 	cacheService: ICacheService;
+	emailService: IEmailService;
 }
 
 async function releaseSsoIdentitiesOf(user: User, deletionReasonCode: number): Promise<void> {
@@ -215,6 +218,10 @@ export async function processUserDeletion(
 		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
 		return;
 	}
+	const completionNotice =
+		deletionReasonCode === DeletionReasons.USER_REQUESTED && user.email
+			? {email: user.email, locale: user.locale}
+			: null;
 	await removeNetworkBlocksOf(userId, deps);
 	await releaseSsoIdentitiesOf(user, deletionReasonCode);
 	await withdrawPendingRegistrationOf(user);
@@ -496,6 +503,13 @@ export async function processUserDeletion(
 
 	await userCacheService.setUserPartialResponseFromUser(anonymisedUser);
 	await userRepository.completeDeletion(anonymisedUser);
+	if (completionNotice) {
+		await deps.emailService
+			.send('account_deletion_completed', completionNotice.email, {}, completionNotice.locale)
+			.catch((error: unknown) => {
+				Logger.error({userId, error}, 'Failed to send the account deletion confirmation email');
+			});
+	}
 	await emitActivity('account_deleted', userId.toString(), {user_id: userId.toString()}, null, userId.toString());
 	Logger.debug({userId, deletionReasonCode}, 'User account anonymization completed successfully');
 }

@@ -81,6 +81,7 @@ export function offersInstantAccount(
 	return (
 		registrationUrlCode !== null &&
 		(availability === InstantAccountAvailability.REGISTRATION_CLOSED ||
-			availability === InstantAccountAvailability.APPROVAL_REQUIRED)
+			availability === InstantAccountAvailability.APPROVAL_REQUIRED ||
+			availability === InstantAccountAvailability.EMAIL_DOMAINS_RESTRICTED)
 	);
 }

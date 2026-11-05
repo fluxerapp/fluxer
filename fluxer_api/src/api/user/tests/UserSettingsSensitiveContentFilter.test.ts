@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -29,6 +30,7 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
 			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+			expect(json.default_guilds_restricted).toBe(false);
 		});
 		test('teen account has correct defaults', async () => {
 			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
@@ -36,6 +38,43 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
 			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
 			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+			expect(json.default_guilds_restricted).toBe(true);
+		});
+	});
+	describe('allow_mature_content_on_ios', () => {
+		test('adult can turn on allow_mature_content_on_ios and it defaults to false', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			const {json} = await fetchUserSettings(harness, account.token);
+			expect(json.allow_mature_content_on_ios).toBe(false);
+			const {json: updated} = await updateUserSettings(harness, account.token, {allow_mature_content_on_ios: true});
+			expect(updated.allow_mature_content_on_ios).toBe(true);
+		});
+		test('teen gets AGE_RESTRICTED for allow_mature_content_on_ios true', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{path: string; code: string}>;
+			}>(harness, account.token)
+				.patch('/users/@me/settings')
+				.body({allow_mature_content_on_ios: true})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+			expect(response.errors[0]?.path).toBe('allow_mature_content_on_ios');
+			expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
+		});
+		test('setting a teen date of birth turns allow_mature_content_on_ios off', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			await updateUserSettings(harness, account.token, {allow_mature_content_on_ios: true});
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+			await getUserRepository().patchUpsert(user.id, {date_of_birth: null}, user.toRow());
+			const teenBirthday = new Date();
+			teenBirthday.setUTCFullYear(teenBirthday.getUTCFullYear() - 15);
+			await createBuilder(harness, account.token)
+				.put('/users/@me/date-of-birth')
+				.body({date_of_birth: teenBirthday.toISOString().slice(0, 10)})
+				.execute();
+			const {json} = await fetchUserSettings(harness, account.token);
+			expect(json.allow_mature_content_on_ios).toBe(false);
 		});
 	});
 	describe('validation', () => {

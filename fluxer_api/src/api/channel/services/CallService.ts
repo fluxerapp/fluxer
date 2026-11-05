@@ -91,6 +91,14 @@ export class CallService {
 		ringable: boolean;
 		silent: boolean;
 	}> {
+		const blockedByRecipient = await this.userRepository.getRelationship(
+			recipientId,
+			callerId,
+			RelationshipTypes.BLOCKED,
+		);
+		if (blockedByRecipient) {
+			return {ringable: false, silent: false};
+		}
 		const recipientSettings = await this.userRepository.findSettings(recipientId);
 		if (!recipientSettings) {
 			return {ringable: true, silent: false};

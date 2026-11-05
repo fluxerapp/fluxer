@@ -4,11 +4,13 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {
 	CANCEL_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
 	PAUSE_DESCRIPTOR,
 	SOMETHING_WENT_WRONG_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -272,7 +274,9 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 		const mimeType = pickRecorderMime();
 		if (!mimeType || typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
 			setStage('permission_error');
-			setErrorMessage(i18n._(RECORDING_NOT_SUPPORTED_DESCRIPTOR));
+			setErrorMessage(
+				i18n._(isInsecureBrowserContext() ? MEDIA_NEEDS_HTTPS_DESCRIPTOR : RECORDING_NOT_SUPPORTED_DESCRIPTOR),
+			);
 			return;
 		}
 		try {

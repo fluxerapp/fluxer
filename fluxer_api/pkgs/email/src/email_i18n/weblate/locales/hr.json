@@ -6,6 +6,13 @@
 		"signoff": "Tim {product_name}a",
 		"subject": "Tvoj {product_name} račun neće biti izbrisan"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Ovu si e-poruku primio jer si zatražio brisanje svog {product_name} računa.",
+		"intro": "Izbrisali smo tvoj {product_name} račun, kako si zatražio.",
+		"note": "Tvoje poruke su izbrisane ili više nisu povezane s tobom, ovisno o tome što si odabrao. Ako želiš ponovno koristiti {product_name}, možeš izraditi novi račun.",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoj {product_name} račun je izbrisan"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Ovu si e-poruku primio jer je tvoj račun na {product_name}u dugo bio neaktivan.",
 		"intro": "Tvoj {product_name} račun dugo je neaktivan, pa ćemo ga izbrisati {deletion_date}.",

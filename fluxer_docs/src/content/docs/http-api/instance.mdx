@@ -176,6 +176,7 @@ When `emails_enabled` is false, email verification, password recovery and IP aut
 | captcha_off | Instant accounts are on, but the CAPTCHA they need is off |
 | registration_closed | Public registration is closed |
 | approval_required | New accounts wait for admin approval |
+| email_domains_restricted | Public sign-ups must use an email address on an allowed domain |
 
 ### Email delivery states
 
@@ -421,6 +422,11 @@ What a client needs before anyone signs in.
 | premium_product_name | string | The name of the premium tier, `Premium` unless an admin sets one |
 | premium_info_url | ?string | URL of a page about the premium tier, or null |
 | sign_in_backdrop_url | ?string | Image shown behind the sign-in screens, or null for the default |
+| premium_page_color | ?string | Premium page color of a self-hosted instance as lowercase `#rrggbb`, or null |
+| premium_showcase_expressions_url | ?string | Image next to the emoji card on the premium page of a self-hosted instance, or null |
+| premium_showcase_profile_url | ?string | Image next to the profile card on the premium page of a self-hosted instance, or null |
+| premium_showcase_stream_url | ?string | Image next to the stream card on the premium page of a self-hosted instance, or null |
+| premium_showcase_upload_url | ?string | Image next to the upload card on the premium page of a self-hosted instance, or null |
 | custom_css | ?string | CSS the web and desktop app apply before the person's own theme, except on sign-in pages, or null |
 | upload_limit_message | ?string | Markdown shown when a file is over the upload limit, or null for the default text |
 | trusted_domains | string[] | Extra domains whose links open without a warning. Entries are hostnames, and a `*.` prefix also covers subdomains |

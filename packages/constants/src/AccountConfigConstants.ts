@@ -108,6 +108,7 @@ export const InstantAccountAvailability = {
 	CAPTCHA_OFF: 'captcha_off',
 	REGISTRATION_CLOSED: 'registration_closed',
 	APPROVAL_REQUIRED: 'approval_required',
+	EMAIL_DOMAINS_RESTRICTED: 'email_domains_restricted',
 } as const;
 
 export type InstantAccountAvailability = ValueOf<typeof InstantAccountAvailability>;

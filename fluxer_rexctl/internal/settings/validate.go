@@ -3,6 +3,7 @@
 package settings
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net"
@@ -34,6 +35,20 @@ func validText(v string) error {
 
 func trustedProxyList(v string) []string {
 	return strings.FieldsFunc(v, func(r rune) bool { return r == ',' || r == ' ' || r == '\t' })
+}
+
+func validSignatureSecrets(v string) error {
+	for _, entry := range strings.Split(v, ",") {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		key, err := base64.StdEncoding.DecodeString(entry)
+		if err != nil || base64.StdEncoding.EncodeToString(key) != entry || len(key) < 32 {
+			return errors.New("Give each key as standard base64 that decodes to at least 32 bytes, and separate the keys with commas.")
+		}
+	}
+	return nil
 }
 
 func validTrustedProxies(v string) error {

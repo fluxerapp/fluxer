@@ -25,7 +25,7 @@ type clientIPUser struct {
 }
 
 func runClientIP(ctx context.Context, e *Env) Result {
-	if e.Admin == nil || !e.running(ctx, "api") {
+	if e.Admin == nil || overlayDomain(e.Domain) || !e.running(ctx, "api") {
 		return skip("")
 	}
 	var resp struct {

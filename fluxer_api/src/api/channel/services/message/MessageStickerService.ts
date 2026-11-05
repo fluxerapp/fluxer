@@ -5,7 +5,7 @@ import type {MessageStickerItem} from '@app/api/database/types/MessageTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {checkUserGlobalExpressions} from '@app/api/utils/EmojiUtils';
+import {checkUserGlobalExpressions, isExpressionSourceAgeRestricted} from '@app/api/utils/EmojiUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -38,6 +38,9 @@ export class MessageStickerService {
 					if (!stickerFromAnyGuild) {
 						throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
 					}
+					if (await isExpressionSourceAgeRestricted(this.guildRepository, stickerFromAnyGuild.guildId)) {
+						throw new MissingPermissionsError();
+					}
 					return {
 						sticker_id: stickerFromAnyGuild.id,
 						name: stickerFromAnyGuild.name,
@@ -55,6 +58,9 @@ export class MessageStickerService {
 				const stickerFromOtherGuild = await this.guildRepository.getStickerById(stickerId);
 				if (!stickerFromOtherGuild) {
 					throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
+				}
+				if (await isExpressionSourceAgeRestricted(this.guildRepository, stickerFromOtherGuild.guildId)) {
+					throw new MissingPermissionsError();
 				}
 				if (hasGlobalExpressions === 0) {
 					throw InputValidationError.fromCode(

@@ -33,7 +33,7 @@ import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGif
 import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {clearPendingDeletion, resetTiedBulkMessageDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -365,6 +365,7 @@ export class StripeDisputeWebhookHandler {
 			deletion_reason_code: null,
 			deletion_public_reason: null,
 			deletion_audit_log_reason: null,
+			...resetTiedBulkMessageDeletion(user),
 		});
 		await followOperatorPassWallStanding(user, updatedUser);
 		await clearPendingDeletion({userId, deletionQueue: this.kvDeletionQueue});

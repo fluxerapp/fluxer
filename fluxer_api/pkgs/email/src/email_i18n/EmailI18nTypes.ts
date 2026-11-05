@@ -74,6 +74,7 @@ export type EnforcementNoticeKindLabel =
 
 export interface EmailTemplateVariables {
 	account_deletion_cancelled: Record<string, never>;
+	account_deletion_completed: Record<string, never>;
 	account_deletion_scheduled_inactivity: {
 		deletion_date: string;
 	};

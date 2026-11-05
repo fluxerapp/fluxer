@@ -42,7 +42,9 @@ pub async fn require_auth(
     let config = state.config();
     let session = extract_session(&request, &config.secret_key_base);
     let Some(session) = session else {
-        let entry = if config.sso.is_some() {
+        let entry = if config.sso.as_ref().is_some_and(|sso| sso.only) {
+            "sso/start"
+        } else if config.sso.is_some() {
             "login"
         } else {
             "auth/start"

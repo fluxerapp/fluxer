@@ -15,6 +15,7 @@ import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {writeClipboardText} from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -387,7 +388,7 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 		const handleCopyId = async () => {
 			if (!application) return;
 			try {
-				await navigator.clipboard.writeText(application.id);
+				await writeClipboardText(application.id);
 				setIdCopied(true);
 				setTimeout(() => setIdCopied(false), 2000);
 			} catch (err) {
@@ -562,7 +563,7 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 		};
 		const handleCopyBuilderUrl = useCallback(async () => {
 			if (!builderUrl) return;
-			await navigator.clipboard.writeText(builderUrl);
+			await writeClipboardText(builderUrl);
 			ToastCommands.createToast({
 				type: 'success',
 				children: i18n._(COPIED_URL_TO_CLIPBOARD_DESCRIPTOR),

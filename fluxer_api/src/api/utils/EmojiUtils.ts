@@ -6,11 +6,13 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Guild} from '@app/api/models/Guild';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 
-type EmojiGuildRepository = Pick<GuildRepository, 'getEmoji' | 'getEmojiById'>;
+type EmojiGuildRepository = Pick<GuildRepository, 'getEmoji' | 'getEmojiById' | 'findUnique'>;
 type EmojiUserRepository = Pick<UserRepository, 'findUnique'>;
 
 const CUSTOM_EMOJI_MARKDOWN_REGEX = /<(a)?:([^:]+):(\d+)>/g;
@@ -108,6 +110,17 @@ function collectEmojiMatches(content: string, isInEscapedContext: (index: number
 	return matches;
 }
 
+function isAgeRestrictedGuild(guild: Guild | null): boolean {
+	return guild != null && (guild.nsfw || guild.nsfwLevel === GuildNSFWLevel.AGE_RESTRICTED);
+}
+
+export async function isExpressionSourceAgeRestricted(
+	guildRepository: Pick<GuildRepository, 'findUnique'>,
+	sourceGuildId: GuildID,
+): Promise<boolean> {
+	return isAgeRestrictedGuild(await guildRepository.findUnique(sourceGuildId));
+}
+
 export async function checkUserGlobalExpressions(
 	userId: UserID,
 	userRepository: EmojiUserRepository,
@@ -122,6 +135,7 @@ interface EmojiLookupResult {
 	emojiId: EmojiID;
 	guildEmoji: GuildEmoji | null;
 	globalEmoji: GuildEmoji | null;
+	sourceAgeRestricted: boolean;
 }
 
 async function batchFetchEmojis(
@@ -136,7 +150,11 @@ async function batchFetchEmojis(
 				guildId ? guildRepository.getEmoji(emojiId, guildId) : Promise.resolve(null),
 				guildRepository.getEmojiById(emojiId),
 			]);
-			return {emojiId, guildEmoji, globalEmoji};
+			const sourceAgeRestricted =
+				guildEmoji === null && globalEmoji !== null
+					? await isExpressionSourceAgeRestricted(guildRepository, globalEmoji.guildId)
+					: false;
+			return {emojiId, guildEmoji, globalEmoji, sourceAgeRestricted};
 		}),
 	);
 	const lookupMap = new Map<EmojiID, EmojiLookupResult>();
@@ -191,6 +209,7 @@ async function shouldReplaceEmoji(params: {
 	canUseExternalEmojis: boolean | null;
 }): Promise<boolean> {
 	const {lookup, guildId, isWebhook, hasGlobalExpressions, canUseExternalEmojis} = params;
+	if (lookup.sourceAgeRestricted) return true;
 	if (!guildId) {
 		if (!lookup.globalEmoji) return true;
 		if (!isWebhook && hasGlobalExpressions === 0) return true;

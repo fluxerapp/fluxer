@@ -6,6 +6,13 @@
 		"signoff": "Tým {product_name}",
 		"subject": "Váš účet {product_name} nebude smazán"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Tento e-mail jste obdrželi, protože jste požádali o smazání svého účtu {product_name}.",
+		"intro": "Na vaši žádost jsme smazali váš účet {product_name}.",
+		"note": "Vaše zprávy byly podle vaší volby smazány, nebo už nejsou spojené s vámi. Pokud chcete {product_name} znovu používat, můžete si vytvořit nový účet.",
+		"signoff": "Tým {product_name}",
+		"subject": "Váš účet {product_name} byl smazán"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Tento e-mail jste obdrželi, protože váš účet {product_name} byl dlouho neaktivní.",
 		"intro": "Váš účet {product_name} byl dlouho neaktivní, proto ho {deletion_date} smažeme.",

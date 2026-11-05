@@ -7,7 +7,8 @@
     check_user_session_limit/1,
     increment_user_sessions/1,
     decrement_user_sessions/1,
-    check_identify_rate/1
+    check_identify_rate/1,
+    check_token_identify_rate/1
 ]).
 
 -define(IDENTIFY_TABLE, gateway_identify_rate).
@@ -80,6 +81,48 @@ check_identify_rate(PeerIP) when is_binary(PeerIP) ->
     end;
 check_identify_rate(_) ->
     ok.
+
+-spec check_token_identify_rate(term()) -> ok | {error, identify_rate_limited}.
+check_token_identify_rate(Token) when is_binary(Token) ->
+    check_token_identify_rate(Token, token_identify_limit());
+check_token_identify_rate(_) ->
+    ok.
+
+-spec check_token_identify_rate(binary(), non_neg_integer()) ->
+    ok | {error, identify_rate_limited}.
+check_token_identify_rate(_Token, 0) ->
+    ok;
+check_token_identify_rate(Token, Limit) ->
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = ensure_identify_table(),
+            do_check_token_identify_rate(Token, Limit)
+    end.
+
+-spec token_identify_limit() -> non_neg_integer().
+token_identify_limit() ->
+    case fluxer_gateway_env:get_optional(identify_token_limit_per_minute) of
+        Limit when is_integer(Limit), Limit > 0 -> Limit;
+        _ -> 0
+    end.
+
+-spec do_check_token_identify_rate(binary(), pos_integer()) ->
+    ok | {error, identify_rate_limited}.
+do_check_token_identify_rate(Token, Limit) ->
+    Hash = binary:part(crypto:hash(sha256, Token), 0, 16),
+    Bucket = erlang:system_time(second) div ?IDENTIFY_WINDOW_SECS,
+    Key = {{identify_token, Hash}, Bucket},
+    try ets:update_counter(?IDENTIFY_TABLE, Key, {2, 1}, {Key, 0}) of
+        Count when Count > Limit ->
+            {error, identify_rate_limited};
+        _ ->
+            ok
+    catch
+        error:badarg ->
+            ok
+    end.
 
 -spec do_check_identify_rate(binary()) -> ok | {error, identify_rate_limited}.
 do_check_identify_rate(PeerIP) ->

@@ -6,6 +6,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {isFluxerIosAppRequest} from '@app/api/utils/SessionClientIdentity';
 import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -36,9 +37,13 @@ export function SearchController(app: HonoApp) {
 			}
 			const userId = user.id;
 			const requestCache = ctx.get('requestCache');
+			const iosApp = isFluxerIosAppRequest(
+				ctx.req.header('user-agent') ?? null,
+				ctx.req.header('x-fluxer-client-properties') ?? null,
+			);
 			const result = await ctx
 				.get('searchService')
-				.searchMessages({viewer: viewerFromCtx(ctx), userId, requestCache, data: params});
+				.searchMessages({viewer: viewerFromCtx(ctx), userId, iosApp, requestCache, data: params});
 			return ctx.json(result);
 		},
 	);

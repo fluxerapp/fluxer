@@ -7,10 +7,10 @@ import {createThemeAssetReference, createThemeLocalFileReference} from '@app/fea
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
 import {showThemeSettingsErrorModal} from '@app/features/theme_settings/utils/ThemeSettingsErrorModal';
 import {Button} from '@app/features/ui/button/Button';
+import {writeClipboardText} from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import {copyText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {ASSETS_SECTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/ThemesSections';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -79,7 +79,7 @@ interface AssetRowProps {
 const AssetRow: React.FC<AssetRowProps> = ({name, reference, onDelete}) => {
 	const {i18n} = useLingui();
 	const handleCopy = () => {
-		void copyText(reference)
+		void writeClipboardText(reference)
 			.then(() => ToastCommands.success(i18n._(REFERENCE_COPIED_DESCRIPTOR)))
 			.catch(() =>
 				showThemeSettingsErrorModal(

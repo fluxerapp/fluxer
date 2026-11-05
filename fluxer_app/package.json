@@ -186,6 +186,8 @@
 		"@lingui/core": "catalog:",
 		"@lingui/react": "catalog:",
 		"@livekit/components-react": "catalog:",
+		"@noble/ciphers": "catalog:",
+		"@noble/hashes": "catalog:",
 		"@phosphor-icons/react": "catalog:",
 		"@radix-ui/react-checkbox": "catalog:",
 		"@radix-ui/react-radio-group": "catalog:",
@@ -242,6 +244,7 @@
 	},
 	"devDependencies": {
 		"@babel/parser": "8.0.8",
+		"@babel/types": "^8.1.0",
 		"@lingui/cli": "catalog:",
 		"@lingui/format-po": "catalog:",
 		"@lingui/swc-plugin": "catalog:",

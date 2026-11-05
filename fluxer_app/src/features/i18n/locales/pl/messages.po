@@ -4311,6 +4311,11 @@ msgstr "Zezwól aplikacji {PRODUCT_NAME} na dostęp do mikrofonu. Sprawdź pasek
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Zezwól {productName} w sekcji Nagrywanie ekranu w Ustawieniach systemowych. Jeśli jest już dozwolone, uruchom ponownie {productName2}, aby system macOS zastosował zmiany."
 
+#. Switch in the sensitive content settings. Turns on 18+ communities and channels and the "Show" sensitive media option in the Fluxer app for iPhone and iPad.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Allow 18+ content on iPhone and iPad"
+msgstr "Zezwól na treści 18+ na iPhonie i iPadzie"
+
 #. Private thread setting that lets non-moderators add other members.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Allow anyone to invite"
@@ -6777,6 +6782,16 @@ msgstr "Przeglądarki nie pozwalają aplikacji {productName} wcześniej wyświet
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts
 msgid "Browsers do not list cameras in the screen-share picker. Choose them from the Devices tab instead. If nothing appears here, allow camera access or connect a device."
 msgstr "Przeglądarki nie wyświetlają kamer w oknie wyboru udostępniania ekranu. Wybierz je z karty \"Urządzenia\". Jeśli nic się tu nie pojawi, zezwól na dostęp do kamery lub podłącz urządzenie."
+
+#. Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow the microphone, camera and screen sharing on sites that use HTTPS, and this instance doesn't use HTTPS. You can still join voice channels and listen."
+msgstr "Przeglądarki pozwalają na mikrofon, kamerę i udostępnianie ekranu tylko na stronach z HTTPS, a ta instancja nie używa HTTPS. Nadal możesz dołączać do kanałów głosowych i słuchać."
+
+#. Short note next to a setting or button that browsers turn off on a self-hosted instance opened over plain HTTP, such as notifications or passkeys. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Przeglądarki pozwalają na to tylko na stronach z HTTPS, a ta instancja nie używa HTTPS."
 
 #. Where the dark mode favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -21015,6 +21030,11 @@ msgstr "Dowiedz się więcej o podglądach udostępniania ekranu"
 msgid "Learn more"
 msgstr "Dowiedz się więcej"
 
+#. Link under the Plutonium page hero buttons on self-hosted instances. premiumProductName is the paid tier name set by the instance. Opens a page about the tier that the instance admin chose.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+msgid "Learn more about {premiumProductName}"
+msgstr "Dowiedz się więcej o {premiumProductName}"
+
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Learn more about Visionary"
@@ -21216,6 +21236,11 @@ msgstr "Umożliwia innym zobaczenie Cię na wideo."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets push-to-talk and keybinds work in other apps."
 msgstr "Pozwala na działanie funkcji naciśnij i mów oraz skrótów w innych aplikacjach."
+
+#. Helper text under the "Allow 18+ content on iPhone and iPad" switch. "Show" is the sensitive media option name and must match its translation.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
+msgid "Lets you open communities and channels marked 18+ in the Fluxer app for iPhone and iPad, and choose \"Show\" for sensitive media there. You can only change this on the web or on desktop."
+msgstr "Pozwala otwierać społeczności i kanały oznaczone jako 18+ w aplikacji Fluxer na iPhone’a i iPada oraz wybierać tam opcję „Pokaż” dla multimediów wrażliwych. To ustawienie możesz zmienić tylko w przeglądarce lub na komputerze."
 
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx
 msgid "Lets you reset your password if you forget it."
@@ -37272,11 +37297,6 @@ msgstr "Ten kanał jest zsynchronizowany z kategorią nadrzędną <0>{0}</0>."
 msgid "This channel no longer exists. It may have already been deleted."
 msgstr "Ten kanał już nie istnieje. Mógł zostać usunięty."
 
-#. Error shown when signing in or signing up on a self-hosted instance opened over plain HTTP or a bare IP address, where the browser blocks the automatic background check. HTTPS and localhost are technical terms, keep them as is.
-#: src/features/auth/altcha/CaptchaInterceptor.ts
-msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
-msgstr "Ten sprawdzanie działa tylko wtedy, gdy aplikacja jest otwierana przez HTTPS lub na localhost. Poproś właściciela instancji o udostępnienie jej przez HTTPS lub otwórz ją z poziomu localhost."
-
 #. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
 #: src/features/theme_settings/editor/CssLint.ts
 msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
@@ -37619,6 +37639,11 @@ msgstr "Ta instancja nie używa e-maila, a Ty jesteś jedynym administratorem. J
 #: src/features/moderation/components/report/ReportStepUnavailable.tsx
 msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
 msgstr "Ta instancja nie korzysta z poczty e-mail, więc nie może przyjmować zgłoszeń przez ten formularz. Zgłoś treść w aplikacji lub skontaktuj się z administratorami tej instancji."
+
+#. Title of the dialog shown when someone tries to use the microphone, camera or screen sharing on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "This instance doesn't use HTTPS"
+msgstr "Ta instancja nie używa HTTPS"
 
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
@@ -38140,6 +38165,16 @@ msgstr "Ten kanał głosowy jest oznaczony jako zawierający treści dla dorosł
 #: src/features/voice/engine/media_engine_facade/shared.ts
 msgid "This voice channel is no longer available."
 msgstr "Ten kanał głosowy jest już niedostępny."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel from a browser that cannot encrypt calls.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption, and this browser can't join encrypted calls."
+msgstr "Ten kanał głosowy używa szyfrowania end-to-end, a ta przeglądarka nie może dołączać do szyfrowanych połączeń."
+
+#. Error shown when someone tries to join an end-to-end encrypted voice channel on a self-hosted instance opened over plain HTTP. HTTPS is a technical term, keep it as is.
+#: src/features/voice/engine/media_engine_facade/shared.ts
+msgid "This voice channel uses end-to-end encryption. Browsers only allow encrypted calls on sites that use HTTPS, and this instance doesn't use HTTPS."
+msgstr "Ten kanał głosowy używa szyfrowania end-to-end. Przeglądarki pozwalają na szyfrowane połączenia tylko na stronach z HTTPS, a ta instancja nie używa HTTPS."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
 #: src/features/channel/components/UserMessage.tsx

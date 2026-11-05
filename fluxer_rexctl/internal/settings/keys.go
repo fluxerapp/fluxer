@@ -39,6 +39,7 @@ const (
 	Domain          = "domain"
 	EdgeMode        = "edge.mode"
 	EdgeBind        = "edge.bind"
+	EdgeListen      = "edge.listen_address"
 	EdgeHTTPPort    = "edge.http_port"
 	EdgeHTTPSPort   = "edge.https_port"
 	EdgePublicPort  = "edge.public_port"
@@ -58,8 +59,10 @@ const (
 	NoProxy         = "network.no_proxy"
 	IPv6            = "network.ipv6"
 	SSOPrivate      = "sso.allow_private_addresses"
+	SignedMedia     = "media.signed_attachments"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
+	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
 )
@@ -89,6 +92,18 @@ var ImageVars = map[string]string{
 	"edge":        "FLUXER_CADDY_IMAGE",
 }
 
+const EdgeListenVar = "FLUXER_EDGE_LISTEN_ADDRESS"
+
+const (
+	SignatureModeVar    = "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"
+	SignatureSecretsVar = "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"
+)
+
+func SignsAttachments(mode string) bool {
+	m := strings.ToLower(strings.TrimSpace(mode))
+	return m == "report" || m == "enforce"
+}
+
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
 
 var named = buildNamed()
@@ -102,6 +117,8 @@ func buildNamed() []Key {
 			Help: "Whether Fluxer serves HTTPS itself or runs behind your reverse proxy or a tunnel"},
 		{Name: EdgeBind, Type: "address", Vars: []string{"FLUXER_EDGE_BIND"}, Validate: validBind,
 			Help: "The address your reverse proxy or tunnel connects to"},
+		{Name: EdgeListen, Type: "ip", Vars: []string{EdgeListenVar}, Validate: validIP,
+			Help: "The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address"},
 		{Name: EdgeHTTPPort, Type: "port", Vars: []string{"FLUXER_HTTP_PORT"}, Validate: validPort,
 			Help: "The port Fluxer listens on for HTTP"},
 		{Name: EdgeHTTPSPort, Type: "port", Vars: []string{"FLUXER_HTTPS_PORT"}, Validate: validPort,
@@ -141,10 +158,15 @@ func buildNamed() []Key {
 			Help: "Whether Fluxer's network uses IPv6"},
 		{Name: SSOPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
 			Help: "Whether single sign-on can use a provider on a private or local network address"},
+		{Name: SignedMedia, Type: "choice", Vars: []string{SignatureModeVar}, Options: []string{"off", "report", "enforce"}, Validate: oneOf("off", "report", "enforce"),
+			Confirm: "With enforce, attachment links without a valid signature stop working. That includes links copied out of Fluxer more than a day ago, links a bot saved and data packages made before signing was on. Fluxer's apps get new links by themselves.",
+			Help:    "Whether attachment downloads need a signed link"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
 			Help: "A registry mirror for the database, cache, queue, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),
 			Help: "A fixed amount of memory for Fluxer's services, or empty to size them to this machine on every start"},
+		{Name: DiskProfile, Type: "choice", Options: []string{stack.DiskProfileSmall}, Validate: oneOf(stack.DiskProfileSmall),
+			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
 	}
@@ -233,8 +255,11 @@ func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi
 		return Key{}, unknown(name)
 	}
 	validate := validText
-	if name == TurnServersVar {
+	switch name {
+	case TurnServersVar:
 		validate = validTurnServers
+	case SignatureSecretsVar:
+		validate = validSignatureSecrets
 	}
 	return Key{Name: name, Kind: Raw, Type: "text", Vars: []string{name}, Secret: SecretName(name),
 		Stateful: generatedStateful(name), Validate: validate}, nil
@@ -255,6 +280,9 @@ func otherName(name, use string) error {
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
 	if k.Name == MemoryProfile {
 		return len(set.Profiles) > 0
+	}
+	if k.Name == DiskProfile {
+		return slices.Contains(set.Vars, stack.SpoolTotalVar)
 	}
 	for _, v := range k.Vars {
 		if !slices.Contains(set.Vars, v) && !slices.Contains(custom, v) {

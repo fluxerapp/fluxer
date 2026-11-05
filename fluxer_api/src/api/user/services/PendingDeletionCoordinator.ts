@@ -34,6 +34,17 @@ interface PendingDeletionEligibilityUserLike {
 	flags: bigint;
 }
 
+interface TiedBulkMessageDeletionUserLike {
+	pendingDeletionAt: Date | null;
+	pendingBulkMessageDeletionAt: Date | null;
+}
+
+interface TiedBulkMessageDeletionReset {
+	pending_bulk_message_deletion_at?: null;
+	pending_bulk_message_deletion_channel_count?: null;
+	pending_bulk_message_deletion_message_count?: null;
+}
+
 export async function reschedulePendingDeletion({
 	userId,
 	currentPendingDeletionAt,
@@ -73,4 +84,18 @@ export function isPendingDeletionBlocked(user: PendingDeletionEligibilityUserLik
 		return true;
 	}
 	return (user.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
+}
+
+export function resetTiedBulkMessageDeletion(user: TiedBulkMessageDeletionUserLike): TiedBulkMessageDeletionReset {
+	if (
+		user.pendingBulkMessageDeletionAt === null ||
+		user.pendingBulkMessageDeletionAt.getTime() !== user.pendingDeletionAt?.getTime()
+	) {
+		return {};
+	}
+	return {
+		pending_bulk_message_deletion_at: null,
+		pending_bulk_message_deletion_channel_count: null,
+		pending_bulk_message_deletion_message_count: null,
+	};
 }

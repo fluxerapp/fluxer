@@ -14,6 +14,7 @@ import MediaPermission from '@app/features/permissions/system/state/MediaPermiss
 import {ensureNativePermission} from '@app/features/permissions/system/utils/NativePermissions';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {Store} from '@app/features/voice/engine/Store';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
@@ -392,6 +393,10 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			'prepareMicrophonePermissionForConnect pre-condition: permission helper present',
 		);
 		this.transitionMediaState({type: 'permission.warmup.start'});
+		if (isInsecureBrowserContext()) {
+			this.transitionMediaState({type: 'permission.warmup.unavailable'});
+			return true;
+		}
 		const devicePermission = VoiceDevicePermissionState.getState().permissionStatus;
 		if (MediaPermission.isMicrophoneGranted() || devicePermission.audio === 'granted') {
 			this.transitionMediaState({type: 'permission.warmup.granted'});

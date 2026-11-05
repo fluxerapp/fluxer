@@ -6,6 +6,13 @@
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 帳號不會被刪除"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "您收到這封電子郵件，是因為您要求刪除您的 {product_name} 帳號。",
+		"intro": "我們已依照您的要求刪除您的 {product_name} 帳號。",
+		"note": "依照您的選擇，您的訊息已被刪除，或已不再與您連結。如果您想再次使用 {product_name}，可以建立新帳號。",
+		"signoff": "{product_name} 團隊",
+		"subject": "您的 {product_name} 帳號已刪除"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "您收到此電子郵件是因為您的 {product_name} 帳號已長期未使用。",
 		"intro": "您的 {product_name} 帳號已長時間未使用，我們將在 {deletion_date} 刪除它。",

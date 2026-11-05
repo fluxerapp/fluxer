@@ -380,7 +380,8 @@ pub(crate) fn premium_billing_section(
                         }
                         p class="text-xs text-neutral-500" {
                             "Clients show this name wherever the premium tier is mentioned. Clear it to use the default. \
-                             The info URL is an optional page that describes the tier."
+                             The info URL is an optional page about the tier. The premium page and the premium badge on \
+                             profiles link to it. The comparison chart on the premium page comes from your limit settings."
                         }
                         @if matches!(premium_mode, PremiumMode::Everyone) {
                             p class="text-sm text-amber-700" {

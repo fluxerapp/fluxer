@@ -6,6 +6,13 @@
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} 계정이 삭제되지 않아요"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "{product_name} 계정 삭제를 요청하셨기 때문에 이 이메일을 받으셨어요.",
+		"intro": "요청하신 대로 {product_name} 계정을 삭제했어요.",
+		"note": "선택하신 내용에 따라 메시지가 삭제되었거나 더 이상 회원님과 연결되지 않아요. {product_name}을(를) 다시 사용하고 싶다면 새 계정을 만들 수 있어요.",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} 계정이 삭제되었어요"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "이 이메일은 {product_name} 계정이 오랫동안 사용되지 않아 발송되었어요.",
 		"intro": "{product_name} 계정을 오랫동안 사용하지 않으셔서 {deletion_date}에 삭제할 예정이에요.",

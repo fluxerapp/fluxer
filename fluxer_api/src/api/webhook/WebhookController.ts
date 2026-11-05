@@ -25,7 +25,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
-import {Validator} from '@app/api/Validator';
+import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import type {WebhookExecuteMessageData} from '@app/api/webhook/WebhookService';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -72,7 +72,7 @@ const WebhookMultipartMessagePayload = WebhookMultipartMessageRequest.omit(FORUM
 function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMessagePayload> {
 	const validationResult = WebhookMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }
@@ -80,7 +80,7 @@ function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMes
 function validateWebhookMultipartMessagePayload(data: unknown): z.infer<typeof WebhookMultipartMessagePayload> {
 	const validationResult = WebhookMultipartMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }

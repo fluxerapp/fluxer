@@ -94,6 +94,10 @@ const BRANDING_URL_KEYS = Object.freeze([
 	'status_page_incident_history_url',
 	'premium_info_url',
 	'sign_in_backdrop_url',
+	'premium_showcase_expressions_url',
+	'premium_showcase_profile_url',
+	'premium_showcase_stream_url',
+	'premium_showcase_upload_url',
 ] as const) satisfies ReadonlyArray<keyof InstanceBranding>;
 
 const SETUP_FLAG_KEYS = Object.freeze([
@@ -930,6 +934,9 @@ function parseBranding(value: unknown): Readonly<Partial<InstanceBranding>> {
 	}
 	if (Object.hasOwn(source, 'theme_color')) {
 		branding.theme_color = readNonEmptyString(source, 'theme_color');
+	}
+	if (Object.hasOwn(source, 'premium_page_color')) {
+		branding.premium_page_color = readNonEmptyString(source, 'premium_page_color');
 	}
 	if (Object.hasOwn(source, 'custom_css')) {
 		branding.custom_css = readNonEmptyString(source, 'custom_css');

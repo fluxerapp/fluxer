@@ -6,6 +6,13 @@
 		"signoff": "{product_name} komanda",
 		"subject": "Tavo {product_name} paskyra nebus ištrinta"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Gavai šį el. laišką, nes paprašei ištrinti savo {product_name} paskyrą.",
+		"intro": "Kaip prašei, ištrynėme tavo {product_name} paskyrą.",
+		"note": "Priklausomai nuo tavo pasirinkimo, tavo žinutės buvo ištrintos arba nebėra susietos su tavimi. Jei nori vėl naudotis {product_name}, gali susikurti naują paskyrą.",
+		"signoff": "{product_name} komanda",
+		"subject": "Tavo {product_name} paskyra ištrinta"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Gavai šį el. laišką, nes tavo {product_name} paskyra ilgą laiką buvo neaktyvi.",
 		"intro": "Tavo {product_name} paskyra ilgai nebuvo naudojama, todėl ją ištrinsime {deletion_date}.",

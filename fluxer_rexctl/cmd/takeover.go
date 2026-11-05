@@ -17,6 +17,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -63,11 +64,15 @@ func takeoverDir(ctx context.Context, app *App, dir string, opts takeoverOptions
 		return nil, nil, err
 	}
 	var current *instance.Instance
+	var se *instance.SettingError
 	switch found, err := instance.Find(dir); {
 	case err == nil:
 		current = found
+		app.saveRepaired(current)
 	case errors.Is(err, instance.ErrNotFound):
 		return nil, nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
+	case errors.As(err, &se):
+		return nil, nil, settingRefusal(dir, se)
 	case !errors.Is(err, instance.ErrLegacy):
 		return nil, nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s.", dir), "Run rexctl as the account that installed Fluxer.")
 	}
@@ -166,6 +171,9 @@ func describeTakeover(u *ui.UI, r *instance.ImportReport) {
 		u.Info("One setting your instance is missing will be added.")
 	} else if n > 1 {
 		u.Info("%d settings your instance is missing will be added.", n)
+	}
+	if r.ListenAddress != "" {
+		u.Info("Fluxer keeps listening only on %s, and rexctl keeps that address in %s.", r.ListenAddress, settings.EdgeListen)
 	}
 	if r.DedupedEnv {
 		u.Info("Settings that appear twice in .env keep their last value.")

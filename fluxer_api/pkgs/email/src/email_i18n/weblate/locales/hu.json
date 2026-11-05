@@ -6,6 +6,13 @@
 		"signoff": "{product_name} csapata",
 		"subject": "Nem töröljük {product_name}-fiókodat"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a {product_name}-fiókod törlését.",
+		"intro": "A kérésednek megfelelően töröltük a {product_name}-fiókodat.",
+		"note": "Az üzeneteidet a választásodtól függően töröltük, vagy már nem kapcsolódnak hozzád. Ha újra szeretnéd használni a(z) {product_name} szolgáltatást, létrehozhatsz egy új fiókot.",
+		"signoff": "{product_name} csapata",
+		"subject": "{product_name}-fiókodat töröltük"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert {product_name}-fiókod hosszú ideje inaktív.",
 		"intro": "{product_name}-fiókod hosszú ideje inaktív, ezért {deletion_date} napján töröljük.",

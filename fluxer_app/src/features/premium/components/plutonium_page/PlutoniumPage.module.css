@@ -707,6 +707,21 @@
 	filter: drop-shadow(0 var(--pl-ledge-xl) 0 var(--pl-image-ledge));
 }
 
+.perkArtCustom {
+	aspect-ratio: 11 / 8;
+	overflow: hidden;
+	border-radius: var(--pl-radius-l);
+}
+
+.perkArtCustom .perkArtImage {
+	height: 100%;
+	object-fit: cover;
+}
+
+.perkArtCustom.perkArtFailed .perkArtImage {
+	display: none;
+}
+
 .perkArtPending,
 .perkArtFailed {
 	border-radius: var(--pl-radius-l);

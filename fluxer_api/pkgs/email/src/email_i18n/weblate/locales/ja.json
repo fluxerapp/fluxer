@@ -6,6 +6,13 @@
 		"signoff": "{product_name}チーム",
 		"subject": "{product_name}アカウントは削除されません"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "このメールは、お客様の{product_name}アカウントの削除リクエストを受け付けたため送信されました。",
+		"intro": "ご依頼に基づき、{product_name}アカウントを削除しました。",
+		"note": "メッセージは、お客様の選択に応じて削除されたか、お客様との関連付けが解除されました。{product_name}を再びご利用になる場合は、新しいアカウントを作成できます。",
+		"signoff": "{product_name}チーム",
+		"subject": "{product_name}アカウントを削除しました"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "このメールは、{product_name}アカウントが長期間利用されていないため送信されました。",
 		"intro": "{product_name}アカウントが長期間利用されていないため、{deletion_date}に削除します。",

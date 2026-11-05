@@ -15,6 +15,7 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -26,7 +27,9 @@ var errIPv6NotApplied = errors.New("deploy: the network kept its old IPv6 settin
 
 var derivedVars = map[string][]string{
 	settings.Domain:         {"FLUXER_PUBLIC_ORIGIN", "FLUXER_EDGE_SITE_ADDRESS"},
+	settings.EdgeHTTPPort:   {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN"},
 	settings.EdgeHTTPSPort:  {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN"},
+	"FLUXER_PUBLIC_SCHEME":  {"FLUXER_PUBLIC_PORT", "FLUXER_PUBLIC_ORIGIN", "FLUXER_EDGE_SITE_ADDRESS"},
 	settings.EdgePublicPort: {"FLUXER_PUBLIC_ORIGIN"},
 	stack.EmbeddedWorkerVar: {"FLUXER_WORKER_REPLICAS"},
 }
@@ -39,6 +42,10 @@ func Promised(set *stack.Set, custom []byte, k settings.Key) []string {
 		return slices.Clone(stack.Services)
 	case settings.MemoryProfile:
 		return settings.Services(set, custom, append(stack.ProfileKeys(set), stack.SizingKeys()...))
+	case settings.DiskProfile:
+		return settings.Services(set, custom, stack.DiskSizingKeys())
+	case settings.SignedMedia:
+		return settings.Services(set, custom, []string{settings.SignatureModeVar, settings.SignatureSecretsVar})
 	}
 	return settings.Services(set, custom, append(slices.Clone(k.Vars), derivedVars[k.Name]...))
 }
@@ -142,7 +149,13 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	}
 	slices.Sort(promised)
 	preview := Preview{Keys: changed, Promised: slices.Compact(promised)}
-	newEnv, err := Environment(rs, st, next)
+	nextSecrets, err := signingSecrets(rs, st, next)
+	if err != nil {
+		return nil, err
+	}
+	withSecrets := *st
+	withSecrets.Secrets = nextSecrets
+	newEnv, err := Environment(rs, &withSecrets, next)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +167,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		if o.Confirm != nil && !o.Confirm(preview) {
 			return nil, ErrDeclined
 		}
-		st.Settings = next
+		st.Settings, st.Secrets = next, nextSecrets
 		if err := save(inst); err != nil {
 			return nil, err
 		}
@@ -228,7 +241,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 				return nil, err
 			}
 		}
-		st.Settings = next
+		st.Settings, st.Secrets = next, nextSecrets
 		if _, err := render(inst, rs, next); err != nil {
 			return nil, err
 		}
@@ -271,12 +284,34 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		rerr := revert(ctx, inst, rs, oldP, ipv6, o.OnEvent)
 		return &Change{Keys: changed, Reverted: rerr == nil, VoiceDown: attachVoice(ctx, e, detached)}, errors.Join(err, rerr)
 	}
-	st.Settings = next
+	st.Settings, st.Secrets = next, nextSecrets
 	st.Pending = nil
 	if err := save(inst); err != nil {
 		return nil, err
 	}
 	return &Change{Keys: changed, Restarted: preview.Restarts, Removed: preview.Removes, Applied: true, VoiceDown: attachVoice(ctx, e, detached)}, nil
+}
+
+func signingSecrets(rs *stack.Set, st *instance.State, next map[string]string) (map[string]string, error) {
+	env, err := Environment(rs, st, next)
+	if err != nil {
+		return nil, err
+	}
+	if !settings.SignsAttachments(env[settings.SignatureModeVar]) || strings.TrimSpace(env[settings.SignatureSecretsVar]) != "" {
+		return st.Secrets, nil
+	}
+	if _, chosen := next[settings.SignatureSecretsVar]; chosen {
+		return nil, ui.Refused(
+			fmt.Sprintf("%s needs a signing key, and %s is empty.", settings.SignedMedia, settings.SignatureSecretsVar),
+			fmt.Sprintf("Run rexctl config unset %s and rexctl makes a key.", settings.SignatureSecretsVar))
+	}
+	key, err := secrets.Base64(32)
+	if err != nil {
+		return nil, err
+	}
+	out := maps.Clone(st.Secrets)
+	out[settings.SignatureSecretsVar] = key
+	return out, nil
 }
 
 func checkPorts(ctx context.Context, e *engine.Engine, project string, oldEnv, newEnv map[string]string, changed []string, mode string) error {

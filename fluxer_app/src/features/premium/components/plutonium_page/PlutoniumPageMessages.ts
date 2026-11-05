@@ -26,6 +26,11 @@ export const DONATE_INSTEAD_DESCRIPTOR = msg({
 	message: 'Donate instead',
 	comment: 'Link text in the Plutonium page donation hint. Opens the donation page on the website.',
 });
+export const PREMIUM_INFO_LINK_DESCRIPTOR = msg({
+	message: 'Learn more about {premiumProductName}',
+	comment:
+		'Link under the Plutonium page hero buttons on self-hosted instances. premiumProductName is the paid tier name set by the instance. Opens a page about the tier that the instance admin chose.',
+});
 export const SUBSCRIBE_YEARLY_DESCRIPTOR = msg({
 	message: 'Get yearly',
 	comment: 'Primary Plutonium page button that starts a yearly subscription checkout.',

@@ -27,7 +27,7 @@ class LimitResolverClass {
 		if (!Number.isFinite(resolved) || resolved < 0) {
 			return fallback;
 		}
-		return Math.floor(resolved);
+		return Math.min(Math.floor(resolved), Number.MAX_SAFE_INTEGER);
 	}
 
 	private getSnapshotForInstance(instanceDomain?: string): LimitConfigSnapshot | null {

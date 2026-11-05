@@ -220,6 +220,10 @@ The port Fluxer listens on for HTTPS. If people connect to this port directly, s
 
 The address your reverse proxy or tunnel connects to. The default is `127.0.0.1:8080` with `docker-compose.proxy.yml`, or `127.0.0.1:80` with `tunnel.compose.yml`. With rexctl, use `rexctl config set edge.bind`.
 
+### `FLUXER_EDGE_LISTEN_ADDRESS`
+
+The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address. Write an IPv6 address without brackets. `docker-compose.proxy.yml` and `tunnel.compose.yml` ignore it and use `FLUXER_EDGE_BIND`. With rexctl, use `rexctl config set edge.listen_address`.
+
 ### `FLUXER_ADMIN_BASE_PATH`
 
 The path the admin panel is served under, with a leading slash and no trailing slash, such as `/panel`. The edge serves the admin panel under this path, the admin service builds its links with it, and the default `FLUXER_ADMIN_ENDPOINT` follows it. The default is `/admin`. With rexctl, use `rexctl config set FLUXER_ADMIN_BASE_PATH`.
@@ -682,6 +686,10 @@ The client secret that goes with `FLUXER_ADMIN_SSO_CLIENT_ID`. Only the admin se
 
 The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_DISPLAY_NAME`.
 
+### `FLUXER_ADMIN_SSO_ONLY`
+
+Whether staff can sign in to the admin panel only with single sign-on. Use `true` or `false`. With `true`, the login page hides the button for signing in with a Fluxer account, and the admin panel refuses new sign-ins that way. Staff who are already signed in stay signed in. It needs `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET`, and the admin service won't start without them. When it's empty, it's `false`. With rexctl, use `rexctl config set FLUXER_ADMIN_SSO_ONLY`.
+
 ## Email
 
 The admin panel can also save the delivery mode, the sender and the SMTP server. A value saved there is used first.
@@ -916,7 +924,7 @@ The web origins, separated by commas, that may load media through CORS when `FLU
 
 ### `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`
 
-Whether attachment downloads need a signed URL. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`.
+Whether attachment downloads need a signed link. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and rexctl makes a key the first time you turn it on if that's empty. With rexctl, use `rexctl config set media.signed_attachments`.
 
 ### `FLUXER_MEDIA_PROXY_READ_ONLY`
 
@@ -992,7 +1000,7 @@ The chunk size the relay uses when it writes upload bodies to its spool on disk,
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
+The most disk space the spool may use at once, in bytes from 0 to 256 GiB, shared by relay uploads and copies of large audio and video files. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`. The default is `2147483648`, which is 2 GiB. rexctl raises this to `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` if you set that higher. When disk.profile is small, rexctl sets this to 536870912, which is 512 MiB, unless you set it. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`.
 
 ### `FLUXER_CACHE_PURGE_ADAPTER`
 
@@ -1063,6 +1071,10 @@ How many NATS RPC requests the gateway works on at once. When it's empty, the ga
 ### `FLUXER_GATEWAY_ZSTD_WINDOW_LOG`
 
 The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `17`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
+
+### `FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`
+
+The most times one token can identify on one gateway node in a minute. The gateway does not answer identifies over the limit. A value of `0` turns off this limit. When it's empty, the gateway uses `0`. With rexctl, use `rexctl config set FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`.
 
 ### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
@@ -1450,7 +1462,7 @@ Postgres `min_wal_size`, the write-ahead log space Postgres keeps for reuse afte
 
 ### `FLUXER_POSTGRES_MAX_WAL_SIZE`
 
-Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
+Postgres `max_wal_size`, how large the write-ahead log may grow before Postgres starts a checkpoint. The default is `2GB`. When disk.profile is small, rexctl sets this to 512MB unless you set it. With rexctl, use `rexctl config set FLUXER_POSTGRES_MAX_WAL_SIZE`.
 
 ### `FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET`
 
@@ -1776,11 +1788,11 @@ How much LiveKit logs. Use `debug`, `info`, `warn` or `error`. The default is `i
 
 ### `FLUXER_LOG_MAX_SIZE`
 
-How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
+How large the log file of a container grows before Docker rotates it, such as `50m`. The default is `10m`. When disk.profile is small, rexctl sets this to 5m unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_SIZE`.
 
 ### `FLUXER_LOG_MAX_FILE`
 
-How many log files Docker keeps for each container when it rotates logs. The default is `3`. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
+How many log files Docker keeps for each container when it rotates logs. The default is `3`. When disk.profile is small, rexctl sets this to 2 unless you set it. With rexctl, use `rexctl config set FLUXER_LOG_MAX_FILE`.
 
 ### `FLUXER_RESTART_POLICY`
 
@@ -2419,7 +2431,11 @@ When account closures for payment disputes take effect.
 
 #### `FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL`
 
-Whether sandbox store purchases count for every account.
+Whether sandbox store purchases, gifts included, count for every account with no time limit.
+
+#### `FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS`
+
+Whether sandbox App Store and Google Play subscriptions count for every account for 7 days after each purchase. On by default.
 
 #### `FLUXER_STORE_BILLING_SANDBOX_USER_IDS`
 

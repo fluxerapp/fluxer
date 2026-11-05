@@ -38,6 +38,7 @@ import {
 	MEMBER_THANKS_DESCRIPTOR,
 	MONTHLY_PRICE_DESCRIPTOR,
 	PAGE_LABEL_DESCRIPTOR,
+	PREMIUM_INFO_LINK_DESCRIPTOR,
 	PRICE_OR_DESCRIPTOR,
 	REDEEM_GIFT_CODE_DESCRIPTOR,
 	REDEEM_ONLY_DESCRIPTOR,
@@ -60,6 +61,7 @@ import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/Premiu
 import {yearlySavingsPercent} from '@app/features/premium/utils/PremiumSavings';
 import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {getSubscriptionStatus} from '@app/features/premium/utils/SubscriptionStatus';
+import {getPremiumPageVariables} from '@app/features/theme/utils/InstanceBrandColors';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
@@ -257,6 +259,10 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 		comparisonActions = giftButton('primary', 'comparison');
 	}
 	const showDonationHint = !RuntimeConfig.isSelfHosted();
+	const premiumInfoUrl = RuntimeConfig.isSelfHosted() ? RuntimeConfig.appPublic.branding.premium_info_url : null;
+	const pageColors = getPremiumPageVariables(
+		RuntimeConfig.isSelfHosted() ? RuntimeConfig.appPublic.branding.premium_page_color : null,
+	);
 	const heroArt = heroArtFor(RuntimeConfig.isSelfHosted());
 	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {
 		productName: RuntimeConfig.productName,
@@ -444,6 +450,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 	return (
 		<div
 			className={styles.root}
+			style={(pageColors ?? undefined) as React.CSSProperties | undefined}
 			role="main"
 			aria-label={i18n._(PAGE_LABEL_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 			data-flx="premium.plutonium-page.root"
@@ -496,6 +503,21 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 									</a>
 								</FocusRing>
 								<span data-flx="premium.plutonium-page.plutonium-page.span--4">{donationAfter}</span>
+							</p>
+						)}
+						{premiumInfoUrl && (
+							<p className={styles.meta} data-flx="premium.plutonium-page.hero.premium-info">
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.hero.premium-info-focus-ring">
+									<a
+										className={styles.inlineLink}
+										href={premiumInfoUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-flx="premium.plutonium-page.hero.premium-info-link"
+									>
+										{i18n._(PREMIUM_INFO_LINK_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+									</a>
+								</FocusRing>
 							</p>
 						)}
 					</div>

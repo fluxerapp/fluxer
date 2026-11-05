@@ -434,6 +434,7 @@ func restoreErr(path string, err error, logPath string) error {
 	var inUse *backup.ProjectInUseError
 	var part *backup.RestoreError
 	var pull *backup.PullError
+	var space *backup.RestoreSpaceError
 	partFix := "Run rexctl restore again with --verbose to see why."
 	if logPath != "" {
 		partFix = fmt.Sprintf("Read %s to see why, then run rexctl restore again.", logPath)
@@ -446,6 +447,11 @@ func restoreErr(path string, err error, logPath string) error {
 		return ui.Wrap(pull.Err, "Couldn't download Fluxer.", "Run rexctl restore again with --verbose to see why.")
 	case errors.Is(err, backup.ErrUploadsNotHere):
 		return uploadsNotHere(nil, "", "", err)
+	case errors.As(err, &space):
+		return ui.Refused(
+			fmt.Sprintf("Restoring %s needs about %s of free disk space in %s, and %s is free.", path, ui.Bytes(int64(space.Need)), space.Dir, ui.Bytes(int64(space.Available))),
+			"Free up space there, then run rexctl restore again.",
+		)
 	case errors.As(err, &inUse):
 		return ui.Refused(
 			fmt.Sprintf("Another Fluxer instance on this machine is in %s.", inUse.Dir),

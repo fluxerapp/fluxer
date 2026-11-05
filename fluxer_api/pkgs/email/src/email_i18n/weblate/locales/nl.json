@@ -6,6 +6,13 @@
 		"signoff": "Het team van {product_name}",
 		"subject": "Je {product_name}-account wordt niet verwijderd"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Je hebt deze e-mail ontvangen omdat je hebt verzocht om je {product_name}-account te verwijderen.",
+		"intro": "We hebben je {product_name}-account verwijderd, zoals je had gevraagd.",
+		"note": "Je berichten zijn verwijderd of niet meer aan jou gekoppeld, afhankelijk van wat je hebt gekozen. Als je {product_name} weer wilt gebruiken, kun je een nieuw account aanmaken.",
+		"signoff": "Het team van {product_name}",
+		"subject": "Je {product_name}-account is verwijderd"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je {product_name}-account al lange tijd inactief is.",
 		"intro": "Je {product_name}-account is al lange tijd inactief, dus we verwijderen het op {deletion_date}.",

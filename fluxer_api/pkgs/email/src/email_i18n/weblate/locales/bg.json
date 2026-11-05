@@ -6,6 +6,13 @@
 		"signoff": "Екипът на {product_name}",
 		"subject": "Акаунтът ти във {product_name} няма да бъде изтрит"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Получи този имейл, защото поиска да изтриеш акаунта си във {product_name}.",
+		"intro": "Изтрихме акаунта ти във {product_name}, както поиска.",
+		"note": "Съобщенията ти бяха изтрити или вече не са свързани с теб, в зависимост от избора ти. Ако искаш да използваш {product_name} отново, можеш да създадеш нов акаунт.",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Акаунтът ти във {product_name} е изтрит"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Получи този имейл, защото акаунтът ти във {product_name} е неактивен от дълго време.",
 		"intro": "Акаунтът ти във {product_name} е неактивен от дълго време, затова ще го изтрием на {deletion_date}.",

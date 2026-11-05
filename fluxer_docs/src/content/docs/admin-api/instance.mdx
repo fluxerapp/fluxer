@@ -268,7 +268,7 @@ The registration policy and every issued registration URL. [List pending registr
 | --- | --- | --- |
 | mode | string | [Registration mode](#registration-modes) |
 | admin_registration_urls_enabled | boolean | Whether issued registration URLs work |
-| allowed_email_domains | array[string] | Email domains that new accounts and email changes must use, or empty for any. Registration URLs aren't checked |
+| allowed_email_domains | array[string] | Email domains that new accounts and email changes must use, or empty for any. While set, an email mode instance turns down public sign-ups without an email. Registration URLs aren't checked |
 | urls | array[[registration URL](#registration-url-object) object] | Every issued registration URL, newest first, including revoked and used-up ones |
 
 ## Registration modes
@@ -521,6 +521,12 @@ Fluxer drops an override that would make a maximum smaller than its minimum.
 | favicon | Writes `branding.favicon_url` |
 | favicon_dark | Writes `branding.favicon_dark_url` |
 | sign_in_backdrop | Writes `branding.sign_in_backdrop_url` |
+| premium_showcase_expressions | Writes the emoji card image |
+| premium_showcase_profile | Writes the profile card image |
+| premium_showcase_stream | Writes the stream card image |
+| premium_showcase_upload | Writes the upload card image |
+
+Each `premium_showcase_*` kind writes the `branding` field with its name and `_url`, such as `branding.premium_showcase_stream_url`. The `favicon_dark`, `sign_in_backdrop` and `premium_showcase_*` kinds only work on self-hosted instances.
 
 ## SMTP TLS mode
 
@@ -659,7 +665,7 @@ Merges the body into the saved configuration and returns the [instance configura
 
 <sup>1</sup> While `enabled` is true, a save without an `issuer` fails with `SSO_ISSUER_REQUIRED`, and endpoint URLs must use `https` and point at a public address unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true. Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` without a `client_id`. When endpoints come from the `issuer`, Fluxer fetches the provider's discovery document. If that fails, turning on `enforced` fails with `SSO_DISCOVERY_FAILED`, and a save without `enforced` goes through with a line in `warnings`. A save that changes the provider ID while accounts are linked to the old one moves those links itself when only a trailing `/` changed, or when it adds an `issuer` whose authorization endpoint is the one already in use. Otherwise it fails with `SSO_ISSUER_CHANGE_HAS_IDENTITIES` unless it sends `migrate_identities`. True moves the links to the new issuer, and false leaves them on the old one. Each move writes a `migrate_sso_identities` audit log entry. `migrate_identities` applies to that save only and is never stored
 
-<sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters and `branding.theme_color` is a hex color. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
+<sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters, and `branding.theme_color` and `branding.premium_page_color` are hex colors. `branding.premium_page_color` only works on self-hosted instances. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
 
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out. `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`. `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`
 
@@ -726,14 +732,14 @@ Uploads an image to a branding slot and returns the [instance configuration](#in
 | kind | string | [Branding asset kind](#branding-asset-kinds) of the slot to write |
 | image?<sup>1</sup> | ?string | Base64 image or data URI, or null to clear the slot (up to 16000000 characters) |
 
-<sup>1</sup> Up to the `avatar_max_size` limit, 10 MiB by default, as PNG, JPEG, WebP, GIF, APNG, still AVIF, HEIC, HEIF, JXL or SVG. A `sign_in_backdrop` is up to 4 MiB as a still PNG, JPEG, WebP or AVIF
+<sup>1</sup> Up to the `avatar_max_size` limit, 10 MiB by default, as PNG, JPEG, WebP, GIF, APNG, still AVIF, HEIC, HEIF, JXL or SVG. A `sign_in_backdrop` is up to 4 MiB as a still PNG, JPEG, WebP or AVIF. A `premium_showcase_*` image has the same limits and is 480 to 2400 pixels on each side
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [instance configuration](#instance-configuration-object) object | The slot was written or cleared |
-| 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
+| 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `IMAGE_DIMENSIONS_OUT_OF_RANGE`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 

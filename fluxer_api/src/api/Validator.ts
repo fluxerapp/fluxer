@@ -15,6 +15,7 @@ import {
 	type core,
 	type input,
 	type output,
+	ZodArray,
 	ZodNullable,
 	ZodObject,
 	ZodOptional,
@@ -60,7 +61,10 @@ function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot =
 	const metadata = schema ? schemaMetadata.get(schema) : undefined;
 	if (metadata?.preserveEmptyValues) return obj;
 	if (typeof obj === 'string' && obj === '') return null;
-	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, undefined, false));
+	if (Array.isArray(obj)) {
+		const element = schema instanceof ZodArray ? schema.element : undefined;
+		return obj.map((item) => convertEmptyValuesToNull(item, element, false));
+	}
 	if (obj !== null && typeof obj === 'object') {
 		if (isEmptyObject(obj) && !isRoot) return null;
 		const shape = schema instanceof ZodObject ? schema.shape : undefined;

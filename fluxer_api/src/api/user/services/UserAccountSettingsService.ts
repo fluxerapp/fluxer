@@ -217,6 +217,9 @@ export class UserAccountSettingsService {
 			if (data.sensitive_content_guild_filter !== undefined) {
 				updatedRowData.sensitive_content_guild_filter = data.sensitive_content_guild_filter;
 			}
+			if (data.allow_mature_content_on_ios !== undefined) {
+				updatedRowData.allow_mature_content_on_ios = data.allow_mature_content_on_ios;
+			}
 		} else {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				const allowed =
@@ -250,6 +253,16 @@ export class UserAccountSettingsService {
 					'AGE_RESTRICTED',
 					'Non-adult users cannot modify the guild content filter',
 				);
+			}
+			if (data.allow_mature_content_on_ios === true) {
+				throw ValidationError.fromPath(
+					'allow_mature_content_on_ios',
+					'AGE_RESTRICTED',
+					'Non-adult users cannot allow 18+ content on iOS',
+				);
+			}
+			if (data.allow_mature_content_on_ios === false) {
+				updatedRowData.allow_mature_content_on_ios = false;
 			}
 		}
 		if (isStaffUser) {

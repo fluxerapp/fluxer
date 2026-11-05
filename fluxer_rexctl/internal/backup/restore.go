@@ -20,6 +20,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
@@ -76,6 +77,53 @@ func (e *PullError) Error() string {
 
 func (e *PullError) Unwrap() error { return e.Err }
 
+const DiskReserve = 1_000_000_000
+
+type RestoreSpaceError struct {
+	Dir       string
+	Need      uint64
+	Available uint64
+}
+
+func (e *RestoreSpaceError) Error() string {
+	return fmt.Sprintf("backup: restoring needs %d bytes in %s and %d are free", e.Need, e.Dir, e.Available)
+}
+
+func restoreDataNeed(m *Manifest) uint64 {
+	var n uint64
+	for _, en := range m.Entries {
+		n += uint64(max(en.Size, 0))
+		if m.Database != "" && en.Path == m.Database {
+			n += uint64(max(en.Size, 0))
+		}
+	}
+	return n
+}
+
+func checkRestoreSpace(store, dir string, need uint64) error {
+	if err := needFree(store, need+DiskReserve); err != nil || sameDisk(store, dir) {
+		return err
+	}
+	return needFree(dir, DiskReserve)
+}
+
+func needFree(path string, need uint64) error {
+	free, err := host.FreeDisk(path)
+	if err != nil || free >= need {
+		return nil
+	}
+	return &RestoreSpaceError{Dir: path, Need: need, Available: free}
+}
+
+func sameDisk(a, b string) bool {
+	x, errX := host.DiskID(a)
+	y, errY := host.DiskID(b)
+	if errX != nil || errY != nil {
+		return a == b
+	}
+	return x == y
+}
+
 func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts RestoreOptions) (*instance.Instance, error) {
 	progress := opts.Progress
 	if progress == nil {
@@ -100,9 +148,13 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err := checkProjectFree(ctx, e, m.Project, dir); err != nil {
 		return nil, err
 	}
+	var data uint64
+	if existing == nil {
+		data = restoreDataNeed(m)
+	}
 
 	progress(StagePulling)
-	if err := pullFromBackup(ctx, path, e, opts.OnEvent); err != nil {
+	if err := pullFromBackup(ctx, path, dir, e, data, opts.OnEvent); err != nil {
 		return nil, err
 	}
 
@@ -415,7 +467,7 @@ func removeStaleImages(ctx context.Context, p *engine.Project, stale []string) {
 	}
 }
 
-func pullFromBackup(ctx context.Context, path string, e *engine.Engine, onEvent func(engine.Event)) error {
+func pullFromBackup(ctx context.Context, path, dir string, e *engine.Engine, data uint64, onEvent func(engine.Event)) error {
 	staging, err := os.MkdirTemp("", "rexctl-restore-")
 	if err != nil {
 		return err
@@ -431,6 +483,10 @@ func pullFromBackup(ctx context.Context, path string, e *engine.Engine, onEvent 
 	p, err := deploy.Load(ctx, inst, e)
 	if err != nil {
 		return &PullError{Err: err}
+	}
+	images, _ := stack.EmbeddedImages()
+	if err := checkRestoreSpace(engine.ImageStore(dir, e), dir, data+e.PullNeed(ctx, images, p.Images(), nil)); err != nil {
+		return err
 	}
 	if err := p.Pull(ctx, onEvent); err != nil {
 		return &PullError{Err: err}

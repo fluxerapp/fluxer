@@ -6,6 +6,13 @@
 		"signoff": "Teamet bag {product_name}",
 		"subject": "Din {product_name}-konto bliver ikke slettet"
 	},
+	"account_deletion_completed": {
+		"footer_reason": "Du modtog denne e-mail, fordi du anmodede om at slette din {product_name}-konto.",
+		"intro": "Vi har slettet din {product_name}-konto, som du bad om.",
+		"note": "Dine beskeder er blevet slettet eller er ikke længere knyttet til dig, afhængigt af hvad du valgte. Hvis du vil bruge {product_name} igen, kan du oprette en ny konto.",
+		"signoff": "Teamet bag {product_name}",
+		"subject": "Din {product_name}-konto er blevet slettet"
+	},
 	"account_deletion_scheduled_inactivity": {
 		"footer_reason": "Du har modtaget denne e-mail, fordi din {product_name}-konto har været inaktiv i lang tid.",
 		"intro": "Din {product_name}-konto har været inaktiv i lang tid, så vi sletter den den {deletion_date}.",

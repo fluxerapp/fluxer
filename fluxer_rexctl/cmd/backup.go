@@ -119,7 +119,7 @@ func runBackup(ctx context.Context, app *App) error {
 			return nil
 		})
 		if err != nil {
-			return backupCreateErr(err)
+			return backupCreateErr(inst, err)
 		}
 		if paused {
 			err := app.UI.Step(ctx, "Waiting for Fluxer to start again", func(ctx context.Context, s *ui.Step) error {
@@ -182,7 +182,7 @@ func warnBackupSkipped(app *App, m *backup.Manifest) {
 	}
 }
 
-func backupCreateErr(err error) error {
+func backupCreateErr(inst *instance.Instance, err error) error {
 	var ee *ui.ExitError
 	var disk *backup.DiskError
 	var missing *backup.MissingDataError
@@ -206,7 +206,7 @@ func backupCreateErr(err error) error {
 	case errors.As(err, &disk):
 		return ui.Failed(
 			fmt.Sprintf("There isn't enough free space for a backup. It needs about %s and %s is free.", ui.Bytes(int64(disk.Need)), ui.Bytes(int64(disk.Available))),
-			"Free up some space, then run rexctl backup again.",
+			"Free up some space, then run rexctl backup again."+keepFewerFix(inst, disk.Need-min(disk.Available, disk.Need)),
 		)
 	case errors.As(err, &dump):
 		return ui.Wrap(fmt.Errorf("%w %s", err, dump.Output), "Couldn't save the database.", "Run rexctl doctor to find the problem.")
@@ -341,6 +341,41 @@ func pruneBackups(app *App, inst *instance.Instance) {
 	if err != nil {
 		app.UI.Warn(fmt.Sprintf("Couldn't delete older backups in %s.", dir), "Check that you can change files in that folder.")
 	}
+}
+
+func keepFewerFix(inst *instance.Instance, short uint64) string {
+	if inst == nil || inst.State == nil || short == 0 {
+		return ""
+	}
+	dir := inst.BackupDir()
+	list, err := backup.List(dir)
+	if err != nil {
+		return ""
+	}
+	protected := map[string]bool{}
+	for _, p := range protectedBackups(inst, dir) {
+		if b := backup.Find(list, p); b != nil {
+			protected[b.Path] = true
+		}
+	}
+	keep := inst.KeepBackups()
+	for n := len(list) - 1; n >= 1; n-- {
+		if keep != instance.KeepAllBackups && n >= keep {
+			continue
+		}
+		var freed uint64
+		var removed int
+		for _, b := range list[n:] {
+			if !protected[b.Path] {
+				freed += uint64(max(b.SizeBytes, 0))
+				removed++
+			}
+		}
+		if removed > 0 && freed >= short {
+			return fmt.Sprintf(" Or run rexctl backup keep %d, which deletes %s now to free about %s. From then on, rexctl keeps the newest %d.", n, plural(removed, "older backup", "older backups"), ui.Bytes(int64(freed)), n)
+		}
+	}
+	return ""
 }
 
 func protectedBackups(inst *instance.Instance, dir string) []string {
