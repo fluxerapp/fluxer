@@ -1072,6 +1072,10 @@ How many NATS RPC requests the gateway works on at once. When it's empty, the ga
 
 The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `17`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
 
+### `FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`
+
+The most times one token can identify on one gateway node in a minute. The gateway does not answer identifies over the limit. A value of `0` turns off this limit. When it's empty, the gateway uses `0`. With rexctl, use `rexctl config set FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`.
+
 ### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
 How many failed requests from the gateway to the API in 10 seconds open its circuit breaker, when at least 80 percent of the requests in that time failed. The breaker then stops further requests for a while. When it's empty, the gateway uses `6`. With rexctl, use `rexctl config set FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`.
