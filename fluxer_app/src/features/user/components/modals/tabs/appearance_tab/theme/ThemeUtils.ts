@@ -2,7 +2,6 @@
 
 import type {ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import {THEME_VARIABLE_NAMES} from '@app/features/theme/variables/ThemeVariableManifest';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 
 const ROOT_BLOCK_PATTERN = /:root\s*\{([^{}]*)\}/g;
 const DECLARATION_PATTERN = /(--[a-zA-Z0-9_-]+)\s*:\s*([^;{}]+);/g;
@@ -192,15 +191,6 @@ export function readFileText(file: File): Promise<string> {
 		reader.onload = () => resolve(String(reader.result ?? ''));
 		reader.readAsText(file);
 	});
-}
-
-export async function copyText(text: string): Promise<void> {
-	const electronApi = getElectronAPI();
-	if (electronApi?.clipboardWriteText) {
-		await electronApi.clipboardWriteText(text);
-		return;
-	}
-	await navigator.clipboard.writeText(text);
 }
 
 export function parseTagInput(value: string): Array<string> {
