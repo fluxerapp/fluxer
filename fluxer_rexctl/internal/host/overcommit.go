@@ -3,21 +3,13 @@
 package host
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
-)
-
-const (
-	OvercommitSetting = "vm.overcommit_memory = 1"
-	OvercommitFile    = "/etc/sysctl.d/61-fluxer-overcommit.conf"
-	OvercommitCommand = "echo '" + OvercommitSetting + "' | sudo tee " + OvercommitFile + " && sudo sysctl --system"
 )
 
 type OvercommitState int
@@ -81,15 +73,9 @@ func FreeMemory() uint64 {
 	return free
 }
 
-func EnableOvercommit(ctx context.Context) error {
-	if _, err := output(ctx, false, "sh", "-c", "printf '"+OvercommitSetting+"\\n' > "+OvercommitFile); err != nil {
-		return err
-	}
-	if _, err := output(ctx, false, "sysctl", "-p", OvercommitFile); err != nil {
-		return err
-	}
+func overcommitChanged() error {
 	if s := Overcommit(); s == OvercommitOff || s == OvercommitLocked {
-		return fmt.Errorf("%w after sysctl -p %s", ErrOvercommitUnchanged, OvercommitFile)
+		return ErrOvercommitUnchanged
 	}
 	return nil
 }

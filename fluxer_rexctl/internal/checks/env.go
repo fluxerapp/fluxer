@@ -190,17 +190,46 @@ func (e *Env) lookup(key string) (string, bool) {
 }
 
 func (e *Env) stage(key string, value *string) {
+	e.stageSetting(key, value, false)
+}
+
+func (e *Env) stageSetting(key string, value *string, secret bool) {
 	if e.staged == nil {
 		e.staged = map[string]*string{}
 	}
+	if e.dryRun {
+		e.stageStep(key, e.settingStep(key, value, secret))
+	}
 	e.staged[key] = value
 	e.env = nil
+}
+
+func (e *Env) settingStep(key string, value *string, secret bool) host.Step {
+	set := func(v string) string {
+		if secret {
+			return "rexctl config set " + key + " -"
+		}
+		return "rexctl config set " + key + " " + instance.ShellQuote(v)
+	}
+	undo := "rexctl config unset " + key
+	if old := e.setting(key); old != "" {
+		undo = set(old)
+	}
+	if value == nil {
+		return host.Step{Do: "Removes " + key + " from your settings.", Command: "rexctl config unset " + key, Undo: undo}
+	}
+	do := "Sets " + key + " to " + *value + "."
+	if secret {
+		do = "Sets " + key + " to the value in .env."
+	}
+	return host.Step{Do: do, Command: set(*value), Undo: undo}
 }
 
 func (e *Env) stageSecret(key, value string) {
 	if e.stagedSecrets == nil {
 		e.stagedSecrets = map[string]string{}
 	}
+	e.stageStep("secret "+key, host.Step{Do: "Saves " + key + " in the secrets rexctl keeps."})
 	e.stagedSecrets[key] = value
 	e.env = nil
 }
@@ -209,8 +238,44 @@ func (e *Env) stageAdmin(key, value string) {
 	if e.stagedAdmin == nil {
 		e.stagedAdmin = map[string]string{}
 	}
+	e.stageStep("admin "+key, host.Step{Do: "Sends " + key + " from .env to your instance's admin settings."})
 	e.stagedAdmin[key] = value
 	e.env = nil
+}
+
+func (e *Env) stageEnvImport() {
+	e.stageStep(".env", host.Step{Do: "Deletes .env from " + e.Instance.Dir + " once the settings are applied."})
+	e.importEnv = true
+}
+
+func (e *Env) stageStep(key string, step host.Step) {
+	if !e.dryRun {
+		return
+	}
+	if e.stageSteps == nil {
+		e.stageSteps = map[string]int{}
+	}
+	if i, ok := e.stageSteps[key]; ok {
+		step.Undo = e.steps[i].Undo
+		e.steps[i] = step
+		return
+	}
+	e.stageSteps[key] = len(e.steps)
+	e.steps = append(e.steps, step)
+}
+
+func (e *Env) run(ctx context.Context, steps ...host.Step) error {
+	if e.dryRun {
+		e.steps = append(e.steps, steps...)
+		return nil
+	}
+	return host.RunSteps(ctx, steps)
+}
+
+func (e *Env) reload(ctx context.Context) {
+	e.Project, e.loadErr = nil, nil
+	e.prepared = false
+	e.prepare(ctx)
 }
 
 func (e *Env) stagedCount() int {
@@ -280,9 +345,7 @@ func Commit(ctx context.Context, e *Env, o deploy.ApplyOptions) error {
 		return err
 	}
 	done = true
-	e.Project = nil
-	e.prepared = false
-	e.prepare(ctx)
+	e.reload(ctx)
 	e.reset()
 	return nil
 }
@@ -472,9 +535,14 @@ func (e *Env) up(ctx context.Context) error {
 	if e.Instance == nil || e.Engine == nil {
 		return errNoProject
 	}
-	if e.loadErr != nil {
+	if e.loadErr != nil && !e.dryRun {
 		return e.loadErr
 	}
-	_, err := deploy.Apply(ctx, e.Instance, e.Engine, deploy.ApplyOptions{})
-	return err
+	return e.run(ctx, host.Step{
+		Do: "Writes Fluxer's files from your settings and starts any service that changed or isn't running.",
+		Run: func(ctx context.Context) error {
+			_, err := deploy.Apply(ctx, e.Instance, e.Engine, deploy.ApplyOptions{})
+			return err
+		},
+	})
 }

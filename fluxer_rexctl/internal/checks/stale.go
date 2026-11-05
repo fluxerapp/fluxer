@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
@@ -72,5 +74,10 @@ func fixStale(ctx context.Context, e *Env) error {
 	if e.loadErr != nil {
 		return e.loadErr
 	}
-	return e.Project.Up(ctx, engine.UpOptions{Services: stale, NoDeps: true, Recreate: engine.RecreateAlways})
+	return e.run(ctx, host.Step{
+		Do: "Recreates " + ui.JoinAnd(stale) + " from the Fluxer version on this machine, so it stops running the older one.",
+		Run: func(ctx context.Context) error {
+			return e.Project.Up(ctx, engine.UpOptions{Services: stale, NoDeps: true, Recreate: engine.RecreateAlways})
+		},
+	})
 }

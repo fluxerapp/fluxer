@@ -4,8 +4,11 @@ package checks
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
@@ -29,24 +32,38 @@ func runStackFiles(ctx context.Context, e *Env) Result {
 }
 
 func fixStackFiles(ctx context.Context, e *Env) error {
-	restored, err := release.RestoreMissing(e.Instance)
-	if err != nil {
+	missing := release.MissingFiles(e.Instance)
+	var restored []string
+	err := e.run(ctx, host.Step{
+		Do: fmt.Sprintf("Writes %s again from Fluxer %s.", ui.JoinAnd(missing), e.Instance.State.Release),
+		Run: func(ctx context.Context) error {
+			var err error
+			if restored, err = release.RestoreMissing(e.Instance); err != nil {
+				return err
+			}
+			if err := e.Instance.Save(); err != nil {
+				return err
+			}
+			e.reload(ctx)
+			return nil
+		},
+	})
+	if err != nil || e.Project == nil {
 		return err
-	}
-	if err := e.Instance.Save(); err != nil {
-		return err
-	}
-	e.Project = nil
-	e.prepared = false
-	e.prepare(ctx)
-	if e.Project == nil {
-		return nil
 	}
 	if err := e.up(ctx); err != nil {
 		return err
 	}
-	if restart := release.RestartFor(restored); len(restart) > 0 {
-		return e.Project.Restart(ctx, restart...)
+	if restart := release.RestartFor(missing); len(restart) > 0 {
+		return e.run(ctx, host.Step{
+			Do: fmt.Sprintf("Restarts %s, which read these files.", ui.JoinAnd(restart)),
+			Run: func(ctx context.Context) error {
+				if restart := release.RestartFor(restored); len(restart) > 0 {
+					return e.Project.Restart(ctx, restart...)
+				}
+				return nil
+			},
+		})
 	}
 	return nil
 }

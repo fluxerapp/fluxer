@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -59,18 +60,22 @@ func fixEnvFile(ctx context.Context, e *Env) error {
 		return err
 	}
 	if r.Env.Same {
-		return instance.RemoveEnv(e.Instance)
+		return e.run(ctx, host.Step{
+			Do:  "Deletes .env from " + e.Instance.Dir + ". rexctl already keeps every setting in it.",
+			Run: func(context.Context) error { return instance.RemoveEnv(e.Instance) },
+		})
 	}
-	for k, v := range r.Env.Settings() {
-		e.stage(k, v)
+	for _, c := range r.Env.Changes {
+		switch c.Kind {
+		case instance.ChangeSetting:
+			e.stageSetting(c.Key, &c.Value, c.Secret)
+		case instance.ChangeSecret:
+			e.stageSecret(c.Key, c.Value)
+		case instance.ChangeAdmin:
+			e.stageAdmin(c.Key, c.Value)
+		}
 	}
-	for k, v := range r.Env.Values(instance.ChangeSecret) {
-		e.stageSecret(k, v)
-	}
-	for k, v := range r.Env.Values(instance.ChangeAdmin) {
-		e.stageAdmin(k, v)
-	}
-	e.importEnv = true
+	e.stageEnvImport()
 	return nil
 }
 
@@ -102,25 +107,43 @@ func runStackEdits(ctx context.Context, e *Env) Result {
 }
 
 func fixStackEdits(ctx context.Context, e *Env) error {
-	edits, err := instance.KeepEdits(e.Instance)
+	r, err := e.drift()
 	if err != nil {
 		return err
 	}
-	for _, ed := range edits {
-		e.keptEdits = append(e.keptEdits, [2]string{ed.Name, ed.Copy})
-		if err := os.Remove(e.Instance.Generated(ed.Name)); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
+	if len(r.Changed) == 0 {
+		return e.up(ctx)
 	}
-	if _, err := release.RestoreMissing(e.Instance); err != nil {
+	version := "version"
+	if len(r.Changed) > 1 {
+		version = "versions"
+	}
+	err = e.run(ctx, host.Step{
+		Do: fmt.Sprintf("Copies your %s of %s to %s and puts rexctl's %s back.", version, ui.JoinAnd(r.Changed), e.Instance.Path(instance.StateDirName, instance.EditedDir), version),
+		Run: func(ctx context.Context) error {
+			edits, err := instance.KeepEdits(e.Instance)
+			if err != nil {
+				return err
+			}
+			for _, ed := range edits {
+				e.keptEdits = append(e.keptEdits, [2]string{ed.Name, ed.Copy})
+				if err := os.Remove(e.Instance.Generated(ed.Name)); err != nil && !errors.Is(err, os.ErrNotExist) {
+					return err
+				}
+			}
+			if _, err := release.RestoreMissing(e.Instance); err != nil {
+				return err
+			}
+			if err := e.Instance.Save(); err != nil {
+				return err
+			}
+			e.reload(ctx)
+			return nil
+		},
+	})
+	if err != nil {
 		return err
 	}
-	if err := e.Instance.Save(); err != nil {
-		return err
-	}
-	e.Project = nil
-	e.prepared = false
-	e.prepare(ctx)
 	return e.up(ctx)
 }
 

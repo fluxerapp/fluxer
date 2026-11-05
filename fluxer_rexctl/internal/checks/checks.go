@@ -4,6 +4,8 @@ package checks
 
 import (
 	"context"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 
@@ -37,6 +39,7 @@ type Result struct {
 	Fix     string   `json:"fix,omitempty"`
 	Fixable bool     `json:"fixable"`
 	Fixed   bool     `json:"fixed"`
+	Plan    *Plan    `json:"plan,omitempty"`
 	Manual  string   `json:"-"`
 	Details []string `json:"-"`
 }
@@ -64,6 +67,9 @@ type Env struct {
 	importEnv     bool
 	stagedBy      []string
 	keptEdits     [][2]string
+	dryRun        bool
+	steps         []host.Step
+	stageSteps    map[string]int
 	publicIP      string
 	publicErr     error
 	publicDone    bool
@@ -219,6 +225,36 @@ func ApplyFix(ctx context.Context, env *Env, id string) (Result, error) {
 	r.Fixable = true
 	r.Fixed = r.Status == Pass || r.Status == Skip
 	return r, nil
+}
+
+type Plan struct {
+	Asks     bool        `json:"asks"`
+	Settings bool        `json:"settings"`
+	Steps    []host.Step `json:"steps"`
+	Error    string      `json:"error,omitempty"`
+}
+
+func PlanFix(ctx context.Context, env *Env, id string) (Plan, error) {
+	c, ok := registry[id]
+	if !ok || c.Fix == nil {
+		return Plan{}, ErrNoFix
+	}
+	staged, secrets, admin := maps.Clone(env.staged), maps.Clone(env.stagedSecrets), maps.Clone(env.stagedAdmin)
+	importEnv, kept := env.importEnv, slices.Clone(env.keptEdits)
+	defer func() {
+		env.staged, env.stagedSecrets, env.stagedAdmin = staged, secrets, admin
+		env.importEnv, env.keptEdits = importEnv, kept
+		env.dryRun = false
+		env.env = nil
+		env.steps, env.stageSteps = nil, nil
+	}()
+	env.dryRun = true
+	err := c.Fix(ctx, env)
+	steps := env.steps
+	if steps == nil {
+		steps = []host.Step{}
+	}
+	return Plan{Asks: !c.SafeFix, Settings: len(env.stageSteps) > 0, Steps: steps}, err
 }
 
 func Failed(results []Result) bool {

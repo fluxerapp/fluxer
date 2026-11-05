@@ -5,6 +5,8 @@ package checks
 import (
 	"context"
 	"strings"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 )
 
 func init() {
@@ -31,5 +33,8 @@ func fixAppProxy(ctx context.Context, e *Env) error {
 	if e.Project == nil {
 		return errNoProject
 	}
-	return e.Project.Restart(ctx, "app-proxy")
+	return e.run(ctx, host.Step{
+		Do:  "Restarts app-proxy.",
+		Run: func(ctx context.Context) error { return e.Project.Restart(ctx, "app-proxy") },
+	})
 }

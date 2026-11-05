@@ -215,7 +215,7 @@ To add your own Caddy directives, such as extra routes or headers, put them in a
 rexctl doctor
 ```
 
-This checks your instance and the machine, and tells you how to fix each problem it finds. `rexctl doctor --fix` fixes the problems rexctl can fix safely.
+This checks your instance and the machine, and tells you how to fix each problem it finds. `rexctl doctor --fix` fixes the problems rexctl can fix safely. To see what it changes first, run `rexctl doctor --fix --dry-run`.
 
 If `rexctl doctor` says memory overcommit is off, the machine has little free memory compared with Fluxer's cache. The cache saves its data in the background by briefly copying itself, and with `vm.overcommit_memory` set to 0 Linux can refuse that copy when memory runs low. `rexctl doctor --fix` sets it to 1, which is what Valkey recommends. With plenty of free memory and swap, rexctl doesn't warn about it.
 
