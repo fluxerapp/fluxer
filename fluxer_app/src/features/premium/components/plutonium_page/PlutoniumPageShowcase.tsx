@@ -305,7 +305,13 @@ function PerkArt({card, source, eager}: {card: PerkCard; source: PerkArtSource; 
 					data-flx="premium.plutonium-page.perk-art.custom-image"
 				/>
 			) : (
-				<FlagshipPerkArt card={card} eager={eager} imageRef={imageRef} onStatus={setStatus} />
+				<FlagshipPerkArt
+					card={card}
+					eager={eager}
+					imageRef={imageRef}
+					onStatus={setStatus}
+					data-flx="premium.plutonium-page.plutonium-page-showcase.perk-art.flagship-perk-art"
+				/>
 			)}
 		</div>
 	);
