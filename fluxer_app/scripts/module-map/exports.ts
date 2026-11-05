@@ -38,7 +38,7 @@ const getObjectPropertyName = (property: t.ObjectProperty): string | undefined =
 const getGeneratedBinding = (node: AstNode | null | undefined): string | undefined => {
 	if (t.isIdentifier(node)) return node.name;
 
-	if (t.isArrowFunctionExpression(node)) {
+	if (t.isArrowFunctionExpression(node) || t.isFunctionExpression(node)) {
 		if (t.isBlockStatement(node.body)) {
 			const [statement] = node.body.body;
 
@@ -49,7 +49,7 @@ const getGeneratedBinding = (node: AstNode | null | undefined): string | undefin
 			return undefined;
 		}
 
-		return getGeneratedBinding(node.body);
+		return t.isArrowFunctionExpression(node) ? getGeneratedBinding(node.body) : undefined;
 	}
 
 	return undefined;
@@ -60,6 +60,9 @@ const hasDefaultBindingComment = (node: t.ObjectProperty): boolean => {
 
 	return comments.some((comment) => comment.value.includes('export default binding'));
 };
+
+const getExportSourceModule = (module: CompilationModule): CompilationModule =>
+	(module as CompilationModule & {rootModule?: CompilationModule | null}).rootModule ?? module;
 
 const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 	const ast = parseModuleSource(code);
@@ -85,7 +88,8 @@ const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 			if (
 				t.isMemberExpression(callee) &&
 				t.isIdentifier(callee.object, {name: '__webpack_require__'}) &&
-				t.isIdentifier(callee.property, {name: 'd'})
+				t.isIdentifier(callee.property, {name: 'd'}) &&
+				t.isIdentifier(args[0], {name: '__webpack_exports__'})
 			) {
 				for (const argument of args.slice(1, 3)) {
 					if (!t.isObjectExpression(argument)) continue;
@@ -174,6 +178,8 @@ const collectExportBindings = (code: string): Map<string, Set<string>> => {
 
 			if ((t.isFunctionDeclaration(declaration) || t.isClassDeclaration(declaration)) && declaration.id) {
 				addBinding(declaration.id.name, 'default');
+			} else if (t.isIdentifier(declaration)) {
+				addBinding(declaration.name, 'default');
 			}
 		}
 	}
@@ -263,8 +269,11 @@ export const getModuleExportMap = (
 
 	if (generatedExports.length !== exportNames.length) return undefined;
 
+	const sourceModule = getExportSourceModule(module);
 	const originalSource =
-		typeof module.type === 'string' && module.type.startsWith('javascript/') ? module.originalSource() : null;
+		typeof sourceModule.type === 'string' && sourceModule.type.startsWith('javascript/')
+			? sourceModule.originalSource()
+			: null;
 
 	const sourceBindings = originalSource
 		? collectExportBindings(originalSource.source().toString())
