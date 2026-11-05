@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createEmojiID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createEmojiID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ReactionEmojiKey} from '@app/api/channel/repositories/MessageInteractionRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {ensureTextChannel, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
@@ -40,7 +41,15 @@ interface ParsedEmoji {
 	animated?: boolean;
 }
 
-const REACTION_CUSTOM_EMOJI_REGEX = /^(.+):(\d+)$/;
+const UNICODE_EMOJI_ID = createEmojiID(0n);
+const REACTION_CUSTOM_EMOJI_REGEX = /^<?(?:a?:)?[^:<>]*:(\d+)>?$/;
+
+function toParsedEmoji(reaction: MessageReaction): ParsedEmoji {
+	if (reaction.emojiId === UNICODE_EMOJI_ID) {
+		return {name: reaction.emojiName};
+	}
+	return {id: reaction.emojiId.toString(), name: reaction.emojiName, animated: reaction.isEmojiAnimated};
+}
 
 export class MessageReactionService {
 	private async assertReactionRemovalAllowed(authChannel: AuthenticatedChannel, messageId: MessageID): Promise<void> {
@@ -130,16 +139,12 @@ export class MessageReactionService {
 		const validatedLimit = Math.min(Math.max(requestedLimit, 1), limitCap);
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
-		const parsedEmoji = this.parseEmojiWithoutValidation(emoji);
-		const afterUserId = after;
-		const fetchLimit = validatedLimit + 1;
 		const reactions = await this.channelRepository.messageInteractions.listReactionUsers(
 			channel.id,
 			messageId,
-			parsedEmoji.name,
-			fetchLimit,
-			afterUserId,
-			parsedEmoji.id ? createEmojiID(BigInt(parsedEmoji.id)) : undefined,
+			this.parseReactionEmojiKey(emoji),
+			validatedLimit + 1,
+			after,
 		);
 		const hasMore = reactions.length > validatedLimit;
 		const pageReactions = hasMore ? reactions.slice(0, validatedLimit) : reactions;
@@ -200,33 +205,31 @@ export class MessageReactionService {
 			key: 'max_reactions_per_message',
 			fallback: MAX_REACTIONS_PER_MESSAGE,
 		});
-		const parsedEmojiBasic = this.parseEmojiWithoutValidation(emoji);
-		const emojiId = parsedEmojiBasic.id ? createEmojiID(BigInt(parsedEmojiBasic.id)) : undefined;
+		const emojiKey = this.parseReactionEmojiKey(emoji);
 		const userReactionExists = await this.channelRepository.messageInteractions.checkUserReactionExists(
 			channel.id,
 			messageId,
 			userId,
-			parsedEmojiBasic.name,
-			emojiId,
+			emojiKey,
 		);
 		if (userReactionExists) {
 			return;
 		}
-		const reactionCount = await this.channelRepository.messageInteractions.countReactionUsers(
+		const existingReactions = await this.channelRepository.messageInteractions.listReactionUsers(
 			channel.id,
 			messageId,
-			parsedEmojiBasic.name,
-			emojiId,
+			emojiKey,
 		);
+		const reactionCount = existingReactions.length;
 		if (reactionCount === 0 && guild) {
 			await checkPermission(Permissions.ADD_REACTIONS);
 		}
 		let parsedEmoji: ParsedEmoji;
 		if (reactionCount > 0) {
-			parsedEmoji = parsedEmojiBasic;
+			parsedEmoji = toParsedEmoji(existingReactions[0]);
 		} else {
-			parsedEmoji = await this.parseAndValidateEmoji({
-				emoji,
+			parsedEmoji = await this.validateEmoji({
+				emojiKey,
 				guildId: channel.guildId?.toString() || undefined,
 				userId,
 				hasPermission: channel.guildId ? hasPermission : undefined,
@@ -249,7 +252,7 @@ export class MessageReactionService {
 			messageId,
 			userId,
 			parsedEmoji.name,
-			emojiId,
+			emojiKey.id,
 			parsedEmoji.animated ?? false,
 		);
 		await this.dispatchMessageReactionAdd({
@@ -279,21 +282,16 @@ export class MessageReactionService {
 		const channel = authChannel.channel;
 		const {hasPermission} = authChannel;
 		await this.assertReactionRemovalAllowed(authChannel, messageId);
-		const parsedEmoji = this.parseEmojiWithoutValidation(emoji);
+		const emojiKey = this.parseReactionEmojiKey(emoji);
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) return;
 		const isRemovingOwnReaction = targetId === actorId;
 		if (!isRemovingOwnReaction) {
 			await this.assertCanModerateMessageReactions({channel, hasPermission});
 		}
-		const emojiId = parsedEmoji.id ? createEmojiID(BigInt(parsedEmoji.id)) : undefined;
-		await this.channelRepository.messageInteractions.removeReaction(
-			channel.id,
-			messageId,
-			targetId,
-			parsedEmoji.name,
-			emojiId,
-		);
+		const parsedEmoji = await this.findStoredEmoji(channel.id, messageId, emojiKey);
+		if (!parsedEmoji) return;
+		await this.channelRepository.messageInteractions.removeReaction(channel.id, messageId, targetId, emojiKey);
 		await this.dispatchMessageReactionRemove({
 			channel,
 			messageId,
@@ -315,17 +313,13 @@ export class MessageReactionService {
 		const channel = authChannel.channel;
 		const {hasPermission} = authChannel;
 		await this.assertReactionRemovalAllowed(authChannel, messageId);
-		const parsedEmoji = this.parseEmojiWithoutValidation(emoji);
+		const emojiKey = this.parseReactionEmojiKey(emoji);
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) return;
 		await this.assertCanModerateMessageReactions({channel, hasPermission});
-		const emojiId = parsedEmoji.id ? createEmojiID(BigInt(parsedEmoji.id)) : undefined;
-		await this.channelRepository.messageInteractions.removeAllReactionsForEmoji(
-			channel.id,
-			messageId,
-			parsedEmoji.name,
-			emojiId,
-		);
+		const parsedEmoji = await this.findStoredEmoji(channel.id, messageId, emojiKey);
+		if (!parsedEmoji) return;
+		await this.channelRepository.messageInteractions.removeAllReactionsForEmoji(channel.id, messageId, emojiKey);
 		await this.dispatchMessageReactionRemoveAllForEmoji({
 			channel,
 			messageId,
@@ -366,43 +360,46 @@ export class MessageReactionService {
 		}
 	}
 
-	private parseEmojiWithoutValidation(emoji: string): {
-		name: string;
-		id?: string;
-		animated?: boolean;
-	} {
+	private parseReactionEmojiKey(emoji: string): ReactionEmojiKey {
 		const decodedEmoji = decodeURIComponent(emoji);
 		const customEmojiMatch = decodedEmoji.match(REACTION_CUSTOM_EMOJI_REGEX);
 		if (customEmojiMatch) {
-			const [, name, id] = customEmojiMatch;
-			return {
-				id,
-				name: name || 'unknown',
-			};
+			return {id: createEmojiID(BigInt(customEmojiMatch[1]))};
 		}
 		return {name: decodedEmoji};
 	}
 
-	private async parseAndValidateEmoji({
-		emoji,
+	private async findStoredEmoji(
+		channelId: ChannelID,
+		messageId: MessageID,
+		emojiKey: ReactionEmojiKey,
+	): Promise<ParsedEmoji | null> {
+		const [reaction] = await this.channelRepository.messageInteractions.listReactionUsers(
+			channelId,
+			messageId,
+			emojiKey,
+			1,
+		);
+		if (reaction) return toParsedEmoji(reaction);
+		return emojiKey.id === undefined ? {name: emojiKey.name} : null;
+	}
+
+	private async validateEmoji({
+		emojiKey,
 		guildId,
 		userId,
 		hasPermission,
 	}: {
-		emoji: string;
+		emojiKey: ReactionEmojiKey;
 		guildId?: string | undefined;
 		userId?: UserID;
 		hasPermission?: (permission: bigint) => Promise<boolean>;
 	}): Promise<ParsedEmoji> {
-		const decodedEmoji = decodeURIComponent(emoji);
-		const customEmojiMatch = decodedEmoji.match(REACTION_CUSTOM_EMOJI_REGEX);
-		if (customEmojiMatch) {
-			const [, , id] = customEmojiMatch;
-			const emojiIdBigInt = createEmojiID(BigInt(id));
+		if (emojiKey.id !== undefined) {
 			const hasGlobalExpressions = userId
 				? await checkUserGlobalExpressions(userId, this.userRepository, this.limitConfigService)
 				: 0;
-			const emoji = await this.guildRepository.getEmojiById(emojiIdBigInt);
+			const emoji = await this.guildRepository.getEmojiById(emojiKey.id);
 			if (!emoji) {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.CUSTOM_EMOJI_NOT_FOUND);
 			}
@@ -420,15 +417,15 @@ export class MessageReactionService {
 				}
 			}
 			return {
-				id,
+				id: emojiKey.id.toString(),
 				name: emoji.name,
 				animated: emoji.isAnimated,
 			};
 		}
-		if (!isValidSingleUnicodeEmoji(decodedEmoji)) {
+		if (!isValidSingleUnicodeEmoji(emojiKey.name)) {
 			throw InputValidationError.fromCode('emoji', ValidationErrorCodes.NOT_A_VALID_UNICODE_EMOJI);
 		}
-		return {name: decodedEmoji};
+		return {name: emojiKey.name};
 	}
 
 	private async dispatchMessageReactionAdd(params: {
