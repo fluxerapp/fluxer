@@ -24,7 +24,6 @@ type ImageSet struct {
 	Release   string                         `json:"release"`
 	Images    map[string]string              `json:"images"`
 	Builds    map[string]string              `json:"builds,omitempty"`
-	Tags      map[string]string              `json:"tags,omitempty"`
 	Layers    map[string]Layer               `json:"layers,omitempty"`
 	Platforms map[string]map[string][]string `json:"platforms,omitempty"`
 }
@@ -185,7 +184,14 @@ func pinImages(compose []byte, release string, images map[string]string) ([]byte
 		case !pinned:
 			continue
 		default:
-			if name, _, ok := defaultedVar(img.value); ok {
+			name, def, ok := defaultedVar(img.value)
+			if !ok {
+				def = img.value
+			}
+			if withoutDigest(ref) != withoutDigest(def) {
+				continue
+			}
+			if ok {
 				value = "${" + name + ":-" + ref + "}"
 			} else {
 				value = ref
@@ -263,6 +269,11 @@ func RegistryServices() map[string]bool {
 		}
 	}
 	return out
+}
+
+func withoutDigest(ref string) string {
+	name, _, _ := strings.Cut(ref, "@")
+	return name
 }
 
 func digestPinned(ref string) bool {

@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"maps"
 	"net/http"
 	"net/url"
@@ -86,7 +87,7 @@ func run(ctx context.Context, setPath, cachePath string, pin bool) error {
 	if err := json.Unmarshal(data, &set); err != nil {
 		return err
 	}
-	third, err := thirdParty()
+	third, err := thirdParty(stack.Embedded())
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,6 @@ func run(ctx context.Context, setPath, cachePath string, pin bool) error {
 		}
 	}
 
-	set.Tags = map[string]string{}
 	set.Layers = map[string]stack.Layer{}
 	set.Platforms = map[string]map[string][]string{}
 	var todo []blob
@@ -125,12 +125,9 @@ func run(ctx context.Context, setPath, cachePath string, pin bool) error {
 		if err != nil {
 			return err
 		}
-		top, topDigest, err := c.manifest(ctx, r, r.ref)
+		top, _, err := c.manifest(ctx, r, r.ref)
 		if err != nil {
 			return fmt.Errorf("%s: %w", ref, err)
-		}
-		if !strings.Contains(ref, "@") {
-			set.Tags[ref] = topDigest
 		}
 		for _, p := range platforms {
 			m, err := c.platformManifest(ctx, r, top, p)
@@ -200,20 +197,31 @@ func run(ctx context.Context, setPath, cachePath string, pin bool) error {
 	return writeJSON(setPath, set)
 }
 
-func thirdParty() (map[string]string, error) {
-	compose, err := stack.ReadFile(stack.Embedded(), stack.ComposeFile)
+func thirdParty(set *stack.Set) (map[string]string, error) {
+	files := []string{stack.ComposeFile}
+	voice, err := fs.Glob(set.Files, "voice/*.compose.yml")
 	if err != nil {
 		return nil, err
 	}
+	files = append(files, voice...)
 	out := map[string]string{}
-	for svc, value := range stack.ComposeImages(compose) {
-		if strings.HasPrefix(value, "${FLUXER_REGISTRY") {
-			continue
+	for _, name := range files {
+		compose, err := stack.ReadFile(set, name)
+		if err != nil {
+			return nil, err
 		}
-		if def, ok := stack.ImageDefault(value); ok {
-			value = def
+		for svc, value := range stack.ComposeImages(compose) {
+			if strings.HasPrefix(value, "${FLUXER_REGISTRY") {
+				continue
+			}
+			if def, ok := stack.ImageDefault(value); ok {
+				value = def
+			}
+			if seen, ok := out[svc]; ok && seen != value {
+				return nil, fmt.Errorf("%s runs %s in one compose file and %s in another, so it can't have one pinned image", svc, seen, value)
+			}
+			out[svc] = value
 		}
-		out[svc] = value
 	}
 	return out, nil
 }

@@ -82,3 +82,15 @@ func TestRegistryServicesLeavesOutThirdPartyImages(t *testing.T) {
 		t.Fatalf("RegistryServices() = %v", got)
 	}
 }
+
+func TestPinImagesLeavesAnImageWhosePinIsForAnotherTag(t *testing.T) {
+	shipped, images := pinnedSet(t)
+	images["postgres"] = "postgres:17-alpine@sha256:" + strings.Repeat("cd", 32)
+	got, err := pinImages(shipped, "test", images)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pinned := ComposeImages(got)["postgres"]; pinned != "${FLUXER_POSTGRES_IMAGE:-postgres:16-alpine}" {
+		t.Fatalf("postgres image = %q", pinned)
+	}
+}
