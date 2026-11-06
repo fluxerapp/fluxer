@@ -9,6 +9,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
+import {STREAM_PREVIEW_CONTENT_TYPE_JPEG} from '@fluxer/constants/src/StreamConstants';
 import {
 	StreamPreviewResponse,
 	StreamPreviewUploadBodySchema,
@@ -72,9 +73,9 @@ export function StreamController(app: HonoApp) {
 			if (!preview) {
 				return ctx.body(null, 404);
 			}
-			const payload: ArrayBuffer = preview.buffer.slice().buffer;
+			const payload: ArrayBuffer = preview.slice().buffer;
 			const headers = {
-				'Content-Type': preview.contentType || 'image/jpeg',
+				'Content-Type': STREAM_PREVIEW_CONTENT_TYPE_JPEG,
 				'Cache-Control': 'no-store, private',
 				Pragma: 'no-cache',
 			};

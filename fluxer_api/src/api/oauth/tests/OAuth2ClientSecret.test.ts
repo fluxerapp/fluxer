@@ -65,4 +65,24 @@ describe('OAuth2 Client Secret', () => {
 		expect(json.client_secret).toBeUndefined();
 		expect(json.id).toBe(application.id);
 	});
+	test('keeps the new bot token when the client secret is reset at the same time', async () => {
+		const {appOwner, application} = await createOAuth2TestSetup(harness);
+		const [botReset] = await Promise.all([
+			createBuilder<{token: string}>(harness, appOwner.token)
+				.post(`/oauth2/applications/${application.id}/bot/reset-token`)
+				.body({password: appOwner.password})
+				.expect(HTTP_STATUS.OK)
+				.execute(),
+			createBuilder(harness, appOwner.token)
+				.post(`/oauth2/applications/${application.id}/client-secret/reset`)
+				.body({password: appOwner.password})
+				.expect(HTTP_STATUS.OK)
+				.execute(),
+		]);
+		await createBuilder(harness, `Bot ${botReset.token}`).get('/users/@me').expect(HTTP_STATUS.OK).execute();
+		await createBuilder(harness, `Bot ${application.bot.token}`)
+			.get('/users/@me')
+			.expect(HTTP_STATUS.UNAUTHORIZED)
+			.execute();
+	});
 });

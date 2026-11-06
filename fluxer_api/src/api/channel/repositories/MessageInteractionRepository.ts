@@ -9,6 +9,7 @@ import type {ChannelPinRow, MessageReactionRow} from '@app/api/database/types/Me
 import type {Message} from '@app/api/models/Message';
 import {MessageReaction} from '@app/api/models/MessageReaction';
 import {ChannelPins, MessageReactions, Messages} from '@app/api/Tables';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
 const createFetchChannelPinsQuery = (limit: number) =>
@@ -73,6 +74,16 @@ const FETCH_NEXT_EMOJI_NAME_QUERY = MessageReactions.selectCql({
 	],
 	limit: 1,
 });
+const FETCH_NEXT_EMOJI_ID_QUERY = MessageReactions.selectCql({
+	columns: ['emoji_id'],
+	where: [
+		MessageReactions.where.eq('channel_id'),
+		MessageReactions.where.eq('bucket'),
+		MessageReactions.where.eq('message_id'),
+		MessageReactions.where.gt('emoji_id', 'after_emoji_id'),
+	],
+	limit: 1,
+});
 const DELETE_REACTIONS_BY_EMOJI_ID_QUERY = MessageReactions.deleteCql({
 	where: [
 		MessageReactions.where.eq('channel_id'),
@@ -117,21 +128,29 @@ export class MessageInteractionRepository {
 		channelId: ChannelID,
 		beforePinnedTimestamp: Date,
 		limit: number = 50,
-	): Promise<Array<Message>> {
+		minMessageTimestamp: number | null = null,
+	): Promise<{messages: Array<Message>; scannedCount: number; oldestPinnedTimestamp: Date | null}> {
 		const pins = await fetchMany<ChannelPinRow>(
 			createFetchChannelPinsQuery(limit).bind({
 				channel_id: channelId,
 				before_pinned_timestamp: beforePinnedTimestamp,
 			}),
 		);
+		let oldestPinnedTimestamp: Date | null = null;
 		const messages: Array<Message> = [];
 		for (const pin of pins) {
+			if (!oldestPinnedTimestamp || pin.pinned_timestamp.getTime() < oldestPinnedTimestamp.getTime()) {
+				oldestPinnedTimestamp = pin.pinned_timestamp;
+			}
+			if (minMessageTimestamp !== null && snowflakeToDate(pin.message_id).getTime() < minMessageTimestamp) {
+				continue;
+			}
 			const message = await this.messageRepository.getMessage(channelId, pin.message_id);
 			if (message) {
 				messages.push(message);
 			}
 		}
-		return messages;
+		return {messages, scannedCount: pins.length, oldestPinnedTimestamp};
 	}
 
 	async addChannelPin(channelId: ChannelID, messageId: MessageID, pinnedTimestamp: Date): Promise<void> {
@@ -297,15 +316,35 @@ export class MessageInteractionRepository {
 		await this.setHasReaction(channelId, messageId, hasReactions);
 	}
 
-	async countUniqueReactions(channelId: ChannelID, messageId: MessageID): Promise<number> {
-		const reactions = await this.listMessageReactions(channelId, messageId);
-		const uniqueEmojis = new Set<string>();
-		for (const reaction of reactions) {
-			uniqueEmojis.add(
-				reaction.emojiId === UNICODE_EMOJI_ID ? `unicode:${reaction.emojiName}` : `custom:${reaction.emojiId}`,
-			);
+	async countUniqueReactions(channelId: ChannelID, messageId: MessageID, limit: number): Promise<number> {
+		const key = {channel_id: channelId, bucket: BucketUtils.makeBucket(messageId), message_id: messageId};
+		let count = 0;
+		let unicode = await fetchOne<Pick<MessageReactionRow, 'emoji_name'>>(FETCH_FIRST_EMOJI_NAME_QUERY, {
+			...key,
+			emoji_id: UNICODE_EMOJI_ID,
+		});
+		while (unicode) {
+			count += 1;
+			if (count >= limit) return count;
+			unicode = await fetchOne<Pick<MessageReactionRow, 'emoji_name'>>(FETCH_NEXT_EMOJI_NAME_QUERY, {
+				...key,
+				emoji_id: UNICODE_EMOJI_ID,
+				after_emoji_name: unicode.emoji_name,
+			});
 		}
-		return uniqueEmojis.size;
+		let custom = await fetchOne<Pick<MessageReactionRow, 'emoji_id'>>(FETCH_NEXT_EMOJI_ID_QUERY, {
+			...key,
+			after_emoji_id: UNICODE_EMOJI_ID,
+		});
+		while (custom) {
+			count += 1;
+			if (count >= limit) return count;
+			custom = await fetchOne<Pick<MessageReactionRow, 'emoji_id'>>(FETCH_NEXT_EMOJI_ID_QUERY, {
+				...key,
+				after_emoji_id: custom.emoji_id,
+			});
+		}
+		return count;
 	}
 
 	async checkUserReactionExists(

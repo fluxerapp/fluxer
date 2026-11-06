@@ -103,6 +103,10 @@ export class UserRepository {
 		return this.accountRepo.compareAndSetFlags(user, flags);
 	}
 
+	async compareAndClearSuspension(user: User, flags: bigint): Promise<User | null> {
+		return this.accountRepo.compareAndClearSuspension(user, flags);
+	}
+
 	async moveLegacyBadgeHideBits(userId: UserID, options: {mergeIntoHiddenList: boolean}): Promise<User | null> {
 		return this.accountRepo.moveLegacyBadgeHideBits(userId, options);
 	}
@@ -442,6 +446,10 @@ export class UserRepository {
 
 	async listBlockedUserIds(sourceUserId: UserID): Promise<Array<UserID>> {
 		return this.relationshipRepo.listBlockedUserIds(sourceUserId);
+	}
+
+	async listUserIdsBlockingTarget(targetUserId: UserID, sourceUserIds: Array<UserID>): Promise<Set<UserID>> {
+		return this.relationshipRepo.listUserIdsBlockingTarget(targetUserId, sourceUserIds);
 	}
 
 	async hasReachedRelationshipLimit(sourceUserId: UserID, limit: number): Promise<boolean> {

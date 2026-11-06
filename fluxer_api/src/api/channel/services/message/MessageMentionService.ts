@@ -22,7 +22,7 @@ import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import {ChannelTypes, MessageTypes, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -47,6 +47,7 @@ interface MentionReadRepairData {
 	channelMentions: Set<ChannelID>;
 	mentionsEveryone: boolean;
 	changed: boolean;
+	channelsChanged: boolean;
 }
 
 interface MentionableUser {
@@ -161,8 +162,8 @@ export class MessageMentionService {
 			changed:
 				!this.setsEqual(message.mentionedUserIds, userMentions) ||
 				!this.setsEqual(message.mentionedRoleIds, roleMentions) ||
-				!this.setsEqual(message.mentionedChannelIds, contentChannelMentions) ||
 				message.mentionEveryone !== mentionsEveryone,
+			channelsChanged: !this.setsEqual(message.mentionedChannelIds, contentChannelMentions),
 		};
 	}
 
@@ -187,7 +188,7 @@ export class MessageMentionService {
 		};
 	}
 
-	private setsEqual<T>(left: ReadonlySet<T>, right: ReadonlySet<T>): boolean {
+	setsEqual<T>(left: ReadonlySet<T>, right: ReadonlySet<T>): boolean {
 		if (left.size !== right.size) return false;
 		for (const value of left) {
 			if (!right.has(value)) return false;
@@ -395,18 +396,9 @@ export class MessageMentionService {
 			return {validUsers, validUserIds};
 		}
 		const authorId = message.authorId;
-		const blockedUserIds = new Set(
-			(
-				await Promise.all(
-					validUserIds.map(async (targetUserId) => {
-						if (targetUserId === authorId) {
-							return null;
-						}
-						const block = await this.userRepository.getRelationship(targetUserId, authorId, RelationshipTypes.BLOCKED);
-						return block ? targetUserId : null;
-					}),
-				)
-			).filter((targetUserId): targetUserId is UserID => targetUserId != null),
+		const blockedUserIds = await this.userRepository.listUserIdsBlockingTarget(
+			authorId,
+			validUserIds.filter((targetUserId) => targetUserId !== authorId),
 		);
 		if (blockedUserIds.size === 0) {
 			return {validUsers, validUserIds};

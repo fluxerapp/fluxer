@@ -223,7 +223,7 @@ export class MessageProcessingService {
 				? await this.channelRepository.messages.getMessage(message.reference.channelId, message.reference.messageId)
 				: null;
 		const repair = await this.mentionService.buildReadRepairMentionData({message, referencedMessage});
-		if (!repair.changed) {
+		if (!repair.changed && !repair.channelsChanged) {
 			return message;
 		}
 		const resolvedSourceChannel =
@@ -237,14 +237,17 @@ export class MessageProcessingService {
 					channel: resolvedSourceChannel,
 				})
 			: [];
+		const channelIds = new Set(
+			validChannelMentions.map((mentionedChannel) => createChannelID(BigInt(mentionedChannel.id))),
+		);
+		if (!repair.changed && this.mentionService.setsEqual(message.mentionedChannelIds, channelIds)) {
+			return message;
+		}
 		const updatedMessageData = {
 			...message.toRow(),
 			mention_users: repair.userMentions.size > 0 ? repair.userMentions : null,
 			mention_roles: repair.roleMentions.size > 0 ? repair.roleMentions : null,
-			mention_channels:
-				validChannelMentions.length > 0
-					? new Set(validChannelMentions.map((mentionedChannel) => createChannelID(BigInt(mentionedChannel.id))))
-					: null,
+			mention_channels: channelIds.size > 0 ? channelIds : null,
 			mention_everyone: repair.mentionsEveryone,
 		};
 		try {

@@ -2,7 +2,7 @@
 
 import {AsyncLocalStorage} from 'node:async_hooks';
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import {guildIdToRoleId} from '@app/api/BrandedTypes';
+import {createInviteCode, guildIdToRoleId} from '@app/api/BrandedTypes';
 import type {GuildVisitRow} from '@app/api/database/types/GuildVisitTypes';
 import {userGuildVisitsActive} from '@app/api/experiment/GuildVisitsGate';
 import {assertNotBannedFromGuildVisit, endGuildVisit} from '@app/api/guild/visits/GuildVisitLifecycle';
@@ -17,6 +17,7 @@ import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {
 	getGuildDiscoveryRepository,
 	getGuildRepository,
+	getInviteRepository,
 	getLimitConfigService,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
@@ -71,6 +72,7 @@ export interface GuildVisitorAccess {
 const visitRepository = new GuildVisitRepository();
 const visitRowCache = new Map<string, {row: GuildVisitRow | null; expiresAt: number}>();
 const viewCache = new Map<string, {generation: string; view: GuildVisitorView; expiresAt: number}>();
+const inviteGuildCache = new Map<string, {guildId: string | null; expiresAt: number}>();
 
 function boundedSet<V>(map: Map<string, V>, key: string, value: V): void {
 	map.delete(key);
@@ -98,6 +100,7 @@ export function forgetGuildVisitRow(userId: UserID, guildId: GuildID): void {
 export function resetGuildVisitorCachesForTesting(): void {
 	visitRowCache.clear();
 	viewCache.clear();
+	inviteGuildCache.clear();
 }
 
 async function findGuildVisitRowCached(userId: UserID, guildId: GuildID): Promise<GuildVisitRow | null> {
@@ -110,6 +113,30 @@ async function findGuildVisitRowCached(userId: UserID, guildId: GuildID): Promis
 	const row = await visitRepository.get(userId, guildId);
 	boundedSet(visitRowCache, key, {row, expiresAt: now + VISIT_ROW_CACHE_MS});
 	return row;
+}
+
+async function findInviteGuildIdCached(code: string): Promise<string | null> {
+	const now = Date.now();
+	const cached = inviteGuildCache.get(code);
+	if (cached && cached.expiresAt > now) {
+		return cached.guildId;
+	}
+	const invite = await getInviteRepository().findUnique(createInviteCode(code));
+	const guildId = invite?.guildId?.toString() ?? null;
+	boundedSet(inviteGuildCache, code, {guildId, expiresAt: now + VISIT_ROW_CACHE_MS});
+	return guildId;
+}
+
+export async function guildVisitInviteStillValid(
+	visit: Pick<GuildVisitRow, 'source' | 'invite_code' | 'guild_id'>,
+): Promise<boolean> {
+	if (visit.source !== GuildVisitSources.INVITE && visit.source !== GuildVisitSources.VANITY_URL) {
+		return true;
+	}
+	if (!visit.invite_code) {
+		return false;
+	}
+	return (await findInviteGuildIdCached(visit.invite_code)) === visit.guild_id.toString();
 }
 
 export async function loadGuildVisitorView(guildId: GuildID): Promise<GuildVisitorView | null> {
@@ -195,12 +222,17 @@ export async function resolveGuildVisitorAccess(params: {
 	if (visit.invite_expires_at !== null && visit.invite_expires_at.getTime() <= now) {
 		return null;
 	}
-	const [member, view, user] = await Promise.all([
+	const [member, view, user, inviteValid] = await Promise.all([
 		getGuildRepository().getMember(guildId, userId),
 		loadGuildVisitorView(guildId),
 		params.user ? Promise.resolve(params.user) : getUserRepository().findUnique(userId),
+		guildVisitInviteStillValid(visit),
 	]);
 	if (member || !view || !user) {
+		return null;
+	}
+	if (!inviteValid) {
+		await endGuildVisit({userId, guildId, reason: GuildVisitEndReasons.INVITE_REVOKED});
 		return null;
 	}
 	if (!guildVisitAuthorizedByView(visit, view)) {

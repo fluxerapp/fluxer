@@ -44,10 +44,8 @@ export function canonicalizePurgeUrl(url: string): Array<string> {
 	if (segments.length < MIN_PATH_SEGMENTS) {
 		return [];
 	}
-	const stem = segments[segments.length - 1]!.replace(EXTENSION_PATTERN, '');
-	if (stem === '') {
-		return [];
-	}
+	const filename = segments[segments.length - 1]!;
+	const stem = filename.replace(EXTENSION_PATTERN, '') || filename;
 	const directory = segments.slice(0, -1).join('/');
 	return animationVariants(stem).map((variant) => `${base.host}${basePath}/${directory}/${variant}`);
 }

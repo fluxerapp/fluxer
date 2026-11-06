@@ -9,7 +9,11 @@ function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): string | u
 		return;
 	}
 	try {
-		return new URL(trimmedUrl).toString();
+		const parsedUrl = new URL(trimmedUrl);
+		if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+			return;
+		}
+		return parsedUrl.toString();
 	} catch {
 		return;
 	}

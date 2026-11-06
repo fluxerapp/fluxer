@@ -87,20 +87,6 @@ function needsDeliveryRecord(purchase: OperatorPassPurchaseRow): boolean {
 	return purchase.delivered_at != null && purchase.delivery_recorded_at == null;
 }
 
-async function listCompletedSessionsFor(
-	deps: FulfilmentSweepDependencies,
-	candidates: ReadonlyArray<SweepCandidate>,
-): Promise<ReadonlySet<string>> {
-	let oldestMs: number | null = null;
-	for (const candidate of candidates) {
-		if (candidate.need !== 'if_completed') continue;
-		const createdMs = candidate.purchase.created_at.getTime();
-		if (oldestMs === null || createdMs < oldestMs) oldestMs = createdMs;
-	}
-	if (oldestMs === null) return new Set();
-	return deps.listCompletedSessionIds(new Date(oldestMs - SESSION_CREATED_SLACK_MS));
-}
-
 function expandedObject<T extends {id: string}>(value: string | T | null | undefined): T | null {
 	return value && typeof value === 'object' ? value : null;
 }
@@ -156,6 +142,78 @@ async function sweepSession(
 	}
 }
 
+async function sweepCandidate(
+	deps: FulfilmentSweepDependencies,
+	{purchase, need, record, receipts}: SweepCandidate,
+	nowMs: number,
+	completedSessionIds: () => Promise<ReadonlySet<string>>,
+	result: FulfilmentSweepResult,
+): Promise<void> {
+	if (record) {
+		try {
+			await deps.recordDelivery(purchase);
+		} catch (error) {
+			Logger.warn(
+				{sessionId: purchase.checkout_session_id, error},
+				'Operator Pass fulfilment sweep could not record the certificate delivery time on the payment',
+			);
+		}
+	}
+	if (receipts) {
+		try {
+			await deps.requeueWithdrawalReceipts(purchase, new Date(nowMs));
+		} catch (error) {
+			Logger.warn(
+				{sessionId: purchase.checkout_session_id, error},
+				'Operator Pass fulfilment sweep could not queue the owed withdrawal receipts again',
+			);
+		}
+	}
+	if (need === 'skip' || (need === 'if_completed' && !(await completedSessionIds()).has(purchase.checkout_session_id)))
+		return;
+	const context = {
+		sessionId: purchase.checkout_session_id,
+		purchaserId: purchase.purchaser_id,
+		status: purchase.status,
+		purchasedAt: purchase.purchased_at ?? null,
+	};
+	if (need === 'welcome_lapsed') {
+		const marker = `${WELCOME_LAPSED_KEY_PREFIX}${purchase.checkout_session_id}:${welcomeWindowStartMs(purchase)}`;
+		try {
+			if (await deps.kvClient.setnx(marker, '1', WELCOME_LAPSED_MARKER_TTL_SECONDS)) {
+				Logger.error(context, 'Operator Pass certificate email was never sent, the sweep stopped retrying it');
+				await alertSupport({
+					dedupeKey: `operator-pass-certificate-email:${purchase.checkout_session_id}`,
+					subject: 'Operator Pass certificate email never sent',
+					summary:
+						'The certificate email for an Operator Pass purchase was never sent, and the sweep stopped retrying it after 7 days. Send the buyer the certificate by hand.',
+					facts: {
+						checkoutSessionId: purchase.checkout_session_id,
+						paymentIntentId: purchase.payment_intent_id,
+						userId: purchase.purchaser_id,
+						documentNumber: purchase.invoice_number,
+					},
+				});
+			}
+		} catch (error) {
+			Logger.warn({...context, error}, 'Operator Pass fulfilment sweep could not record a lapsed certificate email');
+		}
+		return;
+	}
+	if (purchase.purchased_at) await alertIfUndelivered(purchase, purchase.purchased_at, nowMs, context);
+	result.checked += 1;
+	try {
+		const session = await deps.retrieveSession(purchase.checkout_session_id);
+		if (!purchase.purchased_at && isSessionPaid(session)) {
+			await alertIfUndelivered(purchase, purchase.created_at, nowMs, context);
+		}
+		await sweepSession(deps, session, nowMs);
+	} catch (error) {
+		result.failed += 1;
+		Logger.warn({...context, error}, 'Operator Pass fulfilment sweep could not finish a purchase');
+	}
+}
+
 export async function runOperatorPassFulfilmentSweep(
 	deps: FulfilmentSweepDependencies,
 ): Promise<FulfilmentSweepResult> {
@@ -166,91 +224,26 @@ export async function runOperatorPassFulfilmentSweep(
 	if (!(await deps.kvClient.acquireLock(LOCK_KEY, token, LOCK_TTL_SECONDS))) return result;
 	result.ran = true;
 	try {
-		const candidates: Array<SweepCandidate> = [];
+		let completedIds: Promise<ReadonlySet<string>> | null = null;
+		const completedSessionIds = () => {
+			completedIds ??= deps.listCompletedSessionIds(new Date(now() - SESSION_LOOKBACK_MS - SESSION_CREATED_SLACK_MS));
+			return completedIds;
+		};
 		let pageState: string | null = null;
 		do {
 			if (now() >= deadline || !(await deps.kvClient.extendLock(LOCK_KEY, token, LOCK_TTL_SECONDS))) return result;
 			const page = await deps.repository.scanPurchases(PAGE_SIZE, pageState);
 			for (const purchase of page.rows) {
-				const need = sweepNeed(purchase, now());
+				const nowMs = now();
+				if (nowMs >= deadline) return result;
+				const need = sweepNeed(purchase, nowMs);
 				const record = needsDeliveryRecord(purchase);
 				const receipts = (purchase.withdrawal_receipts_owed?.size ?? 0) > 0;
-				if (need !== 'skip' || record || receipts) candidates.push({purchase, need, record, receipts});
+				if (need === 'skip' && !record && !receipts) continue;
+				await sweepCandidate(deps, {purchase, need, record, receipts}, nowMs, completedSessionIds, result);
 			}
 			pageState = page.pageState;
 		} while (pageState);
-		if (candidates.length === 0) return result;
-		if (now() >= deadline || !(await deps.kvClient.extendLock(LOCK_KEY, token, LOCK_TTL_SECONDS))) return result;
-		const completedIds = await listCompletedSessionsFor(deps, candidates);
-		for (const {purchase, need, record, receipts} of candidates) {
-			const nowMs = now();
-			if (nowMs >= deadline) return result;
-			if (record) {
-				try {
-					await deps.recordDelivery(purchase);
-				} catch (error) {
-					Logger.warn(
-						{sessionId: purchase.checkout_session_id, error},
-						'Operator Pass fulfilment sweep could not record the certificate delivery time on the payment',
-					);
-				}
-			}
-			if (receipts) {
-				try {
-					await deps.requeueWithdrawalReceipts(purchase, new Date(nowMs));
-				} catch (error) {
-					Logger.warn(
-						{sessionId: purchase.checkout_session_id, error},
-						'Operator Pass fulfilment sweep could not queue the owed withdrawal receipts again',
-					);
-				}
-			}
-			if (need === 'skip' || (need === 'if_completed' && !completedIds.has(purchase.checkout_session_id))) continue;
-			const context = {
-				sessionId: purchase.checkout_session_id,
-				purchaserId: purchase.purchaser_id,
-				status: purchase.status,
-				purchasedAt: purchase.purchased_at ?? null,
-			};
-			if (need === 'welcome_lapsed') {
-				const marker = `${WELCOME_LAPSED_KEY_PREFIX}${purchase.checkout_session_id}:${welcomeWindowStartMs(purchase)}`;
-				try {
-					if (await deps.kvClient.setnx(marker, '1', WELCOME_LAPSED_MARKER_TTL_SECONDS)) {
-						Logger.error(context, 'Operator Pass certificate email was never sent, the sweep stopped retrying it');
-						await alertSupport({
-							dedupeKey: `operator-pass-certificate-email:${purchase.checkout_session_id}`,
-							subject: 'Operator Pass certificate email never sent',
-							summary:
-								'The certificate email for an Operator Pass purchase was never sent, and the sweep stopped retrying it after 7 days. Send the buyer the certificate by hand.',
-							facts: {
-								checkoutSessionId: purchase.checkout_session_id,
-								paymentIntentId: purchase.payment_intent_id,
-								userId: purchase.purchaser_id,
-								documentNumber: purchase.invoice_number,
-							},
-						});
-					}
-				} catch (error) {
-					Logger.warn(
-						{...context, error},
-						'Operator Pass fulfilment sweep could not record a lapsed certificate email',
-					);
-				}
-				continue;
-			}
-			if (purchase.purchased_at) await alertIfUndelivered(purchase, purchase.purchased_at, nowMs, context);
-			result.checked += 1;
-			try {
-				const session = await deps.retrieveSession(purchase.checkout_session_id);
-				if (!purchase.purchased_at && isSessionPaid(session)) {
-					await alertIfUndelivered(purchase, purchase.created_at, nowMs, context);
-				}
-				await sweepSession(deps, session, nowMs);
-			} catch (error) {
-				result.failed += 1;
-				Logger.warn({...context, error}, 'Operator Pass fulfilment sweep could not finish a purchase');
-			}
-		}
 		return result;
 	} finally {
 		await deps.kvClient.releaseLock(LOCK_KEY, token);

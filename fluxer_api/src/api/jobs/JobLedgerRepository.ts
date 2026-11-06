@@ -4,6 +4,7 @@ import {
 	BatchBuilder,
 	deleteOneOrMany,
 	fetchMany,
+	fetchManyInChunks,
 	fetchOne,
 	fetchPage,
 	type PagedQueryResult,
@@ -52,9 +53,13 @@ export const EXPIRED_JOB_ERROR = 'Expired from the job queue';
 
 const JOB_LEDGER_RETENTION_DAYS = JOB_LEDGER_TTL_SECONDS / seconds('1 day');
 const NEWEST_FIRST = {col: 'created_at', direction: 'DESC'} as const;
+const FILTERED_SCAN_PAGE_SIZE = 200;
 
 const FETCH_JOB_BY_ID_QUERY = JobsById.select({
 	where: JobsById.where.eq('job_id'),
+});
+const FETCH_JOBS_BY_IDS_QUERY = JobsById.select({
+	where: JobsById.where.in('job_id', 'job_ids'),
 });
 const ACTIVE_JOBS_QUERY = JobsActive.select();
 const ACTIVE_JOB_IDS_QUERY = JobsActive.select({columns: ['job_id']});
@@ -79,24 +84,28 @@ function previousBucketDay(day: string): string {
 	return bucketDayFor(date);
 }
 
-function dayJobsQuery(olderThanPosition: boolean, limit: number | null) {
+function isCompleteJob(row: JobByIdRow | null | undefined): row is JobByIdRow {
+	return Boolean(row?.created_at && row.task_type && row.status);
+}
+
+function dayJobsQuery(olderThanPosition: boolean, limit: number) {
 	return JobsByDayBucket.select({
 		where: olderThanPosition
 			? [JobsByDayBucket.where.eq('bucket_day'), JobsByDayBucket.where.lt('created_at')]
 			: JobsByDayBucket.where.eq('bucket_day'),
 		orderBy: NEWEST_FIRST,
-		...(limit === null ? {} : {limit}),
+		limit,
 	});
 }
 
 async function fetchDayAfter(
 	bucketDay: string,
 	after: LedgerPosition | null,
-	limit: number | null,
+	limit: number,
 ): Promise<{rows: Array<JobByDayBucketRow>; exhausted: boolean}> {
 	if (after === null) {
 		const rows = await fetchMany<JobByDayBucketRow>(dayJobsQuery(false, limit).bind({bucket_day: bucketDay}));
-		return {rows, exhausted: limit === null || rows.length < limit};
+		return {rows, exhausted: rows.length < limit};
 	}
 	const ties = await fetchMany<JobByDayBucketRow>(
 		JOBS_AFTER_IN_TIE_QUERY.bind({bucket_day: bucketDay, created_at: after.createdAt, job_id: after.jobId}),
@@ -104,7 +113,7 @@ async function fetchDayAfter(
 	const older = await fetchMany<JobByDayBucketRow>(
 		dayJobsQuery(true, limit).bind({bucket_day: bucketDay, created_at: after.createdAt}),
 	);
-	return {rows: [...ties, ...older], exhausted: limit === null || older.length < limit};
+	return {rows: [...ties, ...older], exhausted: older.length < limit};
 }
 
 export class JobLedgerRepository {
@@ -160,7 +169,14 @@ export class JobLedgerRepository {
 
 	async getJob(jobId: bigint): Promise<JobByIdRow | null> {
 		const row = await fetchOne<JobByIdRow>(FETCH_JOB_BY_ID_QUERY.bind({job_id: jobId}));
-		return row?.created_at && row.task_type && row.status ? row : null;
+		return isCompleteJob(row) ? row : null;
+	}
+
+	private async getJobsByIds(jobIds: Array<bigint>): Promise<Map<bigint, JobByIdRow>> {
+		const rows = await fetchManyInChunks<JobByIdRow, bigint>(FETCH_JOBS_BY_IDS_QUERY, jobIds, (chunk) => ({
+			job_ids: chunk,
+		}));
+		return new Map(rows.filter(isCompleteJob).map((row) => [row.job_id, row]));
 	}
 
 	async discardJob(jobId: bigint, createdAt: Date): Promise<void> {
@@ -278,18 +294,29 @@ export class JobLedgerRepository {
 		const lookbackDays = Math.min(opts.maxLookbackDays, JOB_LEDGER_RETENTION_DAYS);
 		const oldestDay = bucketDayFor(new Date(now - lookbackDays * ms('1 day')));
 		const requestedBy = filters.requestedByUserId ?? null;
-		const wholeDays = Boolean(filters.status || filters.taskType || requestedBy !== null);
+		const filtered = Boolean(filters.status || filters.taskType || requestedBy !== null);
 		const jobs: Array<JobByIdRow> = [];
 		let lastRow: JobByDayBucketRow | null = null;
 		let day = bucketDayFor(new Date(Math.min(cursor ? cursor.createdAt.getTime() : now, now)));
 		let after: LedgerPosition | null = cursor;
 		while (jobs.length < limit && day >= oldestDay) {
-			const {rows, exhausted} = await fetchDayAfter(day, after, wholeDays ? null : limit - jobs.length);
+			const {rows, exhausted} = await fetchDayAfter(
+				day,
+				after,
+				filtered ? FILTERED_SCAN_PAGE_SIZE : limit - jobs.length,
+			);
+			const jobsById = await this.getJobsByIds(
+				rows
+					.filter(
+						(row) =>
+							(!filters.taskType || row.task_type === filters.taskType) &&
+							(requestedBy === null || row.requested_by_user_id === requestedBy),
+					)
+					.map((row) => row.job_id),
+			);
 			for (const row of rows) {
 				after = {createdAt: row.created_at, jobId: row.job_id};
-				if (filters.taskType && row.task_type !== filters.taskType) continue;
-				if (requestedBy !== null && row.requested_by_user_id !== requestedBy) continue;
-				const job = await this.getJob(row.job_id);
+				const job = jobsById.get(row.job_id);
 				if (!job || (filters.status && job.status !== filters.status)) continue;
 				jobs.push(job);
 				lastRow = row;

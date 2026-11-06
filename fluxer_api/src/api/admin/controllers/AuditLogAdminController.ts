@@ -50,6 +50,7 @@ export function AuditLogAdminController(app: HonoApp) {
 				sort_order: q === undefined ? undefined : sort_order,
 				limit,
 				offset,
+				acls: ctx.get('adminUserAcls'),
 			});
 			await recordAdminRead(ctx, {
 				targetType: 'audit_log',
@@ -92,7 +93,7 @@ export function AuditLogAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {log_id} = ctx.req.valid('param');
-			const log = await adminService.auditService.getAuditLog(log_id);
+			const log = await adminService.auditService.getAuditLog(log_id, ctx.get('adminUserAcls'));
 			if (!log) {
 				throw new NotFoundError({code: APIErrorCodes.NOT_FOUND});
 			}

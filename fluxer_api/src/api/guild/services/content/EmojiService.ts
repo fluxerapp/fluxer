@@ -62,7 +62,7 @@ export class EmojiService {
 		if (allEmojis.length >= maxEmojis) {
 			throw new MaxGuildEmojisError(maxEmojis);
 		}
-		const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
+		const {animated, imageBuffer} = await this.avatarService.processEmoji({
 			errorPath: 'image',
 			base64Image: image,
 			guildFeatures,
@@ -72,7 +72,6 @@ export class EmojiService {
 			prefix: 'emojis',
 			emojiId,
 			imageBuffer,
-			contentType,
 		});
 		const emoji = await this.guildRepository.upsertEmoji({
 			guild_id: guildId,
@@ -154,7 +153,7 @@ export class EmojiService {
 					});
 					continue;
 				}
-				const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
+				const {animated, imageBuffer} = await this.avatarService.processEmoji({
 					errorPath: `emojis[${success.length + failed.length}].image`,
 					base64Image: emojiData.image,
 					guildFeatures,
@@ -164,7 +163,6 @@ export class EmojiService {
 					prefix: 'emojis',
 					emojiId,
 					imageBuffer,
-					contentType,
 				});
 				const emoji = await this.guildRepository.upsertEmoji({
 					guild_id: guildId,

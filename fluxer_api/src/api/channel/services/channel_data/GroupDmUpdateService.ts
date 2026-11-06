@@ -136,10 +136,13 @@ export class GroupDmUpdateService {
 			});
 			updates.icon_hash = iconHash;
 		}
-		const updatedChannel = await this.channelRepository.channelData.upsert({
-			...channel.toRow(),
-			...updates,
-		});
+		const updatedChannel = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				...updates,
+			},
+			channel.toRow(),
+		);
 		if (name !== undefined && name !== channel.name) {
 			const messageId = createMessageID(await this.snowflakeService.generateForChannel(channelId));
 			const message = await this.messagePersistenceService.createSystemMessage({

@@ -137,7 +137,12 @@ export function UserAdminController(app: HonoApp) {
 		async (ctx) => {
 			const canReviewRegistrations = hasAdminACL(ctx.get('adminUserAcls'), AdminACLs.REGISTRATION_REVIEW);
 			const [user, pendingRegistrations] = await Promise.all([
-				mapUserToAdminResponse(ctx.get('user'), ctx.get('cacheService'), undefined, ctx.get('requestLocale')),
+				mapUserToAdminResponse(
+					ctx.get('user'),
+					ctx.get('cacheService'),
+					ctx.get('authTokenType') === 'admin_api_key' ? ctx.get('adminUserAcls') : undefined,
+					ctx.get('requestLocale'),
+				),
 				canReviewRegistrations ? getInstanceConfigRepository().getPendingRegistrations() : null,
 			]);
 			return ctx.json({user, pending_registration_count: pendingRegistrations?.length ?? null});

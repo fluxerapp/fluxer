@@ -9,7 +9,7 @@ import {Logger} from '@app/api/Logger';
 import {calculateDistance} from '@app/api/utils/GeoUtils';
 import type {VoiceJoinTokenRepository} from '@app/api/voice/VoiceJoinTokenRepository';
 import type {VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
-import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import type {VoiceRepository, VoiceServerNodeFields} from '@app/api/voice/VoiceRepository';
 import {
 	bundledVoiceServerId,
 	checkLiveKitKeys,
@@ -371,30 +371,34 @@ export class VoiceNodeService {
 	}
 
 	async update(server: VoiceServerRecord, body: UpdateVoiceNodeRequest): Promise<VoiceNodeResponse> {
-		const updated: VoiceServerRecord = {...server, updatedAt: new Date()};
+		const fields: VoiceServerNodeFields = {};
 		if (body.endpoint !== undefined && body.endpoint !== server.endpoint) {
-			updated.endpoint = this.checkEndpoint(body.endpoint, server.pinnedHostname);
-			await verifyNodeEndpoint(updated.endpoint, server, server.internalEndpoint, true).catch((error: unknown) => {
+			fields.endpoint = this.checkEndpoint(body.endpoint, server.pinnedHostname);
+			await verifyNodeEndpoint(fields.endpoint, server, server.internalEndpoint, true).catch((error: unknown) => {
 				throw asApiError(error);
 			});
 		}
+		const current = await this.deps.voiceRepository.getServer(server.regionId, server.serverId);
+		if (!current) throw new VoiceNodeUnknownError();
 		if (
-			server.pinnedSoftLimit &&
+			current.pinnedSoftLimit &&
 			body.soft_connection_limit !== undefined &&
-			body.soft_connection_limit !== server.softConnectionLimit
+			body.soft_connection_limit !== current.softConnectionLimit
 		) {
 			throw InputValidationError.create(
 				'soft_connection_limit',
 				'The join token set the soft limit of this server. Change it in the admin panel.',
 			);
 		}
-		if (body.draining !== undefined) updated.draining = body.draining;
-		if (body.latitude !== undefined) updated.latitude = body.latitude;
-		if (body.longitude !== undefined) updated.longitude = body.longitude;
-		if (body.soft_connection_limit !== undefined) updated.softConnectionLimit = body.soft_connection_limit;
-		if (body.public_ipv4 !== undefined) updated.publicIpv4 = body.public_ipv4 || null;
-		if (body.public_ipv6 !== undefined) updated.publicIpv6 = body.public_ipv6 || null;
-		await this.deps.voiceRepository.upsertServer(updated);
+		if (body.draining !== undefined) fields.draining = body.draining;
+		if (body.latitude !== undefined) fields.latitude = body.latitude;
+		if (body.longitude !== undefined) fields.longitude = body.longitude;
+		if (body.soft_connection_limit !== undefined) fields.softConnectionLimit = body.soft_connection_limit;
+		if (body.public_ipv4 !== undefined) fields.publicIpv4 = body.public_ipv4 || null;
+		if (body.public_ipv6 !== undefined) fields.publicIpv6 = body.public_ipv6 || null;
+		const updatedAt = new Date();
+		await this.deps.voiceRepository.patchServerNodeFields(server.regionId, server.serverId, fields, updatedAt);
+		const updated: VoiceServerRecord = {...current, ...fields, updatedAt};
 		await this.deps.publish(
 			JSON.stringify({type: 'server_updated', regionId: server.regionId, serverId: server.serverId}),
 		);

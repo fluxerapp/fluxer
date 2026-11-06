@@ -76,13 +76,16 @@ export class UserMessageDeletionService {
 		assertMutableUserId(userId);
 		const {beforeTimestamp = Number.POSITIVE_INFINITY, channelIdAllowlist, onProgress} = options;
 		Logger.debug({userId, beforeTimestamp}, 'Starting bulk user message deletion');
-		const messagesByChannel = await this.collectUserMessages(userId, beforeTimestamp, channelIdAllowlist);
-		let totalDeleted = 0;
-		for (const [channelIdStr, messages] of messagesByChannel.entries()) {
-			const deleted = await this.deleteMessagesInChannel(channelIdStr, messages);
-			totalDeleted += deleted;
-			onProgress?.(totalDeleted);
-		}
+		const {totalDeleted} = await this.deleteMatchingMessages(
+			userId,
+			async (channelId, messageId) => {
+				if (channelIdAllowlist && !channelIdAllowlist.has(channelId.toString())) {
+					return false;
+				}
+				return snowflakeToDate(messageId).getTime() <= beforeTimestamp;
+			},
+			onProgress,
+		);
 		Logger.debug({userId, totalDeleted}, 'Bulk user message deletion completed');
 		return totalDeleted;
 	}
@@ -94,28 +97,39 @@ export class UserMessageDeletionService {
 		onProgress?: (deleted: number) => void,
 	): Promise<DeleteSelfMessagesResult> {
 		Logger.debug({userId, filter}, 'Starting filtered user message deletion');
-		const messagesByChannel = await this.collectMessagesMatchingFilter(userId, filter, context);
-		let totalDeleted = 0;
-		let channelCount = 0;
-		for (const [channelIdStr, messages] of messagesByChannel.entries()) {
-			const deleted = await this.deleteMessagesInChannel(channelIdStr, messages);
-			if (deleted > 0) {
-				channelCount += 1;
-			}
-			totalDeleted += deleted;
-			onProgress?.(totalDeleted);
-		}
-		Logger.debug({userId, totalDeleted, channelCount}, 'Filtered user message deletion completed');
-		return {totalDeleted, channelCount};
+		const channelEligibility = new Map<string, boolean>();
+		const result = await this.deleteMatchingMessages(
+			userId,
+			async (channelId, messageId) => {
+				if (!isTimestampInWindow(snowflakeToDate(messageId).getTime(), filter)) {
+					return false;
+				}
+				const channelIdStr = channelId.toString();
+				let eligible = channelEligibility.get(channelIdStr);
+				if (eligible === undefined) {
+					const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
+					eligible = channel ? isChannelEligible(channel, userId, filter, context) : false;
+					channelEligibility.set(channelIdStr, eligible);
+				}
+				return eligible;
+			},
+			onProgress,
+		);
+		Logger.debug(
+			{userId, totalDeleted: result.totalDeleted, channelCount: result.channelCount},
+			'Filtered user message deletion completed',
+		);
+		return result;
 	}
 
-	private async collectMessagesMatchingFilter(
+	private async deleteMatchingMessages(
 		userId: UserID,
-		filter: DeleteSelfMessagesFilter,
-		context: DeleteSelfMessagesEligibilityContext,
-	): Promise<Map<string, Array<MessageWithChannel>>> {
-		const messagesByChannel = new Map<string, Array<MessageWithChannel>>();
-		const channelEligibility = new Map<string, boolean>();
+		matches: (channelId: ChannelID, messageId: MessageID) => Promise<boolean>,
+		onProgress?: (deleted: number) => void,
+	): Promise<DeleteSelfMessagesResult> {
+		const pendingByChannel = new Map<string, Array<MessageWithChannel>>();
+		const channelsWithDeletions = new Set<string>();
+		let totalDeleted = 0;
 		let lastMessageId: MessageID | undefined;
 		while (true) {
 			const messageRefs = await this.deps.channelRepository.messages.listMessagesByAuthor(
@@ -127,31 +141,33 @@ export class UserMessageDeletionService {
 				break;
 			}
 			for (const {channelId, messageId} of messageRefs) {
-				const ts = snowflakeToDate(messageId).getTime();
-				if (!isTimestampInWindow(ts, filter)) {
-					continue;
-				}
-				const channelIdStr = channelId.toString();
-				let eligible = channelEligibility.get(channelIdStr);
-				if (eligible === undefined) {
-					const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-					eligible = channel ? isChannelEligible(channel, userId, filter, context) : false;
-					channelEligibility.set(channelIdStr, eligible);
-				}
-				if (!eligible) {
+				if (!(await matches(channelId, messageId))) {
 					continue;
 				}
 				const message = await this.deps.channelRepository.messages.getMessage(channelId, messageId);
-				if (message && message.authorId === userId) {
-					if (!messagesByChannel.has(channelIdStr)) {
-						messagesByChannel.set(channelIdStr, []);
-					}
-					messagesByChannel.get(channelIdStr)!.push({channelId, messageId, message});
+				if (!message || message.authorId !== userId) {
+					continue;
 				}
+				const channelIdStr = channelId.toString();
+				let pending = pendingByChannel.get(channelIdStr);
+				if (!pending) {
+					pending = [];
+					pendingByChannel.set(channelIdStr, pending);
+				}
+				pending.push({channelId, messageId, message});
 			}
 			lastMessageId = messageRefs[messageRefs.length - 1]!.messageId;
+			for (const [channelIdStr, messages] of pendingByChannel) {
+				const deleted = await this.deleteMessagesInChannel(channelIdStr, messages);
+				if (deleted > 0) {
+					channelsWithDeletions.add(channelIdStr);
+				}
+				totalDeleted += deleted;
+				onProgress?.(totalDeleted);
+			}
+			pendingByChannel.clear();
 		}
-		return messagesByChannel;
+		return {totalDeleted, channelCount: channelsWithDeletions.size};
 	}
 
 	private async resolveChannelAllowlist(scope: DeleteUserMessagesScope): Promise<ReadonlySet<string>> {
@@ -184,44 +200,6 @@ export class UserMessageDeletionService {
 			}
 		}
 		return allowlist;
-	}
-
-	private async collectUserMessages(
-		userId: UserID,
-		beforeTimestamp: number,
-		channelIdAllowlist?: ReadonlySet<string>,
-	): Promise<Map<string, Array<MessageWithChannel>>> {
-		const messagesByChannel = new Map<string, Array<MessageWithChannel>>();
-		let lastMessageId: MessageID | undefined;
-		while (true) {
-			const messageRefs = await this.deps.channelRepository.messages.listMessagesByAuthor(
-				userId,
-				this.FETCH_BATCH_SIZE,
-				lastMessageId,
-			);
-			if (messageRefs.length === 0) {
-				break;
-			}
-			for (const {channelId, messageId} of messageRefs) {
-				if (channelIdAllowlist && !channelIdAllowlist.has(channelId.toString())) {
-					continue;
-				}
-				const messageTimestamp = snowflakeToDate(messageId).getTime();
-				if (messageTimestamp > beforeTimestamp) {
-					continue;
-				}
-				const message = await this.deps.channelRepository.messages.getMessage(channelId, messageId);
-				if (message && message.authorId === userId) {
-					const channelIdStr = channelId.toString();
-					if (!messagesByChannel.has(channelIdStr)) {
-						messagesByChannel.set(channelIdStr, []);
-					}
-					messagesByChannel.get(channelIdStr)!.push({channelId, messageId, message});
-				}
-			}
-			lastMessageId = messageRefs[messageRefs.length - 1]!.messageId;
-		}
-		return messagesByChannel;
 	}
 
 	private async deleteMessagesInChannel(channelIdStr: string, messages: Array<MessageWithChannel>): Promise<number> {

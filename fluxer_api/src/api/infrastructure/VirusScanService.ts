@@ -42,6 +42,7 @@ export class VirusScanService implements IVirusScanService {
 		if ((await this.cacheService.get(cacheKey)) != null) {
 			return {isClean: false, threat: 'Cached virus signature', fileHash};
 		}
+		let threat: string;
 		try {
 			const scanResult = await run();
 			if (scanResult.isClean) {
@@ -50,8 +51,7 @@ export class VirusScanService implements IVirusScanService {
 			if (!scanResult.threat) {
 				throw new Error('Virus scan provider returned infected status without threat name');
 			}
-			await this.cacheService.set(cacheKey, 'true', seconds('7 days'));
-			return {isClean: false, threat: scanResult.threat, fileHash};
+			threat = scanResult.threat;
 		} catch (error) {
 			Logger.error({error: describeError(error), filename, fileHash}, 'Virus scan failed');
 			if (this.failOpen) {
@@ -59,5 +59,11 @@ export class VirusScanService implements IVirusScanService {
 			}
 			throw new Error(`Virus scan failed: ${describeError(error)}`);
 		}
+		try {
+			await this.cacheService.set(cacheKey, 'true', seconds('7 days'));
+		} catch (error) {
+			Logger.warn({error: describeError(error), filename, fileHash}, 'Failed to cache virus scan result');
+		}
+		return {isClean: false, threat, fileHash};
 	}
 }

@@ -396,15 +396,16 @@ export class OAuth2RequestService {
 			scopes.push('bot');
 		}
 		const isOwner = requestingUserId !== undefined && requestingUserId === application.ownerUserId;
+		const bot = botUser ? mapBotProfileToResponse(botUser) : null;
 		return {
 			id: application.applicationId.toString(),
 			name: application.name,
-			icon: botUser?.avatarHash ?? null,
+			icon: bot?.avatar ?? null,
 			description: null,
 			redirect_uris: Array.from(application.oauth2RedirectUris),
 			scopes,
 			bot_public: application.botIsPublic || isOwner,
-			bot: botUser ? mapBotProfileToResponse(botUser) : null,
+			bot,
 			current_user: requestingUser ? mapUserToPartialResponse(requestingUser) : null,
 		};
 	}
@@ -528,7 +529,7 @@ export class OAuth2RequestService {
 							application: {
 								id: application.applicationId.toString(),
 								name: application.name,
-								icon: botUser?.avatarHash ?? null,
+								icon: botUser ? mapUserToPartialResponse(botUser).avatar : null,
 								description: null,
 								bot_public: application.botIsPublic,
 							},

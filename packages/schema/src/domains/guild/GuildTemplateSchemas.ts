@@ -24,7 +24,7 @@ const TemplateEntityId = z
 	])
 	.describe('The template-local numeric identifier');
 const TemplatePermissionBitfield = z
-	.union([z.string(), z.number().int().nonnegative()])
+	.union([z.string().max(64), z.number().int().nonnegative()])
 	.describe('The permissions bitfield as a string or integer');
 const TemplateOverwriteType = z
 	.union([z.number(), z.string()])
@@ -140,7 +140,11 @@ export const TemplateRole = z.object({
 	color: ColorType.optional().describe('The colour of the role as an integer'),
 	hoist: z.boolean().optional().describe('Whether the role is hoisted'),
 	mentionable: z.boolean().optional().describe('Whether the role is mentionable'),
-	unicode_emoji: z.string().nullish().describe('The unicode emoji for the role icon'),
+	unicode_emoji: z
+		.string()
+		.max(TEMPLATE_EMOJI_NAME_MAX_LENGTH)
+		.nullish()
+		.describe('The unicode emoji for the role icon'),
 });
 
 export type TemplateRole = z.infer<typeof TemplateRole>;

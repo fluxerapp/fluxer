@@ -42665,11 +42665,17 @@
 											"type": ["number", "string"]
 										},
 										"allow": {
-											"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
+											"anyOf": [
+												{"type": "string", "maxLength": 64},
+												{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+											],
 											"description": "The allowed permissions bitfield as a string"
 										},
 										"deny": {
-											"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
+											"anyOf": [
+												{"type": "string", "maxLength": 64},
+												{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+											],
 											"description": "The denied permissions bitfield as a string"
 										}
 									},
@@ -42783,16 +42789,25 @@
 					},
 					"permissions": {
 						"description": "The permissions bitfield as a string (legacy)",
-						"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}]
+						"anyOf": [
+							{"type": "string", "maxLength": 64},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+						]
 					},
 					"permissions_new": {
 						"description": "The permissions bitfield as a string (preferred)",
-						"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}]
+						"anyOf": [
+							{"type": "string", "maxLength": 64},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+						]
 					},
 					"color": {"description": "The colour of the role as an integer", "$ref": "#/components/schemas/ColorType"},
 					"hoist": {"description": "Whether the role is hoisted", "type": "boolean"},
 					"mentionable": {"description": "Whether the role is mentionable", "type": "boolean"},
-					"unicode_emoji": {"description": "The unicode emoji for the role icon", "type": ["string", "null"]}
+					"unicode_emoji": {
+						"description": "The unicode emoji for the role icon",
+						"anyOf": [{"type": "string", "maxLength": 64}, {"type": "null"}]
+					}
 				},
 				"required": ["id"]
 			},

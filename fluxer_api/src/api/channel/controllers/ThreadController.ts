@@ -98,6 +98,7 @@ function SelfThreadMemberAlias(action: 'join' | 'leave'): MiddlewareHandler<Hono
 	return async (ctx, next) => {
 		if (ctx.req.param('user_id') !== '@me') return next();
 		const {channel_id} = parseWithSchema(ChannelIdParam, {channel_id: ctx.req.param('channel_id')});
+		if (action === 'join') assertTierAllows(ctx.get('user'), TierGatedActions.THREAD_JOIN, NO_TIER_CONTEXT);
 		await ctx.get('threadService').members[action]({
 			viewer: viewerFromCtx(ctx),
 			user: ctx.get('user'),
@@ -496,11 +497,14 @@ export function ThreadController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const {channel_id, user_id} = ctx.req.valid('param');
+			const user = ctx.get('user');
+			const targetId = createUserID(user_id);
+			if (targetId === user.id) assertTierAllows(user, TierGatedActions.THREAD_JOIN, NO_TIER_CONTEXT);
 			await ctx.get('threadService').members.add({
 				viewer: viewerFromCtx(ctx),
-				user: ctx.get('user'),
+				user,
 				channelId: createChannelID(channel_id),
-				targetId: createUserID(user_id),
+				targetId,
 			});
 			return ctx.body(null, 204);
 		},

@@ -57,7 +57,7 @@ export async function indexChannelMessageHistory(
 	if (channel?.isThread()) {
 		await channelRepository.channelData.patchIndexedAt(channelId, new Date());
 	} else if (channel) {
-		await channelRepository.channelData.upsert({...channel.toRow(), indexed_at: new Date()});
+		await channelRepository.channelData.upsert({...channel.toRow(), indexed_at: new Date()}, channel.toRow());
 	}
 	return totalIndexed;
 }

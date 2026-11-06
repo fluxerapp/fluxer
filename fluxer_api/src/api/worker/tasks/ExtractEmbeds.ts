@@ -9,7 +9,10 @@ import {
 	enqueueCrosspostSync,
 	isCrosspostedMessage,
 } from '@app/api/channel/services/message/CrosspostPropagation';
-import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {
+	buildBroadcastMessageData,
+	findContentHiddenAuthorId,
+} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {decrementThreadMessageCount} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
 import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
@@ -404,7 +407,10 @@ async function dispatchEmbedUpdate({
 		sourceGuildId: guildId ?? channel.guildId,
 	});
 
-	if (guildId && !channel.guildId) {
+	const hiddenAuthorId = await findContentHiddenAuthorId(latestMessage);
+	if (hiddenAuthorId) {
+		await gatewayService.dispatchPresence({userId: hiddenAuthorId, event: 'MESSAGE_UPDATE', data: messageData});
+	} else if (guildId && !channel.guildId) {
 		await gatewayService.dispatchGuild({
 			guildId,
 			event: 'MESSAGE_UPDATE',
@@ -506,6 +512,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 					await enqueueCrosspostSourceRemoval(getWorkerDependencies().workerService, {
 						messages: [latestExpectedMessage],
 						mode: 'purge',
+						channel,
 					});
 					return true;
 				}

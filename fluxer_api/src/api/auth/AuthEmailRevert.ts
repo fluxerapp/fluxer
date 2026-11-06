@@ -6,7 +6,7 @@ import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
-import {createEmailRevertToken} from '@app/api/BrandedTypes';
+import {createEmailRevertToken, type UserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
@@ -43,22 +43,48 @@ export async function issueEmailRevertToken(ctx: ApiContext, params: IssueEmailR
 		user_id: user.id,
 		email: trimmed,
 	});
+	await recordIssuedEmailRevertToken(user.id, token);
 	await email.send('email_change_revert', trimmed, {newEmail, token}, user.locale);
 }
 
 const EMAIL_REVERT_CLAIM_KEY_PREFIX = 'auth:email-revert:claimed:';
+const EMAIL_REVERT_ISSUED_KEY_PREFIX = 'auth:email-revert:issued:';
 
-function emailRevertClaimKey(token: string): string {
-	return `${EMAIL_REVERT_CLAIM_KEY_PREFIX}${crypto.createHash('sha256').update(token).digest('hex')}`;
+function emailRevertTokenHash(token: string): string {
+	return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function emailRevertClaimKey(tokenHash: string): string {
+	return `${EMAIL_REVERT_CLAIM_KEY_PREFIX}${tokenHash}`;
+}
+
+function emailRevertIssuedKey(userId: UserID): string {
+	return `${EMAIL_REVERT_ISSUED_KEY_PREFIX}${userId}`;
 }
 
 function claimEmailRevertToken(token: string): Promise<boolean> {
-	return getKVClient().setnx(emailRevertClaimKey(token), '1', EMAIL_REVERT_TOKEN_TTL_SECONDS);
+	return getKVClient().setnx(emailRevertClaimKey(emailRevertTokenHash(token)), '1', EMAIL_REVERT_TOKEN_TTL_SECONDS);
+}
+
+async function recordIssuedEmailRevertToken(userId: UserID, token: string): Promise<void> {
+	const kv = getKVClient();
+	const key = emailRevertIssuedKey(userId);
+	await kv.rpush(key, emailRevertTokenHash(token));
+	await kv.expire(key, EMAIL_REVERT_TOKEN_TTL_SECONDS);
+}
+
+async function claimEmailRevertTokensIssuedAfter(userId: UserID, token: string): Promise<void> {
+	const kv = getKVClient();
+	const issued = await kv.lrange(emailRevertIssuedKey(userId), 0, -1);
+	const later = issued.slice(issued.lastIndexOf(emailRevertTokenHash(token)) + 1);
+	await Promise.all(
+		later.map((tokenHash) => kv.setnx(emailRevertClaimKey(tokenHash), '1', EMAIL_REVERT_TOKEN_TTL_SECONDS)),
+	);
 }
 
 async function releaseEmailRevertTokenClaim(token: string): Promise<void> {
 	try {
-		await getKVClient().del(emailRevertClaimKey(token));
+		await getKVClient().del(emailRevertClaimKey(emailRevertTokenHash(token)));
 	} catch (error) {
 		Logger.error({error}, 'Could not release the claim of an email revert token whose revert failed');
 	}
@@ -111,6 +137,7 @@ export async function revertEmailChange(
 		await releaseEmailRevertTokenClaim(token);
 		throw error;
 	}
+	await claimEmailRevertTokensIssuedAfter(user.id, token);
 	await users.deleteAllPasswordResetTokens(user.id);
 	await users.deleteEmailRevertToken(token);
 	await users.deleteAllMfaBackupCodes(user.id);

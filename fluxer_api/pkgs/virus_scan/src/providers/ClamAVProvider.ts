@@ -11,6 +11,9 @@ interface ClamAVConfig {
 	streamChunkBytes?: number;
 }
 
+const CLAMAV_CONNECT_TIMEOUT_MS = 5_000;
+const CLAMAV_IDLE_TIMEOUT_MS = 120_000;
+
 export class ClamAVProvider {
 	private readonly streamChunkBytes: number;
 
@@ -26,9 +29,14 @@ export class ClamAVProvider {
 		const chunkSize = this.streamChunkBytes;
 		return new Promise((resolve, reject) => {
 			const socket = createConnection(this.config.port, this.config.host);
+			socket.setTimeout(CLAMAV_IDLE_TIMEOUT_MS);
 			let response = '';
 			let settled = false;
+			const connectTimer = setTimeout(() => {
+				doReject(new Error('ClamAV connection timed out'));
+			}, CLAMAV_CONNECT_TIMEOUT_MS);
 			const cleanup = (): void => {
+				clearTimeout(connectTimer);
 				if (!socket.destroyed) {
 					socket.destroy();
 				}
@@ -49,6 +57,7 @@ export class ClamAVProvider {
 				resolve(result);
 			};
 			socket.on('connect', () => {
+				clearTimeout(connectTimer);
 				socket.write('zINSTREAM\0');
 				let pendingTail: Buffer | null = null;
 				const writeSized = (slice: Buffer): boolean => {
@@ -116,6 +125,9 @@ export class ClamAVProvider {
 				} else {
 					doReject(new Error(`Unexpected ClamAV response: ${trimmedResponse}`));
 				}
+			});
+			socket.on('timeout', () => {
+				doReject(new Error('ClamAV connection timed out'));
 			});
 			socket.on('error', (error) => {
 				doReject(new Error(`ClamAV connection failed: ${error.message}`));

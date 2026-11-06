@@ -58,6 +58,10 @@ test.each([
 	['Fluхer', true],
 	['Ѕtripe', true],
 	['Steam Team', true],
+	['ΜΕΤΑ Inc', true],
+	['ΜΕΤΑ TWITCH', true],
+	['Lisa Inc', false],
+	['Ilya Inc', false],
 	['Ivan Иванов', false],
 	['Mighty Mike', false],
 ])('checks the wall name %s', (name, reserved) => {

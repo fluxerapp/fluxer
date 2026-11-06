@@ -85,6 +85,15 @@ describe('Auth desktop handoff negative paths', () => {
 			.header('x-forwarded-for', ip)
 			.expect(429, APIErrorCodes.HANDOFF_ATTEMPTS_EXCEEDED)
 			.execute();
+		const freshResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
+			.post('/auth/handoff/initiate')
+			.body(null)
+			.execute();
+		const freshInfo = await createBuilderWithoutAuth<HandoffInfoResponse>(harness)
+			.get(`/auth/handoff/${freshResp.code}/info`)
+			.header('x-forwarded-for', ip)
+			.execute();
+		expect(freshInfo.status).toBe('pending');
 	});
 	it('says a code was already used only to the network that approved it', async () => {
 		const approverIp = '198.51.100.41';

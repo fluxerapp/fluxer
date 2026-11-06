@@ -415,6 +415,7 @@ export class MessagePersistenceService {
 		isBugHunterBot?: boolean;
 		locale?: string | null;
 		dmNsfwContext?: DmNsfwContext;
+		hasPermission?: (permission: bigint) => Promise<boolean>;
 	}): Promise<UpdateMessageResult> {
 		const {message, messageId, data, channel, guild, member} = params;
 		if (message.messageSnapshots && message.messageSnapshots.length > 0) {
@@ -440,6 +441,7 @@ export class MessagePersistenceService {
 					userId: message.authorId ?? null,
 					webhookId: message.webhookId ?? null,
 					guildId: channel.guildId,
+					hasPermission: channel.guildId ? params.hasPermission : undefined,
 				});
 				if (!hasVisibleContent(sanitizedContent)) {
 					sanitizedContent = '';

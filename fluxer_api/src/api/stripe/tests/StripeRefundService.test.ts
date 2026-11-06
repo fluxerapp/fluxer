@@ -813,7 +813,7 @@ describe('StripeRefundService self-serve refund', () => {
 				.expect(400, APIErrorCodes.STRIPE_NO_PURCHASE_HISTORY)
 				.execute();
 		});
-		test('does not finalize cooldown or cancel the subscription while the refund is still pending at the provider', async () => {
+		test('starts the cooldown but keeps the subscription while the refund is still pending at the provider', async () => {
 			server.use(...createStripeApiHandlers().handlers);
 			server.use(
 				invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]),
@@ -832,7 +832,11 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.subscription_id).toBeNull();
 			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const updatedUser = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
-			expect(updatedUser!.lastRefundAt).toBeNull();
+			expect(updatedUser!.lastRefundAt).not.toBeNull();
+			await createBuilder(harness, account.token)
+				.post('/premium/refund-latest')
+				.expect(403, APIErrorCodes.STRIPE_REFUND_COOLDOWN_ACTIVE)
+				.execute();
 		});
 		test('does not finalize cooldown or cancel the subscription when the refund fails at the provider', async () => {
 			server.use(...createStripeApiHandlers().handlers);

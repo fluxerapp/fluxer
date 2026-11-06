@@ -42,7 +42,7 @@ interface SearchableDocument {
 }
 
 type Matcher<TDocument, TFilters> = (doc: TDocument, filters: TFilters) => boolean;
-type TextCollector<TDocument> = (doc: TDocument) => Array<string | null>;
+type TextCollector<TDocument, TFilters> = (doc: TDocument, filters: TFilters) => Array<string | null>;
 type Sorter<TDocument, TFilters> = (left: TDocument, right: TDocument, filters: TFilters, query: string) => number;
 
 const DEFAULT_LIMIT = 25;
@@ -107,7 +107,7 @@ class InMemorySearchAdapter<TFilters, TDocument extends SearchableDocument> {
 
 	constructor(
 		private readonly matchesFilters: Matcher<TDocument, TFilters>,
-		private readonly collectText: TextCollector<TDocument>,
+		private readonly collectText: TextCollector<TDocument, TFilters>,
 		private readonly sortDocuments: Sorter<TDocument, TFilters>,
 	) {}
 
@@ -166,7 +166,9 @@ class InMemorySearchAdapter<TFilters, TDocument extends SearchableDocument> {
 			.filter((doc) => this.matchesFilters(doc, filters))
 			.filter((doc) => {
 				const trimmed = query.trim();
-				return trimmed.length === 0 || stringArrayContainsText(this.collectText(doc).filter(isString), trimmed);
+				return (
+					trimmed.length === 0 || stringArrayContainsText(this.collectText(doc, filters).filter(isString), trimmed)
+				);
 			})
 			.sort((left, right) => this.sortDocuments(left, right, filters, query));
 		const facets = options?.facets;
@@ -305,8 +307,14 @@ function matchesUserFilters(doc: SearchableUser, filters: UserSearchFilters): bo
 	return true;
 }
 
-function collectUserText(doc: SearchableUser): Array<string | null> {
-	return [doc.id, doc.username, doc.email, doc.stripeCustomerId, doc.stripeSubscriptionId];
+function collectUserText(doc: SearchableUser, filters: UserSearchFilters): Array<string | null> {
+	return [
+		doc.id,
+		doc.username,
+		filters.excludeEmail ? null : doc.email,
+		doc.stripeCustomerId,
+		doc.stripeSubscriptionId,
+	];
 }
 
 function sortNumericField<TDocument extends SearchableDocument, TFilters>(

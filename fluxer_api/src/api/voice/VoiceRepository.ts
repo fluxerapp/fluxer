@@ -10,6 +10,7 @@ import {
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
+import {Db} from '@app/api/database/CassandraTypes';
 import {
 	VOICE_REGION_COLUMNS,
 	VOICE_SERVER_COLUMNS,
@@ -17,6 +18,13 @@ import {
 	type VoiceServerRow,
 } from '@app/api/database/types/VoiceTypes';
 import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+
+export type VoiceServerNodeFields = Partial<
+	Pick<
+		VoiceServerRecord,
+		'endpoint' | 'draining' | 'latitude' | 'longitude' | 'softConnectionLimit' | 'publicIpv4' | 'publicIpv6'
+	>
+>;
 
 function toIterable<T>(value: unknown): Array<T> {
 	if (value === null || value === undefined) return [];
@@ -157,6 +165,31 @@ export class VoiceRepository {
 
 	async upsertServer(server: VoiceServerRecord): Promise<void> {
 		await upsertOne(VoiceServers.upsertAll(this.toServerRow(server)));
+	}
+
+	async patchServerNodeFields(
+		regionId: string,
+		serverId: string,
+		fields: VoiceServerNodeFields,
+		updatedAt: Date,
+	): Promise<void> {
+		await fetchOne(
+			VoiceServers.patchByPk(
+				{region_id: regionId, server_id: serverId},
+				{
+					...(fields.endpoint !== undefined && {endpoint: Db.set(fields.endpoint)}),
+					...(fields.draining !== undefined && {draining: Db.set(fields.draining)}),
+					...(fields.latitude !== undefined && {latitude: Db.set(fields.latitude)}),
+					...(fields.longitude !== undefined && {longitude: Db.set(fields.longitude)}),
+					...(fields.softConnectionLimit !== undefined && {
+						soft_connection_limit: Db.set(fields.softConnectionLimit),
+					}),
+					...(fields.publicIpv4 !== undefined && {public_ipv4: Db.set(fields.publicIpv4)}),
+					...(fields.publicIpv6 !== undefined && {public_ipv6: Db.set(fields.publicIpv6)}),
+					updated_at: Db.set(updatedAt),
+				},
+			),
+		);
 	}
 
 	private toServerRow(server: VoiceServerRecord): VoiceServerRow {

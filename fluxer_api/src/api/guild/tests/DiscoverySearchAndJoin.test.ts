@@ -382,6 +382,22 @@ describe('Discovery Search and Join', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
 				.execute();
 		});
+		test('should not preview a channel in an 18+ category', async () => {
+			const {ownerToken, guildId} = await createListedGuild('Restricted Category Guild');
+			const category = await createBuilder<{id: string}>(harness, ownerToken)
+				.post(`/guilds/${guildId}/channels`)
+				.body({name: 'after dark', type: ChannelTypes.GUILD_CATEGORY, nsfw_override: true})
+				.execute();
+			const child = await createBuilder<{id: string}>(harness, ownerToken)
+				.post(`/guilds/${guildId}/channels`)
+				.body({name: 'late-chat', type: ChannelTypes.GUILD_TEXT, parent_id: category.id})
+				.execute();
+			const viewer = await createTestAccount(harness);
+			await createBuilder(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${child.id}`)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
+				.execute();
+		});
 		test('should not preview a channel from another guild', async () => {
 			const {guildId} = await createListedGuild('Listed Guild');
 			const other = await createListedGuild('Other Listed Guild');

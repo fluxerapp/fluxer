@@ -5,6 +5,7 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Logger} from '@app/api/Logger';
 import {hashRequestToken, recordAuthFailure} from '@app/api/middleware/RequestErrorTelemetry';
+import {getApplicationRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
@@ -143,8 +144,13 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (type === 'bearer') {
 		const oauth2TokenRepository = ctx.get('oauth2TokenRepository');
 		const accessToken = await oauth2TokenRepository.getAccessToken(token);
-		const tokenUser = accessToken ? await ctx.get('apiContext').services.users.findUnique(accessToken.userId) : null;
-		if (accessToken && !(tokenUser && isSignInRefused(tokenUser))) {
+		const [tokenUser, application] = accessToken
+			? await Promise.all([
+					ctx.get('apiContext').services.users.findUnique(accessToken.userId),
+					getApplicationRepository().getApplication(accessToken.applicationId),
+				])
+			: [null, null];
+		if (accessToken && application && !(tokenUser && isSignInRefused(tokenUser))) {
 			ctx.set('oauthBearerApplicationId', accessToken.applicationId);
 			ctx.set('oauthBearerScopes', accessToken.scope);
 			ctx.set('authTokenType', 'bearer');
@@ -183,11 +189,13 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		const apiKey = await adminApiKeyService.validateApiKey(token);
 		if (apiKey) {
 			const user = await ctx.get('apiContext').services.users.findUnique(apiKey.createdById);
-			if (user) {
+			if (user && !isSignInRefused(user)) {
 				ctx.set('authTokenType', 'admin_api_key');
 				ctx.set('adminApiKeyAcls', apiKey.acls);
 				ctx.set('adminApiKeyId', apiKey.keyId);
 				setUserInContext(ctx, user, false);
+			} else if (user) {
+				recordAuthFailure(resolvedClientIp, tokenHash);
 			}
 		} else {
 			recordAuthFailure(resolvedClientIp, tokenHash);

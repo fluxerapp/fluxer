@@ -197,6 +197,29 @@ describe('Reaction emoji matching', () => {
 		expect(await messageReactions(s)).toEqual([]);
 	});
 
+	it('counts each distinct emoji once, up to the given limit', async () => {
+		const s = await setup();
+		const [first, second] = s.reactors;
+		const other = await createEmoji(harness, s.owner.token, s.guildId, {name: 'bean', image: getPngDataUrl()});
+		await react(s, first, '\u{1F525}');
+		await react(s, second, '\u{1F44D}');
+		await react(s, first, `coin:${s.emoji.id}`);
+		await react(s, second, `bean:${other.id}`);
+		const repository = getChannelRepository().messageInteractions;
+		const channelId = createChannelID(BigInt(s.channelId));
+		const messageId = createMessageID(BigInt(s.messageId));
+		await repository.addReaction(
+			channelId,
+			messageId,
+			createUserID(BigInt(second.userId)),
+			'old',
+			createEmojiID(BigInt(s.emoji.id)),
+		);
+
+		expect(await repository.countUniqueReactions(channelId, messageId, 30)).toBe(4);
+		expect(await repository.countUniqueReactions(channelId, messageId, 3)).toBe(3);
+	});
+
 	it.each([
 		['with U+FE0F', '\u2764\uFE0F'],
 		['with a skin tone', '\u{1F44D}\u{1F3FD}'],

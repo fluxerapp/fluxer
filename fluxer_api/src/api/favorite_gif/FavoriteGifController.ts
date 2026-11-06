@@ -8,9 +8,12 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getUnfurlerService} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {Validator} from '@app/api/Validator';
 import {ResolveGifUrlsBodySchema, ResolveGifUrlsResponse} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import type {Context} from 'hono';
+
+const FAVORITE_GIF_RESOLVE_CONCURRENCY = 8;
 
 function getLocale(ctx: Context<HonoEnv>): string {
 	return (ctx.get('requestLocale') || 'en-US').replace('-', '_');
@@ -40,9 +43,12 @@ export function FavoriteGifController(app: HonoApp) {
 			const unfurlerService = getUnfurlerService();
 			const locale = getLocale(ctx);
 			const country = await resolveGifRequestCountry(ctx.req.raw);
-			const entries = await Promise.all(
-				urls.map((url) => resolveFavoriteGifEntry({url, locale, country, gifService, mediaService, unfurlerService})),
+			const uniqueUrls = [...new Set(urls)];
+			const resolved = await mapWithConcurrency(uniqueUrls, FAVORITE_GIF_RESOLVE_CONCURRENCY, (url) =>
+				resolveFavoriteGifEntry({url, locale, country, gifService, mediaService, unfurlerService}),
 			);
+			const entriesByUrl = new Map(uniqueUrls.map((url, index) => [url, resolved[index]!]));
+			const entries = urls.map((url) => entriesByUrl.get(url)!);
 			return ctx.json({entries});
 		},
 	);

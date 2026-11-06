@@ -124,13 +124,13 @@ export class DesktopHandoffService {
 	): Promise<{initiatorOrigin: string | null; returnUrl: string | null}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
-		await this.checkAttemptLimit(approverIp);
 		const storedApprover = await cache.get<HandoffApproverData>(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
 		if (!storedApprover) {
 			await this.rejectUnknownCode(normalizedCode, approverIp);
 		}
 		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		if (!handoffData || handoffData.denied) {
+			await this.checkAttemptLimit(approverIp);
 			await this.recordFailedAttempt(approverIp);
 			throw new InvalidHandoffCodeError();
 		}
@@ -178,10 +178,10 @@ export class DesktopHandoffService {
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
-		await this.checkAttemptLimit(approverIp);
 		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
 		const handoffData = await cache.get<HandoffData>(codeKey);
 		if (!handoffData || handoffData.denied) {
+			await this.checkAttemptLimit(approverIp);
 			if (!handoffData && (await this.wasUsedBy(normalizedCode, approverIp))) {
 				throw new HandoffCodeAlreadyUsedError();
 			}
@@ -207,12 +207,12 @@ export class DesktopHandoffService {
 	async denyHandoff(code: string, approverIp: string): Promise<void> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
-		await this.checkAttemptLimit(approverIp);
 		const approverKey = `${HANDOFF_APPROVER_PREFIX}${normalizedCode}`;
 		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
 		const storedApprover = await cache.get<HandoffApproverData>(approverKey);
 		const handoffData = await cache.get<HandoffData>(codeKey);
 		if (!storedApprover || !handoffData) {
+			await this.checkAttemptLimit(approverIp);
 			await this.recordFailedAttempt(approverIp);
 			throw new InvalidHandoffCodeError();
 		}
@@ -301,6 +301,7 @@ export class DesktopHandoffService {
 	}
 
 	private async rejectUnknownCode(normalizedCode: string, clientIp: string): Promise<never> {
+		await this.checkAttemptLimit(clientIp);
 		if (await this.wasUsedBy(normalizedCode, clientIp)) {
 			throw new HandoffCodeAlreadyUsedError();
 		}

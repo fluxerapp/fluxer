@@ -3,7 +3,7 @@
 import {type ApplicationID, createApplicationID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/types/OAuth2Types';
 import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
@@ -86,9 +86,15 @@ export class ApplicationRepository {
 		if (ids.length === 0) {
 			return [];
 		}
-		const rows = await fetchMany<ApplicationRow>(FETCH_APPLICATIONS_BY_IDS_CQL, {
-			application_ids: ids.map((r) => r.application_id),
-		});
+		return this.listApplicationsByIds(ids.map((r) => r.application_id));
+	}
+
+	async listApplicationsByIds(applicationIds: Array<ApplicationID>): Promise<Array<Application>> {
+		const rows = await fetchManyInChunks<ApplicationRow, ApplicationID>(
+			FETCH_APPLICATIONS_BY_IDS_CQL,
+			applicationIds,
+			(chunk) => ({application_ids: chunk}),
+		);
 		return rows.map((r) => new Application(r));
 	}
 

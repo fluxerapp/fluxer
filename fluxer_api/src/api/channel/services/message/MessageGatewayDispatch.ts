@@ -4,8 +4,10 @@ import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
+import {isContentHidden} from '@app/api/user/UserHelpers';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
@@ -101,17 +103,29 @@ export async function dispatchMessageCreateToUser({
 	});
 }
 
+export async function findContentHiddenAuthorId(message: Message): Promise<UserID | null> {
+	if (!message.authorId) return null;
+	const author = await getUserRepository().findUnique(message.authorId);
+	return author && isContentHidden(author, message.id) ? author.id : null;
+}
+
 export async function dispatchMessageUpdateBroadcast({
 	gatewayService,
 	...params
 }: BuildBroadcastMessageDataParams & {
 	gatewayService: IGatewayService;
 }): Promise<void> {
+	const data = await buildBroadcastMessageData(params);
+	const hiddenAuthorId = await findContentHiddenAuthorId(params.message);
+	if (hiddenAuthorId) {
+		await gatewayService.dispatchPresence({userId: hiddenAuthorId, event: 'MESSAGE_UPDATE', data});
+		return;
+	}
 	await dispatchChannelEvent({
 		gatewayService,
 		channel: params.channel,
 		event: 'MESSAGE_UPDATE',
-		data: await buildBroadcastMessageData(params),
+		data,
 	});
 }
 

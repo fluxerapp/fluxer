@@ -3,6 +3,7 @@
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {threadSearchIndexEnqueueCappedTotal} from '@app/api/channel/threads/ThreadMetrics';
+import {guildResponseToContentWarningView} from '@app/api/channel/utils/EffectiveContentWarning';
 import {
 	THREAD_FEATURE_CHANNEL_TYPES,
 	THREAD_PARENT_CHANNEL_TYPES,
@@ -169,6 +170,9 @@ export class GuildSearchService {
 		} else {
 			searchChannelIds = validChannelIds.map((id) => id.toString());
 		}
+		if (searchChannelIds.length === 0) {
+			return emptyMessageSearchResponse(searchParams);
+		}
 		return runMessageSearch({
 			searchService,
 			messageRepository: this.channelRepository,
@@ -195,7 +199,7 @@ export class GuildSearchService {
 		if (!searchService) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents} =
+		const {accessibleChannels, unindexedChannelIds, nsfwGuildIds, parentCategories, threadParents} =
 			await this.collectAccessibleGuildChannels(userId, viewer, channelIds);
 		if (unindexedChannelIds.size > 0) {
 			await queueIndexingChannels(this.workerService, unindexedChannelIds);
@@ -221,9 +225,8 @@ export class GuildSearchService {
 			if (!channel) {
 				return false;
 			}
-			const guildId = channel.guildId?.toString();
-			const guildIsAgeRestricted = guildId != null && guildNsfwLevels.get(guildId) === GuildNSFWLevel.AGE_RESTRICTED;
-			if (guildIsAgeRestricted) {
+			const guildNsfw = channel.guildId != null && nsfwGuildIds.has(channel.guildId.toString());
+			if (guildNsfw) {
 				return canIncludeNsfw;
 			}
 			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
@@ -345,14 +348,14 @@ export class GuildSearchService {
 	): Promise<{
 		accessibleChannels: Map<string, Channel>;
 		unindexedChannelIds: Set<string>;
-		guildNsfwLevels: Map<string, number>;
+		nsfwGuildIds: Set<string>;
 		parentCategories: Map<string, Channel>;
 		threadParents: Map<string, Channel>;
 	}> {
 		const guildIds = await this.userRepository.getUserGuildIds(userId);
 		const accessibleChannels = new Map<string, Channel>();
 		const unindexedChannelIds = new Set<string>();
-		const guildNsfwLevels = new Map<string, number>();
+		const nsfwGuildIds = new Set<string>();
 		const parentCategories = new Map<string, Channel>();
 		const permissionChecks: Array<{
 			channel: Channel;
@@ -370,8 +373,8 @@ export class GuildSearchService {
 					),
 				this.gatewayService.getViewableChannels({guildId, userId}),
 			]);
-			if (guildData) {
-				guildNsfwLevels.set(guildId.toString(), guildData.nsfw_level);
+			if (guildData && guildResponseToContentWarningView(guildData).nsfw) {
+				nsfwGuildIds.add(guildId.toString());
 			}
 			const viewableChannelIds = new Set(viewableChannels.map((channelId) => channelId.toString()));
 			for (const channel of guildChannels) {
@@ -433,6 +436,6 @@ export class GuildSearchService {
 		if (missingThreadIds.length > 0) {
 			await this.addRequestedThreads(userId, missingThreadIds, parentById, threadParents);
 		}
-		return {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents};
+		return {accessibleChannels, unindexedChannelIds, nsfwGuildIds, parentCategories, threadParents};
 	}
 }

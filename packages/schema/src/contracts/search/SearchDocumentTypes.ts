@@ -134,6 +134,7 @@ export interface UserSearchFilters {
 	hasAcl?: Array<string>;
 	createdAtGreaterThanOrEqual?: number;
 	createdAtLessThanOrEqual?: number;
+	excludeEmail?: boolean;
 	sortBy?: 'createdAt' | 'lastActiveAt' | 'relevance';
 	sortOrder?: 'asc' | 'desc';
 }

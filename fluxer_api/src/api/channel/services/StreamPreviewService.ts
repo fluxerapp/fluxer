@@ -32,7 +32,6 @@ interface StreamPreviewMeta {
 	updatedAt: number;
 	ownerId: string;
 	channelId: string;
-	contentType: string;
 }
 
 function getErrorName(error: unknown): string | undefined {
@@ -121,14 +120,13 @@ export class StreamPreviewService {
 		this.assertJpeg(params.body, params.contentType);
 		const bucket = Config.s3.buckets.uploads;
 		const key = this.getObjectKey(params.streamKey);
-		const contentType = params.contentType ?? STREAM_PREVIEW_CONTENT_TYPE_JPEG;
 		const expiresAt = new Date(Date.now() + ms('1 day'));
 		try {
 			await this.storageService.uploadObject({
 				bucket,
 				key,
 				body: params.body,
-				contentType,
+				contentType: STREAM_PREVIEW_CONTENT_TYPE_JPEG,
 				expiresAt,
 			});
 		} catch (error) {
@@ -147,7 +145,6 @@ export class StreamPreviewService {
 			updatedAt: Date.now(),
 			ownerId: params.userId.toString(),
 			channelId: params.channelId.toString(),
-			contentType,
 		};
 		try {
 			await this.cacheService.set(this.getCacheKey(params.streamKey), meta, PREVIEW_TTL_SECONDS);
@@ -192,7 +189,6 @@ export class StreamPreviewService {
 			updatedAt: Date.now(),
 			ownerId: params.userId.toString(),
 			channelId: params.channelId.toString(),
-			contentType,
 		};
 		await this.cacheService.set(this.getCacheKey(params.streamKey), meta, PREVIEW_TTL_SECONDS);
 		return {
@@ -205,16 +201,12 @@ export class StreamPreviewService {
 		};
 	}
 
-	async getPreview(streamKey: string): Promise<{
-		buffer: Uint8Array;
-		contentType: string;
-	} | null> {
+	async getPreview(streamKey: string): Promise<Uint8Array | null> {
 		const cacheKey = this.getCacheKey(streamKey);
 		const meta = await this.cacheService.get<StreamPreviewMeta>(cacheKey);
 		if (!meta) return null;
-		let buffer: Uint8Array;
 		try {
-			buffer = await this.storageService.readObject(meta.bucket, meta.key, STREAM_PREVIEW_MAX_BYTES);
+			return await this.storageService.readObject(meta.bucket, meta.key, STREAM_PREVIEW_MAX_BYTES);
 		} catch (error) {
 			if (isMissingObjectError(error)) {
 				return null;
@@ -229,7 +221,6 @@ export class StreamPreviewService {
 			}
 			throw error;
 		}
-		return {buffer, contentType: meta.contentType || STREAM_PREVIEW_CONTENT_TYPE_JPEG};
 	}
 
 	async deletePreview(streamKey: string): Promise<void> {

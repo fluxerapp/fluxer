@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomBytes} from 'node:crypto';
+
 const CACHE_INFLIGHT_MAX_ENTRIES = 10000;
 const CACHE_INFLIGHT_JOIN_RETRIES = 1;
 const CACHE_PRODUCE_TIMEOUT_MS = 15000;
 const CACHE_PRODUCE_TIMEOUT_MESSAGE = 'Cache produce timed out';
+const CACHE_INVALIDATION_MARKER_TTL_SECONDS = 60;
 
 interface CacheProduceTracking {
 	generation: number;
@@ -35,6 +38,7 @@ export abstract class ICacheService {
 		if (tracked) {
 			tracked.generation += 1;
 		}
+		await this.set(invalidationMarkerKey(key), randomBytes(16).toString('hex'), CACHE_INVALIDATION_MARKER_TTL_SECONDS);
 		await this.deleteEntry(key);
 	}
 
@@ -189,10 +193,17 @@ export abstract class ICacheService {
 		generation: number,
 		abandonment: CacheProduceAbandonment,
 	): Promise<T> {
+		const markerKey = invalidationMarkerKey(key);
+		const markerBefore = await this.get<string>(markerKey);
 		const value = await valueFactory();
-		if (!abandonment.abandoned && this.currentGeneration(key) === generation) {
+		const markerAfter = await this.get<string>(markerKey);
+		if (markerAfter === markerBefore && !abandonment.abandoned && this.currentGeneration(key) === generation) {
 			await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
 		}
 		return value;
 	}
+}
+
+function invalidationMarkerKey(key: string): string {
+	return `cache-invalidation:${key}`;
 }

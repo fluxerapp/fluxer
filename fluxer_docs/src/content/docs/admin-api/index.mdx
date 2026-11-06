@@ -20,7 +20,7 @@ Send one of these credentials in the `Authorization` header. [Authentication](/a
 
 The account needs `admin:authenticate` or `*`. The API refuses bot tokens and access tokens from any other OAuth2 application. No Admin route needs an OAuth2 scope, MFA or sudo mode.
 
-An [Admin API key](/admin-api/api-keys/) acts as the account that created it and only works on paths under `/v1/admin`. A request made with a key needs one of the route's ACLs on the key and one on the account that owns it, unless that account has `*`. Removing an ACL from the key or its owner takes effect on the next request.
+An [Admin API key](/admin-api/api-keys/) acts as the account that created it and only works on paths under `/v1/admin`. A request made with a key can only use ACLs that both the key and the account that owns it have. `*` on the key or the account counts as having every ACL. Removing an ACL from the key or its owner takes effect on the next request.
 
 ## ACL evaluation
 

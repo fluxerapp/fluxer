@@ -24,17 +24,18 @@ export function revisionStatuses(
 		{status: OperatorPassWallRevisionStatus; decision: OperatorPassWallDecisionRow | null}
 	>(revisions.map((revision) => [revision.revision_id, {status: 'pending', decision: null}]));
 	let live: bigint | null = null;
+	let previous: bigint | null = null;
 	const timeline = [
 		...revisions.map((revision): WallHistoryItem => ({kind: 'revision', at: revision.revision_id, revision})),
 		...decisions.map((decision): WallHistoryItem => ({kind: 'decision', at: decision.decision_id, decision})),
 	].sort((left, right) => compareSnowflakes(left.at, right.at));
 	for (const item of timeline) {
 		if (item.kind === 'revision') {
-			for (const [id, value] of result) {
-				if (value.status === 'pending' && id < item.revision.revision_id) {
-					result.set(id, {status: 'superseded', decision: null});
-				}
+			const current = item.revision.revision_id;
+			if (previous != null && previous < current && result.get(previous)?.status === 'pending') {
+				result.set(previous, {status: 'superseded', decision: null});
 			}
+			previous = current;
 			continue;
 		}
 		const decision = item.decision;

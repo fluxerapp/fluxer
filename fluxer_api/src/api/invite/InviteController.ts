@@ -8,6 +8,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {tierContextFrom} from '@app/api/user/AccountTier';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
 import {ChannelIdParam, GuildIdParam, InviteCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
@@ -65,6 +66,7 @@ export function InviteController(app: HonoApp) {
 				inviteCode,
 				requestCache,
 				tierContext: tierContextFrom(ctx),
+				ip: getRequestClientIp(ctx),
 			});
 			return ctx.json(invite);
 		},

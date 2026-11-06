@@ -19,9 +19,13 @@ import {ChannelTypes, MessageReferenceTypes, MessageTypes} from '@fluxer/constan
 import {
 	ServerMessageFlags,
 	TEXT_THREAD_PARENT_CHANNEL_TYPES,
+	THREAD_FEATURE_CHANNEL_TYPES,
 	THREAD_MESSAGE_FLAG_MASK,
 } from '@fluxer/constants/src/ThreadConstants';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {
+	MessageChannelMentionResponse,
+	MessageResponse,
+} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 interface ThreadListQuery {
@@ -31,22 +35,43 @@ interface ThreadListQuery {
 	around?: MessageID;
 }
 
+function mentionsThreadChannel(mentions: ReadonlyArray<MessageChannelMentionResponse> | null | undefined): boolean {
+	return mentions?.some((mention) => THREAD_FEATURE_CHANNEL_TYPES.has(mention.type)) ?? false;
+}
+
+function withoutThreadChannelMentions<T extends {mention_channels?: Array<MessageChannelMentionResponse> | null}>(
+	value: T,
+): T {
+	if (!mentionsThreadChannel(value.mention_channels)) return value;
+	const {mention_channels, ...rest} = value;
+	const kept = mention_channels?.filter((mention) => !THREAD_FEATURE_CHANNEL_TYPES.has(mention.type)) ?? [];
+	return (kept.length > 0 ? {...rest, mention_channels: kept} : rest) as T;
+}
+
 export function carriesThreadArtifact(response: MessageResponse): boolean {
 	if (response.type === MessageTypes.THREAD_CREATED || response.type === MessageTypes.THREAD_STARTER_MESSAGE) {
 		return true;
 	}
 	if ((response.flags & THREAD_MESSAGE_FLAG_MASK) !== 0 || response.thread !== undefined) return true;
-	if (response.message_snapshots?.some((snapshot) => (snapshot.flags & THREAD_MESSAGE_FLAG_MASK) !== 0)) return true;
+	if (mentionsThreadChannel(response.mention_channels)) return true;
+	if (
+		response.message_snapshots?.some(
+			(snapshot) =>
+				(snapshot.flags & THREAD_MESSAGE_FLAG_MASK) !== 0 || mentionsThreadChannel(snapshot.mention_channels),
+		)
+	) {
+		return true;
+	}
 	const referenced = response.referenced_message;
 	return referenced != null && carriesThreadArtifact(referenced);
 }
 
 function maskResponse(response: MessageResponse): MessageResponse {
-	const {thread: _thread, ...rest} = response;
+	const {thread: _thread, ...rest} = withoutThreadChannelMentions(response);
 	const masked: MessageResponse = {...rest, flags: response.flags & ~THREAD_MESSAGE_FLAG_MASK};
 	if (response.message_snapshots) {
 		masked.message_snapshots = response.message_snapshots.map((snapshot) => ({
-			...snapshot,
+			...withoutThreadChannelMentions(snapshot),
 			flags: snapshot.flags & ~THREAD_MESSAGE_FLAG_MASK,
 		}));
 	}

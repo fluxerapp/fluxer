@@ -31,10 +31,11 @@ export function applyPremiumBadgeMasking(
 	let premiumType = heldType;
 	let premiumLifetimeSequence = user.premiumLifetimeSequence ?? undefined;
 	if (user.premiumType === UserPremiumTypes.LIFETIME) {
-		if (options.premiumFlags & PremiumFlags.BADGE_MASKED) {
+		const masked = (options.premiumFlags & PremiumFlags.BADGE_MASKED) !== 0;
+		if (masked) {
 			premiumType = UserPremiumTypes.SUBSCRIPTION;
 		}
-		if (options.hidden.has('visionary_number')) {
+		if (masked || options.hidden.has('visionary_number')) {
 			premiumLifetimeSequence = undefined;
 		}
 	}

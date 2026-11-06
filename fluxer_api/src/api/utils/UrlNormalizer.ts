@@ -17,6 +17,8 @@ const TRACKING_PARAMS = new Set([
 ]);
 const FIRST_PRINTABLE_ASCII_CODE = 0x20;
 const WHITESPACE_RE = /\s/;
+const TRAILING_DOTS_RE = /\.+$/;
+export const MAX_HOSTNAME_LENGTH = 253;
 
 export function canonicalizeUrl(raw: string): string | null {
 	const trimmed = raw.trim();
@@ -39,7 +41,11 @@ export function canonicalizeUrl(raw: string): string | null {
 	}
 	const asciiHost = domainToASCII(parsed.hostname);
 	if (!asciiHost) return null;
-	parsed.hostname = asciiHost.toLowerCase();
+	const host = asciiHost.toLowerCase().replace(TRAILING_DOTS_RE, '');
+	if (!host || host.length > MAX_HOSTNAME_LENGTH) return null;
+	parsed.hostname = host;
+	parsed.username = '';
+	parsed.password = '';
 	if (
 		(parsed.protocol === 'http:' && parsed.port === '80') ||
 		(parsed.protocol === 'https:' && parsed.port === '443')
@@ -65,36 +71,50 @@ export function canonicalizeUrl(raw: string): string | null {
 	return parsed.toString().toLowerCase();
 }
 
-const TRAILING_DOTS_RE = /\.+$/;
-
 export function normalizeHostname(raw: string): string | null {
 	const trimmed = raw.trim();
 	if (!trimmed) return null;
 	const ascii = domainToASCII(trimmed);
 	if (!ascii) return null;
 	const host = ascii.toLowerCase().replace(TRAILING_DOTS_RE, '');
-	return host || null;
+	if (!host || host.length > MAX_HOSTNAME_LENGTH) return null;
+	return host;
 }
 
 const URL_CANDIDATE_RE =
-	/(?<![a-z0-9._+-]@)((?:https?:\/\/)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:[/:?#][^\s<>\u201D']*)?)/gi;
-const TRAILING_PUNCT_RE = /[.,;:!?)\]}\x22'\u00bb\u201C\u201D]+$/;
+	/(?<![\p{L}\p{M}\p{N}-]|[\p{L}\p{N}._+-]@)((?:https?:\/\/)?[\p{L}\p{M}\p{N}-]+(?:[.\u3002\uFF0E\uFF61][\p{L}\p{M}\p{N}-]+)+\.?(?:[/:?#][^\s<>\u201D']*)?)/giu;
+const SCHEME_URL_RE = /https?:\/\/[^\s<>\u201D']+/giu;
+const TRAILING_PUNCT_RE = /(?<![.,;:!?)\]}\x22'\u00bb\u201C\u201D])[.,;:!?)\]}\x22'\u00bb\u201C\u201D]+$/;
+const SCHEME_RE = /^https?:\/\//i;
+const HOST_END_RE = /[/:?#]/;
+const LABEL_SEPARATOR_RE = /[.\u3002\uFF0E\uFF61]/;
+const NUMERIC_LABEL_RE = /^(?:0x[0-9a-f]*|\d+)$/i;
+const IPV4_OCTET_RE = /^(?:0|[1-9]\d{0,2})$/;
+
+function isPlainHostCandidate(candidate: string): boolean {
+	const hostEnd = candidate.search(HOST_END_RE);
+	const labels = (hostEnd === -1 ? candidate : candidate.slice(0, hostEnd)).split(LABEL_SEPARATOR_RE);
+	if (!NUMERIC_LABEL_RE.test(labels[labels.length - 1] ?? '')) return true;
+	return labels.length === 4 && labels.every((label) => IPV4_OCTET_RE.test(label) && Number(label) <= 255);
+}
 
 export function extractUrlCandidates(text: string | null | undefined): Array<string> {
 	if (!text) return [];
-	const out: Array<string> = [];
-	URL_CANDIDATE_RE.lastIndex = 0;
-	let m: RegExpExecArray | null;
-	while ((m = URL_CANDIDATE_RE.exec(text)) !== null) {
-		const candidate = m[1];
+	const out = new Set<string>();
+	for (const match of text.matchAll(URL_CANDIDATE_RE)) {
+		const candidate = match[1]?.replace(TRAILING_PUNCT_RE, '');
 		if (!candidate) continue;
-		let cleaned = candidate.replace(TRAILING_PUNCT_RE, '');
-		if (!/^https?:\/\//i.test(cleaned)) {
-			cleaned = `http://${cleaned}`;
+		if (SCHEME_RE.test(candidate)) {
+			out.add(candidate);
+		} else if (isPlainHostCandidate(candidate)) {
+			out.add(`http://${candidate}`);
 		}
-		out.push(cleaned);
 	}
-	return out;
+	for (const match of text.matchAll(SCHEME_URL_RE)) {
+		const candidate = match[0].replace(TRAILING_PUNCT_RE, '');
+		if (candidate) out.add(candidate);
+	}
+	return [...out];
 }
 
 const LINK_AUTHORITY_RE = /https?:\/\/([^\s/\\?#<>"'`()[\]{}|^]+)/giu;

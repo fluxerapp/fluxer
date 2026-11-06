@@ -754,6 +754,16 @@ export class ThreadRepository {
 			for (const row of rows)
 				byUser.addPrepared(ThreadMembersByUser.upsertAll(this.memberByUserRow(stateRow, row.user_id)));
 			await byUser.execute(false);
+			const present = new Set(
+				(
+					await this.getMembers(
+						threadId,
+						rows.map((row) => row.user_id),
+					)
+				).map((m) => m.userId),
+			);
+			const gone = rows.filter((row) => !present.has(row.user_id)).map((row) => row.user_id);
+			if (gone.length > 0) await this.reconcileMembersByUser(stateRow, gone);
 			return {added: rows.map((row) => new ThreadMember(row)), state: next ?? state};
 		}
 		throw new ServiceUnavailableError();
@@ -763,7 +773,11 @@ export class ThreadRepository {
 		const unique = [...new Set(userIds)];
 		for (let attempt = 0; attempt < STATE_CAS_ATTEMPTS; attempt++) {
 			const existing = await this.getMembers(threadId, unique);
-			if (existing.length === 0) return {removed: [], state: await this.getState(threadId)};
+			if (existing.length === 0) {
+				const state = await this.getState(threadId);
+				if (state) await this.reconcileMembersByUser(state.toRow(), unique);
+				return {removed: [], state};
+			}
 			const removed = await executeConditional(
 				ThreadMembers.conditionalBatch(
 					existing.map((member) => ({
@@ -802,6 +816,20 @@ export class ThreadRepository {
 			return {removed: existing, state};
 		}
 		throw new ServiceUnavailableError();
+	}
+
+	private async reconcileMembersByUser(stateRow: ThreadStateRow, userIds: Array<UserID>): Promise<void> {
+		if (userIds.length === 0) return;
+		const cleanup = new BatchBuilder();
+		for (const userId of userIds)
+			cleanup.addPrepared(ThreadMembersByUser.deleteByPk(this.memberByUserRow(stateRow, userId)));
+		await cleanup.execute(false);
+		const present = await this.getMembers(stateRow.thread_id, userIds);
+		if (present.length === 0) return;
+		const restore = new BatchBuilder();
+		for (const member of present)
+			restore.addPrepared(ThreadMembersByUser.upsertAll(this.memberByUserRow(stateRow, member.userId)));
+		await restore.execute(false);
 	}
 
 	private async bumpMembership(

@@ -154,3 +154,30 @@ describe('LiveKitService updateParticipant mute', () => {
 		]);
 	});
 });
+
+describe('LiveKitService createToken mute', () => {
+	const params = {
+		userId: createUserID(3n),
+		guildId: createGuildID(1n),
+		channelId: createChannelID(2n),
+		connectionId: 'conn-1',
+		tokenNonce: 'nonce-1',
+		regionId: 'region-1',
+		serverId: 'region-1-server-1',
+	};
+
+	async function tokenAttributes(mute: boolean): Promise<Record<string, string> | undefined> {
+		const service = createServiceWithRoomServiceClient({});
+		const {token} = await service.createToken({...params, mute});
+		const payload = JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString());
+		return payload.attributes;
+	}
+
+	it('records the server mute on a token issued to a muted member', async () => {
+		expect(await tokenAttributes(true)).toEqual({server_mute: 'true'});
+	});
+
+	it('records no server mute on a token issued to an unmuted member', async () => {
+		expect(await tokenAttributes(false)).toBeUndefined();
+	});
+});

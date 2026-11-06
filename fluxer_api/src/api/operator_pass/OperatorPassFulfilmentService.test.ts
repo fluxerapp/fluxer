@@ -716,7 +716,7 @@ test('the welcome email waits for the certificate file instead of going out with
 	});
 });
 
-test('the fulfilment sweep lists Stripe sessions only when a pending purchase is waiting, from its creation time', async () => {
+test('the fulfilment sweep lists Stripe sessions only when a pending purchase is waiting, over the session lookback window', async () => {
 	const {repository, fulfilment, session} = await startPurchase(['Ada Lovelace'], 1);
 	await fulfilment.handleCheckoutSessionCompleted(session);
 	const pending = (await repository.findPurchase(session.id))!;
@@ -747,7 +747,9 @@ test('the fulfilment sweep lists Stripe sessions only when a pending purchase is
 
 	expect(await sweep(31 * 60 * 1000)).toEqual({ran: true, checked: 0, failed: 0});
 	expect(listCompletedSessionIds).toHaveBeenCalledTimes(1);
-	expect(listCompletedSessionIds.mock.calls[0][0]).toEqual(new Date(pending.created_at.getTime() - 10 * 60 * 1000));
+	expect(listCompletedSessionIds.mock.calls[0][0]).toEqual(
+		new Date(pending.created_at.getTime() + 31 * 60 * 1000 - 25 * 60 * 60 * 1000 - 10 * 60 * 1000),
+	);
 	expect(retrieveSession).not.toHaveBeenCalled();
 });
 

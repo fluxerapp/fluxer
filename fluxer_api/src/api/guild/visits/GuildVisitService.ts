@@ -261,6 +261,7 @@ export class GuildVisitService {
 		guildId: GuildID;
 		tierContext: TierContext;
 		requestCache: RequestCache;
+		ip?: string | null;
 	}): Promise<GuildResponse> {
 		const {user, guildId, tierContext} = params;
 		const row = userGuildVisitsActive(user.id) ? await guildVisitRepository().get(user.id, guildId) : null;
@@ -287,7 +288,7 @@ export class GuildVisitService {
 
 	private async joinThroughInvite(
 		row: GuildVisitRow,
-		params: {user: User; tierContext: TierContext; requestCache: RequestCache},
+		params: {user: User; tierContext: TierContext; requestCache: RequestCache; ip?: string | null},
 	): Promise<void> {
 		const invite = row.invite_code ? await this.inviteService.findInvite(createInviteCode(row.invite_code)) : null;
 		if (!invite || invite.guildId !== row.guild_id) {
@@ -304,12 +305,13 @@ export class GuildVisitService {
 			inviteCode: invite.code,
 			requestCache: params.requestCache,
 			tierContext: params.tierContext,
+			ip: params.ip,
 		});
 	}
 
 	private async joinThroughDiscovery(
 		row: GuildVisitRow,
-		params: {user: User; tierContext: TierContext; requestCache: RequestCache},
+		params: {user: User; tierContext: TierContext; requestCache: RequestCache; ip?: string | null},
 	): Promise<void> {
 		const status = await getGuildDiscoveryRepository().findByGuildId(row.guild_id);
 		if (status?.status !== DiscoveryApplicationStatus.APPROVED) {
@@ -330,6 +332,7 @@ export class GuildVisitService {
 			joinSourceType: JoinSourceTypes.DISCOVERY,
 			requestCache: params.requestCache,
 			tierContext: params.tierContext,
+			ip: params.ip,
 		});
 	}
 
@@ -343,7 +346,7 @@ export class GuildVisitService {
 
 	private async joinAsOperatorVisit(
 		row: GuildVisitRow,
-		params: {user: User; tierContext: TierContext; requestCache: RequestCache},
+		params: {user: User; tierContext: TierContext; requestCache: RequestCache; ip?: string | null},
 	): Promise<void> {
 		if ((await this.singleCommunityService.getStockCommunityId()) !== row.guild_id) {
 			const invite = await this.findOperatorInvite(row.guild_id);
@@ -353,6 +356,7 @@ export class GuildVisitService {
 					inviteCode: invite.code,
 					requestCache: params.requestCache,
 					tierContext: params.tierContext,
+					ip: params.ip,
 				});
 				return;
 			}
@@ -371,6 +375,7 @@ export class GuildVisitService {
 			joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 			requestCache: params.requestCache,
 			tierContext: params.tierContext,
+			ip: params.ip,
 		});
 	}
 

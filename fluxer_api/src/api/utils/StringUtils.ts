@@ -7,8 +7,15 @@ const graphemeSegmenter = new Intl.Segmenter('en', {granularity: 'grapheme'});
 
 export function parseString(value: string, maxLength: number) {
 	const decoded = decode(value).trim();
-	const graphemes = Array.from(graphemeSegmenter.segment(decoded), ({segment}) => segment);
-	return graphemes.length > maxLength ? `${graphemes.slice(0, Math.max(0, maxLength - 3)).join('')}...` : decoded;
+	const keep = Math.max(0, maxLength - 3);
+	let cut = 0;
+	let count = 0;
+	for (const {index} of graphemeSegmenter.segment(decoded)) {
+		if (count === keep) cut = index;
+		count++;
+		if (count > maxLength) return `${decoded.slice(0, cut)}...`;
+	}
+	return decoded;
 }
 
 export function safeUrl(value: unknown): string | undefined {

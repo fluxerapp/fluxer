@@ -419,6 +419,7 @@ export class UserAccountRequestService {
 					state: operatorPassState,
 					viewerId: params.currentUserId,
 					restrictProfile,
+					hidden,
 				})
 			: null;
 		const viewerIsSelf = params.currentUserId === profileUser.id;

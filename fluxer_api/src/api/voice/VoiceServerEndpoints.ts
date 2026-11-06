@@ -149,6 +149,8 @@ function request(
 				res.on('error', reject);
 			},
 		);
+		const deadline = setTimeout(() => req.destroy(new Error('timed out')), options.timeoutMs);
+		req.on('close', () => clearTimeout(deadline));
 		req.on('timeout', () => req.destroy(new Error('timed out')));
 		req.on('error', reject);
 		req.end(options.body);

@@ -8,6 +8,7 @@ import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isSyntheticUserId} from '@app/api/constants/Core';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Logger} from '@app/api/Logger';
+import {hasAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {getGuildSearchService, getMessageSearchService, getUserSearchService} from '@app/api/SearchFactory';
 import {
 	claimSearchReindexAll,
@@ -15,6 +16,7 @@ import {
 	INDEX_REFRESH_STATUS_TTL_SECONDS,
 	indexRefreshStatusKey,
 } from '@app/api/search/SearchReindexAllRun';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -143,9 +145,10 @@ export class AdminSearchService {
 		}
 		const query = data.query?.trim() || '';
 		const isBrowseAll = query === '' || query === '*';
+		const excludeEmail = !hasAdminACL(acls, AdminACLs.USER_VIEW_EMAIL);
 		const searchFilters: UserSearchFilters = isBrowseAll
-			? {sortBy: 'createdAt', sortOrder: 'asc'}
-			: {sortBy: 'relevance'};
+			? {sortBy: 'createdAt', sortOrder: 'asc', excludeEmail}
+			: {sortBy: 'relevance', excludeEmail};
 		const directUserId = /^\d+$/.test(query) ? createUserID(BigInt(query)) : null;
 		const canResolveDirectUser = directUserId !== null && !isSyntheticUserId(directUserId) && data.offset === 0;
 		const [searchResult, directUser] = await Promise.all([

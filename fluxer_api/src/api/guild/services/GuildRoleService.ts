@@ -9,6 +9,7 @@ import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
+import {withGuildMemberRoleWriteLock} from '@app/api/guild/services/member/GuildMemberRoleWriteLock';
 import {computeMovedIds, getMemberListRoleOrderIds} from '@app/api/guild/services/role/RoleOrderAuditUtils';
 import {
 	resolveProtectedBitActor,
@@ -398,15 +399,17 @@ export class GuildRoleService {
 		const memberIds = await this.gatewayService.getMembersWithRole({guildId, roleId});
 		await Promise.all(
 			memberIds.map(async (memberId) => {
-				const member = await this.guildRepository.getMember(guildId, memberId);
-				if (member?.roleIds.has(roleId)) {
+				await withGuildMemberRoleWriteLock(this.cacheService, guildId, memberId, async () => {
+					const member = await this.guildRepository.getMember(guildId, memberId);
+					if (!member?.roleIds.has(roleId)) return;
 					const updatedRoleIds = new Set(member.roleIds);
 					updatedRoleIds.delete(roleId);
-					await this.guildRepository.upsertMember({
-						...member.toRow(),
-						role_ids: updatedRoleIds.size > 0 ? updatedRoleIds : null,
-					});
-				}
+					const previousRow = member.toRow();
+					await this.guildRepository.upsertMember(
+						{...previousRow, role_ids: updatedRoleIds.size > 0 ? updatedRoleIds : null},
+						previousRow,
+					);
+				});
 			}),
 		);
 		const liveRole = await this.guildRepository.getRole(role.id, guildId);

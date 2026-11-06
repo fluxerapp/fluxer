@@ -193,6 +193,7 @@ export class MessageEditService {
 					isBugHunterBot,
 					locale: user?.locale,
 					dmNsfwContext,
+					hasPermission,
 				}),
 			);
 		});

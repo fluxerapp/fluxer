@@ -109,7 +109,7 @@ export async function barOperatorPassAfterDispute(
 	const disputeId = review.dispute_id;
 	const history = await services.repository.listRemovalHistory(user.id);
 	const started = history.findLast((entry) => isBarFor(entry, disputeId));
-	if (started?.ended_at != null) {
+	if (started?.ended_at != null && started.end_reason !== 'replaced') {
 		return false;
 	}
 	const removal = await services.repository.findRemoval(user.id);

@@ -4,7 +4,11 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {ReadState} from '@app/api/models/ReadState';
-import {type ReadStateChannelHint, resolveReadStateMarker} from '@app/api/read_state/ReadStateChannelMeta';
+import {
+	loadChannelMeta,
+	type ReadStateChannelHint,
+	resolveReadStateMarker,
+} from '@app/api/read_state/ReadStateChannelMeta';
 import type {
 	ReadStateMarker,
 	ReadStateMentionUpdate,
@@ -127,6 +131,8 @@ export class ReadStateService {
 		}
 		const results: Array<ReadState> = [];
 		for (const readState of readStates) {
+			const channel = await loadChannelMeta(readState.channelId);
+			if (!channel) continue;
 			results.push(
 				await this.ackMessage({
 					userId,
@@ -135,6 +141,7 @@ export class ReadStateService {
 					mentionCount: readState.mentionCount ?? 0,
 					manual: readState.manual,
 					capable,
+					channel,
 				}),
 			);
 		}
@@ -153,22 +160,29 @@ export class ReadStateService {
 		}>;
 		capable?: boolean;
 	}): Promise<Array<ReadState>> {
-		if (readStates.length === 0) {
+		const channels = await Promise.all(readStates.map(({channelId}) => loadChannelMeta(channelId)));
+		const known = readStates.flatMap((readState, index) => {
+			const channel = channels[index];
+			return channel ? [{...readState, channel}] : [];
+		});
+		if (known.length === 0) {
 			return [];
 		}
 		try {
 			const markers: Array<ReadStateMarker | null> = capable
-				? await Promise.all(readStates.map(({channelId}) => resolveReadStateMarker({userId, channelId, capable})))
+				? await Promise.all(
+						known.map(({channelId, channel}) => resolveReadStateMarker({userId, channelId, capable, channel})),
+					)
 				: [];
 			const updatedReadStates = await this.repository.bulkAckMessages(
 				userId,
-				markers.length > 0
-					? readStates.map((readState, index) => ({...readState, marker: markers[index]}))
-					: readStates,
+				known.map(({channelId, messageId}, index) =>
+					markers.length > 0 ? {channelId, messageId, marker: markers[index]} : {channelId, messageId},
+				),
 			);
 			const readStatesByChannel = new Map(updatedReadStates.map((readState) => [readState.channelId, readState]));
 			await Promise.all(
-				readStates.map(({channelId, messageId}) =>
+				known.map(({channelId, messageId}) =>
 					Promise.all([
 						this.dispatchMessageAck({
 							userId,

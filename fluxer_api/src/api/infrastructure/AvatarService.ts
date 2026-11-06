@@ -14,7 +14,6 @@ import type {AssetKind} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {AVATAR_MAX_SIZE, EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
-import sharp from 'sharp';
 
 type ResourceType = 'attachment' | 'avatar' | 'emoji' | 'sticker' | 'banner' | 'other';
 type LimitConfigSnapshotProvider = Pick<LimitConfigService, 'getConfigSnapshot'>;
@@ -43,20 +42,16 @@ export class AvatarService {
 		}
 	}
 
-	private async stripImageMetadata(buffer: Uint8Array, format: string): Promise<Uint8Array> {
+	private async stripImageMetadata(buffer: Uint8Array): Promise<Uint8Array> {
 		try {
-			const isJpeg = format === 'jpg' || format === 'jpeg';
-			if (isJpeg) {
-				return await sharp(buffer).jpeg({quality: 100}).toBuffer();
-			}
 			const stripped = await this.mediaService.stripImageMetadata(buffer);
 			if (stripped) {
 				return stripped;
 			}
-			Logger.error({format}, 'Failed to strip image metadata, using original buffer');
+			Logger.error('Failed to strip image metadata, using original buffer');
 			return buffer;
 		} catch (error) {
-			Logger.error({error, format}, 'Failed to strip image metadata, using original buffer');
+			Logger.error({error}, 'Failed to strip image metadata, using original buffer');
 			return buffer;
 		}
 	}
@@ -93,11 +88,12 @@ export class AvatarService {
 		if (bannedAvatarHashCache.isBanned(imageHashShort)) {
 			throw new ContentBlockedError();
 		}
-		await this.scanAndBlockBannedSha({
+		const uploadBuffer = await this.stripImageMetadata(imageBuffer);
+		this.scanAndBlockBannedSha({
 			imageBuffer,
+			uploadBuffer,
 			resourceType: this.getResourceTypeForPrefix(prefix),
 		});
-		const uploadBuffer = await this.stripImageMetadata(imageBuffer, metadata.format);
 		await this.storageService.uploadAvatar({prefix, key: `${fullKeyPath}/${imageHashShort}`, body: uploadBuffer});
 		if (previousKey && stripAnimationPrefix(previousKey) !== imageHashShort) {
 			await this.storageService.deleteAvatar({
@@ -112,7 +108,6 @@ export class AvatarService {
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
-		contentType: string;
 	}> {
 		return this.processExpression('emoji', 'emoji_max_size', EMOJI_MAX_SIZE, params);
 	}
@@ -126,7 +121,6 @@ export class AvatarService {
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
-		contentType: string;
 	}> {
 		const {errorPath, base64Image, guildFeatures} = params;
 		const {imageBuffer, metadata} = await decodeValidatedImage(this.mediaService, {
@@ -140,7 +134,6 @@ export class AvatarService {
 			imageBuffer,
 			animated,
 			format: metadata.format,
-			contentType: metadata.content_type,
 		};
 	}
 
@@ -148,17 +141,15 @@ export class AvatarService {
 		prefix: 'emojis';
 		emojiId: bigint;
 		imageBuffer: Uint8Array;
-		contentType?: string | null;
 		animated?: boolean;
 	}): Promise<void> {
-		const {prefix, emojiId, imageBuffer, contentType} = params;
-		await this.scanAndBlockBannedSha({
+		const {prefix, emojiId, imageBuffer} = params;
+		const uploadBuffer = await this.stripImageMetadata(imageBuffer);
+		this.scanAndBlockBannedSha({
 			imageBuffer,
+			uploadBuffer,
 			resourceType: 'emoji',
 		});
-		const ct = contentType ?? '';
-		const format = ct.includes('jpeg') || ct.includes('jpg') ? 'jpeg' : ct.replace('image/', '') || 'png';
-		const uploadBuffer = await this.stripImageMetadata(imageBuffer, format);
 		await this.storageService.uploadAvatar({prefix, key: emojiId.toString(), body: uploadBuffer});
 	}
 
@@ -215,7 +206,6 @@ export class AvatarService {
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
-		contentType: string;
 	}> {
 		return this.processExpression('sticker', 'sticker_max_size', STICKER_MAX_SIZE, params);
 	}
@@ -224,17 +214,15 @@ export class AvatarService {
 		prefix: 'stickers';
 		stickerId: bigint;
 		imageBuffer: Uint8Array;
-		contentType?: string | null;
 		animated?: boolean;
 	}): Promise<void> {
-		const {prefix, stickerId, imageBuffer, contentType} = params;
-		await this.scanAndBlockBannedSha({
+		const {prefix, stickerId, imageBuffer} = params;
+		const uploadBuffer = await this.stripImageMetadata(imageBuffer);
+		this.scanAndBlockBannedSha({
 			imageBuffer,
+			uploadBuffer,
 			resourceType: 'sticker',
 		});
-		const ct = contentType ?? '';
-		const format = ct.includes('jpeg') || ct.includes('jpg') ? 'jpeg' : ct.replace('image/', '') || 'png';
-		const uploadBuffer = await this.stripImageMetadata(imageBuffer, format);
 		await this.storageService.uploadAvatar({prefix, key: stickerId.toString(), body: uploadBuffer});
 	}
 
@@ -264,7 +252,11 @@ export class AvatarService {
 		}
 	}
 
-	private async scanAndBlockBannedSha(params: {imageBuffer: Uint8Array; resourceType: ResourceType}): Promise<void> {
+	private scanAndBlockBannedSha(params: {
+		imageBuffer: Uint8Array;
+		uploadBuffer: Uint8Array;
+		resourceType: ResourceType;
+	}): void {
 		const modCtx = {
 			userId: null,
 			guildId: null,
@@ -281,6 +273,9 @@ export class AvatarService {
 				| 'app_asset',
 		};
 		contentModerationService.scanFileBuffer(Buffer.from(params.imageBuffer), modCtx);
+		if (params.uploadBuffer !== params.imageBuffer) {
+			contentModerationService.scanFileBuffer(Buffer.from(params.uploadBuffer), modCtx);
+		}
 	}
 
 	private getResourceTypeForPrefix(prefix: string): ResourceType {

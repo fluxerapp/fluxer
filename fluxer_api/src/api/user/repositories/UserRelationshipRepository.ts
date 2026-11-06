@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {deleteOneOrMany, executeGroupedBatches, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	deleteOneOrMany,
+	executeGroupedBatches,
+	fetchMany,
+	fetchManyInChunks,
+	fetchOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db, nextVersion} from '@app/api/database/CassandraTypes';
 import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {NoteRow, RelationshipRow} from '@app/api/database/types/UserTypes';
@@ -26,6 +32,13 @@ const FETCH_RELATIONSHIP_TARGET_TYPES_CQL = Relationships.selectCql({
 });
 const FETCH_RELATIONSHIPS_BY_TARGET_CQL = RelationshipsByTarget.selectCql({
 	where: RelationshipsByTarget.where.eq('target_user_id'),
+});
+const FETCH_RELATIONSHIPS_BY_TARGET_AND_SOURCES_CQL = RelationshipsByTarget.selectCql({
+	columns: ['source_user_id', 'type'],
+	where: [
+		RelationshipsByTarget.where.eq('target_user_id'),
+		RelationshipsByTarget.where.in('source_user_id', 'source_user_ids'),
+	],
 });
 const FETCH_RELATIONSHIP_CQL = Relationships.selectCql({
 	where: [
@@ -152,6 +165,15 @@ export class UserRelationshipRepository {
 			{source_user_id: sourceUserId},
 		);
 		return rows.filter((row) => row.type === RelationshipTypes.BLOCKED).map((row) => row.target_user_id);
+	}
+
+	async listUserIdsBlockingTarget(targetUserId: UserID, sourceUserIds: Array<UserID>): Promise<Set<UserID>> {
+		const rows = await fetchManyInChunks<Pick<RelationshipRow, 'source_user_id' | 'type'>>(
+			FETCH_RELATIONSHIPS_BY_TARGET_AND_SOURCES_CQL,
+			sourceUserIds,
+			(chunk) => ({target_user_id: targetUserId, source_user_ids: chunk}),
+		);
+		return new Set(rows.filter((row) => row.type === RelationshipTypes.BLOCKED).map((row) => row.source_user_id));
 	}
 
 	async listIncomingRequests(userId: UserID): Promise<Array<Relationship>> {

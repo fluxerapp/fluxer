@@ -18,11 +18,13 @@ const INERT_LITERALS: ReadonlyArray<readonly [string, string]> = [
 	['>', '\uE001'],
 	['[', '\uE002'],
 	[']', '\uE003'],
+	['\\', '\uE004'],
 ];
-const INERT_PATTERN = /[<>[\]]/g;
-const LITERAL_PATTERN = /[\uE000-\uE003]/g;
+const INERT_PATTERN = /[<>[\]\\]/g;
+const LITERAL_PATTERN = /[\uE000-\uE004]/g;
 const TO_INERT = new Map(INERT_LITERALS);
 const TO_LITERAL = new Map(INERT_LITERALS.map(([literal, inert]) => [inert, literal]));
+const TO_MARKDOWN_LITERAL = new Map(INERT_LITERALS.map(([literal, inert]) => [inert, `\\${literal}`]));
 const HTML_ESCAPES: Record<string, string> = {
 	'&': '&amp;',
 	'<': '&lt;',
@@ -405,5 +407,8 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 	]
 		.filter((block): block is string => Boolean(block))
 		.join('\n\n');
+	if (links === 'markdown') {
+		return text.replace(LITERAL_PATTERN, (character) => TO_MARKDOWN_LITERAL.get(character) ?? character);
+	}
 	return restoreEmailLiterals(text);
 }

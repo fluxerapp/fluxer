@@ -19,6 +19,10 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import {assertNotBannedFromGuild} from '@app/api/guild/services/GuildBanChecks';
 import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
 import type {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
+import {
+	type GuildMemberRoleWriteLocks,
+	withGuildMemberRoleWriteLock,
+} from '@app/api/guild/services/member/GuildMemberRoleWriteLock';
 import type {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
 import {endGuildVisit} from '@app/api/guild/visits/GuildVisitLifecycle';
@@ -170,6 +174,7 @@ export class GuildMemberOperationsService {
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly searchIndexService: GuildMemberSearchIndexService,
+		private readonly cacheService: GuildMemberRoleWriteLocks,
 	) {}
 
 	async getMembers(params: {
@@ -349,18 +354,34 @@ export class GuildMemberOperationsService {
 			auditLogReason: params.auditLogReason,
 		});
 		const isAssigningRoles = updateData.role_ids !== undefined && updateData.role_ids.size > 0;
-		const shouldRemoveTemporaryStatus = targetMember.isTemporary && isAssigningRoles;
-		const updatedMemberData = this.buildMemberUpdateRow({targetMember, updateData, shouldRemoveTemporaryStatus});
-		let updatedMember: GuildMember;
+		let commitStarted = false;
+		let committed: {updatedMember: GuildMember; shouldRemoveTemporaryStatus: boolean};
 		try {
-			updatedMember = await this.guildRepository.upsertMember(updatedMemberData);
+			committed = await withGuildMemberRoleWriteLock(this.cacheService, guildId, targetId, async () => {
+				const currentMember = await this.guildRepository.getMember(guildId, targetId);
+				if (!currentMember) throw new UnknownGuildMemberError();
+				const shouldRemoveTemporaryStatus = currentMember.isTemporary && isAssigningRoles;
+				const updatedMemberData = this.buildMemberUpdateRow({
+					targetMember: currentMember,
+					updateData,
+					shouldRemoveTemporaryStatus,
+				});
+				commitStarted = true;
+				const updatedMember = await this.guildRepository.upsertMember(updatedMemberData, currentMember.toRow());
+				return {updatedMember, shouldRemoveTemporaryStatus};
+			});
 		} catch (error) {
+			if (!commitStarted) {
+				await this.rollbackPreparedAssets(preparedAssets);
+				throw error;
+			}
 			Logger.error(
 				{error, guildId, userId: targetId},
 				'Guild member update failed with unknown commit status; retaining uploaded assets',
 			);
 			throw error;
 		}
+		const {updatedMember, shouldRemoveTemporaryStatus} = committed;
 		await this.entityAssetService.commitAssetChanges([preparedAssets.avatar, preparedAssets.banner]);
 		if (shouldRemoveTemporaryStatus) {
 			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
@@ -420,6 +441,7 @@ export class GuildMemberOperationsService {
 			sendJoinMessage?: boolean;
 			skipGuildLimitCheck?: boolean;
 			skipBanCheck?: boolean;
+			ip?: string | null;
 			skipAccountLimitCheck?: boolean;
 			isTemporary?: boolean;
 			joinSourceType?: JoinSourceType;
@@ -461,7 +483,7 @@ export class GuildMemberOperationsService {
 			assertTierAllows(user, TierGatedActions.GUILD_JOIN, params.tierContext);
 		}
 		if (!skipBanCheck) {
-			await assertNotBannedFromGuild(this.guildRepository, this.userRepository, {userId, guildId});
+			await assertNotBannedFromGuild(this.guildRepository, this.userRepository, {userId, guildId, ip: params.ip});
 		}
 		const userGuildsCount = await this.guildRepository.countUserGuilds(userId);
 		if (!skipGuildLimitCheck) {

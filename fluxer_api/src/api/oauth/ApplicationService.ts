@@ -227,14 +227,15 @@ export class ApplicationService {
 				});
 			}
 		}
+		const currentRow = application.toRow();
 		const updatedRow: ApplicationRow = {
-			...application.toRow(),
+			...currentRow,
 			name: args.name ?? application.name,
 			oauth2_redirect_uris: args.redirectUris ? new Set(args.redirectUris) : application.oauth2RedirectUris,
 			bot_is_public: args.botPublic ?? application.botIsPublic,
 			bot_require_code_grant: args.botRequireCodeGrant ?? application.botRequireCodeGrant,
 		};
-		return this.deps.applicationRepository.upsertApplication(updatedRow);
+		return this.deps.applicationRepository.upsertApplication(updatedRow, currentRow);
 	}
 
 	async deleteApplication(userId: UserID, applicationId: ApplicationID): Promise<void> {
@@ -325,13 +326,14 @@ export class ApplicationService {
 		}
 		const {token, hash, preview} = await this.deps.botAuthService.generateBotToken(applicationId);
 		const botTokenCreatedAt = new Date();
+		const currentRow = application.toRow();
 		const updatedRow: ApplicationRow = {
-			...application.toRow(),
+			...currentRow,
 			bot_token_hash: hash,
 			bot_token_preview: preview,
 			bot_token_created_at: botTokenCreatedAt,
 		};
-		await this.deps.applicationRepository.upsertApplication(updatedRow);
+		await this.deps.applicationRepository.upsertApplication(updatedRow, currentRow);
 		Logger.info({applicationId: applicationId.toString()}, 'Successfully rotated bot token');
 		const botUserId = application.botUserId;
 		if (botUserId !== null) {
@@ -352,12 +354,13 @@ export class ApplicationService {
 		const clientSecret = randomBase64Url(32);
 		const clientSecretHash = await hashPassword(clientSecret);
 		const clientSecretCreatedAt = new Date();
+		const currentRow = application.toRow();
 		const updatedRow: ApplicationRow = {
-			...application.toRow(),
+			...currentRow,
 			client_secret_hash: clientSecretHash,
 			client_secret_created_at: clientSecretCreatedAt,
 		};
-		await this.deps.applicationRepository.upsertApplication(updatedRow);
+		await this.deps.applicationRepository.upsertApplication(updatedRow, currentRow);
 		Logger.info({applicationId: applicationId.toString()}, 'Successfully rotated client secret');
 		return {clientSecret};
 	}

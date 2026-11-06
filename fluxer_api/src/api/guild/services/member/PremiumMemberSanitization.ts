@@ -50,10 +50,13 @@ export async function sanitizeExpiredPremiumMemberPerks({
 	}
 	const updatePromises = membersToSanitize.map(({guildId, member}) =>
 		guildRepository
-			.upsertMember({
-				...member!.toRow(),
-				is_premium_sanitized: true,
-			})
+			.upsertMember(
+				{
+					...member!.toRow(),
+					is_premium_sanitized: true,
+				},
+				member!.toRow(),
+			)
 			.then((updatedMember) => ({guildId, updatedMember, error: null}))
 			.catch((error) => {
 				Logger.error(

@@ -35,6 +35,8 @@ import {
 	type ThreadParentSettingsInput,
 } from '@app/api/channel/services/thread/ThreadParentSettings';
 import {enqueueDeleteChannelThreads} from '@app/api/channel/threads/ThreadJobs';
+import {valuesEqual} from '@app/api/database/CassandraVersionedUpdate';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
 	isTainted,
 	THREAD_FEATURE_CHANNEL_TYPES,
@@ -130,26 +132,29 @@ function assertOverwriteTarget(channel: Channel, viewer: ThreadViewer | undefine
 
 export class ChannelOperationsService {
 	private async persistOverwritesAndDispatch(
-		channel: Channel,
-		overwrites: NonNullable<Channel['permissionOverwrites']>,
-		previousPermissionOverwrites: Channel['permissionOverwrites'],
+		channelId: ChannelID,
+		applyChange: (overwrites: Channel['permissionOverwrites']) => void,
 		requestCache: RequestCache,
 		guildId: GuildID,
 	): Promise<void> {
+		const current = await this.channelRepository.channelData.findUnique(channelId);
+		if (!current) throw new UnknownChannelError();
+		const overwrites = new Map(current.permissionOverwrites ?? []);
+		applyChange(overwrites);
 		const updated = await this.channelRepository.channelData.upsert(
 			{
-				...channel.toRow(),
+				...current.toRow(),
 				permission_overwrites: new Map(
 					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
 				),
 			},
-			channel.toRow(),
+			current.toRow(),
 		);
 		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: requestCache});
-		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
+		if (current.type === ChannelTypes.GUILD_CATEGORY) {
 			await this.propagatePermissionsToSyncedChildren({
 				categoryChannel: updated,
-				previousPermissionOverwrites,
+				previousPermissionOverwrites: current.permissionOverwrites,
 				guildId,
 				requestCache: requestCache,
 			});
@@ -443,12 +448,24 @@ export class ChannelOperationsService {
 					? data.rtc_region
 					: channel.rtcRegion,
 			rtc_p2p: data.rtc_p2p !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.rtc_p2p : channel.rtcP2p,
-			permission_overwrites: new Map(
-				Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [
-					targetId,
-					overwrite.toPermissionOverwrite(),
-				]),
-			),
+			permission_overwrites:
+				permissionOverwrites.size > 0
+					? new Map(
+							Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [
+								targetId,
+								overwrite.toPermissionOverwrite(),
+							]),
+						)
+					: null,
+		};
+		const writeChannel = async (): Promise<Channel> => {
+			const current = await this.channelRepository.channelData.findUnique(channelId);
+			if (!current) throw new UnknownChannelError();
+			const currentRow = current.toRow();
+			return this.channelRepository.channelData.upsert(
+				rebaseChangedColumns(updatedChannelData, channel.toRow(), currentRow),
+				currentRow,
+			);
 		};
 		let retypedThreads: Array<ThreadState> = [];
 		const toAnnouncement =
@@ -471,16 +488,19 @@ export class ChannelOperationsService {
 								channel,
 								nextType,
 							);
-							if (threads.length === 0) return this.channelRepository.channelData.upsert(updatedChannelData);
-							const {parent, active} = await retypeParentThreads(this.channelRepository, threads, nextType, () =>
-								this.channelRepository.channelData.upsert(updatedChannelData),
+							if (threads.length === 0) return writeChannel();
+							const {parent, active} = await retypeParentThreads(
+								this.channelRepository,
+								threads,
+								nextType,
+								writeChannel,
 							);
 							retypedThreads = active;
 							return parent;
 						},
 						PARENT_CONVERSION_LOCK_TTL_SECONDS,
 					)
-				: await this.channelRepository.channelData.upsert(updatedChannelData);
+				: await writeChannel();
 		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && nextType !== ChannelTypes.GUILD_ANNOUNCEMENT) {
 			await enqueueChannelFollowerRemoval({sourceChannelId: channelId, reason: 'converted'});
 		}
@@ -605,10 +625,11 @@ export class ChannelOperationsService {
 				const guildChannels = await this.channelRepository.channelData.listGuildChannels(guildId, 'maintenance');
 				const childChannels = guildChannels.filter((ch: Channel) => ch.parentId === channelId);
 				for (const childChannel of childChannels) {
-					const updatedChild = await this.channelRepository.channelData.upsert({
-						...childChannel.toRow(),
-						parent_id: null,
-					});
+					const childRow = childChannel.toRow();
+					const updatedChild = await this.channelRepository.channelData.upsert(
+						{...childRow, parent_id: null},
+						childRow,
+					);
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}
 			}
@@ -750,15 +771,19 @@ export class ChannelOperationsService {
 		if (syncedChannels.length > 0) {
 			await Promise.all(
 				syncedChannels.map(async (child) => {
-					const updatedChild = await this.channelRepository.channelData.upsert({
-						...child.toRow(),
-						permission_overwrites: new Map(
-							Array.from(categoryChannel.permissionOverwrites.entries()).map(([targetId, overwrite]) => [
-								targetId,
-								overwrite.toPermissionOverwrite(),
-							]),
-						),
-					});
+					const childRow = child.toRow();
+					const updatedChild = await this.channelRepository.channelData.upsert(
+						{
+							...childRow,
+							permission_overwrites: new Map(
+								Array.from(categoryChannel.permissionOverwrites.entries()).map(([targetId, overwrite]) => [
+									targetId,
+									overwrite.toPermissionOverwrite(),
+								]),
+							),
+						},
+						childRow,
+					);
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}),
 			);
@@ -878,18 +903,16 @@ export class ChannelOperationsService {
 		const grantedBits = overwriteGrantedBits(existing, {allow: sanitizedAllow, deny: sanitizedDeny});
 		const effectivePermissions = actor.threadBits ? withImplicitThreadBits(userPermissions) : userPermissions;
 		if (!hasAdministrator && (grantedBits & ~effectivePermissions) !== 0n) throw new MissingPermissionsError();
-		const previousPermissionOverwrites = channel.permissionOverwrites;
 		const nextOverwrite = new ChannelPermissionOverwrite({
 			type: params.overwrite.type,
 			allow_: sanitizedAllow,
 			deny_: sanitizedDeny,
 		});
-		const overwrites = new Map(channel.permissionOverwrites ?? []);
-		overwrites.set(targetId, nextOverwrite);
 		await this.persistOverwritesAndDispatch(
-			channel,
-			overwrites,
-			previousPermissionOverwrites,
+			channel.id,
+			(overwrites) => {
+				overwrites.set(targetId, nextOverwrite);
+			},
 			params.requestCache,
 			channel.guildId,
 		);
@@ -916,10 +939,8 @@ export class ChannelOperationsService {
 		if (!channel?.guildId) throw new UnknownChannelError();
 		assertOverwriteTarget(channel, params.viewer);
 		await this.checkOverwritePermission({guildId: channel.guildId, userId: params.userId, channelId: channel.id});
-		const previousPermissionOverwrites = channel.permissionOverwrites;
-		const overwrites = new Map(channel.permissionOverwrites ?? []);
-		const removedRole = overwrites.get(createRoleID(params.overwriteId));
-		const removedUser = overwrites.get(createUserID(params.overwriteId));
+		const removedRole = channel.permissionOverwrites?.get(createRoleID(params.overwriteId));
+		const removedUser = channel.permissionOverwrites?.get(createUserID(params.overwriteId));
 		const removed = removedRole ?? removedUser;
 		const kept =
 			removed && (hasThreadPermissionBits(removed.allow) || hasThreadPermissionBits(removed.deny))
@@ -942,23 +963,24 @@ export class ChannelOperationsService {
 			const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
 			if (!hasAdministrator && (removed.deny & ~kept & ~userPermissions) !== 0n) throw new MissingPermissionsError();
 		}
-		overwrites.delete(createRoleID(params.overwriteId));
-		overwrites.delete(createUserID(params.overwriteId));
-		if (removed && kept !== 0n) {
-			const removedTargetId = removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
-			overwrites.set(
-				removedTargetId,
-				new ChannelPermissionOverwrite({
-					type: removed.type,
-					allow_: removed.allow & kept,
-					deny_: removed.deny & kept,
-				}),
-			);
-		}
 		await this.persistOverwritesAndDispatch(
-			channel,
-			overwrites,
-			previousPermissionOverwrites,
+			channel.id,
+			(overwrites) => {
+				overwrites.delete(createRoleID(params.overwriteId));
+				overwrites.delete(createUserID(params.overwriteId));
+				if (removed && kept !== 0n) {
+					const removedTargetId =
+						removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
+					overwrites.set(
+						removedTargetId,
+						new ChannelPermissionOverwrite({
+							type: removed.type,
+							allow_: removed.allow & kept,
+							deny_: removed.deny & kept,
+						}),
+					);
+				}
+			},
 			params.requestCache,
 			channel.guildId,
 		);
@@ -979,6 +1001,14 @@ export class ChannelOperationsService {
 export interface ChannelTypeConversion {
 	from: number;
 	to: number;
+}
+
+function rebaseChangedColumns(desired: ChannelRow, snapshot: ChannelRow, current: ChannelRow): ChannelRow {
+	const next = {...current};
+	for (const column of Object.keys(desired) as Array<keyof ChannelRow>) {
+		if (!valuesEqual(desired[column], snapshot[column])) Object.assign(next, {[column]: desired[column]});
+	}
+	return next;
 }
 
 function resolveNextChannelType(channel: Channel, typeConversion: ChannelTypeConversion | null): number {

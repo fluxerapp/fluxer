@@ -31,6 +31,7 @@ import {
 	type GuildStickerRow,
 } from '@app/api/database/types/GuildTypes';
 import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {bumpGuildBanGeneration} from '@app/api/guild/services/GuildBanChecks';
 import {
 	bumpGuildVisitorViewGeneration,
 	touchesGuildVisitorView,
@@ -300,7 +301,7 @@ export class GuildRepository {
 		return result ? Number(result.count) : 0;
 	}
 
-	async upsertMember(data: GuildMemberRow): Promise<GuildMember> {
+	async upsertMember(data: GuildMemberRow, oldData?: GuildMemberRow | null): Promise<GuildMember> {
 		const guildId = data.guild_id;
 		const userId = data.user_id;
 		const result = await executeVersionedUpdate<GuildMemberRow, 'guild_id' | 'user_id'>(
@@ -314,6 +315,7 @@ export class GuildRepository {
 				patch: buildPatchFromData(data, current, GUILD_MEMBER_COLUMNS, ['guild_id', 'user_id']),
 			}),
 			GuildMembers,
+			{initialData: oldData},
 		);
 		await upsertOne(
 			GuildMembersByUserId.insert({
@@ -470,6 +472,7 @@ export class GuildRepository {
 				batch.addPrepared(GuildBansByEmail.insert({guild_id: data.guild_id, email: data.email, user_id: data.user_id}));
 		}
 		await batch.execute();
+		await bumpGuildBanGeneration(data.guild_id);
 		return new GuildBan(data);
 	}
 
@@ -480,6 +483,7 @@ export class GuildRepository {
 		batch.addPrepared(GuildBansByUserId.deleteByPk({user_id: userId, guild_id: guildId}));
 		if (ban?.email) batch.addPrepared(GuildBansByEmail.deleteByPk({guild_id: guildId, email: ban.email}));
 		await batch.execute();
+		await bumpGuildBanGeneration(guildId);
 	}
 
 	async deleteAllBansForUser(userId: UserID): Promise<void> {
@@ -491,6 +495,9 @@ export class GuildRepository {
 				...(ban.email ? [GuildBansByEmail.deleteByPk({guild_id: ban.guild_id, email: ban.email})] : []),
 			]),
 		);
+		for (const ban of bans) {
+			await bumpGuildBanGeneration(ban.guild_id);
+		}
 	}
 
 	async getBanByEmail(guildId: GuildID, email: string): Promise<GuildBan | null> {

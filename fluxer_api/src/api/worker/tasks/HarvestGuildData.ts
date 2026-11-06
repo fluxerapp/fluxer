@@ -60,6 +60,21 @@ interface GuildHarvestAttachment {
 	height: number | null;
 }
 
+const MAX_ARCHIVE_FILENAME_BYTES = 255;
+
+function archiveAttachmentName(attachmentId: AttachmentID, filename: string): string {
+	if (
+		filename.length === 0 ||
+		filename === '.' ||
+		filename === '..' ||
+		Buffer.byteLength(filename, 'utf8') > MAX_ARCHIVE_FILENAME_BYTES ||
+		/[\0/\\]/.test(filename)
+	) {
+		return attachmentId.toString();
+	}
+	return filename;
+}
+
 function buildGuildHarvestAttachment(
 	channelId: ChannelID,
 	attachment: GuildHarvestAttachment,
@@ -70,7 +85,9 @@ function buildGuildHarvestAttachment(
 		filename: attachment.filename,
 		size: attachment.size.toString(),
 		content_type: attachment.contentType,
-		archive_path: includeAttachments ? `attachments/${channelId}/${attachment.id}/${attachment.filename}` : null,
+		archive_path: includeAttachments
+			? `attachments/${channelId}/${attachment.id}/${archiveAttachmentName(attachment.id, attachment.filename)}`
+			: null,
 		cdn_url: makeDataPackageAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
 		width: attachment.width,
 		height: attachment.height,
@@ -327,7 +344,7 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 					'attachments',
 					dl.channelId.toString(),
 					dl.attachmentId.toString(),
-					dl.filename,
+					archiveAttachmentName(dl.attachmentId, dl.filename),
 				);
 				await downloadToDisk(storageService, cdnBucket(), storageKey, dest);
 				doneCount++;
