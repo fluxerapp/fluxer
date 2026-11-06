@@ -16,7 +16,7 @@ import {
 	type StoredAccountList,
 	type UserData,
 } from '@app/features/auth/state/AccountStorageContract';
-import {accountKeyUserId, accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import {accountKeyUserId, accountStorageKey, deriveAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {BrowserAccountStorageRepository} from '@app/features/auth/state/BrowserAccountStorageRepository';
 import {
 	type DesktopAccountStorageRepository,
@@ -78,7 +78,8 @@ class AccountStorage {
 		}
 		let existing = await active.repository.read(storageKey ?? userId);
 		if (active.source === 'idb' && existing === null && storageKey !== null) {
-			existing = await active.repository.read(userId);
+			const unqualified = await active.repository.read(userId);
+			existing = unqualified !== null && deriveAccountStorageKey(unqualified) === null ? unqualified : null;
 		}
 		const resolvedInstance = instance ?? existing?.instance;
 		const resolvedStorageKey = storageKey ?? existing?.storageKey;

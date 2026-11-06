@@ -125,7 +125,7 @@ export async function initiateConnection(
 export async function authorizeBlueskyConnection(i18n: I18n, handle: string): Promise<void> {
 	try {
 		const response = await http.post<BlueskyAuthorizeResponse>(Endpoints.BLUESKY_AUTHORIZE, {body: {handle}});
-		window.open(response.body.authorize_url, '_blank');
+		window.open(response.body.authorize_url, '_blank', 'noopener,noreferrer');
 	} catch (error) {
 		logger.error(`Failed to start Bluesky OAuth flow for ${handle}:`, error);
 		showErrorModal(i18n, error, {

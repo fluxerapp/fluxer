@@ -751,7 +751,7 @@ function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
 		const id = readNonEmptyString(source, 'id');
 		const name = readNonEmptyString(source, 'name');
 		const assetUrl = readNonEmptyString(source, 'asset_url');
-		if (id == null || name == null || assetUrl == null) {
+		if (id == null || !/^\d{1,20}$/.test(id) || name == null || assetUrl == null) {
 			return [];
 		}
 		const position = readNonEmptyString(source, 'position');

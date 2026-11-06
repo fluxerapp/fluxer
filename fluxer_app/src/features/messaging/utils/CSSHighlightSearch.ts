@@ -36,6 +36,32 @@ function normaliseSearchTerms(terms: ReadonlyArray<string>): Array<string> {
 	return Array.from(cleanTerms);
 }
 
+interface LoweredText {
+	text: string;
+	startOffsets: Array<number> | null;
+	endOffsets: Array<number> | null;
+}
+
+function lowerTextWithOffsets(text: string): LoweredText {
+	const lowered = text.toLowerCase();
+	if (lowered.length === text.length) {
+		return {text: lowered, startOffsets: null, endOffsets: null};
+	}
+	const startOffsets: Array<number> = [];
+	const endOffsets: Array<number> = [];
+	let offset = 0;
+	for (const char of text) {
+		const lowerChar = char.toLowerCase();
+		const end = offset + char.length;
+		for (let i = 0; i < lowerChar.length; i++) {
+			startOffsets.push(offset);
+			endOffsets.push(end);
+		}
+		offset = end;
+	}
+	return {text: lowered, startOffsets, endOffsets};
+}
+
 export function createRangesForSearchTerms(textNodes: Array<Text>, searchTerms: ReadonlyArray<string>): Array<Range> {
 	const ranges: Array<Range> = [];
 	const cleanTerms = normaliseSearchTerms(searchTerms);
@@ -43,16 +69,17 @@ export function createRangesForSearchTerms(textNodes: Array<Text>, searchTerms: 
 	textNodes.forEach((textNode) => {
 		const text = textNode.textContent || '';
 		if (!text) return;
-		const lowerText = text.toLowerCase();
+		const {text: lowerText, startOffsets, endOffsets} = lowerTextWithOffsets(text);
 		for (const term of cleanTerms) {
 			if (term.length > lowerText.length) continue;
 			let startPos = 0;
 			while (startPos < lowerText.length) {
 				const index = lowerText.indexOf(term, startPos);
 				if (index === -1) break;
+				const lastIndex = index + term.length - 1;
 				const range = textNode.ownerDocument.createRange();
-				range.setStart(textNode, index);
-				range.setEnd(textNode, index + term.length);
+				range.setStart(textNode, startOffsets ? startOffsets[index] : index);
+				range.setEnd(textNode, endOffsets ? endOffsets[lastIndex] : lastIndex + 1);
 				ranges.push(range);
 				startPos = index + term.length;
 			}

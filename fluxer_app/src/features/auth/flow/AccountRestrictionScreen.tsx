@@ -171,10 +171,18 @@ function LineText({line}: {line: string}) {
 	return parts;
 }
 
-function Lines({lines, className = styles.text}: {lines: ReadonlyArray<string>; className?: string}) {
+function Lines({
+	lines,
+	className = styles.text,
+	links = true,
+}: {
+	lines: ReadonlyArray<string>;
+	className?: string;
+	links?: boolean;
+}) {
 	return lines.map((line) => (
 		<p key={line} className={className} data-flx="auth.flow.account-restriction-screen.lines.text">
-			<LineText line={line} data-flx="auth.flow.account-restriction-screen.lines.line-text" />
+			{links ? <LineText line={line} data-flx="auth.flow.account-restriction-screen.lines.line-text" /> : line}
 		</p>
 	));
 }
@@ -243,7 +251,11 @@ function NoticeView({
 					{notice.rule == null ? null : (
 						<RuleLine rule={notice.rule} data-flx="auth.flow.account-restriction-screen.notice-view.rule-line" />
 					)}
-					<Lines lines={notice.facts} data-flx="auth.flow.account-restriction-screen.notice-view.lines--2" />
+					<Lines
+						lines={notice.facts}
+						links={false}
+						data-flx="auth.flow.account-restriction-screen.notice-view.lines--2"
+					/>
 					{notice.statement == null ? null : (
 						<p className={styles.text} data-flx="auth.flow.account-restriction-screen.notice.statement">
 							{i18n._(NOTE_FROM_OUR_TEAM_DESCRIPTOR, {statement: notice.statement})}

@@ -4,13 +4,15 @@ import type {ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import {THEME_VARIABLE_NAMES} from '@app/features/theme/variables/ThemeVariableManifest';
 
 const ROOT_BLOCK_PATTERN = /:root\s*\{([^{}]*)\}/g;
-const DECLARATION_PATTERN = /(--[a-zA-Z0-9_-]+)\s*:\s*([^;{}]+);/g;
+const DECLARATION_PATTERN = /(?<![a-zA-Z0-9_-])(--[a-zA-Z0-9_-]+)\s*:\s*([^;{}]+)(;|$)/g;
 const THEME_VARIABLES: ReadonlySet<string> = new Set(THEME_VARIABLE_NAMES);
 
 function replaceThemeDeclarations(css: string, replace: (declaration: string, name: string) => string): string {
 	return css.replace(ROOT_BLOCK_PATTERN, (block: string, body: string) => {
-		const nextBody = body.replace(DECLARATION_PATTERN, (declaration: string, name: string) =>
-			THEME_VARIABLES.has(name) ? replace(declaration, name) : declaration,
+		const nextBody = body.replace(
+			DECLARATION_PATTERN,
+			(declaration: string, name: string, _value: string, terminator: string) =>
+				terminator === ';' && THEME_VARIABLES.has(name) ? replace(declaration, name) : declaration,
 		);
 		return `${block.slice(0, block.length - body.length - 1)}${nextBody}}`;
 	});
@@ -19,8 +21,8 @@ function replaceThemeDeclarations(css: string, replace: (declaration: string, na
 export function extractThemeVariableOverrides(css: string): Record<string, string> {
 	const overrides: Record<string, string> = {};
 	for (const block of css.matchAll(ROOT_BLOCK_PATTERN)) {
-		for (const [, name, value] of (block[1] ?? '').matchAll(DECLARATION_PATTERN)) {
-			if (name && value && THEME_VARIABLES.has(name)) overrides[name] = value.trim();
+		for (const [, name, value, terminator] of (block[1] ?? '').matchAll(DECLARATION_PATTERN)) {
+			if (terminator === ';' && name && value && THEME_VARIABLES.has(name)) overrides[name] = value.trim();
 		}
 	}
 	return overrides;

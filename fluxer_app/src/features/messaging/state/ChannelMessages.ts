@@ -177,15 +177,15 @@ class MessageBufferSegment {
 	}
 
 	has(id: string): boolean {
-		return this.keyedById[id] != null;
+		return this.get(id) != null;
 	}
 
 	get(id: string): Message | undefined {
-		return this.keyedById[id];
+		return Object.hasOwn(this.keyedById, id) ? this.keyedById[id] : undefined;
 	}
 
 	remove(id: string): void {
-		if (!this.keyedById[id]) return;
+		if (!this.get(id)) return;
 		delete this.keyedById[id];
 		this.items = this.items.filter((m) => m.id !== id);
 	}
@@ -201,7 +201,7 @@ class MessageBufferSegment {
 	}
 
 	replace(previousId: string, next: Message): void {
-		const existing = this.keyedById[previousId];
+		const existing = this.get(previousId);
 		if (!existing) return;
 		delete this.keyedById[previousId];
 		this.keyedById[next.id] = next;
@@ -210,7 +210,7 @@ class MessageBufferSegment {
 	}
 
 	update(id: string, updater: (m: Message) => Message): void {
-		const current = this.keyedById[id];
+		const current = this.get(id);
 		if (!current) return;
 		const updated = updater(current);
 		this.keyedById[id] = updated;
@@ -478,7 +478,7 @@ export class ChannelMessages {
 	}
 
 	get(id: string, checkBuffers = false): Message | undefined {
-		const local = this.messageIndex[id];
+		const local = Object.hasOwn(this.messageIndex, id) ? this.messageIndex[id] : undefined;
 		if (local || !checkBuffers) return local;
 		return this.beforeBuffer.get(id) ?? this.afterBuffer.get(id);
 	}
@@ -496,7 +496,7 @@ export class ChannelMessages {
 	}
 
 	has(id: string, checkBuffers = true): boolean {
-		if (this.messageIndex[id]) return true;
+		if (this.get(id)) return true;
 		if (!checkBuffers) return false;
 		return this.beforeBuffer.has(id) || this.afterBuffer.has(id);
 	}
@@ -526,7 +526,7 @@ export class ChannelMessages {
 	}
 
 	update(id: string, updater: (m: Message) => Message): ChannelMessages {
-		const current = this.messageIndex[id];
+		const current = this.get(id);
 		if (!current) {
 			if (this.beforeBuffer.has(id)) {
 				return this.cloneAnd((draft) => draft.beforeBuffer.update(id, updater), true);
@@ -545,7 +545,7 @@ export class ChannelMessages {
 	}
 
 	replace(previousId: string, next: Message): ChannelMessages {
-		const current = this.messageIndex[previousId];
+		const current = this.get(previousId);
 		if (!current) {
 			if (this.beforeBuffer.has(previousId)) {
 				return this.cloneAnd((draft) => draft.beforeBuffer.replace(previousId, next), true);

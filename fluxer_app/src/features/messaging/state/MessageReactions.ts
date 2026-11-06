@@ -224,6 +224,12 @@ class MessageReactionsManager {
 		this.pruneAllReactionEntries(messageId);
 	}
 
+	handleMessageDelete(messageId: string): void {
+		this.pruneAllReactionEntries(messageId);
+		if (!this.messageStates.delete(messageId)) return;
+		this.queueMessageNotify(messageId);
+	}
+
 	handleReactionRemoveEmoji(messageId: string, emoji: ReactionEmoji): void {
 		this.commitReactionEvent(messageId, {type: 'reaction.removeEmoji', emoji});
 		const key = getReactionKey(messageId, emoji);

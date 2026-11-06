@@ -29,6 +29,8 @@ const DELETED_RESOLUTION: MessageReferenceResolution = Object.freeze({
 	state: MessageReferenceState.DELETED,
 });
 
+const MAX_DELETED_MESSAGE_IDS = 10_000;
+
 type MessageInput = WireMessage | MessageRecord;
 
 const toWireMessage = (message: MessageInput): WireMessage =>
@@ -53,6 +55,18 @@ class MessageReferences {
 
 	private getKey(channelId: string, messageId: string): string {
 		return `${channelId}:${messageId}`;
+	}
+
+	private recordDeletedMessage(key: string): void {
+		this.deletedMessageIds.delete(key);
+		this.deletedMessageIds.add(key);
+		while (this.deletedMessageIds.size > MAX_DELETED_MESSAGE_IDS) {
+			const oldest = this.deletedMessageIds.values().next().value;
+			if (oldest === undefined) {
+				break;
+			}
+			this.deletedMessageIds.delete(oldest);
+		}
 	}
 
 	private bumpReferenceVersion(refChannelId: string, refMessageId: string): void {
@@ -83,7 +97,7 @@ class MessageReferences {
 		if (this.deletedMessageIds.has(key) && !this.cachedMessages.has(key)) {
 			return false;
 		}
-		this.deletedMessageIds.add(key);
+		this.recordDeletedMessage(key);
 		this.cachedMessages.delete(key);
 		this.bumpReferenceVersion(refChannelId, refMessageId);
 		return true;
@@ -172,7 +186,7 @@ class MessageReferences {
 
 	handleMessageDelete(channelId: string, messageId: string): void {
 		const key = this.getKey(channelId, messageId);
-		this.deletedMessageIds.add(key);
+		this.recordDeletedMessage(key);
 		this.cachedMessages.delete(key);
 		this.referenceVersions.delete(key);
 		this.referenceCount.delete(key);

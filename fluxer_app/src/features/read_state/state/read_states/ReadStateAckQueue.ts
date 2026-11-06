@@ -82,14 +82,16 @@ export class ReadStateAckQueue {
 		const now = Date.now();
 		const delay = options.immediate || options.hadMentions ? 0 : ACK_BATCH_DELAY_MS;
 		const deadline = now + delay;
-		const existing = this.pendingAcks.get(channelId);
+		const currentUserId = this.callbacks.currentUserId();
+		const found = this.pendingAcks.get(channelId);
+		const existing = found?.userId === currentUserId ? found : undefined;
 		const existingIsNewer = existing != null && compareMessageIds(existing.messageId, messageId) > 0;
 		const pending: PendingAck = {
 			channelId,
 			messageId: existingIsNewer ? existing.messageId : messageId,
 			deadline: existing == null ? deadline : Math.min(existing.deadline, deadline),
 			attempt: existing?.attempt ?? 0,
-			userId: this.callbacks.currentUserId(),
+			userId: currentUserId,
 		};
 		this.pendingAcks.set(channelId, pending);
 		const state = this.callbacks.getState(channelId);
@@ -149,6 +151,7 @@ export class ReadStateAckQueue {
 			return;
 		}
 		this.clearAckFlushTimer();
+		this.dropOtherAccountAcks();
 		const now = Date.now();
 		const due = Array.from(this.pendingAcks.values()).filter((pending) => mode === 'all' || pending.deadline <= now);
 		if (due.length === 0) {
@@ -158,12 +161,31 @@ export class ReadStateAckQueue {
 		this.isFlushingAcks = true;
 		try {
 			for (const chunk of chunkEntries(due, ACK_BATCH_SIZE)) {
-				await this.sendAckChunk(chunk);
+				const currentUserId = this.dropOtherAccountAcks();
+				const sendable = chunk.filter((entry) => entry.userId === currentUserId);
+				if (sendable.length > 0) {
+					await this.sendAckChunk(sendable);
+				}
 			}
 		} finally {
 			this.isFlushingAcks = false;
 			this.scheduleAckFlush();
 		}
+	}
+
+	private dropOtherAccountAcks(): string | null {
+		const currentUserId = this.callbacks.currentUserId();
+		for (const pending of Array.from(this.pendingAcks.values())) {
+			if (pending.userId === currentUserId) {
+				continue;
+			}
+			this.pendingAcks.delete(pending.channelId);
+			const state = this.callbacks.getState(pending.channelId);
+			if (state?.inFlightAckMessageId === pending.messageId) {
+				state.inFlightAckMessageId = null;
+			}
+		}
+		return currentUserId;
 	}
 
 	private async sendAckChunk(entries: Array<PendingAck>): Promise<void> {

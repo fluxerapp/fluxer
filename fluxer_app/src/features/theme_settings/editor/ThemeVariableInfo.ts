@@ -8,7 +8,7 @@ import {getThemeDefaultVariables} from '@app/features/theme_settings/utils/Theme
 import {getTokenGroupLabelDescriptor, getTokenVariableDefinition} from '@app/features/theme_settings/utils/TokenGroups';
 import {i18n} from '@lingui/core';
 
-const DEFINED_VARIABLE_PATTERN = /(--[A-Za-z_][\w-]*)\s*:/g;
+const DEFINED_VARIABLE_PATTERN = /(?<![\w-])(--[A-Za-z_][\w-]*)\s*:/g;
 
 let lastDefinedSource = '';
 let lastDefinedVariables: ReadonlySet<string> = new Set();

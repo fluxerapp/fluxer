@@ -111,7 +111,9 @@ function exceedsEmojiCount(nodes: ReadonlyArray<Node>, limit: number): boolean {
 			if (count > limit) return true;
 			continue;
 		}
-		stack.push(...childNodesOf(node));
+		for (const child of childNodesOf(node)) {
+			stack.push(child);
+		}
 	}
 	return false;
 }

@@ -33,8 +33,8 @@ export function findThemes(content: string | null): Array<string> {
 	return CodeLinkUtils.findCodes(content, THEME_CONFIG);
 }
 
-export function findTheme(content: string | null): string | null {
-	return CodeLinkUtils.findCode(content, THEME_CONFIG);
+export function findThemeUrl(url: string | null): string | null {
+	return CodeLinkUtils.findCodeAtUrlStart(url, THEME_CONFIG);
 }
 
 export function findSpoileredThemes(content: string | null): Array<CodeLinkUtils.CodeLinkMatch> {

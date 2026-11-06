@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
+import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -28,15 +28,45 @@ function writeItem(key: string, value: string): void {
 	}
 }
 
-export function readDeviceProof(userId: string): string | null {
-	return readItem(`${DEVICE_PROOF_KEY_PREFIX}${userId}`);
+function removeItem(key: string): void {
+	try {
+		getProtectedLocalStorage()?.removeItem(key);
+	} catch (error) {
+		logger.warn('Failed to remove account entry storage', error);
+	}
 }
 
-export function storeDeviceProof(userId: string, deviceProof: string | undefined): void {
+function deviceProofKey(snapshot: RuntimeConfigSnapshot, userId: string): string | null {
+	const instanceKey = runtimeInstanceKey(snapshot);
+	return instanceKey === null ? null : `${DEVICE_PROOF_KEY_PREFIX}${instanceKey}.${userId}`;
+}
+
+function unscopedDeviceProofKey(userId: string): string {
+	return `${DEVICE_PROOF_KEY_PREFIX}${userId}`;
+}
+
+export function readDeviceProof(snapshot: RuntimeConfigSnapshot, userId: string): string | null {
+	const key = deviceProofKey(snapshot, userId);
+	if (key === null) {
+		return null;
+	}
+	return readItem(key) ?? readItem(unscopedDeviceProofKey(userId));
+}
+
+export function storeDeviceProof(
+	snapshot: RuntimeConfigSnapshot,
+	userId: string,
+	deviceProof: string | undefined,
+): void {
 	if (deviceProof === undefined || deviceProof === '') {
 		return;
 	}
-	writeItem(`${DEVICE_PROOF_KEY_PREFIX}${userId}`, deviceProof);
+	const key = deviceProofKey(snapshot, userId);
+	if (key === null) {
+		return;
+	}
+	writeItem(key, deviceProof);
+	removeItem(unscopedDeviceProofKey(userId));
 }
 
 function ageBlockKey(): string | null {

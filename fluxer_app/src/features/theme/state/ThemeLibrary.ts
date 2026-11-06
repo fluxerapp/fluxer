@@ -984,9 +984,9 @@ class ThemeLibrary {
 				if (typeof item.author === 'string') theme.author = item.author;
 				if (typeof item.version === 'string') theme.version = item.version;
 				if (Array.isArray(item.tags)) theme.tags = item.tags.filter((tag): tag is string => typeof tag === 'string');
-				await saveThemeLibraryTheme(theme);
 				importedThemes.push(theme);
 			}
+			if (importedThemes.length > 0) await applyThemeLibraryThemeChanges(importedThemes, new Set());
 			const importedAssets: Array<ThemeLibraryAsset> = [];
 			if (Array.isArray(payloadAssets)) {
 				for (const item of payloadAssets) {

@@ -12,15 +12,12 @@ import Accounts from '@app/features/auth/state/Accounts';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 
-function accountIsSelectableOnCurrentInstance(
-	account: Account,
-	currentInstance: RuntimeConfigSnapshot,
-	currentInstanceKey: string,
-): boolean {
+export function accountBelongsToInstance(account: Account, instance: RuntimeConfigSnapshot): boolean {
 	if (account.instance != null) {
-		return runtimeConfigSnapshotsAreSameInstance(account.instance, currentInstance);
+		return runtimeConfigSnapshotsAreSameInstance(account.instance, instance);
 	}
-	return parseAccountStorageKey(account.storageKey)?.instanceKey === currentInstanceKey;
+	const instanceKey = runtimeInstanceKey(instance);
+	return instanceKey !== null && parseAccountStorageKey(account.storageKey)?.instanceKey === instanceKey;
 }
 
 export function currentInstanceAccounts(): Array<Account> {
@@ -29,13 +26,10 @@ export function currentInstanceAccounts(): Array<Account> {
 	if (currentInstance === null) {
 		return [...accounts].sort(compareSwitcherOrder);
 	}
-	const currentInstanceKey = runtimeInstanceKey(currentInstance);
-	if (currentInstanceKey === null) {
+	if (runtimeInstanceKey(currentInstance) === null) {
 		throw new Error('Current runtime snapshot has no instance identity');
 	}
-	return accounts
-		.filter((account) => accountIsSelectableOnCurrentInstance(account, currentInstance, currentInstanceKey))
-		.sort(compareSwitcherOrder);
+	return accounts.filter((account) => accountBelongsToInstance(account, currentInstance)).sort(compareSwitcherOrder);
 }
 
 export function switcherAccounts(): Array<Account> {

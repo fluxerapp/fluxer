@@ -3,6 +3,7 @@
 import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
+import {getDateFromUnixTimestampSeconds} from '@app/features/messaging/utils/markdown/TimestampValidation';
 import Users from '@app/features/user/state/Users';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
@@ -106,6 +107,9 @@ function formatChannelMention(channelId: string, i18n: I18n): string {
 }
 
 function formatTimestampForTts(timestamp: number, style: string | undefined): string {
+	if (getDateFromUnixTimestampSeconds(timestamp) == null) {
+		return String(timestamp);
+	}
 	const locale = getCurrentLocale();
 	const hour12 = shouldUse12HourFormat(locale);
 	const resolvedStyle = (style ? TTS_STYLE_MAP[style] : undefined) ?? TimestampStyle.ShortDateTime;

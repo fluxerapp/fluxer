@@ -23,6 +23,7 @@ import {getPersistentStorageBackend} from '@app/features/platform/state/Persiste
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {formatNameForStreamerMode, formatNicknameForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {AccountEngineNotification} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -129,7 +130,9 @@ function accountsSpanSeveralInstances(): boolean {
 }
 
 function accountNotificationLabel(account: Account, includeHost: boolean): string {
-	const accountName = account.userData?.globalName || account.userData?.username || account.userId;
+	const accountName = formatNameForStreamerMode(
+		account.userData?.globalName || account.userData?.username || account.userId,
+	);
 	const host = includeHost ? resolveAccountInstanceLabel(account) : null;
 	return host === null ? accountName : i18n._(ACCOUNT_ON_HOST_DESCRIPTOR, {accountName, host});
 }
@@ -160,7 +163,7 @@ function presentAccountNotification(
 ): AccountNotificationPresentation {
 	const {guildName, channelName, channelType} = notification;
 	const author = message.author;
-	let title = message.member?.nick || author.global_name || author.username;
+	let title = formatNicknameForStreamerMode(message.member?.nick || author.global_name || author.username);
 	let context: string | null = null;
 	if (channelType !== null && GUILD_CHANNEL_TYPES.has(channelType) && channelName !== null) {
 		const channelLabel = `${channelType === ChannelTypes.GUILD_VOICE ? '' : '#'}${channelName}`;

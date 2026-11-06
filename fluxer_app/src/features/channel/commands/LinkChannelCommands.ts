@@ -14,7 +14,7 @@ interface OpenLinkChannelOptions {
 
 function openLinkChannelDestination(channel: Channel): void {
 	if (!channel.url) return;
-	const inviteCode = InviteUtils.findInvite(channel.url);
+	const inviteCode = InviteUtils.findInviteUrl(channel.url);
 	if (inviteCode) {
 		void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
 		return;

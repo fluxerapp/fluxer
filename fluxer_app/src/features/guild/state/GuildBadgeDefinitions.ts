@@ -51,7 +51,8 @@ function readBadge(value: unknown): InstanceGuildBadge | null {
 	if (typeof value !== 'object' || value === null) return null;
 	const source = value as Record<string, unknown>;
 	const {id, name, description, asset_url: assetUrl, href, position} = source;
-	if (typeof id !== 'string' || typeof name !== 'string' || typeof assetUrl !== 'string') return null;
+	if (typeof id !== 'string' || !/^[0-9]{1,20}$/.test(id) || typeof name !== 'string' || typeof assetUrl !== 'string')
+		return null;
 	return {
 		id,
 		name,

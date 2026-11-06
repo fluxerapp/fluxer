@@ -261,7 +261,11 @@ function mentionedUserName(value: unknown): string | null {
 	return null;
 }
 
-export function inlineMentionedUserNames(content: string, mentions: unknown): string {
+export function inlineMentionedUserNames(
+	content: string,
+	mentions: unknown,
+	formatName: (name: string) => string = (name) => name,
+): string {
 	if (!content || !Array.isArray(mentions) || mentions.length === 0) return content;
 	const names = new Map<string, string>();
 	for (const mention of mentions) {
@@ -271,6 +275,6 @@ export function inlineMentionedUserNames(content: string, mentions: unknown): st
 	}
 	return content.replace(USER_MENTION_PATTERN, (token, userId: string) => {
 		const name = names.get(userId);
-		return name === undefined ? token : `@${name}`;
+		return name === undefined ? token : `@${formatName(name)}`;
 	});
 }

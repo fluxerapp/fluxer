@@ -11,10 +11,31 @@ interface ParseResult {
 }
 
 const PARSE_CACHE_CAPACITY = 2048;
+const PARSE_CACHE_MAX_CHARACTERS = 2_000_000;
 const parseCache = new LRUMap<string, ParseResult>(PARSE_CACHE_CAPACITY);
+let cachedCharacters = 0;
 
 function getParseCacheKey(content: string, context: MarkdownContext): string {
 	return `${context}\u0000${content}`;
+}
+
+function cacheParseResult(cacheKey: string, result: ParseResult): void {
+	if (cacheKey.length > PARSE_CACHE_MAX_CHARACTERS) {
+		return;
+	}
+	while (
+		parseCache.size > 0 &&
+		(parseCache.size >= PARSE_CACHE_CAPACITY || cachedCharacters + cacheKey.length > PARSE_CACHE_MAX_CHARACTERS)
+	) {
+		const oldest = parseCache.keys().next().value;
+		if (oldest === undefined) {
+			break;
+		}
+		parseCache.delete(oldest);
+		cachedCharacters -= oldest.length;
+	}
+	parseCache.set(cacheKey, result);
+	cachedCharacters += cacheKey.length;
 }
 
 export function parseMarkdownContent({content, context}: {content: string; context: MarkdownContext}): ParseResult {
@@ -26,6 +47,6 @@ export function parseMarkdownContent({content, context}: {content: string; conte
 	const flags = getParserFlagsForContext(context);
 	const parser = new WasmParser(content, flags);
 	const result = parser.parse();
-	parseCache.set(cacheKey, result);
+	cacheParseResult(cacheKey, result);
 	return result;
 }

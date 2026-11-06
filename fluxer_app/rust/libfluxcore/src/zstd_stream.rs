@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use zstd::zstd_safe::zstd_sys::ZSTD_EndDirective;
-use zstd::zstd_safe::{CCtx, CParameter, DCtx, InBuffer, OutBuffer};
+use zstd::zstd_safe::{CCtx, CParameter, DCtx, DParameter, InBuffer, OutBuffer};
 
 const READ_BUFFER_BYTES: usize = 16 * 1024;
 const MAX_DECOMPRESSED_BYTES: usize = 64 * 1024 * 1024;
 const ENCODER_WINDOW_LOG: u32 = 17;
 const ENCODER_TABLE_LOG: u32 = 15;
+const DECODER_WINDOW_LOG_MAX: u32 = 21;
 
 #[derive(Debug)]
 pub enum ZstdError {
@@ -84,6 +85,9 @@ impl ZstdStreamDecoder {
     pub fn new() -> Result<Self, ZstdError> {
         let mut context = DCtx::try_create().ok_or(ZstdError::OutOfMemory)?;
         context.init().map_err(|_| ZstdError::Decode)?;
+        context
+            .set_parameter(DParameter::WindowLogMax(DECODER_WINDOW_LOG_MAX))
+            .map_err(|_| ZstdError::Decode)?;
         Ok(Self { context })
     }
 
