@@ -618,7 +618,6 @@ export interface AccessibilitySettings {
 	showSuppressEmbedsButton: boolean;
 	showGifIndicator: boolean;
 	showAttachmentExpiryIndicator: boolean;
-	useBrowserLocaleForTimeFormat: boolean;
 	channelTypingIndicatorMode: ChannelTypingIndicatorMode;
 	showMessageActionBar: boolean;
 	showMessageActionBarQuickReactions: boolean;
@@ -723,7 +722,6 @@ class Accessibility {
 	showSuppressEmbedsButton = true;
 	showGifIndicator = true;
 	showAttachmentExpiryIndicator = true;
-	useBrowserLocaleForTimeFormat = false;
 	channelTypingIndicatorMode: ChannelTypingIndicatorMode = ChannelTypingIndicatorMode.AVATARS;
 	showMessageActionBar = true;
 	showMessageActionBarQuickReactions = true;
@@ -831,7 +829,6 @@ class Accessibility {
 				'showSuppressEmbedsButton',
 				'showGifIndicator',
 				'showAttachmentExpiryIndicator',
-				'useBrowserLocaleForTimeFormat',
 				'channelTypingIndicatorMode',
 				'showMessageActionBar',
 				'showMessageActionBarQuickReactions',
@@ -890,7 +887,6 @@ class Accessibility {
 				showSuppressEmbedsButton: s.showSuppressEmbedsButton,
 				showGifIndicator: s.showGifIndicator,
 				showAttachmentExpiryIndicator: s.showAttachmentExpiryIndicator,
-				useBrowserLocaleForTimeFormat: s.useBrowserLocaleForTimeFormat,
 				channelTypingIndicatorMode: CHANNEL_TYPING_INDICATOR_TO_PROTO[s.channelTypingIndicatorMode],
 				showMessageActionBar: s.showMessageActionBar,
 				showMessageActionBarQuickReactions: s.showMessageActionBarQuickReactions,
@@ -968,8 +964,6 @@ class Accessibility {
 				if (m.showGifIndicator !== undefined) s.showGifIndicator = m.showGifIndicator;
 				if (m.showAttachmentExpiryIndicator !== undefined)
 					s.showAttachmentExpiryIndicator = m.showAttachmentExpiryIndicator;
-				if (m.useBrowserLocaleForTimeFormat !== undefined)
-					s.useBrowserLocaleForTimeFormat = m.useBrowserLocaleForTimeFormat;
 				s.channelTypingIndicatorMode = CHANNEL_TYPING_INDICATOR_FROM_PROTO[m.channelTypingIndicatorMode];
 				if (m.showMessageActionBar !== undefined) s.showMessageActionBar = m.showMessageActionBar;
 				if (m.showMessageActionBarQuickReactions !== undefined)
@@ -1293,8 +1287,6 @@ class Accessibility {
 		if (validated.showGifIndicator !== undefined) this.showGifIndicator = validated.showGifIndicator;
 		if (validated.showAttachmentExpiryIndicator !== undefined)
 			this.showAttachmentExpiryIndicator = validated.showAttachmentExpiryIndicator;
-		if (validated.useBrowserLocaleForTimeFormat !== undefined)
-			this.useBrowserLocaleForTimeFormat = validated.useBrowserLocaleForTimeFormat;
 		if (validated.channelTypingIndicatorMode !== undefined)
 			this.channelTypingIndicatorMode = validated.channelTypingIndicatorMode;
 		if (validated.showMessageActionBar !== undefined) this.showMessageActionBar = validated.showMessageActionBar;
@@ -1412,7 +1404,6 @@ class Accessibility {
 				typeof data.showAttachmentExpiryIndicator === 'boolean'
 					? data.showAttachmentExpiryIndicator
 					: this.showAttachmentExpiryIndicator,
-			useBrowserLocaleForTimeFormat: data.useBrowserLocaleForTimeFormat ?? this.useBrowserLocaleForTimeFormat,
 			channelTypingIndicatorMode: data.channelTypingIndicatorMode ?? this.channelTypingIndicatorMode,
 			showMessageActionBar: data.showMessageActionBar ?? this.showMessageActionBar,
 			showMessageActionBarQuickReactions:

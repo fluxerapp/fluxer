@@ -40,7 +40,6 @@ message AccessibilitySettings {
   optional bool show_gif_indicator = 29;
   optional bool show_attachment_expiry_indicator = 30;
 
-  optional bool use_browser_locale_for_time_format = 31;
   ChannelTypingIndicatorMode channel_typing_indicator_mode = 32;
   optional bool show_selected_channel_typing_indicator = 33;
 
@@ -54,8 +53,8 @@ message AccessibilitySettings {
   optional bool show_stickers_in_autocomplete = 40;
   optional bool show_memes_in_autocomplete = 41;
 
-  reserved 42, 43, 65;
-  reserved "attachment_media_dimension_size", "embed_media_dimension_size", "double_click_message_actions";
+  reserved 31, 42, 43, 65;
+  reserved "use_browser_locale_for_time_format", "attachment_media_dimension_size", "embed_media_dimension_size", "double_click_message_actions";
 
   optional bool voice_channel_join_requires_double_click = 44;
   optional string custom_theme_css = 45;

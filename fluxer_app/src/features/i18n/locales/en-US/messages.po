@@ -5083,11 +5083,6 @@ msgstr "App icon badge"
 msgid "App icons"
 msgstr "App icons"
 
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "App language: {format}"
-msgstr "App language: {format}"
-
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "App settings"
 msgstr "App settings"
@@ -6761,11 +6756,6 @@ msgstr "Browser forward"
 msgctxt "keyboard-key-name"
 msgid "Browser home"
 msgstr "Browser home"
-
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Browser locale: {format}"
-msgstr "Browser locale: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
@@ -12396,6 +12386,16 @@ msgstr "Date"
 msgid "Date and time"
 msgstr "Date and time"
 
+#. Title of the language settings section that picks a fixed order for numeric dates.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Date format"
+msgstr "Date format"
+
+#. Accessible label for the date format choices in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Date format selection"
+msgstr "Date format selection"
+
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
@@ -12421,10 +12421,20 @@ msgstr "Date picker"
 msgid "Date posted"
 msgstr "Date posted"
 
+#. Help text under the regional format picker in the language settings.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Dates, times and numbers follow this format. Prices stay in the currency of your billing country."
+msgstr "Dates, times and numbers follow this format. Prices stay in the currency of your billing country."
+
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
 #: src/features/auth/flow/DateOfBirthField.tsx
 msgid "Day"
 msgstr "Day"
+
+#. Date format option that writes day/month/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Day first"
+msgstr "Day first"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts
@@ -20405,6 +20415,11 @@ msgstr "Ireland"
 msgid "Is this instance for one community or many?"
 msgstr "Is this instance for one community or many?"
 
+#. Date format option named after the international standard. Keep "ISO 8601" as is.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "ISO 8601"
+msgstr "ISO 8601"
+
 #. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
@@ -23290,6 +23305,11 @@ msgstr "Montana"
 #: src/features/auth/flow/DateOfBirthField.tsx
 msgid "Month"
 msgstr "Month"
+
+#. Date format option that writes month/day/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Month first"
+msgstr "Month first"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
@@ -29272,6 +29292,16 @@ msgstr "Regenerating will invalidate the current secret. Update any code that us
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Regenerating will invalidate the current token. Update any code that uses the old value."
 
+#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Regional format"
+msgstr "Regional format"
+
+#. Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Regional format: {format}"
+msgstr "Regional format: {format}"
+
 #. Generic authentication action label for opening or submitting account registration.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Register"
@@ -31057,6 +31087,11 @@ msgstr "Russian"
 msgid "Safety"
 msgstr "Safety"
 
+#. Regional format option that writes dates, times and numbers the way the interface language does. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Same as language"
+msgstr "Same as language"
+
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "Same time as you"
@@ -31595,6 +31630,11 @@ msgstr "Search for anything..."
 msgid "Search for channels, people, or communities"
 msgstr "Search for channels, people, or communities"
 
+#. Placeholder in the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Search formats…"
+msgstr "Search formats…"
+
 #. Generic search-input placeholder for filtering the current friends list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Search friends"
@@ -32064,6 +32104,11 @@ msgstr "Select interface language"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Select one to add a rule for it to your CSS."
 msgstr "Select one to add a rule for it to your CSS."
+
+#. Accessible label for the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Select regional format"
+msgstr "Select regional format"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
@@ -36102,10 +36147,10 @@ msgstr "System DMs cannot host video calls"
 msgid "System DMs cannot host voice calls"
 msgstr "System DMs cannot host voice calls"
 
-#. Label in the language tab. Preserve {format}.
+#. Regional format option that uses the date, time and number settings of the device or browser. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "System locale: {format}"
-msgstr "System locale: {format}"
+msgid "System format"
+msgstr "System format"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -40766,11 +40811,6 @@ msgstr "Use another account"
 msgid "Use autoscrolling"
 msgstr "Use autoscrolling"
 
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use browser locale for time format"
-msgstr "Use browser locale for time format"
-
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "Use card"
@@ -40925,11 +40965,6 @@ msgstr "Use stickers from other communities with {premiumProductName}"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use stickers from other communities."
 msgstr "Use stickers from other communities."
-
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use system locale for time format"
-msgstr "Use system locale for time format"
 
 #. Switch label in Settings > Themes on the desktop app, also used as its settings search entry. When on, the account uses the theme shared by every account in the desktop app.
 #: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts

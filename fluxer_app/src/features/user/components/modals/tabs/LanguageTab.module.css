@@ -147,11 +147,6 @@
 	font-style: italic;
 }
 
-.switchWrapper {
-	display: flex;
-	flex-direction: column;
-}
-
 .spellcheckHint {
 	margin: 0;
 	font-size: 0.8125rem;
