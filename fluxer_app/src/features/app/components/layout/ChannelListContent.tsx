@@ -53,6 +53,7 @@ import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {SidebarThreadList} from '@app/features/threads/components/SidebarThreadList';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import {getSidebarThreadActivity} from '@app/features/threads/utils/SidebarThreadActivity';
 import {ChannelListContextMenu} from '@app/features/ui/action_menu/ChannelListContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as DimensionCommands from '@app/features/ui/commands/DimensionCommands';
@@ -423,13 +424,14 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 			const showSet = new Set<string>();
 			for (const ch of filteredTextChannels) {
 				const unreadState = getUnreadStateInChannel(ch.id);
+				const threadActivity = threadsActive ? getSidebarThreadActivity(ch.id) : null;
 				if (
 					shouldShowChannelInCollapsedCategory({
 						isCategoryMuted,
 						isSelected: ch.id === showTextSelected,
 						isConnected: false,
-						hasVisibleUnread: unreadState.hasVisibleUnread,
-						hasMentions: unreadState.hasMentions,
+						hasVisibleUnread: unreadState.hasVisibleUnread || threadActivity?.hasActivity === true,
+						hasMentions: unreadState.hasMentions || threadActivity?.hasMentions === true,
 					})
 				) {
 					showSet.add(ch.id);
@@ -659,7 +661,7 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 											<SidebarThreadList
 												guildId={guild.id}
 												parentId={ch.id}
-												onlySelected={group.isCollapsed}
+												collapsed={group.isCollapsed}
 												data-flx="app.channel-list-content.sidebar-thread-list"
 											/>
 										</React.Fragment>

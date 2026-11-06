@@ -13,7 +13,7 @@ import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextM
 import {useThreadMenuData} from '@app/features/threads/hooks/useThreadMenuData';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
-import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
+import {hasSidebarThreadActivity, isSidebarThreadUnread} from '@app/features/threads/utils/SidebarThreadActivity';
 import {isThreadMutedInSidebar} from '@app/features/threads/utils/ThreadNotificationUtils';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
@@ -45,10 +45,9 @@ const ThreadMenuSheet = observer(({thread, onClose}: {thread: Channel; onClose: 
 
 const SidebarThreadRow = observer(({thread, isLast, isSelected}: SidebarThreadRowProps) => {
 	const [menuOpen, setMenuOpen] = useState(false);
-	const joined = ThreadMemberships.isMember(thread.id);
 	const muted = isThreadMutedInSidebar(thread);
 	const mentionCount = ReadStates.getMentionCount(thread.id);
-	const isUnread = joined && !muted && ReadStates.hasUnread(thread.id);
+	const isUnread = isSidebarThreadUnread(thread);
 	const handleClick = useCallback(() => openThreadFullView(thread), [thread]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
@@ -130,16 +129,18 @@ const SidebarThreadRow = observer(({thread, isLast, isSelected}: SidebarThreadRo
 interface SidebarThreadListProps {
 	guildId: string;
 	parentId: string;
-	onlySelected?: boolean;
+	collapsed?: boolean;
 }
 
-export const SidebarThreadList = observer(({guildId, parentId, onlySelected = false}: SidebarThreadListProps) => {
+export const SidebarThreadList = observer(({guildId, parentId, collapsed = false}: SidebarThreadListProps) => {
 	if (!ThreadGuilds.isActive(guildId)) return null;
 	const selectedThreadId =
 		Navigation.threadId ??
 		(Navigation.channelId && ChannelThreads.hasThread(Navigation.channelId) ? Navigation.channelId : null);
 	const sidebarThreads = ChannelThreads.getSidebarThreads(parentId, selectedThreadId);
-	const threads = onlySelected ? sidebarThreads.filter((thread) => thread.id === selectedThreadId) : sidebarThreads;
+	const threads = collapsed
+		? sidebarThreads.filter((thread) => thread.id === selectedThreadId || hasSidebarThreadActivity(thread))
+		: sidebarThreads;
 	if (threads.length === 0) return null;
 	return (
 		<div className={styles.threadList} role="group" data-flx="threads.sidebar-thread-list.thread-list">
