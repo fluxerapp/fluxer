@@ -53,6 +53,7 @@ interface OperatorPassWallSnapshot {
 
 interface RankedWallEntry {
 	entry: OperatorPassWallBlobEntry;
+	count: number;
 	since: number;
 }
 
@@ -95,6 +96,7 @@ export class OperatorPassWallPublicationService {
 				...(entry.live_business ? {business: true as const} : {}),
 				...(entry.quote ? {quote: entry.quote} : {}),
 			},
+			count: holder.count,
 			since: holder.since.getTime(),
 		};
 	}
@@ -262,6 +264,7 @@ export class OperatorPassWallPublicationService {
 				(left, right) =>
 					Number(left.entry.business === true) - Number(right.entry.business === true) ||
 					(left.entry.business ? 0 : right.entry.tier - left.entry.tier) ||
+					right.count - left.count ||
 					left.since - right.since ||
 					left.entry.id.localeCompare(right.entry.id),
 			)
