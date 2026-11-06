@@ -14,33 +14,59 @@ use futures_util::StreamExt as _;
 use http::StatusCode;
 use sha2::{Digest as _, Sha256};
 use std::{
+    ffi::{CStr, CString},
     fs::Metadata,
-    path::{Path, PathBuf},
+    os::{
+        fd::{AsRawFd as _, FromRawFd as _, OwnedFd},
+        unix::fs::OpenOptionsExt as _,
+    },
 };
 use tokio::io::{AsyncReadExt as _, AsyncSeekExt as _, AsyncWriteExt as _};
 
 const LOCAL_OPEN_FLAGS: i32 = libc::O_CLOEXEC | libc::O_NOFOLLOW | libc::O_NONBLOCK;
+const LOCAL_DIR_FLAGS: i32 =
+    libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC;
+const LOCAL_CREATE_FLAGS: i32 =
+    libc::O_WRONLY | libc::O_CREAT | libc::O_TRUNC | libc::O_NOFOLLOW | libc::O_CLOEXEC;
+
+struct LocalEntry {
+    parent: OwnedFd,
+    name: CString,
+}
 
 impl Store {
-    pub(super) async fn local_path(
+    fn local_entry(&self, bucket: &str, key: &str) -> Result<LocalEntry, StorageError> {
+        safe_bucket(bucket)?;
+        safe_key(key)?;
+        open_local_entry(&self.cfg.storage.root, bucket, key, false)
+    }
+
+    async fn create_local_file(
         &self,
         bucket: &str,
         key: &str,
-    ) -> Result<PathBuf, StorageError> {
+    ) -> Result<(LocalEntry, tokio::fs::File), StorageError> {
         safe_bucket(bucket)?;
         safe_key(key)?;
-        let root = Path::new(&self.cfg.storage.root);
-        let path = root.join(bucket).join(key);
-        reject_symlink_chain(&path)?;
-        Ok(path)
+        let root = self.cfg.storage.root.clone();
+        let bucket = bucket.to_owned();
+        let key = key.to_owned();
+        tokio::task::spawn_blocking(move || {
+            let entry = open_local_entry(&root, &bucket, &key, true)?;
+            let file = open_at(&entry.parent, &entry.name, LOCAL_CREATE_FLAGS, 0o666)
+                .map_err(map_local_open_error)?;
+            Ok((entry, tokio::fs::File::from_std(std::fs::File::from(file))))
+        })
+        .await
+        .map_err(std::io::Error::other)?
     }
 
     pub(super) async fn read_local(
         &self,
         request: BufferedObjectReadRequest<'_>,
     ) -> Result<BufferedStorageObject, StorageError> {
-        let path = self.local_path(request.bucket, request.key).await?;
-        let (file, metadata) = open_local_read_file(&path).await?;
+        let entry = self.local_entry(request.bucket, request.key)?;
+        let (file, metadata) = open_local_read_file(entry).await?;
         if metadata.len() > request.limit as u64 {
             return Err(StorageError::StreamTooLong);
         }
@@ -63,15 +89,15 @@ impl Store {
         bucket: &str,
         key: &str,
     ) -> Result<HeadResult, StorageError> {
-        let path = self.local_path(bucket, key).await?;
-        let metadata = tokio::fs::symlink_metadata(&path)
-            .await
-            .map_err(map_not_found)?;
-        if !metadata.is_file() {
-            return Err(StorageError::NotFound);
+        let entry = self.local_entry(bucket, key)?;
+        let stat = stat_at(&entry.parent, &entry.name).map_err(map_not_found)?;
+        match stat.st_mode & libc::S_IFMT {
+            libc::S_IFREG => {}
+            libc::S_IFLNK => return Err(StorageError::InvalidKey),
+            _ => return Err(StorageError::NotFound),
         }
         Ok(HeadResult {
-            content_length: metadata.len(),
+            content_length: u64::try_from(stat.st_size).unwrap_or(0),
             content_type: local_content_type(key),
         })
     }
@@ -80,8 +106,8 @@ impl Store {
         &self,
         plan: ObjectStreamPlan<'_>,
     ) -> Result<StreamObject, StorageError> {
-        let path = self.local_path(plan.bucket, plan.key).await?;
-        let (mut file, metadata) = open_local_read_file(&path).await?;
+        let entry = self.local_entry(plan.bucket, plan.key)?;
+        let (mut file, metadata) = open_local_read_file(entry).await?;
         let total_len = usize::try_from(metadata.len()).map_err(|_| StorageError::StreamTooLong)?;
         let byte_range = match plan.range {
             StreamRange::Full => None,
@@ -138,11 +164,9 @@ impl Store {
         key: &str,
         data: &[u8],
     ) -> Result<(), StorageError> {
-        let path = self.local_path(bucket, key).await?;
-        if let Some(parent) = path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
-        tokio::fs::write(path, data).await?;
+        let (_entry, mut file) = self.create_local_file(bucket, key).await?;
+        file.write_all(data).await?;
+        file.flush().await?;
         Ok(())
     }
 
@@ -152,11 +176,7 @@ impl Store {
         key: &str,
         options: RelayPutOptions,
     ) -> Result<(), StorageError> {
-        let path = self.local_path(bucket, key).await?;
-        if let Some(parent) = path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
-        let mut dest = tokio::fs::File::create(&path).await?;
+        let (entry, mut dest) = self.create_local_file(bucket, key).await?;
         let content_length = options.content_length;
         let result = async {
             match options.body {
@@ -185,7 +205,9 @@ impl Store {
         }
         .await;
         if result.is_err() {
-            let _ = tokio::fs::remove_file(&path).await;
+            drop(dest);
+            let _ =
+                tokio::task::spawn_blocking(move || unlink_at(&entry.parent, &entry.name)).await;
         }
         result
     }
@@ -197,15 +219,27 @@ fn local_content_type(key: &str) -> String {
         .to_owned()
 }
 
-async fn open_local_read_file(path: &Path) -> Result<(tokio::fs::File, Metadata), StorageError> {
-    let mut options = tokio::fs::OpenOptions::new();
-    options.read(true).custom_flags(LOCAL_OPEN_FLAGS);
-    let file = options.open(path).await.map_err(map_local_open_error)?;
-    let metadata = file.metadata().await?;
+async fn open_local_read_file(
+    entry: LocalEntry,
+) -> Result<(tokio::fs::File, Metadata), StorageError> {
+    let (file, metadata) = tokio::task::spawn_blocking(move || {
+        let file = open_at(
+            &entry.parent,
+            &entry.name,
+            libc::O_RDONLY | LOCAL_OPEN_FLAGS,
+            0,
+        )
+        .map(std::fs::File::from)
+        .map_err(map_local_open_error)?;
+        let metadata = file.metadata()?;
+        Ok::<_, StorageError>((file, metadata))
+    })
+    .await
+    .map_err(std::io::Error::other)??;
     if !metadata.is_file() {
         return Err(StorageError::NotFound);
     }
-    Ok((file, metadata))
+    Ok((tokio::fs::File::from_std(file), metadata))
 }
 
 fn map_local_open_error(error: std::io::Error) -> StorageError {
@@ -215,25 +249,86 @@ fn map_local_open_error(error: std::io::Error) -> StorageError {
     map_not_found(error)
 }
 
-/// Walks the resolved path and refuses any component that is a symlink.
-///
-/// This is deliberately synchronous. It runs once per storage operation and touches one dentry
-/// per path component, which the kernel serves from cache in well under a microsecond. Issuing
-/// each `symlink_metadata` through `tokio::fs` instead turns a handful of cheap syscalls into one
-/// blocking-threadpool round-trip *per component*, which measured as a 2-3x throughput loss on
-/// every storage-backed request.
-fn reject_symlink_chain(path: &Path) -> Result<(), StorageError> {
-    let mut current = PathBuf::new();
-    for component in path.components() {
-        current.push(component.as_os_str());
-        match std::fs::symlink_metadata(&current) {
-            Ok(metadata) if metadata.file_type().is_symlink() => {
+fn open_local_entry(
+    root: &str,
+    bucket: &str,
+    key: &str,
+    create: bool,
+) -> Result<LocalEntry, StorageError> {
+    if create {
+        std::fs::create_dir_all(root)?;
+    }
+    let mut dir = OwnedFd::from(
+        std::fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_DIRECTORY)
+            .open(root)
+            .map_err(map_not_found)?,
+    );
+    let mut components = std::iter::once(bucket).chain(key.split('/')).peekable();
+    while let Some(component) = components.next() {
+        let name = CString::new(component).map_err(|_| StorageError::InvalidKey)?;
+        if components.peek().is_none() {
+            return Ok(LocalEntry { parent: dir, name });
+        }
+        if create {
+            mkdir_at(&dir, &name)?;
+        }
+        dir = match open_at(&dir, &name, LOCAL_DIR_FLAGS, 0) {
+            Ok(next) => next,
+            Err(error)
+                if error.raw_os_error() == Some(libc::ENOTDIR) && is_symlink_at(&dir, &name) =>
+            {
                 return Err(StorageError::InvalidKey);
             }
-            Ok(_) => {}
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(StorageError::Io(error)),
-        }
+            Err(error) => return Err(map_local_open_error(error)),
+        };
+    }
+    Err(StorageError::InvalidKey)
+}
+
+fn open_at(dir: &OwnedFd, name: &CStr, flags: i32, mode: libc::c_uint) -> std::io::Result<OwnedFd> {
+    let fd = unsafe { libc::openat(dir.as_raw_fd(), name.as_ptr(), flags, mode) };
+    if fd < 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    Ok(unsafe { OwnedFd::from_raw_fd(fd) })
+}
+
+fn mkdir_at(dir: &OwnedFd, name: &CStr) -> std::io::Result<()> {
+    if unsafe { libc::mkdirat(dir.as_raw_fd(), name.as_ptr(), 0o777) } == 0 {
+        return Ok(());
+    }
+    let error = std::io::Error::last_os_error();
+    if error.raw_os_error() == Some(libc::EEXIST) {
+        return Ok(());
+    }
+    Err(error)
+}
+
+fn stat_at(dir: &OwnedFd, name: &CStr) -> std::io::Result<libc::stat> {
+    let mut stat = std::mem::MaybeUninit::<libc::stat>::uninit();
+    let rc = unsafe {
+        libc::fstatat(
+            dir.as_raw_fd(),
+            name.as_ptr(),
+            stat.as_mut_ptr(),
+            libc::AT_SYMLINK_NOFOLLOW,
+        )
+    };
+    if rc != 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    Ok(unsafe { stat.assume_init() })
+}
+
+fn is_symlink_at(dir: &OwnedFd, name: &CStr) -> bool {
+    stat_at(dir, name).is_ok_and(|stat| stat.st_mode & libc::S_IFMT == libc::S_IFLNK)
+}
+
+fn unlink_at(dir: &OwnedFd, name: &CStr) -> std::io::Result<()> {
+    if unsafe { libc::unlinkat(dir.as_raw_fd(), name.as_ptr(), 0) } != 0 {
+        return Err(std::io::Error::last_os_error());
     }
     Ok(())
 }

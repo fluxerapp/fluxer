@@ -244,9 +244,9 @@ pub fn transform_image(
     }
     let heif_source = is_heif_source(sniffed.mime);
     let decoded_animation = if sniffed.mime == "image/apng" {
-        try_decode_apng(input, animated, media_limits)?
+        try_decode_apng(input, animated, media_limits, options.deadline_ms)?
     } else if animated && heif_source_may_be_a_sequence(sniffed) {
-        decode_heif_sequence(input, media_limits)?
+        decode_heif_sequence(input, media_limits, options.deadline_ms)?
     } else {
         None
     };
@@ -274,7 +274,8 @@ pub fn transform_image(
         && decoded_animation.is_none()
         && (animated || requires_heif_sdr_decode);
     if use_heif_primary_still_path
-        && let Some(decoded) = try_decode_heif_primary_still(input, media_limits, metrics)?
+        && let Some(decoded) =
+            try_decode_heif_primary_still(input, media_limits, metrics, options.deadline_ms)?
     {
         let mut image = decoded.image;
         validate_vips_image(media_limits, &image)?;

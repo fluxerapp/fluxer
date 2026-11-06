@@ -5,6 +5,7 @@ use crate::{
     byte_budget::BudgetedBytes,
     constants::{self, AssetExtension},
     mime,
+    public_net_policy::external_url_for_log,
     server::{
         external::fetch_external,
         params::url_filename,
@@ -162,7 +163,7 @@ async fn load_external_url(
 ) -> Result<LoadedMediaInput, MediaFailure> {
     let (fetched_url, data) = fetch_external(app, url).await.map_err(|err| {
         let failure = MediaFailure::from(err);
-        warn!(reason = failure.code(), url, ?err);
+        warn!(reason = failure.code(), url = %external_url_for_log(url), ?err);
         failure
     })?;
     Ok(LoadedMediaInput {

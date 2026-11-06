@@ -11,6 +11,7 @@ use super::placeholder::{encode_thumbhash, encoded_placeholder, optional_thumbha
 use crate::{
     constants,
     media_limits::MediaLimits,
+    media_type::MediaType,
     metrics::transform::TransformMetrics,
     mime,
     nsfw::{NSFWClassification, NSFWClient, NSFWPolicy},
@@ -123,10 +124,11 @@ fn validate_metadata_image_dimensions(
 fn probe_av_metadata_without_requiring_a_frame(
     input: &[u8],
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<AVMetadata, MediaError> {
-    match probe_av_metadata(input, NSFW_PREVIEW_MAX_DIMENSION, media_limits, None) {
+    match probe_av_metadata(input, NSFW_PREVIEW_MAX_DIMENSION, media_limits, deadline_ms) {
         Ok(metadata) => Ok(metadata),
-        Err(error) => probe_av_metadata(input, 0, media_limits, None).map_err(|_| error),
+        Err(error) => probe_av_metadata(input, 0, media_limits, deadline_ms).map_err(|_| error),
     }
 }
 
@@ -167,6 +169,7 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<PreparedMet
         Some(probe_av_metadata_without_requiring_a_frame(
             input,
             media_limits,
+            options.deadline_ms,
         )?)
     } else {
         None
@@ -210,15 +213,18 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<PreparedMet
         None
     };
 
-    let scan_eligible = is_image
-        || (category == mime::Category::Video
-            && av_probe.as_ref().is_some_and(|probe| probe.has_video));
+    let probe_has_video = av_probe.as_ref().is_some_and(|probe| probe.has_video);
+    let scan_eligible = is_image || probe_has_video;
     let nsfw_scan = if let Some(threshold) = options.nsfw.scan_threshold(scan_eligible) {
         nsfw_scan_buffers(NSFWScanSource {
             media_limits,
             metrics,
             threshold,
-            content_type: sniffed.mime,
+            content_type: if probe_has_video {
+                MediaType::MP4Video.mime()
+            } else {
+                sniffed.mime
+            },
             animated,
             frame_count: frames_count.max(sniffed.frames),
             input,

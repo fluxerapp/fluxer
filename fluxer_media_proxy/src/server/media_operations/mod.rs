@@ -32,6 +32,7 @@ use axum::{
     http::{HeaderMap, Method, StatusCode},
 };
 use bytes::Bytes;
+use http_body::Body as _;
 use input::LoadedMediaInput;
 use std::{sync::Arc, time::Duration};
 
@@ -66,6 +67,7 @@ pub(in crate::server) async fn resolve_metadata(
         NSFWPolicy::Disabled
     };
     let mut metadata = extract_metadata(app, &input, true, nsfw).await?;
+    let data = include_data.then_some(input.data);
     let is_image = metadata["content_type"]
         .as_str()
         .is_some_and(|content_type| content_type.starts_with("image/"));
@@ -76,10 +78,7 @@ pub(in crate::server) async fn resolve_metadata(
             metadata[field] = served[field].take();
         }
     }
-    Ok(MetadataOutput {
-        metadata,
-        data: include_data.then_some(input.data),
-    })
+    Ok(MetadataOutput { metadata, data })
 }
 
 async fn served_variant_metadata(
@@ -103,7 +102,15 @@ async fn served_variant_metadata(
         if response.status() != StatusCode::OK {
             return None;
         }
-        let data = to_bytes(response.into_body(), constants::MAX_MEDIA_PROXY_BYTES)
+        let body = response.into_body();
+        let reserved = body
+            .size_hint()
+            .upper()
+            .and_then(|upper| usize::try_from(upper).ok())
+            .unwrap_or(constants::MAX_MEDIA_PROXY_BYTES)
+            .min(constants::MAX_MEDIA_PROXY_BYTES);
+        let _reservation = app.media.external_buffer_bytes().try_reserve(reserved)?;
+        let data = to_bytes(body, constants::MAX_MEDIA_PROXY_BYTES)
             .await
             .ok()?;
         let input = LoadedMediaInput {

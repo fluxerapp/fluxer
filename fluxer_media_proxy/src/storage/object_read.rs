@@ -5,15 +5,25 @@ use super::{
     Store, record_storage_outcome, unversioned_read_budget,
 };
 use crate::{byte_budget::ByteBudget, config::StorageBackend, constants};
+use bytes::Bytes;
 
 impl Store {
     pub async fn read_object(&self, bucket: &str, key: &str) -> Result<Object, StorageError> {
         let budget = unversioned_read_budget(constants::MAX_MEDIA_PROXY_BYTES);
+        self.read_object_within(bucket, key, &budget).await
+    }
+
+    pub async fn read_object_within(
+        &self,
+        bucket: &str,
+        key: &str,
+        budget: &ByteBudget,
+    ) -> Result<Object, StorageError> {
         let object = self
-            .read_object_limited(bucket, key, constants::MAX_MEDIA_PROXY_BYTES, &budget)
+            .read_object_limited(bucket, key, constants::MAX_MEDIA_PROXY_BYTES, budget)
             .await?;
         Ok(Object {
-            data: object.data.as_bytes().clone(),
+            data: Bytes::from_owner(object.data),
             content_type: object.content_type,
         })
     }

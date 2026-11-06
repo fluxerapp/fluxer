@@ -90,8 +90,12 @@ pub(in crate::server) async fn run_video_transform(
             move || Ok(cost_bytes),
             move || {
                 let started = Instant::now();
-                let thumbnail =
-                    media_process::extract_video_thumbnail(&data, format, &media_limits)?;
+                let thumbnail = media_process::extract_video_thumbnail(
+                    &data,
+                    format,
+                    deadline_ms,
+                    &media_limits,
+                )?;
                 let media = if width.is_none() && height.is_none() {
                     thumbnail
                 } else {

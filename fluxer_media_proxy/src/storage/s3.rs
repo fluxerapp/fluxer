@@ -4,9 +4,9 @@ use super::{
     BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, HeadResult,
     ObjectStreamPlan, StorageError, Store, StreamObject, StreamRange,
     relay_body::{RelayBody, RelayPutOptions, SizedFileBody},
-    response_body::{exact_response_stream, read_response_bytes},
+    response_body::{exact_response_stream, read_response_bytes, read_response_bytes_up_to},
 };
-use crate::{aws_sigv4, byte_budget::BudgetedBytes, config::Config, http_headers, range};
+use crate::{aws_sigv4, config::Config, http_headers, range};
 use axum::body::Body;
 use http::{HeaderMap, HeaderName, StatusCode, header};
 use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
@@ -16,6 +16,8 @@ use std::time::Duration;
 use tokio::io::AsyncSeekExt as _;
 
 pub(super) const UNSIGNED_PAYLOAD: &str = "UNSIGNED-PAYLOAD";
+
+const S3_ERROR_BODY_BYTES_MAX: usize = 2048;
 
 const QUERY_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b' ')
@@ -60,13 +62,7 @@ impl Store {
                     usize::try_from(content_length).map_err(|_| StorageError::StreamTooLong)?;
                 read_response_bytes(response, expected_length, request.budget).await?
             }
-            None => {
-                let data = response.bytes().await?;
-                if data.len() > request.limit {
-                    return Err(StorageError::StreamTooLong);
-                }
-                BudgetedBytes::unbudgeted(data)
-            }
+            None => read_response_bytes_up_to(response, request.limit, request.budget).await?,
         };
         Ok(BufferedStorageObject {
             content_digest: match request.content_digest {
@@ -308,13 +304,18 @@ pub(super) fn signed_headers(
     headers
 }
 
-pub(super) async fn s3_error_summary(response: reqwest::Response) -> String {
+pub(super) async fn s3_error_summary(mut response: reqwest::Response) -> String {
     let status = response.status();
-    let body = response
-        .bytes()
-        .await
-        .map(|b| b.to_vec())
-        .unwrap_or_default();
+    let mut body = Vec::new();
+    while body.len() < S3_ERROR_BODY_BYTES_MAX {
+        match response.chunk().await {
+            Ok(Some(chunk)) => {
+                let take = chunk.len().min(S3_ERROR_BODY_BYTES_MAX - body.len());
+                body.extend_from_slice(&chunk[..take]);
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
     let snippet: String = String::from_utf8_lossy(&body)
         .chars()
         .filter(|c| !c.is_control() || *c == ' ')

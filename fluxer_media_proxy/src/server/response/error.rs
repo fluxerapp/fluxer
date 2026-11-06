@@ -13,6 +13,9 @@ pub(in crate::server) fn storage_status(err: &StorageError) -> StatusCode {
         StorageError::ReadOnlyStorage => StatusCode::FORBIDDEN,
         StorageError::InvalidBucket | StorageError::InvalidKey => StatusCode::BAD_REQUEST,
         StorageError::StreamTooLong => StatusCode::PAYLOAD_TOO_LARGE,
+        StorageError::BufferBudgetExhausted | StorageError::BufferAllocationFailed => {
+            StatusCode::SERVICE_UNAVAILABLE
+        }
         _ => StatusCode::BAD_GATEWAY,
     }
 }

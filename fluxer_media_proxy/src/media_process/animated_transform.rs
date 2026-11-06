@@ -4,7 +4,8 @@ use super::image_probe::animated_probe_from_image;
 use super::loaded_image::validate_dimensions;
 use super::native_runtime::{clear_vips_error, vips_runtime};
 use super::{
-    MediaError, native_animated_frame_limit, native_buffer_to_media_bytes, native_status_error,
+    MediaError, native_animated_frame_limit, native_buffer_to_media_bytes,
+    native_optional_deadline, native_status_error,
 };
 use crate::{
     constants,
@@ -31,6 +32,7 @@ pub(super) fn try_decode_heif_primary_still(
     input: &[u8],
     media_limits: &MediaLimits,
     metrics: &TransformMetrics,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedHEIFPrimaryStill>, MediaError> {
     let mut raw = ptr::null_mut();
     let mut facts = native::FluxerHEIFPrimaryStillDecodeFacts::empty();
@@ -38,7 +40,7 @@ pub(super) fn try_decode_heif_primary_still(
         native::fluxer_heif_decode_primary_still(
             input.as_ptr().cast(),
             input.len(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             media_limits.image_pixels(),
             c_int::try_from(media_limits.image_dimension())
@@ -53,6 +55,10 @@ pub(super) fn try_decode_heif_primary_still(
             clear_vips_error();
             metrics.avif_libheif_decode_failures.inc();
             return Ok(None);
+        }
+        NativeStatus::DeadlineExceeded => {
+            clear_vips_error();
+            return Err(MediaError::RequestTimeout);
         }
         status => {
             clear_vips_error();
@@ -76,6 +82,7 @@ pub(super) fn try_decode_apng(
     input: &[u8],
     animated: bool,
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedAnimation>, MediaError> {
     let runtime = vips_runtime()?;
     let mut raw = ptr::null_mut();
@@ -85,7 +92,7 @@ pub(super) fn try_decode_apng(
             input.as_ptr().cast(),
             input.len(),
             runtime.config().ffmpeg_decoder_threads(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             if animated {
                 native_animated_frame_limit(media_limits)
@@ -125,6 +132,7 @@ pub(super) fn try_decode_apng(
 pub(super) fn decode_heif_sequence(
     input: &[u8],
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedAnimation>, MediaError> {
     let runtime = vips_runtime()?;
     let mut raw = ptr::null_mut();
@@ -134,7 +142,7 @@ pub(super) fn decode_heif_sequence(
             input.as_ptr().cast(),
             input.len(),
             runtime.config().ffmpeg_decoder_threads(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             native_animated_frame_limit(media_limits),
             media_limits.animated_total_pixels(),

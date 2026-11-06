@@ -79,12 +79,156 @@ static int fluxer_av_strip_input_open(
     return FLUXER_NATIVE_STATUS_OK;
 }
 
+static const uint8_t fluxer_av_vorbis_empty_comment[] = {
+    0x03, 'v', 'o', 'r', 'b', 'i', 's', 0, 0, 0, 0, 0, 0, 0, 0, 0x01,
+};
+
+static const uint8_t fluxer_av_theora_empty_comment[] = {
+    0x81, 't', 'h', 'e', 'o', 'r', 'a', 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+static int fluxer_av_split_xiph_headers(
+    const uint8_t *data,
+    size_t size,
+    size_t first_header_size,
+    const uint8_t **start,
+    size_t *len,
+    int *length_prefixed
+) {
+    if (size >= 2 && (((size_t)data[0] << 8) | data[1]) == first_header_size) {
+        size_t offset = 0;
+        for (int i = 0; i < 3; i++) {
+            if (size - offset < 2) return AVERROR_INVALIDDATA;
+            len[i] = ((size_t)data[offset] << 8) | data[offset + 1];
+            offset += 2;
+            if (size - offset < len[i]) return AVERROR_INVALIDDATA;
+            start[i] = data + offset;
+            offset += len[i];
+        }
+        *length_prefixed = 1;
+        return 0;
+    }
+    if (size < 3 || data[0] != 2) return AVERROR_INVALIDDATA;
+    size_t offset = 1;
+    for (int i = 0; i < 2; i++) {
+        len[i] = 0;
+        while (offset < size && data[offset] == 0xff) {
+            len[i] += 0xff;
+            offset++;
+        }
+        if (offset >= size) return AVERROR_INVALIDDATA;
+        len[i] += data[offset++];
+    }
+    if (size - offset < len[0] || size - offset - len[0] < len[1]) return AVERROR_INVALIDDATA;
+    start[0] = data + offset;
+    start[1] = start[0] + len[0];
+    start[2] = start[1] + len[1];
+    len[2] = size - offset - len[0] - len[1];
+    *length_prefixed = 0;
+    return 0;
+}
+
+static uint8_t *fluxer_av_write_xiph_lace(uint8_t *out, size_t len) {
+    for (; len >= 0xff; len -= 0xff) *out++ = 0xff;
+    *out++ = (uint8_t)len;
+    return out;
+}
+
+static int fluxer_av_strip_xiph_comment(AVCodecParameters *par) {
+    const uint8_t *comment;
+    size_t comment_len;
+    size_t first_header_size;
+    if (par->codec_id == AV_CODEC_ID_VORBIS) {
+        comment = fluxer_av_vorbis_empty_comment;
+        comment_len = sizeof(fluxer_av_vorbis_empty_comment);
+        first_header_size = 30;
+    } else if (par->codec_id == AV_CODEC_ID_THEORA) {
+        comment = fluxer_av_theora_empty_comment;
+        comment_len = sizeof(fluxer_av_theora_empty_comment);
+        first_header_size = 42;
+    } else {
+        return 0;
+    }
+    if (par->extradata == NULL || par->extradata_size <= 0) return 0;
+    const uint8_t *start[3];
+    size_t len[3];
+    int length_prefixed = 0;
+    int rc = fluxer_av_split_xiph_headers(
+        par->extradata, (size_t)par->extradata_size, first_header_size, start, len,
+        &length_prefixed);
+    if (rc < 0) return rc;
+    start[1] = comment;
+    len[1] = comment_len;
+    size_t size = len[0] + len[1] + len[2] +
+        (length_prefixed ? 6 : 1 + len[0] / 0xff + 1 + len[1] / 0xff + 1);
+    if (size > (size_t)INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE) return AVERROR_INVALIDDATA;
+    uint8_t *data = av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
+    if (data == NULL) return AVERROR(ENOMEM);
+    uint8_t *out = data;
+    if (!length_prefixed) {
+        *out++ = 2;
+        out = fluxer_av_write_xiph_lace(out, len[0]);
+        out = fluxer_av_write_xiph_lace(out, len[1]);
+    }
+    for (int i = 0; i < 3; i++) {
+        if (length_prefixed) {
+            *out++ = (uint8_t)(len[i] >> 8);
+            *out++ = (uint8_t)len[i];
+        }
+        memcpy(out, start[i], len[i]);
+        out += len[i];
+    }
+    av_free(par->extradata);
+    par->extradata = data;
+    par->extradata_size = (int)size;
+    return 0;
+}
+
+static int fluxer_av_strip_picture(
+    const AVStream *source,
+    fluxer_av_picture_strip_cb strip_picture,
+    void *user_data,
+    AVPacket **out,
+    int *width,
+    int *height
+) {
+    const AVPacket *picture = &source->attached_pic;
+    const void *data = NULL;
+    size_t len = 0;
+    if (strip_picture == NULL || picture->data == NULL || picture->size <= 0 ||
+        strip_picture(user_data, picture->data, (size_t)picture->size, &data, &len,
+                      width, height) != 0 ||
+        data == NULL || len == 0 || len > (size_t)INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE) {
+        return 0;
+    }
+    AVPacket *packet = av_packet_alloc();
+    if (packet == NULL || av_new_packet(packet, (int)len) < 0) {
+        av_packet_free(&packet);
+        return AVERROR(ENOMEM);
+    }
+    memcpy(packet->data, data, len);
+    *out = packet;
+    return 0;
+}
+
+static int fluxer_av_strip_use_picture(AVPacket *packet, const AVPacket *picture) {
+    AVBufferRef *buffer = av_buffer_ref(picture->buf);
+    if (buffer == NULL) return AVERROR(ENOMEM);
+    av_buffer_unref(&packet->buf);
+    packet->buf = buffer;
+    packet->data = picture->data;
+    packet->size = picture->size;
+    return 0;
+}
+
 static int fluxer_av_strip_copy_stream(AVFormatContext *output, const AVStream *source) {
     AVStream *stream = avformat_new_stream(output, NULL);
     if (stream == NULL) return AVERROR(ENOMEM);
     int rc = avcodec_parameters_copy(stream->codecpar, source->codecpar);
     if (rc < 0) return rc;
     AVCodecParameters *par = stream->codecpar;
+    rc = fluxer_av_strip_xiph_comment(par);
+    if (rc < 0) return rc;
     const struct AVCodecTag *const *tags = output->oformat->codec_tag;
     unsigned int tag = 0;
     if (tags != NULL && av_codec_get_id(tags, par->codec_tag) != par->codec_id &&
@@ -111,7 +255,14 @@ static int fluxer_av_strip_copy_stream(AVFormatContext *output, const AVStream *
     return 0;
 }
 
-static int fluxer_av_strip_map_streams(AVFormatContext *input, AVFormatContext *output, int *map) {
+static int fluxer_av_strip_map_streams(
+    AVFormatContext *input,
+    AVFormatContext *output,
+    int *map,
+    AVPacket **pictures,
+    fluxer_av_picture_strip_cb strip_picture,
+    void *user_data
+) {
     static const enum AVMediaType order[] = {
         AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_SUBTITLE,
     };
@@ -123,9 +274,21 @@ static int fluxer_av_strip_map_streams(AVFormatContext *input, AVFormatContext *
                 stream->codecpar->codec_type != order[t]) {
                 continue;
             }
+            int width = 0;
+            int height = 0;
+            if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+                int rc = fluxer_av_strip_picture(
+                    stream, strip_picture, user_data, &pictures[i], &width, &height);
+                if (rc < 0) return rc;
+                if (pictures[i] == NULL) continue;
+            }
             int rc = fluxer_av_strip_copy_stream(output, stream);
             if (rc < 0) return rc;
             map[i] = (int)output->nb_streams - 1;
+            if (width > 0 && height > 0) {
+                output->streams[map[i]]->codecpar->width = width;
+                output->streams[map[i]]->codecpar->height = height;
+            }
         }
     }
     return output->nb_streams > 0 ? 0 : AVERROR_STREAM_NOT_FOUND;
@@ -209,16 +372,23 @@ static void fluxer_av_strip_retime(
 static int fluxer_av_strip_remux(
     fluxer_av_strip_input *input,
     AVFormatContext *output,
-    int faststart
+    int faststart,
+    fluxer_av_picture_strip_cb strip_picture,
+    void *user_data
 ) {
     AVFormatContext *source = input->format;
     unsigned int mapped_streams = source->nb_streams;
     int *map = av_calloc(mapped_streams, sizeof(*map));
+    AVPacket **pictures = av_calloc(mapped_streams, sizeof(*pictures));
     fluxer_av_strip_track *tracks = av_calloc(mapped_streams, sizeof(*tracks));
     AVPacket *packet = av_packet_alloc();
     AVDictionary *options = NULL;
-    int rc = map == NULL || tracks == NULL || packet == NULL ? AVERROR(ENOMEM) : 0;
-    if (rc == 0) rc = fluxer_av_strip_map_streams(source, output, map);
+    int rc = map == NULL || pictures == NULL || tracks == NULL || packet == NULL
+        ? AVERROR(ENOMEM)
+        : 0;
+    if (rc == 0) {
+        rc = fluxer_av_strip_map_streams(source, output, map, pictures, strip_picture, user_data);
+    }
     if (rc == 0 && faststart) rc = av_dict_set(&options, "movflags", "+faststart", 0);
     if (rc == 0) rc = avio_open2(&output->pb, output->url, AVIO_FLAG_WRITE,
                                  &output->interrupt_callback, NULL);
@@ -246,6 +416,13 @@ static int fluxer_av_strip_remux(
             av_packet_unref(packet);
             continue;
         }
+        if (pictures[index] != NULL) {
+            rc = fluxer_av_strip_use_picture(packet, pictures[index]);
+            if (rc < 0) {
+                av_packet_unref(packet);
+                break;
+            }
+        }
         track->started = 1;
         const AVStream *destination = output->streams[map[index]];
         fluxer_av_strip_retime(packet, source->streams[index], destination,
@@ -266,6 +443,10 @@ static int fluxer_av_strip_remux(
     av_dict_free(&options);
     av_packet_free(&packet);
     av_free(tracks);
+    for (unsigned int i = 0; pictures != NULL && i < mapped_streams; i++) {
+        av_packet_free(&pictures[i]);
+    }
+    av_free(pictures);
     av_free(map);
     return rc;
 }
@@ -277,7 +458,9 @@ int fluxer_av_strip_metadata(
     const char *muxer,
     int faststart,
     const char *output_path,
-    long long deadline_monotonic_ms
+    long long deadline_monotonic_ms,
+    fluxer_av_picture_strip_cb strip_picture,
+    void *user_data
 ) {
     if (demuxer == NULL || muxer == NULL || output_path == NULL ||
         (faststart != 0 && faststart != 1)) {
@@ -298,7 +481,7 @@ int fluxer_av_strip_metadata(
         output->protocol_whitelist = av_strdup("file");
         rc = output->protocol_whitelist == NULL
             ? AVERROR(ENOMEM)
-            : fluxer_av_strip_remux(&input, output, faststart);
+            : fluxer_av_strip_remux(&input, output, faststart, strip_picture, user_data);
     } else if (rc >= 0) {
         rc = AVERROR(ENOMEM);
     }
