@@ -635,7 +635,9 @@ async function runConfiguredDisplayScreenShare(
 				ActiveScreenShareSource.setWindowAudioScope(appShareAudioScope ?? 'window');
 			}
 			if (captured && useWaylandPortal) {
-				ActiveScreenShareSource.setPublishedSource('wayland', null);
+				ActiveScreenShareSource.setPublishedSource('wayland', null, {
+					portalSurface: options?.preferredDisplaySurface,
+				});
 				ActiveScreenShareSource.setSourceDimensions(null);
 			}
 			if (!captured && useWaylandPortal && mode !== 'switch') {
