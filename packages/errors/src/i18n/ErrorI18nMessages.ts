@@ -14,6 +14,15 @@ export const ERROR_I18N_MESSAGES = {
 	'account.date_of_birth_required': 'Enter your date of birth to continue.',
 	'account.password_required_to_claim':
 		"{reason, select, email_delivery_off {Set a password to keep this account. This instance can't send email codes.} local_credential_basis {Set a password to keep this account. This instance asks every account for a password or passkey.} other {Set a password to keep this account.}}",
+	'account.play_integrity_app_not_recognized':
+		'Install the app from Google Play and sign in to Google Play to check your age in the app.',
+	'account.play_integrity_challenge_invalid': 'This check has expired or was already used. Try again.',
+	'account.play_integrity_device_not_trusted':
+		"This device didn't pass the Google Play device check, so the app can't check your age on it.",
+	'account.play_integrity_not_available': "Age checks from the Android app aren't available on this instance.",
+	'account.play_integrity_request_invalid': "This age check request isn't valid.",
+	'account.play_integrity_token_invalid': "We couldn't confirm this age check from your device. Try again.",
+	'account.play_integrity_unavailable': "We couldn't connect to Google Play to check your age. Try again later.",
 	'account.unclaimed_cannot_accept_friend_requests': 'Claim your account to accept friend requests.',
 	'account.unclaimed_cannot_add_reactions': 'Claim your account to add reactions.',
 	'account.unclaimed_cannot_create_applications': 'Claim your account to create applications.',

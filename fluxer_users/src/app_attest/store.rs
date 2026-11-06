@@ -249,11 +249,7 @@ pub fn iso_millis(ms: i64) -> String {
 
 fn decode_challenge(row: Value) -> Option<ChallengeRecord> {
     let row = postgres::decode_row_dates_as_millis(row).ok()?;
-    let purpose = match row.get("purpose")?.as_str()? {
-        "attest" => ChallengePurpose::Attest,
-        "assert" => ChallengePurpose::Assert,
-        _ => return None,
-    };
+    let purpose = ChallengePurpose::parse(row.get("purpose")?.as_str()?)?;
     Some(ChallengeRecord {
         user_id: row.get("user_id")?.as_i64()?,
         purpose,

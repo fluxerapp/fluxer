@@ -16,7 +16,7 @@ const CHALLENGE_BYTES: usize = 32;
 const CHALLENGE_TEXT_LEN: usize = 43;
 const MAX_ATTESTATION_BYTES: usize = 16 * 1024;
 const MAX_ASSERTION_BYTES: usize = 4 * 1024;
-const MAX_CLIENT_DATA_BYTES: usize = 1024;
+pub const MAX_CLIENT_DATA_BYTES: usize = 1024;
 
 const STANDARD_ANY_PADDING: GeneralPurpose = GeneralPurpose::new(
     &base64::alphabet::STANDARD,
@@ -56,26 +56,7 @@ impl AppAttestService {
         if !self.config.is_enabled() {
             return Ok(rejected(AppAttestRejection::NotConfigured));
         }
-        let mut bytes = [0u8; CHALLENGE_BYTES];
-        self.random
-            .fill(&mut bytes)
-            .map_err(|_| anyhow::anyhow!("system random source failed"))?;
-        let challenge = URL_SAFE_NO_PAD.encode(bytes);
-        let expires_at_ms = unix_ms(now) + CHALLENGE_TTL_SECONDS * 1000;
-        self.store
-            .insert_challenge(
-                &challenge,
-                &ChallengeRecord {
-                    user_id,
-                    purpose,
-                    expires_at_ms,
-                },
-            )
-            .await?;
-        Ok(UserResponse::AppAttestChallenge {
-            challenge,
-            expires_at: iso_millis(expires_at_ms),
-        })
+        issue_challenge(&self.store, &self.random, user_id, purpose, now).await
     }
 
     pub async fn register_key(
@@ -109,9 +90,14 @@ impl AppAttestService {
         let Some(attestation) = decode_limited(attestation_base64, MAX_ATTESTATION_BYTES) else {
             return Ok(Err(AppAttestRejection::InvalidRequest));
         };
-        if !self
-            .consume_challenge(challenge, user_id, ChallengePurpose::Attest, now)
-            .await?
+        if !consume_challenge(
+            &self.store,
+            challenge,
+            user_id,
+            ChallengePurpose::Attest,
+            now,
+        )
+        .await?
         {
             return Ok(Err(AppAttestRejection::InvalidChallenge));
         }
@@ -193,9 +179,14 @@ impl AppAttestService {
         let Ok(parsed) = serde_json::from_slice::<AgeClientData>(&client_data) else {
             return Ok(Err(AppAttestRejection::InvalidRequest));
         };
-        if !self
-            .consume_challenge(&parsed.challenge, user_id, ChallengePurpose::Assert, now)
-            .await?
+        if !consume_challenge(
+            &self.store,
+            &parsed.challenge,
+            user_id,
+            ChallengePurpose::Assert,
+            now,
+        )
+        .await?
         {
             return Ok(Err(AppAttestRejection::InvalidChallenge));
         }
@@ -236,21 +227,50 @@ impl AppAttestService {
             attested_at: iso_millis(now_ms),
         }))
     }
+}
 
-    async fn consume_challenge(
-        &self,
-        challenge: &str,
-        user_id: i64,
-        purpose: ChallengePurpose,
-        now: SystemTime,
-    ) -> anyhow::Result<bool> {
-        if challenge.len() != CHALLENGE_TEXT_LEN || URL_SAFE_NO_PAD.decode(challenge).is_err() {
-            return Ok(false);
-        }
-        self.store
-            .consume_challenge(challenge, user_id, purpose, unix_ms(now))
-            .await
+pub async fn issue_challenge(
+    store: &AppAttestStore,
+    random: &SystemRandom,
+    user_id: i64,
+    purpose: ChallengePurpose,
+    now: SystemTime,
+) -> anyhow::Result<UserResponse> {
+    let mut bytes = [0u8; CHALLENGE_BYTES];
+    random
+        .fill(&mut bytes)
+        .map_err(|_| anyhow::anyhow!("system random source failed"))?;
+    let challenge = URL_SAFE_NO_PAD.encode(bytes);
+    let expires_at_ms = unix_ms(now) + CHALLENGE_TTL_SECONDS * 1000;
+    store
+        .insert_challenge(
+            &challenge,
+            &ChallengeRecord {
+                user_id,
+                purpose,
+                expires_at_ms,
+            },
+        )
+        .await?;
+    Ok(UserResponse::AppAttestChallenge {
+        challenge,
+        expires_at: iso_millis(expires_at_ms),
+    })
+}
+
+pub async fn consume_challenge(
+    store: &AppAttestStore,
+    challenge: &str,
+    user_id: i64,
+    purpose: ChallengePurpose,
+    now: SystemTime,
+) -> anyhow::Result<bool> {
+    if challenge.len() != CHALLENGE_TEXT_LEN || URL_SAFE_NO_PAD.decode(challenge).is_err() {
+        return Ok(false);
     }
+    store
+        .consume_challenge(challenge, user_id, purpose, unix_ms(now))
+        .await
 }
 
 fn keys_to_evict(keys: &[StoredKey], max_keys: usize) -> Vec<String> {
@@ -274,7 +294,7 @@ fn decode_key_id(key_id: &str) -> Option<[u8; KEY_ID_LEN]> {
     STANDARD_ANY_PADDING.decode(key_id).ok()?.try_into().ok()
 }
 
-fn decode_limited(value: &str, max_bytes: usize) -> Option<Vec<u8>> {
+pub fn decode_limited(value: &str, max_bytes: usize) -> Option<Vec<u8>> {
     if value.len() > max_bytes.div_ceil(3) * 4 {
         return None;
     }
@@ -292,7 +312,7 @@ fn rejected(code: AppAttestRejection) -> UserResponse {
     UserResponse::AppAttestRejected { code }
 }
 
-fn unix_ms(now: SystemTime) -> i64 {
+pub fn unix_ms(now: SystemTime) -> i64 {
     now.duration_since(UNIX_EPOCH)
         .map(|elapsed| elapsed.as_millis() as i64)
         .unwrap_or_default()

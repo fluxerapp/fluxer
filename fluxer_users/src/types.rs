@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::app_attest::{AgeFloor, AppAttestRejection, ChallengePurpose};
+use crate::play_integrity::PlayIntegrityRejection;
 use crate::pseudonym::pseudonym;
 use fluxer_common::user_flags::AccountStanding;
 #[cfg(test)]
@@ -47,6 +48,17 @@ pub enum UserRequest {
         assertion_base64: String,
         client_data_base64: String,
     },
+    PlayIntegrityCreateChallenge {
+        #[serde(deserialize_with = "deserialize_i64_from_number_or_string")]
+        user_id: i64,
+    },
+    PlayIntegritySubmitAge {
+        #[serde(deserialize_with = "deserialize_i64_from_number_or_string")]
+        user_id: i64,
+        package_name: String,
+        integrity_token: String,
+        client_data_base64: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,6 +78,9 @@ pub enum UserResponse {
     },
     AppAttestRejected {
         code: AppAttestRejection,
+    },
+    PlayIntegrityRejected {
+        code: PlayIntegrityRejection,
     },
 }
 

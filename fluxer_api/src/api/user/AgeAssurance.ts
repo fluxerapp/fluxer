@@ -4,9 +4,12 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {UserID} from '@app/api/BrandedTypes';
 import {executeConditional, fetchMany} from '@app/api/database/CassandraQueryExecution';
 import {
+	type AppAttestAgeAccepted,
 	type AppAttestOutcome,
 	type AppAttestRejectionCode,
 	createUsersServiceClient,
+	type PlayIntegrityOutcome,
+	type PlayIntegrityRejectionCode,
 } from '@app/api/infrastructure/UsersServiceClient';
 import type {User} from '@app/api/models/User';
 import {AppAttestKeyLookup, AppAttestKeys} from '@app/api/Tables';
@@ -21,11 +24,19 @@ import {AppAttestKeyInUseError} from '@fluxer/errors/src/domains/user/AppAttestK
 import {AppAttestKeyNotRegisteredError} from '@fluxer/errors/src/domains/user/AppAttestKeyNotRegisteredError';
 import {AppAttestNotAvailableError} from '@fluxer/errors/src/domains/user/AppAttestNotAvailableError';
 import {AppAttestRequestInvalidError} from '@fluxer/errors/src/domains/user/AppAttestRequestInvalidError';
+import {PlayIntegrityAppNotRecognizedError} from '@fluxer/errors/src/domains/user/PlayIntegrityAppNotRecognizedError';
+import {PlayIntegrityChallengeInvalidError} from '@fluxer/errors/src/domains/user/PlayIntegrityChallengeInvalidError';
+import {PlayIntegrityDeviceNotTrustedError} from '@fluxer/errors/src/domains/user/PlayIntegrityDeviceNotTrustedError';
+import {PlayIntegrityNotAvailableError} from '@fluxer/errors/src/domains/user/PlayIntegrityNotAvailableError';
+import {PlayIntegrityRequestInvalidError} from '@fluxer/errors/src/domains/user/PlayIntegrityRequestInvalidError';
+import {PlayIntegrityTokenInvalidError} from '@fluxer/errors/src/domains/user/PlayIntegrityTokenInvalidError';
+import {PlayIntegrityUnavailableError} from '@fluxer/errors/src/domains/user/PlayIntegrityUnavailableError';
 import type {
 	AgeAssuranceSubmitRequest,
 	AgeAssuranceSubmitResponse,
 	AppAttestChallengeResponse,
 	AppAttestKeyRegisterRequest,
+	PlayIntegrityAgeSubmitRequest,
 } from '@fluxer/schema/src/domains/user/AgeAssuranceSchemas';
 
 const FETCH_APP_ATTEST_KEYS_FOR_USER_CQL = AppAttestKeys.selectCql({
@@ -54,6 +65,30 @@ function rejectionError(code: AppAttestRejectionCode): Error {
 
 function unwrap<T>(outcome: AppAttestOutcome<T>): T {
 	if (!outcome.ok) throw rejectionError(outcome.code);
+	return outcome.value;
+}
+
+function playIntegrityRejectionError(code: PlayIntegrityRejectionCode): Error {
+	switch (code) {
+		case 'not_configured':
+			return new PlayIntegrityNotAvailableError();
+		case 'invalid_request':
+			return new PlayIntegrityRequestInvalidError();
+		case 'invalid_challenge':
+			return new PlayIntegrityChallengeInvalidError();
+		case 'invalid_token':
+			return new PlayIntegrityTokenInvalidError();
+		case 'app_not_recognized':
+			return new PlayIntegrityAppNotRecognizedError();
+		case 'device_not_trusted':
+			return new PlayIntegrityDeviceNotTrustedError();
+		case 'unavailable':
+			return new PlayIntegrityUnavailableError();
+	}
+}
+
+function unwrapPlayIntegrity<T>(outcome: PlayIntegrityOutcome<T>): T {
+	if (!outcome.ok) throw playIntegrityRejectionError(outcome.code);
 	return outcome.value;
 }
 
@@ -88,6 +123,34 @@ export async function submitAttestedAge(
 			clientDataBase64: request.client_data,
 		}),
 	);
+	return applyAttestedAge(ctx, user, accepted);
+}
+
+export async function createPlayIntegrityChallenge(userId: UserID): Promise<AppAttestChallengeResponse> {
+	return unwrapPlayIntegrity(await createUsersServiceClient().playIntegrityCreateChallenge(userId));
+}
+
+export async function submitPlayIntegrityAge(
+	ctx: ApiContext,
+	user: User,
+	request: PlayIntegrityAgeSubmitRequest,
+): Promise<AgeAssuranceSubmitResponse> {
+	const accepted = unwrapPlayIntegrity(
+		await createUsersServiceClient().playIntegritySubmitAge({
+			userId: user.id,
+			packageName: request.package_name,
+			integrityToken: request.integrity_token,
+			clientDataBase64: request.client_data,
+		}),
+	);
+	return applyAttestedAge(ctx, user, accepted);
+}
+
+async function applyAttestedAge(
+	ctx: ApiContext,
+	user: User,
+	accepted: AppAttestAgeAccepted,
+): Promise<AgeAssuranceSubmitResponse> {
 	const attestedAt = new Date(accepted.attested_at);
 	if (user.ageAttestedAt !== null && user.ageAttestedAt.getTime() > attestedAt.getTime()) {
 		return {age_floor: accepted.age_floor};

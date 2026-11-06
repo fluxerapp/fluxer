@@ -20,7 +20,9 @@ impl RouterService for UsersRouter {
             UserRequest::Invalidate { user_id }
             | UserRequest::AppAttestCreateChallenge { user_id, .. }
             | UserRequest::AppAttestRegisterKey { user_id, .. }
-            | UserRequest::AppAttestSubmitAge { user_id, .. } => user_id.to_string(),
+            | UserRequest::AppAttestSubmitAge { user_id, .. }
+            | UserRequest::PlayIntegrityCreateChallenge { user_id }
+            | UserRequest::PlayIntegritySubmitAge { user_id, .. } => user_id.to_string(),
             UserRequest::GetPartialsByIds { user_ids, .. } => user_ids
                 .iter()
                 .min()
@@ -63,7 +65,9 @@ impl RouterService for UsersRouter {
             UserRequest::Invalidate { .. }
             | UserRequest::AppAttestCreateChallenge { .. }
             | UserRequest::AppAttestRegisterKey { .. }
-            | UserRequest::AppAttestSubmitAge { .. } => None,
+            | UserRequest::AppAttestSubmitAge { .. }
+            | UserRequest::PlayIntegrityCreateChallenge { .. }
+            | UserRequest::PlayIntegritySubmitAge { .. } => None,
         }
     }
 

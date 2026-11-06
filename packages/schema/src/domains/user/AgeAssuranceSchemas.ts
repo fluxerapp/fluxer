@@ -8,6 +8,9 @@ import {
 	APP_ATTEST_KEY_ID_BYTES,
 	AppAttestChallengePurposes,
 	AttestedAgeFloors,
+	PLAY_INTEGRITY_CLIENT_DATA_MAX_BYTES,
+	PLAY_INTEGRITY_PACKAGE_NAME_MAX_LENGTH,
+	PLAY_INTEGRITY_TOKEN_MAX_LENGTH,
 } from '@fluxer/constants/src/AgeAssuranceConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
@@ -16,6 +19,8 @@ import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/Schem
 import {z} from 'zod';
 
 const BASE64URL_REGEX = /^[A-Za-z0-9_-]+$/;
+const ANDROID_PACKAGE_NAME_REGEX = /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/;
+const PLAY_INTEGRITY_TOKEN_REGEX = /^[\x21\x23-\x5b\x5d-\x7e]+$/;
 
 function decodedBase64Length(value: string): number {
 	const padding = value.length - value.replace(/=+$/, '').length;
@@ -127,3 +132,24 @@ export const AgeAssuranceSubmitResponse = z.object({
 });
 
 export type AgeAssuranceSubmitResponse = z.infer<typeof AgeAssuranceSubmitResponse>;
+
+export const PlayIntegrityAgeSubmitRequest = z.object({
+	package_name: z
+		.string()
+		.max(PLAY_INTEGRITY_PACKAGE_NAME_MAX_LENGTH)
+		.regex(ANDROID_PACKAGE_NAME_REGEX)
+		.describe('Package name of the Android app that asked for the integrity token, such as com.fluxer'),
+	integrity_token: z
+		.string()
+		.min(1)
+		.max(PLAY_INTEGRITY_TOKEN_MAX_LENGTH)
+		.regex(PLAY_INTEGRITY_TOKEN_REGEX)
+		.describe(
+			'Token from a standard Play Integrity request, made with requestHash set to the SHA-256 of client_data as unpadded base64url',
+		),
+	client_data: base64BytesType(1, PLAY_INTEGRITY_CLIENT_DATA_MAX_BYTES).describe(
+		'The exact UTF-8 JSON bytes the app hashed, as standard base64 on one line with no line breaks (Base64.NO_WRAP on Android). The JSON holds challenge, age_lower, age_upper and age_range_source',
+	),
+});
+
+export type PlayIntegrityAgeSubmitRequest = z.infer<typeof PlayIntegrityAgeSubmitRequest>;
