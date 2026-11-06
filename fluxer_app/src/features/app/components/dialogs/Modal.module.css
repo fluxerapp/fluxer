@@ -10,6 +10,8 @@
 .layer {
 	position: fixed;
 	inset: 0;
+	left: var(--quick-css-dock-left, 0px);
+	right: var(--quick-css-dock-right, 0px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -56,6 +58,8 @@
 .layer.layerFullscreen {
 	position: absolute;
 	inset: 0;
+	left: var(--quick-css-dock-left, 0px);
+	right: var(--quick-css-dock-right, 0px);
 	--fullscreen-pad-y: clamp(0.5rem, 1.5vh, 1rem);
 	--fullscreen-pad-x: clamp(0.75rem, 2vw, 1.5rem);
 	--fullscreen-view-height: min(100dvh, 100svh, 100vh);
