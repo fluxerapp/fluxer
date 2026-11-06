@@ -25698,6 +25698,11 @@ msgstr "Alleen de CSS-tekst wordt gesynchroniseerd tussen apparaten. Geüploade 
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "Alleen de CSS-tekst wordt gesynchroniseerd. Geüploade bestanden en lokale bestandsverwijzingen blijven op dit apparaat."
 
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "Alleen de eerste {maxPages} pagina's met resultaten kunnen worden getoond. Probeer een specifiekere zoekopdracht."
+
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Only the first 200 CSS files in this folder are loaded."

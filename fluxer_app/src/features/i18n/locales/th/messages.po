@@ -25698,6 +25698,11 @@ msgstr "เฉพาะข้อความ CSS เท่านั้นที�
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "เฉพาะข้อความ CSS เท่านั้นที่ซิงค์ ส่วนไฟล์ที่อัปโหลดและการอ้างอิงไฟล์ในเครื่องจะอยู่เฉพาะในอุปกรณ์นี้"
 
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "แสดงผลลัพธ์ได้เพียง {maxPages} หน้าแรกเท่านั้น ลองค้นหาให้เจาะจงมากขึ้น"
+
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Only the first 200 CSS files in this folder are loaded."

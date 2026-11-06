@@ -12,6 +12,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {MessageSearchParams, MessageSearchScope} from '@app/features/search/utils/SearchUtils';
 import {isIndexing, type SearchContext, searchMessages} from '@app/features/search/utils/SearchUtils';
 import * as FormUtils from '@app/lib/forms';
+import {MESSAGE_SEARCH_MAX_PAGE} from '@fluxer/constants/src/LimitConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type {IconProps} from '@phosphor-icons/react';
@@ -40,6 +41,15 @@ export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 } as const;
 export const EMPTY_SEARCH_MESSAGES: Array<Message> = [];
 export const EMPTY_SEARCH_CHANNELS: Array<Channel> = [];
+export const SEARCH_PAGE_LIMIT_DESCRIPTOR = msg({
+	message: 'Only the first {maxPages} pages of results can be shown. Try a more specific search.',
+	comment:
+		'Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.',
+});
+export function getSearchPageCount(total: number, hitsPerPage: number): {totalPages: number; capped: boolean} {
+	const pages = Math.max(1, Math.ceil(total / hitsPerPage));
+	return {totalPages: Math.min(pages, MESSAGE_SEARCH_MAX_PAGE), capped: pages > MESSAGE_SEARCH_MAX_PAGE};
+}
 const OTHER_DESCRIPTOR = msg({
 	message: '{total, plural, one {# result} other {# results}}',
 	comment: 'Result count header in the channel search results panel. Plural cases describe the result count.',

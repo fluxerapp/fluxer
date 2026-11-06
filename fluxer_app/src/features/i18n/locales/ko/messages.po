@@ -25698,6 +25698,11 @@ msgstr "CSS 텍스트만 기기 간에 동기화됩니다. 업로드된 에셋, 
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "CSS 텍스트만 동기화됩니다. 업로드된 에셋과 로컬 파일 참조는 이 기기에 유지됩니다."
 
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "검색 결과는 처음 {maxPages}페이지까지만 표시할 수 있어요. 더 구체적으로 검색해 보세요."
+
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Only the first 200 CSS files in this folder are loaded."

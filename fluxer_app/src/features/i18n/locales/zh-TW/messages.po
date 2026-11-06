@@ -25698,6 +25698,11 @@ msgstr "只有 CSS 文字會在裝置間同步。上傳的素材、桌面檔案�
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "只會同步 CSS 文字。上傳的素材和本機檔案參考會保留在此裝置上。"
 
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "只能顯示前 {maxPages} 頁結果。請嘗試更具體的搜尋。"
+
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Only the first 200 CSS files in this folder are loaded."
