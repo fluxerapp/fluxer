@@ -22,6 +22,10 @@
 	padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 }
 
+.wrapper[data-offscreen] * {
+	animation-play-state: paused;
+}
+
 .wrapperCompact {
 	margin-inline-start: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
 	margin-inline-end: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));

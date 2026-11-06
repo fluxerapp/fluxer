@@ -7,9 +7,11 @@ import {SkeletonCircle} from '@app/features/app/components/skeleton/SkeletonCirc
 import {SkeletonLine} from '@app/features/app/components/skeleton/SkeletonLine';
 import {SkeletonEmphasis, SkeletonRadius} from '@app/features/app/components/skeleton/SkeletonStyle';
 import {skeletonSurfaceVar} from '@app/features/app/components/skeleton/SkeletonSurfaceContract';
+import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {flxElementClassName} from '@app/lib/react';
 import type React from 'react';
+import {useEffect, useRef} from 'react';
 
 const AVATAR_SIZE = skeletonSurfaceVar('--message-avatar-size');
 const COMPACT_AVATAR_SIZE = skeletonSurfaceVar('--message-avatar-size-compact');
@@ -227,42 +229,60 @@ function CompactScrollFillerSkeletonGroup({
 	);
 }
 
+function usePauseWhileOffscreen(): React.RefObject<HTMLElement | null> {
+	const ref = useRef<HTMLElement | null>(null);
+	useEffect(() => {
+		const element = ref.current;
+		if (element == null || typeof IntersectionObserver === 'undefined') {
+			return;
+		}
+		return observeIntersection(element, (entry) => {
+			element.toggleAttribute('data-offscreen', !entry.isIntersecting);
+		});
+	}, []);
+	return ref;
+}
+
 export const ScrollFillerSkeleton = ({
 	compact,
 	compactAvatarsVisible,
 	groups,
 	groupSpacing,
 	totalHeight,
-}: PlaceholderSpecs) => (
-	<flx-message-list-skeleton
-		className={flxElementClassName(styles.wrapper, compact && styles.wrapperCompact)}
-		style={{height: remFromPx(totalHeight)}}
-		data-flx="app.skeleton.scroll-filler-skeleton.wrapper"
-	>
-		{groups.map((group, groupIndex) => {
-			const props = {
-				group,
-				groupCount: groups.length,
-				groupIndex,
-				groupSpacing,
-				compactAvatarsVisible,
-			};
-			if (compact) {
+}: PlaceholderSpecs) => {
+	const wrapperRef = usePauseWhileOffscreen();
+	return (
+		<flx-message-list-skeleton
+			ref={wrapperRef}
+			className={flxElementClassName(styles.wrapper, compact && styles.wrapperCompact)}
+			style={{height: remFromPx(totalHeight)}}
+			data-flx="app.skeleton.scroll-filler-skeleton.wrapper"
+		>
+			{groups.map((group, groupIndex) => {
+				const props = {
+					group,
+					groupCount: groups.length,
+					groupIndex,
+					groupSpacing,
+					compactAvatarsVisible,
+				};
+				if (compact) {
+					return (
+						<CompactScrollFillerSkeletonGroup
+							key={groupIndex}
+							data-flx="app.skeleton.scroll-filler-skeleton.compact-scroll-filler-skeleton-group"
+							{...props}
+						/>
+					);
+				}
 				return (
-					<CompactScrollFillerSkeletonGroup
+					<CozyScrollFillerSkeletonGroup
 						key={groupIndex}
-						data-flx="app.skeleton.scroll-filler-skeleton.compact-scroll-filler-skeleton-group"
+						data-flx="app.skeleton.scroll-filler-skeleton.cozy-scroll-filler-skeleton-group"
 						{...props}
 					/>
 				);
-			}
-			return (
-				<CozyScrollFillerSkeletonGroup
-					key={groupIndex}
-					data-flx="app.skeleton.scroll-filler-skeleton.cozy-scroll-filler-skeleton-group"
-					{...props}
-				/>
-			);
-		})}
-	</flx-message-list-skeleton>
-);
+			})}
+		</flx-message-list-skeleton>
+	);
+};
