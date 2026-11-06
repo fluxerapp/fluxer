@@ -122,6 +122,7 @@ export type UpdaterEvent =
 			context: UpdaterContext;
 			version: string | null;
 			downloadUrl?: string;
+			sha256?: string | null;
 	  }
 	| {
 			type: 'not-available';

@@ -7,6 +7,8 @@ import type {ThemeDirectoryCssFile, ThemeFolderChange, ThemeFolderStatus} from '
 import {readThemeCssFile} from '@electron/main/ThemeLinkedFileWatch';
 
 const THEME_FOLDER_MAX_CSS_FILES = 200;
+const THEME_FOLDER_MAX_ENTRIES = 10_000;
+const THEME_FOLDER_MAX_DEPTH = 16;
 const SKIPPED_DIRECTORY_NAMES: ReadonlySet<string> = new Set(['node_modules']);
 
 interface ThemeFolderEntry {
@@ -46,12 +48,21 @@ function isMissingError(error: unknown): boolean {
 export async function listThemeFolderCssFiles(folder: string): Promise<ThemeFolderListing> {
 	const files: Array<string> = [];
 	let truncated = false;
-	const visit = async (directory: string, root: boolean): Promise<void> => {
-		let entries: Array<fs.Dirent>;
+	let visited = 0;
+	const visit = async (directory: string, depth: number): Promise<void> => {
+		const entries: Array<fs.Dirent> = [];
 		try {
-			entries = await fs.promises.readdir(directory, {withFileTypes: true});
+			const dir = await fs.promises.opendir(directory);
+			for await (const entry of dir) {
+				visited += 1;
+				if (visited > THEME_FOLDER_MAX_ENTRIES) {
+					truncated = true;
+					break;
+				}
+				entries.push(entry);
+			}
 		} catch (error) {
-			if (root) throw error;
+			if (depth === 0) throw error;
 			return;
 		}
 		entries.sort((a, b) => a.name.localeCompare(b.name));
@@ -60,7 +71,11 @@ export async function listThemeFolderCssFiles(folder: string): Promise<ThemeFold
 			const entryPath = path.join(directory, entry.name);
 			if (entry.isDirectory()) {
 				if (entry.name.startsWith('.') || SKIPPED_DIRECTORY_NAMES.has(entry.name)) continue;
-				await visit(entryPath, false);
+				if (depth + 1 > THEME_FOLDER_MAX_DEPTH) {
+					truncated = true;
+					continue;
+				}
+				await visit(entryPath, depth + 1);
 			} else if (entry.isFile() && entry.name.toLowerCase().endsWith('.css')) {
 				if (files.length === THEME_FOLDER_MAX_CSS_FILES) {
 					truncated = true;
@@ -70,7 +85,7 @@ export async function listThemeFolderCssFiles(folder: string): Promise<ThemeFold
 			}
 		}
 	};
-	await visit(folder, true);
+	await visit(folder, 0);
 	return {files, truncated};
 }
 
@@ -99,12 +114,6 @@ function diffThemeFolderScan(
 		added.splice(added.indexOf(to), 1);
 	}
 	return {added, changed, removed, renamed};
-}
-
-function isFlatpakDocumentPortalPath(folder: string): boolean {
-	const runtimeDir = process.env.XDG_RUNTIME_DIR;
-	if (runtimeDir && folder.startsWith(`${path.join(runtimeDir, 'doc')}${path.sep}`)) return true;
-	return /^\/run\/user\/\d+\/doc\//.test(folder);
 }
 
 export async function resolveThemeFolderFile(filePath: string, folders: ReadonlyArray<string>): Promise<string | null> {
@@ -139,7 +148,7 @@ export function createThemeFolderWatch(
 	folder: string,
 	emit: (change: ThemeFolderChange) => void,
 	{
-		forcePolling = isFlatpakDocumentPortalPath(folder),
+		forcePolling = process.platform === 'linux',
 		pollIntervalMs = 2000,
 		debounceMs = 150,
 		reconcileIntervalMs = 30_000,
@@ -169,7 +178,9 @@ export function createThemeFolderWatch(
 
 	const startInterval = (intervalMs: number): void => {
 		clearIntervalTimer();
-		intervalTimer = setInterval(() => void scan(), intervalMs);
+		intervalTimer = setInterval(() => {
+			if (!scanning) void scan();
+		}, intervalMs);
 		intervalTimer.unref?.();
 	};
 

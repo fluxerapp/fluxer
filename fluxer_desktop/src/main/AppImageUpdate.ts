@@ -47,6 +47,7 @@ const APPIMAGE_MODE = 0o755;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const STAGING_FREE_SPACE_MARGIN_BYTES = 16 * 1024 * 1024;
 const APPIMAGE_DOWNLOAD_STALL_MS = 30_000;
+const APPIMAGE_MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 const NON_RETRYABLE_STAGING_ERRNOS = new Set([
 	'ENOSPC',
 	'EDQUOT',
@@ -213,7 +214,15 @@ async function downloadAndStageAppImage(
 	}
 	const declaredTotal = Number.parseInt(response.headers.get('content-length') ?? '', 10);
 	const total = Number.isFinite(declaredTotal) && declaredTotal > 0 ? declaredTotal : 0;
+	const contentEncoding = (response.headers.get('content-encoding') ?? '').trim().toLowerCase();
+	const limit =
+		total > 0 && (contentEncoding === '' || contentEncoding === 'identity')
+			? Math.min(total, APPIMAGE_MAX_DOWNLOAD_BYTES)
+			: APPIMAGE_MAX_DOWNLOAD_BYTES;
 	try {
+		if (total > APPIMAGE_MAX_DOWNLOAD_BYTES) {
+			throw new Error(`Update download is ${total} bytes, above the ${APPIMAGE_MAX_DOWNLOAD_BYTES} byte limit.`);
+		}
 		assertRoomToStage(options.target.directory, total);
 	} catch (error) {
 		await response.body.cancel().catch(() => {});
@@ -250,6 +259,9 @@ async function downloadAndStageAppImage(
 					break;
 				}
 				onData();
+				if (transferred + value.byteLength > limit) {
+					throw new Error(`Update download exceeded ${limit} bytes.`);
+				}
 				let written = 0;
 				while (written < value.byteLength) {
 					const result = await handle.write(value, written, value.byteLength - written);

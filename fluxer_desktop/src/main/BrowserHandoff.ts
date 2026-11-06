@@ -37,6 +37,7 @@ const HANDOFF_TOKEN_MAX_LENGTH = 4096;
 const HANDOFF_API_VERSION_MAX = 1000;
 const HANDOFF_CODE_PATTERN = /^[A-Za-z0-9-]{1,64}$/u;
 const HANDOFF_POLL_SECRET_PATTERN = /^[A-Za-z0-9_-]{1,256}$/u;
+const HANDOFF_RETURN_GRANT_MAX = 4;
 const HANDOFF_CODE_SEPARATOR_PATTERN = /[^A-Za-z0-9]/gu;
 const TRAILING_SLASH_PATTERN = /\/+$/u;
 
@@ -60,7 +61,8 @@ interface ActiveHandoffSession {
 	readonly watcher: RendererDocumentOwnerWatcher;
 	inFlight: Promise<DesktopHandoffStatusResult> | null;
 	pollSecret: string | null;
-	grant: string | null;
+	readonly grants: Array<string>;
+	grantPolls: number;
 }
 
 interface HandoffJSONRequest {
@@ -226,7 +228,10 @@ export class DesktopBrowserHandoff {
 			);
 			return;
 		}
-		session.grant = grant;
+		if (session.grants.includes(grant) || session.grants.length >= HANDOFF_RETURN_GRANT_MAX) {
+			return;
+		}
+		session.grants.push(grant);
 	}
 
 	public cleanup(): void {
@@ -268,7 +273,7 @@ export class DesktopBrowserHandoff {
 				? DesktopHandoffReturnMethod.DEEP_LINK
 				: DesktopHandoffReturnMethod.CODE;
 		owner.requireCurrent(RENDERER_CONTEXT);
-		this.rememberSession(owner, {code, expiresAtMs, instance, origin, pollSecret: usablePollSecret, grant: null});
+		this.rememberSession(owner, {code, expiresAtMs, instance, origin, pollSecret: usablePollSecret});
 		return {instance, code, expiresAt, returnMethod};
 	}
 
@@ -304,11 +309,9 @@ export class DesktopBrowserHandoff {
 		const path = `/auth/handoff/${encodeURIComponent(session.code)}/status`;
 		let response: HandoffJSONResponse | null = null;
 		if (session.pollSecret != null) {
+			const grant = session.grants.length === 0 ? null : session.grants[session.grantPolls++ % session.grants.length];
 			const attempt = await this.requestJSON({
-				body:
-					session.grant == null
-						? {poll_secret: session.pollSecret}
-						: {poll_secret: session.pollSecret, grant: session.grant},
+				body: grant == null ? {poll_secret: session.pollSecret} : {poll_secret: session.pollSecret, grant},
 				instance: session.instance,
 				method: 'POST',
 				origin: session.origin,
@@ -367,12 +370,14 @@ export class DesktopBrowserHandoff {
 
 	private rememberSession(
 		owner: RendererDocumentOwner,
-		session: Omit<ActiveHandoffSession, 'inFlight' | 'owner' | 'watcher'>,
+		session: Omit<ActiveHandoffSession, 'grantPolls' | 'grants' | 'inFlight' | 'owner' | 'watcher'>,
 	): void {
 		const frame = owner.frame;
 		this.releaseFrame(frame);
 		this.sessions.set(frame, {
 			...session,
+			grantPolls: 0,
+			grants: [],
 			inFlight: null,
 			owner,
 			watcher: owner.watchInvalidation(() => this.releaseFrame(frame)),

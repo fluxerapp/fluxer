@@ -289,10 +289,10 @@ function removeLegacyGeneratedDesktopEntry(): boolean {
 }
 
 function writeDesktopFileAtomically(filePath: string, contents: string): void {
-	const tempPath = `${filePath}.${process.pid}.tmp`;
+	const tempPath = `${filePath}.${crypto.randomBytes(8).toString('hex')}.tmp`;
 	try {
 		fs.mkdirSync(path.dirname(filePath), {recursive: true});
-		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644});
+		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644, flag: 'wx'});
 		fs.renameSync(tempPath, filePath);
 	} catch (error) {
 		try {

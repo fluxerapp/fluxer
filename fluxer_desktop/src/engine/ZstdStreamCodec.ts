@@ -11,18 +11,35 @@ class ZstdStreamCodecError extends Error {
 
 type ZstdStream = ZstdCompress | ZstdDecompress;
 
+const DECOMPRESSED_FRAME_MAX_BYTES = 128 * 1024 * 1024;
+
 class SerialStream {
 	private readonly stream: ZstdStream;
 	private readonly flushKind: number | null;
+	private readonly maxOutputBytes: number | null;
 	private tail: Promise<unknown> = Promise.resolve();
 	private chunks: Array<Buffer> = [];
+	private outputBytes = 0;
 	private pendingReject: ((error: Error) => void) | null = null;
 	private failure: Error | null = null;
 
-	constructor(stream: ZstdStream, flushKind: number | null) {
+	constructor(stream: ZstdStream, flushKind: number | null, maxOutputBytes: number | null = null) {
 		this.stream = stream;
 		this.flushKind = flushKind;
+		this.maxOutputBytes = maxOutputBytes;
 		stream.on('data', (chunk: Buffer) => {
+			if (this.failure !== null) {
+				return;
+			}
+			this.outputBytes += chunk.length;
+			if (this.maxOutputBytes !== null && this.outputBytes > this.maxOutputBytes) {
+				this.failure = new ZstdStreamCodecError('Decompressed gateway frame exceeds the size limit');
+				this.chunks = [];
+				this.pendingReject?.(this.failure);
+				this.pendingReject = null;
+				this.stream.destroy();
+				return;
+			}
 			this.chunks.push(chunk);
 		});
 		stream.on('error', (error: Error) => {
@@ -51,6 +68,7 @@ class SerialStream {
 		}
 		return new Promise<Buffer>((resolve, reject) => {
 			this.chunks = [];
+			this.outputBytes = 0;
 			this.pendingReject = reject;
 			const done = (): void => {
 				if (this.pendingReject !== reject) {
@@ -59,6 +77,7 @@ class SerialStream {
 				this.pendingReject = null;
 				const output = Buffer.concat(this.chunks);
 				this.chunks = [];
+				this.outputBytes = 0;
 				resolve(output);
 			};
 			this.stream.write(input);
@@ -72,7 +91,7 @@ class SerialStream {
 }
 
 export class ZstdStreamCodec {
-	private readonly decoder = new SerialStream(createZstdDecompress(), null);
+	private readonly decoder = new SerialStream(createZstdDecompress(), null, DECOMPRESSED_FRAME_MAX_BYTES);
 	private readonly encoder = new SerialStream(createZstdCompress(), constants.ZSTD_e_flush);
 	private readonly textDecoder = new TextDecoder('utf-8', {fatal: true});
 

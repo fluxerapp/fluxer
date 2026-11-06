@@ -25,12 +25,12 @@ function getManualDownloadFormatPreference(): Array<ManualDesktopFormat> {
 	return [];
 }
 
-export function getManualDownloadUrl(info: ManualLatestInfo): string {
+export function getManualDownloadFile(info: ManualLatestInfo): ManualLatestFile {
 	for (const format of getManualDownloadFormatPreference()) {
-		const url = info.files[format]?.url;
-		if (url) {
-			return url;
+		const file = info.files[format];
+		if (file?.url) {
+			return file;
 		}
 	}
-	return DOWNLOAD_PAGE_URL;
+	return {url: DOWNLOAD_PAGE_URL, sha256: null};
 }

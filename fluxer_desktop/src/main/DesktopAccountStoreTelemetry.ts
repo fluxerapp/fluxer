@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {readFileSync, renameSync, statSync, writeFileSync} from 'node:fs';
+import {randomBytes} from 'node:crypto';
+import {readFileSync, renameSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {createChildLogger} from '@electron/common/Logger';
 
@@ -73,15 +74,16 @@ export function recordDesktopAccountStoreEvent(
 	const counts = {...readDesktopAccountStoreTelemetry(userDataPath)};
 	counts[event] = (counts[event] ?? 0) + 1;
 	const file = desktopAccountStoreTelemetryFile(userDataPath);
-	const pending = `${file}.tmp`;
+	const pending = `${file}.${randomBytes(8).toString('hex')}.tmp`;
 	try {
 		writeFileSync(
 			pending,
 			`${JSON.stringify({version: DESKTOP_ACCOUNT_STORE_TELEMETRY_VERSION, counts, updatedAt: Date.now()})}\n`,
-			{encoding: 'utf8', mode: 0o600},
+			{encoding: 'utf8', mode: 0o600, flag: 'wx'},
 		);
 		renameSync(pending, file);
 	} catch (error) {
+		rmSync(pending, {force: true});
 		logger.warn('Failed to persist account store telemetry', {file, error});
 	}
 	return counts;

@@ -178,6 +178,7 @@ export class ModuleManifestRepository {
 		} catch (error) {
 			throw new ModuleManifestFetchError(`failed to reach ${url}`, null, {cause: error});
 		}
+		this.requireFeedResponseUrl(response);
 		if (response.status === 304 && known != null) {
 			return known.version;
 		}
@@ -244,6 +245,7 @@ export class ModuleManifestRepository {
 		} catch (error) {
 			throw new ModuleManifestFetchError(`failed to reach ${url}`, null, {cause: error});
 		}
+		this.requireFeedResponseUrl(response);
 		if (response.status === 304) {
 			return null;
 		}
@@ -255,6 +257,17 @@ export class ModuleManifestRepository {
 		const document = {bytes, etag: response.headers.get('etag'), fromCache: false};
 		this.validated = document.etag == null ? null : document;
 		return document;
+	}
+
+	private requireFeedResponseUrl(response: Response): void {
+		if (response.url.length === 0) {
+			return;
+		}
+		const finalUrl = new URL(response.url);
+		if (finalUrl.protocol === 'https:' || finalUrl.origin === new URL(this.packageOrigin).origin) {
+			return;
+		}
+		throw new ModuleManifestFetchError(`feed request was redirected to ${finalUrl.origin}`, response.status);
 	}
 
 	private async readBoundedBody(response: Response, limit: number, description: string): Promise<Buffer> {

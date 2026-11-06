@@ -167,6 +167,7 @@ const activeNotifications = new Map<string, ActiveNotificationHandle>();
 
 let notificationIdCounter = 0;
 let linuxNativeClient: NativeNotificationClient | null = null;
+let linuxBodyMarkupSupported: Promise<boolean> | null = null;
 let linuxNativeWindowGetter: (() => BrowserWindow | null) | null = null;
 
 const linuxNativeIdToString = new Map<number, string>();
@@ -273,6 +274,24 @@ async function resolveImageDataForLinux(iconSource: string | undefined): Promise
 	}
 }
 
+function linuxBodyMarkupSupport(client: NativeNotificationClient): Promise<boolean> {
+	if (!linuxBodyMarkupSupported) {
+		linuxBodyMarkupSupported = client
+			.getServerCapabilities()
+			.then((capabilities) => capabilities.includes('body-markup'))
+			.catch((error) => {
+				logger.warn('FreedesktopNotifications.getServerCapabilities failed', {error});
+				linuxBodyMarkupSupported = null;
+				return false;
+			});
+	}
+	return linuxBodyMarkupSupported;
+}
+
+function escapeNotificationMarkup(text: string): string {
+	return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
 async function showLinuxNativeNotification(
 	id: string,
 	options: NotificationOptions,
@@ -282,11 +301,12 @@ async function showLinuxNativeNotification(
 	const previousHandle = activeNotifications.get(id);
 	const replacesId = previousHandle?.type === 'linux-native' ? previousHandle.nativeId : undefined;
 	const imageData = await resolveImageDataForLinux(options.icon);
+	const bodyMarkupSupported = await linuxBodyMarkupSupport(client);
 	const payload: NativeNotifyPayload = {
 		appName: DESKTOP_APP_NAME,
 		...(replacesId !== undefined ? {replacesId} : {}),
 		summary: options.title,
-		body: options.body,
+		body: bodyMarkupSupported ? escapeNotificationMarkup(options.body) : options.body,
 		expireTimeoutMs: -1,
 		hints: {
 			urgency: 'normal',

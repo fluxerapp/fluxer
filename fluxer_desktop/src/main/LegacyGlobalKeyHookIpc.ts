@@ -15,6 +15,7 @@ import {ipcMain} from 'electron';
 const MAX_LEGACY_ID_LENGTH = 512;
 const MAX_LEGACY_KEY_NAME_LENGTH = 64;
 const MAX_LEGACY_MOUSE_BUTTON = 31;
+const MAX_LEGACY_REGISTRATIONS = 256;
 
 interface LegacyLinuxEvdevStatus {
 	supported: boolean;
@@ -82,6 +83,7 @@ export class LegacyGlobalKeyHookAdapter implements GlobalShortcutsConsumer {
 	register(id: number, binding: ShortcutBinding): void {
 		const client = this.clients.get(id);
 		if (!client) return;
+		if (!client.registrations.has(binding.sourceId) && client.registrations.size >= MAX_LEGACY_REGISTRATIONS) return;
 		client.registrations.set(binding.sourceId, binding);
 		this.applyRegistrations(client);
 	}

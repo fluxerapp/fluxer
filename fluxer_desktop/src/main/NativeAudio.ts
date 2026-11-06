@@ -666,7 +666,7 @@ function reconfigureCaptureById(
 	if (session.finalized || session.stopping) return false;
 	if (typeof session.capture.setRoutingRule !== 'function') return false;
 	try {
-		return session.capture.setRoutingRule({linuxRule});
+		return session.capture.setRoutingRule({linuxRule: normalizeLinuxRoutingRule(linuxRule)});
 	} catch (error) {
 		logger.warn('Failed to reconfigure native audio routing in place', {captureId, error});
 		return false;
