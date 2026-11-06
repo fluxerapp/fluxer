@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GUILDS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {
+	MAX_CHANNEL_OVERRIDES,
+	MAX_GROUP_DM_OTHER_RECIPIENTS,
+	MAX_GUILDS_PREMIUM,
+} from '@fluxer/constants/src/LimitConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -493,6 +497,9 @@ export const UserGuildSettingsUpdateRequest = z
 		hide_muted_channels: z.boolean().describe('Hide muted channels'),
 		channel_overrides: z
 			.record(SnowflakeStringType, ChannelOverrideSchema)
+			.refine((overrides) => Object.keys(overrides).length <= MAX_CHANNEL_OVERRIDES, {
+				message: ValidationErrorCodes.TOO_LARGE,
+			})
 			.nullable()
 			.describe('Per-channel overrides'),
 		unread_badges: withFieldDescription(UserNotificationSettingsSchema, 'Default unread badges level for the guild')

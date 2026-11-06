@@ -92,6 +92,9 @@ export const UnsignedInt64StringType = z
 export const SnowflakeStringType = z
 	.string()
 	.regex(SNOWFLAKE_REGEX)
+	.refine((value) => !SNOWFLAKE_REGEX.test(value) || BigInt(value) <= MAX_INT64_VALUE, {
+		message: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE,
+	})
 	.register(schemaMetadata, {name: 'SnowflakeStringType', format: 'snowflake'});
 const BitflagStringType = z
 	.string()

@@ -146,7 +146,9 @@ export class VoiceAvailabilityService {
 		context: VoiceAccessContext,
 		accessibleRegions: Array<VoiceRegionAvailability>,
 	): {regionId: string; server: VoiceServerRecord} | null {
-		const initialServer = this.selectServer(regionId, context);
+		const initialServer = accessibleRegions.some((region) => region.id === regionId)
+			? this.selectServer(regionId, context)
+			: null;
 		if (initialServer && this.isServerPlaceable(initialServer)) {
 			return {regionId, server: initialServer};
 		}

@@ -12,6 +12,7 @@ import {
 import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
 import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -41,6 +42,7 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {SyncedPreferencesConflictError} from '@fluxer/errors/src/domains/user/SyncedPreferencesConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {ValidationError} from '@fluxer/errors/src/ValidationError';
@@ -322,6 +324,10 @@ export class UserAccountSettingsService {
 	}): Promise<UserGuildSettings> {
 		const {userId, guildId, data} = params;
 		const currentSettings = await this.deps.userAccountRepository.findGuildSettings(userId, guildId);
+		if (guildId !== null && !currentSettings) {
+			if (!(await this.canCreateGuildSettings(userId, guildId))) throw new UnknownGuildError();
+			await this.deleteGuildSettingsOutsideCurrentGuilds(userId, guildId);
+		}
 		const resolvedGuildId = guildId ?? createGuildID(0n);
 		const baseRow: UserGuildSettingsRow = currentSettings
 			? {
@@ -394,6 +400,25 @@ export class UserAccountSettingsService {
 		const updatedSettings = await this.deps.userAccountRepository.upsertGuildSettings(updatedRowData);
 		await this.deps.updatePropagator.dispatchUserGuildSettingsUpdate({userId, settings: updatedSettings});
 		return updatedSettings;
+	}
+
+	private async canCreateGuildSettings(userId: UserID, guildId: GuildID): Promise<boolean> {
+		if (await this.deps.guildRepository.getMember(guildId, userId)) return true;
+		return (await guildVisitRepository().get(userId, guildId)) !== null;
+	}
+
+	private async deleteGuildSettingsOutsideCurrentGuilds(userId: UserID, guildId: GuildID): Promise<void> {
+		const [rows, memberGuildIds, visits] = await Promise.all([
+			this.deps.userAccountRepository.findAllGuildSettings(userId),
+			this.deps.userAccountRepository.getUserGuildIds(userId),
+			guildVisitRepository().list(userId),
+		]);
+		const keep = new Set<GuildID>([createGuildID(0n), guildId, ...memberGuildIds, ...visits.map((v) => v.guild_id)]);
+		await Promise.all(
+			rows
+				.filter((row) => !keep.has(row.guildId))
+				.map((row) => this.deps.userAccountRepository.deleteGuildSettings(userId, row.guildId)),
+		);
 	}
 
 	private normalizeIncomingCallFlags(flags: number): number {
