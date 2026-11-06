@@ -9,8 +9,11 @@
     has_member/2,
     list_guild_members/2,
     search_guild_members/2,
+    search_members_table/2,
     paginate_members/3
 ]).
+
+-define(MEMBER_SEARCH_CHUNK, 1000).
 
 -type guild_state() :: map().
 -type guild_member() :: map().
@@ -75,6 +78,58 @@ search_guild_members(#{query := Query, limit := Limit}, State) when
     {reply, #{members => Members, total => map_size(MemberMap)}, State};
 search_guild_members(_Request, State) ->
     {reply, #{members => [], total => 0}, State}.
+
+-spec search_members_table(map(), ets:tid()) -> map().
+search_members_table(#{query := Query, limit := Limit}, Tab) when
+    is_binary(Query), is_integer(Limit), Limit >= 0
+->
+    try
+        Members = collect_table_matches(Tab, string:lowercase(Query), Limit),
+        #{members => Members, total => ets:info(Tab, size)}
+    catch
+        error:badarg -> #{members => [], total => 0}
+    end;
+search_members_table(_Request, _Tab) ->
+    #{members => [], total => 0}.
+
+-spec collect_table_matches(ets:tid(), binary(), non_neg_integer()) -> [guild_member()].
+collect_table_matches(_Tab, _NormalizedQuery, 0) ->
+    [];
+collect_table_matches(Tab, NormalizedQuery, Limit) ->
+    Chunk = ets:select(Tab, [{'_', [], ['$_']}], ?MEMBER_SEARCH_CHUNK),
+    collect_table_chunk(Chunk, NormalizedQuery, Limit, []).
+
+-spec collect_table_chunk(term(), binary(), pos_integer(), [guild_member()]) ->
+    [guild_member()].
+collect_table_chunk({Entries, Continuation}, NormalizedQuery, Remaining, Acc) when
+    is_list(Entries)
+->
+    case collect_entry_matches(Entries, NormalizedQuery, Remaining, Acc) of
+        {0, Matched} ->
+            lists:reverse(Matched);
+        {Left, Matched} ->
+            collect_table_chunk(ets:select(Continuation), NormalizedQuery, Left, Matched)
+    end;
+collect_table_chunk(_EndOfTable, _NormalizedQuery, _Remaining, Acc) ->
+    lists:reverse(Acc).
+
+-spec collect_entry_matches([term()], binary(), non_neg_integer(), [guild_member()]) ->
+    {non_neg_integer(), [guild_member()]}.
+collect_entry_matches(_Entries, _NormalizedQuery, 0, Acc) ->
+    {0, Acc};
+collect_entry_matches([], _NormalizedQuery, Remaining, Acc) ->
+    {Remaining, Acc};
+collect_entry_matches([{_UserId, Member} | Rest], NormalizedQuery, Remaining, Acc) when
+    is_map(Member)
+->
+    case
+        guild_request_members_search:member_matches_normalized_query(Member, NormalizedQuery)
+    of
+        true -> collect_entry_matches(Rest, NormalizedQuery, Remaining - 1, [Member | Acc]);
+        false -> collect_entry_matches(Rest, NormalizedQuery, Remaining, Acc)
+    end;
+collect_entry_matches([_Entry | Rest], NormalizedQuery, Remaining, Acc) ->
+    collect_entry_matches(Rest, NormalizedQuery, Remaining, Acc).
 
 -spec collect_query_matches(#{user_id() => guild_member()}, binary(), non_neg_integer()) ->
     [guild_member()].

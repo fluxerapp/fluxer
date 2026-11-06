@@ -612,6 +612,7 @@ serialize_transfer_identity(State) ->
         user_id => maps:get(user_id, State),
         user_data => maps:get(user_data, State),
         custom_status => maps:get(custom_status, State, null),
+        settings_invisible => maps:get(settings_invisible, State, false),
         version => maps:get(version, State),
         token_hash => maps:get(token_hash, State),
         auth_session_id_hash => maps:get(auth_session_id_hash, State),

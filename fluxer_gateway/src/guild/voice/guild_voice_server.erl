@@ -211,10 +211,6 @@ handle_cast({disconnect_all_voice_users_in_channel, Request}, State) when is_map
             Request,
             State
         )};
-handle_cast({cleanup_virtual_access_for_user, UserId}, State) when is_integer(UserId) ->
-    GS = guild_voice_server_state:build_guild_state(State),
-    NewGS = guild_voice_disconnect_user:cleanup_virtual_channel_access_for_user(UserId, GS),
-    {noreply, guild_voice_server_state:apply_guild_state(NewGS, State)};
 handle_cast(_, State) ->
     {noreply, State}.
 

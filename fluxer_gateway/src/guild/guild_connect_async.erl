@@ -93,7 +93,11 @@ finalize_session_connect_async(SessionId, Attempt, Result0, Computed, State) ->
 finalize_session_connect_batch(Results, State) ->
     State1 = decrement_session_connect_inflight(State),
     {State2, Joined} = lists:foldl(fun finalize_result/2, {State1, {#{}, []}}, Results),
-    maybe_start_session_connect_workers(finish_joined_users(Joined, State1, State2)).
+    State3 = finish_joined_users(Joined, State1, State2),
+    State4 = guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_sessions(
+        guild_connect_result:outdated_session_ids(Results, State3), State3
+    ),
+    maybe_start_session_connect_workers(State4).
 
 -spec finalize_result(term(), {map(), joined()}) -> {map(), joined()}.
 finalize_result({SessionId, Attempt, Result0, Computed}, {State, Joined}) when
@@ -140,7 +144,7 @@ finalize_with_pid(SessionId, Attempt, Result0, Computed, Request, SessionPid, St
                 GuildId,
                 SessionId,
                 Attempt,
-                Result0,
+                guild_connect_result:checked_result(Result0, Request, State),
                 Computed,
                 Request,
                 SessionPid,
@@ -453,9 +457,11 @@ queued_session_pid(_) ->
 -spec start_worker([map()], map()) -> map().
 start_worker(Items, State) ->
     Self = self(),
+    Generation = guild_viewable_channels_cache:generation(State),
     Snapshot = guild_data:build_connect_snapshot(Items, State),
+    StampedItems = [Item#{viewable_generation => Generation} || Item <- Items],
     {_Pid, Ref} = spawn_monitor(fun() ->
-        guild_connect_result:compute_and_send_done(Items, Self, Snapshot)
+        guild_connect_result:compute_and_send_done(StampedItems, Self, Snapshot)
     end),
     WorkerRefs = maps:get(session_connect_worker_refs, State, #{}),
     State#{session_connect_worker_refs => WorkerRefs#{Ref => true}}.
@@ -479,7 +485,8 @@ upsert_session_valid(SessionId, SessionPid, UserId, Request, Computed, State, Jo
     Existing = maps:get(SessionId, Sessions0, undefined),
     {MRef, Existing1} = resolve_monitor(Existing, SessionPid),
     GuildId = require_guild_id(maps:get(id, State)),
-    SessionData = build_session_data(SessionId, UserId, SessionPid, MRef, Request, Computed),
+    Computed1 = current_user_roles(UserId, Computed, State),
+    SessionData = build_session_data(SessionId, UserId, SessionPid, MRef, Request, Computed1),
     store_passive_state(SessionId, GuildId, Computed),
     FinalSD = maybe_mark_synced(GuildId, Computed, SessionData),
     Sessions = merge_session(SessionId, FinalSD, Existing1, Sessions0),
@@ -490,6 +497,12 @@ upsert_session_valid(SessionId, SessionPid, UserId, Request, Computed, State, Jo
     update_presence_subscription(
         UserId, Existing, State2, note_joined_user(UserId, State2, Joined)
     ).
+
+-spec current_user_roles(integer(), map(), map()) -> map().
+current_user_roles(UserId, #{user_roles := _} = Computed, State) ->
+    Computed#{user_roles => session_passive:get_user_roles_for_guild(UserId, State)};
+current_user_roles(_UserId, Computed, _State) ->
+    Computed.
 
 -spec note_joined_user(integer(), map(), joined()) -> joined().
 note_joined_user(UserId, State, {Joined, Fresh}) ->

@@ -3,7 +3,7 @@
 -module(guild_viewable_channels_cache).
 -typing([eqwalizer]).
 
--export([get/3, invalidate/1]).
+-export([get/3, invalidate/1, invalidate_user/2, generation/1]).
 
 -type guild_state() :: #{viewable_channels_cache => ets:tid(), term() => term()}.
 -type user_id() :: integer().
@@ -43,10 +43,40 @@ compute_viewable_channel_map(UserId, State) ->
 invalidate(State) ->
     case viewable_channels_cache_table(State) of
         CacheTab when is_reference(CacheTab) ->
+            Generation = table_generation(CacheTab),
             ets:delete_all_objects(CacheTab),
+            ets:insert(CacheTab, {generation, Generation + 1}),
             ok;
         undefined ->
             ok
+    end.
+
+-spec invalidate_user(integer(), #{
+    viewable_channels_cache => ets:tid(), term() => term()
+}) -> ok.
+invalidate_user(UserId, State) ->
+    case viewable_channels_cache_table(State) of
+        CacheTab when is_reference(CacheTab) ->
+            ets:match_delete(CacheTab, {{UserId, '_'}, '_'}),
+            ets:insert(CacheTab, {generation, table_generation(CacheTab) + 1}),
+            ok;
+        undefined ->
+            ok
+    end.
+
+-spec generation(#{viewable_channels_cache => ets:tid(), term() => term()}) ->
+    non_neg_integer().
+generation(State) ->
+    case viewable_channels_cache_table(State) of
+        CacheTab when is_reference(CacheTab) -> table_generation(CacheTab);
+        undefined -> 0
+    end.
+
+-spec table_generation(ets:tid()) -> non_neg_integer().
+table_generation(CacheTab) ->
+    case ets:lookup(CacheTab, generation) of
+        [{generation, Generation}] when is_integer(Generation), Generation >= 0 -> Generation;
+        _ -> 0
     end.
 
 -spec viewable_channels_cache_table(guild_state()) -> ets:tid() | undefined.

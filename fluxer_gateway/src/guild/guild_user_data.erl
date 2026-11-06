@@ -12,28 +12,6 @@
 -type user_id() :: integer().
 -type member() :: map().
 
--spec update_members_user_data(map(), user_id(), map()) -> map().
-update_members_user_data(Members, UserId, UserData) ->
-    maps:map(
-        fun(_MemberUserId, Member) ->
-            maybe_update_member_user(Member, UserId, UserData)
-        end,
-        Members
-    ).
-
--spec maybe_update_member_user(member(), user_id(), map()) -> member().
-maybe_update_member_user(Member, UserId, EventData) ->
-    MUser = maps:get(<<"user">>, Member, #{}),
-    MemberId =
-        case is_map(MUser) of
-            true -> snowflake_id:parse_optional(maps:get(<<"id">>, MUser, undefined));
-            false -> undefined
-        end,
-    case MemberId =:= UserId of
-        true -> Member#{<<"user">> => EventData};
-        false -> Member
-    end.
-
 -spec handle_user_data_update(user_id(), map(), guild_state()) -> guild_state().
 handle_user_data_update(UserId, UserData, State) ->
     case guild_permissions_check:find_member_by_user_id(UserId, State) of
@@ -48,21 +26,18 @@ maybe_apply_changed_user_data(UserId, UserData, Member, State) ->
     CurrentUserData = maps:get(<<"user">>, Member, #{}),
     case utils:check_user_data_differs(CurrentUserData, UserData) of
         false -> State;
-        true -> apply_user_data_update(UserId, UserData, State)
+        true -> apply_user_data_update(UserId, UserData, Member, State)
     end.
 
--spec apply_user_data_update(user_id(), map(), guild_state()) -> guild_state().
-apply_user_data_update(UserId, UserData, State) ->
+-spec apply_user_data_update(user_id(), map(), member(), guild_state()) -> guild_state().
+apply_user_data_update(UserId, UserData, Member, State) ->
     Data = maps:get(data, State),
-    Members = guild_data_index_members:member_map(Data),
     NormalizedUserData = map_utils:ensure_map(
         guild_data_normalize:member(#{<<"user">> => UserData})
     ),
     #{<<"user">> := UpdatedUserData} = NormalizedUserData,
-    UpdatedMembers = update_members_user_data(
-        Members, UserId, map_utils:ensure_map(UpdatedUserData)
-    ),
-    UpdatedData = guild_data_index_members:put_member_map(UpdatedMembers, Data),
+    UpdatedMember = Member#{<<"user">> => map_utils:ensure_map(UpdatedUserData)},
+    UpdatedData = guild_data_index_members:put_member(UpdatedMember, Data),
     UpdatedState = State#{data => UpdatedData},
     dispatch_guild_member_update(UserId, UpdatedState),
     UpdatedState.

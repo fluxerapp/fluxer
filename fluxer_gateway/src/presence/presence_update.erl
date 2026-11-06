@@ -6,6 +6,7 @@
 -export([
     maybe_handle_custom_status/2,
     handle_user_settings_update/2,
+    settings_invisible/1,
     handle_user_update_event/2,
     handle_message_create_event/2,
     handle_message_ack_event/2,
@@ -60,9 +61,16 @@ maybe_update_custom_status(Data, State) ->
 
 -spec update_settings_invisible(map(), state()) -> state().
 update_settings_invisible(Data, State) ->
-    case user_settings_presence_status(Data) of
+    case settings_invisible(Data) of
         undefined -> State;
-        Status -> State#{settings_invisible => Status =:= invisible}
+        Invisible -> State#{settings_invisible => Invisible}
+    end.
+
+-spec settings_invisible(map()) -> boolean() | undefined.
+settings_invisible(Data) ->
+    case user_settings_presence_status(Data) of
+        undefined -> undefined;
+        Status -> Status =:= invisible
     end.
 
 -spec user_settings_presence_status(map()) -> online | idle | dnd | invisible | undefined.
@@ -88,14 +96,25 @@ normalize_user_settings_status(_) -> undefined.
 -spec handle_user_update_event(map(), state()) -> state().
 handle_user_update_event(Data, State) ->
     CurrentUserData = maps:get(user_data, State, #{}),
+    RestrictionChanged =
+        user_utils:profile_restricted(CurrentUserData) =/= user_utils:profile_restricted(Data),
     case utils:check_user_data_differs(CurrentUserData, Data) of
         true ->
             UserId = maps:get(user_id, State),
             presence_broadcast:publish_user_update_to_bus(UserId, Data, State),
-            State#{user_data := Data};
+            apply_user_data(RestrictionChanged, Data, State);
+        false when RestrictionChanged ->
+            apply_user_data(true, Data, State);
         false ->
             State
     end.
+
+-spec apply_user_data(boolean(), map(), state()) -> state().
+apply_user_data(false, Data, State) ->
+    State#{user_data := Data};
+apply_user_data(true, Data, State) ->
+    State1 = State#{user_data := Data},
+    presence_broadcast:publish_global_presence(maps:get(sessions, State1), State1).
 
 -spec handle_message_create_event(map(), state()) -> state().
 handle_message_create_event(Data, State) ->

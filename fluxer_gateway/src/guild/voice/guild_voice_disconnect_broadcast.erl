@@ -8,7 +8,7 @@
     cache_recently_disconnected/2,
     clear_recently_disconnected/2,
     clear_recently_disconnected_for_channel/2,
-    clear_pending_voice_connection/2,
+    clear_pending_voice_connection/3,
     clear_pending_voice_connections_for_user/3,
     clear_pending_voice_connections_for_user_channel/3,
     clear_pending_voice_connections_for_channel/2,
@@ -79,14 +79,11 @@ clear_recently_disconnected_for_channel(ChannelId, State) ->
     ),
     State#{recently_disconnected_voice_states => NewCache}.
 
--spec clear_pending_voice_connection(binary(), guild_state()) -> guild_state().
-clear_pending_voice_connection(ConnectionId, State) ->
+-spec clear_pending_voice_connection(binary(), integer(), guild_state()) -> guild_state().
+clear_pending_voice_connection(ConnectionId, UserId, State) ->
     PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    case maps:is_key(ConnectionId, PendingConnections) of
-        false ->
-            State;
-        true ->
-            PendingData = maps:get(ConnectionId, PendingConnections, #{}),
+    case maps:get(ConnectionId, PendingConnections, undefined) of
+        #{user_id := UserId} = PendingData ->
             NewPending = maps:remove(ConnectionId, PendingConnections),
             NewState = State#{pending_voice_connections => NewPending},
             release_removed_pending(
@@ -94,7 +91,9 @@ clear_pending_voice_connection(ConnectionId, State) ->
                 voice_state_utils:voice_states(State),
                 NewPending,
                 NewState
-            )
+            );
+        _ ->
+            State
     end.
 
 -spec clear_pending_voice_connections_for_user(integer(), binary() | undefined, guild_state()) ->

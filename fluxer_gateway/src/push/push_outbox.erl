@@ -59,8 +59,10 @@
     | enqueued.
 -type reads() :: #{{integer(), integer()} => {integer(), integer()}}.
 -type active() :: #{integer() => {non_neg_integer(), integer()}}.
+-type by_channel() :: #{integer() => gb_sets:set(non_neg_integer())}.
 -type state() :: #{
     jobs := gb_trees:tree(non_neg_integer(), entry()),
+    by_channel => by_channel(),
     ready := queue:queue(non_neg_integer()),
     inflight := #{pid() => {reference(), reference(), entry()}},
     followups => #{pid() => #{integer() => integer()}},
@@ -123,6 +125,7 @@ init([]) ->
     schedule_prune(),
     {ok, #{
         jobs => gb_trees:empty(),
+        by_channel => #{},
         ready => queue:new(),
         inflight => #{},
         followups => #{},
@@ -199,14 +202,43 @@ admit(Job, #{next_seq := Seq} = State) ->
 
 -spec insert(entry(), state()) -> state().
 insert(#{seq := Seq} = Entry, #{jobs := Jobs, ready := Ready} = State) ->
-    State#{jobs := gb_trees:enter(Seq, Entry, Jobs), ready := queue:in(Seq, Ready)}.
+    State1 = State#{jobs := gb_trees:enter(Seq, Entry, Jobs), ready := queue:in(Seq, Ready)},
+    index_job(Entry, State1).
+
+-spec index_job(entry(), state()) -> state().
+index_job(#{kind := message, seq := Seq, channel_id := ChannelId}, State) ->
+    ByChannel = maps:get(by_channel, State, #{}),
+    Seqs = maps:get(ChannelId, ByChannel, gb_sets:empty()),
+    State#{by_channel => ByChannel#{ChannelId => gb_sets:add_element(Seq, Seqs)}};
+index_job(_Entry, State) ->
+    State.
+
+-spec unindex_job(entry(), state()) -> state().
+unindex_job(#{kind := message, seq := Seq, channel_id := ChannelId}, State) ->
+    ByChannel = maps:get(by_channel, State, #{}),
+    case maps:find(ChannelId, ByChannel) of
+        {ok, Seqs} ->
+            store_channel_seqs(ChannelId, gb_sets:del_element(Seq, Seqs), ByChannel, State);
+        error ->
+            State
+    end;
+unindex_job(_Entry, State) ->
+    State.
+
+-spec store_channel_seqs(integer(), gb_sets:set(non_neg_integer()), by_channel(), state()) ->
+    state().
+store_channel_seqs(ChannelId, Seqs, ByChannel, State) ->
+    case gb_sets:is_empty(Seqs) of
+        true -> State#{by_channel => maps:remove(ChannelId, ByChannel)};
+        false -> State#{by_channel => ByChannel#{ChannelId => Seqs}}
+    end.
 
 -spec shed_to_capacity(state()) -> state().
 shed_to_capacity(#{jobs := Jobs, max_queue := MaxQueue} = State) ->
     case gb_trees:size(Jobs) > MaxQueue of
         true ->
             {_Seq, Shed, Rest} = gb_trees:take_smallest(Jobs),
-            shed_to_capacity(shed(Shed, State#{jobs := Rest}));
+            shed_to_capacity(shed(Shed, unindex_job(Shed, State#{jobs := Rest})));
         false ->
             State
     end.
@@ -240,7 +272,7 @@ pump(#{ready := Ready, jobs := Jobs} = State) ->
 take_ready(none, _Seq, State) ->
     State;
 take_ready({value, Entry}, Seq, #{jobs := Jobs} = State) ->
-    dispatch(Entry, State#{jobs := gb_trees:delete(Seq, Jobs)}).
+    dispatch(Entry, unindex_job(Entry, State#{jobs := gb_trees:delete(Seq, Jobs)})).
 
 -spec dispatch(entry(), state()) -> state().
 dispatch(Entry, State) ->
@@ -298,7 +330,7 @@ with_user_ids(UserIds, #{job := Job} = Entry) ->
     }.
 
 -spec apply_read(integer(), integer(), integer(), state()) -> state().
-apply_read(UserId, ChannelId, MessageId, #{reads := Reads, jobs := Jobs} = State) ->
+apply_read(UserId, ChannelId, MessageId, #{reads := Reads} = State) ->
     Key = {UserId, ChannelId},
     Watermark =
         case maps:find(Key, Reads) of
@@ -306,14 +338,20 @@ apply_read(UserId, ChannelId, MessageId, #{reads := Reads, jobs := Jobs} = State
             error -> MessageId
         end,
     State1 = State#{reads := Reads#{Key => {Watermark, now_ms()}}},
-    State2 = lists:foldl(
-        fun({Seq, Entry}, Acc) ->
-            truncate_entry(Seq, Entry, UserId, ChannelId, MessageId, Acc)
-        end,
+    Seqs = maps:get(ChannelId, maps:get(by_channel, State1, #{}), gb_sets:empty()),
+    State2 = gb_sets:fold(
+        fun(Seq, Acc) -> truncate_seq(Seq, UserId, ChannelId, MessageId, Acc) end,
         State1,
-        gb_trees:to_list(Jobs)
+        Seqs
     ),
     note_inflight_read(UserId, ChannelId, MessageId, State2).
+
+-spec truncate_seq(integer(), integer(), integer(), integer(), state()) -> state().
+truncate_seq(Seq, UserId, ChannelId, MessageId, #{jobs := Jobs} = State) ->
+    case gb_trees:lookup(Seq, Jobs) of
+        {value, Entry} -> truncate_entry(Seq, Entry, UserId, ChannelId, MessageId, State);
+        none -> State
+    end.
 
 -spec note_inflight_read(integer(), integer(), integer(), state()) -> state().
 note_inflight_read(UserId, ChannelId, MessageId, #{inflight := Inflight} = State) ->
@@ -377,8 +415,8 @@ remove_reader(Seq, #{user_ids := UserIds} = Entry, UserId, State) ->
     end.
 
 -spec drop_reader(non_neg_integer(), [integer()], entry(), state()) -> state().
-drop_reader(Seq, [], _Entry, #{jobs := Jobs} = State) ->
-    State#{jobs := gb_trees:delete(Seq, Jobs)};
+drop_reader(Seq, [], Entry, #{jobs := Jobs} = State) ->
+    unindex_job(Entry, State#{jobs := gb_trees:delete(Seq, Jobs)});
 drop_reader(Seq, Remaining, Entry, #{jobs := Jobs} = State) ->
     State#{jobs := gb_trees:update(Seq, with_user_ids(Remaining, Entry), Jobs)}.
 
@@ -487,7 +525,8 @@ drop_prepared(Entry, State) ->
 schedule_retry(#{seq := Seq, attempts := Attempts} = Entry, #{jobs := Jobs} = State) ->
     NextAttempts = Attempts + 1,
     _ = erlang:send_after(retry_delay(NextAttempts, State), self(), {retry, Seq}),
-    State1 = State#{jobs := gb_trees:enter(Seq, Entry#{attempts := NextAttempts}, Jobs)},
+    Retried = Entry#{attempts := NextAttempts},
+    State1 = index_job(Retried, State#{jobs := gb_trees:enter(Seq, Retried, Jobs)}),
     shed_to_capacity(bump(retries, 1, State1)).
 
 -spec retry_delay(pos_integer(), state()) -> pos_integer().

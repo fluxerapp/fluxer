@@ -36,7 +36,8 @@ common_children() ->
         child_spec(gateway_concurrency, gateway_concurrency),
         child_spec(gateway_rollout_config, gateway_rollout_config),
         child_spec(channel_threads_flip, channel_threads_flip),
-        child_spec(channel_threads_config, channel_threads_config)
+        child_spec(channel_threads_config, channel_threads_config),
+        child_spec(voice_permission_sync_queue, voice_permission_sync_queue)
     ] ++ cluster_children() ++
         [
             child_spec(gateway_dispatch_relay, gateway_dispatch_relay),

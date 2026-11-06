@@ -202,34 +202,10 @@ dispatch_permission_update(GuildId, ChannelId, UserId, ConnectionId, VoicePermis
             _ = Fun(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions),
             ok;
         _ ->
-            spawn_permission_update(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions),
-            ok
-    end.
-
--spec spawn_permission_update(
-    integer(), channel_id(), user_id(), binary(), voice_utils:voice_permissions()
-) -> pid().
-spawn_permission_update(GuildId, ChannelId, UserId, ConnId, VoicePerms) ->
-    spawn(fun() ->
-        enforce_voice_permissions_in_livekit(
-            GuildId, ChannelId, UserId, ConnId, VoicePerms
-        )
-    end).
-
--spec enforce_voice_permissions_in_livekit(
-    integer(), channel_id(), user_id(), binary(), voice_utils:voice_permissions()
-) -> ok.
-enforce_voice_permissions_in_livekit(
-    GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-) ->
-    Req = voice_utils:build_update_participant_permissions_rpc_request(
-        GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-    ),
-    case rpc_client:call(Req) of
-        {ok, _Data} ->
-            ok;
-        {error, _Reason} ->
-            ok
+            Req = voice_utils:build_update_participant_permissions_rpc_request(
+                GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
+            ),
+            voice_permission_sync_queue:enqueue(ConnectionId, Req)
     end.
 
 -spec sync_roles_after_change([integer()], guild_state(), guild_state()) -> ok.

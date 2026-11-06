@@ -24,7 +24,7 @@ handle_move_member_result(
 handle_move_member_result(#{success := true, user_id := DisconnectedUserId}, _, null, Pid) when
     is_integer(DisconnectedUserId)
 ->
-    cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid),
+    gen_server:cast(Pid, {cleanup_virtual_access_for_user, DisconnectedUserId}),
     #{<<"success">> => true};
 handle_move_member_result(#{success := true}, _, _, _) ->
     #{<<"success">> => true};
@@ -42,11 +42,6 @@ send_voice_server_updates_for_move(GuildId, ChannelId, VoiceSessionData, Pid) ->
             GuildId, ChannelId, VoiceSessionData, Pid
         )
     end),
-    ok.
-
--spec cleanup_virtual_access_on_disconnect(integer(), pid()) -> ok.
-cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) ->
-    spawn(fun() -> do_cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) end),
     ok.
 
 -spec voice_session_data([term()]) -> [map()].
@@ -74,18 +69,3 @@ normalize_binary(<<"voice_permission_denied">>) -> <<"target_missing_connect">>;
 normalize_binary(<<"voice_connection_not_found">>) -> <<"connection_not_found">>;
 normalize_binary(<<"voice_missing_connection_id">>) -> <<"connection_not_found">>;
 normalize_binary(Error) -> Error.
-
-do_cleanup_virtual_access_on_disconnect(UserId, GuildPid) ->
-    GuildId = resolve_guild_id_from_pid(GuildPid),
-    TargetPid = guild_voice_server:resolve(GuildId, GuildPid),
-    gen_server:cast(TargetPid, {cleanup_virtual_access_for_user, UserId}).
-
-resolve_guild_id_from_pid(GuildPid) ->
-    try guild_voice_server_state:guild_id_call(GuildPid, 5000) of
-        GuildId when is_integer(GuildId) ->
-            GuildId;
-        _ ->
-            undefined
-    catch
-        _:_ -> undefined
-    end.

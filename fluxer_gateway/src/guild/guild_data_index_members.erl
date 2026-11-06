@@ -13,7 +13,6 @@
     get_member/2,
     get_member_ets/2,
     put_member/2,
-    put_member_map/2,
     remove_member/2,
     build_member_map/1,
     normalize_member_map/1,
@@ -145,19 +144,6 @@ put_member(Member, Data) when is_map(Member), is_map(Data) ->
             invalidate_sorted_member_ids(Data1)
     end;
 put_member(_, Data) ->
-    Data.
-
--spec put_member_map(term(), guild_data()) -> guild_data().
-put_member_map(MemberMap, Data) when is_map(MemberMap), is_map(Data) ->
-    NormalizedMemberMap = normalize_member_map(MemberMap),
-    Data#{
-        <<"members">> => NormalizedMemberMap,
-        members_normalized => NormalizedMemberMap,
-        member_list_revision => make_ref(),
-        members_sorted_ids => lists:sort(maps:keys(NormalizedMemberMap)),
-        <<"member_role_index">> => build_member_role_index(NormalizedMemberMap)
-    };
-put_member_map(_, Data) ->
     Data.
 
 -spec remove_member(term(), guild_data()) -> guild_data().

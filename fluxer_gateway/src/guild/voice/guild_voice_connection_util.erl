@@ -11,6 +11,7 @@
     voice_flags_for_permissions/2,
     resolve_guild_identity/1,
     resolve_viewer_stream_keys/5,
+    bound_viewer_stream_keys/1,
     check_camera_user_limit/3,
     maybe_attach_session_id/2,
     maybe_attach_member/2,
@@ -21,6 +22,8 @@
     p2p_agreed/1,
     clear_virtual_access_flags/2
 ]).
+
+-define(MAX_VIEWER_STREAM_KEYS, 256).
 
 -type guild_state() :: map().
 -type voice_state() :: map().
@@ -232,11 +235,26 @@ add_user_to_set(VS, Acc) ->
 -spec validate_viewer_keys(list(), integer() | undefined, integer(), voice_state_map(), list()) ->
     {ok, list()} | {error, atom()}.
 validate_viewer_keys([], _GuildId, _ChId, _VS, Acc) ->
-    {ok, lists:reverse(Acc)};
+    {ok, bound_viewer_stream_keys(lists:reverse(Acc))};
 validate_viewer_keys([Key | Rest], GuildId, ChId, VS, Acc) ->
     case validate_single_key(Key, GuildId, ChId, VS) of
         {ok, ValidKey} -> validate_viewer_keys(Rest, GuildId, ChId, VS, [ValidKey | Acc]);
         {error, _} = Error -> Error
+    end.
+
+-spec bound_viewer_stream_keys([binary()]) -> [binary()].
+bound_viewer_stream_keys(Keys) ->
+    bound_viewer_stream_keys(Keys, ?MAX_VIEWER_STREAM_KEYS, []).
+
+-spec bound_viewer_stream_keys([binary()], non_neg_integer(), [binary()]) -> [binary()].
+bound_viewer_stream_keys([], _Remaining, Acc) ->
+    lists:reverse(Acc);
+bound_viewer_stream_keys(_Keys, 0, Acc) ->
+    lists:reverse(Acc);
+bound_viewer_stream_keys([Key | Rest], Remaining, Acc) ->
+    case lists:member(Key, Acc) of
+        true -> bound_viewer_stream_keys(Rest, Remaining, Acc);
+        false -> bound_viewer_stream_keys(Rest, Remaining - 1, [Key | Acc])
     end.
 
 -spec validate_single_key(term(), integer() | undefined, integer(), voice_state_map()) ->

@@ -12,6 +12,7 @@
 
 -define(GUILD_COLLECTION_FETCH_TIMEOUT_MS, 120000).
 -define(GUILD_MEMBER_COLLECTION_LIMIT, 1000).
+-define(WORKER_STOP_TIMEOUT_MS, 5000).
 -define(GUILD_COLLECTIONS, [
     <<"guild">>,
     <<"roles">>,
@@ -26,46 +27,89 @@
 fetch_guild_data(GuildId) ->
     Parent = self(),
     Ref = make_ref(),
-    _ = [
-        spawn_monitor(fun() ->
-            erlang:process_flag(fullsweep_after, 0),
-            Parent ! {Ref, Collection, fetch_guild_collection(GuildId, Collection)}
-        end)
+    Workers = maps:from_list([
+        spawn_collection_worker(Parent, Ref, GuildId, Collection)
      || Collection <- ?GUILD_COLLECTIONS
-    ],
+    ]),
     DeadlineMs = erlang:monotonic_time(millisecond) + ?GUILD_COLLECTION_FETCH_TIMEOUT_MS,
-    collect_results(Ref, ?GUILD_COLLECTIONS, #{}, DeadlineMs).
+    {Result, RemainingWorkers} =
+        collect_results(Ref, ?GUILD_COLLECTIONS, #{}, Workers, DeadlineMs),
+    stop_workers(RemainingWorkers),
+    flush_results(Ref),
+    Result.
 
--spec collect_results(reference(), [binary()], map(), integer()) -> fetch_result().
-collect_results(_Ref, [], Acc, _DeadlineMs) ->
-    {ok, Acc};
-collect_results(Ref, PendingCollections, Acc, DeadlineMs) ->
+-spec spawn_collection_worker(pid(), reference(), guild_id(), binary()) ->
+    {reference(), pid()}.
+spawn_collection_worker(Parent, Ref, GuildId, Collection) ->
+    {Pid, MRef} = spawn_monitor(fun() ->
+        erlang:process_flag(fullsweep_after, 0),
+        Parent ! {Ref, Collection, fetch_guild_collection(GuildId, Collection)}
+    end),
+    {MRef, Pid}.
+
+-spec collect_results(reference(), [binary()], map(), #{reference() => pid()}, integer()) ->
+    {fetch_result(), #{reference() => pid()}}.
+collect_results(_Ref, [], Acc, Workers, _DeadlineMs) ->
+    {{ok, Acc}, Workers};
+collect_results(Ref, PendingCollections, Acc, Workers, DeadlineMs) ->
     RemainingMs = DeadlineMs - erlang:monotonic_time(millisecond),
     case RemainingMs > 0 of
         false ->
-            {error, {guild_collection_fetch_timeout, PendingCollections}};
+            {{error, {guild_collection_fetch_timeout, PendingCollections}}, Workers};
         true ->
-            await_collection(Ref, PendingCollections, Acc, DeadlineMs, RemainingMs)
+            await_collection(Ref, PendingCollections, Acc, Workers, DeadlineMs, RemainingMs)
     end.
 
--spec await_collection(reference(), [binary()], map(), integer(), integer()) ->
-    fetch_result().
-await_collection(Ref, PendingCollections, Acc, DeadlineMs, RemainingMs) ->
+-spec await_collection(
+    reference(), [binary()], map(), #{reference() => pid()}, integer(), integer()
+) ->
+    {fetch_result(), #{reference() => pid()}}.
+await_collection(Ref, PendingCollections, Acc, Workers, DeadlineMs, RemainingMs) ->
     receive
         {Ref, Collection, {ok, Data}} ->
             NewPending = lists:delete(Collection, PendingCollections),
-            collect_results(Ref, NewPending, Acc#{Collection => Data}, DeadlineMs);
+            collect_results(Ref, NewPending, Acc#{Collection => Data}, Workers, DeadlineMs);
         {Ref, Collection, {ok, Data, Extras}} when is_map(Extras) ->
             NewPending = lists:delete(Collection, PendingCollections),
             collect_results(
-                Ref, NewPending, maps:merge(Acc#{Collection => Data}, Extras), DeadlineMs
+                Ref,
+                NewPending,
+                maps:merge(Acc#{Collection => Data}, Extras),
+                Workers,
+                DeadlineMs
             );
         {Ref, Collection, {error, Reason}} ->
-            {error, {guild_collection_fetch_failed, Collection, Reason}};
-        {'DOWN', _, process, _, _} ->
-            collect_results(Ref, PendingCollections, Acc, DeadlineMs)
+            {{error, {guild_collection_fetch_failed, Collection, Reason}}, Workers};
+        {'DOWN', MRef, process, _, normal} when is_map_key(MRef, Workers) ->
+            collect_results(
+                Ref, PendingCollections, Acc, maps:remove(MRef, Workers), DeadlineMs
+            );
+        {'DOWN', MRef, process, _, Reason} when is_map_key(MRef, Workers) ->
+            {{error, {guild_collection_worker_down, Reason}}, maps:remove(MRef, Workers)}
     after RemainingMs ->
-        {error, {guild_collection_fetch_timeout, PendingCollections}}
+        {{error, {guild_collection_fetch_timeout, PendingCollections}}, Workers}
+    end.
+
+-spec stop_workers(#{reference() => pid()}) -> ok.
+stop_workers(Workers) ->
+    maps:foreach(fun stop_worker/2, Workers).
+
+-spec stop_worker(reference(), pid()) -> ok.
+stop_worker(MRef, Pid) ->
+    exit(Pid, kill),
+    receive
+        {'DOWN', MRef, process, _, _} -> ok
+    after ?WORKER_STOP_TIMEOUT_MS ->
+        _ = erlang:demonitor(MRef, [flush]),
+        ok
+    end.
+
+-spec flush_results(reference()) -> ok.
+flush_results(Ref) ->
+    receive
+        {Ref, _, _} -> flush_results(Ref)
+    after 0 ->
+        ok
     end.
 
 -spec fetch_guild_collection(guild_id(), binary()) ->

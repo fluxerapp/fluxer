@@ -26,11 +26,30 @@ handle_dispatch(Event, {pre_encoded, _} = Data, State) ->
         true -> {noreply, State};
         false -> do_handle_dispatch_pre_encoded(Event, Data, State)
     end;
-handle_dispatch(Event, Data, State) ->
+handle_dispatch(Event, Data, State0) ->
+    State1 = track_settings_invisible(Event, Data, State0),
+    State = track_profile_restricted(Event, Data, State1),
     case session_thread_backstop:check(Event, Data, State) of
         drop -> {noreply, State};
         {ok, Data1} -> handle_plain_dispatch(Event, Data1, State)
     end.
+
+-spec track_settings_invisible(event(), map() | list(), session_state()) -> session_state().
+track_settings_invisible(user_settings_update, Data, State) when is_map(Data) ->
+    case presence_update:settings_invisible(Data) of
+        undefined -> State;
+        Invisible -> State#{settings_invisible => Invisible}
+    end;
+track_settings_invisible(_Event, _Data, State) ->
+    State.
+
+-spec track_profile_restricted(event(), map() | list(), session_state()) -> session_state().
+track_profile_restricted(user_update, #{<<"profile_restricted">> := _} = Data, State) ->
+    UserData = maps:get(user_data, State, #{}),
+    Restricted = user_utils:profile_restricted(Data),
+    State#{user_data => UserData#{<<"profile_restricted">> => Restricted}};
+track_profile_restricted(_Event, _Data, State) ->
+    State.
 
 -spec skip_pre_encoded(event(), {pre_encoded, binary()}, session_state()) -> boolean().
 skip_pre_encoded(Event, Data, State) ->

@@ -10,8 +10,7 @@
     local_voice_states_for_channel/2,
     parse_voice_channel_id/1,
     fetch_guild_data/1,
-    guild_state_call/2,
-    guild_id_call/2
+    guild_state_call/2
 ]).
 
 -export_type([
@@ -147,22 +146,6 @@ guild_state_call(GuildPid, Timeout) ->
 -spec full_guild_state_call(pid(), timeout()) -> term().
 full_guild_state_call(GuildPid, Timeout) ->
     gen_server:call(GuildPid, {get_sessions}, Timeout).
-
--spec guild_id_call(pid(), timeout()) -> integer() | undefined.
-guild_id_call(GuildPid, Timeout) ->
-    case gen_server:call(GuildPid, {get_guild_id}, Timeout) of
-        GuildId when is_integer(GuildId) -> GuildId;
-        _ -> guild_state_id(full_guild_state_call(GuildPid, Timeout))
-    end.
-
--spec guild_state_id(term()) -> integer() | undefined.
-guild_state_id(GuildState) when is_map(GuildState) ->
-    case maps:get(id, GuildState, undefined) of
-        GuildId when is_integer(GuildId) -> GuildId;
-        _ -> undefined
-    end;
-guild_state_id(_) ->
-    undefined.
 
 -spec fetch_guild_data(pid()) -> map().
 fetch_guild_data(GuildPid) ->

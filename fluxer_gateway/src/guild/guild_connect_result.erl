@@ -4,9 +4,11 @@
 -typing([eqwalizer]).
 
 -export([
+    checked_result/3,
     compute_and_send_done/3,
     compute_session_connect/3,
     computed_result/1,
+    outdated_session_ids/2,
     resolve_guild_id/2,
     send_result/4
 ]).
@@ -167,3 +169,30 @@ send_result(GuildId, Attempt, Result0, SessionPid) ->
         end,
     SessionPid ! {guild_connect_result, GuildId, Attempt, Reply},
     ok.
+
+-spec checked_result(term(), map(), map()) -> term().
+checked_result({ok, _} = Result, #{user_id := UserId}, State) when is_integer(UserId) ->
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
+        undefined -> {error, not_member};
+        _Member -> Result
+    end;
+checked_result(Result, _Request, _State) ->
+    Result.
+
+-spec outdated_session_ids([term()], map()) -> [binary()].
+outdated_session_ids(Results, State) ->
+    Generation = guild_viewable_channels_cache:generation(State),
+    [
+        SessionId
+     || {SessionId, _Attempt, {ok, _}, #{request := #{user_id := UserId}} = Computed} <-
+            Results,
+        is_binary(SessionId),
+        is_integer(UserId),
+        computed_outdated(UserId, Computed, Generation, State)
+    ].
+
+-spec computed_outdated(integer(), map(), non_neg_integer(), map()) -> boolean().
+computed_outdated(UserId, Computed, Generation, State) ->
+    maps:get(viewable_generation, Computed, Generation) =/= Generation orelse
+        maps:get(user_roles, Computed, []) =/=
+            session_passive:get_user_roles_for_guild(UserId, State).

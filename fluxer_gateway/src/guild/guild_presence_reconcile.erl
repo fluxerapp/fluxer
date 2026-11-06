@@ -126,11 +126,24 @@ tab_display(UserId, Tab) ->
 -spec reconcile_user(term(), guild_state()) -> guild_state().
 reconcile_user(UserId, State) when is_integer(UserId), UserId > 0 ->
     case is_connected(UserId, State) of
-        false -> State;
-        true -> apply_user_reconcile(UserId, authoritative_presence(UserId), State)
+        false ->
+            State;
+        true ->
+            spawn_user_fetch(UserId, member_presence_tab(State), self()),
+            State
     end;
 reconcile_user(_UserId, State) ->
     State.
+
+-spec spawn_user_fetch(user_id(), ets:tid() | undefined, pid()) -> ok.
+spawn_user_fetch(UserId, Tab, Parent) ->
+    _ = spawn(fun() -> fetch_user_and_reply(UserId, Tab, Parent) end),
+    ok.
+
+-spec fetch_user_and_reply(user_id(), ets:tid() | undefined, pid()) -> ok.
+fetch_user_and_reply(UserId, Tab, Parent) ->
+    Parent ! {presence_reconcile_apply, observe_mismatches([UserId], Tab)},
+    ok.
 
 -spec maybe_schedule_user_repair(user_id(), guild_state()) -> ok.
 maybe_schedule_user_repair(UserId, State) ->
@@ -165,23 +178,6 @@ lookup_presence_value(UserId, PresenceById) ->
     case maps:get(UserId, PresenceById, undefined) of
         Presence when is_map(Presence) -> Presence;
         _ -> undefined
-    end.
-
--spec apply_user_reconcile(user_id(), presence() | undefined, guild_state()) -> guild_state().
-apply_user_reconcile(UserId, Authoritative, State) ->
-    case reconcile_action(UserId, Authoritative, State) of
-        noop -> State;
-        {replay, Payload} -> replay_presence(UserId, Payload, State)
-    end.
-
--spec reconcile_action(user_id(), presence() | undefined, guild_state()) ->
-    noop | {replay, presence()}.
-reconcile_action(UserId, Authoritative, State) ->
-    Desired = desired_display(Authoritative),
-    Current = current_display(UserId, State),
-    case Desired =:= Current of
-        true -> noop;
-        false -> {replay, replay_payload(Authoritative)}
     end.
 
 -spec replay_presence(user_id(), presence(), guild_state()) -> guild_state().
@@ -226,16 +222,6 @@ is_connected(UserId, State) ->
 connected_user_ids_list(State) ->
     Set = guild_member_list_connected:connected_session_user_ids(State),
     [UserId || UserId <- sets:to_list(Set), is_integer(UserId), UserId > 0].
-
--spec authoritative_presence(user_id()) -> presence() | undefined.
-authoritative_presence(UserId) ->
-    try presence_cache:get(UserId) of
-        {ok, Payload} when is_map(Payload) -> Payload;
-        _ -> undefined
-    catch
-        error:_ -> undefined;
-        exit:_ -> undefined
-    end.
 
 -spec authoritative_presence_map([user_id(), ...]) -> presence_by_id().
 authoritative_presence_map(UserIds) ->

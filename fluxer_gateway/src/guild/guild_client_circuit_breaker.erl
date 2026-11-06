@@ -8,11 +8,14 @@
     ensure_table/0,
     acquire_slot/1,
     release_slot/1,
+    prune_dead/0,
     get_circuit_state/1,
     execute_with_circuit_breaker/3
 ]).
 
 -type circuit_state() :: closed | open | half_open.
+
+-type row() :: {pid(), integer(), closed | open, integer(), integer() | undefined}.
 
 -export_type([circuit_state/0]).
 
@@ -20,6 +23,10 @@
 -define(FAILURE_THRESHOLD, 5).
 -define(RECOVERY_TIMEOUT_MS, 30000).
 -define(MAX_CONCURRENT, 50).
+-define(CONCURRENT_POS, 2).
+-define(STATE_POS, 3).
+-define(FAILURES_POS, 4).
+-define(OPENED_AT_POS, 5).
 
 -spec ensure_table() -> ok.
 ensure_table() ->
@@ -33,40 +40,78 @@ ensure_table() ->
 
 -spec acquire_slot(pid()) -> ok | {error, too_many_requests}.
 acquire_slot(GuildPid) ->
-    case safe_lookup(GuildPid) of
-        [] ->
-            safe_insert(GuildPid, #{
-                state => closed,
-                failures => 0,
-                concurrent => 1
-            }),
+    case safe_update_counter(GuildPid, {?CONCURRENT_POS, 1}) of
+        {ok, C} when C =< ?MAX_CONCURRENT ->
             ok;
-        [{_, #{concurrent := C}}] when C >= ?MAX_CONCURRENT ->
+        {ok, _C} ->
+            _ = safe_update_counter(GuildPid, {?CONCURRENT_POS, -1}),
             {error, too_many_requests};
-        [{_, #{concurrent := C} = State}] ->
-            safe_insert(GuildPid, State#{concurrent => C + 1}),
+        error ->
             ok
     end.
 
 -spec release_slot(pid()) -> ok.
 release_slot(GuildPid) ->
-    case safe_lookup(GuildPid) of
-        [{_, #{concurrent := C} = State}] when C > 0 ->
-            safe_insert(GuildPid, State#{concurrent => C - 1}),
-            ok;
+    case safe_update_counter(GuildPid, {?CONCURRENT_POS, -1}) of
+        {ok, C} when C < 0 ->
+            safe_update_element(GuildPid, [{?CONCURRENT_POS, 0}]),
+            drop_idle_row(GuildPid);
+        {ok, 0} ->
+            drop_idle_row(GuildPid);
         _ ->
             ok
+    end.
+
+-spec drop_idle_row(pid()) -> ok.
+drop_idle_row(GuildPid) ->
+    try
+        ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, 0, closed, 0, '_'}, [], [true]}])
+    of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec prune_dead() -> ok.
+prune_dead() ->
+    drop_unknown_rows(),
+    Pids = idle_pids(),
+    Alive = process_liveness:are_alive(Pids),
+    lists:foreach(fun drop_dead_row/1, [Pid || Pid <- Pids, not maps:get(Pid, Alive, true)]).
+
+-spec drop_unknown_rows() -> ok.
+drop_unknown_rows() ->
+    try ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{'_', '_'}, [], [true]}]) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec idle_pids() -> [pid()].
+idle_pids() ->
+    try ets:select(?CIRCUIT_BREAKER_TABLE, [{{'$1', 0, '_', '_', '_'}, [], ['$1']}]) of
+        Pids -> [Pid || Pid <- Pids, is_pid(Pid)]
+    catch
+        error:badarg -> []
+    end.
+
+-spec drop_dead_row(pid()) -> ok.
+drop_dead_row(GuildPid) ->
+    try
+        ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, 0, '_', '_', '_'}, [], [true]}])
+    of
+        _ -> ok
+    catch
+        error:badarg -> ok
     end.
 
 -spec get_circuit_state(pid()) -> circuit_state().
 get_circuit_state(GuildPid) ->
     case safe_lookup(GuildPid) of
-        [] ->
-            closed;
-        [{_, #{state := open, opened_at := OpenedAt}}] ->
+        [{_, _, open, _, OpenedAt}] when is_integer(OpenedAt) ->
             check_recovery_timeout(OpenedAt);
-        [{_, #{state := State}}] ->
-            State
+        _ ->
+            closed
     end.
 
 -spec check_recovery_timeout(integer()) -> circuit_state().
@@ -124,10 +169,11 @@ update_circuit_state(GuildPid, Result, PrevState) ->
     IsSuccess = is_success_result(Result),
     case {IsSuccess, PrevState} of
         {true, half_open} ->
-            safe_delete(GuildPid),
-            ok;
+            safe_update_element(GuildPid, [
+                {?STATE_POS, closed}, {?FAILURES_POS, 0}, {?OPENED_AT_POS, undefined}
+            ]);
         {true, closed} ->
-            reset_failures(GuildPid);
+            safe_update_element(GuildPid, [{?FAILURES_POS, 0}]);
         {false, _} ->
             record_failure(GuildPid)
     end.
@@ -147,69 +193,56 @@ is_success_result({error, Category, _}) when
 is_success_result(_) ->
     false.
 
--spec reset_failures(pid()) -> ok.
-reset_failures(GuildPid) ->
-    case safe_lookup(GuildPid) of
-        [{_, State}] ->
-            safe_insert(GuildPid, State#{failures => 0}),
-            ok;
-        [] ->
-            ok
-    end.
-
 -spec record_failure(pid()) -> ok.
 record_failure(GuildPid) ->
-    Now = erlang:system_time(millisecond),
-    case safe_lookup(GuildPid) of
-        [] ->
-            safe_insert(GuildPid, #{
-                state => closed,
-                failures => 1,
-                concurrent => 0
-            }),
-            ok;
-        [{_, #{failures := F} = State}] when F + 1 >= ?FAILURE_THRESHOLD ->
-            safe_insert(GuildPid, State#{
-                state => open,
-                failures => F + 1,
-                opened_at => Now
-            }),
-            ok;
-        [{_, #{failures := F} = State}] ->
-            safe_insert(GuildPid, State#{failures => F + 1}),
+    case safe_update_counter(GuildPid, {?FAILURES_POS, 1}) of
+        {ok, F} when F >= ?FAILURE_THRESHOLD ->
+            Now = erlang:system_time(millisecond),
+            safe_update_element(GuildPid, [{?STATE_POS, open}, {?OPENED_AT_POS, Now}]);
+        _ ->
             ok
     end.
 
--spec safe_insert(pid(), map()) -> ok.
-safe_insert(GuildPid, State) ->
-    ensure_table(),
-    case try_insert(GuildPid, State) of
-        ok ->
-            ok;
-        retry ->
+-spec safe_update_counter(pid(), {pos_integer(), integer()}) -> {ok, integer()} | error.
+safe_update_counter(GuildPid, Op) ->
+    case try_update_counter(GuildPid, Op) of
+        {ok, _} = Ok ->
+            Ok;
+        error ->
             ensure_table(),
-            _ = try_insert(GuildPid, State),
-            ok
+            drop_unknown_row(GuildPid),
+            try_update_counter(GuildPid, Op)
     end.
 
--spec try_insert(pid(), map()) -> ok | retry.
-try_insert(GuildPid, State) ->
-    try ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State}) of
-        true -> ok
-    catch
-        error:badarg -> retry
-    end.
-
--spec safe_delete(pid()) -> ok.
-safe_delete(GuildPid) ->
-    ensure_table(),
-    try ets:delete(?CIRCUIT_BREAKER_TABLE, GuildPid) of
-        true -> ok
+-spec drop_unknown_row(pid()) -> ok.
+drop_unknown_row(GuildPid) ->
+    try ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, '_'}, [], [true]}]) of
+        _ -> ok
     catch
         error:badarg -> ok
     end.
 
--spec safe_lookup(pid()) -> list().
+-spec try_update_counter(pid(), {pos_integer(), integer()}) -> {ok, integer()} | error.
+try_update_counter(GuildPid, Op) ->
+    try ets:update_counter(?CIRCUIT_BREAKER_TABLE, GuildPid, Op, default_row(GuildPid)) of
+        Value when is_integer(Value) -> {ok, Value}
+    catch
+        error:badarg -> error
+    end.
+
+-spec default_row(pid()) -> row().
+default_row(GuildPid) ->
+    {GuildPid, 0, closed, 0, undefined}.
+
+-spec safe_update_element(pid(), [{pos_integer(), term()}]) -> ok.
+safe_update_element(GuildPid, Changes) ->
+    try ets:update_element(?CIRCUIT_BREAKER_TABLE, GuildPid, Changes) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec safe_lookup(pid()) -> [row()].
 safe_lookup(GuildPid) ->
     try ets:lookup(?CIRCUIT_BREAKER_TABLE, GuildPid) of
         Result -> Result

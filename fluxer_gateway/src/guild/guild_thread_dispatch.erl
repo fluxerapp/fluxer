@@ -7,7 +7,7 @@
 
 -export([
     handles/1,
-    handle/3,
+    handle/4,
     dispatch_counts/0,
     count_masked/2,
     init_counters/0
@@ -52,8 +52,8 @@ handles(thread_member_list_update) -> true;
 handles(forum_unreads) -> true;
 handles(_) -> false.
 
--spec handle(atom(), map(), map()) -> {noreply, map()}.
-handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
+-spec handle(atom(), map(), full | state_only, map()) -> {noreply, map()}.
+handle(Event, EventData, Mode, #{id := GuildId} = State) when is_integer(GuildId) ->
     Data = EventData#{<<"guild_id">> => integer_to_binary(GuildId)},
     try
         State1 =
@@ -61,9 +61,7 @@ handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
                 true -> guild_thread_load:queue_event(Event, Data, State);
                 false -> State
             end,
-        {Deliveries, State2} = handle_event(Event, Data, State1),
-        ok = deliver(Deliveries, GuildId),
-        {noreply, after_delivery(Event, Data, State2)}
+        {noreply, handle_mode(Mode, Event, Data, GuildId, State1)}
     catch
         Class:Reason:Stack ->
             ?LOG_WARNING(
@@ -74,8 +72,16 @@ handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
             ),
             {noreply, State}
     end;
-handle(_Event, _EventData, State) ->
+handle(_Event, _EventData, _Mode, State) ->
     {noreply, State}.
+
+-spec handle_mode(full | state_only, atom(), map(), integer(), guild_state()) -> guild_state().
+handle_mode(state_only, Event, Data, _GuildId, State) ->
+    guild_state_threads:apply_event(Event, Data, State);
+handle_mode(full, Event, Data, GuildId, State) ->
+    {Deliveries, State1} = handle_event(Event, Data, State),
+    ok = deliver(Deliveries, GuildId),
+    after_delivery(Event, Data, State1).
 
 -spec after_delivery(atom(), map(), guild_state()) -> guild_state().
 after_delivery(thread_members_update, Data, State) ->

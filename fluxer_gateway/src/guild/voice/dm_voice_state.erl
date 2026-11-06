@@ -27,10 +27,24 @@
     {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
 handle_dm_disconnect(undefined, _UserId, _VoiceStates, State) ->
     {reply, gateway_errors:error(voice_missing_connection_id), State};
-handle_dm_disconnect(ConnectionId, _UserId, VoiceStates, State) ->
+handle_dm_disconnect(ConnectionId, UserId, VoiceStates, State) ->
     case maps:get(ConnectionId, VoiceStates, undefined) of
-        undefined -> {reply, #{success => true}, State};
-        OldVoiceState -> do_dm_disconnect(ConnectionId, OldVoiceState, VoiceStates, State)
+        undefined ->
+            {reply, #{success => true}, State};
+        OldVoiceState ->
+            handle_existing_dm_disconnect(
+                ConnectionId, UserId, OldVoiceState, VoiceStates, State
+            )
+    end.
+
+-spec handle_existing_dm_disconnect(
+    binary(), integer(), voice_state(), voice_state_map(), dm_state()
+) ->
+    {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
+handle_existing_dm_disconnect(ConnectionId, UserId, OldVoiceState, VoiceStates, State) ->
+    case guild_voice_state:user_matches_voice_state(OldVoiceState, UserId) of
+        false -> {reply, gateway_errors:error(voice_user_mismatch), State};
+        true -> do_dm_disconnect(ConnectionId, OldVoiceState, VoiceStates, State)
     end.
 
 -spec do_dm_disconnect(binary(), voice_state(), voice_state_map(), dm_state()) ->
@@ -263,7 +277,7 @@ validate_dm_viewer_stream_keys(Keys, ChId, VS) ->
 -spec validate_keys_list(list(), integer(), voice_state_map(), list()) ->
     {ok, list()} | {error, atom()}.
 validate_keys_list([], _ChId, _VS, Acc) ->
-    {ok, lists:reverse(Acc)};
+    {ok, guild_voice_connection_util:bound_viewer_stream_keys(lists:reverse(Acc))};
 validate_keys_list([Key | Rest], ChId, VS, Acc) ->
     case validate_single_key(Key, ChId, VS) of
         {ok, ValidKey} -> validate_keys_list(Rest, ChId, VS, [ValidKey | Acc]);
