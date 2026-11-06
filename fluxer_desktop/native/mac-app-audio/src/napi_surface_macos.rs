@@ -879,9 +879,12 @@ impl ProcessLoopback {
             self.inner
                 .running
                 .store(false, std::sync::atomic::Ordering::Release);
-            let mut state = lock_loopback_state(&self.inner)?;
-            state.source = None;
-            state.stream = None;
+            let source = {
+                let mut state = lock_loopback_state(&self.inner)?;
+                state.stream = None;
+                state.source.take()
+            };
+            drop(source);
             return Err(napi::Error::new(
                 Status::GenericFailure,
                 "SCStream startCapture failed",

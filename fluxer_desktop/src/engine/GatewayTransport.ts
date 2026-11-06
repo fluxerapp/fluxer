@@ -2,9 +2,11 @@
 
 import type {LookupAddress} from 'node:dns';
 import {createRequire} from 'node:module';
-import {isIP, type LookupFunction} from 'node:net';
+import {isIP, type LookupFunction, type Socket} from 'node:net';
 import {errorMessage} from '@electron/common/ErrorMessage';
-import {Agent, type Dispatcher, ProxyAgent, WebSocket} from 'undici';
+import {Agent, type buildConnector, Client, type Dispatcher, Pool, ProxyAgent, WebSocket} from 'undici';
+
+const GATEWAY_CLOSE_GRACE_MS = 5_000;
 
 export type GatewayTransportEvent =
 	| {readonly kind: 'open'}
@@ -106,6 +108,28 @@ function pinnedLookup(address: string): LookupFunction {
 	};
 }
 
+function socketTrackingFactory(sockets: Set<Socket>): (origin: string | URL, opts: object) => Dispatcher {
+	return (origin, opts) =>
+		new Pool(origin, {
+			...opts,
+			factory: (clientOrigin, clientOpts) => {
+				const {connect} = clientOpts as {connect: buildConnector.connector};
+				return new Client(clientOrigin, {
+					...clientOpts,
+					connect: (connectOpts, callback) =>
+						connect(connectOpts, (...args) => {
+							const socket = args[1];
+							if (socket != null) {
+								sockets.add(socket);
+								socket.once('close', () => sockets.delete(socket));
+							}
+							callback(...args);
+						}),
+				});
+			},
+		});
+}
+
 interface WebSocketGatewayTransportOptions {
 	readonly trustedCertificates?: ReadonlyArray<string>;
 }
@@ -114,25 +138,39 @@ function createWebSocketGatewayTransport(options: WebSocketGatewayTransportOptio
 	const trustedCertificates = options.trustedCertificates ?? [];
 	const trust = trustedCertificates.length > 0 ? {ca: [...trustedCertificates]} : {};
 	return ({url, address, proxy, onEvent}) => {
+		const sockets = new Set<Socket>();
+		const factory = socketTrackingFactory(sockets);
 		const dispatcher: Dispatcher =
 			proxy === null
 				? new Agent({
+						factory,
 						connect: {
 							...(address === null ? {} : {lookup: pinnedLookup(address)}),
 							...trust,
 						},
 					})
-				: new ProxyAgent({uri: proxy, proxyTunnel: true, requestTls: trust, proxyTls: trust});
+				: new ProxyAgent({uri: proxy, proxyTunnel: true, requestTls: trust, proxyTls: trust, factory});
 		let terminated = false;
+		let closeGraceTimer: ReturnType<typeof setTimeout> | null = null;
 		const finish = (event: GatewayTransportEvent): void => {
 			if (terminated) {
 				return;
 			}
 			terminated = true;
+			if (closeGraceTimer !== null) {
+				clearTimeout(closeGraceTimer);
+				closeGraceTimer = null;
+			}
 			void dispatcher.close().catch(() => undefined);
 			onEvent(event);
 		};
-		const socket = new WebSocket(url, {dispatcher});
+		let socket: WebSocket;
+		try {
+			socket = new WebSocket(url, {dispatcher});
+		} catch (error) {
+			void dispatcher.destroy().catch(() => undefined);
+			throw error;
+		}
 		socket.binaryType = 'arraybuffer';
 		socket.addEventListener('open', () => {
 			if (!terminated) onEvent({kind: 'open'});
@@ -161,6 +199,20 @@ function createWebSocketGatewayTransport(options: WebSocketGatewayTransportOptio
 				} catch {
 					socket.close();
 				}
+				if (terminated || closeGraceTimer !== null) {
+					return;
+				}
+				closeGraceTimer = setTimeout(() => {
+					closeGraceTimer = null;
+					if (terminated) {
+						return;
+					}
+					for (const tracked of sockets) {
+						tracked.destroy();
+					}
+					void dispatcher.destroy().catch(() => undefined);
+				}, GATEWAY_CLOSE_GRACE_MS);
+				closeGraceTimer.unref?.();
 			},
 		};
 	};

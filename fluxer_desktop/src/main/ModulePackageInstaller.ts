@@ -13,6 +13,7 @@ import {
 	ModuleStoreDownloadHashMismatchError,
 } from '@electron/main/ModuleStore';
 import type {ModulePlanItem} from '@electron/main/ModuleUpdatePlanner';
+import {DESKTOP_PACKAGE_LOOPBACK_HOSTS} from '@electron/main/ShellDownloadFormats';
 
 const MODULE_PACKAGE_HASH_MISMATCH_RETRIES = 1;
 const MODULE_PACKAGE_HEADER_TIMEOUT_MS = 30000;
@@ -21,7 +22,6 @@ const MODULE_PACKAGE_PROGRESS_INTERVAL_MS = 250;
 const TRANSIENT_HTTP_STATUS_FLOOR = 500;
 const TRANSIENT_PACKAGE_HTTP_STATUSES: ReadonlySet<number> = new Set([408, 425, 429]);
 const CAUSE_CHAIN_LIMIT = 8;
-const MODULE_LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', 'localhost']);
 const DETERMINISTIC_PACKAGE_IO_CODES: ReadonlySet<string> = new Set(['EEXIST', 'EISDIR', 'ENOTDIR']);
 const HTTP_PARTIAL_CONTENT = 206;
 const HTTP_RANGE_NOT_SATISFIABLE = 416;
@@ -457,7 +457,7 @@ export class ModulePackageInstaller {
 			return url.toString();
 		}
 		const base = new URL(this.packageOrigin);
-		if (url.protocol === 'http:' && url.origin === base.origin && MODULE_LOOPBACK_HOSTS.has(base.hostname)) {
+		if (url.protocol === 'http:' && url.origin === base.origin && DESKTOP_PACKAGE_LOOPBACK_HOSTS.has(base.hostname)) {
 			return url.toString();
 		}
 		throw new ModulePackageUrlPolicyError(item.module, item.entry.url);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {readFileSync, renameSync, writeFileSync} from 'node:fs';
+import {randomBytes} from 'node:crypto';
+import {readFileSync, renameSync, rmSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 
 const DESKTOP_APP_STORE_STATE_FILE_NAME = 'account-store-state-v1.json';
@@ -73,11 +74,12 @@ export function recordDesktopAppStoreSuccess(options: {
 		lastSchemaVersion: options.schemaVersion,
 	};
 	const file = desktopAppStoreStateFile(options.userDataPath);
-	const pending = `${file}.tmp`;
+	const pending = `${file}.${randomBytes(8).toString('hex')}.tmp`;
 	try {
-		writeFileSync(pending, `${JSON.stringify(state)}\n`, {encoding: 'utf8', mode: 0o600});
+		writeFileSync(pending, `${JSON.stringify(state)}\n`, {encoding: 'utf8', mode: 0o600, flag: 'wx'});
 		renameSync(pending, file);
 	} catch {
+		rmSync(pending, {force: true});
 		return null;
 	}
 	return state;

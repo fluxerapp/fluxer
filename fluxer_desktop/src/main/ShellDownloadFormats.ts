@@ -13,15 +13,28 @@ const PACKAGE_ORIGIN_ENV = 'FLUXER_DESKTOP_PACKAGE_ORIGIN';
 const CHANNEL_PACKAGE_ORIGINS: Record<BuildChannel, string> = {
 	stable: 'https://pkgs.fluxer.com',
 	canary: 'https://pkgs.fluxer.com',
-	development: 'http://localhost:48780',
+	development: 'http://127.0.0.1:48780',
 };
+
+export const DESKTOP_PACKAGE_LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', 'localhost', '[::1]']);
+
+function isUsablePackageOrigin(value: string): boolean {
+	let url: URL;
+	try {
+		url = new URL(value);
+	} catch {
+		return false;
+	}
+	return url.protocol === 'https:' || (url.protocol === 'http:' && DESKTOP_PACKAGE_LOOPBACK_HOSTS.has(url.hostname));
+}
 
 export function resolveDesktopPackageOrigin(): string {
 	const override = process.env?.[PACKAGE_ORIGIN_ENV];
-	if (override == null || override.trim().length === 0) {
+	const trimmed = override?.trim() ?? '';
+	if (trimmed.length === 0 || !isUsablePackageOrigin(trimmed)) {
 		return CHANNEL_PACKAGE_ORIGINS[BUILD_CHANNEL];
 	}
-	return override.trim().replace(/\/+$/u, '');
+	return trimmed.replace(/\/+$/u, '');
 }
 
 export function getUpdateBaseUrl(platform: NodeJS.Platform = process.platform): string {

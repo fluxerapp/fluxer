@@ -5,8 +5,8 @@
 use core::ffi::c_void;
 use core::ptr;
 use std::sync::{
-    Mutex, MutexGuard,
-    atomic::{AtomicPtr, AtomicU64, Ordering},
+    Mutex, MutexGuard, RwLock, RwLockReadGuard,
+    atomic::{AtomicU64, Ordering},
 };
 
 use objc2::rc::Retained;
@@ -104,7 +104,23 @@ unsafe impl Send for Source {}
 unsafe impl Sync for Source {}
 
 pub struct DelegateIvars {
-    pub source: AtomicPtr<Source>,
+    source: RwLock<*mut Source>,
+}
+
+impl DelegateIvars {
+    fn read_source(&self) -> RwLockReadGuard<'_, *mut Source> {
+        self.source
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn set_source(&self, ptr: *mut Source) {
+        let mut guard = self
+            .source
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *guard = ptr;
+    }
 }
 
 define_class!(
@@ -118,11 +134,11 @@ define_class!(
     unsafe impl SCStreamDelegate for FluxerSCKAudioSource {
         #[unsafe(method(stream:didStopWithError:))]
         unsafe fn did_stop_with_error(&self, _stream: &SCStream, err: &NSError) {
-            let ptr = self.ivars().source.load(Ordering::Acquire);
-            if ptr.is_null() {
+            let guard = self.ivars().read_source();
+            if guard.is_null() {
                 return;
             }
-            let src = unsafe { &*ptr };
+            let src = unsafe { &**guard };
             let _ = src.state.request_stop();
             let _ = src.state.mark_stopped();
             let (cb, ctx) = {
@@ -148,12 +164,12 @@ define_class!(
             if output_type != SCStreamOutputType::Audio {
                 return;
             }
-            let ptr = self.ivars().source.load(Ordering::Acquire);
-            if ptr.is_null() {
+            let guard = self.ivars().read_source();
+            if guard.is_null() {
                 return;
             }
             unsafe {
-                handle_audio_sample(&*ptr, sample_buffer);
+                handle_audio_sample(&**guard, sample_buffer);
             }
         }
     }
@@ -162,7 +178,7 @@ define_class!(
 impl FluxerSCKAudioSource {
     pub fn new() -> Retained<Self> {
         let this = Self::alloc().set_ivars(DelegateIvars {
-            source: AtomicPtr::new(core::ptr::null_mut()),
+            source: RwLock::new(core::ptr::null_mut()),
         });
         unsafe { msg_send![super(this), init] }
     }
@@ -372,7 +388,7 @@ impl Source {
         });
 
         let raw: *mut Source = &mut *src;
-        src.delegate.ivars().source.store(raw, Ordering::Release);
+        src.delegate.ivars().set_source(raw);
         src
     }
 
@@ -422,9 +438,6 @@ impl Source {
 
 impl Drop for Source {
     fn drop(&mut self) {
-        self.delegate
-            .ivars()
-            .source
-            .store(ptr::null_mut(), Ordering::Release);
+        self.delegate.ivars().set_source(ptr::null_mut());
     }
 }

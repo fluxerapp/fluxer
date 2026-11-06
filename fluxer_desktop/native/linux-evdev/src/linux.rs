@@ -47,6 +47,7 @@ const EVENT_NODE_PREFIX: &str = "event";
 const FLATPAK_INFO_PATH: &str = "/.flatpak-info";
 const PERMISSION_RETRY_DELAY: Duration = Duration::from_millis(500);
 const FULL_KEYBOARD_KEY_CODES: std::ops::Range<u16> = 1..32;
+const MAX_DEVICE_READS_PER_WAKE: usize = 64;
 
 fn poll_key_for_device_fd(fd: RawFd) -> Option<usize> {
     usize::try_from(fd).ok()?.checked_add(DEVICE_KEY_BASE)
@@ -637,7 +638,7 @@ impl Reader {
             let Some(opened) = self.devices.get_mut(&fd) else {
                 return;
             };
-            loop {
+            for _ in 0..MAX_DEVICE_READS_PER_WAKE {
                 match opened.device.fetch_events() {
                     Ok(events) => {
                         for ev in events {

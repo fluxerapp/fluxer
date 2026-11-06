@@ -211,6 +211,7 @@ export interface UpdaterEvent {
 	message?: string;
 	reason?: 'platform' | 'unpackaged' | 'managed-package';
 	downloadUrl?: string;
+	sha256?: string | null;
 	downloadOptions?: Array<UpdaterDownloadOption>;
 }
 

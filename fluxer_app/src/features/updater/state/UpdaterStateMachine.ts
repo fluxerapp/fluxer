@@ -30,6 +30,7 @@ interface UpdaterMachineContext {
 	manualNativeDownloadInFlight: boolean;
 	nativeUnsupported: NativeUnsupportedUpdate | null;
 	nativeManualDownloadUrl: string | null;
+	nativeManualDownloadSha256: string | null;
 }
 
 export type UpdaterMachineEvent =
@@ -41,6 +42,7 @@ export type UpdaterMachineEvent =
 			type: 'native.available';
 			version: string | null;
 			downloadUrl: string | null;
+			sha256: string | null;
 	  }
 	| {type: 'native.notAvailable'; now: number}
 	| {type: 'native.error'}
@@ -76,6 +78,7 @@ function createInitialUpdaterContext(): UpdaterMachineContext {
 		manualNativeDownloadInFlight: false,
 		nativeUnsupported: null,
 		nativeManualDownloadUrl: null,
+		nativeManualDownloadSha256: null,
 	};
 }
 
@@ -91,6 +94,7 @@ function clearNativeUpdate(context: UpdaterMachineContext): UpdaterMachineContex
 			native: createEmptyNativeUpdateInfo(),
 		},
 		nativeManualDownloadUrl: null,
+		nativeManualDownloadSha256: null,
 	};
 }
 
@@ -134,6 +138,7 @@ const updaterStateMachine = setup({
 				isChecking: false,
 				nativeUnsupported: null,
 				nativeManualDownloadUrl: event.downloadUrl,
+				nativeManualDownloadSha256: event.sha256,
 			};
 		}),
 		applyNativeNotAvailable: assign(({context, event}) => {

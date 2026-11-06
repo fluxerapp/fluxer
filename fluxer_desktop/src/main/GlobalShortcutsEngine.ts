@@ -157,7 +157,7 @@ function sanitizeGlobalShortcutCombo(value: unknown): GlobalShortcutCombo | null
 
 export function sanitizeGlobalShortcutsSyncPayload(value: unknown): SanitizedSyncPayload | null {
 	if (!isRecord(value) || !Array.isArray(value.bindings) || !Array.isArray(value.actions)) return null;
-	if (value.bindings.length > MAX_SYNC_BINDINGS) return null;
+	if (value.bindings.length > MAX_SYNC_BINDINGS || value.actions.length > MAX_SYNC_BINDINGS) return null;
 	const bindings: Array<SanitizedSyncBinding> = [];
 	for (const entry of value.bindings) {
 		if (!isRecord(entry)) return null;

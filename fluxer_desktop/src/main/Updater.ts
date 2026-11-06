@@ -9,7 +9,7 @@ import {MANUAL_DESKTOP_FORMATS, type ManualDesktopFormat} from '@electron/main/S
 import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {
 	DOWNLOAD_PAGE_URL,
-	getManualDownloadUrl,
+	getManualDownloadFile,
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
@@ -28,6 +28,7 @@ type UpdaterEvent =
 			context: UpdaterContext;
 			version?: string | null;
 			downloadUrl?: string;
+			sha256?: string | null;
 	  }
 	| {
 			type: 'not-available';
@@ -158,11 +159,13 @@ function sendManualUpdateAvailable(
 	context: UpdaterContext,
 	latest: ManualLatestInfo,
 ): void {
+	const file = getManualDownloadFile(latest);
 	send(getMainWindow(), {
 		type: 'available',
 		context,
 		version: latest.version,
-		downloadUrl: getManualDownloadUrl(latest),
+		downloadUrl: file.url,
+		sha256: file.sha256,
 	});
 }
 

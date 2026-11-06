@@ -591,7 +591,7 @@ fn required_alg_array(object: &Object) -> Result<Vec<i32>> {
             "pubKeyCredParams must not be empty".to_owned(),
         ));
     }
-    let mut algs = Vec::with_capacity(len as usize);
+    let mut algs = Vec::new();
     for i in 0..len {
         let mut elem_raw: napi::sys::napi_value = std::ptr::null_mut();
         let status = unsafe { napi::sys::napi_get_element(raw_env, raw, i, &mut elem_raw) };
@@ -651,7 +651,7 @@ fn optional_descriptor_array(object: &Object, key: &str) -> Result<Vec<Descripto
     }
     let arr: Object = unsafe { value.cast::<Object>()? };
     let len = read_array_length(&arr)?;
-    let mut out = Vec::with_capacity(len as usize);
+    let mut out = Vec::new();
     for i in 0..len {
         let mut elem_raw: napi::sys::napi_value = std::ptr::null_mut();
         let status = unsafe { napi::sys::napi_get_element(raw_env, raw, i, &mut elem_raw) };

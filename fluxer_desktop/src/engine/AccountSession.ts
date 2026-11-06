@@ -38,6 +38,7 @@ import type {
 } from '@fluxer/desktop_ipc/src/AccountEngineCoreContract';
 
 const INBOUND_QUEUE_MAX_BYTES = 32 * 1024 * 1024;
+const INBOUND_QUEUE_COMPACT_AT = 1024;
 const NOTIFICATION_MAX_AGE_MS = 2 * 60 * 1000;
 const NOTIFICATION_BURST = 5;
 const NOTIFICATION_REFILL_MS = 1_000;
@@ -514,6 +515,9 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 			this.queue = [];
 			this.queueHead = 0;
 			this.queueBytes = 0;
+		} else if (this.queueHead >= INBOUND_QUEUE_COMPACT_AT && this.queueHead * 2 >= this.queue.length) {
+			this.queue = this.queue.slice(this.queueHead);
+			this.queueHead = 0;
 		}
 		if (item.client !== this.client) {
 			return;
@@ -668,7 +672,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 				this.releaseSentAt = this.deps.clock.now();
 			}
 		}
-		if (this.queueBytes + bytes > INBOUND_QUEUE_MAX_BYTES && type !== 'READY') {
+		if (this.queueBytes + bytes > INBOUND_QUEUE_MAX_BYTES && (type !== 'READY' || this.hasPending())) {
 			this.deps.log('warn', 'Account engine inbound queue overflowed, resuming', {accountKey: this.accountKey});
 			this.dropQueue();
 			this.disconnect(GatewayClose.ZOMBIE, 'overflow');

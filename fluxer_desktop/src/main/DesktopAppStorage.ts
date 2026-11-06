@@ -5,6 +5,7 @@ import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import type {AppStoreBoundary, AppStoreBoundaryFactory} from '@electron/main/AppStoreNativeBoundary';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {desktopAppStoreStateFile} from '@electron/main/DesktopAppStoreHealth';
 import type {
 	DesktopAccountCompareAndSwapRequest,
@@ -614,9 +615,7 @@ export class DesktopAppStorage {
 	}
 
 	private async writeAuthoritySentinel(): Promise<void> {
-		const temporary = `${this.authoritySentinelPath}.tmp`;
-		await fsPromises.writeFile(temporary, '1\n', {encoding: 'utf8', mode: 0o600});
-		await fsPromises.rename(temporary, this.authoritySentinelPath);
+		await writeFileAtomically(this.authoritySentinelPath, '1\n', 0o600);
 		this.authorityExpected = true;
 		this.status = {...this.status, authorityExpected: true};
 	}

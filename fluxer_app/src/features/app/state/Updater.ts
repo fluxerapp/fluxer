@@ -41,6 +41,7 @@ type UpdaterEvent =
 			context: UpdaterContext;
 			version: string | null;
 			downloadUrl?: string;
+			sha256: string | null;
 	  }
 	| {
 			type: 'not-available';
@@ -117,6 +118,7 @@ function normalizeUpdaterEvent(event: NativeUpdaterEvent): UpdaterEvent | null {
 				context,
 				version: event.version ?? null,
 				downloadUrl: event.downloadUrl,
+				sha256: event.sha256 ?? null,
 			};
 		case 'not-available':
 			return {type: 'not-available', context};
@@ -186,6 +188,10 @@ class Updater {
 
 	get nativeManualDownloadUrl(): string | null {
 		return this.snapshot.context.nativeManualDownloadUrl;
+	}
+
+	get nativeManualDownloadSha256(): string | null {
+		return this.snapshot.context.nativeManualDownloadSha256;
 	}
 
 	private get nativeCheckFailed(): boolean {
@@ -390,6 +396,7 @@ class Updater {
 					type: 'native.available',
 					version: event.version ?? null,
 					downloadUrl: getElectronAPI()?.platform === 'linux' ? DESKTOP_DOWNLOAD_URL : (event.downloadUrl ?? null),
+					sha256: getElectronAPI()?.platform === 'linux' ? null : event.sha256,
 				});
 				if (shouldShowImmediateUserResult) {
 					this.showCurrentUpdateState();
@@ -630,17 +637,15 @@ class Updater {
 			showUpdaterModal((modals) => modals.pushManagedShellUpdateModal({version, flatpakAppId}));
 			return;
 		}
-		const url = this.nativeManualDownloadUrl ?? DESKTOP_DOWNLOAD_URL;
+		const url = this.nativeManualDownloadUrl;
+		const sha256 = url ? this.nativeManualDownloadSha256 : null;
+		const downloadUrl = url ?? DESKTOP_DOWNLOAD_URL;
 		showUpdaterModal((modals) =>
-			modals.pushUpdateAvailableModal(version, () => this.downloadManualNativeUpdateOrOpen(url)),
+			modals.pushUpdateAvailableModal(version, () => this.downloadManualNativeUpdateOrOpen(downloadUrl, sha256)),
 		);
 	}
 
-	private async downloadManualNativeUpdateOrOpen(
-		url: string,
-		suggestedName?: string,
-		sha256?: string | null,
-	): Promise<void> {
+	private async downloadManualNativeUpdateOrOpen(url: string, sha256: string | null): Promise<void> {
 		if (this.manualNativeDownloadInFlight) {
 			return;
 		}
@@ -648,7 +653,7 @@ class Updater {
 		try {
 			const outcome = await downloadWithNative({
 				url,
-				suggestedName: suggestedName ?? this.getManualUpdateSuggestedName(url),
+				suggestedName: this.getManualUpdateSuggestedName(url),
 				sha256,
 			});
 			if (outcome === 'success' || outcome === 'canceled') {
