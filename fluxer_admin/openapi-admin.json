@@ -18977,7 +18977,7 @@
 							"type": "object",
 							"properties": {
 								"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
-								"name": {"type": "string", "minLength": 1, "maxLength": 100},
+								"name": {"type": "string", "maxLength": 100},
 								"animated": {"type": "boolean"},
 								"creator_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
 								"media_url": {"type": "string", "minLength": 1, "maxLength": 2048}
@@ -19019,7 +19019,7 @@
 							"type": "object",
 							"properties": {
 								"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
-								"name": {"type": "string", "minLength": 1, "maxLength": 100},
+								"name": {"type": "string", "maxLength": 100},
 								"animated": {"type": "boolean"},
 								"creator_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
 								"media_url": {"type": "string", "minLength": 1, "maxLength": 2048}
@@ -19308,7 +19308,7 @@
 							"owner_username": {"nullable": true, "type": "string"},
 							"owner_global_name": {"nullable": true, "type": "string"},
 							"owner_discriminator": {"nullable": true, "type": "string"},
-							"name": {"type": "string", "minLength": 1, "maxLength": 100},
+							"name": {"type": "string", "maxLength": 100},
 							"vanity_url_code": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"icon": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"banner": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
@@ -19343,7 +19343,7 @@
 									"type": "object",
 									"properties": {
 										"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
-										"name": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 100},
+										"name": {"nullable": true, "type": "string", "maxLength": 100},
 										"type": {"allOf": [{"$ref": "#/components/schemas/ChannelType"}]},
 										"position": {"$ref": "#/components/schemas/Int32Type"},
 										"parent_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
@@ -19363,7 +19363,7 @@
 									"type": "object",
 									"properties": {
 										"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
-										"name": {"type": "string", "minLength": 1, "maxLength": 100},
+										"name": {"type": "string", "maxLength": 100},
 										"color": {"$ref": "#/components/schemas/Int32Type"},
 										"position": {"$ref": "#/components/schemas/Int32Type"},
 										"permissions": {

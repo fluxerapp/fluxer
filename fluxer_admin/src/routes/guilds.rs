@@ -129,11 +129,9 @@ async fn guild_detail(
     let csrf_token = csrf::get_csrf_token(&request);
 
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let guild = client
-        .lookup_guild(&guild_id)
-        .await
-        .log_error("load guild detail")
-        .flatten();
+    let lookup = client.lookup_guild(&guild_id).await;
+    let load_failed = lookup.is_err();
+    let guild = lookup.log_error("load guild detail").flatten();
 
     let tq = to_tab_query(&query);
     let admin_acls = auth.0.acls();
@@ -172,6 +170,7 @@ async fn guild_detail(
         tab_body,
         is_detail_fragment,
         username_sign_in,
+        load_failed,
     );
     Html(markup.into_string()).into_response()
 }
