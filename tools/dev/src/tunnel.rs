@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::manifest::{DEV_PROXY_PORT, LOCAL_APP_URL, LOOPBACK_HOST};
-use crate::paths::{DEV_STATE_DIR, ROOT, which};
+use crate::paths::{DEV_STATE_DIR, ROOT, which, write_private_file};
 use crate::proc::wait_tcp;
 use anyhow::{Context, Result, bail};
 use std::fs;
@@ -170,9 +170,7 @@ pub fn write_cloudflare_token_file(token: &str) -> Result<PathBuf> {
     fs::create_dir_all(DEV_STATE_DIR.as_path())
         .with_context(|| format!("failed to create {}", DEV_STATE_DIR.display()))?;
     let path = default_token_file();
-    fs::write(&path, format!("{}\n", token.trim()))
-        .with_context(|| format!("failed to write {}", path.display()))?;
-    set_private_file_mode(&path)?;
+    write_private_file(&path, &format!("{}\n", token.trim()))?;
     println!("Saved Cloudflare tunnel token to {}", path.display());
     Ok(path)
 }
@@ -226,7 +224,8 @@ pub async fn run_cloudflare_tunnel(
     println!("Starting Cloudflare Tunnel for {public_url} -> http://127.0.0.1:8088");
     if let Some(binary) = resolve_cloudflared_binary() {
         let status = Command::new(binary)
-            .args(["tunnel", "run", "--token", token.as_str()])
+            .args(["tunnel", "run"])
+            .env("TUNNEL_TOKEN", &token)
             .status()
             .context("failed to start cloudflared")?;
         return Ok(status.code().unwrap_or(1));
@@ -251,12 +250,13 @@ pub async fn run_cloudflare_tunnel(
                 "--rm",
                 "--network",
                 &format!("container:{container}"),
+                "-e",
+                "TUNNEL_TOKEN",
                 "cloudflare/cloudflared:latest",
                 "tunnel",
                 "run",
-                "--token",
-                token.as_str(),
             ])
+            .env("TUNNEL_TOKEN", &token)
             .status()
             .context("failed to start cloudflare/cloudflared Docker image")?;
         return Ok(status.code().unwrap_or(1));
@@ -351,23 +351,13 @@ fn docker_command() -> Vec<PathBuf> {
     if docker_socket_is_writable() || which("sudo").is_none() {
         return vec![PathBuf::from("docker")];
     }
-    vec![PathBuf::from("sudo"), PathBuf::from("docker")]
+    vec![
+        PathBuf::from("sudo"),
+        PathBuf::from("--preserve-env=TUNNEL_TOKEN"),
+        PathBuf::from("docker"),
+    ]
 }
 
 fn docker_socket_is_writable() -> bool {
     std::os::unix::net::UnixStream::connect("/var/run/docker.sock").is_ok()
-}
-
-#[cfg(unix)]
-fn set_private_file_mode(path: &Path) -> Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-    let mut permissions = fs::metadata(path)?.permissions();
-    permissions.set_mode(0o600);
-    fs::set_permissions(path, permissions)?;
-    Ok(())
-}
-
-#[cfg(not(unix))]
-fn set_private_file_mode(_path: &Path) -> Result<()> {
-    Ok(())
 }

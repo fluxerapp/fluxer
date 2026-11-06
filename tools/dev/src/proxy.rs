@@ -15,7 +15,7 @@ use axum::{
 use hyper_util::rt::TokioIo;
 use std::collections::HashMap;
 use std::env;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -57,6 +57,7 @@ const BLOCKED_RESPONSE_HEADERS: &[&str] = &[
     "upgrade",
 ];
 const X_FORWARDED_FOR_HEADER: &str = "x-forwarded-for";
+const CF_CONNECTING_IP_HEADER: &str = "cf-connecting-ip";
 
 pub async fn run_proxy(host: &str, port: u16) -> Result<()> {
     let bind = format!("{host}:{port}");
@@ -105,6 +106,7 @@ async fn proxy_request(
         return redirect_response(&request_head, &location).into_response();
     }
 
+    let client_ip = forwarded_client_ip(&request_head, client_addr).to_string();
     let route = route_for_path(&request_head.path);
     let (target_host, target_port) = target_for_route(route, &state.gateway_ports);
     if is_upgrade_request(&request_head) {
@@ -114,7 +116,7 @@ async fn proxy_request(
             route,
             target_host,
             target_port,
-            client_addr,
+            &client_ip,
         )
         .await;
     }
@@ -126,9 +128,19 @@ async fn proxy_request(
         route,
         target_host,
         target_port,
-        client_addr,
+        &client_ip,
     )
     .await
+}
+
+fn forwarded_client_ip(request: &RequestHead, client_addr: SocketAddr) -> IpAddr {
+    if client_addr.ip().is_loopback()
+        && let Some(ip) = header_value(request, CF_CONNECTING_IP_HEADER)
+            .and_then(|value| value.trim().parse::<IpAddr>().ok())
+    {
+        return ip;
+    }
+    client_addr.ip()
 }
 
 async fn proxy_http(
@@ -138,7 +150,7 @@ async fn proxy_http(
     route: &'static ProxyRoute,
     target_host: &'static str,
     target_port: u16,
-    client_addr: SocketAddr,
+    client_ip: &str,
 ) -> Response<Body> {
     let target_url = upstream_http_url(&request_head.path, route, target_host, target_port);
     let (parts, body) = request.into_parts();
@@ -147,27 +159,18 @@ async fn proxy_http(
     if method != Method::GET && method != Method::HEAD {
         request_builder = request_builder.body(reqwest::Body::wrap_stream(body.into_data_stream()));
     }
-    let mut saw_forwarded_for = false;
 
     for (name, value) in &parts.headers {
         let name_str = name.as_str();
-        if BLOCKED_REQUEST_HEADERS.contains(&name_str) {
+        if BLOCKED_REQUEST_HEADERS.contains(&name_str)
+            || name_str.eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER)
+        {
             continue;
         }
-        if name.as_str().eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER) {
-            saw_forwarded_for = true;
-            if let Some(value) = append_forwarded_for(value, client_addr) {
-                request_builder = request_builder.header(name.clone(), value);
-            }
-        } else {
-            request_builder = request_builder.header(name.clone(), value.clone());
-        }
+        request_builder = request_builder.header(name.clone(), value.clone());
     }
 
-    if !saw_forwarded_for {
-        request_builder =
-            request_builder.header(X_FORWARDED_FOR_HEADER, client_addr.ip().to_string());
-    }
+    request_builder = request_builder.header(X_FORWARDED_FOR_HEADER, client_ip);
 
     let upstream_response = match request_builder.send().await {
         Ok(response) => response,
@@ -191,7 +194,7 @@ async fn proxy_upgrade(
     route: &'static ProxyRoute,
     target_host: &'static str,
     target_port: u16,
-    client_addr: SocketAddr,
+    client_ip: &str,
 ) -> Response<Body> {
     let on_upgrade = hyper::upgrade::on(&mut request);
     let mut target = match TcpStream::connect((target_host, target_port)).await {
@@ -205,7 +208,7 @@ async fn proxy_upgrade(
             route,
             Some(target_host),
             Some(target_port),
-            Some(&client_addr.ip().to_string()),
+            Some(client_ip),
         ))
         .await
     {
@@ -281,11 +284,6 @@ fn request_head_from_request(request: &Request<Body>) -> RequestHead {
             })
             .collect(),
     }
-}
-
-fn append_forwarded_for(value: &HeaderValue, client_addr: SocketAddr) -> Option<HeaderValue> {
-    let value = value.to_str().ok()?;
-    HeaderValue::from_str(&format!("{value}, {}", client_addr.ip())).ok()
 }
 
 fn copy_response_headers(source: &HeaderMap, target: &mut HeaderMap) {
@@ -621,7 +619,6 @@ pub fn rewrite_head(
         rewrite_path(&request.path, route),
         request.version
     )];
-    let mut saw_forwarded_for = false;
     let mut saw_host = false;
     let mut saw_connection = false;
     for (name, value) in &request.headers {
@@ -634,13 +631,8 @@ pub fn rewrite_head(
                 "Connection: {}",
                 if is_upgrade { "Upgrade" } else { "close" }
             ));
-        } else if name.eq_ignore_ascii_case("x-forwarded-for") {
-            saw_forwarded_for = true;
-            if let Some(client_ip) = client_ip {
-                lines.push(format!("{name}: {value}, {client_ip}"));
-            } else {
-                lines.push(format!("{name}: {value}"));
-            }
+        } else if name.eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER) {
+            continue;
         } else {
             lines.push(format!("{name}: {value}"));
         }
@@ -654,9 +646,7 @@ pub fn rewrite_head(
             if is_upgrade { "Upgrade" } else { "close" }
         ));
     }
-    if let Some(client_ip) = client_ip
-        && !saw_forwarded_for
-    {
+    if let Some(client_ip) = client_ip {
         lines.push(format!("X-Forwarded-For: {client_ip}"));
     }
     lines.push(String::new());
