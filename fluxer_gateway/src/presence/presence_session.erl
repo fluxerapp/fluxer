@@ -34,8 +34,9 @@
 
 -spec handle_session_connect(connect_request(), pid(), state()) ->
     {reply, {ok, [map()]}, state()}.
-handle_session_connect(Request, Pid, State) ->
+handle_session_connect(Request, Pid, State0) ->
     #{session_id := SessionId0} = Request,
+    State = merge_guild_ids(maps:get(guild_ids, Request, []), State0),
     SessionId = normalize_session_id(SessionId0),
     Status = normalize_status(maps:get(status, Request, offline)),
     Afk = normalize_boolean(maps:get(afk, Request, false)),
@@ -74,6 +75,12 @@ handle_session_connect(Request, Pid, State) ->
             ),
             {reply, {ok, SessionsData}, NewState}
     end.
+
+-spec merge_guild_ids(term(), state()) -> state().
+merge_guild_ids([_ | _] = GuildIds, #{guild_ids := Known} = State) ->
+    State#{guild_ids := maps:merge(Known, presence_targets:map_from_ids(GuildIds))};
+merge_guild_ids(_GuildIds, State) ->
+    State.
 
 -spec refresh_existing_session(
     session_entry(), pid(), status(), boolean(), boolean(), pid() | undefined, state()

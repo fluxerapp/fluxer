@@ -178,11 +178,7 @@ handle_cast_guild_or_lifecycle({reconnect_drain, SocketPid}, State) when
 ->
     session_lifecycle:handle_reconnect_drain(SocketPid, State);
 handle_cast_guild_or_lifecycle({guild_join, GuildId}, State) when is_integer(GuildId) ->
-    self() ! {guild_connect, GuildId, 0},
-    {noreply,
-        session_bot_guilds:track_join(
-            GuildId, session_visits:handle_guild_join(GuildId, State)
-        )};
+    handle_guild_join(GuildId, maps:get(shard, State, undefined), State);
 handle_cast_guild_or_lifecycle({visit_start, GuildId, Operator}, State) when
     is_integer(GuildId), is_boolean(Operator)
 ->
@@ -220,6 +216,20 @@ handle_cast_guild_or_lifecycle(reconnect_drain, State) ->
     session_lifecycle:handle_reconnect_drain(State);
 handle_cast_guild_or_lifecycle(Msg, State) ->
     do_handle_cast_call(Msg, State).
+
+-spec handle_guild_join(guild_id(), gateway_sharding:shard() | undefined, session_state()) ->
+    {noreply, session_state()}.
+handle_guild_join(GuildId, Shard, State) ->
+    case gateway_sharding:retain_guild_ids_for_shard([GuildId], Shard) of
+        [] ->
+            {noreply, State};
+        _ ->
+            self() ! {guild_connect, GuildId, 0},
+            {noreply,
+                session_bot_guilds:track_join(
+                    GuildId, session_visits:handle_guild_join(GuildId, State)
+                )}
+    end.
 
 -spec do_handle_cast_call(term(), session_state()) ->
     {noreply, session_state()}.
