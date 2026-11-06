@@ -1735,6 +1735,10 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 				this.syncLocalSpeaking(room);
 				if (meter.speaking) noteLocalVoiceActivity(room.localParticipant, {force: true, speaking: true});
 			},
+			() => ({
+				suppressed: this.shouldSuppressLocalSpeaking(room),
+				open: isPushToTalkActiveFromAppState() ? true : (readVoiceInputProcessor(track)?.readGateOpen() ?? null),
+			}),
 		);
 		const reportRuntime = (): void => {
 			const processor = readVoiceInputProcessor(track);
