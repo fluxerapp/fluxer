@@ -267,6 +267,11 @@ export function preloadSplashWindow(): void {
 	createSplashWindow(true, true);
 }
 
+export function discardPreloadedSplashWindow(): void {
+	if (!splashHeldHidden) return;
+	closeSplashWindow();
+}
+
 export function revealPreloadedSplashWindow(): BrowserWindow | null {
 	const window = splashWindow;
 	if (!splashHeldHidden || !splashDocumentReady || window == null || window.isDestroyed()) return null;
