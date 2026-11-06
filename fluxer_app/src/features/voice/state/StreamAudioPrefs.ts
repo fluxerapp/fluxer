@@ -79,7 +79,8 @@ class StreamAudioPrefs {
 	setVolume(streamKey: string, volume: number): void {
 		const clamped = clampVoiceVolumePercent(volume);
 		const existing = this.entries[streamKey];
-		if (existing && existing.volume === clamped) {
+		const muted = (existing?.muted ?? false) && clamped === 0;
+		if (existing && existing.volume === clamped && existing.muted === muted) {
 			this.touchStream(streamKey);
 			return;
 		}
@@ -87,14 +88,14 @@ class StreamAudioPrefs {
 			...this.entries,
 			[streamKey]: {
 				volume: clamped,
-				muted: existing?.muted ?? false,
+				muted,
 				lastAccessed: Date.now(),
 			},
 		};
 		this.audioPrefsRevision += 1;
 		this.startPruneInterval();
 		this.notifyListeners();
-		logger.debug('Set stream volume', {streamKey, volume: clamped});
+		logger.debug('Set stream volume', {streamKey, volume: clamped, muted});
 	}
 
 	setMuted(streamKey: string, muted: boolean): void {
