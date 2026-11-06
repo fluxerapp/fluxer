@@ -37855,7 +37855,7 @@
 						"type": "object",
 						"properties": {
 							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
-							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": "string"},
 							"parent_id": {
 								"description": "ID of the parent category for this channel",
 								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -43336,7 +43336,7 @@
 				"type": "object",
 				"properties": {
 					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
-					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": "string"},
 					"parent_id": {
 						"description": "ID of the parent category for this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -43407,7 +43407,7 @@
 					},
 					"name": {"description": "The name of the channel", "type": "string"}
 				},
-				"required": ["type", "name"]
+				"required": ["url", "type", "name"]
 			},
 			"GuildCategoryChannelCreateRequest": {
 				"type": "object",
