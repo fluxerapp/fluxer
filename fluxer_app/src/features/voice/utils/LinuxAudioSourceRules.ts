@@ -51,7 +51,9 @@ function buildPlaybackStreamPattern(appName: string): VirtmicNode {
 }
 
 function buildLinuxAudioDeviceTargetPattern(node: VirtmicNode, displayName: string): VirtmicNode | null {
-	const targetObjects = uniqueValues([node['object.serial'], node['node.name']]);
+	const targetObjects = uniqueValues(
+		[node['object.serial'], node['node.name']].filter((value) => !value?.includes('\n')),
+	);
 	if (targetObjects.length === 0) return null;
 	return {
 		[LINUX_AUDIO_TARGET_OBJECTS_PATTERN_KEY]: targetObjects.join('\n'),

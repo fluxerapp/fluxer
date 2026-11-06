@@ -31,6 +31,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getDefaultAvatarURLForIndex} from '@app/features/user/utils/AvatarUtils';
+import {formatNameForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
@@ -301,7 +302,7 @@ const MentionRow = ({
 	mention: AccountEngineMention;
 }) => {
 	const {i18n} = useLingui();
-	const authorName = mention.author.globalName ?? mention.author.username;
+	const authorName = formatNameForStreamerMode(mention.author.globalName ?? mention.author.username);
 	const channelName =
 		mention.channelName ?? (isDirectChannelType(mention.channelType) ? i18n._(DIRECT_MESSAGE_DESCRIPTOR) : accountName);
 	const context =

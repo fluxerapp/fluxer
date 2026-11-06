@@ -371,9 +371,9 @@ export class VoiceMeshEngine extends RTCEngine {
 		const publication = participant.getTrackPublicationBySid(info.sid);
 		if (!publication) return;
 		const receiver = peer.rtpReceiver(src);
-		const serverMuted =
-			src === 'microphone' &&
-			voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(peer.connectionId)?.mute === true;
+		const voiceState =
+			src === 'microphone' ? voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(peer.connectionId) : null;
+		const serverMuted = voiceState?.mute === true || voiceState?.suppress === true;
 		const live = receiver !== null && receiver.track.readyState === 'live' && publication.isDesired && !serverMuted;
 		if (live && publication.track?.mediaStreamTrack === receiver.track) return;
 		if (publication.track) {

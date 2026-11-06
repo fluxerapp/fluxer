@@ -7,6 +7,7 @@ import type {
 	QuickSwitcherResult,
 } from '@app/features/search/state/QuickSwitcherTypes';
 import {createSearchTerm, scoreSearchTerm} from '@app/features/search/utils/SearchTextMatching';
+import {formatNameForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {compareStrings} from '@app/lib/list/CompareStrings';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
@@ -90,7 +91,9 @@ function accountLabel(account: OtherAccountInfo, showHost: boolean, i18n: I18n):
 }
 
 function userName(user: AccountEngineUser): string {
-	return user.globalName != null && user.globalName.length > 0 ? user.globalName : user.username;
+	return formatNameForStreamerMode(
+		user.globalName != null && user.globalName.length > 0 ? user.globalName : user.username,
+	);
 }
 
 function isDirectChannel(channel: AccountEngineChannelActivity): boolean {

@@ -80,6 +80,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 			onClosedRef.current(windowGeneration, 'blocked');
 			return;
 		}
+		childWindow.opener = null;
 		const mirrored = mountMirroredDocument(childWindow, {
 			title: initialTitleRef.current,
 			exclude: stylesheetExcludeRef.current,

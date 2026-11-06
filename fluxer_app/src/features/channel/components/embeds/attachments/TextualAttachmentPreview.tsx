@@ -151,7 +151,10 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 		if (!isCsvPreview || csvRows === null) {
 			return null;
 		}
-		if (!isExpanded || csvRows.length <= MAX_EXPANDED_PREVIEW_LINES) {
+		if (!isExpanded) {
+			return csvRows.slice(0, DEFAULT_PREVIEW_LINES);
+		}
+		if (csvRows.length <= MAX_EXPANDED_PREVIEW_LINES) {
 			return csvRows;
 		}
 		const remainingRowCount = csvRows.length - MAX_EXPANDED_PREVIEW_LINES;

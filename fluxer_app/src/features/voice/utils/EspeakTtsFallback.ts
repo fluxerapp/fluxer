@@ -95,7 +95,7 @@ export async function synthesize(
 ): Promise<ArrayBuffer | null> {
 	ensureConfig();
 	const voiceId = await ensureVoice(options.voiceKey);
-	const result = meSpeak.speak(text, {rawdata: true, voice: voiceId, speed: options.speed});
+	const result = meSpeak.speak(` ${text}`, {rawdata: true, voice: voiceId, speed: options.speed});
 	return result instanceof ArrayBuffer ? result : null;
 }
 

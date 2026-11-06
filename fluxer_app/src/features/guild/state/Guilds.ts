@@ -17,7 +17,8 @@ class Guilds {
 	}
 
 	getGuild(guildId: string): Guild | undefined {
-		return this.guilds[guildId];
+		const guild = this.guilds[guildId];
+		return guild instanceof Guild ? guild : undefined;
 	}
 
 	getGuildIds(): Array<string> {
@@ -25,7 +26,7 @@ class Guilds {
 	}
 
 	getGuildRoles(guildId: string, includeEveryone = false): Array<GuildRole> {
-		const guild = this.guilds[guildId];
+		const guild = this.getGuild(guildId);
 		if (!guild) {
 			return [];
 		}
@@ -33,7 +34,8 @@ class Guilds {
 	}
 
 	getGuildRole(guildId: string, roleId: string): GuildRole | undefined {
-		return this.guilds[guildId]?.roles[roleId];
+		const role = this.getGuild(guildId)?.roles[roleId];
+		return role instanceof GuildRole ? role : undefined;
 	}
 
 	getGuilds(): Array<Guild> {

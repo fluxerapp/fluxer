@@ -53,10 +53,10 @@ const HEADER_COMMENT_PATTERN = /^\s*\/\*([\s\S]*?)\*\//;
 const METADATA_LINE_PATTERN =
 	/^\s*(?:\*\s*)?(?:@?([a-zA-Z][a-zA-Z0-9_-]*)|([a-zA-Z][a-zA-Z0-9 _-]*))\s*[:=]\s*(.*?)\s*$/;
 const AT_RULE_METADATA_PATTERN = /^\s*(?:\*\s*)?@([a-zA-Z][a-zA-Z0-9_-]*)\s+(.*?)\s*$/;
-const ASSET_FUNCTION_PATTERN = /fluxer-theme-asset\(\s*(['"])(.*?)\1\s*\)/g;
-const ASSET_URL_PATTERN = /url\(\s*(['"]?)fluxer-theme-asset:\/\/([^'")\s]+)\1\s*\)/g;
-const LOCAL_FILE_FUNCTION_PATTERN = /fluxer-local-file\(\s*(['"])(.*?)\1\s*\)/g;
-const LOCAL_FILE_URL_PATTERN = /url\(\s*(['"]?)fluxer-local-file:\/\/([^'")]+)\1\s*\)/g;
+const ASSET_FUNCTION_PATTERN = /fluxer-theme-asset\(\s*(['"])((?:\\.|(?!\1)[^\\\n\r\u2028\u2029])*\\?)\1\s*\)/g;
+const ASSET_URL_PATTERN = /url\(\s*(['"]?)fluxer-theme-asset:\/\/([^'"()\s]+)\1\s*\)/g;
+const LOCAL_FILE_FUNCTION_PATTERN = /fluxer-local-file\(\s*(['"])((?:\\.|(?!\1)[^\\\n\r\u2028\u2029])*\\?)\1\s*\)/g;
+const LOCAL_FILE_URL_PATTERN = /url\(\s*(['"]?)fluxer-local-file:\/\/(?=([^'"()]+))\2\1\s*\)/g;
 const LOCAL_FONT_DATA_URL_PREFIX = 'data:font/';
 
 function normalizeMetadataKey(key: string): keyof ThemeMetadata | null {

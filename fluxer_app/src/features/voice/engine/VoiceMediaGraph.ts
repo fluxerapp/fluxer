@@ -376,11 +376,10 @@ export function normalizeVoiceMediaGraphViewerStreamKeys(
 	keys: ReadonlyArray<string> | null | undefined,
 ): Array<string> {
 	if (!keys || keys.length === 0) return [];
-	assert.ok(keys.length <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'viewer stream key input exceeded graph limit');
 	const normalized: Array<string> = [];
 	const seen = new Set<string>();
 	for (const key of keys) {
-		assert.ok(normalized.length <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'viewer stream key normalization exceeded limit');
+		if (normalized.length >= VOICE_MEDIA_GRAPH_ENTRY_LIMIT) break;
 		if (!key || seen.has(key)) continue;
 		seen.add(key);
 		normalized.push(key);

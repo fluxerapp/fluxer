@@ -42,7 +42,7 @@ interface SearchChip {
 }
 
 const QUOTE_CHARS = new Set(['"', '\u201c', '\u201d', '\u201f', '\u2033', '\u00ab', '\u00bb']);
-const isQuoteChar = (ch: string | undefined): boolean => ch !== undefined && QUOTE_CHARS.has(ch);
+export const isQuoteChar = (ch: string | undefined): boolean => ch !== undefined && QUOTE_CHARS.has(ch);
 const KNOWN_KEYS = new Set([
 	'from',
 	'-from',
@@ -291,7 +291,7 @@ export function tokenize(query: string): {
 	return {tokens, content: normalizeSpaces(content), exactPhrases, chips};
 }
 
-const splitCSV = (input: string): Array<string> => {
+export const splitCSV = (input: string): Array<string> => {
 	const items: Array<string> = [];
 	let i = 0;
 	const n = input['length'];
@@ -337,7 +337,7 @@ const normalizeToken = (value: string): string => value.trim().toLowerCase();
 const CURRENT_USER_TOKENS = new Set(['@me']);
 const isCurrentUserToken = (value: string): boolean => CURRENT_USER_TOKENS.has(normalizeToken(value));
 const getCurrentUserId = (): string | null => Users.getCurrentUser()?.id ?? null;
-const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
+export const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 	const trimmedTag = tag.trim();
 	if (!trimmedTag) {
 		return null;

@@ -143,11 +143,11 @@ function isTextualAttachment(attachment: MessageAttachment): boolean {
 
 export function getLanguageFromAttachment(attachment: MessageAttachment): string | null {
 	const extension = (attachment.filename ?? '').split('.').pop()?.toLowerCase();
-	if (extension && EXTENSION_LANGUAGE_MAP[extension]) {
+	if (extension && Object.hasOwn(EXTENSION_LANGUAGE_MAP, extension)) {
 		return EXTENSION_LANGUAGE_MAP[extension];
 	}
 	const normalizedType = (attachment.content_type ?? '').toLowerCase().split(';')[0].trim();
-	if (normalizedType && MIME_LANGUAGE_MAP[normalizedType]) {
+	if (normalizedType && Object.hasOwn(MIME_LANGUAGE_MAP, normalizedType)) {
 		return MIME_LANGUAGE_MAP[normalizedType];
 	}
 	return null;

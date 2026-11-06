@@ -7,6 +7,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import {parseAndRenderToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
+import {formatNameForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {inlineMentionedUserNames} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -175,7 +176,10 @@ export function buildWireMessageNotificationBody(message: WireMessage, i18n: I18
 		resolveFromStores: false,
 		i18n,
 	};
-	const userBody = renderMarkdownPreview(inlineMentionedUserNames(message.content, message.mentions), markdownOptions);
+	const userBody = renderMarkdownPreview(
+		inlineMentionedUserNames(message.content, message.mentions, formatNameForStreamerMode),
+		markdownOptions,
+	);
 	if (userBody) return userBody;
 	const contentFallback = buildMessageContentFallbackPreview(
 		{

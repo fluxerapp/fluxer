@@ -37,6 +37,7 @@ struct ExtraContent {
 struct BlockSpoilerResult {
     node: Node,
     new_line_index: usize,
+    new_node_count: usize,
     extra_content: Option<ExtraContent>,
 }
 
@@ -66,6 +67,7 @@ struct ListResult {
 struct TableResult {
     node: Node,
     new_line_index: usize,
+    new_node_count: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -156,7 +158,7 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
             return Ok(BlockParseResult {
                 node: Some(result.node),
                 new_line_index: result.new_line_index,
-                new_node_count: state.parser.node_count + 1,
+                new_node_count: result.new_node_count,
                 extra_nodes: None,
             });
         }
@@ -288,7 +290,7 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
         return Ok(BlockParseResult {
             node: Some(table.node),
             new_line_index: table.new_line_index,
-            new_node_count: state.parser.node_count + 1,
+            new_node_count: table.new_node_count,
             extra_nodes: None,
         });
     }
@@ -398,17 +400,19 @@ fn parse_blockquote(
         return Ok(no_block(index, node_count));
     }
     if ParserFlags::has(parser.flags(), ParserFlags::ALLOW_ALERTS)
-        && let Some(alert) = parse_alert_lines(parser, &child_lines)?
+        && let Some((alert, alert_node_count)) =
+            parse_alert_lines(parser, &child_lines, node_count)?
     {
         return Ok(BlockParseResult {
             node: Some(alert),
             new_line_index: index,
-            new_node_count: node_count + 1,
+            new_node_count: alert_node_count,
             extra_nodes: None,
         });
     }
     let mut child_parser =
         parser.child_with_flags(parser.flags() & !ParserFlags::ALLOW_BLOCKQUOTES);
+    child_parser.node_count = node_count + 1;
     let mut child_nodes = child_parser.parse_lines(child_lines)?;
     normalize_nodes(&mut child_nodes, true);
     let blank_lines = if child_nodes.is_empty() {
@@ -422,7 +426,7 @@ fn parse_blockquote(
             blank_lines,
         }),
         new_line_index: index,
-        new_node_count: node_count + 1,
+        new_node_count: child_parser.node_count,
         extra_nodes: None,
     })
 }
@@ -463,6 +467,7 @@ fn parse_multiline_blockquote(
         (parser.flags() & !ParserFlags::ALLOW_MULTILINE_BLOCKQUOTES)
             | ParserFlags::ALLOW_BLOCKQUOTES,
     );
+    child_parser.node_count = node_count + 1;
     let child_nodes = child_parser.parse_lines(child_lines)?;
     let blank_lines = if child_nodes.is_empty() {
         Some(index.saturating_sub(current))
@@ -475,7 +480,7 @@ fn parse_multiline_blockquote(
             blank_lines,
         }),
         new_line_index: index,
-        new_node_count: node_count + 1,
+        new_node_count: child_parser.node_count,
         extra_nodes: None,
     })
 }
@@ -780,10 +785,12 @@ fn parse_block_spoiler(
                 content: concat("||", trim_right(&content)),
             },
             new_line_index: index,
+            new_node_count: parser.node_count + 1,
             extra_content: None,
         });
     }
     let mut child_parser = parser.child_with_flags(parser.flags());
+    child_parser.node_count = parser.node_count + 1;
     let mut window = child_lines;
     if !has_visible_content(&lines_to_text(&window)) {
         return Ok(BlockSpoilerResult {
@@ -791,6 +798,7 @@ fn parse_block_spoiler(
                 content: lines_to_text(&lines[current..index]),
             },
             new_line_index: index,
+            new_node_count: parser.node_count + 1,
             extra_content: None,
         });
     }
@@ -805,6 +813,7 @@ fn parse_block_spoiler(
         } else {
             index
         },
+        new_node_count: child_parser.node_count,
         extra_content: trailing_content,
     })
 }
@@ -812,7 +821,8 @@ fn parse_block_spoiler(
 fn parse_alert_lines(
     parser: &mut MarkdownParser,
     lines: &[Line],
-) -> Result<Option<Node>, ParseError> {
+    node_count: usize,
+) -> Result<Option<(Node, usize)>, ParseError> {
     if lines.is_empty() || !starts_with(&lines[0].text, "[!") {
         return Ok(None);
     }
@@ -841,13 +851,17 @@ fn parse_alert_lines(
             | ParserFlags::ALLOW_LISTS
             | ParserFlags::ALLOW_HEADINGS,
     );
+    child_parser.node_count = node_count + 1;
     let prepared = prepare_alert_content_lines(content_lines);
     let mut children = child_parser.parse_lines(prepared)?;
     children = post_process_alert_nodes(children);
-    Ok(Some(Node::Alert {
-        alert_type,
-        children,
-    }))
+    Ok(Some((
+        Node::Alert {
+            alert_type,
+            children,
+        },
+        child_parser.node_count,
+    )))
 }
 
 fn prepare_alert_content_lines(mut lines: Vec<Line>) -> Vec<Line> {
@@ -1172,17 +1186,20 @@ fn parse_table(
     let Some((header_cells, alignments)) = table_header(lines, current) else {
         return Ok(None);
     };
-    let header_row = create_table_row(parser, &header_cells)?;
+    let (header_row, header_node_count) = create_table_row(parser, &header_cells)?;
     let column_count = header_cells.len();
+    let mut new_node_count = parser.node_count + 1 + header_node_count;
     let mut rows = Vec::new();
     let mut index = current + 2;
-    while index < lines.len() {
+    while index < lines.len() && new_node_count <= MAX_AST_NODES {
         let line = trim_table_line(&lines[index]);
         if !is_table_body_line(line.text) {
             break;
         }
         let cells = normalize_column_count(split_table_cells(line), column_count);
-        rows.push(create_table_row(parser, &cells)?);
+        let (row, row_node_count) = create_table_row(parser, &cells)?;
+        rows.push(row);
+        new_node_count += row_node_count;
         index += 1;
     }
     Ok(Some(TableResult {
@@ -1192,6 +1209,7 @@ fn parse_table(
             rows,
         },
         new_line_index: index,
+        new_node_count,
     }))
 }
 
@@ -1315,8 +1333,9 @@ fn parse_alignments(cells: &[TableCellText]) -> Option<Vec<TableAlignment>> {
 fn create_table_row(
     parser: &mut MarkdownParser,
     cells: &[TableCellText],
-) -> Result<Node, ParseError> {
+) -> Result<(Node, usize), ParseError> {
     let mut out = Vec::new();
+    let mut node_count = 1;
     for cell in cells {
         let left = trim_start(&cell.text);
         let value = trim_right(left);
@@ -1329,9 +1348,10 @@ fn create_table_row(
         } else {
             parsed
         };
+        node_count += 1 + children.len();
         out.push(Node::TableCell { children });
     }
-    Ok(Node::TableRow { cells: out })
+    Ok((Node::TableRow { cells: out }, node_count))
 }
 
 pub(crate) fn is_block_start(line: &str, flags: u32) -> bool {

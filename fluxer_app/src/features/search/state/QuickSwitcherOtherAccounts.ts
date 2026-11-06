@@ -12,6 +12,7 @@ import {switcherAccounts} from '@app/features/auth/state/AccountSwitcherAccounts
 import Accounts from '@app/features/auth/state/Accounts';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import type {OtherAccountInfo, OtherAccountsContext} from '@app/features/search/state/QuickSwitcherAccountResults';
+import {formatNameForStreamerMode, getDisplayName} from '@app/features/user/utils/NicknameUtils';
 import type {AccountEngineAccountActivity} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {I18n} from '@lingui/core';
 
@@ -29,18 +30,24 @@ export function otherAccountDisplayName(account: Account, i18n: I18n): string {
 	const labels = getAccountDisplayLabels(account);
 	if (labels.available) return labels.displayLabel;
 	const user = AccountEngine.getSummary(getAccountKey(account))?.user ?? null;
-	if (user != null) return user.globalName ?? user.username;
+	if (user != null) return getDisplayName(user);
 	return i18n._(ACCOUNT_DETAILS_UNAVAILABLE_DESCRIPTOR);
+}
+
+function otherAccountUsername(account: Account, engineUsername: string | null): string | null {
+	const labels = getAccountDisplayLabels(account);
+	if (labels.available) return labels.usernameLabel;
+	if (engineUsername != null) return formatNameForStreamerMode(engineUsername);
+	return null;
 }
 
 function toOtherAccountInfo(account: Account, i18n: I18n): OtherAccountInfo {
 	const accountKey = getAccountKey(account);
-	const labels = getAccountDisplayLabels(account);
 	const summary = AccountEngine.getSummary(accountKey);
 	return {
 		accountKey,
 		displayName: otherAccountDisplayName(account, i18n),
-		username: labels.available ? labels.usernameLabel : (summary?.user?.username ?? null),
+		username: otherAccountUsername(account, summary?.user?.username ?? null),
 		host: resolveAccountInstanceLabel(account),
 		isExpired: account.isValid === false,
 		mentionCount: AccountEngine.getMentionCount(accountKey),

@@ -793,8 +793,8 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const {url, text} = node;
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
 	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
-	const inviteCode = InviteUtils.findInvite(url);
-	const themeCode = ThemeUtils.findTheme(url);
+	const inviteCode = InviteUtils.findInviteUrl(url);
+	const themeCode = ThemeUtils.findThemeUrl(url);
 	const userProfileId = parseUserProfileUrl(url);
 	const messageJumpTarget = parseMessageJumpLink(url);
 	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
@@ -813,7 +813,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const appPage = settingsTarget ? null : parseAppPageLink(url);
 	const isInlineReplyContext = isRestrictedInlineContext(options.context);
 	const shouldDisableInteractions = options.disableInteractions === true;
-	if (inviteCode && StreamerMode.shouldHideInviteLinks) {
+	if (StreamerMode.shouldHideInviteLinks && InviteUtils.findInvite(url)) {
 		return (
 			<span key={id} className={markupStyles.link} data-flx="messaging.markdown.renderers.link-renderer.invite-masked">
 				{i18n._(INVITE_LINK_MASKED_DESCRIPTOR)}

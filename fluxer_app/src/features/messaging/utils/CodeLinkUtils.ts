@@ -101,6 +101,16 @@ export function findCode(content: string | null, config: CodeLinkConfig): string
 	return findCodeMatches(content, config)[0]?.code ?? null;
 }
 
+export function findCodeAtUrlStart(url: string | null, config: CodeLinkConfig): string | null {
+	if (!url) return null;
+	const pattern = createPattern(config);
+	pattern.lastIndex = 0;
+	const match = pattern.exec(url);
+	pattern.lastIndex = 0;
+	if (match?.index !== 0) return null;
+	return match[1] ?? null;
+}
+
 export function findSpoileredCodeMatches(content: string | null, config: CodeLinkConfig): Array<CodeLinkMatch> {
 	if (!content) return [];
 	const matches: Array<CodeLinkMatch> = [];

@@ -197,7 +197,7 @@ export const RecipientList = observer((props: RecipientListProps) => {
 								const secondaryText = (() => {
 									if (item.type === 'dm') return i18n._(DIRECT_MESSAGE_DESCRIPTOR);
 									if (item.type === 'group_dm') return i18n._(GROUP_DM_DESCRIPTOR);
-									return item.user.username;
+									return NicknameUtils.formatNameForStreamerMode(item.user.username);
 								})();
 								const groupChannel =
 									item.type === 'group_dm' && item.channelId ? Channels.getChannel(item.channelId) : null;

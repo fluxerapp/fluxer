@@ -80,7 +80,36 @@ export interface UserSettingsAccountTransitionCheckpoint {
 	readonly recentlyAckedSyncedPreferenceFields: ReadonlyArray<readonly [SyncedPreferencesField, number]>;
 	readonly syncConsecutive429s: number;
 	readonly hadPendingFlush: boolean;
+	readonly accountSettings: AccountScopedSettings;
 }
+
+interface AccountScopedSettings {
+	readonly flags: number;
+	readonly status: StatusType;
+	readonly statusResetsAt: string | null;
+	readonly statusResetsTo: string | null;
+	readonly customStatus: CustomStatus | null;
+	readonly guildFolders: ReadonlyArray<GuildFolder>;
+	readonly restrictedGuilds: ReadonlyArray<string>;
+	readonly botRestrictedGuilds: ReadonlyArray<string>;
+	readonly staffDmAccessUserIds: ReadonlyArray<string>;
+	readonly suppressUnprivilegedSelfMentionsBypassUserIds: ReadonlyArray<string>;
+	readonly trustedDomains: ReadonlyArray<string>;
+}
+
+const EMPTY_ACCOUNT_SCOPED_SETTINGS: AccountScopedSettings = {
+	flags: 0,
+	status: StatusTypes.ONLINE,
+	statusResetsAt: null,
+	statusResetsTo: null,
+	customStatus: null,
+	guildFolders: [],
+	restrictedGuilds: [],
+	botRestrictedGuilds: [],
+	staffDmAccessUserIds: [],
+	suppressUnprivilegedSelfMentionsBypassUserIds: [],
+	trustedDomains: [],
+};
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -522,7 +551,34 @@ class UserSettingsState {
 				this.syncFlushInFlight ||
 				this.syncFlushPendingPromise !== null ||
 				this.syncFlushPendingResolvers.length > 0,
+			accountSettings: {
+				flags: this.flags,
+				status: this.status,
+				statusResetsAt: this.statusResetsAt,
+				statusResetsTo: this.statusResetsTo,
+				customStatus: this.customStatus,
+				guildFolders: this.guildFolders,
+				restrictedGuilds: this.restrictedGuilds,
+				botRestrictedGuilds: this.botRestrictedGuilds,
+				staffDmAccessUserIds: this.staffDmAccessUserIds,
+				suppressUnprivilegedSelfMentionsBypassUserIds: this.suppressUnprivilegedSelfMentionsBypassUserIds,
+				trustedDomains: this.trustedDomains,
+			},
 		};
+	}
+
+	private applyAccountScopedSettings(settings: AccountScopedSettings): void {
+		this.flags = settings.flags;
+		this.status = settings.status;
+		this.statusResetsAt = settings.statusResetsAt;
+		this.statusResetsTo = settings.statusResetsTo;
+		this.customStatus = settings.customStatus;
+		this.guildFolders = [...settings.guildFolders];
+		this.restrictedGuilds = [...settings.restrictedGuilds];
+		this.botRestrictedGuilds = [...settings.botRestrictedGuilds];
+		this.staffDmAccessUserIds = [...settings.staffDmAccessUserIds];
+		this.suppressUnprivilegedSelfMentionsBypassUserIds = [...settings.suppressUnprivilegedSelfMentionsBypassUserIds];
+		this.trustedDomains = [...settings.trustedDomains];
 	}
 
 	async restoreAccountTransitionCheckpoint(checkpoint: UserSettingsAccountTransitionCheckpoint): Promise<void> {
@@ -535,6 +591,7 @@ class UserSettingsState {
 			this.accountEpoch = Math.max(this.accountEpoch, checkpoint.accountEpoch);
 			this.hydrated = checkpoint.hydrated;
 			this.awaitingAccountSettings = false;
+			this.applyAccountScopedSettings(checkpoint.accountSettings);
 			this.syncedPreferences = cloneSyncedPreferences(checkpoint.syncedPreferences);
 			this.wireSyncedPreferences = cloneSyncedPreferences(checkpoint.wireSyncedPreferences);
 			this.wireSyncedPreferencesBase = checkpoint.wireSyncedPreferencesBase;
@@ -580,6 +637,7 @@ class UserSettingsState {
 		this.syncFlushGeneration += 1;
 		this.hydrated = false;
 		this.awaitingAccountSettings = true;
+		this.applyAccountScopedSettings(EMPTY_ACCOUNT_SCOPED_SETTINGS);
 		this.syncedPreferences = createEmptySyncedPreferences();
 		this.wireSyncedPreferences = createEmptySyncedPreferences();
 		this.wireSyncedPreferencesBase = null;

@@ -156,3 +156,58 @@ fn native_parser_fixtures_cover_typescript_suite_surface() {
         ]})
     );
 }
+
+fn count_nodes(value: &serde_json::Value) -> usize {
+    match value {
+        serde_json::Value::Object(map) => {
+            usize::from(map.contains_key("type")) + map.values().map(count_nodes).sum::<usize>()
+        }
+        serde_json::Value::Array(items) => items.iter().map(count_nodes).sum(),
+        _ => 0,
+    }
+}
+
+#[test]
+fn wide_table_with_short_rows_stays_within_node_budget() {
+    let header = vec!["a"; 500].join("|");
+    let align = vec!["-"; 500].join("|");
+    let mut input = format!("{header}\n{align}\n");
+    while input.len() + 2 <= 4000 {
+        input.push_str("|\n");
+    }
+    let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
+    let nodes = parser.parse(&input).expect("parse succeeds");
+    let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+    assert!(count_nodes(&value) <= 12_000);
+
+    let quoted_header = vec!["a"; 71].join("|");
+    let quoted_align = vec!["-"; 71].join("|");
+    let block = format!(
+        "> {quoted_header}\n> {quoted_align}\n{}x\n",
+        "> |\n".repeat(160)
+    );
+    let quoted = block.repeat(4000 / block.len());
+    let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
+    let nodes = parser.parse(&quoted).expect("parse succeeds");
+    let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+    assert!(count_nodes(&value) <= 12_000);
+
+    let alert = format!(
+        "> [!NOTE]\n> {quoted_header}\n> {quoted_align}\n{}x\n",
+        "> |\n".repeat(160)
+    );
+    let spoiler = format!(
+        "||\n{quoted_header}\n{quoted_align}\n{}||\n",
+        "|\n".repeat(170)
+    );
+    for unit in [alert, spoiler] {
+        let input = unit.repeat(4000 / unit.len());
+        let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
+        let nodes = parser.parse(&input).expect("parse succeeds");
+        let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+        assert!(count_nodes(&value) <= 12_000);
+    }
+
+    let filled = parse("a|b\n-|-\n1|2\n|", ParserFlags::ALL, "");
+    assert_eq!(filled["nodes"][0]["rows"].as_array().map(Vec::len), Some(2));
+}

@@ -243,7 +243,7 @@ const ReactorListItem = observer(
 						{displayName}
 					</span>
 					<span className={styles.reactorTag} data-flx="app.message-reactions-content.reactor-list-item.reactor-tag">
-						{reactor.tag}
+						{NicknameUtils.formatUserTagForStreamerMode(reactor)}
 					</span>
 				</div>
 				{showRemoveButton && (

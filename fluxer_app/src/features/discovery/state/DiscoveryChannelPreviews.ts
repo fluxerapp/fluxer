@@ -13,6 +13,8 @@ type DiscoveryChannelPreviewEntry =
 	| {status: 'ready'; preview: DiscoveryChannelPreview}
 	| {status: 'unavailable'};
 
+const MAX_ENTRIES = 500;
+
 function entryKey(guildId: string, channelId: string): string {
 	return `${guildId}:${channelId}`;
 }
@@ -37,24 +39,35 @@ class DiscoveryChannelPreviews {
 		const key = entryKey(guildId, channelId);
 		if (this.discoveryDisabled || this.entries.has(key)) return;
 		this.entries.set(key, {status: 'loading'});
+		this.evictSettledEntries();
 		DiscoveryCommands.getChannelPreview(guildId, channelId).then(
 			(preview) => {
-				runInAction(() => this.entries.set(key, {status: 'ready', preview}));
+				runInAction(() => {
+					if (this.entries.has(key)) this.entries.set(key, {status: 'ready', preview});
+				});
 			},
 			(error: unknown) => {
 				const code = failureCode(error);
 				runInAction(() => {
 					if (code === APIErrorCodes.DISCOVERY_DISABLED) {
 						this.discoveryDisabledByApi = true;
-						this.entries.set(key, {status: 'unavailable'});
+						if (this.entries.has(key)) this.entries.set(key, {status: 'unavailable'});
 					} else if (code === APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE) {
-						this.entries.set(key, {status: 'unavailable'});
+						if (this.entries.has(key)) this.entries.set(key, {status: 'unavailable'});
 					} else {
 						this.entries.delete(key);
 					}
 				});
 			},
 		);
+	}
+
+	private evictSettledEntries(): void {
+		if (this.entries.size <= MAX_ENTRIES) return;
+		for (const [key, entry] of this.entries) {
+			if (this.entries.size <= MAX_ENTRIES) return;
+			if (entry.status !== 'loading') this.entries.delete(key);
+		}
 	}
 
 	reset(): void {

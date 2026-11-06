@@ -49,6 +49,10 @@ export function findInvite(content: string | null): string | null {
 	return CodeLinkUtils.findCode(content, INVITE_CONFIG);
 }
 
+export function findInviteUrl(url: string | null): string | null {
+	return CodeLinkUtils.findCodeAtUrlStart(url, INVITE_CONFIG);
+}
+
 export function findSpoileredInvites(content: string | null): Array<CodeLinkUtils.CodeLinkMatch> {
 	return CodeLinkUtils.findSpoileredCodeMatches(content, INVITE_CONFIG);
 }
