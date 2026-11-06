@@ -59,6 +59,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
+import {loadThreadsForMessages} from '@app/features/threads/commands/ThreadCommands';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {CopyLinkIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -857,6 +858,12 @@ export const LinkRenderer = observer(function LinkRenderer({
 		!Guilds.getGuild(jumpTarget.scope)
 			? jumpTarget.scope
 			: null;
+	const uncachedGuildId = jumpTarget && !jumpChannel && jumpTarget.scope !== ME ? jumpTarget.scope : null;
+	const uncachedChannelId = uncachedGuildId ? (jumpTarget?.channelId ?? null) : null;
+	useEffect(() => {
+		if (!uncachedGuildId || !uncachedChannelId) return;
+		void loadThreadsForMessages([{channel_id: uncachedChannelId, guild_id: uncachedGuildId}]);
+	}, [uncachedGuildId, uncachedChannelId]);
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
 	const appPage = settingsTarget ? null : parseAppPageLink(url);
 	const isInlineReplyContext = isRestrictedInlineContext(options.context);

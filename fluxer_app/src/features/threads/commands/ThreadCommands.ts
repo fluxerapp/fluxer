@@ -186,7 +186,17 @@ export async function loadThreadsForMessages(
 		if (nonThreadChannelIds.has(message.channel_id)) continue;
 		pending.add(message.channel_id);
 	}
-	await Promise.all(Array.from(pending, loadUnknownThread));
+	await Promise.all(Array.from(pending, loadUnknownThreadOnce));
+}
+
+const unknownThreadLookups = new Map<string, Promise<void>>();
+
+function loadUnknownThreadOnce(channelId: string): Promise<void> {
+	const existing = unknownThreadLookups.get(channelId);
+	if (existing) return existing;
+	const lookup = loadUnknownThread(channelId).finally(() => unknownThreadLookups.delete(channelId));
+	unknownThreadLookups.set(channelId, lookup);
+	return lookup;
 }
 
 async function loadUnknownThread(channelId: string): Promise<void> {
