@@ -71,7 +71,15 @@ fn write_node(out: &mut String, node: &Node) {
             write_bool(out, *ordered);
             out.push_str(key!("items"));
             out.push('[');
-            for (index, ListItem { children, ordinal }) in items.iter().enumerate() {
+            for (
+                index,
+                ListItem {
+                    children,
+                    ordinal,
+                    checked,
+                },
+            ) in items.iter().enumerate()
+            {
                 if index > 0 {
                     out.push(',');
                 }
@@ -80,6 +88,10 @@ fn write_node(out: &mut String, node: &Node) {
                 if let Some(ordinal) = ordinal {
                     out.push_str(key!("ordinal"));
                     write_number(out, *ordinal as u64);
+                }
+                if let Some(checkmark) = checked {
+                    out.push_str(key!("checked"));
+                    write_bool(out, *checkmark);
                 }
                 out.push('}');
             }

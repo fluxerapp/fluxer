@@ -11,6 +11,11 @@
 	cursor: pointer;
 }
 
+.taskListCheck {
+	display: inline-block;
+	margin: 0 0.25rem;
+}
+
 .disabled {
 	opacity: 0.6;
 }
