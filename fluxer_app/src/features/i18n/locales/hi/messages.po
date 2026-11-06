@@ -20012,11 +20012,6 @@ msgstr "अमान्य ऑथराइज़ेशन अनुरोध"
 msgid "Invalid bot permissions."
 msgstr "अमान्य बॉट अनुमतियाँ।"
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "अमान्य इमोजी नाम"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"

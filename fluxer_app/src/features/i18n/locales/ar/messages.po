@@ -20012,11 +20012,6 @@ msgstr "طلب تفويض غير صالح"
 msgid "Invalid bot permissions."
 msgstr "أذونات البوت غير صالحة."
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "اسم الرمز التعبيري غير صالح"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"

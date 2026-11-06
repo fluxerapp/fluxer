@@ -20012,11 +20012,6 @@ msgstr "Requête d'autorisation non valide"
 msgid "Invalid bot permissions."
 msgstr "Permissions du bot non valides."
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "Nom d’emoji non valide"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"
