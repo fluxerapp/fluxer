@@ -292,6 +292,14 @@ Whether the API accepts a voice server joining with an endpoint that resolves to
 
 How often each API node checks every active voice server, in milliseconds. A server that fails two checks in a row gets no new calls until a check passes. Set it to `0` to turn the checks off. When it's empty, the API checks every 15 seconds. With rexctl, use `rexctl config set FLUXER_VOICE_HEALTH_INTERVAL_MS`.
 
+### `FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED`
+
+Whether a worker compares each voice server's call participants with the gateway's call state every minute and disconnects connections the gateway has not known for two minutes. Use `true` or `false`. When it's empty, the check runs. With rexctl, use `rexctl config set FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED`.
+
+### `FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN`
+
+Whether the voice participant check from `FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED` only logs the connections it would disconnect. Use `true` or `false`. When it's empty, the check only logs them. With rexctl, use `rexctl config set FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN`.
+
 ### `FLUXER_LIVEKIT_TCP_PORT`
 
 The TCP port for voice and video. The default is `7881`. With rexctl, use `rexctl config set voice.tcp_port`.

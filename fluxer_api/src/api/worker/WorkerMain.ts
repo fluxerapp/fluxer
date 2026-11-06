@@ -145,6 +145,10 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		);
 	}
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
+	cron.upsert('sweepVoiceParticipants', 'sweepVoiceParticipants', {}, '30 * * * * *', {
+		ledger: false,
+		enabled: () => Config.voice.enabled && Config.voice.participantSweepEnabled,
+	});
 	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *', {ledger: false});
 	if (Config.blocklistFeeds.enabled) {
 		cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *', {ledger: true});

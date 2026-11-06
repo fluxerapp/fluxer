@@ -2,13 +2,18 @@
 
 import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {ILiveKitService, LiveKitParticipantRef} from '@app/api/infrastructure/ILiveKitService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import {SERVER_MUTE_ATTRIBUTE} from '@app/api/infrastructure/LiveKitService';
 import {isDMRoom, parseParticipantMetadataWithRaw, parseRoomName} from '@app/api/infrastructure/VoiceRoomContext';
 import {Logger} from '@app/api/Logger';
+import {
+	voiceParticipantConfirmUnavailableTotal,
+	voiceParticipantsDisconnectedTotal,
+} from '@app/api/voice/VoiceParticipantMetrics';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
-import type {WebhookEvent} from 'livekit-server-sdk';
+import {ms} from 'itty-time';
+import type {ParticipantPermission, WebhookEvent} from 'livekit-server-sdk';
 import {TrackSource, WebhookReceiver} from 'livekit-server-sdk';
 
 const WEBHOOK_CLOCK_TOLERANCE_SECONDS = 60;
@@ -24,6 +29,22 @@ interface VoiceWebhookParticipantContext {
 	readonly type: 'dm' | 'guild';
 	readonly channelId: ChannelID;
 	readonly guildId?: GuildID;
+}
+
+type ParticipantContext = NonNullable<ReturnType<typeof parseParticipantMetadataWithRaw>>['context'];
+
+type ConfirmOutcome =
+	| {status: 'confirmed'}
+	| {status: 'rejected'; error: string | undefined}
+	| {status: 'unavailable'; error: unknown};
+
+const CONFIRM_ATTEMPTS = 2;
+const DM_CONFIRM_RECHECK_DELAYS_MS = [ms('5 seconds'), ms('10 seconds')];
+
+function sleep(durationMs: number): Promise<void> {
+	return new Promise((resolve) => {
+		setTimeout(resolve, durationMs);
+	});
 }
 
 export class LiveKitWebhookService {
@@ -207,101 +228,152 @@ export class LiveKitWebhookService {
 	}
 
 	private async handleParticipantJoined(event: WebhookEvent, apiKey: string): Promise<void> {
-		if (event.event !== 'participant_joined') {
+		if (event.event !== 'participant_joined' || !event.participant) {
 			return;
 		}
 		const {participant} = event;
-		if (!participant?.metadata) {
-			Logger.debug('Participant joined without metadata, skipping');
-			return;
-		}
-		const parsed = parseParticipantMetadataWithRaw(participant.metadata);
+		const roomName = event.room?.name ?? null;
+		const metadata = participant.metadata ?? '';
+		const parsed = metadata ? parseParticipantMetadataWithRaw(metadata) : null;
 		if (!parsed) {
-			Logger.warn({metadata: participant.metadata}, 'Failed to parse participant metadata');
+			Logger.warn(
+				{participantIdentity: participant.identity, roomName, hasMetadata: Boolean(metadata)},
+				'LiveKit participant_joined without usable metadata - disconnecting participant',
+			);
+			await this.removeJoinedParticipant(
+				await this.locateJoinedParticipant({apiKey, roomName, identity: participant.identity, metadata}),
+				'unidentified',
+			);
 			return;
 		}
 		const {context, raw} = parsed;
-		const tokenNonce = raw.token_nonce;
-		const source = this.resolveSource(apiKey, raw);
-		if (
-			!source ||
-			!(await this.isFromPinnedServer(
-				context.type === 'guild' ? context.guildId : undefined,
-				context.channelId,
-				source,
-			))
-		) {
+		const outcome = await this.confirmWithRetry(context, raw.token_nonce);
+		const logContext = {
+			type: context.type,
+			guildId: context.type === 'guild' ? context.guildId.toString() : undefined,
+			channelId: context.channelId.toString(),
+			connectionId: context.connectionId,
+			participantIdentity: participant.identity,
+			roomName,
+		};
+		if (outcome.status === 'confirmed') {
 			return;
 		}
-		Logger.debug(
-			{
-				type: context.type,
-				participantIdentity: participant.identity,
-				roomName: event.room?.name ?? null,
-				channelId: context.channelId.toString(),
-				guildId: context.type === 'guild' ? context.guildId.toString() : undefined,
-				connectionId: context.connectionId,
-				tokenNonce,
-			},
-			'Processing LiveKit participant_joined event',
+		if (outcome.status === 'unavailable') {
+			voiceParticipantConfirmUnavailableTotal.inc();
+			Logger.warn(
+				{...logContext, error: outcome.error},
+				'LiveKit participant_joined confirm unavailable - leaving participant for the sweep',
+			);
+			return;
+		}
+		const located = await this.locateJoinedParticipant({apiKey, roomName, identity: participant.identity, metadata});
+		if (context.type === 'dm' && participant.permission) {
+			void this.holdDmJoin(context, raw.token_nonce, located, participant.permission, logContext);
+			return;
+		}
+		Logger.warn(
+			{...logContext, error: outcome.error},
+			'LiveKit participant_joined rejected - disconnecting participant',
 		);
-		try {
-			const guildId = context.type === 'guild' ? context.guildId : undefined;
-			Logger.debug(
-				{
-					type: context.type,
-					guildId: guildId?.toString(),
-					channelId: context.channelId.toString(),
-					connectionId: context.connectionId,
-					participantIdentity: participant.identity,
-				},
-				'LiveKit participant_joined - confirming voice connection',
-			);
-			const result = await this.gatewayService.confirmVoiceConnection({
-				guildId,
-				channelId: context.channelId,
-				connectionId: context.connectionId,
-				tokenNonce,
-			});
-			Logger.debug(
-				{
-					type: context.type,
-					guildId: guildId?.toString(),
-					channelId: context.channelId.toString(),
-					connectionId: context.connectionId,
-					success: result.success,
-					error: result.error,
-				},
-				'LiveKit voice connection confirm result',
-			);
-			if (!result.success) {
-				Logger.warn(
-					{
-						type: context.type,
-						guildId: guildId?.toString(),
-						channelId: context.channelId.toString(),
-						connectionId: context.connectionId,
-						error: result.error,
-						participantIdentity: participant.identity,
-					},
-					'LiveKit participant_joined rejected - disconnecting participant',
-				);
-				try {
-					await this.liveKitService.disconnectParticipant({
-						guildId,
-						channelId: context.channelId,
-						userId: context.userId,
-						connectionId: context.connectionId,
-						regionId: source.regionId,
-						serverId: source.serverId,
-					});
-				} catch (disconnectError) {
-					Logger.error({error: disconnectError}, 'Failed to disconnect rejected participant');
-				}
-				return;
+		await this.removeJoinedParticipant(located, 'rejected');
+	}
+
+	private async holdDmJoin(
+		context: ParticipantContext,
+		tokenNonce: string,
+		located: Array<LiveKitParticipantRef>,
+		permission: ParticipantPermission,
+		logContext: Record<string, unknown>,
+	): Promise<void> {
+		const setPermission = async (next: Partial<ParticipantPermission>) => {
+			for (const ref of located) {
+				await this.liveKitService.setParticipantPermission({...ref, permission: next});
 			}
+		};
+		try {
+			await setPermission({...permission, canSubscribe: false});
+			let outcome: ConfirmOutcome = {status: 'rejected', error: undefined};
+			for (const delayMs of DM_CONFIRM_RECHECK_DELAYS_MS) {
+				await sleep(delayMs);
+				outcome = await this.confirmWithRetry(context, tokenNonce);
+				if (outcome.status !== 'rejected') {
+					await setPermission(permission);
+					return;
+				}
+			}
+			Logger.warn(
+				{...logContext, error: outcome.status === 'rejected' ? outcome.error : undefined},
+				'LiveKit participant_joined rejected - disconnecting participant',
+			);
+			await this.removeJoinedParticipant(located, 'rejected');
 		} catch (error) {
-			Logger.error({error, type: context.type}, 'Error processing participant_joined');
+			Logger.error({...logContext, error}, 'Failed to recheck LiveKit call participant');
+		}
+	}
+
+	private async confirmWithRetry(context: ParticipantContext, tokenNonce: string): Promise<ConfirmOutcome> {
+		let lastError: unknown = null;
+		for (let attempt = 0; attempt < CONFIRM_ATTEMPTS; attempt += 1) {
+			try {
+				const result = await this.gatewayService.confirmVoiceConnection({
+					guildId: context.type === 'guild' ? context.guildId : undefined,
+					channelId: context.channelId,
+					connectionId: context.connectionId,
+					tokenNonce,
+				});
+				return result.success ? {status: 'confirmed'} : {status: 'rejected', error: result.error};
+			} catch (error) {
+				lastError = error;
+			}
+		}
+		return {status: 'unavailable', error: lastError};
+	}
+
+	private async locateJoinedParticipant(params: {
+		apiKey: string;
+		roomName: string | null;
+		identity: string;
+		metadata: string;
+	}): Promise<Array<LiveKitParticipantRef>> {
+		const {apiKey, roomName, identity, metadata} = params;
+		const servers = this.serversByKey.get(apiKey) ?? [];
+		if (roomName === null || servers.length === 0) {
+			Logger.warn(
+				{participantIdentity: identity, roomName, serverCount: servers.length},
+				'Cannot determine where to disconnect LiveKit participant',
+			);
+			return [];
+		}
+		const refs = servers.map((server) => ({
+			regionId: server.regionId,
+			serverId: server.serverId,
+			roomName,
+			identity,
+		}));
+		if (refs.length === 1) {
+			return refs;
+		}
+		const located: Array<LiveKitParticipantRef> = [];
+		for (const ref of refs) {
+			const result = await this.liveKitService.getParticipant(ref);
+			if (result.status === 'ok' && result.participant?.metadata === metadata) {
+				located.push(ref);
+			}
+		}
+		return located;
+	}
+
+	private async removeJoinedParticipant(
+		located: Array<LiveKitParticipantRef>,
+		reason: 'unidentified' | 'rejected',
+	): Promise<void> {
+		if (located.length === 0) {
+			return;
+		}
+		voiceParticipantsDisconnectedTotal.inc(`reason="${reason}"`);
+		for (const ref of located) {
+			await this.liveKitService.removeParticipant(ref);
 		}
 	}
 
