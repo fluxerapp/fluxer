@@ -145,19 +145,62 @@ const CHINESE_TRADITIONAL_DESCRIPTOR = msg({
 	message: 'Chinese (traditional)',
 	comment: 'Short label in the language and locale names. Keep it concise.',
 });
+const BELARUSIAN_DESCRIPTOR = msg({
+	message: 'Belarusian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const BANGLA_DESCRIPTOR = msg({
+	message: 'Bangla',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const CATALAN_DESCRIPTOR = msg({
+	message: 'Catalan',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const FILIPINO_DESCRIPTOR = msg({
+	message: 'Filipino',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const LATVIAN_DESCRIPTOR = msg({
+	message: 'Latvian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const PORTUGUESE_PORTUGAL_DESCRIPTOR = msg({
+	message: 'Portuguese (Portugal)',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const SLOVAK_DESCRIPTOR = msg({
+	message: 'Slovak',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const SLOVENIAN_DESCRIPTOR = msg({
+	message: 'Slovenian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const ALBANIAN_DESCRIPTOR = msg({
+	message: 'Albanian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const TOKI_PONA_DESCRIPTOR = msg({
+	message: 'Toki Pona',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
 const logger = new Logger('LocaleUtils');
 
 interface LocaleInfo {
 	code: string;
 	name: MessageDescriptor;
 	nativeName: string;
-	flag: string;
+	flag: string | null;
 	region?: string;
 }
 
 const SUPPORTED_LOCALES: Array<LocaleInfo> = [
-	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: '🇸🇦'},
+	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: null},
+	{code: 'be', name: BELARUSIAN_DESCRIPTOR, nativeName: 'Беларуская', flag: null},
 	{code: 'bg', name: BULGARIAN_DESCRIPTOR, nativeName: 'Български', flag: '🇧🇬'},
+	{code: 'bn', name: BANGLA_DESCRIPTOR, nativeName: 'বাংলা', flag: '🇧🇩'},
+	{code: 'ca', name: CATALAN_DESCRIPTOR, nativeName: 'Català', flag: null},
 	{code: 'cs', name: CZECH_DESCRIPTOR, nativeName: 'Čeština', flag: '🇨🇿'},
 	{code: 'da', name: DANISH_DESCRIPTOR, nativeName: 'Dansk', flag: '🇩🇰'},
 	{code: 'de', name: GERMAN_DESCRIPTOR, nativeName: 'Deutsch', flag: '🇩🇪'},
@@ -165,8 +208,9 @@ const SUPPORTED_LOCALES: Array<LocaleInfo> = [
 	{code: 'en-GB', name: ENGLISH_DESCRIPTOR, nativeName: 'English', flag: '🇬🇧'},
 	{code: 'en-US', name: ENGLISH_US_DESCRIPTOR, nativeName: 'English (US)', flag: '🇺🇸'},
 	{code: 'es-ES', name: SPANISH_SPAIN_DESCRIPTOR, nativeName: 'Español (España)', flag: '🇪🇸'},
-	{code: 'es-419', name: SPANISH_LATIN_AMERICA_DESCRIPTOR, nativeName: 'Español (Latinoamérica)', flag: '🌎'},
+	{code: 'es-419', name: SPANISH_LATIN_AMERICA_DESCRIPTOR, nativeName: 'Español (Latinoamérica)', flag: null},
 	{code: 'fi', name: FINNISH_DESCRIPTOR, nativeName: 'Suomi', flag: '🇫🇮'},
+	{code: 'fil', name: FILIPINO_DESCRIPTOR, nativeName: 'Filipino', flag: '🇵🇭'},
 	{code: 'fr', name: FRENCH_DESCRIPTOR, nativeName: 'Français', flag: '🇫🇷'},
 	{code: 'he', name: HEBREW_DESCRIPTOR, nativeName: 'עברית', flag: '🇮🇱'},
 	{code: 'hi', name: HINDI_DESCRIPTOR, nativeName: 'हिन्दी', flag: '🇮🇳'},
@@ -177,14 +221,20 @@ const SUPPORTED_LOCALES: Array<LocaleInfo> = [
 	{code: 'ja', name: JAPANESE_DESCRIPTOR, nativeName: '日本語', flag: '🇯🇵'},
 	{code: 'ko', name: KOREAN_DESCRIPTOR, nativeName: '한국어', flag: '🇰🇷'},
 	{code: 'lt', name: LITHUANIAN_DESCRIPTOR, nativeName: 'Lietuvių', flag: '🇱🇹'},
+	{code: 'lv', name: LATVIAN_DESCRIPTOR, nativeName: 'Latviešu', flag: '🇱🇻'},
 	{code: 'nl', name: DUTCH_DESCRIPTOR, nativeName: 'Nederlands', flag: '🇳🇱'},
 	{code: 'no', name: NORWEGIAN_DESCRIPTOR, nativeName: 'Norsk', flag: '🇳🇴'},
 	{code: 'pl', name: POLISH_DESCRIPTOR, nativeName: 'Polski', flag: '🇵🇱'},
 	{code: 'pt-BR', name: PORTUGUESE_BRAZIL_DESCRIPTOR, nativeName: 'Português (Brasil)', flag: '🇧🇷'},
+	{code: 'pt-PT', name: PORTUGUESE_PORTUGAL_DESCRIPTOR, nativeName: 'Português (Portugal)', flag: '🇵🇹'},
 	{code: 'ro', name: ROMANIAN_DESCRIPTOR, nativeName: 'Română', flag: '🇷🇴'},
 	{code: 'ru', name: RUSSIAN_DESCRIPTOR, nativeName: 'Русский', flag: '🇷🇺'},
+	{code: 'sk', name: SLOVAK_DESCRIPTOR, nativeName: 'Slovenčina', flag: '🇸🇰'},
+	{code: 'sl', name: SLOVENIAN_DESCRIPTOR, nativeName: 'Slovenščina', flag: '🇸🇮'},
+	{code: 'sq', name: ALBANIAN_DESCRIPTOR, nativeName: 'Shqip', flag: '🇦🇱'},
 	{code: 'sv-SE', name: SWEDISH_DESCRIPTOR, nativeName: 'Svenska', flag: '🇸🇪'},
 	{code: 'th', name: THAI_DESCRIPTOR, nativeName: 'ไทย', flag: '🇹🇭'},
+	{code: 'tok', name: TOKI_PONA_DESCRIPTOR, nativeName: 'toki pona', flag: null},
 	{code: 'tr', name: TURKISH_DESCRIPTOR, nativeName: 'Türkçe', flag: '🇹🇷'},
 	{code: 'uk', name: UKRAINIAN_DESCRIPTOR, nativeName: 'Українська', flag: '🇺🇦'},
 	{code: 'vi', name: VIETNAMESE_DESCRIPTOR, nativeName: 'Tiếng Việt', flag: '🇻🇳'},
@@ -276,7 +326,7 @@ interface TranslatedLocaleInfo {
 	code: string;
 	name: string;
 	nativeName: string;
-	flag: string;
+	flag: string | null;
 	region?: string;
 }
 
