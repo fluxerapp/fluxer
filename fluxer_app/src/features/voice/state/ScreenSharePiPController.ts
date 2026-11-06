@@ -64,8 +64,7 @@ function pickLiveKitScreenShare(
 	channelId: string,
 	guildId: string | null,
 ): ScreenSharePiPScreenShare | null {
-	const participants = [room.localParticipant, ...Array.from(room.remoteParticipants.values())];
-	for (const participant of participants) {
+	for (const participant of room.remoteParticipants.values()) {
 		for (const publication of participant.trackPublications.values()) {
 			if (publication.source !== Track.Source.ScreenShare) continue;
 			if (publication.isMuted) continue;
@@ -97,6 +96,7 @@ function pickRemoteScreenShareFromSnapshots(
 		if (!snapshot.isScreenShareEnabled) continue;
 		const parsed = parseVoiceParticipantIdentity(snapshot.identity);
 		if (!parsed.userId || !parsed.connectionId) continue;
+		if (parsed.connectionId === MediaEngine.connectionId) continue;
 		const voiceState = connectionVoiceStates[parsed.connectionId];
 		if (voiceState && voiceState.channel_id !== channelId) continue;
 		if (!isWatchedScreenShare(guildId, channelId, parsed.connectionId)) continue;
@@ -129,18 +129,10 @@ function pickLocalSelfShare(channelId: string): ScreenSharePiPScreenShare | null
 	);
 }
 
-function detectActiveScreenShare(channelId: string | null, guildId: string | null): ScreenSharePiPScreenShare | null {
-	if (!channelId) return null;
-	const local = pickLocalSelfShare(channelId);
-	if (local) return local;
+function pickRemoteScreenShare(channelId: string, guildId: string | null): ScreenSharePiPScreenShare | null {
 	const room = MediaEngine.room;
-	if (room) {
-		const fromRoom = pickLiveKitScreenShare(room, channelId, guildId);
-		if (fromRoom) return fromRoom;
-	}
-	const fromSnapshots = pickRemoteScreenShareFromSnapshots(channelId, guildId);
-	if (fromSnapshots) return fromSnapshots;
-	return null;
+	const fromRoom = room ? pickLiveKitScreenShare(room, channelId, guildId) : null;
+	return fromRoom ?? pickRemoteScreenShareFromSnapshots(channelId, guildId);
 }
 
 function pickWatchedScreenShareFromOpenPiP(
@@ -167,7 +159,12 @@ function detectScreenSharePiPContent(
 	channelId: string | null,
 	guildId: string | null,
 ): ScreenSharePiPScreenShare | null {
-	return detectActiveScreenShare(channelId, guildId) ?? pickWatchedScreenShareFromOpenPiP(channelId, guildId);
+	if (!channelId) return null;
+	return (
+		pickWatchedScreenShareFromOpenPiP(channelId, guildId) ??
+		pickRemoteScreenShare(channelId, guildId) ??
+		pickLocalSelfShare(channelId)
+	);
 }
 
 function getClosedReason(conditions: ScreenSharePiPConditions): string | null {
