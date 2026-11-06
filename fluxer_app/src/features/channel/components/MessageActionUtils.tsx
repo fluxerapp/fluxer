@@ -723,5 +723,5 @@ export function requestToggleSuppressEmbeds(message: Message, i18n: I18n): void 
 }
 
 export function requestSpeakMessage(message: Message): void {
-	TtsUtils.speakMessage(getEffectiveContent(message));
+	TtsUtils.speakMessage(getEffectiveContent(message), Channels.getChannel(message.channelId)?.guildId ?? null);
 }

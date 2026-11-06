@@ -15,7 +15,7 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import * as TtsSpeechUtils from '@app/features/voice/utils/TtsSpeechUtils';
-import {formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
+import {formatContentForTts, formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {type I18n, i18n as linguiI18n} from '@lingui/core';
@@ -332,7 +332,7 @@ async function speakWithFallback(
 	void speakNextChunk();
 }
 
-function speakMessage(content: string): void {
+function speakMessage(content: string, guildId: string | null): void {
 	ensureInitialized();
 	if (!isSupported()) {
 		void showUnsupportedModal();
@@ -342,7 +342,7 @@ function speakMessage(content: string): void {
 		stopSpeaking();
 		return;
 	}
-	speakText({text: content});
+	speakText({text: formatContentForTts(content, guildId, getI18n())});
 }
 
 function isUserMessageType(type: number): boolean {
