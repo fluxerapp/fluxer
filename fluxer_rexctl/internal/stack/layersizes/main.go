@@ -35,6 +35,7 @@ const (
 	mediaManifest  = "application/vnd.oci.image.manifest.v1+json"
 	mediaDockerV2  = "application/vnd.docker.distribution.manifest.v2+json"
 	parallelLayers = 4
+	maxManifest    = 4 << 20
 )
 
 func main() {
@@ -316,7 +317,7 @@ func (c *client) login(ctx context.Context, r repo, challenge string) error {
 		Token       string `json:"token"`
 		AccessToken string `json:"access_token"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(io.LimitReader(res.Body, maxManifest)).Decode(&body); err != nil {
 		return err
 	}
 	tok := body.Token
@@ -335,9 +336,12 @@ func (c *client) manifest(ctx context.Context, r repo, ref string) (manifest, st
 		return manifest{}, "", err
 	}
 	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
+	data, err := io.ReadAll(io.LimitReader(res.Body, maxManifest+1))
 	if err != nil {
 		return manifest{}, "", err
+	}
+	if len(data) > maxManifest {
+		return manifest{}, "", fmt.Errorf("manifest %s is larger than %d bytes", ref, maxManifest)
 	}
 	var m manifest
 	if err := json.Unmarshal(data, &m); err != nil {
@@ -375,7 +379,7 @@ func (c *client) diffIDs(ctx context.Context, r repo, digest string) ([]string, 
 			DiffIDs []string `json:"diff_ids"`
 		} `json:"rootfs"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&cfg); err != nil {
+	if err := json.NewDecoder(io.LimitReader(res.Body, maxManifest)).Decode(&cfg); err != nil {
 		return nil, err
 	}
 	return cfg.RootFS.DiffIDs, nil

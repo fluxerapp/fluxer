@@ -13,7 +13,7 @@ import (
 
 const Masked = "set"
 
-var secretParts = []string{"PASSWORD", "SECRET", "_TOKEN", "PRIVATE_KEY", "COOKIE", "API_KEY", "PROXY_KEY", "BLUESKY_KEYS", "SECRETS_BASE64"}
+var secretParts = []string{"PASSWORD", "SECRET", "_TOKEN", "PRIVATE_KEY", "COOKIE", "API_KEY", "PROXY_KEY", "BLUESKY_KEYS", "SECRETS_BASE64", "TRUSTED_CALLERS", "SIGNING_KEY", "MASTER_KEY"}
 
 func SecretName(name string) bool {
 	for _, p := range secretParts {

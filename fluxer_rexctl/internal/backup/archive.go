@@ -15,8 +15,10 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/klauspost/compress/zstd"
 )
@@ -195,6 +197,14 @@ func trailer(manifest []byte) []byte {
 }
 
 func ReadManifest(path string) (*Manifest, error) {
+	data, err := readTrailer(path)
+	if err != nil {
+		return nil, err
+	}
+	return parseManifest(data)
+}
+
+func readTrailer(path string) ([]byte, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -226,12 +236,15 @@ func ReadManifest(path string) (*Manifest, error) {
 	if binary.LittleEndian.Uint32(frame[0:4]) != skippableMagic || binary.LittleEndian.Uint32(frame[4:8]) != uint32(n)+trailerSize {
 		return nil, ErrNotBackup
 	}
-	return parseManifest(frame[8:])
+	return frame[8:], nil
 }
 
 func parseManifest(data []byte) (*Manifest, error) {
 	var m Manifest
 	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, ErrNotBackup
+	}
+	if slices.ContainsFunc([]string{m.Domain, m.Project, m.Release, m.Reason}, func(s string) bool { return strings.ContainsFunc(s, unicode.IsControl) }) {
 		return nil, ErrNotBackup
 	}
 	if m.Format < 1 {
@@ -288,27 +301,34 @@ func checkName(name string) error {
 }
 
 func Verify(path string) (*Manifest, error) {
-	head, err := ReadManifest(path)
+	data, err := readTrailer(path)
 	if err != nil {
-		return head, err
+		return nil, err
+	}
+	m, err := parseManifest(data)
+	if err != nil {
+		return m, err
 	}
 	seen := map[string]Entry{}
-	var manifest, sumsData []byte
+	var manifestSum, sumsSum []byte
 	err = walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
 		if hdr.Typeflag != tar.TypeReg {
 			return nil
 		}
 		switch hdr.Name {
 		case ManifestName:
-			b, err := io.ReadAll(io.LimitReader(r, maxManifestSize))
-			manifest = b
+			if hdr.Size != int64(len(data)) {
+				return fmt.Errorf("%w: the index doesn't match the manifest", ErrDamaged)
+			}
+			sum, err := hashReader(r)
+			manifestSum = sum
 			return err
 		case SumsName:
-			b, err := io.ReadAll(io.LimitReader(r, maxManifestSize))
-			sumsData = b
+			sum, err := hashReader(r)
+			sumsSum = sum
 			return err
 		}
-		if manifest != nil {
+		if manifestSum != nil {
 			return fmt.Errorf("%w: %s comes after the manifest", ErrDamaged, hdr.Name)
 		}
 		h := sha256.New()
@@ -323,14 +343,13 @@ func Verify(path string) (*Manifest, error) {
 		return nil
 	})
 	if err != nil {
-		return head, err
+		return m, err
 	}
-	if manifest == nil || sumsData == nil {
-		return head, fmt.Errorf("%w: the manifest is missing", ErrDamaged)
+	if manifestSum == nil || sumsSum == nil {
+		return m, fmt.Errorf("%w: the manifest is missing", ErrDamaged)
 	}
-	m, err := parseManifest(manifest)
-	if err != nil {
-		return head, err
+	if want := sha256.Sum256(data); !bytes.Equal(manifestSum, want[:]) {
+		return m, fmt.Errorf("%w: the index doesn't match the manifest", ErrDamaged)
 	}
 	if len(m.Entries) != len(seen) {
 		return m, fmt.Errorf("%w: the manifest lists %d files and the archive has %d", ErrDamaged, len(m.Entries), len(seen))
@@ -344,19 +363,18 @@ func Verify(path string) (*Manifest, error) {
 			return m, fmt.Errorf("%w: %s doesn't match its checksum", ErrDamaged, want.Path)
 		}
 	}
-	if !bytes.Equal(sumsData, sums(append(m.Entries, entryFor(ManifestName, manifest)))) {
+	if want := sha256.Sum256(sums(append(m.Entries, entryFor(ManifestName, data)))); !bytes.Equal(sumsSum, want[:]) {
 		return m, fmt.Errorf("%w: %s doesn't match the manifest", ErrDamaged, SumsName)
-	}
-	if !sameManifest(head, m) {
-		return m, fmt.Errorf("%w: the index doesn't match the manifest", ErrDamaged)
 	}
 	return m, nil
 }
 
-func sameManifest(a, b *Manifest) bool {
-	x, err1 := json.Marshal(a)
-	y, err2 := json.Marshal(b)
-	return err1 == nil && err2 == nil && bytes.Equal(x, y)
+func hashReader(r io.Reader) ([]byte, error) {
+	h := sha256.New()
+	if _, err := io.Copy(h, r); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrDamaged, err)
+	}
+	return h.Sum(nil), nil
 }
 
 func volumeOf(name string) (string, string, bool) {

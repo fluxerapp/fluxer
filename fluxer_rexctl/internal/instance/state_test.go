@@ -29,3 +29,15 @@ func TestParseStateSplitsListenAddress(t *testing.T) {
 		t.Fatalf("config set is locked out: %v", err)
 	}
 }
+
+func TestParseStateRefusesInvalidNames(t *testing.T) {
+	if _, err := ParseState([]byte(`{"schema":5,"project":"Fluxer Prod"}`), "/data/fluxer"); !errors.Is(err, ErrBadProject) {
+		t.Fatalf("project: err %v", err)
+	}
+	if _, err := ParseState([]byte(`{"schema":5,"project":"fluxer","voice":[{"id":"a/b"}]}`), "/data/fluxer"); err == nil {
+		t.Fatal("voice server ID: no error")
+	}
+	if _, err := ParseState([]byte(`{"schema":5,"project":"fluxer","voice":[{"id":"EU.West_server-1"}]}`), "/data/fluxer"); err != nil {
+		t.Fatalf("voice server ID: %v", err)
+	}
+}

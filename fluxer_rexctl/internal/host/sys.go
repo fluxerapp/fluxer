@@ -131,7 +131,7 @@ func parseSTUN(msg, txid []byte) (net.IP, error) {
 		case stunMappedAddress:
 			mapped = stunAddress(val, false, txid)
 		}
-		attrs = attrs[4+(alen+3)&^3:]
+		attrs = attrs[min(4+(alen+3)&^3, len(attrs)):]
 	}
 	if mapped != nil {
 		return mapped, nil

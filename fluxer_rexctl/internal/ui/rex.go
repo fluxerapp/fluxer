@@ -81,7 +81,7 @@ func (u *UI) Rex(lines ...string) {
 	b.WriteString("\n")
 	for i, row := range art {
 		if i >= first && i-first < len(lines) {
-			row += "   " + lines[i-first]
+			row += "   " + printable(lines[i-first])
 		}
 		b.WriteString(row + "\n")
 	}

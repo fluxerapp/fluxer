@@ -273,7 +273,7 @@ func (p *Project) stop(ctx context.Context, timeout *time.Duration, services []s
 	} else if err != nil {
 		return err
 	}
-	if marker := p.stopMarker(); marker != "" && os.WriteFile(marker, []byte(strings.Join(services, "\n")), 0o600) == nil {
+	if marker := p.stopMarker(); marker != "" && p.writeStopMarker(services) == nil {
 		defer os.Remove(marker)
 	}
 	if err := c.svc.Stop(ctx, p.Name, api.StopOptions{Project: p.modelOrNil(), Services: services, Timeout: timeout}); err != nil {
@@ -293,6 +293,23 @@ func (p *Project) stopMarker() string {
 		return ""
 	}
 	return filepath.Join(dir, "stopping")
+}
+
+func (p *Project) writeStopMarker(services []string) error {
+	root, err := os.OpenRoot(p.Dir)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	f, err := root.OpenFile(filepath.Join(".rexctl", "stopping"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(strings.Join(services, "\n"))
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	return err
 }
 
 func (p *Project) finishStop(ctx context.Context, c *conn) error {

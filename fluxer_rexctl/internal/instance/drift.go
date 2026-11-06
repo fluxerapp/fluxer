@@ -302,9 +302,16 @@ func UnseenEdits(inst *Instance) []string {
 }
 
 func SeenEdits(inst *Instance) {
-	path := inst.Path(StateDirName, EditedDir, seenMarker)
+	root, err := os.OpenRoot(inst.Dir)
+	if err != nil {
+		return
+	}
+	defer root.Close()
+	name := filepath.Join(StateDirName, EditedDir, seenMarker)
 	now := time.Now()
-	if os.Chtimes(path, now, now) != nil {
-		_ = os.WriteFile(path, nil, 0o600)
+	if root.Chtimes(name, now, now) != nil {
+		if f, err := root.OpenFile(name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600); err == nil {
+			_ = f.Close()
+		}
 	}
 }

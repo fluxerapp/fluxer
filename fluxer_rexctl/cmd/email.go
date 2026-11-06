@@ -97,7 +97,7 @@ func smtpReason(message string) string {
 	if certificateFailed(message) {
 		return "Your email server's certificate isn't trusted. It may be self-signed."
 	}
-	return sentenceOf(message)
+	return sentenceOf(ui.Inline(message))
 }
 
 func newEmailCmd(app *App) *cobra.Command {

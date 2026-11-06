@@ -154,7 +154,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	}
 
 	progress(StagePulling)
-	if err := pullFromBackup(ctx, path, dir, e, data, opts.OnEvent); err != nil {
+	if err := pullFromBackup(ctx, path, dir, e, m, data, opts.OnEvent); err != nil {
 		return nil, err
 	}
 
@@ -467,7 +467,7 @@ func removeStaleImages(ctx context.Context, p *engine.Project, stale []string) {
 	}
 }
 
-func pullFromBackup(ctx context.Context, path, dir string, e *engine.Engine, data uint64, onEvent func(engine.Event)) error {
+func pullFromBackup(ctx context.Context, path, dir string, e *engine.Engine, m *Manifest, data uint64, onEvent func(engine.Event)) error {
 	staging, err := os.MkdirTemp("", "rexctl-restore-")
 	if err != nil {
 		return err
@@ -479,6 +479,9 @@ func pullFromBackup(ctx context.Context, path, dir string, e *engine.Engine, dat
 	inst, err := instance.Find(staging)
 	if err != nil {
 		return err
+	}
+	if inst.Project() != m.Project {
+		return fmt.Errorf("%w: the backup's state names project %s and its manifest names %s", ErrDamaged, inst.Project(), m.Project)
 	}
 	p, err := deploy.Load(ctx, inst, e)
 	if err != nil {

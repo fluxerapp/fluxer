@@ -3,10 +3,13 @@
 package stack
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 )
 
 const BundleProject = "fluxer"
@@ -25,12 +28,12 @@ func Bundle(dir string, images map[string]string) error {
 		files = append(files, renderedFile{OverlayFiles[o], data})
 	}
 	for _, d := range madeDirs {
-		if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
+		if err := makeBundleDir(filepath.Join(dir, d)); err != nil {
 			return err
 		}
 	}
 	for _, f := range files {
-		if err := os.WriteFile(filepath.Join(dir, f.name), f.data, 0o644); err != nil {
+		if err := envfile.WriteFileAtomic(filepath.Join(dir, f.name), f.data, false); err != nil {
 			return err
 		}
 	}
@@ -40,7 +43,7 @@ func Bundle(dir string, images map[string]string) error {
 		}
 		target := filepath.Join(dir, filepath.FromSlash(name))
 		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
+			return makeBundleDir(target)
 		}
 		data, err := ReadFile(set, name)
 		if err != nil {
@@ -51,6 +54,20 @@ func Bundle(dir string, images map[string]string) error {
 				return err
 			}
 		}
-		return os.WriteFile(target, data, 0o644)
+		return envfile.WriteFileAtomic(target, data, false)
 	})
+}
+
+func makeBundleDir(path string) error {
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		return err
+	}
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return errors.New("stack: " + path + " is not a plain folder")
+	}
+	return nil
 }

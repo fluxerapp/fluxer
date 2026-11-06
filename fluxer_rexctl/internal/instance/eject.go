@@ -89,10 +89,17 @@ func Eject(inst *Instance, o EjectOptions) error {
 func writePlain(inst *Instance) (map[string]string, error) {
 	out := map[string]string{}
 	for _, name := range stack.FileNames() {
-		data, err := os.ReadFile(inst.Generated(name))
+		info, err := os.Lstat(inst.Generated(name))
 		if errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
+		if err != nil {
+			return nil, err
+		}
+		if !info.Mode().IsRegular() {
+			continue
+		}
+		data, err := os.ReadFile(inst.Generated(name))
 		if err != nil {
 			return nil, err
 		}

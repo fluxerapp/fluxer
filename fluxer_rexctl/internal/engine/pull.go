@@ -10,6 +10,7 @@ import (
 
 	"github.com/distribution/reference"
 	"github.com/docker/cli/cli/command"
+	"github.com/moby/moby/api/types/jsonstream"
 	"github.com/moby/moby/client"
 )
 
@@ -59,7 +60,7 @@ func (p *Project) pullMissing(ctx context.Context, onEvent func(Event)) error {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			emit(Event{ID: id, Kind: "image", Text: err.Error(), Status: EventError})
+			emit(Event{ID: id, Kind: "image", Text: plain(err.Error()), Status: EventError})
 			errs = append(errs, fmt.Errorf("%s: %w", ref, err))
 			failed = append(failed, ref)
 			if registryDown(err) {
@@ -109,12 +110,12 @@ func pullOne(ctx context.Context, c *conn, ref, id string, emit func(Event)) err
 			return err
 		}
 		if msg.Error != nil {
-			return msg.Error
+			return &jsonstream.Error{Code: msg.Error.Code, Message: plain(msg.Error.Message)}
 		}
 		if msg.ID == "" || strings.HasPrefix(msg.Status, "Pulling from") {
 			continue
 		}
-		ev := Event{ID: msg.ID, Parent: id, Kind: "layer", Text: msg.Status, Status: EventWorking}
+		ev := Event{ID: plain(msg.ID), Parent: id, Kind: "layer", Text: plain(msg.Status), Status: EventWorking}
 		if msg.Progress != nil {
 			ev.Current, ev.Total = msg.Progress.Current, msg.Progress.Total
 		}

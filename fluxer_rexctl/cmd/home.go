@@ -32,11 +32,11 @@ func runHome(_ context.Context, app *App, c *cobra.Command) error {
 	inst, err := instance.Find(dir)
 	switch {
 	case err == nil:
-		homeGreet(app, fmt.Sprintf("Your instance is at %s.", inst.Origin()))
+		homeGreet(app, fmt.Sprintf("Your instance is at %s.", ui.Inline(inst.Origin())))
 		homeCommands(app, c, homeInstalled)
 	case errors.Is(err, instance.ErrLegacy):
-		homeGreet(app, fmt.Sprintf("There's a Fluxer instance in %s.", dir))
-		app.UI.Info("Run %s to take it over.", app.takeOverCommand())
+		homeGreet(app, fmt.Sprintf("There's a Fluxer instance in %s.", ui.Inline(dir)))
+		app.UI.Info("Run %s to take it over.", ui.Inline(app.takeOverCommand()))
 		app.UI.Info("")
 		homeCommands(app, c, homeLegacy)
 	default:

@@ -21,6 +21,18 @@ var ErrRelogin = errors.New("host: log out and back in to use docker")
 
 var dockerDistros = []string{"ubuntu", "debian", "raspbian", "fedora", "centos", "rhel"}
 
+var scriptClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if req.URL.Scheme != "https" {
+			return fmt.Errorf("%s redirected to non-https %s", DockerInstallScript, req.URL.Redacted())
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		return nil
+	},
+}
+
 func CanInstallDocker(info *Info) bool {
 	if info == nil || info.OS != "linux" || info.WSL {
 		return false
@@ -74,7 +86,7 @@ func downloadScript(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := scriptClient.Do(req)
 	if err != nil {
 		return "", err
 	}

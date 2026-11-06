@@ -335,6 +335,9 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 	for range f.Count {
 		id := f.ID
 		if id == "" {
+			if !voice.UsableRegion(region) {
+				return nil, ui.Refused(fmt.Sprintf("rexctl can't make a server ID from the region ID %q.", region), "Pass --id with a server ID.")
+			}
 			id = voice.NextID(region, ids)
 		} else if slices.Contains(ids, id) {
 			return nil, ui.Refused(fmt.Sprintf("A voice server or Compose project with the ID %s already exists.", id), "Pass --id with another ID.")

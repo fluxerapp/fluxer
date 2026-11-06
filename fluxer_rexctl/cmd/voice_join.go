@@ -377,6 +377,28 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 }
 
 func chooseJoinID(preview *voice.Preview, flagID string, inst *instance.Instance, taken []string) (string, error) {
+	id, err := pickJoinID(preview, flagID, inst, taken)
+	if err != nil {
+		return "", err
+	}
+	if err := checkJoinID(preview, id); err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+func checkJoinID(preview *voice.Preview, id string) error {
+	if id != voice.EdgeID && voice.ValidID(id) {
+		return nil
+	}
+	fix := "Pass --id with lowercase letters, digits and dashes."
+	if preview.ServerIDPinned {
+		fix = "Make a new token on the Fluxer machine."
+	}
+	return ui.Refused(fmt.Sprintf("rexctl can't use the server ID %q.", id), fix)
+}
+
+func pickJoinID(preview *voice.Preview, flagID string, inst *instance.Instance, taken []string) (string, error) {
 	id := preview.ServerID
 	switch {
 	case flagID != "" && preview.ServerIDPinned && flagID != id:
@@ -908,6 +930,9 @@ func joinWithRetries(ctx context.Context, app *App, client *voice.Client, e *eng
 			return nil, joinError(err, plan.domain, saved.ID)
 		}
 		next := voice.NextID(plan.preview.Region.ID, append(voiceIDsInUse(ctx, e, inst, voice.JoinedProject("")), saved.ID))
+		if err := checkJoinID(plan.preview, next); err != nil {
+			return nil, err
+		}
 		app.UI.Info("%s is taken on %s. Trying %s.", saved.ID, plan.domain, next)
 		if err := renameJoinedServer(ctx, app, e, inst, saved, next, plan); err != nil {
 			return nil, err

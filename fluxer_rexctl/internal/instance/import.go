@@ -476,7 +476,14 @@ func diskSet(dir, release string, profiles map[string]map[string]string) (*stack
 	return newSet(release, files, profiles)
 }
 
+func validRelease(release string) bool {
+	return release == "" || (filepath.IsLocal(release) && release == filepath.Base(release))
+}
+
 func writeReleaseSet(dir, release string) error {
+	if !validRelease(release) {
+		return fmt.Errorf("%w: %s", ErrNoReleaseSet, release)
+	}
 	target := filepath.Join(dir, StateDirName, ReleasesDir, release, StackDir)
 	if isDir(target) {
 		return nil
@@ -515,6 +522,9 @@ func recordRendered(dir string, s *State) error {
 }
 
 func releaseSet(dir, release string) (*stack.Set, error) {
+	if !validRelease(release) {
+		return nil, fmt.Errorf("%w: %s", ErrNoReleaseSet, release)
+	}
 	set, err := stack.LoadSet(filepath.Join(dir, StateDirName, ReleasesDir, release, StackDir))
 	if err == nil {
 		return set, nil
