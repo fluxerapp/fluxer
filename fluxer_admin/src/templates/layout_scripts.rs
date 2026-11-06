@@ -18,6 +18,9 @@ pub const THEME_INIT_SCRIPT: &str = r#"
 })();
 "#;
 
+pub const HISTORY_CACHE_CLEAR_SCRIPT: &str =
+    "try { localStorage.removeItem('htmx-history-cache'); } catch (e) {}";
+
 pub const THEME_TOGGLE_SCRIPT: &str = r#"
 (function () {
 	if (window.__fluxerAdminThemeToggle) return;

@@ -21,6 +21,8 @@ use crate::{
 };
 use maud::{Markup, html};
 
+const MAX_GUILD_ID_LOOKUP: usize = 200;
+
 pub struct GuildsListParams {
     pub q: String,
     pub requested_ids: Vec<String>,
@@ -38,7 +40,7 @@ impl GuildsListParams {
         let ids = ids.unwrap_or_default();
         Self {
             q: q.unwrap_or_default().trim().to_owned(),
-            requested_ids: parse_comma_separated(&ids),
+            requested_ids: parse_guild_ids(&ids),
             limit: match limit.unwrap_or(50) {
                 25 => 25,
                 100 => 100,
@@ -60,6 +62,19 @@ impl GuildsListParams {
     pub fn search_query(&self) -> &str {
         &self.q
     }
+}
+
+fn parse_guild_ids(ids: &str) -> Vec<String> {
+    let mut parsed: Vec<String> = Vec::new();
+    for id in parse_comma_separated(ids) {
+        if parsed.len() == MAX_GUILD_ID_LOOKUP {
+            break;
+        }
+        if id.chars().all(|ch| ch.is_ascii_digit()) && !parsed.contains(&id) {
+            parsed.push(id);
+        }
+    }
+    parsed
 }
 
 pub struct GuildsListResults<'a> {

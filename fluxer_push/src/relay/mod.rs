@@ -313,7 +313,6 @@ async fn forward(
     body: Body,
     bytes: &mut usize,
 ) -> Result<(), Rejection> {
-    let _permit = state.quota.admit()?;
     let target = resolve(state, incoming)?;
     if !device_token_is_shaped(incoming.leg, &incoming.device_token) {
         return Err(Rejection::new(Reason::DeviceTokenInvalid));
@@ -322,9 +321,17 @@ async fn forward(
         return Err(Rejection::new(Reason::BadRequest));
     }
     let delivery = Delivery::parse(header(headers, URGENCY_HEADER), header(headers, TTL_HEADER))?;
+    let lowered;
+    let quota_token: &str = match incoming.leg {
+        RelayLeg::Apns | RelayLeg::ApnsVoip => {
+            lowered = incoming.device_token.to_ascii_lowercase();
+            &lowered
+        }
+        RelayLeg::Fcm => &incoming.device_token,
+    };
     state.quota.take(
         &state.metrics,
-        &incoming.device_token,
+        quota_token,
         match incoming.leg {
             RelayLeg::ApnsVoip => Urgency::Alert,
             _ => delivery.urgency,
@@ -344,6 +351,7 @@ async fn forward(
     if body.is_empty() {
         return Err(Rejection::new(Reason::BadRequest));
     }
+    let _permit = state.quota.admit()?;
     let payload = envelope::encode_payload(&body);
 
     match target {

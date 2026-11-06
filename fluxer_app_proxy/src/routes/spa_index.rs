@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::branding_images::BrandingSnapshot;
-use crate::config::HttpEndpoint;
+use crate::config::{HttpEndpoint, HttpUrl};
 use crate::csp::{CspHeaderValues, inline_script_hashes};
 use crate::instance_brand_colors::{THEMES, instance_brand_variables};
 use crate::state::{
@@ -14,8 +14,9 @@ use axum::{
     http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
+use futures_util::FutureExt;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use super::assets_proxy::serve_local_asset;
@@ -532,7 +533,7 @@ fn is_auth_entry_path(path: &str) -> bool {
 
 #[allow(clippy::result_large_err)]
 async fn load_spa_index_html(state: &AppState, request_path: &str) -> Result<String, Response> {
-    let index_upstream_url = match &state.spa_index_source {
+    let upstream = match &state.spa_index_source {
         SpaIndexSource::Bundled {
             shell,
             auth_entry_shell,
@@ -543,49 +544,79 @@ async fn load_spa_index_html(state: &AppState, request_path: &str) -> Result<Str
                 .unwrap_or(shell);
             return Ok(shell.to_string());
         }
-        SpaIndexSource::Upstream(index_upstream_url) => index_upstream_url,
+        SpaIndexSource::Upstream(upstream) => upstream,
     };
-    let response = state
-        .http_client
+    let fetch = {
+        let mut in_flight = upstream
+            .in_flight
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        match in_flight.as_ref().filter(|(_, task)| !task.is_finished()) {
+            Some((fetch, _)) => fetch.clone(),
+            None => {
+                let task = tokio::spawn(fetch_upstream_spa_index(
+                    state.http_client.clone(),
+                    upstream.url.clone(),
+                ));
+                let abort_handle = task.abort_handle();
+                let fetch = task
+                    .map(|joined| joined.unwrap_or(Err(StatusCode::INTERNAL_SERVER_ERROR)))
+                    .boxed()
+                    .shared();
+                *in_flight = Some((fetch.clone(), abort_handle));
+                fetch
+            }
+        }
+    };
+    fetch
+        .await
+        .map(|html| html.to_string())
+        .map_err(IntoResponse::into_response)
+}
+
+async fn fetch_upstream_spa_index(
+    http_client: reqwest::Client,
+    index_upstream_url: Arc<HttpUrl>,
+) -> Result<Arc<str>, StatusCode> {
+    let mut response = http_client
         .get(index_upstream_url.as_url().clone())
         .timeout(Duration::from_secs(10))
         .send()
         .await
         .map_err(|err| {
             tracing::error!(url = %index_upstream_url, %err, "failed to fetch upstream index.html");
-            StatusCode::BAD_GATEWAY.into_response()
+            StatusCode::BAD_GATEWAY
         })?;
     if !response.status().is_success() {
         let status = response.status();
         tracing::error!(url = %index_upstream_url, %status, "upstream index.html returned non-success status");
-        return Err(StatusCode::BAD_GATEWAY.into_response());
+        return Err(StatusCode::BAD_GATEWAY);
     }
     if response
         .content_length()
         .is_some_and(|length| length > MAX_SPA_INDEX_BYTES as u64)
     {
         tracing::error!(url = %index_upstream_url, "upstream index.html exceeds the size limit");
-        return Err(StatusCode::BAD_GATEWAY.into_response());
+        return Err(StatusCode::BAD_GATEWAY);
     }
-    let mut response = response;
     let mut bytes: Vec<u8> = Vec::new();
     loop {
         let chunk = response.chunk().await.map_err(|err| {
             tracing::error!(url = %index_upstream_url, %err, "failed to read upstream index.html body");
-            StatusCode::BAD_GATEWAY.into_response()
+            StatusCode::BAD_GATEWAY
         })?;
         let Some(chunk) = chunk else {
             break;
         };
         if chunk.len() > MAX_SPA_INDEX_BYTES - bytes.len() {
             tracing::error!(url = %index_upstream_url, "upstream index.html exceeds the size limit");
-            return Err(StatusCode::BAD_GATEWAY.into_response());
+            return Err(StatusCode::BAD_GATEWAY);
         }
         bytes.extend_from_slice(&chunk);
     }
-    String::from_utf8(bytes).map_err(|err| {
+    String::from_utf8(bytes).map(Arc::from).map_err(|err| {
         tracing::error!(url = %index_upstream_url, %err, "upstream index.html is not valid UTF-8");
-        StatusCode::BAD_GATEWAY.into_response()
+        StatusCode::BAD_GATEWAY
     })
 }
 

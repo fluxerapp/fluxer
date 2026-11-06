@@ -17,6 +17,8 @@ const SECONDS_PER_MINUTE: f64 = 60.0;
 const KEY_BYTES: usize = 16;
 const IPV4_PREFIX_BYTES: usize = 3;
 const IPV6_PREFIX_BYTES: usize = 8;
+const IPV4_FAMILY_TAG: u8 = 4;
+const IPV6_FAMILY_TAG: u8 = 6;
 const MAX_GENERATION_AGE: Duration = Duration::from_secs(300);
 
 type Key = [u8; KEY_BYTES];
@@ -112,10 +114,12 @@ pub fn source_key(ip: IpAddr) -> Key {
     let mut key = [0u8; KEY_BYTES];
     match ip.to_canonical() {
         IpAddr::V4(ip) => {
-            key[..IPV4_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV4_PREFIX_BYTES])
+            key[0] = IPV4_FAMILY_TAG;
+            key[1..=IPV4_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV4_PREFIX_BYTES]);
         }
         IpAddr::V6(ip) => {
-            key[..IPV6_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV6_PREFIX_BYTES])
+            key[0] = IPV6_FAMILY_TAG;
+            key[1..=IPV6_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV6_PREFIX_BYTES]);
         }
     }
     key
