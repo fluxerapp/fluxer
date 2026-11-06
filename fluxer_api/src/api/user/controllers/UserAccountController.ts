@@ -106,6 +106,8 @@ import {
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
 
+const GUILD_SETTINGS_BODY_LIMIT = 4 * 1024 * 1024;
+
 export function UserAccountController(app: HonoApp) {
 	app.get(
 		'/users/@me',
@@ -867,6 +869,7 @@ export function UserAccountController(app: HonoApp) {
 	);
 	app.patch(
 		'/users/@me/guilds/@me/settings',
+		RequestBodyLimit(GUILD_SETTINGS_BODY_LIMIT),
 		RateLimitMiddleware(RateLimitConfigs.USER_GUILD_SETTINGS_UPDATE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -892,6 +895,7 @@ export function UserAccountController(app: HonoApp) {
 	);
 	app.patch(
 		'/users/@me/guilds/:guild_id/settings',
+		RequestBodyLimit(GUILD_SETTINGS_BODY_LIMIT),
 		RateLimitMiddleware(RateLimitConfigs.USER_GUILD_SETTINGS_UPDATE),
 		LoginRequired,
 		DefaultUserOnly,

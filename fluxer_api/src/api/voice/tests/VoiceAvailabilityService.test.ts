@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayService} from '@app/api/infrastructure/GatewayService';
 import type {GatewayVoiceStateCounts} from '@app/api/infrastructure/IGatewayService';
@@ -9,6 +9,7 @@ import {FakeNatsConnectionManager} from '@app/api/test/mocks/FakeNatsConnectionM
 import type {VoiceAccessContext} from '@app/api/voice/VoiceAvailabilityService';
 import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import {resolveVoiceRegionPreference, selectVoiceRegionId} from '@app/api/voice/VoiceRegionSelection';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {VoiceServerLoadTracker} from '@app/api/voice/VoiceServerLoad';
 import {VoiceTopology} from '@app/api/voice/VoiceTopology';
@@ -530,6 +531,62 @@ describe('VoiceAvailabilityService', () => {
 			};
 			expect(service.selectServer('us-default', context)?.serverId).toBe('server-1');
 			expect(service.selectServer('us-default', context)?.serverId).toBe('server-2');
+		});
+	});
+	describe('region placement for users outside region restrictions', () => {
+		const vipOnlyRestrictions = {
+			vipOnly: true,
+			requiredGuildFeatures: new Set<string>(),
+			allowedGuildIds: new Set<GuildID>(),
+			allowedUserIds: new Set<UserID>(),
+		};
+		const context: VoiceAccessContext = {
+			requestingUserId: createUserID(123n),
+			guildId: createGuildID(456n),
+			guildFeatures: new Set(),
+		};
+		function placeWithoutCoordinates(): {regionId: string; server: VoiceServerRecord} | null {
+			const accessibleRegions = service.getAvailableRegions(context).filter((region) => region.isAccessible);
+			const preference = resolveVoiceRegionPreference({
+				preferredRegionId: null,
+				accessibleRegions,
+				defaultRegionId: null,
+			});
+			const regionId = selectVoiceRegionId({
+				preferredRegionId: preference.regionId,
+				mode: preference.mode,
+				accessibleRegions,
+				selectionKey: 'guild:456:channel:1',
+			});
+			if (regionId === null) {
+				return null;
+			}
+			return service.selectServerOrFallback(regionId, context, accessibleRegions);
+		}
+		it('places the user in an open region instead of the VIP-only default region', async () => {
+			const vipRegion = createRegion({id: 'vip', isDefault: true, restrictions: vipOnlyRestrictions});
+			const openRegion = createRegion({id: 'open', isDefault: false});
+			const topology = await createTopology(
+				[vipRegion, openRegion],
+				new Map([
+					['vip', [createServer({regionId: 'vip', serverId: 'vip-1'})]],
+					['open', [createServer({regionId: 'open', serverId: 'open-1'})]],
+				]),
+			);
+			service = new VoiceAvailabilityService(topology);
+			const placement = placeWithoutCoordinates();
+			expect(placement?.regionId).toBe('open');
+			expect(placement?.server.serverId).toBe('open-1');
+			expect(service.selectServerOrFallback('vip', context, [])).toBeNull();
+		});
+		it('places nobody when every region is restricted', async () => {
+			const vipRegion = createRegion({id: 'vip', isDefault: true, restrictions: vipOnlyRestrictions});
+			const topology = await createTopology(
+				[vipRegion],
+				new Map([['vip', [createServer({regionId: 'vip', serverId: 'vip-1'})]]]),
+			);
+			service = new VoiceAvailabilityService(topology);
+			expect(placeWithoutCoordinates()).toBeNull();
 		});
 	});
 });

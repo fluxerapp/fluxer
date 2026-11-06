@@ -4,6 +4,8 @@ import {ASSET_FORMAT_POLICY} from '@fluxer/constants/src/AssetFormatPolicy';
 
 export const MAX_GUILDS_PREMIUM = 200;
 export const MAX_GUILD_CHANNELS = 500;
+export const MAX_CHANNEL_OVERRIDES = 10000;
+export const MAX_PUSH_SUBSCRIPTIONS_PER_USER = 100;
 export const MAX_CHANNELS_PER_CATEGORY = 50;
 export const VOICE_CHANNEL_BITRATE_MIN = 8000;
 export const VOICE_CHANNEL_BITRATE_DEFAULT = 64000;

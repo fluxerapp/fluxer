@@ -18,6 +18,7 @@ const createFetchRecentMentionsQuery = (limit: number) =>
 		limit,
 	});
 const BULK_RECENT_MENTION_BATCH_QUERY_LIMIT = 50;
+const MAX_RECENT_MENTION_SCAN_PAGES = 20;
 
 export class RecentMentionRepository {
 	async getRecentMention(userId: UserID, messageId: MessageID): Promise<RecentMention | null> {
@@ -36,11 +37,12 @@ export class RecentMentionRepository {
 		limit: number = 25,
 		before?: MessageID,
 	): Promise<Array<RecentMention>> {
+		if (!includeGuilds) return [];
 		const fetchLimit = Math.max(limit * 2, 50);
 		const query = createFetchRecentMentionsQuery(fetchLimit);
 		let beforeMessageId = before || createMessageID(generateSnowflake());
 		const filteredMentions: Array<RecentMentionRow> = [];
-		while (filteredMentions.length < limit) {
+		for (let page = 0; page < MAX_RECENT_MENTION_SCAN_PAGES && filteredMentions.length < limit; page++) {
 			const allMentions = await fetchMany<RecentMentionRow>(
 				query.bind({
 					user_id: userId,
@@ -49,7 +51,7 @@ export class RecentMentionRepository {
 			);
 			if (allMentions.length === 0) break;
 			filteredMentions.push(
-				...allMentions.filter((mention) => this.matchesFilters(mention, includeEveryone, includeRole, includeGuilds)),
+				...allMentions.filter((mention) => this.matchesFilters(mention, includeEveryone, includeRole)),
 			);
 			beforeMessageId = allMentions[allMentions.length - 1].message_id;
 			if (allMentions.length < fetchLimit) break;
@@ -57,15 +59,9 @@ export class RecentMentionRepository {
 		return filteredMentions.slice(0, limit).map((mention) => new RecentMention(mention));
 	}
 
-	private matchesFilters(
-		mention: RecentMentionRow,
-		includeEveryone: boolean,
-		includeRole: boolean,
-		includeGuilds: boolean,
-	): boolean {
+	private matchesFilters(mention: RecentMentionRow, includeEveryone: boolean, includeRole: boolean): boolean {
 		if (!includeEveryone && mention.is_everyone) return false;
 		if (!includeRole && mention.is_role) return false;
-		if (!includeGuilds && mention.guild_id != null) return false;
 		return true;
 	}
 

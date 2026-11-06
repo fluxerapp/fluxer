@@ -8,7 +8,7 @@ import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {isContentHidden} from '@app/api/user/UserHelpers';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
 interface BuildBroadcastMessageDataParams {
@@ -53,6 +53,9 @@ async function buildBroadcastMessageCreateData(
 	params: BuildBroadcastMessageCreateDataParams,
 ): Promise<MessageCreateBroadcastData> {
 	const messageResponse = await buildBroadcastMessageData(params);
+	if (params.message.type === MessageTypes.CHANNEL_PINNED_MESSAGE) {
+		delete messageResponse.referenced_message;
+	}
 	const groupDmNicks = serializeGroupDmNicks(params.channel);
 	return {
 		...messageResponse,

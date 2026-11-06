@@ -45,7 +45,7 @@ import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
-import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_BOOKMARKS_NON_PREMIUM, MAX_PUSH_SUBSCRIPTIONS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -485,6 +485,7 @@ export class UserContentService {
 		if (originKind === 'legacy' && (await this.isLegacyWebPushReplaced(data, installedApp))) {
 			return new PushSubscription(data);
 		}
+		await this.makeRoomForPushSubscription(data);
 		const subscription = await this.userRepository.createPushSubscription(data);
 		if (originKind === 'legacy' && installedApp) {
 			await this.bestEffortPushOriginWrite(() => markInstalledLegacyPushSubscription(this.kv, data.subscription_id));
@@ -621,8 +622,25 @@ export class UserContentService {
 			provider_environment: providerEnvironment,
 			...(threadChannels === true ? {thread_channels: true} : {}),
 		};
+		await this.makeRoomForPushSubscription(data);
 		const subscription = await this.userRepository.createPushSubscription(data);
 		return subscription;
+	}
+
+	private async makeRoomForPushSubscription(data: PushSubscriptionRow): Promise<void> {
+		const others = (await this.userRepository.listPushSubscriptions(data.user_id)).filter(
+			(subscription) => subscription.subscriptionId !== data.subscription_id,
+		);
+		const excess = others.length - (MAX_PUSH_SUBSCRIPTIONS_PER_USER - 1);
+		if (excess <= 0) return;
+		const sessionIdHash = data.auth_session_id_hash;
+		const evictionOrder = [
+			...others.filter((subscription) => sessionIdHash !== null && subscription.authSessionIdHash === sessionIdHash),
+			...others.filter((subscription) => sessionIdHash === null || subscription.authSessionIdHash !== sessionIdHash),
+		];
+		for (const subscription of evictionOrder.slice(0, excess)) {
+			await this.userRepository.deletePushSubscription(data.user_id, subscription.subscriptionId);
+		}
 	}
 
 	async listMobileDevices(userId: UserID): Promise<Array<PushSubscription>> {

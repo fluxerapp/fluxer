@@ -91,14 +91,12 @@ describe('VoiceRegionSelection', () => {
 		const preference = resolveVoiceRegionPreference({
 			preferredRegionId: null,
 			accessibleRegions: regions,
-			availableRegions: regions,
 			defaultRegionId: null,
 		});
 		const selected = selectVoiceRegionId({
 			preferredRegionId: preference.regionId,
 			mode: preference.mode,
 			accessibleRegions: regions,
-			availableRegions: regions,
 			latitude: '49',
 			longitude: '49',
 			selectionKey: 'guild:1:channel:1',
@@ -113,14 +111,12 @@ describe('VoiceRegionSelection', () => {
 		const preference = resolveVoiceRegionPreference({
 			preferredRegionId: 'a',
 			accessibleRegions: regions,
-			availableRegions: regions,
 			defaultRegionId: null,
 		});
 		const selected = selectVoiceRegionId({
 			preferredRegionId: preference.regionId,
 			mode: preference.mode,
 			accessibleRegions: regions,
-			availableRegions: regions,
 			latitude: '49',
 			longitude: '49',
 			selectionKey: 'guild:1:channel:1',
@@ -195,7 +191,6 @@ describe('VoiceRegionSelection', () => {
 			preferredRegionId: null,
 			mode: 'automatic',
 			accessibleRegions: [regions[1], regions[0]],
-			availableRegions: [regions[1], regions[0]],
 			latitude: '50',
 			longitude: '50',
 			selectionKey: 'guild:1:channel:1',
@@ -204,7 +199,6 @@ describe('VoiceRegionSelection', () => {
 			preferredRegionId: null,
 			mode: 'automatic',
 			accessibleRegions: [regions[0], regions[1]],
-			availableRegions: [regions[0], regions[1]],
 			latitude: '50',
 			longitude: '50',
 			selectionKey: 'guild:1:channel:1',
@@ -213,7 +207,6 @@ describe('VoiceRegionSelection', () => {
 			preferredRegionId: null,
 			mode: 'automatic',
 			accessibleRegions: [regions[1], regions[0]],
-			availableRegions: [regions[1], regions[0]],
 			latitude: '50',
 			longitude: '50',
 			selectionKey: 'guild:1:channel:2',

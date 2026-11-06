@@ -85,7 +85,7 @@ build_markdown_context(MessageData, GuildId, RoleNames, GuildData) ->
         ),
         <<"user_nicknames">> => UserNicknames,
         <<"roles">> => role_names_for_context(GuildId, RoleNames),
-        <<"channels">> => channel_names_for_context(MessageData, GuildData)
+        <<"channels">> => channel_names_for_context(MessageData, GuildId, GuildData)
     }.
 
 -spec mention_user_names(term()) -> map().
@@ -262,12 +262,12 @@ role_id_binary(RoleId) when is_integer(RoleId), RoleId > 0 ->
 role_id_binary(RoleId) ->
     push_utils:normalize_binary(RoleId).
 
--spec channel_names_for_context(map(), map()) -> map().
-channel_names_for_context(MessageData, GuildData) ->
+-spec channel_names_for_context(map(), non_neg_integer(), map()) -> map().
+channel_names_for_context(MessageData, GuildId, GuildData) ->
     FromMentions = mention_channel_names(maps:get(<<"mention_channels">>, MessageData, [])),
     Content = push_utils:normalize_binary(maps:get(<<"content">>, MessageData, <<"">>), <<>>),
     MentionedIds = channel_mention_ids(Content),
-    maps:merge(channel_names_from_guild_data(MentionedIds, GuildData), FromMentions).
+    maps:merge(channel_names_from_guild_data(MentionedIds, GuildId, GuildData), FromMentions).
 
 -spec mention_channel_names(term()) -> map().
 mention_channel_names(MentionChannels) when is_list(MentionChannels) ->
@@ -320,40 +320,21 @@ maybe_prepend_snowflake(IdBin, Acc) ->
         _ -> Acc
     end.
 
--spec channel_names_from_guild_data([integer()], map()) -> map().
-channel_names_from_guild_data([], _GuildData) ->
+-spec channel_names_from_guild_data([integer()], non_neg_integer(), map()) -> map().
+channel_names_from_guild_data([], _GuildId, _GuildData) ->
     #{};
-channel_names_from_guild_data(ChannelIds, GuildData) when is_map(GuildData) ->
-    ChannelIndex = guild_data_index_channels:channel_index(GuildData),
-    lists:foldl(
-        fun(ChannelId, Acc) -> put_index_channel_name(ChannelId, ChannelIndex, Acc) end,
-        #{},
-        ChannelIds
-    ).
+channel_names_from_guild_data(ChannelIds, GuildId, GuildData) ->
+    Channels = guild_members_mutation:resolve_channel_mentions_for_guild(
+        ChannelIds, GuildId, GuildData
+    ),
+    lists:foldl(fun put_visible_channel_name/2, #{}, Channels).
 
--spec put_index_channel_name(integer(), map(), map()) -> map().
-put_index_channel_name(ChannelId, ChannelIndex, Acc) ->
-    Channel = maps:get(ChannelId, ChannelIndex, undefined),
-    put_index_channel_name_from_channel(ChannelId, Channel, Acc).
-
--spec put_index_channel_name_from_channel(integer(), term(), map()) -> map().
-put_index_channel_name_from_channel(ChannelId, Channel, Acc) when is_map(Channel) ->
-    maybe_put_copyable_index_channel_name(
-        is_copyable_channel_mention(Channel), ChannelId, Channel, Acc
-    );
-put_index_channel_name_from_channel(_ChannelId, _Channel, Acc) ->
-    Acc.
-
--spec maybe_put_copyable_index_channel_name(boolean(), integer(), map(), map()) -> map().
-maybe_put_copyable_index_channel_name(true, ChannelId, Channel, Acc) ->
-    put_copyable_index_channel_name(ChannelId, Channel, Acc);
-maybe_put_copyable_index_channel_name(false, _ChannelId, _Channel, Acc) ->
-    Acc.
-
--spec put_copyable_index_channel_name(integer(), map(), map()) -> map().
-put_copyable_index_channel_name(ChannelId, Channel, Acc) ->
-    Name = push_utils:normalize_binary(maps:get(<<"name">>, Channel, undefined)),
-    maybe_put_name(integer_to_binary(ChannelId), Name, Acc).
+-spec put_visible_channel_name(map(), map()) -> map().
+put_visible_channel_name(#{id := Id, name := Name, type := Type}, Acc) ->
+    case is_copyable_channel_type(Type) of
+        true -> maybe_put_name(integer_to_binary(Id), push_utils:normalize_binary(Name), Acc);
+        false -> Acc
+    end.
 
 -spec is_copyable_channel_mention(map()) -> boolean().
 is_copyable_channel_mention(Channel) ->
