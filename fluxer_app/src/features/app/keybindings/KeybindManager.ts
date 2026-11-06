@@ -469,7 +469,8 @@ class KeybindManager {
 			return Boolean(channelId && ReadStates.hasUnread(channelId));
 		}
 		if (action === 'chat_focus_textarea') {
-			return this.currentChannelId != null && document.querySelector(CHANNEL_TEXTAREA_SELECTOR) != null;
+			const composer = document.querySelector(CHANNEL_TEXTAREA_SELECTOR);
+			return this.currentChannelId != null && composer != null && composer.getAttribute('aria-disabled') !== 'true';
 		}
 		return true;
 	}
