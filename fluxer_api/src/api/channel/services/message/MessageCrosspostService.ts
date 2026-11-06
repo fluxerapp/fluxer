@@ -14,6 +14,7 @@ import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/
 import {isCrosspostCopy, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import {assertMessageWithinHistoryCutoff} from '@app/api/channel/services/message/MessageHistoryCutoff';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {withRetryingLock} from '@app/api/channel/utils/RetryingLock';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -33,6 +34,7 @@ import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMes
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface MessageCrosspostServiceDeps {
@@ -42,6 +44,7 @@ interface MessageCrosspostServiceDeps {
 	rateLimitService: IRateLimitService;
 	messageWriteLock: MessageWriteLock;
 	crosspostPropagation: CrosspostPropagation;
+	cacheService: ICacheService;
 }
 
 interface CrosspostMessageResult {
@@ -98,6 +101,30 @@ export class MessageCrosspostService {
 		this.assertCrosspostable(message);
 		this.assertNotBlocked(message, guild);
 		await this.assertBudgetAvailable(channelId);
+		const published = await withRetryingLock(this.deps.cacheService, `crosspost:channel:${channelId}:publish`, () =>
+			this.publishWithinBudget({channelId, messageId, channel}),
+		);
+		Logger.info(
+			{
+				actorId: userId.toString(),
+				guildId: guild.id,
+				channelId: channelId.toString(),
+				messageId: messageId.toString(),
+			},
+			'message published',
+		);
+		return {message: published, authChannel};
+	}
+
+	private async publishWithinBudget({
+		channelId,
+		messageId,
+		channel,
+	}: {
+		channelId: ChannelID;
+		messageId: MessageID;
+		channel: AuthenticatedChannel['channel'];
+	}): Promise<Message> {
 		const published = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) {
 				throw new UnknownMessageError();
@@ -111,15 +138,6 @@ export class MessageCrosspostService {
 			await this.deps.channelRepository.crossposts.addSource({sourceChannelId: channelId, sourceMessageId: messageId});
 			return updated;
 		});
-		Logger.info(
-			{
-				actorId: userId.toString(),
-				guildId: guild.id,
-				channelId: channelId.toString(),
-				messageId: messageId.toString(),
-			},
-			'message published',
-		);
 		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: published});
 		try {
 			await this.deps.crosspostPropagation.enqueueCrosspostFanout({channelId, messageId});
@@ -138,7 +156,7 @@ export class MessageCrosspostService {
 			throw error;
 		}
 		await this.deps.rateLimitService.checkLimit(this.channelBudgetConfig(channelId));
-		return {message: published, authChannel};
+		return published;
 	}
 
 	private assertCrosspostable(message: Message): void {

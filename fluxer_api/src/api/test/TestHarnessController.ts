@@ -37,6 +37,7 @@ import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {Logger} from '@app/api/Logger';
 import {getKVClient, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '@app/api/Tables';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
@@ -1081,7 +1082,6 @@ export function TestHarnessController(app: HonoApp) {
 			}
 		}
 		Logger.info({processed, total: readyDeletions.length}, '[test/worker/process-pending-deletions] Completed');
-		await snowflakeService.shutdown();
 		return ctx.json(
 			{
 				scheduled: processed,
@@ -1190,8 +1190,6 @@ export function TestHarnessController(app: HonoApp) {
 				'[test/worker/process-inactivity-deletions] Failed',
 			);
 			throw new ProcessingFailedError(error instanceof Error ? error.message : String(error));
-		} finally {
-			await snowflakeService.shutdown();
 		}
 	});
 	app.get('/test/attachment-decay/:attachment_id', async (ctx) => {
@@ -1681,10 +1679,25 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UnknownUserError();
 		}
 		const scopeSet = new Set(scopesInput ?? ['identify', 'email']);
+		const snowflakeService = ctx.get('snowflakeService');
 		const applicationId = applicationIdInput
 			? createApplicationID(BigInt(applicationIdInput))
-			: createApplicationID(BigInt(1));
-		const snowflakeService = ctx.get('snowflakeService');
+			: createApplicationID(await snowflakeService.generate());
+		if (!applicationIdInput) {
+			await new ApplicationRepository().upsertApplication({
+				application_id: applicationId,
+				owner_user_id: userId,
+				name: 'Test application',
+				bot_user_id: null,
+				bot_is_public: null,
+				oauth2_redirect_uris: new Set(),
+				client_secret_hash: null,
+				bot_token_hash: null,
+				bot_token_preview: null,
+				bot_token_created_at: null,
+				client_secret_created_at: null,
+			});
+		}
 		const tokenId = await snowflakeService.generate();
 		const token = `test_oauth_${tokenId.toString()}`;
 		const oauth2TokenRepository = new OAuth2TokenRepository();

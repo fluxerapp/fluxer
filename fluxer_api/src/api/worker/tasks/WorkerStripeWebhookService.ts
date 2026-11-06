@@ -7,9 +7,8 @@ import {createWorkerEnforcementServices} from '@app/api/worker/tasks/admin_bulk/
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import type Stripe from 'stripe';
 
-export function createWorkerStripeWebhookService(deps: WorkerDependencies, stripe: Stripe): StripeWebhookService {
-	const productRegistry = getProductRegistry();
-	const stripeService = new StripeService(
+export function createWorkerStripeService(deps: WorkerDependencies): StripeService {
+	return new StripeService(
 		deps.userRepository,
 		deps.gatewayService,
 		deps.guildRepository,
@@ -20,6 +19,11 @@ export function createWorkerStripeWebhookService(deps: WorkerDependencies, strip
 		deps.storeEntitlementService,
 		deps.operatorPassServices,
 	);
+}
+
+export function createWorkerStripeWebhookService(deps: WorkerDependencies, stripe: Stripe): StripeWebhookService {
+	const productRegistry = getProductRegistry();
+	const stripeService = createWorkerStripeService(deps);
 	return new StripeWebhookService(
 		stripe,
 		deps.userRepository,

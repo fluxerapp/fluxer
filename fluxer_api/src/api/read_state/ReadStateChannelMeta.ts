@@ -40,7 +40,7 @@ function rememberChannelMeta(channelId: ChannelID, meta: ReadStateChannelHint): 
 	}
 }
 
-async function loadChannelMeta(channelId: ChannelID): Promise<ReadStateChannelHint | null> {
+export async function loadChannelMeta(channelId: ChannelID): Promise<ReadStateChannelHint | null> {
 	const cached = channelMetaCache.get(channelId.toString());
 	if (cached !== undefined) return cached;
 	const row = await fetchOne<Pick<ChannelRow, 'channel_id' | 'guild_id' | 'type'>>(FETCH_CHANNEL_META_CQL, {

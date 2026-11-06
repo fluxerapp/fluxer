@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {normalizeHostname} from '@app/api/utils/UrlNormalizer';
+import {MAX_HOSTNAME_LENGTH, normalizeHostname} from '@app/api/utils/UrlNormalizer';
 import {getDomain} from 'tldts';
 
 const URL_HOST_PATTERN_MAX_WILDCARDS = 3;
 const URL_HOST_PATTERN_MIN_LITERAL_CHARS = 3;
 
-const MAX_HOSTNAME_LENGTH = 253;
 const HOSTNAME_LABEL_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const GLOB_LABEL_RE = /^[a-z0-9*-]{1,63}$/;
 const REPEATED_WILDCARDS_RE = /\*+/g;
@@ -19,7 +18,6 @@ export type UrlDomainEntry =
 	  };
 
 function isValidHostname(host: string): boolean {
-	if (host.length > MAX_HOSTNAME_LENGTH) return false;
 	return host.split('.').every((label) => HOSTNAME_LABEL_RE.test(label));
 }
 

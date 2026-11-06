@@ -242,6 +242,7 @@ export class MessageReactionService {
 			const uniqueReactionCount = await this.channelRepository.messageInteractions.countUniqueReactions(
 				channel.id,
 				messageId,
+				maxReactionsPerMessage,
 			);
 			if (uniqueReactionCount >= maxReactionsPerMessage) {
 				throw new MaxReactionsPerMessageError(maxReactionsPerMessage);

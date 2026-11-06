@@ -5,6 +5,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export const ACTIVITY_SPOOL_KEY = 'activity:spool';
 const ACTIVITY_SPOOL_SIGNAL_CAP = 200_000;
+const ACTIVITY_SPOOL_HARD_CAP = 2_000_000;
 export const ACTIVITY_SPOOL_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const DRAIN_BATCH = 200;
 const DRAIN_BUDGET_MS = 15_000;
@@ -43,7 +44,8 @@ export async function spoolActivity(
 	entry: ActivitySpoolEntry,
 	always: boolean,
 ): Promise<'spooled' | 'dropped'> {
-	if (!always && (await kv.llen(ACTIVITY_SPOOL_KEY)) >= ACTIVITY_SPOOL_SIGNAL_CAP) {
+	const depth = await kv.llen(ACTIVITY_SPOOL_KEY);
+	if (depth >= ACTIVITY_SPOOL_HARD_CAP || (!always && depth >= ACTIVITY_SPOOL_SIGNAL_CAP)) {
 		return 'dropped';
 	}
 	await kv.rpush(ACTIVITY_SPOOL_KEY, JSON.stringify(entry));

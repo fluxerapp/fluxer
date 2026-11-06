@@ -106,6 +106,7 @@ async function executeEntry(
 		inviteCode: createInviteCode(entry.code),
 		requestCache,
 		tierContext,
+		ip: params.ip,
 	});
 	return invite.guildId === null ? null : {guild_id: invite.guildId.toString(), mode: 'member'};
 }

@@ -1,3 +1,4 @@
+import {PhraseMatcherSet} from '@app/api/utils/PhraseMatcherSet';
 import {SubstringMatcher} from '@app/api/utils/SubstringMatcher';
 import {describe, expect, test} from 'vitest';
 
@@ -140,5 +141,16 @@ describe('SubstringMatcher', () => {
 			}
 		}
 		expect(mismatches).toEqual([]);
+	});
+});
+
+describe('PhraseMatcherSet', () => {
+	test('matches a stored phrase with combining marks against the same text', () => {
+		for (const phrase of ['\u0130\u0335', 'o\u0600\u0335\u0301']) {
+			const matcher = new PhraseMatcherSet();
+			matcher.add(phrase);
+			expect(matcher.containsBannedPhrase(phrase)).toBe(true);
+			expect(matcher.isPhraseBanned(phrase)).toBe(true);
+		}
 	});
 });

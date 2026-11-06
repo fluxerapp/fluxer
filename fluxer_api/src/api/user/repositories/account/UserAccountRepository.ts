@@ -25,6 +25,8 @@ import {
 	LEGACY_PREMIUM_FLAGS_MASK,
 	legacyHiddenProfileBadges,
 } from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export interface UserDeletionScheduleUpdate {
@@ -105,7 +107,7 @@ export class UserAccountRepository {
 			const updatedData = result.updatedData;
 			const previousData = result.previousData;
 			const updatedUser = new User(updatedData);
-			await this.emailOwnershipRepo.finalizeEmailClaim(emailClaim);
+			await this.finalizeEmailClaimOrRevert(emailClaim, userId, previousData);
 			await this.releasePreviousEmailIfChanged(previousData, updatedData);
 			await this.indexRepo.syncIndices(updatedData, previousData);
 			await this.searchRepo.indexUser(updatedUser);
@@ -129,6 +131,14 @@ export class UserAccountRepository {
 
 	async compareAndSetFlags(user: User, flags: bigint): Promise<User | null> {
 		const result = await this.dataRepo.compareAndSetFlags(user, flags & ~LEGACY_DEAD_USER_FLAGS_MASK);
+		if (!result) return null;
+		const updatedUser = new User(result.updatedData);
+		await this.searchRepo.updateUser(updatedUser);
+		return updatedUser;
+	}
+
+	async compareAndClearSuspension(user: User, flags: bigint): Promise<User | null> {
+		const result = await this.dataRepo.compareAndClearSuspension(user, flags & ~LEGACY_DEAD_USER_FLAGS_MASK);
 		if (!result) return null;
 		const updatedUser = new User(result.updatedData);
 		await this.searchRepo.updateUser(updatedUser);
@@ -252,7 +262,7 @@ export class UserAccountRepository {
 			const updatedData = result.updatedData;
 			const previousData = result.previousData;
 			const updatedUser = new User(updatedData);
-			await this.emailOwnershipRepo.finalizeEmailClaim(emailClaim);
+			await this.finalizeEmailClaimOrRevert(emailClaim, userId, previousData);
 			await this.releasePreviousEmailIfChanged(previousData, updatedData);
 			if (deletionTransition !== 'anonymise') {
 				await this.indexRepo.syncIndices(updatedData, previousData);
@@ -268,6 +278,16 @@ export class UserAccountRepository {
 			}
 			throw error;
 		}
+	}
+
+	private async finalizeEmailClaimOrRevert(
+		emailClaim: EmailClaimReservation | null,
+		userId: UserID,
+		previousData: UserRow | null,
+	): Promise<void> {
+		if (await this.emailOwnershipRepo.finalizeEmailClaim(emailClaim)) return;
+		await this.dataRepo.patchUser(userId, {email: previousData?.email ? Db.set(previousData.email) : Db.clear()});
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_ALREADY_IN_USE);
 	}
 
 	async indexUserAcls(user: User): Promise<void> {

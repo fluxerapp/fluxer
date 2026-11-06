@@ -130,10 +130,11 @@ export function profileOperatorPassSince(params: {
 	state: OperatorPassEntitlementState;
 	viewerId: UserID;
 	restrictProfile: boolean;
+	hidden: boolean;
 }): Date | null {
-	const {user, state, viewerId, restrictProfile} = params;
+	const {user, state, viewerId, restrictProfile, hidden} = params;
 	const isOwner = viewerId === user.id;
-	if (user.isBot || (!isOwner && restrictProfile)) {
+	if (user.isBot || (!isOwner && (restrictProfile || hidden))) {
 		return null;
 	}
 	const holder = resolveOperatorPassHolder(state);

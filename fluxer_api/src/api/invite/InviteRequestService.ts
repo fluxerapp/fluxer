@@ -70,6 +70,7 @@ export class InviteRequestService {
 		inviteCode: InviteCode;
 		requestCache: RequestCache;
 		tierContext: TierContext;
+		ip?: string | null;
 	}): Promise<InviteResponseSchema> {
 		const invite = await this.inviteService.acceptInvite(params);
 		return this.mapInviteResponse(invite, params.requestCache);

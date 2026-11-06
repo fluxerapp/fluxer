@@ -144,6 +144,7 @@ export function GuildVisitController(app: HonoApp) {
 					guildId: createGuildID(ctx.req.valid('param').guild_id),
 					tierContext: tierContextFrom(ctx),
 					requestCache: ctx.get('requestCache'),
+					ip: getRequestClientIp(ctx),
 				}),
 			),
 	);

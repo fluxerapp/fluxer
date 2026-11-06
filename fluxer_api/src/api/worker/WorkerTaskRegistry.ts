@@ -17,6 +17,7 @@ import bulkDeleteSelfMessagesImmediate from '@app/api/worker/tasks/BulkDeleteSel
 import bulkDeleteUserMessages from '@app/api/worker/tasks/BulkDeleteUserMessages';
 import clearAuthenticatedReporterEmails from '@app/api/worker/tasks/ClearAuthenticatedReporterEmails';
 import closePaymentDisputeAccounts from '@app/api/worker/tasks/ClosePaymentDisputeAccounts';
+import countBulkMessageDeletionTargets from '@app/api/worker/tasks/CountBulkMessageDeletionTargets';
 import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
@@ -119,6 +120,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
 	clearAuthenticatedReporterEmails,
 	closePaymentDisputeAccounts,
+	countBulkMessageDeletionTargets,
 	crosspostMessage,
 	crosspostMessageChunk,
 	deleteUserMessagesInGuildByTime,

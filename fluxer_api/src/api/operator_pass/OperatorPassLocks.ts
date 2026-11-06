@@ -18,6 +18,10 @@ export function operatorPassHolderLockKey(userId: bigint): string {
 	return `operator_pass:holder_lock:${userId}`;
 }
 
+export function operatorPassReleaseLockKey(year: number): string {
+	return `operator_pass:release_lock:${year}`;
+}
+
 export async function withOperatorPassLock<T>(
 	cacheService: ICacheService,
 	lockKey: string,

@@ -27,7 +27,7 @@ export async function listActiveFeatureLimits(
 	subjectId: UserID,
 	limit: EnforcementLimit,
 ): Promise<Array<EnforcementDecisionRow>> {
-	const decisions = await repository.listBySubject('user', subjectId);
+	const decisions = await repository.listAllBySubject('user', subjectId);
 	return decisions.filter(
 		(decision) => decision.kind === 'feature_limit' && decision.status === 'active' && decision.feature_limit === limit,
 	);

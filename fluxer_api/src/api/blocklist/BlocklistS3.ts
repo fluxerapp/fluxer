@@ -3,9 +3,19 @@
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 
 const BLOCKLIST_S3_BUCKET = 'fluxer-geoip';
-export const BLOCKLIST_S3_KEYS = {
-	feedUrls: 'blocklists/feed-urls.txt',
-} as const;
+export const BLOCKLIST_FEED_CATEGORIES = ['urlhaus', 'phishtank'] as const;
+export type BlocklistFeedCategory = (typeof BLOCKLIST_FEED_CATEGORIES)[number];
+export const COMBINED_FEED_URLS_KEY = 'blocklists/feed-urls.txt';
+
+export function feedUrlsKey(category: BlocklistFeedCategory): string {
+	return `blocklists/feed-urls/${category}.txt`;
+}
+
+const MISSING_BLOCKLIST_OBJECT_ERRORS = new Set(['NoSuchBucket', 'NoSuchKey', 'NotFound']);
+
+export function isMissingBlocklistObjectError(error: unknown): boolean {
+	return error instanceof Error && MISSING_BLOCKLIST_OBJECT_ERRORS.has(error.name);
+}
 
 export async function writeLinesToS3(storage: IStorageService, key: string, lines: Iterable<string>): Promise<number> {
 	let totalBytes = 0;
@@ -43,8 +53,9 @@ export async function readLinesFromS3(storage: IStorageService, key: string): Pr
 		}
 		if (start < text.length) lines.push(text.slice(start));
 		return lines;
-	} catch {
-		return [];
+	} catch (error) {
+		if (isMissingBlocklistObjectError(error)) return [];
+		throw error;
 	}
 }
 

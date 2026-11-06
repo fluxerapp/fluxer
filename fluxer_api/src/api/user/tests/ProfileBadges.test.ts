@@ -179,6 +179,7 @@ describe('profile badges', () => {
 			.execute();
 		const masked = await profile(viewer, target);
 		expect(masked.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+		expect(masked.premium_lifetime_sequence).toBeUndefined();
 		expect(kinds(masked)).toEqual(['plutonium']);
 	});
 

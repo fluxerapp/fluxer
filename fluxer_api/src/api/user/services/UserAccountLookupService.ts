@@ -10,6 +10,7 @@ import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorSe
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
+import {isProfileHidden} from '@app/api/user/ProfileVisibility';
 import {applyPremiumBadgeMasking} from '@app/api/user/profile_badges/PremiumBadgeMasking';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
@@ -76,6 +77,7 @@ export class UserAccountLookupService {
 			await this.validateProfileAccess(userId, targetId, user);
 		}
 		const restrictProfile = await this.shouldRestrictProfile(userId, targetId, user);
+		const hiddenFromViewer = userId !== targetId && isProfileHidden(user);
 		let guildMember: GuildMemberResponse | null = null;
 		let guildMemberDomain: GuildMember | null = null;
 		if (guildId != null) {
@@ -96,13 +98,14 @@ export class UserAccountLookupService {
 			premiumFlags: user.premiumFlags,
 			hidden: user.hiddenProfileBadges,
 			selfHosted: Config.instance.selfHosted,
-			restricted: restrictProfile,
+			restricted: restrictProfile || hiddenFromViewer,
 		});
 		const profileFieldPrivacyContext = restrictProfile
 			? null
 			: await this.getProfileFieldPrivacyContext(userId, targetId);
 		const timezoneVisible =
 			!restrictProfile &&
+			!hiddenFromViewer &&
 			user.timezone != null &&
 			profileFieldPrivacyContext != null &&
 			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext);

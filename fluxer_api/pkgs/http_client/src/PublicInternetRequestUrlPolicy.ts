@@ -59,6 +59,7 @@ const BLOCKED_IPV6_SUBNETS: Array<BlockedSubnet> = [
 	{address: '2001:db8::', prefixLength: 32, family: 'ipv6'},
 	{address: 'fc00::', prefixLength: 7, family: 'ipv6'},
 	{address: 'fe80::', prefixLength: 10, family: 'ipv6'},
+	{address: 'fec0::', prefixLength: 10, family: 'ipv6'},
 	{address: 'ff00::', prefixLength: 8, family: 'ipv6'},
 ];
 const blockedIpv4List = createBlockList(BLOCKED_IPV4_SUBNETS);

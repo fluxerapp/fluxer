@@ -55,6 +55,9 @@ import type {
 	UserGuildSettingsUpdateRequest,
 	UserSettingsUpdateRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+
+const VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS = 60;
 
 interface UserAccountSettingsServiceDeps {
 	userAccountRepository: UserRepository;
@@ -64,6 +67,7 @@ interface UserAccountSettingsServiceDeps {
 	userCacheService: UserCacheService;
 	guildRepository: GuildRepository;
 	limitConfigService: LimitConfigService;
+	cacheService: ICacheService;
 }
 
 export class UserAccountSettingsService {
@@ -430,6 +434,27 @@ export class UserAccountSettingsService {
 	}
 
 	async updateVoiceActivitySharingDefault(params: {
+		userId: UserID;
+		shareVoiceActivity: boolean;
+		requestCache: RequestCache;
+	}): Promise<User> {
+		const lockKey = `voice_activity_sharing_change:${params.userId}`;
+		const token = await this.deps.cacheService.acquireLock(lockKey, VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS);
+		if (!token) {
+			throw InputValidationError.fromCode(
+				'share_voice_activity',
+				ValidationErrorCodes.VOICE_ACTIVITY_SHARING_ON_COOLDOWN,
+				{retry_after: VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS},
+			);
+		}
+		try {
+			return await this.applyVoiceActivitySharingDefault(params);
+		} finally {
+			await this.deps.cacheService.releaseLock(lockKey, token);
+		}
+	}
+
+	private async applyVoiceActivitySharingDefault(params: {
 		userId: UserID;
 		shareVoiceActivity: boolean;
 		requestCache: RequestCache;

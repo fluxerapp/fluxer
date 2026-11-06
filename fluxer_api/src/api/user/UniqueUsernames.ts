@@ -113,7 +113,14 @@ export async function reserveUsername(
 	const key = `unique-username:${username.toLowerCase()}`;
 	const token = await acquireReservationLock(deps.cache, key);
 	if (!token) throw usernameTakenError();
+	const keepAlive = setInterval(
+		() => {
+			deps.cache.extendLock(key, token, RESERVATION_TTL_SECONDS).catch(() => {});
+		},
+		(RESERVATION_TTL_SECONDS * 1000) / 3,
+	);
 	const release = async () => {
+		clearInterval(keepAlive);
 		await deps.cache.releaseLock(key, token);
 	};
 	try {
@@ -123,6 +130,23 @@ export async function reserveUsername(
 		throw error;
 	}
 	return {username, release};
+}
+
+export async function reserveDerivedUsername(
+	deps: UniqueUsernameDeps,
+	base: string,
+	exceptUserId?: UserID,
+): Promise<UsernameReservation> {
+	for (let attempt = 0; attempt < DERIVE_ATTEMPTS; attempt++) {
+		const candidate = attempt === 0 ? base : randomUsernameVariant(base);
+		if (await isUsernameTaken(deps.users, candidate, exceptUserId)) continue;
+		try {
+			return await reserveUsername(deps, candidate, exceptUserId);
+		} catch (error) {
+			if (!isUsernameTakenError(error)) throw error;
+		}
+	}
+	throw usernameTakenError();
 }
 
 export async function deriveAvailableUsername(users: UsernameLookup, base: string): Promise<string> {

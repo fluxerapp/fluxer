@@ -62,24 +62,24 @@ function hasAnyAdminACL(acls: Set<string>, requiredACLs: ReadonlyArray<string>):
 	return acls.has(AdminACLs.WILDCARD) || requiredACLs.some((acl) => acls.has(acl));
 }
 
-function ensureAdminApiKeyOwnerCanUseACLs(
-	adminUser: User,
-	tokenType: AdminAuthTokenType,
-	requiredACLs: ReadonlyArray<string>,
-): void {
-	if (tokenType !== 'admin_api_key' || adminUser.acls.has(AdminACLs.WILDCARD)) {
-		return;
+function intersectAdminApiKeyACLs(keyAcls: ReadonlySet<string>, ownerAcls: ReadonlySet<string>): Set<string> {
+	if (ownerAcls.has(AdminACLs.WILDCARD)) {
+		return new Set(keyAcls);
 	}
-	if (!requiredACLs.some((acl) => adminUser.acls.has(acl))) {
-		throw new MissingACLError(requiredACLs[0] ?? AdminACLs.AUTHENTICATE);
+	if (keyAcls.has(AdminACLs.WILDCARD)) {
+		return new Set(ownerAcls);
 	}
+	return new Set(Array.from(keyAcls).filter((acl) => ownerAcls.has(acl)));
 }
 
 function getRequestAdminACLs(ctx: Context<HonoEnv>, adminUser: User, tokenType: AdminAuthTokenType): Set<string> {
 	if (tokenType === 'operator') {
 		return new Set([AdminACLs.WILDCARD]);
 	}
-	return tokenType === 'admin_api_key' ? (ctx.get('adminApiKeyAcls') ?? new Set()) : adminUser.acls;
+	if (tokenType === 'admin_api_key') {
+		return intersectAdminApiKeyACLs(ctx.get('adminApiKeyAcls') ?? new Set(), adminUser.acls);
+	}
+	return adminUser.acls;
 }
 
 function getAdminAuditAttribution(ctx: Context<HonoEnv>, tokenType: AdminAuthTokenType): AdminAuditAttribution | null {
@@ -130,7 +130,6 @@ function requireAdminAccess(requiredACLs: ReadonlyArray<string>) {
 			'Checking admin ACL requirements',
 		);
 		ensureAdminCanAuthenticate(adminUser, tokenType);
-		ensureAdminApiKeyOwnerCanUseACLs(adminUser, tokenType, requiredACLs);
 		if (!hasAnyAdminACL(requestAcls, requiredACLs)) {
 			throw new MissingACLError(requiredACLs[0] ?? AdminACLs.AUTHENTICATE);
 		}

@@ -64,6 +64,21 @@ describe('cache invalidation during an in-flight produce', () => {
 		expect(await cache.get('session')).toBeNull();
 	});
 
+	it('does not resurrect a value another cache instance deleted while the factory was running', async () => {
+		const shared = new MockKVProvider();
+		const deleting = new KVCacheProvider({client: shared});
+		const producing = new KVCacheProvider({client: shared});
+		const {produces, factory} = gatedFactory(1);
+		const pending = producing.getOrSet('session', factory, 30);
+		await produces[0].started.promise;
+		await deleting.delete('session');
+		produces[0].result.resolve('revoked-session');
+		await expect(pending).resolves.toBe('revoked-session');
+		expect(await deleting.get('session')).toBeNull();
+		await expect(producing.getOrSet('session', async () => 'fresh', 30)).resolves.toBe('fresh');
+		expect(await deleting.get('session')).toBe('fresh');
+	});
+
 	it('still stores the value when no invalidation happens', async () => {
 		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gate = deferred<string>();

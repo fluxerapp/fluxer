@@ -179,10 +179,13 @@ export class GroupDmOperationsService {
 			throw new MaxGroupDmRecipientsError(recipientLimit);
 		}
 		const updatedRecipientIds = new Set([...channel.recipientIds, recipientId]);
-		const updatedChannel = await this.channelRepository.channelData.upsert({
-			...channel.toRow(),
-			recipient_ids: updatedRecipientIds,
-		});
+		const updatedChannel = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				recipient_ids: updatedRecipientIds,
+			},
+			channel.toRow(),
+		);
 		await this.userRepository.openPrivateChannelForUser(recipientId, updatedChannel);
 		const recipientUserResponse = await this.userCacheService.getUserPartialResponse(recipientId, requestCache);
 		const messageId = createMessageID(await this.snowflakeService.generateForChannel(channelId));
@@ -277,12 +280,15 @@ export class GroupDmOperationsService {
 		}
 		const updatedNicknames = new Map(channel.nicknames);
 		updatedNicknames.delete(recipientId.toString());
-		const updatedChannel = await this.channelRepository.channelData.upsert({
-			...channel.toRow(),
-			owner_id: newOwnerId,
-			recipient_ids: updatedRecipientIds,
-			nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
-		});
+		const updatedChannel = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				owner_id: newOwnerId,
+				recipient_ids: updatedRecipientIds,
+				nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
+			},
+			channel.toRow(),
+		);
 		await this.userRepository.closeDmForUser(recipientId, channelId);
 		await this.disconnectRemovedRecipientFromCall(channelId, recipientId);
 		const recipientUserResponse = await this.userCacheService.getUserPartialResponse(recipientId, requestCache);

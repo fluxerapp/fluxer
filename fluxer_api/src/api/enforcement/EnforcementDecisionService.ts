@@ -738,8 +738,18 @@ export class EnforcementDecisionService {
 				assert(limit !== null);
 				const user = await this.requireUserSubject(decision);
 				const holding = await findHoldingFeatureLimit(this.deps.repository, subjectId, limit, decision.decision_id);
-				if (!holding) {
-					await setFeatureLimit(this.deps, user, limit, false, actorId);
+				if (holding) {
+					return true;
+				}
+				const cleared = await setFeatureLimit(this.deps, user, limit, false, actorId);
+				const heldSinceClear = await findHoldingFeatureLimit(
+					this.deps.repository,
+					subjectId,
+					limit,
+					decision.decision_id,
+				);
+				if (heldSinceClear) {
+					await setFeatureLimit(this.deps, cleared, limit, true, actorId);
 				}
 				return true;
 			}

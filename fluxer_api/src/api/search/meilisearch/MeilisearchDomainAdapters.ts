@@ -14,6 +14,7 @@ import {
 } from '@app/api/search/meilisearch/MeilisearchFilterUtils';
 import {MeilisearchIndexAdapter} from '@app/api/search/meilisearch/MeilisearchIndexAdapter';
 import {MEILISEARCH_INDEX_DEFINITIONS} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
+import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {
 	AuditLogSearchFilters,
 	GuildMemberSearchFilters,
@@ -213,6 +214,17 @@ export class MeilisearchMessageAdapter extends MeilisearchIndexAdapter<MessageSe
 			matchingStrategy: 'all',
 		});
 	}
+
+	override async search(
+		query: string,
+		filters: MessageSearchFilters,
+		options?: SearchOptions,
+	): Promise<SearchResult<SearchableMessage>> {
+		if (filters.channelIds?.length === 0) {
+			return {hits: [], total: 0};
+		}
+		return super.search(query, filters, options);
+	}
 }
 
 export class MeilisearchGuildAdapter extends MeilisearchIndexAdapter<GuildSearchFilters, SearchableGuild> {
@@ -232,6 +244,8 @@ export class MeilisearchUserAdapter extends MeilisearchIndexAdapter<UserSearchFi
 			client: options.client,
 			index: MEILISEARCH_INDEX_DEFINITIONS.users,
 			buildFilters: buildUserFilters,
+			buildSearchableAttributes: (filters) =>
+				filters.excludeEmail ? ['username', 'id'] : MEILISEARCH_INDEX_DEFINITIONS.users.searchableAttributes,
 			buildSort: (filters) => buildSort(filters.sortBy ?? 'createdAt', filters.sortOrder),
 		});
 	}

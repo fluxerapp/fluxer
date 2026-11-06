@@ -80,16 +80,39 @@ export class MessageValidationService {
 				if (embed.url) contentModerationService.scanUrl(embed.url, modCtx);
 				contentModerationService.scanText(embed.title ?? null, modCtx);
 				contentModerationService.scanText(embed.description ?? null, modCtx);
-				if (embed.footer) contentModerationService.scanText(embed.footer.text ?? null, modCtx);
+				if (embed.footer) {
+					contentModerationService.scanText(embed.footer.text ?? null, modCtx);
+					if (embed.footer.icon_url) contentModerationService.scanUrl(embed.footer.icon_url, modCtx);
+				}
 				if (embed.author) {
 					contentModerationService.scanText(embed.author.name ?? null, modCtx);
 					if (embed.author.url) contentModerationService.scanUrl(embed.author.url, modCtx);
+					if (embed.author.icon_url) contentModerationService.scanUrl(embed.author.icon_url, modCtx);
+				}
+				for (const media of [embed.image, embed.thumbnail]) {
+					if (!media) continue;
+					contentModerationService.scanUrl(media.url, modCtx);
+					contentModerationService.scanText(media.description ?? null, modCtx);
 				}
 				if (embed.fields) {
 					for (const field of embed.fields) {
 						contentModerationService.scanText(field.name ?? null, modCtx);
 						contentModerationService.scanText(field.value ?? null, modCtx);
 					}
+				}
+			}
+		}
+		if (data.attachments) {
+			for (const attachment of data.attachments) {
+				contentModerationService.scanText(attachment.title ?? null, modCtx);
+				contentModerationService.scanText(attachment.description ?? null, modCtx);
+			}
+		}
+		if ('message_snapshots' in data && data.message_snapshots) {
+			for (const snapshot of data.message_snapshots) {
+				for (const attachment of snapshot.attachments ?? []) {
+					contentModerationService.scanText(attachment.title ?? null, modCtx);
+					contentModerationService.scanText(attachment.description ?? null, modCtx);
 				}
 			}
 		}

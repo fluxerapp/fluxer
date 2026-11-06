@@ -169,3 +169,39 @@ test('a quote may mention Fluxer and its team but not links', async () => {
 		await harness.shutdown();
 	}
 });
+
+test('hiding the pass count removes it from a frozen wall', async () => {
+	const harness = await createApiTestHarness();
+	try {
+		const holder = await createTestAccount(harness);
+		const viewer = await createTestAccount(harness);
+		const holderId = createUserID(BigInt(holder.userId));
+		await givePass(holderId);
+		await createBuilder(harness, holder.token)
+			.put('/operator-pass/listing')
+			.body({wall_name: 'Ada', wall_opt_out: false, wall_quote: 'Chat for everyone'})
+			.expect(200)
+			.execute();
+
+		const shownOperator = async () => {
+			const wall = await createBuilder<OperatorPassWallResponse>(harness, viewer.token)
+				.get('/operator-pass/wall')
+				.expect(200)
+				.execute();
+			return wall.operators.find((operator) => operator.name === 'Ada');
+		};
+		expect(await shownOperator()).toMatchObject({count: 1, quote: 'Chat for everyone'});
+
+		await getOperatorPassWallService().publication.setFrozen(true, holderId);
+		await createBuilder(harness, holder.token)
+			.patch('/users/@me')
+			.body({operator_pass_badge_count_hidden: true})
+			.expect(200)
+			.execute();
+		const operator = await shownOperator();
+		expect(operator).toMatchObject({name: 'Ada', quote: 'Chat for everyone'});
+		expect(operator).not.toHaveProperty('count');
+	} finally {
+		await harness.shutdown();
+	}
+});

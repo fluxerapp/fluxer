@@ -138,17 +138,20 @@ describe('Crosspost moderation', () => {
 	}
 
 	describe('takedown hooks', () => {
-		test('an admin delete of a published source purges its copies and leaves others alone', async () => {
+		test('an admin delete in an announcement channel queues a purge for each deleted message', async () => {
 			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
 			await publish(harness, world.a.member.token, world.a.ann.id, source.id);
 			const plain = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'not published');
 			const admin = await createAdmin(harness);
 			await adminDeleteMessage(harness, admin, world.a.ann.id, plain.id);
-			expect(worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE)).toHaveLength(0);
+			expect(worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE).map((job) => job.payload)).toEqual([
+				{channelId: world.a.ann.id, messageId: plain.id, mode: 'purge'},
+			]);
 			await adminDeleteMessage(harness, admin, world.a.ann.id, source.id);
-			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
-			expect(jobs).toHaveLength(1);
-			expect(jobs[0]!.payload).toEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
+			expect(worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE).map((job) => job.payload)).toEqual([
+				{channelId: world.a.ann.id, messageId: plain.id, mode: 'purge'},
+				{channelId: world.a.ann.id, messageId: source.id, mode: 'purge'},
+			]);
 		});
 
 		test('a message shred of a published source purges its copies', async () => {
@@ -180,9 +183,9 @@ describe('Crosspost moderation', () => {
 				}),
 			);
 			expect(await readMessageRow(world.a.ann.id, source.id)).toBeNull();
-			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
-			expect(jobs).toHaveLength(1);
-			expect(jobs[0]!.payload).toEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
+			const payloads = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE).map((job) => job.payload);
+			expect(payloads).toHaveLength(2);
+			expect(payloads).toContainEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
 		});
 	});
 

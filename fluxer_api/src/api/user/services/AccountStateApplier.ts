@@ -179,7 +179,11 @@ export async function applyHideProfile(deps: AccountStateDeps, env: ActionOf<'hi
 			if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
 			if (env.on && isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 			const hidden = (user.flags & UserFlags.PROFILE_HIDDEN) !== 0n;
-			if (hidden === env.on) return outcomeOf(env, 'noop', user);
+			if (hidden === env.on) {
+				await deps.dispatch.userUpdated(user);
+				await deps.dispatch.profileChanged(user);
+				return outcomeOf(env, 'noop', user);
+			}
 			const target = env.on ? user.flags | UserFlags.PROFILE_HIDDEN : user.flags & ~UserFlags.PROFILE_HIDDEN;
 			const updated = await deps.users.compareAndSetFlags(user, target);
 			if (updated) {
@@ -203,18 +207,21 @@ export async function applyHideRecentMessages(
 		if (user.isBot || isDeletionComplete(user)) return outcomeOf(env, 'ineligible', user);
 		const current = user.contentHiddenSince?.getTime() ?? null;
 		if (!env.on) {
-			if (current === null) return outcomeOf(env, 'noop', user);
+			if (current === null) {
+				await deps.dispatch.contentVisibilityChanged(user);
+				return outcomeOf(env, 'noop', user);
+			}
 			const shown = await deps.users.patchUpsert(user.id, {content_hidden_since: null}, user.toRow());
 			await deps.dispatch.contentVisibilityChanged(shown);
 			return outcomeOf(env, 'applied', shown);
 		}
 		if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 		const since = current === null ? env.since_ms : Math.min(current, env.since_ms);
-		let hidden = user;
-		if (since !== current) {
-			hidden = await deps.users.patchUpsert(user.id, {content_hidden_since: new Date(since)}, user.toRow());
-			await deps.dispatch.contentVisibilityChanged(hidden);
-		}
+		const hidden =
+			since === current
+				? user
+				: await deps.users.patchUpsert(user.id, {content_hidden_since: new Date(since)}, user.toRow());
+		await deps.dispatch.contentVisibilityChanged(hidden);
 		const removed = await removeAuthoredMessagesSince(deps, user.id, since);
 		return outcomeOf(env, since === current ? 'noop' : 'applied', hidden, `messages=${removed}`);
 	});

@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createInviteCode, type GuildID} from '@app/api/BrandedTypes';
+import type {GuildID} from '@app/api/BrandedTypes';
 import type {GuildVisitRow} from '@app/api/database/types/GuildVisitTypes';
 import {userGuildVisitsActive} from '@app/api/experiment/GuildVisitsGate';
 import {assertNotBannedFromGuildVisit, endGuildVisit} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {
 	guildVisitAuthorizedByView,
+	guildVisitInviteStillValid,
 	guildVisitRepository,
 	loadGuildVisitorView,
 } from '@app/api/guild/visits/GuildVisitorAccess';
 import {maxGuildVisitsFor} from '@app/api/guild/visits/GuildVisitService';
-import {getInviteRepository, getLimitConfigService} from '@app/api/middleware/ServiceSingletons';
+import {getLimitConfigService} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {GuildVisitEndReasons, GuildVisitSources} from '@fluxer/constants/src/GuildVisitConstants';
@@ -34,10 +35,7 @@ async function checkSessionVisit(
 	const view = await loadGuildVisitorView(row.guild_id);
 	if (!view || !guildVisitAuthorizedByView(row, view)) return 'drop';
 	if (view.guild.nsfw && !canUserAccessNsfwContent(user)) return 'drop';
-	if (row.source === GuildVisitSources.INVITE || row.source === GuildVisitSources.VANITY_URL) {
-		const invite = row.invite_code ? await getInviteRepository().findUnique(createInviteCode(row.invite_code)) : null;
-		if (!invite || invite.guildId !== row.guild_id) return 'INVITE_REVOKED';
-	}
+	if (!(await guildVisitInviteStillValid(row))) return 'INVITE_REVOKED';
 	try {
 		await assertNotBannedFromGuildVisit({guildId: row.guild_id, user, ip});
 	} catch (error) {

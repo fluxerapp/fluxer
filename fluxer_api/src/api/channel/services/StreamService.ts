@@ -174,10 +174,7 @@ export class StreamService {
 		);
 	}
 
-	async getPreview(params: {userId: UserID; viewer: ThreadViewer; streamKey: string}): Promise<{
-		buffer: Uint8Array;
-		contentType: string;
-	} | null> {
+	async getPreview(params: {userId: UserID; viewer: ThreadViewer; streamKey: string}): Promise<Uint8Array | null> {
 		const parsedKey = this.getParsedStreamKeyOrThrow(params.streamKey);
 		const channelId = this.getChannelIdFromParsedKeyOrThrow(parsedKey);
 		await this.assertStreamChannelAccess({

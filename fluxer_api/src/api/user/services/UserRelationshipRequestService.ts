@@ -161,11 +161,15 @@ export class UserRelationshipRequestService {
 	}
 
 	private createInverseRelationshipResolver(viewerId: UserID) {
-		return (relationship: Relationship) =>
-			this.userRelationshipService.getRelationship({
+		return (relationship: Relationship) => {
+			if (relationship.type !== RelationshipTypes.FRIEND) {
+				return Promise.resolve(null);
+			}
+			return this.userRelationshipService.getRelationship({
 				userId: relationship.targetUserId,
 				targetId: viewerId,
 				type: relationship.type,
 			});
+		};
 	}
 }

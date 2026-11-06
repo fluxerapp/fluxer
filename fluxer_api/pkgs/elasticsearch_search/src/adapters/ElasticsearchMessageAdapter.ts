@@ -36,7 +36,7 @@ function buildMessageFilters(filters: MessageSearchFilters): Array<Elasticsearch
 	if (filters.channelId) {
 		clauses.push(esTermFilter('channelId', filters.channelId));
 	}
-	if (filters.channelIds && filters.channelIds.length > 0) {
+	if (filters.channelIds !== undefined) {
 		clauses.push(esTermsFilter('channelId', filters.channelIds));
 	}
 	clauses.push(...esExcludeAny('channelId', filters.excludeChannelIds ?? []));

@@ -193,6 +193,23 @@ describe('Email revert flow', () => {
 		const statuses = results.map(({response}) => response.status).sort();
 		expect(statuses).toEqual([200, 400, 400, 400].sort());
 	});
+	it('rejects revert tokens from changes made after the redeemed one', async () => {
+		const account = await createTestAccount(harness);
+		const firstRevertToken = await changeEmailAndGetRevertToken(harness, account);
+		const changed = await createBuilder<UserPrivateResponse>(harness, account.token).get('/users/@me').execute();
+		const laterRevertToken = await changeEmailAndGetRevertToken(harness, {...account, email: changed.email});
+		const revertResp = await createBuilderWithoutAuth<EmailRevertResponse>(harness)
+			.post('/auth/email-revert')
+			.body({token: firstRevertToken, password: uniquePassword()})
+			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/email-revert')
+			.body({token: laterRevertToken, password: uniquePassword()})
+			.expect(400)
+			.execute();
+		const user = await createBuilder<UserPrivateResponse>(harness, revertResp.token).get('/users/@me').execute();
+		expect(user.email).toBe(account.email);
+	});
 	it('restores original email and clears mfa', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)

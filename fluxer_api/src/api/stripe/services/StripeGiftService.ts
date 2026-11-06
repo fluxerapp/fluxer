@@ -129,6 +129,7 @@ export class StripeGiftService {
 			}
 			await this.userRepository.redeemGiftCode(code, userId);
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');
+			let stackedOntoStripe = false;
 			try {
 				const premiumType = giftCode.durationQuantity === 0 ? UserPremiumTypes.LIFETIME : UserPremiumTypes.SUBSCRIPTION;
 				Logger.debug({userId, giftCode: code, premiumType}, 'Computed premium type from gift duration');
@@ -156,6 +157,7 @@ export class StripeGiftService {
 					'Gift redemption stacking decision completed',
 				);
 				if (stackedSubscription) {
+					stackedOntoStripe = true;
 					Logger.debug(
 						{
 							userId,
@@ -212,8 +214,28 @@ export class StripeGiftService {
 				}
 				Logger.debug({userId, giftCode: code}, 'Completed entitlement grant path for redeemed gift');
 			} catch (entitlementError: unknown) {
+				if (stackedOntoStripe || (await this.didGiftGrantPersist(user))) {
+					await this.cacheService.set(`redeemed_gift_codes:${code}`, true, seconds('5 minutes'));
+					await this.cacheService.set(appliedKey, true, seconds('365 days'));
+					if (giftCode.durationQuantity === 0 && giftCode.visionarySequenceNumber != null) {
+						try {
+							await this.userRepository.reserveVisionarySlot(giftCode.visionarySequenceNumber, userId);
+						} catch (reserveError: unknown) {
+							Logger.error(
+								{userId, giftCode: code, reserveError},
+								'Failed to reserve visionary slot after gift entitlement grant failure',
+							);
+						}
+					}
+					Logger.warn(
+						{userId, giftCode: code, error: entitlementError},
+						'Gift entitlement grant threw after premium state was saved; keeping redemption',
+					);
+					throw entitlementError;
+				}
 				try {
 					await this.userRepository.unredeemGiftCode(code, userId);
+					await this.cacheService.delete(appliedKey);
 					Logger.warn(
 						{userId, giftCode: code, error: entitlementError},
 						'Rolled back gift code redemption after entitlement grant failure',
@@ -301,6 +323,16 @@ export class StripeGiftService {
 			const freshPayment = await this.userRepository.getPaymentByCheckoutSession(checkoutSessionId);
 			if (freshPayment?.giftCode) {
 				return freshPayment.giftCode;
+			}
+			const sessionGift = (await this.userRepository.findGiftCodesByCreator(purchaser.id)).find(
+				(gift) => gift.checkoutSessionId === checkoutSessionId,
+			);
+			if (sessionGift) {
+				Logger.warn(
+					{checkoutSessionId, code: sessionGift.code},
+					'Reused gift code already created for checkout session',
+				);
+				return sessionGift.code;
 			}
 			const code = await generateUniqueGiftCode((code) => this.userRepository.findGiftCode(code));
 			const duration = mapGiftDurationMonthsToFields(productInfo.durationMonths);
@@ -416,6 +448,25 @@ export class StripeGiftService {
 		}
 		Logger.debug({userId: user.id, giftCode: code}, 'Stacked gift duration onto Stripe subscription');
 		return {subscription: extension.kind === 'extended' ? extension.subscription : null};
+	}
+
+	private async didGiftGrantPersist(before: User): Promise<boolean> {
+		let latest: User | null;
+		try {
+			latest = await this.userRepository.findUnique(before.id);
+		} catch (error: unknown) {
+			Logger.error({userId: before.id, error}, 'Failed to reload user after gift entitlement grant failure');
+			return false;
+		}
+		if (!latest) {
+			return false;
+		}
+		return (
+			latest.premiumType !== before.premiumType ||
+			latest.premiumUntil?.getTime() !== before.premiumUntil?.getTime() ||
+			latest.premiumGiftExtensionEndsAt?.getTime() !== before.premiumGiftExtensionEndsAt?.getTime() ||
+			latest.premiumLifetimeSequence !== before.premiumLifetimeSequence
+		);
 	}
 
 	private async stopStoreRenewalsPastTrialLimit(userId: UserID): Promise<void> {

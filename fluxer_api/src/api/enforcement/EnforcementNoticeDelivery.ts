@@ -30,6 +30,7 @@ import {
 	enforcementNoticeSlots,
 	renderEmailTemplateText,
 } from '@pkgs/email/src/EmailService';
+import {stripInlineMarkup} from '@pkgs/email/src/email_html/EmailHtmlRenderer';
 import type {EmailTemplateVariables, EnforcementNoticeKindLabel} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 
 interface EnforcementNoticeDeliveryDeps {
@@ -50,8 +51,11 @@ function joinSentences(lines: ReadonlyArray<string>, locale: string | null): str
 	return lines.join(NO_SENTENCE_SPACE.test(locale ?? '') ? '' : ' ');
 }
 
-function joinParagraphs(lines: ReadonlyArray<string>): string {
-	return lines.join('\n');
+const MARKDOWN_TRIGGER = /[\\`*_~|<>[\]()]/g;
+
+function factsText(facts: ReadonlyArray<string>, format: NoticeFormat): string {
+	const joined = facts.join('\n');
+	return format === 'system_dm' ? joined.replace(MARKDOWN_TRIGGER, '\\$&') : stripInlineMarkup(joined);
 }
 
 function ruleTitle(rule: EnforcementNotice['rule'], format: NoticeFormat): string {
@@ -78,7 +82,7 @@ function noticeVariables(
 		effects: joinSentences(notice.effects, locale),
 		rule_title: ruleTitle(notice.rule, format),
 		rule_url: format === 'email' ? (notice.rule?.url ?? null) : null,
-		facts: joinParagraphs(notice.facts),
+		facts: factsText(notice.facts, format),
 		statement: notice.statement,
 		how_we_decided: joinSentences(notice.how_we_decided, locale),
 		appeals_email: notice.appeal?.email ?? null,

@@ -197,6 +197,21 @@ describe('buildEnforcementNotice', () => {
 		}
 	});
 
+	it('shows channel and community names in the system message as written', () => {
+		const name = '[x](https://example.org)';
+		const row = KINDS.suspension!;
+		const evidence: Array<EvidenceMessageLocation> = [
+			{
+				locationKey: '20',
+				location: {type: 'channel', channelName: name, communityName: name},
+				timestamp: new Date('2026-10-01T09:00:00.000Z'),
+			},
+		];
+		const text = renderNoticeText(row, notice(row, evidence), 'en-US');
+		expect(text).not.toContain('](https://example.org)');
+		expect(text).toContain('\\[x\\]\\(https://example.org\\)');
+	});
+
 	it('renders legacy restrictions from the user row', () => {
 		const suspended = buildEnforcementNotice(
 			{

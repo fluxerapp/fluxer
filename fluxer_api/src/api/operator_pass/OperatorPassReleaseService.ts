@@ -8,16 +8,20 @@ import {
 	loadOperatorPassEntitlementState,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
+import {operatorPassReleaseLockKey, withOperatorPassLock} from '@app/api/operator_pass/OperatorPassLocks';
 import {getOperatorPassReleaseListWindow} from '@app/api/operator_pass/OperatorPassPrices';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import type {OperatorPassWallEntryStore} from '@app/api/operator_pass/OperatorPassWallEntryStore';
 import {isOperatorPassWallListed} from '@app/api/operator_pass/OperatorPassWallPresentation';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {OperatorPassReleaseAlreadyPublishedError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassReleaseAlreadyPublishedError';
 import {OperatorPassReleaseNotReadyError} from '@fluxer/errors/src/domains/operator_pass/OperatorPassReleaseNotReadyError';
 import {UnknownOperatorPassReleaseEntryError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassReleaseEntryError';
 import type {OperatorPassReleaseResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 const RELEASE_NAME_SORT_LOCALE = 'en';
 
@@ -44,11 +48,19 @@ function buildOperatorPassReleaseFile(year: number, tag: string, names: Readonly
 	return [`The Operators of ${year}`, '', `Released in ${tag}. Thank you.`, '', ...names, ''].join('\n');
 }
 
+function releaseBusyError(): ConflictError {
+	return new ConflictError({
+		code: APIErrorCodes.CONFLICT,
+		message: 'This release is being changed in another request',
+	});
+}
+
 export class OperatorPassReleaseService {
 	constructor(
 		private readonly repository: OperatorPassRepository,
 		private readonly userRepository: UserRepository,
 		private readonly entries: OperatorPassWallEntryStore,
+		private readonly cacheService: ICacheService,
 	) {}
 
 	async previewRelease(year: number): Promise<OperatorPassReleasePreview> {
@@ -131,6 +143,19 @@ export class OperatorPassReleaseService {
 	}
 
 	async eraseFromRelease(params: {year: number; userId: UserID; adminId: UserID}): Promise<OperatorPassReleaseFile> {
+		return withOperatorPassLock(
+			this.cacheService,
+			operatorPassReleaseLockKey(params.year),
+			() => this.eraseFromReleaseLocked(params),
+			releaseBusyError,
+		);
+	}
+
+	private async eraseFromReleaseLocked(params: {
+		year: number;
+		userId: UserID;
+		adminId: UserID;
+	}): Promise<OperatorPassReleaseFile> {
 		const release = await this.repository.findRelease(params.year);
 		const entry = await this.repository.findWallEntry(params.userId);
 		if (!release || !entry) {

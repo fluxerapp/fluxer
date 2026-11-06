@@ -40,3 +40,11 @@ export async function admitLimitedReport(
 	const stored = await env.kv.setnx(dedupeKey(clientIp, target), '1', DAY_SECONDS);
 	return stored ? 'store' : 'drop';
 }
+
+export async function releaseLimitedReport(
+	env: BudgetEnv,
+	clientIp: string,
+	target: LimitedReportTarget,
+): Promise<void> {
+	await env.kv.del(dedupeKey(clientIp, target));
+}

@@ -60,8 +60,10 @@ const seedThreadPermissions: WorkerTaskHandler = async (payload) => {
 	await channelRepository.threads.ensureGuildMarker(guildId);
 	const channels = await channelRepository.channelData.listGuildChannels(guildId, 'complete');
 	const updatedChannels: Array<Channel> = [];
-	for (const channel of channels) {
-		if (channel.permissionOverwrites.size === 0) continue;
+	for (const candidate of channels) {
+		if (candidate.permissionOverwrites.size === 0) continue;
+		const channel = await channelRepository.channelData.findUnique(candidate.id);
+		if (!channel || channel.permissionOverwrites.size === 0) continue;
 		let changed = false;
 		const overwrites = new Map(
 			Array.from(channel.permissionOverwrites.entries()).map(([targetId, overwrite]) => {

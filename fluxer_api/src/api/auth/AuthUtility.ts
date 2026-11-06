@@ -6,7 +6,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {createNoticeLookupDeps, loadAccountNotice} from '@app/api/enforcement/EnforcementAccountNotice';
 import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
 import {createNetworkBlockError} from '@app/api/enforcement/NetworkBlockError';
-import {clearExpiredSuspension} from '@app/api/enforcement/SuspensionState';
+import {clearExpiredSuspension, hasExpiredSuspension} from '@app/api/enforcement/SuspensionState';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
@@ -116,7 +116,11 @@ export async function assertSignInAllowed(ctx: ApiContext, user: User): Promise<
 		{users: ctx.services.users, repository: new EnforcementDecisionRepository()},
 		user,
 	);
-	return expiry?.cleared ?? user;
+	if (expiry) return expiry.cleared;
+	if (!hasExpiredSuspension(user)) return user;
+	const current = (await ctx.services.users.findUnique(user.id)) ?? user;
+	if (isSignInRefused(current)) await refuseRestrictedSignIn(ctx, current);
+	return current;
 }
 
 export async function reactivateOnSignIn(

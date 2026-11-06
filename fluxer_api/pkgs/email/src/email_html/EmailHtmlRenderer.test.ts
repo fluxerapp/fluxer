@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {EmailConfig, EmailMessage, IEmailProvider} from '@pkgs/email/src/EmailProviderTypes';
-import {EmailService} from '@pkgs/email/src/EmailService';
+import {EmailService, renderEmailTemplateText, reportResolvedSlots} from '@pkgs/email/src/EmailService';
 import {EMAIL_HTML_LAYOUTS} from '@pkgs/email/src/email_html/EmailHtmlLayouts.generated';
 import {
 	escapeHtml,
@@ -759,6 +759,36 @@ describe('email HTML renderer', () => {
 				expect(match[1]).not.toContain('/*');
 			}
 		}
+	});
+});
+
+describe('email text renderer', () => {
+	const render = (format: 'plain' | 'markdown') =>
+		renderEmailTemplateText(
+			'report_resolved',
+			'en-US',
+			{
+				target: 'community',
+				reportedAt: new Date('2026-11-01T00:00:00Z'),
+				username: '',
+				communityName: '[Join](https://example.com/x) <b> \\[Open\\](https://example.com/y)',
+				channelName: '',
+				outcome: 'no_violation',
+				appeals_email: null,
+			},
+			'Fluxer',
+			(template) => reportResolvedSlots(template, '123', ''),
+			{format},
+		);
+
+	it('escapes brackets from names in markdown text', () => {
+		const text = render('markdown');
+		expect(text).toContain('\\[Join\\](https://example.com/x) \\<b\\> \\\\\\[Open\\\\\\](https://example.com/y)');
+		expect(text).not.toMatch(/(?<!\\)(?:\\\\)*[[\]]/);
+	});
+
+	it('keeps names literal in plain text', () => {
+		expect(render('plain')).toContain('[Join](https://example.com/x) <b> \\[Open\\](https://example.com/y)');
 	});
 });
 

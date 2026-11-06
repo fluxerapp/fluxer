@@ -134,20 +134,17 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 					deletionChunk.map(({messageId}) => messageId),
 					{context: {source: 'message_shred', jobId: data.job_id}},
 				);
-				await enqueueCrosspostSourceRemoval(workerService, {
-					messages: deletionChunk.map(({message}) => message),
-					mode: 'purge',
-				});
-				await persistStatus('in_progress');
-				const messagesByChannel = new Map<ChannelID, Array<MessageID>>();
-				for (const {channelId, messageId} of deletionChunk) {
-					const ids = messagesByChannel.get(channelId) ?? [];
-					ids.push(messageId);
-					messagesByChannel.set(channelId, ids);
+				const messagesByChannel = new Map<ChannelID, Array<Message>>();
+				for (const {channelId, message} of deletionChunk) {
+					const channelMessages = messagesByChannel.get(channelId) ?? [];
+					channelMessages.push(message);
+					messagesByChannel.set(channelId, channelMessages);
 				}
-				for (const [channelId, messageIds] of messagesByChannel) {
+				for (const [channelId, channelMessages] of messagesByChannel) {
 					const channel = await channelRepository.channelData.findUnique(channelId);
+					await enqueueCrosspostSourceRemoval(workerService, {messages: channelMessages, mode: 'purge', channel});
 					if (!channel) continue;
+					const messageIds = channelMessages.map((message) => message.id);
 					await decrementThreadMessageCount(channelRepository, channel, messageIds);
 					await dispatchChannelEvent({
 						gatewayService,
@@ -156,6 +153,7 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 						data: {channel_id: channelId.toString(), ids: messageIds.map((id) => id.toString())},
 					});
 				}
+				await persistStatus('in_progress');
 			}
 		}
 	};

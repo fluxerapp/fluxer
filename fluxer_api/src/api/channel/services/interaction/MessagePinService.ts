@@ -28,7 +28,6 @@ import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/Invali
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 const PIN_LIST_UNBOUNDED_TIMESTAMP = new Date('9999-12-31T23:59:59.999Z');
 
@@ -71,23 +70,20 @@ export class MessagePinService {
 		let before = beforeTimestamp ?? PIN_LIST_UNBOUNDED_TIMESTAMP;
 		let exhausted = false;
 		while (filtered.length <= pageSize && !exhausted) {
-			const messages = await this.channelRepository.messageInteractions.listChannelPins(
+			const page = await this.channelRepository.messageInteractions.listChannelPins(
 				channel.id,
 				before,
 				pageSize + 1,
+				cutoffTimestamp,
 			);
-			const sorted = messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0));
-			exhausted = messages.length <= pageSize;
-			for (const message of sorted) {
-				if (cutoffTimestamp === null || snowflakeToDate(message.id).getTime() >= cutoffTimestamp) {
-					filtered.push(message);
-				}
-			}
-			const last = sorted[sorted.length - 1];
-			if (!last?.pinnedTimestamp) {
+			exhausted = page.scannedCount <= pageSize;
+			filtered.push(
+				...page.messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0)),
+			);
+			if (!page.oldestPinnedTimestamp) {
 				break;
 			}
-			before = last.pinnedTimestamp;
+			before = page.oldestPinnedTimestamp;
 		}
 		const hasMore = filtered.length > pageSize;
 		const trimmed = filtered.slice(0, pageSize);

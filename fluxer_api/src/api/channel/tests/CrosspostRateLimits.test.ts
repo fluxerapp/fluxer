@@ -75,6 +75,24 @@ describe('Publishing and published-edit limits', () => {
 		expect(worker.byTask('crosspostMessage')).toHaveLength(CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
 	});
 
+	test('concurrent publishes of different messages never go past the channel budget', async () => {
+		const messages = [];
+		for (let index = 0; index < CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts + 3; index++) {
+			messages.push(await postMessage(harness, world.author.token, world.announcement.id, `Burst ${index}`));
+		}
+		const results = await Promise.all(
+			messages.map((message) =>
+				crosspostRequest(harness, world.author.token, world.announcement.id, message.id).executeRaw(),
+			),
+		);
+		const published = results.filter(({response}) => response.status === 200);
+		expect(published.length).toBeLessThanOrEqual(CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
+		expect(worker.byTask('crosspostMessage')).toHaveLength(published.length);
+		expect(await channelBudgetRemaining(world.announcement.id)).toBe(
+			CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts - published.length,
+		);
+	});
+
 	test('failed publishes do not consume budget', async () => {
 		const published = await postMessage(harness, world.author.token, world.announcement.id, 'Published once');
 		await publish(harness, world.author.token, world.announcement.id, published.id);

@@ -13,7 +13,7 @@ import {UserSettings} from '@app/api/models/UserSettings';
 import {scheduleSystemDeletion} from '@app/api/user/AccountCleanup';
 import type {TierContext} from '@app/api/user/AccountTier';
 import {executeEntries, type GuildEntryDeps, takePendingEntries} from '@app/api/user/GuildEntry';
-import {deriveAvailableUsername} from '@app/api/user/UniqueUsernames';
+import {reserveDerivedUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
 import {mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {BELOW_MINIMUM_AGE_TRAIT, DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
@@ -101,13 +101,18 @@ export function settingsForAge(settings: UserSettings, adult: boolean): UserSett
 	return changed ? new UserSettings(row) : null;
 }
 
-async function releaseUsername(ctx: ApiContext, user: User): Promise<{username: string; discriminator: number}> {
+async function releaseUsername(
+	ctx: ApiContext,
+	user: User,
+): Promise<{username: string; discriminator: number; reservation?: UsernameReservation}> {
 	const base = generateRandomUsername();
 	if (usesUniqueUsernames()) {
-		return {
-			username: await deriveAvailableUsername(ctx.services.users, base),
-			discriminator: USERNAME_MODE_DISCRIMINATOR,
-		};
+		const reservation = await reserveDerivedUsername(
+			{users: ctx.services.users, cache: ctx.services.cache},
+			base,
+			user.id,
+		);
+		return {username: reservation.username, discriminator: USERNAME_MODE_DISCRIMINATOR, reservation};
 	}
 	const result = await getDiscriminatorService().generateDiscriminator({username: base});
 	return result.available && result.discriminator !== -1
@@ -124,11 +129,16 @@ async function handleUnderage(ctx: ApiContext, user: User): Promise<never> {
 	traits.delete(DOB_DEFERRED_TRAIT);
 	traits.add(BELOW_MINIMUM_AGE_TRAIT);
 	const released = await releaseUsername(ctx, user);
-	const updated = await ctx.services.users.patchUpsert(
-		user.id,
-		{traits, date_of_birth: null, username: released.username, discriminator: released.discriminator},
-		user.toRow(),
-	);
+	let updated: User;
+	try {
+		updated = await ctx.services.users.patchUpsert(
+			user.id,
+			{traits, date_of_birth: null, username: released.username, discriminator: released.discriminator},
+			user.toRow(),
+		);
+	} finally {
+		await released.reservation?.release();
+	}
 	await scheduleSystemDeletion(
 		{users: ctx.services.users, gateway: ctx.services.gateway, deletionQueue: getKVAccountDeletionQueue()},
 		updated,

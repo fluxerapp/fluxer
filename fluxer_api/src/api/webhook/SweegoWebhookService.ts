@@ -11,6 +11,8 @@ import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 
+const SWEEGO_WEBHOOK_TOLERANCE_SECONDS = 300;
+
 interface ISweegoUserRepository {
 	findByEmail(email: string): Promise<User | null>;
 	patchUpsert(userId: UserID, patch: Partial<UserRow>, currentRow: UserRow): Promise<User | null>;
@@ -108,6 +110,14 @@ export class SweegoWebhookService {
 		if (!webhookId || !timestamp || !signature) {
 			Logger.warn('Sweego webhook missing signature headers');
 			return {status: 401, body: 'Missing signature headers'};
+		}
+		const timestampSeconds = Number(timestamp);
+		if (
+			!Number.isFinite(timestampSeconds) ||
+			Math.abs(Date.now() / 1000 - timestampSeconds) > SWEEGO_WEBHOOK_TOLERANCE_SECONDS
+		) {
+			Logger.warn({timestamp}, 'Sweego webhook timestamp outside tolerance');
+			return {status: 401, body: 'Invalid timestamp'};
 		}
 		const isValid = this.verifySignature(body, webhookId, timestamp, signature, secret);
 		if (!isValid) {

@@ -233,6 +233,43 @@ export class UserDataRepository {
 		return null;
 	}
 
+	async compareAndClearSuspension(
+		user: User,
+		flags: bigint,
+	): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
+		assertWritableUserId(user.id);
+		const previousData = user.toRow();
+		const version = nextVersion(user.version);
+		const suspension = {
+			temp_banned_until: previousData.temp_banned_until ?? null,
+			enforcement_decision_id: previousData.enforcement_decision_id ?? null,
+		};
+		const expected = previousData.flags ?? 0n;
+		const conditions: Array<Partial<UserRow>> = [{flags: expected, ...suspension}];
+		if (expected === 0n && previousData.version != null) {
+			conditions.push({flags: null, ...suspension, version: previousData.version});
+		}
+		for (const condition of conditions) {
+			const applied = await executeConditional(
+				Users.conditionalPatchByPk(
+					{user_id: user.id},
+					{
+						flags: Db.set(flags),
+						temp_banned_until: Db.clear(),
+						enforcement_decision_id: Db.clear(),
+						version: Db.set(version),
+					},
+					condition,
+				),
+			);
+			if (!applied) continue;
+			const updatedData = {...previousData, flags, temp_banned_until: null, enforcement_decision_id: null, version};
+			await emitAccountChangedIfRelevant(previousData, updatedData);
+			return {previousData, updatedData};
+		}
+		return null;
+	}
+
 	async findRow(userId: UserID): Promise<UserRow | null> {
 		return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
 	}

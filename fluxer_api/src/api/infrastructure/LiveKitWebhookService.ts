@@ -205,19 +205,8 @@ export class LiveKitWebhookService {
 			{roomName, contextType: context.type, guildId: guildId?.toString(), channelId: context.channelId.toString()},
 			'Processing LiveKit room_finished event',
 		);
-		const servers = this.serversByKey.get(apiKey) ?? [];
-		if (servers.length === 0) {
-			return;
-		}
-		const pinned = await this.voiceRoomStore.getPinnedRoomServer(guildId, context.channelId);
-		if (
-			pinned &&
-			!servers.some((server) => server.regionId === pinned.regionId && server.serverId === pinned.serverId)
-		) {
-			Logger.debug(
-				{guildId: guildId?.toString(), channelId: context.channelId.toString(), pinnedServer: pinned.serverId},
-				'Ignoring LiveKit webhook from a server the room is not pinned to',
-			);
+		const source = this.resolveSource(apiKey, undefined);
+		if (!(await this.isFromPinnedServer(guildId, context.channelId, source))) {
 			return;
 		}
 		await this.voiceRoomStore.deleteRoomServer(guildId, context.channelId);

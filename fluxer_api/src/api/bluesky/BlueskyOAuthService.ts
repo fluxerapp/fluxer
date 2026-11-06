@@ -42,6 +42,7 @@ const NULL_BODY_STATUSES = new Set([204, 205, 304]);
 const HANDLE_LOOKUP_TIMEOUT_MS = 3000;
 const HANDLE_INVALID = 'handle.invalid';
 const SESSION_TTL_SECONDS = 300;
+const MAX_JSON_ENTRIES = 1024;
 
 function createUnfurlerFetch(unfurler: IUnfurlerService): Fetch {
 	return async (input, init) => {
@@ -60,6 +61,38 @@ function createUnfurlerFetch(unfurler: IUnfurlerService): Fetch {
 			status: response.status,
 			headers: response.headers,
 		});
+	};
+}
+
+function exceedsEntryLimit(value: unknown, limit: number): boolean {
+	let count = 0;
+	const pending: Array<unknown> = [value];
+	while (pending.length > 0) {
+		const current = pending.pop();
+		if (current === null || typeof current !== 'object') continue;
+		const children = Array.isArray(current) ? current : Object.values(current);
+		count += children.length;
+		if (count > limit) return true;
+		for (const child of children) pending.push(child);
+	}
+	return false;
+}
+
+function createBoundedJsonFetch(fetch: Fetch): Fetch {
+	return async (input, init) => {
+		const response = await fetch(input, init);
+		if (!response.ok || response.body === null) return response;
+		const text = await response.text();
+		let json: unknown;
+		try {
+			json = JSON.parse(text);
+		} catch {
+			json = undefined;
+		}
+		if (exceedsEntryLimit(json, MAX_JSON_ENTRIES)) {
+			throw new Error('JSON response has too many entries');
+		}
+		return new Response(text, {status: response.status, statusText: response.statusText, headers: response.headers});
 	};
 }
 
@@ -143,7 +176,7 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 		for (const [index, key] of config.keys.entries()) {
 			keyset.push(await loadSigningKey(key, index));
 		}
-		const fetch = createUnfurlerFetch(unfurler);
+		const fetch = createBoundedJsonFetch(createUnfurlerFetch(unfurler));
 		const handleResolver = createHandleResolver(unfurler, fetch);
 		return new BlueskyOAuthService(
 			{

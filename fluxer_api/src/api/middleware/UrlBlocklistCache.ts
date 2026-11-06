@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
-import {BLOCKLIST_S3_KEYS, readLinesFromS3} from '@app/api/blocklist/BlocklistS3';
+import {
+	BLOCKLIST_FEED_CATEGORIES,
+	COMBINED_FEED_URLS_KEY,
+	feedUrlsKey,
+	readLinesFromS3,
+} from '@app/api/blocklist/BlocklistS3';
 import {Config} from '@app/api/Config';
 import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -16,6 +21,7 @@ class UrlBlocklistCache extends RefreshedCache {
 	}
 
 	private exactUrls: Set<string> = new Set();
+	private feedUrls: Set<string> = new Set();
 	private hostRules = new UrlHostRuleSet();
 	private adminRepository = new AdminRepository();
 	private storageService: IStorageService | null = null;
@@ -29,7 +35,7 @@ class UrlBlocklistCache extends RefreshedCache {
 			this.adminRepository.loadAllBannedUrlDomains(),
 			this.loadFeedUrls(),
 		]);
-		const nextUrls = feedUrls;
+		const nextUrls = new Set(feedUrls);
 		for (const row of manualUrls) {
 			if (row.url_canonical) nextUrls.add(row.url_canonical.toLowerCase());
 		}
@@ -47,9 +53,19 @@ class UrlBlocklistCache extends RefreshedCache {
 	}
 
 	private async loadFeedUrls(): Promise<Set<string>> {
-		if (!this.storageService || !Config.blocklistFeeds.enabled) return new Set();
-		const lines = await readLinesFromS3(this.storageService, BLOCKLIST_S3_KEYS.feedUrls);
-		return new Set(lines);
+		if (!this.storageService || !Config.blocklistFeeds.enabled) {
+			this.feedUrls = new Set();
+			return this.feedUrls;
+		}
+		const storageService = this.storageService;
+		const keys = [...BLOCKLIST_FEED_CATEGORIES.map(feedUrlsKey), COMBINED_FEED_URLS_KEY];
+		try {
+			const lineSets = await Promise.all(keys.map((key) => readLinesFromS3(storageService, key)));
+			this.feedUrls = new Set(lineSets.flat());
+		} catch (error) {
+			Logger.warn({error}, 'Failed to read URL blocklist feed files, keeping the previous feed URLs');
+		}
+		return this.feedUrls;
 	}
 
 	isUrlBanned(rawUrl: string): boolean {
@@ -115,6 +131,7 @@ class UrlBlocklistCache extends RefreshedCache {
 	resetForTesting(): void {
 		this.resetRefreshState();
 		this.exactUrls = new Set();
+		this.feedUrls = new Set();
 		this.hostRules = new UrlHostRuleSet();
 
 		this.storageService = null;

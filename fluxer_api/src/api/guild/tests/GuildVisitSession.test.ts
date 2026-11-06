@@ -2,8 +2,8 @@
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {bumpGuildBanGeneration} from '@app/api/guild/services/GuildBanChecks';
 import {createChannelInvite, createGuild, getGuildChannels} from '@app/api/guild/tests/GuildTestUtils';
-import {bumpGuildBanGeneration} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
 import {getGuildRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';

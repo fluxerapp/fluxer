@@ -10,6 +10,7 @@ import {
 	getPremiumStateReconciliationQueueService,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {createGiftCodeRow} from '@app/api/models/GiftCode';
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {getProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
 import {type BillingCancelSource, enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
@@ -258,6 +259,53 @@ describe('Stripe Webhook - billing emails', () => {
 			expect((await paymentRepository.getPaymentByCheckoutSession('cs_stuck_gift'))?.status).toBe('completed');
 			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
 			expect(receipt!.metadata).toMatchObject({plan: 'gift_1_year'});
+		});
+
+		test('reuses the gift code already created for a checkout session when reconciliation completes it', async () => {
+			const account = await createBuyer('cus_partial_gift');
+			const userId = createUserID(BigInt(account.userId));
+			stripe.put.checkoutSession({
+				id: 'cs_partial_gift',
+				mode: 'payment',
+				subscription: null,
+				invoice: null,
+				payment_intent: null,
+				payment_status: 'paid',
+				amount_total: 0,
+				metadata: {price_id: BILLING_EMAIL_PRICES.gift1MonthUsd, user_id: account.userId, is_gift: 'true'},
+			});
+			const paymentRepository = new PaymentRepository();
+			await paymentRepository.createPayment({
+				checkout_session_id: 'cs_partial_gift',
+				user_id: userId,
+				price_id: BILLING_EMAIL_PRICES.gift1MonthUsd,
+				product_type: ProductType.GIFT_1_MONTH,
+				status: 'pending',
+				is_gift: true,
+				created_at: new Date(Date.now() - 11 * 60 * 1000),
+			});
+			await getUserRepository().createGiftCode(
+				createGiftCodeRow({
+					code: 'partialgiftcode0000000000000000000',
+					durationType: 'months',
+					durationQuantity: 1,
+					createdAt: new Date(),
+					createdByUserId: userId,
+					checkoutSessionId: 'cs_partial_gift',
+				}),
+			);
+			const dependencies = getWorkerDependencies();
+			Object.assign(dependencies, {paymentRepository});
+			try {
+				await reconcileUserPayments({userId: account.userId}, createTestWorkerHelpers());
+			} finally {
+				Reflect.deleteProperty(dependencies, 'paymentRepository');
+			}
+			const payment = await paymentRepository.getPaymentByCheckoutSession('cs_partial_gift');
+			expect(payment?.status).toBe('completed');
+			expect(payment?.giftCode).toBe('partialgiftcode0000000000000000000');
+			const gifts = await getUserRepository().findGiftCodesByCreator(userId);
+			expect(gifts.map((gift) => gift.code)).toEqual(['partialgiftcode0000000000000000000']);
 		});
 
 		test('sends the receipt in the buyer locale', async () => {

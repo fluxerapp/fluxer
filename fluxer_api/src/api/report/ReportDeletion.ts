@@ -10,8 +10,10 @@ import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import {ReportUnderLegalHoldError} from '@fluxer/errors/src/domains/moderation/ReportUnderLegalHoldError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 import {listReportProfileSnapshotAssets} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
+import {ms} from 'itty-time';
 
 const SCAN_PAGE_SIZE = 500;
+const REPORT_EVIDENCE_COPY_GRACE_MS = ms('1 minute');
 
 export interface ReportDeletionDeps {
 	reportRepository: ReportRepository;
@@ -86,6 +88,13 @@ async function deleteReportEvidence(
 	options: {now: Date; dryRun: boolean},
 ): Promise<ReportDeletionResult> {
 	const result: ReportDeletionResult = {objectsDeleted: 0, sharedObjectsKept: 0};
+	const cutoff = Math.min(
+		options.now.getTime(),
+		Math.max(
+			options.now.getTime() - REPORT_EVIDENCE_COPY_GRACE_MS,
+			report.reportedAt.getTime() + REPORT_EVIDENCE_COPY_GRACE_MS,
+		),
+	);
 	for (const key of await storedObjectKeys(storageService, report)) {
 		if (ledger.retainedKeys.has(key)) {
 			result.sharedObjectsKept++;
@@ -93,7 +102,7 @@ async function deleteReportEvidence(
 		}
 		if (ledger.deletedKeys.has(key)) continue;
 		const metadata = await storageService.getObjectMetadata(Config.s3.buckets.reports, key);
-		if (metadata?.lastModified && metadata.lastModified.getTime() >= options.now.getTime()) {
+		if (metadata?.lastModified && metadata.lastModified.getTime() >= cutoff) {
 			ledger.retainedKeys.add(key);
 			result.sharedObjectsKept++;
 			continue;
@@ -107,6 +116,27 @@ async function deleteReportEvidence(
 	return result;
 }
 
+async function rejectUnclaimedReport(
+	deps: ReportDeletionDeps,
+	report: IARSubmission,
+	ledger: ReportEvidenceLedger,
+	now: Date,
+): Promise<never> {
+	for (const key of referencedObjectKeys(report)) {
+		ledger.retainedKeys.add(key);
+	}
+	const current = await deps.reportRepository.getReport(report.reportId);
+	if (!current) {
+		await deps.reportSearchService?.deleteReport(report.reportId);
+		throw new UnknownReportError();
+	}
+	await deps.reportSearchService?.updateReport(current);
+	if (isReportUnderLegalHold(current, now)) {
+		throw new ReportUnderLegalHoldError();
+	}
+	throw new UnknownReportError();
+}
+
 export async function deleteReportWithEvidence(
 	deps: ReportDeletionDeps,
 	report: IARSubmission,
@@ -114,12 +144,23 @@ export async function deleteReportWithEvidence(
 	options: {now: Date; dryRun: boolean},
 ): Promise<ReportDeletionResult> {
 	const {reportRepository, storageService, reportSearchService} = deps;
-	const result = await deleteReportEvidence(storageService, report, ledger, options);
-	if (!options.dryRun) {
-		await reportSearchService?.deleteReport(report.reportId);
-		await reportRepository.deleteReport(report.reportId);
+	if (options.dryRun) {
+		return deleteReportEvidence(storageService, report, ledger, options);
 	}
-	return result;
+	await reportSearchService?.deleteReport(report.reportId);
+	const row = await reportRepository.deleteReport(report);
+	if (!row) {
+		return rejectUnclaimedReport(deps, report, ledger, options.now);
+	}
+	try {
+		const result = await deleteReportEvidence(storageService, report, ledger, options);
+		await reportRepository.releaseDeletedReport(report);
+		return result;
+	} catch (error) {
+		await reportRepository.restoreReport(row);
+		await reportSearchService?.updateReport(report);
+		throw error;
+	}
 }
 
 export async function clearCopiedContextWithEvidence(
@@ -129,16 +170,25 @@ export async function clearCopiedContextWithEvidence(
 	options: {now: Date; dryRun: boolean},
 ): Promise<ReportDeletionResult> {
 	const {reportRepository, storageService, reportSearchService} = deps;
-	const result = await deleteReportEvidence(storageService, report, ledger, options);
-	if (!options.dryRun && (await reportRepository.clearCopiedContext(report.reportId, report.reportType))) {
-		await reportSearchService?.updateReport({
-			...report,
-			messageContext: null,
-			reportedProfileSnapshot: null,
-			additionalInfo: null,
-		});
+	if (options.dryRun) {
+		return deleteReportEvidence(storageService, report, ledger, options);
 	}
-	return result;
+	await reportSearchService?.updateReport({
+		...report,
+		messageContext: null,
+		reportedProfileSnapshot: null,
+		additionalInfo: null,
+	});
+	const row = await reportRepository.clearCopiedContext(report);
+	if (!row) {
+		return rejectUnclaimedReport(deps, report, ledger, options.now);
+	}
+	try {
+		return await deleteReportEvidence(storageService, report, ledger, options);
+	} catch (error) {
+		await reportRepository.restoreCopiedContext(row);
+		throw error;
+	}
 }
 
 async function loadDeletableReport(

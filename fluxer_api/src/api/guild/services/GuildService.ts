@@ -80,6 +80,8 @@ interface StoredGuildAuditLogListResponse extends Omit<GuildAuditLogListResponse
 	webhooks: Array<StoredAuditLogWebhookResponse>;
 }
 
+const AUDIT_LOG_SCAN_PAGE_SIZE = 200;
+
 export class GuildService {
 	public readonly data: GuildDataService;
 	public readonly members: GuildMemberService;
@@ -149,6 +151,7 @@ export class GuildService {
 			rateLimitService,
 			guildAuditLogService,
 			limitConfigService,
+			cacheService,
 		);
 		this.roles = new GuildRoleService(
 			guildRepository,
@@ -320,16 +323,34 @@ export class GuildService {
 		let processedLogs: Array<GuildAuditLog> = [];
 		let currentBeforeLogId = beforeLogId;
 		let currentAfterLogId = afterLogId;
+		const chunkSize = Math.min(effectiveLimit * 2, AUDIT_LOG_SCAN_PAGE_SIZE);
+		const pageSize = afterLogId === undefined ? AUDIT_LOG_SCAN_PAGE_SIZE : chunkSize;
+		const threadChannels = {checked: new Set<string>(), gated: new Set<string>()};
+		let pendingLogs: Array<GuildAuditLog> = [];
+		let historyExhausted = false;
 		while (processedLogs.length < effectiveLimit) {
-			const fetchLimit = Math.min(effectiveLimit * 2, 200);
-			const logs = await this.guildRepository.listAuditLogs({
-				guildId,
-				limit: fetchLimit,
-				beforeLogId: currentBeforeLogId,
-				afterLogId: currentAfterLogId,
-				userId: filterUserId,
-				actionType,
-			});
+			if (pendingLogs.length < chunkSize && !historyExhausted) {
+				const page = await this.guildRepository.listAuditLogs({
+					guildId,
+					limit: pageSize,
+					beforeLogId: currentBeforeLogId,
+					afterLogId: currentAfterLogId,
+					userId: filterUserId,
+					actionType,
+				});
+				historyExhausted = page.length < pageSize;
+				const lastLog = page[page.length - 1];
+				if (lastLog && afterLogId !== undefined) {
+					currentAfterLogId = lastLog.logId;
+				} else if (lastLog) {
+					currentBeforeLogId = lastLog.logId;
+				}
+				if (hideThreadEntries) {
+					await this.resolveGatedThreadChannels(page, threadChannels);
+				}
+				pendingLogs = pendingLogs.concat(page);
+			}
+			const logs = pendingLogs.splice(0, chunkSize);
 			if (logs.length === 0) {
 				break;
 			}
@@ -337,21 +358,15 @@ export class GuildService {
 				? (await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs)).processedLogs
 				: logs;
 			const visibleLogs = hideThreadEntries
-				? (await this.dropThreadScopedAuditLogs(batchedLogs)).map(maskThreadAuditLog)
+				? batchedLogs.filter((log) => !isThreadScopedAuditLog(log, threadChannels.gated)).map(maskThreadAuditLog)
 				: batchedLogs;
 			for (const log of visibleLogs) {
 				if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
 					processedLogs.push(log);
 				}
 			}
-			if (logs.length < fetchLimit) {
+			if (logs.length < chunkSize) {
 				break;
-			}
-			const lastLog = logs[logs.length - 1];
-			if (afterLogId !== undefined) {
-				currentAfterLogId = lastLog.logId;
-			} else {
-				currentBeforeLogId = lastLog.logId;
 			}
 		}
 		processedLogs = processedLogs.slice(0, effectiveLimit);
@@ -381,20 +396,22 @@ export class GuildService {
 		return response;
 	}
 
-	private async dropThreadScopedAuditLogs(logs: Array<GuildAuditLog>): Promise<Array<GuildAuditLog>> {
-		const candidateIds = [...new Set(logs.flatMap((log) => collectAuditLogChannelIds(log)))].filter((id) =>
-			/^\d{1,20}$/.test(id),
+	private async resolveGatedThreadChannels(
+		logs: Array<GuildAuditLog>,
+		threadChannels: {checked: Set<string>; gated: Set<string>},
+	): Promise<void> {
+		const candidateIds = [...new Set(logs.flatMap((log) => collectAuditLogChannelIds(log)))].filter(
+			(id) => /^\d{1,20}$/.test(id) && !threadChannels.checked.has(id),
 		);
-		const channels =
-			candidateIds.length > 0
-				? await this.channelRepository.channelData.listChannels(candidateIds.map((id) => createChannelID(BigInt(id))))
-				: [];
-		const gatedIds = new Set(
-			channels
-				.filter((channel) => THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))
-				.map((channel) => channel.id.toString()),
-		);
-		return logs.filter((log) => !isThreadScopedAuditLog(log, gatedIds));
+		if (candidateIds.length > 0) {
+			for (const id of candidateIds) threadChannels.checked.add(id);
+			const channels = await this.channelRepository.channelData.listChannels(
+				candidateIds.map((id) => createChannelID(BigInt(id))),
+			);
+			for (const channel of channels) {
+				if (THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) threadChannels.gated.add(channel.id.toString());
+			}
+		}
 	}
 
 	private async dropForumWebhooks(webhooks: Array<Webhook>): Promise<Array<Webhook>> {

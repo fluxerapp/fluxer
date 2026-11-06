@@ -100,6 +100,7 @@ export class LiveKitService extends ILiveKitService {
 			connectionId,
 			regionId,
 			serverId,
+			mute = false,
 			deaf = false,
 			canSpeak = true,
 			canStream = true,
@@ -127,6 +128,7 @@ export class LiveKitService extends ILiveKitService {
 			identity: participantIdentity,
 			metadata: JSON.stringify(metadata),
 			ttl: VOICE_TOKEN_TTL_SECONDS,
+			...(mute ? {attributes: {[SERVER_MUTE_ATTRIBUTE]: 'true'}} : {}),
 		});
 		accessToken.addGrant({
 			roomJoin: true,

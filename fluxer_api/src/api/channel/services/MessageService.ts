@@ -169,6 +169,7 @@ export class MessageService {
 			rateLimitService,
 			messageWriteLock: this.writeLock,
 			crosspostPropagation: this.crosspostPropagation,
+			cacheService,
 		});
 		this.retrieval = new MessageRetrievalService(
 			channelRepository,

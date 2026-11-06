@@ -1,4 +1,9 @@
+import {createUserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
+import {WebAuthnCredentials} from '@app/api/Tables';
+import {WebAuthnRepository} from '@app/api/user/repositories/auth/WebAuthnRepository';
 import {Validator} from '@app/api/Validator';
+import {InvalidWebAuthnCredentialError} from '@fluxer/errors/src/domains/auth/InvalidWebAuthnCredentialError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
 	WebAuthnAuthenticateRequest,
@@ -142,4 +147,41 @@ it.each(['__proto__', 'constructor', 'toString'])('does not treat unknown key %s
 	const result = await validateRequest(UserUpdateWithVerificationRequest, {[field]: {}, avatar: ''});
 	expect(result.status).toBe(200);
 	expect(await result.json()).toEqual({avatar: null});
+});
+
+describe('credential id ownership', () => {
+	const repository = new WebAuthnRepository();
+	const owner = createUserID(1001n);
+	const other = createUserID(1002n);
+
+	async function register(userId: typeof owner, credentialId: string): Promise<void> {
+		await repository.createWebAuthnCredential(userId, credentialId, Buffer.from('key'), 0n, null, 'Passkey', null);
+	}
+
+	it('keeps the first account as the owner of a credential id', async () => {
+		await register(owner, 'shared-id');
+		await expect(register(other, 'shared-id')).rejects.toBeInstanceOf(InvalidWebAuthnCredentialError);
+		expect(await repository.getUserIdByCredentialId('shared-id')).toBe(owner);
+		expect(await repository.getWebAuthnCredential(other, 'shared-id')).toBeNull();
+
+		await repository.deleteWebAuthnCredential(other, 'shared-id');
+		await repository.deleteAllWebAuthnCredentials(other);
+		expect(await repository.getUserIdByCredentialId('shared-id')).toBe(owner);
+
+		await repository.deleteWebAuthnCredential(owner, 'shared-id');
+		expect(await repository.getUserIdByCredentialId('shared-id')).toBeNull();
+		await register(other, 'shared-id');
+		expect(await repository.getUserIdByCredentialId('shared-id')).toBe(other);
+
+		await repository.deleteAllWebAuthnCredentials(other);
+		expect(await repository.getUserIdByCredentialId('shared-id')).toBeNull();
+	});
+
+	it('hands a credential id to a new account when the previous owner has no credential row', async () => {
+		await register(owner, 'orphan-id');
+		await deleteOneOrMany(WebAuthnCredentials.deleteByPk({user_id: owner, credential_id: 'orphan-id'}));
+		await register(other, 'orphan-id');
+		expect(await repository.getUserIdByCredentialId('orphan-id')).toBe(other);
+		expect(await repository.getWebAuthnCredential(other, 'orphan-id')).not.toBeNull();
+	});
 });

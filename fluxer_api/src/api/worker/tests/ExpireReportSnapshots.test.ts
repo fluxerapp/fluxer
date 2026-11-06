@@ -11,6 +11,7 @@ import {
 	type IARSubmissionRow,
 } from '@app/api/database/types/ReportTypes';
 import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
+import {deleteReportWithEvidence} from '@app/api/report/ReportDeletion';
 import type {IARSubmission} from '@app/api/report/ReportModels';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
@@ -27,10 +28,11 @@ import {
 	reportRetentionDates,
 } from '@app/api/worker/tasks/ExpireReportSnapshots';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {ReportUnderLegalHoldError} from '@fluxer/errors/src/domains/moderation/ReportUnderLegalHoldError';
 import type {ReportItemOutcome} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {serializeReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 import {ms} from 'itty-time';
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const NOW = new Date('2027-06-01T12:00:00.000Z');
 const DAY_MS = ms('1 day');
@@ -727,6 +729,51 @@ describe('report retention', () => {
 		storage.configure({shouldFailDelete: false});
 		expect(await run()).toMatchObject({contextExpired: 1, contextCleared: 1, failed: 0});
 		await expectContextCleared(due);
+	});
+
+	it('keeps the copied context when search cannot be updated, then clears both on the next run', async () => {
+		const due = await seed({
+			resolvedDaysAgo: 200,
+			outcome: 'no_violation',
+			attachment: newAttachment(),
+			additionalInfo: 'They keep messaging my friends',
+		});
+		vi.spyOn(search, 'updateReport').mockRejectedValueOnce(new Error('search unavailable'));
+
+		expect(await run()).toMatchObject({contextExpired: 1, contextCleared: 0, failed: 1});
+		expect((await repository.getReport(due.reportId))?.additionalInfo).toBe('They keep messaging my friends');
+
+		expect(await run()).toMatchObject({contextExpired: 1, contextCleared: 1, failed: 0});
+		await expectContextCleared(due);
+		expect((await search.searchReports('friends', {}, {limit: 10})).hits).toHaveLength(0);
+	});
+
+	it('keeps the report when its search document cannot be deleted, then deletes both on the next run', async () => {
+		const expired = await seed({resolvedDaysAgo: 400, attachment: newAttachment(), profile: true});
+		vi.spyOn(search, 'deleteReport').mockRejectedValueOnce(new Error('search unavailable'));
+
+		expect(await run()).toMatchObject({expired: 1, deleted: 0, failed: 1});
+		expect(await repository.getReport(expired.reportId)).not.toBeNull();
+		expect(storage.hasObject(REPORTS_BUCKET, expired.attachmentKey!)).toBe(true);
+
+		expect(await run()).toMatchObject({expired: 1, deleted: 1, failed: 0});
+		await expectGone(expired);
+	});
+
+	it('keeps a report and its objects when a legal hold is placed after the report was read', async () => {
+		const expired = await seed({resolvedDaysAgo: 400, attachment: newAttachment(), profile: true});
+		const stale = (await repository.getReport(expired.reportId))!;
+		await repository.setReportLegalHold(expired.reportId, new Date(NOW.getTime() + DAY_MS), 'Preservation request');
+
+		await expect(
+			deleteReportWithEvidence(
+				deps,
+				stale,
+				{retainedKeys: new Set(), deletedKeys: new Set()},
+				{now: NOW, dryRun: false},
+			),
+		).rejects.toBeInstanceOf(ReportUnderLegalHoldError);
+		await expectKept(expired);
 	});
 
 	it('deletes rows when search is not configured', async () => {

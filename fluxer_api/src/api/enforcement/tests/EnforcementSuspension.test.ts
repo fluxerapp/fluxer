@@ -575,6 +575,34 @@ describe('Enforcement suspensions', () => {
 			expect(await getDecision(harness, staff, expiredId)).toMatchObject({status: 'active', replaced: true});
 		});
 
+		test('keeps a suspension applied while the expired decision is being ended', async () => {
+			const target = await createTestAccount(harness);
+			await suspend(harness, staff, target.userId);
+			await expire(target);
+			const repository = new EnforcementDecisionRepository();
+			let currentId: string | null = null;
+			const expiry = await clearExpiredSuspension(
+				{
+					users: getUserRepository(),
+					repository: {
+						get: async (id) => {
+							const row = await repository.get(id);
+							currentId = await suspend(harness, staff, target.userId);
+							return row;
+						},
+						endIfActive: (id, end) => repository.endIfActive(id, end),
+					},
+				},
+				await loadUser(target),
+			);
+			expect(expiry).toBeNull();
+			const after = await loadUser(target);
+			expect(after.flags & UserFlags.DISABLED).toBe(UserFlags.DISABLED);
+			expect(after.tempBannedUntil!.getTime()).toBeGreaterThan(Date.now());
+			expect(after.enforcementDecisionId).toBe(BigInt(currentId!));
+			expect(await getDecision(harness, staff, currentId!)).toMatchObject({status: 'active', end_outcome: null});
+		});
+
 		test('keeps a reversal made between reading and ending the decision', async () => {
 			const target = await createTestAccount(harness);
 			const decisionId = await suspend(harness, staff, target.userId);

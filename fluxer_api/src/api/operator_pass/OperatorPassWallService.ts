@@ -38,6 +38,7 @@ import {
 } from '@app/api/operator_pass/OperatorPassWallPublicationService';
 import {OperatorPassWallRetentionService} from '@app/api/operator_pass/OperatorPassWallRetentionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export class OperatorPassWallService {
 	private readonly entries: OperatorPassWallEntryStore;
@@ -50,9 +51,10 @@ export class OperatorPassWallService {
 	constructor(
 		private readonly repository: OperatorPassRepository,
 		private readonly userRepository: UserRepository,
+		cacheService: ICacheService,
 	) {
 		this.entries = new OperatorPassWallEntryStore(repository, invalidateOperatorPassPublicWall);
-		this.releases = new OperatorPassReleaseService(repository, userRepository, this.entries);
+		this.releases = new OperatorPassReleaseService(repository, userRepository, this.entries, cacheService);
 		this.publication = new OperatorPassWallPublicationService(repository, userRepository, this.entries);
 		this.retention = new OperatorPassWallRetentionService(repository, this.entries, this.publication, this.auditLogs);
 		this.history = new OperatorPassWallHistoryService(repository, userRepository, this.entries);

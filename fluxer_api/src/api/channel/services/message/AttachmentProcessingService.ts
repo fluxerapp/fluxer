@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import {type ChannelID, createAttachmentID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -35,6 +36,22 @@ import {temporaryFile} from 'tempy';
 const ATTACHMENT_PROCESSING_CONCURRENCY = 2;
 const METADATA_PROBE_DEGRADED_CONTEXT = 'message_attachment';
 
+interface ComputeAttachmentsParams {
+	message: Message;
+	attachments: Array<AttachmentToProcess>;
+	uploadUserId: UserID;
+	uploadChannelId?: ChannelID;
+	channel?: Channel;
+	guild?: GuildResponse | null;
+	member?: GuildMemberResponse | null;
+	nsfwMode: MediaProxyNsfwMode;
+}
+
+interface ComputedAttachments {
+	attachments: Array<MessageAttachment>;
+	hasVirusDetected: boolean;
+}
+
 interface ProcessAttachmentParams {
 	message: Message;
 	attachment: AttachmentToProcess;
@@ -45,6 +62,7 @@ interface ProcessAttachmentParams {
 	guild?: GuildResponse | null;
 	member?: GuildMemberResponse | null;
 	nsfwMode: MediaProxyNsfwMode;
+	snapshotKeys: Array<string>;
 }
 
 interface AttachmentCopyOperation {
@@ -57,6 +75,7 @@ interface AttachmentCopyOperation {
 
 interface ProcessedAttachment {
 	attachment: MessageAttachment;
+	uploadKey: string;
 	copyOperation: AttachmentCopyOperation;
 	hasVirusDetected: boolean;
 	applyFinalObjectMetadata: boolean;
@@ -80,20 +99,21 @@ export class AttachmentProcessingService {
 		private snowflakeService: ISnowflakeService,
 	) {}
 
-	async computeAttachments(params: {
-		message: Message;
-		attachments: Array<AttachmentToProcess>;
-		uploadUserId: UserID;
-		uploadChannelId?: ChannelID;
-		channel?: Channel;
-		guild?: GuildResponse | null;
-		member?: GuildMemberResponse | null;
-		nsfwMode: MediaProxyNsfwMode;
-	}): Promise<{
-		attachments: Array<MessageAttachment>;
-		hasVirusDetected: boolean;
-	}> {
+	async computeAttachments(params: ComputeAttachmentsParams): Promise<ComputedAttachments> {
 		validateAttachmentIds(params.attachments.map((a) => ({id: BigInt(a.id)})));
+		const snapshotKeys: Array<string> = [];
+		try {
+			return await this.processAndStoreAttachments({...params, snapshotKeys});
+		} finally {
+			for (const key of snapshotKeys) {
+				this.deleteUploadObject(Config.s3.buckets.uploads, key);
+			}
+		}
+	}
+
+	private async processAndStoreAttachments(
+		params: ComputeAttachmentsParams & {snapshotKeys: Array<string>},
+	): Promise<ComputedAttachments> {
 		const results = await mapWithConcurrency(
 			params.attachments,
 			ATTACHMENT_PROCESSING_CONCURRENCY,
@@ -108,32 +128,42 @@ export class AttachmentProcessingService {
 					guild: params.guild,
 					member: params.member,
 					nsfwMode: params.nsfwMode,
+					snapshotKeys: params.snapshotKeys,
 				}),
 		);
 		const hasVirusDetected = results.some((result) => result.hasVirusDetected);
-		const copyResults = hasVirusDetected
-			? []
-			: await mapWithConcurrency(results, ATTACHMENT_PROCESSING_CONCURRENCY, (result) =>
-					this.storeAttachmentObject(result.copyOperation),
-				);
 		if (hasVirusDetected) {
 			for (const result of results) {
-				this.deleteUploadObject(result.copyOperation.sourceBucket, result.copyOperation.sourceKey);
+				this.deleteUploadObject(Config.s3.buckets.uploads, result.uploadKey);
 			}
 			return {attachments: [], hasVirusDetected: true};
+		}
+		let copyResults: Array<StoredAttachmentObject | null>;
+		try {
+			copyResults = await mapWithConcurrency(results, ATTACHMENT_PROCESSING_CONCURRENCY, (result) =>
+				this.storeAttachmentObject(result.copyOperation, params.message),
+			);
+		} catch (error) {
+			if (error instanceof ContentBlockedError) {
+				for (const result of results) {
+					this.deleteUploadObject(Config.s3.buckets.uploads, result.uploadKey);
+					this.deleteUploadObject(result.copyOperation.destinationBucket, result.copyOperation.destinationKey);
+				}
+			}
+			throw error;
 		}
 		const bindingResults = await Promise.all(
 			results.map(async (result, index) => ({
 				index,
 				result,
 				bound: await this.attachmentUploadTraceRepository.bindAttachment(
-					result.copyOperation.sourceKey,
+					result.uploadKey,
 					result.attachment.attachment_id,
 				),
 			})),
 		);
 		for (const result of results) {
-			void this.deleteUploadObject(result.copyOperation.sourceBucket, result.copyOperation.sourceKey);
+			this.deleteUploadObject(Config.s3.buckets.uploads, result.uploadKey);
 		}
 		const unboundResult = bindingResults.find(({bound}) => bound === null);
 		if (unboundResult) {
@@ -177,11 +207,15 @@ export class AttachmentProcessingService {
 				{filename: attachment.filename},
 			);
 		}
-		const uploadedFile = await this.storageService.getObjectMetadata(
-			Config.s3.buckets.uploads,
-			attachment.upload_filename,
-		);
-		if (!uploadedFile) {
+		const uploadKey = attachment.upload_filename;
+		const sourceKey =
+			pendingUpload.upload_mode === 'presigned_singlepart'
+				? await this.snapshotUploadObject(uploadKey, params.snapshotKeys)
+				: uploadKey;
+		const uploadedFile = sourceKey
+			? await this.storageService.getObjectMetadata(Config.s3.buckets.uploads, sourceKey)
+			: null;
+		if (!sourceKey || !uploadedFile) {
 			throw InputValidationError.fromCode(`attachments.${index}.upload_filename`, ValidationErrorCodes.FILE_NOT_FOUND);
 		}
 		const attachmentId = createAttachmentID(await this.snowflakeService.generate());
@@ -205,7 +239,7 @@ export class AttachmentProcessingService {
 			? null
 			: await this.sniffAttachmentMediaType({
 					index,
-					uploadFilename: attachment.upload_filename,
+					uploadFilename: sourceKey,
 					filename: attachment.filename,
 				});
 		if (sniffedContentType !== null) {
@@ -230,7 +264,7 @@ export class AttachmentProcessingService {
 		if (isMedia) {
 			metadata = await this.getAttachmentMediaMetadata({
 				index,
-				uploadFilename: attachment.upload_filename,
+				uploadFilename: sourceKey,
 				filename: attachment.filename,
 				nsfwMode,
 				sizeBytes: uploadedFile.contentLength,
@@ -259,24 +293,20 @@ export class AttachmentProcessingService {
 		try {
 			if (needsLocalDownload) {
 				sourceLocalPath = temporaryFile();
-				await this.storageService.writeObjectToDisk(
-					Config.s3.buckets.uploads,
-					attachment.upload_filename,
-					sourceLocalPath,
-				);
+				await this.storageService.writeObjectToDisk(Config.s3.buckets.uploads, sourceKey, sourceLocalPath);
 			}
 			if (metadata) {
 				await this.scanContentModerationHash({
 					contentHash: metadata.content_hash,
 					bucket: Config.s3.buckets.uploads,
-					key: attachment.upload_filename,
+					key: uploadKey,
 					message,
 				});
 			} else {
 				await this.scanContentModerationWithLocalFile({
 					localPath: sourceLocalPath,
 					bucket: Config.s3.buckets.uploads,
-					key: attachment.upload_filename,
+					key: uploadKey,
 					message,
 				});
 			}
@@ -299,16 +329,17 @@ export class AttachmentProcessingService {
 			};
 			const copyOperation = {
 				sourceBucket: Config.s3.buckets.uploads,
-				sourceKey: attachment.upload_filename,
+				sourceKey,
 				destinationBucket: Config.s3.buckets.cdn,
 				destinationKey: cdnKey,
 				newContentType: contentType,
 			};
 			if (scanResult.isVirusDetected) {
 				hasVirusDetected = true;
-				await this.storageService.deleteObject(Config.s3.buckets.uploads, attachment.upload_filename);
+				await this.storageService.deleteObject(Config.s3.buckets.uploads, uploadKey);
 				return {
 					attachment: processedAttachment,
+					uploadKey,
 					copyOperation,
 					hasVirusDetected,
 					applyFinalObjectMetadata,
@@ -324,6 +355,7 @@ export class AttachmentProcessingService {
 			}
 			return {
 				attachment: processedAttachment,
+				uploadKey,
 				copyOperation,
 				hasVirusDetected,
 				applyFinalObjectMetadata,
@@ -336,7 +368,26 @@ export class AttachmentProcessingService {
 		}
 	}
 
-	private async storeAttachmentObject(operation: AttachmentCopyOperation): Promise<StoredAttachmentObject | null> {
+	private async snapshotUploadObject(uploadKey: string, snapshotKeys: Array<string>): Promise<string | null> {
+		const bucket = Config.s3.buckets.uploads;
+		if (!(await this.storageService.getObjectMetadata(bucket, uploadKey))) {
+			return null;
+		}
+		const snapshotKey = crypto.randomUUID();
+		snapshotKeys.push(snapshotKey);
+		await this.storageService.copyObject({
+			sourceBucket: bucket,
+			sourceKey: uploadKey,
+			destinationBucket: bucket,
+			destinationKey: snapshotKey,
+		});
+		return snapshotKey;
+	}
+
+	private async storeAttachmentObject(
+		operation: AttachmentCopyOperation,
+		message: Message,
+	): Promise<StoredAttachmentObject | null> {
 		const {sourceBucket, sourceKey, destinationBucket, destinationKey, newContentType} = operation;
 		const copyOriginal = () =>
 			this.storageService.copyObject({sourceBucket, sourceKey, destinationBucket, destinationKey, newContentType});
@@ -363,6 +414,7 @@ export class AttachmentProcessingService {
 				hashFileSha256(strippedPath),
 				fs.promises.stat(strippedPath),
 			]);
+			contentModerationService.scanSha256(contentHash, this.moderationContext(message));
 			await this.storageService.uploadObjectFromFile({
 				bucket: destinationBucket,
 				key: destinationKey,
@@ -506,21 +558,24 @@ export class AttachmentProcessingService {
 		message: Message;
 	}): Promise<void> {
 		const {bucket, key, message} = params;
-		const modCtx: ModerationContext = {
-			userId: message.authorId ?? null,
-			guildId: null,
-			channelId: message.channelId,
-			messageId: message.id,
-			surface: 'message_attachment',
-		};
 		try {
-			contentModerationService.scanSha256(params.contentHash, modCtx);
+			contentModerationService.scanSha256(params.contentHash, this.moderationContext(message));
 		} catch (error) {
 			if (error instanceof ContentBlockedError) {
 				await this.storageService.deleteObject(bucket, key);
 			}
 			throw error;
 		}
+	}
+
+	private moderationContext(message: Message): ModerationContext {
+		return {
+			userId: message.authorId ?? null,
+			guildId: null,
+			channelId: message.channelId,
+			messageId: message.id,
+			surface: 'message_attachment',
+		};
 	}
 
 	private async scanMalware(localPath: string | null): Promise<{

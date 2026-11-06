@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {GuildVisitRow} from '@app/api/database/types/GuildVisitTypes';
 import {userGuildVisitsActive} from '@app/api/experiment/GuildVisitsGate';
+import {assertNoGuildBanMatch, readGuildBanGeneration} from '@app/api/guild/services/GuildBanChecks';
 import {guildVisitEndedTotal} from '@app/api/guild/visits/GuildVisitMetrics';
 import {forgetGuildVisitRow, guildVisitRepository, markGuildVisitEnded} from '@app/api/guild/visits/GuildVisitorAccess';
 import {bumpGuildVisitorViewGeneration} from '@app/api/guild/visits/GuildVisitorViewGeneration';
@@ -19,9 +20,7 @@ import {
 	GuildVisitEndReasons,
 	GuildVisitSources,
 } from '@fluxer/constants/src/GuildVisitConstants';
-import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
-import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
-import {getSameIpDecisionKey, isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 
 const BAN_MEMO_TTL_SECONDS = 600;
 const GUILD_PAGE_SIZE = 1000;
@@ -63,12 +62,8 @@ export async function endGuildVisit(params: {
 	});
 }
 
-function banGenerationKey(guildId: GuildID): string {
-	return `guild:ban_gen:${guildId}`;
-}
-
-export async function bumpGuildBanGeneration(guildId: GuildID): Promise<void> {
-	await getKVClient().incr(banGenerationKey(guildId));
+function memoPart(value: string | null | undefined, toKey: (value: string) => string): string {
+	return value ? toKey(value) : '-';
 }
 
 export async function assertNotBannedFromGuildVisit(params: {
@@ -78,23 +73,22 @@ export async function assertNotBannedFromGuildVisit(params: {
 }): Promise<void> {
 	const {guildId, user, ip} = params;
 	const kv = getKVClient();
-	const generation = (await kv.get(banGenerationKey(guildId))) ?? '0';
-	const ipKey = ip ? (getSameIpDecisionKey(ip) ?? ip) : '-';
-	const memoKey = `guild_visit:ban_ok:${guildId}:${user.id}:${ipKey}:${generation}`;
+	const generation = await readGuildBanGeneration(guildId);
+	const ipDecisionKey = (value: string) => getSameIpDecisionKey(value) ?? value;
+	const ipKey = memoPart(ip, ipDecisionKey);
+	const lastActiveIpKey = memoPart(user.lastActiveIp, ipDecisionKey);
+	const emailKey = memoPart(user.email, (value) =>
+		createHash('sha256').update(value.toLowerCase()).digest('hex').slice(0, 16),
+	);
+	const memoKey = `guild_visit:ban_ok:${guildId}:${user.id}:${ipKey}:${lastActiveIpKey}:${emailKey}:${generation}`;
 	if ((await kv.get(memoKey)) !== null) return;
-	const guildRepository = getGuildRepository();
-	const bans = await guildRepository.listBans(guildId);
-	const ips = [ip, user.lastActiveIp].filter((value): value is string => typeof value === 'string' && value !== '');
-	for (const ban of bans) {
-		if (ban.userId === user.id) throw new BannedFromGuildError();
-		for (const candidate of ips) {
-			if (isSameIpDecisionMatch(candidate, ban.ipAddress) && !isIpBanExempt(candidate)) {
-				throw new IpBannedFromGuildError();
-			}
-		}
-	}
-	const email = user.email?.toLowerCase();
-	if (email && (await guildRepository.getBanByEmail(guildId, email))) throw new BannedFromGuildError();
+	await assertNoGuildBanMatch(getGuildRepository(), {
+		guildId,
+		generation,
+		userId: user.id,
+		email: user.email,
+		ips: [ip, user.lastActiveIp],
+	});
 	await kv.setex(memoKey, BAN_MEMO_TTL_SECONDS, '1');
 }
 
@@ -105,7 +99,6 @@ export async function onGuildBanAdded(params: {
 	gateway: IGatewayService;
 }): Promise<void> {
 	const {guildId, targetUserId, targetIp, gateway} = params;
-	await bumpGuildBanGeneration(guildId);
 	await bumpGuildVisitorViewGeneration(guildId);
 	if (await guildVisitRepository().get(targetUserId, guildId)) {
 		await endGuildVisit({userId: targetUserId, guildId, reason: GuildVisitEndReasons.BANNED, gateway});

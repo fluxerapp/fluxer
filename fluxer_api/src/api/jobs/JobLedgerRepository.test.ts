@@ -180,3 +180,42 @@ describe('JobLedgerRepository discardJob', () => {
 		).toEqual([]);
 	});
 });
+
+describe('JobLedgerRepository listJobs', () => {
+	beforeEach(() => {
+		executor = new InMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+	});
+
+	afterEach(() => {
+		executor.reset();
+		setCassandraQueryExecutorForTesting(null);
+	});
+
+	it('pages a status filter through a day with more jobs than one scan page', async () => {
+		const repository = new JobLedgerRepository();
+		const succeeded: Array<bigint> = [];
+		for (let index = 1; index <= 450; index += 1) {
+			const jobId = BigInt(index);
+			await createJob(repository, jobId, 'syncUrlBlocklists');
+			if (index % 100 === 0) {
+				await repository.markSucceeded(jobId, null);
+				succeeded.push(jobId);
+			}
+		}
+		const newestFirst = [...succeeded].reverse();
+		const list = (cursor: Awaited<ReturnType<JobLedgerRepository['listJobs']>>['nextCursor']) =>
+			repository.listJobs({limit: 2, cursor, maxLookbackDays: 1, filters: {status: 'succeeded'}});
+
+		const first = await list(null);
+		expect(first.jobs.map((job) => job.job_id)).toEqual(newestFirst.slice(0, 2));
+		expect(first.nextCursor?.jobId).toBe(newestFirst[1]);
+
+		const second = await list(first.nextCursor);
+		expect(second.jobs.map((job) => job.job_id)).toEqual(newestFirst.slice(2, 4));
+
+		const third = await list(second.nextCursor);
+		expect(third.jobs).toEqual([]);
+		expect(third.nextCursor).toBeNull();
+	});
+});

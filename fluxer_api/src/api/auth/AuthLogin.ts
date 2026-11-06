@@ -386,6 +386,7 @@ export async function login(
 				inviteCode: createInviteCode(data.invite_code),
 				requestCache: createRequestCache(),
 				tierContext: tierContextFromRequest(request),
+				ip: clientIp,
 			});
 		} catch (error) {
 			Logger.warn({inviteCode: data.invite_code, error}, 'Failed to auto-join invite on login');

@@ -7,6 +7,7 @@ import {
 	deleteOneOrMany,
 	executeConditional,
 	fetchMany,
+	fetchManyInChunks,
 	fetchOne,
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
@@ -68,7 +69,7 @@ const FETCH_BANNED_IP_QUERY = BannedIps.select({
 	where: BannedIps.where.eq('ip'),
 });
 const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
-	where: BannedEmails.where.eq('email_lower'),
+	where: BannedEmails.where.in('email_lower', 'email_lowers'),
 });
 const LOAD_ALL_BANNED_EMAILS_QUERY = BannedEmails.select();
 
@@ -352,15 +353,12 @@ export class AdminRepository {
 	}
 
 	async isEmailBanned(email: string): Promise<boolean> {
-		for (const key of getEmailBlocklistKeys(email)) {
-			const result = await fetchOne<{
-				email_lower: string;
-			}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: key}));
-			if (result) {
-				return true;
-			}
-		}
-		return false;
+		const rows = await fetchManyInChunks<{email_lower: string}, string>(
+			IS_EMAIL_BANNED_QUERY,
+			getEmailBlocklistKeys(email),
+			(chunk) => ({email_lowers: chunk}),
+		);
+		return rows.length > 0;
 	}
 
 	async banEmail(email: string): Promise<void> {

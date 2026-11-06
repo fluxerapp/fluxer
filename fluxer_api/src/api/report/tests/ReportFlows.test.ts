@@ -17,7 +17,7 @@ import {
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
-import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {getReportFlowResponse} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -503,6 +503,22 @@ describe('Report flows', () => {
 	});
 
 	describe('Dedupe', () => {
+		test('a refused walk from a limited reporter does not hold the network slot for the target', async () => {
+			await getInstanceConfigRepository().updateAccountsConfig({interaction_tier: 'enforced'});
+			const target = await createTestAccount(harness);
+			const first = await createTestAccount(harness, {skipEmailVerification: true});
+			const second = await createTestAccount(harness, {skipEmailVerification: true});
+			await submitUser(harness, first.token, userBody(target.userId, [{screen_id: 'user_start', option_id: 'dislike'}]))
+				.header('x-forwarded-for', '203.0.113.30')
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+				.execute();
+			const result = await submitUser(harness, second.token, userBody(target.userId))
+				.header('x-forwarded-for', '203.0.113.31')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reportedUserId?.toString()).toBe(target.userId);
+		});
+
 		test('v2 and legacy message reports share the reservation', async () => {
 			const first = await setupMessage(harness);
 			await legacyMessage(harness, first.reporter.token, first).expect(HTTP_STATUS.OK).execute();

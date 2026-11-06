@@ -454,6 +454,13 @@ export class WebhookService {
 		service,
 	}: WebhookExecuteParams): Promise<Message> {
 		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		contentModerationService.scanText(data.username ?? null, {
+			userId: webhook.creatorId,
+			guildId: webhook.guildId,
+			channelId: webhook.channelId,
+			messageId: null,
+			surface: 'webhook',
+		});
 		const forumPost = this.resolveForumPost(channel, data);
 		if (channel.isThreadOnly()) {
 			if (service && threadId === undefined) throw new WebhookServiceForumUnsupportedError();

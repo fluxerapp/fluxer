@@ -126,6 +126,14 @@ export class UserAccountProfileService {
 		await this.deps.entityAssetService.commitAssetChanges([result.preparedAvatarUpload, result.preparedBannerUpload]);
 	}
 
+	async rollbackAssetUploads(result: ProfileUpdateResult): Promise<void> {
+		for (const prepared of [result.preparedAvatarUpload, result.preparedBannerUpload]) {
+			if (prepared) {
+				await this.deps.entityAssetService.rollbackAssetUpload(prepared);
+			}
+		}
+	}
+
 	private async processBioUpdate(params: {user: User; bio: string | null; updates: UserFieldUpdates}): Promise<void> {
 		const {user, bio, updates} = params;
 		if (bio !== user.bio) {
@@ -160,6 +168,7 @@ export class UserAccountProfileService {
 					userRepository: this.deps.userAccountRepository,
 					guildRepository: this.deps.guildRepository,
 					limitConfigService: this.deps.limitConfigService,
+					allowCodeBlocks: false,
 				});
 			}
 			if (

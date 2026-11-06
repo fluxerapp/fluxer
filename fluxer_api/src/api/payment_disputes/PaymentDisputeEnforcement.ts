@@ -469,6 +469,10 @@ export class PaymentDisputeEnforcementService {
 			);
 			return review;
 		}
+		const deletionAt = user.pendingDeletionAt ?? decision.deletion_at;
+		if (deletionAt) {
+			await this.enforceClosure(user, user, deletionAt, reasonCode);
+		}
 		const marked = await this.linkDecision(review, decisionId);
 		await this.deps.auditService.createAuditLog({
 			adminUserId: SYSTEM_USER_ID,
@@ -520,18 +524,27 @@ export class PaymentDisputeEnforcementService {
 			enforcement_decision_id: params.decisionId,
 			temp_banned_until: null,
 		});
+		await this.enforceClosure(user, updated, params.deletionAt, params.reasonCode);
+		await followOperatorPassWallStanding(user, updated);
+	}
+
+	private async enforceClosure(
+		user: User,
+		updated: User,
+		deletionAt: Date,
+		reasonCode: PaymentDisputeClosureReason,
+	): Promise<void> {
 		await reschedulePendingDeletion({
 			userId: user.id,
 			currentPendingDeletionAt: user.pendingDeletionAt,
-			nextPendingDeletionAt: params.deletionAt,
-			deletionReasonCode: params.reasonCode,
+			nextPendingDeletionAt: deletionAt,
+			deletionReasonCode: reasonCode,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
 		await revokeAllAuthSessions({users: this.deps.userRepository, gateway: this.deps.gatewayService}, user.id);
 		await this.deps.oauth2Tokens.deleteAllAccessTokensForUser(user.id);
 		await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(user.id);
 		await this.deps.userCacheService.setUserPartialResponseFromUser(updated);
-		await followOperatorPassWallStanding(user, updated);
 	}
 
 	private async completeWarning(review: PaymentDisputeReviewRow): Promise<PaymentDisputeDecisionResult> {

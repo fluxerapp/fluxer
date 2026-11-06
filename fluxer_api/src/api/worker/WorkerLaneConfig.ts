@@ -44,6 +44,7 @@ const LANE_CONFIG = {
 			'applicationProcessDeletion',
 			'guildProcessDeletion',
 			'bulkDeleteSelfMessagesImmediate',
+			'countBulkMessageDeletionTargets',
 			'bulkDeleteUserMessages',
 			'deleteUserMessagesInGuildByTime',
 			'messageShred',

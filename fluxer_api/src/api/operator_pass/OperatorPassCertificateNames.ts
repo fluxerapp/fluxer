@@ -178,9 +178,13 @@ function foldForComparison(name: string): ReadonlyArray<string> {
 }
 
 const FOLDED_RESERVED_SUBSTRINGS = RESERVED_SUBSTRINGS.map(foldWord);
-const FOLDED_ROLE_WORDS: ReadonlySet<string> = new Set([...ROLE_WORDS].map(foldWord));
-const FOLDED_BRAND_WORDS: ReadonlySet<string> = new Set([...BRAND_WORDS].map(foldWord));
-const FOLDED_COMPANY_WORDS: ReadonlySet<string> = new Set([...COMPANY_WORDS].map(foldWord));
+function foldWords(words: ReadonlySet<string>): ReadonlySet<string> {
+	return new Set([...words].flatMap((word) => [foldWord(word), foldWord(skeleton(word.toUpperCase()))]));
+}
+
+const FOLDED_ROLE_WORDS = foldWords(ROLE_WORDS);
+const FOLDED_BRAND_WORDS = foldWords(BRAND_WORDS);
+const FOLDED_COMPANY_WORDS = foldWords(COMPANY_WORDS);
 
 function scriptsOf(character: string): ReadonlySet<string> | null {
 	const scripts = new Set<string>();

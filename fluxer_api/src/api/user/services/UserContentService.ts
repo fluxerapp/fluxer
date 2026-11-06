@@ -70,7 +70,6 @@ import type {
 	UnregisterMobileDeviceRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -807,27 +806,25 @@ export class UserContentService {
 		const scheduledAt = new Date(Date.now() + delayMs);
 		const user = await this.userRepository.findUniqueAssert(userId);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
-		const counts = await this.countBulkDeletionTargets(userId, scheduledAt.getTime());
 		Logger.debug(
-			{
-				userId: userId.toString(),
-				channelCount: counts.channelCount,
-				messageCount: counts.messageCount,
-				scheduledAt: scheduledAt.toISOString(),
-			},
+			{userId: userId.toString(), scheduledAt: scheduledAt.toISOString()},
 			'Scheduling bulk message deletion',
 		);
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{
 				pending_bulk_message_deletion_at: scheduledAt,
-				pending_bulk_message_deletion_channel_count: counts.channelCount,
-				pending_bulk_message_deletion_message_count: counts.messageCount,
+				pending_bulk_message_deletion_channel_count: null,
+				pending_bulk_message_deletion_message_count: null,
 			},
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.scheduleDeletion(userId, scheduledAt);
 		await dispatchUserUpdate(this.gatewayService, updatedUser);
+		await this.workerService.addJob('countBulkMessageDeletionTargets', {
+			userId: userId.toString(),
+			scheduledAt: scheduledAt.getTime(),
+		});
 	}
 
 	async bulkDeleteSelfMessagesImmediate(params: {userId: UserID; filter: BulkDeleteSelfMessagesFilter}): Promise<void> {
@@ -858,40 +855,6 @@ export class UserContentService {
 		);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
 		await dispatchUserUpdate(this.gatewayService, updatedUser);
-	}
-
-	private async countBulkDeletionTargets(
-		userId: UserID,
-		cutoffMs: number,
-	): Promise<{
-		channelCount: number;
-		messageCount: number;
-	}> {
-		const CHUNK_SIZE = 200;
-		let lastMessageId: MessageID | undefined;
-		const channels = new Set<string>();
-		let messageCount = 0;
-		while (true) {
-			const messageRefs = await this.channelRepository.messages.listMessagesByAuthor(userId, CHUNK_SIZE, lastMessageId);
-			if (messageRefs.length === 0) {
-				break;
-			}
-			for (const {channelId, messageId} of messageRefs) {
-				if (snowflakeToDate(messageId).getTime() > cutoffMs) {
-					continue;
-				}
-				channels.add(channelId.toString());
-				messageCount++;
-			}
-			lastMessageId = messageRefs[messageRefs.length - 1].messageId;
-			if (messageRefs.length < CHUNK_SIZE) {
-				break;
-			}
-		}
-		return {
-			channelCount: channels.size,
-			messageCount,
-		};
 	}
 
 	private async dispatchRecentMentionDelete({

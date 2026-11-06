@@ -34,6 +34,7 @@ function fixture() {
 		deleteRemoval: vi.fn(async () => {
 			removal = null;
 		}),
+		scanRemovals: vi.fn(async () => ({rows: removal ? [removal] : [], pageState: null})),
 		listRemovalHistory: vi.fn(async () => history),
 		saveRemovalHistory: vi.fn(async (row: OperatorPassRemovalHistoryRow) => {
 			history.push(row);
@@ -245,4 +246,39 @@ test('losing the progress markers does not email or audit an applied bar again',
 	expect(await barOperatorPassAfterDispute(state.services, state.progress, user, review)).toBe(false);
 	expect(state.emailService.send.mock.calls.length).toBe(sends);
 	expect(state.history).toHaveLength(1);
+});
+
+test('a bar replaced by a limited removal comes back once that removal expires', async () => {
+	const state = fixture();
+	vi.useFakeTimers({toFake: ['Date'], now: new Date('2026-12-03T00:00:00Z')});
+	onTestFinished(() => {
+		vi.useRealTimers();
+	});
+	expect(await barOperatorPassAfterDispute(state.services, state.progress, user, review)).toBe(true);
+	const barStarted = state.current()?.removed_at;
+
+	vi.setSystemTime(new Date('2026-12-04T00:00:00Z'));
+	await state.removalService.remove({
+		user,
+		adminUserId: user.id,
+		rule: 'Section 3.1 of the Operator Pass terms',
+		facts: 'Wall breach',
+		automated: false,
+		serious: false,
+		durationDays: 2,
+		notifyUser: true,
+	});
+
+	vi.setSystemTime(new Date('2026-12-07T00:00:00Z'));
+	expect(await state.removalService.restoreExpired()).toBe(1);
+	expect(state.current()).toBeNull();
+
+	const sends = state.emailService.send.mock.calls.length;
+	expect(await barOperatorPassAfterDispute(state.services, state.progress, user, review)).toBe(false);
+	expect(state.current()).toMatchObject({removal_state: 'removed', removed_until: null, removed_at: barStarted});
+	expect(state.current()?.facts).toMatch(/^Payment dispute dp_test_bar /);
+	expect(state.emailService.send.mock.calls.length).toBe(sends);
+
+	expect(await barOperatorPassAfterDispute(state.services, state.progress, user, review)).toBe(false);
+	expect(state.emailService.send.mock.calls.length).toBe(sends);
 });

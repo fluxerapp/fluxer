@@ -162,6 +162,29 @@ export class EnforcementDecisionRepository {
 		limit: number = SUBJECT_DECISION_SCAN_LIMIT,
 		before?: bigint,
 	): Promise<Array<EnforcementDecisionRow>> {
+		return this.getMany(await this.listSubjectDecisionIds(subjectType, subjectId, limit, before));
+	}
+
+	async listAllBySubject(
+		subjectType: EnforcementSubjectType,
+		subjectId: bigint,
+	): Promise<Array<EnforcementDecisionRow>> {
+		const decisions: Array<EnforcementDecisionRow> = [];
+		let before: bigint | undefined;
+		for (;;) {
+			const ids = await this.listSubjectDecisionIds(subjectType, subjectId, SUBJECT_DECISION_SCAN_LIMIT, before);
+			decisions.push(...(await this.getMany(ids)));
+			if (ids.length < SUBJECT_DECISION_SCAN_LIMIT) return decisions;
+			before = ids[ids.length - 1];
+		}
+	}
+
+	private async listSubjectDecisionIds(
+		subjectType: EnforcementSubjectType,
+		subjectId: bigint,
+		limit: number,
+		before: bigint | undefined,
+	): Promise<Array<bigint>> {
 		const keys = await fetchMany<Pick<EnforcementDecisionBySubjectRow, 'decision_id'>>(
 			listBySubjectQuery(limit, before !== undefined).bind({
 				subject_type: subjectType,
@@ -169,7 +192,7 @@ export class EnforcementDecisionRepository {
 				...(before !== undefined ? {before} : {}),
 			}),
 		);
-		return this.getMany(keys.map((key) => key.decision_id));
+		return keys.map((key) => key.decision_id);
 	}
 
 	async listReportLinks(limit: number, after?: bigint): Promise<Array<DecisionReportLink>> {

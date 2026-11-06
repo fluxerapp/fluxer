@@ -5,7 +5,7 @@ import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils'
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {beforeEach, describe, test} from 'vitest';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('Admin API Key Authorization', () => {
 	let harness: ApiTestHarness;
@@ -31,6 +31,17 @@ describe('Admin API Key Authorization', () => {
 			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 			.execute();
+	});
+	test('key stops showing email once owner loses the email view ACL', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup', 'user:view:email']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Email View', ['user:lookup', 'user:view:email'], null);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
+		const result = await createBuilder<{users: Array<{email: string | null}>}>(harness, apiKey.token)
+			.get(`/admin/users/${admin.userId}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(result.users[0]?.email).toBeNull();
 	});
 	test('key cannot access endpoints without required ACLs', async () => {
 		const admin = await createTestAccount(harness);

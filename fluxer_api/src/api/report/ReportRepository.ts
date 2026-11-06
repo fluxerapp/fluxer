@@ -198,16 +198,35 @@ export class ReportRepository {
 		return {...report, legalHoldUntil, legalHoldReason};
 	}
 
-	async clearCopiedContext(reportId: ReportID, reportType: number): Promise<boolean> {
-		return executeConditional(
+	async clearCopiedContext(report: IARSubmission): Promise<IARSubmissionRow | null> {
+		const row = await fetchOne<IARSubmissionRow>(GET_REPORT_QUERY.bind({report_id: report.reportId}));
+		if (!row) {
+			return null;
+		}
+		const cleared = await executeConditional(
 			IARSubmissions.conditionalPatchByPk(
-				{report_id: reportId},
+				{report_id: report.reportId},
 				{
 					message_context: Db.set(null),
 					reported_profile_snapshot: Db.set(null),
 					additional_info: Db.set(null),
 				},
-				{report_type: reportType},
+				{report_type: report.reportType, legal_hold_until: report.legalHoldUntil ?? null},
+			),
+		);
+		return cleared ? row : null;
+	}
+
+	async restoreCopiedContext(row: IARSubmissionRow): Promise<void> {
+		await executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: row.report_id},
+				{
+					message_context: Db.set(row.message_context),
+					reported_profile_snapshot: Db.set(row.reported_profile_snapshot ?? null),
+					additional_info: Db.set(row.additional_info),
+				},
+				{report_type: row.report_type},
 			),
 		);
 	}
@@ -222,16 +241,27 @@ export class ReportRepository {
 		);
 	}
 
-	async deleteReport(reportId: ReportID): Promise<void> {
-		const report = await this.getReport(reportId);
-		if (!report) {
-			return;
+	async deleteReport(report: IARSubmission): Promise<IARSubmissionRow | null> {
+		const row = await fetchOne<IARSubmissionRow>(GET_REPORT_QUERY.bind({report_id: report.reportId}));
+		if (!row) {
+			return null;
 		}
-		await this.releaseReporterReservation(report);
-		await deleteOneOrMany(IARReportNotes.deletePartition({report_id: reportId}));
-		await executeConditional(
-			IARSubmissions.conditionalDeleteByPk({report_id: reportId}, {report_type: report.reportType}),
+		const deleted = await executeConditional(
+			IARSubmissions.conditionalDeleteByPk(
+				{report_id: report.reportId},
+				{report_type: report.reportType, legal_hold_until: report.legalHoldUntil ?? null},
+			),
 		);
+		return deleted ? row : null;
+	}
+
+	async restoreReport(row: IARSubmissionRow): Promise<void> {
+		await executeConditional(IARSubmissions.insertIfNotExists(row));
+	}
+
+	async releaseDeletedReport(report: IARSubmission): Promise<void> {
+		await this.releaseReporterReservation(report);
+		await deleteOneOrMany(IARReportNotes.deletePartition({report_id: report.reportId}));
 	}
 
 	async addNote(note: IARReportNoteRow): Promise<void> {

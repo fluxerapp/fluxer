@@ -159,7 +159,7 @@ export class MessageDataRepository {
 
 	private async listMessagesBefore(channelId: ChannelID, before: MessageID, limit: number): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
-		const maxBucket = BucketUtils.makeBucket(before);
+		const maxBucket = Math.min(BucketUtils.makeBucket(before), BucketUtils.makeBucket(generateSnowflake()));
 		const minBucket = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
 		getLogger().debug(
 			{
@@ -220,7 +220,7 @@ export class MessageDataRepository {
 		const low = Math.min(afterBucket, beforeBucket);
 		const createdMin = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
 		const minBucket = Math.max(low, createdMin);
-		const maxBucket = high;
+		const maxBucket = Math.min(high, BucketUtils.makeBucket(generateSnowflake()));
 		getLogger().debug(
 			{
 				channelId: channelId.toString(),
