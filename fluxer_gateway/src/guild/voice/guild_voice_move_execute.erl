@@ -147,13 +147,10 @@ handle_channel_move(Conns, ChannelIdValue, UserId, ModeratorId, VoiceStates, Sta
     guild_state()
 ) -> voice_reply().
 handle_valid_channel(Conns, ChannelId, UserId, ModId, VoiceStates, Channel, State) ->
-    StateWithPending = mark_pending_states(UserId, ChannelId, State),
     ChannelType = map_utils:get_integer(Channel, <<"type">>, undefined),
     case ChannelType of
         2 ->
-            check_perms_and_execute(
-                Conns, ChannelId, UserId, ModId, VoiceStates, StateWithPending
-            );
+            check_perms_and_execute(Conns, ChannelId, UserId, ModId, VoiceStates, State);
         _ ->
             {reply, gateway_errors:error(voice_channel_not_voice), State}
     end.

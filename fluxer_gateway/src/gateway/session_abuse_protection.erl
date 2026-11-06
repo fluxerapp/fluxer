@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
-    check_user_session_limit/1,
+    reserve_user_session/1,
     increment_user_sessions/1,
     decrement_user_sessions/1,
     check_identify_rate/1,
@@ -18,28 +18,29 @@
 -define(IDENTIFY_CLEANUP_INTERVAL_MS, ?IDENTIFY_WINDOW_SECS * 2 * 1000).
 -define(MAX_SESSIONS_PER_USER, 100).
 
--spec check_user_session_limit(term()) -> ok | {error, too_many_sessions}.
-check_user_session_limit(UserId) when is_integer(UserId), UserId > 0 ->
-    case gateway_handler_rate_limit:rate_limits_disabled() of
-        true ->
-            ok;
-        false ->
-            ok = ensure_session_user_counts_table(),
-            do_check_user_session_limit(UserId)
-    end;
-check_user_session_limit(_) ->
-    ok.
-
--spec do_check_user_session_limit(integer()) -> ok | {error, too_many_sessions}.
-do_check_user_session_limit(UserId) ->
-    try ets:lookup(?SESSION_USER_COUNTS, UserId) of
-        [{_, Count}] when Count >= ?MAX_SESSIONS_PER_USER ->
-            {error, too_many_sessions};
+-spec reserve_user_session(term()) -> ok | {error, too_many_sessions}.
+reserve_user_session(UserId) when is_integer(UserId), UserId > 0 ->
+    ok = ensure_session_user_counts_table(),
+    try ets:update_counter(?SESSION_USER_COUNTS, UserId, {2, 1}, {UserId, 0}) of
+        Count when Count > ?MAX_SESSIONS_PER_USER ->
+            reject_over_limit(UserId);
         _ ->
             ok
     catch
         error:badarg ->
             ok
+    end;
+reserve_user_session(_) ->
+    ok.
+
+-spec reject_over_limit(integer()) -> ok | {error, too_many_sessions}.
+reject_over_limit(UserId) ->
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = decrement_user_sessions(UserId),
+            {error, too_many_sessions}
     end.
 
 -spec increment_user_sessions(term()) -> ok.
@@ -59,7 +60,7 @@ decrement_user_sessions(UserId) when is_integer(UserId), UserId > 0 ->
     try
         case ets:update_counter(?SESSION_USER_COUNTS, UserId, {2, -1, 0, 0}) of
             0 ->
-                ets:delete(?SESSION_USER_COUNTS, UserId),
+                _ = ets:select_delete(?SESSION_USER_COUNTS, [{{UserId, 0}, [], [true]}]),
                 ok;
             _ ->
                 ok

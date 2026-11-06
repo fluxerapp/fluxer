@@ -83,12 +83,26 @@ request_session_map(SessionId, SessionUserId, Sessions, State) ->
 
 -spec visible_session_map(map(), map(), guild_state()) -> map().
 visible_session_map(Session, Map, State) ->
-    case
-        guild_thread_gate:needs_variant(State) andalso
-            not guild_thread_gate:session_viewer(Session)
-    of
-        true -> visible_channels_only(Session, Map, State);
-        false -> Map
+    Visible =
+        case
+            guild_thread_gate:needs_variant(State) andalso
+                not guild_thread_gate:session_viewer(Session)
+        of
+            true -> visible_channels_only(Session, Map, State);
+            false -> Map
+        end,
+    without_categories(Visible, State).
+
+-spec without_categories(map(), guild_state()) -> map().
+without_categories(Map, State) ->
+    Index = guild_data_index_channels:channel_index(maps:get(data, State, #{})),
+    maps:filter(fun(ChannelId, _) -> not is_category_channel(ChannelId, Index) end, Map).
+
+-spec is_category_channel(term(), map()) -> boolean().
+is_category_channel(ChannelId, Index) ->
+    case maps:get(ChannelId, Index, undefined) of
+        #{<<"type">> := Type} -> channel_types:is_category(Type);
+        _ -> false
     end.
 
 -spec visible_channels_only(map(), map(), guild_state()) -> map().

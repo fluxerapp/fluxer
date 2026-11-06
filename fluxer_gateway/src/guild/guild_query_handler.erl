@@ -8,6 +8,7 @@
 
 -define(INLINE_MEMBER_QUERY_MAX_IDS, 100).
 -define(INFERRED_DEADLINE_MARGIN_MS, 1000).
+-define(VIEWER_ONLINE_COUNT_TTL_MS, 5000).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
@@ -131,8 +132,27 @@ handle_get_counts(State) ->
 -spec handle_get_user_counts(user_id(), guild_state()) -> {reply, map(), guild_state()}.
 handle_get_user_counts(UserId, State) ->
     MemberCount = maps:get(member_count, State, 0),
-    OnlineCount = guild_mutual_online:compute_count(UserId, State),
-    {reply, #{member_count => MemberCount, online_count => OnlineCount}, State}.
+    {OnlineCount, NewState} = viewer_online_count(UserId, State),
+    {reply, #{member_count => MemberCount, online_count => OnlineCount}, NewState}.
+
+-spec viewer_online_count(user_id(), guild_state()) -> {non_neg_integer(), guild_state()}.
+viewer_online_count(UserId, State) ->
+    Now = erlang:monotonic_time(millisecond),
+    Counts = maps:get(viewer_online_counts, State, #{}),
+    case maps:get(UserId, Counts, undefined) of
+        {ExpiresAt, Count} when ExpiresAt > Now ->
+            {Count, State};
+        _ ->
+            store_viewer_online_count(UserId, Now, Counts, State)
+    end.
+
+-spec store_viewer_online_count(user_id(), integer(), map(), guild_state()) ->
+    {non_neg_integer(), guild_state()}.
+store_viewer_online_count(UserId, Now, Counts, State) ->
+    Count = guild_mutual_online:compute_count(UserId, State),
+    Live = maps:filter(fun(_Id, {ExpiresAt, _}) -> ExpiresAt > Now end, Counts),
+    Entry = {Now + ?VIEWER_ONLINE_COUNT_TTL_MS, Count},
+    {Count, State#{viewer_online_counts => Live#{UserId => Entry}}}.
 
 -spec handle_get_channel_member_counts(map(), guild_state()) -> {reply, map(), guild_state()}.
 handle_get_channel_member_counts(Request, State) ->
@@ -229,8 +249,33 @@ handle_call_dispatch({check_permission, Request}, _From, State) ->
     handle_check_permission(request_map(Request), State);
 handle_call_dispatch({get_user_permissions, Request}, _From, State) ->
     handle_get_user_permissions(request_map(Request), State);
+handle_call_dispatch({search_guild_members, Request}, From, State) ->
+    handle_search_guild_members(request_map(Request), From, State);
 handle_call_dispatch(Msg, From, State) ->
     handle_async_member_query(Msg, From, State).
+
+-spec handle_search_guild_members(map(), gen_server:from(), guild_state()) ->
+    {reply, map(), guild_state()} | {noreply, guild_state()}.
+handle_search_guild_members(Request, From, State) ->
+    case shared_members_table(State) of
+        {ok, Tab} -> search_members_table_async(Request, Tab, From, State);
+        none -> guild_data_members:search_guild_members(Request, State)
+    end.
+
+-spec search_members_table_async(map(), ets:tid(), gen_server:from(), guild_state()) ->
+    {noreply, guild_state()}.
+search_members_table_async(Request, Tab, From, State) ->
+    spawn_async_reply(From, fun() -> guild_data_members:search_members_table(Request, Tab) end),
+    {noreply, State}.
+
+-spec shared_members_table(guild_state()) -> {ok, ets:tid()} | none.
+shared_members_table(#{data := #{members_ets := Tab}}) when is_reference(Tab) ->
+    case guild_members_table_repair:members_table_healthy(Tab) of
+        true -> {ok, Tab};
+        false -> none
+    end;
+shared_members_table(_State) ->
+    none.
 
 -spec handle_async_member_query(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()} | {noreply, guild_state()}.
@@ -373,8 +418,6 @@ handle_call_data({has_member, Req}, State) ->
     guild_data_members:has_member(request_map(Req), State);
 handle_call_data({list_guild_members, Req}, State) ->
     guild_data_members:list_guild_members(request_map(Req), State);
-handle_call_data({search_guild_members, Req}, State) ->
-    guild_data_members:search_guild_members(request_map(Req), State);
 handle_call_data({list_guild_members_cursor, Req}, State) ->
     guild_member_list_read:get_members_cursor(request_map(Req), State);
 handle_call_data({get_first_viewable_text_channel}, State) ->

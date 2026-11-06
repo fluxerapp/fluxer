@@ -18,16 +18,21 @@
 
 -define(KEY, {?MODULE, counters}).
 -define(REJECT_REASONS, [disabled, age_restricted, unavailable, busy]).
--define(EVICT_REASONS, [busy, banned, disabled, age_restricted, removed, error]).
+-define(EVICT_REASONS, [busy, banned, disabled, age_restricted, removed, error, unavailable]).
 
 -spec init() -> ok.
 init() ->
-    case persistent_term:get(?KEY, undefined) of
-        undefined ->
-            persistent_term:put(?KEY, counters:new(length(keys()), [write_concurrency]));
-        _ ->
-            ok
+    Size = length(keys()),
+    case counters_size(persistent_term:get(?KEY, undefined)) of
+        Size -> ok;
+        _ -> persistent_term:put(?KEY, counters:new(Size, [write_concurrency]))
     end.
+
+-spec counters_size(counters:counters_ref() | undefined) -> non_neg_integer() | undefined.
+counters_size(undefined) ->
+    undefined;
+counters_size(Counters) ->
+    maps:get(size, counters:info(Counters)).
 
 -spec admitted() -> ok.
 admitted() ->

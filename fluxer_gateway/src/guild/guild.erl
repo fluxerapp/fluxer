@@ -539,39 +539,12 @@ dispatch_event(Event, EventData, State) ->
 visitor_dispatch(Event, Data, OldState, NewState) when is_atom(Event); is_binary(Event) ->
     case guild_dispatch:normalize_event(Event) of
         Atom when is_atom(Atom) ->
-            safe_visitor_dispatch(Atom, Data, OldState, NewState);
+            guild_visitor_dispatch:safe_after_dispatch(Atom, Data, OldState, NewState);
         _ ->
             NewState
     end;
 visitor_dispatch(_Event, _Data, _OldState, NewState) ->
     NewState.
-
--spec safe_visitor_dispatch(atom(), map(), guild_state(), guild_state()) -> guild_state().
-safe_visitor_dispatch(Event, Data, OldState, NewState) ->
-    try
-        guild_visitor_dispatch:after_dispatch(Event, Data, OldState, NewState)
-    catch
-        Class:Reason:Stack ->
-            logger:error(
-                "guild_visitor_dispatch_failed: guild_id=~p event=~p class=~p reason=~p "
-                "stack=~p",
-                [maps:get(id, NewState, undefined), Event, Class, Reason, Stack]
-            ),
-            evict_visitors_after_failure(NewState)
-    end.
-
--spec evict_visitors_after_failure(guild_state()) -> guild_state().
-evict_visitors_after_failure(State) ->
-    try
-        guild_visitors:evict_all(error, State)
-    catch
-        Class:Reason:Stack ->
-            logger:error(
-                "guild_visitor_eviction_failed: guild_id=~p class=~p reason=~p stack=~p",
-                [maps:get(id, State, undefined), Class, Reason, Stack]
-            ),
-            State
-    end.
 
 -spec parse_event_data(term()) -> map().
 parse_event_data(D) when is_binary(D) -> require_map(json:decode(D));

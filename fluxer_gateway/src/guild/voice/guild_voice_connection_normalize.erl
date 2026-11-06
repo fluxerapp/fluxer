@@ -73,38 +73,10 @@ guild_id_binary(Value, Int) ->
         Bin -> Bin
     end.
 
--spec safe_iolist_to_binary(term()) -> binary() | undefined.
+-spec safe_iolist_to_binary(list()) -> binary() | undefined.
 safe_iolist_to_binary(Value) ->
-    case safe_iolist_to_binary_parts(Value) of
-        {ok, Binary} -> Binary;
-        error -> undefined
+    try iolist_to_binary(eqwalizer:dynamic_cast(Value)) of
+        Binary -> Binary
+    catch
+        error:badarg -> undefined
     end.
-
--spec safe_iolist_to_binary_parts(term()) -> {ok, binary()} | error.
-safe_iolist_to_binary_parts(Value) when is_binary(Value) ->
-    {ok, Value};
-safe_iolist_to_binary_parts(Value) when is_integer(Value), Value >= 0, Value =< 255 ->
-    {ok, <<Value>>};
-safe_iolist_to_binary_parts(Value) when is_list(Value) ->
-    safe_iolist_list_to_binary(Value);
-safe_iolist_to_binary_parts(_) ->
-    error.
-
--spec safe_iolist_list_to_binary(term()) -> {ok, binary()} | error.
-safe_iolist_list_to_binary([]) ->
-    {ok, <<>>};
-safe_iolist_list_to_binary([Head | Tail]) ->
-    case {safe_iolist_to_binary_parts(Head), safe_iolist_tail_to_binary(Tail)} of
-        {{ok, HeadBinary}, {ok, TailBinary}} -> {ok, <<HeadBinary/binary, TailBinary/binary>>};
-        _ -> error
-    end;
-safe_iolist_list_to_binary(_) ->
-    error.
-
--spec safe_iolist_tail_to_binary(term()) -> {ok, binary()} | error.
-safe_iolist_tail_to_binary(Value) when is_binary(Value) ->
-    {ok, Value};
-safe_iolist_tail_to_binary(Value) when is_list(Value) ->
-    safe_iolist_list_to_binary(Value);
-safe_iolist_tail_to_binary(_) ->
-    error.

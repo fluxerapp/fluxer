@@ -14,6 +14,7 @@
 -type guild_state() :: map().
 -type event() :: atom().
 -type event_data() :: map().
+-type dispatch_mode() :: full | state_only.
 
 -spec normalize_event(atom() | binary()) -> atom() | binary().
 normalize_event(Event) when is_atom(Event) ->
@@ -23,18 +24,20 @@ normalize_event(Event) when is_binary(Event) ->
 
 -spec handle_dispatch(atom() | binary(), map(), map()) -> {noreply, map()}.
 handle_dispatch(Event, EventData, State) ->
-    case should_skip_dispatch(Event, State) of
-        true ->
-            {noreply, State};
-        false ->
-            normalized_event_atom(normalize_event(Event), EventData, State)
-    end.
+    Mode =
+        case should_skip_dispatch(Event, State) of
+            true -> state_only;
+            false -> full
+        end,
+    normalized_event_atom(normalize_event(Event), EventData, Mode, State).
 
--spec normalized_event_atom(atom() | binary(), event_data(), guild_state()) ->
+-spec normalized_event_atom(atom() | binary(), event_data(), dispatch_mode(), guild_state()) ->
     {noreply, guild_state()}.
-normalized_event_atom(Event, EventData, State) when is_atom(Event) ->
-    process_dispatch(Event, EventData, State);
-normalized_event_atom(Event, _EventData, State) when is_binary(Event) ->
+normalized_event_atom(Event, EventData, Mode, State) when is_atom(Event) ->
+    process_dispatch(Event, EventData, Mode, State);
+normalized_event_atom(_Event, _EventData, state_only, State) ->
+    {noreply, State};
+normalized_event_atom(Event, _EventData, full, State) when is_binary(Event) ->
     ?LOG_WARNING("guild dispatch dropped unknown event: event=~ts guild_id=~p", [
         Event, maps:get(id, State, undefined)
     ]),
@@ -50,8 +53,9 @@ should_skip_dispatch(_Event, State) ->
     lists:member(<<"UNAVAILABLE_FOR_EVERYONE">>, Features) orelse
         lists:member(<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>, Features).
 
--spec process_dispatch(event(), event_data(), guild_state()) -> {noreply, guild_state()}.
-process_dispatch(Event, EventData, State) ->
+-spec process_dispatch(event(), event_data(), dispatch_mode(), guild_state()) ->
+    {noreply, guild_state()}.
+process_dispatch(Event, EventData, Mode, State) ->
     case
         {
             guild_thread_gate:pre_update_filter(Event, EventData, State),
@@ -64,14 +68,14 @@ process_dispatch(Event, EventData, State) ->
         {{filtered, FilteredData}, _HandlesThread} ->
             ok = maybe_self_heal(State),
             process_regular_dispatch(
-                Event, FilteredData, guild_thread_flip:hold(Event, EventData, State)
+                Event, FilteredData, Mode, guild_thread_flip:hold(Event, EventData, State)
             );
         {pass, true} ->
             State1 = guild_thread_flip:hold(Event, EventData, State),
-            guild_thread_dispatch:handle(Event, EventData, State1);
+            guild_thread_dispatch:handle(Event, EventData, Mode, State1);
         {pass, false} ->
             State1 = guild_thread_flip:hold(Event, EventData, State),
-            process_regular_dispatch(Event, EventData, State1)
+            process_regular_dispatch(Event, EventData, Mode, State1)
     end.
 
 -spec maybe_self_heal(guild_state()) -> ok.
@@ -83,15 +87,14 @@ maybe_self_heal(#{id := GuildId}) when is_integer(GuildId) ->
 maybe_self_heal(_State) ->
     ok.
 
--spec process_regular_dispatch(event(), event_data(), guild_state()) ->
+-spec process_regular_dispatch(event(), event_data(), dispatch_mode(), guild_state()) ->
     {noreply, guild_state()}.
-process_regular_dispatch(Event, EventData, State) ->
+process_regular_dispatch(Event, EventData, state_only, State) ->
+    {_SessionIdOpt, _FinalData, UpdatedState} = apply_regular_event(Event, EventData, State),
+    {noreply, UpdatedState};
+process_regular_dispatch(Event, EventData, full, State) ->
     GuildId = maps:get(id, State),
-    {SessionIdOpt, CleanData} = extract_session_id_if_needed(Event, EventData),
-    DecoratedData = CleanData#{<<"guild_id">> => integer_to_binary(GuildId)},
-    FinalData0 = guild_dispatch_decorate:decorate_member_data(Event, DecoratedData, State),
-    UpdatedState0 = guild_state:update_state(Event, FinalData0, State),
-    UpdatedState = guild_state_threads:after_regular_event(Event, FinalData0, UpdatedState0),
+    {SessionIdOpt, FinalData0, UpdatedState} = apply_regular_event(Event, EventData, State),
     FilterState = filter_state_for_event(Event, State, UpdatedState),
     Sessions = maps:get(sessions, UpdatedState),
     FilteredSessions = filter_dispatch_sessions(
@@ -102,12 +105,28 @@ process_regular_dispatch(Event, EventData, State) ->
         "process_dispatch: event=~p guild_id=~p total_sessions=~p filtered_sessions=~p",
         [Event, GuildId, map_size(Sessions), length(FilteredSessions)]
     ),
-    guild_dispatch_send:dispatch_to_sessions(FilteredSessions, Event, FinalData, UpdatedState),
+    lists:foreach(
+        fun({Group, GroupData}) ->
+            guild_dispatch_send:dispatch_to_sessions(Group, Event, GroupData, UpdatedState)
+        end,
+        guild_thread_payload:starter_variants(Event, FinalData, FilteredSessions, UpdatedState)
+    ),
     guild_dispatch_push:maybe_send_push_notifications(Event, FinalData, GuildId, UpdatedState),
     FinalState = guild_dispatch_member_list:maybe_broadcast_member_list_update(
         Event, FinalData, State, UpdatedState
     ),
     {noreply, FinalState}.
+
+-spec apply_regular_event(event(), event_data(), guild_state()) ->
+    {binary() | undefined, event_data(), guild_state()}.
+apply_regular_event(Event, EventData, State) ->
+    GuildId = maps:get(id, State),
+    {SessionIdOpt, CleanData} = extract_session_id_if_needed(Event, EventData, State),
+    DecoratedData = CleanData#{<<"guild_id">> => integer_to_binary(GuildId)},
+    FinalData0 = guild_dispatch_decorate:decorate_member_data(Event, DecoratedData, State),
+    UpdatedState0 = guild_state:update_state(Event, FinalData0, State),
+    UpdatedState = guild_state_threads:after_regular_event(Event, FinalData0, UpdatedState0),
+    {SessionIdOpt, FinalData0, UpdatedState}.
 
 -spec filter_dispatch_sessions(
     event(), event_data(), binary() | undefined, map(), guild_state()
@@ -141,14 +160,30 @@ filter_state_for_event(channel_delete, PreviousState, _UpdatedState) ->
 filter_state_for_event(_Event, _PreviousState, UpdatedState) ->
     UpdatedState.
 
--spec extract_session_id_if_needed(event(), event_data()) ->
+-spec extract_session_id_if_needed(event(), event_data(), guild_state()) ->
     {binary() | undefined, event_data()}.
-extract_session_id_if_needed(message_reaction_add, EventData) ->
-    guild_dispatch_decorate:extract_and_remove_session_id(EventData);
-extract_session_id_if_needed(message_reaction_remove, EventData) ->
-    guild_dispatch_decorate:extract_and_remove_session_id(EventData);
-extract_session_id_if_needed(_, EventData) ->
+extract_session_id_if_needed(Event, EventData, State) when
+    Event =:= message_reaction_add; Event =:= message_reaction_remove
+->
+    {SessionIdOpt, CleanData} = guild_dispatch_decorate:extract_and_remove_session_id(
+        EventData
+    ),
+    {actor_session_id(SessionIdOpt, EventData, State), CleanData};
+extract_session_id_if_needed(_, EventData, _State) ->
     {undefined, EventData}.
+
+-spec actor_session_id(binary() | undefined, event_data(), guild_state()) ->
+    binary() | undefined.
+actor_session_id(undefined, _EventData, _State) ->
+    undefined;
+actor_session_id(SessionId, EventData, State) ->
+    ActorId = guild_dispatch_decorate:parse_snowflake(
+        <<"user_id">>, maps:get(<<"user_id">>, EventData, undefined)
+    ),
+    case maps:get(SessionId, maps:get(sessions, State, #{}), undefined) of
+        #{user_id := UserId} when is_integer(ActorId), UserId =:= ActorId -> SessionId;
+        _ -> undefined
+    end.
 
 -spec is_member_list_updates_enabled(map()) -> boolean().
 is_member_list_updates_enabled(State) ->

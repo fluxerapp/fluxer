@@ -222,10 +222,14 @@ dispatch_presence_now(P, State) ->
 flush_all_pending_presences(State) ->
     PendingQ = ensure_queue(maps:get(pending_presences, State, [])),
     PendingList = queue:to_list(PendingQ),
-    FlushedState = lists:foldl(
-        fun dispatch_presence_now/2, State, PendingList
+    {ToSend, RemainingList} = lists:partition(
+        fun(P) -> not check_presence_scope(maps:get(data, P), State) end,
+        PendingList
     ),
-    FlushedState#{pending_presences => queue:new()}.
+    FlushedState = lists:foldl(
+        fun dispatch_presence_now/2, State, ToSend
+    ),
+    FlushedState#{pending_presences => queue:from_list(RemainingList)}.
 
 -spec maybe_sync_presence_targets(event(), [user_id()], session_state()) -> session_state().
 maybe_sync_presence_targets(Event, FlushedIds, State) ->

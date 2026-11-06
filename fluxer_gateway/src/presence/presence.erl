@@ -50,7 +50,8 @@
     friend_ids => [user_id()],
     group_dm_recipients => #{integer() => [user_id()] | #{user_id() => true}},
     status := status(),
-    custom_status => custom_status()
+    custom_status => custom_status(),
+    settings_invisible => boolean()
 }.
 
 -spec start_link(presence_data()) -> {ok, pid()} | {error, term()}.
@@ -218,7 +219,7 @@ build_initial_state(PresenceData) ->
         push_buffer => [],
         custom_status => maps:get(custom_status, PresenceData, null),
         status => Status,
-        settings_invisible => false,
+        settings_invisible => maps:get(settings_invisible, PresenceData, false),
         guild_ids => presence_targets:map_from_ids(GuildIds),
         temporary_guild_ids => #{},
         friends => presence_targets:map_from_ids(FriendIds),

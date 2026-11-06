@@ -58,8 +58,8 @@ env_public_config() ->
 -spec env_proxy_config() -> map().
 env_proxy_config() ->
     #{
-        <<"client_ip_header">> => env_binary(
-            "FLUXER_CLIENT_IP_HEADER_NAME", <<"x-forwarded-for">>
+        <<"client_ip_header">> => string:lowercase(
+            string:trim(env_binary("FLUXER_CLIENT_IP_HEADER_NAME", <<"x-forwarded-for">>))
         ),
         <<"trust_client_ip_header">> => env_bool("FLUXER_TRUST_CLIENT_IP_HEADER", false)
     }.
@@ -456,7 +456,7 @@ parse_int(Name, Value) ->
 
 -spec env_bool(string(), boolean()) -> boolean().
 env_bool(Name, Default) ->
-    case string:lowercase(env_string(Name, "")) of
+    case string:lowercase(string:trim(env_string(Name, ""))) of
         "1" -> true;
         "true" -> true;
         "yes" -> true;

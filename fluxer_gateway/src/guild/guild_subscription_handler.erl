@@ -180,12 +180,16 @@ flush_lazy_subscribe_buffer(State) ->
 flush_lazy_subscribe_keys([], _Buffer, State) ->
     State;
 flush_lazy_subscribe_keys([BufferKey | Rest], Buffer, State) ->
-    Engines = map_size(maps:get(?ENGINES_KEY, State, #{})),
+    Engines = maps:get(?ENGINES_KEY, State, #{}),
     State1 = process_buffered_lazy_subscribe(BufferKey, Buffer, State),
-    case Rest =/= [] andalso map_size(maps:get(?ENGINES_KEY, State1, #{})) > Engines of
+    case Rest =/= [] andalso engine_added(Engines, maps:get(?ENGINES_KEY, State1, #{})) of
         true -> defer_lazy_subscribe_keys(Rest, Buffer, State1);
         false -> flush_lazy_subscribe_keys(Rest, Buffer, State1)
     end.
+
+-spec engine_added(map(), map()) -> boolean().
+engine_added(Before, After) ->
+    lists:any(fun(ListId) -> not maps:is_key(ListId, Before) end, maps:keys(After)).
 
 -spec defer_lazy_subscribe_keys([lazy_subscribe_key()], map(), guild_state()) -> guild_state().
 defer_lazy_subscribe_keys(Keys, Buffer, State) ->

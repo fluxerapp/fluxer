@@ -5,12 +5,13 @@
 -behaviour(gen_server).
 
 -export([start_link/0, pub/2, pub_reply/2, reply_publish_failures/0, get_pool_status/0]).
--export([has_ready_connection/0]).
+-export([has_ready_connection/0, send_overloaded_async/2]).
 -export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(PERSISTENT_TERM_KEY, {?MODULE, connections}).
 -define(REPLY_FAILURE_KEY, {?MODULE, reply_publish_failures}).
+-define(OVERLOAD_SENDERS_KEY, {?MODULE, overload_senders}).
 
 -dialyzer(
     {no_opaque, [
@@ -108,6 +109,7 @@ init([]) ->
     Slots = lists:duplicate(PoolSize, undefined),
     persistent_term:put(?PERSISTENT_TERM_KEY, list_to_tuple(Slots)),
     persistent_term:put(?REPLY_FAILURE_KEY, counters:new(1, [write_concurrency])),
+    _ = overload_sender_counter(),
     self() ! connect_all,
     {ok, #{
         pool_size => PoolSize,
@@ -394,7 +396,7 @@ dispatch_rpc_msg(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State) ->
         undefined ->
             State;
         ReplyTo when HC >= MaxH ->
-            send_overloaded_async(ReplyTo),
+            send_overloaded_async(ReplyTo, MaxH),
             State;
         ReplyTo ->
             {_Pid, MRef} = spawn_rpc_handler(Subject, Payload, ReplyTo),
@@ -407,10 +409,40 @@ spawn_rpc_handler(Subject, Payload, ReplyTo) ->
         gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo)
     end).
 
--spec send_overloaded_async(binary()) -> ok.
-send_overloaded_async(ReplyTo) ->
-    _ = spawn(fun() -> send_overloaded(ReplyTo) end),
+-spec send_overloaded_async(binary(), pos_integer()) -> ok.
+send_overloaded_async(ReplyTo, MaxSenders) ->
+    Ref = overload_sender_counter(),
+    case atomics:add_get(Ref, 1, 1) of
+        InFlight when InFlight > MaxSenders ->
+            atomics:sub(Ref, 1, 1);
+        _ ->
+            spawn_overloaded_sender(ReplyTo, Ref)
+    end.
+
+-spec spawn_overloaded_sender(binary(), atomics:atomics_ref()) -> ok.
+spawn_overloaded_sender(ReplyTo, Ref) ->
+    _ = spawn(fun() -> send_overloaded_and_release(ReplyTo, Ref) end),
     ok.
+
+-spec send_overloaded_and_release(binary(), atomics:atomics_ref()) -> ok.
+send_overloaded_and_release(ReplyTo, Ref) ->
+    try
+        _ = send_overloaded(ReplyTo),
+        ok
+    after
+        atomics:sub(Ref, 1, 1)
+    end.
+
+-spec overload_sender_counter() -> atomics:atomics_ref().
+overload_sender_counter() ->
+    case persistent_term:get(?OVERLOAD_SENDERS_KEY, undefined) of
+        Ref when Ref =/= undefined ->
+            Ref;
+        undefined ->
+            Ref = atomics:new(1, [{signed, true}]),
+            persistent_term:put(?OVERLOAD_SENDERS_KEY, Ref),
+            Ref
+    end.
 
 -spec send_overloaded(binary()) -> ok | {error, term()}.
 send_overloaded(ReplyTo) ->

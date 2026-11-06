@@ -3,7 +3,7 @@
 -module(guild_dm_partners).
 -typing([eqwalizer]).
 
--export([handle_cast/2, maybe_reevaluate/4]).
+-export([handle_cast/2, maybe_reevaluate/4, reevaluate_user/2, reevaluate_all/1]).
 
 -type guild_state() :: map().
 -type session_id() :: binary().
@@ -17,7 +17,7 @@
 -type registrations() :: #{session_id() => registration()}.
 -type scope() :: none | all | {user, user_id()}.
 
--export_type([guild_state/0]).
+-export_type([guild_state/0, user_id/0]).
 
 -define(MAX_PARTNERS, 1000).
 -define(PRUNE_SLACK, 64).
@@ -42,6 +42,22 @@ maybe_reevaluate(Event, Data, PreviousState, State) ->
             reevaluate(
                 effective_scope(scope(Event, Data), PreviousState, State), Registrations, State
             )
+    end.
+
+-spec reevaluate_user(user_id(), guild_state()) -> guild_state().
+reevaluate_user(UserId, State) ->
+    reevaluate_registered({user, UserId}, State).
+
+-spec reevaluate_all(guild_state()) -> guild_state().
+reevaluate_all(State) ->
+    reevaluate_registered(all, State).
+
+-spec reevaluate_registered(scope(), guild_state()) -> guild_state().
+reevaluate_registered(Scope, State) ->
+    Registrations = registrations(State),
+    case map_size(Registrations) of
+        0 -> State;
+        _ -> reevaluate(Scope, Registrations, State)
     end.
 
 -spec effective_scope(scope(), guild_state(), guild_state()) -> scope().

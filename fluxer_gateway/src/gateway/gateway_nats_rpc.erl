@@ -508,12 +508,7 @@ dispatch_rpc(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State) ->
     map()
 ) -> map().
 do_dispatch_rpc(ReplyTo, _Subject, _Payload, HC, MaxH, _HRefs, State) when HC >= MaxH ->
-    ErrResp = iolist_to_binary(
-        json:encode(#{
-            <<"ok">> => false, <<"error">> => <<"overloaded">>
-        })
-    ),
-    _ = spawn(fun() -> gateway_nats_pool:pub_reply(ReplyTo, ErrResp) end),
+    gateway_nats_pool:send_overloaded_async(ReplyTo, MaxH),
     State;
 do_dispatch_rpc(ReplyTo, Subject, Payload, HC, _MaxH, HRefs, State) ->
     {_Pid, MRef} = spawn_monitor(fun() ->

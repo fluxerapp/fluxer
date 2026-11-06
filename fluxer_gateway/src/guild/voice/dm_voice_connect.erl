@@ -152,25 +152,26 @@ handle_new_connection(
     connect_request()
 ) -> {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
 check_e2ee_and_create(Req) ->
-    ChannelIdValue = maps:get(channel_id, Req),
     State = maps:get(state, Req),
-    DmJoinResult =
-        case guild_voice_e2ee:is_e2ee_enabled_for_dm() of
-            true ->
-                guild_voice_e2ee:check_join_allowed_dm(
-                    ChannelIdValue,
-                    maps:get(e2ee_capable, Req),
-                    maps:get(bot, Req),
-                    maps:get(voice_states, Req)
-                );
-            false ->
-                ok
-        end,
-    case DmJoinResult of
+    case check_dm_e2ee_join(Req) of
         {error, ErrorAtom2} ->
             {reply, gateway_errors:error(ErrorAtom2), State};
         ok ->
             dm_voice_token:get_dm_voice_token_and_create_state(Req)
+    end.
+
+-spec check_dm_e2ee_join(connect_request()) -> ok | {error, atom()}.
+check_dm_e2ee_join(Req) ->
+    case guild_voice_e2ee:is_e2ee_enabled_for_dm() of
+        true ->
+            guild_voice_e2ee:check_join_allowed_dm(
+                maps:get(channel_id, Req),
+                maps:get(e2ee_capable, Req),
+                maps:get(bot, Req),
+                maps:get(voice_states, Req)
+            );
+        false ->
+            ok
     end.
 
 -spec handle_existing_connection(
@@ -208,10 +209,27 @@ apply_existing_update(
         {error, ErrorAtom} ->
             {reply, gateway_errors:error(ErrorAtom), State};
         {ok, ParsedViewerKey} ->
-            commit_existing_update(Req#{
+            commit_checked_update(check_existing_move_e2ee(Req), Req#{
                 effective_session_id => EffSessId,
                 viewer_stream_keys => ParsedViewerKey
             })
+    end.
+
+-spec commit_checked_update(ok | {error, atom()}, connect_request()) ->
+    {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
+commit_checked_update({error, E2EEError}, #{state := State}) ->
+    {reply, gateway_errors:error(E2EEError), State};
+commit_checked_update(ok, Req) ->
+    commit_existing_update(Req).
+
+-spec check_existing_move_e2ee(connect_request()) -> ok | {error, atom()}.
+check_existing_move_e2ee(
+    #{channel_id := ChannelIdValue, existing_voice_state := ExistingVoiceState} = Req
+) ->
+    OldChannelId = maps:get(<<"channel_id">>, ExistingVoiceState, null),
+    case snowflake_id:equal(ChannelIdValue, OldChannelId) of
+        true -> ok;
+        false -> check_dm_e2ee_join(Req)
     end.
 
 -spec resolve_existing_viewer_stream_keys(term(), integer(), voice_state_map(), voice_state()) ->

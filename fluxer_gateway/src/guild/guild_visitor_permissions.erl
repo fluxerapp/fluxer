@@ -5,6 +5,7 @@
 
 -export([
     viewable_channel_map/2,
+    channel_permissions/2,
     strip_overwrites/2,
     guild_nsfw/1,
     channel_effective_nsfw/3
@@ -48,6 +49,29 @@ viewable_channel_map(State, Adult) ->
         #{},
         map_utils:ensure_list(guild_data_index_channels:channel_list(Data))
     ).
+
+-spec channel_permissions(map(), integer()) -> non_neg_integer().
+channel_permissions(State, ChannelId) ->
+    Index = guild_data_index_channels:channel_index(guild_data_index:ensure_data_map(State)),
+    case permission_channel(ChannelId, Index, State) of
+        Channel when is_map(Channel) -> visible_permissions(context(State, false), Channel);
+        undefined -> 0
+    end.
+
+-spec permission_channel(integer(), map(), map()) -> map() | undefined.
+permission_channel(ChannelId, Index, State) ->
+    case guild_thread_gate:thread(ChannelId, State) of
+        Thread when is_map(Thread) ->
+            parent_channel(Thread, Index);
+        _ ->
+            indexed_channel(maps:get(ChannelId, Index, undefined))
+    end.
+
+-spec indexed_channel(term()) -> map() | undefined.
+indexed_channel(Channel) when is_map(Channel) ->
+    Channel;
+indexed_channel(_) ->
+    undefined.
 
 -spec strip_overwrites(map(), integer()) -> map().
 strip_overwrites(Channel, GuildId) ->

@@ -18,11 +18,19 @@
 
 -define(EVICT_INTERVAL_MS, 60000).
 -define(DEFAULT_MAX_ENTRIES, 500000).
+-define(MAX_PENDING_JOBS, 4096).
+-define(PENDING_MAX_AGE_MS, 30000).
+-define(PENDING_DRAIN_INTERVAL_MS, 50).
 
 -define(CNT_WORKER_POOL, push_loss_worker_pool).
 
+-type pending_job() :: {integer(), map()}.
+
 -type state() :: #{
-    max_entries := non_neg_integer()
+    max_entries := non_neg_integer(),
+    pending := queue:queue(pending_job()),
+    pending_len := non_neg_integer(),
+    drain_scheduled := boolean()
 }.
 
 -spec start_link() -> {ok, pid()} | {error, term()} | ignore.
@@ -35,7 +43,16 @@ init([]) ->
     push_ets_cache:init(),
     init_worker_counter(),
     maybe_schedule_eviction(env_boolean(push_enabled)),
-    {ok, #{max_entries => ?DEFAULT_MAX_ENTRIES}}.
+    {ok, initial_state()}.
+
+-spec initial_state() -> state().
+initial_state() ->
+    #{
+        max_entries => ?DEFAULT_MAX_ENTRIES,
+        pending => queue:new(),
+        pending_len => 0,
+        drain_scheduled => false
+    }.
 
 -spec maybe_schedule_eviction(boolean()) -> ok.
 maybe_schedule_eviction(true) ->
@@ -46,7 +63,7 @@ maybe_schedule_eviction(false) ->
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
 handle_call(get_cache_stats, _From, State) ->
-    {reply, {ok, cache_stats_with_counters()}, State};
+    {reply, {ok, cache_stats_with_counters(State)}, State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -69,6 +86,8 @@ handle_info(evict_caches, State) ->
     }),
     schedule_eviction(),
     {noreply, State};
+handle_info(drain_pending, State) ->
+    {noreply, schedule_drain(drain_pending(State#{drain_scheduled := false}))};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -79,7 +98,7 @@ terminate(_Reason, _State) ->
 -spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) ->
     erlang:garbage_collect(),
-    {ok, State}.
+    {ok, maps:merge(initial_state(), State)}.
 
 -spec handle_message_create(map()) -> ok.
 handle_message_create(Params) ->
@@ -294,10 +313,59 @@ publish_eligible_users(
     ok.
 
 -spec handle_message_create_cast(map(), state()) -> {noreply, state()}.
+handle_message_create_cast(Params, #{pending_len := 0} = State) ->
+    case spawn_message_worker(Params) of
+        ok -> {noreply, State};
+        dropped -> {noreply, schedule_drain(enqueue_pending(Params, State))}
+    end;
 handle_message_create_cast(Params, State) ->
-    SpawnResult = maybe_spawn_push_worker(fun() -> do_handle_message_create(Params) end),
-    log_message_worker_drop(SpawnResult, Params),
-    {noreply, State}.
+    {noreply, schedule_drain(enqueue_pending(Params, State))}.
+
+-spec spawn_message_worker(map()) -> ok | dropped.
+spawn_message_worker(Params) ->
+    maybe_spawn_push_worker(fun() -> do_handle_message_create(Params) end).
+
+-spec enqueue_pending(map(), state()) -> state().
+enqueue_pending(Params, #{pending_len := Len} = State) when Len >= ?MAX_PENDING_JOBS ->
+    log_message_worker_drop(Params),
+    State;
+enqueue_pending(Params, #{pending := Pending, pending_len := Len} = State) ->
+    Job = {erlang:monotonic_time(millisecond), Params},
+    State#{pending := queue:in(Job, Pending), pending_len := Len + 1}.
+
+-spec drain_pending(state()) -> state().
+drain_pending(#{pending := Pending, pending_len := Len} = State) ->
+    case queue:out(Pending) of
+        {empty, _} ->
+            State#{pending := queue:new(), pending_len := 0};
+        {{value, Job}, Rest} ->
+            drain_job(Job, State#{pending := Rest, pending_len := Len - 1}, State)
+    end.
+
+-spec drain_job(pending_job(), state(), state()) -> state().
+drain_job({EnqueuedAt, Params}, Next, State) ->
+    case erlang:monotonic_time(millisecond) - EnqueuedAt > ?PENDING_MAX_AGE_MS of
+        true ->
+            log_message_worker_drop(Params),
+            drain_pending(Next);
+        false ->
+            drain_spawn(spawn_message_worker(Params), Next, State)
+    end.
+
+-spec drain_spawn(ok | dropped, state(), state()) -> state().
+drain_spawn(ok, Next, _State) ->
+    drain_pending(Next);
+drain_spawn(dropped, _Next, State) ->
+    State.
+
+-spec schedule_drain(state()) -> state().
+schedule_drain(#{pending_len := 0} = State) ->
+    State;
+schedule_drain(#{drain_scheduled := true} = State) ->
+    State;
+schedule_drain(State) ->
+    _ = erlang:send_after(?PENDING_DRAIN_INTERVAL_MS, self(), drain_pending),
+    State#{drain_scheduled := true}.
 
 -spec handle_clear_channel_notifications(integer(), integer(), integer(), state()) ->
     {noreply, state()}.
@@ -305,10 +373,8 @@ handle_clear_channel_notifications(UserId, ChannelId, MessageId, State) ->
     _ = push_job_publisher:publish_clear(UserId, ChannelId, MessageId),
     {noreply, State}.
 
--spec log_message_worker_drop(ok | dropped, map()) -> ok.
-log_message_worker_drop(ok, _Params) ->
-    ok;
-log_message_worker_drop(dropped, Params) ->
+-spec log_message_worker_drop(map()) -> ok.
+log_message_worker_drop(Params) ->
     push_worker_pool:bump_counter(?CNT_WORKER_POOL, 1),
     MessageData = maps:get(message_data, Params, #{}),
     log_worker_pool_drop(
@@ -327,10 +393,10 @@ log_worker_pool_drop(false, MessageId, ChannelId) ->
         message_id => MessageId, channel_id => ChannelId
     }).
 
--spec cache_stats_with_counters() -> map().
-cache_stats_with_counters() ->
+-spec cache_stats_with_counters(state()) -> map().
+cache_stats_with_counters(#{pending_len := PendingLen}) ->
     Base = maps:merge(push_ets_cache:cache_stats(), push_recipients:counters()),
-    maps:merge(Base, push_loss_counters()).
+    maps:merge(Base#{worker_pool_pending => PendingLen}, push_loss_counters()).
 
 -spec push_loss_counters() -> map().
 push_loss_counters() ->

@@ -7,12 +7,10 @@
     dispatch_channel_delete/4,
     dispatch_channel_create/4,
     send_member_list_sync/5,
-    maybe_ensure_parent_category_visible/5,
-    can_send_member_list/3
+    maybe_ensure_parent_category_visible/5
 ]).
 
 -type guild_state() :: map().
--type user_id() :: integer().
 -type channel_id() :: integer().
 
 -spec maybe_ensure_parent_category_visible(integer(), map(), map(), map(), integer()) -> map().
@@ -115,17 +113,20 @@ send_sync_for_list(SessionId, SessionData, SessionPid, ChannelId, GuildId, ListI
         [] ->
             ok;
         _ ->
-            SessionUserId = maps:get(user_id, SessionData),
             maybe_dispatch_sync(
-                SessionUserId, SessionPid, ChannelId, GuildId, ListId, Ranges, State
+                SessionData, SessionPid, ChannelId, GuildId, ListId, Ranges, State
             )
     end.
 
 -spec maybe_dispatch_sync(
-    user_id() | undefined, pid(), channel_id(), integer(), binary(), list(), guild_state()
+    map(), pid(), channel_id(), integer(), binary(), list(), guild_state()
 ) -> ok.
-maybe_dispatch_sync(SessionUserId, SessionPid, ChannelId, GuildId, ListId, Ranges, State) ->
-    case can_send_member_list(SessionUserId, ChannelId, State) of
+maybe_dispatch_sync(SessionData, SessionPid, ChannelId, GuildId, ListId, Ranges, State) ->
+    case
+        guild_member_list_connected:session_can_view_channel_members(
+            SessionData, ChannelId, State
+        )
+    of
         true ->
             SyncResponse = guild_member_list_read:build_sync_response(
                 GuildId, ListId, Ranges, State
@@ -138,17 +139,6 @@ maybe_dispatch_sync(SessionUserId, SessionPid, ChannelId, GuildId, ListId, Range
             );
         false ->
             ok
-    end.
-
--spec can_send_member_list(integer() | undefined, integer(), map()) -> boolean().
-can_send_member_list(UserId, ChannelId, State) ->
-    case snowflake_id(ChannelId) of
-        ResolvedChannelId when is_integer(UserId), is_integer(ResolvedChannelId) ->
-            guild_permissions_check:can_view_channel(
-                UserId, ResolvedChannelId, undefined, State
-            );
-        undefined ->
-            false
     end.
 
 -spec maybe_dispatch_channel_delete(channel_id(), pid(), guild_state(), integer()) -> ok.

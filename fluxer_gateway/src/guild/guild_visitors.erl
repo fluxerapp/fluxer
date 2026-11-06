@@ -16,6 +16,7 @@
     evict_ips/2,
     evict_disabled/1,
     evict_minors/1,
+    evict_unavailable/1,
     evict_all/2,
     promote_user/2,
     refresh_views/1
@@ -95,9 +96,7 @@ reject(Reason, State) ->
     ok | {reject, rejection()}.
 static_rejection(Operator, Adult, State) ->
     Features = guild_features(State),
-    Unavailable =
-        lists:member(<<"UNAVAILABLE_FOR_EVERYONE">>, Features) orelse
-            lists:member(<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>, Features),
+    Unavailable = is_unavailable(Features),
     Disabled = not Operator andalso not lists:member(<<"VISITS_ENABLED">>, Features),
     case {Unavailable, Disabled, Adult} of
         {true, _, _} -> {reject, unavailable};
@@ -224,6 +223,7 @@ remove_session(SessionId, State) ->
             State1 = guild_visitor_state:put(
                 Visitors#{
                     sessions => Remaining,
+                    views => remaining_views(Remaining, maps:get(views, Visitors)),
                     refs => maps:remove(MRef, maps:get(refs, Visitors)),
                     count => max(0, maps:get(count, Visitors) - 1),
                     by_user => decrement(UserId, maps:get(by_user, Visitors)),
@@ -233,6 +233,12 @@ remove_session(SessionId, State) ->
             ),
             maybe_mark_empty(State1)
     end.
+
+-spec remaining_views(map(), map()) -> map().
+remaining_views(Remaining, _Views) when map_size(Remaining) =:= 0 ->
+    #{};
+remaining_views(_Remaining, Views) ->
+    Views.
 
 -spec maybe_mark_empty(guild_data:guild_state()) -> guild_data:guild_state().
 maybe_mark_empty(State) ->
@@ -356,6 +362,18 @@ evict_minors(State) ->
             Victims = [S || S <- maps:values(sessions(State)), not maps:get(adult, S)],
             evict_sessions(Victims, age_restricted, State)
     end.
+
+-spec evict_unavailable(guild_data:guild_state()) -> guild_data:guild_state().
+evict_unavailable(State) ->
+    case is_unavailable(guild_features(State)) of
+        false -> State;
+        true -> evict_all(unavailable, State)
+    end.
+
+-spec is_unavailable([binary()]) -> boolean().
+is_unavailable(Features) ->
+    lists:member(<<"UNAVAILABLE_FOR_EVERYONE">>, Features) orelse
+        lists:member(<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>, Features).
 
 -spec evict_all(atom(), guild_data:guild_state()) -> guild_data:guild_state().
 evict_all(Reason, State) ->

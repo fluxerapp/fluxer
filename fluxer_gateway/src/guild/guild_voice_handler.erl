@@ -195,4 +195,10 @@ do_upsert_voice_state(ConnectionId, VoiceState, State) ->
             null -> maps:remove(ConnectionId, VoiceStates0);
             _ -> VoiceStates0#{ConnectionId => VoiceState}
         end,
-    State#{voice_states => VoiceStates}.
+    State1 = State#{voice_states => VoiceStates},
+    case voice_state_utils:voice_state_user_id(VoiceState) of
+        UserId when is_integer(UserId) ->
+            guild_voice_disconnect_user:cleanup_virtual_channel_access_for_user(UserId, State1);
+        _ ->
+            State1
+    end.

@@ -12,6 +12,19 @@
 
 -export_type([session_state/0, guild_id/0]).
 
+-define(MAX_UNCONNECTED_GUILD_SUBSCRIPTIONS, 10).
+-define(MAX_STORED_MEMBER_LIST_CHANNELS, 50).
+-define(STORED_SUBSCRIPTION_KEYS, [
+    <<"active">>,
+    <<"sync">>,
+    <<"typing">>,
+    <<"members">>,
+    <<"member_list_channels">>,
+    <<"thread_member_lists">>,
+    <<"threads">>,
+    <<"focused_channel_id">>
+]).
+
 -type session_state() :: session:session_state().
 -type guild_id() :: session:guild_id().
 
@@ -67,14 +80,77 @@ build_unavailable_guild_data(GuildId, false) ->
 store_guild_subscriptions(Data, State) when is_map(Data) ->
     case maps:get(<<"subscriptions">>, Data, undefined) of
         Subscriptions when is_map(Subscriptions) ->
-            State1 = merge_subscriptions(Subscriptions, State),
-            State2 = merge_active_guilds(Subscriptions, State1),
-            reconcile_active_member_list(Subscriptions, State2);
+            {Accepted, State0} = accept_subscriptions(Subscriptions, State),
+            State1 = merge_subscriptions(Accepted, State0),
+            State2 = merge_active_guilds(Accepted, State1),
+            reconcile_active_member_list(Accepted, State2);
         _ ->
             State
     end;
 store_guild_subscriptions(_Data, State) ->
     State.
+
+-spec accept_subscriptions(map(), session_state()) -> {map(), session_state()}.
+accept_subscriptions(Subscriptions, State) ->
+    Guilds = maps:get(guilds, State, #{}),
+    {Connected, Unconnected} = maps:fold(
+        fun(GuildIdBin, GuildSubData, Acc) ->
+            classify_subscription(GuildIdBin, GuildSubData, Guilds, Acc)
+        end,
+        {#{}, #{}},
+        Subscriptions
+    ),
+    accept_unconnected(Connected, Unconnected, Guilds, State).
+
+-spec classify_subscription(term(), term(), map(), {map(), map()}) -> {map(), map()}.
+classify_subscription(GuildIdBin, GuildSubData, Guilds, {Connected, Unconnected}) when
+    is_binary(GuildIdBin), is_map(GuildSubData)
+->
+    case validation:validate_snowflake(<<"guild_id">>, GuildIdBin) of
+        {ok, GuildId} ->
+            classify_guild(
+                maps:is_key(GuildId, Guilds),
+                GuildId,
+                GuildIdBin,
+                GuildSubData,
+                {Connected, Unconnected}
+            );
+        _ ->
+            {Connected, Unconnected}
+    end;
+classify_subscription(_, _, _, Acc) ->
+    Acc.
+
+-spec classify_guild(boolean(), guild_id(), binary(), map(), {map(), map()}) -> {map(), map()}.
+classify_guild(true, _GuildId, GuildIdBin, GuildSubData, {Connected, Unconnected}) ->
+    {Connected#{GuildIdBin => GuildSubData}, Unconnected};
+classify_guild(false, GuildId, GuildIdBin, GuildSubData, {Connected, Unconnected}) ->
+    {Connected, Unconnected#{GuildId => {GuildIdBin, GuildSubData}}}.
+
+-spec accept_unconnected(map(), #{guild_id() => {binary(), map()}}, map(), session_state()) ->
+    {map(), session_state()}.
+accept_unconnected(Connected, Unconnected, _Guilds, State) when map_size(Unconnected) =:= 0 ->
+    {Connected, State};
+accept_unconnected(Connected, Unconnected, Guilds, State) ->
+    Current = maps:get(guild_subscription_state, State, #{}),
+    Stored = [
+        GuildId
+     || GuildId <- maps:keys(Current),
+        not maps:is_key(GuildId, Guilds),
+        not maps:is_key(GuildId, Unconnected)
+    ],
+    case length(Stored) + map_size(Unconnected) =< ?MAX_UNCONNECTED_GUILD_SUBSCRIPTIONS of
+        true ->
+            {maps:merge(Connected, maps:from_list(maps:values(Unconnected))), State};
+        false ->
+            Kept = lists:sublist(
+                maps:values(Unconnected), ?MAX_UNCONNECTED_GUILD_SUBSCRIPTIONS
+            ),
+            {
+                maps:merge(Connected, maps:from_list(Kept)),
+                lists:foldl(fun remove_guild_subscription_state/2, State, Stored)
+            }
+    end.
 
 -spec reconcile_active_member_list(map(), session_state()) -> session_state().
 reconcile_active_member_list(Subscriptions, State) ->
@@ -192,10 +268,29 @@ merge_guild_subscription_data(Existing, Incoming) ->
 
 -spec merge_subscription_key(binary(), term(), map()) -> map().
 merge_subscription_key(<<"member_list_channels">>, Channels, Acc) when is_map(Channels) ->
-    ExistingChannels = maps:get(<<"member_list_channels">>, Acc, #{}),
-    Acc#{<<"member_list_channels">> => maps:merge(ExistingChannels, Channels)};
+    ExistingChannels =
+        case maps:get(<<"member_list_channels">>, Acc, #{}) of
+            Existing when is_map(Existing) -> Existing;
+            _ -> #{}
+        end,
+    Acc#{<<"member_list_channels">> => merge_member_list_channels(ExistingChannels, Channels)};
 merge_subscription_key(Key, Value, Acc) ->
-    Acc#{Key => Value}.
+    case lists:member(Key, ?STORED_SUBSCRIPTION_KEYS) of
+        true -> Acc#{Key => Value};
+        false -> Acc
+    end.
+
+-spec merge_member_list_channels(map(), map()) -> map().
+merge_member_list_channels(ExistingChannels, Channels) ->
+    Merged = channels_with_ranges(maps:merge(ExistingChannels, Channels)),
+    case map_size(Merged) > ?MAX_STORED_MEMBER_LIST_CHANNELS of
+        true -> channels_with_ranges(Channels);
+        false -> Merged
+    end.
+
+-spec channels_with_ranges(map()) -> map().
+channels_with_ranges(Channels) ->
+    maps:filter(fun(_ChannelId, Ranges) -> is_non_empty_ranges(Ranges) end, Channels).
 
 -spec merge_active_guilds(map(), session_state()) -> session_state().
 merge_active_guilds(Subscriptions, State) ->

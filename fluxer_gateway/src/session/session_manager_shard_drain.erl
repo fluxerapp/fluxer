@@ -237,7 +237,10 @@ build_user_data(UserDataMap) ->
         <<"mention_flags">> => map_utils:get_safe(UserDataMap, <<"mention_flags">>, undefined)
     },
     Normalized = user_utils:normalize_user(UserData0),
-    Normalized#{<<"is_staff">> => maps:get(<<"is_staff">>, UserDataMap, false)}.
+    Normalized#{
+        <<"is_staff">> => maps:get(<<"is_staff">>, UserDataMap, false),
+        <<"profile_restricted">> => user_utils:profile_restricted(UserDataMap)
+    }.
 
 -spec detach_custom_status(map() | null) -> map() | null.
 detach_custom_status(null) ->

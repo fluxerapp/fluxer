@@ -35,9 +35,10 @@ add_virtual_access(UserId, ChannelId, State) ->
         UserId, ChannelId, State#{virtual_channel_access => VirtualAccess#{UserId => Updated}}
     ),
     State2 = update_user_session_view_cache(UserId, ChannelId, add, State1),
-    mark_pending_join(
+    State3 = mark_pending_join(
         UserId, ChannelId, guild_member_list_engine_inputs:mark_stale(ChannelId, State2)
-    ).
+    ),
+    guild_dm_partners:reevaluate_user(UserId, State3).
 
 -spec clear_view_only(user_id(), channel_id(), guild_state()) -> guild_state().
 clear_view_only(UserId, ChannelId, State) ->
@@ -73,11 +74,14 @@ remove_virtual_access(UserId, ChannelId, State) ->
     guild_state().
 remove_channel_from_user(UserId, ChannelId, UserChannels, State0) ->
     Updated = sets:del_element(ChannelId, UserChannels),
+    ok = guild_viewable_channels_cache:invalidate_user(UserId, State0),
     State = guild_member_list_engine_inputs:mark_stale(ChannelId, State0),
-    case sets:size(Updated) of
-        0 -> remove_all_user_virtual_access(UserId, State);
-        _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)
-    end.
+    State1 =
+        case sets:size(Updated) of
+            0 -> remove_all_user_virtual_access(UserId, State);
+            _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)
+        end,
+    guild_dm_partners:reevaluate_user(UserId, State1).
 
 -spec remove_all_user_virtual_access(user_id(), guild_state()) -> guild_state().
 remove_all_user_virtual_access(UserId, State) ->

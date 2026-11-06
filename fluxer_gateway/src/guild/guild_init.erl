@@ -160,8 +160,11 @@ handle_reload(NewData, State) ->
     GuildIdBin = integer_to_binary(GuildId),
     EventData = NewGuild#{<<"guild_id">> => GuildIdBin},
     gateway_dispatch_relay:dispatch_many(Pids, guild_update, EventData, GuildId),
-    NewState = guild_maintenance:cleanup_removed_member_subscriptions(
+    NewState3 = guild_maintenance:cleanup_removed_member_subscriptions(
         OldData, NormalizedNewData, NewState2
+    ),
+    NewState = guild_dm_partners:reevaluate_all(
+        guild_visitor_dispatch:safe_after_dispatch(guild_update, EventData, State, NewState3)
     ),
     ok = guild_maintenance:maybe_put_permission_cache(NewState),
     {reply, ok, NewState}.

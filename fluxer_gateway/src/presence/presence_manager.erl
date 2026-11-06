@@ -151,14 +151,12 @@ handle_cast(_Msg, State) ->
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
-    presence_manager_cache:clean_by_pid(Pid),
     Shards = maps:get(shards, State),
     {noreply,
         maybe_restart_manager_shard(
             shard_utils:find_shard_by_ref(Ref, Shards), State
         )};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
-    presence_manager_cache:clean_by_pid(Pid),
     Shards = maps:get(shards, State),
     {noreply,
         maybe_restart_manager_shard(

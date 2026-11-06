@@ -85,10 +85,12 @@ handle_cast(_Unknown, State) ->
     State :: state().
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     demonitor(Ref, [flush]),
-    presence_manager_cache:clean_by_pid(Pid),
     Presences = maps:get(presences, State),
     ShardIndex = shard_index(State),
     RemovedUserIds = find_user_ids_by_pid(Pid, Presences),
+    lists:foreach(
+        fun(UserId) -> presence_manager_cache:clean(UserId, Pid) end, RemovedUserIds
+    ),
     demonitor_refs_for_pid(Pid, Presences),
     NewPresences = sanitize_presences(
         process_registry:cleanup_on_down(presence, Pid, Presences)
@@ -183,7 +185,8 @@ build_presence_data(Request) ->
         status => Status,
         friend_ids => maps:get(friend_ids, Request, []),
         group_dm_recipients => maps:get(group_dm_recipients, Request, #{}),
-        custom_status => maps:get(custom_status, Request, null)
+        custom_status => maps:get(custom_status, Request, null),
+        settings_invisible => maps:get(settings_invisible, Request, false)
     }.
 
 -spec register_new_presence(

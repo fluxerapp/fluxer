@@ -23,9 +23,26 @@ update_state(Event, EventData, State) ->
     StateWithUpdatedUser = StateWithUpdatedUser0#{data => Data},
     UpdatedData = update_data_for_event(Event, EventData, Data),
     UpdatedState = StateWithUpdatedUser#{data => UpdatedData},
+    ok = maybe_invalidate_viewable_channels_cache(Event, UpdatedState),
     maybe_latch_stale_engines(
         Event, handle_post_update(Event, EventData, StateWithUpdatedUser, UpdatedState)
     ).
+
+-spec maybe_invalidate_viewable_channels_cache(event(), guild_state()) -> ok.
+maybe_invalidate_viewable_channels_cache(Event, State) when
+    Event =:= guild_update;
+    Event =:= guild_role_create;
+    Event =:= guild_role_update;
+    Event =:= guild_role_update_bulk;
+    Event =:= guild_role_delete;
+    Event =:= channel_create;
+    Event =:= channel_update;
+    Event =:= channel_update_bulk;
+    Event =:= channel_delete
+->
+    guild_viewable_channels_cache:invalidate(State);
+maybe_invalidate_viewable_channels_cache(_Event, _State) ->
+    ok.
 
 -spec maybe_latch_stale_engines(event(), guild_state()) -> guild_state().
 maybe_latch_stale_engines(Event, State) when
@@ -104,7 +121,8 @@ update_channel_event(_Event, _EventData, Data) ->
 
 -spec handle_post_update(event(), event_data(), guild_state(), guild_state()) -> guild_state().
 handle_post_update(guild_update, _EventData, OldState, NewState) ->
-    guild_availability:handle_unavailability_transition(OldState, NewState);
+    State1 = guild_availability:handle_unavailability_transition(OldState, NewState),
+    resync_owner_visibility(OldState, State1);
 handle_post_update(guild_member_add, EventData, _OldState, NewState) ->
     guild_state_member:sync_member(EventData, NewState),
     UserId = guild_state_member:extract_user_id(EventData),
@@ -189,6 +207,25 @@ resync_channels_after_permission_change(ChanIds, OldState, NewState) ->
         ChanIds, Dispatched
     ),
     Dispatched.
+
+-spec resync_owner_visibility(guild_state(), guild_state()) -> guild_state().
+resync_owner_visibility(OldState, NewState) ->
+    case {guild_owner_id(OldState), guild_owner_id(NewState)} of
+        {Same, Same} ->
+            NewState;
+        {OldOwnerId, NewOwnerId} ->
+            guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_users(
+                [Id || Id <- [OldOwnerId, NewOwnerId], is_integer(Id), Id > 0],
+                OldState,
+                NewState
+            )
+    end.
+
+-spec guild_owner_id(guild_state()) -> user_id() | undefined.
+guild_owner_id(State) ->
+    Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
+    Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
+    snowflake_id:parse_optional(maps:get(<<"owner_id">>, Guild, undefined)).
 
 -spec post_update_member_remove(event_data(), guild_state()) -> guild_state().
 post_update_member_remove(EventData, NewState) ->

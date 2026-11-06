@@ -95,7 +95,7 @@ check_user_session_limit(
         user_id := UserId
     }
 ) ->
-    case map_utils:get_safe(UserDataMap, <<"bot">>, false) of
+    case is_bot_identify(UserDataMap) of
         true ->
             {
                 session_manager_shard_drain:validate_identify_sharding(
@@ -105,9 +105,16 @@ check_user_session_limit(
             };
         _ ->
             {
-                session_abuse_protection:check_user_session_limit(UserId),
-                <<"session_abuse_protection:check_user_session_limit/1">>
+                session_abuse_protection:reserve_user_session(UserId),
+                <<"session_abuse_protection:reserve_user_session/1">>
             }
+    end.
+
+-spec is_bot_identify(map()) -> boolean().
+is_bot_identify(UserDataMap) ->
+    case map_utils:get_safe(UserDataMap, <<"bot">>, false) of
+        true -> true;
+        _ -> false
     end.
 
 -spec handle_user_session_limit_result(ok | {error, term()}, map()) ->
@@ -118,7 +125,6 @@ handle_user_session_limit_result({error, sharding_required}, Ctx) ->
     {reply, {error, sharding_required}, maps:get(state, Ctx)};
 handle_user_session_limit_result(ok, Ctx) ->
     UserId = maps:get(user_id, Ctx),
-    session_abuse_protection:increment_user_sessions(UserId),
     BuildStartedAt = gateway_timings:start(),
     SessionData0 = session_manager_shard_drain:build_session_data(
         maps:get(data, Ctx),
@@ -142,15 +148,15 @@ handle_user_session_limit_result(ok, Ctx) ->
         maps:get(sessions, Ctx),
         maps:get(state, Ctx)
     ),
-    rollback_on_start_failure(StartResult, UserId).
+    ok = release_session_reservation(maps:get(user_data_map, Ctx), UserId),
+    StartResult.
 
--spec rollback_on_start_failure({reply, start_reply(), state()}, integer()) ->
-    {reply, start_reply(), state()}.
-rollback_on_start_failure({reply, {success, Pid}, _State} = Result, _UserId) when is_pid(Pid) ->
-    Result;
-rollback_on_start_failure({reply, {error, _Reason}, _State} = Result, UserId) ->
-    session_abuse_protection:decrement_user_sessions(UserId),
-    Result.
+-spec release_session_reservation(map(), integer()) -> ok.
+release_session_reservation(UserDataMap, UserId) ->
+    case is_bot_identify(UserDataMap) of
+        true -> ok;
+        false -> session_abuse_protection:decrement_user_sessions(UserId)
+    end.
 
 -spec validate_identify_payload(term()) ->
     {ok, map(), integer(), binary()} | {error, term()}.

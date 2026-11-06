@@ -50,6 +50,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(sweep_orphan_tables, State) ->
     _ = sweep_orphan_tables(),
+    _ = proc_lib:spawn(fun guild_client_circuit_breaker:prune_dead/0),
     {noreply, State#{sweep_timer => schedule_orphan_sweep()}};
 handle_info(_Info, State) ->
     {noreply, State}.

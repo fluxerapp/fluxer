@@ -40,7 +40,7 @@ handoff_to_owner(UserId, Pid, OwnerNode) ->
     case confirm_target_ready(UserId, OwnerNode) of
         true ->
             safe_stop_presence(Pid),
-            presence_manager_cache:clean_by_pid(Pid);
+            presence_manager_cache:clean(UserId, Pid);
         false ->
             ok
     end.

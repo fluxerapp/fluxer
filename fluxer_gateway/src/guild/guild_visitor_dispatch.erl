@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
-    after_dispatch/4,
+    safe_after_dispatch/4,
     channel_visible/3
 ]).
 
@@ -33,6 +33,8 @@
 -type guild_state() :: map().
 -type session() :: guild_visitors:visitor_session().
 -type delivery() :: {atom(), pid(), map()}.
+
+-export_type([guild_state/0]).
 
 -spec allowed(atom()) -> boolean().
 allowed(Event) ->
@@ -76,6 +78,33 @@ after_dispatch(Event, Data, OldState, State) ->
         _ -> visitor_dispatch(Event, Data, OldState, State)
     end.
 
+-spec safe_after_dispatch(atom(), map(), guild_state(), guild_state()) -> guild_state().
+safe_after_dispatch(Event, Data, OldState, NewState) ->
+    try
+        after_dispatch(Event, Data, OldState, NewState)
+    catch
+        Class:Reason:Stack ->
+            logger:error(
+                "guild_visitor_dispatch_failed: guild_id=~p event=~p class=~p reason=~p "
+                "stack=~p",
+                [maps:get(id, NewState, undefined), Event, Class, Reason, Stack]
+            ),
+            evict_all_after_failure(NewState)
+    end.
+
+-spec evict_all_after_failure(guild_state()) -> guild_state().
+evict_all_after_failure(State) ->
+    try
+        guild_visitors:evict_all(error, State)
+    catch
+        Class:Reason:Stack ->
+            logger:error(
+                "guild_visitor_eviction_failed: guild_id=~p class=~p reason=~p stack=~p",
+                [maps:get(id, State, undefined), Class, Reason, Stack]
+            ),
+            State
+    end.
+
 -spec visitor_dispatch(atom(), map(), guild_state(), guild_state()) -> guild_state().
 visitor_dispatch(guild_delete, _Data, _OldState, State) ->
     guild_visitors:evict_all(removed, State);
@@ -86,8 +115,12 @@ visitor_dispatch(Event, Data0, OldState, State0) ->
     },
     State1 =
         case Event of
-            guild_update -> guild_visitors:evict_minors(guild_visitors:evict_disabled(State0));
-            _ -> State0
+            guild_update ->
+                guild_visitors:evict_minors(
+                    guild_visitors:evict_disabled(guild_visitors:evict_unavailable(State0))
+                );
+            _ ->
+                State0
         end,
     {ViewDeliveries, State2} = refresh_for(Event, Data, OldState, State1),
     Deliveries =
@@ -220,14 +253,58 @@ event_deliveries(Event, Data, State) ->
 focused_deliveries(Event, Payload, Data, State) ->
     case snowflake_id:parse_maybe(maps:get(<<"channel_id">>, Data, undefined)) of
         ChannelId when is_integer(ChannelId) ->
-            [
-                {Event, Pid, mask_for(S, Event, Payload, State)}
-             || #{pid := Pid} = S <- guild_visitors:focused_sessions(ChannelId, State),
-                channel_visible(S, ChannelId, State)
-            ];
+            focused_channel_deliveries(Event, Payload, Data, ChannelId, State);
         _ ->
             []
     end.
+
+-spec focused_channel_deliveries(atom(), map(), map(), integer(), guild_state()) ->
+    [delivery()].
+focused_channel_deliveries(Event, Payload, Data, ChannelId, State) ->
+    Sessions = [
+        S
+     || S <- guild_visitors:focused_sessions(ChannelId, State),
+        channel_visible(S, ChannelId, State)
+    ],
+    case Sessions =/= [] andalso message_readable(Event, ChannelId, Data, State) of
+        true -> visible_deliveries(Event, Payload, Sessions, State);
+        false -> []
+    end.
+
+-spec visible_deliveries(atom(), map(), [map()], guild_state()) -> [delivery()].
+visible_deliveries(Event, Payload, Sessions, State) ->
+    PermissionsFor = fun(ParentId) ->
+        guild_visitor_permissions:channel_permissions(State, ParentId)
+    end,
+    Visible = guild_thread_payload:hide_unreadable_source(
+        Event, Payload, PermissionsFor, State
+    ),
+    [{Event, Pid, mask_for(S, Event, Visible, State)} || #{pid := Pid} = S <- Sessions].
+
+-spec message_readable(atom(), integer(), map(), guild_state()) -> boolean().
+message_readable(Event, ChannelId, Data, State) ->
+    case guild_dispatch_filter:is_message_access_filtered_event(Event) of
+        false ->
+            true;
+        true ->
+            message_id_readable(message_id(Data), ChannelId, State)
+    end.
+
+-spec message_id_readable(integer() | undefined, integer(), guild_state()) -> boolean().
+message_id_readable(undefined, _ChannelId, _State) ->
+    false;
+message_id_readable(MessageId, ChannelId, State) ->
+    guild_permissions_check:can_access_message_by_permissions(
+        guild_visitor_permissions:channel_permissions(State, ChannelId),
+        integer_to_binary(MessageId),
+        State
+    ).
+
+-spec message_id(map()) -> integer() | undefined.
+message_id(#{<<"message_id">> := MessageId}) ->
+    snowflake_id:parse_maybe(MessageId);
+message_id(Data) ->
+    snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)).
 
 -spec scoped_deliveries(
     guild | channel | pins | thread | none, atom(), map(), map(), guild_state()

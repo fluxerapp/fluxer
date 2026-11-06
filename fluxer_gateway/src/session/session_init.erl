@@ -223,6 +223,7 @@ extract_core_fields(
         user_id => UserId,
         user_data => UserData,
         custom_status => maps:get(custom_status, D, null),
+        settings_invisible => maps:get(settings_invisible, D, false),
         version => Version,
         token_hash => TokenHash,
         auth_session_id_hash => AuthSessionIdHash,

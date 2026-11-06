@@ -65,7 +65,8 @@ build_presence_request(State) when is_map(State) ->
         status => maps:get(status, State),
         friend_ids => FriendIds,
         group_dm_recipients => GroupDmRecipients,
-        custom_status => maps:get(custom_status, State, null)
+        custom_status => maps:get(custom_status, State, null),
+        settings_invisible => maps:get(settings_invisible, State, false)
     }.
 
 -spec do_session_connect(pid(), attempt(), session_state()) ->

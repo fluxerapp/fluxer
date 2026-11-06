@@ -24,17 +24,31 @@ schedule_passive_sync(State) ->
 handle_passive_sync(State) ->
     GuildId = maps:get(id, State),
     PassiveSessions = large_guild_passive_sessions(GuildId, State),
-    ok = maybe_spawn_passive_updates(PassiveSessions, State),
-    _ = schedule_passive_sync(State),
-    {noreply, State}.
+    State1 = maybe_spawn_passive_updates(PassiveSessions, State),
+    _ = schedule_passive_sync(State1),
+    {noreply, State1}.
 
--spec maybe_spawn_passive_updates(map(), guild_state()) -> ok.
-maybe_spawn_passive_updates(PassiveSessions, _State) when map_size(PassiveSessions) =:= 0 ->
-    ok;
+-spec maybe_spawn_passive_updates(map(), guild_state()) -> guild_state().
+maybe_spawn_passive_updates(PassiveSessions, State) when map_size(PassiveSessions) =:= 0 ->
+    State;
 maybe_spawn_passive_updates(PassiveSessions, State) ->
+    case passive_worker_running(maps:get(passive_sync_worker, State, undefined)) of
+        true ->
+            State;
+        false ->
+            State#{passive_sync_worker => spawn_passive_worker(PassiveSessions, State)}
+    end.
+
+-spec spawn_passive_worker(map(), guild_state()) -> pid().
+spawn_passive_worker(PassiveSessions, State) ->
     SyncState = passive_sync_state(State, PassiveSessions),
-    _ = spawn(fun() -> send_passive_updates(PassiveSessions, SyncState) end),
-    ok.
+    spawn(fun() -> send_passive_updates(PassiveSessions, SyncState) end).
+
+-spec passive_worker_running(term()) -> boolean().
+passive_worker_running(Pid) when is_pid(Pid), node(Pid) =:= node() ->
+    erlang:is_process_alive(Pid);
+passive_worker_running(_) ->
+    false.
 
 -spec large_guild_passive_sessions(integer(), guild_state()) -> map().
 large_guild_passive_sessions(GuildId, State) ->
@@ -145,7 +159,10 @@ compute_passive_msg_diffs(Channels, UserId, Member, State, RegState) ->
     PreviousLastMessageIds = maps:get(previous_passive_updates, RegState, #{}),
     #{
         delta => compute_delta(CurrentLastMessageIds, PreviousLastMessageIds),
-        previous_last_message_ids => PreviousLastMessageIds
+        current_last_message_ids => CurrentLastMessageIds,
+        previous_last_message_ids => maps:with(
+            maps:keys(CurrentLastMessageIds), PreviousLastMessageIds
+        )
     }.
 
 -spec compute_passive_voice_diffs(integer(), integer(), guild_state(), map()) -> map().
@@ -178,7 +195,7 @@ dispatch_passive_diffs(SessionId, GuildId, Pid, Diffs) ->
 send_and_store_passive(SessionId, GuildId, Pid, Diffs) ->
     #{
         delta := Delta,
-        previous_last_message_ids := PrevMsgIds,
+        current_last_message_ids := CurMsgIds,
         voice_state_updates := VoiceUpdates,
         current_voice_states := CurVoice
     } = Diffs,
@@ -186,9 +203,8 @@ send_and_store_passive(SessionId, GuildId, Pid, Diffs) ->
         GuildId, Delta, VoiceUpdates
     ),
     gateway_dispatch_relay:dispatch(Pid, passive_updates, EventData, GuildId),
-    MergedMsgIds = maps:merge(PrevMsgIds, Delta),
     passive_sync_registry:store(SessionId, GuildId, #{
-        previous_passive_updates => MergedMsgIds,
+        previous_passive_updates => CurMsgIds,
         previous_passive_channel_versions => #{},
         previous_passive_voice_states => CurVoice
     }),

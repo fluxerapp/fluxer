@@ -47,7 +47,7 @@ relay_or_direct_many(SessionPids, Event, Payload) ->
 relay_many_to_shards(SessionPids, Event, Payload, Workers, Count) ->
     ShardBuckets = build_shard_buckets(SessionPids, Count),
     Deferred = deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers, []),
-    deliver_deferred_shards(Deferred, Event, Payload).
+    deliver_deferred_shards(Deferred, Event, Payload, claim_deadline()).
 
 -spec build_shard_buckets([pid()], pos_integer()) -> tuple().
 build_shard_buckets(SessionPids, Count) ->
@@ -92,12 +92,12 @@ deliver_shard(Generation, Pids, Event, Payload, Deferred) ->
         full -> [{Generation, Pids} | Deferred]
     end.
 
--spec deliver_deferred_shards(deferred(), atom(), term()) -> ok.
-deliver_deferred_shards([], _Event, _Payload) ->
+-spec deliver_deferred_shards(deferred(), atom(), term(), integer()) -> ok.
+deliver_deferred_shards([], _Event, _Payload, _Deadline) ->
     ok;
-deliver_deferred_shards([{Generation, Pids} | Rest], Event, Payload) ->
-    enqueue(Generation, {deliver_many, Pids, Event, Payload}),
-    deliver_deferred_shards(Rest, Event, Payload).
+deliver_deferred_shards([{Generation, Pids} | Rest], Event, Payload, Deadline) ->
+    enqueue(Generation, {deliver_many, Pids, Event, Payload}, Deadline),
+    deliver_deferred_shards(Rest, Event, Payload, Deadline).
 
 -spec relay_or_direct(pid(), atom(), term()) -> ok.
 relay_or_direct(SessionPid, Event, Payload) ->
@@ -107,7 +107,7 @@ relay_or_direct(SessionPid, Event, Payload) ->
             gateway_dispatch_relay:dispatch_direct(SessionPid, Event, Payload);
         Count ->
             Generation = generation(erlang:phash2(SessionPid, Count) + 1, Workers),
-            enqueue(Generation, {deliver, SessionPid, Event, Payload})
+            enqueue(Generation, {deliver, SessionPid, Event, Payload}, claim_deadline())
     end.
 
 -spec generation(pos_integer(), tuple()) -> generation().
@@ -121,11 +121,11 @@ worker_generation(Slot, Worker) when is_pid(Worker) ->
         _ -> {Worker, unaccounted}
     end.
 
--spec enqueue(generation(), term()) -> ok.
-enqueue(Generation, Msg) ->
+-spec enqueue(generation(), term(), integer()) -> ok.
+enqueue(Generation, Msg, Deadline) ->
     case enqueue_async(Generation, Msg) of
         ok -> ok;
-        full -> enqueue_blocking(Generation, Msg, claim_deadline())
+        full -> enqueue_blocking(Generation, Msg, Deadline)
     end.
 
 -spec enqueue_blocking(generation(), term(), integer()) -> ok.

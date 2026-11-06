@@ -323,7 +323,6 @@ extract_stored_status(UserSettings) ->
 select_initial_status(PresenceStatus, StoredStatus) ->
     case {normalize_status(PresenceStatus), StoredStatus} of
         {undefined, Stored} -> Stored;
-        {<<"unknown">>, Stored} -> Stored;
         {<<"online">>, Stored} when Stored =/= <<"online">> -> Stored;
         {Presence, _} -> Presence
     end.
@@ -333,7 +332,12 @@ normalize_status(undefined) ->
     undefined;
 normalize_status(null) ->
     undefined;
-normalize_status(Status) when is_binary(Status) -> Status;
+normalize_status(Status) when is_binary(Status) ->
+    try constants:status_type_atom(Status) of
+        Value when is_atom(Value) -> Status
+    catch
+        error:function_clause -> undefined
+    end;
 normalize_status(Status) when is_atom(Status) ->
     try constants:status_type_atom(Status) of
         Value when is_binary(Value) -> Value

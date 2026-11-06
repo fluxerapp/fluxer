@@ -74,24 +74,16 @@ shares_viewable_channel(UserId, ChannelMap, State) ->
 shares_any_channel(UserId, Member, ChannelMap, Channels, State) ->
     lists:any(
         fun(Channel) ->
-            shares_channel_or_parent(Channel, UserId, Member, ChannelMap, Channels, State)
+            shares_channel(Channel, UserId, Member, ChannelMap, State)
         end,
         Channels
     ).
 
--spec shares_channel_or_parent(map(), user_id(), map(), map(), [map()], guild_state()) ->
-    boolean().
-shares_channel_or_parent(Channel, UserId, Member, ChannelMap, Channels, State) ->
-    channel_viewable(UserId, Member, Channel, State) andalso
-        (maps:is_key(channel_id(Channel), ChannelMap) orelse
-            shared_parent(channel_parent_id(Channel), ChannelMap, Channels)).
-
--spec shared_parent(channel_id() | undefined, map(), [map()]) -> boolean().
-shared_parent(undefined, _ChannelMap, _Channels) ->
-    false;
-shared_parent(ParentId, ChannelMap, Channels) ->
-    maps:is_key(ParentId, ChannelMap) andalso
-        lists:any(fun(C) -> channel_id(C) =:= ParentId end, Channels).
+-spec shares_channel(map(), user_id(), map(), map(), guild_state()) -> boolean().
+shares_channel(Channel, UserId, Member, ChannelMap, State) ->
+    not channel_types:is_category(maps:get(<<"type">>, Channel, undefined)) andalso
+        maps:is_key(channel_id(Channel), ChannelMap) andalso
+        channel_viewable(UserId, Member, Channel, State).
 
 -spec collect_missing_parent_ids([map()], map()) -> [channel_id()].
 collect_missing_parent_ids(Channels, MissingParents) ->

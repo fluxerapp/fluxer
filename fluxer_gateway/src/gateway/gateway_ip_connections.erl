@@ -78,7 +78,7 @@ decrement(PeerIP) ->
 update_connection_count(PeerIP) ->
     case ets:update_counter(?CONNECTION_TABLE, PeerIP, {2, -1, 0, 0}) of
         0 ->
-            ets:delete(?CONNECTION_TABLE, PeerIP),
+            ets:delete_object(?CONNECTION_TABLE, {PeerIP, 0}),
             ok;
         _ ->
             ok
