@@ -4,7 +4,7 @@ import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {GuildMFALevel, getEffectiveGuildMfaLevel} from '@fluxer/constants/src/GuildConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
@@ -25,11 +25,13 @@ const ELEVATED_MFA_PERMISSIONS =
 
 export async function createGuildMfaEnforcer(params: {
 	userRepository: UserRepository;
-	guildData: Pick<GuildResponse, 'mfa_level' | 'owner_id'>;
+	guildData: Pick<GuildResponse, 'mfa_level' | 'owner_id' | 'features'>;
 	userId: UserID;
 }): Promise<(permission: bigint) => void> {
 	const {userRepository, guildData, userId} = params;
-	const requiresGuildMfa = guildData.mfa_level === GuildMFALevel.ELEVATED && guildData.owner_id !== userId.toString();
+	const requiresGuildMfa =
+		getEffectiveGuildMfaLevel(guildData.mfa_level, guildData.features) === GuildMFALevel.ELEVATED &&
+		guildData.owner_id !== userId.toString();
 	let actorLacksMfa = false;
 	if (requiresGuildMfa) {
 		const actor = await userRepository.findUnique(userId);

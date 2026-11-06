@@ -41217,6 +41217,11 @@ msgstr "ยืนยันตัวตนไม่สำเร็จ"
 msgid "Verified & partnered community"
 msgstr "คอมมูนิตี้ที่ยืนยันแล้วและเป็นพาร์ทเนอร์"
 
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "ชุมชนที่ยืนยันแล้วและชุมชนพาร์ทเนอร์กำหนดให้ผู้ดูแลต้องใช้ 2FA เสมอ"
+
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified community"

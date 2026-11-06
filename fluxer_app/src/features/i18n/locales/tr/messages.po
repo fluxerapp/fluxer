@@ -41217,6 +41217,11 @@ msgstr "Doğrulama başarısız oldu"
 msgid "Verified & partnered community"
 msgstr "Onaylı ve iş ortağı topluluğu"
 
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "Doğrulanmış ve partner topluluklar moderatörler için her zaman 2FA ister"
+
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified community"

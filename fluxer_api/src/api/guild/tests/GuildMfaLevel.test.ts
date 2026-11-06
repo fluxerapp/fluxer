@@ -12,7 +12,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {GuildFeatures, GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -160,4 +160,32 @@ describe('Guild MFA level', () => {
 			Permissions.SEND_MESSAGES.toString(),
 		);
 	});
+	for (const feature of [GuildFeatures.VERIFIED, GuildFeatures.PARTNERED]) {
+		it(`always requires 2FA for moderators in a ${feature} community`, async () => {
+			const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
+			const member = members[0]!;
+			const channel = channels[0]!;
+			const managerRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Managers',
+				permissions: (Permissions.MANAGE_ROLES | Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
+			});
+			const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Target'});
+			await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
+			await createBuilder(harness, '')
+				.post(`/test/guilds/${guild.id}/features`)
+				.body({add_features: [feature]})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const fetched = await createBuilder<GuildResponse>(harness, owner.token)
+				.get(`/guilds/${guild.id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(fetched.mfa_level).toBe(GuildMFALevel.ELEVATED);
+			await createBuilder(harness, member.token)
+				.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+				.body({type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+				.execute();
+		});
+	}
 });

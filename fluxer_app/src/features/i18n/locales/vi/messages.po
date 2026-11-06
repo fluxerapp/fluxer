@@ -41217,6 +41217,11 @@ msgstr "Xác minh không thành công"
 msgid "Verified & partnered community"
 msgstr "Cộng đồng đối tác đã xác minh"
 
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "Cộng đồng đã xác minh và cộng đồng đối tác luôn yêu cầu người điều hành bật 2FA"
+
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified community"

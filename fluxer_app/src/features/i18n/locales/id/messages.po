@@ -41217,6 +41217,11 @@ msgstr "Verifikasi gagal"
 msgid "Verified & partnered community"
 msgstr "Komunitas terverifikasi & bermitra"
 
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "Komunitas terverifikasi dan mitra selalu mewajibkan 2FA untuk moderator"
+
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified community"
