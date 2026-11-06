@@ -30,6 +30,7 @@ use crate::{
     },
 };
 use maud::{Markup, html};
+use std::collections::HashSet;
 
 pub struct UserListParams {
     pub q: String,
@@ -156,14 +157,17 @@ pub fn users_list_page(config: &AdminConfig, auth: &AuthContext, view: UserListV
     admin_layout(config, auth, "Users", "users", None, content)
 }
 
+const MAX_ID_LOOKUP: usize = 500;
+
 fn parse_ids_query(ids_query: &str) -> Vec<String> {
+    let mut seen = HashSet::new();
     let mut ids = Vec::new();
     for raw in ids_query.split(',') {
+        if ids.len() >= MAX_ID_LOOKUP {
+            break;
+        }
         let id = raw.trim();
-        if !id.is_empty()
-            && id.chars().all(|ch| ch.is_ascii_digit())
-            && !ids.iter().any(|v| v == id)
-        {
+        if !id.is_empty() && id.chars().all(|ch| ch.is_ascii_digit()) && seen.insert(id) {
             ids.push(id.to_owned());
         }
     }

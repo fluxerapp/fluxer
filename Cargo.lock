@@ -1821,6 +1821,8 @@ dependencies = [
  "fluxer_common",
  "futures",
  "hmac",
+ "hyper",
+ "hyper-util",
  "p256",
  "percent-encoding",
  "rand 0.10.3",
@@ -1831,6 +1833,7 @@ dependencies = [
  "sha2 0.11.1",
  "thiserror",
  "tokio",
+ "tower-service",
  "tracing",
  "url",
 ]

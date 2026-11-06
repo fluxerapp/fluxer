@@ -3,7 +3,7 @@
 use axum::{
     body::{Body, to_bytes},
     extract::{Request, State},
-    http::{HeaderValue, Method, StatusCode, header},
+    http::{HeaderMap, HeaderValue, Method, StatusCode, header},
     middleware::Next,
     response::{IntoResponse, Response},
 };
@@ -49,7 +49,7 @@ pub async fn csrf_protection(
             .iter()
             .any(|suffix| path.ends_with(suffix));
         if !is_ignored {
-            if !is_same_site_request(&request, config.admin_origin().as_deref()) {
+            if !is_same_site_request(request.headers(), config.admin_origin().as_deref()) {
                 return StatusCode::FORBIDDEN.into_response();
             }
             let header_token = extract_csrf_header(&request);
@@ -166,16 +166,14 @@ async fn extract_csrf_from_form_body(
     Ok((request, token))
 }
 
-fn is_same_site_request(request: &Request, admin_origin: Option<&str>) -> bool {
-    if let Some(site) = request
-        .headers()
+pub(crate) fn is_same_site_request(headers: &HeaderMap, admin_origin: Option<&str>) -> bool {
+    if let Some(site) = headers
         .get("sec-fetch-site")
         .and_then(|value| value.to_str().ok())
     {
         return matches!(site, "same-origin" | "same-site" | "none");
     }
-    match request
-        .headers()
+    match headers
         .get(header::ORIGIN)
         .and_then(|value| value.to_str().ok())
     {

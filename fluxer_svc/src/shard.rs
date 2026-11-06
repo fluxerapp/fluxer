@@ -13,6 +13,7 @@ use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
 const MAX_SHARD_REQUEST_BYTES: usize = 2 * 1024 * 1024;
+const MAX_IN_FLIGHT_REQUEST_BYTES: usize = 32 * 1024 * 1024;
 const SHARD_DRAIN_LINGER: Duration = Duration::from_millis(500);
 const SHARD_ANNOUNCE_TIMEOUT: Duration = Duration::from_secs(1);
 const DRAIN_IDLE_UNSUBSCRIBE: Duration = Duration::from_millis(250);
@@ -237,6 +238,7 @@ where
     let health_addr = config.listen_addr;
     let is_serving = Arc::new(AtomicBool::new(false));
     let request_permits = Arc::new(Semaphore::new(config.max_concurrent_requests));
+    let request_byte_budget = Arc::new(Semaphore::new(MAX_IN_FLIGHT_REQUEST_BYTES));
 
     let mut tasks = JoinSet::new();
 
@@ -336,9 +338,26 @@ where
                             }
                             Err(TryAcquireError::Closed) => return anyhow::Ok(()),
                         };
+                        let request_bytes =
+                            msg.payload().len().clamp(1, MAX_SHARD_REQUEST_BYTES) as u32;
+                        let byte_permit = match request_byte_budget
+                            .clone()
+                            .try_acquire_many_owned(request_bytes)
+                        {
+                            Ok(permit) => permit,
+                            Err(TryAcquireError::NoPermits) => {
+                                debug!(request_bytes, "shedding request, byte budget exhausted");
+                                metrics.record_request();
+                                metrics.record_request_error();
+                                reply_json_error(&msg, &transport, "overloaded").await;
+                                continue;
+                            }
+                            Err(TryAcquireError::Closed) => return anyhow::Ok(()),
+                        };
                         let request = handle(msg);
                         requests.spawn(async move {
                             let _permit = permit;
+                            let _byte_permit = byte_permit;
                             request.await;
                         });
                     }

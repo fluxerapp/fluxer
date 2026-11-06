@@ -9,19 +9,32 @@ use crate::rpc::RpcClient;
 use crate::tokens::TokenCache;
 use crate::vendor;
 use axum::Router;
+use axum::extract::ConnectInfo;
 use fluxer_common::secret::SecretString;
 use fluxer_svc::shutdown::{DEFAULT_DRAIN_TIMEOUT, drain_with_timeout, wait_for_shutdown};
 use fluxer_svc::transport::NatsTransport;
+use hyper::body::Incoming;
+use hyper::service::service_fn;
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn::auto::Builder;
+use std::io;
 use std::net::SocketAddr;
+use std::pin::pin;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use tokio::net::TcpListener;
-use tokio::sync::{oneshot, watch};
+use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::{Notify, oneshot, watch};
 use tokio::task::JoinHandle;
-use tracing::info;
+use tokio::time::{Instant, sleep};
+use tower_service::Service;
+use tracing::{error, info};
 
 const JOB_DRAIN_TIMEOUT: Duration = Duration::from_secs(25);
+const FIRST_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+const CONNECTION_IDLE_TIMEOUT: Duration = Duration::from_secs(120);
+const CONNECTION_CLOSE_GRACE: Duration = Duration::from_secs(15);
+const ACCEPT_ERROR_PAUSE: Duration = Duration::from_secs(1);
 
 pub struct Sidecar {
     metrics: Arc<Metrics>,
@@ -48,7 +61,7 @@ impl Sidecar {
 
 pub struct Serving {
     stop: oneshot::Sender<()>,
-    served: JoinHandle<std::io::Result<()>>,
+    served: JoinHandle<()>,
 }
 
 impl Serving {
@@ -67,17 +80,99 @@ impl Serving {
 pub async fn serve(addr: SocketAddr, router: Router) -> anyhow::Result<Serving> {
     let listener = TcpListener::bind(addr).await?;
     let (stop, stopped) = oneshot::channel::<()>();
-    let served = tokio::spawn(async move {
-        axum::serve(
-            listener,
-            router.into_make_service_with_connect_info::<SocketAddr>(),
-        )
-        .with_graceful_shutdown(async move {
-            let _ = stopped.await;
-        })
-        .await
-    });
+    let served = tokio::spawn(accept_connections(listener, router, stopped));
     Ok(Serving { stop, served })
+}
+
+async fn accept_connections(
+    listener: TcpListener,
+    router: Router,
+    mut stopped: oneshot::Receiver<()>,
+) {
+    let stopping = watch::Sender::new(false);
+    let (open_tx, open_rx) = watch::channel(());
+    loop {
+        let (stream, remote_addr) = tokio::select! {
+            accepted = listener.accept() => match accepted {
+                Ok(accepted) => accepted,
+                Err(err) => {
+                    pause_after_accept_error(err).await;
+                    continue;
+                }
+            },
+            _ = &mut stopped => break,
+        };
+        tokio::spawn(serve_connection(
+            stream,
+            remote_addr,
+            router.clone(),
+            stopping.subscribe(),
+            open_rx.clone(),
+        ));
+    }
+    stopping.send_replace(true);
+    drop(open_rx);
+    drop(listener);
+    open_tx.closed().await;
+}
+
+async fn pause_after_accept_error(err: io::Error) {
+    if matches!(
+        err.kind(),
+        io::ErrorKind::ConnectionRefused
+            | io::ErrorKind::ConnectionAborted
+            | io::ErrorKind::ConnectionReset
+    ) {
+        return;
+    }
+    error!(error = %err, "accept error");
+    sleep(ACCEPT_ERROR_PAUSE).await;
+}
+
+async fn serve_connection(
+    stream: TcpStream,
+    remote_addr: SocketAddr,
+    router: Router,
+    mut stopping: watch::Receiver<bool>,
+    _open: watch::Receiver<()>,
+) {
+    let activity = Arc::new(Notify::new());
+    let service = service_fn({
+        let activity = Arc::clone(&activity);
+        move |mut req: hyper::Request<Incoming>| {
+            activity.notify_one();
+            req.extensions_mut().insert(ConnectInfo(remote_addr));
+            router.clone().call(req)
+        }
+    });
+    let mut builder = Builder::new(TokioExecutor::new());
+    builder.http2().enable_connect_protocol();
+    let mut conn = pin!(builder.serve_connection_with_upgrades(TokioIo::new(stream), service));
+    let mut deadline = pin!(sleep(FIRST_REQUEST_TIMEOUT));
+    let mut served_request = false;
+    let mut closing = false;
+    loop {
+        tokio::select! {
+            _ = conn.as_mut() => break,
+            _ = activity.notified(), if !closing => {
+                served_request = true;
+                deadline.as_mut().reset(Instant::now() + CONNECTION_IDLE_TIMEOUT);
+            }
+            _ = stopping.wait_for(|stopping| *stopping), if !closing => {
+                conn.as_mut().graceful_shutdown();
+                closing = true;
+                deadline.as_mut().reset(Instant::now() + CONNECTION_CLOSE_GRACE);
+            }
+            _ = deadline.as_mut() => {
+                if closing || !served_request {
+                    break;
+                }
+                conn.as_mut().graceful_shutdown();
+                closing = true;
+                deadline.as_mut().reset(Instant::now() + CONNECTION_CLOSE_GRACE);
+            }
+        }
+    }
 }
 
 pub struct AppState {

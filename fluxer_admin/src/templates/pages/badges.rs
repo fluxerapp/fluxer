@@ -32,6 +32,7 @@ struct BadgePermissions {
 }
 
 pub const BADGE_PAGE_SIZE: u32 = 50;
+const MAX_BADGE_TRAIL: usize = 100;
 
 #[derive(Clone, Debug, Default)]
 pub struct BadgePageState {
@@ -64,12 +65,17 @@ impl BadgePageState {
                 .filter(|query| !query.is_empty())
                 .map(|query| query.chars().take(64).collect()),
             after: after.and_then(cursor),
-            trail: trail
-                .unwrap_or("")
-                .split(',')
-                .filter(|entry| !entry.is_empty())
-                .map(cursor)
-                .collect(),
+            trail: {
+                let mut entries: Vec<Option<String>> = trail
+                    .unwrap_or("")
+                    .rsplit(',')
+                    .filter(|entry| !entry.is_empty())
+                    .take(MAX_BADGE_TRAIL)
+                    .map(cursor)
+                    .collect();
+                entries.reverse();
+                entries
+            },
         }
     }
 

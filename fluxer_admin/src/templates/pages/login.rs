@@ -5,7 +5,7 @@ use crate::{
     config::AdminConfig,
     templates::{
         layout::{admin_title, favicon_links, product_name},
-        layout_scripts::THEME_INIT_SCRIPT,
+        layout_scripts::{HISTORY_CACHE_CLEAR_SCRIPT, THEME_INIT_SCRIPT},
     },
 };
 use maud::{DOCTYPE, Markup, PreEscaped, html};
@@ -29,6 +29,7 @@ pub fn login_page(
                 (favicon_links(config, branding))
             }
             body class="flex min-h-[100dvh] items-center justify-center bg-neutral-50 p-4" {
+                script { (PreEscaped(HISTORY_CACHE_CLEAR_SCRIPT)) }
                 main class="w-full max-w-sm" {
                     div class="flex flex-col gap-4 items-stretch" {
                         div class="rounded-lg bg-white transition-all border border-neutral-200 p-8" {

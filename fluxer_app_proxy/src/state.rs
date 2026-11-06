@@ -5,10 +5,13 @@ use crate::config::{AppProxyConfig, HttpUrl};
 use crate::csp::CompiledCspPolicy;
 use crate::local_files::LocalFileStore;
 use crate::routes::{bundles_app_assets, present_local_asset_prefixes};
-use std::sync::Arc;
+use axum::http::StatusCode;
+use futures_util::future::{BoxFuture, Shared};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::sync::Semaphore;
+use tokio::task::AbortHandle;
 
 pub const MAX_SPA_INDEX_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_RENDERED_SPA_INDEX_BYTES: usize = 8 * 1024 * 1024;
@@ -39,19 +42,30 @@ impl Default for AppProxyBudgets {
 
 pub const AUTH_ENTRY_SHELL_FILE: &str = "auth-index.html";
 
+pub type UpstreamSpaIndexFetch = Shared<BoxFuture<'static, Result<Arc<str>, StatusCode>>>;
+
+#[derive(Clone)]
+pub struct UpstreamSpaIndex {
+    pub url: Arc<HttpUrl>,
+    pub in_flight: Arc<Mutex<Option<(UpstreamSpaIndexFetch, AbortHandle)>>>,
+}
+
 #[derive(Clone)]
 pub enum SpaIndexSource {
     Bundled {
         shell: Arc<str>,
         auth_entry_shell: Option<Arc<str>>,
     },
-    Upstream(Arc<HttpUrl>),
+    Upstream(UpstreamSpaIndex),
 }
 
 impl SpaIndexSource {
     pub async fn load(config: &AppProxyConfig) -> anyhow::Result<Self> {
         if let Some(index_upstream_url) = &config.index_upstream_url {
-            return Ok(Self::Upstream(Arc::new(index_upstream_url.clone())));
+            return Ok(Self::Upstream(UpstreamSpaIndex {
+                url: Arc::new(index_upstream_url.clone()),
+                in_flight: Arc::new(Mutex::new(None)),
+            }));
         }
         let static_dir = std::path::Path::new(&config.static_dir);
         let shell = read_shell(&static_dir.join("index.html")).await?;

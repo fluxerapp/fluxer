@@ -9,9 +9,10 @@ use crate::{
     middleware::{auth::AuthContext, flash::FlashData, htmx},
     state::AppState,
     templates,
-    utils::forms::MultiValueForm,
+    utils::forms::clean_string,
 };
-use axum::{extract::Request, http::HeaderMap, response::Response};
+use axum::{body, extract::Request, http::HeaderMap, response::Response};
+use url::form_urlencoded;
 
 const BRANDING_ASSET_FORM_BYTES: usize = BRANDING_ASSET_MAX_IMAGE_CHARS * 3 + 64 * 1024;
 
@@ -29,8 +30,11 @@ pub(super) async fn post(
     request: Request,
 ) -> Response {
     let config = state.config();
-    let form = MultiValueForm::from_request_with_limit(request, BRANDING_ASSET_FORM_BYTES).await;
-    let (kind, image) = match build_branding_asset_change(form.as_ref(), action) {
+    let form = body::to_bytes(request.into_body(), BRANDING_ASSET_FORM_BYTES)
+        .await
+        .ok()
+        .map(|bytes| BrandingAssetForm::parse(&bytes));
+    let (kind, image) = match build_branding_asset_change(form, action) {
         Ok(change) => change,
         Err(message) => {
             return instance_config_response(config, headers, FlashData::error(message));
@@ -66,19 +70,49 @@ pub(super) async fn post(
     instance_config_response(config, headers, flash)
 }
 
+struct BrandingAssetForm {
+    kind: Option<String>,
+    image: Option<String>,
+}
+
+impl BrandingAssetForm {
+    fn parse(bytes: &[u8]) -> Self {
+        let mut form = Self {
+            kind: None,
+            image: None,
+        };
+        for (key, value) in form_urlencoded::parse(bytes) {
+            let slot = match key.as_ref() {
+                "kind" => &mut form.kind,
+                "image" => &mut form.image,
+                _ => continue,
+            };
+            if slot.is_none() {
+                *slot = Some(value.into_owned());
+            }
+        }
+        form
+    }
+}
+
 fn build_branding_asset_change(
-    form: Option<&MultiValueForm>,
+    form: Option<BrandingAssetForm>,
     action: Action,
 ) -> Result<(BrandingAssetKind, Option<String>), &'static str> {
     let form = form.ok_or("Invalid form data")?;
     let kind = form
-        .first("kind")
+        .kind
+        .as_deref()
         .and_then(BrandingAssetKind::parse)
         .ok_or("Unknown branding asset")?;
     if matches!(action, Action::Remove) {
         return Ok((kind, None));
     }
-    let image = form.clean("image").ok_or("Choose an image to upload")?;
+    let image = form
+        .image
+        .as_deref()
+        .and_then(clean_string)
+        .ok_or("Choose an image to upload")?;
     Ok((kind, Some(image)))
 }
 

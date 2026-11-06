@@ -3,6 +3,7 @@
 use crate::{
     api::client::{AdminApiClient, ApiError},
     config::AdminConfig,
+    middleware::csrf,
     oauth2,
     session::{
         self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookies,
@@ -10,7 +11,7 @@ use crate::{
     },
     sso,
     state::AppState,
-    templates::pages::login,
+    templates::{layout_scripts::HISTORY_CACHE_CLEAR_SCRIPT, pages::login},
 };
 use axum::{
     Json, Router,
@@ -375,6 +376,9 @@ async fn finish_admin_sign_in(state: &AppState, user_id: &str, access_token: &st
 
 async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -> Response {
     let config = state.config();
+    if !csrf::is_same_site_request(&headers, config.admin_origin().as_deref()) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
     if let Some(session_value) = extract_cookie(&headers, SESSION_COOKIE_NAME)
         && let Some(session) = session::parse_session(&session_value, &config.secret_key_base)
     {
@@ -435,6 +439,7 @@ fn oauth_start_page(
 <body>
 <p>Starting authentication...</p>
 <script>
+{HISTORY_CACHE_CLEAR_SCRIPT}
 (function () {{
 	var flow = {{state: {state}, verifier: {verifier}, createdAt: Date.now()}};
 	try {{
