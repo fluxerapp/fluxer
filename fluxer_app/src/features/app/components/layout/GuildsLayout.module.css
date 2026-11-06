@@ -521,6 +521,10 @@
 	--outline-radius: 0px;
 }
 
+.outlineFrame.outlineFrameFullscreen {
+	--outline-frame-clip-radius: 0px;
+}
+
 .outlineFrameFullscreen {
 	border: none;
 	border-radius: 0;
@@ -544,7 +548,11 @@
 	--outline-radius: var(--outline-frame-radius-native);
 }
 
-:global(html.platform-native) .outlineFrame.outlineFrameFullscreen {
+:global(html.platform-native) .outlineFrame.outlineFrame.outlineFrameFullscreen {
+	--outline-frame-clip-radius: 0px;
+}
+
+.outlineFrameFullscreen {
 	border: none;
 }
 
