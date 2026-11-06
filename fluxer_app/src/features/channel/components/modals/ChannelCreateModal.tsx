@@ -33,7 +33,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {LockSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 
 const CHANNEL_TYPE_DESCRIPTOR = msg({
@@ -82,22 +82,30 @@ export const ChannelCreateModal = observer(({guildId, parentId}: {guildId: strin
 	const channelType = Number(form.watch('type') || '0');
 	const canBePrivate = channelType !== ChannelTypes.GUILD_LINK;
 	const privateSelected = isPrivate && canBePrivate;
+	const createStartedRef = useRef(false);
 	const onSubmit = async (data: FormInputs) => {
 		if (privateSelected && step === 'details') {
 			setStep('access');
 			return;
 		}
+		if (createStartedRef.current) return;
+		createStartedRef.current = true;
 		const currentUserId = Users.currentUser?.id;
 		const members =
 			currentUserId && !access.some((entry) => entry.type === 1 && entry.id === currentUserId)
 				? [...access, {id: currentUserId, type: 1 as const}]
 				: access;
-		await createChannel(
-			guildId,
-			data,
-			parentId,
-			privateSelected ? buildPrivateChannelOverwrites(guildId, Number(data.type), members) : undefined,
-		);
+		try {
+			await createChannel(
+				guildId,
+				data,
+				parentId,
+				privateSelected ? buildPrivateChannelOverwrites(guildId, Number(data.type), members) : undefined,
+			);
+		} catch (error) {
+			createStartedRef.current = false;
+			throw error;
+		}
 	};
 	const {handleSubmit} = useFormSubmit({
 		form,
