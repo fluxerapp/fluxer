@@ -155,7 +155,7 @@ impl Store {
     ) -> Result<Self, reqwest::Error> {
         let socket_io_timeout =
             NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
-        let options = HTTPClientOptions::new(socket_io_timeout, socket_io_timeout);
+        let options = HTTPClientOptions::streaming(socket_io_timeout, socket_io_timeout);
         let client = http_client::build(options, http_client_metrics)?;
         let raw_client = http_client::build_raw(options)?;
         Ok(Self {

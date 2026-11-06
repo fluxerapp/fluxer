@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod keys;
+mod slow_stream;
 
 use crate::{
     config::{

@@ -21,7 +21,7 @@ const EXTERNAL_RETRY_WINDOW_MS: u64 = 15_000;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct HTTPClientOptions {
     connect_timeout_ms: NonZeroU64,
-    request_timeout_ms: NonZeroU64,
+    request_timeout_ms: Option<NonZeroU64>,
     read_timeout_ms: Option<NonZeroU64>,
     retries: HTTPRetryPolicy,
     address_policy: HTTPAddressPolicy,
@@ -45,7 +45,16 @@ impl HTTPClientOptions {
     pub fn new(connect_timeout_ms: NonZeroU64, timeout_ms: NonZeroU64) -> Self {
         Self {
             connect_timeout_ms,
-            request_timeout_ms: timeout_ms,
+            request_timeout_ms: Some(timeout_ms),
+            ..Self::default()
+        }
+    }
+
+    pub fn streaming(connect_timeout_ms: NonZeroU64, read_timeout_ms: NonZeroU64) -> Self {
+        Self {
+            connect_timeout_ms,
+            request_timeout_ms: None,
+            read_timeout_ms: Some(read_timeout_ms),
             ..Self::default()
         }
     }
@@ -73,8 +82,7 @@ impl Default for HTTPClientOptions {
         Self {
             connect_timeout_ms: NonZeroU64::new(1_500)
                 .expect("default connection timeout must be nonzero"),
-            request_timeout_ms: NonZeroU64::new(30_000)
-                .expect("default request timeout must be nonzero"),
+            request_timeout_ms: NonZeroU64::new(30_000),
             read_timeout_ms: None,
             retries: HTTPRetryPolicy {
                 max_retries: NonZeroU32::new(2)
@@ -97,9 +105,11 @@ pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest:
     // is the one client that opts out, because it only ever dials this process on loopback.
     let mut builder = reqwest::Client::builder()
         .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
-        .timeout(Duration::from_millis(options.request_timeout_ms.get()))
         .redirect(reqwest::redirect::Policy::none())
         .user_agent(crate::constants::OUTBOUND_USER_AGENT);
+    if let Some(request_timeout_ms) = options.request_timeout_ms {
+        builder = builder.timeout(Duration::from_millis(request_timeout_ms.get()));
+    }
     if let Some(read_timeout_ms) = options.read_timeout_ms {
         builder = builder.read_timeout(Duration::from_millis(read_timeout_ms.get()));
     }
