@@ -544,6 +544,7 @@
 }
 
 :global(html.platform-native) .outlineFrame {
+	--outline-frame-top-border-width: 0.0625rem;
 	border-top: 0.0625rem solid var(--user-area-divider-color);
 	--outline-radius: var(--outline-frame-radius-native);
 }

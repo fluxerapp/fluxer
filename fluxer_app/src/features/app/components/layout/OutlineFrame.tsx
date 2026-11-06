@@ -11,6 +11,7 @@ interface OutlineFrameProps {
 	sidebarDivider?: boolean;
 	sidebarResizeHandle?: boolean;
 	hideTopBorder?: boolean;
+	cornerCap?: boolean;
 	sides?: FrameSides;
 	nagbar?: React.ReactNode;
 	children: React.ReactNode;
@@ -21,6 +22,7 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 	sidebarDivider = false,
 	sidebarResizeHandle = false,
 	hideTopBorder = false,
+	cornerCap = false,
 	sides,
 	nagbar,
 	children,
@@ -36,14 +38,23 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 		};
 	}, [hideTopBorder, sides]);
 	const showTopBorder = ctxSides.top !== false;
-	const frameStyle = useMemo<React.CSSProperties & {'--outline-frame-clip-radius'?: string}>(() => {
+	const frameStyle = useMemo<
+		React.CSSProperties & {'--outline-frame-clip-radius'?: string; '--outline-frame-start-border-width'?: string}
+	>(() => {
+		let clipRadius: string | undefined;
+		if (cornerCap) {
+			clipRadius = '0px';
+		} else if (ctxSides.left === false) {
+			clipRadius = 'var(--outline-radius, 0px)';
+		}
 		return {
-			'--outline-frame-clip-radius': ctxSides.left === false ? 'var(--outline-radius, 0px)' : undefined,
+			'--outline-frame-clip-radius': clipRadius,
+			'--outline-frame-start-border-width': ctxSides.left === false ? '0px' : undefined,
 			borderLeft: ctxSides.left === false ? 'none' : undefined,
 			borderRight: ctxSides.right === false ? 'none' : undefined,
 			borderBottom: ctxSides.bottom === false ? 'none' : undefined,
 		};
-	}, [ctxSides.bottom, ctxSides.left, ctxSides.right]);
+	}, [cornerCap, ctxSides.bottom, ctxSides.left, ctxSides.right]);
 	return (
 		<div className={styles.bounds} data-flx="app.outline-frame.bounds">
 			<div
@@ -67,6 +78,7 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 							</div>
 						</div>
 					</div>
+					{cornerCap && <div className={styles.cornerCap} aria-hidden data-flx="app.outline-frame.corner-cap" />}
 				</FrameContext.Provider>
 			</div>
 		</div>
