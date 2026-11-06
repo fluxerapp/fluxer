@@ -175,6 +175,14 @@ class Invites {
 		this.guildFetchStatus = new Map();
 	}
 
+	dropFailedInviteSlots(): void {
+		const next = new Map(this.inviteSlots);
+		for (const [resourceKey, slot] of this.inviteSlots) {
+			if (slot.error != null) next.delete(resourceKey);
+		}
+		if (next.size !== this.inviteSlots.size) this.inviteSlots = next;
+	}
+
 	fetchInvite = action(async (code: string, target: InstanceHTTPTarget): Promise<Invite> => {
 		const resourceKey = inviteResourceKey(code, target);
 		const inflight = this.pendingRequests.get(resourceKey);
@@ -304,6 +312,10 @@ class Invites {
 
 const invites = new Invites();
 
-AccountScopedWork.registerCancellation(() => invites.reset());
+AccountScopedWork.registerTransition({
+	suspend: () => invites.reset(),
+	resume: () => {},
+	released: () => invites.dropFailedInviteSlots(),
+});
 
 export default invites;
