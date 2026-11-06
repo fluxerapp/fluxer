@@ -117,6 +117,7 @@ export default class RpcServerManager extends (EventEmitter as new () => TypedEm
 				null,
 				RpcError.builtIn('APPLICATION_ERROR', 'RPC data stream malformed'),
 			);
+			await reader.cancel();
 			return;
 		}
 
@@ -124,6 +125,15 @@ export default class RpcServerManager extends (EventEmitter as new () => TypedEm
 
 		if (version !== RPC_VERSION_V2) {
 			this.publishRpcResponsePacket(callerIdentity, requestId, null, RpcError.builtIn('UNSUPPORTED_VERSION'));
+			await reader.cancel();
+			return;
+		}
+
+		const handler = this.rpcHandlers.get(method);
+
+		if (!handler) {
+			this.publishRpcResponsePacket(callerIdentity, requestId, null, RpcError.builtIn('UNSUPPORTED_METHOD'));
+			await reader.cancel();
 			return;
 		}
 
@@ -138,13 +148,6 @@ export default class RpcServerManager extends (EventEmitter as new () => TypedEm
 				null,
 				RpcError.builtIn('APPLICATION_ERROR', 'Error reading RPC request payload', {cause: e}),
 			);
-			return;
-		}
-
-		const handler = this.rpcHandlers.get(method);
-
-		if (!handler) {
-			this.publishRpcResponsePacket(callerIdentity, requestId, null, RpcError.builtIn('UNSUPPORTED_METHOD'));
 			return;
 		}
 

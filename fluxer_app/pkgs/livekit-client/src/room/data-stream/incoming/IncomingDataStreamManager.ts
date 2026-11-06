@@ -15,7 +15,7 @@ import {DataStreamError, DataStreamErrorReason} from '../../errors.ts';
 import type {ByteStreamInfo, StreamController, TextStreamInfo} from '../../types.ts';
 import {bigIntToNumber, isCompressionStreamSupported, numberToBigInt} from '../../utils.ts';
 import {deflateRawDecompress, inflateRawTransform} from '../compression.ts';
-import {DEFAULT_MAX_PAYLOAD_BYTE_LENGTH} from '../constants.ts';
+import {DEFAULT_MAX_PAYLOAD_BYTE_LENGTH, MAX_OPEN_STREAMS_PER_PARTICIPANT} from '../constants.ts';
 import {type ByteStreamHandler, ByteStreamReader, type TextStreamHandler, TextStreamReader} from './StreamReader.ts';
 
 export default class IncomingDataStreamManager {
@@ -124,12 +124,33 @@ export default class IncomingDataStreamManager {
 			case 'streamHeader':
 				return this.handleStreamHeader(packet.value.value, packet.participantIdentity, encryptionType);
 			case 'streamChunk':
-				return this.handleStreamChunk(packet.value.value, encryptionType);
+				return this.handleStreamChunk(packet.value.value, packet.participantIdentity, encryptionType);
 			case 'streamTrailer':
-				return this.handleStreamTrailer(packet.value.value, encryptionType);
+				return this.handleStreamTrailer(packet.value.value, packet.participantIdentity, encryptionType);
 			default:
 				throw new Error(`DataPacket of value "${packet.value.case}" is not data stream related!`);
 		}
+	}
+
+	private hasReachedOpenStreamLimit(participantIdentity: string, streamId: string) {
+		let openStreams = 0;
+		for (const controller of this.byteStreamControllers.values()) {
+			if (controller.sendingParticipantIdentity === participantIdentity) {
+				openStreams += 1;
+			}
+		}
+		for (const controller of this.textStreamControllers.values()) {
+			if (controller.sendingParticipantIdentity === participantIdentity) {
+				openStreams += 1;
+			}
+		}
+		if (openStreams < MAX_OPEN_STREAMS_PER_PARTICIPANT) {
+			return false;
+		}
+		this.log.warn(
+			`Data stream ${streamId} from ${participantIdentity} dropped, ${MAX_OPEN_STREAMS_PER_PARTICIPANT} streams from this participant are already open`,
+		);
+		return true;
 	}
 
 	private handleStreamHeader(
@@ -195,6 +216,10 @@ export default class IncomingDataStreamManager {
 					return;
 				}
 
+				if (this.hasReachedOpenStreamLimit(participantIdentity, streamHeader.streamId)) {
+					return;
+				}
+
 				const stream = new ReadableStream<DataStream_Chunk>({
 					start: (controller) => {
 						streamController = controller;
@@ -212,6 +237,11 @@ export default class IncomingDataStreamManager {
 							startTime: Date.now(),
 							sendingParticipantIdentity: participantIdentity,
 						});
+					},
+					cancel: () => {
+						if (this.byteStreamControllers.get(streamHeader.streamId)?.controller === streamController) {
+							this.byteStreamControllers.delete(streamHeader.streamId);
+						}
 					},
 				});
 				streamHandlerCallback(
@@ -283,6 +313,10 @@ export default class IncomingDataStreamManager {
 					return;
 				}
 
+				if (this.hasReachedOpenStreamLimit(participantIdentity, streamHeader.streamId)) {
+					return;
+				}
+
 				const stream = new ReadableStream<DataStream_Chunk>({
 					start: (controller) => {
 						streamController = controller;
@@ -301,6 +335,11 @@ export default class IncomingDataStreamManager {
 							sendingParticipantIdentity: participantIdentity,
 						});
 					},
+					cancel: () => {
+						if (this.textStreamControllers.get(streamHeader.streamId)?.controller === streamController) {
+							this.textStreamControllers.delete(streamHeader.streamId);
+						}
+					},
 				});
 				streamHandlerCallback(
 					new TextStreamReader(
@@ -317,9 +356,9 @@ export default class IncomingDataStreamManager {
 		}
 	}
 
-	private handleStreamChunk(chunk: DataStream_Chunk, encryptionType: Encryption_Type) {
+	private handleStreamChunk(chunk: DataStream_Chunk, participantIdentity: string, encryptionType: Encryption_Type) {
 		const fileBuffer = this.byteStreamControllers.get(chunk.streamId);
-		if (fileBuffer) {
+		if (fileBuffer && fileBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (fileBuffer.info.encryptionType !== encryptionType) {
 				fileBuffer.controller.error(
 					new DataStreamError(
@@ -333,7 +372,7 @@ export default class IncomingDataStreamManager {
 			}
 		}
 		const textBuffer = this.textStreamControllers.get(chunk.streamId);
-		if (textBuffer) {
+		if (textBuffer && textBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (textBuffer.info.encryptionType !== encryptionType) {
 				textBuffer.controller.error(
 					new DataStreamError(
@@ -348,9 +387,13 @@ export default class IncomingDataStreamManager {
 		}
 	}
 
-	private handleStreamTrailer(trailer: DataStream_Trailer, encryptionType: Encryption_Type) {
+	private handleStreamTrailer(
+		trailer: DataStream_Trailer,
+		participantIdentity: string,
+		encryptionType: Encryption_Type,
+	) {
 		const textBuffer = this.textStreamControllers.get(trailer.streamId);
-		if (textBuffer) {
+		if (textBuffer && textBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (textBuffer.info.encryptionType !== encryptionType) {
 				textBuffer.controller.error(
 					new DataStreamError(
@@ -375,7 +418,7 @@ export default class IncomingDataStreamManager {
 		}
 
 		const fileBuffer = this.byteStreamControllers.get(trailer.streamId);
-		if (fileBuffer) {
+		if (fileBuffer && fileBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (fileBuffer.info.encryptionType !== encryptionType) {
 				fileBuffer.controller.error(
 					new DataStreamError(

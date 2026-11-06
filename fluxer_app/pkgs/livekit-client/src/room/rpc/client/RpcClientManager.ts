@@ -170,14 +170,21 @@ export default class RpcClientManager extends (EventEmitter as new () => TypedEm
 		const associatedRequestId = attributes[RpcRequestAttrs.RPC_REQUEST_ID];
 		if (!associatedRequestId) {
 			this.log.warn(`RPC data stream malformed: ${RpcRequestAttrs.RPC_REQUEST_ID} not set.`);
+			await reader.cancel();
 			return;
 		}
 
 		const pending = this.pendingResponses.get(associatedRequestId);
-		if (pending && pending.participantIdentity !== senderIdentity) {
+		if (!pending) {
+			this.log.error('Response received for unexpected RPC request', associatedRequestId);
+			await reader.cancel();
+			return;
+		}
+		if (pending.participantIdentity !== senderIdentity) {
 			this.log.warn(
 				`RPC response stream for ${associatedRequestId} arrived from unexpected sender ${senderIdentity}, expected ${pending.participantIdentity}. Ignoring.`,
 			);
+			await reader.cancel();
 			return;
 		}
 

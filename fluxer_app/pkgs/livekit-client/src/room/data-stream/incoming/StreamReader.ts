@@ -57,6 +57,10 @@ abstract class BaseStreamReader<T extends BaseStreamInfo> {
 
 	onProgress?: (progress: number | undefined) => void;
 
+	cancel(reason?: unknown): Promise<void> {
+		return this.reader.cancel(reason).catch(() => {});
+	}
+
 	abstract readAll(opts?: BaseStreamReaderReadAllOpts): Promise<string | Array<Uint8Array>>;
 }
 
