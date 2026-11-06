@@ -245,6 +245,22 @@ export const TimeFormatTypesDescriptions: Record<keyof typeof TimeFormatTypes, s
 	TWELVE_HOUR: 'Use 12-hour time format (AM/PM)',
 	TWENTY_FOUR_HOUR: 'Use 24-hour time format',
 };
+
+export const TimestampFormatTypes = {
+	AUTO: 0,
+	ISO_8601: 1,
+	DAY_MONTH_YEAR: 2,
+	MONTH_DAY_YEAR: 3,
+} as const;
+
+export type TimestampFormatType = ValueOf<typeof TimestampFormatTypes>;
+
+export const TimestampFormatTypesDescriptions: Record<keyof typeof TimestampFormatTypes, string> = {
+	AUTO: 'Write dates the way the regional format does',
+	ISO_8601: 'Write dates as year-month-day, such as 2026-11-06 21:23',
+	DAY_MONTH_YEAR: 'Write dates as day/month/year, such as 06/11/2026',
+	MONTH_DAY_YEAR: 'Write dates as month/day/year, such as 11/06/2026',
+};
 export const StickerAnimationOptions = {
 	ALWAYS_ANIMATE: 0,
 	ANIMATE_ON_INTERACTION: 1,
