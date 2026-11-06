@@ -6,7 +6,7 @@ use crate::html_parser;
 use crate::http_fetch;
 use crate::media_proxy::MediaProxyClient;
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
-use scraper::{Html, Selector};
+use scraper::Selector;
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
@@ -144,7 +144,7 @@ struct TenorJsonLdUrls {
 }
 
 fn extract_json_ld_urls(html: &str) -> Option<TenorJsonLdUrls> {
-    let doc = Html::parse_document(html);
+    let doc = html_parser::parse_document(html);
     let selector = Selector::parse(r#"script.dynamic[type="application/ld+json"]"#).ok()?;
 
     for script in doc.select(&selector) {

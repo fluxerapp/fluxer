@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::html_parser;
 use crate::http_fetch;
-use scraper::{Html, Selector};
+use scraper::Selector;
 use serde::Deserialize;
 use std::time::Duration;
+
+const MAX_OEMBED_ENDPOINTS: usize = 3;
 
 #[derive(Debug, Clone)]
 pub struct OEmbedEndpoint {
@@ -36,13 +39,13 @@ pub struct OEmbedResponse {
 }
 
 pub fn discover_oembed_url(html: &str) -> Vec<OEmbedEndpoint> {
-    let doc = Html::parse_document(html);
+    let doc = html_parser::parse_document(html);
     let sel = match Selector::parse("link") {
         Ok(s) => s,
         Err(_) => return Vec::new(),
     };
 
-    let mut endpoints = Vec::new();
+    let mut endpoints: Vec<OEmbedEndpoint> = Vec::new();
 
     for el in doc.select(&sel) {
         let href = match el.value().attr("href") {
@@ -54,7 +57,7 @@ pub fn discover_oembed_url(html: &str) -> Vec<OEmbedEndpoint> {
             None => continue,
         };
 
-        if !link_type.contains("+oembed") {
+        if !link_type.contains("+oembed") || endpoints.iter().any(|ep| ep.url == href) {
             continue;
         }
 
@@ -72,6 +75,9 @@ pub fn discover_oembed_url(html: &str) -> Vec<OEmbedEndpoint> {
             url: href.to_owned(),
             format,
         });
+        if endpoints.len() >= MAX_OEMBED_ENDPOINTS {
+            break;
+        }
     }
 
     endpoints

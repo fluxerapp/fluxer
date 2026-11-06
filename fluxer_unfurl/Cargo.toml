@@ -15,6 +15,7 @@ encoding_rs = "0.8.44"
 entities = "1.0.1"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 hickory-resolver = { version = "0.26.3", default-features = false, features = ["tokio"] }
+html5ever = "0.40"
 infer = "0.22.0"
 moka = { version = "0.12.16", features = ["future", "sync"] }
 regex = "1.13"

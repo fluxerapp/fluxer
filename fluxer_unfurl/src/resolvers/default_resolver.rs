@@ -478,6 +478,7 @@ fn optional_oembed_string(value: Option<&str>) -> Option<&str> {
 fn optional_absolute_url(value: Option<&str>) -> Option<String> {
     Url::parse(optional_oembed_string(value)?)
         .ok()
+        .filter(|url| matches!(url.scheme(), "http" | "https"))
         .map(|url| url.to_string())
 }
 
