@@ -30,6 +30,7 @@ import {
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import ModalState from '@app/features/ui/state/Modal';
 import {autoUpdate, FloatingPortal, flip, offset, size, useFloating} from '@floating-ui/react';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -139,6 +140,14 @@ function resolvePortalRoot(portalHost: HTMLElement | null): HTMLElement | undefi
 		return undefined;
 	}
 	return portalHost;
+}
+
+function isCoveredByModal(reference: HTMLElement): boolean {
+	const ownerDocument = reference.ownerDocument;
+	if (!ModalState.hasModalOpen(ownerDocument)) return false;
+	const dialogs = ownerDocument.querySelectorAll('[role="dialog"][aria-modal="true"]');
+	const topDialog = dialogs.item(dialogs.length - 1);
+	return topDialog == null || !topDialog.contains(reference);
 }
 
 const ATTACHED_AUTOCOMPLETE_GAP = 4;
@@ -324,6 +333,7 @@ export const Autocomplete = observer(
 			rowRefs,
 			getOptionId,
 		};
+		if (referenceState != null && isCoveredByModal(referenceState)) return null;
 		return (
 			<FloatingPortal root={resolvePortalRoot(portalHost)} data-flx="channel.autocomplete.floating-portal">
 				<div
