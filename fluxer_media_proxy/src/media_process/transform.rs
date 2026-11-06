@@ -16,7 +16,7 @@ use super::loaded_image::{
     static_output_pixels, validate_dimensions_u32, validate_jxl_decode_pixels,
     validate_static_output_pixels, validate_vips_image,
 };
-use super::native_cost::fit_static_output_to_budget;
+use super::native_cost::{accumulated_decode_pixels, fit_static_output_to_budget};
 use super::native_runtime::{clear_vips_error, ensure_vips_init, last_vips_error};
 use super::transform_plan::{
     AutoQualitySource, output_is_sdr, resolve_auto_quality, should_transform_animated_webp_direct,
@@ -73,7 +73,7 @@ fn is_heif_source(mime: &str) -> bool {
     matches!(mime, "image/avif" | "image/heic" | "image/heif")
 }
 
-fn heif_source_may_be_a_sequence(sniffed: mime::SniffInfo) -> bool {
+pub(super) fn heif_source_may_be_a_sequence(sniffed: mime::SniffInfo) -> bool {
     match sniffed.mime {
         "image/avif" => sniffed.animated,
         "image/heic" | "image/heif" => true,
@@ -243,10 +243,21 @@ pub fn transform_image(
         }
     }
     let heif_source = is_heif_source(sniffed.mime);
+    let accumulated_pixels = accumulated_decode_pixels(sniffed, media_limits);
     let decoded_animation = if sniffed.mime == "image/apng" {
-        try_decode_apng(input, animated, media_limits, options.deadline_ms)?
-    } else if animated && heif_source_may_be_a_sequence(sniffed) {
-        decode_heif_sequence(input, media_limits, options.deadline_ms)?
+        let max_total_pixels = match accumulated_pixels {
+            Some(pixels) if animated => pixels,
+            _ => media_limits.animated_total_pixels(),
+        };
+        try_decode_apng(
+            input,
+            animated,
+            max_total_pixels,
+            media_limits,
+            options.deadline_ms,
+        )?
+    } else if animated && let Some(max_total_pixels) = accumulated_pixels {
+        decode_heif_sequence(input, max_total_pixels, media_limits, options.deadline_ms)?
     } else {
         None
     };
