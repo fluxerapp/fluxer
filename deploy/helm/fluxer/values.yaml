@@ -710,7 +710,10 @@ edge:
       storageClassName: ""
   replicas: 1
   # Edge settings as NAME: value, overriding the chart's, for example
-  # FLUXER_EDGE_GLOBAL_OPTIONS or FLUXER_EDGE_ENCODE.
+  # FLUXER_EDGE_GLOBAL_OPTIONS, FLUXER_EDGE_ENCODE, or FLUXER_EDGE_TRUSTED_PROXIES
+  # set to the address range of your ingress controller, gateway or proxy.
+  # Outside loadBalancer mode the edge takes the client IP from X-Forwarded-For
+  # sent by any private address unless you narrow it.
   env: {}
   extraEnv: []
   resources:

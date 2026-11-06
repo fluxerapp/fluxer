@@ -24,7 +24,8 @@ Point DNS for {{ $v.domain }} at the external address of the edge-public Service
 {{- else if eq $v.edge.expose "none" }}
 
 Nothing exposes the instance yet. Send your proxy or tunnel to the Service edge
-on port 8080, with the Host header {{ $v.domain }}.
+on port 8080, with the Host header {{ $v.domain }}. The proxy must replace
+X-Forwarded-For with the client address it sees, or add that address at the end.
 {{- else }}
 
 Point DNS for {{ $v.domain }} at your {{ ternary "ingress controller" "gateway" (eq $v.edge.expose "ingress") }}. Its Service needs

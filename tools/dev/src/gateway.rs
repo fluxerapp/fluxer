@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT};
+use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT, write_private_file};
 use crate::proc::{
     AwaitOutcome, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, await_or_shutdown,
     can_bind_tcp_port, cleanup_orphaned_process_groups, configure_process_group,
@@ -116,7 +116,7 @@ pub fn write_gateway_config(
         .replace("${FLUXER_ERLANG_NODE_NAME}", node_name)
         .replace("${FLUXER_ERLANG_COOKIE}", cookie)
         .replace("${FLUXER_ERLANG_DIST_PORT}", dist_port);
-    fs::write(config_dir.join("vm.args"), vm_text)?;
+    write_private_file(&config_dir.join("vm.args"), &vm_text)?;
     Ok(())
 }
 

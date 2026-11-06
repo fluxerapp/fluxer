@@ -432,7 +432,7 @@ async function serveStaticOrRender({
 	}
 	if (shouldRedirectStaticDirectory(staticFile, requestPath)) {
 		response.writeHead(HttpStatus.MOVED_PERMANENTLY, {
-			[HTTPHeader.LOCATION]: `${requestPath.pathname}/${requestPath.search}`,
+			[HTTPHeader.LOCATION]: `${requestPath.pathname.replace(/^\/+/u, '/')}/${requestPath.search}`,
 			[HTTPHeader.CONTENT_LENGTH]: '0',
 			[HTTPHeader.CACHE_CONTROL]: 'no-cache',
 		});

@@ -13,12 +13,11 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub const DEVELOPMENT_PACKAGE_ORIGIN: &str = "http://localhost:48780";
+pub const DEVELOPMENT_PACKAGE_ORIGIN: &str = "http://127.0.0.1:48780";
 const PKGS_ROOT_ENV: &str = "FLUXER_DEV_PKGS_ROOT";
 const PKGS_CONTAINER: &str = "fluxer-dev-pkgs";
 const PKGS_IMAGE: &str = "nginx:1.28";
 const PKGS_PUBLISH: &str = "127.0.0.1:48780:80";
-const PKGS_PROBE_ORIGIN: &str = "http://127.0.0.1:48780";
 const PKGS_CONTAINER_ROOT: &str = "/srv/pkgs";
 const PKGS_CONTAINER_CONFIG: &str = "/etc/nginx/conf.d/default.conf";
 const PKGS_NGINX_CONFIG: &str = "server {
@@ -552,7 +551,7 @@ pub fn ensure_pkgs_server() -> Result<()> {
 
 fn verify_served_manifest(target: &ModuleCoordinate, metadata_version: u64) -> Result<()> {
     let url = format!(
-        "{PKGS_PROBE_ORIGIN}/desktop/{}/{}/{}/{CHANNEL_MANIFEST_NAME}",
+        "{DEVELOPMENT_PACKAGE_ORIGIN}/desktop/{}/{}/{}/{CHANNEL_MANIFEST_NAME}",
         target.channel, target.platform, target.arch
     );
     let mut last = String::new();

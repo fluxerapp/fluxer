@@ -11,6 +11,8 @@ const CACHE_MS = 5 * 60 * 1000;
 const RETRY_MS = 30 * 1000;
 const FETCH_TIMEOUT_MS = 15 * 1000;
 const PAGES = 3;
+const MAX_ENTRIES = 256;
+const PINNED_RESERVE = 15;
 const CALVER = /^\d{4}\.\d{3,4}\.\d{1,6}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const ENGINE_VERSION = /^\d+\.\d+\.\d+$/;
@@ -66,6 +68,9 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
+let githubRetryAt = 0;
+let rateLimitRemaining = Number.POSITIVE_INFINITY;
+let rateLimitResetAt = 0;
 
 export class ResolverUnavailableError extends Error {}
 
@@ -91,10 +96,19 @@ async function getJSON<T>(url: string): Promise<T | null> {
 		},
 		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 	});
+	const remaining = Number.parseInt(response.headers.get('x-ratelimit-remaining') ?? '', 10);
+	const reset = Number.parseInt(response.headers.get('x-ratelimit-reset') ?? '', 10);
+	if (Number.isFinite(remaining) && Number.isFinite(reset)) {
+		rateLimitRemaining = remaining;
+		rateLimitResetAt = reset * 1000;
+	}
 	if (response.status === 404) {
 		return null;
 	}
 	if (!response.ok) {
+		const now = Date.now();
+		const exhausted = (response.status === 403 || response.status === 429) && remaining === 0;
+		githubRetryAt = exhausted && rateLimitResetAt > now ? rateLimitResetAt : now + RETRY_MS;
 		throw new ResolverUnavailableError(`GitHub answered ${response.status} for ${url}`);
 	}
 	return (await response.json()) as T;
@@ -241,19 +255,33 @@ async function resolveVersion(version: string): Promise<RexctlRelease | null> {
 	return toRexctlRelease(release, version);
 }
 
+function evictOldest(): void {
+	if (cache.size < MAX_ENTRIES) {
+		return;
+	}
+	for (const [key, entry] of cache) {
+		if (key !== 'latest' && !entry.pending) {
+			cache.delete(key);
+			return;
+		}
+	}
+}
+
 export async function resolveRexctlRelease(version: string | null): Promise<RexctlRelease | null> {
 	const key = version ?? 'latest';
 	const now = Date.now();
 	let entry = cache.get(key);
 	if (!entry) {
 		entry = {value: null, fetchedAt: 0, failedAt: 0, pending: null};
+		evictOldest();
 		cache.set(key, entry);
 	}
 	const current = entry;
 	if (now - current.fetchedAt < CACHE_MS) {
 		return current.value;
 	}
-	if (now - current.failedAt < RETRY_MS) {
+	const quotaReserved = version !== null && rateLimitRemaining < PINNED_RESERVE && now < rateLimitResetAt;
+	if (!current.pending && (now - current.failedAt < RETRY_MS || now < githubRetryAt || quotaReserved)) {
 		if (current.value) {
 			return current.value;
 		}
