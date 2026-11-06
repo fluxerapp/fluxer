@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
 import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormatter';
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
@@ -109,6 +110,20 @@ function formatTimestampForTts(timestamp: number, style: string | undefined, i18
 	return formatTimestamp(timestamp, resolvedStyle, i18n);
 }
 
+function replaceUnicodeEmojiWithNames(text: string): string {
+	let result = '';
+	let cursor = 0;
+	for (const match of UnicodeEmojis.matchEmojiSurrogates(text)) {
+		if (match.name == null) {
+			continue;
+		}
+		const [baseName] = match.name.split('::');
+		result += `${text.slice(cursor, match.start)} ${baseName.replace(/_/g, ' ')} `;
+		cursor = match.end;
+	}
+	return result + text.slice(cursor);
+}
+
 export function formatContentForTts(content: string, guildId: string | null, i18n: I18n): string {
 	let formatted = content;
 	formatted = formatted.replace(CODE_BLOCK_PATTERN, ` ${i18n._(CODE_BLOCK_DESCRIPTOR)} `);
@@ -117,6 +132,7 @@ export function formatContentForTts(content: string, guildId: string | null, i18
 	formatted = formatted.replace(ROLE_MENTION_PATTERN, (_match, roleId) => formatRoleMention(roleId, guildId, i18n));
 	formatted = formatted.replace(CHANNEL_MENTION_PATTERN, (_match, channelId) => formatChannelMention(channelId, i18n));
 	formatted = formatted.replace(CUSTOM_EMOJI_PATTERN, (_match, emojiName) => i18n._(EMOJI_DESCRIPTOR, {emojiName}));
+	formatted = replaceUnicodeEmojiWithNames(formatted);
 	formatted = formatted.replace(SLASH_COMMAND_PATTERN, (_match, commandName) =>
 		i18n._(SLASH_DESCRIPTOR, {commandName}),
 	);
