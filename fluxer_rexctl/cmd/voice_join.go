@@ -1084,6 +1084,9 @@ func ensureVoiceEdge(ctx context.Context, app *App, e *engine.Engine, inst *inst
 
 func voiceEdgeSpec(inst *instance.Instance) engine.Spec {
 	env := map[string]string{"FLUXER_VOICE_NETWORK": voice.MachineNetwork}
+	if ref := ownEdgeImage(); ref != "" {
+		env[settings.ImageVars["edge"]] = ref
+	}
 	if inst.State.VoiceEdge != nil && inst.State.VoiceEdge.Email != "" {
 		env["FLUXER_VOICE_EDGE_EMAIL"] = inst.State.VoiceEdge.Email
 	}
