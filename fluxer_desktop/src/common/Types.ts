@@ -337,6 +337,7 @@ export interface ElectronAPI {
 	onJumpListNewDm: (callback: () => void) => () => void;
 	setZoomFactor: (factor: number) => void;
 	getAccessibilitySupportEnabled: () => Promise<boolean>;
+	getSystemLocale: () => Promise<string>;
 	onAccessibilitySupportChanged: (callback: (enabled: boolean) => void) => () => void;
 	getLinuxAppearance: () => Promise<LinuxAppearanceSnapshot>;
 	setPrebootTheme: (theme: string) => void;

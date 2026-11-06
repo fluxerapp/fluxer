@@ -337,6 +337,7 @@ export interface ElectronAPI {
 	openMediaAccessSettings(type: MediaAccessType): Promise<void>;
 	onDisplayMediaRequested?(callback: (requestId: string, info: DisplayMediaRequestInfo) => void): () => void;
 	getAccessibilitySupportEnabled?(): Promise<boolean>;
+	getSystemLocale?(): Promise<string>;
 	onAccessibilitySupportChanged?(callback: (enabled: boolean) => void): () => void;
 	getLinuxAppearance?(): Promise<LinuxAppearanceSnapshot>;
 	setPrebootTheme?(theme: string): void;
