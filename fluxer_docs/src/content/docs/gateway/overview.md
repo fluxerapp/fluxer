@@ -112,7 +112,7 @@ The Gateway drops replayable Dispatches up to the sequence in your heartbeat. On
 
 ## Resuming a session
 
-Opcode 6 resumes a session on a new socket within 60,000 ms after the old one closes. Send the original token, the Ready `session_id` and the last sequence you processed. A payload missing any of them closes with `4002`.
+Opcode 6 resumes a session on a new socket within 60,000 ms after the old one closes, unless the client closed it with `1000` or `1001`. Send the original token, the Ready `session_id` and the last sequence you processed. A payload missing any of them closes with `4002`.
 
 ```json
 {
