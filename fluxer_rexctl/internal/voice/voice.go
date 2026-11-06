@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -48,9 +49,14 @@ const (
 	EdgeNone     = "none"
 )
 
-var idPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
+var (
+	idPattern     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
+	regionPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$`)
+)
 
 func ValidID(id string) bool { return idPattern.MatchString(id) }
+
+func UsableRegion(id string) bool { return regionPattern.MatchString(id) }
 
 func JoinedProject(id string) string { return MachineProject + "-" + id }
 
@@ -59,6 +65,10 @@ func ProjectName(instanceProject, id string) string {
 }
 
 func ServerDir(dir, id string) string { return filepath.Join(dir, ServersDir, id) }
+
+func SafeDirName(id string) bool {
+	return id != "" && id != "." && id != ".." && !strings.ContainsAny(id, `/\`)
+}
 
 func Alias(id string) string { return "voice-" + id }
 
@@ -174,7 +184,10 @@ func (e Env) File() []byte {
 }
 
 func envValue(v string) string {
-	if strings.ContainsAny(v, " \"'{}[]$#\\") && !strings.Contains(v, "'") {
+	switch {
+	case strings.ContainsAny(v, "'\n\r") || strings.HasSuffix(v, `\`):
+		return envfile.Quote(v)
+	case strings.ContainsAny(v, " \"{}[]$#\\"):
 		return "'" + v + "'"
 	}
 	return v

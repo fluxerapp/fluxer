@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"unicode"
 )
 
 func Memory() (uint64, error) {
@@ -143,9 +144,16 @@ func socketOwner(inodes map[string]bool) string {
 				if err != nil {
 					return ""
 				}
-				return strings.TrimSpace(string(comm))
+				return strings.TrimSpace(strings.Map(dropControl, string(comm)))
 			}
 		}
 	}
 	return ""
+}
+
+func dropControl(r rune) rune {
+	if unicode.IsControl(r) {
+		return -1
+	}
+	return r
 }

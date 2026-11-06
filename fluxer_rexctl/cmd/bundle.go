@@ -4,11 +4,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -35,13 +35,13 @@ func newBundleCmd(app *App) *cobra.Command {
 			if err := stack.Bundle(out, images.Images); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
-			if err := os.WriteFile(filepath.Join(out, ".env.example"), []byte(instance.BundleEnv()), 0o644); err != nil {
+			if err := envfile.WriteFileAtomic(filepath.Join(out, ".env.example"), []byte(instance.BundleEnv()), false); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
-			if err := os.WriteFile(filepath.Join(out, "voice", "voice.env.example"), []byte(instance.VoiceBundleEnv()), 0o644); err != nil {
+			if err := envfile.WriteFileAtomic(filepath.Join(out, "voice", "voice.env.example"), []byte(instance.VoiceBundleEnv()), false); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
-			if err := os.WriteFile(filepath.Join(out, "voice", "edge.env.example"), []byte(instance.VoiceEdgeBundleEnv()), 0o644); err != nil {
+			if err := envfile.WriteFileAtomic(filepath.Join(out, "voice", "edge.env.example"), []byte(instance.VoiceEdgeBundleEnv()), false); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
 			return nil

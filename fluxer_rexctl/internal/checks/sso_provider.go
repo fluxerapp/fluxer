@@ -12,6 +12,8 @@ import (
 
 const ssoProbeSeconds = 8
 
+const ssoDiscoveryMaxBytes = 256 << 10
+
 func init() {
 	Register(Check{ID: "sso-provider", Phases: Installed, Run: runSSOProvider})
 }
@@ -22,6 +24,7 @@ type ssoProbeInput struct {
 	Discovery string `json:"discovery"`
 	Token     string `json:"token"`
 	Timeout   int    `json:"timeout_ms"`
+	MaxBytes  int    `json:"max_bytes"`
 }
 
 type ssoProbeOutput struct {
@@ -70,7 +73,16 @@ const connect = (u) => new Promise((resolve, reject) => {
     }
     if (res.status < 200 || res.status >= 300) done({ ok: false, stage: "discovery", host: discoveryHost, status: res.status });
     let doc;
-    try { doc = await res.json(); } catch (e) { doc = null; }
+    try {
+      const chunks = [];
+      let size = 0;
+      for await (const c of res.body) {
+        size += c.length;
+        if (size > input.max_bytes) { chunks.length = 0; break; }
+        chunks.push(c);
+      }
+      doc = size > input.max_bytes ? null : JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch (e) { doc = null; }
     if (!doc || typeof doc !== "object" || typeof doc.issuer !== "string") done({ ok: false, stage: "discovery", host: discoveryHost, code: "NOT_DISCOVERY" });
     if (!token && typeof doc.token_endpoint === "string") token = doc.token_endpoint;
   }
@@ -102,7 +114,7 @@ func ssoProvider(ctx context.Context, e *Env, run execFunc) Result {
 	if issuer == "" {
 		return skip("")
 	}
-	in := ssoProbeInput{Token: trimmed(cfg.Sso.TokenUrl), Timeout: ssoProbeSeconds * 1000}
+	in := ssoProbeInput{Token: trimmed(cfg.Sso.TokenUrl), Timeout: ssoProbeSeconds * 1000, MaxBytes: ssoDiscoveryMaxBytes}
 	if trimmed(cfg.Sso.AuthorizationUrl) == "" || in.Token == "" || trimmed(cfg.Sso.JwksUrl) == "" || trimmed(cfg.Sso.UserinfoUrl) == "" {
 		in.Discovery = discoveryURL(issuer)
 		if in.Discovery == "" {

@@ -21,10 +21,7 @@ const generatedSchema = 3
 
 const LayoutSchema = generatedSchema
 
-var (
-	euid  = os.Geteuid
-	chown = os.Lchown
-)
+var euid = os.Geteuid
 
 func (i *Instance) OldLayout() bool {
 	return i.State != nil && i.State.rootLayout
@@ -85,7 +82,7 @@ func savedSchema(path string) (int, error) {
 
 func copyGenerated(i *Instance) (map[string]string, error) {
 	gen := stack.GeneratedPath(i.Dir)
-	if err := os.MkdirAll(gen, 0o755); err != nil {
+	if err := stack.MakeGenerated(gen); err != nil {
 		return nil, err
 	}
 	if err := i.giveToOwner(gen); err != nil {
@@ -126,6 +123,11 @@ func (i *Instance) DropRootCopies(ctx context.Context, started bool) error {
 	}
 	changed := false
 	for name, hash := range i.State.LeftInRoot {
+		if !slices.Contains(stack.FileNames(), name) {
+			delete(i.State.LeftInRoot, name)
+			changed = true
+			continue
+		}
 		_, mounted := stack.MountedFiles[name]
 		if mounted && (!started || i.rootMounted(ctx, name)) {
 			continue

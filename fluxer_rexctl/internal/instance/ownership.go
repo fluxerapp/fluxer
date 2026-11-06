@@ -15,35 +15,46 @@ type Foreign struct {
 	Dir   string
 }
 
-func (i *Instance) ownDirs() []string {
-	return []string{i.Path(StateDirName), i.Path(BackupsDir)}
-}
-
 func (i *Instance) GiveFilesToOwner() error {
 	if euid() != 0 {
 		return nil
 	}
-	uid, gid, ok := dirIDs(i.Dir)
+	r, err := os.OpenRoot(i.Dir)
+	if err != nil {
+		return nil
+	}
+	defer r.Close()
+	info, err := r.Stat(".")
+	if err != nil {
+		return nil
+	}
+	uid, gid, ok := fileIDs(info)
 	if !ok || uid == 0 {
 		return nil
 	}
 	var errs []error
-	for _, dir := range i.ownDirs() {
-		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	for _, name := range []string{StateDirName, BackupsDir} {
+		top, err := r.Lstat(name)
+		if err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				errs = append(errs, err)
+			}
+			continue
+		}
+		if !top.IsDir() {
+			continue
+		}
+		err = fs.WalkDir(r.FS(), name, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				if errors.Is(err, fs.ErrNotExist) {
 					return nil
 				}
 				return err
 			}
-			info, err := d.Info()
-			if err != nil {
+			if !d.IsDir() && !d.Type().IsRegular() {
 				return nil
 			}
-			if owner, ok := ownerOf(info); ok && owner == 0 {
-				return chownIDs(path, uid, gid)
-			}
-			return nil
+			return claimForOwner(r, path, uid, gid)
 		})
 		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			errs = append(errs, err)
@@ -74,11 +85,4 @@ func (i *Instance) ForeignFile() (Foreign, bool) {
 		return nil
 	})
 	return found, found.Path != ""
-}
-
-func chownIDs(path string, uid, gid int) error {
-	if err := chown(path, uid, gid); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	return nil
 }

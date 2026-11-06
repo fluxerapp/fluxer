@@ -499,7 +499,7 @@ func testRemoteVoiceServer(c *cobra.Command, app *App, id string) error {
 			}
 			results = append(results, transportResult{Path: p, Err: err})
 		}
-		app.UI.Info("Tested %s at %s from this machine.", id, endpoint)
+		app.UI.Info("Tested %s at %s from this machine.", id, ui.Inline(endpoint))
 		if !reportTransports(app, results, false) {
 			switch {
 			case slices.ContainsFunc(results, func(r transportResult) bool { return errors.Is(r.Err, voice.ErrTokenRejected) }):

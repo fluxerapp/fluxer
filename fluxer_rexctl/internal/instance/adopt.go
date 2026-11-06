@@ -180,6 +180,12 @@ func ResolveComposeFiles(dir string, env map[string]string, environ []string) ([
 }
 
 func PlanAdopt(l *Legacy) (*AdoptPlan, error) {
+	if !projectName.MatchString(l.Project) {
+		return nil, &AdoptError{
+			Msg: fmt.Sprintf("rexctl can't use the Compose project name %q.", l.Project),
+			Fix: "Set COMPOSE_PROJECT_NAME in .env to lowercase letters, digits, dashes and underscores, starting with a letter or digit.",
+		}
+	}
 	p := &AdoptPlan{
 		Dir:        l.Dir,
 		Project:    l.Project,
@@ -284,7 +290,7 @@ func adoptFiles(ctx context.Context, p *AdoptPlan) error {
 	if p.customFrom != "" {
 		dst := filepath.Join(p.Dir, CustomCompose)
 		if p.customFrom != dst {
-			if within(p.Dir, p.customFrom) {
+			if resolvedWithin(p.Dir, filepath.Dir(p.customFrom)) {
 				if err := l.moveTo(p.customFrom, dst); err != nil {
 					return err
 				}
@@ -467,7 +473,9 @@ func (l *Legacy) copyTo(src, dst string) error {
 	if existing, err := os.ReadFile(dst); err == nil && bytes.Equal(existing, data) {
 		return nil
 	}
-	return envfile.WriteFileAtomic(dst, normalizeLF(data), false)
+	info, err := os.Stat(src)
+	private := err == nil && info.Mode().Perm()&0o004 == 0
+	return envfile.WriteFileAtomic(dst, normalizeLF(data), private)
 }
 
 func loadLegacyEnv(path string) (*envfile.File, bool, error) {
@@ -562,6 +570,15 @@ func appendUnique(list []string, v string) []string {
 		return list
 	}
 	return append(list, v)
+}
+
+func resolvedWithin(dir, path string) bool {
+	realDir, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		return false
+	}
+	realPath, err := filepath.EvalSymlinks(path)
+	return err == nil && within(realDir, realPath)
 }
 
 func within(dir, path string) bool {

@@ -543,7 +543,7 @@ func writeUpgradeText(inst *instance.Instance, to, text string) string {
 	if loggedThisAttempt(inst, to) {
 		flag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	}
-	f, err := os.OpenFile(path, flag, 0o600)
+	f, err := openStateLog(inst, upgradeLog(to), flag)
 	if err != nil {
 		return ""
 	}
@@ -552,6 +552,15 @@ func writeUpgradeText(inst *instance.Instance, to, text string) string {
 		return ""
 	}
 	return path
+}
+
+func openStateLog(inst *instance.Instance, name string, flag int) (*os.File, error) {
+	root, err := os.OpenRoot(inst.Dir)
+	if err != nil {
+		return nil, err
+	}
+	defer root.Close()
+	return root.OpenFile(filepath.Join(instance.StateDirName, name), flag, 0o600)
 }
 
 func printUpgradePlan(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags, needSelf bool, from, version string) {
@@ -1362,7 +1371,7 @@ func writeFailureLog(ctx context.Context, inst *instance.Instance, p *engine.Pro
 		}
 	}
 	path := inst.Path(instance.StateDirName, name)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	f, err := openStateLog(inst, name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC)
 	if err != nil {
 		return ""
 	}
@@ -1386,11 +1395,15 @@ func writeBackupLog(inst *instance.Instance, name string, cause error) string {
 	if errors.As(cause, &dump) && dump.Output != "" {
 		text += "\n" + dump.Output + "\n"
 	}
-	path := inst.Path(instance.StateDirName, name)
-	if err := os.WriteFile(path, []byte(text), 0o600); err != nil {
+	f, err := openStateLog(inst, name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC)
+	if err != nil {
 		return ""
 	}
-	return path
+	defer f.Close()
+	if _, err := f.WriteString(text); err != nil {
+		return ""
+	}
+	return inst.Path(instance.StateDirName, name)
 }
 
 func notRunning(ctx context.Context, p *engine.Project) []string {

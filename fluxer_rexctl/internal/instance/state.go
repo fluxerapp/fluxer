@@ -17,6 +17,7 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
 
 const StateSchema = generatedSchema + 2
@@ -230,9 +231,17 @@ func parseStateRepairing(data []byte, dir string, repairing []string) (*State, e
 	if head.Project == "" {
 		return nil, fmt.Errorf("instance: the state in %s names no project", dir)
 	}
+	if !projectName.MatchString(head.Project) {
+		return nil, fmt.Errorf("instance: the state in %s names the project %q: %w", dir, head.Project, ErrBadProject)
+	}
 	s, err := parseState(data, dir, repairing)
 	if err != nil {
 		return nil, err
+	}
+	for _, v := range s.Voice {
+		if !voice.SafeDirName(v.ID) {
+			return nil, fmt.Errorf("instance: the state in %s has a voice server with the ID %q, which isn't a folder name", dir, v.ID)
+		}
 	}
 	s.rootLayout = head.Schema < generatedSchema
 	s.normalize()

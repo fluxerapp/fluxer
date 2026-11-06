@@ -276,10 +276,10 @@ func runBackupVerify(ctx context.Context, app *App, arg string) error {
 			return backupFileErr(path, err)
 		}
 		if m.WithoutUploads() {
-			s.Done("The backup is complete. It has %s on %s without uploads, made %s.", m.Domain, fluxerName(m.Release), backupTime(m.CreatedAt))
+			s.Done("The backup is complete. It has %s on %s without uploads, made %s.", ui.Inline(m.Domain), fluxerName(ui.Inline(m.Release)), backupTime(m.CreatedAt))
 			return nil
 		}
-		s.Done("The backup is complete. It has %s on %s, made %s.", m.Domain, fluxerName(m.Release), backupTime(m.CreatedAt))
+		s.Done("The backup is complete. It has %s on %s, made %s.", ui.Inline(m.Domain), fluxerName(ui.Inline(m.Release)), backupTime(m.CreatedAt))
 		return nil
 	})
 }

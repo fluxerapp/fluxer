@@ -170,11 +170,11 @@ func (u *UI) glyphLine(glyph string, style lipgloss.Style, msg, fix string) {
 	var b strings.Builder
 	b.WriteString(style.Render(glyph))
 	b.WriteString(" ")
-	b.WriteString(msg)
+	b.WriteString(printable(msg))
 	b.WriteString("\n")
 	if fix != "" {
 		b.WriteString("  ")
-		b.WriteString(fix)
+		b.WriteString(printable(fix))
 		b.WriteString("\n")
 	}
 	u.emit(b.String())
@@ -206,7 +206,7 @@ func (u *UI) Detail(format string, args ...any) {
 	if !u.opts.Verbose {
 		return
 	}
-	u.emit(u.theme.Dim.Render(fmt.Sprintf(format, args...)) + "\n")
+	u.emit(u.theme.Dim.Render(printable(fmt.Sprintf(format, args...))) + "\n")
 }
 
 func (u *UI) Result(s string) {
@@ -214,6 +214,7 @@ func (u *UI) Result(s string) {
 }
 
 func (u *UI) Highlight(s string) {
+	s = Inline(s)
 	if !u.stdoutTTY {
 		fmt.Fprintln(u.opts.Stdout, s)
 		return
@@ -234,6 +235,12 @@ func (u *UI) JSON(v any) error {
 }
 
 func (u *UI) Table(headers []string, rows [][]string) {
+	headers = cells(headers)
+	clean := make([][]string, len(rows))
+	for i, r := range rows {
+		clean[i] = cells(r)
+	}
+	rows = clean
 	widths := make([]int, len(headers))
 	for i, h := range headers {
 		widths[i] = ansi.StringWidth(h)
@@ -326,9 +333,9 @@ func (u *UI) ReportError(err error) {
 	}
 	if ee.Code == ExitUsage {
 		var b strings.Builder
-		b.WriteString(msg + "\n")
+		b.WriteString(printable(msg) + "\n")
 		if ee.Fix != "" {
-			b.WriteString(ee.Fix + "\n")
+			b.WriteString(printable(ee.Fix) + "\n")
 		}
 		u.emit(b.String())
 	} else {
@@ -349,6 +356,32 @@ func (u *UI) ReportError(err error) {
 		}
 		cause = inner.Err
 	}
+}
+
+func printable(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\t' || !unicode.IsControl(r) {
+			return r
+		}
+		return -1
+	}, ansi.Strip(s))
+}
+
+func Inline(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\t' {
+			return ' '
+		}
+		return r
+	}, printable(s))
+}
+
+func cells(row []string) []string {
+	out := make([]string, len(row))
+	for i, c := range row {
+		out[i] = Inline(c)
+	}
+	return out
 }
 
 func sentence(s string) string {

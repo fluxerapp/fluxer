@@ -6,7 +6,9 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"unicode"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/docker/compose/v5/pkg/api"
 )
 
@@ -52,23 +54,33 @@ func (b *bus) On(events ...api.Resource) {
 }
 
 func toEvent(project string, r api.Resource) Event {
-	kind, name, _ := strings.Cut(r.ID, " ")
+	id := plain(r.ID)
+	kind, name, _ := strings.Cut(id, " ")
 	ev := Event{
-		ID:      r.ID,
-		Parent:  r.ParentID,
+		ID:      id,
+		Parent:  plain(r.ParentID),
 		Kind:    strings.ToLower(kind),
-		Text:    r.Text,
+		Text:    plain(r.Text),
 		Status:  eventStatus(r.Status),
 		Current: r.Current,
 		Total:   r.Total,
 	}
 	if r.Status == api.Error && r.Details != "" {
-		ev.Text = r.Details
+		ev.Text = plain(r.Details)
 	}
 	if ev.Kind == "container" {
 		ev.Service = serviceOf(project, name)
 	}
 	return ev
+}
+
+func plain(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r != '\t' && r != '\n' && unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, ansi.Strip(s))
 }
 
 func serviceOf(project, container string) string {
