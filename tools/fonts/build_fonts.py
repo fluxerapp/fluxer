@@ -173,6 +173,7 @@ class GithubReleaseSource:
     repo: str
     tag: str
     asset: str
+    ttf_dir: str | None = None
 
     @property
     def label(self) -> str:
@@ -200,6 +201,8 @@ class GithubReleaseSource:
             )
             blob = _http_get(url)
             _extract_zip(blob, root)
+            if self.ttf_dir is not None:
+                _convert_ttf_to_woff2(root / self.ttf_dir)
             marker.write_text(hashlib.sha256(blob).hexdigest() + "\n")
         return root
 
@@ -207,7 +210,17 @@ class GithubReleaseSource:
         return (self._root(cache) / ".complete").read_text().strip()
 
 
+def _convert_ttf_to_woff2(directory: Path) -> None:
+    for ttf in sorted(directory.glob("*.ttf")):
+        font = TTFont(ttf, recalcTimestamp=False, recalcBBoxes=False)
+        font.flavor = "woff2"
+        font.save(ttf.with_suffix(".woff2"))
+        font.close()
+
+
 Source = Union[NpmSource, GithubReleaseSource]
+
+NOTO_BENGALI_TTF = "NotoSansBengali/hinted/ttf"
 
 SOURCES: dict[str, Source] = {
     "plex-sans": NpmSource("@ibm/plex-sans", "1.1.0"),
@@ -221,6 +234,12 @@ SOURCES: dict[str, Source] = {
     "plex-sans-tc": NpmSource("@ibm/plex-sans-tc", "1.1.1"),
     "plex-sans-kr": GithubReleaseSource(
         "IBM/plex", "@ibm/plex-sans-kr@1.1.0", "ibm-plex-sans-kr.zip"
+    ),
+    "noto-sans-bengali": GithubReleaseSource(
+        "notofonts/bengali",
+        "NotoSansBengali-v3.011",
+        "NotoSansBengali-v3.011.zip",
+        ttf_dir=NOTO_BENGALI_TTF,
     ),
 }
 
@@ -246,6 +265,7 @@ class Family:
 
 
 LATIN_WEIGHTS = UPRIGHT_WEIGHTS + ITALIC_WEIGHTS
+NOTO_WEIGHTS = tuple(weight for weight in UPRIGHT_WEIGHTS if weight != "Text")
 PLEX_WOFF2 = "fonts/complete/woff2"
 
 LATIN_CORE_STYLESHEETS = ("fluxer-sans.css", "fluxer-mono.css")
@@ -296,6 +316,17 @@ FAMILIES: tuple[Family, ...] = (
         PLEX_GASP,
         "Fluxer Sans Devanagari",
         "script-devanagari.css",
+    ),
+    Family(
+        "FluxerSansBengali",
+        "NotoSansBengali",
+        NOTO_WEIGHTS,
+        "noto-sans-bengali",
+        NOTO_BENGALI_TTF,
+        REBUILD,
+        PLEX_GASP,
+        "Fluxer Sans Bengali",
+        "script-bengali.css",
     ),
     Family(
         "FluxerSansHebrew",
@@ -397,6 +428,7 @@ SCRIPT_FAMILY_ORDER: tuple[str, ...] = (
     "Fluxer Sans Arabic",
     "Fluxer Sans Hebrew",
     "Fluxer Sans Devanagari",
+    "Fluxer Sans Bengali",
     "Fluxer Sans Thai Looped",
     "Fluxer Sans SC",
     "Fluxer Sans TC",
@@ -420,6 +452,7 @@ LOCALE_FALLBACKS: tuple[tuple[tuple[str, ...], str, tuple[str, ...]], ...] = (
     (("ar",), "Fluxer Sans Arabic", ("Segoe UI", "Geeza Pro", "Arabic Typesetting")),
     (("he",), "Fluxer Sans Hebrew", ("Segoe UI", "Arial Hebrew")),
     (("hi", "mr", "ne", "sa"), "Fluxer Sans Devanagari", ("Nirmala UI", "Noto Sans Devanagari")),
+    (("bn", "as"), "Fluxer Sans Bengali", ("Nirmala UI", "Bangla Sangam MN", "Noto Sans Bengali")),
     (("th",), "Fluxer Sans Thai Looped", ("Leelawadee UI", "Thonburi")),
 )
 
@@ -525,7 +558,12 @@ def _extract_member(archive: object, member: object, name: str, root: Path, is_d
 
 
 def fluxer_name(value: str) -> str:
-    return value.replace("IBM Plex ", "Fluxer ").replace("IBMPlex", "Fluxer")
+    return (
+        value.replace("IBM Plex ", "Fluxer ")
+        .replace("IBMPlex", "Fluxer")
+        .replace("Noto Sans ", "Fluxer Sans ")
+        .replace("NotoSans", "FluxerSans")
+    )
 
 
 def _name_map(font: TTFont) -> dict[tuple[int, int, int, int], str]:

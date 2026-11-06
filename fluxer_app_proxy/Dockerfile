@@ -63,7 +63,7 @@ COPY packages/snowflake/ ./packages/snowflake/
 COPY packages/voice_engine_v2/ ./packages/voice_engine_v2/
 COPY packages/fonts/css/ ./packages/fonts/css/
 COPY packages/fonts/files/ ./packages/fonts/files/
-COPY packages/fonts/NOTICE.md packages/fonts/LICENSE-IBM-PLEX.txt ./packages/fonts/
+COPY packages/fonts/NOTICE.md packages/fonts/LICENSE-IBM-PLEX.txt packages/fonts/LICENSE-NOTO-SANS-BENGALI.txt ./packages/fonts/
 COPY packages/markdown_parser/rust/Cargo.toml ./packages/markdown_parser/rust/
 COPY packages/markdown_parser/rust/.cargo/ ./packages/markdown_parser/rust/.cargo/
 COPY packages/markdown_parser/rust/benches/parser.rs ./packages/markdown_parser/rust/benches/
