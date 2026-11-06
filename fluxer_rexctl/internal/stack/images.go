@@ -221,16 +221,61 @@ func UnpinImages(compose []byte) []byte {
 	if err != nil || prefix == "" {
 		return compose
 	}
+	shippedValue := map[string]string{}
+	for _, t := range templates {
+		shippedValue[t.service] = t.value
+	}
 	lines := strings.Split(string(compose), "\n")
 	for _, img := range found {
-		repo, digest, pinned := strings.Cut(img.value, "@sha256:")
 		i := img.line - 1
-		if !pinned || len(digest) != 64 || i < 0 || i >= len(lines) || img.column-1 > len(lines[i]) {
+		if i < 0 || i >= len(lines) || img.column-1 > len(lines[i]) {
+			continue
+		}
+		if name, ref, ok := defaultedVar(img.value); ok {
+			tmplName, _, tmplOK := defaultedVar(shippedValue[img.service])
+			if tmplOK && tmplName == name && digestPinned(ref) {
+				lines[i] = lines[i][:img.column-1] + shippedValue[img.service]
+			}
+			continue
+		}
+		repo, digest, pinned := strings.Cut(img.value, "@sha256:")
+		if !pinned || len(digest) != 64 {
 			continue
 		}
 		lines[i] = lines[i][:img.column-1] + prefix + path.Base(repo) + suffix
 	}
 	return []byte(strings.Join(lines, "\n"))
+}
+
+func RegistryServices() map[string]bool {
+	out := map[string]bool{}
+	compose, err := ReadFile(Embedded(), ComposeFile)
+	if err != nil {
+		return out
+	}
+	found, err := imageLines(compose)
+	if err != nil {
+		return out
+	}
+	for _, img := range found {
+		if strings.HasPrefix(img.value, "${FLUXER_REGISTRY") {
+			out[img.service] = true
+		}
+	}
+	return out
+}
+
+func digestPinned(ref string) bool {
+	_, digest, ok := strings.Cut(ref, "@sha256:")
+	if !ok || len(digest) != 64 {
+		return false
+	}
+	for _, r := range digest {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 func ImageDefault(value string) (string, bool) {

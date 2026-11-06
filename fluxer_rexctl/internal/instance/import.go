@@ -263,8 +263,9 @@ func setsImage(custom []byte, images map[string]string) bool {
 	if err := yaml.Unmarshal(custom, &doc); err != nil {
 		return true
 	}
+	fluxer := stack.RegistryServices()
 	for name, svc := range doc.Services {
-		if _, ok := svc["image"]; ok && images[name] != "" {
+		if _, ok := svc["image"]; ok && fluxer[name] && images[name] != "" {
 			return true
 		}
 	}

@@ -346,11 +346,15 @@ func uploadsRef(v volumeRef, have []engine.Volume, mark bool) *UploadsRef {
 }
 
 func UploadsDefinition(set *stack.Set, st *instance.State) string {
-	def, err := stack.ServicesDefinition(set, stack.OverlaysFor(st.Settings), st.Images.Refs, stack.UploadsServices...)
+	refs := maps.Clone(st.Images.Refs)
+	for _, svc := range stack.UploadsServices {
+		delete(refs, svc)
+	}
+	def, err := stack.ServicesDefinition(set, stack.OverlaysFor(st.Settings), refs, stack.UploadsServices...)
 	if err != nil {
 		return ""
 	}
-	return stack.Hash([]byte(settings.ImageRef(st.Settings, st.Images.Refs, "seaweedfs") + "\n" + def))
+	return stack.Hash([]byte(settings.ImageRef(st.Settings, refs, "seaweedfs") + "\n" + def))
 }
 
 func uploadsDefinition(inst *instance.Instance) string {

@@ -324,7 +324,13 @@ func imageFor(svc, value string, fluxer map[string]string, chosen func(string) s
 		return svc
 	}
 	def, ok := stack.ImageDefault(value)
+	if pinned := fluxer[svc]; pinned != "" {
+		def = pinned
+	}
 	if !ok {
+		if def != "" {
+			return def
+		}
 		return value
 	}
 	name := strings.TrimPrefix(strings.SplitN(value, ":-", 2)[0], "${")
