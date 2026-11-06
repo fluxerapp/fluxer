@@ -122,13 +122,18 @@ fn extract_animated_image_frames_for_nsfw(
 ) -> Result<Vec<Vec<u8>>, MediaError> {
     let media_type = MediaType::from_mime(source.content_type);
     if let Some(media_type @ (MediaType::APNG | MediaType::GIF | MediaType::WebP)) = media_type {
-        return extract_native_animated_frames_for_nsfw(
+        match extract_native_animated_frames_for_nsfw(
             source.media_limits,
             source.input,
             source.frame_count,
             media_type,
             source.deadline_ms,
-        );
+        ) {
+            Ok(frames) => return Ok(frames),
+            Err(err) => tracing::warn!(
+                "nsfw native animated frame extract failed: {err:?} - retrying with vips"
+            ),
+        }
     }
     extract_vips_animation_frames_for_nsfw(source.media_limits, source.input, source.deadline_ms)
 }
@@ -321,39 +326,45 @@ pub(super) fn compute_frame_sample_timestamps(
     duration_seconds: Option<f64>,
     prng: &mut rand_chacha::ChaCha8Rng,
 ) -> [f64; MAX_NSFW_SAMPLE_FRAMES] {
-    const DEFAULT_SAMPLING_WINDOW_SECONDS: f64 = 1.0;
+    const UNKNOWN_DURATION_MIDDLE_POSITION: f64 = 0.5;
+    const UNKNOWN_DURATION_END_POSITION: f64 = 0.85;
 
     use rand::RngExt;
-    let valid: Option<f64> = duration_seconds.filter(|d| d.is_finite() && *d > 0.0);
-    let sampling_window_seconds = valid.unwrap_or(DEFAULT_SAMPLING_WINDOW_SECONDS);
-
-    let clamp = |v: f64| -> f64 {
+    let clamp = |v: f64, max_v: f64| -> f64 {
         if !v.is_finite() {
             return 0.0;
         }
-        match valid {
-            Some(max_v) => v.clamp(0.0, max_v),
-            None => v.max(0.0),
-        }
+        v.clamp(0.0, max_v)
     };
-
-    let start_base = clamp((sampling_window_seconds * 0.1 + 0.5).clamp(1.0, 2.0));
-    let middle_base = clamp(sampling_window_seconds / 2.0);
-    let end_candidate = if sampling_window_seconds > 2.0 {
-        sampling_window_seconds - 1.0
-    } else {
-        sampling_window_seconds * 0.95
-    };
-    let min_end = start_base + 0.5;
-    let end_base = clamp(end_candidate.max(min_end));
-
-    let mut jitter = |v: f64| -> f64 {
+    let mut jitter = |v: f64, max_v: f64| -> f64 {
         let radius = (v.abs() * 0.1).max(0.05);
         let r: f64 = prng.random();
-        clamp(v + (r * 2.0 - 1.0) * radius)
+        clamp(v + (r * 2.0 - 1.0) * radius, max_v)
     };
 
-    [jitter(start_base), jitter(middle_base), jitter(end_base)]
+    let Some(duration) = duration_seconds.filter(|d| d.is_finite() && *d > 0.0) else {
+        return [
+            0.0,
+            jitter(UNKNOWN_DURATION_MIDDLE_POSITION, 1.0),
+            jitter(UNKNOWN_DURATION_END_POSITION, 1.0),
+        ];
+    };
+
+    let start_base = clamp((duration * 0.1 + 0.5).clamp(1.0, 2.0), duration);
+    let middle_base = clamp(duration / 2.0, duration);
+    let end_candidate = if duration > 2.0 {
+        duration - 1.0
+    } else {
+        duration * 0.95
+    };
+    let min_end = start_base + 0.5;
+    let end_base = clamp(end_candidate.max(min_end), duration);
+
+    [
+        jitter(start_base, duration),
+        jitter(middle_base, duration),
+        jitter(end_base, duration),
+    ]
 }
 
 pub(super) fn nsfw_frame_seed(input: &[u8]) -> u64 {

@@ -2,11 +2,17 @@
 
 use super::super::native_runtime::ensure_vips_init;
 use super::super::{MediaError, native_optional_deadline, native_status_error};
-use crate::native::{self, FluxerAVAudioDurationOut, NativeStatus};
+use super::strip_image_metadata;
+use crate::{
+    media_limits::MediaLimits,
+    native::{self, FluxerAVAudioDurationOut, NativeStatus},
+};
+use libc::{c_int, c_void, size_t};
 use std::{
     ffi::{CStr, CString},
     os::unix::ffi::OsStrExt,
     path::Path,
+    slice,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -67,10 +73,57 @@ pub fn av_container(content_type: &str) -> Option<AvContainer> {
     })
 }
 
+struct PictureStrip<'a> {
+    media_limits: &'a MediaLimits,
+    deadline_ms: Option<i64>,
+    stripped: Vec<u8>,
+}
+
+unsafe extern "C" fn strip_attached_picture(
+    user_data: *mut c_void,
+    data: *const c_void,
+    len: size_t,
+    out_data: *mut *const c_void,
+    out_len: *mut size_t,
+    out_width: *mut c_int,
+    out_height: *mut c_int,
+) -> c_int {
+    if user_data.is_null()
+        || data.is_null()
+        || out_data.is_null()
+        || out_len.is_null()
+        || out_width.is_null()
+        || out_height.is_null()
+    {
+        return -1;
+    }
+    let context = unsafe { &mut *user_data.cast::<PictureStrip<'_>>() };
+    let input = unsafe { slice::from_raw_parts(data.cast::<u8>(), len) };
+    let Ok(stripped) = strip_image_metadata(input, context.media_limits, context.deadline_ms)
+    else {
+        return -1;
+    };
+    let (Ok(width), Ok(height)) = (
+        c_int::try_from(stripped.width),
+        c_int::try_from(stripped.height),
+    ) else {
+        return -1;
+    };
+    context.stripped = stripped.bytes;
+    unsafe {
+        *out_data = context.stripped.as_ptr().cast();
+        *out_len = context.stripped.len();
+        *out_width = width;
+        *out_height = height;
+    }
+    0
+}
+
 pub fn strip_av_metadata(
     input: &[u8],
     container: AvContainer,
     output: &Path,
+    media_limits: &MediaLimits,
     deadline_ms: Option<i64>,
 ) -> Result<(), MediaError> {
     ensure_vips_init()?;
@@ -79,6 +132,11 @@ pub fn strip_av_metadata(
     }
     let output =
         CString::new(output.as_os_str().as_bytes()).map_err(|_| MediaError::MediaEncodeFailed)?;
+    let mut pictures = PictureStrip {
+        media_limits,
+        deadline_ms,
+        stripped: Vec::new(),
+    };
     let rc = unsafe {
         native::fluxer_av_strip_metadata(
             input.as_ptr().cast(),
@@ -88,6 +146,8 @@ pub fn strip_av_metadata(
             i32::from(container.faststart),
             output.as_ptr(),
             native_optional_deadline(deadline_ms),
+            strip_attached_picture,
+            (&raw mut pictures).cast(),
         )
     };
     match native_status_error(NativeStatus::from_code(rc), MediaError::MediaDecodeFailed) {

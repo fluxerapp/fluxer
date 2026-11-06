@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::image_probe::probe_image_dims;
-use super::loaded_image::static_output_pixels;
+use super::loaded_image::{static_output_pixels, validate_dimensions_u32};
 use super::native_runtime::ensure_vips_init;
 use super::{ImageDimensions, MediaError};
 use crate::{
@@ -46,7 +46,7 @@ pub fn image_transform_cost(
 ) -> Result<NativeCost, MediaError> {
     ensure_vips_init()?;
     let sniffed_mime = mime::sniff(input).mime;
-    let dims = probe_image_dims(media_limits, input)?;
+    let dims = cost_image_dims(media_limits, input, sniffed_mime)?;
     let source_pixels = dims.width as usize * dims.height as usize;
     let options =
         fit_static_output_to_budget(input.len(), sniffed_mime, options, dims, media_limits);
@@ -59,6 +59,42 @@ pub fn image_transform_cost(
         source_pixels * decode_bytes_per_pixel(sniffed_mime) + output_pixels * encode
     };
     Ok(NativeCost::Bytes(input.len().saturating_add(pixel_cost)))
+}
+
+fn cost_image_dims(
+    media_limits: &MediaLimits,
+    input: &[u8],
+    sniffed_mime: &str,
+) -> Result<ImageDimensions, MediaError> {
+    if sniffed_mime == "image/bmp"
+        && let Some((width, height)) = bmp_header_dims(input)
+    {
+        validate_dimensions_u32(media_limits, width, height)?;
+        return Ok(ImageDimensions {
+            width,
+            height,
+            pages: 1,
+            bands: 4,
+            eight_bit: true,
+        });
+    }
+    probe_image_dims(media_limits, input)
+}
+
+fn bmp_header_dims(input: &[u8]) -> Option<(u32, u32)> {
+    let read = |offset: usize, len: usize| input.get(offset..offset + len);
+    let header_size = u32::from_le_bytes(read(14, 4)?.try_into().ok()?);
+    if header_size == 12 {
+        let width = u16::from_le_bytes(read(18, 2)?.try_into().ok()?);
+        let height = u16::from_le_bytes(read(20, 2)?.try_into().ok()?);
+        return Some((u32::from(width), u32::from(height)));
+    }
+    if header_size < 16 {
+        return None;
+    }
+    let width = i32::from_le_bytes(read(18, 4)?.try_into().ok()?);
+    let height = i32::from_le_bytes(read(22, 4)?.try_into().ok()?);
+    Some((u32::try_from(width).ok()?, height.unsigned_abs()))
 }
 
 pub(super) fn fit_static_output_to_budget(
@@ -106,7 +142,7 @@ pub fn metadata_cost(input: &[u8], media_limits: &MediaLimits) -> Result<NativeC
     match mime::category(sniffed_mime) {
         Some(mime::Category::Image) => {
             ensure_vips_init()?;
-            let dims = probe_image_dims(media_limits, input)?;
+            let dims = cost_image_dims(media_limits, input, sniffed_mime)?;
             let source_pixels = dims.width as usize * dims.height as usize;
             Ok(NativeCost::Bytes(input.len().saturating_add(
                 source_pixels * decode_bytes_per_pixel(sniffed_mime),

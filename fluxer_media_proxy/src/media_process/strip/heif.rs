@@ -5,11 +5,11 @@ use std::{collections::HashSet, ops::Range};
 
 const FREE_BOX_HEADER: usize = 8;
 
-struct BoxSpan {
-    kind: [u8; 4],
-    start: usize,
-    body: usize,
-    end: usize,
+pub(super) struct BoxSpan {
+    pub(super) kind: [u8; 4],
+    pub(super) start: usize,
+    pub(super) body: usize,
+    pub(super) end: usize,
 }
 
 fn read_uint(input: &[u8], offset: usize, size: usize) -> Result<u64, MediaError> {
@@ -21,7 +21,7 @@ fn read_uint(input: &[u8], offset: usize, size: usize) -> Result<u64, MediaError
         .fold(0u64, |value, &byte| (value << 8) | u64::from(byte)))
 }
 
-fn read_box(input: &[u8], start: usize, limit: usize) -> Result<BoxSpan, MediaError> {
+pub(super) fn read_box(input: &[u8], start: usize, limit: usize) -> Result<BoxSpan, MediaError> {
     let size = read_uint(input, start, 4)? as usize;
     let kind: [u8; 4] = input
         .get(start + 4..start + 8)
@@ -323,41 +323,58 @@ fn rewrite_meta(
 }
 
 pub(super) fn strip_items(input: &[u8]) -> Result<Vec<u8>, MediaError> {
-    let top = children(input, 0, input.len())?;
-    let meta = top
-        .iter()
-        .find(|span| &span.kind == b"meta")
-        .ok_or(MediaError::MediaDecodeFailed)?;
-    let mut removal = Removal {
-        items: HashSet::new(),
-        file_ranges: Vec::new(),
-        idat_ranges: Vec::new(),
-    };
-    let mut rewritten = rewrite_meta(input, meta, &mut removal)?;
-    if removal.items.is_empty() {
+    let mut found_meta = false;
+    let mut edits: Vec<(Range<usize>, Vec<u8>)> = Vec::new();
+    let mut file_ranges = Vec::new();
+    let mut offset = 0;
+    while offset < input.len() {
+        let meta = read_box(input, offset, input.len())?;
+        offset = meta.end;
+        if &meta.kind != b"meta" {
+            continue;
+        }
+        found_meta = true;
+        let mut removal = Removal {
+            items: HashSet::new(),
+            file_ranges: Vec::new(),
+            idat_ranges: Vec::new(),
+        };
+        let mut rewritten = rewrite_meta(input, &meta, &mut removal)?;
+        if removal.items.is_empty() {
+            continue;
+        }
+        if !removal.idat_ranges.is_empty() {
+            zero_idat(&mut rewritten, &removal.idat_ranges)?;
+        }
+        let original_len = meta.end - meta.start;
+        let padding = original_len
+            .checked_sub(rewritten.len())
+            .filter(|padding| *padding >= FREE_BOX_HEADER)
+            .ok_or(MediaError::UnsupportedMediaType)?;
+        push_box(&mut rewritten, b"free", &vec![0; padding - FREE_BOX_HEADER])?;
+        file_ranges.extend(removal.file_ranges);
+        edits.push((meta.start..meta.end, rewritten));
+    }
+    if !found_meta {
+        return Err(MediaError::MediaDecodeFailed);
+    }
+    if edits.is_empty() {
         return Ok(input.to_vec());
     }
-    if !removal.idat_ranges.is_empty() {
-        zero_idat(&mut rewritten, &removal.idat_ranges)?;
-    }
-    let original_len = meta.end - meta.start;
-    let padding = original_len
-        .checked_sub(rewritten.len())
-        .filter(|padding| *padding >= FREE_BOX_HEADER)
-        .ok_or(MediaError::UnsupportedMediaType)?;
-    if removal
-        .file_ranges
-        .iter()
-        .any(|range| range.start < meta.end && range.end > meta.start)
-    {
+    let overlaps_edit = |range: &Range<usize>| {
+        let index = edits.partition_point(|(span, _)| span.end <= range.start);
+        edits
+            .get(index)
+            .is_some_and(|(span, _)| span.start < range.end)
+    };
+    if file_ranges.iter().any(overlaps_edit) {
         return Err(MediaError::UnsupportedMediaType);
     }
-    let mut output = Vec::with_capacity(input.len());
-    output.extend_from_slice(&input[..meta.start]);
-    output.extend_from_slice(&rewritten);
-    push_box(&mut output, b"free", &vec![0; padding - FREE_BOX_HEADER])?;
-    output.extend_from_slice(&input[meta.end..]);
-    zero_ranges(&mut output, &removal.file_ranges)?;
+    let mut output = input.to_vec();
+    for (span, rewritten) in &edits {
+        output[span.clone()].copy_from_slice(rewritten);
+    }
+    zero_ranges(&mut output, &file_ranges)?;
     Ok(output)
 }
 
@@ -369,4 +386,65 @@ fn zero_idat(meta: &mut [u8], ranges: &[Range<usize>]) -> Result<(), MediaError>
         .ok_or(MediaError::MediaDecodeFailed)?;
     let (body, end) = (idat.body, idat.end);
     zero_ranges(&mut meta[body..end], ranges)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn boxed(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
+        let mut output = Vec::new();
+        push_box(&mut output, kind, body).unwrap();
+        output
+    }
+
+    fn infe(id: u16, item_type: &[u8; 4]) -> Vec<u8> {
+        let mut body = vec![2, 0, 0, 0];
+        body.extend_from_slice(&id.to_be_bytes());
+        body.extend_from_slice(&[0, 0]);
+        body.extend_from_slice(item_type);
+        body.push(0);
+        boxed(b"infe", &body)
+    }
+
+    fn meta(items: &[(u16, &[u8; 4], u32, u32)]) -> Vec<u8> {
+        let mut iinf = vec![0, 0, 0, 0];
+        iinf.extend_from_slice(&(items.len() as u16).to_be_bytes());
+        let mut iloc = vec![0, 0, 0, 0, 0x44, 0x00];
+        iloc.extend_from_slice(&(items.len() as u16).to_be_bytes());
+        for &(id, item_type, offset, length) in items {
+            iinf.extend_from_slice(&infe(id, item_type));
+            iloc.extend_from_slice(&id.to_be_bytes());
+            iloc.extend_from_slice(&[0, 0, 0, 1]);
+            iloc.extend_from_slice(&offset.to_be_bytes());
+            iloc.extend_from_slice(&length.to_be_bytes());
+        }
+        let mut body = vec![0, 0, 0, 0];
+        body.extend_from_slice(&boxed(b"iinf", &iinf));
+        body.extend_from_slice(&boxed(b"iloc", &iloc));
+        boxed(b"meta", &body)
+    }
+
+    #[test]
+    fn strips_exif_from_every_meta_box() {
+        let ftyp = boxed(b"ftyp", b"heic\0\0\0\0");
+        let first = meta(&[(1, b"hvc1", 0, 0)]);
+        let header_len = ftyp.len() + first.len();
+        let second_len = meta(&[(1, b"hvc1", 0, 0), (2, b"Exif", 0, 0)]).len();
+        let image_offset = (header_len + second_len + 8) as u32;
+        let first = meta(&[(1, b"hvc1", image_offset, 8)]);
+        let second = meta(&[
+            (1, b"hvc1", image_offset, 8),
+            (2, b"Exif", image_offset + 8, 8),
+        ]);
+        let mdat = boxed(b"mdat", b"IMAGEDATGPS59.33");
+        let input = [ftyp, first, second, mdat].concat();
+
+        let output = strip_items(&input).unwrap();
+
+        assert_eq!(output.len(), input.len());
+        assert!(!output.windows(4).any(|window| window == b"Exif"));
+        assert!(!output.windows(8).any(|window| window == b"GPS59.33"));
+        assert!(output.windows(8).any(|window| window == b"IMAGEDAT"));
+    }
 }

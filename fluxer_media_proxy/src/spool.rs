@@ -10,7 +10,7 @@ use tokio::{
     io::{AsyncSeekExt, AsyncWriteExt, BufWriter},
 };
 
-use crate::upload_relay::{release_spool_budget, try_reserve_spool_budget};
+use crate::upload_relay::SpoolReservation;
 
 #[derive(Debug, Error)]
 pub enum SpoolError {
@@ -28,25 +28,18 @@ pub enum SpoolError {
 
 #[derive(Debug)]
 pub struct SpooledBody {
-    file: Option<File>,
+    file: File,
     length: u64,
-    budget_reservation: u64,
+    reservation: SpoolReservation,
 }
 
 impl SpooledBody {
-    pub fn into_parts(mut self) -> (File, u64) {
-        let file = self.file.take().expect("SpooledBody already consumed");
-        let length = self.length;
-        if self.budget_reservation > 0 {
-            release_spool_budget(self.budget_reservation);
-            self.budget_reservation = 0;
-        }
-        (file, length)
+    pub fn into_parts(self) -> (File, u64, SpoolReservation) {
+        (self.file, self.length, self.reservation)
     }
 
     pub fn into_mapped(self) -> std::io::Result<MappedSpool> {
-        let file = self.file.as_ref().expect("SpooledBody already consumed");
-        let map = unsafe { Mmap::map(file)? };
+        let map = unsafe { Mmap::map(&self.file)? };
         Ok(MappedSpool { map, _spool: self })
     }
 }
@@ -59,15 +52,6 @@ pub struct MappedSpool {
 impl AsRef<[u8]> for MappedSpool {
     fn as_ref(&self) -> &[u8] {
         &self.map
-    }
-}
-
-impl Drop for SpooledBody {
-    fn drop(&mut self) {
-        if self.budget_reservation > 0 {
-            release_spool_budget(self.budget_reservation);
-            self.budget_reservation = 0;
-        }
     }
 }
 
@@ -84,35 +68,32 @@ pub async fn spool_to_temp(
     {
         return Err(SpoolError::PayloadTooLarge);
     }
-    let budget_reservation = declared_length.unwrap_or(max_body_bytes);
-    if !try_reserve_spool_budget(budget_reservation, spool_total_ceiling) {
-        return Err(SpoolError::BudgetExhausted);
-    }
-    let outcome = spool_body_inner(
+    let mut reservation =
+        SpoolReservation::try_new(declared_length.unwrap_or(0), spool_total_ceiling)
+            .ok_or(SpoolError::BudgetExhausted)?;
+    let (file, length) = spool_body_inner(
         body,
         declared_length,
         max_body_bytes,
+        spool_total_ceiling,
+        &mut reservation,
         dir,
         write_buffer_bytes,
     )
-    .await;
-    match outcome {
-        Ok((file, length)) => Ok(SpooledBody {
-            file: Some(file),
-            length,
-            budget_reservation,
-        }),
-        Err(err) => {
-            release_spool_budget(budget_reservation);
-            Err(err)
-        }
-    }
+    .await?;
+    Ok(SpooledBody {
+        file,
+        length,
+        reservation,
+    })
 }
 
 async fn spool_body_inner(
     mut body: Body,
     declared_length: Option<u64>,
     max_body_bytes: u64,
+    spool_total_ceiling: u64,
+    reservation: &mut SpoolReservation,
     dir: &Path,
     write_buffer_bytes: usize,
 ) -> Result<(File, u64), SpoolError> {
@@ -130,6 +111,11 @@ async fn spool_body_inner(
         let next = written.saturating_add(chunk.len() as u64);
         if next > max_body_bytes || declared_length.is_some_and(|declared| next > declared) {
             return Err(SpoolError::PayloadTooLarge);
+        }
+        if declared_length.is_none()
+            && !reservation.try_grow(chunk.len() as u64, spool_total_ceiling)
+        {
+            return Err(SpoolError::BudgetExhausted);
         }
         writer.write_all(&chunk).await?;
         written = next;

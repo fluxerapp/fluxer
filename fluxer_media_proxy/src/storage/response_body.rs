@@ -99,6 +99,48 @@ pub(super) async fn read_response_bytes(
     ))
 }
 
+pub(super) async fn read_response_bytes_up_to(
+    mut response: reqwest::Response,
+    limit: usize,
+    budget: &ByteBudget,
+) -> Result<BudgetedBytes, StorageError> {
+    let _transport_chunk_reservation = budget
+        .try_reserve(response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX)
+        .ok_or(StorageError::BufferBudgetExhausted)?;
+    let mut buffer_budget = ReadBufferBudget::reserve(budget, 0)?;
+    let mut body: Vec<u8> = Vec::new();
+    let mut empty_chunks_remaining = response_body_limit::response_body_chunk_limit(limit as u64);
+    while let Some(chunk) = response.chunk().await? {
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
+                StorageError::ObjectStorage(anyhow::anyhow!(
+                    "object storage response exceeded its empty chunk limit"
+                ))
+            })?;
+            continue;
+        }
+        let next_length = body
+            .len()
+            .checked_add(chunk.len())
+            .filter(|length| *length <= limit)
+            .ok_or(StorageError::StreamTooLong)?;
+        if next_length > body.capacity() {
+            let target_capacity = next_length.max(body.capacity().saturating_mul(2).min(limit));
+            buffer_budget.grow_to(target_capacity)?;
+            body.try_reserve_exact(target_capacity - body.len())
+                .map_err(|_| StorageError::BufferAllocationFailed)?;
+            buffer_budget.grow_to(body.capacity())?;
+        }
+        body.extend_from_slice(&chunk);
+        assert_eq!(body.len(), next_length);
+    }
+    buffer_budget.shrink_to(body.capacity());
+    Ok(BudgetedBytes::budgeted(
+        Bytes::from(body),
+        buffer_budget.into_reservation(),
+    ))
+}
+
 pub(super) async fn read_exact_bytes(
     reader: impl AsyncRead + Unpin,
     expected_length: usize,

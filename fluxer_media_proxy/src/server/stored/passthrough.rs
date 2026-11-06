@@ -24,8 +24,8 @@ use crate::{
         state::AppState,
         transform::{
             cache::{
-                CachedTransformRequest, cached_transform, cached_transform_hit,
-                coalescer_failure_response,
+                CachedTransformRequest, cached_transform, cached_transform_failed,
+                cached_transform_hit, coalescer_failure_response, record_cached_transform_failure,
             },
             cache_key::{TransformCacheKeyInput, transform_cache_key},
             execution::{coalesced_work_result, deadline_instant, run_transform},
@@ -39,7 +39,6 @@ use axum::{
     http::{HeaderMap, HeaderValue, Method, StatusCode, header},
     response::Response,
 };
-use bytes::Bytes;
 use std::sync::Arc;
 
 pub(in crate::server) enum PassthroughDisposition<'a> {
@@ -86,6 +85,9 @@ pub(in crate::server) async fn serve_stored_passthrough_stream(
     if app.cfg.mode == DeploymentMode::Mp
         && image_extension_from_filename(key) == Some(AssetExtension::Svg)
     {
+        if let Err(err) = app.store.head_object(bucket, key).await {
+            return storage_error_response(key, err);
+        }
         return serve_stored_passthrough_svg(app, method, bucket, key, &disposition).await;
     }
     let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
@@ -164,12 +166,89 @@ async fn serve_stored_passthrough_svg(
     key: &str,
     disposition: &PassthroughDisposition<'_>,
 ) -> Response {
-    let object = match app.store.read_object(bucket, key).await {
-        Ok(object) => object,
+    let runtime = app.media.transforms();
+    let cache_identity = format!("{bucket}/{key}");
+    let format = OutputFormat::WebP;
+    let quality = ImageQuality::Lossless;
+    let options = media_process::ImageOptions {
+        width: Some(constants::SVG_RASTER_MAX_DIMENSION),
+        height: Some(constants::SVG_RASTER_MAX_DIMENSION),
+        format,
+        quality,
+        animation: AnimationMode::Static,
+        deadline_ms: runtime.transform_deadline_ms(),
+        ..Default::default()
+    };
+    let cache_key = transform_cache_key(TransformCacheKeyInput {
+        route: TransformRoute::Stored,
+        asset_kind: None,
+        cache_identity: &cache_identity,
+        width: options.width,
+        height: options.height,
+        format,
+        quality: Some(quality),
+        animated: false,
+        effort: None,
+        resize_mode: Some(options.resize_mode),
+    });
+    if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
+        return generated_media_response(GeneratedMediaResponse {
+            method,
+            data: hit.data,
+            content_type: hit.format.mime(),
+            disposition: passthrough_disposition_header(disposition, hit.format.mime()),
+        });
+    }
+    if cached_transform_failed(runtime, &cache_key) {
+        return svg_rasterize_failed_response(&cache_identity);
+    }
+    let data = match app
+        .store
+        .read_object_within(bucket, key, app.media.stored_buffer_bytes())
+        .await
+    {
+        Ok(object) => object.data,
         Err(err) => return storage_error_response(key, err),
     };
-    let cache_identity = format!("{bucket}/{key}");
-    serve_stored_svg_rasterized(app, method, object.data, &cache_identity, disposition).await
+    let failure_key = cache_key.clone();
+    let transformed = match cached_transform(CachedTransformRequest {
+        runtime,
+        cache_key,
+        format,
+        deadline: deadline_instant(options.deadline_ms),
+        work: move || async move {
+            coalesced_work_result(run_transform(runtime, data, options).await)
+                .map(|media| media_process::MediaBytes::from(media.bytes))
+        },
+    })
+    .await
+    {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            if let Some(response) =
+                coalescer_failure_response(error, "coalescer_timeout_svg_rasterize")
+            {
+                return response;
+            }
+            record_cached_transform_failure(runtime, failure_key);
+            return svg_rasterize_failed_response(&cache_identity);
+        }
+    };
+    generated_media_response(GeneratedMediaResponse {
+        method,
+        data: transformed,
+        content_type: format.mime(),
+        disposition: passthrough_disposition_header(disposition, format.mime()),
+    })
+}
+
+fn svg_rasterize_failed_response(cache_identity: &str) -> Response {
+    text_with_source(
+        StatusCode::BAD_REQUEST,
+        "Bad Request",
+        "svg_rasterize_failed",
+        cache_identity,
+    )
 }
 
 /// Resolves the object's full length, preferring what the store already reported on the streamed
@@ -242,78 +321,4 @@ fn passthrough_disposition_header(
             Some(filename),
         )),
     }
-}
-
-async fn serve_stored_svg_rasterized(
-    app: &Arc<AppState>,
-    method: Method,
-    data: Bytes,
-    cache_identity: &str,
-    disposition: &PassthroughDisposition<'_>,
-) -> Response {
-    let runtime = app.media.transforms();
-    let format = OutputFormat::WebP;
-    let quality = ImageQuality::Lossless;
-    let options = media_process::ImageOptions {
-        width: Some(constants::SVG_RASTER_MAX_DIMENSION),
-        height: Some(constants::SVG_RASTER_MAX_DIMENSION),
-        format,
-        quality,
-        animation: AnimationMode::Static,
-        deadline_ms: runtime.transform_deadline_ms(),
-        ..Default::default()
-    };
-    let cache_key = transform_cache_key(TransformCacheKeyInput {
-        route: TransformRoute::Stored,
-        asset_kind: None,
-        cache_identity,
-        width: options.width,
-        height: options.height,
-        format,
-        quality: Some(quality),
-        animated: false,
-        effort: None,
-        resize_mode: Some(options.resize_mode),
-    });
-    if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
-        return generated_media_response(GeneratedMediaResponse {
-            method,
-            data: hit.data.as_bytes().clone().into(),
-            content_type: hit.format.mime(),
-            disposition: passthrough_disposition_header(disposition, hit.format.mime()),
-        });
-    }
-    let transformed = match cached_transform(CachedTransformRequest {
-        runtime,
-        cache_key,
-        format,
-        deadline: deadline_instant(options.deadline_ms),
-        work: move || async move {
-            coalesced_work_result(run_transform(runtime, data, options).await)
-                .map(|media| media_process::MediaBytes::from(media.bytes))
-        },
-    })
-    .await
-    {
-        Ok(bytes) => bytes.as_bytes().clone(),
-        Err(error) => {
-            if let Some(response) =
-                coalescer_failure_response(error, "coalescer_timeout_svg_rasterize")
-            {
-                return response;
-            }
-            return text_with_source(
-                StatusCode::BAD_REQUEST,
-                "Bad Request",
-                "svg_rasterize_failed",
-                cache_identity,
-            );
-        }
-    };
-    generated_media_response(GeneratedMediaResponse {
-        method,
-        data: transformed.into(),
-        content_type: format.mime(),
-        disposition: passthrough_disposition_header(disposition, format.mime()),
-    })
 }

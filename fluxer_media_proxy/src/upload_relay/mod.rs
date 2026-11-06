@@ -67,12 +67,29 @@ impl Drop for BufferReservation {
     }
 }
 
-pub fn try_reserve_spool_budget(needed: u64, ceiling: u64) -> bool {
-    try_reserve(&SPOOL_IN_FLIGHT_BYTES, needed, ceiling)
+#[derive(Debug)]
+pub struct SpoolReservation {
+    bytes: u64,
 }
 
-pub fn release_spool_budget(amount: u64) {
-    SPOOL_IN_FLIGHT_BYTES.fetch_sub(amount, Ordering::AcqRel);
+impl SpoolReservation {
+    pub fn try_new(bytes: u64, ceiling: u64) -> Option<Self> {
+        try_reserve(&SPOOL_IN_FLIGHT_BYTES, bytes, ceiling).then_some(Self { bytes })
+    }
+
+    pub fn try_grow(&mut self, bytes: u64, ceiling: u64) -> bool {
+        if !try_reserve(&SPOOL_IN_FLIGHT_BYTES, bytes, ceiling) {
+            return false;
+        }
+        self.bytes += bytes;
+        true
+    }
+}
+
+impl Drop for SpoolReservation {
+    fn drop(&mut self) {
+        SPOOL_IN_FLIGHT_BYTES.fetch_sub(self.bytes, Ordering::AcqRel);
+    }
 }
 
 fn try_reserve(counter: &AtomicU64, needed: u64, ceiling: u64) -> bool {

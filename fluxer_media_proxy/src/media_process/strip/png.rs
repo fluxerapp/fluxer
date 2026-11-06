@@ -22,11 +22,7 @@ pub(super) fn strip_chunks(input: &[u8]) -> Result<Vec<u8>, MediaError> {
         let kind = &header[4..8];
         let end = offset.saturating_add(12).saturating_add(length);
         if keeps_chunk(kind) {
-            output.extend_from_slice(
-                input
-                    .get(offset..end)
-                    .ok_or(MediaError::MediaDecodeFailed)?,
-            );
+            output.extend_from_slice(&input[offset..end.min(input.len())]);
         }
         offset = end;
         if kind == b"IEND" {

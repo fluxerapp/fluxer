@@ -4,6 +4,7 @@ mod av;
 mod gif;
 mod heif;
 mod jpeg;
+mod jxl;
 mod png;
 mod webp;
 
@@ -75,6 +76,7 @@ pub fn strips_image(sniffed_mime: &str) -> bool {
             | "image/heic"
             | "image/heif"
             | "image/tiff"
+            | "image/jxl"
     )
 }
 
@@ -102,6 +104,7 @@ pub fn strip_image_metadata(
         "image/webp" => webp::strip_chunks(input)?,
         "image/gif" => gif::strip_blocks(input)?,
         "image/avif" | "image/heic" | "image/heif" => heif::strip_items(input)?,
+        "image/jxl" => jxl::strip_boxes(input)?,
         _ => reencode_tiff(input, media_limits, deadline_ms)?,
     };
     Ok(StrippedImage {

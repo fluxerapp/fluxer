@@ -5,7 +5,7 @@ use crate::{
     media_process::{self, MediaError},
     metrics, mime,
     server::{state::AppState, transform::execution::deadline_instant},
-    upload_relay::{release_spool_budget, try_reserve_spool_budget},
+    upload_relay::SpoolReservation,
 };
 use bytes::Bytes;
 use memmap2::Mmap;
@@ -17,20 +17,6 @@ pub(in crate::server) struct StrippedMedia {
     pub(in crate::server) data: Bytes,
     pub(in crate::server) content_type: String,
     pub(in crate::server) dimensions: Option<(u32, u32)>,
-}
-
-struct SpoolReservation(u64);
-
-impl SpoolReservation {
-    fn try_new(bytes: u64, ceiling: u64) -> Option<Self> {
-        try_reserve_spool_budget(bytes, ceiling).then_some(Self(bytes))
-    }
-}
-
-impl Drop for SpoolReservation {
-    fn drop(&mut self) {
-        release_spool_budget(self.0);
-    }
 }
 
 struct StrippedFile {
@@ -119,30 +105,43 @@ async fn strip_av(
 ) -> Result<StrippedMedia, MediaFailure> {
     let container =
         media_process::av_container(&content_type).ok_or(MediaFailure::StripUnsupportedType)?;
-    let relay = &app.cfg.upload_relay;
-    let reservation = SpoolReservation::try_new(data.len() as u64, relay.spool_max_total_bytes)
-        .ok_or(MediaFailure::StripSpoolExhausted)?;
-    let output = tempfile::NamedTempFile::new_in(&relay.spool_dir).map_err(|error| {
-        MediaFailure::StripFailed {
-            detail: format!("spool file: {error}"),
-        }
-    })?;
-    let path = output.path().to_owned();
+    let spool_dir = app.cfg.upload_relay.spool_dir.clone();
+    let spool_max_total_bytes = app.cfg.upload_relay.spool_max_total_bytes;
+    let runtime = app.media.transforms();
+    let media_limits = runtime.limits();
     let deadline_ms = metrics::now_ms() + AV_STRIP_TIMEOUT_MS;
     let cost = media_process::av_native_cost(data.len());
-    app.media
-        .transforms()
+    let (reservation, output) = runtime
         .tasks()
         .run_native(
             deadline_instant(Some(deadline_ms)),
             move || Ok(cost),
             move || {
-                media_process::strip_av_metadata(&data, container, &path, Some(deadline_ms))?;
-                Ok(())
+                let Some(reservation) =
+                    SpoolReservation::try_new(data.len() as u64, spool_max_total_bytes)
+                else {
+                    return Ok(Err(MediaFailure::StripSpoolExhausted));
+                };
+                let output = match tempfile::NamedTempFile::new_in(&spool_dir) {
+                    Ok(output) => output,
+                    Err(error) => {
+                        return Ok(Err(MediaFailure::StripFailed {
+                            detail: format!("spool file: {error}"),
+                        }));
+                    }
+                };
+                media_process::strip_av_metadata(
+                    &data,
+                    container,
+                    output.path(),
+                    &media_limits,
+                    Some(deadline_ms),
+                )?;
+                Ok(Ok((reservation, output)))
             },
         )
         .await
-        .map_err(|error| strip_failure(&error))?;
+        .map_err(|error| strip_failure(&error))??;
     let map =
         unsafe { Mmap::map(output.as_file()) }.map_err(|error| MediaFailure::StripFailed {
             detail: format!("map stripped output: {error}"),

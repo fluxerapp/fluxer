@@ -165,6 +165,9 @@ int fluxer_av_metadata(
     struct fluxer_av_metadata_out *out
 );
 
+typedef int (*fluxer_av_picture_strip_cb)(
+    void *user_data, const void *data, size_t len,
+    const void **out_data, size_t *out_len, int *out_width, int *out_height);
 int fluxer_av_strip_metadata(
     const void *media_data,
     size_t media_len,
@@ -172,7 +175,9 @@ int fluxer_av_strip_metadata(
     const char *muxer,
     int faststart,
     const char *output_path,
-    long long deadline_monotonic_ms
+    long long deadline_monotonic_ms,
+    fluxer_av_picture_strip_cb strip_picture,
+    void *user_data
 );
 
 struct fluxer_av_audio_duration_out {

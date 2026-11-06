@@ -123,6 +123,15 @@ impl FluxerNSFWFrameOut {
 }
 
 pub type VipsWriteCb = unsafe extern "C" fn(*mut c_void, *const c_void, size_t) -> c_int;
+pub type AvPictureStripCb = unsafe extern "C" fn(
+    *mut c_void,
+    *const c_void,
+    size_t,
+    *mut *const c_void,
+    *mut size_t,
+    *mut c_int,
+    *mut c_int,
+) -> c_int;
 
 unsafe extern "C" {
     pub static fluxer_vips_format_uchar: c_int;
@@ -317,6 +326,8 @@ unsafe extern "C" {
         faststart: c_int,
         output_path: *const c_char,
         deadline_monotonic_ms: c_longlong,
+        strip_picture: AvPictureStripCb,
+        user_data: *mut c_void,
     ) -> c_int;
     pub fn fluxer_av_audio_duration(
         media_data: *const c_void,

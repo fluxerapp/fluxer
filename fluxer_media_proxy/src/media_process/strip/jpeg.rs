@@ -22,6 +22,7 @@ const APP14: u8 = 0xEE;
 const APP15: u8 = 0xEF;
 const COM: u8 = 0xFE;
 const DEFAULT_REENCODE_QUALITY: u8 = 95;
+const MAX_HEADER_SEGMENTS: usize = 4096;
 
 struct Segment<'a> {
     marker: u8,
@@ -110,6 +111,9 @@ fn parse_layout(input: &[u8]) -> Result<JpegLayout<'_>, MediaError> {
                 scan_start: offset,
                 scan_end,
             });
+        }
+        if header.len() >= MAX_HEADER_SEGMENTS {
+            return Err(MediaError::MediaDecodeFailed);
         }
         let segment = read_segment(input, offset)?;
         offset += segment.bytes.len();

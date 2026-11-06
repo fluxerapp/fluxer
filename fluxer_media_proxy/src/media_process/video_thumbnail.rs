@@ -25,6 +25,7 @@ pub struct VideoThumbnailOptions {
 pub fn extract_video_thumbnail(
     input: &[u8],
     format: OutputFormat,
+    deadline_ms: Option<i64>,
     media_limits: &MediaLimits,
 ) -> Result<ProcessedMedia, MediaError> {
     extract_video_thumbnail_with_options(
@@ -34,7 +35,7 @@ pub fn extract_video_thumbnail(
             width: None,
             height: None,
             quality: ResolvedImageQuality::High,
-            deadline_ms: None,
+            deadline_ms,
         },
         media_limits,
     )
