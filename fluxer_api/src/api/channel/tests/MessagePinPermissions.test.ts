@@ -6,12 +6,13 @@ import {
 	sendChannelMessage,
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
+import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelPinsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {ChannelPinsResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Message pin permissions', () => {
 	let harness: ApiTestHarness;
@@ -68,5 +69,30 @@ describe('Message pin permissions', () => {
 		await pinMessage(harness, member.token, systemChannel.id, message.id);
 
 		expect(await listPinnedMessageIds(owner.token, systemChannel.id)).toEqual([message.id]);
+	});
+
+	it('omits the pinned message body from the pin notice event', async () => {
+		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const message = await sendChannelMessage(harness, owner.token, systemChannel.id, 'hidden history');
+		await createPermissionOverwrite(harness, owner.token, systemChannel.id, member.userId, {
+			type: 1,
+			allow: (Permissions.VIEW_CHANNEL | Permissions.PIN_MESSAGES).toString(),
+			deny: Permissions.READ_MESSAGE_HISTORY.toString(),
+		});
+		const dispatchGuild = vi.spyOn(getGatewayService(), 'dispatchGuild');
+		try {
+			await pinMessage(harness, member.token, systemChannel.id, message.id);
+			const notice = dispatchGuild.mock.calls
+				.map(([params]) => params)
+				.filter((params) => params.event === 'MESSAGE_CREATE')
+				.map((params) => params.data as MessageResponse)
+				.find((data) => data.type === MessageTypes.CHANNEL_PINNED_MESSAGE);
+			expect(notice?.message_reference?.message_id).toBe(message.id);
+			expect(notice).toBeDefined();
+			expect('referenced_message' in notice!).toBe(false);
+		} finally {
+			dispatchGuild.mockRestore();
+		}
 	});
 });

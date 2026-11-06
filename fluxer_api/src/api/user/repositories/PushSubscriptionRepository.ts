@@ -6,6 +6,7 @@ import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
 import {PushSubscription} from '@app/api/models/PushSubscription';
 import {PushSubscriptions} from '@app/api/Tables';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {MAX_PUSH_SUBSCRIPTIONS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 
 const FETCH_PUSH_SUBSCRIPTIONS_CQL = PushSubscriptions.selectCql({
 	where: PushSubscriptions.where.eq('user_id'),
@@ -74,9 +75,9 @@ export class PushSubscriptionRepository {
 		const rows = await fetchMany<PushSubscriptionRow>(FETCH_BULK_PUSH_SUBSCRIPTIONS_CQL, {user_ids: userIds});
 		const map = new Map<UserID, Array<PushSubscription>>();
 		for (const row of rows) {
-			const sub = new PushSubscription(row);
 			const existing = map.get(row.user_id) ?? [];
-			existing.push(sub);
+			if (existing.length >= MAX_PUSH_SUBSCRIPTIONS_PER_USER) continue;
+			existing.push(new PushSubscription(row));
 			map.set(row.user_id, existing);
 		}
 		return map;
