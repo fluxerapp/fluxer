@@ -127,3 +127,11 @@ describe('RichEmbedRequest', () => {
 		expect(result.data.title).toBe('');
 	});
 });
+
+describe('RichEmbedRequest author', () => {
+	it('drops an author whose name is empty', () => {
+		const result = RichEmbedRequest.safeParse({author: {name: ''}, description: 'text'});
+		expect(result.success).toBe(true);
+		expect(result.data?.author).toBeUndefined();
+	});
+});

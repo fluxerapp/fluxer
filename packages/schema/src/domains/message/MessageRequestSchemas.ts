@@ -37,7 +37,7 @@ function omitEmbedObjectWithoutRequiredField(value: unknown, requiredField: stri
 		return value;
 	}
 	const record = value as Record<string, unknown>;
-	if (record[requiredField] === undefined || record[requiredField] === null) {
+	if (record[requiredField] === undefined || record[requiredField] === null || record[requiredField] === '') {
 		return undefined;
 	}
 	return value;
