@@ -41,20 +41,14 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 	const frameStyle = useMemo<
 		React.CSSProperties & {'--outline-frame-clip-radius'?: string; '--outline-frame-start-border-width'?: string}
 	>(() => {
-		let clipRadius: string | undefined;
-		if (cornerCap) {
-			clipRadius = '0px';
-		} else if (ctxSides.left === false) {
-			clipRadius = 'var(--outline-radius, 0px)';
-		}
 		return {
-			'--outline-frame-clip-radius': clipRadius,
+			'--outline-frame-clip-radius': ctxSides.left === false ? 'var(--outline-radius, 0px)' : undefined,
 			'--outline-frame-start-border-width': ctxSides.left === false ? '0px' : undefined,
 			borderLeft: ctxSides.left === false ? 'none' : undefined,
 			borderRight: ctxSides.right === false ? 'none' : undefined,
 			borderBottom: ctxSides.bottom === false ? 'none' : undefined,
 		};
-	}, [cornerCap, ctxSides.bottom, ctxSides.left, ctxSides.right]);
+	}, [ctxSides.bottom, ctxSides.left, ctxSides.right]);
 	return (
 		<div className={styles.bounds} data-flx="app.outline-frame.bounds">
 			<div
@@ -62,6 +56,7 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 					styles.frame,
 					showTopBorder && styles.frameShowTop,
 					!showTopBorder && styles.frameHideTop,
+					cornerCap && styles.frameCornerCap,
 					className,
 				)}
 				style={frameStyle}

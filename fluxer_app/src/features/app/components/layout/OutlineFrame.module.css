@@ -47,6 +47,18 @@
 	border-top: none;
 }
 
+.frameCornerCap {
+	--outline-frame-clip-radius: 0px;
+}
+
+:global(html.user-stylesheets) .frameCornerCap {
+	--outline-frame-clip-radius: max(0px, var(--outline-radius, 0px) - var(--outline-frame-border-width, 0.0625rem));
+}
+
+:global(html.user-stylesheets) .cornerCap {
+	display: none;
+}
+
 .cornerCap {
 	position: absolute;
 	top: 0;
