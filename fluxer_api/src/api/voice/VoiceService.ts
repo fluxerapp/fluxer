@@ -426,6 +426,18 @@ export class VoiceService {
 		const {guildId, channelId, userId, connectionId} = params;
 		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
 		if (!pinnedServer) {
+			await Promise.allSettled(
+				this.liveKitService.listServers().map((server) =>
+					this.liveKitService.disconnectParticipant({
+						userId,
+						guildId,
+						channelId,
+						connectionId,
+						regionId: server.regionId,
+						serverId: server.serverId,
+					}),
+				),
+			);
 			return;
 		}
 		await this.liveKitService.disconnectParticipant({

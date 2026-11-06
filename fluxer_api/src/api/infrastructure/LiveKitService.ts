@@ -5,10 +5,15 @@ import {Config} from '@app/api/Config';
 import {
 	type CreateTokenParams,
 	type DisconnectParticipantParams,
+	type GetParticipantResult,
 	ILiveKitService,
 	type ListParticipantsParams,
 	type ListParticipantsResult,
+	type ListRoomsParams,
+	type ListRoomsResult,
+	type LiveKitParticipantRef,
 	type MuteMicrophoneTrackParams,
+	type SetParticipantPermissionParams,
 	type UpdateParticipantParams,
 	type UpdateParticipantPermissionsParams,
 } from '@app/api/infrastructure/ILiveKitService';
@@ -243,24 +248,90 @@ export class LiveKitService extends ILiveKitService {
 
 	async disconnectParticipant(params: DisconnectParticipantParams): Promise<void> {
 		const {userId, guildId, channelId, connectionId, regionId, serverId} = params;
-		const roomName = this.getRoomName(guildId, channelId);
-		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
+		await this.removeParticipant({
+			regionId,
+			serverId,
+			roomName: this.getRoomName(guildId, channelId),
+			identity: this.getParticipantIdentity(userId, connectionId),
+		});
+	}
+
+	async removeParticipant(params: LiveKitParticipantRef): Promise<void> {
+		const {regionId, serverId, roomName, identity} = params;
 		const server = this.tryResolveServerClient(regionId, serverId);
 		if (server === null) {
 			Logger.debug(
-				{regionId, serverId, participantIdentity, roomName},
+				{regionId, serverId, participantIdentity: identity, roomName},
 				'LiveKit disconnect skipped — pinned server no longer exists in topology',
 			);
 			return;
 		}
 		try {
-			await server.roomServiceClient.removeParticipant(roomName, participantIdentity);
+			await server.roomServiceClient.removeParticipant(roomName, identity);
 		} catch (error) {
 			if (LiveKitService.isHttp404(error)) {
-				Logger.debug({participantIdentity, roomName}, 'LiveKit participant already disconnected');
+				Logger.debug({participantIdentity: identity, roomName}, 'LiveKit participant already disconnected');
 				return;
 			}
 			Logger.error({error}, 'Error disconnecting LiveKit participant');
+		}
+	}
+
+	async getParticipant(params: LiveKitParticipantRef): Promise<GetParticipantResult> {
+		const {regionId, serverId, roomName, identity} = params;
+		const server = this.tryResolveServerClient(regionId, serverId);
+		if (server === null) {
+			return {status: 'error', errorCode: 'server_missing', retryable: false, serverMissing: true};
+		}
+		try {
+			const participant = await server.roomServiceClient.getParticipant(roomName, identity);
+			return {
+				status: 'ok',
+				participant: {joinedAt: Number(participant.joinedAt), metadata: participant.metadata},
+			};
+		} catch (error) {
+			if (LiveKitService.isHttp404(error)) {
+				return {status: 'ok', participant: null};
+			}
+			Logger.warn(
+				{error, regionId, serverId, roomName, participantIdentity: identity},
+				'LiveKit getParticipant failed',
+			);
+			return LiveKitService.lookupError(error);
+		}
+	}
+
+	async setParticipantPermission(params: SetParticipantPermissionParams): Promise<void> {
+		const {regionId, serverId, roomName, identity, permission} = params;
+		const server = this.tryResolveServerClient(regionId, serverId);
+		if (server === null) {
+			return;
+		}
+		try {
+			await server.roomServiceClient.updateParticipant(roomName, identity, undefined, permission);
+		} catch (error) {
+			if (LiveKitService.isHttp404(error)) {
+				return;
+			}
+			Logger.error({error, participantIdentity: identity, roomName}, 'Error updating LiveKit participant permission');
+		}
+	}
+
+	async listRooms(params: ListRoomsParams): Promise<ListRoomsResult> {
+		const {regionId, serverId} = params;
+		const server = this.tryResolveServerClient(regionId, serverId);
+		if (server === null) {
+			return {status: 'error', errorCode: 'server_missing', retryable: false, serverMissing: true};
+		}
+		try {
+			const rooms = await server.roomServiceClient.listRooms();
+			return {
+				status: 'ok',
+				rooms: rooms.map((room) => ({name: room.name, numParticipants: room.numParticipants})),
+			};
+		} catch (error) {
+			Logger.warn({error, regionId, serverId}, 'LiveKit listRooms failed');
+			return LiveKitService.lookupError(error);
 		}
 	}
 
@@ -280,18 +351,25 @@ export class LiveKitService extends ILiveKitService {
 			const participants = await server.roomServiceClient.listParticipants(roomName);
 			return {
 				status: 'ok',
-				participants: participants.map((participant) => ({identity: participant.identity})),
+				participants: participants.map((participant) => ({
+					identity: participant.identity,
+					joinedAt: Number(participant.joinedAt),
+					metadata: participant.metadata,
+				})),
 			};
 		} catch (error) {
 			Logger.warn({error, regionId, serverId, roomName}, 'LiveKit listParticipants failed');
-			const status = LiveKitService.getHttpStatus(error);
-			const isRetryable = status != null && status >= 500;
-			return {
-				status: 'error',
-				errorCode: error instanceof Error ? error.message : 'unknown',
-				retryable: isRetryable,
-			};
+			return LiveKitService.lookupError(error);
 		}
+	}
+
+	private static lookupError(error: unknown): {status: 'error'; errorCode: string; retryable: boolean} {
+		const status = LiveKitService.getHttpStatus(error);
+		return {
+			status: 'error',
+			errorCode: error instanceof Error ? error.message : 'unknown',
+			retryable: status != null && status >= 500,
+		};
 	}
 
 	private static isHttp404(error: unknown): boolean {
@@ -312,6 +390,16 @@ export class LiveKitService extends ILiveKitService {
 
 	private tryResolveServerClient(regionId: string, serverId: string): ServerClientConfig | null {
 		return this.serverClients.get(regionId)?.get(serverId) ?? null;
+	}
+
+	listServers(): Array<{regionId: string; serverId: string}> {
+		const servers: Array<{regionId: string; serverId: string}> = [];
+		for (const [regionId, regionServers] of this.serverClients) {
+			for (const serverId of regionServers.keys()) {
+				servers.push({regionId, serverId});
+			}
+		}
+		return servers;
 	}
 
 	getDefaultRegionId(): string | null {

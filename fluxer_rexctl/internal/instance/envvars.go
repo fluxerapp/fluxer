@@ -99,6 +99,8 @@ var envVars = []envVar{
 	{"FLUXER_VOICE_P2P_STUN_URLS", "voice", "STUN URLs for peer-to-peer calls, separated by commas, such as `stun:stun.example.com:3478`. When it's empty, peer-to-peer calls work only between devices with a direct route to each other, such as on one local network."},
 	{"FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS", "voice", "Whether the API accepts a voice server joining with an endpoint that resolves to a private address. Use `true` or `false`. Set it to `true` only for tests and private networks."},
 	{"FLUXER_VOICE_HEALTH_INTERVAL_MS", "voice", "How often each API node checks every active voice server, in milliseconds. A server that fails two checks in a row gets no new calls until a check passes. Set it to `0` to turn the checks off. When it's empty, the API checks every 15 seconds."},
+	{"FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED", "voice", "Whether a worker compares each voice server's call participants with the gateway's call state every minute and disconnects connections the gateway has not known for two minutes. Use `true` or `false`. When it's empty, the check runs."},
+	{"FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN", "voice", "Whether the voice participant check from FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED only logs the connections it would disconnect. Use `true` or `false`. When it's empty, the check only logs them."},
 	{"FLUXER_LIVEKIT_TCP_PORT", "voice", ""},
 	{"FLUXER_LIVEKIT_UDP_PORT", "voice", ""},
 	{"FLUXER_LIVEKIT_NODE_IP", "voice", "Set FLUXER_LIVEKIT_USE_EXTERNAL_IP to `false` with it."},
