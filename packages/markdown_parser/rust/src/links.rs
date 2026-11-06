@@ -343,7 +343,7 @@ pub(crate) fn parse_masked_link(
     };
     if !has_visible_content(link_text)
         || is_slash_command_masked_link_text(trimmed_link_text)
-        || is_email_like(trimmed_link_text)
+        || (is_email_like(trimmed_link_text) && !is_mailto_of(trimmed_link_text, url_info.url))
         || url_info.url.len() > MAX_LINK_URL_LENGTH
         || !is_valid_masked_link_url(scan, position + url_info.start, url_info.url.len())
         || (starts_with_url(trimmed_link_text)
@@ -923,6 +923,10 @@ fn is_email_like(text: &str) -> bool {
         return false;
     }
     text[at + 1..].contains('.')
+}
+
+fn is_mailto_of(email: &str, url: &str) -> bool {
+    starts_with(url, "mailto:") && url["mailto:".len()..].eq_ignore_ascii_case(email)
 }
 
 pub fn is_valid_email(text: &str) -> bool {
