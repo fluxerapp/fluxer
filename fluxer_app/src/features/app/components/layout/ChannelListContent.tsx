@@ -41,6 +41,7 @@ import {
 } from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -348,11 +349,11 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 		[guild],
 	);
 	const getUnreadStateInChannel = (channelId: string): ChannelUnreadState => {
+		const channel = Channels.getChannel(channelId);
 		const unreadCount = ReadStates.getUnreadCount(channelId);
-		const hasUnread = ReadStates.hasUnread(channelId);
+		const hasUnread = channel?.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
 		const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
-		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
 					id: channel.id,
