@@ -10,7 +10,7 @@ import {
 	vanityCodeToInviteCode,
 } from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {enqueueEndGuildVisitsForCode} from '@app/api/guild/visits/GuildVisitLifecycle';
@@ -175,7 +175,7 @@ export class InviteService {
 			viewer,
 			channelId,
 		});
-		if (THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) {
+		if (THREAD_CHANNEL_TYPES.has(channel.type)) {
 			throw new InvalidChannelTypeError();
 		}
 		if (!channel.guildId) {
