@@ -1360,8 +1360,9 @@ export default class RTCEngine extends (EventEmitter as new () => TypedEventEmit
 			this.createDataChannels();
 		}
 
-		if (res?.lastMessageSeq) {
-			this.resendReliableMessagesForResume(res.lastMessageSeq).catch((error) => {
+		const lastMessageSeq = res?.lastMessageSeq ?? 0;
+		if (lastMessageSeq > 0 || this.reliableChannel.hasUnsent()) {
+			this.resendReliableMessagesForResume(lastMessageSeq).catch((error) => {
 				this.log.warn('failed to resend reliable messages after resume', {
 					...this.logContext,
 					error,

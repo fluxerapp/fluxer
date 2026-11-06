@@ -20,6 +20,8 @@ export enum DataTrackPublishErrorReason {
 	InvalidName = 6,
 
 	Unknown = 7,
+
+	EncryptionMismatch = 8,
 }
 
 export class DataTrackPublishError<
@@ -73,6 +75,13 @@ export class DataTrackPublishError<
 		return new DataTrackPublishError(
 			`Received RequestResponse for publishDataTrack, but reason was unrecognised (${reason}, ${message})`,
 			DataTrackPublishErrorReason.Unknown,
+		);
+	}
+
+	static encryptionMismatch() {
+		return new DataTrackPublishError(
+			'Server accepted the data track without the requested encryption',
+			DataTrackPublishErrorReason.EncryptionMismatch,
 		);
 	}
 

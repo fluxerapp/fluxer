@@ -222,30 +222,16 @@ export default class DataTrackDepacketizer {
 	): Throws<DataTrackFrameInternal, DataTrackDepacketizerDropError<DataTrackDepacketizerDropReason.Incomplete>> {
 		const received = partial.payloads.size;
 
+		const chain: Array<NonSharedUint8Array> = [];
 		let payloadLengthBytes = 0;
-		for (const p of partial.payloads.values()) {
-			payloadLengthBytes += p.length;
-		}
-		const payload = new Uint8Array(payloadLengthBytes);
-
 		const sequencePointer = partial.startSequence.clone();
-		let payloadOffsetPointerBytes = 0;
 		while (true) {
 			const partialPayload = partial.payloads.get(sequencePointer.value);
 			if (!partialPayload) {
 				break;
 			}
-			partial.payloads.delete(sequencePointer.value);
-
-			const payloadRemainingBytes = payload.length - payloadOffsetPointerBytes;
-			if (partialPayload.length > payloadRemainingBytes) {
-				throw new Error(
-					`Depacketizer.finalize: Expected at least ${partialPayload.length} more bytes left in the payload buffer, only got ${payloadRemainingBytes} bytes.`,
-				);
-			}
-
-			payload.set(partialPayload, payloadOffsetPointerBytes);
-			payloadOffsetPointerBytes += partialPayload.length;
+			chain.push(partialPayload);
+			payloadLengthBytes += partialPayload.length;
 
 			if (sequencePointer.value !== endSequence) {
 				sequencePointer.increment();
@@ -253,6 +239,12 @@ export default class DataTrackDepacketizer {
 			}
 
 			this.partials.delete(partialFrameNumber);
+			const payload = new Uint8Array(payloadLengthBytes);
+			let payloadOffsetPointerBytes = 0;
+			for (const chainPayload of chain) {
+				payload.set(chainPayload, payloadOffsetPointerBytes);
+				payloadOffsetPointerBytes += chainPayload.length;
+			}
 			return {payload, extensions: partial.extensions};
 		}
 
