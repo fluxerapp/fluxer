@@ -24,6 +24,10 @@ import * as HelpCenterUtils from '@app/features/ui/utils/HelpCenterUtils';
 import * as NativeUtils from '@app/features/ui/utils/NativeUtils';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/tabs/LanguageTab.module.css';
+import {
+	DATE_FORMAT_DESCRIPTOR,
+	REGIONAL_FORMAT_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {resolveHour12} from '@app/features/user/utils/DateFormatting';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
@@ -55,11 +59,6 @@ const REGIONAL_FORMAT_EXAMPLE_DESCRIPTOR = msg({
 	comment:
 		'Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.',
 });
-const REGIONAL_FORMAT_TITLE_DESCRIPTOR = msg({
-	message: 'Regional format',
-	comment:
-		'Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language.',
-});
 const REGIONAL_FORMAT_HELP_DESCRIPTOR = msg({
 	message: 'Dates, times and numbers follow this format. Prices stay in the currency of your billing country.',
 	comment: 'Help text under the regional format picker in the language settings.',
@@ -81,10 +80,6 @@ const SEARCH_REGIONAL_FORMATS_DESCRIPTOR = msg({
 const SELECT_REGIONAL_FORMAT_DESCRIPTOR = msg({
 	message: 'Select regional format',
 	comment: 'Accessible label for the regional format picker in the language settings. Keep it concise.',
-});
-const DATE_FORMAT_TITLE_DESCRIPTOR = msg({
-	message: 'Date format',
-	comment: 'Title of the language settings section that picks a fixed order for numeric dates.',
 });
 const DATE_FORMAT_SELECTION_DESCRIPTOR = msg({
 	message: 'Date format selection',
@@ -564,7 +559,7 @@ const LanguageTab = observer(() => {
 				</SettingsSection>
 				<SettingsSection
 					id="regional-format"
-					title={i18n._(REGIONAL_FORMAT_TITLE_DESCRIPTOR)}
+					title={i18n._(REGIONAL_FORMAT_DESCRIPTOR)}
 					data-flx="user.language-tab.settings-tab-section.regional-format"
 				>
 					<div className={styles.languageControls} data-flx="user.language-tab.regional-format-controls">
@@ -591,7 +586,7 @@ const LanguageTab = observer(() => {
 				</SettingsSection>
 				<SettingsSection
 					id="date-format"
-					title={i18n._(DATE_FORMAT_TITLE_DESCRIPTOR)}
+					title={i18n._(DATE_FORMAT_DESCRIPTOR)}
 					data-flx="user.language-tab.settings-tab-section.date-format"
 				>
 					<RadioGroup

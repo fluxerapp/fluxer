@@ -8443,6 +8443,11 @@ msgstr "選擇要傳送訊息的好友。"
 msgid "Choose how chat moves after you send a message"
 msgstr "選擇在您傳送訊息後，聊天視窗如何移動"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose how dates, times and numbers are written"
+msgstr ""
+
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Choose how messages are displayed in chat channels."
@@ -8480,6 +8485,11 @@ msgstr "選擇要分享的內容"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Choose the category that best describes your community. You can change this any time."
 msgstr "選擇最符合您社群的類別。您可以隨時變更。"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose the order of day, month and year in dates"
+msgstr ""
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -12386,8 +12396,8 @@ msgstr "日期"
 msgid "Date and time"
 msgstr "日期和時間"
 
-#. Title of the language settings section that picks a fixed order for numeric dates.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
+#. Title of the language settings section that picks a fixed order for numeric dates. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Date format"
 msgstr ""
 
@@ -12408,6 +12418,11 @@ msgstr "出生日期"
 #: src/features/channel/components/message_search_bar/DateSection.tsx
 msgid "Date options"
 msgstr "日期選項"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Date order"
+msgstr ""
 
 #. Accessible label for the date picker dialog.
 #: src/features/ui/components/form/DateTimePickerField.tsx
@@ -20416,7 +20431,9 @@ msgid "Is this instance for one community or many?"
 msgstr "這個實例是給一個社群使用，還是給多個社群使用？"
 
 #. Date format option named after the international standard. Keep "ISO 8601" as is.
+#. Settings search synonym for the international date format standard. Keep "ISO 8601" as is.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
 msgid "ISO 8601"
 msgstr ""
 
@@ -25418,6 +25435,11 @@ msgstr "Num Lock"
 msgid "Number"
 msgstr "數字"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Number format"
+msgstr ""
+
 #. Label of the control that sets how many Operator Passes to buy. All of them go to your own account.
 #: src/features/premium/components/operator_pass/checkout/CheckoutChooseStage.tsx
 msgid "Number of passes"
@@ -29292,8 +29314,13 @@ msgstr "重新產生會讓目前的密鑰失效。請更新所有使用舊值的
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "重新產生會讓目前的權杖失效。請更新所有使用舊值的程式碼。"
 
-#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Region"
+msgstr ""
+
+#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Regional format"
 msgstr ""
 

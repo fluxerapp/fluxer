@@ -19,11 +19,13 @@ import {
 	APPLICATIONS_DESCRIPTOR as APPLICATIONS_LIST_DESCRIPTOR,
 	AUTHORIZED_APPS_DESCRIPTOR,
 	BLOCKED_USERS_DESCRIPTOR,
+	DATE_FORMAT_DESCRIPTOR,
 	DESKTOP_WINDOW_DESCRIPTOR,
 	DEVELOPER_MODE_DESCRIPTOR,
 	CONNECTIONS_DESCRIPTOR as LINKED_CONNECTIONS_DESCRIPTOR,
 	PURCHASED_GIFTS_DESCRIPTOR,
 	REDEEM_A_GIFT_DESCRIPTOR,
+	REGIONAL_FORMAT_DESCRIPTOR,
 	SPELL_CHECK_DESCRIPTOR as SPELLCHECK_DESCRIPTOR,
 	TIME_FORMAT_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
@@ -140,7 +142,9 @@ export const generalSettingsSections = [
 		keywords: [LANGUAGE_SETTINGS_DESCRIPTOR],
 		isAdvanced: false,
 	},
+	{id: 'regional-format', tabType: 'language', label: REGIONAL_FORMAT_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{id: 'time-format', tabType: 'language', label: TIME_FORMAT_DESCRIPTOR, keywords: [], isAdvanced: false},
+	{id: 'date-format', tabType: 'language', label: DATE_FORMAT_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{id: 'spellcheck', tabType: 'language', label: SPELLCHECK_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{
 		id: 'desktop-window',
