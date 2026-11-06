@@ -1025,6 +1025,7 @@ export class MessageSendService {
 			userId: webhookActorId,
 			nonce: data.nonce,
 			expectedChannelId: channelId,
+			forumParentId: forumStarter ? (thread?.parentId ?? undefined) : undefined,
 			existing: (message) => message,
 			send: async (recordNonce) => {
 				const messageIdTask = startEarly(
