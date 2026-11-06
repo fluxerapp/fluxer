@@ -22,6 +22,7 @@ interface ModuleMapPluginOptions {
 
 interface ModuleEntry {
 	id?: string | number;
+	chunkIds?: Array<string | number>;
 	files?: Array<string>;
 	concatenatedInto?: string | number;
 	exportMap?: Record<string, string>;
@@ -46,6 +47,9 @@ interface ConcatenatedModuleLike {
 }
 
 type CompilationModule = Parameters<Compilation['chunkGraph']['getModuleId']>[0];
+
+const getModuleChunkIds = (compilation: Compilation, module: CompilationModule): Array<string | number> =>
+	[...compilation.chunkGraph.getModuleChunksIterable(module)].flatMap((chunk) => (chunk.id == null ? [] : [chunk.id]));
 
 const getConcatenatedModules = (module: CompilationModule): Array<ModuleWithResource> | undefined => {
 	const {modules} = module as CompilationModule & ConcatenatedModuleLike;
@@ -72,7 +76,7 @@ const getModuleKey = (root: string, filename: string): {key: string; packageName
 const collectModuleMetadata = (compilation: Compilation, root: string, includeDependencies: boolean) => {
 	const modules: Record<string, ModuleEntry> = {};
 	const packages: Record<string, string> = {};
-	const concatenatedChildren = new Map<string, string | number>();
+	const concatenatedChildren = new Map<string, {id: string | number; chunkIds: Array<string | number>}>();
 	const concatenatedRoots = new Set<string>();
 
 	for (const module of compilation.modules) {
@@ -91,7 +95,10 @@ const collectModuleMetadata = (compilation: Compilation, root: string, includeDe
 		for (const child of concatenated) {
 			if (!child.resource || child === rootModule || !path.isAbsolute(child.resource)) continue;
 
-			concatenatedChildren.set(stripQuery(child.resource), id);
+			concatenatedChildren.set(stripQuery(child.resource), {
+				id,
+				chunkIds: getModuleChunkIds(compilation, module),
+			});
 		}
 	}
 
@@ -111,10 +118,13 @@ const collectModuleMetadata = (compilation: Compilation, root: string, includeDe
 		if (id == null) {
 			if (concatenatedRoots.has(moduleFilename)) continue;
 
-			const concatenatedInto = concatenatedChildren.get(moduleFilename);
-			if (concatenatedInto === undefined) continue;
+			const concatenated = concatenatedChildren.get(moduleFilename);
+			if (concatenated === undefined) continue;
 
-			modules[key] = {concatenatedInto};
+			modules[key] = {
+				concatenatedInto: concatenated.id,
+				chunkIds: concatenated.chunkIds,
+			};
 
 			continue;
 		}
@@ -123,6 +133,7 @@ const collectModuleMetadata = (compilation: Compilation, root: string, includeDe
 
 		modules[key] = {
 			id,
+			chunkIds: getModuleChunkIds(compilation, module),
 			files: getModuleFiles(compilation, module),
 			...(exportMap ? {exportMap} : {}),
 		};

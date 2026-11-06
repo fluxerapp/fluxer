@@ -35,6 +35,13 @@ const getObjectPropertyName = (property: t.ObjectProperty): string | undefined =
 	return undefined;
 };
 
+const getMemberPropertyName = (member: t.MemberExpression): string | undefined => {
+	if (!member.computed && t.isIdentifier(member.property)) return member.property.name;
+	if (member.computed && t.isStringLiteral(member.property)) return member.property.value;
+	if (member.computed && t.isNumericLiteral(member.property)) return String(member.property.value);
+	return undefined;
+};
+
 const getGeneratedBinding = (node: AstNode | null | undefined): string | undefined => {
 	if (t.isIdentifier(node)) return node.name;
 
@@ -55,11 +62,8 @@ const getGeneratedBinding = (node: AstNode | null | undefined): string | undefin
 	return undefined;
 };
 
-const hasDefaultBindingComment = (node: t.ObjectProperty): boolean => {
-	const comments = [...(node.leadingComments ?? []), ...(node.value.leadingComments ?? [])];
-
-	return comments.some((comment) => comment.value.includes('export default binding'));
-};
+const hasDefaultBindingMarker = (comments: Array<t.Comment> | null | undefined): boolean =>
+	comments?.some((comment) => comment.value.trim() === 'export default') ?? false;
 
 const getExportSourceModule = (module: CompilationModule): CompilationModule =>
 	(module as CompilationModule & {rootModule?: CompilationModule | null}).rootModule ?? module;
@@ -67,6 +71,7 @@ const getExportSourceModule = (module: CompilationModule): CompilationModule =>
 const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 	const ast = parseModuleSource(code);
 	const exports: Array<GeneratedExport> = [];
+	const defaultBindings = new Set<string>();
 
 	const visit = (value: unknown): void => {
 		if (Array.isArray(value)) {
@@ -81,6 +86,14 @@ const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 		}
 
 		const node = value as AstNode;
+
+		if (t.isVariableDeclaration(node) && hasDefaultBindingMarker(node.leadingComments)) {
+			for (const declaration of node.declarations) {
+				if (t.isIdentifier(declaration.id)) {
+					defaultBindings.add(declaration.id.name);
+				}
+			}
+		}
 
 		if (t.isCallExpression(node)) {
 			const {callee, arguments: args} = node;
@@ -103,10 +116,25 @@ const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 						exports.push({
 							name,
 							binding: getGeneratedBinding(property.value),
-							isDefaultBinding: hasDefaultBindingComment(property),
+							isDefaultBinding: false,
 						});
 					}
 				}
+			}
+		}
+
+		if (
+			t.isAssignmentExpression(node) &&
+			t.isMemberExpression(node.left) &&
+			t.isIdentifier(node.left.object, {name: '__webpack_exports__'})
+		) {
+			const name = getMemberPropertyName(node.left);
+			if (name !== undefined) {
+				exports.push({
+					name,
+					binding: getGeneratedBinding(node.right),
+					isDefaultBinding: false,
+				});
 			}
 		}
 
@@ -114,6 +142,10 @@ const getGeneratedExports = (code: string): Array<GeneratedExport> => {
 	};
 
 	visit(ast);
+
+	for (const generated of exports) {
+		generated.isDefaultBinding = generated.binding != null && defaultBindings.has(generated.binding);
+	}
 
 	return exports;
 };
@@ -249,9 +281,13 @@ export const getModuleExportMap = (
 	let exportNames: Array<string> | null = null;
 
 	if (Array.isArray(usedExports)) {
-		exportNames = usedExports;
+		if (usedExports.length) {
+			exportNames = usedExports;
+		} else if (Array.isArray(providedExports)) {
+			exportNames = providedExports;
+		}
 	} else if (Array.isArray(providedExports)) {
-		if (usedExports === true) {
+		if (usedExports === true || usedExports === null) {
 			exportNames = providedExports;
 		}
 		if (usedExports === false) {
