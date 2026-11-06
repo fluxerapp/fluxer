@@ -3,6 +3,8 @@
 use crate::app_attest::AppAttestConfig;
 use crate::app_attest::service::AppAttestService;
 use crate::app_attest::store::AppAttestStore;
+use crate::play_integrity::PlayIntegrityConfig;
+use crate::play_integrity::service::PlayIntegrityService;
 use crate::types::{ApiUserPartial, UserPartial, UserRequest, UserResponse};
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, Utc};
@@ -49,6 +51,7 @@ pub struct UsersShard {
     storage: UsersStorage,
     caches: UserCaches,
     app_attest: AppAttestService,
+    play_integrity: PlayIntegrityService,
 }
 
 struct UserCaches {
@@ -239,12 +242,15 @@ impl UsersShard {
         max_entries: u64,
         ttl: Duration,
         app_attest: AppAttestConfig,
-    ) -> Self {
-        Self {
-            app_attest: AppAttestService::new(app_attest, AppAttestStore::Postgres(kv.clone())),
+        play_integrity: PlayIntegrityConfig,
+    ) -> anyhow::Result<Self> {
+        let store = AppAttestStore::Postgres(kv.clone());
+        Ok(Self {
+            play_integrity: PlayIntegrityService::new(play_integrity, store.clone())?,
+            app_attest: AppAttestService::new(app_attest, store),
             storage: UsersStorage::Postgres(PostgresUsersStorage { kv }),
             caches: UserCaches::new(max_entries, ttl),
-        }
+        })
     }
 
     #[cfg(feature = "scylla")]
@@ -253,6 +259,7 @@ impl UsersShard {
         max_entries: u64,
         ttl: Duration,
         app_attest: AppAttestConfig,
+        play_integrity: PlayIntegrityConfig,
     ) -> anyhow::Result<Self> {
         let stmt_partial = db
             .prepare(format!(
@@ -269,6 +276,7 @@ impl UsersShard {
             crate::app_attest::store::ScyllaAppAttestStore::new(db.clone()),
         ));
         Ok(Self {
+            play_integrity: PlayIntegrityService::new(play_integrity, app_attest_store.clone())?,
             app_attest: AppAttestService::new(app_attest, app_attest_store),
             storage: UsersStorage::Scylla(Arc::new(ScyllaUsersStorage {
                 db,
@@ -570,6 +578,27 @@ impl ShardService for UsersShard {
                         user_id,
                         &key_id,
                         &assertion_base64,
+                        &client_data_base64,
+                        SystemTime::now(),
+                    )
+                    .await
+            }
+            UserRequest::PlayIntegrityCreateChallenge { user_id } => {
+                self.play_integrity
+                    .create_challenge(user_id, SystemTime::now())
+                    .await
+            }
+            UserRequest::PlayIntegritySubmitAge {
+                user_id,
+                package_name,
+                integrity_token,
+                client_data_base64,
+            } => {
+                self.play_integrity
+                    .submit_age(
+                        user_id,
+                        &package_name,
+                        &integrity_token,
                         &client_data_base64,
                         SystemTime::now(),
                     )

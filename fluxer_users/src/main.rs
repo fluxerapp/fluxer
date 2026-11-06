@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod app_attest;
+mod play_integrity;
 mod pseudonym;
 mod router_impl;
 mod shard_impl;
@@ -48,25 +49,39 @@ async fn build_shard(config: &ServiceConfig) -> anyhow::Result<UsersShard> {
         allow_development = app_attest.allow_development,
         "app attest configuration"
     );
+    let play_integrity = play_integrity::PlayIntegrityConfig::from_env()?;
+    tracing::info!(
+        package_names = play_integrity.package_names.len(),
+        cert_digests = play_integrity.cert_digests.len(),
+        device_integrity = ?play_integrity.device_integrity,
+        "play integrity configuration"
+    );
     match config.database_backend {
         DatabaseBackend::Postgres => {
             let postgres_config = fluxer_svc::postgres::PostgresConfig::from_service_config(config);
             let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
             let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
-            Ok(UsersShard::new_postgres(
+            UsersShard::new_postgres(
                 kv,
                 config.cache_max_entries,
                 config.cache_ttl,
                 app_attest,
-            ))
+                play_integrity,
+            )
         }
         DatabaseBackend::Cassandra => {
             #[cfg(feature = "scylla")]
             {
                 let scylla_config = fluxer_svc::scylla::ScyllaConfig::from_service_config(config);
                 let db = fluxer_svc::scylla::connect(&scylla_config).await?;
-                UsersShard::new_scylla(db, config.cache_max_entries, config.cache_ttl, app_attest)
-                    .await
+                UsersShard::new_scylla(
+                    db,
+                    config.cache_max_entries,
+                    config.cache_ttl,
+                    app_attest,
+                    play_integrity,
+                )
+                .await
             }
             #[cfg(not(feature = "scylla"))]
             {

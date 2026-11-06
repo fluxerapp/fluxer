@@ -103,6 +103,7 @@ impl Environment {
 pub enum ChallengePurpose {
     Attest,
     Assert,
+    PlayIntegrity,
 }
 
 impl ChallengePurpose {
@@ -110,6 +111,16 @@ impl ChallengePurpose {
         match self {
             ChallengePurpose::Attest => "attest",
             ChallengePurpose::Assert => "assert",
+            ChallengePurpose::PlayIntegrity => "play_integrity",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "attest" => Some(ChallengePurpose::Attest),
+            "assert" => Some(ChallengePurpose::Assert),
+            "play_integrity" => Some(ChallengePurpose::PlayIntegrity),
+            _ => None,
         }
     }
 }

@@ -42,6 +42,13 @@ export interface IUsersServiceClient {
 		assertionBase64: string;
 		clientDataBase64: string;
 	}): Promise<AppAttestOutcome<AppAttestAgeAccepted>>;
+	playIntegrityCreateChallenge(userId: UserID): Promise<PlayIntegrityOutcome<AppAttestChallengeIssued>>;
+	playIntegritySubmitAge(params: {
+		userId: UserID;
+		packageName: string;
+		integrityToken: string;
+		clientDataBase64: string;
+	}): Promise<PlayIntegrityOutcome<AppAttestAgeAccepted>>;
 }
 
 const APP_ATTEST_REJECTION_CODES = [
@@ -57,6 +64,20 @@ const APP_ATTEST_REJECTION_CODES = [
 export type AppAttestRejectionCode = (typeof APP_ATTEST_REJECTION_CODES)[number];
 
 export type AppAttestOutcome<T> = {ok: true; value: T} | {ok: false; code: AppAttestRejectionCode};
+
+const PLAY_INTEGRITY_REJECTION_CODES = [
+	'not_configured',
+	'invalid_request',
+	'invalid_challenge',
+	'invalid_token',
+	'app_not_recognized',
+	'device_not_trusted',
+	'unavailable',
+] as const;
+
+export type PlayIntegrityRejectionCode = (typeof PLAY_INTEGRITY_REJECTION_CODES)[number];
+
+export type PlayIntegrityOutcome<T> = {ok: true; value: T} | {ok: false; code: PlayIntegrityRejectionCode};
 
 export interface AppAttestChallengeIssued {
 	challenge: string;
@@ -98,6 +119,17 @@ type UsersServiceRequest =
 			key_id: string;
 			assertion_base64: string;
 			client_data_base64: string;
+	  }
+	| {
+			op: 'PlayIntegrityCreateChallenge';
+			user_id: string;
+	  }
+	| {
+			op: 'PlayIntegritySubmitAge';
+			user_id: string;
+			package_name: string;
+			integrity_token: string;
+			client_data_base64: string;
 	  };
 
 interface UserPartialsResponse {
@@ -114,15 +146,18 @@ function isUserPartialsResponse(value: unknown): value is UserPartialsResponse {
 	);
 }
 
-function isAppAttestRejectionCode(value: unknown): value is AppAttestRejectionCode {
-	return typeof value === 'string' && (APP_ATTEST_REJECTION_CODES as ReadonlyArray<string>).includes(value);
+function rejectionReader<C extends string>(variant: string, codes: ReadonlyArray<C>): (value: unknown) => C | null {
+	return (value) => {
+		if (!isJsonRecord(value)) return null;
+		const rejected = value[variant];
+		if (!isJsonRecord(rejected)) return null;
+		const code = rejected.code;
+		return codes.find((candidate) => candidate === code) ?? null;
+	};
 }
 
-function rejectedCode(value: unknown): AppAttestRejectionCode | null {
-	if (!isJsonRecord(value) || !isJsonRecord(value.AppAttestRejected)) return null;
-	const code = value.AppAttestRejected.code;
-	return isAppAttestRejectionCode(code) ? code : null;
-}
+const appAttestRejection = rejectionReader('AppAttestRejected', APP_ATTEST_REJECTION_CODES);
+const playIntegrityRejection = rejectionReader('PlayIntegrityRejected', PLAY_INTEGRITY_REJECTION_CODES);
 
 function acceptChallenge(value: unknown): AppAttestChallengeIssued | null {
 	if (!isJsonRecord(value) || !isJsonRecord(value.AppAttestChallenge)) return null;
@@ -250,9 +285,10 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 		userId: UserID,
 		purpose: AppAttestChallengePurpose,
 	): Promise<AppAttestOutcome<AppAttestChallengeIssued>> {
-		return this.appAttestRequest(
+		return this.attestationRequest(
 			{op: 'AppAttestCreateChallenge', user_id: userId.toString(), purpose},
 			acceptChallenge,
+			appAttestRejection,
 		);
 	}
 
@@ -262,7 +298,7 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 		attestationBase64: string;
 		challenge: string;
 	}): Promise<AppAttestOutcome<true>> {
-		return this.appAttestRequest(
+		return this.attestationRequest(
 			{
 				op: 'AppAttestRegisterKey',
 				user_id: params.userId.toString(),
@@ -271,6 +307,7 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 				challenge: params.challenge,
 			},
 			acceptKeyRegistered,
+			appAttestRejection,
 		);
 	}
 
@@ -280,7 +317,7 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 		assertionBase64: string;
 		clientDataBase64: string;
 	}): Promise<AppAttestOutcome<AppAttestAgeAccepted>> {
-		return this.appAttestRequest(
+		return this.attestationRequest(
 			{
 				op: 'AppAttestSubmitAge',
 				user_id: params.userId.toString(),
@@ -289,21 +326,50 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 				client_data_base64: params.clientDataBase64,
 			},
 			acceptAge,
+			appAttestRejection,
 		);
 	}
 
-	private async appAttestRequest<T>(
+	async playIntegrityCreateChallenge(userId: UserID): Promise<PlayIntegrityOutcome<AppAttestChallengeIssued>> {
+		return this.attestationRequest(
+			{op: 'PlayIntegrityCreateChallenge', user_id: userId.toString()},
+			acceptChallenge,
+			playIntegrityRejection,
+		);
+	}
+
+	async playIntegritySubmitAge(params: {
+		userId: UserID;
+		packageName: string;
+		integrityToken: string;
+		clientDataBase64: string;
+	}): Promise<PlayIntegrityOutcome<AppAttestAgeAccepted>> {
+		return this.attestationRequest(
+			{
+				op: 'PlayIntegritySubmitAge',
+				user_id: params.userId.toString(),
+				package_name: params.packageName,
+				integrity_token: params.integrityToken,
+				client_data_base64: params.clientDataBase64,
+			},
+			acceptAge,
+			playIntegrityRejection,
+		);
+	}
+
+	private async attestationRequest<T, C extends string>(
 		payload: UsersServiceRequest,
 		accept: (value: unknown) => T | null,
-	): Promise<AppAttestOutcome<T>> {
+		reject: (value: unknown) => C | null,
+	): Promise<{ok: true; value: T} | {ok: false; code: C}> {
 		const reply = await this.request(
 			payload,
-			(value): value is unknown => rejectedCode(value) !== null || accept(value) !== null,
+			(value): value is unknown => reject(value) !== null || accept(value) !== null,
 		);
-		const code = rejectedCode(reply);
+		const code = reject(reply);
 		if (code !== null) return {ok: false, code};
 		const accepted = accept(reply);
-		if (accepted === null) throw new Error('[users-service] invalid App Attest response payload');
+		if (accepted === null) throw new Error('[users-service] invalid age assurance response payload');
 		return {ok: true, value: accepted};
 	}
 

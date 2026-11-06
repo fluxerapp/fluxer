@@ -33,6 +33,8 @@ function acceptingClient(base: IUsersServiceClient, floor: AttestedAgeFloor, att
 			ok: true,
 			value: {age_floor: floor, attested_at: attestedAt.toISOString()},
 		}),
+		playIntegrityCreateChallenge: (userId) => base.playIntegrityCreateChallenge(userId),
+		playIntegritySubmitAge: (params) => base.playIntegritySubmitAge(params),
 	};
 }
 

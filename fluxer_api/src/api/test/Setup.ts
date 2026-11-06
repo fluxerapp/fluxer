@@ -16,6 +16,7 @@ import type {
 	AppAttestChallengeIssued,
 	AppAttestOutcome,
 	IUsersServiceClient,
+	PlayIntegrityOutcome,
 } from '@app/api/infrastructure/UsersServiceClient';
 import {setInjectedUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {initializeLogger} from '@app/api/Logger';
@@ -127,6 +128,14 @@ class RepositoryBackedUsersServiceClient implements IUsersServiceClient {
 	}
 
 	async appAttestSubmitAge(): Promise<AppAttestOutcome<AppAttestAgeAccepted>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async playIntegrityCreateChallenge(): Promise<PlayIntegrityOutcome<AppAttestChallengeIssued>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async playIntegritySubmitAge(): Promise<PlayIntegrityOutcome<AppAttestAgeAccepted>> {
 		return {ok: false, code: 'not_configured'};
 	}
 }

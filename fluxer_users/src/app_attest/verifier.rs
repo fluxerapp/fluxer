@@ -469,7 +469,7 @@ fn sha256_concat(first: &[u8], second: &[u8]) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
+pub fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
     left.len() == right.len()
         && left
             .iter()
