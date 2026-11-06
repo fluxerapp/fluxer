@@ -408,6 +408,10 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Emoji': {
+			if (node.kind.kind === 'Standard' && ctx.source.startsWith(`:${node.kind.name}:`, ctx.pos)) {
+				pushContent(ctx, ctx.pos + node.kind.name.length + 2, format);
+				return;
+			}
 			alignOpaque(EMOJI_TOKEN_RE, node.kind.kind === 'Standard' ? node.kind.raw : null, format, ctx);
 			return;
 		}
