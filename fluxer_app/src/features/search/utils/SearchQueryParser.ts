@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {fuzzySearch} from '@app/features/search/utils/SearchTextMatching';
 import type {MessageSearchParams} from '@app/features/search/utils/SearchUtils';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import Users from '@app/features/user/state/Users';
+import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {fromTimestamp, isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {DateTime} from 'luxon';
@@ -367,6 +371,13 @@ export function resolveSearchChannelDisplayName(channel: {
 	return channel.name?.trim() ?? '';
 }
 
+export function getSearchableGuildChannels(guildId: string): Array<Channel> {
+	const channels = Channels.getGuildChannels(guildId).filter(
+		(channel) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type),
+	);
+	return [...channels, ...ChannelThreads.getGuildThreads(guildId)];
+}
+
 const tryResolveChannel = (name: string, guildId?: string | null, hints?: SearchHints): string | null => {
 	if (hints?.channelsByName?.[name]) return hints.channelsByName[name];
 	const target = name.toLowerCase();
@@ -377,7 +388,7 @@ const tryResolveChannel = (name: string, guildId?: string | null, hints?: Search
 		const partial = privateChannels.find((c) => resolveSearchChannelDisplayName(c).toLowerCase().includes(target));
 		return partial?.id ?? null;
 	}
-	const channels = Channels.getGuildChannels(guildId);
+	const channels = getSearchableGuildChannels(guildId);
 	const matches = channels.filter((c) => (c.name || '').toLowerCase() === target);
 	if (matches.length > 0) return matches[0].id;
 	const partial = channels.find((c) => (c.name || '').toLowerCase().includes(target));
