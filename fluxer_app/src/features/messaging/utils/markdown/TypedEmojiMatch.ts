@@ -10,14 +10,6 @@ export interface TypedEmojiMatch {
 	name: string;
 }
 
-const SHORTCODE_WORD_BOUNDARY_CHAR = /[\p{L}\p{N}_]/u;
-
-function isTypedEmojiShortcodeBoundary(text: string, start: number, end: number): boolean {
-	const previous = start > 0 ? text.charAt(start - 1) : '';
-	const next = end < text.length ? text.charAt(end) : '';
-	return !SHORTCODE_WORD_BOUNDARY_CHAR.test(previous) && !SHORTCODE_WORD_BOUNDARY_CHAR.test(next);
-}
-
 export function isExistingCustomEmojiMarkdown(content: string, matchIndex: number): boolean {
 	return content[matchIndex - 1] === '<' || (content[matchIndex - 2] === '<' && content[matchIndex - 1] === 'a');
 }
@@ -33,7 +25,7 @@ export function findTypedEmojiShortcode(text: string, startIndex = 0): TypedEmoj
 	while (match != null) {
 		const matchIndex = match.index;
 		const matchEnd = matchIndex + match[0].length;
-		if (!isExistingCustomEmojiMarkdown(text, matchIndex) && isTypedEmojiShortcodeBoundary(text, matchIndex, matchEnd)) {
+		if (!isExistingCustomEmojiMarkdown(text, matchIndex)) {
 			if (urlSpans === null) {
 				urlSpans = findUrlSpans(text);
 			}
