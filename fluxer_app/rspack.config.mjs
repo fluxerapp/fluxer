@@ -1013,9 +1013,11 @@ export default () => {
 			minimize: isProduction,
 			minimizer: [
 				new SwcJsMinimizerRspackPlugin({
-					compress: true,
-					mangle: true,
-					format: {comments: false},
+					minimizerOptions: {
+						compress: true,
+						mangle: true,
+						format: {comments: false, asciiOnly: isDesktopRenderer},
+					},
 					exclude: /\.worklet\.js$/,
 				}),
 				new LightningCssMinimizerRspackPlugin(),
