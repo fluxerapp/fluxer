@@ -99,7 +99,7 @@ export function registerMessageHandlers(host: HandlerHost, i18n: I18n): void {
 		if (type !== 'press') return;
 		const message = context?.focusedMessage ?? MessageFocus.getFocusedMessage();
 		if (!message) return;
-		requestToggleBookmark(message, i18n);
+		void requestToggleBookmark(message, i18n);
 	});
 	host.register('message_toggle_embeds', ({type, context}) => {
 		if (type !== 'press') return;
