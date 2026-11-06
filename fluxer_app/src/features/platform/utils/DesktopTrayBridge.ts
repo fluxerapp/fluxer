@@ -13,6 +13,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import StatusExpiry from '@app/features/user/state/StatusExpiry';
 import UserSettings from '@app/features/user/state/UserSettings';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {selectVoiceEngineV2AppConnectionWithFallback} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
@@ -105,7 +106,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 	const disposeTrayAction = electronApi.onTrayAction((payload) => {
 		switch (payload.action) {
 			case 'set-status': {
-				void UserSettings.setStatus(payload.status);
+				StatusExpiry.setActiveStatusExpiry({status: payload.status, durationMs: null});
 				break;
 			}
 			case 'toggle-mute': {

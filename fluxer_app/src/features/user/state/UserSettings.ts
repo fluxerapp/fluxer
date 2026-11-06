@@ -664,11 +664,6 @@ class UserSettingsState {
 		}
 	}
 
-	setStatus(status: StatusType): void {
-		this.status = status;
-		LocalPresence.updatePresence();
-	}
-
 	handleGatewayReady(userSettings: unknown): void {
 		this.updateUserSettings(userSettings);
 	}
