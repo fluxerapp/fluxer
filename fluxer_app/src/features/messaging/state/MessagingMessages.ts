@@ -22,10 +22,12 @@ import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {ChannelId} from '@fluxer/schema/src/branded/WireIds';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {makeAutoObservable, reaction} from 'mobx';
 
 const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
 const staleWindowRefetchedAt = new Map<string, number>();
+const refetchedForLastMessageId = new Map<string, string>();
 
 interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
@@ -203,6 +205,16 @@ class Messages {
 		return messages.ready && messages.length > 0 && !messages.cached;
 	}
 
+	private claimNewestMessageRefetch(channelId: string, messages: ChannelMessages): boolean {
+		const lastMessageId = Channels.getChannel(channelId)?.lastMessageId ?? null;
+		const newestLoadedId = messages.last()?.id ?? null;
+		if (lastMessageId == null || newestLoadedId == null || !messages.hasNewestMessages()) return false;
+		if (SnowflakeUtils.compare(lastMessageId, newestLoadedId) <= 0) return false;
+		if (refetchedForLastMessageId.get(channelId) === lastMessageId) return false;
+		refetchedForLastMessageId.set(channelId, lastMessageId);
+		return true;
+	}
+
 	shouldPreloadLatestPage(channelId: string): boolean {
 		if (!GatewaySessions.foregroundConnection.isConnected || !Channels.getChannel(channelId)) {
 			return false;
@@ -348,7 +360,11 @@ class Messages {
 			MessageCommands.jumpToMessage({channelId, ...dispatch});
 			return false;
 		}
-		if (!GatewaySessions.foregroundConnection.isConnected || messages.loadingMore || this.hasLoadedPage(messages)) {
+		if (
+			!GatewaySessions.foregroundConnection.isConnected ||
+			messages.loadingMore ||
+			(this.hasLoadedPage(messages) && !this.claimNewestMessageRefetch(channelId, messages))
+		) {
 			if (this.hasLoadedPage(messages) && Dimension.channelPinnedToEnd(channelId)) {
 				this.commitMessages(messages.trimOldest(MAX_MESSAGES_PER_CHANNEL));
 				this.notifyChange();
