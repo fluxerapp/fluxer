@@ -42,6 +42,7 @@ const QUALIFIED_DOLLAR_BY_LOCALE: Readonly<Partial<Record<LocaleCode, string>>> 
 	[Locales.ES_419]: 'US$',
 	[Locales.FR]: '$US',
 	[Locales.PT_BR]: 'US$',
+	[Locales.PT_PT]: 'US$',
 	[Locales.ZH_TW]: 'US$',
 };
 
