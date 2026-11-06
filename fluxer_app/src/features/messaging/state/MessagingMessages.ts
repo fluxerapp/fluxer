@@ -586,6 +586,13 @@ class Messages {
 		return true;
 	}
 
+	clearReferencedMessage(channelId: string, messageId: string): void {
+		const existing = ChannelMessages.get(channelId);
+		if (!existing?.get(messageId)?.referencedMessage) return;
+		this.commitMessages(existing.update(messageId, (message) => message.withoutReferencedMessage()));
+		this.notifyChange();
+	}
+
 	handleMessageDeleteBulk(action: {ids: Array<string>; channelId: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;

@@ -40,7 +40,7 @@ class MessageReferences {
 	deletedMessageIds = new Set<string>();
 	cachedMessages = new Map<string, MessageRecord>();
 	private referenceVersions = new Map<string, number>();
-	private referenceCount = new Map<string, Set<string>>();
+	private referenceCount = new Map<string, Map<string, string>>();
 	private referencingMessages = new Map<
 		string,
 		{
@@ -127,14 +127,19 @@ class MessageReferences {
 		this.bumpReferenceVersion(message.channel_id, message.id);
 	}
 
-	private addReference(refChannelId: string, refMessageId: string, referencingMessageId: string): void {
+	private addReference(
+		refChannelId: string,
+		refMessageId: string,
+		referencingChannelId: string,
+		referencingMessageId: string,
+	): void {
 		const key = this.getKey(refChannelId, refMessageId);
-		let refs = this.referenceCount.get(key);
-		if (!refs) {
-			refs = new Set<string>();
-			this.referenceCount.set(key, refs);
+		const refs = this.referenceCount.get(key);
+		if (refs) {
+			refs.set(referencingMessageId, referencingChannelId);
+		} else {
+			this.referenceCount.set(key, new Map([[referencingMessageId, referencingChannelId]]));
 		}
-		refs.add(referencingMessageId);
 		this.referencingMessages.set(referencingMessageId, {channelId: refChannelId, messageId: refMessageId});
 	}
 
@@ -169,7 +174,7 @@ class MessageReferences {
 			return false;
 		}
 		const refChannelId = message.message_reference?.channel_id ?? fallbackChannelId;
-		this.addReference(refChannelId, refMessageId, message.id);
+		this.addReference(refChannelId, refMessageId, message.channel_id, message.id);
 		if (!('referenced_message' in message)) {
 			return false;
 		}
@@ -189,7 +194,13 @@ class MessageReferences {
 		this.recordDeletedMessage(key);
 		this.cachedMessages.delete(key);
 		this.referenceVersions.delete(key);
+		const referencing = this.referenceCount.get(key);
 		this.referenceCount.delete(key);
+		if (referencing) {
+			for (const [referencingMessageId, referencingChannelId] of referencing) {
+				Messages.clearReferencedMessage(referencingChannelId, referencingMessageId);
+			}
+		}
 		const referencedBy = this.referencingMessages.get(messageId);
 		if (referencedBy) {
 			this.removeReference(referencedBy.channelId, referencedBy.messageId, messageId);
