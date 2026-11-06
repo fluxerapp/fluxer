@@ -435,7 +435,13 @@ class Messages {
 			channelId: selectedChannelId,
 			messageId: undefined,
 		});
-		if (!didChannelSelect && currentMessages && currentMessages.length === 0 && !currentMessages.ready) {
+		if (
+			!didChannelSelect &&
+			currentMessages &&
+			currentMessages.length === 0 &&
+			!currentMessages.ready &&
+			!currentMessages.loadingMore
+		) {
 			this.commitMessages(currentMessages.withPatch({loadingMore: true}));
 			MessageCommands.fetchMessages(selectedChannelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 			this.notifyChange();
