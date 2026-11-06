@@ -3,7 +3,11 @@
 -module(guild_members_mutation).
 -typing([eqwalizer]).
 
--export([resolve_mention_sources_page/2, resolve_channel_mentions/2]).
+-export([
+    resolve_mention_sources_page/2,
+    resolve_channel_mentions/2,
+    resolve_channel_mentions_for_guild/3
+]).
 
 -export_type([guild_state/0, guild_reply/1]).
 
