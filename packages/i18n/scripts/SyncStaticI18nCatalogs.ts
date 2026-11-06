@@ -111,7 +111,7 @@ function normalizeFlatCatalog(source: FlatCatalog, existing: unknown): FlatCatal
 	const next: FlatCatalog = {};
 	for (const key of Object.keys(source).sort()) {
 		const value = existingRecord[key];
-		next[key] = typeof value === 'string' ? value : source[key];
+		next[key] = typeof value === 'string' ? value : '';
 	}
 	return next;
 }
@@ -126,7 +126,7 @@ function normalizeEmailCatalog(source: EmailCatalog, existing: unknown): EmailCa
 		const template: Record<string, string> = {};
 		for (const field of Object.keys(sourceTemplate)) {
 			const value = existingTemplate[field];
-			template[field] = typeof value === 'string' ? value : sourceTemplate[field];
+			template[field] = typeof value === 'string' ? value : '';
 		}
 		next[key] = template as EmailTemplate;
 	}
