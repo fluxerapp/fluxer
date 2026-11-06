@@ -548,11 +548,7 @@
 	--outline-radius: var(--outline-frame-radius-native);
 }
 
-:global(html.platform-native) .outlineFrame.outlineFrame.outlineFrameFullscreen {
-	--outline-frame-clip-radius: 0px;
-}
-
-.outlineFrameFullscreen {
+:global(html.platform-native) .outlineFrame.outlineFrameFullscreen {
 	border: none;
 }
 
