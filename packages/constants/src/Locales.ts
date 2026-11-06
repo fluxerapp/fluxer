@@ -42,3 +42,24 @@ export const Locales = {
 export type LocaleCode = ValueOf<typeof Locales>;
 
 export const AllLocales: ReadonlyArray<LocaleCode> = Object.values(Locales);
+
+const FORMATTING_FALLBACK_LOCALE = 'en-US';
+const formattingLocaleCache = new Map<string, string>();
+
+function isFormattingLocaleSupported(locale: string): boolean {
+	try {
+		return locale !== '' && Intl.DateTimeFormat.supportedLocalesOf(locale).length > 0;
+	} catch {
+		return false;
+	}
+}
+
+export function resolveFormattingLocale(locale: string): string {
+	const cached = formattingLocaleCache.get(locale);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const resolved = isFormattingLocaleSupported(locale) ? locale : FORMATTING_FALLBACK_LOCALE;
+	formattingLocaleCache.set(locale, resolved);
+	return resolved;
+}

@@ -11,6 +11,7 @@ import Tick from '@app/features/ui/state/Tick';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {getFormattedDateTimeWithSeconds} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {DateTime} from 'luxon';
 import {computed} from 'mobx';
 import {observer} from 'mobx-react-lite';
@@ -53,7 +54,7 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 					}
 					return {
 						displayTime: formatTimestamp(timestamp, style, i18n),
-						relativeTime: DateTime.fromJSDate(labelDate).setLocale(locale).toRelative(),
+						relativeTime: DateTime.fromJSDate(labelDate).setLocale(resolveFormattingLocale(locale)).toRelative(),
 					};
 				},
 				{equals: areRelativeLabelsEqual},

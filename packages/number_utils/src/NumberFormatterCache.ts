@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
+
 const numberFormatterCache = new Map<string, Intl.NumberFormat>();
 
 export function getNumberFormatter(
@@ -11,7 +13,7 @@ export function getNumberFormatter(
 	if (cachedFormatter !== undefined) {
 		return cachedFormatter;
 	}
-	const formatter = new Intl.NumberFormat(locale, numberFormatOptions);
+	const formatter = new Intl.NumberFormat(resolveFormattingLocale(locale), numberFormatOptions);
 	numberFormatterCache.set(cacheKey, formatter);
 	return formatter;
 }

@@ -7,7 +7,7 @@ import {getNativeLocaleIdentifier} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {noteLocale} from '@app/features/theme/fonts/ScriptFontLoader';
-import {AllLocales, type LocaleCode} from '@fluxer/constants/src/Locales';
+import {AllLocales, type LocaleCode, resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {type I18n, i18n, type Messages} from '@lingui/core';
 import {createAtom, runInAction} from 'mobx';
 
@@ -172,7 +172,7 @@ function applyDocumentLocale(localeCode: LocaleCode): void {
 let loadedLocale: LocaleCode | null = null;
 
 function activateLocale(localeCode: LocaleCode, messages: Messages): void {
-	i18n.loadAndActivate({locale: localeCode, messages});
+	i18n.loadAndActivate({locale: localeCode, locales: resolveFormattingLocale(localeCode), messages});
 	loadedLocale = localeCode;
 	applyDocumentLocale(localeCode);
 	noteLocale(localeCode);
