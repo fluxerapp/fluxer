@@ -38,3 +38,17 @@ func TestRunningRefsLeavesOutServicesThatDontRun(t *testing.T) {
 		t.Fatalf("a stack without voice or object store still runs them: %v", lean)
 	}
 }
+
+func TestRunningRefsUsesThePinned3rdPartyImage(t *testing.T) {
+	set := stack.Embedded()
+	pinned := "postgres:16-alpine@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	refs := RunningRefs(set, map[string]string{"postgres": pinned}, Running{})
+	if !slices.Contains(refs, pinned) || slices.Contains(refs, "postgres:16-alpine") {
+		t.Fatalf("didn't use the pinned postgres image: %v", refs)
+	}
+	chosen := map[string]string{"FLUXER_POSTGRES_IMAGE": "postgres:16.9-alpine"}
+	refs = RunningRefs(set, map[string]string{"postgres": pinned}, Running{Chosen: func(k string) string { return chosen[k] }})
+	if !slices.Contains(refs, "postgres:16.9-alpine") || slices.Contains(refs, pinned) {
+		t.Fatalf("used the pinned image instead of FLUXER_POSTGRES_IMAGE: %v", refs)
+	}
+}

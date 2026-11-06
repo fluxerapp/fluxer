@@ -41,8 +41,9 @@ const (
 func main() {
 	setPath := flag.String("set", "internal/stack/imageset.json", "the image set file to add sizes to")
 	cachePath := flag.String("cache", "", "a file that keeps layer sizes between runs")
+	pin := flag.Bool("pin", false, "pin 3rd party images in the compose file to the digest of the tag")
 	flag.Parse()
-	if err := run(context.Background(), *setPath, *cachePath); err != nil {
+	if err := run(context.Background(), *setPath, *cachePath, *pin); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -76,7 +77,7 @@ type blob struct {
 	diffID    string
 }
 
-func run(ctx context.Context, setPath, cachePath string) error {
+func run(ctx context.Context, setPath, cachePath string, pin bool) error {
 	data, err := os.ReadFile(setPath)
 	if err != nil {
 		return err
@@ -85,9 +86,19 @@ func run(ctx context.Context, setPath, cachePath string) error {
 	if err := json.Unmarshal(data, &set); err != nil {
 		return err
 	}
-	refs, err := thirdParty()
+	third, err := thirdParty()
 	if err != nil {
 		return err
+	}
+	c := &client{http: &http.Client{Timeout: 30 * time.Minute}, tokens: map[string]string{}}
+	if pin {
+		if err := pinThirdParty(ctx, c, &set, third); err != nil {
+			return err
+		}
+	}
+	var refs []string
+	if !pin {
+		refs = slices.Collect(maps.Values(third))
 	}
 	for _, ref := range set.Images {
 		refs = append(refs, ref)
@@ -104,7 +115,6 @@ func run(ctx context.Context, setPath, cachePath string) error {
 		}
 	}
 
-	c := &client{http: &http.Client{Timeout: 30 * time.Minute}, tokens: map[string]string{}}
 	set.Tags = map[string]string{}
 	set.Layers = map[string]stack.Layer{}
 	set.Platforms = map[string]map[string][]string{}
@@ -190,22 +200,61 @@ func run(ctx context.Context, setPath, cachePath string) error {
 	return writeJSON(setPath, set)
 }
 
-func thirdParty() ([]string, error) {
+func thirdParty() (map[string]string, error) {
 	compose, err := stack.ReadFile(stack.Embedded(), stack.ComposeFile)
 	if err != nil {
 		return nil, err
 	}
-	var out []string
-	for _, value := range stack.ComposeImages(compose) {
+	out := map[string]string{}
+	for svc, value := range stack.ComposeImages(compose) {
 		if strings.HasPrefix(value, "${FLUXER_REGISTRY") {
 			continue
 		}
 		if def, ok := stack.ImageDefault(value); ok {
 			value = def
 		}
-		out = append(out, value)
+		out[svc] = value
 	}
 	return out, nil
+}
+
+type resolver interface {
+	digest(ctx context.Context, ref string) (string, error)
+}
+
+func (c *client) digest(ctx context.Context, ref string) (string, error) {
+	r, err := parse(ref)
+	if err != nil {
+		return "", err
+	}
+	_, d, err := c.manifest(ctx, r, r.ref)
+	return d, err
+}
+
+func pinThirdParty(ctx context.Context, c resolver, set *stack.ImageSet, third map[string]string) error {
+	if set.Images == nil {
+		set.Images = map[string]string{}
+	}
+	resolved := map[string]string{}
+	for _, svc := range slices.Sorted(maps.Keys(third)) {
+		ref := third[svc]
+		if _, ok := set.Images[svc]; ok {
+			return fmt.Errorf("%s already has an image in the image set", svc)
+		}
+		if strings.Contains(ref, "@") {
+			set.Images[svc] = ref
+			continue
+		}
+		if _, ok := resolved[ref]; !ok {
+			d, err := c.digest(ctx, ref)
+			if err != nil {
+				return fmt.Errorf("%s: %w", ref, err)
+			}
+			resolved[ref] = d
+		}
+		set.Images[svc] = ref + "@" + resolved[ref]
+	}
+	return nil
 }
 
 func writeJSON(path string, v any) error {

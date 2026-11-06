@@ -215,11 +215,11 @@ jobs:
           key: layer-sizes-${{ github.run_id }}
           restore-keys: layer-sizes-
 
-      - name: add image sizes to the image set
+      - name: add image sizes to the image set and also pin 3rd party images
         working-directory: fluxer_rexctl
         env:
           GHCR_TOKEN: ${{ github.token }}
-        run: go run ./internal/stack/layersizes -set internal/stack/imageset.json -cache "${RUNNER_TEMP}/layer-sizes.json"
+        run: go run ./internal/stack/layersizes -pin -set internal/stack/imageset.json -cache "${RUNNER_TEMP}/layer-sizes.json"
 
       - name: govulncheck
         working-directory: fluxer_rexctl

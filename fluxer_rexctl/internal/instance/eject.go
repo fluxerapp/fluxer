@@ -228,12 +228,13 @@ func handUpdate(ctx context.Context, dir string, e *engine.Engine, s *State, cus
 		return nil, err
 	}
 	own := stack.ComposeImages(custom)
+	registry := stack.RegistryServices()
 	var updated *stack.ImageSet
 	for _, seen := range []map[string]string{stack.ComposeImages(compose), live.images} {
 		maps.DeleteFunc(seen, func(svc, ref string) bool {
 			_, fluxer := shipped.Images[svc]
 			_, mine := own[svc]
-			return !fluxer || mine || strings.Contains(ref, "${")
+			return !fluxer || !registry[svc] || mine || strings.Contains(ref, "${")
 		})
 		switch {
 		case sameImages(seen, s.Images.Refs):
