@@ -97,7 +97,7 @@
 	font-weight: 500;
 	font-variant-numeric: tabular-nums;
 	color: var(--text-secondary);
-	text-align: right;
+	text-align: end;
 }
 
 .speedControl {

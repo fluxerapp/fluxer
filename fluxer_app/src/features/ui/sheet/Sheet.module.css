@@ -44,8 +44,8 @@
 	width: 100%;
 	height: calc(var(--sheet-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - var(--sheet-top-gap));
 	max-height: calc(100dvh - var(--sheet-viewport-offset-bottom));
-	border-top-left-radius: 1.5rem;
-	border-top-right-radius: 1.5rem;
+	border-start-start-radius: 1.5rem;
+	border-start-end-radius: 1.5rem;
 	overflow: hidden;
 	color: var(--text-primary);
 	background-color: var(--sheet-surface, var(--background-secondary));
@@ -171,12 +171,12 @@
 
 .headerAlignStart .headerCenter {
 	align-items: flex-start;
-	text-align: left;
+	text-align: start;
 }
 
 .headerAlignEnd .headerCenter {
 	align-items: flex-end;
-	text-align: right;
+	text-align: end;
 }
 
 .headerAfter {

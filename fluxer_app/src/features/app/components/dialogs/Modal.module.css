@@ -396,7 +396,7 @@
 .insetCloseButtonContainer {
 	position: absolute;
 	top: calc(0.75rem + env(safe-area-inset-top, 0px));
-	right: calc(0.75rem + env(safe-area-inset-right, 0px));
+	inset-inline-end: calc(0.75rem + var(--safe-area-inset-inline-end));
 	z-index: 10;
 	pointer-events: auto;
 }
