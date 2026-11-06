@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
+import {type AssetKind, getPolicy, isExtensionAllowed} from '@fluxer/constants/src/AssetFormatPolicy';
 
 export interface ImageUploadFileLike {
 	readonly type?: string | null;
@@ -19,6 +20,14 @@ export function isSvgMimeType(type: string | null | undefined): boolean {
 export function isSvgFile(file: ImageUploadFileLike): boolean {
 	if (isSvgMimeType(file.type)) return true;
 	return (file.name ?? '').toLowerCase().endsWith('.svg');
+}
+
+export function isAssetUploadFileAllowed(kind: AssetKind, file: ImageUploadFileLike): boolean {
+	const name = (file.name ?? '').toLowerCase();
+	const dot = name.lastIndexOf('.');
+	if (dot !== -1 && isExtensionAllowed(kind, name.slice(dot + 1))) return true;
+	const mime = normalizeImageMimeType(file.type);
+	return mime !== '' && Object.values(getPolicy(kind).mimes).includes(mime);
 }
 
 export async function readImageFileAsUploadDataUrl(file: File): Promise<string> {

@@ -12,7 +12,11 @@ import {openAssetSourceModal} from '@app/features/expressions/components/modals/
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
-import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
+import {
+	isAssetUploadFileAllowed,
+	isSvgFile,
+	readImageFileAsUploadDataUrl,
+} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
@@ -95,7 +99,8 @@ export function useEditGroupForm({
 					return;
 				}
 				const svg = isSvgFile(file);
-				if (!svg && !(await canCropFile(file))) {
+				const croppable = svg || (await canCropFile(file));
+				if (!croppable && !isAssetUploadFileAllowed('guild_icon', file)) {
 					showChannelErrorModal({
 						title: i18n._(messages.unsupportedIconFormatTitle),
 						message: getAssetFormatErrorMessage(i18n, 'guild_icon', 'unsupported_mime'),
@@ -113,6 +118,13 @@ export function useEditGroupForm({
 					return;
 				}
 				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
+				if (!croppable) {
+					form.setValue('icon', base64);
+					setPreviewIconUrl(base64);
+					setHasClearedIcon(false);
+					form.clearErrors('icon');
+					return;
+				}
 				ModalCommands.push(
 					modal(() => (
 						<AssetCropModal
