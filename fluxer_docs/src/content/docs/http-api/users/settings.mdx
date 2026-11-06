@@ -171,6 +171,7 @@ The input form of the [user settings object](/http-api/users/#user-settings-obje
 | status_resets_to? | ?string | [Presence status](#presence-status-values) to set at `status_resets_at`, not `offline`, or null to clear it |
 | theme? | string | [Theme value](#theme-values) |
 | locale?<sup>2</sup> | string | Interface [locale](/topics/locales/#supported-locales) |
+| regional_format? | ?string | [Regional format](/http-api/users/#regional-formats) such as `de-DE` or `system`, or null to follow `locale`. Anything else fails with `INVALID_FORMAT` |
 | restricted_guilds?<sup>3</sup> | array[snowflake] | The guilds where member direct messages are restricted (max 200) |
 | bot_restricted_guilds?<sup>3</sup> | array[snowflake] | The guilds where bot direct messages are restricted (max 200) |
 | default_guilds_restricted? | boolean | Whether new guilds restrict member direct messages |
@@ -192,6 +193,7 @@ The input form of the [user settings object](/http-api/users/#user-settings-obje
 | custom_status? | ?[custom status input](#custom-status-input-object) object | The custom status, or null to clear it |
 | afk_timeout? | integer | Idle seconds before the account is shown as away (60-600) |
 | time_format? | integer | [Time format setting](/http-api/users/#time-format-settings) |
+| timestamp_format? | integer | [Timestamp format setting](/http-api/users/#timestamp-format-settings) |
 | developer_mode? | boolean | Whether developer mode is on |
 | trusted_domains?<sup>6</sup> | array[string] | The trusted external link domains (max 1000, each 1-253 characters) |
 | default_hide_muted_channels? | boolean | Whether new guilds hide muted channels |

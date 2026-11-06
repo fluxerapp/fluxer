@@ -278,6 +278,8 @@ export interface UserSettingsRow {
 	guild_folders: Array<GuildFolder> | null;
 	afk_timeout: number | null;
 	time_format: number | null;
+	regional_format: string | null;
+	timestamp_format: number | null;
 	trusted_domains: Set<string> | null;
 	default_hide_muted_channels: boolean | null;
 	sensitive_content_friend_dm_filter: number | null;
@@ -522,6 +524,8 @@ export const USER_SETTINGS_COLUMNS = [
 	'guild_folders',
 	'afk_timeout',
 	'time_format',
+	'regional_format',
+	'timestamp_format',
 	'trusted_domains',
 	'default_hide_muted_channels',
 	'sensitive_content_friend_dm_filter',
