@@ -21,6 +21,7 @@ import Drafts from '@app/features/messaging/state/MessagingDrafts';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import * as ThreadD from '@app/features/threads/utils/ThreadMessageDescriptors';
@@ -185,11 +186,13 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 						{i18n._(D.PREVIEW_DESCRIPTOR)}
 					</span>
 					{hasVisibleMessageContent(body) ? (
-						<SafeMarkdown
-							content={body}
-							options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
-							data-flx="forum.forum-post-composer.safe-markdown"
-						/>
+						<div className={markupStyles.markup} data-flx="forum.forum-post-composer.preview-markup">
+							<SafeMarkdown
+								content={body}
+								options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
+								data-flx="forum.forum-post-composer.safe-markdown"
+							/>
+						</div>
 					) : (
 						<span className={styles.hint} data-flx="forum.forum-post-composer.preview-empty">
 							{i18n._(D.PREVIEW_EMPTY_DESCRIPTOR)}
