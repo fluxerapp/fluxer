@@ -12,6 +12,7 @@ import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatti
 import styles from '@app/features/user/components/modals/tabs/accessibility_tab/VisualTab.module.css';
 import {shouldShowDirectMessageSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
 import {DIM_STRIKETHROUGH_TEXT_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	ALWAYS_UNDERLINE_LINKS_DESCRIPTOR,
 	SUMMARY_NONE_DESCRIPTOR as NONE_DESCRIPTOR,
@@ -69,7 +70,7 @@ const dmMessagePreviewOptions = (i18n: I18n): ReadonlyArray<RadioOption<DMMessag
 export const VisualTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
-		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 		[i18n, i18n.locale],
 	);
 	const saturationFactor = Accessibility.saturationFactor;

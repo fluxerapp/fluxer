@@ -35,6 +35,7 @@ import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionU
 import Users from '@app/features/user/state/Users';
 import {getEmojiURL} from '@app/features/user/utils/AvatarUtils';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -263,7 +264,8 @@ export const GuildAuditLogSentence: React.FC<GuildAuditLogSentenceProps> = obser
 			values[name] = renderPlaceholder(value, guildId, i18n);
 			continue;
 		}
-		values[name] = name === PLURAL_COUNT_VALUE ? value : renderValue(getCachedNumberFormat(i18n.locale).format(value));
+		values[name] =
+			name === PLURAL_COUNT_VALUE ? value : renderValue(getCachedNumberFormat(getFormattingLocale()).format(value));
 	}
 	return <Trans id={sentence.descriptor.id} message={sentence.descriptor.message} values={values} />;
 });

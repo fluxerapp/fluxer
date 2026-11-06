@@ -7,6 +7,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import styles from '@app/features/voice/components/media_player/MediaVolumeControl.module.css';
 import {
 	MUTE_DESCRIPTOR_2 as MUTE_DESCRIPTOR,
@@ -226,7 +227,7 @@ export const MediaVolumeControl = observer(function MediaVolumeControl({
 			aria-valuemin={0}
 			aria-valuemax={100}
 			aria-valuenow={Math.round(displayVolume * 100)}
-			aria-valuetext={formatRoundedPercentage(i18n.locale, displayVolume * 100)}
+			aria-valuetext={formatRoundedPercentage(getFormattingLocale(), displayVolume * 100)}
 			aria-orientation="horizontal"
 			tabIndex={0}
 			data-flx="voice.media-player.media-volume-control.slider"

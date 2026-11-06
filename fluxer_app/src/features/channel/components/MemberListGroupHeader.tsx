@@ -5,7 +5,8 @@ import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {openRoleContextMenu, openRoleContextMenuForElement} from '@app/features/ui/action_menu/RoleContextMenu';
-import {useLingui} from '@lingui/react/macro';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {useLingui} from '@lingui/react';
 import type {CSSProperties, Ref} from 'react';
 
 interface MemberListGroupHeaderProps {
@@ -27,7 +28,7 @@ export function MemberListGroupHeader({
 	style,
 	ref,
 }: MemberListGroupHeaderProps) {
-	const {i18n} = useLingui();
+	useLingui();
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: Role headings have button semantics and handlers; other headings have neither.
 		<div
@@ -67,7 +68,7 @@ export function MemberListGroupHeader({
 				{'—'}
 			</span>
 			<span className={styles.groupHeaderCount} data-flx="channel.member-list-group-header.count">
-				{getCachedNumberFormat(i18n.locale).format(count)}
+				{getCachedNumberFormat(getFormattingLocale()).format(count)}
 			</span>
 		</div>
 	);

@@ -28,6 +28,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {canCropFile} from '@app/features/voice/utils/MediaCapabilities';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {assignTransientUploadFieldMutation} from '@app/lib/forms/TransientUploadFields';
@@ -92,7 +93,7 @@ export function useEditGroupForm({
 					showChannelErrorModal({
 						title: i18n._(messages.iconFileTooLargeTitle),
 						message: i18n._(messages.iconFileTooLarge, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+							imageMaxSizeLabel: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 						}),
 						dataFlx: `${dataFlx}.icon-file-too-large.generic-error-modal`,
 					});
@@ -176,7 +177,7 @@ export function useEditGroupForm({
 			title: i18n._(messages.changeIcon),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+				maxSize: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUploadClick,

@@ -24,7 +24,7 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {RECOVERY_KEY_SEPARATOR} from '@fluxer/constants/src/RecoveryKeyUtils';
 import {formatTimestampWithStyle} from '@fluxer/date_utils/src/DateTimestampStyle';
@@ -228,7 +228,7 @@ const RecoveryKitModal = observer(
 		const keyGroups = useMemo(() => recoveryKey.split(RECOVERY_KEY_SEPARATOR), [recoveryKey]);
 		const recoverPageUrl = `${RuntimeConfig.webAppBaseUrl}${Routes.RECOVER_ACCOUNT}`;
 		const recoverUrl = `${recoverPageUrl}#username=${encodeURIComponent(accountTag)}&key=${encodeURIComponent(recoveryKey)}`;
-		const locale = getCurrentLocale();
+		const locale = getFormattingLocale();
 		const timeFormat = UserSettings.timeFormat;
 		const sheet = useMemo<RecoveryKitSheet>(() => {
 			const productName = RuntimeConfig.productName;

@@ -40,6 +40,7 @@ import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -301,7 +302,7 @@ function resolveGuildChannelDisableReason(
 		return i18n._(EMBED_LINKS_PERMISSION_REQUIRED_DESCRIPTOR, {embedLinksPermissionLabel});
 	}
 	if (slowmodeRemainingMs <= 0) return null;
-	return i18n._(SLOWMODE_WAIT_DESCRIPTOR, {remaining: formatSlowmodeTime(slowmodeRemainingMs, i18n.locale)});
+	return i18n._(SLOWMODE_WAIT_DESCRIPTOR, {remaining: formatSlowmodeTime(slowmodeRemainingMs, getFormattingLocale())});
 }
 
 function resolveForwardDestinationOption(

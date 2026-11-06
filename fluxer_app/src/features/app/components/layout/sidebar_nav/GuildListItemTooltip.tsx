@@ -53,7 +53,7 @@ interface GuildListItemTooltipProps {
 	readonly isMuted: boolean;
 	readonly mutedText: string | null;
 	readonly guildCounts: GuildCounts | null;
-	readonly currentLocale: string;
+	readonly formattingLocale: string;
 	readonly voiceRows: ReadonlyArray<SidebarVoiceRow>;
 	readonly navigationKeybind: KeyCombo | null;
 }
@@ -102,7 +102,7 @@ export function GuildListItemTooltip({
 	isMuted,
 	mutedText,
 	guildCounts,
-	currentLocale,
+	formattingLocale,
 	voiceRows,
 	navigationKeybind,
 }: GuildListItemTooltipProps) {
@@ -132,7 +132,7 @@ export function GuildListItemTooltip({
 				data-flx="app.sidebar-nav.guild-list-item-tooltip.render-online-count.guild-tooltip-stat-text--2"
 			>
 				{i18n._(ONLINE_MEMBER_COUNT_DESCRIPTOR, {
-					onlineCount: formatNumber(guildCounts.onlineCount, currentLocale),
+					onlineCount: formatNumber(guildCounts.onlineCount, formattingLocale),
 				})}
 			</span>
 		);
@@ -162,7 +162,7 @@ export function GuildListItemTooltip({
 				data-flx="app.sidebar-nav.guild-list-item-tooltip.render-member-count.guild-tooltip-stat-text--2"
 			>
 				{i18n._(TOTAL_MEMBER_COUNT_DESCRIPTOR, {
-					memberCount: formatNumber(guildCounts.memberCount, currentLocale),
+					memberCount: formatNumber(guildCounts.memberCount, formattingLocale),
 					rawMemberCount: guildCounts.memberCount,
 				})}
 			</span>

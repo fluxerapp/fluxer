@@ -10,7 +10,7 @@ import {
 	AnimeTweenType,
 	createAnimeFlxElement,
 } from '@app/features/ui/motion/AnimeElement';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 
@@ -46,7 +46,7 @@ function resolveMentionBadgeMotion(useReducedMotion: boolean): MentionBadgeMotio
 }
 
 const formatMentionCount = (mentionCount: number) => {
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	if (mentionCount > 99 && mentionCount < 1000) {
 		return `${formatNumber(99, locale)}+`;
 	}

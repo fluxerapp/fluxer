@@ -11,6 +11,7 @@ import {instanceTargetFromSnapshot} from '@app/features/platform/transport/Insta
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {EnvelopeSimpleIcon, WarningCircleIcon} from '@phosphor-icons/react';
@@ -174,7 +175,7 @@ const IpAuthorizationScreen = ({
 						{resendUsed ? <Trans>Resent</Trans> : <Trans>Resend email</Trans>}
 						<flx-i18n data-flx="auth.flow.ip-authorization-screen.flx-i18n">
 							{resendIn > 0
-								? ` (${getCachedNumberFormat(i18n.locale, {style: 'unit', unit: 'second', unitDisplay: 'narrow', maximumFractionDigits: 0}).format(resendIn)})`
+								? ` (${getCachedNumberFormat(getFormattingLocale(), {style: 'unit', unit: 'second', unitDisplay: 'narrow', maximumFractionDigits: 0}).format(resendIn)})`
 								: ''}
 						</flx-i18n>
 					</Button>

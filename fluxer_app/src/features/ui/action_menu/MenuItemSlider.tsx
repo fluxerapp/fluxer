@@ -3,8 +3,9 @@
 import styles from '@app/features/ui/action_menu/MenuItem.module.css';
 import {Slider} from '@app/features/ui/components/Slider';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ContextMenu as BaseContextMenu} from '@base-ui/react/context-menu';
-import {useLingui} from '@lingui/react/macro';
+import {useLingui} from '@lingui/react';
 import {clsx} from 'clsx';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -21,14 +22,14 @@ interface MenuItemSliderProps {
 
 export const MenuItemSlider = React.forwardRef<HTMLDivElement, MenuItemSliderProps>(
 	({label, value, minValue = 0, maxValue = 100, disabled = false, onChange, onFormat, step = 1}, forwardedRef) => {
-		const {i18n} = useLingui();
+		useLingui();
 		const [localValue, setLocalValue] = useState(value);
 		const localValueRef = useRef(value);
 		localValueRef.current = localValue;
 		useEffect(() => {
 			setLocalValue(value);
 		}, [value]);
-		const formattedValue = onFormat ? onFormat(localValue) : formatRoundedPercentage(i18n.locale, localValue);
+		const formattedValue = onFormat ? onFormat(localValue) : formatRoundedPercentage(getFormattingLocale(), localValue);
 		const handleValueChange = useCallback(
 			(newValue: number) => {
 				localValueRef.current = newValue;

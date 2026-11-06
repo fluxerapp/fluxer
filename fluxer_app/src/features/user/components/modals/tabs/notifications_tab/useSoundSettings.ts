@@ -10,6 +10,7 @@ import {getSoundLabels} from '@app/features/notification/utils/SoundLabels';
 import {clearCustomSoundCache, type SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {INVALID_AUDIO_FILE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -104,7 +105,7 @@ export function useSoundSettings() {
 					message:
 						validation.reason === 'too_large'
 							? i18n._(FILE_IS_TOO_LARGE_MAXIMUM_SIZE_IS_DESCRIPTOR, {
-									maxSize: formatFileSize(i18n.locale, CUSTOM_SOUND_MAX_SIZE_BYTES),
+									maxSize: formatFileSize(getFormattingLocale(), CUSTOM_SOUND_MAX_SIZE_BYTES),
 								})
 							: i18n._(CHOOSE_A_SUPPORTED_AUDIO_FILE_DESCRIPTOR),
 					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',

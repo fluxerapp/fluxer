@@ -26,6 +26,7 @@ import {
 import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {getFormattedShortDate, getFormattedTime} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	CHANGE_EMOJI_DESCRIPTOR,
@@ -34,7 +35,6 @@ import {
 	WHAT_S_HAPPENING_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import {getDaysBetween} from '@fluxer/date_utils/src/DateComparison';
-import {getFormattedShortDate, getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -105,13 +105,13 @@ const formatLabelWithRelative = (i18n: I18n, label: string, relative: TimeLabel 
 const getDayDifference = (reference: Date, target: Date): number => {
 	return getDaysBetween(target, reference);
 };
-const formatTimeString = (date: Date): string => getFormattedTime(date, getCurrentLocale());
+const formatTimeString = (date: Date): string => getFormattedTime(date);
 const formatRelativeDayTimeLabel = (reference: Date, target: Date): TimeLabel => {
 	const dayOffset = getDayDifference(reference, target);
 	const timeString = formatTimeString(target);
 	if (dayOffset === 0) return {dayLabel: getRelativeDayLabelLower(getCurrentLocale(), 0), timeString};
 	if (dayOffset === 1) return {dayLabel: getRelativeDayLabelLower(getCurrentLocale(), 1), timeString};
-	const dayLabel = getFormattedShortDate(target, getCurrentLocale());
+	const dayLabel = getFormattedShortDate(target);
 	return {dayLabel, timeString};
 };
 export const CustomStatusModal = observer(() => {

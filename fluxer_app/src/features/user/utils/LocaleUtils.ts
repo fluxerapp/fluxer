@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n, {loadLocaleCatalog, normalizeLocale} from '@app/app/I18n';
+import SystemLocale from '@app/features/i18n/state/SystemLocale';
 import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {DiscoverySupportedLanguages} from '@fluxer/constants/src/DiscoveryConstants';
+import {resolveRegionalFormatLocale} from '@fluxer/constants/src/Locales';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -248,6 +250,10 @@ let localLocaleOverride: string | null = null;
 
 export function getCurrentLocale(): string {
 	return UserSettings.locale || DEFAULT_LOCALE;
+}
+
+export function getFormattingLocale(): string {
+	return resolveRegionalFormatLocale(UserSettings.regionalFormat, getCurrentLocale(), SystemLocale.locale);
 }
 
 export function getCurrentOrDetectedLocale(): string {

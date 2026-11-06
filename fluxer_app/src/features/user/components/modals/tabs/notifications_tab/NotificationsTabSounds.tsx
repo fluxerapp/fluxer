@@ -15,6 +15,7 @@ import type {SoundSettings} from '@app/features/ui/state/Sound';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.module.css';
 import {MASTER_VOLUME_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {PER_SOUND_VOLUME_DESCRIPTOR, PREVIEW_SOUND_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -145,7 +146,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const formatPercentage = useCallback(
-			(value: number) => formatRoundedPercentage(i18n.locale, value),
+			(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			[i18n, i18n.locale],
 		);
 		const masterVolume = soundSettings.masterVolume ?? DEFAULT_MASTER;
@@ -281,7 +282,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 					/>
 					<div className={styles.hint} data-flx="user.notifications-tab.sounds.hint">
 						{i18n._(CLICK_THE_UPLOAD_ICON_NEXT_TO_ANY_SOUND_DESCRIPTOR, {
-							customSoundMaxSizeLabel: formatFileSize(i18n.locale, CUSTOM_SOUND_MAX_SIZE_BYTES),
+							customSoundMaxSizeLabel: formatFileSize(getFormattingLocale(), CUSTOM_SOUND_MAX_SIZE_BYTES),
 						})}
 					</div>
 					<div

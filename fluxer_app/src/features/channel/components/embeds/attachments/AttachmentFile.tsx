@@ -18,6 +18,7 @@ import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -56,7 +57,7 @@ export const AttachmentFile = observer(({attachment, message, isPreview, spoiler
 	const {enabled: isMobile} = MobileLayout;
 	const isExpired = Boolean(attachment.expired);
 	const fileName = attachment.title || attachment.filename;
-	const fileSize = formatFileSize(i18n.locale, attachment.size);
+	const fileSize = formatFileSize(getFormattingLocale(), attachment.size);
 	const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
 	const {name: fileNameWithoutExt, extension: fileExt} = splitFilename(fileName);
 	const showTextPreview = !isPreview && shouldPreviewAttachment(attachment);

@@ -34,6 +34,7 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import VoiceSettings, {BLUR_BACKGROUND_ID, NONE_BACKGROUND_ID} from '@app/features/voice/state/VoiceSettings';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
@@ -522,7 +523,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 						title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 						message: () =>
 							i18n._(BACKGROUND_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-								backgroundMediaMaxSizeLabel: formatFileSize(i18n.locale, BACKGROUND_MEDIA_MAX_SIZE_BYTES),
+								backgroundMediaMaxSizeLabel: formatFileSize(getFormattingLocale(), BACKGROUND_MEDIA_MAX_SIZE_BYTES),
 							}),
 						dataFlx: 'theme.background-image-gallery-modal.file-too-large-error-modal',
 					});
@@ -987,7 +988,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 						</div>
 						<div className={styles.infoText} data-flx="theme.background-image-gallery-modal.info-text">
 							{i18n._(MAX_BACKGROUND_SIZE_DESCRIPTOR, {
-								BACKGROUND_MEDIA_MAX_SIZE_LABEL: formatFileSize(i18n.locale, BACKGROUND_MEDIA_MAX_SIZE_BYTES),
+								BACKGROUND_MEDIA_MAX_SIZE_LABEL: formatFileSize(getFormattingLocale(), BACKGROUND_MEDIA_MAX_SIZE_BYTES),
 							})}
 						</div>
 						{maxBackgroundImages === 1 && shouldShowPremiumFeatures() && (

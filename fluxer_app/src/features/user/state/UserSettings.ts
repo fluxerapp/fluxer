@@ -56,6 +56,7 @@ import {
 	StickerAnimationOptions,
 	ThemeTypes,
 	TimeFormatTypes,
+	TimestampFormatTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {
 	createEmptySyncedPreferences,
@@ -131,7 +132,9 @@ export interface UserSettings {
 	statusResetsTo: string | null;
 	theme: string;
 	timeFormat: number;
+	timestampFormat: number;
 	locale: string;
+	regionalFormat: string | null;
 	restrictedGuilds: Array<string>;
 	botRestrictedGuilds: Array<string>;
 	defaultGuildsRestricted: boolean;
@@ -331,7 +334,9 @@ class UserSettingsState {
 	statusResetsTo: string | null = null;
 	theme: string = ThemeTypes.DARK;
 	timeFormat: number = TimeFormatTypes.AUTO;
+	timestampFormat: number = TimestampFormatTypes.AUTO;
 	locale: string = 'en-US';
+	regionalFormat: string | null = null;
 	restrictedGuilds: Array<string> = [];
 	botRestrictedGuilds: Array<string> = [];
 	defaultGuildsRestricted: boolean = false;
@@ -697,6 +702,8 @@ class UserSettingsState {
 			AccountTheme.updateServerTheme(camelCaseSettings.theme);
 		}
 		this.timeFormat = camelCaseSettings.timeFormat;
+		this.timestampFormat = camelCaseSettings.timestampFormat ?? TimestampFormatTypes.AUTO;
+		this.regionalFormat = camelCaseSettings.regionalFormat ?? null;
 		const localeToLoad = camelCaseSettings.locale ?? this.locale;
 		const normalizedLocale = applyLocaleChange(localeToLoad);
 		this.locale = normalizedLocale;
@@ -799,7 +806,9 @@ class UserSettingsState {
 			statusResetsTo: this.statusResetsTo,
 			theme: this.theme,
 			timeFormat: this.timeFormat,
+			timestampFormat: this.timestampFormat,
 			locale: this.locale,
+			regionalFormat: this.regionalFormat,
 			restrictedGuilds: [...this.restrictedGuilds],
 			botRestrictedGuilds: [...this.botRestrictedGuilds],
 			defaultGuildsRestricted: this.defaultGuildsRestricted,

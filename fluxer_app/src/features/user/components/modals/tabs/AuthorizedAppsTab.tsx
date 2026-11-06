@@ -24,11 +24,10 @@ import {
 	useSelectableSettingsList,
 } from '@app/features/user/components/modals/tabs/components/SelectableSettingsList';
 import {getUserAvatarURL} from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import {CLEAR_SELECTION_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
-import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
 import {msg, plural} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {AppWindowIcon, InfoIcon, NetworkSlashIcon, XIcon} from '@phosphor-icons/react';
@@ -70,7 +69,7 @@ const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({
 	comment: 'Toast shown after OAuth application access was revoked.',
 });
 const formatDate = (dateString: string): string => {
-	return getFormattedShortDate(dateString, getCurrentLocale());
+	return getFormattedShortDate(dateString);
 };
 
 function getAuthorizationSelectionId(authorization: OAuth2Authorization): string {

@@ -6,7 +6,7 @@ import Discovery from '@app/features/discovery/state/Discovery';
 import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {getCurrentLocale, getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale, getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {animate} from 'animejs';
@@ -133,7 +133,7 @@ export const DiscoverySearchFilters = observer(function DiscoverySearchFilters({
 						aria-hidden
 						data-flx="discovery.discovery.discovery-search-filters.render-category-row.category-count"
 					>
-						{formatNumber(row.count, getCurrentLocale())}
+						{formatNumber(row.count, getFormattingLocale())}
 					</span>
 				</button>
 			</FocusRing>

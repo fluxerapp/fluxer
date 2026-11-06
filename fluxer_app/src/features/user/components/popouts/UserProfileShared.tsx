@@ -25,7 +25,7 @@ import styles from '@app/features/user/components/popouts/UserProfileShared.modu
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	ABOUT_ME_DESCRIPTOR,
 	THIS_CONNECTION_HAS_BEEN_VERIFIED_DESCRIPTOR,
@@ -222,7 +222,7 @@ export const UserProfileTimezoneInfo: React.FC<{profile: Profile}> = observer(({
 	if (timezoneOffset == null) {
 		return null;
 	}
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const localTime = getDateFormatter(locale, {
 		hour: 'numeric',
 		minute: '2-digit',

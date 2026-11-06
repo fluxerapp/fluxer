@@ -17,6 +17,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import type {MenuGroupType, MenuSheetItem} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
@@ -181,7 +182,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({inputVolume: value});
 				},
-				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+				onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 				factoryDefaultValue: 100,
 			},
 			{
@@ -192,7 +193,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({outputVolume: value});
 				},
-				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+				onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 				factoryDefaultValue: 100,
 			},
 		];

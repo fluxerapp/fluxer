@@ -17,7 +17,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -158,7 +158,7 @@ export const CrosspostCommunityCard = observer(function CrosspostCommunityCard({
 		}
 	}, [guildId, onClose]);
 	const bannerUrl = data?.banner ? AvatarUtils.getGuildBannerURL({id: data.id, banner: data.banner}) : null;
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hasCounts = data != null && data.onlineCount != null && data.memberCount != null;
 	const renderedOnlineCount = hasCounts ? formatNumber(data.onlineCount ?? 0, locale) : '';
 	const renderedMemberCount = hasCounts ? formatNumber(data.memberCount ?? 0, locale) : '';

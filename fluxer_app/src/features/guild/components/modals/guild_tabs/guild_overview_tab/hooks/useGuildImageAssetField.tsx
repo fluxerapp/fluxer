@@ -21,6 +21,7 @@ import {readBlobAsDataUrl as blobToDataUrl, readBlobAsDataUrl} from '@app/featur
 import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -169,7 +170,7 @@ export function useGuildImageAssetField({
 			if (!canManage) return;
 			const requestId = ++requestIdRef.current;
 			if (file.size > maxBytes) {
-				const maxSizeLabel = formatFileSize(i18n.locale, maxBytes);
+				const maxSizeLabel = formatFileSize(getFormattingLocale(), maxBytes);
 				showErrorModal(i18n._(FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_FILE_DESCRIPTOR, {label, maxSizeLabel}));
 				return;
 			}
@@ -225,7 +226,7 @@ export function useGuildImageAssetField({
 							setIsProcessing(true);
 							try {
 								if (croppedBlob.size > maxBytes) {
-									const maxSizeLabel = formatFileSize(i18n.locale, maxBytes);
+									const maxSizeLabel = formatFileSize(getFormattingLocale(), maxBytes);
 									showErrorModal(i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {maxSizeLabel}));
 									return;
 								}

@@ -13,6 +13,7 @@ import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {MediaPlaybackRate} from '@app/features/voice/components/media_player/components/MediaPlaybackRate';
 import {MediaProgressBar} from '@app/features/voice/components/media_player/components/MediaProgressBar';
 import {MediaVolumeControl} from '@app/features/voice/components/media_player/components/MediaVolumeControl';
@@ -117,7 +118,7 @@ export function InlineAudioPlayer({
 	const {name: fileName, extension: fileExtension} = extension
 		? {name: title, extension: `.${extension}`}
 		: splitFilename(title);
-	const fileSizeString = fileSize ? formatFileSize(i18n.locale, fileSize) : '';
+	const fileSizeString = fileSize ? formatFileSize(getFormattingLocale(), fileSize) : '';
 	useEffect(() => {
 		if (hasStarted && pendingPlayRef.current) {
 			const timer = setTimeout(() => {

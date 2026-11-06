@@ -18,6 +18,7 @@ import {
 	useAccountGateAction,
 } from '@app/features/user/utils/AccountGatePresentation';
 import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {TEXT_DID_NOT_GO_THROUGH_DESCRIPTOR} from '@app/features/user/utils/MessagingPausedHelpEmail';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -101,7 +102,6 @@ export const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) 
 	);
 });
 const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
-	const {i18n} = useLingui();
 	const [timeRemaining, setTimeRemaining] = useState<number>(initialTime);
 	useEffect(() => {
 		if (timeRemaining <= 0) return;
@@ -120,8 +120,8 @@ const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
 		const totalSeconds = Math.ceil(ms / 1000);
 		const minutes = Math.floor(totalSeconds / 60);
 		const seconds = totalSeconds % 60;
-		const minutesLabel = getCachedNumberFormat(i18n.locale, {useGrouping: false}).format(minutes);
-		const secondsLabel = getCachedNumberFormat(i18n.locale, {
+		const minutesLabel = getCachedNumberFormat(getFormattingLocale(), {useGrouping: false}).format(minutes);
+		const secondsLabel = getCachedNumberFormat(getFormattingLocale(), {
 			minimumIntegerDigits: 2,
 			useGrouping: false,
 		}).format(seconds);

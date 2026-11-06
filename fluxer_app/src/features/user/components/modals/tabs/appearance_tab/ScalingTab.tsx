@@ -14,6 +14,7 @@ import {Slider} from '@app/features/ui/components/Slider';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {formatRoundedPercentage, roundPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -74,7 +75,11 @@ export const FontSizeTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const fontSize = Accessibility.fontSize;
 	const options: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => FONT_SIZE_OPTIONS.map((value) => ({value, label: `${getCachedNumberFormat(i18n.locale).format(value)}px`})),
+		() =>
+			FONT_SIZE_OPTIONS.map((value) => ({
+				value,
+				label: `${getCachedNumberFormat(getFormattingLocale()).format(value)}px`,
+			})),
 		[i18n.locale],
 	);
 	const selectedFontSize = getNearestFontSize(fontSize);
@@ -126,7 +131,7 @@ export const AppZoomLevelTabContent: React.FC = observer(() => {
 	const markers = ZOOM_LEVEL_MARKERS.map((step) => roundPercentage(step * 100));
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
-		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 		[i18n, i18n.locale],
 	);
 	return (
@@ -136,7 +141,9 @@ export const AppZoomLevelTabContent: React.FC = observer(() => {
 			minValue={Math.round(ZOOM_LEVEL_MIN * 100)}
 			maxValue={Math.round(ZOOM_LEVEL_MAX * 100)}
 			ariaLabel={i18n._(APP_ZOOM_LEVEL_DESCRIPTOR)}
-			ariaValueText={i18n._(PERCENT_DESCRIPTOR, {zoomPercent: getCachedNumberFormat(i18n.locale).format(zoomPercent)})}
+			ariaValueText={i18n._(PERCENT_DESCRIPTOR, {
+				zoomPercent: getCachedNumberFormat(getFormattingLocale()).format(zoomPercent),
+			})}
 			step={1}
 			markers={markers}
 			stickToMarkers={false}
@@ -144,7 +151,7 @@ export const AppZoomLevelTabContent: React.FC = observer(() => {
 			onValueChange={(value) => AccessibilityCommands.update({zoomLevel: value / 100})}
 			onMarkerRender={formatPercentage}
 			onValueRender={(value) => (
-				<Trans>{ph({zoomPercent: getCachedNumberFormat(i18n.locale).format(roundPercentage(value))})}%</Trans>
+				<Trans>{ph({zoomPercent: getCachedNumberFormat(getFormattingLocale()).format(roundPercentage(value))})}%</Trans>
 			)}
 			data-flx="user.appearance-tab.scaling-tab.app-zoom-level-tab-content.slider"
 		/>
