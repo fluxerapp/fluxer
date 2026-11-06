@@ -233,20 +233,19 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 									data-flx="forum.forum-post-composer.emoji-picker-popout"
 								/>
 							)}
+							tooltip={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
 							data-flx="forum.forum-post-composer.emoji-popout"
 						>
-							<Tooltip text={i18n._(D.ADD_EMOJI_DESCRIPTOR)} data-flx="forum.forum-post-composer.emoji-tooltip">
-								<FocusRing offset={-2} data-flx="forum.forum-post-composer.emoji.focus-ring">
-									<button
-										type="button"
-										className={styles.composerIconButton}
-										aria-label={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
-										data-flx="forum.forum-post-composer.emoji-button"
-									>
-										<SmileyIcon size={remFromPx(20)} weight="bold" data-flx="forum.forum-post-composer.smiley-icon" />
-									</button>
-								</FocusRing>
-							</Tooltip>
+							<FocusRing offset={-2} data-flx="forum.forum-post-composer.emoji.focus-ring">
+								<button
+									type="button"
+									className={styles.composerIconButton}
+									aria-label={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
+									data-flx="forum.forum-post-composer.emoji-button"
+								>
+									<SmileyIcon size={remFromPx(20)} weight="bold" data-flx="forum.forum-post-composer.smiley-icon" />
+								</button>
+							</FocusRing>
 						</Popout>
 					)}
 					{forum.availableTags.length > 0 && (
