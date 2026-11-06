@@ -1150,6 +1150,12 @@ const DROPPED_WHITESPACE_RE = /^[ \t\r]+\n/;
 const LINE_WHITESPACE_RE = /^[ \t\r]+/;
 
 const REPLACEMENT_CHARACTER = '\uFFFD';
+const TEXT_PRESENTATION_SELECTOR = '\uFE0F';
+const PLAINTEXT_SYMBOL_SHORTCODES: Readonly<Record<string, string>> = {
+	'\u2122': ':tm:',
+	'\u00A9': ':copyright:',
+	'\u00AE': ':registered:',
+};
 const UNPAIRED_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 function isUnpairedSurrogateAt(text: string, index: number): boolean {
@@ -1209,6 +1215,15 @@ function advancePastText(
 		}
 		if (source[pos] === content[ci]) {
 			pos += 1;
+			ci += 1;
+			if (source[pos] === TEXT_PRESENTATION_SELECTOR && PLAINTEXT_SYMBOL_SHORTCODES[source[pos - 1]!] != null) {
+				pos += 1;
+			}
+			continue;
+		}
+		const symbolShortcode = PLAINTEXT_SYMBOL_SHORTCODES[content[ci]!];
+		if (symbolShortcode != null && source.startsWith(symbolShortcode, pos)) {
+			pos += symbolShortcode.length;
 			ci += 1;
 			continue;
 		}
