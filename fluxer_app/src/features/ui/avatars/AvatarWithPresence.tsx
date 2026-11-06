@@ -6,6 +6,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import styles from '@app/features/ui/avatars/AvatarWithPresence.module.css';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {parseAvatarHash} from '@app/features/user/utils/AvatarUtils';
@@ -51,6 +52,7 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 }) {
 	const {i18n} = useLingui();
 	const guildMember = GuildMembers.getMember(guildId || '', user.id);
+	const requestSize = size * getAppRemScale();
 	const resolveSrc = (animation: 'static' | 'animated') =>
 		guildId && guildMember
 			? AvatarUtils.getGuildMemberDisplayAvatarURL({
@@ -59,8 +61,9 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 					memberAvatar: guildMember.avatar,
 					avatarUnset: guildMember.isAvatarUnset(),
 					animated: animation === 'animated',
+					size: requestSize,
 				})
-			: AvatarUtils.getUserAvatarURL({id: user.id, avatar: user.avatar}, animation === 'animated');
+			: AvatarUtils.getUserAvatarURL({id: user.id, avatar: user.avatar}, animation === 'animated', requestSize);
 	let displayAvatarHash: string | null;
 	if (guildId && guildMember) {
 		displayAvatarHash = guildMember.isAvatarUnset() ? null : (guildMember.avatar ?? user.avatar);

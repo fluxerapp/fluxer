@@ -18,12 +18,12 @@ import {FocusRingWrapper} from '@app/features/ui/components/FocusRingWrapper';
 import {ListStatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
@@ -57,8 +57,9 @@ interface MemberListItemProps {
 	roleColor?: string;
 	displayName?: string;
 	disableBackdrop?: boolean;
-	avatarMediaSize?: MediaProxyImageSize;
 }
+
+const MEMBER_AVATAR_SIZE = 32;
 
 export const MemberListItem: React.FC<MemberListItemProps> = observer((props) => {
 	const {i18n} = useLingui();
@@ -74,7 +75,6 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 		roleColor,
 		displayName,
 		disableBackdrop = false,
-		avatarMediaSize,
 	} = props;
 	const itemRef = useRef<HTMLButtonElement>(null);
 	const hookStatus = useMemberListPresence({
@@ -163,9 +163,9 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 			memberAvatar: guildMember.avatar,
 			avatarUnset: guildMember.isAvatarUnset(),
 			animated: false,
-			size: avatarMediaSize,
+			size: MEMBER_AVATAR_SIZE * getAppRemScale(),
 		});
-	}, [avatarMediaSize, guildId, guildMember, user]);
+	}, [guildId, guildMember, user]);
 	const memberHoverAvatarUrl = useMemo(() => {
 		if (!guildId || !guildMember) {
 			return undefined;
@@ -176,9 +176,9 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 			memberAvatar: guildMember.avatar,
 			avatarUnset: guildMember.isAvatarUnset(),
 			animated: true,
-			size: avatarMediaSize,
+			size: MEMBER_AVATAR_SIZE * getAppRemScale(),
 		});
-	}, [avatarMediaSize, guildId, guildMember, user]);
+	}, [guildId, guildMember, user]);
 	const nameContent = (
 		<span
 			ref={nameRef}
@@ -210,7 +210,7 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 						<div className={styles.avatarContainer} data-flx="channel.member-list-item.avatar-container">
 							<ListStatusAwareAvatar
 								user={user}
-								size={32}
+								size={MEMBER_AVATAR_SIZE}
 								isTyping={isTyping}
 								showOffline={isCurrentUser || isTyping}
 								guildId={guildId}
@@ -218,7 +218,6 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								isMobile={isMobile}
 								avatarUrl={memberAvatarUrl}
 								hoverAvatarUrl={memberHoverAvatarUrl}
-								mediaSize={avatarMediaSize}
 								data-flx="channel.member-list-item.status-aware-avatar"
 							/>
 						</div>

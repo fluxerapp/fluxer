@@ -61,7 +61,6 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {MEDIA_PROXY_AVATAR_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {useLingui as useLinguiRuntime} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
@@ -497,7 +496,6 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 						roleColor={roleColor}
 						displayName={displayName}
 						disableBackdrop={true}
-						avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
 						data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item--2"
 					/>
 				</div>,
