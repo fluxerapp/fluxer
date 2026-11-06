@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {TimestampFormatTypes} from '@fluxer/constants/src/UserConstants';
-import {formatPresetDate, formatPresetDateTime} from '@fluxer/date_utils/src/DateFormatPresets';
+import {formatPresetDate, formatPresetDateTime, toDateFormatPreset} from '@fluxer/date_utils/src/DateFormatPresets';
+import {formatTimestampWithStyle, TimestampStyle} from '@fluxer/date_utils/src/DateTimestampStyle';
 import {describe, expect, test} from 'vitest';
 
 const EVENING = new Date(2026, 10, 6, 21, 3, 45);
@@ -26,5 +27,15 @@ describe('date format presets', () => {
 			/^11\/06\/2026 9:03\sPM$/,
 		);
 		expect(formatPresetDateTime(EVENING, TimestampFormatTypes.DAY_MONTH_YEAR, 'en-GB', false)).toBe('06/11/2026 21:03');
+	});
+
+	test('message timestamps use the preset for numeric styles only', () => {
+		const seconds = EVENING.getTime() / 1000;
+		const iso = toDateFormatPreset(TimestampFormatTypes.ISO_8601);
+		expect(formatTimestampWithStyle(seconds, TimestampStyle.ShortDateMediumTime, 'en-US', false, iso)).toBe(
+			'2026-11-06 21:03:45',
+		);
+		expect(formatTimestampWithStyle(seconds, TimestampStyle.LongDate, 'en-US', false, iso)).toBe('November 6, 2026');
+		expect(toDateFormatPreset(TimestampFormatTypes.AUTO)).toBeNull();
 	});
 });

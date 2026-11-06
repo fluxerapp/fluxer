@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type DateFormatPreset,
+	formatPresetDate,
+	formatPresetDateTime,
+	formatPresetTime,
+} from '@fluxer/date_utils/src/DateFormatPresets';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {localeUses12Hour} from '@fluxer/date_utils/src/DateHourCycle';
 
@@ -58,13 +64,43 @@ const STYLES_WITHOUT_HOUR_CYCLE: ReadonlySet<TimestampStyle> = new Set([
 	TimestampStyle.LongDate,
 ]);
 
+function formatPresetStyle(
+	date: Date,
+	style: TimestampStyle,
+	locale: string,
+	hour12: boolean,
+	preset: DateFormatPreset,
+): string | null {
+	switch (style) {
+		case TimestampStyle.ShortTime:
+			return formatPresetTime(date, preset, locale, hour12);
+		case TimestampStyle.LongTime:
+			return formatPresetTime(date, preset, locale, hour12, true);
+		case TimestampStyle.ShortDate:
+			return formatPresetDate(date, preset, locale);
+		case TimestampStyle.ShortDateShortTime:
+			return formatPresetDateTime(date, preset, locale, hour12);
+		case TimestampStyle.ShortDateMediumTime:
+			return formatPresetDateTime(date, preset, locale, hour12, true);
+		default:
+			return null;
+	}
+}
+
 export function formatTimestampWithStyle(
 	timestamp: number,
 	style: TimestampStyle,
 	locale: string,
 	hour12?: boolean,
+	preset: DateFormatPreset | null = null,
 ): string {
 	const date = new Date(timestamp * 1000);
+	if (preset !== null) {
+		const presetText = formatPresetStyle(date, style, locale, hour12 ?? localeUses12Hour(locale), preset);
+		if (presetText !== null) {
+			return presetText;
+		}
+	}
 	const baseOptions = TIMESTAMP_STYLE_OPTIONS[style] ?? DEFAULT_STYLE_OPTIONS;
 	const needsHourCycle = !STYLES_WITHOUT_HOUR_CYCLE.has(style);
 	const options = needsHourCycle ? {...baseOptions, hour12: hour12 ?? localeUses12Hour(locale)} : baseOptions;

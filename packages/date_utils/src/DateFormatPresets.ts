@@ -7,6 +7,17 @@ import type {DateInput} from '@fluxer/date_utils/src/DateTypes';
 
 export type DateFormatPreset = Exclude<TimestampFormatType, typeof TimestampFormatTypes.AUTO>;
 
+export function toDateFormatPreset(value: number): DateFormatPreset | null {
+	switch (value) {
+		case TimestampFormatTypes.ISO_8601:
+		case TimestampFormatTypes.DAY_MONTH_YEAR:
+		case TimestampFormatTypes.MONTH_DAY_YEAR:
+			return value;
+		default:
+			return null;
+	}
+}
+
 function padTwo(value: number): string {
 	return value.toString().padStart(2, '0');
 }
