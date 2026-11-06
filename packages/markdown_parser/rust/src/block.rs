@@ -1054,14 +1054,6 @@ impl ListContext<'_> {
                 } else {
                     break;
                 }
-            } else if is_bullet_point_text(current_line) {
-                if let Some(last) = items.last_mut() {
-                    last.children.push(Node::Text {
-                        content: trim(current_line).to_owned(),
-                    });
-                }
-                index += 1;
-                new_count += 1;
             } else if is_list_continuation(current_line, indent_level) {
                 if let Some(last) = items.last_mut() {
                     let trimmed = trim_start(current_line);
@@ -1139,9 +1131,6 @@ pub(crate) fn match_list_item(line: &str) -> Option<ListMatch<'_>> {
     let mut indent = 0usize;
     while indent < line.len() && byte_at(line, indent) == b' ' {
         indent += 1;
-    }
-    if indent > 0 && indent < 2 {
-        return None;
     }
     let indent_level = indent / 2;
     if indent >= line.len() {
@@ -1461,14 +1450,6 @@ fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) 
     }
     let start = items[0].ordinal.or(ordinal).unwrap_or(1);
     Some(start + items.len())
-}
-
-fn is_bullet_point_text(text: &str) -> bool {
-    if match_list_item(text).is_some() {
-        return false;
-    }
-    let trimmed_text = trim_start(text);
-    starts_with(trimmed_text, "- ") && !starts_with(text, "  ")
 }
 
 fn is_list_continuation(line: &str, indent_level: usize) -> bool {
