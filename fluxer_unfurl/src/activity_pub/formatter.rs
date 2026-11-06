@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use super::limits;
 use super::types::{
     ActivityPubActor, ActivityPubCollectionCount, ActivityPubContext, ActivityPubPost,
     MastodonMediaAttachment, MastodonPost,
@@ -235,7 +236,20 @@ async fn resolve_mastodon_media_embeds(
     let mut primary_media_claimed = false;
     let nsfw_str = MediaProxyClient::nsfw_mode_str(nsfw_mode);
 
-    for attachment in post.media_attachments.as_deref().unwrap_or_default() {
+    let attachments = post
+        .media_attachments
+        .as_deref()
+        .unwrap_or_default()
+        .iter()
+        .filter(|attachment| {
+            matches!(
+                attachment.attachment_type.as_deref(),
+                Some("image" | "gifv" | "video")
+            )
+        })
+        .take(limits::MAX_MEDIA_ATTACHMENTS);
+
+    for attachment in attachments {
         match attachment.attachment_type.as_deref() {
             Some("image" | "gifv") => {
                 let Some(image) = process_mastodon_media(attachment, media_proxy, nsfw_str).await
@@ -290,7 +304,15 @@ async fn resolve_activity_pub_media_embeds(
     let mut primary_media_claimed = false;
     let nsfw_str = MediaProxyClient::nsfw_mode_str(nsfw_mode);
 
-    for attachment in post.attachment.as_deref().unwrap_or_default() {
+    let attachments = post
+        .attachment
+        .as_deref()
+        .unwrap_or_default()
+        .iter()
+        .filter(|attachment| attachment_is_image(attachment) || attachment_is_video(attachment))
+        .take(limits::MAX_MEDIA_ATTACHMENTS);
+
+    for attachment in attachments {
         if attachment_is_image(attachment) {
             let Some(image) = process_activity_pub_media(attachment, media_proxy, nsfw_str).await
             else {

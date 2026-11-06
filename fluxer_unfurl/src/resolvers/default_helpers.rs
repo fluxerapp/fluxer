@@ -213,7 +213,7 @@ pub fn parse_text(value: &str, max_len: usize) -> String {
 }
 
 pub fn decode_html_text(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
+    crate::html_parser::parse_fragment(input)
         .root_element()
         .text()
         .collect()
@@ -243,7 +243,10 @@ pub fn format_timestamp(unix_seconds: i64) -> Option<String> {
 }
 
 pub fn sanitize_absolute_url(value: &str) -> Option<String> {
-    Url::parse(value.trim()).ok().map(|url| url.to_string())
+    Url::parse(value.trim())
+        .ok()
+        .filter(|url| matches!(url.scheme(), "http" | "https"))
+        .map(|url| url.to_string())
 }
 
 #[cfg(test)]

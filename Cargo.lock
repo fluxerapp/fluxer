@@ -1884,6 +1884,7 @@ dependencies = [
  "fluxer-svc",
  "fluxer_common",
  "hickory-resolver",
+ "html5ever",
  "infer",
  "moka",
  "regex",

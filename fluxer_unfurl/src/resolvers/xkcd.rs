@@ -51,7 +51,7 @@ impl Resolver for XkcdResolver {
             let title = og.title.as_deref().map(|t| parse_text(t, 70));
 
             let image_alt = {
-                let doc = Html::parse_document(&html);
+                let doc = html_parser::parse_document(&html);
                 extract_comic_alt(&doc)
             };
             let footer_text = image_alt.clone();

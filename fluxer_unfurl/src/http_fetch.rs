@@ -124,7 +124,8 @@ where
             client.get(current_url.clone()).headers(hop_headers).send(),
         )
         .await
-        .map_err(|_| anyhow::anyhow!("request timed out"))??;
+        .map_err(|_| anyhow::anyhow!("request timed out"))?
+        .map_err(reqwest::Error::without_url)?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -189,7 +190,7 @@ pub async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Res
     let mut buf = Vec::with_capacity(max_bytes.min(64 * 1024));
     let mut stream = resp;
 
-    while let Some(chunk) = stream.chunk().await? {
+    while let Some(chunk) = stream.chunk().await.map_err(reqwest::Error::without_url)? {
         let next_len = buf
             .len()
             .checked_add(chunk.len())

@@ -3,10 +3,13 @@
 use fluxer_common::public_ip::{is_public_ip, is_valid_public_hostname};
 use reqwest::dns::{Addrs, Name, Resolve, Resolving};
 use std::net::{IpAddr, SocketAddr};
+use std::time::Duration;
 use tokio::net::lookup_host;
+use tokio::time::timeout;
 use url::Url;
 
 const MAX_URL_LEN: usize = 8192;
+const DNS_LOOKUP_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum Error {
@@ -42,8 +45,9 @@ pub async fn validate_url(url: &Url) -> Result<(), Error> {
     }
     let port = url.port_or_known_default().ok_or(Error::BlockedUrl)?;
     let mut seen = false;
-    let addrs = lookup_host((host.as_str(), port))
+    let addrs = timeout(DNS_LOOKUP_TIMEOUT, lookup_host((host.as_str(), port)))
         .await
+        .map_err(|_| Error::DnsLookupFailed)?
         .map_err(|_| Error::DnsLookupFailed)?;
     for addr in addrs {
         seen = true;

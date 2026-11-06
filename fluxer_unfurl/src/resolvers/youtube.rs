@@ -4,6 +4,7 @@ use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedMedia, EmbedProvider, MessageEmbed};
+use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::future::Future;
 use std::pin::Pin;
@@ -12,6 +13,7 @@ use url::Url;
 
 const YOUTUBE_COLOR: u32 = 0xFF0000;
 const YOUTUBE_API_BASE: &str = "https://www.googleapis.com/youtube/v3/videos";
+const YOUTUBE_API_KEY_HEADER: &str = "x-goog-api-key";
 const YOUTUBE_API_MAX_BYTES: usize = 256 * 1024;
 const YOUTUBE_API_TIMEOUT: Duration = Duration::from_secs(10);
 const YOUTUBE_DESCRIPTION_MAX: usize = 350;
@@ -85,10 +87,20 @@ async fn fetch_api_video(
     video_id: &str,
     api_key: &str,
 ) -> Option<YouTubeVideo> {
-    let api_url = build_youtube_api_url(api_base, video_id, api_key).ok()?;
-    let api_response = match http_fetch::fetch_url(
+    let api_url = build_youtube_api_url(api_base, video_id).ok()?;
+    let api_origin = api_url.origin();
+    let api_response = match http_fetch::fetch_url_with_headers(
         &ctx.http_client,
         api_url.as_ref(),
+        |hop| {
+            let mut headers = HeaderMap::new();
+            if hop.origin() == api_origin {
+                let mut value = HeaderValue::from_str(api_key)?;
+                value.set_sensitive(true);
+                headers.insert(YOUTUBE_API_KEY_HEADER, value);
+            }
+            Ok(headers)
+        },
         YOUTUBE_API_MAX_BYTES,
         YOUTUBE_API_TIMEOUT,
     )
@@ -305,10 +317,9 @@ struct YouTubeThumbnail {
     height: Option<u32>,
 }
 
-fn build_youtube_api_url(base: &str, video_id: &str, api_key: &str) -> anyhow::Result<Url> {
+fn build_youtube_api_url(base: &str, video_id: &str) -> anyhow::Result<Url> {
     let mut url = Url::parse(base)?;
     url.query_pairs_mut()
-        .append_pair("key", api_key)
         .append_pair("id", video_id)
         .append_pair("part", "snippet,player,status");
     Ok(url)
