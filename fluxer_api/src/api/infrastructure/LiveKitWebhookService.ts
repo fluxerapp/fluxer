@@ -275,20 +275,6 @@ export class LiveKitWebhookService {
 				'LiveKit voice connection confirm result',
 			);
 			if (!result.success) {
-				if (result.error === 'connection_not_found') {
-					Logger.warn(
-						{
-							type: context.type,
-							guildId: guildId?.toString(),
-							channelId: context.channelId.toString(),
-							connectionId: context.connectionId,
-							error: result.error,
-							participantIdentity: participant.identity,
-						},
-						'LiveKit participant_joined did not match gateway state; leaving participant connected',
-					);
-					return;
-				}
 				Logger.warn(
 					{
 						type: context.type,
