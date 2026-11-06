@@ -26,6 +26,7 @@ import {
 	useScreenReaderLabelLogic,
 } from '@app/features/ui/utils/ModalUtils';
 import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
+import {useDirection} from '@base-ui/react/direction-provider';
 import {FloatingFocusManager, FloatingOverlay, FloatingPortal, useFloating} from '@floating-ui/react';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
@@ -101,6 +102,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			}
 			PopoutCommands.closeAllForDocument(modalDocument);
 		}, [isFirstModal, modalDocument]);
+		const direction = useDirection();
 		const isInstantTransition = transitionPreset === 'instant';
 		const shouldAnimateRoot = !prefersReducedMotion && !isInstantTransition;
 		const [isRootAnimating, setIsRootAnimating] = useState(shouldAnimateRoot);
@@ -121,6 +123,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			transitionPreset,
 			prefersReducedMotion,
 			isFullscreenOnMobile,
+			isRtl: direction === 'rtl',
 		});
 		const backdropMotionSpec = resolveModalBackdropMotionSpec({
 			transitionPreset,

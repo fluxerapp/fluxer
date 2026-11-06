@@ -3,6 +3,7 @@
 import styles from '@app/features/app/components/layout/GuildsLayout.module.css';
 import {DMListItem} from '@app/features/app/components/layout/sidebar_nav/GuildListDMItem';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {useDirection} from '@base-ui/react/direction-provider';
 import {motion} from 'framer-motion';
 import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
@@ -47,6 +48,7 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 	voiceCallActive,
 }) => {
 	const setRowRef = scrollTargetRef;
+	const enterX = useDirection() === 'rtl' ? -DM_LIST_ENTER_X : DM_LIST_ENTER_X;
 	const previousPendingRemovalRef = useRef(pendingRemoval);
 	const removalCycleRef = useRef(0);
 	if (previousPendingRemovalRef.current !== pendingRemoval) {
@@ -82,8 +84,8 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 		>
 			<motion.div
 				className={styles.dmListItemBox}
-				initial={reducedMotion ? false : {x: DM_LIST_ENTER_X}}
-				animate={{x: pendingRemoval ? DM_LIST_ENTER_X : 0}}
+				initial={reducedMotion ? false : {x: enterX}}
+				animate={{x: pendingRemoval ? enterX : 0}}
 				transition={{duration: durationMs / 1000, ease: easing}}
 				data-flx="app.guild-list-dm-animation.dm-list-item-box"
 			>
