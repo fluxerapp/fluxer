@@ -12,7 +12,7 @@ import {Db} from '@app/api/database/CassandraTypes';
 import type {AdminApiKeyByCreatorRow, AdminApiKeyRow} from '@app/api/database/types/AdminAuthTypes';
 import {AdminApiKey} from '@app/api/models/AdminApiKey';
 import {AdminApiKeys, AdminApiKeysByCreator} from '@app/api/Tables';
-import {hashPassword} from '@app/api/utils/PasswordUtils';
+import {hashStoredSecret} from '@app/api/utils/StoredSecret';
 
 export interface CreateAdminApiKeyData {
 	name: string;
@@ -32,7 +32,7 @@ function computeTtlSeconds(expiresAt: Date): number {
 
 export class AdminApiKeyRepository {
 	async create(data: CreateAdminApiKeyData, createdBy: UserID, keyId: bigint, rawKey: string): Promise<AdminApiKey> {
-		const keyHash = await hashPassword(rawKey);
+		const keyHash = hashStoredSecret(rawKey);
 		const createdAt = new Date();
 		const row: AdminApiKeyRow = {
 			key_id: keyId,

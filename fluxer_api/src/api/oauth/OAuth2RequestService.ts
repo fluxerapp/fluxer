@@ -27,7 +27,6 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
-import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
 import {ALL_PERMISSIONS} from '@fluxer/constants/src/ChannelConstants';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
@@ -181,11 +180,8 @@ export class OAuth2RequestService {
 		if (!application) {
 			throw new InvalidClientError();
 		}
-		if (application.clientSecretHash) {
-			const valid = await verifyPassword({password: secret, passwordHash: application.clientSecretHash});
-			if (!valid) {
-				throw new InvalidClientError();
-			}
+		if (!(await this.oauth2Service.clientSecretMatches(application, secret))) {
+			throw new InvalidClientError();
 		}
 		return this.oauth2Service.introspect(params.form.token, applicationId);
 	}

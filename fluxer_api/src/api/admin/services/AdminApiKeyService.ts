@@ -6,7 +6,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import type {AdminApiKey} from '@app/api/models/AdminApiKey';
-import {verifyPassword} from '@app/api/utils/PasswordUtils';
+import type {StoredSecretVerifier} from '@app/api/utils/StoredSecret';
 import {AdminApiKeyNotFoundError} from '@fluxer/errors/src/domains/admin/AdminApiKeyNotFoundError';
 import type {CreateAdminApiKeyRequest, UpdateAdminApiKeyRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {ms} from 'itty-time';
@@ -50,6 +50,7 @@ export class AdminApiKeyService {
 	constructor(
 		private readonly adminApiKeyRepository: AdminApiKeyRepository,
 		private readonly snowflakeService: ISnowflakeService,
+		private readonly storedSecrets: StoredSecretVerifier,
 	) {}
 
 	private generateRawKey(keyId: bigint): string {
@@ -149,7 +150,7 @@ export class AdminApiKeyService {
 		) {
 			return 'cached';
 		}
-		const valid = await verifyPassword({password: rawKey, passwordHash: apiKey.keyHash});
+		const valid = await this.storedSecrets.matches(`admin_api_key:${apiKey.keyId}`, rawKey, apiKey.keyHash);
 		if (!valid) {
 			return 'invalid';
 		}

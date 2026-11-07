@@ -99,6 +99,7 @@ import {VisionarySlotRepository} from '@app/api/user/repositories/VisionarySlotR
 import {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
 import {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {StoredSecretVerifier} from '@app/api/utils/StoredSecret';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {VoiceP2pConnectionReportRepository} from '@app/api/voice/VoiceP2pConnectionReportRepository';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
@@ -177,6 +178,7 @@ export const getNatsConfigPublisher = singleton(
 
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
+export const getStoredSecretVerifier = singleton(() => new StoredSecretVerifier(getCacheService()));
 export const getCustomBadgeCatalog = singleton(
 	() =>
 		new CustomBadgeCatalog({
@@ -374,7 +376,9 @@ export const getReadStateService = singleton(() => new ReadStateService(getReadS
 export const getDiscriminatorService = singleton(
 	() => new DiscriminatorService(getUserRepository(), getCacheService(), getLimitConfigService()),
 );
-export const getBotAuthService = singleton(() => new BotAuthService(getApplicationRepository(), getUserRepository()));
+export const getBotAuthService = singleton(
+	() => new BotAuthService(getApplicationRepository(), getUserRepository(), getStoredSecretVerifier()),
+);
 export const getBotMfaMirrorService = singleton(
 	() => new BotMfaMirrorService(getApplicationRepository(), getUserRepository(), getGatewayService()),
 );
@@ -405,7 +409,7 @@ export const getEntityAssetService = singleton(
 		new EntityAssetService(getStorageService(), getMediaService(), getAssetDeletionQueue(), getLimitConfigService()),
 );
 export const getAdminApiKeyService = singleton(
-	() => new AdminApiKeyService(getAdminApiKeyRepository(), getSnowflakeService()),
+	() => new AdminApiKeyService(getAdminApiKeyRepository(), getSnowflakeService(), getStoredSecretVerifier()),
 );
 export const getAdminArchiveService = singleton(
 	() =>
