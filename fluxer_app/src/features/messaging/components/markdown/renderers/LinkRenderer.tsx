@@ -18,12 +18,9 @@ import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import {COPY_LINK_DESCRIPTOR, OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import {LinkDestinationTooltip} from '@app/features/messaging/components/LinkDestinationTooltip';
-import {MentionLabel} from '@app/features/messaging/components/markdown/renderers/MentionLabel';
-import {MentionRenderer} from '@app/features/messaging/components/markdown/renderers/MentionRenderer';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
 import {
 	isRestrictedInlineContext,
@@ -79,7 +76,6 @@ import {
 	getUserSettingsTabLabel,
 } from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {UserSettingsDeepLinkTarget} from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
-import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -788,50 +784,6 @@ function AppPageJumpLinkMention({page, url, i18n, interactive = true}: AppPageJu
 	);
 }
 
-interface UnknownUserLinkMentionProps {
-	userId: string;
-	guildId?: string;
-	interactive: boolean;
-}
-
-function UnknownUserLinkMention({userId, guildId, interactive}: UnknownUserLinkMentionProps) {
-	const label = (
-		<MentionLabel data-flx="messaging.markdown.renderers.link-renderer.unknown-user-link-mention.mention-label">{`@${userId}`}</MentionLabel>
-	);
-	if (!interactive) {
-		return (
-			<span
-				className={markupStyles.mention}
-				data-flx="messaging.markdown.renderers.link-renderer.unknown-user-link-mention.span"
-			>
-				{label}
-			</span>
-		);
-	}
-	const open = () => void UserProfileCommands.openLinkedUserProfile(userId, guildId);
-	return (
-		<span
-			role="button"
-			tabIndex={0}
-			className={clsx(markupStyles.mention, markupStyles.interactive)}
-			onClick={(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				open();
-			}}
-			onKeyDown={(event) => {
-				if (!isKeyboardActivationKey(event.key)) return;
-				event.preventDefault();
-				event.stopPropagation();
-				open();
-			}}
-			data-flx="messaging.markdown.renderers.link-renderer.unknown-user-link-mention.button"
-		>
-			{label}
-		</span>
-	);
-}
-
 export const LinkRenderer = observer(function LinkRenderer({
 	node,
 	id,
@@ -907,34 +859,6 @@ export const LinkRenderer = observer(function LinkRenderer({
 			mention
 		) : (
 			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--app-page">
-				{mention}
-			</FocusRing>
-		);
-	}
-	if (userProfileId && !text) {
-		if (Users.getUser(userProfileId)) {
-			return (
-				<MentionRenderer
-					node={{type: 'Mention', kind: {kind: 'User', id: userProfileId}}}
-					id={id}
-					renderChildren={renderChildren}
-					options={options}
-					data-flx="messaging.markdown.renderers.link-renderer.user-link-mention"
-				/>
-			);
-		}
-		const mention = (
-			<UnknownUserLinkMention
-				userId={userProfileId}
-				guildId={options.guildId}
-				interactive={!isInlineReplyContext && !shouldDisableInteractions}
-				data-flx="messaging.markdown.renderers.link-renderer.unknown-user-link-mention"
-			/>
-		);
-		return shouldDisableInteractions || isInlineReplyContext ? (
-			mention
-		) : (
-			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--user">
 				{mention}
 			</FocusRing>
 		);
