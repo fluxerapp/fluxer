@@ -189,6 +189,19 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		can_video: z.boolean().optional().describe('Whether the user can use video'),
 	}),
 	z.object({
+		type: z
+			.literal('voice_update_participant_permissions')
+			.describe('Request type for updating the voice permissions of one connection'),
+		guild_id: SnowflakeType.optional().describe('ID of the guild'),
+		channel_id: SnowflakeType.describe('ID of the voice channel'),
+		user_id: SnowflakeType.describe('ID of the user to update'),
+		connection_id: createStringType().describe('Connection ID of the user'),
+		can_speak: z.boolean().describe('Whether the user can speak'),
+		can_stream: z.boolean().describe('Whether the user can stream'),
+		can_video: z.boolean().describe('Whether the user can use video'),
+		deaf: z.boolean().describe('Whether the user is deafened'),
+	}),
+	z.object({
 		type: z.literal('call_ended').describe('Request type for notifying that a call has ended'),
 		channel_id: SnowflakeType.describe('ID of the channel where the call ended'),
 		message_id: SnowflakeType.describe('ID of the call start message'),
@@ -519,6 +532,14 @@ export const RpcResponse = z.discriminatedUnion('type', [
 				success: z.boolean().describe('Whether the update was successful'),
 			})
 			.describe('Update result'),
+	}),
+	z.object({
+		type: z.literal('voice_update_participant_permissions').describe('Response type for voice permissions update'),
+		data: z
+			.object({
+				success: z.boolean().describe('Whether the permissions update was successful'),
+			})
+			.describe('Permissions update result'),
 	}),
 	z.object({
 		type: z.literal('call_ended').describe('Response type for call ended notification'),

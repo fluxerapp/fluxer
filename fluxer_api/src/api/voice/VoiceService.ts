@@ -426,6 +426,28 @@ export class VoiceService {
 		}
 	}
 
+	async updateConnectionPermissions(params: {
+		guildId?: GuildID;
+		channelId: ChannelID;
+		userId: UserID;
+		connectionId: string;
+		deaf: boolean;
+		canSpeak: boolean;
+		canStream: boolean;
+		canVideo: boolean;
+	}): Promise<void> {
+		const {guildId, channelId} = params;
+		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
+		if (!pinnedServer) {
+			return;
+		}
+		await this.liveKitService.updateParticipant({
+			...params,
+			regionId: pinnedServer.regionId,
+			serverId: pinnedServer.serverId,
+		});
+	}
+
 	async disconnectParticipant(params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
