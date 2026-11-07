@@ -59,6 +59,7 @@ export async function parseMultipartMessageData(
 		channelId,
 		actor: options?.actor,
 	});
+	const sender = options?.actor === 'webhook' ? `webhook:${ctx.req.param('webhook_id')}` : `user:${user.id.toString()}`;
 	const body: MultipartBody = {};
 	const storedFiles: Array<StoredMultipartFile> = [];
 	try {
@@ -67,7 +68,12 @@ export async function parseMultipartMessageData(
 			storedFiles,
 			maxAttachments,
 			upload,
-			storeFile: (stream, filename) => attachmentService.storeFormDataFile({body: stream, filename}),
+			storeFile: (stream, filename) =>
+				attachmentService.storeFormDataFile({
+					body: stream,
+					filename,
+					holder: {sender, clientIp: requireRequestClientIp(ctx)},
+				}),
 		});
 		const mergedJsonData = normalizeMessageRequestPayload(mergeMultipartScalarFields(body, data));
 		options?.onPayloadParsed?.(mergedJsonData);

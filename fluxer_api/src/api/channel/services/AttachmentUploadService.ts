@@ -9,7 +9,7 @@ import type {
 	AttachmentUploadMode,
 	AttachmentUploadTraceRepository,
 } from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
-import {acquireFormUploadSlot} from '@app/api/channel/services/FormUploadSlots';
+import {acquireFormUploadSlot, type FormUploadHolder} from '@app/api/channel/services/FormUploadSlots';
 import type {MessageInteractionService} from '@app/api/channel/services/MessageInteractionService';
 import type {MessageService} from '@app/api/channel/services/MessageService';
 import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
@@ -138,11 +138,19 @@ export class AttachmentUploadService {
 		private gatewayService: IGatewayService,
 	) {}
 
-	async storeFormDataFile({body, filename}: {body: Readable; filename: string}): Promise<string> {
+	async storeFormDataFile({
+		body,
+		filename,
+		holder,
+	}: {
+		body: Readable;
+		filename: string;
+		holder: FormUploadHolder;
+	}): Promise<string> {
 		const uploadKey = crypto.randomUUID();
 		const bucket = Config.s3.buckets.uploads;
 		const contentType = getContentTypeFromFilename(filename);
-		const releaseSlot = await acquireFormUploadSlot();
+		const releaseSlot = await acquireFormUploadSlot(holder);
 		try {
 			await runAttachmentStorageOperation(() =>
 				this.storageService.uploadObject({
