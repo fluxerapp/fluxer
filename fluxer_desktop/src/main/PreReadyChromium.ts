@@ -26,9 +26,6 @@ import {isSafeModeLaunch} from '@electron/main/LaunchOptions';
 import {app} from 'electron';
 import log from 'electron-log';
 
-const GPU_TILE_MEMORY_LIMIT_MB = '256';
-const GPU_DISCARDABLE_MEMORY_LIMIT_MB = '128';
-
 let preReadyChromiumConfigured = false;
 
 export function applyPreReadyChromiumConfiguration(channel: BuildChannel, argv: ReadonlyArray<string>): void {
@@ -47,8 +44,6 @@ export function applyPreReadyChromiumConfiguration(channel: BuildChannel, argv: 
 		});
 	}
 	app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-	app.commandLine.appendSwitch('force-gpu-mem-available-mb', GPU_TILE_MEMORY_LIMIT_MB);
-	app.commandLine.appendSwitch('force-gpu-mem-discardable-limit-mb', GPU_DISCARDABLE_MEMORY_LIMIT_MB);
 	const windowBehaviorSettings = getDesktopWindowBehaviorSettings();
 	app.commandLine.appendSwitch(
 		windowBehaviorSettings.smoothScrolling ? 'enable-smooth-scrolling' : 'disable-smooth-scrolling',
