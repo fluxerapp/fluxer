@@ -234,6 +234,11 @@ func ImageStore(dir string, e *Engine) string {
 			return e.DataRoot
 		}
 	}
+	if e == nil {
+		if root := PlannedDataRoot(); root != "" {
+			return root
+		}
+	}
 	return dir
 }
 
