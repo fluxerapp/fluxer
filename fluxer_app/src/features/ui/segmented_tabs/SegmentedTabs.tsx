@@ -11,6 +11,7 @@ import {useRef} from 'react';
 export interface SegmentedTab<T extends string = string> {
 	id: T;
 	label: string;
+	icon?: React.ReactNode;
 }
 
 interface SegmentedTabsProps<T extends string = string> {
@@ -79,7 +80,14 @@ export function SegmentedTabs<T extends string = string>({
 							className={clsx(styles.tab, isSelected ? styles.tabActive : styles.tabInactive)}
 							data-flx="ui.segmented-tabs.segmented-tabs.tab.button"
 						>
-							{tab.label}
+							{tab.icon ? (
+								<span className={styles.tabContent} data-flx="ui.segmented-tabs.segmented-tabs.tab.content">
+									{tab.icon}
+									{tab.label}
+								</span>
+							) : (
+								tab.label
+							)}
 						</button>
 					);
 				})}

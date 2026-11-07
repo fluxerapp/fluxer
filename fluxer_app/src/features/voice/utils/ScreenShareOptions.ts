@@ -56,6 +56,7 @@ const BITRATE_RUNGS = [
 ] as const satisfies ReadonlyArray<ScreenshareResolution>;
 
 export function resolveScreenShareFrameRate(frameRate: number): SupportedScreenShareFrameRate {
+	if (frameRate >= 120) return 120;
 	if (frameRate >= 60) return 60;
 	if (frameRate >= 30) return 30;
 	return 15;

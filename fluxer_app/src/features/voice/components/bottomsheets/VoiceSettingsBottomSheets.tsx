@@ -69,6 +69,11 @@ const SHOW_MY_OWN_CAMERA_DESCRIPTOR = msg({
 	message: 'Show my own camera',
 	comment: 'Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.',
 });
+const SHOW_MY_SCREEN_SHARE_DESCRIPTOR = msg({
+	message: 'Show my screen share',
+	comment:
+		'Toggle label in the mobile video settings bottom sheet. Controls whether the local screen share tile is in the call view.',
+});
 const SHOW_NON_VIDEO_PARTICIPANTS_DESCRIPTOR = msg({
 	message: 'Show non-video participants',
 	comment:
@@ -385,6 +390,18 @@ export const VoiceMoreOptionsBottomSheet: React.FC<VoiceMoreOptionsBottomSheetPr
 			label: i18n._(SHOW_MY_OWN_CAMERA_DESCRIPTOR),
 			onClick: () => {
 				VoiceSettingsCommands.update({showMyOwnCamera: !voiceSettings.showMyOwnCamera});
+			},
+		},
+		{
+			icon: (
+				<MembersIcon
+					className={sharedStyles.icon}
+					data-flx="voice.voice-settings-bottom-sheets.voice-more-options-bottom-sheet.members-icon.show-my-screen-share"
+				/>
+			),
+			label: i18n._(SHOW_MY_SCREEN_SHARE_DESCRIPTOR),
+			onClick: () => {
+				VoiceSettingsCommands.update({showMyOwnScreenShare: !voiceSettings.showMyOwnScreenShare});
 			},
 		},
 		{
