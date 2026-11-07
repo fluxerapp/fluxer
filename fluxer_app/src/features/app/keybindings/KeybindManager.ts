@@ -2,6 +2,7 @@
 
 import {organizeChannels} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import {
+	isTextEditingShortcutEvent,
 	keyboardEventCanRecoverStaleMacMetaPress,
 	keyboardEventMatchesCombo,
 	keyboardEventReleasesComboModifier,
@@ -1981,6 +1982,7 @@ class KeybindManager {
 		const target = event.target ?? null;
 		if (shouldSuppressLocalShortcutForModalFocus(entry, target)) return true;
 		if (!isEditableElement(target)) return false;
+		if (isTextEditingShortcutEvent(event)) return true;
 		if (this.shouldAllowLocalShortcutFromEditable(entry, target)) {
 			return false;
 		}
@@ -1998,7 +2000,6 @@ class KeybindManager {
 	}
 
 	private shouldPreserveEditableDefaultForShortcut(entry: RuntimeKeybind, event: KeyboardEvent): boolean {
-		if (entry.preventDefaultInEditable) return false;
 		const target = event.target ?? null;
 		return entry.section === 'voice_and_video' && isEditableElement(target);
 	}

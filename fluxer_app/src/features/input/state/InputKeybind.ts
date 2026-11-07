@@ -135,6 +135,7 @@ import {
 	OPEN_QUICK_CSS_EDITOR_DESCRIPTOR,
 	TURN_CUSTOM_CSS_ON_OR_OFF_DESCRIPTOR,
 } from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
+import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {VOICE_TOGGLE_DEAFEN_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -183,7 +184,6 @@ export interface KeybindConfig {
 	section: KeybindSection;
 	assignable?: boolean;
 	ignoreWhileTyping?: boolean;
-	preventDefaultInEditable?: boolean;
 	allowGlobal?: boolean;
 	requiresKeyboardMode?: boolean;
 	requiresMessageFocus?: boolean;
@@ -260,12 +260,62 @@ const getAccountKeybindConfigs = (i18n: KeybindLabelI18n): ReadonlyArray<Keybind
 		...(action === 'system_open_account_switcher' ? {allowGlobal: true} : {}),
 	}));
 
+const WEB_BROWSER_RESERVED_DEFAULT_ACTIONS: ReadonlySet<KeybindCommand> = new Set<KeybindCommand>([
+	'nav_history_back',
+	'nav_history_forward',
+	'nav_guild_tab_prev',
+	'nav_guild_tab_next',
+	'nav_guild_slot_1',
+	'nav_guild_slot_2',
+	'nav_guild_slot_3',
+	'nav_guild_slot_4',
+	'nav_guild_slot_5',
+	'nav_guild_slot_6',
+	'nav_guild_slot_7',
+	'nav_guild_slot_8',
+	'nav_guild_slot_9',
+	'nav_add_guild',
+	'chat_new_dm',
+	'chat_toggle_pins',
+	'chat_toggle_inbox',
+	'chat_mark_inbox_read',
+	'chat_toggle_member_list',
+	'chat_toggle_emoji',
+	'chat_toggle_gif',
+	'chat_toggle_sticker',
+	'voice_toggle_soundboard',
+	'misc_help',
+	'system_zoom_in',
+	'system_zoom_out',
+	'system_zoom_reset',
+	'system_open_account_switcher',
+	'system_switch_account_recent',
+	'system_jump_account_mention',
+	'nav_quick_switcher_accounts',
+]);
+
+const WEB_APPLE_BROWSER_RESERVED_DEFAULT_ACTIONS: ReadonlySet<KeybindCommand> = new Set<KeybindCommand>([
+	'system_switch_account_next',
+	'system_switch_account_prev',
+]);
+
+function withBrowserReservedDefaultsCleared(configs: ReadonlyArray<KeybindConfig>): ReadonlyArray<KeybindConfig> {
+	if (isElectron()) return configs;
+	const applePlatform = isApplePlatform();
+	return configs.map((config) =>
+		WEB_BROWSER_RESERVED_DEFAULT_ACTIONS.has(config.action) ||
+		(applePlatform && WEB_APPLE_BROWSER_RESERVED_DEFAULT_ACTIONS.has(config.action))
+			? {...config, combo: {key: ''}}
+			: config,
+	);
+}
+
 const getDefaultKeybinds = (
 	i18n: KeybindLabelI18n,
 	keyboardShortcutsOverlayCombo: KeyCombo = DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
 	startDmCallCombo: KeyCombo = DEFAULT_START_DM_CALL_COMBO,
 ): ReadonlyArray<KeybindConfig> =>
-	[
+	withBrowserReservedDefaultsCleared([
 		{
 			action: 'system_toggle_shortcuts_overlay',
 			label: i18n._(SHOW_KEYBOARD_SHORTCUTS_LIST_DESCRIPTOR),
@@ -722,7 +772,6 @@ const getDefaultKeybinds = (
 			action: 'voice_toggle_compact_call_view',
 			label: i18n._(EXPAND_OR_COLLAPSE_COMPACT_CALL_VIEW_DESCRIPTOR),
 			combo: {key: 'v', code: 'KeyV', ctrlOrMeta: true, shift: true},
-			preventDefaultInEditable: true,
 			assignable: true,
 			section: 'voice_and_video',
 		},
@@ -922,7 +971,7 @@ const getDefaultKeybinds = (
 			hideFromDefaults: true,
 		},
 		...getAccountKeybindConfigs(i18n),
-	] as const;
+	]);
 
 class Keybind {
 	customKeybinds: Array<CustomKeybindEntry> = [];
