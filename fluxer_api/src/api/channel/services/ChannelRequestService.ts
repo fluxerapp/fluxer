@@ -202,6 +202,7 @@ export class ChannelRequestService {
 			userId: params.userId,
 			viewer: params.viewer,
 			channelId: params.channelId,
+			skipNsfwValidation: true,
 		});
 		if (channel.isThread()) {
 			await this.channelService.channelData.deleteThread({

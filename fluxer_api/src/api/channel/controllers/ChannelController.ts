@@ -237,7 +237,7 @@ export function ChannelController(app: HonoApp) {
 			const channelRequestService = ctx.get('channelRequestService');
 			await ctx
 				.get('channelService')
-				.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId});
+				.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId, skipNsfwValidation: true});
 			if (delete_messages) {
 				await requireSudoMode(ctx, user, body);
 				await ctx.get('channelService').userMessageDeletion.deleteUserMessagesInScope(userId, {
