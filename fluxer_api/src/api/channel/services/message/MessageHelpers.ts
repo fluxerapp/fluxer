@@ -165,7 +165,9 @@ async function copyCdnObject(
 	sourceKey: string,
 	destinationKey: string,
 	contentType: string | null | undefined,
+	copyKeys: Array<string>,
 ): Promise<boolean> {
+	copyKeys.push(destinationKey);
 	try {
 		await storageService.copyObject({
 			sourceBucket: Config.s3.buckets.cdn,
@@ -190,6 +192,7 @@ async function cloneAttachments(
 	destinationChannelId: ChannelID,
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
+	copyKeys: Array<string>,
 ): Promise<Array<MessageAttachment>> {
 	const clonedAttachments: Array<MessageAttachment> = [];
 	for (const attachment of attachments) {
@@ -199,6 +202,7 @@ async function cloneAttachments(
 			makeAttachmentCdnKey(sourceChannelId, attachment.id, attachment.filename),
 			makeAttachmentCdnKey(destinationChannelId, newAttachmentId, attachment.filename),
 			attachment.contentType,
+			copyKeys,
 		);
 		if (!copied) {
 			continue;
@@ -230,7 +234,9 @@ export async function createMessageSnapshotsForForward(
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
 	limitConfigService: LimitConfigService,
+	copyKeys: Array<string>,
 	selection?: ForwardMediaSelection,
+	assertMediaAllowed?: (media: {hasAttachments: boolean; hasEmbeds: boolean}) => void,
 ): Promise<Array<MessageSnapshotModel>> {
 	if ((referencedMessage.flags & MessageFlags.SOURCE_MESSAGE_DELETED) !== 0) {
 		throw new UnknownMessageError();
@@ -249,6 +255,7 @@ export async function createMessageSnapshotsForForward(
 			throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.NO_VALID_MEDIA_IN_MESSAGE);
 		}
 		validateTotalAttachmentSize(snapshotAttachments, user, limitConfigService);
+		assertMediaAllowed?.({hasAttachments: snapshotAttachments.length > 0, hasEmbeds: snapshotEmbeds.length > 0});
 		const attachmentsForClone = snapshotAttachments.map((att) =>
 			att instanceof Attachment ? att : new Attachment(att),
 		);
@@ -258,6 +265,7 @@ export async function createMessageSnapshotsForForward(
 			destinationChannelId,
 			storageService,
 			snowflakeService,
+			copyKeys,
 		);
 		await cloneOwnedEmbedAttachments(
 			snapshotEmbeds,
@@ -265,6 +273,7 @@ export async function createMessageSnapshotsForForward(
 			destinationChannelId,
 			storageService,
 			snowflakeService,
+			copyKeys,
 		);
 		const snapshotData: CassandraMessageSnapshot = {
 			content: isMediaOnlyForward ? null : snapshot.content,
@@ -282,14 +291,6 @@ export async function createMessageSnapshotsForForward(
 		return [new MessageSnapshotModel(snapshotData)];
 	}
 	const selectedAttachments = selectForwardAttachments(referencedMessage.attachments, selection);
-	validateTotalAttachmentSize(selectedAttachments, user, limitConfigService);
-	const clonedAttachments = await cloneAttachments(
-		selectedAttachments,
-		attachmentStorageChannelId(referencedMessage),
-		destinationChannelId,
-		storageService,
-		snowflakeService,
-	);
 	const referencedMessageEmbeds = selectForwardEmbeds(
 		(referencedMessage.flags & MessageFlags.SUPPRESS_EMBEDS) === 0
 			? referencedMessage.embeds.map((embed) => embed.toMessageEmbed())
@@ -299,12 +300,26 @@ export async function createMessageSnapshotsForForward(
 	if (isMediaOnlyForward && selectedAttachments.length === 0 && referencedMessageEmbeds.length === 0) {
 		throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.NO_VALID_MEDIA_IN_MESSAGE);
 	}
+	validateTotalAttachmentSize(selectedAttachments, user, limitConfigService);
+	assertMediaAllowed?.({
+		hasAttachments: selectedAttachments.length > 0,
+		hasEmbeds: referencedMessageEmbeds.length > 0,
+	});
+	const clonedAttachments = await cloneAttachments(
+		selectedAttachments,
+		attachmentStorageChannelId(referencedMessage),
+		destinationChannelId,
+		storageService,
+		snowflakeService,
+		copyKeys,
+	);
 	await cloneOwnedEmbedAttachments(
 		referencedMessageEmbeds,
 		attachmentStorageChannelId(referencedMessage),
 		destinationChannelId,
 		storageService,
 		snowflakeService,
+		copyKeys,
 	);
 	const snapshotData: CassandraMessageSnapshot = {
 		content: isMediaOnlyForward ? null : referencedMessage.content,
@@ -358,6 +373,7 @@ async function cloneOwnedEmbedAttachments(
 	destinationChannelId: ChannelID,
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
+	copyKeys: Array<string>,
 ): Promise<void> {
 	const mediaPrefix = `${Config.endpoints.media}/`;
 	const sourcePrefix = `${mediaPrefix}attachments/${sourceChannelId}/`;
@@ -378,6 +394,7 @@ async function cloneOwnedEmbedAttachments(
 				url.slice(mediaPrefix.length),
 				makeAttachmentCdnKey(destinationChannelId, clonedId, filename),
 				media.content_type,
+				copyKeys,
 			);
 			clonedUrls.set(url, copied ? makeAttachmentCdnUrl(destinationChannelId, clonedId, filename) : null);
 		}
