@@ -101,6 +101,16 @@ export const keyboardEventReleasesComboModifier = (
 	if (combo.shift && keyboardEventIsModifierKey(event, 'shift')) return true;
 	return false;
 };
+const TEXT_EDITING_KEY_CODES: ReadonlySet<string> = new Set(['KeyV', 'KeyC', 'KeyX', 'KeyA', 'KeyZ', 'KeyY']);
+const TEXT_NAVIGATION_KEYS: ReadonlySet<string> = new Set(['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete']);
+
+export const isTextEditingShortcutEvent = (event: KeyboardShortcutEvent): boolean => {
+	const commandModifierCount = Number(event.ctrlKey) + Number(event.altKey) + Number(event.metaKey);
+	if (commandModifierCount !== 1) return false;
+	if ((event.ctrlKey || event.metaKey) && TEXT_EDITING_KEY_CODES.has(event.code ?? '')) return true;
+	return TEXT_NAVIGATION_KEYS.has(event.key);
+};
+
 export const shouldAllowLocalShortcutForChannelTextarea = (
 	entry: Pick<KeybindConfig, 'editableFocusBehavior'>,
 	textareaValue: string,
