@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createUserID} from '@app/api/BrandedTypes';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
+import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
 import {
 	createOAuth2Application,
 	createUniqueApplicationName,
@@ -56,6 +59,21 @@ describe('OAuth2 Application Delete', () => {
 		expect(botUser.username).toBe('DeletedUser');
 		expect(botUser.discriminator).toBe('0000');
 		expect(botUser.avatar).toBeNull();
+	});
+	test('removes guild bans of the deleted bot', async () => {
+		const owner = await createTestAccount(harness);
+		const createResult = await createOAuth2Application(harness, owner.token, {
+			name: createUniqueApplicationName(),
+		});
+		const guild = await createGuild(harness, owner.token, `Bot Ban Cleanup ${Date.now()}`);
+		await banUser(harness, owner.token, guild.id, createResult.botUserId);
+		const guildRepository = getGuildRepository();
+		const guildId = createGuildID(BigInt(guild.id));
+		const botUserId = createUserID(BigInt(createResult.botUserId));
+		expect(await guildRepository.getBan(guildId, botUserId)).not.toBeNull();
+		await deleteOAuth2Application(harness, owner.token, createResult.application.id, owner.password);
+		expect(await guildRepository.getBan(guildId, botUserId)).toBeNull();
+		expect(await guildRepository.listBans(guildId)).toHaveLength(0);
 	});
 	test('keeps bot-authored messages readable after deleting the application', async () => {
 		const account = await createTestAccount(harness);
