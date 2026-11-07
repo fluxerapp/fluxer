@@ -36,7 +36,7 @@ import {
 } from '@app/features/auth/state/AuthFlow';
 import {loginIdentifierField} from '@app/features/auth/utils/AccountSignInIdentifier';
 import {describePasskeyError, describePasskeyPromptEnded} from '@app/features/auth/utils/PasskeyErrorMessages';
-import {classifyPasskeyFailure} from '@app/features/auth/utils/PasskeyFailure';
+import {isPasskeyCeremonyAborted} from '@app/features/auth/utils/PasskeyFailure';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import {
 	ForegroundGatewayConnectionRecoverableError,
@@ -72,7 +72,7 @@ export const PasskeyLoginCapability = Object.freeze({
 
 export type PasskeyLoginCapability = (typeof PasskeyLoginCapability)[keyof typeof PasskeyLoginCapability];
 
-export function resolveInitialPasskeyLoginCapability(): PasskeyLoginCapability {
+function resolveInitialPasskeyLoginCapability(): PasskeyLoginCapability {
 	if (isDesktop() || browserSupportsWebAuthn()) {
 		return PasskeyLoginCapability.AVAILABLE;
 	}
@@ -171,7 +171,6 @@ interface LoginFormControllerOptions {
 	onLoginSuccess?: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onRequireMfa?: (challenge: MfaChallenge) => void;
 	onRequireIpAuthorization?: (challenge: IpAuthorizationChallenge) => void;
-	onDesktopPasskeyHandoff: () => void;
 }
 
 export function useLoginFormController({
@@ -181,7 +180,6 @@ export function useLoginFormController({
 	onLoginSuccess,
 	onRequireMfa,
 	onRequireIpAuthorization,
-	onDesktopPasskeyHandoff,
 }: LoginFormControllerOptions) {
 	const {i18n} = useLingui();
 	const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
@@ -239,12 +237,7 @@ export function useLoginFormController({
 			const requestRuntimeSnapshot = requireLoginRuntimeSnapshot(runtimeSnapshot);
 			let outcome: LegacyPasskeyLoginOutcome | null = null;
 			if (!migrationOrigin || readPasskeyLoginRoute() === 'native') {
-				const capability = await resolvePasskeyLoginCapability();
-				if (capability === PasskeyLoginCapability.BROWSER_HANDOFF) {
-					onDesktopPasskeyHandoff();
-					return;
-				}
-				if (capability === PasskeyLoginCapability.UNAVAILABLE) {
+				if ((await resolvePasskeyLoginCapability()) !== PasskeyLoginCapability.AVAILABLE) {
 					ToastCommands.error(i18n._(PASSKEY_UNAVAILABLE_DESCRIPTOR));
 					return;
 				}
@@ -291,21 +284,16 @@ export function useLoginFormController({
 			if (AuthenticationCommands.showAccountRestriction(err)) {
 				return;
 			}
-			const failure = classifyPasskeyFailure(err, isDesktop() ? 'browser_handoff' : 'show_error');
-			if (failure === 'aborted') {
+			if (isPasskeyCeremonyAborted(err)) {
 				return;
 			}
-			if (failure === 'browser_handoff') {
-				onDesktopPasskeyHandoff();
-			} else {
-				ToastCommands.error(describePasskeyError(i18n, err, null) ?? i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
-			}
+			ToastCommands.error(describePasskeyError(i18n, err, null) ?? i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
 		} finally {
 			if (!navigating) {
 				setIsPasskeyLoading(false);
 			}
 		}
-	}, [inviteCode, onLoginSuccess, redirectPath, onDesktopPasskeyHandoff, i18n, runtimeSnapshot]);
+	}, [inviteCode, onLoginSuccess, redirectPath, i18n, runtimeSnapshot]);
 	const connectingMessage =
 		connectingDomain === null ? null : i18n._(CONNECTING_TO_INSTANCE_DESCRIPTOR, {domain: connectingDomain});
 	return {
@@ -487,7 +475,7 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 			if (AuthenticationCommands.showAccountRestriction(error)) {
 				return;
 			}
-			if (classifyPasskeyFailure(error, 'show_error') !== 'aborted') {
+			if (!isPasskeyCeremonyAborted(error)) {
 				ToastCommands.error(describePasskeyError(i18n, error, null) ?? i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
 			}
 		} finally {
