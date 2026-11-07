@@ -59,6 +59,7 @@ import {
 	shouldCheckDesktopSourceScreenRecordingPermission,
 	useScreenSharePickerDisplayPermission,
 } from '@app/features/voice/components/modals/screen_share_picker_modal/useScreenSharePickerDisplayPermission';
+import {WebStreamSetupModal} from '@app/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal';
 import {
 	StreamSettingsMenuContent,
 	useHasHigherVideoQuality,
@@ -377,7 +378,11 @@ export async function preloadScreenSharePickerSources(): Promise<ScreenSharePick
 
 export async function openScreenSharePickerModal(): Promise<void> {
 	if (!getElectronAPI()) {
-		await startConfiguredDisplayScreenShare(null);
+		ModalCommands.push(
+			ModalCommands.modal(() => (
+				<WebStreamSetupModal data-flx="voice.screen-share-picker-modal.open-screen-share-picker-modal.web-stream-setup-modal" />
+			)),
+		);
 		return;
 	}
 	ModalCommands.push(

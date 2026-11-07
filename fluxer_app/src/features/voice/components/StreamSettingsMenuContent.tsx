@@ -97,8 +97,8 @@ const SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR = msg({
 	comment: 'Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.',
 });
 
-const SHARP_TEXT_AT_UP_TO_4K_DESCRIPTOR = msg({
-	message: 'Sharp text at up to 4K, up to 15 FPS',
+const SHARP_TEXT_AT_UP_TO_1080P_DESCRIPTOR = msg({
+	message: 'Sharp text at up to 1080p, 30 FPS',
 	comment:
 		'Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.',
 });
@@ -430,7 +430,7 @@ export const StreamSettingsMenuContent = observer(
 					value: 'screenshare',
 					label: i18n._(SCREENSHARE_DESCRIPTOR),
 					description: hasHigherVideoQuality
-						? i18n._(SHARP_TEXT_AT_UP_TO_4K_DESCRIPTOR)
+						? i18n._(SHARP_TEXT_AT_UP_TO_1080P_DESCRIPTOR)
 						: i18n._(SHARP_TEXT_AT_720P_DESCRIPTOR),
 					isPremium: false,
 				});
