@@ -245,6 +245,7 @@ export class ApplicationService {
 			const guildIds = await this.apiContext.services.users.getUserGuildIds(botUserId);
 			await this.apiContext.services.users.deleteUserSecondaryIndices(botUserId);
 			await this.apiContext.services.users.removeFromAllGuilds(botUserId);
+			await this.apiContext.services.users.deleteAllRelationships(botUserId);
 			for (const guildId of guildIds) {
 				try {
 					await this.apiContext.services.gateway.dispatchGuild({
