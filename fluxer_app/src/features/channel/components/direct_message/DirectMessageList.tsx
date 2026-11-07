@@ -315,9 +315,17 @@ export const DMList = observer(() => {
 	};
 	const renderPremiumIcon = () => {
 		return showFluxerPremiumIcon ? (
-			<AtomIcon weight="fill" className={styles.iconSize5} data-flx="channel.direct-message.direct-message-list.render-premium-icon.icon-size5" />
+			<AtomIcon
+				weight="fill"
+				className={styles.iconSize5}
+				data-flx="channel.direct-message.direct-message-list.render-premium-icon.icon-size5"
+			/>
 		) : (
-			<CrownIcon weight="fill" className={styles.iconSize5} data-flx="channel.direct-message.direct-message-list.render-premium-icon.icon-size5--2" />
+			<CrownIcon
+				weight="fill"
+				className={styles.iconSize5}
+				data-flx="channel.direct-message.direct-message-list.render-premium-icon.icon-size5--2"
+			/>
 		);
 	};
 	if (isMobile) {
