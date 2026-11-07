@@ -693,15 +693,22 @@ export class UserContentService {
 		});
 		const harvestRepository = new UserHarvestRepository();
 		await harvestRepository.create(harvest);
-		await this.workerService.addJob('harvestUserData', {
-			userId: userId.toString(),
-			harvestId: harvestId.toString(),
-			...(filter
-				? {
-						filter: serializeSelfMessageFilter(filter),
-					}
-				: {}),
-		});
+		try {
+			await this.workerService.addJob('harvestUserData', {
+				userId: userId.toString(),
+				harvestId: harvestId.toString(),
+				...(filter
+					? {
+							filter: serializeSelfMessageFilter(filter),
+						}
+					: {}),
+			});
+		} catch (error) {
+			await harvestRepository
+				.markUnqueuedAsTerminallyFailed(harvest, 'Export job could not be queued')
+				.catch((markError) => Logger.error({err: markError, userId, harvestId}, 'Failed to close unqueued harvest'));
+			throw error;
+		}
 		return {
 			harvest_id: harvest.harvestId.toString(),
 			status: harvest.getStatus(),
