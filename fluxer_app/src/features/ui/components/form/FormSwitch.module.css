@@ -102,7 +102,6 @@
 	transition-property: transform, box-shadow;
 	transition-duration: 150ms;
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-	will-change: transform;
 	transform: translateX(calc(0.125rem * var(--switch-travel-sign, 1)));
 }
 
