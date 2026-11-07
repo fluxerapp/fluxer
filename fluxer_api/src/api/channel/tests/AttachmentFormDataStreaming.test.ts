@@ -7,6 +7,7 @@ import {Readable} from 'node:stream';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {Config, getConfig} from '@app/api/Config';
+import {acquireFormUploadSlot} from '@app/api/channel/services/FormUploadSlots';
 import {createChannel, createGuild} from '@app/api/channel/tests/AttachmentTestUtils';
 import {THREADS_FEATURE, THREADS_FEATURE_HEADER} from '@app/api/channel/tests/ThreadTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
@@ -390,10 +391,10 @@ describe('streamed multipart attachment uploads', () => {
 		expect(statuses).toEqual([400, 400, 400, 400, 400, 400]);
 	});
 
-	it('limits how many files stream to storage at once', async () => {
+	it('limits how many files one sender streams to storage at once', async () => {
 		const config = getConfig();
 		const previousLimit = config.maxConcurrentFormUploads;
-		config.maxConcurrentFormUploads = 2;
+		config.maxConcurrentFormUploads = 8;
 		const storage = harness.storageService;
 		const uploadObject = storage.uploadObject.bind(storage);
 		let inflight = 0;
@@ -422,6 +423,45 @@ describe('streamed multipart attachment uploads', () => {
 			expect(peak).toBe(2);
 		} finally {
 			storage.uploadObject = uploadObject;
+			config.maxConcurrentFormUploads = previousLimit;
+		}
+	});
+
+	it('caps upload slots per sender and per client IP', async () => {
+		const config = getConfig();
+		const previousLimit = config.maxConcurrentFormUploads;
+		config.maxConcurrentFormUploads = 8;
+		const releases: Array<() => void> = [];
+		const pending = (sender: string, clientIp: string) => {
+			const state = {granted: false};
+			const done = acquireFormUploadSlot({sender, clientIp}).then((release) => {
+				state.granted = true;
+				releases.push(release);
+			});
+			return {state, done};
+		};
+		try {
+			const firstA = await acquireFormUploadSlot({sender: 'a', clientIp: 'x'});
+			releases.push(await acquireFormUploadSlot({sender: 'a', clientIp: 'x'}));
+			const extraA = pending('a', 'x');
+			releases.push(await acquireFormUploadSlot({sender: 'b', clientIp: 'x'}));
+			releases.push(await acquireFormUploadSlot({sender: 'b', clientIp: 'x'}));
+			const sameIp = pending('c', 'x');
+			releases.push(await acquireFormUploadSlot({sender: 'c', clientIp: 'y'}));
+			await Promise.resolve();
+			expect(extraA.state.granted).toBe(false);
+			expect(sameIp.state.granted).toBe(false);
+
+			firstA();
+			await extraA.done;
+			await Promise.resolve();
+			expect(sameIp.state.granted).toBe(false);
+
+			releases.shift()!();
+			await sameIp.done;
+			expect(sameIp.state.granted).toBe(true);
+		} finally {
+			for (const release of releases) release();
 			config.maxConcurrentFormUploads = previousLimit;
 		}
 	});
