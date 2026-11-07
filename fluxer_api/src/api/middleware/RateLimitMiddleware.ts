@@ -168,7 +168,14 @@ async function revokeAuthenticatedSessionOnGlobalRateLimit(ctx: Context<HonoEnv>
 	} catch (_error) {}
 }
 
-export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): MiddlewareHandler<HonoEnv> {
+interface RateLimitMiddlewareOptions {
+	skipRouteLimit?: (ctx: Context<HonoEnv>) => Promise<boolean>;
+}
+
+export function RateLimitMiddleware(
+	routeConfig: RouteRateLimitConfig,
+	options: RateLimitMiddlewareOptions = {},
+): MiddlewareHandler<HonoEnv> {
 	const routeBucketHash = getBucketHash(routeConfig.bucket);
 	const emailBucketHash = routeConfig.emailBucket ? getBucketHash(routeConfig.emailBucket.bucket) : undefined;
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
@@ -204,6 +211,10 @@ export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): Middlewa
 					scope: 'global',
 				});
 			}
+		}
+		if (options.skipRouteLimit && (await options.skipRouteLimit(ctx))) {
+			await next();
+			return;
 		}
 		const bucket = resolveBucket(routeConfig.bucket, clientId, ctx);
 		const bucketResult = await rateLimitService.checkBucketLimit(bucket, routeConfig.config);

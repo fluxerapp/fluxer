@@ -13,7 +13,7 @@ export const ReportFlowTargetType = withOpenApiType(
 		[
 			['message', 'message', 'A message'],
 			['user', 'user', 'A user profile'],
-			['guild', 'guild', 'A community, on the DSA form only'],
+			['guild', 'guild', 'A community'],
 		],
 		'Kind of entity a report flow is about',
 	),

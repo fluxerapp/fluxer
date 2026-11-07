@@ -20,7 +20,7 @@ import {
 	type ReportFlowLinkId,
 	type ReportFlowOutcomeDef,
 } from '@app/api/report/flows/ReportFlowScreens';
-import {getLegacyCategory, type ReportReasonKey} from '@app/api/report/flows/ReportReasonCatalog';
+import {getLegacyCategory, isUrgentReportReason, type ReportReasonKey} from '@app/api/report/flows/ReportReasonCatalog';
 import {isStringArray, parseJsonArray} from '@app/api/utils/JsonBoundaryUtils';
 import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {InvalidReportFlowAnswersError} from '@fluxer/errors/src/domains/moderation/InvalidReportFlowAnswersError';
@@ -49,6 +49,7 @@ interface ReportFlowStepInput {
 
 interface ResolvedReportFlowAnswers {
 	reason: ReportReasonKey;
+	urgent: boolean;
 	legacyCategory: string;
 	steps: Array<ReportFlowStepRecord>;
 	stepsJson: string;
@@ -203,9 +204,12 @@ export function getReportFlowResponse(
 function findInvalidStep(
 	variant: ReportFlowVariant,
 	steps: ReadonlyArray<ReportFlowStepInput>,
-): {invalidStep: number} | {reason: ReportReasonKey; steps: Array<ReportFlowStepRecord>} {
+):
+	| {invalidStep: number}
+	| {reason: ReportReasonKey; submittedOnUrgentScreen: boolean; steps: Array<ReportFlowStepRecord>} {
 	let expectedScreenId: string | null = variant.startScreenId;
 	let finalReason: ReportReasonKey | null = null;
+	let submittedOnUrgentScreen = false;
 	let itemReason: ReportReasonKey | null = null;
 	const records: Array<ReportFlowStepRecord> = [];
 	for (let index = 0; index < steps.length; index++) {
@@ -256,6 +260,7 @@ function findInvalidStep(
 		} else if (outcome.type === 'submit') {
 			expectedScreenId = null;
 			finalReason = outcome.reason;
+			submittedOnUrgentScreen = screen.def.urgent === true;
 		} else {
 			return {invalidStep: index};
 		}
@@ -263,7 +268,7 @@ function findInvalidStep(
 	if (finalReason === null) {
 		return {invalidStep: Math.max(steps.length - 1, 0)};
 	}
-	return {reason: itemReason ?? finalReason, steps: records};
+	return {reason: itemReason ?? finalReason, submittedOnUrgentScreen, steps: records};
 }
 
 export function resolveReportFlowAnswers(params: {
@@ -287,6 +292,7 @@ export function resolveReportFlowAnswers(params: {
 	}
 	return {
 		reason: result.reason,
+		urgent: result.submittedOnUrgentScreen || isUrgentReportReason(result.reason),
 		legacyCategory: getLegacyCategory(result.reason, params.target),
 		steps: result.steps,
 		stepsJson: JSON.stringify(result.steps),

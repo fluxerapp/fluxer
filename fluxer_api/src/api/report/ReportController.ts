@@ -6,6 +6,7 @@ import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {urgentFlowSubmissionRequest, urgentLegacyReportRequest} from '@app/api/report/ReportUrgency';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {
@@ -60,7 +61,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/flows/message/submissions',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('message')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -88,7 +89,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/flows/user/submissions',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('user')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -114,7 +115,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/flows/guild/submissions',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('guild')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -141,7 +142,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/message',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('message')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -168,7 +169,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/user',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('user')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -193,7 +194,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/guild',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('guild')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({

@@ -11,7 +11,7 @@ import {
 	resolveReportFlowAnswers,
 	resolveReportFlowLocale,
 } from '@app/api/report/flows/ReportFlowRegistry';
-import {reasonSkipsReporterCaps} from '@app/api/report/flows/ReportReasonCatalog';
+import {isUrgentLegacyCategory} from '@app/api/report/flows/ReportReasonCatalog';
 import {
 	admitLimitedReport,
 	isLimitedReporter,
@@ -86,9 +86,10 @@ export class ReportRequestService {
 		data,
 		request,
 	}: ReportUserRequestContext<ReportMessageRequest> & {viewer: ThreadViewer}): Promise<ReportResponse> {
-		return this.admitAndStore(user, request, {type: 'message', id: BigInt(data.message_id)}, false, () =>
+		const urgent = isUrgentLegacyCategory('message', data.category);
+		return this.admitAndStore(user, request, {type: 'message', id: BigInt(data.message_id)}, urgent, () =>
 			this.reportService.reportMessage(
-				this.createReporter(user),
+				this.createReporter(user, urgent),
 				viewer,
 				createChannelID(data.channel_id),
 				createMessageID(data.message_id),
@@ -98,9 +99,10 @@ export class ReportRequestService {
 	}
 
 	async reportUser({user, data, request}: ReportUserRequestContext<ReportUserRequest>): Promise<ReportResponse> {
-		return this.admitAndStore(user, request, {type: 'user', id: BigInt(data.user_id)}, false, () =>
+		const urgent = isUrgentLegacyCategory('user', data.category);
+		return this.admitAndStore(user, request, {type: 'user', id: BigInt(data.user_id)}, urgent, () =>
 			this.reportService.reportUser(
-				this.createReporter(user),
+				this.createReporter(user, urgent),
 				createUserID(data.user_id),
 				data.category,
 				data.guild_id ? createGuildID(data.guild_id) : undefined,
@@ -109,9 +111,10 @@ export class ReportRequestService {
 	}
 
 	async reportGuild({user, data, request}: ReportUserRequestContext<ReportGuildRequest>): Promise<ReportResponse> {
-		return this.admitAndStore(user, request, {type: 'guild', id: BigInt(data.guild_id)}, false, () =>
+		const urgent = isUrgentLegacyCategory('guild', data.category);
+		return this.admitAndStore(user, request, {type: 'guild', id: BigInt(data.guild_id)}, urgent, () =>
 			this.reportService.reportGuild(
-				this.createReporter(user),
+				this.createReporter(user, urgent),
 				createGuildID(data.guild_id),
 				data.category,
 				data.invite_code ? createInviteCode(data.invite_code) : undefined,
@@ -137,9 +140,9 @@ export class ReportRequestService {
 		viewer: ThreadViewer;
 	}): Promise<ReportResponse> {
 		const flow = this.resolveInAppFlow(user, 'message', data, locale);
-		return this.admitAndStore(user, request, {type: 'message', id: BigInt(data.message_id)}, flow.capExempt, () =>
+		return this.admitAndStore(user, request, {type: 'message', id: BigInt(data.message_id)}, flow.urgent, () =>
 			this.reportService.reportMessage(
-				this.createReporter(user, flow.capExempt),
+				this.createReporter(user, flow.urgent),
 				viewer,
 				createChannelID(data.channel_id),
 				createMessageID(data.message_id),
@@ -156,9 +159,9 @@ export class ReportRequestService {
 		request,
 	}: ReportFlowSubmissionContext<ReportFlowUserSubmissionRequest>): Promise<ReportResponse> {
 		const flow = this.resolveInAppFlow(user, 'user', data, locale);
-		return this.admitAndStore(user, request, {type: 'user', id: BigInt(data.user_id)}, flow.capExempt, () =>
+		return this.admitAndStore(user, request, {type: 'user', id: BigInt(data.user_id)}, flow.urgent, () =>
 			this.reportService.reportUser(
-				this.createReporter(user, flow.capExempt),
+				this.createReporter(user, flow.urgent),
 				createUserID(data.user_id),
 				flow.category,
 				data.guild_id ? createGuildID(data.guild_id) : undefined,
@@ -174,9 +177,9 @@ export class ReportRequestService {
 		request,
 	}: ReportFlowSubmissionContext<ReportFlowGuildSubmissionRequest>): Promise<ReportResponse> {
 		const flow = this.resolveInAppFlow(user, 'guild', data, locale);
-		return this.admitAndStore(user, request, {type: 'guild', id: BigInt(data.guild_id)}, flow.capExempt, () =>
+		return this.admitAndStore(user, request, {type: 'guild', id: BigInt(data.guild_id)}, flow.urgent, () =>
 			this.reportService.reportGuild(
-				this.createReporter(user, flow.capExempt),
+				this.createReporter(user, flow.urgent),
 				createGuildID(data.guild_id),
 				flow.category,
 				data.invite_code ? createInviteCode(data.invite_code) : undefined,
@@ -207,7 +210,7 @@ export class ReportRequestService {
 		target: ReportFlowTargetType,
 		data: ReportFlowAnswersInput,
 		locale: string | null,
-	): {category: string; record: ReportFlowRecord; capExempt: boolean} {
+	): {category: string; record: ReportFlowRecord; urgent: boolean} {
 		let answers: ReturnType<typeof resolveReportFlowAnswers>;
 		try {
 			answers = resolveReportFlowAnswers({
@@ -228,7 +231,7 @@ export class ReportRequestService {
 		}
 		return {
 			category: answers.legacyCategory,
-			capExempt: reasonSkipsReporterCaps(answers.reason),
+			urgent: answers.urgent,
 			record: {
 				reason: answers.reason,
 				revisionHash: data.revision_hash,
@@ -243,10 +246,13 @@ export class ReportRequestService {
 		user: User,
 		request: Request,
 		target: LimitedReportTarget,
-		capExempt: boolean,
+		urgent: boolean,
 		store: () => Promise<ReportRecord>,
 	): Promise<ReportResponse> {
-		if (!isLimitedReporter(user, capExempt)) {
+		if (urgent) {
+			return this.toReportResponse(await store());
+		}
+		if (!isLimitedReporter(user)) {
 			assertTierAllows(user, TierGatedActions.REPORT, NO_TIER_CONTEXT);
 			return this.toReportResponse(await store());
 		}
@@ -271,14 +277,14 @@ export class ReportRequestService {
 		};
 	}
 
-	private createReporter(user: User, capExempt = false) {
+	private createReporter(user: User, urgent = false) {
 		return {
 			id: user.id,
 			email: user.email,
 			fullLegalName: null,
 			countryOfResidence: null,
 			tier: getAccountTier(user),
-			capExempt,
+			urgent,
 		};
 	}
 
