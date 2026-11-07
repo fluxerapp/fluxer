@@ -92,7 +92,7 @@ export class UserAccountSettingsService {
 	async updateSettings(params: {
 		userId: UserID;
 		data: UserSettingsUpdateRequest;
-		ageUser: Pick<User, 'dateOfBirth' | 'attestedAgeFloor'>;
+		ageUser: Pick<User, 'dateOfBirth'>;
 		flags?: bigint;
 	}): Promise<UserSettings> {
 		const {userId, data, ageUser, flags = 0n} = params;

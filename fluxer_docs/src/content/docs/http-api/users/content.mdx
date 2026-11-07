@@ -151,7 +151,7 @@ An account can save at most the `max_bookmarks` [instance limit](/http-api/insta
 | --- | --- | --- |
 | 204 | empty | The message is in your saved messages |
 | 400 | [error response](/http-api/#error-response) | `MAX_BOOKMARKS` when you are at the limit, even for a message already saved |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel needs age verification |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel is age restricted and the account can't see mature content |
 
 The rate limit is 30 requests per 10 seconds, on the `user:saved_messages:write` bucket.
 

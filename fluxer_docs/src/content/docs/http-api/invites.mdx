@@ -132,7 +132,7 @@ Joins the authenticated account to the target of the invite and returns an [invi
 | 400 | [error response](/http-api/#error-response) | `INVALID_CHANNEL_TYPE` when a type `1` invite targets a private channel that is not a group direct message |
 | 400 | [error response](/http-api/#error-response) | `MAX_GUILDS` when the account is in the maximum number of guilds |
 | 400 | [error response](/http-api/#error-response) | `MAX_GUILD_MEMBERS` or `MAX_GROUP_DM_RECIPIENTS` when the target is full |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the age check fails |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the account can't see mature content |
 | 403 | [error response](/http-api/#error-response) | `INVITES_DISABLED` when the guild has paused invites |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when `INSTANT_INVITES` is set in the guild's [disabled operations](/http-api/guilds/#disabled-guild-operations) |
 | 403 | [error response](/http-api/#error-response) | `USER_BANNED_FROM_GUILD` or `USER_IP_BANNED_FROM_GUILD` when the account or its network address is banned |
@@ -160,7 +160,7 @@ Starts a [visit](/http-api/guilds/#visiting-guilds) to the guild of a guild invi
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when `INSTANT_INVITES` is set in the guild's [disabled operations](/http-api/guilds/#disabled-guild-operations) |
 | 403 | [error response](/http-api/#error-response) | `USER_BANNED_FROM_GUILD` or `USER_IP_BANNED_FROM_GUILD` when the caller is banned |
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when the account is [limited](/http-api/users/#account-limitation) |
-| 403 | [error response](/http-api/#error-response) | `DATE_OF_BIRTH_REQUIRED` or `ACCOUNT_BELOW_MINIMUM_AGE` when the age check fails |
+| 403 | [error response](/http-api/#error-response) | `DATE_OF_BIRTH_REQUIRED` when the account has no date of birth, or `ACCOUNT_BELOW_MINIMUM_AGE` when it is too young |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_INVITE` or `UNKNOWN_GUILD` when the invite or guild is unavailable |
 
 The rate limit is 10 requests per 60 seconds, on the `guild:visit:start` bucket. Each IP address can also start 30 visits per 60 seconds.
@@ -210,7 +210,7 @@ A guild channel makes a guild invite, and a group direct message makes a group d
 | 400 | [error response](/http-api/#error-response) | `MAX_INVITES` when the guild has `max_guild_invites` invites (default 1,000), counting its custom invite URL |
 | 400 | [error response](/http-api/#error-response) | `INVALID_CHANNEL_TYPE` when the channel is a thread, forum channel or media channel |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when instant invites are paused for the guild |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the age check fails |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the account can't see mature content |
 
 The rate limit is 20 requests per minute, on the `invite:create::channel_id` bucket.
 
@@ -226,7 +226,7 @@ Returns the channel's [invite metadata objects](#invite-metadata-object), newest
 | --- | --- | --- |
 | 200 | array[[invite metadata](#invite-metadata-object) object] | The invites were returned |
 | 400 | [error response](/http-api/#error-response) | `TWO_FACTOR_REQUIRED` when the guild needs [multi-factor authentication](/http-api/guilds/#mfa-levels) you lack |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the age check fails |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the guild or channel is age restricted and the account can't see mature content |
 
 The rate limit is 40 requests per 10 seconds, on the `invite:list::channel_id` bucket.
 

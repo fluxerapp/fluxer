@@ -221,9 +221,9 @@ The input form of the [user settings object](/http-api/users/#user-settings-obje
 
 <sup>6</sup> The single entry `*` trusts every domain. Combining it with another entry fails with the field code `INVALID_TRUSTED_DOMAINS`
 
-<sup>7</sup> An account that isn't a verified adult can set only blur or block, and any other value fails with the field code `AGE_RESTRICTED`
+<sup>7</sup> An account under 18 can set only blur or block, and any other value fails with the field code `AGE_RESTRICTED`
 
-<sup>8</sup> An account that isn't a verified adult can't change this field, and it fails with the field code `AGE_RESTRICTED`
+<sup>8</sup> An account under 18 can't change this field, and it fails with the field code `AGE_RESTRICTED`
 
 <sup>9</sup> Only staff accounts can set these fields
 
@@ -295,8 +295,8 @@ A new account starts with these settings.
 | Time format | Automatic |
 | Profile privacy | Visible to all guild members |
 | Voice activity sharing | On |
-| Friend sources | Mutual friends and mutual guilds, and anyone for a verified adult |
-| Sensitive media filters | Friend DMs show for a verified adult and blur otherwise, non-friend DMs block, guilds blur |
+| Friend sources | Mutual friends and mutual guilds, and anyone for an account 18 or over |
+| Sensitive media filters | Friend DMs show for an account 18 or over and blur otherwise, non-friend DMs block, guilds blur |
 
 ## Get current user settings
 

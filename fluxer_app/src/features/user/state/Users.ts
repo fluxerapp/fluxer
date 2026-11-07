@@ -40,7 +40,7 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'has_ever_purchased',
 	'has_unread_gift_inventory',
 	'unread_gift_inventory_count',
-	'age_verified_adult',
+	'mature_content_unlocked',
 	'terms_agreed_at',
 	'privacy_agreed_at',
 	'traits',

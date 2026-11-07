@@ -264,9 +264,13 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:app_attest:key_register',
 		config: {limit: 6, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	USER_AGE_ASSURANCE_SUBMIT: {
-		bucket: 'user:age_assurance:submit',
+	USER_AGE_RANGE_SUBMIT: {
+		bucket: 'user:age_range:submit',
 		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_AGE_RANGE_REMOVE: {
+		bucket: 'user:age_range:remove',
+		config: {limit: 5, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	USER_PLAY_INTEGRITY_CHALLENGE: {
 		bucket: 'user:play_integrity:challenge',

@@ -101,7 +101,7 @@ export const DateOfBirthGate = observer(() => {
 		}
 	};
 	const title = i18n._(DATE_OF_BIRTH_TITLE_DESCRIPTOR);
-	const helpUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.AgeVerification);
+	const helpUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.NoIdOrFaceScans);
 	const whyUrl = helpUrl === null ? null : `${helpUrl}#date-of-birth`;
 	const stackPlacement = ModalState.hasModalOpen() ? BEHIND_STACKED_MODAL_PLACEMENT : UNSTACKED_MODAL_CONTEXT;
 	return (

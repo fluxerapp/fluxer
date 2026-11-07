@@ -211,7 +211,7 @@ Copies one attachment or embed asset from a message you can read into your colle
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY`<sup>3</sup> when the body or selection fails validation |
 | 400 | [error response](/http-api/#error-response) | `MEDIA_METADATA_ERROR` when the media cannot be read |
 | 400 | [error response](/http-api/#error-response) | `MAX_FAVORITE_MEMES` when the collection is full |
-| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS`, `MISSING_ACCESS` or `NSFW_CONTENT_AGE_RESTRICTED` when you can't view the channel or aren't verified |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS`, `MISSING_ACCESS` or `NSFW_CONTENT_AGE_RESTRICTED` when you can't see the channel or it's age restricted |
 
 <sup>3</sup> The validation code is `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE`, `EMBED_INDEX_OUT_OF_BOUNDS`, `NO_VALID_MEDIA_IN_MESSAGE`, `MEDIA_ALREADY_IN_FAVORITE_MEMES` or `MAX_FAVORITE_MEME_TAGS_EXCEEDED`
 

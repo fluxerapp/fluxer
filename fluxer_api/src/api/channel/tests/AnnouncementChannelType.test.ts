@@ -32,10 +32,10 @@ describe('Announcement channel type', () => {
 		await harness?.shutdown();
 	});
 
-	test('applies the age gate to an age-restricted announcement channel', async () => {
+	test('applies the age restriction to an age-restricted announcement channel', async () => {
 		const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
 		const minor = await createTestAccount(harness, {dateOfBirth: '2012-01-01'});
-		const guild = await createGuild(harness, owner.token, 'Age Gate Guild');
+		const guild = await createGuild(harness, owner.token, 'Age Restricted Guild');
 		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
 		await acceptInvite(harness, minor.token, invite.code);
 		const announcement = await createChannel(harness, owner.token, guild.id, 'news', ChannelTypes.GUILD_ANNOUNCEMENT);

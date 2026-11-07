@@ -488,11 +488,11 @@ What a client needs before anyone signs in.
 | --- | --- | --- |
 | country_code | string | The ISO 3166-1 alpha-2 country code |
 | region_code | ?string | The ISO 3166-2 subdivision code, or null for the whole country |
-| action | string | `restrict` to need an age check, or `block` to refuse access |
+| action | string | `restrict` when a date of birth typed in is not enough for mature content, or `block` to refuse access |
 
 ## Geolocation object
 
-The approximate location of the request, and the places where mature content needs an age check or isn't available.
+The approximate location of the request, the places where a date of birth typed in is not enough for mature content, and the places where mature content isn't available.
 
 ### Structure
 
@@ -502,7 +502,7 @@ The approximate location of the request, and the places where mature content nee
 | regionCode | ?string | The upper-case ISO 3166-2 subdivision code, or null |
 | latitude | ?string | The approximate latitude as a decimal string, or null |
 | longitude | ?string | The approximate longitude as a decimal string, or null |
-| ageRestrictedGeos | array[[geo entry](#geo-entry-object) object] | Places where mature content needs an age check |
+| ageRestrictedGeos | array[[geo entry](#geo-entry-object) object] | Places where a date of birth typed in is not enough for mature content |
 | ageBlockedGeos | array[[geo entry](#geo-entry-object) object] | Places where mature content isn't available |
 
 When the location is unknown, all four location fields are null. Match `countryCode` and `regionCode` against the geo lists yourself.

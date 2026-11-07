@@ -151,11 +151,11 @@ The `flags` field is a 64-bit bitfield sent as a decimal string. It has every st
 | 1 &lt;&lt; 39 | HAS_SESSION_STARTED | Account has started a session |
 | 1 &lt;&lt; 47 | RATE_LIMIT_BYPASS | Account skips rate limits |
 | 1 &lt;&lt; 48 | REPORT_BANNED | Account cannot send reports |
-| 1 &lt;&lt; 49 | VERIFIED_NOT_UNDERAGE | Account is verified as not underage |
+| 1 &lt;&lt; 49 | VERIFIED_NOT_UNDERAGE | Marks an account as not under the minimum age. Only staff can set it |
 | 1 &lt;&lt; 50 | ACCOUNT_LIMITED | Account is [limited](/http-api/users/#account-limitation) |
 | 1 &lt;&lt; 51 | HAS_DISMISSED_PREMIUM_ONBOARDING | Account dismissed premium onboarding |
 | 1 &lt;&lt; 53 | APP_STORE_REVIEWER | Account belongs to an app store reviewer |
-| 1 &lt;&lt; 60 | AGE_VERIFIED_ADULT | Account verified its age as an adult |
+| 1 &lt;&lt; 60 | MATURE_CONTENT_UNLOCKED | Account can see mature content in places where a date of birth is not enough. Staff can set it |
 | 1 &lt;&lt; 62 | LIMIT_EXEMPT | Account is never limited |
 
 ## Premium flags

@@ -18,7 +18,7 @@ import {getMessageSearchService} from '@app/api/SearchFactory';
 import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/ChannelIndexingUtils';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
+import {channelIsAgeRestricted, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
 import {accessibleRequestedThreadIds, accessibleThreadIds} from '@app/api/search/ThreadSearchScope';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
@@ -30,7 +30,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
@@ -80,7 +80,7 @@ export class GuildSearchService {
 				? await getSearchNsfwAccess(this.userRepository, userId, iosApp)
 				: {adult: false, allowed: false};
 		if (guildIsAgeRestricted && !nsfwAccess.adult) {
-			throw new NsfwContentRequiresAgeVerificationError();
+			throw new NsfwContentAgeRestrictedError();
 		}
 		if (guildIsAgeRestricted && !nsfwAccess.allowed) {
 			return emptyMessageSearchResponse(searchParams);
@@ -121,7 +121,7 @@ export class GuildSearchService {
 		const categoryLookup = await this.buildParentCategoryLookup(channelMap);
 		const nsfwFilteredIds = channelIds.filter((id) => {
 			const channel = channelMap.get(id.toString())!;
-			return !(channelRequiresAgeVerification(channel, categoryLookup, guildNsfw) && !canIncludeNsfw);
+			return !(channelIsAgeRestricted(channel, categoryLookup, guildNsfw) && !canIncludeNsfw);
 		});
 		const permissionResults = await mapWithConcurrency(nsfwFilteredIds, PERMISSION_CHECK_CONCURRENCY, (channelId) =>
 			this.gatewayService.checkPermission({
@@ -229,7 +229,7 @@ export class GuildSearchService {
 			if (guildNsfw) {
 				return canIncludeNsfw;
 			}
-			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
+			if (channelIsAgeRestricted(channel, parentCategories, false)) {
 				return canIncludeNsfw;
 			}
 			return true;

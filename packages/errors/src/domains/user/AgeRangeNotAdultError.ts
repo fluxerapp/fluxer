@@ -3,10 +3,8 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 
-export class NsfwContentRequiresAgeVerificationError extends ForbiddenError {
+export class AgeRangeNotAdultError extends ForbiddenError {
 	constructor() {
-		super({
-			code: APIErrorCodes.NSFW_CONTENT_AGE_RESTRICTED,
-		});
+		super({code: APIErrorCodes.AGE_RANGE_NOT_ADULT});
 	}
 }

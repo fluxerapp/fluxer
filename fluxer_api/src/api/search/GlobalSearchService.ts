@@ -18,7 +18,7 @@ import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/Cha
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
+import {channelIsAgeRestricted, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -129,7 +129,7 @@ export class GlobalSearchService {
 			if (channel.guildId != null && nsfwGuildIds.has(channel.guildId.toString())) {
 				return canIncludeNsfw;
 			}
-			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
+			if (channelIsAgeRestricted(channel, parentCategories, false)) {
 				return canIncludeNsfw;
 			}
 			return true;

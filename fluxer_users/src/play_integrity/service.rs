@@ -142,7 +142,7 @@ impl PlayIntegrityService {
             tracing::info!(user_id, ?rejection, "play integrity verdict rejected");
             return Ok(Err(rejection));
         }
-        tracing::info!(user_id, "play integrity age verified");
+        tracing::info!(user_id, "play integrity age range accepted");
         Ok(Ok(UserResponse::AppAttestAgeAccepted {
             age_floor,
             attested_at: iso_millis(now_ms),

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import {LocalDate} from '@app/api/database/LocalDate';
 import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
-import {type AttestedAgeFloor, AttestedAgeFloors} from '@fluxer/constants/src/AgeAssuranceConstants';
+import {type AttestedAgeFloor, AttestedAgeFloors} from '@fluxer/constants/src/AgeRangeConstants';
 import {isPlausibleDateOfBirth} from '@fluxer/constants/src/RegionalMinimumAge';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 
@@ -64,25 +66,22 @@ interface NsfwEligibilityUser {
 		  }
 		| string
 		| null;
-	attestedAgeFloor: AttestedAgeFloor | null;
-}
-
-export function hasAttestedAge(attestedAgeFloor: AttestedAgeFloor | null | undefined): boolean {
-	return attestedAgeFloor === AttestedAgeFloors.ADULT || attestedAgeFloor === AttestedAgeFloors.MINOR;
 }
 
 export function canUserAccessNsfwContent(user: NsfwEligibilityUser): boolean {
 	if (user.isBot) {
 		return true;
 	}
-	if (user.attestedAgeFloor === AttestedAgeFloors.ADULT) {
-		return true;
-	}
-	if (user.attestedAgeFloor != null) {
-		return false;
-	}
 	if (!instanceCollectsDateOfBirth()) {
 		return true;
 	}
 	return isUserAdult(user.dateOfBirth);
+}
+
+function hasAdultAgeRange(user: {attestedAgeFloor: AttestedAgeFloor | null}): boolean {
+	return !Config.instance.selfHosted && user.attestedAgeFloor === AttestedAgeFloors.ADULT;
+}
+
+export function isMatureContentUnlocked(user: {flags: bigint; attestedAgeFloor: AttestedAgeFloor | null}): boolean {
+	return (user.flags & UserFlags.MATURE_CONTENT_UNLOCKED) !== 0n || hasAdultAgeRange(user);
 }

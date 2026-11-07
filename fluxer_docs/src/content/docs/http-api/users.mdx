@@ -123,7 +123,8 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 | has_unread_gift_inventory<sup>1</sup> | boolean | Whether the gift inventory has unread items |
 | unread_gift_inventory_count<sup>1</sup> | integer | The number of unread gift inventory items |
 | pending_bulk_message_deletion<sup>1</sup> | ?[pending bulk message deletion](#pending-bulk-message-deletion-object) object | The scheduled deletion of all the account's messages, or null |
-| age_verified_adult?<sup>1</sup> | boolean | Whether adult age verification is done, omitted when false |
+| mature_content_unlocked?<sup>1</sup> <sup>5</sup> | boolean | Whether the account can see mature content in places where a date of birth typed in is not enough |
+| has_age_range?<sup>1</sup> <sup>5</sup> | boolean | Whether Fluxer keeps an age range for the account. The range itself is not included |
 | terms_agreed_at<sup>1</sup> | ?ISO8601 timestamp | When the account last accepted the terms, or null |
 | privacy_agreed_at<sup>1</sup> | ?ISO8601 timestamp | When the account was last shown the current privacy policy, or null |
 | claimed?<sup>1</sup> | boolean | Whether the account can sign in on another device with an email, a password or a passkey |
@@ -140,6 +141,8 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 <sup>3</sup> When the [accounts configuration](/admin-api/instance/#accounts-configuration-object) enforces it, most routes return 403 `DATE_OF_BIRTH_REQUIRED` until the date is set
 
 <sup>4</sup> After premium ends, a `random` tag-style instance gives the account a new discriminator at its next Gateway session
+
+<sup>5</sup> The iOS and Android apps can send an age range from the Apple or Google account, and Fluxer keeps it only when it is 18 or over. `mature_content_unlocked` is true when Fluxer keeps such a range, when staff set it, or when the account had mature content unlocked before. A self-hosted instance never keeps an age range
 
 ## Pending bulk message deletion object
 

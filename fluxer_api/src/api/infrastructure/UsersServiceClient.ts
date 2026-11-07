@@ -13,7 +13,7 @@ import {
 	type AppAttestChallengePurpose,
 	type AttestedAgeFloor,
 	isAttestedAgeFloor,
-} from '@fluxer/constants/src/AgeAssuranceConstants';
+} from '@fluxer/constants/src/AgeRangeConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
@@ -369,7 +369,7 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 		const code = reject(reply);
 		if (code !== null) return {ok: false, code};
 		const accepted = accept(reply);
-		if (accepted === null) throw new Error('[users-service] invalid age assurance response payload');
+		if (accepted === null) throw new Error('[users-service] invalid age range response payload');
 		return {ok: true, value: accepted};
 	}
 

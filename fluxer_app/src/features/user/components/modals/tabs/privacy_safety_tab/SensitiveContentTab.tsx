@@ -6,6 +6,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
+import {AgeRangeSection} from '@app/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.module.css';
 import {shouldShowDirectMessageSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -331,6 +332,9 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 					onChange={setAllowMatureContentOnIos}
 					data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.switch.allow-mature-content-on-ios"
 				/>
+			)}
+			{currentUser?.hasAgeRange && (
+				<AgeRangeSection data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.age-range-section" />
 			)}
 		</div>
 	);

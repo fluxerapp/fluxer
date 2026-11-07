@@ -56,6 +56,8 @@ const FIELDS_CLEARED_ON_DELETION = [
 	'accent_color',
 	'timezone',
 	'date_of_birth',
+	'attested_age_floor',
+	'age_attested_at',
 	'locale',
 	'premium_flags',
 	'hidden_profile_badges',

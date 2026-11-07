@@ -520,7 +520,7 @@ export class UserAccountRequestService {
 		response.premium_grace_ends_at = null;
 		response.premium_discriminator = false;
 		response.last_voice_activity_sharing_change_at = null;
-		response.age_verified_adult = undefined;
+		response.mature_content_unlocked = undefined;
 		response.terms_agreed_at = null;
 		response.privacy_agreed_at = null;
 		response.claimed = undefined;
@@ -528,6 +528,7 @@ export class UserAccountRequestService {
 		response.verification_need = undefined;
 		response.has_password = undefined;
 		response.date_of_birth_required = undefined;
+		response.has_age_range = undefined;
 		response.profile_restricted = undefined;
 		response.mfa_enabled = false;
 		response.authenticator_types = undefined;

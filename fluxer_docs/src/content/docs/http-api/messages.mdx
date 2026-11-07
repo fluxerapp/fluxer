@@ -12,7 +12,7 @@ A message is one post in a [channel](/http-api/channels/), with its text, attach
 
 A private channel returns 404 `UNKNOWN_CHANNEL` when you're not a recipient. A guild channel needs [VIEW_CHANNEL](/http-api/permissions/), and in a thread you also need access to the parent and to a private thread, as [Thread permissions](/http-api/threads/#thread-permissions) describes.
 
-In a guild channel without [READ_MESSAGE_HISTORY](/http-api/permissions/), you only see messages created after the guild's message history cutoff, and nothing when the guild has no cutoff. In an age-restricted channel, the routes that read, send, edit or delete messages return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account passes the age check.
+In a guild channel without [READ_MESSAGE_HISTORY](/http-api/permissions/), you only see messages created after the guild's message history cutoff, and nothing when the guild has no cutoff. In an age-restricted channel, the routes that read, send, edit or delete messages return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account can see mature content.
 
 Routes that need `MANAGE_MESSAGES` also follow the guild's [MFA level](/http-api/guilds/#mfa-levels) for [elevated permissions](/http-api/permissions/#elevated-permissions).
 

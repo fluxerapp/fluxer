@@ -22,6 +22,7 @@ import {OperatorPassCertificateService} from '@app/api/operator_pass/OperatorPas
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {buildStorePurchaseRow} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {
+	AppAttestKeys,
 	GuildMembersByUserId,
 	Messages,
 	MessagesByAuthorV2,
@@ -34,6 +35,7 @@ import {HarvestedMessagesSchema, harvestUserArchive} from '@app/api/test/UserArc
 import {clearWorkerDependencies, setWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {initializeWorkerDependencies, type WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
+import {AttestedAgeFloors} from '@fluxer/constants/src/AgeRangeConstants';
 import {makeBucket} from '@fluxer/snowflake/src/SnowflakeBuckets';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import {z} from 'zod';
@@ -323,6 +325,38 @@ describe('harvested user data', () => {
 			[null, false],
 			[null, false],
 			['Grace Hopper', true],
+		]);
+	});
+
+	it('exports the stored age range and the App Attest keys without the public key', async () => {
+		const user = await deps.userRepository.findUniqueAssert(AUTHOR);
+		await deps.userRepository.patchUpsert(
+			AUTHOR,
+			{attested_age_floor: AttestedAgeFloors.ADULT, age_attested_at: new Date('2026-11-01T08:00:00.000Z')},
+			user.toRow(),
+		);
+		await upsertOne(
+			AppAttestKeys.upsertAll({
+				user_id: AUTHOR,
+				key_id: 'key-1',
+				public_key: Buffer.from('public-key'),
+				environment: 'production',
+				app_id: 'TEAM.app.fluxer',
+				counter: 3n,
+				created_at: new Date('2026-10-30T08:00:00.000Z'),
+				last_used_at: new Date('2026-11-01T08:00:00.000Z'),
+			}),
+		);
+		const data = await exportUserData({});
+		expect(data.user).toMatchObject({age_range: 'adult', age_range_received_at: '2026-11-01T08:00:00.000Z'});
+		expect(data.app_attest_keys).toEqual([
+			{
+				key_id: 'key-1',
+				environment: 'production',
+				counter: 3,
+				created_at: '2026-10-30T08:00:00.000Z',
+				last_used_at: '2026-11-01T08:00:00.000Z',
+			},
 		]);
 	});
 

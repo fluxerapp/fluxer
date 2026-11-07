@@ -100,7 +100,7 @@ pub fn settings_tab(
                             "Content Rating"
                         }
                         p class="text-sm text-neutral-500" {
-                            "Adult content drives the age-verification gate. Content warnings are an advisory shown before entering, with optional custom copy."
+                            "Adult content is hidden from accounts that cannot see mature content. Content warnings are an advisory shown before entering, with optional custom copy."
                         }
                         input type="hidden" name="nsfw_submitted" value="1";
                         input type="hidden" name="content_warning_submitted" value="1";
