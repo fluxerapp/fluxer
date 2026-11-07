@@ -45,8 +45,10 @@ func authenticate(ctx context.Context, sudo string) error {
 	return nil
 }
 
+var asRoot = isRoot
+
 func privileged(name string, args ...string) (string, []string, error) {
-	if isRoot() {
+	if asRoot() {
 		return name, args, nil
 	}
 	sudo, err := exec.LookPath("sudo")

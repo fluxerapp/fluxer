@@ -510,7 +510,7 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 			clearUpgrade(inst)
 			return ui.Failed(fmt.Sprintf("rexctl didn't update to %s.", p.To), "Run rexctl upgrade again.")
 		}
-		if err := refreshBootUnit(ctx, inst, e, nil); err != nil {
+		if err := refreshBootUnit(ctx, app, inst, e, nil); err != nil {
 			app.UI.Detail("%v", err)
 		}
 		return guardedUpgradeStack(ctx, app, inst, e, f)
@@ -1582,7 +1582,7 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 		return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl doctor to see what's wrong.")
 	}
 	if loaded, err := deploy.Load(ctx, inst, e); err == nil {
-		if err := refreshBootUnit(ctx, inst, e, loaded); err != nil {
+		if err := refreshBootUnit(ctx, app, inst, e, loaded); err != nil {
 			app.UI.Detail("%v", err)
 		}
 	}

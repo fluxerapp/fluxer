@@ -27,7 +27,7 @@ func RunSteps(ctx context.Context, steps []Step) error {
 }
 
 func rootCmd(s string) string {
-	if isRoot() {
+	if asRoot() {
 		return s
 	}
 	return "sudo " + s
