@@ -7,8 +7,7 @@
     build_voice_token_rpc_request/6,
     build_voice_token_rpc_request/8,
     build_force_disconnect_rpc_request/4,
-    build_update_participant_rpc_request/6,
-    build_update_participant_permissions_rpc_request/5,
+    enqueue_update_participant/6,
     add_geolocation_to_request/3,
     add_rtc_region_to_request/2,
     apply_voice_permissions_to_flags/2,
@@ -146,11 +145,12 @@ build_force_disconnect_rpc_request(GuildId, ChannelId, UserId, ConnectionId) ->
     end.
 
 -spec build_update_participant_rpc_request(
-    integer() | null, integer(), integer(), boolean(), boolean(), voice_permissions()
+    integer(), integer(), integer(), boolean(), boolean(), voice_permissions()
 ) -> map().
 build_update_participant_rpc_request(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions) ->
-    BaseReq = #{
+    #{
         <<"type">> => <<"voice_update_participant">>,
+        <<"guild_id">> => integer_to_binary(GuildId),
         <<"channel_id">> => integer_to_binary(ChannelId),
         <<"user_id">> => integer_to_binary(UserId),
         <<"mute">> => Mute,
@@ -158,36 +158,24 @@ build_update_participant_rpc_request(GuildId, ChannelId, UserId, Mute, Deaf, Voi
         <<"can_speak">> => maps:get(can_speak, VoicePermissions, true),
         <<"can_stream">> => maps:get(can_stream, VoicePermissions, true),
         <<"can_video">> => maps:get(can_video, VoicePermissions, true)
-    },
-    case GuildId of
-        null ->
-            BaseReq;
-        _ ->
-            BaseReq#{<<"guild_id">> => integer_to_binary(GuildId)}
-    end.
+    }.
 
--spec build_update_participant_permissions_rpc_request(
-    integer() | null, integer(), integer(), binary(), voice_permissions()
-) -> map().
-build_update_participant_permissions_rpc_request(
-    GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-) ->
-    BaseReq = #{
-        <<"type">> => <<"voice_update_participant_permissions">>,
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"connection_id">> => ConnectionId,
-        <<"can_speak">> => maps:get(can_speak, VoicePermissions, true),
-        <<"can_stream">> => maps:get(can_stream, VoicePermissions, true),
-        <<"can_video">> => maps:get(can_video, VoicePermissions, true),
-        <<"deaf">> => maps:get(deaf, VoicePermissions, false)
-    },
-    case GuildId of
-        null ->
-            BaseReq;
-        _ ->
-            BaseReq#{<<"guild_id">> => integer_to_binary(GuildId)}
-    end.
+-spec enqueue_update_participant(
+    integer(), integer(), integer(), boolean(), boolean(), voice_permissions()
+) -> ok.
+enqueue_update_participant(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions) ->
+    Req = build_update_participant_rpc_request(
+        GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions
+    ),
+    Key = iolist_to_binary([
+        <<"participant:">>,
+        integer_to_binary(GuildId),
+        <<":">>,
+        integer_to_binary(ChannelId),
+        <<":">>,
+        integer_to_binary(UserId)
+    ]),
+    voice_permission_sync_queue:enqueue(Key, Req).
 
 -spec compute_voice_permissions(integer(), integer(), guild_state()) -> voice_permissions().
 compute_voice_permissions(UserId, ChannelId, State) ->

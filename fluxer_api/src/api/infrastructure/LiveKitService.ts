@@ -15,13 +15,12 @@ import {
 	type MuteMicrophoneTrackParams,
 	type SetParticipantPermissionParams,
 	type UpdateParticipantParams,
-	type UpdateParticipantPermissionsParams,
 } from '@app/api/infrastructure/ILiveKitService';
 import {Logger} from '@app/api/Logger';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {resolveRoomServiceEndpoint, toHttpUrl} from '@app/api/voice/VoiceServerEndpoints';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
-import {AccessToken, RoomServiceClient, type TrackInfo, TrackSource} from 'livekit-server-sdk';
+import {AccessToken, RoomServiceClient, TrackSource} from 'livekit-server-sdk';
 
 interface ServerClientConfig {
 	endpoint: string;
@@ -123,7 +122,7 @@ export class LiveKitService extends ILiveKitService {
 		} else {
 			metadata['dm_call'] = 'true';
 		}
-		const canPublishSources = computeLiveKitPublishSources({canSpeak, canStream, canVideo});
+		const canPublishSources = computeLiveKitPublishSources({canSpeak: canSpeak && !mute, canStream, canVideo});
 		const accessToken = new AccessToken(server.apiKey, server.apiSecret, {
 			identity: participantIdentity,
 			metadata: JSON.stringify(metadata),
@@ -143,75 +142,63 @@ export class LiveKitService extends ILiveKitService {
 
 	async updateParticipant(params: UpdateParticipantParams): Promise<void> {
 		const {userId, guildId, channelId, connectionId, regionId, serverId, mute, deaf} = params;
+		if (mute === undefined && deaf === undefined) {
+			return;
+		}
 		const roomName = this.getRoomName(guildId, channelId);
 		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
 		const server = this.resolveServerClient(regionId, serverId);
-		try {
-			const participants = await server.roomServiceClient.listParticipants(roomName);
-			const participant = participants.find((p) => p.identity === participantIdentity);
-			if (!participant) {
-				return;
+		const participants = await server.roomServiceClient.listParticipants(roomName);
+		const participant = participants.find((p) => p.identity === participantIdentity);
+		if (!participant) {
+			return;
+		}
+		const wasServerMuted = participant.attributes[SERVER_MUTE_ATTRIBUTE] === 'true';
+		const serverMuted = mute ?? wasServerMuted;
+		const deafened = deaf ?? participant.permission?.canSubscribe === false;
+		const currentSources = participant.permission?.canPublishSources ?? [];
+		const canPublishSources = computeLiveKitPublishSources({
+			canSpeak: (params.canSpeak ?? currentSources.includes(TrackSource.MICROPHONE)) && !serverMuted,
+			canStream: params.canStream ?? currentSources.includes(TrackSource.SCREEN_SHARE),
+			canVideo: params.canVideo ?? currentSources.includes(TrackSource.CAMERA),
+		});
+		const permission = {
+			canPublish: !deafened && canPublishSources.length > 0,
+			canSubscribe: !deafened,
+			canPublishSources,
+		};
+		if (serverMuted !== wasServerMuted) {
+			await this.setServerMuteAttribute(server, roomName, participantIdentity, serverMuted);
+		}
+		const updated = await server.roomServiceClient.updateParticipant(
+			roomName,
+			participantIdentity,
+			undefined,
+			permission,
+		);
+		for (const track of updated.tracks ?? participant.tracks) {
+			if (!track.sid) {
+				continue;
 			}
-			if (mute !== undefined) {
-				const tracks =
-					(await this.setServerMuteAttribute(server, roomName, participantIdentity, mute)) ?? participant.tracks;
-				for (const track of tracks) {
-					if (track.source === TrackSource.MICROPHONE && track.sid) {
-						await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, track.sid, mute);
-					}
-				}
+			if (!canPublishSources.includes(track.source)) {
+				await this.setTrackMuted(server, roomName, participantIdentity, track.sid, true);
+			} else if (track.source === TrackSource.MICROPHONE && wasServerMuted) {
+				await this.setTrackMuted(server, roomName, participantIdentity, track.sid, false);
 			}
-			if (deaf !== undefined) {
-				const canPublishSources = computeLiveKitPublishSources({
-					canSpeak: params.canSpeak ?? true,
-					canStream: params.canStream ?? true,
-					canVideo: params.canVideo ?? true,
-				});
-				await server.roomServiceClient.updateParticipant(roomName, participantIdentity, undefined, {
-					canPublish: !deaf && canPublishSources.length > 0,
-					canSubscribe: !deaf,
-					canPublishSources,
-				});
-			}
-		} catch (error) {
-			Logger.error({error}, 'Error updating LiveKit participant');
 		}
 	}
 
-	async updateParticipantPermissions(params: UpdateParticipantPermissionsParams): Promise<void> {
-		const {userId, guildId, channelId, connectionId, regionId, serverId, canSpeak, canStream, canVideo, deaf} = params;
-		const roomName = this.getRoomName(guildId, channelId);
-		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
-		const server = this.resolveServerClient(regionId, serverId);
+	private async setTrackMuted(
+		server: ServerClientConfig,
+		roomName: string,
+		participantIdentity: string,
+		trackSid: string,
+		muted: boolean,
+	): Promise<void> {
 		try {
-			const participants = await server.roomServiceClient.listParticipants(roomName);
-			const participant = participants.find((p) => p.identity === participantIdentity);
-			if (!participant) {
-				Logger.warn({participantIdentity, roomName}, 'Participant not found for permission update');
-				return;
-			}
-			const canPublishSources = computeLiveKitPublishSources({canSpeak, canStream, canVideo});
-			const participantPermission = {
-				canPublish: !deaf && canPublishSources.length > 0,
-				canPublishSources,
-				...(deaf !== undefined ? {canSubscribe: !deaf} : {}),
-			};
-			await server.roomServiceClient.updateParticipant(roomName, participantIdentity, undefined, {
-				...participantPermission,
-			});
-			const revokedSources = computeLiveKitPublishSources({
-				canSpeak: !canSpeak,
-				canStream: !canStream,
-				canVideo: !canVideo,
-			});
-			for (const track of participant.tracks) {
-				if (track.sid && revokedSources.includes(track.source)) {
-					await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, track.sid, true);
-				}
-			}
-			Logger.debug({participantIdentity, roomName, canSpeak, canStream, canVideo}, 'Updated participant permissions');
+			await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, trackSid, muted);
 		} catch (error) {
-			Logger.error({error}, 'Error updating LiveKit participant permissions');
+			Logger.debug({error, participantIdentity, roomName, trackSid, muted}, 'LiveKit declined track mute change');
 		}
 	}
 
@@ -220,15 +207,13 @@ export class LiveKitService extends ILiveKitService {
 		roomName: string,
 		participantIdentity: string,
 		mute: boolean,
-	): Promise<Array<TrackInfo> | null> {
+	): Promise<void> {
 		try {
-			const updated = await server.roomServiceClient.updateParticipant(roomName, participantIdentity, {
+			await server.roomServiceClient.updateParticipant(roomName, participantIdentity, {
 				attributes: {[SERVER_MUTE_ATTRIBUTE]: mute ? 'true' : ''},
 			});
-			return updated.tracks;
 		} catch (error) {
 			Logger.warn({error, participantIdentity, roomName}, 'Failed to record server mute on LiveKit participant');
-			return null;
 		}
 	}
 

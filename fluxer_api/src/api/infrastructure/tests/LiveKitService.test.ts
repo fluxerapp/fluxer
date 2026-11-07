@@ -106,16 +106,25 @@ describe('LiveKitService updateParticipant mute', () => {
 		serverId: 'region-1-server-1',
 	};
 
-	function roomServiceClient(
-		listedTracks: Array<{sid: string; source: TrackSource}>,
-		updatedTracks: typeof listedTracks,
-	) {
+	const allSources = [
+		TrackSource.MICROPHONE,
+		TrackSource.CAMERA,
+		TrackSource.SCREEN_SHARE,
+		TrackSource.SCREEN_SHARE_AUDIO,
+	];
+
+	function roomServiceClient(participant: {
+		attributes: Record<string, string>;
+		permission?: {canSubscribe: boolean; canPublishSources: Array<TrackSource>};
+		tracks: Array<{sid: string; source: TrackSource}>;
+		updatedTracks?: Array<{sid: string; source: TrackSource}>;
+	}) {
 		const calls: Array<Array<unknown>> = [];
 		const client = {
-			listParticipants: async () => [{identity: 'user_3_conn-1', tracks: listedTracks}],
+			listParticipants: async () => [{identity: 'user_3_conn-1', ...participant}],
 			updateParticipant: async (...args: Array<unknown>) => {
 				calls.push(['updateParticipant', ...args]);
-				return {identity: 'user_3_conn-1', tracks: updatedTracks};
+				return {identity: 'user_3_conn-1', tracks: participant.updatedTracks ?? participant.tracks};
 			},
 			mutePublishedTrack: async (...args: Array<unknown>) => {
 				calls.push(['mutePublishedTrack', ...args]);
@@ -124,33 +133,194 @@ describe('LiveKitService updateParticipant mute', () => {
 		return {client, calls};
 	}
 
-	it('records the mute on the participant and mutes every current microphone track', async () => {
-		const {client, calls} = roomServiceClient(
-			[{sid: 'TR_old', source: TrackSource.MICROPHONE}],
-			[
+	it('records the mute, revokes the microphone, then mutes every remaining microphone track', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [{sid: 'TR_old', source: TrackSource.MICROPHONE}],
+			updatedTracks: [
 				{sid: 'TR_old', source: TrackSource.MICROPHONE},
 				{sid: 'TR_new', source: TrackSource.MICROPHONE},
 			],
-		);
+		});
 		const service = createServiceWithRoomServiceClient(client);
 
-		await service.updateParticipant({...params, mute: true});
+		await service.updateParticipant({
+			...params,
+			mute: true,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
 
 		expect(calls).toEqual([
 			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: 'true'}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{
+					canPublish: true,
+					canSubscribe: true,
+					canPublishSources: [TrackSource.CAMERA, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
+				},
+			],
 			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_old', true],
 			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_new', true],
 		]);
 	});
 
-	it('clears the recorded mute on unmute', async () => {
-		const {client, calls} = roomServiceClient([], []);
+	it('revokes the microphone even when a track mute fails', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [
+				{sid: 'TR_cam', source: TrackSource.CAMERA},
+				{sid: 'TR_mic', source: TrackSource.MICROPHONE},
+			],
+		});
+		const service = createServiceWithRoomServiceClient({
+			...client,
+			mutePublishedTrack: async (...args: Array<unknown>) => {
+				calls.push(['mutePublishedTrack', ...args]);
+				throw new Error('not_found');
+			},
+		});
+
+		await service.updateParticipant({
+			...params,
+			mute: true,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: false,
+		});
+
+		expect(calls).toEqual([
+			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: 'true'}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{
+					canPublish: true,
+					canSubscribe: true,
+					canPublishSources: [TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
+				},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_cam', true],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_mic', true],
+		]);
+	});
+
+	it('clears the recorded mute before restoring microphone publishing', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {server_mute: 'true'},
+			tracks: [{sid: 'TR_mic', source: TrackSource.MICROPHONE}],
+		});
 		const service = createServiceWithRoomServiceClient(client);
 
-		await service.updateParticipant({...params, mute: false});
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
 
 		expect(calls).toEqual([
 			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: ''}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: allSources},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_mic', false],
+		]);
+	});
+
+	it('leaves the microphone of a member who was never server muted alone', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [{sid: 'TR_mic', source: TrackSource.MICROPHONE}],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: allSources},
+			],
+		]);
+	});
+
+	it('keeps the sources a muted member already has when the caller sends no permissions', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {server_mute: 'true'},
+			permission: {canSubscribe: true, canPublishSources: []},
+			tracks: [],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({...params, mute: true, deaf: false});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: false, canSubscribe: true, canPublishSources: []},
+			],
+		]);
+	});
+
+	it('mutes camera and screen tracks a permission sync no longer allows', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [
+				{sid: 'TR_mic', source: TrackSource.MICROPHONE},
+				{sid: 'TR_cam', source: TrackSource.CAMERA},
+				{sid: 'TR_screen', source: TrackSource.SCREEN_SHARE},
+			],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: false,
+			canVideo: false,
+		});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: [TrackSource.MICROPHONE]},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_cam', true],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_screen', true],
 		]);
 	});
 });
@@ -166,12 +336,24 @@ describe('LiveKitService createToken mute', () => {
 		serverId: 'region-1-server-1',
 	};
 
-	async function tokenAttributes(mute: boolean): Promise<Record<string, string> | undefined> {
+	async function tokenPayload(mute: boolean) {
 		const service = createServiceWithRoomServiceClient({});
 		const {token} = await service.createToken({...params, mute});
-		const payload = JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString());
-		return payload.attributes;
+		return JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString());
 	}
+
+	async function tokenAttributes(mute: boolean): Promise<Record<string, string> | undefined> {
+		return (await tokenPayload(mute)).attributes;
+	}
+
+	it('withholds microphone publishing from a token issued to a muted member', async () => {
+		expect((await tokenPayload(true)).video.canPublishSources).toEqual([
+			'camera',
+			'screen_share',
+			'screen_share_audio',
+		]);
+		expect((await tokenPayload(false)).video.canPublishSources).toContain('microphone');
+	});
 
 	it('records the server mute on a token issued to a muted member', async () => {
 		expect(await tokenAttributes(true)).toEqual({server_mute: 'true'});

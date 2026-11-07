@@ -18,13 +18,18 @@
 -type guild_reply(T) :: {reply, T | {error, atom(), atom()}, guild_state()}.
 -type member() :: map().
 -type voice_state() :: map().
--type request() :: #{
-    user_id := integer(),
-    mute := boolean(),
-    deaf := boolean()
-}.
+-type request() ::
+    #{
+        user_id := integer(),
+        mute := boolean(),
+        deaf := boolean()
+    }
+    | #{livekit_resync := [{integer(), binary()}]}.
 
 -spec update_member_voice(request(), guild_state()) -> guild_reply(map()).
+update_member_voice(#{livekit_resync := Targets}, State) ->
+    ok = resync_livekit_participants(Targets, State),
+    {reply, #{success => true}, State};
 update_member_voice(Request, State) ->
     #{user_id := UserId, mute := Mute, deaf := Deaf} = Request,
     VoiceStates = voice_state_utils:voice_states(State),
@@ -85,20 +90,38 @@ apply_member_voice_update(
     broadcast_voice_state_updates(Updated, FinalState),
     {reply, #{success => true}, FinalState}.
 
--spec enforce_participant_state_in_livekit(
-    integer(), integer(), integer(), boolean(), boolean(), voice_utils:voice_permissions()
-) ->
-    ok.
-enforce_participant_state_in_livekit(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions) ->
-    Req = voice_utils:build_update_participant_rpc_request(
-        GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions
-    ),
-    case rpc_client:call(Req) of
-        {ok, _Data} ->
-            ok;
-        {error, _Reason} ->
+-spec resync_livekit_participants([{integer(), binary()}], guild_state()) -> ok.
+resync_livekit_participants(Targets, State) ->
+    GuildId = state_guild_id(State),
+    VoiceStates = voice_state_utils:voice_states(State),
+    lists:foreach(
+        fun({UserId, ConnectionId}) ->
+            maybe_resync_livekit_participant(
+                GuildId, UserId, maps:get(ConnectionId, VoiceStates, undefined), State
+            )
+        end,
+        lists:usort(Targets)
+    ).
+
+-spec maybe_resync_livekit_participant(
+    integer() | undefined, integer(), voice_state() | undefined, guild_state()
+) -> ok.
+maybe_resync_livekit_participant(GuildId, UserId, VoiceState, State) when is_map(VoiceState) ->
+    case voice_state_utils:voice_state_user_id(VoiceState) of
+        UserId ->
+            maybe_enforce_voice_state(
+                GuildId,
+                UserId,
+                type_conv:is_true(maps:get(<<"mute">>, VoiceState, false)),
+                type_conv:is_true(maps:get(<<"deaf">>, VoiceState, false)),
+                VoiceState,
+                State
+            );
+        _ ->
             ok
-    end.
+    end;
+maybe_resync_livekit_participant(_GuildId, _UserId, _VoiceState, _State) ->
+    ok.
 
 -spec guild_data(guild_state()) -> map().
 guild_data(State) ->
@@ -204,26 +227,10 @@ dispatch_livekit_enforcement(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermis
             _ = Fun(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions),
             ok;
         _ ->
-            spawn_livekit_enforcement(
+            voice_utils:enqueue_update_participant(
                 GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions
             )
     end.
-
--spec spawn_livekit_enforcement(
-    integer(),
-    integer(),
-    integer(),
-    boolean(),
-    boolean(),
-    voice_utils:voice_permissions()
-) -> ok.
-spawn_livekit_enforcement(GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions) ->
-    spawn(fun() ->
-        enforce_participant_state_in_livekit(
-            GuildId, ChannelId, UserId, Mute, Deaf, VoicePermissions
-        )
-    end),
-    ok.
 
 -spec state_guild_id(guild_state()) -> integer() | undefined.
 state_guild_id(State) ->
