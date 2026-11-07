@@ -511,6 +511,19 @@ export class GuildRepository {
 		}
 	}
 
+	private async deleteAllBansForGuild(guildId: GuildID): Promise<void> {
+		const bans = await fetchMany<GuildBanRow>(FETCH_GUILD_BANS_BY_GUILD_ID_QUERY, {guild_id: guildId});
+		if (bans.length === 0) return;
+		await executeGroupedBatches(
+			bans.map((ban) => [
+				GuildBans.deleteByPk({guild_id: guildId, user_id: ban.user_id}),
+				GuildBansByUserId.deleteByPk({user_id: ban.user_id, guild_id: guildId}),
+				...(ban.email ? [GuildBansByEmail.deleteByPk({guild_id: guildId, email: ban.email})] : []),
+			]),
+		);
+		await bumpGuildBanGeneration(guildId);
+	}
+
 	async getBanByEmail(guildId: GuildID, email: string): Promise<GuildBan | null> {
 		const row = await fetchOne<GuildBanByEmailRow>(FETCH_GUILD_BAN_BY_EMAIL_QUERY, {guild_id: guildId, email});
 		if (!row) return null;
@@ -799,6 +812,7 @@ export class GuildRepository {
 			const emojiBatch = emojis.slice(i, i + BATCH_SIZE);
 			await Promise.all(emojiBatch.map((emoji) => this.deleteEmoji(guildId, emoji.id)));
 		}
+		await this.deleteAllBansForGuild(guildId);
 		await this.deleteGuildRow(guildId, actualOwnerId);
 	}
 
