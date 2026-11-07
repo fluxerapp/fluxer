@@ -18,7 +18,9 @@ export const VoiceLiveKitRoot = observer(function VoiceLiveKitRoot({children}: V
 	}
 	return (
 		<VoiceRoomContext.Provider value={room}>
-			<runtime.VoiceRoomProviders room={room} data-flx="voice.voice-live-kit-root.runtime-voice-room-providers">{children}</runtime.VoiceRoomProviders>
+			<runtime.VoiceRoomProviders room={room} data-flx="voice.voice-live-kit-root.runtime-voice-room-providers">
+				{children}
+			</runtime.VoiceRoomProviders>
 		</VoiceRoomContext.Provider>
 	);
 });
