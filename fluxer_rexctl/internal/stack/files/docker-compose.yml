@@ -416,7 +416,7 @@ services:
 
   seaweedfs:
     <<: *fluxer-service
-    image: ${FLUXER_SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.47}
+    image: ${FLUXER_SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.52}
     deploy:
       resources:
         limits:
@@ -434,7 +434,7 @@ services:
       start_period: ${FLUXER_SEAWEEDFS_HEALTHCHECK_START_PERIOD:-60s}
 
   seaweedfs-init:
-    image: ${FLUXER_SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.47}
+    image: ${FLUXER_SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.52}
     deploy:
       resources:
         limits:

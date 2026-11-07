@@ -316,7 +316,7 @@ seaweedfs:
   enabled: true
   image:
     repository: chrislusf/seaweedfs
-    tag: "4.47"
+    tag: "4.52"
     digest: ""
     pullPolicy: IfNotPresent
   # Volumes grown per bucket. 1 keeps the store usable on small disks.
