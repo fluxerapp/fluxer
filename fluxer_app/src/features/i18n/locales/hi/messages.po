@@ -2235,6 +2235,11 @@ msgstr "{requestedLabel} शुरू नहीं हो सका। इसक
 msgid "{resolution} {fps} FPS"
 msgstr "{resolution} {fps} FPS"
 
+#. Footer summary under the preset name in the web stream setup modal. {resolution} is a technical token like 1080p. {fps} is a whole number of frames per second, and FPS is a technical token.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "{resolution} at {fps} FPS"
+msgstr "{fps} FPS पर {resolution}"
+
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
 #: src/features/channel/state/ChannelDisplayName.ts
 msgid "{resolvedName}'s group"
@@ -17312,9 +17317,11 @@ msgid "Frame"
 msgstr "फ़्रेम"
 
 #. Section header in the stream settings menu for frame rate options.
+#. Section label in the web stream setup modal for the stream frame rate options, in frames per second.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Frame rate"
 msgstr "फ़्रेम रेट"
@@ -27125,6 +27132,11 @@ msgstr "लोग अपनी कम्युनिटी बना सकत�
 msgid "People can only talk in communities."
 msgstr "लोग सिर्फ़ कम्युनिटी में बात कर सकते हैं।"
 
+#. Description under the "Share a preview image" switch in the web stream setup modal.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "People can see a still image of what you share before they start watching."
+msgstr "देखना शुरू करने से पहले लोग आपकी शेयर की जा रही चीज़ की एक स्थिर तस्वीर देख सकते हैं।"
+
 #. Description of allowing direct messages in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "People can send friend requests and direct messages."
@@ -27921,6 +27933,11 @@ msgstr "तैयार हो रहा है"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Presence"
 msgstr "उपस्थिति"
+
+#. Section label in the web stream setup modal. Picks the Gaming preset (motion), the Screen share preset (sharp text) or custom numbers.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Preset"
+msgstr "प्रीसेट"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+T.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -30498,8 +30515,10 @@ msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayla
 msgstr "आकार बदलना, विंडो बड़ी करना और विंडो स्नैपिंग कंपोजिटर पर निर्भर करते हैं। क्लाइंट-साइड डेकोरेशन के बिना Wayland हैंडल नहीं देता। अगर विंडो अटकी हुई लगे, तो --ozone-platform=x11 के साथ लॉन्च करें।"
 
 #. Section header in the stream settings menu for resolution options.
+#. Section label in the web stream setup modal for the stream resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Resolution"
 msgstr "रिज़ॉल्यूशन"
@@ -32935,6 +32954,11 @@ msgstr "कई लोग टाइप कर रहे हैं..."
 msgid "Share"
 msgstr "शेयर करें"
 
+#. Switch label in the web stream setup modal. When on, Fluxer uploads a still image of the stream so people can see it before watching.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Share a preview image"
+msgstr "प्रीव्यू तस्वीर शेयर करें"
+
 #. Button or menu action label in the buttons tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Share action."
@@ -32944,6 +32968,11 @@ msgstr "शेयर करें।"
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Share and back up"
 msgstr "शेयर करें और बैकअप लें"
+
+#. Switch label in the web stream setup modal.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Share audio"
+msgstr "ऑडियो शेयर करें"
 
 #. Plutonium page perk card body about upload size. freeSize is a formatted size such as 25 MB.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -32989,7 +33018,9 @@ msgstr "बताएं कि हमारी टीम को इसका आ
 msgid "Share with a friend"
 msgstr "किसी दोस्त के साथ शेयर करें"
 
+#. Title of the modal shown on web before the browser screen picker opens. The user picks stream quality here first.
 #. Voice control button or tooltip label for starting screen sharing.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Share your screen"
 msgstr "अपनी स्क्रीन शेयर करें"
@@ -33039,8 +33070,8 @@ msgstr "720p पर शार्प टेक्स्ट, 30 FPS तक"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 4K, up to 15 FPS"
-msgstr "15 FPS पर 4K तक शार्प टेक्स्ट"
+msgid "Sharp text at up to 1080p, 30 FPS"
+msgstr "1080p तक शार्प टेक्स्ट, 30 FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34958,6 +34989,11 @@ msgstr "रिकॉर्डिंग शुरू करें"
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "परिणाम सीमित करने के लिए खोज <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> से शुरू करें।"
+
+#. Primary button in the web stream setup modal. Opens the browser's screen picker and starts sharing.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Start sharing"
+msgstr "शेयर करना शुरू करें"
 
 #. Native macOS Edit > Speech submenu item that starts reading the selected text aloud. Imperative verb.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -44330,6 +44366,11 @@ msgstr "आपके ब्राउज़र ने पासकी को ब�
 msgid "Your browser blocked the passkey because this page is not on {rpId}, the passkey domain of this instance. Ask the instance owner to check the passkey domain setting."
 msgstr "आपका ब्राउज़र पासकी को ब्लॉक कर रहा है क्योंकि यह पेज {rpId} पर नहीं है, जो इस इंस्टेंस का पासकी डोमेन है। इंस्टेंस मालिक से पासकी डोमेन सेटिंग की जाँच करने के लिए कहें।"
 
+#. Description under the "Share audio" switch in the web stream setup modal. The browser picker owns the final audio choice.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Your browser lets you choose whether to include audio when you pick what to share."
+msgstr "क्या शेयर करना है, यह चुनते समय आपका ब्राउज़र आपको ऑडियो शामिल करने या न करने का विकल्प देता है।"
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -44741,6 +44782,11 @@ msgstr "आपका सहेजा गया {savedResolution} {savedFrameRate
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "आपका स्क्रीन शेयर किसी कम्पैटिबल वीडियो कोडेक के साथ पब्लिश नहीं हो सका, इसलिए इसे रोक दिया गया। फिर से शेयर करने की कोशिश करें।"
+
+#. Footer summary under the preset name in the web stream setup modal when the Source resolution is picked. {fps} is a whole number of frames per second, and FPS is a technical token.
+#: src/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.tsx
+msgid "Your screen's resolution at {fps} FPS"
+msgstr "{fps} FPS पर आपकी स्क्रीन का रेज़ोल्यूशन"
 
 #. Alert on the setup token screen when the token was refused while creating the account.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
