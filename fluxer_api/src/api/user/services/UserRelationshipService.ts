@@ -255,6 +255,10 @@ export class UserRelationshipService {
 			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.INCOMING_REQUEST);
 		}
 		await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.OUTGOING_REQUEST);
+		if (await this.userRepository.getRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST)) {
+			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST);
+			await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.INCOMING_REQUEST);
+		}
 		const [userRelationship, targetRelationship] = await this.upsertMutualFriendship(userId, targetId);
 		await this.dispatchRelationshipUpdate({
 			userId,
