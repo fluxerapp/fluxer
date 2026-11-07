@@ -2,7 +2,7 @@
 
 import {
 	BASE64_IMAGE_MAX_SIZE,
-	MAX_BIO_LENGTH,
+	MAX_BIO_LENGTH_CEILING,
 	MAX_SCREEN_SHARE_BITRATE_CEILING,
 	MIN_SCREEN_SHARE_BITRATE_CEILING,
 } from '@fluxer/constants/src/LimitConstants';
@@ -453,7 +453,7 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 		isToggle: false,
 		unit: 'count',
 		min: 0,
-		max: MAX_BIO_LENGTH,
+		max: MAX_BIO_LENGTH_CEILING,
 	},
 	max_bookmarks: {
 		key: 'max_bookmarks',

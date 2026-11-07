@@ -32151,7 +32151,10 @@
 						"description": "Base64-encoded profile banner image",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {"description": "User biography text (max 320 characters)", "type": ["string", "null"]},
+					"bio": {
+						"description": "User biography text, up to the instance max_bio_length limit (320 by default)",
+						"type": ["string", "null"]
+					},
 					"pronouns": {"description": "User pronouns (max 40 characters)", "type": ["string", "null"]},
 					"accent_color": {
 						"description": "Profile accent color as integer",
@@ -35448,7 +35451,10 @@
 						"description": "Base64-encoded image data for the member guild banner",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {"description": "The member guild profile bio (1-320 characters)", "type": ["string", "null"]},
+					"bio": {
+						"description": "The member guild profile bio, up to the instance max_bio_length limit (320 by default)",
+						"type": ["string", "null"]
+					},
 					"pronouns": {
 						"description": "The member guild profile pronouns (1-40 characters)",
 						"type": ["string", "null"]
@@ -35564,7 +35570,10 @@
 						"description": "Base64-encoded image data for the member guild banner",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {"description": "The member guild profile bio (1-320 characters)", "type": ["string", "null"]},
+					"bio": {
+						"description": "The member guild profile bio, up to the instance max_bio_length limit (320 by default)",
+						"type": ["string", "null"]
+					},
 					"pronouns": {
 						"description": "The member guild profile pronouns (1-40 characters)",
 						"type": ["string", "null"]

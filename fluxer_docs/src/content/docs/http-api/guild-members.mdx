@@ -77,7 +77,7 @@ The request body for [Modify current guild member](#modify-current-guild-member)
 | roles?<sup>2</sup> | array[snowflake] | The complete replacement role set (max 250) |
 | avatar?<sup>3</sup> | ?base64 string | The guild avatar image data, or null to clear it |
 | banner?<sup>3</sup> | ?base64 string | The guild banner image data, or null to clear it |
-| bio? | ?string | The guild profile biography (1-320 characters) |
+| bio? | ?string | The guild profile biography (1 character up to the `max_bio_length` limit, 320 by default) |
 | pronouns? | ?string | The guild profile pronouns (1-40 characters) |
 | accent_color? | ?integer | The guild profile accent color as packed 24-bit RGB (0-16777215) |
 | profile_flags? | ?integer | The [guild member profile flags](#guild-member-profile-flags) to store |

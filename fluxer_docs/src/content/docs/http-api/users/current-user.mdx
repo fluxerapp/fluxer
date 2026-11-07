@@ -83,7 +83,7 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 | password? | string | Current password (8-256 characters) |
 | avatar?<sup>5</sup> | ?string | Base64-encoded avatar image, or null to clear |
 | banner?<sup>5</sup> <sup>6</sup> | ?string | Base64-encoded banner image, or null to clear |
-| bio?<sup>7</sup> | ?string | Biography (1-320 characters), or null to clear |
+| bio?<sup>7</sup> | ?string | Biography (1 character up to the `max_bio_length` limit, 320 by default), or null to clear |
 | pronouns? | ?string | Pronouns (1-40 characters), or null to clear |
 | accent_color? | ?integer | Packed 24-bit RGB color (0-16777215), or null to clear |
 | timezone?<sup>8</sup> | ?string | IANA timezone identifier (1-128 characters), or null to clear |

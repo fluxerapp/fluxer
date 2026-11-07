@@ -846,6 +846,17 @@ export class GuildMemberOperationsService {
 					const minutes = Math.ceil((bioRateLimit.retryAfter || 0) / 60);
 					throw InputValidationError.fromCode('bio', ValidationErrorCodes.BIO_CHANGED_TOO_MANY_TIMES, {minutes});
 				}
+				const maxBioLength = resolveLimitSafe(
+					this.limitConfigService.getConfigSnapshot(),
+					createLimitMatchContext({user: targetUser}),
+					'max_bio_length',
+					DEFAULT_STOCK_LIMITS.max_bio_length,
+				);
+				if (data.bio && data.bio.length > maxBioLength) {
+					throw InputValidationError.fromCode('bio', ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH, {
+						maxLength: maxBioLength,
+					});
+				}
 				this.enforceProfileSubstringBlocklist(targetUser, 'bio', data.bio);
 				updateData.bio = data.bio;
 			}
