@@ -79,6 +79,7 @@ message AccessibilitySettings {
   optional bool sequential_file_send = 63;
   optional bool mobile_splash_zoom_animation = 64;
   optional bool message_double_click_actions = 66;
+  optional bool announce_call_joins_and_leaves = 67;
 }
 
 message AccessibilityOverrides {
