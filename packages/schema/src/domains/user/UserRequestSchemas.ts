@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	MAX_BIO_LENGTH_CEILING,
 	MAX_CHANNEL_OVERRIDES,
 	MAX_GROUP_DM_OTHER_RECIPIENTS,
 	MAX_GUILDS_PREMIUM,
@@ -75,7 +76,9 @@ export const UserUpdateRequest = z
 		password: PasswordType.describe('The current password for verification'),
 		avatar: createBase64ImageType().nullish().describe('Base64-encoded avatar image'),
 		banner: createBase64ImageType().nullish().describe('Base64-encoded profile banner image'),
-		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),
+		bio: createStringType(1, MAX_BIO_LENGTH_CEILING)
+			.nullish()
+			.describe('User biography text, up to the instance max_bio_length limit (320 by default)'),
 		pronouns: createStringType(1, 40).nullish().describe('User pronouns (max 40 characters)'),
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),
 		timezone: createStringType(1, 128).nullish().describe('IANA timezone identifier saved for profile local time'),
