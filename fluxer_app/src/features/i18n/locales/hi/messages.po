@@ -4122,6 +4122,11 @@ msgstr "साइन इन करने के बाद कार्रवा�
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "आपका अकाउंट डिलीट होने के बाद आप अपने भेजे गए मैसेज डिलीट नहीं कर पाएँगे"
 
+#. Label in the sensitive content settings, shown when the Fluxer app for iPhone, iPad or Android has sent the age range that the Apple or Google account shares with apps.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Age range from your Apple or Google account"
+msgstr "आपके Apple या Google खाते से आयु सीमा"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -29295,6 +29300,7 @@ msgstr "विंडो का साइज़ और पोज़िशन य�
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button that clears the default reaction or deletes a tag in forum settings.
 #. Button that removes a branding image in the setup wizard.
+#. Confirm button in the dialog that deletes the stored age range.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29309,6 +29315,7 @@ msgstr "विंडो का साइज़ और पोज़िशन य�
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
 #: src/features/ui/action_menu/UserContextMenu.tsx
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 #: src/features/webhook/components/WebhookListItem.tsx
 msgid "Remove"
@@ -29345,6 +29352,11 @@ msgstr "क्या आप {userName} को ग्रुप से हटा�
 #: src/features/relationship/utils/RelationshipActionUtils.tsx
 msgid "Remove {userName} from your friends?"
 msgstr "क्या आप {userName} को अपने दोस्तों से हटाना चाहते हैं?"
+
+#. Button in the sensitive content settings that opens a confirmation to delete the stored age range.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove age range"
+msgstr "आयु सीमा हटाएं"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
 #: src/features/channel/components/MessageActionUtils.tsx
@@ -29552,6 +29564,11 @@ msgstr "अनुवादक हटाएँ"
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "अपने बैज से हटाएँ कि आपने {premiumProductName} पहली बार कब खरीदा था"
+
+#. Title of the confirmation shown before deleting the age range from an Apple or Google account.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove your age range?"
+msgstr "अपनी आयु सीमा हटाएं?"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -36542,6 +36559,11 @@ msgstr "फ़ाइल में वह वेरिफ़िकेशन ट�
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "आप जिस फ़ाइल को अपलोड करने की कोशिश कर रहे हैं, वह {maxSizeFormatted} की अधिकतम साइज़ सीमा से ज़्यादा है।"
 
+#. Helper text under "Age range from your Apple or Google account" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "The Fluxer app for iPhone, iPad or Android sent us this age range. If it shows that you're 18 or older, you can see 18+ content in the UK and Brazil. It doesn't change your date of birth."
+msgstr "iPhone, iPad या Android के लिए Fluxer ऐप ने हमें यह आयु सीमा भेजी है। अगर इससे पता चलता है कि आपकी उम्र 18 वर्ष या उससे अधिक है, तो आप यूके और ब्राज़ील में 18+ सामग्री देख सकते हैं। इससे आपकी जन्म तिथि नहीं बदलती।"
+
 #. Setup wizard body explaining the push relay.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "The Fluxer apps for iOS and Android get notifications through a push relay that Fluxer runs, which passes them to Apple and Google. To use it, you accept the push relay privacy notice."
@@ -42161,10 +42183,20 @@ msgstr "हम उस CSS फ़ाइल को पढ़ नहीं पा�
 msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "हम इस थीम को पढ़ नहीं पाए। हो सकता है यह खराब हो या अमान्य हो।"
 
+#. Error shown when deleting the stored age range fails.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "We couldn't remove your age range. Please try again."
+msgstr "हम आपकी आयु सीमा नहीं हटा सके। कृपया फिर से कोशिश करें।"
+
 #. Error message after saving a theme failed in Settings > Themes or the quick CSS editor window.
 #: src/features/theme_settings/utils/ThemeSettingsErrorModal.ts
 msgid "We couldn't save that theme."
 msgstr "हम वह थीम सेव नहीं कर सके।"
+
+#. Body of the confirmation shown before deleting the age range. App Attest is an Apple product name and stays in English.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "We delete the age range, the time we got it and the App Attest keys for your Apple devices. In the UK and Brazil, you can't see 18+ content until the app sends an age range again. The app may send it again later if your Apple or Google account still shares it with Fluxer."
+msgstr "हम आयु सीमा, उसे पाने का समय और आपके Apple डिवाइस की App Attest कुंजियां हटा देते हैं। यूके और ब्राज़ील में आप 18+ सामग्री तब तक नहीं देख सकते, जब तक ऐप फिर से आयु सीमा नहीं भेजता। अगर आपका Apple या Google खाता अब भी इसे Fluxer के साथ साझा करता है, तो ऐप बाद में आपकी आयु सीमा फिर से भेज सकता है।"
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx

@@ -190,7 +190,7 @@ Returns a [channel object](#channel-object). You need `VIEW_CHANNEL` in a guild 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [channel](#channel-object) object | The channel was returned |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel is age restricted and the age check fails |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel is age restricted and the account can't see mature content |
 
 The rate limit is 100 requests per 10 seconds, on the `channel:read::channel_id` bucket.
 
@@ -307,7 +307,7 @@ The decoded icon can't be larger than the [`avatar_max_size`](/http-api/instance
 | 400 | [error response](/http-api/#error-response) | `CHANNEL_HAS_FOLLOWED_CHANNELS` when converting to announcement while the channel follows an announcement channel |
 | 400 | [error response](/http-api/#error-response) | `CHANNEL_HAS_THREADS` when converting to announcement while the channel has a private thread |
 | 400 | [error response](/http-api/#error-response) | `MAX_CATEGORY_CHANNELS` when the new parent category is full |
-| 400 | [error response](/http-api/#error-response) | `GROUP_DM_MATURE_CONTENT_INELIGIBLE` when a recipient fails the age check |
+| 400 | [error response](/http-api/#error-response) | `GROUP_DM_MATURE_CONTENT_INELIGIBLE` when a recipient can't see mature content |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_TRANSFER_OWNERSHIP_TO_BOT` when `owner_id` is a bot |
 
 Converting an announcement channel back to text removes every follow of it.

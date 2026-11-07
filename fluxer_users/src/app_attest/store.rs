@@ -18,6 +18,7 @@ const CHALLENGES_TABLE: &str = "app_attest_challenges";
 const KEYS_TABLE: &str = "app_attest_keys";
 const KEY_LOOKUP_TABLE: &str = "app_attest_key_lookup";
 pub const CHALLENGE_TTL_SECONDS: i64 = 300;
+pub const KEY_TTL_SECONDS: i64 = 3600;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ChallengeRecord {
@@ -109,13 +110,24 @@ impl AppAttestStore {
         }
     }
 
-    pub async fn claim_key_id(&self, key_id: &str, user_id: i64) -> anyhow::Result<i64> {
+    pub async fn claim_key_id(
+        &self,
+        key_id: &str,
+        user_id: i64,
+        now_ms: i64,
+    ) -> anyhow::Result<i64> {
         match self {
             AppAttestStore::Postgres(kv) => {
                 let key = postgres::kv_key(&[KeyPart::String(key_id)])?;
                 let row = json!({"key_id": key_id, "user_id": bigint(user_id)});
                 if kv
-                    .insert_row_if_absent(KEY_LOOKUP_TABLE, &key, &key, &row, None)
+                    .insert_row_if_absent(
+                        KEY_LOOKUP_TABLE,
+                        &key,
+                        &key,
+                        &row,
+                        Some(key_expires_at_ms(now_ms)),
+                    )
                     .await?
                 {
                     return Ok(user_id);
@@ -152,8 +164,14 @@ impl AppAttestStore {
                     "created_at": date(key.created_at_ms),
                     "last_used_at": key.last_used_at_ms.map(date),
                 });
-                kv.insert_row_if_absent(KEYS_TABLE, &partition, &row_key, &row, None)
-                    .await
+                kv.insert_row_if_absent(
+                    KEYS_TABLE,
+                    &partition,
+                    &row_key,
+                    &row,
+                    Some(key_expires_at_ms(key.created_at_ms)),
+                )
+                .await
             }
             #[cfg(feature = "scylla")]
             AppAttestStore::Scylla(store) => store.insert_key_if_absent(user_id, key).await,
@@ -224,6 +242,10 @@ impl AppAttestStore {
             }
         }
     }
+}
+
+fn key_expires_at_ms(now_ms: i64) -> i64 {
+    now_ms + KEY_TTL_SECONDS * 1000
 }
 
 fn key_row_keys(user_id: i64, key_id: &str) -> anyhow::Result<(String, String)> {
@@ -402,12 +424,12 @@ impl ScyllaAppAttestStore {
                         .await?,
                     claim_key_id: db
                         .prepare(format!(
-                            "INSERT INTO {KEY_LOOKUP_TABLE} (key_id, user_id) VALUES (?, ?) IF NOT EXISTS"
+                            "INSERT INTO {KEY_LOOKUP_TABLE} (key_id, user_id) VALUES (?, ?) IF NOT EXISTS USING TTL {KEY_TTL_SECONDS}"
                         ))
                         .await?,
                     insert_key: db
                         .prepare(format!(
-                            "INSERT INTO {KEYS_TABLE} (user_id, {SCYLLA_KEY_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS"
+                            "INSERT INTO {KEYS_TABLE} (user_id, {SCYLLA_KEY_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS USING TTL {KEY_TTL_SECONDS}"
                         ))
                         .await?,
                     select_key: db
@@ -432,7 +454,7 @@ impl ScyllaAppAttestStore {
                         .await?,
                     advance_counter: db
                         .prepare(format!(
-                            "UPDATE {KEYS_TABLE} SET counter = ?, last_used_at = ? WHERE user_id = ? AND key_id = ? IF counter < ?"
+                            "UPDATE {KEYS_TABLE} USING TTL {KEY_TTL_SECONDS} SET counter = ?, last_used_at = ? WHERE user_id = ? AND key_id = ? IF counter < ?"
                         ))
                         .await?,
                 })

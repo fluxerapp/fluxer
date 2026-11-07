@@ -291,7 +291,7 @@ Returns the owner and first message of each requested post. You need `READ_MESSA
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [post data](#response-body) map | Post data was returned |
-| 403 | [error response](/http-api/#error-response) | The age check fails, with `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | The account can't see mature content, with `NSFW_CONTENT_AGE_RESTRICTED` |
 
 The rate limit is 20 requests per 10 seconds, on the `channel:post_data::channel_id` bucket.
 

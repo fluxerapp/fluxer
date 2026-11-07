@@ -21815,7 +21815,7 @@
 					{
 						"name": "VERIFIED_NOT_UNDERAGE",
 						"value": "562949953421312",
-						"description": "User is verified as not underage"
+						"description": "Marks an account as not under the minimum age. Only staff can set it"
 					},
 					{"name": "ACCOUNT_LIMITED", "value": "1125899906842624", "description": "User account is limited"},
 					{
@@ -21825,9 +21825,9 @@
 					},
 					{"name": "APP_STORE_REVIEWER", "value": "9007199254740992", "description": "User is an app store reviewer"},
 					{
-						"name": "AGE_VERIFIED_ADULT",
+						"name": "MATURE_CONTENT_UNLOCKED",
 						"value": "1152921504606846976",
-						"description": "User has verified their age as an adult"
+						"description": "User can see mature content in regions where a date of birth is not enough. Staff can set it, and accounts that already had mature content unlocked before keep it"
 					},
 					{
 						"name": "LIMIT_EXEMPT",
@@ -26963,6 +26963,8 @@
 					"ACLS_MUST_BE_NON_EMPTY",
 					"ADMIN_API_KEY_NOT_FOUND",
 					"ALREADY_FRIENDS",
+					"AGE_RANGE_NOT_ADULT",
+					"AGE_RANGE_NOT_NEEDED",
 					"APP_ATTEST_NOT_AVAILABLE",
 					"APP_ATTEST_KEY_NOT_REGISTERED",
 					"APP_ATTEST_KEY_IN_USE",
@@ -27353,20 +27355,22 @@
 					"ACLs must be non-empty.",
 					"Admin API key wasn't found.",
 					"You're already friends with this user.",
-					"Age checks from the app aren't available on this instance.",
+					"An age range only counts here when it shows that you're 18 or older.",
+					"You don't need an age range where you are.",
+					"This instance doesn't accept age ranges from the app.",
 					"This device key isn't registered with your account.",
 					"This device key is already registered to another account.",
 					"This check has expired or was already used. Try again.",
 					"We couldn't confirm this device key.",
-					"We couldn't confirm this age check from your device.",
-					"This age check request isn't valid.",
-					"Age checks from the Android app aren't available on this instance.",
-					"This age check request isn't valid.",
+					"We couldn't confirm the age range your device sent.",
+					"This age range request isn't valid.",
+					"This instance doesn't accept age ranges from the Android app.",
+					"This age range request isn't valid.",
 					"This check has expired or was already used. Try again.",
-					"We couldn't confirm this age check from your device. Try again.",
-					"Install the app from Google Play and sign in to Google Play to check your age in the app.",
-					"This device didn't pass the Google Play device check, so the app can't check your age on it.",
-					"We couldn't connect to Google Play to check your age. Try again later.",
+					"We couldn't confirm the age range your device sent. Try again.",
+					"Install the app from Google Play and sign in to Google Play so the app can send your age range.",
+					"This device didn't pass the Google Play device check, so the app can't send your age range from it.",
+					"We couldn't connect to Google Play to get your age range. Try again later.",
 					"Bots can't create communities.",
 					"Bots can't send friend requests.",
 					"This bot is already in the community.",

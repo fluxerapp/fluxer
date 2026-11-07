@@ -63,7 +63,7 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -374,7 +374,7 @@ export abstract class BaseChannelAuthService {
 			channel,
 			parentChannel: authContextResult.parentChannel,
 		});
-		const requiresAgeVerification = computeEffectiveChannelNsfw(
+		const isAgeRestricted = computeEffectiveChannelNsfw(
 			channelToContentWarningView(channel),
 			parentCategory,
 			guildResponseToContentWarningView(guildDataResult),
@@ -387,12 +387,12 @@ export abstract class BaseChannelAuthService {
 				channel.type === ChannelTypes.GUILD_VOICE ||
 				channel.type === ChannelTypes.GUILD_LINK ||
 				THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
-			requiresAgeVerification
+			isAgeRestricted
 		) {
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownUserError();
 			if (!canUserAccessNsfwContent(user)) {
-				throw new NsfwContentRequiresAgeVerificationError();
+				throw new NsfwContentAgeRestrictedError();
 			}
 		}
 		return {
@@ -493,16 +493,16 @@ export abstract class BaseChannelAuthService {
 				channel: thread.parent,
 				parentChannel: context.parentCategory,
 			});
-			const requiresAgeVerification = computeEffectiveChannelNsfw(
+			const isAgeRestricted = computeEffectiveChannelNsfw(
 				channelToContentWarningView(thread.parent),
 				parentCategory,
 				guildResponseToContentWarningView(guild),
 			);
-			if (requiresAgeVerification) {
+			if (isAgeRestricted) {
 				const user = await this.userRepository.findUnique(userId);
 				if (!user) throw new UnknownUserError();
 				if (!canUserAccessNsfwContent(user)) {
-					throw new NsfwContentRequiresAgeVerificationError();
+					throw new NsfwContentAgeRestrictedError();
 				}
 			}
 		}

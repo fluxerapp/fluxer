@@ -13,7 +13,7 @@ import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 
-export function channelRequiresAgeVerification(
+export function channelIsAgeRestricted(
 	channel: Channel,
 	channelsById: ReadonlyMap<string, Channel>,
 	guildNsfw: boolean,

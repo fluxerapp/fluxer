@@ -201,6 +201,7 @@ export const Endpoints = {
 	USER_ME: '/users/@me',
 	USER_TERMS_ACCEPTANCE: '/users/@me/terms-acceptance',
 	USER_DATE_OF_BIRTH: '/users/@me/date-of-birth',
+	USER_AGE_RANGE: '/users/@me/age-range',
 	USER_CLAIM: '/users/@me/claim',
 	USER_EMAIL_VERIFICATION_SEND: '/users/@me/email-verification/send',
 	USER_EMAIL_VERIFICATION_CONFIRM: '/users/@me/email-verification/confirm',

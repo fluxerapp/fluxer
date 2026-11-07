@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import {getCachedAccountsConfig, setCachedAccountsConfig} from '@app/api/instance/AccountsConfigCache';
-import {calculateAge, canUserAccessNsfwContent, parseDateOfBirth} from '@app/api/utils/AgeUtils';
+import {
+	calculateAge,
+	canUserAccessNsfwContent,
+	isMatureContentUnlocked,
+	parseDateOfBirth,
+} from '@app/api/utils/AgeUtils';
 import {DateOfBirthPolicies, type DateOfBirthPolicy} from '@fluxer/constants/src/AccountConfigConstants';
-import {AttestedAgeFloors} from '@fluxer/constants/src/AgeAssuranceConstants';
+import {AttestedAgeFloors} from '@fluxer/constants/src/AgeRangeConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 function setDateOfBirthPolicy(dateOfBirth: DateOfBirthPolicy): void {
@@ -23,58 +30,51 @@ describe('canUserAccessNsfwContent', () => {
 
 	it('allows a bot whatever the instance collects', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
-		expect(canUserAccessNsfwContent({isBot: true, dateOfBirth: null, attestedAgeFloor: null})).toBe(true);
+		expect(canUserAccessNsfwContent({isBot: true, dateOfBirth: null})).toBe(true);
 	});
 
 	it('allows an adult when the instance collects a date of birth', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH, attestedAgeFloor: null})).toBe(
-			true,
-		);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH})).toBe(true);
 	});
 
 	it('blocks a minor when the instance collects a date of birth', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH, attestedAgeFloor: null})).toBe(
-			false,
-		);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH})).toBe(false);
 	});
 
 	it('blocks a missing date of birth when the instance collects one', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor: null})).toBe(false);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null})).toBe(false);
 	});
 
 	it('allows a missing date of birth when the instance collects none', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.OFF);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor: null})).toBe(true);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null})).toBe(true);
 	});
 
 	it('allows an account with a minor date of birth when the instance collects none', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.OFF);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH, attestedAgeFloor: null})).toBe(
-			true,
-		);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH})).toBe(true);
+	});
+});
+
+describe('isMatureContentUnlocked', () => {
+	afterEach(() => {
+		Config.instance.selfHosted = false;
 	});
 
-	it('blocks an attested minor or under_minimum floor even with an adult date of birth', () => {
-		for (const policy of [DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS, DateOfBirthPolicies.OFF]) {
-			setDateOfBirthPolicy(policy);
-			for (const attestedAgeFloor of [AttestedAgeFloors.MINOR, AttestedAgeFloors.UNDER_MINIMUM]) {
-				expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH, attestedAgeFloor})).toBe(
-					false,
-				);
-				expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor})).toBe(false);
-			}
-		}
+	it('counts only an adult age range or the staff flag', () => {
+		expect(isMatureContentUnlocked({flags: 0n, attestedAgeFloor: AttestedAgeFloors.ADULT})).toBe(true);
+		expect(isMatureContentUnlocked({flags: 0n, attestedAgeFloor: AttestedAgeFloors.MINOR})).toBe(false);
+		expect(isMatureContentUnlocked({flags: 0n, attestedAgeFloor: null})).toBe(false);
+		expect(isMatureContentUnlocked({flags: UserFlags.MATURE_CONTENT_UNLOCKED, attestedAgeFloor: null})).toBe(true);
 	});
 
-	it('lets an attested adult floor decide over a minor or missing date of birth', () => {
-		setDateOfBirthPolicy(DateOfBirthPolicies.REQUIRE_NEW_ACCOUNTS);
-		const attestedAgeFloor = AttestedAgeFloors.ADULT;
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH, attestedAgeFloor})).toBe(true);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null, attestedAgeFloor})).toBe(true);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH, attestedAgeFloor})).toBe(true);
+	it('ignores a stored age range on a self-hosted instance', () => {
+		Config.instance.selfHosted = true;
+		expect(isMatureContentUnlocked({flags: 0n, attestedAgeFloor: AttestedAgeFloors.ADULT})).toBe(false);
+		expect(isMatureContentUnlocked({flags: UserFlags.MATURE_CONTENT_UNLOCKED, attestedAgeFloor: null})).toBe(true);
 	});
 });
 

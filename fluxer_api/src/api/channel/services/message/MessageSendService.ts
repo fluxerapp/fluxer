@@ -85,7 +85,7 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {SlowmodeRateLimitError} from '@fluxer/errors/src/domains/core/SlowmodeRateLimitError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -745,7 +745,7 @@ export class MessageSendService {
 							scopeChannel.isNsfw ||
 							(guild != null && (await this.deps.persistenceService.isNsfwThroughCategory(scopeChannel)));
 						if (!destAllowsNsfw) {
-							throw new NsfwContentRequiresAgeVerificationError();
+							throw new NsfwContentAgeRestrictedError();
 						}
 					}
 					if (data.message_reference && guild && !isForwardMessage) {

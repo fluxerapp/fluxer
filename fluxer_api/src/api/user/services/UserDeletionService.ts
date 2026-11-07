@@ -34,7 +34,7 @@ import type {ApplicationRepository} from '@app/api/oauth/repositories/Applicatio
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
-import {deleteAllAppAttestKeys} from '@app/api/user/AgeAssurance';
+import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import {

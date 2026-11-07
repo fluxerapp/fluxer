@@ -116,7 +116,12 @@ impl AppAttestService {
             }
         };
         let key_id = general_purpose::STANDARD.encode(key_id);
-        if self.store.claim_key_id(&key_id, user_id).await? != user_id {
+        if self
+            .store
+            .claim_key_id(&key_id, user_id, unix_ms(now))
+            .await?
+            != user_id
+        {
             return Ok(Err(AppAttestRejection::KeyInUse));
         }
         let key = StoredKey {

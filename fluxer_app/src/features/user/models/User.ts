@@ -182,7 +182,7 @@ export class User {
 	private readonly _hasEverPurchased: boolean | undefined;
 	private readonly _hasUnreadGiftInventory: boolean | undefined;
 	private readonly _unreadGiftInventoryCount: number | undefined;
-	private readonly _ageVerifiedAdult: boolean | undefined;
+	private readonly _matureContentUnlocked: boolean | undefined;
 	private readonly _termsAgreedAt: Date | null | undefined;
 	private readonly _privacyAgreedAt: Date | null | undefined;
 	private readonly _traits: ReadonlyArray<string>;
@@ -191,6 +191,7 @@ export class User {
 	private readonly _verificationNeed: AccountVerificationNeed | null | undefined;
 	private readonly _hasPassword: boolean | undefined;
 	private readonly _dateOfBirthRequired: boolean | undefined;
+	private readonly _hasAgeRange: boolean | undefined;
 
 	constructor(user: WireUser, options?: UserRecordOptions) {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
@@ -271,7 +272,7 @@ export class User {
 		this._unreadGiftInventoryCount = hasKey(user, 'unread_gift_inventory_count')
 			? user.unread_gift_inventory_count
 			: undefined;
-		this._ageVerifiedAdult = hasKey(user, 'age_verified_adult') ? user.age_verified_adult : undefined;
+		this._matureContentUnlocked = hasKey(user, 'mature_content_unlocked') ? user.mature_content_unlocked : undefined;
 		this._termsAgreedAt = hasKey(user, 'terms_agreed_at') ? parseDateOrNull(user.terms_agreed_at) : undefined;
 		this._privacyAgreedAt = hasKey(user, 'privacy_agreed_at') ? parseDateOrNull(user.privacy_agreed_at) : undefined;
 		this._traits = mergeTraitsArray(EMPTY_STRING_ARRAY, user, {clearMissing: true});
@@ -280,6 +281,7 @@ export class User {
 		this._verificationNeed = hasKey(user, 'verification_need') ? user.verification_need : undefined;
 		this._hasPassword = hasKey(user, 'has_password') ? user.has_password : undefined;
 		this._dateOfBirthRequired = hasKey(user, 'date_of_birth_required') ? user.date_of_birth_required : undefined;
+		this._hasAgeRange = hasKey(user, 'has_age_range') ? user.has_age_range : undefined;
 	}
 
 	get email(): string | null | undefined {
@@ -366,8 +368,8 @@ export class User {
 		return this._nsfwAllowed;
 	}
 
-	get matureContentCheckComplete(): boolean | undefined {
-		return this._ageVerifiedAdult;
+	get matureContentUnlocked(): boolean | undefined {
+		return this._matureContentUnlocked;
 	}
 
 	get termsAgreedAt(): Date | null | undefined {
@@ -524,8 +526,8 @@ export class User {
 		if (hasUnreadGiftInventory !== undefined) result.has_unread_gift_inventory = hasUnreadGiftInventory;
 		const unreadGiftInventoryCount = pickField(this._unreadGiftInventoryCount, u, 'unread_gift_inventory_count', opts);
 		if (unreadGiftInventoryCount !== undefined) result.unread_gift_inventory_count = unreadGiftInventoryCount;
-		const ageVerifiedAdult = pickField(this._ageVerifiedAdult, u, 'age_verified_adult', opts);
-		if (ageVerifiedAdult !== undefined) result.age_verified_adult = ageVerifiedAdult;
+		const matureContentUnlocked = pickField(this._matureContentUnlocked, u, 'mature_content_unlocked', opts);
+		if (matureContentUnlocked !== undefined) result.mature_content_unlocked = matureContentUnlocked;
 		const termsAgreedAt = pickDateField(this._termsAgreedAt, u, 'terms_agreed_at', opts);
 		if (termsAgreedAt !== undefined) result.terms_agreed_at = dateToIsoOrNull(termsAgreedAt);
 		const privacyAgreedAt = pickDateField(this._privacyAgreedAt, u, 'privacy_agreed_at', opts);
@@ -541,6 +543,8 @@ export class User {
 		if (hasPassword !== undefined) result.has_password = hasPassword;
 		const dateOfBirthRequired = pickField(this._dateOfBirthRequired, u, 'date_of_birth_required', opts);
 		if (dateOfBirthRequired !== undefined) result.date_of_birth_required = dateOfBirthRequired;
+		const hasAgeRange = pickField(this._hasAgeRange, u, 'has_age_range', opts);
+		if (hasAgeRange !== undefined) result.has_age_range = hasAgeRange;
 		return result;
 	}
 
@@ -680,6 +684,10 @@ export class User {
 		return this._dateOfBirthRequired === true;
 	}
 
+	get hasAgeRange(): boolean {
+		return this._hasAgeRange === true;
+	}
+
 	equals(other: User): boolean {
 		if (this === other) return true;
 		return (
@@ -731,7 +739,7 @@ export class User {
 			this._hasEverPurchased === other._hasEverPurchased &&
 			this._hasUnreadGiftInventory === other._hasUnreadGiftInventory &&
 			this._unreadGiftInventoryCount === other._unreadGiftInventoryCount &&
-			this._ageVerifiedAdult === other._ageVerifiedAdult &&
+			this._matureContentUnlocked === other._matureContentUnlocked &&
 			datesEqual(this._termsAgreedAt, other._termsAgreedAt) &&
 			datesEqual(this._privacyAgreedAt, other._privacyAgreedAt) &&
 			arraysShallowEqual(this._traits, other._traits) &&
@@ -739,7 +747,8 @@ export class User {
 			this._accountTier === other._accountTier &&
 			this._verificationNeed === other._verificationNeed &&
 			this._hasPassword === other._hasPassword &&
-			this._dateOfBirthRequired === other._dateOfBirthRequired
+			this._dateOfBirthRequired === other._dateOfBirthRequired &&
+			this._hasAgeRange === other._hasAgeRange
 		);
 	}
 
@@ -813,7 +822,7 @@ export class User {
 		setOptional('has_ever_purchased', this._hasEverPurchased);
 		setOptional('has_unread_gift_inventory', this._hasUnreadGiftInventory);
 		setOptional('unread_gift_inventory_count', this._unreadGiftInventoryCount);
-		setOptional('age_verified_adult', this._ageVerifiedAdult);
+		setOptional('mature_content_unlocked', this._matureContentUnlocked);
 		setOptional(
 			'terms_agreed_at',
 			this._termsAgreedAt === undefined ? undefined : dateToIsoOrNull(this._termsAgreedAt),
@@ -828,6 +837,7 @@ export class User {
 		setOptional('verification_need', this._verificationNeed);
 		setOptional('has_password', this._hasPassword);
 		setOptional('date_of_birth_required', this._dateOfBirthRequired);
+		setOptional('has_age_range', this._hasAgeRange);
 		return {
 			...baseFields,
 			...(privateFields as Partial<UserPrivate>),

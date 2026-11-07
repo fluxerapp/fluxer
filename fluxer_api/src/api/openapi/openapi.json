@@ -17834,15 +17834,15 @@
 				}
 			}
 		},
-		"/users/@me/age-assurance": {
+		"/users/@me/age-range": {
 			"post": {
-				"operationId": "submit_age_assurance",
+				"operationId": "submit_age_range",
 				"summary": "Submit attested age floor",
 				"tags": ["Users"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeAssuranceSubmitResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeRangeSubmitResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -17887,23 +17887,74 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits the age floor the device reported, signed by a registered App Attest key. client_data holds the exact JSON bytes the app signed, with the challenge from a challenge with purpose assert and the age_floor. The newest accepted floor replaces the stored one. The stored floor decides the age of the account in place of its date of birth: adult makes age-restricted content available, and minor or under_minimum makes it unavailable. An adult or minor floor also counts as a date of birth for routes that need one. Returns APP_ATTEST_KEY_NOT_REGISTERED when the key is unknown, in which case the app should register a new key. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"description": "Submits the age floor the device reported, signed by a registered App Attest key. client_data holds the exact JSON bytes the app signed, with the challenge from a challenge with purpose assert and the age_floor. Only the adult floor is accepted. It stores that the account's age range is 18 or over, with the time it was received, which unlocks mature content in regions where a date of birth typed in is not enough for mature content. It does not change the date of birth or any setting. Any other floor returns AGE_RANGE_NOT_ADULT with status 403 and nothing is stored. When the request ends, whatever the outcome, every App Attest key registered to the current user is deleted, so the app registers a new key before each submit. Returns APP_ATTEST_KEY_NOT_REGISTERED when the key is unknown, in which case the app should register a new key. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest. Returns FEATURE_NOT_AVAILABLE_SELF_HOSTED with status 403 on a self-hosted instance, and AGE_RANGE_NOT_NEEDED with status 403 when the request does not come from a region where a date of birth typed in is not enough for mature content.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeAssuranceSubmitRequest"}}}
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeRangeSubmitRequest"}}}
 				}
+			},
+			"delete": {
+				"operationId": "remove_age_range",
+				"summary": "Remove the stored age range",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPrivateResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes the stored age range with the time it was received, and deletes every App Attest key registered to the current user. After that, mature content is locked again in regions where a date of birth typed in is not enough for mature content. The date of birth and settings do not change. When no age range is stored, the request still succeeds. Returns the updated user.",
+				"security": [{"sessionToken": []}]
 			}
 		},
-		"/users/@me/age-assurance/play-integrity": {
+		"/users/@me/age-range/play-integrity": {
 			"post": {
-				"operationId": "submit_play_integrity_age_assurance",
+				"operationId": "submit_play_integrity_age_range",
 				"summary": "Submit Play age range",
 				"tags": ["Users"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeAssuranceSubmitResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AgeRangeSubmitResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -17952,7 +18003,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits the age range that the Google Play Age Signals API reported, bound to a standard Play Integrity token. client_data holds the exact JSON bytes the app hashed, with the challenge from the Play Integrity challenge endpoint, age_lower, age_upper and age_range_source. The token must be requested with requestHash set to the SHA-256 of those bytes as unpadded base64url. Fluxer checks the token with Google Play and works out the age floor from the range: adult when age_lower is 18, minor when age_lower is 13 or more, and under_minimum otherwise. The newest accepted floor replaces the stored one, as with the iOS age check. Returns PLAY_INTEGRITY_APP_NOT_RECOGNIZED when the app was not installed from Google Play, and PLAY_INTEGRITY_DEVICE_NOT_TRUSTED when the device fails the Play device check. Returns PLAY_INTEGRITY_UNAVAILABLE with status 503 when Google Play could not be asked, in which case the app should try again later with a new challenge. Returns PLAY_INTEGRITY_NOT_AVAILABLE with status 404 when this instance does not accept Play Integrity.",
+				"description": "Submits the age range that the Google Play Age Signals API reported, bound to a standard Play Integrity token. client_data holds the exact JSON bytes the app hashed, with the challenge from the Play Integrity challenge endpoint, age_lower, age_upper and age_range_source. The token must be requested with requestHash set to the SHA-256 of those bytes as unpadded base64url. Fluxer checks the token with Google Play and accepts the range only when age_lower is 18. An accepted range is stored as the adult floor with the time it was received, as with the iOS app. The token, the verdict, the range and its source are not stored. Any other range returns AGE_RANGE_NOT_ADULT with status 403 and nothing is stored. Returns PLAY_INTEGRITY_APP_NOT_RECOGNIZED when the app was not installed from Google Play, and PLAY_INTEGRITY_DEVICE_NOT_TRUSTED when the device fails the Play device check. Returns PLAY_INTEGRITY_UNAVAILABLE with status 503 when Google Play could not be asked, in which case the app should try again later with a new challenge. Returns PLAY_INTEGRITY_NOT_AVAILABLE with status 404 when this instance does not accept Play Integrity. Returns FEATURE_NOT_AVAILABLE_SELF_HOSTED with status 403 on a self-hosted instance, and AGE_RANGE_NOT_NEEDED with status 403 when the request does not come from a region where a date of birth typed in is not enough for mature content.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -18013,7 +18064,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a single use challenge for the iOS app, valid for 5 minutes. Use purpose attest before registering a new App Attest key, and purpose assert before submitting an age floor. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"description": "Creates a single use challenge for the iOS app, valid for 5 minutes. Use purpose attest before registering a new App Attest key, and purpose assert before submitting an age range. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest. Returns FEATURE_NOT_AVAILABLE_SELF_HOSTED with status 403 on a self-hosted instance, and AGE_RANGE_NOT_NEEDED with status 403 when the request does not come from a region where a date of birth typed in is not enough for mature content.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -18075,7 +18126,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Registers an App Attest key for the current user. The attestation must be made with clientDataHash set to the SHA-256 of the UTF-8 challenge string from a challenge with purpose attest. The server keeps the key id, public key, environment, App ID and counter, and does not keep the attestation itself. Registering the same key again for the same user succeeds and changes nothing. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest.",
+				"description": "Registers an App Attest key for the current user. The attestation must be made with clientDataHash set to the SHA-256 of the UTF-8 challenge string from a challenge with purpose attest. The server keeps the key id, public key, environment, App ID and counter for at most one hour, or until the next age range submit, and does not keep the attestation itself. Registering the same key again for the same user succeeds and changes nothing. Returns APP_ATTEST_NOT_AVAILABLE with status 404 when this instance does not accept App Attest. Returns FEATURE_NOT_AVAILABLE_SELF_HOSTED with status 403 on a self-hosted instance, and AGE_RANGE_NOT_NEEDED with status 403 when the request does not come from a region where a date of birth typed in is not enough for mature content.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -23569,7 +23620,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a single use challenge for the Android app, valid for 5 minutes. Put it in client_data before submitting an age range with a Play Integrity token. Returns PLAY_INTEGRITY_NOT_AVAILABLE with status 404 when this instance does not accept Play Integrity.",
+				"description": "Creates a single use challenge for the Android app, valid for 5 minutes. Put it in client_data before submitting an age range with a Play Integrity token. Returns PLAY_INTEGRITY_NOT_AVAILABLE with status 404 when this instance does not accept Play Integrity. Returns FEATURE_NOT_AVAILABLE_SELF_HOSTED with status 403 on a self-hosted instance, and AGE_RANGE_NOT_NEEDED with status 403 when the request does not come from a region where a date of birth typed in is not enough for mature content.",
 				"security": [{"sessionToken": []}]
 			}
 		},
@@ -28863,8 +28914,8 @@
 						],
 						"description": "Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here."
 					},
-					"age_verified_adult": {
-						"description": "Whether the user has verified their age as an adult",
+					"mature_content_unlocked": {
+						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the iOS or Android app sent an age range of 18 or over, when staff set it, or when the account already had mature content unlocked before. Never true from an age range on a self-hosted instance",
 						"type": "boolean"
 					},
 					"terms_agreed_at": {
@@ -28890,6 +28941,10 @@
 					"has_password": {"description": "Whether the account has a password", "type": "boolean"},
 					"date_of_birth_required": {
 						"description": "Whether the account still has to enter its date of birth, which clients ask for before anything else",
+						"type": "boolean"
+					},
+					"has_age_range": {
+						"description": "Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included",
 						"type": "boolean"
 					},
 					"profile_restricted": {
@@ -32040,13 +32095,13 @@
 				},
 				"required": ["package_name", "integrity_token", "client_data"]
 			},
-			"AgeAssuranceSubmitResponse": {
+			"AgeRangeSubmitResponse": {
 				"type": "object",
 				"properties": {"age_floor": {"$ref": "#/components/schemas/AttestedAgeFloorSchema"}},
 				"required": ["age_floor"],
 				"additionalProperties": false
 			},
-			"AgeAssuranceSubmitRequest": {
+			"AgeRangeSubmitRequest": {
 				"type": "object",
 				"properties": {
 					"key_id": {
@@ -32366,8 +32421,8 @@
 						],
 						"description": "Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here."
 					},
-					"age_verified_adult": {
-						"description": "Whether the user has verified their age as an adult",
+					"mature_content_unlocked": {
+						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the iOS or Android app sent an age range of 18 or over, when staff set it, or when the account already had mature content unlocked before. Never true from an age range on a self-hosted instance",
 						"type": "boolean"
 					},
 					"terms_agreed_at": {
@@ -32393,6 +32448,10 @@
 					"has_password": {"description": "Whether the account has a password", "type": "boolean"},
 					"date_of_birth_required": {
 						"description": "Whether the account still has to enter its date of birth, which clients ask for before anything else",
+						"type": "boolean"
+					},
+					"has_age_range": {
+						"description": "Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included",
 						"type": "boolean"
 					},
 					"profile_restricted": {
@@ -34922,7 +34981,7 @@
 					"ageRestrictedGeos": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/GeoEntry"},
-						"description": "Locations where age restricted content requires an age check"
+						"description": "Locations where a date of birth typed in is not enough for mature content"
 					},
 					"ageBlockedGeos": {
 						"type": "array",
@@ -45988,15 +46047,9 @@
 				"description": "The full list of badge keys to hide from other people. It replaces the stored list, takes precedence over the deprecated hide fields, and keys of custom badges that no longer exist are dropped"
 			},
 			"AttestedAgeFloorSchema": {
-				"description": "Age floor reported by the device",
-				"x-enumNames": ["ADULT", "MINOR", "UNDER_MINIMUM"],
-				"x-enumDescriptions": [
-					"The device reports an adult",
-					"The device reports someone under 18",
-					"The device reports someone under 13"
-				],
-				"enum": ["adult", "minor", "under_minimum"],
-				"type": "string"
+				"type": "string",
+				"const": "adult",
+				"description": "Age floor that was accepted, which is always adult"
 			},
 			"ConfirmEmailClaimAccountResponse": {
 				"type": "object",
@@ -46945,6 +46998,8 @@
 					"ACLS_MUST_BE_NON_EMPTY",
 					"ADMIN_API_KEY_NOT_FOUND",
 					"ALREADY_FRIENDS",
+					"AGE_RANGE_NOT_ADULT",
+					"AGE_RANGE_NOT_NEEDED",
 					"APP_ATTEST_NOT_AVAILABLE",
 					"APP_ATTEST_KEY_NOT_REGISTERED",
 					"APP_ATTEST_KEY_IN_USE",
@@ -47335,20 +47390,22 @@
 					"ACLs must be non-empty.",
 					"Admin API key wasn't found.",
 					"You're already friends with this user.",
-					"Age checks from the app aren't available on this instance.",
+					"An age range only counts here when it shows that you're 18 or older.",
+					"You don't need an age range where you are.",
+					"This instance doesn't accept age ranges from the app.",
 					"This device key isn't registered with your account.",
 					"This device key is already registered to another account.",
 					"This check has expired or was already used. Try again.",
 					"We couldn't confirm this device key.",
-					"We couldn't confirm this age check from your device.",
-					"This age check request isn't valid.",
-					"Age checks from the Android app aren't available on this instance.",
-					"This age check request isn't valid.",
+					"We couldn't confirm the age range your device sent.",
+					"This age range request isn't valid.",
+					"This instance doesn't accept age ranges from the Android app.",
+					"This age range request isn't valid.",
 					"This check has expired or was already used. Try again.",
-					"We couldn't confirm this age check from your device. Try again.",
-					"Install the app from Google Play and sign in to Google Play to check your age in the app.",
-					"This device didn't pass the Google Play device check, so the app can't check your age on it.",
-					"We couldn't connect to Google Play to check your age. Try again later.",
+					"We couldn't confirm the age range your device sent. Try again.",
+					"Install the app from Google Play and sign in to Google Play so the app can send your age range.",
+					"This device didn't pass the Google Play device check, so the app can't send your age range from it.",
+					"We couldn't connect to Google Play to get your age range. Try again later.",
 					"Bots can't create communities.",
 					"Bots can't send friend requests.",
 					"This bot is already in the community.",

@@ -11,6 +11,8 @@ type AllErrorCodes = APIErrorCode | ValidationErrorCode;
 export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.ACCESS_DENIED]: 'permissions.missing_access',
 	[APIErrorCodes.ACCOUNT_LIMITED]: 'account.limited',
+	[APIErrorCodes.AGE_RANGE_NOT_ADULT]: 'account.age_range_not_adult',
+	[APIErrorCodes.AGE_RANGE_NOT_NEEDED]: 'account.age_range_not_needed',
 	[APIErrorCodes.APP_ATTEST_NOT_AVAILABLE]: 'account.app_attest_not_available',
 	[APIErrorCodes.APP_ATTEST_KEY_NOT_REGISTERED]: 'account.app_attest_key_not_registered',
 	[APIErrorCodes.APP_ATTEST_KEY_IN_USE]: 'account.app_attest_key_in_use',

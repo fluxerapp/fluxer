@@ -20,6 +20,11 @@ export async function setDateOfBirth(dateOfBirth: string): Promise<GuildEntryRes
 	return response.body.entry;
 }
 
+export async function removeAgeRange(): Promise<void> {
+	const response = await http.delete<UserPrivateResponse>(Endpoints.USER_AGE_RANGE);
+	Users.handleUserUpdate(response.body);
+}
+
 export async function claimAccount(email: string, password: string | null): Promise<ClaimAccountResponse> {
 	const response = await http.post<ClaimAccountResponse>(Endpoints.USER_CLAIM, {
 		body: password === null || password === '' ? {email} : {email, password},

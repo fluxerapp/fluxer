@@ -4122,6 +4122,11 @@ msgstr "หลังจากลงชื่อเข้าใช้ ให้�
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "หลังจากบัญชีของคุณถูกลบแล้ว คุณจะไม่สามารถลบข้อความที่ส่งไปแล้วได้"
 
+#. Label in the sensitive content settings, shown when the Fluxer app for iPhone, iPad or Android has sent the age range that the Apple or Google account shares with apps.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Age range from your Apple or Google account"
+msgstr "ช่วงอายุจากบัญชี Apple หรือ Google ของคุณ"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -29295,6 +29300,7 @@ msgstr "จำขนาดและตำแหน่งหน้าต่าง
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button that clears the default reaction or deletes a tag in forum settings.
 #. Button that removes a branding image in the setup wizard.
+#. Confirm button in the dialog that deletes the stored age range.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29309,6 +29315,7 @@ msgstr "จำขนาดและตำแหน่งหน้าต่าง
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
 #: src/features/ui/action_menu/UserContextMenu.tsx
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 #: src/features/webhook/components/WebhookListItem.tsx
 msgid "Remove"
@@ -29345,6 +29352,11 @@ msgstr "นำ {userName} ออกจากกลุ่มใช่หรือ
 #: src/features/relationship/utils/RelationshipActionUtils.tsx
 msgid "Remove {userName} from your friends?"
 msgstr "ลบ {userName} ออกจากรายชื่อเพื่อนใช่หรือไม่"
+
+#. Button in the sensitive content settings that opens a confirmation to delete the stored age range.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove age range"
+msgstr "ลบช่วงอายุ"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
 #: src/features/channel/components/MessageActionUtils.tsx
@@ -29552,6 +29564,11 @@ msgstr "ลบเครื่องมือแปลภาษา"
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "นำวันที่คุณซื้อ {premiumProductName} ครั้งแรกออกจากป้ายของคุณ"
+
+#. Title of the confirmation shown before deleting the age range from an Apple or Google account.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove your age range?"
+msgstr "ลบช่วงอายุของคุณใช่ไหม"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -36542,6 +36559,11 @@ msgstr "ไฟล์นี้มีโทเค็นยืนยันที่
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "ไฟล์ที่คุณพยายามอัปโหลดมีขนาดเกินขีดจำกัดสูงสุดที่ {maxSizeFormatted}"
 
+#. Helper text under "Age range from your Apple or Google account" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "The Fluxer app for iPhone, iPad or Android sent us this age range. If it shows that you're 18 or older, you can see 18+ content in the UK and Brazil. It doesn't change your date of birth."
+msgstr "แอป Fluxer สำหรับ iPhone, iPad หรือ Android ส่งช่วงอายุนี้มาให้เรา หากช่วงอายุนี้แสดงว่าคุณอายุ 18 ปีขึ้นไป คุณจะดูเนื้อหา 18+ ได้ในสหราชอาณาจักรและบราซิล ช่วงอายุนี้ไม่ได้เปลี่ยนวันเกิดของคุณ"
+
 #. Setup wizard body explaining the push relay.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "The Fluxer apps for iOS and Android get notifications through a push relay that Fluxer runs, which passes them to Apple and Google. To use it, you accept the push relay privacy notice."
@@ -42161,10 +42183,20 @@ msgstr "เราอ่านไฟล์ CSS นั้นไม่ได้"
 msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "เราอ่านธีมนี้ไม่ได้ ธีมอาจเสียหายหรือไม่ถูกต้อง"
 
+#. Error shown when deleting the stored age range fails.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "We couldn't remove your age range. Please try again."
+msgstr "เราไม่สามารถลบช่วงอายุของคุณได้ โปรดลองอีกครั้ง"
+
 #. Error message after saving a theme failed in Settings > Themes or the quick CSS editor window.
 #: src/features/theme_settings/utils/ThemeSettingsErrorModal.ts
 msgid "We couldn't save that theme."
 msgstr "เราไม่สามารถบันทึกธีมนั้นได้"
+
+#. Body of the confirmation shown before deleting the age range. App Attest is an Apple product name and stays in English.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "We delete the age range, the time we got it and the App Attest keys for your Apple devices. In the UK and Brazil, you can't see 18+ content until the app sends an age range again. The app may send it again later if your Apple or Google account still shares it with Fluxer."
+msgstr "เราจะลบช่วงอายุ เวลาที่เราได้รับ และคีย์ App Attest สำหรับอุปกรณ์ Apple ของคุณ ในสหราชอาณาจักรและบราซิล คุณจะดูเนื้อหา 18+ ไม่ได้จนกว่าแอปจะส่งช่วงอายุมาอีกครั้ง แอปอาจส่งช่วงอายุของคุณมาอีกครั้งในภายหลัง หากบัญชี Apple หรือ Google ของคุณยังแชร์ช่วงอายุกับ Fluxer อยู่"
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx

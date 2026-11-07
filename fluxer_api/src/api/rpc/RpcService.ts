@@ -1621,7 +1621,6 @@ export class RpcService {
 				const isAdult = canUserAccessNsfwContent({
 					isBot: false,
 					dateOfBirth: user.dateOfBirth,
-					attestedAgeFloor: user.attestedAgeFloor,
 				});
 				const baseRow = settings.toRow();
 				const updatedRow = {

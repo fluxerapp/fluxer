@@ -3,7 +3,7 @@
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {UserAccountController} from '@app/api/user/controllers/UserAccountController';
 import {UserAccountTierController} from '@app/api/user/controllers/UserAccountTierController';
-import {UserAgeAssuranceController} from '@app/api/user/controllers/UserAgeAssuranceController';
+import {UserAgeRangeController} from '@app/api/user/controllers/UserAgeRangeController';
 import {UserAuthController} from '@app/api/user/controllers/UserAuthController';
 import {UserChannelController} from '@app/api/user/controllers/UserChannelController';
 import {UserContentController} from '@app/api/user/controllers/UserContentController';
@@ -14,7 +14,7 @@ import {EntranceSoundPlayController} from '@app/api/user/entrance_sound/Entrance
 export function UserController(app: HonoApp) {
 	UserAccountController(app);
 	UserAccountTierController(app);
-	UserAgeAssuranceController(app);
+	UserAgeRangeController(app);
 	UserAuthController(app);
 	UserRelationshipController(app);
 	UserChannelController(app);

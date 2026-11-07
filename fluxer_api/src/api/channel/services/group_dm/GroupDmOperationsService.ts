@@ -41,7 +41,7 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {CannotRemoveOtherRecipientsError} from '@fluxer/errors/src/domains/core/CannotRemoveOtherRecipientsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import {NotFriendsWithUserError} from '@fluxer/errors/src/domains/user/NotFriendsWithUserError';
 
 export class GroupDmOperationsService {
@@ -170,7 +170,7 @@ export class GroupDmOperationsService {
 			return {channel, recipientAdded: false};
 		}
 		if (channel.isNsfw && !(await this.canJoinMatureGroup(recipientId))) {
-			throw new NsfwContentRequiresAgeVerificationError();
+			throw new NsfwContentAgeRestrictedError();
 		}
 		const inviterUser = inviterId ? await this.userRepository.findUnique(inviterId) : null;
 		const fallbackLimit = MAX_GROUP_DM_RECIPIENTS;

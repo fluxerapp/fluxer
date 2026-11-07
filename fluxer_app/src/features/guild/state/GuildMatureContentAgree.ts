@@ -278,7 +278,7 @@ class GuildMatureContentAgree {
 					if (geo.regionCode === null) return true;
 					return geo.regionCode === regionCode;
 				});
-				if (requiresMatureContentCheck && !currentUser?.matureContentCheckComplete) {
+				if (requiresMatureContentCheck && !currentUser?.matureContentUnlocked) {
 					return MatureContentGateReason.GEO_RESTRICTED;
 				}
 			}
