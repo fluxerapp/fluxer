@@ -13,6 +13,10 @@ use axum::{
 
 const STATIC_TEXT_CACHE_CONTROL: &str = "no-cache";
 
+pub async fn module_map(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    serve_static_text_file(&state, &headers, "module-map.json", "application/json").await
+}
+
 pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let mut result =
         serve_static_text_file(&state, &headers, "version.json", "application/json").await;
