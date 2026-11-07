@@ -27,7 +27,6 @@ import {makeAutoObservable, reaction} from 'mobx';
 
 const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
 const staleWindowRefetchedAt = new Map<string, number>();
-const refetchedForLastMessageId = new Map<string, string>();
 
 interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
@@ -205,14 +204,17 @@ class Messages {
 		return messages.ready && messages.length > 0 && !messages.cached;
 	}
 
-	private claimNewestMessageRefetch(channelId: string, messages: ChannelMessages): boolean {
-		const lastMessageId = Channels.getChannel(channelId)?.lastMessageId ?? null;
-		const newestLoadedId = messages.last()?.id ?? null;
-		if (lastMessageId == null || newestLoadedId == null || !messages.hasNewestMessages()) return false;
-		if (SnowflakeUtils.compare(lastMessageId, newestLoadedId) <= 0) return false;
-		if (refetchedForLastMessageId.get(channelId) === lastMessageId) return false;
-		refetchedForLastMessageId.set(channelId, lastMessageId);
-		return true;
+	handlePassiveLastMessageUpdates(channels: Record<string, string>): void {
+		let changed = false;
+		for (const [channelId, lastMessageId] of Object.entries(channels)) {
+			const messages = ChannelMessages.get(channelId);
+			const newestLoadedId = messages?.last()?.id;
+			if (!messages || messages.cached || !newestLoadedId || !messages.hasNewestMessages()) continue;
+			if (SnowflakeUtils.compare(lastMessageId, newestLoadedId) <= 0) continue;
+			this.commitMessages(messages.withPatch({cached: true}));
+			changed = true;
+		}
+		if (changed) this.notifyChange();
 	}
 
 	shouldPreloadLatestPage(channelId: string): boolean {
@@ -360,11 +362,7 @@ class Messages {
 			MessageCommands.jumpToMessage({channelId, ...dispatch});
 			return false;
 		}
-		if (
-			!GatewaySessions.foregroundConnection.isConnected ||
-			messages.loadingMore ||
-			(this.hasLoadedPage(messages) && !this.claimNewestMessageRefetch(channelId, messages))
-		) {
+		if (!GatewaySessions.foregroundConnection.isConnected || messages.loadingMore || this.hasLoadedPage(messages)) {
 			if (this.hasLoadedPage(messages) && Dimension.channelPinnedToEnd(channelId)) {
 				this.commitMessages(messages.trimOldest(MAX_MESSAGES_PER_CHANNEL));
 				this.notifyChange();
