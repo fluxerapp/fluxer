@@ -46,7 +46,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons';
 import {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
-import {getGuildSearchService} from '@app/api/SearchFactory';
+import {getGuildMemberSearchService, getGuildSearchService} from '@app/api/SearchFactory';
 import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {deleteThreadSearchDocuments} from '@app/api/search/thread/ThreadSearchService';
@@ -923,6 +923,12 @@ export class GuildOperationsService {
 		if (guildSearchService) {
 			await guildSearchService.deleteGuild(guildId).catch((error) => {
 				Logger.error({guildId, error}, 'Failed to delete guild from search');
+			});
+		}
+		const guildMemberSearchService = getGuildMemberSearchService();
+		if (guildMemberSearchService) {
+			await guildMemberSearchService.deleteGuildMembers(guildId).catch((error) => {
+				Logger.error({guildId, error}, 'Failed to delete guild members from search');
 			});
 		}
 	}
