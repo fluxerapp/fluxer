@@ -2185,6 +2185,10 @@ msgstr "{productName} 啟動時不會更新。有可用的更新時，您可以�
 msgid "{productName} wordmark"
 msgstr "{productName} 文字標誌"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "{providerName} 會在您的瀏覽器中開啟。請在那裡登入以連結您的帳號。"
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "在這行結尾加上「;」。"
 msgid "Add \":\" between the property and its value."
 msgstr "在屬性與值之間加上「:」。"
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "新增 {blueskyProviderName} 連結"
+msgid "Add {providerName} connection"
+msgstr "新增 {providerName} 連結"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "無法傳送驗證電子郵件"
 msgid "Couldn't sign you in"
 msgstr "無法為您登入"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "無法開始 {blueskyProviderName} 授權"
+msgid "Couldn't start {providerName} authorization"
+msgstr "無法開始 {providerName} 授權"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "連結警告"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "連結您的 {BLUESKY_PROVIDER_NAME} 帳號或驗證網域所有權，即可將它們顯示在您的個人檔案中。"
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "連結您的帳號或驗證網域所有權，即可將它們顯示在您的個人檔案中。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "沒有參照任何本機檔案"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "尚無紀錄"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "已無法使用"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "此內容的來源社群已關閉複製功能，因此無法複製。"
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "您要找的社群可能已被刪除，或是您沒有權限存取。"
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "連結未獲允許。您可以關閉此分頁再試一次。"
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "您已經和這些使用者建立群組了。真的要再建立一個新
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "您已擁有終身版 {premiumProductName}"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "您的連結數已達到一個帳號的上限。請移除一個後再試一次。"
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

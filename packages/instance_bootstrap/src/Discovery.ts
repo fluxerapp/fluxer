@@ -27,6 +27,7 @@ import {
 	type InstanceBranding,
 	type InstanceBuiltInGuildBadgeImages,
 	type InstanceCommunity,
+	type InstanceConnectionProvider,
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGif,
@@ -779,7 +780,27 @@ function parseServices(value: unknown): InstanceServices | null {
 	if (gifEnabled == null || youtubeEnabled == null || blueskyEnabled == null) {
 		return null;
 	}
-	return {gif_enabled: gifEnabled, youtube_enabled: youtubeEnabled, bluesky_enabled: blueskyEnabled};
+	return {
+		gif_enabled: gifEnabled,
+		youtube_enabled: youtubeEnabled,
+		bluesky_enabled: blueskyEnabled,
+		connection_providers: parseConnectionProviders(source['connection_providers']),
+	};
+}
+
+function parseConnectionProviders(value: unknown): Array<InstanceConnectionProvider> {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return value.flatMap((entry): Array<InstanceConnectionProvider> => {
+		const source = asRecord(entry);
+		const id = source == null ? null : readNonEmptyString(source, 'id');
+		const name = source == null ? null : readNonEmptyString(source, 'name');
+		if (source == null || id == null || name == null) {
+			return [];
+		}
+		return [{id, name, icon_url: readAbsoluteHTTPURL(source, 'icon_url')}];
+	});
 }
 
 function parseLimits(value: unknown): LimitConfigSnapshot | LimitConfigWireFormat | null {

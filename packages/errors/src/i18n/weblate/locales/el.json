@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Ο τύπος σύνδεσης δεν υποστηρίζεται.",
 	"connections.limit_reached": "Έχεις φτάσει τον μέγιστο αριθμό συνδέσεων ({limit}).",
 	"connections.not_found": "Άγνωστη σύνδεση.",
+	"connections.unknown_provider": "Αυτό το είδος σύνδεσης δεν είναι διαθέσιμο σε αυτήν την εγκατάσταση.",
 	"connections.verification_failed": "Η επαλήθευση σύνδεσης απέτυχε. Βεβαιώσου ότι το token επαλήθευσης έχει τοποθετηθεί σωστά.",
 	"content_and_safety.content_blocked": "Αυτό το περιεχόμενο αποκλείστηκε από τα συστήματα ασφαλείας.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Το ακατάλληλο περιεχόμενο δεν μπορεί να σταλεί.",

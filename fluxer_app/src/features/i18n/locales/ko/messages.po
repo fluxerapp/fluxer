@@ -2185,6 +2185,10 @@ msgstr "{productName}이(가) 시작 중에는 업데이트되지 않습니다. 
 msgid "{productName} wordmark"
 msgstr "{productName} 워드마크"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "브라우저에서 {providerName}이(가) 열려요. 그곳에서 로그인하여 계정을 연결하세요."
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "이 줄 끝에 \";\"를 추가하세요."
 msgid "Add \":\" between the property and its value."
 msgstr "속성과 값 사이에 \":\"를 추가하세요."
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "{blueskyProviderName} 연결 추가"
+msgid "Add {providerName} connection"
+msgstr "{providerName} 연결 추가"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "인증 이메일을 보낼 수 없습니다"
 msgid "Couldn't sign you in"
 msgstr "로그인할 수 없었습니다"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "{blueskyProviderName} 승인을 시작할 수 없습니다"
+msgid "Couldn't start {providerName} authorization"
+msgstr "{providerName} 승인을 시작할 수 없습니다"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "링크 경고"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "프로필에 표시하려면 {BLUESKY_PROVIDER_NAME} 계정을 연결하거나 도메인 소유권을 확인하세요."
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "프로필에 표시하려면 계정을 연결하거나 도메인 소유권을 확인하세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "참조된 로컬 파일 없음"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "아직 활동 로그가 없습니다"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "더 이상 사용할 수 없음"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "이 표현을 가져온 커뮤니티에서 복제를 꺼 두어 복사�
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "찾으시는 커뮤니티가 삭제되었거나 접근 권한이 없을 수 있습니다."
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "연결이 허용되지 않았습니다. 이 탭을 닫고 다시 시도해 주세요."
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "이 멤버들로 구성된 그룹이 이미 있습니다. 새 그룹을 
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "이미 {premiumProductName} 평생 이용권을 보유하고 있습니다"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "계정 하나에 둘 수 있는 연결 수가 이미 최대입니다. 하나를 삭제하고 다시 시도해 주세요."
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

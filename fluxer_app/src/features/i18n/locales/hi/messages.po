@@ -2185,6 +2185,10 @@ msgstr "{productName} शुरू होने पर अपडेट नही
 msgid "{productName} wordmark"
 msgstr "{productName} वर्डमार्क"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "{providerName} आपके ब्राउज़र में खुलता है। अपना अकाउंट कनेक्ट करने के लिए वहाँ साइन इन करें।"
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "इस लाइन के अंत में \";\" जोड़ें�
 msgid "Add \":\" between the property and its value."
 msgstr "प्रॉपर्टी और उसके वैल्यू के बीच में \":\" जोड़ें।"
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "{blueskyProviderName} कनेक्शन जोड़ें"
+msgid "Add {providerName} connection"
+msgstr "{providerName} कनेक्शन जोड़ें"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "पुष्टि करने वाला ईमेल भेजा �
 msgid "Couldn't sign you in"
 msgstr "आपको साइन इन नहीं किया जा सका"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "{blueskyProviderName} ऑथराइज़ेशन शुरू नहीं किया जा सका"
+msgid "Couldn't start {providerName} authorization"
+msgstr "{providerName} ऑथराइज़ेशन शुरू नहीं किया जा सका"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "लिंक चेतावनियाँ"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "अपनी प्रोफ़ाइल पर दिखाने के लिए अपने {BLUESKY_PROVIDER_NAME} अकाउंट को लिंक करें या डोमेन के मालिकाना हक को वेरिफ़ाई करें।"
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "अपनी प्रोफ़ाइल पर दिखाने के लिए अपने अकाउंट लिंक करें या डोमेन के मालिकाना हक को वेरिफ़ाई करें।"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "किसी स्थानीय फ़ाइल का संदर�
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "अभी तक कोई लॉग नहीं"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "अब उपलब्ध नहीं है"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "जिस कम्युनिटी से यह आया है, �
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "आप जिस कम्युनिटी को ढूंढ रहे हैं, हो सकता है उसे डिलीट कर दिया गया हो या आपके पास उसका एक्सेस न हो।"
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "कनेक्शन की अनुमति नहीं दी गई। आप इस टैब को बंद करके फिर से कोशिश कर सकते हैं।"
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "इन यूज़र के साथ आपका पहले से
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "आपके पास पहले से ही आजीवन {premiumProductName} है"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "आपके पास पहले से ही एक अकाउंट के लिए अधिकतम कनेक्शन हैं। एक हटाएँ और फिर से कोशिश करें।"
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

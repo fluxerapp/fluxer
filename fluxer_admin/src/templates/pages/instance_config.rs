@@ -36,6 +36,7 @@ use maud::{Markup, html};
 
 mod accounts;
 mod captcha;
+mod connections;
 mod experiments;
 mod integrations;
 mod media;
@@ -45,12 +46,15 @@ mod sso;
 use self::{
     accounts::{AccountsSectionInput, account_identity_section, accounts_section},
     captcha::captcha_section,
+    connections::connection_providers_section,
     experiments::{domain_migration_section, voice_p2p_section},
     integrations::integrations_config_section,
     media::{HostingMode, media_config_section},
     policy::policy_config_section,
     sso::sso_config_section,
 };
+
+pub use self::connections::{CONNECTION_PROVIDER_COUNT_FIELD, connection_provider_field};
 
 pub const LOADED_CONFIG_FIELD: &str = "loaded_config";
 
@@ -251,6 +255,17 @@ pub fn instance_config_page(
                             &instance_config.app_public.branding.product_name,
                         ),
                 ))
+                @if instance_config.self_hosted {
+                    (config_group(
+                        "Profile connections",
+                        "OAuth 2.0 and OpenID Connect providers people can link to their profiles.",
+                        connection_providers_section(
+                                base,
+                                config_form,
+                                &instance_config.integrations.connection_providers,
+                            ),
+                    ))
+                }
                 (config_group(
                     "Push notifications",
                     "Consent for the relay that delivers official mobile app notifications.",

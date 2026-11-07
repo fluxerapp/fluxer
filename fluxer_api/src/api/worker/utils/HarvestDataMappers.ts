@@ -2,6 +2,7 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {parseOAuthConnectionIdentifier} from '@app/api/connection/ConnectionProviders';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {
 	OperatorPassCertificateRow,
@@ -38,6 +39,7 @@ import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMap
 import type {ExportedAppAttestKey} from '@app/api/user/AgeRange';
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {getAnimatedAssetExtension} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {
 	decodeSyncedPreferencesLenient,
@@ -682,6 +684,10 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		connections: connections.map((connection) => ({
 			id: connection.connection_id,
 			type: connection.connection_type,
+			provider_id:
+				connection.connection_type === ConnectionTypes.OAUTH
+					? (parseOAuthConnectionIdentifier(connection.identifier)?.providerId ?? null)
+					: null,
 			identifier: connection.identifier,
 			name: connection.name,
 			verified: connection.verified,

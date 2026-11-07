@@ -299,6 +299,14 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getBuiltInBadgeImages(),
 				instanceConfigRepository.getHiddenBuiltInBadges(),
 			]);
+			const mediaService = ctx.get('mediaService');
+			const connectionProviders = [...(await instanceConfigRepository.getConnectionProviderIndex()).values()]
+				.filter(({provider}) => provider.enabled)
+				.map(({provider}) => ({
+					id: provider.id,
+					name: provider.name,
+					icon_url: provider.icon_url ? mediaService.getExternalMediaProxyURL(provider.icon_url) : null,
+				}));
 			const statusPageInstatus = await getStatusPageDetector().isInstatus(appPublicConfig.branding.status_page_url);
 			const lockReason =
 				Config.instance.selfHosted && !appPublicConfig.setup.configured
@@ -337,7 +345,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					sso,
 					registration,
 					community,
-					services,
+					services: {...services, connection_providers: connectionProviders},
 					limits,
 				},
 			);

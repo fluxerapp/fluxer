@@ -6,14 +6,20 @@ import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecord
 import {migrateSsoIdentities} from '@app/api/admin/controllers/SsoIdentityAdminController';
 import {startAttachmentDecayReconcile} from '@app/api/attachment/AttachmentDecayReconcileRun';
 import {maybeAutoJoinInvite} from '@app/api/auth/AuthRegistration';
+import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/OidcClient';
 import {ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
-import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
 import {tryDiscoverOidcProviderMetadata} from '@app/api/auth/services/SsoUtils';
 import {createGuildID, createInviteCode, createUserID} from '@app/api/BrandedTypes';
 import {loadSigningKey} from '@app/api/bluesky/BlueskyOAuthService';
 import {Config} from '@app/api/Config';
+import {connectionCallbackUrl, type StoredConnectionProvider} from '@app/api/connection/ConnectionProviders';
 import {enqueueEndUnassignedGuildVisits} from '@app/api/guild/visits/GuildVisitLifecycle';
+import {
+	mergeConnectionProviderSecrets,
+	type ValidatedConnectionProvider,
+	validateConnectionProviders,
+} from '@app/api/instance/ConnectionProviderValidation';
 import {resolveEffectiveSmtpConfig, type StoredEmailSmtpConfig} from '@app/api/instance/EmailDelivery';
 import {assetStorageKey, resolveBrandingAsset} from '@app/api/instance/InstanceAssetReferences';
 import {
@@ -71,6 +77,7 @@ import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {
 	BrandingAssetUploadRequest,
+	type ConnectionProviderConfigResponse,
 	CreateRegistrationUrlRequest,
 	CreateRegistrationUrlResponse,
 	InstanceConfigResponse,
@@ -260,6 +267,7 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 		instantAccountAvailability,
 		notice,
 		distributionPricing,
+		connectionProviders,
 	] = await Promise.all([
 		instanceConfigRepository.getAppPublicConfig(),
 		instanceConfigRepository.getInstancePolicyConfig(),
@@ -272,6 +280,7 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 		instanceConfigRepository.getInstantAccountAvailability(),
 		instanceConfigRepository.getInstanceNotice(),
 		instanceConfigRepository.getDistributionPricingConfig(),
+		instanceConfigRepository.getConnectionProviders(),
 	]);
 	return {
 		sso: {
@@ -336,13 +345,34 @@ async function buildInstanceConfigResponse(warnings: Array<string> = []): Promis
 				bluesky: integrations.bluesky.effective_enabled,
 			},
 		},
-		integrations,
+		integrations: {...integrations, connection_providers: connectionProviders.map(toConnectionProviderConfigResponse)},
 		media,
 		billing,
 		distribution_pricing: distributionPricing,
 		notice,
 		warnings,
 	};
+}
+
+function toConnectionProviderConfigResponse({
+	client_secret,
+	...provider
+}: StoredConnectionProvider): ConnectionProviderConfigResponse {
+	return {...provider, client_secret_set: Boolean(client_secret), callback_url: connectionCallbackUrl(provider.id)};
+}
+
+async function prepareConnectionProviders(
+	data: InstanceConfigUpdateRequest,
+): Promise<Array<ValidatedConnectionProvider> | null> {
+	const providers = data.integrations?.connection_providers;
+	if (providers === undefined) return null;
+	if (!Config.instance.selfHosted && providers.length > 0) {
+		throw InputValidationError.create(
+			'integrations.connection_providers',
+			'Connection providers are only available on self-hosted instances',
+		);
+	}
+	return validateConnectionProviders(providers, await getInstanceConfigRepository().getConnectionProviders());
 }
 
 function buildAdminIssuedRegistrationUrl(code: string): string {
@@ -623,6 +653,7 @@ interface InstanceConfigUpdateContext {
 	readonly data: InstanceConfigUpdateRequest;
 	readonly instanceConfigRepository: InstanceConfigRepository;
 	readonly integrationsPatch: InstanceIntegrationsConfigPatch | null;
+	readonly connectionProviders: Array<ValidatedConnectionProvider> | null;
 	readonly warnings: Array<string>;
 }
 
@@ -846,6 +877,14 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 			await instanceConfigRepository.setInstanceIntegrationsConfig(integrationsPatch);
 		},
 	),
+	connection_providers: createInstanceConfigSectionApplier(
+		({connectionProviders}) => connectionProviders,
+		async (connectionProviders, {instanceConfigRepository}) => {
+			await instanceConfigRepository.setConnectionProviders((current) =>
+				mergeConnectionProviderSecrets(connectionProviders, current),
+			);
+		},
+	),
 	media: createInstanceConfigSectionApplier(
 		({data}) => data.media,
 		async (media, {instanceConfigRepository}) => {
@@ -982,8 +1021,9 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			const integrationsPatch = toIntegrationsPatch(data.integrations, await readSavedSmtpConfig());
 			await assertConsistentInstanceConfig(data, integrationsPatch);
 			await assertValidBlueskyKeys(integrationsPatch);
+			const connectionProviders = await prepareConnectionProviders(data);
 			const warnings: Array<string> = [];
-			const updateContext = {ctx, data, instanceConfigRepository, integrationsPatch, warnings};
+			const updateContext = {ctx, data, instanceConfigRepository, integrationsPatch, connectionProviders, warnings};
 			for (const applySection of Object.values(INSTANCE_CONFIG_SECTION_APPLIERS)) {
 				const pendingUpdate = applySection(updateContext);
 				if (pendingUpdate) await pendingUpdate;

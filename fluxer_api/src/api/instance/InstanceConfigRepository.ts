@@ -4,6 +4,12 @@ import crypto from 'node:crypto';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
+import {
+	buildConnectionProviderIndex,
+	type ConnectionProviderIndex,
+	parseStoredConnectionProviders,
+	type StoredConnectionProvider,
+} from '@app/api/connection/ConnectionProviders';
 import type {StoredLimitConfig} from '@app/api/constants/LimitConfig';
 import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
@@ -198,6 +204,7 @@ const CHANNEL_THREADS_CONFIG_KEY = 'channel_threads_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
+const CONNECTION_PROVIDERS_KEY = 'connection_providers';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const ADMIN_BOOTSTRAP_KEY = 'admin_bootstrapped';
@@ -216,6 +223,8 @@ export const INSTANCE_CONFIG_REFRESH_CHANNEL = 'instance-config-refresh';
 export const REGISTRATION_PENDING_APPROVAL_TRAIT = 'registration_pending_approval';
 export const REGISTRATION_REJECTED_TRAIT = 'registration_rejected';
 export const INSTANCE_CONFIG_WRITE_ATTEMPTS = 5;
+
+type InstanceServiceToggles = Omit<InstanceServices, 'connection_providers'>;
 
 export class InstanceConfigWriteConflictError extends ConflictError {
 	constructor(key: string) {
@@ -1705,6 +1714,7 @@ export class InstanceConfigRepository {
 	private effectiveBlueskyConfigSource: string | null = null;
 	private parsedCustomBadges: {raw: string | null; stored: StoredCustomBadges} | null = null;
 	private parsedCustomBadgeCatalog: {raw: string | null; stored: CustomBadgeCatalogState} | null = null;
+	private connectionProviderIndex: {raw: string | null; index: ConnectionProviderIndex} | null = null;
 
 	constructor(kvClient: IKVProvider | null = null) {
 		this.kvClient = kvClient;
@@ -3168,7 +3178,29 @@ export class InstanceConfigRepository {
 		});
 	}
 
-	async getResolvedServicesConfig(): Promise<InstanceServices> {
+	async getConnectionProviderIndex(): Promise<ConnectionProviderIndex> {
+		if (!Config.instance.selfHosted) return new Map();
+		const raw = await this.getConfig(CONNECTION_PROVIDERS_KEY);
+		if (this.connectionProviderIndex?.raw !== raw || this.connectionProviderIndex === null) {
+			this.connectionProviderIndex = {
+				raw,
+				index: buildConnectionProviderIndex(parseStoredConnectionProviders(raw)),
+			};
+		}
+		return this.connectionProviderIndex.index;
+	}
+
+	async getConnectionProviders(): Promise<Array<StoredConnectionProvider>> {
+		return [...(await this.getConnectionProviderIndex()).values()].map(({provider}) => provider);
+	}
+
+	async setConnectionProviders(
+		next: (current: Array<StoredConnectionProvider>) => Array<StoredConnectionProvider>,
+	): Promise<void> {
+		await this.updateStoredConfig(CONNECTION_PROVIDERS_KEY, (raw) => next(parseStoredConnectionProviders(raw)));
+	}
+
+	async getResolvedServicesConfig(): Promise<InstanceServiceToggles> {
 		const [policy, gif, youtubeApiKey, bluesky] = await Promise.all([
 			this.getInstancePolicyConfig(),
 			this.getEffectiveGifConfig(),

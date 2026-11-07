@@ -2185,6 +2185,10 @@ msgstr "{productName} nu se va actualiza în timpul pornirii. Când o actualizar
 msgid "{productName} wordmark"
 msgstr "Logotipul {productName}"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "{providerName} se deschide în browserul tău. Conectează-te acolo pentru a-ți lega contul."
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "Adaugă \";\" la sfârșitul acestei linii."
 msgid "Add \":\" between the property and its value."
 msgstr "Adaugă \":\" între proprietate și valoare."
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "Adaugă conexiune {blueskyProviderName}"
+msgid "Add {providerName} connection"
+msgstr "Adaugă conexiune {providerName}"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "Nu s-a putut trimite e-mailul de verificare"
 msgid "Couldn't sign you in"
 msgstr "Nu am putut să te autentific"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "Nu s-a putut începe autorizarea {blueskyProviderName}"
+msgid "Couldn't start {providerName} authorization"
+msgstr "Nu s-a putut începe autorizarea {providerName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "Avertismente link"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "Conectează-ți contul {BLUESKY_PROVIDER_NAME} sau verifică proprietatea domeniului pentru a le afișa pe profilul tău."
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "Conectează-ți conturile sau verifică proprietatea domeniului pentru a le afișa pe profilul tău."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "Nicio referință la fișiere locale"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "Încă nu există jurnale"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "Nu mai este disponibil"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "Comunitatea de la care provine a dezactivat clonarea, așa că nu poate 
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Comunitatea pe care o cauți ar fi putut fi ștearsă sau este posibil să nu ai acces la ea."
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "Conexiunea nu a fost permisă. Poți închide această filă și încerca din nou."
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "Ai deja un grup cu acești utilizatori. Chiar vrei să creezi unul nou? 
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Ai deja {premiumProductName} pe viață"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "Ai deja numărul maxim de conexiuni pe care le poate avea un cont. Elimină una și încearcă din nou."
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

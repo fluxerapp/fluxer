@@ -395,6 +395,7 @@ export const ERROR_I18N_MESSAGES = {
 	'connections.invalid_type': 'The connection type is not supported.',
 	'connections.limit_reached': "You can't have more than {limit} connections.",
 	'connections.not_found': 'Unknown connection.',
+	'connections.unknown_provider': "This kind of connection isn't available on this instance.",
 	'connections.verification_failed':
 		'Connection verification failed. Make sure the verification token is correctly placed.',
 	'content_and_safety.content_blocked': 'This content was blocked by safety systems.',

@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Tilkoblingstypen er ikke støttet.",
 	"connections.limit_reached": "Du har nådd maksimalt antall tilkoblinger ({limit}).",
 	"connections.not_found": "Ukjent tilkobling.",
+	"connections.unknown_provider": "Denne typen tilkobling er ikke tilgjengelig på denne instansen.",
 	"connections.verification_failed": "Tilkoblingsverifisering mislyktes. Sjekk at verifiseringstokenet er riktig plassert.",
 	"content_and_safety.content_blocked": "Dette innholdet ble blokkert av sikkerhetssystemene.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Eksplisitt innhold kan ikke sendes.",

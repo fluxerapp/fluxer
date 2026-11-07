@@ -312,6 +312,7 @@
 	"connections.invalid_type": "O tipo de conexão não é suportado.",
 	"connections.limit_reached": "Você atingiu o número máximo de conexões ({limit}).",
 	"connections.not_found": "Conexão desconhecida.",
+	"connections.unknown_provider": "Esse tipo de conexão não está disponível nesta instância.",
 	"connections.verification_failed": "A verificação da conexão falhou. Certifique-se de que o token de verificação está corretamente posicionado.",
 	"content_and_safety.content_blocked": "Este conteúdo foi bloqueado por sistemas de segurança.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Conteúdo explícito não pode ser enviado.",

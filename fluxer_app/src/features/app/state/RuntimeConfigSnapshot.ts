@@ -34,6 +34,7 @@ import {
 	type InstanceAppPublic,
 	type InstanceBuiltInGuildBadgeImages,
 	type InstanceCommunity,
+	type InstanceConnectionProvider,
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGuildBadge,
@@ -392,7 +393,23 @@ function readServices(value: unknown): InstanceServices {
 		gif_enabled: readBoolean(source, 'gif_enabled', 'services.gif_enabled'),
 		youtube_enabled: readBoolean(source, 'youtube_enabled', 'services.youtube_enabled'),
 		bluesky_enabled: readBoolean(source, 'bluesky_enabled', 'services.bluesky_enabled'),
+		connection_providers: readConnectionProviders(source['connection_providers']),
 	};
+}
+
+function readConnectionProviders(value: unknown): Array<InstanceConnectionProvider> {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return value.map((entry, index) => {
+		const path = `services.connection_providers.${index}`;
+		const source = readRecord(entry, path);
+		return {
+			id: readNonEmptyString(source, 'id', `${path}.id`),
+			name: readNonEmptyString(source, 'name', `${path}.name`),
+			icon_url: readNullableAbsoluteHttpUrl(source, 'icon_url', `${path}.icon_url`),
+		};
+	});
 }
 
 function readLimitFilter(value: unknown, path: string): LimitFilter {

@@ -312,6 +312,7 @@
 	"connections.invalid_type": "نوع الاتصال غير مدعوم.",
 	"connections.limit_reached": "وصلت إلى الحد الأقصى لعدد الاتصالات ({limit}).",
 	"connections.not_found": "اتصال غير معروف.",
+	"connections.unknown_provider": "هذا النوع من الاتصالات غير متاح في هذا المثيل.",
 	"connections.verification_failed": "فشل التحقق من الاتصال. تأكد من وضع رمز التحقق في المكان الصحيح.",
 	"content_and_safety.content_blocked": "حظرت أنظمة السلامة هذا المحتوى.",
 	"content_and_safety.explicit_content_cannot_be_sent": "لا يمكن إرسال المحتوى الصريح.",

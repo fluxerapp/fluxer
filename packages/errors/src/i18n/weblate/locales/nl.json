@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Het verbindingstype wordt niet ondersteund.",
 	"connections.limit_reached": "Je hebt het maximale aantal verbindingen bereikt ({limit}).",
 	"connections.not_found": "Onbekende verbinding.",
+	"connections.unknown_provider": "Dit soort verbinding is niet beschikbaar op deze instantie.",
 	"connections.verification_failed": "Verificatie van de verbinding mislukt. Controleer of het verificatietoken juist is geplaatst.",
 	"content_and_safety.content_blocked": "Deze inhoud is geblokkeerd door veiligheidssystemen.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Seksueel expliciete inhoud kan niet worden verzonden.",

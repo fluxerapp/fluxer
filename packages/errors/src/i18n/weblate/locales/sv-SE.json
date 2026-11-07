@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Anslutningstypen stöds inte.",
 	"connections.limit_reached": "Du har nått maxantalet anslutningar ({limit}).",
 	"connections.not_found": "Okänd anslutning.",
+	"connections.unknown_provider": "Den här typen av anslutning är inte tillgänglig på den här instansen.",
 	"connections.verification_failed": "Anslutningsverifieringen misslyckades. Kontrollera att verifieringstoken är korrekt placerad.",
 	"content_and_safety.content_blocked": "Det här innehållet blockerades av säkerhetssystemen.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Sexuellt explicit innehåll kan inte skickas.",

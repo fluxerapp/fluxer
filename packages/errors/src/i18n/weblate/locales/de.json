@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Dieser Verbindungstyp wird nicht unterstützt.",
 	"connections.limit_reached": "Du hast die maximale Anzahl an Verbindungen ({limit}) erreicht.",
 	"connections.not_found": "Die Verbindung ist unbekannt.",
+	"connections.unknown_provider": "Diese Art von Verbindung ist auf dieser Instanz nicht verfügbar.",
 	"connections.verification_failed": "Die Verbindungsüberprüfung ist fehlgeschlagen. Stelle sicher, dass das Verifizierungs-Token richtig platziert ist.",
 	"content_and_safety.content_blocked": "Dieser Inhalt wurde von den Sicherheitssystemen blockiert.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Explizite Inhalte können nicht gesendet werden.",

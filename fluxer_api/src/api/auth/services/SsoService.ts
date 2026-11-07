@@ -8,7 +8,15 @@ import {assertAccountCreationPastSetup, maybeAutoJoinInvite} from '@app/api/auth
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {assertEmailNotBlocklisted, isEmailBlocklisted} from '@app/api/auth/EmailBlocklist';
-import {getOidcJwks, resetOidcJwksCachesForTests} from '@app/api/auth/services/OidcJwks';
+import {
+	discoveredHttpsUrl,
+	exchangeAuthorizationCode,
+	fetchUserInfo,
+	ProviderExchangeError,
+	type ProviderTokens,
+	resolveOidcDiscovery,
+	verifyIdToken,
+} from '@app/api/auth/services/OidcClient';
 import {
 	isLinkedToSsoProvider,
 	ssoIdentityTrait,
@@ -16,14 +24,7 @@ import {
 	ssoProviderIdOf,
 } from '@app/api/auth/services/SsoIdentityLinks';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
-import {
-	acceptedIssuers,
-	type DiscoveredOidcProviderMetadata,
-	parseTokenEndpointResponse,
-	sanitizeSsoRedirectTo,
-	sendProviderRequest,
-	tryDiscoverOidcProviderMetadata,
-} from '@app/api/auth/services/SsoUtils';
+import {sanitizeSsoRedirectTo} from '@app/api/auth/services/SsoUtils';
 import {userHasMfa} from '@app/api/auth/services/SudoMethods';
 import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
 import {createRoleID, type UserID} from '@app/api/BrandedTypes';
@@ -40,7 +41,7 @@ import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
 import {canJoinSingleCommunity, type SingleCommunityService} from '@app/api/instance/SingleCommunityService';
-import {deriveSsoRedirectUri, isHttpsSsoUrl, isTestSsoProvider} from '@app/api/instance/SsoConfigValidation';
+import {deriveSsoRedirectUri, isTestSsoProvider} from '@app/api/instance/SsoConfigValidation';
 import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
@@ -60,8 +61,6 @@ import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {renameUser} from '@app/api/user/UserRename';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
-import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
-import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {randomBase64Url} from '@app/api/utils/SecretHash';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
@@ -78,10 +77,8 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
-import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
-import type {StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
 import {ms, seconds} from 'itty-time';
-import {type JWTPayload, jwtVerify} from 'jose';
+import type {JWTPayload} from 'jose';
 
 interface SsoStatePayload {
 	codeVerifier: string;
@@ -151,46 +148,14 @@ interface ResolvedSsoClaims {
 	groupsOverage: boolean;
 }
 
-interface DiscoveryCacheEntry {
-	metadata: DiscoveredOidcProviderMetadata | null;
-	fetchedAt: number;
-	failed: boolean;
-}
-
-type ClientAuthMethod = 'client_secret_basic' | 'client_secret_post';
-
-interface TokenEndpointError {
-	error: string | null;
-	description: string | null;
-}
-
-type TokenAttempt =
-	| {ok: true; tokens: {id_token?: string; access_token?: string}}
-	| {ok: false; status: number; error: TokenEndpointError};
-
 const CODE_VERIFIER_BYTE_LENGTH = 32;
 const STATE_BYTE_LENGTH = 16;
 const CLIENT_BINDING_BYTE_LENGTH = 32;
 const MOBILE_REQUIRES_CLIENT_BINDING = false;
 const MOBILE_REQUIRES_SSO_SECOND_FACTOR = false;
 const NONCE_BYTE_LENGTH = 16;
-const DISCOVERY_CACHE_TTL_SECONDS = seconds('30 days');
-const DISCOVERY_FRESH_MS = ms('1 hour');
-const DISCOVERY_FAILURE_FRESH_MS = ms('1 minute');
-
-const TOKEN_ERROR_BODY_MAX_BYTES = 4 * 1024;
-const PROVIDER_ERROR_TEXT_MAX_LENGTH = 300;
-const MISCONFIGURED_CLIENT_ERRORS = new Set(['invalid_client', 'unauthorized_client']);
-
-const discoveryRefreshes = new Map<string, Promise<DiscoveredOidcProviderMetadata | null>>();
-const workingClientAuthMethods = new Map<string, ClientAuthMethod>();
 const MISSING_ISSUER_WARNING_INTERVAL_MS = ms('1 hour');
 let missingIssuerWarnedAt = 0;
-
-export function resetSsoProviderCachesForTests(): void {
-	resetOidcJwksCachesForTests();
-	workingClientAuthMethods.clear();
-}
 
 let ssoLogger: LoggerInterface | undefined;
 
@@ -217,53 +182,6 @@ function buildLinkStateCacheKey(state: string): string {
 
 function pendingSsoLinkKey(ticket: string): string {
 	return `sso:pending-link:${ticket}`;
-}
-
-function issuerCacheId(issuer: string): string {
-	return createHash('sha256').update(issuer).digest('hex').slice(0, 32);
-}
-
-export function ssoDiscoveryCacheKey(issuer: string): string {
-	return `sso:oidc-discovery:v2:${issuerCacheId(issuer)}`;
-}
-
-export function legacySsoDiscoveryCacheKey(issuer: string): string {
-	return `sso:oidc-discovery:${issuerCacheId(issuer)}`;
-}
-
-function isDiscoveryFresh(entry: DiscoveryCacheEntry): boolean {
-	return Date.now() - entry.fetchedAt < (entry.failed ? DISCOVERY_FAILURE_FRESH_MS : DISCOVERY_FRESH_MS);
-}
-
-function clientAuthMethodsToTry(tokenUrl: string, supported: Array<string> | null): Array<ClientAuthMethod> {
-	const basicFirst =
-		!supported?.length || (supported.includes('client_secret_basic') && !supported.includes('client_secret_post'));
-	const first = workingClientAuthMethods.get(tokenUrl) ?? (basicFirst ? 'client_secret_basic' : 'client_secret_post');
-	return [first, first === 'client_secret_post' ? 'client_secret_basic' : 'client_secret_post'];
-}
-
-function formEncode(value: string): string {
-	return new URLSearchParams({v: value}).toString().slice(2);
-}
-
-function basicAuthorization(clientId: string, clientSecret: string): string {
-	return `Basic ${Buffer.from(`${formEncode(clientId)}:${formEncode(clientSecret)}`).toString('base64')}`;
-}
-
-function providerErrorText(value: unknown): string | null {
-	return typeof value === 'string' ? value.slice(0, PROVIDER_ERROR_TEXT_MAX_LENGTH) : null;
-}
-
-function wwwAuthenticateError(header: string | null): string | null {
-	return providerErrorText(header?.match(/error="([^"]*)"/)?.[1]);
-}
-
-function isRefusedClient(attempt: TokenAttempt): boolean {
-	return !attempt.ok && (attempt.status === 400 || attempt.status === 401) && attempt.error.error !== 'invalid_grant';
-}
-
-function discoveredHttpsUrl(url: string | undefined): string | null {
-	return url && isHttpsSsoUrl(url) ? url : null;
 }
 
 function hashClientBinding(clientBinding: string): string {
@@ -466,18 +384,23 @@ function isEntraVerifiedDomainEmail(value: unknown): boolean {
 	return value === 1 || value === '1' || coerceEmailVerified(value) === true;
 }
 
-async function readTokenError(resp: StreamResponse, url: string): Promise<TokenEndpointError> {
-	try {
-		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
-			maxBytes: TOKEN_ERROR_BODY_MAX_BYTES,
-			headers: resp.headers,
-			url,
-			description: 'SSO token error response',
-		});
-		const parsed = parseJsonRecord(rawBody);
-		return {error: providerErrorText(parsed?.['error']), description: providerErrorText(parsed?.['error_description'])};
-	} catch {
-		return {error: null, description: null};
+function rethrowAsSsoError(error: unknown): never {
+	if (!(error instanceof ProviderExchangeError)) throw error;
+	switch (error.stage) {
+		case 'token_unavailable':
+			throw new SsoProviderUnavailableError();
+		case 'token_client_refused':
+			throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_MISCONFIGURED);
+		case 'token_rejected':
+			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_SSO_AUTHORIZATION_CODE);
+		case 'id_token_invalid':
+			throw InputValidationError.fromCode('id_token', ValidationErrorCodes.INVALID_SSO_TOKEN);
+		case 'userinfo_failed':
+			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_FETCH_SSO_USER_INFO);
+		case 'userinfo_signed':
+			throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_USER_INFO_SIGNED_RESPONSE_UNSUPPORTED);
+		case 'userinfo_unparseable':
+			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_PARSE_SSO_USER_INFO);
 	}
 }
 
@@ -1163,7 +1086,7 @@ export class SsoService {
 		}
 		let userInfo: Record<string, unknown> | null = null;
 		if (config.userInfoUrl && tokenResponse.access_token) {
-			userInfo = await this.fetchUserInfo(config.userInfoUrl, tokenResponse.access_token);
+			userInfo = await fetchUserInfo(config.userInfoUrl, tokenResponse.access_token).catch(rethrowAsSsoError);
 		}
 		const idTokenSub = claims ? readStringClaim(claims, 'sub') : undefined;
 		const userInfoSub = userInfo ? readStringClaim(userInfo, 'sub') : undefined;
@@ -1216,78 +1139,17 @@ export class SsoService {
 	}
 
 	private async verifyIdToken(idToken: string, config: ResolvedSsoConfig, expectedNonce: string): Promise<JWTPayload> {
-		try {
-			if (!config.jwksUrl || !config.issuerForVerification) {
-				throw new Error('id_token cannot be verified without a JWKS URL and an issuer');
-			}
-			const jwks = await getOidcJwks(config.jwksUrl);
-			const {payload} = await jwtVerify(idToken, jwks, {
-				issuer: acceptedIssuers(config.issuerForVerification),
-				audience: config.clientId ?? undefined,
-				clockTolerance: 10,
-			});
-			const nonce = payload['nonce'];
-			if (nonce === undefined) {
-				getLogger().warn('SSO id_token missing required nonce claim');
-				throw new Error('nonce missing');
-			}
-			if (typeof nonce !== 'string' || nonce.length === 0 || nonce !== expectedNonce) {
-				throw new Error('nonce mismatch');
-			}
-			return payload;
-		} catch (error) {
-			if (error instanceof SsoProviderUnavailableError) throw error;
-			getLogger().error({error}, 'Failed to verify SSO id_token');
+		if (!config.jwksUrl || !config.issuerForVerification) {
+			getLogger().error('SSO id_token cannot be verified without a JWKS URL and an issuer');
 			throw InputValidationError.fromCode('id_token', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
-	}
-
-	private async fetchUserInfo(userInfoUrl: string, accessToken: string): Promise<Record<string, unknown>> {
-		const resp = await sendProviderRequest({
-			url: userInfoUrl,
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				Accept: 'application/json',
-			},
-			timeout: ms('15 seconds'),
-			serviceName: 'sso_user_info',
-		});
-		if (resp.status < 200 || resp.status >= 300) {
-			FetchUtils.discardResponseBody(resp.stream, resp.status);
-			getLogger().warn(
-				{
-					status: resp.status,
-					userinfo_url: formatUrlForDiagnostics(userInfoUrl),
-					error: wwwAuthenticateError(resp.headers.get('www-authenticate')),
-				},
-				'SSO userinfo request failed',
-			);
-			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_FETCH_SSO_USER_INFO);
-		}
-		if (resp.headers.get('content-type')?.toLowerCase().includes('application/jwt')) {
-			FetchUtils.discardResponseBody(resp.stream, resp.status);
-			getLogger().warn(
-				{userinfo_url: formatUrlForDiagnostics(userInfoUrl)},
-				'SSO provider sent a signed userinfo response, which Fluxer does not support. Turn off userinfo signing for this client at the provider.',
-			);
-			throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_USER_INFO_SIGNED_RESPONSE_UNSUPPORTED);
-		}
-		try {
-			const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
-				maxBytes: EXTERNAL_RESPONSE_LIMITS.ssoUserInfoBytes,
-				headers: resp.headers,
-				url: userInfoUrl,
-				description: 'SSO user info response',
-			});
-			const parsed = parseJsonRecord(rawBody);
-			if (!parsed) {
-				throw new Error('SSO user info response was not a JSON object');
-			}
-			return parsed;
-		} catch {
-			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_PARSE_SSO_USER_INFO);
-		}
+		return verifyIdToken({
+			idToken,
+			jwksUrl: config.jwksUrl,
+			issuer: config.issuerForVerification,
+			clientId: config.clientId ?? '',
+			nonce: expectedNonce,
+		}).catch(rethrowAsSsoError);
 	}
 
 	private async exchangeCode({
@@ -1300,88 +1162,19 @@ export class SsoService {
 		codeVerifier: string;
 		redirectUri: string;
 		config: ResolvedSsoConfig;
-	}): Promise<{
-		id_token?: string;
-		access_token?: string;
-	}> {
+	}): Promise<ProviderTokens> {
 		if (config.isTestProvider) {
 			return {id_token: code};
 		}
-		const tokenUrl = config.tokenUrl ?? '';
-		const params = {
-			grant_type: 'authorization_code',
-			code,
-			redirect_uri: redirectUri,
-			client_id: config.clientId ?? '',
-			code_verifier: codeVerifier,
-		};
-		const methods: Array<ClientAuthMethod | null> = config.clientSecret
-			? clientAuthMethodsToTry(tokenUrl, config.tokenEndpointAuthMethods)
-			: [null];
-		let method = methods[0] ?? null;
-		let attempt = await this.requestTokens(tokenUrl, params, method, config);
-		if (methods.length > 1 && isRefusedClient(attempt)) {
-			method = methods[1] ?? null;
-			attempt = await this.requestTokens(tokenUrl, params, method, config);
-		}
-		if (!attempt.ok) {
-			getLogger().warn(
-				{
-					status: attempt.status,
-					token_url: formatUrlForDiagnostics(tokenUrl),
-					error: attempt.error.error,
-					error_description: attempt.error.description,
-				},
-				'SSO token request failed',
-			);
-			if (attempt.status >= 500) {
-				throw new SsoProviderUnavailableError();
-			}
-			if (attempt.status === 401 || (attempt.error.error && MISCONFIGURED_CLIENT_ERRORS.has(attempt.error.error))) {
-				throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_MISCONFIGURED);
-			}
-			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_SSO_AUTHORIZATION_CODE);
-		}
-		if (method && methods.length > 1) {
-			workingClientAuthMethods.set(tokenUrl, method);
-		}
-		return attempt.tokens;
-	}
-
-	private async requestTokens(
-		tokenUrl: string,
-		params: Record<string, string>,
-		method: ClientAuthMethod | null,
-		config: ResolvedSsoConfig,
-	): Promise<TokenAttempt> {
-		const body = new URLSearchParams(params);
-		const headers: Record<string, string> = {
-			Accept: 'application/json',
-			'Content-Type': 'application/x-www-form-urlencoded',
-		};
-		if (method === 'client_secret_basic') {
-			headers['Authorization'] = basicAuthorization(config.clientId ?? '', config.clientSecret ?? '');
-		} else if (method === 'client_secret_post') {
-			body.set('client_secret', config.clientSecret ?? '');
-		}
-		const resp = await sendProviderRequest({
-			url: tokenUrl,
-			method: 'POST',
-			headers,
-			body,
-			timeout: ms('15 seconds'),
-			serviceName: 'sso_token_exchange',
-		});
-		if (resp.status < 200 || resp.status >= 300) {
-			return {ok: false, status: resp.status, error: await readTokenError(resp, tokenUrl)};
-		}
-		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
-			maxBytes: EXTERNAL_RESPONSE_LIMITS.ssoTokenBytes,
-			headers: resp.headers,
-			url: tokenUrl,
-			description: 'SSO token response',
-		});
-		return {ok: true, tokens: parseTokenEndpointResponse(resp.headers.get('content-type'), rawBody)};
+		return exchangeAuthorizationCode(
+			{
+				tokenUrl: config.tokenUrl ?? '',
+				clientId: config.clientId ?? '',
+				clientSecret: config.clientSecret ?? null,
+				authMethods: config.tokenEndpointAuthMethods,
+			},
+			{code, codeVerifier, redirectUri},
+		).catch(rethrowAsSsoError);
 	}
 
 	private async getResolvedConfig(): Promise<ResolvedSsoConfig> {
@@ -1407,7 +1200,10 @@ export class SsoService {
 			return resolved;
 		}
 		const needsDiscovery = !stored.authorizationUrl || !stored.tokenUrl || !stored.jwksUrl || !stored.userInfoUrl;
-		const discovered = stored.issuer && needsDiscovery ? await this.discoverProvider(stored.issuer) : null;
+		const discovered =
+			stored.issuer && needsDiscovery
+				? await resolveOidcDiscovery(this.apiContext.services.cache, stored.issuer)
+				: null;
 		resolved.discoveryFailed = needsDiscovery && !discovered;
 		if (discovered) {
 			resolved.authorizationUrl ??= discoveredHttpsUrl(discovered.authorization_endpoint);
@@ -1425,39 +1221,6 @@ export class SsoService {
 			Boolean(stored.clientId) &&
 			canResolveClaims;
 		return resolved;
-	}
-
-	private async discoverProvider(issuer: string): Promise<DiscoveredOidcProviderMetadata | null> {
-		const cacheKey = ssoDiscoveryCacheKey(issuer);
-		const cached = await this.apiContext.services.cache.get<DiscoveryCacheEntry>(cacheKey);
-		if (cached && isDiscoveryFresh(cached)) {
-			return cached.metadata;
-		}
-		let refresh = discoveryRefreshes.get(cacheKey);
-		if (!refresh) {
-			refresh = this.refreshDiscovery(issuer, cacheKey, cached?.metadata ?? null).finally(() =>
-				discoveryRefreshes.delete(cacheKey),
-			);
-			discoveryRefreshes.set(cacheKey, refresh);
-		}
-		return refresh;
-	}
-
-	private async refreshDiscovery(
-		issuer: string,
-		cacheKey: string,
-		lastGood: DiscoveredOidcProviderMetadata | null,
-	): Promise<DiscoveredOidcProviderMetadata | null> {
-		const metadata = await tryDiscoverOidcProviderMetadata(issuer);
-		if (!metadata && lastGood) {
-			getLogger().warn(
-				{issuer: formatUrlForDiagnostics(issuer)},
-				'SSO provider discovery failed and the last discovered endpoints stay in use',
-			);
-		}
-		const entry: DiscoveryCacheEntry = {metadata: metadata ?? lastGood, fetchedAt: Date.now(), failed: !metadata};
-		await this.apiContext.services.cache.set(cacheKey, entry, DISCOVERY_CACHE_TTL_SECONDS);
-		return entry.metadata;
 	}
 
 	private async requireReadyConfig(): Promise<ResolvedSsoConfig> {

@@ -186,10 +186,6 @@
 	text-decoration: none;
 }
 
-.connectionDomainIcon {
-	color: #000;
-}
-
 .connectionTooltipContent {
 	align-items: center;
 	display: grid;

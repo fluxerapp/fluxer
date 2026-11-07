@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Tipul de conexiune nu este acceptat.",
 	"connections.limit_reached": "Ai atins numărul maxim de conexiuni ({limit}).",
 	"connections.not_found": "Conexiune necunoscută.",
+	"connections.unknown_provider": "Acest tip de conexiune nu este disponibil pentru această instanță.",
 	"connections.verification_failed": "Verificarea conexiunii a eșuat. Asigură-te că tokenul de verificare este plasat corect.",
 	"content_and_safety.content_blocked": "Acest conținut a fost blocat de sistemele de siguranță.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Conținutul explicit nu poate fi trimis.",

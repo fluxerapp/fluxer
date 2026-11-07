@@ -312,6 +312,7 @@
 	"connections.invalid_type": "סוג החיבור הזה לא נתמך.",
 	"connections.limit_reached": "הגעת למספר החיבורים המרבי ({limit}).",
 	"connections.not_found": "חיבור לא ידוע.",
+	"connections.unknown_provider": "סוג חיבור זה לא זמין במופע זה.",
 	"connections.verification_failed": "אימות החיבור נכשל. נא לוודא שאסימון האימות ממוקם נכון.",
 	"content_and_safety.content_blocked": "תוכן זה נחסם על ידי מערכות הבטיחות.",
 	"content_and_safety.explicit_content_cannot_be_sent": "לא ניתן לשלוח תוכן מפורש.",

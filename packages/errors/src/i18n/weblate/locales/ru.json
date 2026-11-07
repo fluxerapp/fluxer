@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Этот тип подключения не поддерживается.",
 	"connections.limit_reached": "Ты достиг лимита подключений ({limit}).",
 	"connections.not_found": "Неизвестное подключение.",
+	"connections.unknown_provider": "Этот тип подключения недоступен на этом экземпляре.",
 	"connections.verification_failed": "Не удалось проверить подключение. Убедись, что токен подтверждения размещён правильно.",
 	"content_and_safety.content_blocked": "Этот контент был заблокирован системами безопасности.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Неприемлемый контент нельзя отправить.",

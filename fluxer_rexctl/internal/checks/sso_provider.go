@@ -22,9 +22,22 @@ type execFunc func(ctx context.Context, service, stdin string, command ...string
 
 type ssoProbeInput struct {
 	Discovery string `json:"discovery"`
+	Issuer    string `json:"issuer,omitempty"`
 	Token     string `json:"token"`
 	Timeout   int    `json:"timeout_ms"`
 	MaxBytes  int    `json:"max_bytes"`
+}
+
+type probeTarget struct {
+	what      string
+	issuerFix string
+	tokenFix  string
+}
+
+var ssoTarget = probeTarget{
+	what:      "your SSO provider",
+	issuerFix: "Check sso.issuer with rexctl config get sso.issuer.",
+	tokenFix:  "Check sso.token_url with rexctl config get sso.token_url.",
 }
 
 type ssoProbeOutput struct {
@@ -84,6 +97,7 @@ const connect = (u) => new Promise((resolve, reject) => {
       doc = size > input.max_bytes ? null : JSON.parse(Buffer.concat(chunks).toString("utf8"));
     } catch (e) { doc = null; }
     if (!doc || typeof doc !== "object" || typeof doc.issuer !== "string") done({ ok: false, stage: "discovery", host: discoveryHost, code: "NOT_DISCOVERY" });
+    if (input.issuer && doc.issuer.replace(/\/+$/, "") !== input.issuer.replace(/\/+$/, "")) done({ ok: false, stage: "discovery", host: discoveryHost, code: "ISSUER_MISMATCH" });
     if (!token && typeof doc.token_endpoint === "string") token = doc.token_endpoint;
   }
   if (!token) done({ ok: true, host: discoveryHost });
@@ -121,23 +135,28 @@ func ssoProvider(ctx context.Context, e *Env, run execFunc) Result {
 			return skip("")
 		}
 	}
+	p, ok := runProviderProbe(ctx, run, in)
+	if !ok {
+		return skip("")
+	}
+	return probeResult(p, in.Discovery, ssoTarget)
+}
+
+func runProviderProbe(ctx context.Context, run execFunc, in ssoProbeInput) (ssoProbeOutput, bool) {
+	var p ssoProbeOutput
 	payload, err := json.Marshal(in)
 	if err != nil {
-		return skip("")
+		return p, false
 	}
 	out, err := run(ctx, "api", string(payload), "node", "-e", ssoProbeScript)
 	if err != nil {
-		return skip("")
+		return p, false
 	}
 	start := strings.Index(out, "{")
 	if start < 0 {
-		return skip("")
+		return p, false
 	}
-	var p ssoProbeOutput
-	if json.NewDecoder(strings.NewReader(out[start:])).Decode(&p) != nil {
-		return skip("")
-	}
-	return ssoProbeResult(p, in.Discovery)
+	return p, json.NewDecoder(strings.NewReader(out[start:])).Decode(&p) == nil
 }
 
 func trimmed(s *string) string {
@@ -155,28 +174,27 @@ func discoveryURL(issuer string) string {
 	return strings.TrimSuffix(u.String(), "/") + "/.well-known/openid-configuration"
 }
 
-func ssoProbeResult(p ssoProbeOutput, discovery string) Result {
+func probeResult(p ssoProbeOutput, discovery string, target probeTarget) Result {
 	if p.OK {
 		if p.Token != "" && p.Host != "" && !strings.EqualFold(p.Token, p.Host) {
-			return pass(fmt.Sprintf("The API connects to your SSO provider at %s and its token endpoint at %s.", p.Host, p.Token))
+			return pass(fmt.Sprintf("The API connects to %s at %s and its token endpoint at %s.", target.what, p.Host, p.Token))
 		}
 		h := p.Host
 		if h == "" {
 			h = p.Token
 		}
-		return pass(fmt.Sprintf("The API connects to your SSO provider at %s.", h))
+		return pass(fmt.Sprintf("The API connects to %s at %s.", target.what, h))
 	}
 	if p.Stage == "probe" || p.Host == "" {
 		return skip("")
 	}
-	what := "your SSO provider"
-	key := "sso.issuer"
+	what := target.what
+	docFix := fmt.Sprintf("%s Your provider has to serve its discovery document at %s.", target.issuerFix, discovery)
 	if p.Stage == "token" {
-		what = "your SSO provider's token endpoint"
-		key = "sso.token_url"
+		what = target.what + "'s token endpoint"
+		docFix = target.tokenFix
 	}
 	network := fmt.Sprintf("Make %s resolve to an address the API container can connect to. Add %q to extra_hosts for the api service with rexctl config edit, and make your reverse proxy accept connections from Docker.", p.Host, p.Host+":host-gateway")
-	docFix := fmt.Sprintf("Check %s with rexctl config get %s. Your provider has to serve its discovery document at %s.", key, key, discovery)
 	var r Result
 	switch {
 	case p.Status != 0:
@@ -185,6 +203,9 @@ func ssoProbeResult(p ssoProbeOutput, discovery string) Result {
 	case p.Code == "NOT_DISCOVERY":
 		r = fail(fmt.Sprintf("%s at %s didn't send the API a discovery document.", capital(what), p.Host),
 			docFix)
+	case p.Code == "ISSUER_MISMATCH":
+		r = fail(fmt.Sprintf("%s at %s sent a discovery document for another issuer.", capital(what), p.Host),
+			target.issuerFix+" It has to match the issuer in the discovery document exactly.")
 	case p.Code == "ENOTFOUND" || p.Code == "EAI_AGAIN":
 		r = fail(fmt.Sprintf("The API can't look up the address of %s at %s (%s).", what, p.Host, p.Code), network)
 	case p.Code == "ECONNREFUSED" || p.Code == "ECONNRESET":

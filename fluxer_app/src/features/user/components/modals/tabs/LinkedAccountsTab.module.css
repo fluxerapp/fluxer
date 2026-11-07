@@ -103,6 +103,11 @@
 	white-space: nowrap;
 }
 
+.cardStatus {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
 .cardNameRow {
 	align-items: center;
 	display: flex;

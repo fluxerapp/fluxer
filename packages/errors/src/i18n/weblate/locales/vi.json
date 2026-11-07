@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Loại kết nối không được hỗ trợ.",
 	"connections.limit_reached": "Bạn đã đạt số lượng kết nối tối đa ({limit}).",
 	"connections.not_found": "Kết nối không xác định.",
+	"connections.unknown_provider": "Loại kết nối này không khả dụng trên phiên bản này.",
 	"connections.verification_failed": "Xác minh kết nối thất bại. Đảm bảo token xác minh được đặt đúng cách.",
 	"content_and_safety.content_blocked": "Nội dung này đã bị chặn bởi hệ thống an toàn.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Không thể gửi nội dung nhạy cảm.",

@@ -11,7 +11,18 @@ import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstan
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as ConnectionCommands from '@app/features/connection/commands/ConnectionCommands';
-import {AddConnectionModal} from '@app/features/connection/components/modals/AddConnectionModal';
+import {
+	ConnectionIcon,
+	connectionLabel,
+	isConnectionUnavailable,
+	ProviderIcon,
+	UNAVAILABLE_CONNECTION_DESCRIPTOR,
+} from '@app/features/connection/components/ConnectionIcon';
+import {
+	AddConnectionModal,
+	type ConnectionChoice,
+	providerChoice,
+} from '@app/features/connection/components/modals/AddConnectionModal';
 import {EditConnectionModal} from '@app/features/connection/components/modals/EditConnectionModal';
 import type {Connection} from '@app/features/connection/models/Connection';
 import UserConnection from '@app/features/connection/state/UserConnection';
@@ -34,7 +45,7 @@ import {
 	THIS_CONNECTION_HAS_BEEN_VERIFIED_DESCRIPTOR,
 	THIS_CONNECTION_HAS_NOT_BEEN_VERIFIED_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
-import {type ConnectionType, ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
+import {ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {DotsSixVerticalIcon, GlobeSimpleIcon, PencilSimpleIcon, TrashIcon, UserListIcon} from '@phosphor-icons/react';
@@ -55,9 +66,9 @@ const ARE_YOU_SURE_YOU_WANT_TO_REMOVE_THIS_DESCRIPTOR = msg({
 	comment: 'Error message in the linked accounts tab. Keep the tone plain and specific.',
 });
 const ADD_CONNECTION_DESCRIPTOR = msg({
-	message: 'Add {blueskyProviderName} connection',
+	message: 'Add {providerName} connection',
 	comment:
-		'Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.',
+		'Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.',
 });
 const ADD_DOMAIN_CONNECTION_DESCRIPTOR = msg({
 	message: 'Add domain connection',
@@ -160,16 +171,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 			[dropRef],
 		);
 		const mergedRef = useMergeRefs([dropConnectorRef, cardRef]);
-		const icon =
-			connection.type === ConnectionTypes.BLUESKY ? (
-				<BlueskyIcon size={20} data-flx="user.linked-accounts-tab.connection-card.bluesky-icon" />
-			) : (
-				<GlobeSimpleIcon
-					size={remFromPx(20)}
-					className={styles.domainIcon}
-					data-flx="user.linked-accounts-tab.connection-card.domain-icon"
-				/>
-			);
+		const unavailable = isConnectionUnavailable(connection);
 		return (
 			<div
 				ref={mergedRef}
@@ -192,15 +194,16 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 						data-flx="user.linked-accounts-tab.connection-card.dots-six-vertical-icon"
 					/>
 				</div>
-				<Tooltip
-					text={connection.type === ConnectionTypes.BLUESKY ? BLUESKY_PROVIDER_NAME : i18n._(DOMAIN_DESCRIPTOR)}
-					data-flx="user.linked-accounts-tab.connection-card.tooltip"
-				>
+				<Tooltip text={connectionLabel(i18n, connection)} data-flx="user.linked-accounts-tab.connection-card.tooltip">
 					<div
 						className={styles.cardIconSquircle}
 						data-flx="user.linked-accounts-tab.connection-card.card-icon-squircle"
 					>
-						{icon}
+						<ConnectionIcon
+							connection={connection}
+							size={20}
+							data-flx="user.linked-accounts-tab.connection-card.connection-icon"
+						/>
 					</div>
 				</Tooltip>
 				<div className={styles.cardInfo} data-flx="user.linked-accounts-tab.connection-card.card-info">
@@ -234,22 +237,29 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 							</div>
 						</Tooltip>
 					</div>
+					{unavailable && (
+						<span className={styles.cardStatus} data-flx="user.linked-accounts-tab.connection-card.card-status">
+							{i18n._(UNAVAILABLE_CONNECTION_DESCRIPTOR)}
+						</span>
+					)}
 				</div>
 				<div className={styles.cardActions} data-flx="user.linked-accounts-tab.connection-card.card-actions">
-					<Tooltip text={i18n._(EDIT_DESCRIPTOR)} data-flx="user.linked-accounts-tab.connection-card.tooltip--3">
-						<button
-							type="button"
-							className={styles.actionButton}
-							onClick={onEdit}
-							aria-label={i18n._(EDIT_DESCRIPTOR)}
-							data-flx="user.linked-accounts-tab.connection-card.action-button.edit"
-						>
-							<PencilSimpleIcon
-								size={remFromPx(16)}
-								data-flx="user.linked-accounts-tab.connection-card.pencil-simple-icon"
-							/>
-						</button>
-					</Tooltip>
+					{!unavailable && (
+						<Tooltip text={i18n._(EDIT_DESCRIPTOR)} data-flx="user.linked-accounts-tab.connection-card.tooltip--3">
+							<button
+								type="button"
+								className={styles.actionButton}
+								onClick={onEdit}
+								aria-label={i18n._(EDIT_DESCRIPTOR)}
+								data-flx="user.linked-accounts-tab.connection-card.action-button.edit"
+							>
+								<PencilSimpleIcon
+									size={remFromPx(16)}
+									data-flx="user.linked-accounts-tab.connection-card.pencil-simple-icon"
+								/>
+							</button>
+						</Tooltip>
+					)}
 					<Tooltip text={i18n._(REMOVE_DESCRIPTOR)} data-flx="user.linked-accounts-tab.connection-card.tooltip--4">
 						<button
 							type="button"
@@ -335,7 +345,7 @@ const LinkedAccountsTab: React.FC = observer(() => {
 			)),
 		);
 	}, []);
-	const handleAddConnection = useCallback((connectionType: ConnectionType) => {
+	const handleAddConnection = useCallback((connectionType: ConnectionChoice) => {
 		ModalCommands.push(
 			modal(() => (
 				<AddConnectionModal
@@ -382,13 +392,26 @@ const LinkedAccountsTab: React.FC = observer(() => {
 									type="button"
 									className={styles.platformIconButton}
 									onClick={() => handleAddConnection(ConnectionTypes.BLUESKY)}
-									aria-label={i18n._(ADD_CONNECTION_DESCRIPTOR, {blueskyProviderName: BLUESKY_PROVIDER_NAME})}
+									aria-label={i18n._(ADD_CONNECTION_DESCRIPTOR, {providerName: BLUESKY_PROVIDER_NAME})}
 									data-flx="user.linked-accounts-tab.platform-icon-button.add-connection"
 								>
 									<BlueskyIcon size={28} data-flx="user.linked-accounts-tab.bluesky-icon" />
 								</button>
 							</Tooltip>
 						)}
+						{RuntimeConfig.connectionProviders.map((provider) => (
+							<Tooltip key={provider.id} text={provider.name} data-flx="user.linked-accounts-tab.tooltip">
+								<button
+									type="button"
+									className={styles.platformIconButton}
+									onClick={() => handleAddConnection(providerChoice(provider.id))}
+									aria-label={i18n._(ADD_CONNECTION_DESCRIPTOR, {providerName: provider.name})}
+									data-flx="user.linked-accounts-tab.platform-icon-button.add-connection"
+								>
+									<ProviderIcon provider={provider} size={28} data-flx="user.linked-accounts-tab.provider-icon" />
+								</button>
+							</Tooltip>
+						))}
 						<Tooltip text={i18n._(DOMAIN_DESCRIPTOR)} data-flx="user.linked-accounts-tab.tooltip--2">
 							<button
 								type="button"
@@ -411,11 +434,8 @@ const LinkedAccountsTab: React.FC = observer(() => {
 								Icon={UserListIcon}
 								title={<Trans>No connections yet</Trans>}
 								description={
-									RuntimeConfig.blueskyConnectionsEnabled ? (
-										<Trans>
-											Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your
-											profile.
-										</Trans>
+									RuntimeConfig.blueskyConnectionsEnabled || RuntimeConfig.connectionProviders.length > 0 ? (
+										<Trans>Link your accounts or verify domain ownership to display them on your profile.</Trans>
 									) : (
 										<Trans>Verify domain ownership to display it on your profile.</Trans>
 									)

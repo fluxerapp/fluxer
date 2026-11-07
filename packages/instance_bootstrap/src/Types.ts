@@ -23,6 +23,7 @@ export type {
 	InstanceBuiltInGuildBadgeImages,
 	InstanceCaptcha,
 	InstanceCommunity,
+	InstanceConnectionProvider,
 	InstanceEndpoints,
 	InstanceFeatures,
 	InstanceGif,

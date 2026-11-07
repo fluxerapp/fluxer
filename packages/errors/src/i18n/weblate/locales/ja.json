@@ -312,6 +312,7 @@
 	"connections.invalid_type": "この接続タイプはサポートされていません。",
 	"connections.limit_reached": "接続の上限{limit}件に達しました。",
 	"connections.not_found": "不明な接続です。",
+	"connections.unknown_provider": "このインスタンスでは、この種類の接続は利用できません。",
 	"connections.verification_failed": "接続の検証に失敗しました。検証トークンが正しく配置されているかご確認ください。",
 	"content_and_safety.content_blocked": "このコンテンツは安全システムによってブロックされました。",
 	"content_and_safety.explicit_content_cannot_be_sent": "不適切なコンテンツは送信できません。",

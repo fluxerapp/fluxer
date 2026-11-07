@@ -134,6 +134,7 @@ fn build_integrations_update(form: &MultiValueForm) -> Result<InstanceConfigUpda
                 policy_uri: clean("integration_bluesky_policy_uri"),
                 keys: bluesky_keys,
             }),
+            connection_providers: None,
         }),
         ..Default::default()
     })

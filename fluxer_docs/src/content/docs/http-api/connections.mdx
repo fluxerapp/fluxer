@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Connections
-description: Domain and Bluesky connections that appear on a user profile.
+description: Domain, Bluesky and provider connections that appear on a user profile.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A connection links an account to a verified domain or Bluesky account. Visible connections appear in `connected_accounts` on the [full user profile object](/http-api/users/#full-user-profile-object).
+A connection links an account to a verified domain, a Bluesky account or an account at a provider the instance set up. Visible connections appear in `connected_accounts` on the [full user profile object](/http-api/users/#full-user-profile-object).
 
 Connection routes need a user token, and bot tokens and OAuth2 bearers get 403 `ACCESS_DENIED`. The one exception is [List connections](#list-connections), which accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes).
 
@@ -22,10 +22,14 @@ A connection's [type](#connection-types) and `id` together identify it.
 | --- | --- | --- |
 | id | string | The ID of the connection, unique within its type |
 | type | string | [Connection type](#connection-types) |
-| name | string | The domain or Bluesky handle |
+| name | string | The domain, Bluesky handle or account name at the provider |
 | verified | boolean | Whether the connection is verified |
 | visibility_flags | integer | [Connection visibility flags](#connection-visibility-flags) |
 | sort_order | integer | The display order (0-2147483647) |
+| provider_id | ?string | For `oauth`, the provider's `id`. Null for other types, and while the instance has removed or turned off the provider |
+| url | ?string | Link to the account or domain, or null when there is none |
+
+An `oauth` connection with a null `provider_id` is left out of profiles until the instance turns the provider back on.
 
 ## Connection types
 
@@ -33,6 +37,7 @@ A connection's [type](#connection-types) and `id` together identify it.
 | --- | --- | --- |
 | bsky | BLUESKY | A Bluesky account authorized through atproto OAuth |
 | domain | DOMAIN | A domain the account has proved it controls |
+| oauth | OAUTH | An account at an OAuth 2.0 or OpenID Connect provider the instance set up |
 
 ## Connection visibility flags
 
@@ -67,7 +72,7 @@ Fluxer checks the proof once, when the connection is created. Use either method.
 
 ## Bluesky authorization object
 
-[Start Bluesky authorization](#start-bluesky-authorization) returns this object.
+[Start Bluesky authorization](#start-bluesky-authorization) and [Start provider authorization](#start-provider-authorization) return this object.
 
 ### Structure
 
@@ -109,7 +114,7 @@ Starts domain verification and returns a [connection verification object](#conne
 | Status | Body | Condition |
 | --- | --- | --- |
 | 201 | [connection verification](#connection-verification-object) object | Verification was started |
-| 400 | [error response](/http-api/#error-response) | `BLUESKY_OAUTH_NOT_ENABLED` when the type is bsky |
+| 400 | [error response](/http-api/#error-response) | `BLUESKY_OAUTH_NOT_ENABLED` when the type is bsky, or `CONNECTION_INVALID_TYPE` when it is oauth |
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when the account is [limited](/http-api/users/#account-limitation) |
 | 409 | [error response](/http-api/#error-response) | `CONNECTION_ALREADY_EXISTS` when the identifier is already linked |
 
@@ -228,6 +233,36 @@ After authorization, the browser ends on `/connection-callback` in the web app w
 | unknown | The connection could not be saved |
 
 The rate limit is 5 requests per minute, on the `connection:create` bucket.
+
+## Start provider authorization
+
+<RouteHeader method="POST" path="/v1/users/@me/connections/oauth/{provider_id}/authorize" />
+
+Starts or renews a connection to one of the `connection_providers` in the [service availability object](/http-api/instance/#service-availability-object). Send the user to `authorize_url`, and the provider then returns them through `/connections/oauth/{provider_id}/callback`, which clients never call directly. The session that started the request has to still be signed in when the provider returns.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Bluesky authorization](#bluesky-authorization-object) object | Authorization was started |
+| 400 | [error response](/http-api/#error-response) | `CONNECTION_LIMIT_REACHED` when the account has 20 connections |
+| 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when the account is [limited](/http-api/users/#account-limitation) |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_CONNECTION_PROVIDER` when the instance has no such provider turned on |
+| 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when the provider's discovery document can't be fetched |
+
+After authorization, the browser ends on `/connection-callback` in the web app with `status=connected`, or with `status=error` and one of these `reason` values. Success creates the connection, or refreshes its name when the account is already connected, and sends [User Connections Update](/gateway/events/#user-connections-update).
+
+| Value | Description |
+| --- | --- |
+| not_enabled | The provider is not turned on |
+| state_invalid | The authorization state is invalid, used or expired, or the session that started it signed out |
+| denied | The user did not allow the connection at the provider |
+| callback_failed | Authorization could not be completed |
+| already_connected | The account is already connected |
+| limit_reached | The account has 20 connections |
+| unknown | The connection could not be saved |
+
+The rate limit is 10 requests per minute, on the `connection:oauth:authorize` bucket.
 
 ## Get Bluesky client metadata
 

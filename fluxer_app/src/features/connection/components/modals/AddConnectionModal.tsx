@@ -116,8 +116,20 @@ interface InitiateFormInputs {
 	identifier: string;
 }
 
+export type ConnectionChoice = Exclude<ConnectionType, typeof ConnectionTypes.OAUTH> | `oauth:${string}`;
+
+export function providerChoice(providerId: string): ConnectionChoice {
+	return `oauth:${providerId}`;
+}
+
+function defaultChoice(): ConnectionChoice {
+	if (RuntimeConfig.blueskyConnectionsEnabled) return ConnectionTypes.BLUESKY;
+	const [provider] = RuntimeConfig.connectionProviders;
+	return provider ? providerChoice(provider.id) : ConnectionTypes.DOMAIN;
+}
+
 interface AddConnectionModalProps {
-	defaultType?: ConnectionType;
+	defaultType?: ConnectionChoice;
 }
 
 type Step = 'initiate' | 'verify';
@@ -126,27 +138,51 @@ const STEP_ORDER: ReadonlyArray<Step> = ['initiate', 'verify'];
 export const AddConnectionModal = observer(({defaultType}: AddConnectionModalProps) => {
 	const {i18n} = useLingui();
 	const [step, setStep] = useState<Step>('initiate');
-	const [type, setType] = useState<ConnectionType>(
-		defaultType ?? (RuntimeConfig.blueskyConnectionsEnabled ? ConnectionTypes.BLUESKY : ConnectionTypes.DOMAIN),
-	);
+	const [type, setType] = useState<ConnectionChoice>(defaultType ?? defaultChoice);
+	const provider = type.startsWith('oauth:')
+		? (RuntimeConfig.connectionProviders.find((candidate) => providerChoice(candidate.id) === type) ?? null)
+		: null;
+	const providerName = provider?.name ?? '';
 	const [verificationData, setVerificationData] = useState<ConnectionVerificationResponse | null>(null);
 	const [hostCopied, setHostCopied] = useState(false);
 	const [valueCopied, setValueCopied] = useState(false);
 	const pendingBlueskyHandle = useRef<string | null>(null);
+	const pendingProvider = useRef<{id: string; existing: ReadonlySet<string>} | null>(null);
 	const initiateForm = useForm<InitiateFormInputs>();
 	const [isVerifySubmitting, setIsVerifySubmitting] = useState(false);
+	const [isProviderSubmitting, setIsProviderSubmitting] = useState(false);
 	const connectionTypeOptions = useMemo(
 		() => [
 			...(RuntimeConfig.blueskyConnectionsEnabled
 				? [{value: ConnectionTypes.BLUESKY, label: BLUESKY_PROVIDER_NAME}]
 				: []),
+			...RuntimeConfig.connectionProviders.map((candidate) => ({
+				value: providerChoice(candidate.id),
+				label: candidate.name,
+			})),
 			{value: ConnectionTypes.DOMAIN, label: i18n._(DOMAIN_DESCRIPTOR)},
 		],
-		[i18n.locale],
+		[i18n.locale, RuntimeConfig.connectionProviders],
 	);
-	const handleTypeChange = useCallback((value: ConnectionType) => setType(value), []);
+	const handleTypeChange = useCallback((value: ConnectionChoice) => setType(value), []);
+	const startProviderConnection = useCallback(async () => {
+		if (!provider) return;
+		setIsProviderSubmitting(true);
+		try {
+			const existing = new Set(
+				UserConnection.getConnections()
+					.filter((connection) => connection.providerId === provider.id)
+					.map((connection) => connection.id),
+			);
+			await ConnectionCommands.authorizeOAuthConnection(i18n, provider);
+			pendingProvider.current = {id: provider.id, existing};
+		} finally {
+			setIsProviderSubmitting(false);
+		}
+	}, [i18n, provider]);
 	const onSubmitInitiate = useCallback(
 		async (data: InitiateFormInputs) => {
+			if (type.startsWith('oauth:')) return;
 			let identifier = data.identifier.trim();
 			if (type === ConnectionTypes.BLUESKY) {
 				identifier = identifier.replace(/^https?:\/\/bsky\.app\/profile\//i, '').replace(/^@/, '');
@@ -163,7 +199,7 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 				pendingBlueskyHandle.current = identifier.toLowerCase();
 				return;
 			}
-			const result = await ConnectionCommands.initiateConnection(i18n, type, identifier);
+			const result = await ConnectionCommands.initiateConnection(i18n, ConnectionTypes.DOMAIN, identifier);
 			setVerificationData(result);
 			setStep('verify');
 		},
@@ -195,6 +231,17 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 			ModalCommands.popByType(AddConnectionModal);
 		}
 	}, [hasBlueskyConnection]);
+	const pending = pendingProvider.current;
+	const hasNewProviderConnection =
+		pending !== null &&
+		UserConnection.getConnections().some(
+			(connection) => connection.providerId === pending.id && !pending.existing.has(connection.id),
+		);
+	useEffect(() => {
+		if (hasNewProviderConnection) {
+			ModalCommands.popByType(AddConnectionModal);
+		}
+	}, [hasNewProviderConnection]);
 	const hostRecord = useMemo(
 		() => (verificationData?.id ? `_fluxer.${verificationData.id}` : ''),
 		[verificationData?.id],
@@ -246,15 +293,24 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 					onChange={handleTypeChange}
 					data-flx="connection.add-connection-modal.select.type-change"
 				/>
-				<Input
-					data-flx="connection.add-connection-modal.input"
-					{...initiateForm.register('identifier', {required: true})}
-					autoFocus={true}
-					error={initiateForm.formState.errors.identifier?.message}
-					label={type === ConnectionTypes.BLUESKY ? i18n._(HANDLE_DESCRIPTOR) : i18n._(DOMAIN_DESCRIPTOR)}
-					placeholder={type === ConnectionTypes.BLUESKY ? 'username.bsky.social' : 'example.com'}
-					required={true}
-				/>
+				{provider ? (
+					<p
+						className={styles.instructions}
+						data-flx="connection.add-connection-modal.render-initiate-step.instructions"
+					>
+						<Trans>{providerName} opens in your browser. Sign in there to connect your account.</Trans>
+					</p>
+				) : (
+					<Input
+						data-flx="connection.add-connection-modal.input"
+						{...initiateForm.register('identifier', {required: true})}
+						autoFocus={true}
+						error={initiateForm.formState.errors.identifier?.message}
+						label={type === ConnectionTypes.BLUESKY ? i18n._(HANDLE_DESCRIPTOR) : i18n._(DOMAIN_DESCRIPTOR)}
+						placeholder={type === ConnectionTypes.BLUESKY ? 'username.bsky.social' : 'example.com'}
+						required={true}
+					/>
+				)}
 			</div>
 		</Form>
 	);
@@ -366,17 +422,27 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 					<Button onClick={ModalCommands.pop} variant="secondary" data-flx="connection.add-connection-modal.button.pop">
 						<Trans>Cancel</Trans>
 					</Button>
-					<Button
-						onClick={handleInitiateSubmit}
-						submitting={initiateForm.formState.isSubmitting}
-						data-flx="connection.add-connection-modal.button.submit"
-					>
-						{type === ConnectionTypes.BLUESKY ? (
-							i18n._(CONNECT_WITH_PROVIDER_DESCRIPTOR, {providerName: BLUESKY_PROVIDER_NAME})
-						) : (
-							<Trans>Continue</Trans>
-						)}
-					</Button>
+					{provider ? (
+						<Button
+							onClick={startProviderConnection}
+							submitting={isProviderSubmitting}
+							data-flx="connection.add-connection-modal.render-step-footer.button.start-provider-connection"
+						>
+							{i18n._(CONNECT_WITH_PROVIDER_DESCRIPTOR, {providerName: provider.name})}
+						</Button>
+					) : (
+						<Button
+							onClick={handleInitiateSubmit}
+							submitting={initiateForm.formState.isSubmitting}
+							data-flx="connection.add-connection-modal.button.submit"
+						>
+							{type === ConnectionTypes.BLUESKY ? (
+								i18n._(CONNECT_WITH_PROVIDER_DESCRIPTOR, {providerName: BLUESKY_PROVIDER_NAME})
+							) : (
+								<Trans>Continue</Trans>
+							)}
+						</Button>
+					)}
 				</>
 			);
 		}
