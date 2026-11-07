@@ -18,7 +18,11 @@ import {
 	dispatchMessageCreateBroadcast,
 	dispatchMessageUpdateBroadcast,
 } from '@app/api/channel/services/message/MessageGatewayDispatch';
-import {isOperationDisabled, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	attachmentStorageChannelId,
+	isOperationDisabled,
+	purgeMessageAttachments,
+} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
@@ -85,6 +89,7 @@ export interface CrosspostSourceContext {
 	fingerprint: string;
 	accessCache: Map<string, Promise<boolean>>;
 	authorAvatarCache: Map<string, Promise<string | null>>;
+	classifiedAttachments: Promise<Array<MessageAttachment>> | null;
 }
 
 export type CrosspostSourceLoadResult =
@@ -236,6 +241,7 @@ export class CrosspostDeliveryService {
 			fingerprint: crosspostSourceFingerprint(message),
 			accessCache: new Map(),
 			authorAvatarCache: new Map(),
+			classifiedAttachments: null,
 		};
 	}
 
@@ -329,7 +335,7 @@ export class CrosspostDeliveryService {
 			}
 		}
 		const authorAvatar = await this.resolveCopyAuthorAvatar(context, webhook);
-		const built = this.buildCopyPayload(context, target);
+		const built = await this.buildCopyPayload(context, target);
 		if (built.kind === 'blocked') {
 			Logger.warn(
 				{sourceMessageId: context.message.id.toString(), webhookId: webhook.id.toString()},
@@ -512,7 +518,7 @@ export class CrosspostDeliveryService {
 			await this.markCopySourceDeleted(row);
 			return;
 		}
-		const built = this.buildCopyPayload(source, target);
+		const built = await this.buildCopyPayload(source, target);
 		if (built.kind === 'blocked') {
 			Logger.warn(
 				{sourceMessageId: row.source_message_id.toString(), webhookId: row.webhook_id.toString()},
@@ -740,20 +746,27 @@ export class CrosspostDeliveryService {
 		await deleteMessageSearchDocuments([messageId], {context: {source: 'crosspost_family_purge'}});
 	}
 
-	private buildCopyPayload(source: CrosspostSourceContext, target: CrosspostTarget): CrosspostCopyPayloadResult {
+	private async buildCopyPayload(
+		source: CrosspostSourceContext,
+		target: CrosspostTarget,
+	): Promise<CrosspostCopyPayloadResult> {
 		const message = source.message;
 		if (this.isBlocked(source)) {
 			return {kind: 'blocked'};
 		}
-		const nsfwAllowed = this.targetAllowsNsfw(target);
+		const targetNsfw = this.targetIsNsfw(target);
+		const nsfwAllowed = targetNsfw || this.targetAcceptsFlaggedMedia(target);
+		const sourceAttachments = targetNsfw
+			? message.attachments.map((attachment) => attachment.toMessageAttachment())
+			: await this.classifiedAttachments(source);
 		const excludedAttachmentIds = new Set<string>();
 		const attachments: Array<MessageAttachment> = [];
-		for (const attachment of message.attachments) {
+		for (const attachment of sourceAttachments) {
 			if (!nsfwAllowed && attachment.nsfw) {
-				excludedAttachmentIds.add(attachment.id.toString());
+				excludedAttachmentIds.add(attachment.attachment_id.toString());
 				continue;
 			}
-			attachments.push(attachment.toMessageAttachment());
+			attachments.push(attachment);
 		}
 		let embeds = message.embeds.map((embed) => cloneEmbed(embed.toMessageEmbed()));
 		if (!nsfwAllowed) {
@@ -798,16 +811,29 @@ export class CrosspostDeliveryService {
 		return false;
 	}
 
-	private targetAllowsNsfw(target: CrosspostTarget): boolean {
-		if (
-			computeEffectiveChannelNsfw(
-				channelToContentWarningView(target.channel),
-				target.parent ? channelToContentWarningView(target.parent) : null,
-				guildResponseToContentWarningView(target.guild),
-			)
-		) {
-			return true;
+	private classifiedAttachments(source: CrosspostSourceContext): Promise<Array<MessageAttachment>> {
+		if (!source.classifiedAttachments) {
+			const pending = this.deps.persistenceService.classifyStoredAttachments(
+				source.message.attachments.map((attachment) => attachment.toMessageAttachment()),
+				attachmentStorageChannelId(source.message),
+			);
+			source.classifiedAttachments = pending;
+			pending.catch(() => {
+				if (source.classifiedAttachments === pending) source.classifiedAttachments = null;
+			});
 		}
+		return source.classifiedAttachments;
+	}
+
+	private targetIsNsfw(target: CrosspostTarget): boolean {
+		return computeEffectiveChannelNsfw(
+			channelToContentWarningView(target.channel),
+			target.parent ? channelToContentWarningView(target.parent) : null,
+			guildResponseToContentWarningView(target.guild),
+		);
+	}
+
+	private targetAcceptsFlaggedMedia(target: CrosspostTarget): boolean {
 		return this.contentService.isNSFWContentAllowed({
 			channel: target.channel,
 			guild: target.guild,

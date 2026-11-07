@@ -439,6 +439,7 @@ export class MessageSendService {
 		referencedMessage: Message | null;
 		referencedChannelGuildId?: GuildID | null;
 		messageSnapshots?: Array<MessageSnapshot>;
+		forwardSource?: AuthenticatedChannel;
 	}> {
 		let referenceChannelId = channelId;
 		let forwardReferenceAuthChannel: AuthenticatedChannel | null = null;
@@ -479,7 +480,12 @@ export class MessageSendService {
 				this.getForwardMediaSelection(data),
 			);
 		}
-		return {referencedMessage, referencedChannelGuildId, messageSnapshots};
+		return {
+			referencedMessage,
+			referencedChannelGuildId,
+			messageSnapshots,
+			forwardSource: forwardReferenceAuthChannel ?? undefined,
+		};
 	}
 
 	private getForwardMediaSelection(data: MessageRequest): ForwardMediaSelection | undefined {
@@ -706,11 +712,11 @@ export class MessageSendService {
 					forumStarter ? Promise.resolve(channelIdToMessageId(channel.id)) : this.generateMessageId(channel),
 				);
 				const referenceContext = await referenceContextTask;
-				const {referencedMessage, referencedChannelGuildId, messageSnapshots} = referenceContext;
+				const {referencedMessage, referencedChannelGuildId, forwardSource} = referenceContext;
 				this.assertForwardableReference(isForwardMessage, referencedMessage);
-				if (isForwardMessage && messageSnapshots && guild) {
-					const snapshotHasEmbeds = messageSnapshots.some((s) => s.embeds.length > 0);
-					const snapshotHasAttachments = messageSnapshots.some((s) => s.attachments.length > 0);
+				if (isForwardMessage && referenceContext.messageSnapshots && guild) {
+					const snapshotHasEmbeds = referenceContext.messageSnapshots.some((s) => s.embeds.length > 0);
+					const snapshotHasAttachments = referenceContext.messageSnapshots.some((s) => s.attachments.length > 0);
 					if (snapshotHasEmbeds && !canEmbedLinks) {
 						throw new MissingPermissionsError();
 					}
@@ -718,9 +724,23 @@ export class MessageSendService {
 						throw new MissingPermissionsError();
 					}
 				}
+				const messageId = await messageIdTask;
+				const messageSnapshots =
+					isForwardMessage && referenceContext.messageSnapshots && forwardSource
+						? await this.deps.persistenceService.screenForwardSnapshots({
+								snapshots: referenceContext.messageSnapshots,
+								source: forwardSource,
+								destination: {channel, guild},
+								channelId,
+							})
+						: referenceContext.messageSnapshots;
 				if (isForwardMessage && messageSnapshots && this.snapshotsContainNsfwContent(messageSnapshots)) {
 					const guildNsfw = guild != null && guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
-					const destAllowsNsfw = (authChannel.thread?.parent ?? channel).isNsfw || guildNsfw;
+					const scopeChannel = authChannel.thread?.parent ?? channel;
+					const destAllowsNsfw =
+						guildNsfw ||
+						scopeChannel.isNsfw ||
+						(guild != null && (await this.deps.persistenceService.isNsfwThroughCategory(scopeChannel)));
 					if (!destAllowsNsfw) {
 						throw new NsfwContentRequiresAgeVerificationError();
 					}
@@ -752,7 +772,6 @@ export class MessageSendService {
 					data,
 				});
 				const dmNsfwContext = await dmNsfwContextTask;
-				const messageId = await messageIdTask;
 				let mentionData: SendMentionData | undefined;
 				const shouldExtractMentions =
 					channel && !isForwardMessage && (data.content !== undefined || data.message_reference != null);
