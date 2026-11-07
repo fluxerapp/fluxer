@@ -2,6 +2,7 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
+import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -10,13 +11,15 @@ import {
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {RelationshipsByTarget} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
 import applicationProcessDeletion from '@app/api/worker/tasks/ApplicationProcessDeletion';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -126,5 +129,42 @@ describe('applicationProcessDeletion task', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(authorCount.count).toBe(1);
+	});
+	test('removes every relationship of the bot', async () => {
+		const owner = await createTestAccount(harness);
+		const friend = await createTestAccount(harness);
+		const createResult = await createOAuth2Application(harness, owner.token, {
+			name: createUniqueApplicationName(),
+		});
+		const botUserId = createUserID(BigInt(createResult.botUserId));
+		const friendId = createUserID(BigInt(friend.userId));
+		const relationships = new UserRelationshipRepository();
+		for (const [source, target, type] of [
+			[friendId, botUserId, RelationshipTypes.FRIEND],
+			[botUserId, friendId, RelationshipTypes.FRIEND],
+		] as const) {
+			await relationships.upsertRelationship({
+				source_user_id: source,
+				target_user_id: target,
+				type,
+				nickname: null,
+				since: new Date(),
+				share_voice_activity: null,
+				version: 1,
+			});
+		}
+
+		await applicationProcessDeletion(
+			{applicationId: createResult.application.id},
+			createTestWorkerHelpers({jobId: 7200000000000000001n}),
+		);
+
+		expect(await relationships.listRelationships(friendId)).toHaveLength(0);
+		expect(await relationships.listRelationships(botUserId)).toHaveLength(0);
+		const pointingAtBot = await fetchMany(
+			RelationshipsByTarget.selectCql({where: RelationshipsByTarget.where.eq('target_user_id')}),
+			{target_user_id: botUserId},
+		);
+		expect(pointingAtBot).toHaveLength(0);
 	});
 });
