@@ -17,6 +17,7 @@ import type {Relationship} from '@app/api/models/Relationship';
 import type {User} from '@app/api/models/User';
 import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
+import type {RelationshipKey} from '@app/api/user/repositories/UserRelationshipRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {findPersonByLoginHandle} from '@app/api/user/UniqueUsernames';
 
@@ -251,15 +252,12 @@ export class UserRelationshipService {
 			throw new UnknownUserError();
 		}
 		await this.validateRelationshipCounts({userId, targetId});
-		if (incomingRequest) {
-			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.INCOMING_REQUEST);
-		}
-		await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.OUTGOING_REQUEST);
-		if (await this.userRepository.getRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST)) {
-			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST);
-			await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.INCOMING_REQUEST);
-		}
-		const [userRelationship, targetRelationship] = await this.upsertMutualFriendship(userId, targetId);
+		const [userRelationship, targetRelationship] = await this.upsertMutualFriendship(userId, targetId, [
+			{source_user_id: userId, target_user_id: targetId, type: RelationshipTypes.INCOMING_REQUEST},
+			{source_user_id: targetId, target_user_id: userId, type: RelationshipTypes.OUTGOING_REQUEST},
+			{source_user_id: userId, target_user_id: targetId, type: RelationshipTypes.OUTGOING_REQUEST},
+			{source_user_id: targetId, target_user_id: userId, type: RelationshipTypes.INCOMING_REQUEST},
+		]);
 		await this.dispatchRelationshipUpdate({
 			userId,
 			relationship: userRelationship,
@@ -309,8 +307,7 @@ export class UserRelationshipService {
 			await this.endFriendship(userId, targetId);
 			await this.dispatchRelationshipRemove({userId: targetId, targetId: userId.toString()});
 		} else if (existingOutgoingRequest) {
-			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST);
-			await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.INCOMING_REQUEST);
+			await this.deleteFriendRequest(userId, targetId);
 			await this.dispatchRelationshipRemove({userId: targetId, targetId: userId.toString()});
 		} else if (existingIncomingRequest) {
 			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.INCOMING_REQUEST);
@@ -354,8 +351,7 @@ export class UserRelationshipService {
 			return;
 		}
 		if (relationshipType === RelationshipTypes.OUTGOING_REQUEST) {
-			await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST);
-			await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.INCOMING_REQUEST);
+			await this.deleteFriendRequest(userId, targetId);
 			await this.dispatchRelationshipRemove({userId, targetId: targetId.toString()});
 			await this.dispatchRelationshipRemove({userId: targetId, targetId: userId.toString()});
 			return;
@@ -370,9 +366,22 @@ export class UserRelationshipService {
 		await this.dispatchRelationshipRemove({userId, targetId: targetId.toString()});
 	}
 
+	async deleteFriendRequest(requesterId: UserID, recipientId: UserID): Promise<void> {
+		await this.userRepository.writeRelationships({
+			deletes: [
+				{source_user_id: requesterId, target_user_id: recipientId, type: RelationshipTypes.OUTGOING_REQUEST},
+				{source_user_id: recipientId, target_user_id: requesterId, type: RelationshipTypes.INCOMING_REQUEST},
+			],
+		});
+	}
+
 	async endFriendship(userId: UserID, targetId: UserID): Promise<void> {
-		await this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.FRIEND);
-		await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.FRIEND);
+		await this.userRepository.writeRelationships({
+			deletes: [
+				{source_user_id: userId, target_user_id: targetId, type: RelationshipTypes.FRIEND},
+				{source_user_id: targetId, target_user_id: userId, type: RelationshipTypes.FRIEND},
+			],
+		});
 		await this.operatorPassServices?.holdingService.cancelOffersBetween(userId, targetId);
 	}
 
@@ -425,16 +434,7 @@ export class UserRelationshipService {
 			});
 		}
 		for (const relationship of requestsToIgnore) {
-			await this.userRepository.deleteRelationship(
-				userId,
-				relationship.targetUserId,
-				RelationshipTypes.INCOMING_REQUEST,
-			);
-			await this.userRepository.deleteRelationship(
-				relationship.targetUserId,
-				userId,
-				RelationshipTypes.OUTGOING_REQUEST,
-			);
+			await this.deleteFriendRequest(relationship.targetUserId, userId);
 			await this.dispatchRelationshipRemove({userId, targetId: relationship.targetUserId.toString()});
 			await this.dispatchRelationshipRemove({
 				userId: relationship.targetUserId,
@@ -481,25 +481,17 @@ export class UserRelationshipService {
 		if (userAlreadyFriends && !hasExtraUserRelationship && !hasExtraTargetRelationship) {
 			return userFriend;
 		}
-		await Promise.all([
-			...(userFriend ? [this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.FRIEND)] : []),
-			...(userBlocked ? [this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.BLOCKED)] : []),
-			...(userIncoming
-				? [this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.INCOMING_REQUEST)]
-				: []),
-			...(userOutgoing
-				? [this.userRepository.deleteRelationship(userId, targetId, RelationshipTypes.OUTGOING_REQUEST)]
-				: []),
-			...(targetFriend ? [this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.FRIEND)] : []),
-			...(targetBlocked ? [this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.BLOCKED)] : []),
-			...(targetIncoming
-				? [this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.INCOMING_REQUEST)]
-				: []),
-			...(targetOutgoing
-				? [this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.OUTGOING_REQUEST)]
-				: []),
-		]);
-		const [userRelationship, targetRelationship] = await this.upsertMutualFriendship(userId, targetId);
+		const [userRelationship, targetRelationship] = await this.upsertMutualFriendship(
+			userId,
+			targetId,
+			[userBlocked, userIncoming, userOutgoing, targetBlocked, targetIncoming, targetOutgoing]
+				.filter((relationship) => relationship != null)
+				.map((relationship) => ({
+					source_user_id: relationship.sourceUserId,
+					target_user_id: relationship.targetUserId,
+					type: relationship.type,
+				})),
+		);
 		const hadUserRelationship = userFriend != null || hasExtraUserRelationship;
 		const hadTargetRelationship = targetFriend != null || hasExtraTargetRelationship;
 		if (hadUserRelationship) {
@@ -542,31 +534,40 @@ export class UserRelationshipService {
 		return targetUser;
 	}
 
-	private async upsertMutualFriendship(userId: UserID, targetId: UserID): Promise<[Relationship, Relationship]> {
+	private async upsertMutualFriendship(
+		userId: UserID,
+		targetId: UserID,
+		deletes: ReadonlyArray<RelationshipKey>,
+	): Promise<[Relationship, Relationship]> {
 		const now = new Date();
 		const [userDefault, targetDefault] = await Promise.all([
 			this.userRepository.findSettings(userId).then((s) => s?.defaultShareVoiceActivity ?? true),
 			this.userRepository.findSettings(targetId).then((s) => s?.defaultShareVoiceActivity ?? true),
 		]);
-		const userRelationship = await this.userRepository.upsertRelationship({
-			source_user_id: userId,
-			target_user_id: targetId,
-			type: RelationshipTypes.FRIEND,
-			nickname: null,
-			since: now,
-			share_voice_activity: userDefault,
-			version: 1,
+		const [userRelationship, targetRelationship] = await this.userRepository.writeRelationships({
+			upserts: [
+				{
+					source_user_id: userId,
+					target_user_id: targetId,
+					type: RelationshipTypes.FRIEND,
+					nickname: null,
+					since: now,
+					share_voice_activity: userDefault,
+					version: 1,
+				},
+				{
+					source_user_id: targetId,
+					target_user_id: userId,
+					type: RelationshipTypes.FRIEND,
+					nickname: null,
+					since: now,
+					share_voice_activity: targetDefault,
+					version: 1,
+				},
+			],
+			deletes,
 		});
-		const targetRelationship = await this.userRepository.upsertRelationship({
-			source_user_id: targetId,
-			target_user_id: userId,
-			type: RelationshipTypes.FRIEND,
-			nickname: null,
-			since: now,
-			share_voice_activity: targetDefault,
-			version: 1,
-		});
-		return [userRelationship, targetRelationship];
+		return [userRelationship!, targetRelationship!];
 	}
 
 	private async validateFriendRequest({userId, targetId}: {userId: UserID; targetId: UserID}): Promise<User> {
@@ -627,28 +628,32 @@ export class UserRelationshipService {
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
 		const now = new Date();
-		const userRelationship = await this.userRepository.upsertRelationship({
-			source_user_id: userId,
-			target_user_id: targetId,
-			type: RelationshipTypes.OUTGOING_REQUEST,
-			nickname: null,
-			since: now,
-			share_voice_activity: true,
-			version: 1,
+		const [userRelationship, targetRelationship] = await this.userRepository.writeRelationships({
+			upserts: [
+				{
+					source_user_id: userId,
+					target_user_id: targetId,
+					type: RelationshipTypes.OUTGOING_REQUEST,
+					nickname: null,
+					since: now,
+					share_voice_activity: true,
+					version: 1,
+				},
+				{
+					source_user_id: targetId,
+					target_user_id: userId,
+					type: RelationshipTypes.INCOMING_REQUEST,
+					nickname: null,
+					since: now,
+					share_voice_activity: true,
+					version: 1,
+				},
+			],
 		});
-		const targetRelationship = await this.userRepository.upsertRelationship({
-			source_user_id: targetId,
-			target_user_id: userId,
-			type: RelationshipTypes.INCOMING_REQUEST,
-			nickname: null,
-			since: now,
-			share_voice_activity: true,
-			version: 1,
-		});
-		await this.dispatchRelationshipCreate({userId, relationship: userRelationship, userCacheService, requestCache});
+		await this.dispatchRelationshipCreate({userId, relationship: userRelationship!, userCacheService, requestCache});
 		await this.dispatchRelationshipCreate({
 			userId: targetId,
-			relationship: targetRelationship,
+			relationship: targetRelationship!,
 			userCacheService,
 			requestCache,
 		});

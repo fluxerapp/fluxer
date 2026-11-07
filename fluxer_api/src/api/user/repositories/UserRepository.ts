@@ -59,7 +59,7 @@ import {
 	type PrivateChannelSummary,
 	UserChannelRepository,
 } from '@app/api/user/repositories/UserChannelRepository';
-import {UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
+import {type RelationshipKey, UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
 import {UserSettingsRepository} from '@app/api/user/repositories/UserSettingsRepository';
 import {VisionarySlotRepository} from '@app/api/user/repositories/VisionarySlotRepository';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -462,6 +462,13 @@ export class UserRepository {
 
 	async upsertRelationship(relationship: RelationshipRow): Promise<Relationship> {
 		return this.relationshipRepo.upsertRelationship(relationship);
+	}
+
+	async writeRelationships(changes: {
+		upserts?: ReadonlyArray<RelationshipRow>;
+		deletes?: ReadonlyArray<RelationshipKey>;
+	}): Promise<Array<Relationship>> {
+		return this.relationshipRepo.writeRelationships(changes);
 	}
 
 	async bulkUpdateFriendShareVoiceActivity(sourceUserId: UserID, value: boolean): Promise<Array<Relationship>> {
