@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import {existsSync, readdirSync} from 'node:fs';
+import {existsSync, readdirSync, readFileSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
@@ -14,6 +14,7 @@ import {
 	SwcJsMinimizerRspackPlugin,
 	sources,
 } from '@rspack/core';
+import {transformSync} from 'esbuild';
 import {getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 import {moduleMapPlugin} from './scripts/module-map/index.ts';
@@ -178,6 +179,42 @@ function entryRecoveryMarkerPlugin() {
 	};
 }
 
+const INLINE_SCRIPTS_DIR = path.join(ROOT_DIR, 'inline_scripts');
+const INLINE_SCRIPT_TARGETS = ['chrome111', 'edge111', 'firefox114', 'safari16.4'];
+const INLINE_SCRIPT_MARKER_PATTERN = /<script data-inline-script="([a-z-]+)"><\/script>/gu;
+
+class InlineScriptError extends Error {
+	constructor(name, reason) {
+		super(`Cannot inline ${name}.js: ${reason}`);
+		this.name = 'InlineScriptError';
+	}
+}
+
+function inlineScriptTag(name, replacements = {}) {
+	let source = readFileSync(path.join(INLINE_SCRIPTS_DIR, `${name}.js`), 'utf8');
+	for (const [token, value] of Object.entries(replacements)) {
+		source = source.replaceAll(token, value);
+	}
+	const code = transformSync(source, {minify: true, target: INLINE_SCRIPT_TARGETS, legalComments: 'none'}).code.trim();
+	if (/<\/script/iu.test(code)) {
+		throw new InlineScriptError(name, 'it contains a closing script tag');
+	}
+	return `<script data-cfasync="false" nonce="{{CSP_NONCE_PLACEHOLDER}}">${code}</script>`;
+}
+
+function inlineScriptsPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('InlineScriptsPlugin', (compilation) => {
+				HtmlRspackPlugin.getCompilationHooks(compilation).beforeEmit.tap('InlineScriptsPlugin', (data) => {
+					data.html = data.html.replace(INLINE_SCRIPT_MARKER_PATTERN, (_marker, name) => inlineScriptTag(name));
+					return data;
+				});
+			});
+		},
+	};
+}
+
 function bootPreloadPlugin({withIntegrity}) {
 	return {
 		apply(compiler) {
@@ -237,7 +274,10 @@ function bootPreloadPlugin({withIntegrity}) {
 							signedInPreloads.length === 0
 								? ''
 								: `<script type="application/json" id="${SIGNED_IN_PRELOADS_ELEMENT_ID}">${signedInPreloadData}</script>` +
-									`<script data-cfasync="false" nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{if(!localStorage.getItem('${SIGNED_IN_HINT_STORAGE_KEY}'))return;var l=JSON.parse(document.getElementById('${SIGNED_IN_PRELOADS_ELEMENT_ID}').textContent),h=document.head,i,f,e;for(i=0;i<l.length;i++){f=l[i];e=document.createElement('link');e.rel='preload';e.as=f.as;e.href=f.href;e.setAttribute('fetchpriority','low');if(f.integrity){e.crossOrigin='anonymous';e.integrity=f.integrity}h.appendChild(e)}}catch(x){}})()</script>`;
+									inlineScriptTag('signed-in-preloads', {
+										'{{SIGNED_IN_HINT_STORAGE_KEY}}': SIGNED_IN_HINT_STORAGE_KEY,
+										'{{SIGNED_IN_PRELOADS_ELEMENT_ID}}': SIGNED_IN_PRELOADS_ELEMENT_ID,
+									});
 						if (links === '' && signedInPreloadTags === '') {
 							return;
 						}
@@ -748,6 +788,7 @@ export default () => {
 		},
 		plugins: [
 			nodeAssertStrictSchemePlugin(),
+			inlineScriptsPlugin(),
 			fontPreloadPlugin(),
 			libfluxcoreWasmUrlPlugin({publicPath: workerWasmPublicPath ?? publicPath}),
 			rocketLoaderOptOutPlugin(),

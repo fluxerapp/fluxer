@@ -157,6 +157,17 @@
 			}
 		},
 		{
+			"includes": ["fluxer_app/inline_scripts/boot-shell.js"],
+			"linter": {
+				"rules": {
+					"complexity": {"useOptionalChain": "off", "useMathMinMax": "off"},
+					"correctness": {"noInnerDeclarations": "off"},
+					"style": {"noNestedTernary": "off", "useTemplate": "off"},
+					"suspicious": {"noVar": "off", "noGlobalIsFinite": "off"}
+				}
+			}
+		},
+		{
 			"includes": ["fluxer_app/src/**/*.tsx"],
 			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
 		},
