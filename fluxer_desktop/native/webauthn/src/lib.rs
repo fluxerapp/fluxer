@@ -39,8 +39,8 @@ const BACKEND_REASON: &str = "macOS WebAuthn backend (AuthenticationServices). \
 #[cfg(target_os = "windows")]
 const BACKEND_REASON: &str = "Windows WebAuthn broker backend (webauthn.dll). \
      Requires Windows 10 build 18362 (May 2019 / version 1903) or newer; \
-     webauthn.dll is delay-loaded via /DELAYLOAD, so the addon still loads on \
-     older builds but `isSupported()` returns false there.";
+     webauthn.dll and its exports are resolved at runtime from System32, so the \
+     addon still loads on older builds and `isSupported()` returns false there.";
 #[cfg(target_os = "linux")]
 const BACKEND_REASON: &str = "Linux WebAuthn backend (bundled libfido2, HID transport, U2F \
      fallback disabled). Requires a CTAP authenticator on USB-HID; \
