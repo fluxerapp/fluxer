@@ -6,6 +6,7 @@ import {
 	type NagbarState,
 	NagbarType,
 } from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
+import {useAndroidAppNagbarStarted} from '@app/features/app/components/layout/app_layout/nagbars/AndroidAppNagbarSchedule';
 import {
 	useInstanceNoticeRefresh,
 	useVisibleInstanceNotice,
@@ -22,6 +23,7 @@ import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
+import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import {resolvePurchaseAccountState} from '@app/features/premium/hooks/usePurchaseAccountGate';
 import PremiumState from '@app/features/premium/state/PremiumState';
@@ -201,6 +203,14 @@ export const useNagbarConditions = (): NagbarConditions => {
 		if (nagbarState.forceDesktopDownload) return true;
 		return isDesktopBrowser && !nagbarState.desktopDownloadDismissed;
 	})();
+	const androidAppNagbarStarted = useAndroidAppNagbarStarted();
+	const canShowAndroidApp = (() => {
+		if (nagbarState.forceHideAndroidApp) return false;
+		if (nagbarState.forceAndroidApp) return true;
+		if (hasBrokenElectronNativeContext) return false;
+		if (isIOSMobileOrTabletUserAgent(navigator.userAgent, navigator.maxTouchPoints)) return false;
+		return androidAppNagbarStarted && !nagbarState.androidAppDismissed;
+	})();
 	const canShowVisionaryMfa = (() => {
 		if (isSelfHosted) return false;
 		if (nagbarState.forceHideVisionaryMfa) return false;
@@ -376,6 +386,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowLegacyPriceOptIn,
 		canShowGiftInventory,
 		canShowDesktopDownload,
+		canShowAndroidApp,
 		canShowGuildMembershipCta,
 		canShowVisionaryMfa,
 		canShowVoiceSessionRestore,
@@ -496,6 +507,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.VISIONARY_MFA,
 				priority: 7,
 				visible: conditions.canShowVisionaryMfa,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.ANDROID_APP,
+				priority: 7.5,
+				visible: conditions.canShowAndroidApp,
 				dismissible: true,
 			},
 			{

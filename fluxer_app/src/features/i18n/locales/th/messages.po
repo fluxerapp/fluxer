@@ -4743,6 +4743,11 @@ msgstr "ไฟล์วิดีโอที่อัปโหลด"
 msgid "and {remainingCount} more"
 msgstr "และอีก {remainingCount} รายการ"
 
+#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the Android app on Google Play banner.
+#: src/features/devtools/components/NagbarControls.ts
+msgid "Android app nagbar"
+msgstr "แถบแจ้งเตือนแอป Android"
+
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Animate on interaction"
@@ -17784,6 +17789,11 @@ msgstr "รับอวาตาร์และแบนเนอร์แบบ
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "Get another pass"
 msgstr "รับ Operator Pass เพิ่ม"
+
+#. Button in the Android app nagbar that opens the Fluxer listing on Google Play. {googlePlay} is the store brand name Google Play and must stay as is. Use the wording Google Play uses for its own "Get it on Google Play" badge in this language when one exists. Keep it short.
+#: src/features/app/components/layout/app_layout/nagbars/AndroidAppNagbar.tsx
+msgid "Get it on {googlePlay}"
+msgstr "ดาวน์โหลดได้ที่ {googlePlay}"
 
 #. Secondary Plutonium page button that starts a monthly subscription checkout.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -43255,6 +43265,11 @@ msgstr "คุณสามารถขอคืนเงินเต็มจำ
 #: src/features/app/components/dialogs/components/plutonium/RefundsSection.tsx
 msgid "You can get a full refund until {date}. This also ends your subscription right away."
 msgstr "คุณสามารถขอคืนเงินเต็มจำนวนได้ถึง {date} การดำเนินการนี้จะยุติการสมัครสมาชิกของคุณทันที"
+
+#. Nagbar body telling people that the Fluxer app for Android phones can be installed from Google Play. {googlePlay} is the store brand name Google Play and must stay as is. Keep Fluxer and Android untranslated. Keep the tone calm and plain.
+#: src/features/app/components/layout/app_layout/nagbars/AndroidAppNagbar.tsx
+msgid "You can get the Fluxer app for Android on {googlePlay} and chat from your phone."
+msgstr "คุณดาวน์โหลดแอป Fluxer สำหรับ Android ได้จาก {googlePlay} และแชทจากโทรศัพท์ได้เลย"
 
 #. Line under "Full refund" in the Payments settings. {amount} is the price paid, with currency, and {date} is the last day of the refund window, such as Nov 2, 2026. Both are filled in by code.
 #: src/features/app/components/dialogs/components/plutonium/RefundsSection.tsx
