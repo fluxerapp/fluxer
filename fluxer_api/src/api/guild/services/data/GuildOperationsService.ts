@@ -822,20 +822,36 @@ export class GuildOperationsService {
 		for (const feature of GUILD_DELETION_PENDING_FEATURES) {
 			features.add(feature);
 		}
-		await this.guildRepository.upsertPartial(guildId, {features}, guild.toRow());
+		const pending = await this.guildRepository.upsertPartial(guildId, {features}, guild.toRow());
+		await this.reloadGuildAfterDeletionChange(guildId);
+		try {
+			await this.workerService.addJob(
+				'guildProcessDeletion',
+				{guildId: guildId.toString(), copyMode},
+				{jobKey: `guild-deletion-${guildId}`},
+			);
+		} catch (error) {
+			if (await this.guildRepository.findUnique(guildId)) {
+				await this.guildRepository.upsertPartial(guildId, {features: new Set(guild.features)}, pending.toRow());
+				await this.reloadGuildAfterDeletionChange(guildId);
+			}
+			throw error;
+		}
+		await this.gatewayService
+			.dispatchGuild({
+				guildId,
+				event: 'GUILD_DELETE',
+				data: {id: guildId.toString()},
+			})
+			.catch((error) => {
+				Logger.warn({guildId, error}, 'Failed to dispatch GUILD_DELETE after scheduling deletion');
+			});
+	}
+
+	private async reloadGuildAfterDeletionChange(guildId: GuildID): Promise<void> {
 		await this.gatewayService.reloadGuild(guildId).catch((error) => {
-			Logger.warn({guildId, error}, 'Failed to reload guild after scheduling deletion');
+			Logger.warn({guildId, error}, 'Failed to reload guild after a deletion state change');
 		});
-		await this.gatewayService.dispatchGuild({
-			guildId,
-			event: 'GUILD_DELETE',
-			data: {id: guildId.toString()},
-		});
-		await this.workerService.addJob(
-			'guildProcessDeletion',
-			{guildId: guildId.toString(), copyMode},
-			{jobKey: `guild-deletion-${guildId}`},
-		);
 	}
 
 	async purgeGuild(guildId: GuildID, copyMode: ChannelFollowerRemovalCopyMode): Promise<void> {
