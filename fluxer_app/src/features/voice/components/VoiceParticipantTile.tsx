@@ -125,6 +125,7 @@ import {selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload} from '@app/
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import {isStreamAudioPlaybackEnabled} from '@app/features/voice/state/ParticipantVolume';
 import PopoutWindowManager, {getVoiceTilePopoutKey} from '@app/features/voice/state/PopoutWindowManager';
 import {
 	getScreenShareWatchFailureForPublicationOperation,
@@ -387,6 +388,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	});
 	const streamVolume = StreamAudioPrefs.getVolume(streamKey);
 	const isStreamMuted = StreamAudioPrefs.isMuted(streamKey);
+	const streamAudioPlaybackEnabled = isStreamAudioPlaybackEnabled(streamKey);
 	const hasStreamAudioPrefsEntry = StreamAudioPrefs.hasEntry(streamKey);
 	const isSubscribed = Boolean(publication?.isSubscribed);
 	const hasSubscribedScreenShareVideo = isSubscribed && hasVideo;
@@ -472,7 +474,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		userWantsToWatch: isWatching,
 		videoLocallyDisabled: false,
 		isOwnScreenShare,
-		audioEnabled: !isStreamMuted,
+		audioEnabled: streamAudioPlaybackEnabled,
 		audioPublication: screenShareAudioPublication,
 		streamKey,
 		onVideoSubscriptionError: reportVideoSubscriptionError,
@@ -489,18 +491,16 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		if (!isWatching) return;
 		const pub = screenShareAudioPublication;
 		if (!pub) return;
-		const shouldEnable = !isStreamMuted;
 		logger.debug('Applying runtime screen share audio enabled state', {
 			trackSid: pub.trackSid,
 			isWatching,
-			isStreamMuted,
-			shouldEnable,
+			streamAudioPlaybackEnabled,
 		});
 		syncScreenSharePublication({
 			publication: pub,
 			label: 'screen share audio publication',
 			shouldSubscribe: true,
-			shouldEnable,
+			shouldEnable: streamAudioPlaybackEnabled,
 			onError: (operation, label, err) => logger.error(`${operation} failed for ${label}`, err),
 		});
 		MediaEngine.applyLocalAudioPreferencesForUser(userId);
@@ -511,8 +511,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		isFocusedPlaceholderTile,
 		isWatching,
 		screenShareAudioPublication,
-		streamVolume,
-		isStreamMuted,
+		streamAudioPlaybackEnabled,
 		userId,
 	]);
 	useEffect(() => {
