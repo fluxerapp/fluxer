@@ -517,8 +517,8 @@ async function forwardFromSource(side: DomainMigrationSide): Promise<boolean> {
 }
 
 async function forwardWhenIdle(side: DomainMigrationSide): Promise<void> {
-	const {default: MediaEngine} = await import('@app/features/voice/engine/MediaEngineFacade');
-	await when(() => !MediaEngine.connected && !MediaEngine.connecting);
+	const {default: VoiceRuntime} = await import('@app/features/voice/engine/VoiceRuntime');
+	await when(() => !VoiceRuntime.connected && !VoiceRuntime.connecting);
 	if (
 		isDomainMigrationOneShotRoute(window.location.pathname) ||
 		!shouldForwardCompletedSource(

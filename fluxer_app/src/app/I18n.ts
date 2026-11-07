@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {messages as messagesEnUS} from '@app/features/i18n/locales/en-US/messages.mjs';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
@@ -37,7 +36,7 @@ const loaders: Record<LocaleCode, LocaleLoader> = {
 	de: () => import('@app/features/i18n/locales/de/messages.mjs'),
 	el: () => import('@app/features/i18n/locales/el/messages.mjs'),
 	'en-GB': () => import('@app/features/i18n/locales/en-GB/messages.mjs'),
-	'en-US': () => Promise.resolve({messages: messagesEnUS}),
+	'en-US': () => import('@app/features/i18n/locales/en-US/messages.mjs'),
 	'es-ES': () => import('@app/features/i18n/locales/es-ES/messages.mjs'),
 	'es-419': () => import('@app/features/i18n/locales/es-419/messages.mjs'),
 	fi: () => import('@app/features/i18n/locales/fi/messages.mjs'),
@@ -170,8 +169,11 @@ function applyDocumentLocale(localeCode: LocaleCode): void {
 	document.documentElement.dir = getLocaleDirection(localeCode);
 }
 
+let loadedLocale: LocaleCode | null = null;
+
 function activateLocale(localeCode: LocaleCode, messages: Messages): void {
 	i18n.loadAndActivate({locale: localeCode, messages});
+	loadedLocale = localeCode;
 	applyDocumentLocale(localeCode);
 	noteLocale(localeCode);
 }
@@ -180,7 +182,7 @@ export function ensureActiveLocale(): void {
 	if (i18n.locale) {
 		return;
 	}
-	i18n.loadAndActivate({locale: DEFAULT_LOCALE, messages: messagesEnUS});
+	i18n.loadAndActivate({locale: DEFAULT_LOCALE, messages: {}});
 	applyDocumentLocale(DEFAULT_LOCALE);
 }
 
@@ -190,7 +192,7 @@ let requestedLocale: LocaleCode | null = null;
 export async function loadLocaleCatalog(localeCode: string): Promise<LocaleCode> {
 	const normalized = normalizeLocale(localeCode);
 	requestedLocale = normalized;
-	if (normalized === i18n.locale) {
+	if (normalized === loadedLocale) {
 		return normalized;
 	}
 	let loadPromise = inFlightLoads.get(normalized);
@@ -203,7 +205,7 @@ export async function loadLocaleCatalog(localeCode: string): Promise<LocaleCode>
 		inFlightLoads.set(normalized, loadPromise);
 	}
 	const messages = await loadPromise;
-	if (requestedLocale === normalized && i18n.locale !== normalized) {
+	if (requestedLocale === normalized && loadedLocale !== normalized) {
 		activateLocale(normalized, messages);
 	}
 	return normalized;
@@ -212,7 +214,7 @@ export async function loadLocaleCatalog(localeCode: string): Promise<LocaleCode>
 export function applyLocaleChange(localeCode: string): LocaleCode {
 	const normalized = normalizeLocale(localeCode);
 	requestedLocale = normalized;
-	if (normalized === i18n.locale) {
+	if (normalized === loadedLocale) {
 		AppStorage.setItem(AppStorageKey.I18N_CHOSEN_LOCALE, normalized);
 		return normalized;
 	}
@@ -238,7 +240,10 @@ export async function initI18n(forceLocale?: string) {
 				await loadLocaleCatalog(localeToLoad);
 			} catch (error) {
 				logger.error('Failed to initialize i18n, falling back to default locale', error);
-				activateLocale(DEFAULT_LOCALE, messagesEnUS);
+				await loadLocaleCatalog(DEFAULT_LOCALE).catch((fallbackError: unknown) => {
+					logger.error('Failed to load the default locale catalog', fallbackError);
+					ensureActiveLocale();
+				});
 			}
 			initialized = true;
 			return i18n;

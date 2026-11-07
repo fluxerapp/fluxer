@@ -2,8 +2,6 @@
 
 use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
 use anyhow::{Context, Result, anyhow, ensure};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use clap::Args;
 use std::env;
 use std::ffi::OsString;
@@ -143,8 +141,7 @@ fn clang_targets_wasm32(clang: &Path) -> bool {
 
 fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     let rust_source_dir = app_dir.join("../packages/markdown_parser/rust");
-    let bytes_path =
-        app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts");
+    let out_path = app_dir.join("pkgs/markdown_parser/markdown_parser.wasm");
     let target_dir = rust_source_dir.join("target");
 
     run_command(apply_wasm_c_toolchain(
@@ -155,15 +152,18 @@ fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     )?)?;
 
     let wasm_path = target_dir.join("wasm32-unknown-unknown/release/fluxer_markdown_parser.wasm");
-    let wasm =
-        fs::read(&wasm_path).with_context(|| format!("Failed to read {}", wasm_path.display()))?;
-    let content = markdown_wasm_bytes_content(&wasm);
-    if let Some(parent) = bytes_path.parent() {
+    if let Some(parent) = out_path.parent() {
         fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create {}", parent.display()))?;
     }
-    fs::write(&bytes_path, content)
-        .with_context(|| format!("Failed to write {}", bytes_path.display()))
+    fs::copy(&wasm_path, &out_path).with_context(|| {
+        format!(
+            "Failed to copy {} to {}",
+            wasm_path.display(),
+            out_path.display()
+        )
+    })?;
+    Ok(())
 }
 
 fn libfluxcore_build_command(rust_package_dir: &Path, target_dir: &Path) -> CommandSpec {
@@ -689,15 +689,6 @@ fn libfluxcore_readme_content() -> &'static str {
     "<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->\n\
 # libfluxcore\n\n\
 Rust WebAssembly helpers for Fluxer media processing.\n"
-}
-
-fn markdown_wasm_bytes_content(wasm: &[u8]) -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export const MARKDOWN_PARSER_WASM_BASE64 =\n\
-\t'{}';\n",
-        BASE64.encode(wasm)
-    )
 }
 
 #[cfg(test)]

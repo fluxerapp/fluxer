@@ -34,7 +34,7 @@ import {
 	createVoiceParticipantSortSnapshot,
 	sortVoiceParticipantItemsWithSnapshot,
 } from '@app/features/voice/components/VoiceParticipantSortUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import type {UserVoiceActivity} from '@app/features/voice/hooks/useUserVoiceActivities';
 import {useVoiceJoinEligibility} from '@app/features/voice/hooks/useVoiceJoinEligibility';
@@ -103,7 +103,7 @@ export const VoiceActivityCard: React.FC<VoiceActivityCardProps> = observer(({ac
 		activity;
 	const isConnectedToChannel = useMemo(() => {
 		if (!channelId) return false;
-		return MediaEngine.channelId === channelId && MediaEngine.guildId === (guildId ?? null);
+		return VoiceRuntime.channelId === channelId && VoiceRuntime.guildId === (guildId ?? null);
 	}, [channelId, guildId]);
 	const {canJoin} = useVoiceJoinEligibility({
 		guildId: guildId ?? null,

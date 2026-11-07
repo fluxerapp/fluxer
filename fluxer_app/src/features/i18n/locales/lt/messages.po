@@ -34048,7 +34048,7 @@ msgid "Skip this step"
 msgstr "Praleisti šį žingsnį"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx
+#: src/app/SkipToContentLink.tsx
 msgid "Skip to content"
 msgstr "Pereiti prie turinio"
 

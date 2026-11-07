@@ -34047,7 +34047,7 @@ msgid "Skip this step"
 msgstr "Diesen Schritt überspringen"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx
+#: src/app/SkipToContentLink.tsx
 msgid "Skip to content"
 msgstr "Zum Inhalt springen"
 

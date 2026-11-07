@@ -20,7 +20,14 @@ function getPreuploadMessageAttachmentsDefaultForUserId(userId: string | null | 
 }
 
 function currentUserIdSafe(): string | null | undefined {
-	return (Users as typeof Users | undefined)?.currentUserId;
+	try {
+		return Users.currentUserId;
+	} catch (error) {
+		if (error instanceof ReferenceError) {
+			return undefined;
+		}
+		throw error;
+	}
 }
 
 class PrivacyPreferences {

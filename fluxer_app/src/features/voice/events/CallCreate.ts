@@ -3,6 +3,8 @@
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {CallVoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import Dimension from '@app/features/ui/state/Dimension';
+import Users from '@app/features/user/state/Users';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallAvailability from '@app/features/voice/state/CallAvailability';
 import CallState, {type GatewayCallData} from '@app/features/voice/state/CallState';
 
@@ -25,4 +27,5 @@ export function handleCallCreate(data: CallCreatePayload, _context: GatewayHandl
 	Dimension.handleCallCreate(data.channel_id);
 	CallAvailability.setCallAvailable(data.channel_id);
 	CallState.handleCallCreate({channelId: data.channel_id, call: callData});
+	if (CallState.isUserPendingRinging(data.channel_id, Users.currentUserId)) VoiceRuntime.handleCallRing();
 }

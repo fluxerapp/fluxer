@@ -49,12 +49,12 @@ async function resetAppDataExceptDrafts(): Promise<void> {
 
 async function cleanupRuntimeStateOnCrash(): Promise<void> {
 	LayerManager.closeAll();
-	const [{default: GatewaySessions}, {default: MediaEngine}] = await Promise.all([
+	const [{default: GatewaySessions}, {default: VoiceRuntime}] = await Promise.all([
 		import('@app/features/gateway/transport/GatewaySessionPool'),
-		import('@app/features/voice/engine/MediaEngineFacade'),
+		import('@app/features/voice/engine/VoiceRuntime'),
 	]);
 	GatewaySessions.foregroundConnection.logout();
-	MediaEngine.cleanup();
+	VoiceRuntime.cleanup();
 }
 
 export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {

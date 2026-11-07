@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {VoiceSettingsUpdate} from '@app/features/voice/state/VoiceSettings';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getActiveInputDeviceLabel, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
@@ -24,15 +24,15 @@ const SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS: Array<keyof VoiceSettingsPatc
 	'screenShareEncoderMode',
 ];
 function refreshCameraBackground(): void {
-	MediaEngine.refreshCameraBackgroundFromSettings();
+	VoiceRuntime.engine?.refreshCameraBackgroundFromSettings();
 }
 
 function refreshCameraCapture(): void {
-	MediaEngine.refreshCameraCaptureFromSettings();
+	VoiceRuntime.engine?.refreshCameraCaptureFromSettings();
 }
 
 function refreshScreenShareCodecNegotiation(): void {
-	MediaEngine.refreshScreenShareCodecNegotiationFromSettings();
+	VoiceRuntime.engine?.refreshScreenShareCodecNegotiationFromSettings();
 }
 
 function shouldRefreshCameraBackground(settings: VoiceSettingsPatch): boolean {
@@ -62,11 +62,11 @@ function applyUpdatedVoiceSettings(settings: VoiceSettingsPatch, options: VoiceS
 	const cameraCaptureBefore = readCameraCaptureRefreshValues();
 	VoiceSettings.updateSettings(settings);
 	if (settings.muteStreamAudio !== undefined) {
-		MediaEngine.setScreenShareAudioMuted(settings.muteStreamAudio);
+		VoiceRuntime.engine?.setScreenShareAudioMuted(settings.muteStreamAudio);
 	}
 	if (settings.outputVolume !== undefined) {
-		if (MediaEngine.room) {
-			MediaEngine.applyAllLocalAudioPreferences();
+		if (VoiceRuntime.room) {
+			VoiceRuntime.engine?.applyAllLocalAudioPreferences();
 		}
 	}
 	if (options.refreshCameraBackground !== false && shouldRefreshCameraBackground(settings)) {

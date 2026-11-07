@@ -67,7 +67,7 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
@@ -202,7 +202,7 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 		enabled: KeyboardMode.keyboardModeEnabled,
 		restoreFocusOnWindowFocus: false,
 	});
-	const connectedChannelId = MediaEngine.channelId;
+	const connectedChannelId = VoiceRuntime.channelId;
 	const hideMutedChannels = userGuildSettings?.hide_muted_channels ?? false;
 	const showFadedUnreadOnMutedChannels = Accessibility.showFadedUnreadOnMutedChannels;
 	const isMobile = MobileLayout.enabled;

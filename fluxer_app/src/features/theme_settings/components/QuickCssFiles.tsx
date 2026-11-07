@@ -17,7 +17,8 @@ import {confirmDiscardThemeChanges} from '@app/features/theme_settings/component
 import styles from '@app/features/theme_settings/components/QuickCssWorkspace.module.css';
 import {EditTargetNote} from '@app/features/theme_settings/components/ThisAccountSection';
 import EditorPreferences from '@app/features/theme_settings/editor/EditorPreferences';
-import {readCachedEditorState, readOpenedCss} from '@app/features/theme_settings/editor/EditorStateCache';
+import {readOpenedCss} from '@app/features/theme_settings/editor/EditorSession';
+import {readCachedEditorState} from '@app/features/theme_settings/editor/EditorStateCache';
 import {useCurrentAccountLabels} from '@app/features/theme_settings/hooks/useCurrentAccountLabels';
 import ThemeSettingsState, {QUICK_CSS_EDITOR_FILE} from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getLinkedThemeFileLine, isLinkedThemeReadOnly} from '@app/features/theme_settings/utils/LinkedThemeFile';

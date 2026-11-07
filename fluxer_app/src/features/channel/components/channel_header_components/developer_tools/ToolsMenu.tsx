@@ -25,7 +25,7 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -252,7 +252,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 							/>
 						}
 						onClick={() => {
-							void MediaEngine.moveToAfkChannel();
+							void VoiceRuntime.engine?.moveToAfkChannel();
 						}}
 						data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.menu-item"
 					>

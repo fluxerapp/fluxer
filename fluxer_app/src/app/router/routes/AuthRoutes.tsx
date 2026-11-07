@@ -3,7 +3,6 @@
 import {Routes} from '@app/app/Routes';
 import * as AuthRouteRedirectPolicy from '@app/app/router/policy/AuthRouteRedirectPolicy';
 import * as ShortLinkRouteEnterPolicy from '@app/app/router/policy/ShortLinkRouteEnterPolicy';
-import {rootRoute} from '@app/app/router/routes/RootRoutes';
 import * as ShortLinkAcceptModalOpener from '@app/app/router/ShortLinkAcceptModalOpener';
 import {AuthLayout} from '@app/features/app/components/layout/AuthLayout';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -79,7 +78,6 @@ const ThemeRegisterPage = createAuthRoutePage(
 );
 
 const authLayoutRoute = createRoute({
-	getParentRoute: () => rootRoute,
 	id: 'authLayout',
 	layout: ({children}) => <AuthLayout data-flx="app.router.auth-routes.layout.auth-layout">{children}</AuthLayout>,
 });

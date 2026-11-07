@@ -12,8 +12,8 @@ import {Popouts} from '@app/features/ui/popover/PopoverPopouts';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Toasts} from '@app/features/ui/toast/Toasts';
-import {PiPOverlay} from '@app/features/voice/components/PiPOverlay';
-import {VoicePopoutHost} from '@app/features/voice/components/popout/VoicePopoutHost';
+import {LazyPiPOverlay, LazyVoicePopoutHost} from '@app/features/voice/components/LazyVoiceComponents';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {handleContextMenu} from '@app/lib/overlay/OverlayContextMenu';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -27,6 +27,7 @@ const QuickSwitcherBottomSheet = createNamedLoadableComponent<Record<string, unk
 const GlobalOverlays: React.FC = observer(() => {
 	const isMobile = MobileLayout.isMobileLayout();
 	const quickSwitcherOpen = QuickSwitcher.isOpen;
+	const voiceRuntimeLoaded = VoiceRuntime.module !== null;
 	const [quickSwitcherBottomSheetLoaded, setQuickSwitcherBottomSheetLoaded] = useState(false);
 	useAppStorageDegradedNotice();
 	useEffect(() => {
@@ -54,8 +55,8 @@ const GlobalOverlays: React.FC = observer(() => {
 			/>
 			<ContextMenu ownerDocument={document} data-flx="app.global-overlays.context-menu" />
 			<Toasts data-flx="app.global-overlays.toasts" />
-			<PiPOverlay data-flx="app.global-overlays.pi-p-overlay" />
-			<VoicePopoutHost data-flx="app.global-overlays.voice-popout-host" />
+			{voiceRuntimeLoaded && <LazyPiPOverlay data-flx="app.global-overlays.pi-p-overlay" />}
+			{voiceRuntimeLoaded && <LazyVoicePopoutHost data-flx="app.global-overlays.voice-popout-host" />}
 			{isMobile && quickSwitcherBottomSheetLoaded && (
 				<QuickSwitcherBottomSheet
 					isOpen={quickSwitcherOpen}

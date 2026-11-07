@@ -4,7 +4,7 @@ import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSe
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
-import {flushEditorHistory, forgetOpenedCss} from '@app/features/theme_settings/editor/EditorStateCache';
+import {flushEditorHistory, forgetOpenedCss} from '@app/features/theme_settings/editor/EditorSession';
 import ThemeSettingsState, {
 	QUICK_CSS_EDITOR_FILE,
 	type QuickCssEditorPlacement,

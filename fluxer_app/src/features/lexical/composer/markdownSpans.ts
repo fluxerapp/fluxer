@@ -2,7 +2,10 @@
 
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {MAX_LINE_LENGTH} from '@app/features/messaging/utils/markdown/parser/MarkdownConstants';
-import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
+import {
+	isMarkdownParserReady,
+	parseMarkdownAstWithWasm,
+} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
@@ -91,7 +94,9 @@ export function computeMarkdownHighlightSpans(
 		return cached;
 	}
 	const spans = computeMarkdownHighlightResult(source, parserFlags).spans;
-	highlightCache.set(key, spans);
+	if (isMarkdownParserReady()) {
+		highlightCache.set(key, spans);
+	}
 	return spans;
 }
 

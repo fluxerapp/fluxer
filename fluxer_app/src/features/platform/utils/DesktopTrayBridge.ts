@@ -15,7 +15,7 @@ import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettings
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import StatusExpiry from '@app/features/user/state/StatusExpiry';
 import UserSettings from '@app/features/user/state/UserSettings';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {selectVoiceEngineV2AppConnectionWithFallback} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {type StatusType, StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -49,9 +49,11 @@ function toTrayStatus(status: StatusType): 'online' | 'idle' | 'dnd' | 'invisibl
 	}
 }
 
-function resolveVoiceConnectionProjection() {
-	const context = MediaEngine.connectionContext;
-	return selectVoiceEngineV2AppConnectionWithFallback(MediaEngine.voiceEngineV2Model, {
+function resolveVoiceConnectionProjection(): {connected: boolean; channelId: string | null} {
+	const engine = VoiceRuntime.engine;
+	if (engine === null) return VoiceRuntime.connection;
+	const context = engine.connectionContext;
+	return selectVoiceEngineV2AppConnectionWithFallback(engine.voiceEngineV2Model, {
 		connected: context.connected,
 		connecting: context.connecting,
 		reconnecting: context.reconnecting,
@@ -90,7 +92,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 		() => {
 			const voiceConnection = resolveVoiceConnectionProjection();
 			return {
-				mediaEngineVersion: MediaEngine.getMobxSnapshot(),
+				mediaEngineVersion: VoiceRuntime.getMobxSnapshot(),
 				connected: voiceConnection.connected,
 				channelId: voiceConnection.channelId,
 				selfMute: LocalVoiceState.getSelfMute(),
@@ -118,7 +120,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 				break;
 			}
 			case 'disconnect-voice': {
-				void MediaEngine.disconnectFromVoiceChannel('user');
+				void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 				break;
 			}
 			case 'check-for-updates': {

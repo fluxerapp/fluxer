@@ -56,7 +56,7 @@ import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUti
 import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageDescriptor} from '@lingui/core';
@@ -625,7 +625,7 @@ export const UserAreaPopout = observer(() => {
 												/>
 											}
 											label={<Trans>Copy voice diagnostics</Trans>}
-											hint={MediaEngine.connected ? <Trans>In a call</Trans> : undefined}
+											hint={VoiceRuntime.connected ? <Trans>In a call</Trans> : undefined}
 											onClick={handleCopyStats}
 											data-flx="app.floating.user-area-popout.action-button.copy-voice-diagnostics"
 										/>

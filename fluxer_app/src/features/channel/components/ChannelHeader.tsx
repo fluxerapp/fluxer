@@ -109,7 +109,7 @@ import PopoutState from '@app/features/ui/state/Popout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallState from '@app/features/voice/state/CallState';
 import {computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
@@ -171,7 +171,7 @@ export const ChannelHeader = observer(
 		const headerRef = useRef<HTMLElement>(null);
 		const {isMembersOpen} = MemberList;
 		const isMobile = MobileLayout.isMobileLayout();
-		const isCallChannelConnected = Boolean(MediaEngine.connected && MediaEngine.channelId === channel?.id);
+		const isCallChannelConnected = Boolean(VoiceRuntime.connected && VoiceRuntime.channelId === channel?.id);
 		const channelIsE2EEEncrypted =
 			isCallChannelConnected && channel
 				? computeChannelE2EEStatus(channel.guildId ?? null, channel.id) === 'encrypted'
@@ -467,8 +467,8 @@ export const ChannelHeader = observer(
 		const handleMobileVoiceCall = useCallback(
 			async (event: React.MouseEvent) => {
 				if (!channel) return;
-				const isConnected = MediaEngine.connected;
-				const connectedChannelId = MediaEngine.channelId;
+				const isConnected = VoiceRuntime.connected;
+				const connectedChannelId = VoiceRuntime.channelId;
 				const isInCall = isConnected && connectedChannelId === channel.id;
 				if (isInCall) {
 					void CallCommands.leaveCall(channel.id);
@@ -487,8 +487,8 @@ export const ChannelHeader = observer(
 		const handleMobileVideoCall = useCallback(
 			async (event: React.MouseEvent) => {
 				if (!channel) return;
-				const isConnected = MediaEngine.connected;
-				const connectedChannelId = MediaEngine.channelId;
+				const isConnected = VoiceRuntime.connected;
+				const connectedChannelId = VoiceRuntime.channelId;
 				const isInCall = isConnected && connectedChannelId === channel.id;
 				if (isInCall) {
 					void CallCommands.leaveCall(channel.id);

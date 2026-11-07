@@ -2,7 +2,7 @@
 
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import {useCallback, useMemo, useRef} from 'react';
@@ -27,12 +27,12 @@ export function useStreamWatchDoubleClick({
 	startWatching,
 	onNavigateToWatch,
 }: UseStreamWatchDoubleClickOptions): UseStreamWatchDoubleClickResult {
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	const lastClickTimeRef = useRef<number>(0);
 	const isConnectedToChannel = useMemo(() => {
 		if (!channelId) return false;
-		return MediaEngine.channelId === channelId && MediaEngine.guildId === (guildId ?? null);
-	}, [channelId, guildId, MediaEngine.channelId, MediaEngine.guildId]);
+		return VoiceRuntime.channelId === channelId && VoiceRuntime.guildId === (guildId ?? null);
+	}, [channelId, guildId, VoiceRuntime.channelId, VoiceRuntime.guildId]);
 	const handleNavigateToWatch = useCallback(() => {
 		onNavigateToWatch?.();
 	}, [onNavigateToWatch]);

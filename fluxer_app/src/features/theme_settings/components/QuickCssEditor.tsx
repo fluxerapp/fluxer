@@ -28,11 +28,8 @@ import {cssNumberStep} from '@app/features/theme_settings/editor/CssNumberStep';
 import {cssRegionFolding} from '@app/features/theme_settings/editor/CssOutline';
 import {editorPhrases} from '@app/features/theme_settings/editor/EditorPhrases';
 import EditorPreferences from '@app/features/theme_settings/editor/EditorPreferences';
-import {
-	type CachedEditorState,
-	registerLiveEditorCapture,
-	writeCachedEditorState,
-} from '@app/features/theme_settings/editor/EditorStateCache';
+import {registerLiveEditorCapture} from '@app/features/theme_settings/editor/EditorSession';
+import {type CachedEditorState, writeCachedEditorState} from '@app/features/theme_settings/editor/EditorStateCache';
 import {
 	isElementPickerActive,
 	startElementPicker,

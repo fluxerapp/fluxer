@@ -3,10 +3,12 @@
 import {writeClipboardText} from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {COPIED_STATS_JSON_DESCRIPTOR} from '@app/features/voice/components/StatsForNerdsCopyDescriptors';
-import {buildStatsForNerdsCopyPayload, collectStatsForNerdsSnapshot} from '@app/features/voice/utils/StatsForNerdsCopy';
 import type {I18n} from '@lingui/core';
 
 export async function copyVoiceDiagnostics(i18n: I18n): Promise<void> {
+	const {buildStatsForNerdsCopyPayload, collectStatsForNerdsSnapshot} = await import(
+		'@app/features/voice/utils/StatsForNerdsCopy'
+	);
 	const data = collectStatsForNerdsSnapshot();
 	let payload: Record<string, unknown>;
 	try {

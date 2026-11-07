@@ -2,8 +2,8 @@
 
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/VoiceE2EEIndicator.module.css';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceMeshPeers from '@app/features/voice/engine/mesh/VoiceMeshPeers';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import {isChannelP2p} from '@app/features/voice/state/ChannelP2pStatus';
 import {
@@ -29,10 +29,10 @@ export const VoiceE2EEIndicator = observer(function VoiceE2EEIndicator({
 	variant,
 }: VoiceE2EEIndicatorProps) {
 	const {i18n} = useLingui();
-	useMediaEngineVersion();
-	void MediaEngine.getAllVoiceStates();
+	useVoiceRuntimeVersion();
+	void VoiceRuntime.getAllVoiceStates();
 	if (isChannelP2p(guildId, channelId)) {
-		const isBroken = MediaEngine.channelId === channelId && VoiceMeshPeers.hasFailedPeer;
+		const isBroken = VoiceRuntime.channelId === channelId && VoiceMeshPeers.hasFailedPeer;
 		return (
 			<Tooltip
 				text={i18n._(VOICE_P2P_INDICATOR_TOOLTIP_DESCRIPTOR)}
@@ -49,7 +49,7 @@ export const VoiceE2EEIndicator = observer(function VoiceE2EEIndicator({
 			</Tooltip>
 		);
 	}
-	const dmCallEncrypted = MediaEngine.channelId === channelId && MediaEngine.room?.isE2EEEnabled === true;
+	const dmCallEncrypted = VoiceRuntime.channelId === channelId && VoiceRuntime.room?.isE2EEEnabled === true;
 	const knownEncrypted = guildId !== null || dmCallEncrypted;
 	const status = knownEncrypted
 		? computeChannelE2EEStatus(guildId, channelId, {emptyChannelStatus: guildId === null ? 'none' : 'encrypted'})

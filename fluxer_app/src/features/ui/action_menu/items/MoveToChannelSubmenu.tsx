@@ -10,7 +10,7 @@ import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMe
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import Users from '@app/features/user/state/Users';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -45,7 +45,7 @@ export const MoveToChannelSubmenu: React.FC<MoveToChannelSubmenuProps> = observe
 	({userId, guildId, connectionId, connectionIds, onClose, label}) => {
 		const {i18n} = useLingui();
 		const channels = Channels.getGuildChannels(guildId);
-		const userVoiceState = MediaEngine.getVoiceState(guildId, userId);
+		const userVoiceState = VoiceRuntime.getVoiceState(guildId, userId);
 		const currentUser = Users.currentUser;
 		const isSelf = currentUser?.id === userId;
 		const voiceChannels = useMemo(() => {
@@ -82,7 +82,7 @@ export const MoveToChannelSubmenu: React.FC<MoveToChannelSubmenuProps> = observe
 					return;
 				}
 				if (isSelf) {
-					await MediaEngine.connectToVoiceChannel(guildId, channelId);
+					await VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(guildId, channelId));
 				} else {
 					try {
 						await GuildMemberCommands.update(guildId, userId, {

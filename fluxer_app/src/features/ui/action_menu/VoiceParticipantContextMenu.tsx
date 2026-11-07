@@ -20,7 +20,7 @@ import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {User} from '@app/features/user/models/User';
 import {ActiveScreenShareMenu} from '@app/features/voice/components/ActiveScreenShareMenu';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {resolveDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -104,7 +104,7 @@ export const VoiceParticipantContextMenu: React.FC<VoiceParticipantContextMenuPr
 		});
 		const connectionIds = useMemo(() => userVoiceStates.map((u) => u.connectionId), [userVoiceStates]);
 		const guild = guildId ? Guilds.getGuild(guildId) : null;
-		const privateCallChannel = !guildId && MediaEngine.channelId ? Channels.getChannel(MediaEngine.channelId) : null;
+		const privateCallChannel = !guildId && VoiceRuntime.channelId ? Channels.getChannel(VoiceRuntime.channelId) : null;
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const canManageRoles = guildId ? Permission.can(Permissions.MANAGE_ROLES, {guildId}) : false;
 		const memberHasVisibleRoles = useMemo(() => {

@@ -17,7 +17,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -140,7 +140,7 @@ export const CallMessage = observer(({message}: {message: Message}) => {
 	const {author, channel, guild} = useSystemMessageData(message);
 	const currentUserId = Authentication.currentUserId;
 	const callData = message.call;
-	const isLocalConnected = channel ? MediaEngine.connected && MediaEngine.channelId === channel.id : false;
+	const isLocalConnected = channel ? VoiceRuntime.connected && VoiceRuntime.channelId === channel.id : false;
 	const callHeaderState = useCallHeaderState(channel);
 	const shouldShowJoinLink =
 		!isLocalConnected &&

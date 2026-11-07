@@ -67,8 +67,9 @@ import {
 	offeredScreenShareResolution,
 	selectStreamSettingsAudioMenuState,
 } from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
-import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
+import {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
@@ -603,7 +604,7 @@ const ScreenSharePreviewInfoModal = observer(() => {
 	const {i18n} = useLingui();
 	const voiceModel = useVoiceEngineV2Model();
 	const callContext = getScreenSharePreviewCallContext(
-		selectVoiceEngineV2AppConnection(voiceModel).channelId ?? MediaEngine.channelId,
+		selectVoiceEngineV2AppConnection(voiceModel).channelId ?? VoiceRuntime.channelId,
 	);
 	const previewsEnabled = !PrivacyPreferences.getDisableStreamPreviews();
 	const handlePreviewToggle = useCallback((enabled: boolean) => {
