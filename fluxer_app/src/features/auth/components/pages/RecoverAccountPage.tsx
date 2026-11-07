@@ -180,6 +180,7 @@ export const RecoverAccountForm = observer(function RecoverAccountForm({
 				challenge={mfaChallenge}
 				onSuccess={handleMfaSuccess}
 				onCancel={handleMfaCancel}
+				offerBrowserSignIn={false}
 				onStepTitleChange={onStepTitleChange}
 				data-flx="auth.recover-account-page.mfa-screen"
 			/>

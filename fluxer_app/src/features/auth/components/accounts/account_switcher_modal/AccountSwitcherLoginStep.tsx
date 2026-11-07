@@ -76,7 +76,7 @@ export function AccountSwitcherLoginStep({
 			forgotPasswordAction={forgotPasswordAction}
 			showTitle={onStepTitleChange == null}
 			title={title}
-			forceCredentials={purpose.type === AccountSwitcherAuthPurposeType.RELOGIN}
+			relogin={purpose.type === AccountSwitcherAuthPurposeType.RELOGIN}
 			initialIdentifier={getReloginIdentifier(purpose)}
 			runtimeTarget={runtimeTarget}
 			onBackActionChange={onBackActionChange}

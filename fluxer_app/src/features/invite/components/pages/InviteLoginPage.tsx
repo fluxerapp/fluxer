@@ -65,7 +65,6 @@ const InviteLoginPage = observer(function InviteLoginPage({code, invite}: Invite
 			onLoginComplete={runtimeTarget.reset}
 			onBackActionChange={null}
 			completeLoginRedirectPath={Routes.ME}
-			forceCredentials={false}
 			startWithAddAccount={false}
 			runtimeTarget={runtimeTarget}
 			ssoRedirectPath={null}
