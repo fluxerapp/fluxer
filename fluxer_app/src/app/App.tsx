@@ -211,7 +211,9 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 					/>
 					<GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />
 					<IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />
-					{voiceRuntime ? <voiceRuntime.VoiceRuntimeEffects data-flx="app.app.app-wrapper.voice-runtime-voice-runtime-effects" /> : null}
+					{voiceRuntime ? (
+						<voiceRuntime.VoiceRuntimeEffects data-flx="app.app.app-wrapper.voice-runtime-voice-runtime-effects" />
+					) : null}
 					{quickCssEditorOpen ? <QuickCssEditorHost data-flx="app.app.app-wrapper.quick-css-editor-host" /> : null}
 				</div>
 			</VoiceLiveKitRoot>
