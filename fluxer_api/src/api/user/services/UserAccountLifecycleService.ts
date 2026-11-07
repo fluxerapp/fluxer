@@ -37,11 +37,11 @@ export class UserAccountLifecycleService {
 
 	async selfDisable(userId: UserID): Promise<void> {
 		const user = await this.deps.userAccountRepository.findUniqueAssert(userId);
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		const updatedUser = await this.deps.userAccountRepository.updateFlags(
 			userId,
 			(flags) => flags | UserFlags.DISABLED,
 		);
-		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		if (updatedUser) {
 			await propagateUserUpdate(this.deps.userUpdateDeps, user, updatedUser);
 		}
