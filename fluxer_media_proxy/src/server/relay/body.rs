@@ -238,15 +238,31 @@ pub(in crate::server) fn relay_body_chunks(stream: RelayBodyStream) -> RelayBody
         Some(stream),
         |state: Option<RelayBodyStream>| async move {
             let mut stream = state?;
+            let mut coalesced = BytesMut::new();
             loop {
                 match stream.next().await {
                     Some((Ok(chunk), next)) if chunk.is_empty() => {
                         stream = next;
                         tokio::task::yield_now().await;
                     }
-                    Some((Ok(chunk), next)) => return Some((Ok(chunk), Some(next))),
+                    Some((Ok(chunk), next))
+                        if coalesced.is_empty() && chunk.len() >= RELAY_STREAM_FRAME_BYTES =>
+                    {
+                        return Some((Ok(chunk), Some(next)));
+                    }
+                    Some((Ok(chunk), next)) => {
+                        stream = next;
+                        if coalesced.is_empty() {
+                            coalesced.reserve(RELAY_STREAM_FRAME_BYTES);
+                        }
+                        coalesced.extend_from_slice(&chunk);
+                        if coalesced.len() >= RELAY_STREAM_FRAME_BYTES {
+                            return Some((Ok(coalesced.freeze()), Some(stream)));
+                        }
+                    }
                     Some((Err(err), _)) => return Some((Err(err), None)),
-                    None => return None,
+                    None if coalesced.is_empty() => return None,
+                    None => return Some((Ok(coalesced.freeze()), None)),
                 }
             }
         },
