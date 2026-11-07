@@ -5,8 +5,8 @@ import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canOwnerRunBots} from '@app/api/user/UserHelpers';
-import {hashPassword, verifyPassword} from '@app/api/utils/PasswordUtils';
 import {randomBase64Url} from '@app/api/utils/SecretHash';
+import {hashStoredSecret, type StoredSecretVerifier} from '@app/api/utils/StoredSecret';
 
 const VERIFIED_TOKEN_CACHE_LIMIT = 10_000;
 const VERIFIED_TOKEN_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -23,6 +23,7 @@ export class BotAuthService {
 	constructor(
 		private readonly applicationRepository: ApplicationRepository,
 		private readonly users: Pick<UserRepository, 'findUnique'>,
+		private readonly storedSecrets: StoredSecretVerifier,
 	) {}
 
 	private parseBotToken(token: string): {
@@ -56,14 +57,19 @@ export class BotAuthService {
 			return null;
 		}
 		const [isValid, owner] = await Promise.all([
-			this.verifyBotSecret(token, secret, application.botTokenHash),
+			this.verifyBotSecret(applicationId, token, secret, application.botTokenHash),
 			this.users.findUnique(application.ownerUserId),
 		]);
 		if (!isValid || (owner && !canOwnerRunBots(owner))) return null;
 		return application.botUserId;
 	}
 
-	private async verifyBotSecret(token: string, secret: string, botTokenHash: string): Promise<boolean> {
+	private async verifyBotSecret(
+		applicationId: ApplicationID,
+		token: string,
+		secret: string,
+		botTokenHash: string,
+	): Promise<boolean> {
 		const key = createHmac('sha256', this.verifiedTokenKey)
 			.update(token)
 			.update('\0')
@@ -76,7 +82,7 @@ export class BotAuthService {
 			this.verifiedTokens.set(key, cached);
 			return cached.valid;
 		}
-		const valid = await verifyPassword({password: secret, passwordHash: botTokenHash}).catch(() => false);
+		const valid = await this.storedSecrets.matches(`bot_token:${applicationId}`, secret, botTokenHash);
 		this.verifiedTokens.delete(key);
 		this.verifiedTokens.set(key, {valid, expiresAt: now + VERIFIED_TOKEN_CACHE_TTL_MS});
 		while (this.verifiedTokens.size > VERIFIED_TOKEN_CACHE_LIMIT) {
@@ -87,13 +93,13 @@ export class BotAuthService {
 		return valid;
 	}
 
-	async generateBotToken(applicationId: ApplicationID): Promise<{
+	generateBotToken(applicationId: ApplicationID): {
 		token: string;
 		hash: string;
 		preview: string;
-	}> {
+	} {
 		const secret = randomBase64Url(32);
-		const hash = await hashPassword(secret);
+		const hash = hashStoredSecret(secret);
 		const preview = secret.slice(0, 8);
 		const token = `${applicationId.toString()}.${secret}`;
 		return {token, hash, preview};
