@@ -10,28 +10,18 @@ import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 const logger = new Logger('OwnStreamPreviewState');
 const WINDOW_FOCUS_LOSS_DEBOUNCE_MS = 800;
 
-interface OwnStreamHiddenStateOptions {
+interface OwnCameraFeedHiddenOptions {
 	isOwnContent: boolean;
 	isScreenShare: boolean;
 	showMyOwnCamera: boolean;
-	showMyOwnScreenShare: boolean;
 }
 
-interface OwnStreamHiddenState {
-	isOwnScreenShareHidden: boolean;
-	isOwnCameraHidden: boolean;
-}
-
-export function getOwnStreamHiddenState({
+export function isOwnCameraFeedHidden({
 	isOwnContent,
 	isScreenShare,
 	showMyOwnCamera,
-	showMyOwnScreenShare,
-}: OwnStreamHiddenStateOptions): OwnStreamHiddenState {
-	return {
-		isOwnScreenShareHidden: isOwnContent && isScreenShare && !showMyOwnScreenShare,
-		isOwnCameraHidden: isOwnContent && !isScreenShare && !showMyOwnCamera,
-	};
+}: OwnCameraFeedHiddenOptions): boolean {
+	return isOwnContent && !isScreenShare && !showMyOwnCamera;
 }
 
 interface OwnScreenSharePreviewStateOptions {
