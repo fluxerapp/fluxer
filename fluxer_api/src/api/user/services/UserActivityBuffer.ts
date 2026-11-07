@@ -150,6 +150,28 @@ function authSessionActivityStatements(
 	return statements;
 }
 
+function revokedAuthSessionCleanupStatements(
+	sessionIdHash: Buffer,
+	entry: PendingAuthSessionEntry,
+	session: LiveAuthSession,
+): Array<PreparedQuery> {
+	const statements = [AuthSessions.deleteByPk({session_id_hash: sessionIdHash})];
+	const before = {platform: session.appPlatform, releaseChannel: session.appReleaseChannel};
+	const after = {platform: entry.app?.platform ?? null, releaseChannel: entry.app?.releaseChannel ?? null};
+	const sameChannel = before.platform === after.platform && before.releaseChannel === after.releaseChannel;
+	for (const channel of sameChannel ? [before] : [before, after]) {
+		if (!channel.platform || !channel.releaseChannel) continue;
+		statements.push(
+			AuthSessionsByAppChannel.deleteByPk({
+				app_platform: channel.platform,
+				app_release_channel: channel.releaseChannel,
+				session_id_hash: sessionIdHash,
+			}),
+		);
+	}
+	return statements;
+}
+
 export class UserActivityBuffer {
 	private readonly kv: IKVProvider;
 	private readonly writer: ActivityWriter;
@@ -259,7 +281,31 @@ export class UserActivityBuffer {
 			},
 			'Failed to flush an auth session activity entry',
 		);
+		await this.undoWritesForRevokedSessions(writable);
 		return {...stats, drained: drained.length, skipped: stats.skipped + drained.length - writable.length};
+	}
+
+	private async undoWritesForRevokedSessions(
+		written: ReadonlyArray<{sessionIdHash: Buffer; entry: PendingAuthSessionEntry; session: LiveAuthSession}>,
+	): Promise<void> {
+		if (written.length === 0) return;
+		let live: Map<string, LiveAuthSession>;
+		try {
+			live = await this.liveAuthSessions(written.map(({sessionIdHash}) => sessionIdHash));
+		} catch (error) {
+			Logger.warn({error}, 'Failed to recheck auth sessions after flushing their activity');
+			return;
+		}
+		const revoked = written.filter(({sessionIdHash}) => !live.has(this.encodeSessionIdHash(sessionIdHash)));
+		await flushActivityEntries(
+			revoked,
+			async ({sessionIdHash, entry, session}) => {
+				for (const statement of revokedAuthSessionCleanupStatements(sessionIdHash, entry, session)) {
+					await this.writer(statement);
+				}
+			},
+			'Failed to undo activity written to a revoked auth session',
+		);
 	}
 
 	private async liveAuthSessions(sessionIdHashes: ReadonlyArray<Buffer>): Promise<Map<string, LiveAuthSession>> {
