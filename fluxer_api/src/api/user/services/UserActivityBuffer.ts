@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomUUID} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import {fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
@@ -17,6 +18,8 @@ import {seconds} from 'itty-time';
 
 const PENDING_HASH_KEY = 'user_activity:pending';
 const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';
+const USER_FLUSH_LOCK_KEY = 'user_activity:flush_lock';
+const USER_FLUSH_LOCK_TTL_SECONDS = seconds('1 minute');
 const AUTH_SESSION_TOUCH_KEY_PREFIX = 'auth_session_activity:touched:';
 const WRITE_CONCURRENCY = 64;
 const AUTH_SESSION_TOUCH_DEBOUNCE_TTL_SECONDS = seconds('5 minutes');
@@ -82,10 +85,12 @@ async function flushActivityEntries<T>(
 	entries: ReadonlyArray<T>,
 	write: (entry: T) => Promise<unknown>,
 	failureMessage: string,
+	keepLock?: () => Promise<unknown>,
 ): Promise<FlushStats> {
 	let written = 0;
 	let skipped = 0;
 	for (let index = 0; index < entries.length; index += WRITE_CONCURRENCY) {
+		if (index > 0) await keepLock?.();
 		const results = await Promise.allSettled(
 			entries.slice(index, index + WRITE_CONCURRENCY).map(async (entry) => write(entry)),
 		);
@@ -252,17 +257,26 @@ export class UserActivityBuffer {
 	}
 
 	private async drainAndFlushUsers(): Promise<FlushStats> {
-		const drained = await this.atomicDrain();
-		return flushActivityEntries(
-			drained,
-			({userId, entry}) =>
-				this.accounts.updateLastActiveAt({
-					userId,
-					lastActiveAt: new Date(entry.ts),
-					lastActiveIp: entry.ip ?? undefined,
-				}),
-			'Failed to flush a user activity entry',
-		);
+		const lockToken = randomUUID();
+		if (!(await this.kv.acquireLock(USER_FLUSH_LOCK_KEY, lockToken, USER_FLUSH_LOCK_TTL_SECONDS))) {
+			return {drained: 0, written: 0, skipped: 0};
+		}
+		try {
+			const drained = await this.atomicDrain();
+			return await flushActivityEntries(
+				drained,
+				({userId, entry}) =>
+					this.accounts.updateLastActiveAt({
+						userId,
+						lastActiveAt: new Date(entry.ts),
+						lastActiveIp: entry.ip ?? undefined,
+					}),
+				'Failed to flush a user activity entry',
+				() => this.kv.extendLock(USER_FLUSH_LOCK_KEY, lockToken, USER_FLUSH_LOCK_TTL_SECONDS),
+			);
+		} finally {
+			await this.kv.releaseLock(USER_FLUSH_LOCK_KEY, lockToken);
+		}
 	}
 
 	private async drainAndFlushAuthSessions(): Promise<FlushStats> {

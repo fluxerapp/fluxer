@@ -22,6 +22,7 @@ import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from
 
 const REGISTRATION_IP = '198.51.100.7';
 const REQUEST_IP = '203.0.113.7';
+const LATER_REQUEST_IP = '203.0.113.8';
 
 async function fetchMeFromIp(harness: ApiTestHarness, token: string, ip: string): Promise<void> {
 	await createBuilder(harness, token).get('/users/@me').header('x-forwarded-for', ip).expect(HTTP_STATUS.OK).execute();
@@ -165,5 +166,44 @@ describe('User activity buffering', () => {
 			{session_id_hash: sessionIdHash},
 		);
 		expect(sessionRows).toEqual([]);
+	});
+
+	test('overlapping flush jobs leave only the current IP indexed', async () => {
+		const account = await createTestAccount(harness, {ipAddress: REGISTRATION_IP});
+		const userId = createUserID(BigInt(account.userId));
+		const accounts = new UserAccountRepository(harness.kvProvider);
+		let release!: () => void;
+		const gate = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const entered: Array<Promise<void>> = [];
+		const signals: Array<() => void> = [];
+		for (let i = 0; i < 2; i++) {
+			entered.push(new Promise<void>((resolve) => signals.push(resolve)));
+		}
+		let calls = 0;
+		const gatedAccounts = {
+			async updateLastActiveAt(params: Parameters<UserAccountRepository['updateLastActiveAt']>[0]) {
+				signals[calls++]?.();
+				await gate;
+				return accounts.updateLastActiveAt(params);
+			},
+		};
+		await fetchMeFromIp(harness, account.token, REQUEST_IP);
+		const first = new UserActivityBuffer(harness.kvProvider, upsertOne, gatedAccounts).drainAndFlush();
+		await entered[0];
+		await fetchMeFromIp(harness, account.token, LATER_REQUEST_IP);
+		const second = new UserActivityBuffer(harness.kvProvider, upsertOne, gatedAccounts).drainAndFlush();
+		await Promise.race([entered[1], second]);
+		release();
+		await Promise.all([first, second]);
+		await getUserActivityBuffer().drainAndFlush();
+		const userRepository = getUserRepository();
+		expect((await userRepository.getActivityTracking(userId))?.last_active_ip).toBe(LATER_REQUEST_IP);
+		const indexed = async (ip: string) =>
+			(await userRepository.listUserIdsByLastActiveIp(ip, 10, 0)).userIds.map((id) => id.toString());
+		expect(await indexed(LATER_REQUEST_IP)).toContain(account.userId);
+		expect(await indexed(REQUEST_IP)).not.toContain(account.userId);
+		expect(await indexed(REGISTRATION_IP)).not.toContain(account.userId);
 	});
 });
