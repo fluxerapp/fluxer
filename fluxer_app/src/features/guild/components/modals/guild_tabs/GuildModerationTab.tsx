@@ -256,7 +256,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		) : (
 			label
 		);
-	const isMfaRequiredByStatus = guildRequiresMfa(guild.features);
+	const isMfaRequiredByStatus = !RuntimeConfig.isSelfHosted() && guildRequiresMfa(guild.features);
 	const isMfaDisabled = !isGuildOwner || !currentUserHas2FA || isMfaRequiredByStatus;
 	const getMfaTooltipText = (): string | undefined => {
 		if (isMfaRequiredByStatus) {

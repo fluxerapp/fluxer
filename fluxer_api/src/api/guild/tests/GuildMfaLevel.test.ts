@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount, totpCodeNow} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
 import {
 	addMemberRole,
 	createGuild,
@@ -160,32 +161,62 @@ describe('Guild MFA level', () => {
 			Permissions.SEND_MESSAGES.toString(),
 		);
 	});
+	const setupModeratorInStatusCommunity = async (feature: string) => {
+		const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const channel = channels[0]!;
+		const managerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Managers',
+			permissions: (Permissions.MANAGE_ROLES | Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
+		});
+		const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Target'});
+		await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
+		await createBuilder(harness, '')
+			.post(`/test/guilds/${guild.id}/features`)
+			.body({add_features: [feature]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		return {owner, member, guild, channel, targetRole};
+	};
+	const withSelfHosted = async (selfHosted: boolean, run: () => Promise<void>) => {
+		const previous = Config.instance.selfHosted;
+		Config.instance.selfHosted = selfHosted;
+		try {
+			await run();
+		} finally {
+			Config.instance.selfHosted = previous;
+		}
+	};
 	for (const feature of [GuildFeatures.VERIFIED, GuildFeatures.PARTNERED]) {
 		it(`always requires 2FA for moderators in a ${feature} community`, async () => {
-			const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
-			const member = members[0]!;
-			const channel = channels[0]!;
-			const managerRole = await createRole(harness, owner.token, guild.id, {
-				name: 'Managers',
-				permissions: (Permissions.MANAGE_ROLES | Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
+			const {owner, member, guild, channel, targetRole} = await setupModeratorInStatusCommunity(feature);
+			await withSelfHosted(false, async () => {
+				const fetched = await createBuilder<GuildResponse>(harness, owner.token)
+					.get(`/guilds/${guild.id}`)
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				expect(fetched.mfa_level).toBe(GuildMFALevel.ELEVATED);
+				await createBuilder(harness, member.token)
+					.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+					.body({type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'})
+					.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+					.execute();
 			});
-			const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Target'});
-			await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
-			await createBuilder(harness, '')
-				.post(`/test/guilds/${guild.id}/features`)
-				.body({add_features: [feature]})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+		});
+	}
+	it('leaves moderator 2FA to the community on self-hosted instances', async () => {
+		const {owner, member, guild, channel, targetRole} = await setupModeratorInStatusCommunity(GuildFeatures.VERIFIED);
+		await withSelfHosted(true, async () => {
 			const fetched = await createBuilder<GuildResponse>(harness, owner.token)
 				.get(`/guilds/${guild.id}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(fetched.mfa_level).toBe(GuildMFALevel.ELEVATED);
+			expect(fetched.mfa_level).toBe(GuildMFALevel.NONE);
 			await createBuilder(harness, member.token)
 				.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
 				.body({type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		});
-	}
+	});
 });

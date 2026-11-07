@@ -41,8 +41,12 @@ export function guildRequiresMfa(features: Iterable<string>): boolean {
 	return false;
 }
 
-export function getEffectiveGuildMfaLevel(mfaLevel: number, features: Iterable<string>): GuildMFALevelValue {
-	if (guildRequiresMfa(features)) return GuildMFALevel.ELEVATED;
+export function getEffectiveGuildMfaLevel(
+	mfaLevel: number,
+	features: Iterable<string>,
+	selfHosted: boolean,
+): GuildMFALevelValue {
+	if (!selfHosted && guildRequiresMfa(features)) return GuildMFALevel.ELEVATED;
 	return mfaLevel === GuildMFALevel.ELEVATED ? GuildMFALevel.ELEVATED : GuildMFALevel.NONE;
 }
 
