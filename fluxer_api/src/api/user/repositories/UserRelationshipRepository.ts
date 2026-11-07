@@ -40,6 +40,9 @@ const FETCH_RELATIONSHIPS_BY_TARGET_AND_SOURCES_CQL = RelationshipsByTarget.sele
 		RelationshipsByTarget.where.in('source_user_id', 'source_user_ids'),
 	],
 });
+const FETCH_RELATIONSHIPS_FROM_SOURCES_TO_TARGET_CQL = Relationships.selectCql({
+	where: [Relationships.where.in('source_user_id', 'source_user_ids'), Relationships.where.eq('target_user_id')],
+});
 const FETCH_RELATIONSHIP_CQL = Relationships.selectCql({
 	where: [
 		Relationships.where.eq('source_user_id'),
@@ -91,8 +94,18 @@ export class UserRelationshipRepository {
 			fetchMany<RelationshipRow>(FETCH_RELATIONSHIPS_CQL, {source_user_id: userId}),
 			fetchMany<RelationshipRow>(FETCH_RELATIONSHIPS_BY_TARGET_CQL, {target_user_id: userId}),
 		]);
+		const counterpartIds = [...new Set(relationshipsFromUser.map((rel) => rel.target_user_id))];
+		const reverseRelationships = await fetchManyInChunks<RelationshipRow>(
+			FETCH_RELATIONSHIPS_FROM_SOURCES_TO_TARGET_CQL,
+			counterpartIds,
+			(chunk) => ({source_user_ids: chunk, target_user_id: userId}),
+		);
+		const rowsByKey = new Map<string, RelationshipRow>();
+		for (const rel of [...relationshipsFromUser, ...relationshipsPointingToUser, ...reverseRelationships]) {
+			rowsByKey.set(`${rel.source_user_id}:${rel.target_user_id}:${rel.type}`, rel);
+		}
 		await executeGroupedBatches(
-			[...relationshipsFromUser, ...relationshipsPointingToUser].map((rel) => [
+			[...rowsByKey.values()].map((rel) => [
 				Relationships.deleteByPk({
 					source_user_id: rel.source_user_id,
 					target_user_id: rel.target_user_id,
