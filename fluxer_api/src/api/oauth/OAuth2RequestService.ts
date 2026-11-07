@@ -323,7 +323,10 @@ export class OAuth2RequestService {
 				}
 			} catch (err) {
 				if (authCode) {
-					await this.oauth2TokenRepository.deleteAuthorizationCode(authCode);
+					await this.oauth2TokenRepository.consumeAuthorizationCode(
+						authCode,
+						createApplicationID(BigInt(params.body.client_id)),
+					);
 				}
 				throw err;
 			}
