@@ -62,7 +62,7 @@ function getVoiceConnectionContext(): VoiceConnectionContextAccess {
 }
 
 export function isStreamAudioPlaybackEnabled(streamKey: string | null): boolean {
-	if (getEffectiveAudioState().effectiveDeaf) return false;
+	if (getEffectiveAudioState().serverDeaf) return false;
 	return streamKey ? !StreamAudioPrefs.isMuted(streamKey) : true;
 }
 

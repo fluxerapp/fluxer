@@ -58,11 +58,7 @@ import {
 	getLocalMicrophonePublications,
 	getPrimaryLocalMicrophonePublication,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
-import {
-	asVoiceTrackSource,
-	isScreenShareAudioPublicationLike,
-	VoiceTrackSource,
-} from '@app/features/voice/engine/VoiceTrackSource';
+import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {
 	assertBoolean,
 	assertNonEmptyString,
@@ -1564,16 +1560,8 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		});
 		room.remoteParticipants.forEach((participant) => {
 			participant.audioTrackPublications.forEach((publication) => {
-				const isScreenShareAudio = isScreenShareAudioPublicationLike(publication);
-				const isMicrophone = asVoiceTrackSource(publication.source) === VoiceTrackSource.Microphone;
-				if (!isScreenShareAudio && !isMicrophone) return;
+				if (asVoiceTrackSource(publication.source) !== VoiceTrackSource.Microphone) return;
 				try {
-					if (isScreenShareAudio) {
-						if (deafened && publication.isDesired) {
-							publication.setEnabled(false);
-						}
-						return;
-					}
 					if (deafened) {
 						if (publication.isDesired) {
 							publication.setEnabled(false);
@@ -1588,7 +1576,6 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 						error,
 						deafened,
 						identity: participant.identity,
-						isScreenShareAudio,
 						trackSid: publication.trackSid,
 					});
 				}
