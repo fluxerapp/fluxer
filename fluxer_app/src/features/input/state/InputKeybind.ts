@@ -838,7 +838,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'chat_toggle_saved_media',
 			label: i18n._(TOGGLE_SAVED_MEDIA_DESCRIPTOR),
-			combo: {key: 'm', ctrlOrMeta: true},
+			combo: {key: ''},
 			section: 'chat',
 		},
 		{
