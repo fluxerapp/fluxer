@@ -198,7 +198,10 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 		return err
 	}
 	if in.engine != nil {
-		if in.runChecks(ctx, checks.Preinstall, "engine", "podman-subids", "windows-linux-containers") {
+		if in.engine != in.found {
+			delete(in.ran, "disk")
+		}
+		if in.runChecks(ctx, checks.Preinstall, "engine", "podman-subids", "windows-linux-containers", "disk") {
 			return notReady()
 		}
 	} else {
