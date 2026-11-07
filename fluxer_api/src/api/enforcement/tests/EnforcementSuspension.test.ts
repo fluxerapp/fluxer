@@ -35,7 +35,7 @@ import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {ms} from 'itty-time';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 describe('Enforcement suspensions', () => {
 	let harness: ApiTestHarness;
@@ -156,6 +156,20 @@ describe('Enforcement suspensions', () => {
 		expect(ids.map(BigInt)).toContain(user.enforcementDecisionId);
 		const decisions = await listDecisions(harness, staff, target.userId);
 		expect(decisions.filter((decision) => !decision.replaced)).toHaveLength(1);
+	});
+
+	test('a session revocation that fails once still leaves no session behind the suspension', async () => {
+		const target = await createTestAccount(harness);
+		const users = getUserRepository();
+		const userId = createUserID(BigInt(target.userId));
+		expect(await users.listAuthSessions(userId)).not.toHaveLength(0);
+		const spy = vi.spyOn(users, 'deleteAllAuthSessions').mockRejectedValueOnce(new Error('Cassandra timeout'));
+		try {
+			await suspend(harness, staff, target.userId);
+		} finally {
+			spy.mockRestore();
+		}
+		expect(await users.listAuthSessions(userId)).toHaveLength(0);
 	});
 
 	test('a closed account cannot be suspended', async () => {
