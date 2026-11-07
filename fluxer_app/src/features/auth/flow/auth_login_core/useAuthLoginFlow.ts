@@ -3,8 +3,6 @@
 import {AuthLoginStep} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import {startTransition, useMemo, useReducer} from 'react';
 
-type CredentialsBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.METHOD;
-
 type MethodBackTarget = typeof AuthLoginStep.ACCOUNT | typeof AuthLoginStep.INSTANCE;
 
 interface AuthLoginFlowState {
@@ -12,7 +10,6 @@ interface AuthLoginFlowState {
 	hasCompletedInstanceStep: boolean;
 	hasSelectedLoginMethod: boolean;
 	showBrowserStep: boolean;
-	credentialsBackTarget: CredentialsBackTarget;
 	methodBackTarget: MethodBackTarget;
 	prefillIdentifier: string | null;
 	error: string | null;
@@ -20,7 +17,7 @@ interface AuthLoginFlowState {
 
 interface AuthLoginFlowSync {
 	startWithAddAccount: boolean;
-	forceCredentials: boolean;
+	relogin: boolean;
 	initialIdentifier: string | null;
 	initialInstanceSelected: boolean;
 	shouldShowInstanceSelector: boolean;
@@ -40,7 +37,7 @@ export function hasInitialIdentifier(initialIdentifier: string | null): boolean 
 
 function shouldShowStoredAccountSelector(init: AuthLoginFlowInit): boolean {
 	if (init.startWithAddAccount) return false;
-	if (init.forceCredentials) return false;
+	if (init.relogin) return false;
 	if (init.desktopHandoff) return false;
 	if (!init.hasStoredAccounts) return false;
 	return !hasInitialIdentifier(init.initialIdentifier);
@@ -51,17 +48,20 @@ function hasCompletedInitialInstanceStep(init: AuthLoginFlowSync): boolean {
 	return init.initialInstanceSelected;
 }
 
-function syncRequiresCredentials(sync: AuthLoginFlowSync): boolean {
-	return hasInitialIdentifier(sync.initialIdentifier) || sync.forceCredentials;
+function skipsMethodStep(sync: AuthLoginFlowSync): boolean {
+	return hasInitialIdentifier(sync.initialIdentifier) && !sync.relogin;
+}
+
+function syncTargetsAccount(sync: AuthLoginFlowSync): boolean {
+	return hasInitialIdentifier(sync.initialIdentifier) || sync.relogin;
 }
 
 function initialAuthLoginFlowState(init: AuthLoginFlowInit): AuthLoginFlowState {
 	return {
 		showAccountSelector: shouldShowStoredAccountSelector(init),
 		hasCompletedInstanceStep: hasCompletedInitialInstanceStep(init),
-		hasSelectedLoginMethod: hasInitialIdentifier(init.initialIdentifier),
+		hasSelectedLoginMethod: skipsMethodStep(init),
 		showBrowserStep: false,
-		credentialsBackTarget: AuthLoginStep.METHOD,
 		methodBackTarget: AuthLoginStep.INSTANCE,
 		prefillIdentifier: init.initialIdentifier,
 		error: null,
@@ -70,20 +70,14 @@ function initialAuthLoginFlowState(init: AuthLoginFlowInit): AuthLoginFlowState 
 
 type AuthLoginFlowAction =
 	| {type: 'syncFromProps'; sync: AuthLoginFlowSync}
-	| {
-			type: 'showFormForAccount';
-			prefillIdentifier: string | null;
-			message: string | null;
-			hasCompletedInstanceStep: boolean;
-	  }
+	| {type: 'showMethodsForAccount'; prefillIdentifier: string | null; hasCompletedInstanceStep: boolean}
 	| {type: 'addAnotherAccount'}
 	| {type: 'backToAccountList'}
 	| {type: 'changeInstance'}
 	| {type: 'continueFromInstance'}
 	| {type: 'selectEmailMethod'}
 	| {type: 'enterBrowserStep'}
-	| {type: 'backFromCredentials'; allowReturnToAccountList: boolean}
-	| {type: 'backFromBrowser'}
+	| {type: 'backToMethodStep'}
 	| {type: 'setError'; error: string | null};
 
 function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAction): AuthLoginFlowState {
@@ -95,14 +89,13 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 				...state,
 				prefillIdentifier: sync.initialIdentifier,
 				showBrowserStep: false,
-				hasSelectedLoginMethod: hasInitialIdentifier(sync.initialIdentifier),
+				hasSelectedLoginMethod: skipsMethodStep(sync),
 			};
-			if (syncRequiresCredentials(sync)) {
+			if (syncTargetsAccount(sync)) {
 				return {
 					...base,
 					showAccountSelector: false,
 					hasCompletedInstanceStep,
-					credentialsBackTarget: AuthLoginStep.METHOD,
 					methodBackTarget: AuthLoginStep.INSTANCE,
 				};
 			}
@@ -111,7 +104,6 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 					...base,
 					showAccountSelector: false,
 					hasCompletedInstanceStep: !sync.shouldShowInstanceSelector,
-					credentialsBackTarget: AuthLoginStep.METHOD,
 					methodBackTarget: AuthLoginStep.INSTANCE,
 				};
 			}
@@ -120,16 +112,15 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 			}
 			return base;
 		}
-		case 'showFormForAccount':
+		case 'showMethodsForAccount':
 			return {
 				showAccountSelector: false,
 				hasCompletedInstanceStep: action.hasCompletedInstanceStep,
-				hasSelectedLoginMethod: true,
+				hasSelectedLoginMethod: false,
 				showBrowserStep: false,
-				credentialsBackTarget: AuthLoginStep.ACCOUNT,
-				methodBackTarget: AuthLoginStep.INSTANCE,
+				methodBackTarget: AuthLoginStep.ACCOUNT,
 				prefillIdentifier: action.prefillIdentifier,
-				error: action.message,
+				error: null,
 			};
 		case 'addAnotherAccount':
 			return {
@@ -137,7 +128,6 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 				hasCompletedInstanceStep: false,
 				hasSelectedLoginMethod: false,
 				showBrowserStep: false,
-				credentialsBackTarget: AuthLoginStep.METHOD,
 				methodBackTarget: AuthLoginStep.ACCOUNT,
 				prefillIdentifier: null,
 				error: null,
@@ -148,7 +138,6 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 				hasCompletedInstanceStep: true,
 				hasSelectedLoginMethod: false,
 				showBrowserStep: false,
-				credentialsBackTarget: AuthLoginStep.METHOD,
 				methodBackTarget: AuthLoginStep.INSTANCE,
 				prefillIdentifier: null,
 				error: null,
@@ -159,37 +148,15 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 				hasCompletedInstanceStep: false,
 				hasSelectedLoginMethod: false,
 				showBrowserStep: false,
-				credentialsBackTarget: AuthLoginStep.METHOD,
 				error: null,
 			};
 		case 'continueFromInstance':
 			return {...state, hasCompletedInstanceStep: true, showBrowserStep: false, error: null};
 		case 'selectEmailMethod':
-			return {
-				...state,
-				hasSelectedLoginMethod: true,
-				showBrowserStep: false,
-				credentialsBackTarget: AuthLoginStep.METHOD,
-				error: null,
-			};
+			return {...state, hasSelectedLoginMethod: true, showBrowserStep: false, error: null};
 		case 'enterBrowserStep':
 			return {...state, hasSelectedLoginMethod: true, showBrowserStep: true, error: null};
-		case 'backFromCredentials': {
-			if (state.credentialsBackTarget === AuthLoginStep.ACCOUNT && action.allowReturnToAccountList) {
-				return {
-					...state,
-					showBrowserStep: false,
-					prefillIdentifier: null,
-					showAccountSelector: true,
-					hasCompletedInstanceStep: true,
-					hasSelectedLoginMethod: false,
-					methodBackTarget: AuthLoginStep.INSTANCE,
-					error: null,
-				};
-			}
-			return {...state, showBrowserStep: false, hasSelectedLoginMethod: false, error: null};
-		}
-		case 'backFromBrowser':
+		case 'backToMethodStep':
 			return {...state, showBrowserStep: false, hasSelectedLoginMethod: false, error: null};
 		case 'setError':
 			return {...state, error: action.error};
@@ -198,19 +165,14 @@ function reduceAuthLoginFlow(state: AuthLoginFlowState, action: AuthLoginFlowAct
 
 export interface AuthLoginFlow extends AuthLoginFlowState {
 	syncFromProps: (sync: AuthLoginFlowSync) => void;
-	showFormForAccount: (
-		prefillIdentifier: string | null,
-		message: string | null,
-		hasCompletedInstanceStep?: boolean,
-	) => void;
+	showMethodsForAccount: (prefillIdentifier: string | null, hasCompletedInstanceStep: boolean) => void;
 	addAnotherAccount: () => void;
 	backToAccountList: () => void;
 	changeInstance: () => void;
 	continueFromInstance: () => void;
 	selectEmailMethod: () => void;
 	enterBrowserStep: () => void;
-	backFromCredentials: (allowReturnToAccountList: boolean) => void;
-	backFromBrowser: () => void;
+	backToMethodStep: () => void;
 	setError: (error: string | null) => void;
 }
 
@@ -219,17 +181,15 @@ export function useAuthLoginFlow(init: AuthLoginFlowInit): AuthLoginFlow {
 	const actions = useMemo(
 		() => ({
 			syncFromProps: (sync: AuthLoginFlowSync) => dispatch({type: 'syncFromProps', sync}),
-			showFormForAccount: (prefillIdentifier: string | null, message: string | null, hasCompletedInstanceStep = true) =>
-				dispatch({type: 'showFormForAccount', prefillIdentifier, message, hasCompletedInstanceStep}),
+			showMethodsForAccount: (prefillIdentifier: string | null, hasCompletedInstanceStep: boolean) =>
+				dispatch({type: 'showMethodsForAccount', prefillIdentifier, hasCompletedInstanceStep}),
 			addAnotherAccount: () => startTransition(() => dispatch({type: 'addAnotherAccount'})),
 			backToAccountList: () => startTransition(() => dispatch({type: 'backToAccountList'})),
 			changeInstance: () => startTransition(() => dispatch({type: 'changeInstance'})),
 			continueFromInstance: () => startTransition(() => dispatch({type: 'continueFromInstance'})),
 			selectEmailMethod: () => startTransition(() => dispatch({type: 'selectEmailMethod'})),
 			enterBrowserStep: () => startTransition(() => dispatch({type: 'enterBrowserStep'})),
-			backFromCredentials: (allowReturnToAccountList: boolean) =>
-				startTransition(() => dispatch({type: 'backFromCredentials', allowReturnToAccountList})),
-			backFromBrowser: () => startTransition(() => dispatch({type: 'backFromBrowser'})),
+			backToMethodStep: () => startTransition(() => dispatch({type: 'backToMethodStep'})),
 			setError: (error: string | null) => dispatch({type: 'setError', error}),
 		}),
 		[],

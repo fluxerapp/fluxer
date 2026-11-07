@@ -389,6 +389,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 				challenge={mfa.challenge}
 				onSuccess={handleMfaSuccess}
 				onCancel={handleMfaCancel}
+				offerBrowserSignIn={true}
 				data-flx="auth.sso-callback-page.mfa-screen"
 			/>
 		);

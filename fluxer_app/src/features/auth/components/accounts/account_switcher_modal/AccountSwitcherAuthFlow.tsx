@@ -284,6 +284,7 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 						challenge={{ticket: mfaTicket, ...mfaMethods}}
 						onSuccess={handleMfaSuccess}
 						onCancel={handleMfaCancel}
+						offerBrowserSignIn={true}
 						onStepTitleChange={stepTitleChange}
 						data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.mfa-screen"
 					/>

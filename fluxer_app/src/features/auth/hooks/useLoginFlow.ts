@@ -89,6 +89,26 @@ export async function resolvePasskeyLoginCapability(): Promise<PasskeyLoginCapab
 	return PasskeyLoginCapability.UNAVAILABLE;
 }
 
+export function useResolvedPasskeyLoginCapability(): PasskeyLoginCapability | null {
+	const [capability, setCapability] = useState<PasskeyLoginCapability | null>(() =>
+		isDesktop() ? null : resolveInitialPasskeyLoginCapability(),
+	);
+	useEffect(() => {
+		let cancelled = false;
+		void resolvePasskeyLoginCapability()
+			.catch(() => PasskeyLoginCapability.UNAVAILABLE)
+			.then((resolved) => {
+				if (!cancelled) {
+					setCapability(resolved);
+				}
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+	return capability;
+}
+
 function requireLoginRuntimeSnapshot(runtimeSnapshot: RuntimeConfigSnapshot | null): RuntimeConfigSnapshot {
 	if (runtimeSnapshot == null) {
 		throw new Error('Authentication cannot start without a selected instance runtime');
@@ -393,6 +413,10 @@ interface MfaControllerOptions {
 	onLoginSuccess?: (payload: LoginSuccessPayload) => Promise<void> | void;
 }
 
+export function currentMfaRuntimeSnapshot(): RuntimeConfigSnapshot {
+	return Authentication.currentMfaRuntimeSnapshot ?? RuntimeConfig.getSnapshot();
+}
+
 export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: MfaControllerOptions) {
 	const {i18n} = useLingui();
 	const [isWebAuthnLoading, setIsWebAuthnLoading] = useState(false);
@@ -408,7 +432,7 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 				code: normalizedCode,
 				ticket,
 				inviteCode,
-				runtimeSnapshot: Authentication.currentMfaRuntimeSnapshot ?? RuntimeConfig.getSnapshot(),
+				runtimeSnapshot: currentMfaRuntimeSnapshot(),
 			});
 			await onLoginSuccess?.(response);
 		},
@@ -419,7 +443,7 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 		setIsWebAuthnLoading(true);
 		let navigating = false;
 		try {
-			const runtimeSnapshot = Authentication.currentMfaRuntimeSnapshot ?? RuntimeConfig.getSnapshot();
+			const runtimeSnapshot = currentMfaRuntimeSnapshot();
 			const options = await getWebAuthnMfaOptions(ticket, runtimeSnapshot);
 			const migrationOrigin = isPasskeyMigrationOrigin();
 			const runsOnPage =

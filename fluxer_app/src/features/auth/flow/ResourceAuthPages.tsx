@@ -144,7 +144,6 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 					title={null}
 					onBackActionChange={null}
 					completeLoginRedirectPath={Routes.ME}
-					forceCredentials={false}
 					startWithAddAccount={false}
 					runtimeTarget={runtimeTarget}
 					ssoRedirectPath={null}

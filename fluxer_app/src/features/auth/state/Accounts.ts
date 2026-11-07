@@ -13,7 +13,7 @@ import AccountAccess, {
 	AccountInstanceUnavailableError,
 } from '@app/features/auth/state/AccountAccess';
 import type {UserData} from '@app/features/auth/state/AccountStorageContract';
-import {getAccountKey, parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import {getAccountKey, parseAccountStorageKey, supersededAccountKeys} from '@app/features/auth/state/AccountStorageKey';
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {ForegroundGatewayConnectionRecoverableError} from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
@@ -292,14 +292,27 @@ class Accounts {
 					redirectPath,
 					targetAccountKey,
 				});
-				return;
+			} else {
+				await this.runAccountReplacementActivation({
+					activate: (suspension) => SessionManager.loginWithinAccountActivation(loginRequest, suspension),
+					redirectPath: redirectPath ?? Routes.ME,
+					targetAccountKey,
+				});
 			}
-			await this.runAccountReplacementActivation({
-				activate: (suspension) => SessionManager.loginWithinAccountActivation(loginRequest, suspension),
-				redirectPath: redirectPath ?? Routes.ME,
-				targetAccountKey,
-			});
+			await this.removeSupersededAccounts(targetAccountKey);
 		});
+	}
+
+	private async removeSupersededAccounts(accountKey: string): Promise<void> {
+		const account = this.requireAccount(accountKey);
+		for (const supersededKey of supersededAccountKeys(this.orderedAccounts, account)) {
+			try {
+				await SessionManager.removeAccount(supersededKey);
+				AccountAccess.forgetAccount(supersededKey);
+			} catch (error) {
+				logger.warn(`Failed to remove ${supersededKey} after signing in again as ${accountKey}`, error);
+			}
+		}
 	}
 
 	async removeStoredAccount(accountKey: string): Promise<void> {

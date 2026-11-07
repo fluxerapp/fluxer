@@ -91,7 +91,6 @@ const LoginPage = observer(function LoginPage({onBackActionChange}: LoginPagePro
 			onLoginComplete={runtimeTarget.reset}
 			onBackActionChange={onBackActionChange}
 			completeLoginRedirectPath={Routes.ME}
-			forceCredentials={false}
 			startWithAddAccount={false}
 			runtimeTarget={runtimeTarget}
 			ssoRedirectPath={null}
