@@ -3,6 +3,7 @@
 import {type NagbarState, NagbarType} from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
 import styles from '@app/features/app/components/layout/app_layout/NagbarContainer.module.css';
 import {AccountLimitedNagbar} from '@app/features/app/components/layout/app_layout/nagbars/AccountLimitedNagbar';
+import {AndroidAppNagbar} from '@app/features/app/components/layout/app_layout/nagbars/AndroidAppNagbar';
 import {BuildEnvironmentNagbar} from '@app/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar';
 import {ConnectionNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar';
 import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
@@ -81,6 +82,7 @@ const NAGBARS: Record<NagbarType, NagbarEntry> = {
 	[NagbarType.LEGACY_PRICE_OPT_IN]: {Component: LegacyPriceOptInNagbar, premium: true},
 	[NagbarType.GIFT_INVENTORY]: {Component: GiftInventoryNagbar, premium: true},
 	[NagbarType.DESKTOP_DOWNLOAD]: {Component: DesktopDownloadNagbar},
+	[NagbarType.ANDROID_APP]: {Component: AndroidAppNagbar},
 	[NagbarType.GUILD_MEMBERSHIP_CTA]: {Component: GuildMembershipCtaNagbar},
 	[NagbarType.VISIONARY_MFA]: {Component: VisionaryMfaNagbar, premium: true},
 	[NagbarType.VOICE_SESSION_RESTORE]: {Component: VoiceSessionRestoreNagbar},

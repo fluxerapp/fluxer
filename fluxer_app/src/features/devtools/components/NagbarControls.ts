@@ -10,6 +10,11 @@ const DESKTOP_DOWNLOAD_NAGBAR_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the desktop-download banner.',
 });
+const ANDROID_APP_NAGBAR_DESCRIPTOR = msg({
+	message: 'Android app nagbar',
+	comment:
+		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the Android app on Google Play banner.',
+});
 const COMMUNITY_MEMBERSHIP_CTA_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community membership CTA nagbar',
 	comment:
@@ -258,6 +263,15 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		resetKeys: ['forceDesktopDownload', 'desktopDownloadDismissed'],
 		actualStatus: USING_ACTUAL_STATE,
 		dismissedKey: 'desktopDownloadDismissed',
+	}),
+	createNagbarControl({
+		key: 'forceAndroidApp',
+		label: ANDROID_APP_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceAndroidApp',
+		forceHideKey: 'forceHideAndroidApp',
+		resetKeys: ['forceAndroidApp', 'androidAppDismissed'],
+		actualStatus: USING_ACTUAL_STATE,
+		dismissedKey: 'androidAppDismissed',
 	}),
 	createNagbarControl({
 		key: 'forceGuildMembershipCta',

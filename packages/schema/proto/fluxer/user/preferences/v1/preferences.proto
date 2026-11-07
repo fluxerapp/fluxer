@@ -160,6 +160,7 @@ message NagbarDismissals {
   map<string, bool> guild_mfa_requirement = 17;
   map<string, bool> price_announcement = 18;
   map<string, bool> legacy_price_opt_in = 19;
+  bool android_app = 20;
 }
 
 message DismissedUpsells {

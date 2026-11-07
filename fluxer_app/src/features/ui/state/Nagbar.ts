@@ -16,6 +16,7 @@ interface NagbarSettings {
 	premiumOnboardingDismissed: boolean;
 	giftInventoryDismissed: boolean;
 	desktopDownloadDismissed: boolean;
+	androidAppDismissed: boolean;
 	pendingBulkDeletionDismissed: Record<string, boolean>;
 	invitesDisabledDismissed: Record<string, boolean>;
 	guildMfaRequirementDismissed: Record<string, boolean>;
@@ -34,6 +35,7 @@ interface NagbarSettings {
 	forcePremiumOnboarding: boolean;
 	forceGiftInventory: boolean;
 	forceDesktopDownload: boolean;
+	forceAndroidApp: boolean;
 	forceGuildMembershipCta: boolean;
 	forceVisionaryMfa: boolean;
 	forceTermsAcceptance: boolean;
@@ -53,6 +55,7 @@ interface NagbarSettings {
 	forceHidePremiumOnboarding: boolean;
 	forceHideGiftInventory: boolean;
 	forceHideDesktopDownload: boolean;
+	forceHideAndroidApp: boolean;
 	forceHideGuildMembershipCta: boolean;
 	forceHideVisionaryMfa: boolean;
 	forceHideTermsAcceptance: boolean;
@@ -82,6 +85,7 @@ export class Nagbar implements NagbarSettings {
 	premiumOnboardingDismissed = false;
 	giftInventoryDismissed = false;
 	desktopDownloadDismissed = false;
+	androidAppDismissed = false;
 	pendingBulkDeletionDismissed: Record<string, boolean> = {};
 	invitesDisabledDismissed: Record<string, boolean> = {};
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
@@ -102,6 +106,7 @@ export class Nagbar implements NagbarSettings {
 	forcePremiumOnboarding = false;
 	forceGiftInventory = false;
 	forceDesktopDownload = false;
+	forceAndroidApp = false;
 	forceGuildMembershipCta = false;
 	forceVisionaryMfa = false;
 	forceTermsAcceptance = false;
@@ -121,6 +126,7 @@ export class Nagbar implements NagbarSettings {
 	forceHidePremiumOnboarding = false;
 	forceHideGiftInventory = false;
 	forceHideDesktopDownload = false;
+	forceHideAndroidApp = false;
 	forceHideGuildMembershipCta = false;
 	forceHideVisionaryMfa = false;
 	forceHideTermsAcceptance = false;
@@ -150,6 +156,7 @@ export class Nagbar implements NagbarSettings {
 				'premiumOnboardingDismissed',
 				'giftInventoryDismissed',
 				'desktopDownloadDismissed',
+				'androidAppDismissed',
 				'pendingBulkDeletionDismissed',
 				'invitesDisabledDismissed',
 				'guildMfaRequirementDismissed',
@@ -168,6 +175,7 @@ export class Nagbar implements NagbarSettings {
 				premiumOnboarding: s.premiumOnboardingDismissed,
 				giftInventory: s.giftInventoryDismissed,
 				desktopDownload: s.desktopDownloadDismissed,
+				androidApp: s.androidAppDismissed,
 				guildMembershipCta: s.guildMembershipCtaDismissed,
 				visionaryMfa: s.visionaryMfaDismissed,
 				pendingBulkDeletion: {...s.pendingBulkDeletionDismissed},
@@ -186,6 +194,7 @@ export class Nagbar implements NagbarSettings {
 				s.premiumOnboardingDismissed = m.premiumOnboarding;
 				s.giftInventoryDismissed = m.giftInventory;
 				s.desktopDownloadDismissed = m.desktopDownload;
+				s.androidAppDismissed = m.androidApp;
 				s.guildMembershipCtaDismissed = m.guildMembershipCta;
 				s.visionaryMfaDismissed = m.visionaryMfa;
 				s.pendingBulkDeletionDismissed = {...m.pendingBulkDeletion};
@@ -279,6 +288,7 @@ export class Nagbar implements NagbarSettings {
 		this.premiumOnboardingDismissed = false;
 		this.giftInventoryDismissed = false;
 		this.desktopDownloadDismissed = false;
+		this.androidAppDismissed = false;
 		this.pendingBulkDeletionDismissed = {};
 		this.invitesDisabledDismissed = {};
 		this.guildMfaRequirementDismissed = {};
@@ -298,6 +308,7 @@ export class Nagbar implements NagbarSettings {
 		this.forcePremiumOnboarding = false;
 		this.forceGiftInventory = false;
 		this.forceDesktopDownload = false;
+		this.forceAndroidApp = false;
 		this.forceGuildMembershipCta = false;
 		this.forceVisionaryMfa = false;
 		this.forceTermsAcceptance = false;
@@ -317,6 +328,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceHidePremiumOnboarding = false;
 		this.forceHideGiftInventory = false;
 		this.forceHideDesktopDownload = false;
+		this.forceHideAndroidApp = false;
 		this.forceHideGuildMembershipCta = false;
 		this.forceHideVisionaryMfa = false;
 		this.forceHideTermsAcceptance = false;
