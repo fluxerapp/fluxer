@@ -22,6 +22,7 @@ libfido2-sys = "0.5.1"
 windows = {version = "0.62.2", features = [
 	"Win32_Foundation",
 	"Win32_Networking_WindowsWebServices",
+	"Win32_System_LibraryLoader",
 	"Win32_System_Threading",
 	"Win32_UI_WindowsAndMessaging",
 ]}
