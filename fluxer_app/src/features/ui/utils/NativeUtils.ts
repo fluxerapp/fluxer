@@ -146,7 +146,7 @@ export function isFirefoxBrowser(): boolean {
 export function supportsDesktopScreenShareAudioCapture(): boolean {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
-		return !isFirefoxBrowser();
+		return isChromiumBrowser();
 	}
 	return electronApi.platform === 'win32' || electronApi.platform === 'linux' || electronApi.platform === 'darwin';
 }
