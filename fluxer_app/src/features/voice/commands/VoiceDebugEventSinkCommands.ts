@@ -24,14 +24,16 @@ function describeStatsSnapshotError(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
 
-function publishBrowserOpeningStatsSnapshot(): void {
+async function publishBrowserOpeningStatsSnapshot(): Promise<void> {
 	if (!canOpenBrowserVoiceDebugEventSinkPopout()) return;
 	const generatedAtIso = getGeneratedAtIso();
 	try {
-		setBrowserVoiceDebugEventSinkStatsHtml(renderVoiceDebugStatsHtml(collectStatsForNerdsSnapshot(), generatedAtIso));
+		setBrowserVoiceDebugEventSinkStatsHtml(
+			await renderVoiceDebugStatsHtml(collectStatsForNerdsSnapshot(), generatedAtIso),
+		);
 	} catch (error) {
 		setBrowserVoiceDebugEventSinkStatsHtml(
-			renderVoiceDebugStatsUnavailableHtml(
+			await renderVoiceDebugStatsUnavailableHtml(
 				`Failed to collect stats snapshot before opening event sink: ${describeStatsSnapshotError(error)}`,
 				generatedAtIso,
 			),
@@ -40,6 +42,6 @@ function publishBrowserOpeningStatsSnapshot(): void {
 }
 
 export async function openVoiceDebugEventSinkPopout(): Promise<void> {
-	publishBrowserOpeningStatsSnapshot();
+	await publishBrowserOpeningStatsSnapshot();
 	await voiceEngineV2AppDebugEventSinkHostAdapter.openEventSinkPopout();
 }

@@ -3,6 +3,7 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {InitOutput} from '@pkgs/libfluxcore/libfluxcore';
 import initLibfluxcore, * as wasm from '@pkgs/libfluxcore/libfluxcore';
+import libfluxcoreWasmUrl from '@pkgs/libfluxcore/libfluxcore_bg.wasm';
 
 const logger = new Logger('libfluxcore');
 const MAX_RETAINED_LIBFLUXCORE_WASM_MEMORY_BYTES = 64 * 1024 * 1024;
@@ -19,7 +20,7 @@ async function loadModule(): Promise<void> {
 		modulePromise = (async () => {
 			try {
 				if (typeof initLibfluxcore === 'function') {
-					moduleExports = await initLibfluxcore();
+					moduleExports = await initLibfluxcore({module_or_path: libfluxcoreWasmUrl});
 				}
 				moduleReady = true;
 			} catch (err) {

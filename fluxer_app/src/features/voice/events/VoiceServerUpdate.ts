@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {VOICE_MESH_ENDPOINT, VOICE_MESH_TOKEN} from '@app/features/voice/engine/mesh/VoiceMeshSignal';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 
 interface VoiceServerUpdateSfuPayload {
 	p2p?: undefined;
@@ -24,9 +25,18 @@ interface VoiceServerUpdateP2pPayload {
 
 type VoiceServerUpdatePayload = VoiceServerUpdateSfuPayload | VoiceServerUpdateP2pPayload;
 
+const logger = new Logger('VoiceServerUpdate');
+
 export function handleVoiceServerUpdate(data: VoiceServerUpdatePayload, _context: GatewayHandlerContext): void {
+	const engine = VoiceRuntime.engine;
+	if (engine === null) {
+		logger.warn('Dropping a voice server update that arrived before the voice runtime loaded', {
+			connectionId: data.connection_id,
+		});
+		return;
+	}
 	if (data.p2p === true) {
-		MediaEngine.handleVoiceServerUpdate({
+		engine.handleVoiceServerUpdate({
 			token: VOICE_MESH_TOKEN,
 			endpoint: VOICE_MESH_ENDPOINT,
 			connection_id: data.connection_id,
@@ -37,7 +47,7 @@ export function handleVoiceServerUpdate(data: VoiceServerUpdatePayload, _context
 		});
 		return;
 	}
-	MediaEngine.handleVoiceServerUpdate({
+	engine.handleVoiceServerUpdate({
 		token: data.token,
 		endpoint: data.endpoint,
 		connection_id: data.connection_id,

@@ -8,7 +8,7 @@ import {ensureNativePermission} from '@app/features/permissions/system/utils/Nat
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {isVoicePermissionMuteActive} from '@app/features/voice/utils/VoicePermissionUtils';
 import type {Room} from 'livekit-client';
@@ -16,8 +16,8 @@ import type {Room} from 'livekit-client';
 const logger = new Logger('VoiceStateCommands');
 
 export async function toggleSelfDeaf(_guildId: string | null = null): Promise<void> {
-	const connectedGuildId = MediaEngine.guildId;
-	const connectedChannelId = MediaEngine.channelId;
+	const connectedGuildId = VoiceRuntime.guildId;
+	const connectedChannelId = VoiceRuntime.channelId;
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
 	const willDeafen = !currentDeaf;
@@ -54,8 +54,8 @@ const handleMicrophonePermissionBlocked = () => handleMediaPermissionBlocked('mi
 const requestMicrophoneInVoiceChannel = async (room: Room, channelId: string | null): Promise<boolean> => {
 	if (
 		isVoicePermissionMuteActive(
-			MediaEngine.getCurrentUserVoiceState(MediaEngine.guildId),
-			MediaEngine.guildId,
+			VoiceRuntime.getCurrentUserVoiceState(VoiceRuntime.guildId),
+			VoiceRuntime.guildId,
 			channelId,
 		)
 	) {
@@ -64,7 +64,7 @@ const requestMicrophoneInVoiceChannel = async (room: Room, channelId: string | n
 	}
 	try {
 		logger.debug('Requesting microphone permission via MediaEngineFacade');
-		await MediaEngine.enableMicrophone(room, channelId);
+		await VoiceRuntime.engine?.enableMicrophone(room, channelId);
 		MediaPermission.updateMicrophonePermissionGranted();
 		logger.info('Microphone permission granted via MediaEngineFacade');
 		return true;
@@ -118,9 +118,9 @@ const requestMicrophoneDirectly = async (): Promise<boolean> => {
 };
 
 export async function toggleSelfMute(_guildId: string | null = null): Promise<void> {
-	const room = MediaEngine.room;
-	const connectedChannelId = MediaEngine.channelId;
-	const microphoneFailureLatched = MediaEngine.isMicrophoneFailureLatched();
+	const room = VoiceRuntime.room;
+	const connectedChannelId = VoiceRuntime.channelId;
+	const microphoneFailureLatched = VoiceRuntime.isMicrophoneFailureLatched();
 	const currentMute = getCurrentSelfMute();
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
@@ -128,8 +128,8 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 	const willMute = !currentMute && !currentDeaf;
 	const willBeUnmuted = willUnmute || willUndeafen;
 	const isPermissionMuted = isVoicePermissionMuteActive(
-		MediaEngine.getCurrentUserVoiceState(MediaEngine.guildId),
-		MediaEngine.guildId,
+		VoiceRuntime.getCurrentUserVoiceState(VoiceRuntime.guildId),
+		VoiceRuntime.guildId,
 		connectedChannelId,
 	);
 	logger.info('toggleSelfMute', {
@@ -147,7 +147,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 	if (willBeUnmuted) {
 		if (isPermissionMuted) {
 			logger.info('Voice permissions prevent unmute, staying muted');
-			MediaEngine.syncLocalVoiceStateWithServer({self_mute: true});
+			VoiceRuntime.engine?.syncLocalVoiceStateWithServer({self_mute: true});
 			return;
 		}
 		if (MediaPermission.isMicrophoneExplicitlyDenied()) {
@@ -155,7 +155,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 			handleMicrophonePermissionBlocked();
 			return;
 		}
-		MediaEngine.clearMicrophoneFailureLatch();
+		VoiceRuntime.engine?.clearMicrophoneFailureLatch();
 		if (!MediaPermission.isMicrophoneGranted()) {
 			logger.info('Microphone permission not granted, requesting permission');
 			const permissionGranted = room?.localParticipant
@@ -197,7 +197,7 @@ const updateConnectionProperty = async (
 	property: VoiceStateProperty,
 	value: boolean,
 ): Promise<void> => {
-	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+	const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
 	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
@@ -219,7 +219,7 @@ const updateConnectionsProperty = async (
 	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
-		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+		const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 		if (!voiceState) continue;
 		socket.updateVoiceStateExplicit({
 			guild_id: voiceState.guild_id,
@@ -234,20 +234,20 @@ const updateConnectionsProperty = async (
 };
 
 export function getCurrentSelfMute(): boolean {
-	return LocalVoiceState.getSelfMute() || MediaEngine.isMicrophoneFailureLatched();
+	return LocalVoiceState.getSelfMute() || VoiceRuntime.isMicrophoneFailureLatched();
 }
 
 export function getSelfMuteForConnection(connectionId: string): boolean {
-	if (connectionId === MediaEngine.connectionId) return getCurrentSelfMute();
-	return MediaEngine.getVoiceStateByConnectionId(connectionId)?.self_mute ?? false;
+	if (connectionId === VoiceRuntime.connectionId) return getCurrentSelfMute();
+	return VoiceRuntime.getVoiceStateByConnectionId(connectionId)?.self_mute ?? false;
 }
 
 export async function toggleSelfMuteForConnection(connectionId: string): Promise<void> {
-	if (connectionId === MediaEngine.connectionId) {
+	if (connectionId === VoiceRuntime.connectionId) {
 		await toggleSelfMute(null);
 		return;
 	}
-	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+	const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
 	const target = !voiceState.self_mute;
 	await updateConnectionProperty(connectionId, 'self_mute', target);
@@ -256,7 +256,7 @@ export async function toggleSelfMuteForConnection(connectionId: string): Promise
 }
 
 export async function toggleSelfDeafenForConnection(connectionId: string): Promise<void> {
-	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+	const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
 	const target = !voiceState.self_deaf;
 	await updateConnectionProperty(connectionId, 'self_deaf', target);
@@ -273,9 +273,9 @@ export async function turnOffStreamForConnection(connectionId: string): Promise<
 }
 
 export async function bulkMuteConnections(connectionIds: Array<string>, mute: boolean = true): Promise<void> {
-	const currentConnectionId = MediaEngine.connectionId;
+	const currentConnectionId = VoiceRuntime.connectionId;
 	if (currentConnectionId && connectionIds.includes(currentConnectionId)) {
-		if (!mute) MediaEngine.clearMicrophoneFailureLatch();
+		if (!mute) VoiceRuntime.engine?.clearMicrophoneFailureLatch();
 		LocalVoiceState.updateSelfMute(mute);
 	}
 	await updateConnectionsProperty(
@@ -297,7 +297,7 @@ export async function bulkDisconnect(connectionIds: Array<string>): Promise<void
 	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
-		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+		const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 		if (!voiceState) continue;
 		socket.updateVoiceStateExplicit({
 			guild_id: voiceState.guild_id,
@@ -314,12 +314,14 @@ export async function bulkDisconnect(connectionIds: Array<string>): Promise<void
 export async function bulkMoveConnections(connectionIds: Array<string>, targetChannelId: string): Promise<void> {
 	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
-	const localConnectionId = MediaEngine.connectionId;
+	const localConnectionId = VoiceRuntime.connectionId;
 	for (const connectionId of connectionIds) {
-		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
+		const voiceState = VoiceRuntime.getVoiceStateByConnectionId(connectionId);
 		if (!voiceState) continue;
 		if (localConnectionId && connectionId === localConnectionId) {
-			await MediaEngine.connectToVoiceChannel(voiceState.guild_id ?? null, targetChannelId);
+			await VoiceRuntime.withEngine('join', (engine) =>
+				engine.connectToVoiceChannel(voiceState.guild_id ?? null, targetChannelId),
+			);
 			continue;
 		}
 		socket.updateVoiceStateExplicit({

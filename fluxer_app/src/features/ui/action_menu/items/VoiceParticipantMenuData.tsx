@@ -134,8 +134,9 @@ import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/use
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
-import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {LazyCameraPreviewModalInRoom} from '@app/features/voice/components/LazyVoiceComponents';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
+import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import EntranceSoundListenerPrefs from '@app/features/voice/state/EntranceSoundListenerPrefs';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
@@ -169,7 +170,6 @@ import {ChannelTypes, Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/const
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {Track} from 'livekit-client';
 import {useCallback, useMemo} from 'react';
 
 const logger = new Logger('VoiceParticipantMenuData');
@@ -280,25 +280,25 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		);
 	}, [onClose, openDmChannel, displayName, i18n]);
 	const currentUserVoiceStateInGuild = guildId
-		? MediaEngine.getCurrentUserVoiceState(guildId)
-		: MediaEngine.getCurrentUserVoiceState();
-	const isCurrentUserConnectedToVoice = currentUserVoiceStateInGuild !== null || MediaEngine.connectionId !== null;
-	const connectionVoiceState = connectionId ? MediaEngine.getVoiceStateByConnectionId(connectionId) : null;
-	const allVoiceStates = MediaEngine.getAllVoiceStates();
+		? VoiceRuntime.getCurrentUserVoiceState(guildId)
+		: VoiceRuntime.getCurrentUserVoiceState();
+	const isCurrentUserConnectedToVoice = currentUserVoiceStateInGuild !== null || VoiceRuntime.connectionId !== null;
+	const connectionVoiceState = connectionId ? VoiceRuntime.getVoiceStateByConnectionId(connectionId) : null;
+	const allVoiceStates = VoiceRuntime.getAllVoiceStates();
 	const targetHasVoiceStateInLocalRoom =
-		MediaEngine.channelId !== null &&
+		VoiceRuntime.channelId !== null &&
 		Object.values(allVoiceStates).some((guildData) =>
-			Object.values(guildData[MediaEngine.channelId ?? ''] ?? {}).some((voiceState) => voiceState.user_id === user.id),
+			Object.values(guildData[VoiceRuntime.channelId ?? ''] ?? {}).some((voiceState) => voiceState.user_id === user.id),
 		);
 	const isTargetInLocalVoiceRoom =
-		MediaEngine.connected &&
-		MediaEngine.connectionId !== null &&
-		MediaEngine.channelId !== null &&
-		(connectionVoiceState?.channel_id === MediaEngine.channelId || (!connectionId && targetHasVoiceStateInLocalRoom));
-	const currentUserVoiceState = MediaEngine.getCurrentUserVoiceState();
-	const currentConnectionId = MediaEngine.connectionId;
+		VoiceRuntime.connected &&
+		VoiceRuntime.connectionId !== null &&
+		VoiceRuntime.channelId !== null &&
+		(connectionVoiceState?.channel_id === VoiceRuntime.channelId || (!connectionId && targetHasVoiceStateInLocalRoom));
+	const currentUserVoiceState = VoiceRuntime.getCurrentUserVoiceState();
+	const currentConnectionId = VoiceRuntime.connectionId;
 	const currentConnectionVoiceState = currentConnectionId
-		? MediaEngine.getVoiceStateByConnectionId(currentConnectionId)
+		? VoiceRuntime.getVoiceStateByConnectionId(currentConnectionId)
 		: null;
 	const showMyOwnScreenShare = VoiceSettings.showMyOwnScreenShare;
 	const showNonVideoParticipants = VoiceSettings.showNonVideoParticipants;
@@ -311,7 +311,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const connectionVolume = connectionId ? ParticipantVolume.getConnectionVolume(connectionId) : 100;
 	const streamVolume = streamKey ? StreamAudioPrefs.getVolume(streamKey) : 100;
 	const isStreamMuted = streamKey ? StreamAudioPrefs.isMuted(streamKey) : false;
-	const callId = MediaEngine.connectionId ?? '';
+	const callId = VoiceRuntime.connectionId ?? '';
 	const participantIdentity = connectionId ? buildVoiceParticipantIdentity(user.id, connectionId) : '';
 	const isVideoDisabled =
 		callId && participantIdentity ? CallMediaPrefs.isVideoDisabled(callId, participantIdentity) : false;
@@ -337,7 +337,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		return acc;
 	}, [guildId, user.id, allVoiceStates]);
 	const hasMultipleConnections = userVoiceStates.length > 1;
-	const userVoiceState = guildId ? MediaEngine.getVoiceState(guildId, user.id) : null;
+	const userVoiceState = guildId ? VoiceRuntime.getVoiceState(guildId, user.id) : null;
 	const voiceChannels = useMemo(() => {
 		if (!guildId) return [];
 		const channels = Channels.getGuildChannels(guildId);
@@ -386,7 +386,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			onChange: (value: number) => {
 				ParticipantVolume.setVolume(user.id, value);
 				if (isTargetInLocalVoiceRoom) {
-					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
+					VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
 			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
@@ -400,7 +400,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			onChange: (value: number) => {
 				ParticipantVolume.setConnectionVolume(targetConnectionId, value);
 				if (isTargetInLocalVoiceRoom) {
-					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
+					VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
 			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
@@ -468,7 +468,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			},
 		});
 		const connectionParticipant = connectionId
-			? MediaEngine.getParticipantByUserIdAndConnectionId(user.id, connectionId)
+			? VoiceRuntime.getParticipantByUserIdAndConnectionId(user.id, connectionId)
 			: null;
 		const isCameraLive =
 			source.kind === 'camera' && Boolean(connectionParticipant?.isCameraEnabled || connectionVoiceState?.self_video);
@@ -479,11 +479,12 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		const shouldShowFocus = focusSource !== undefined && (surface === 'call-tile' || surface === 'participant-list');
 		if (shouldShowFocus && connectionId && isTargetInLocalVoiceRoom) {
 			const identity = buildVoiceParticipantIdentity(user.id, connectionId);
-			const liveKitFocusSource = focusSource === 'screen-share' ? Track.Source.ScreenShare : Track.Source.Camera;
+			const liveKitFocusSource =
+				focusSource === 'screen-share' ? VoiceTrackSource.ScreenShare : VoiceTrackSource.Camera;
 			const isFocused =
 				pinnedParticipantIdentity === identity &&
 				(pinnedParticipantSource == null || pinnedParticipantSource === liveKitFocusSource);
-			const allStates = MediaEngine.getAllVoiceStates();
+			const allStates = VoiceRuntime.getAllVoiceStates();
 			let connectionCount = 0;
 			Object.values(allStates).forEach((guildData) => {
 				Object.values(guildData).forEach((channelData) => {
@@ -560,7 +561,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
 						modal(() => (
-							<CameraPreviewModalInRoom data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.camera-preview-modal-in-room" />
+							<LazyCameraPreviewModalInRoom data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.camera-preview-modal-in-room" />
 						)),
 					);
 				},
@@ -674,7 +675,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			const selfRootActions: Array<MenuItemType | MenuCheckboxType> = [];
 			const canUseCurrentConnectionAsRoot = !isParentGroupedItem || groupContainsLocalConnection;
 			const useConnectionSpecificControls =
-				connectionId !== undefined && (isGroupedItem || connectionId !== MediaEngine.connectionId);
+				connectionId !== undefined && (isGroupedItem || connectionId !== VoiceRuntime.connectionId);
 			if (useConnectionSpecificControls) {
 				const isSelfMuted = VoiceStateCommands.getSelfMuteForConnection(connectionId);
 				const isSelfDeafened = connectionVoiceState?.self_deaf ?? false;
@@ -842,9 +843,11 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					label: i18n._(isGroupedItem ? VOICE_DISCONNECT_DEVICE_DESCRIPTOR : VOICE_DISCONNECT_DESCRIPTOR),
 					onClick: async () => {
 						if (isCurrentDevice) {
-							await MediaEngine.disconnectFromVoiceChannel('user');
+							await VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 						} else if (targetGuildId) {
-							MediaEngine.disconnectRemoteDevice(targetGuildId, targetConnectionId);
+							VoiceRuntime.withEngine('action', (engine) =>
+								engine.disconnectRemoteDevice(targetGuildId, targetConnectionId),
+							);
 						}
 						onClose();
 					},
@@ -872,7 +875,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					onChange: (checked: boolean) => {
 						ParticipantVolume.setLocalMute(user.id, checked);
 						if (isTargetInLocalVoiceRoom) {
-							MediaEngine.applyLocalAudioPreferencesForUser(user.id);
+							VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(user.id);
 						}
 					},
 				},
@@ -889,7 +892,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					label: i18n._(DISABLE_VIDEO_LOCALLY_DESCRIPTOR),
 					checked: isVideoDisabled,
 					onChange: (checked: boolean) => {
-						const activeCallId = MediaEngine.connectionId;
+						const activeCallId = VoiceRuntime.connectionId;
 						if (!activeCallId) {
 							const error = new Error('Cannot toggle local video without an active voice connection');
 							logger.error('Voice participant menu action invoked without connection id', {
@@ -899,7 +902,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 							});
 							throw error;
 						}
-						MediaEngine.setLocalVideoDisabled(participantIdentity, checked);
+						VoiceRuntime.engine?.setLocalVideoDisabled(participantIdentity, checked);
 					},
 				});
 			}

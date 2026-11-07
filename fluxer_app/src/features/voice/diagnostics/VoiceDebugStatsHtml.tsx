@@ -3,7 +3,7 @@
 import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {AppMetricsSnapshot} from '@app/types/electron.d';
 import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2/src/protocol/types';
-import {renderToStaticMarkup} from 'react-dom/server';
+import type {ReactElement} from 'react';
 
 const VOICE_DEBUG_STATS_JSON_ELEMENT_ID = 'stats-json';
 const VOICE_DEBUG_STATS_MAX_VALUE_CHARS = 4096;
@@ -440,7 +440,13 @@ function VoiceDebugStatsUnavailable({generatedAtIso, message}: VoiceDebugStatsUn
 	);
 }
 
-export function renderVoiceDebugStatsHtml(data: StatsForNerdsData, generatedAtIso: string): string {
+async function loadStaticMarkupRenderer(): Promise<(element: ReactElement) => string> {
+	const {renderToStaticMarkup} = await import('react-dom/server');
+	return renderToStaticMarkup;
+}
+
+export async function renderVoiceDebugStatsHtml(data: StatsForNerdsData, generatedAtIso: string): Promise<string> {
+	const renderToStaticMarkup = await loadStaticMarkupRenderer();
 	return renderToStaticMarkup(
 		<VoiceDebugStats
 			data={data}
@@ -450,7 +456,8 @@ export function renderVoiceDebugStatsHtml(data: StatsForNerdsData, generatedAtIs
 	);
 }
 
-export function renderVoiceDebugStatsUnavailableHtml(message: string, generatedAtIso: string): string {
+export async function renderVoiceDebugStatsUnavailableHtml(message: string, generatedAtIso: string): Promise<string> {
+	const renderToStaticMarkup = await loadStaticMarkupRenderer();
 	return renderToStaticMarkup(
 		<VoiceDebugStatsUnavailable
 			message={message}

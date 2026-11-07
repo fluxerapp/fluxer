@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
-import {takePrebootGatewaySocket} from '@app/features/platform/state/PrebootNetworkHandoff';
+import {type PrebootGatewaySocket, takePrebootGatewaySocket} from '@app/features/platform/state/PrebootNetworkHandoff';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -168,6 +168,7 @@ class BrowserGatewayWireTransport extends BaseGatewayWireTransport {
 	constructor(
 		private readonly url: string,
 		private readonly options: GatewayWireTransportOptions,
+		private preboot: PrebootGatewaySocket | null,
 	) {
 		super();
 	}
@@ -179,7 +180,8 @@ class BrowserGatewayWireTransport extends BaseGatewayWireTransport {
 	start(): void {
 		if (this.disposed) return;
 		if (this.socket != null) return;
-		const preboot = this.options.adoptPrebootSocket === true ? takePrebootGatewaySocket(this.url) : null;
+		const preboot = this.preboot;
+		this.preboot = null;
 		const socket = preboot?.socket ?? new WebSocket(this.url);
 		this.socket = socket;
 		socket.binaryType = this.options.binaryType;
@@ -221,8 +223,9 @@ class BrowserGatewayWireTransport extends BaseGatewayWireTransport {
 	dispose(): void {
 		if (this.disposed) return;
 		this.disposed = true;
-		const socket = this.socket;
+		const socket = this.socket ?? this.preboot?.socket ?? null;
 		this.socket = null;
+		this.preboot = null;
 		this.state = GatewayWireReadyState.CLOSED;
 		if (socket != null) {
 			socket.removeEventListener('open', this.handleOpen);
@@ -783,9 +786,13 @@ function getDesktopGatewayTransportRouter(api: NativeGatewayTransportAPI): Deskt
 }
 
 export function createGatewayWireTransport(url: string, options: GatewayWireTransportOptions): GatewayWireTransport {
+	const preboot = options.adoptPrebootSocket === true ? takePrebootGatewaySocket(url) : null;
+	if (preboot != null) {
+		return new BrowserGatewayWireTransport(url, options, preboot);
+	}
 	const api = resolveNativeGatewayTransportAPI(url);
 	if (api != null) {
 		return new DesktopNativeGatewayWireTransport(url, getDesktopGatewayTransportRouter(api));
 	}
-	return new BrowserGatewayWireTransport(url, options);
+	return new BrowserGatewayWireTransport(url, options, null);
 }

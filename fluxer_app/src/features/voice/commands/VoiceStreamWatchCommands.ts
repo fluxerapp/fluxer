@@ -2,7 +2,7 @@
 
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -27,7 +27,7 @@ function selectStreamChannel(guildId: string | null, channelId: string | null): 
 
 function isConnectedToStreamChannel(guildId: string | null, channelId: string | null): boolean {
 	if (!channelId) return false;
-	return MediaEngine.channelId === channelId && MediaEngine.guildId === (guildId ?? null);
+	return VoiceRuntime.channelId === channelId && VoiceRuntime.guildId === (guildId ?? null);
 }
 
 export function applyStreamWatchFocus(params: {

@@ -47,14 +47,16 @@ import Users from '@app/features/user/state/Users';
 import {canPerform} from '@app/features/user/utils/AccountGates';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import {DirectCallLobbyBottomSheet} from '@app/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet';
-import {CompactVoiceCallStreamHeaderInfo} from '@app/features/voice/components/CompactVoiceCallStreamHeaderInfo';
 import {useCompactVoiceCallResize} from '@app/features/voice/components/compact_voice_call_view/useCompactVoiceCallResize';
+import {
+	LazyCompactVoiceCallStreamHeaderInfo,
+	LazyDirectCallLobbyBottomSheet,
+	LazyVoiceCallView,
+} from '@app/features/voice/components/LazyVoiceComponents';
 import {useVoiceCallFullscreenViewState} from '@app/features/voice/components/useVoiceCallAppFullscreen';
-import {VoiceCallView} from '@app/features/voice/components/VoiceCallView';
 import {VoiceE2EEIndicator} from '@app/features/voice/components/VoiceE2EEIndicator';
 import {useVoiceParticipantAvatarEntries} from '@app/features/voice/components/VoiceParticipantAvatarList';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useCompactCallExpansionState} from '@app/features/voice/hooks/useCompactCallExpansionState';
 import {
 	COMPACT_VOICE_CALL_HEIGHT_MIN,
@@ -87,10 +89,10 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	const isGroupDM = channel?.type === ChannelTypes.GROUP_DM;
 	const isPersonalNotes = channel?.type === ChannelTypes.DM_PERSONAL_NOTES;
 	const currentChannelId = channel?.id ?? null;
-	const mediaConnected = MediaEngine.connected;
-	const mediaChannelId = MediaEngine.channelId;
-	const mediaGuildId = MediaEngine.guildId;
-	const room = MediaEngine.room;
+	const mediaConnected = VoiceRuntime.connected;
+	const mediaChannelId = VoiceRuntime.channelId;
+	const mediaGuildId = VoiceRuntime.guildId;
+	const room = VoiceRuntime.room;
 	const participantAvatarEntries = useVoiceParticipantAvatarEntries({
 		guildId: channel?.guildId ?? null,
 		channelId: channel?.id ?? null,
@@ -244,7 +246,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	}, [callHeaderState.isDeviceInRoomForChannelCall, controlsVariant, i18n.locale]);
 	const compactVoiceCallHeaderSupplement =
 		channel && showCompactVoiceView ? (
-			<CompactVoiceCallStreamHeaderInfo
+			<LazyCompactVoiceCallStreamHeaderInfo
 				channel={channel}
 				enabled={showCompactVoiceView}
 				onOpenChange={setIsVoiceCallChromePinnedByStreamInfo}
@@ -296,7 +298,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 				className={styles.voiceChannelContainer}
 				data-flx="channel.channel-view.dm-channel-view.voice-channel-container"
 			>
-				<VoiceCallView
+				<LazyVoiceCallView
 					channel={channel}
 					fullscreenRequestNonce={voiceCallFullscreenRequestNonce}
 					onCloseFullscreenView={handleCloseCompactCallFullscreenView}
@@ -538,7 +540,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 				data-flx="channel.channel-view.dm-channel-view.channel-grid-voice-call"
 			/>
 			{callExistsAndOngoing && call && channel && (
-				<DirectCallLobbyBottomSheet
+				<LazyDirectCallLobbyBottomSheet
 					isOpen={isCallSheetOpen}
 					onClose={handleCloseCallSheet}
 					channel={channel}

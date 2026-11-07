@@ -13,7 +13,7 @@ import {parseStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamWatchHoverCard} from '@app/features/voice/components/StreamWatchHoverCard';
 import {useStreamPreview} from '@app/features/voice/components/useStreamPreview';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import {canViewStreamPreview} from '@app/features/voice/utils/StreamPreviewPermissionUtils';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
@@ -117,7 +117,7 @@ export const StreamWatchHoverPopout = observer(function StreamWatchHoverPopout({
 		[isOpen, isPopoutEnabled, canFetchStreamPreview],
 	);
 	const {previewUrl, isPreviewLoading} = useStreamPreview(isPreviewActive, streamKey);
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	const streamWatchStateArgs = useMemo(
 		() => ({
 			streamKey,
@@ -131,10 +131,10 @@ export const StreamWatchHoverPopout = observer(function StreamWatchHoverPopout({
 		const parsed = parseStreamKey(streamKey);
 		const connectionId = parsed?.connectionId;
 		if (!connectionId) return null;
-		const userId = MediaEngine.connectionVoiceStates[connectionId]?.user_id;
+		const userId = VoiceRuntime.connectionVoiceStates[connectionId]?.user_id;
 		if (!userId) return null;
 		return {userId, connectionId};
-	}, [streamKey, MediaEngine.connectionVoiceStates]);
+	}, [streamKey, VoiceRuntime.connectionVoiceStates]);
 	const handleWatchConnected = useCallback(() => {
 		if (streamWatchTarget) {
 			VoiceStreamWatchCommands.applyStreamWatchFocus({
@@ -154,11 +154,11 @@ export const StreamWatchHoverPopout = observer(function StreamWatchHoverPopout({
 		onConnected: handleWatchConnected,
 	});
 	const isOwnLocalStream = useMemo(() => {
-		const localConnectionId = MediaEngine.connectionId;
+		const localConnectionId = VoiceRuntime.connectionId;
 		if (!localConnectionId || !streamKey) return false;
 		const parsed = parseStreamKey(streamKey);
 		return parsed?.connectionId === localConnectionId;
-	}, [streamKey, MediaEngine.connectionId]);
+	}, [streamKey, VoiceRuntime.connectionId]);
 	const child = Children.only(children);
 	const referenceRefs = useMemo(() => [refs.setReference, child.props.ref], [refs.setReference, child.props.ref]);
 	const mergedRef = useMergeRefs(referenceRefs);
@@ -288,16 +288,16 @@ export const StreamWatchHoverPopout = observer(function StreamWatchHoverPopout({
 		if (!parsed) return null;
 		const {connectionId} = parsed;
 		if (!connectionId) return null;
-		const participants = MediaEngine.participants;
+		const participants = VoiceRuntime.participants;
 		for (const participantIdentity in participants) {
 			const participant = participants[participantIdentity];
 			if (!participant) continue;
 			if (participant.connectionId === connectionId) return participant.identity;
 		}
-		const voiceState = MediaEngine.connectionVoiceStates[connectionId];
+		const voiceState = VoiceRuntime.connectionVoiceStates[connectionId];
 		if (!voiceState?.user_id) return null;
 		return buildVoiceParticipantIdentity(voiceState.user_id, connectionId);
-	}, [streamKey, MediaEngine.participants, MediaEngine.connectionVoiceStates]);
+	}, [streamKey, VoiceRuntime.participants, VoiceRuntime.connectionVoiceStates]);
 	const handleWatch = useCallback(
 		(event: SyntheticEvent) => {
 			event.stopPropagation();

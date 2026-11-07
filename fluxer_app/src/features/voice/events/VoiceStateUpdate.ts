@@ -6,7 +6,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {
 	discardVoiceJoinChimeSequence,
 	playSelfJoinChimeOnce,
@@ -92,27 +92,27 @@ function rememberJoinChime(data: VoiceStateUpdatePayload, now: number): void {
 }
 
 function shouldPlayJoinChime(data: VoiceStateUpdatePayload): boolean {
-	if (!MediaEngine.connected) return false;
+	if (!VoiceRuntime.connected) return false;
 	if (!data.channel_id) return false;
 	if (!data.connection_id) return false;
-	if (MediaEngine.isVoiceConnectionIgnored(data.connection_id)) return false;
-	if (data.channel_id !== MediaEngine.channelId) return false;
-	const previousState = MediaEngine.getVoiceStateByConnectionId(data.connection_id);
+	if (VoiceRuntime.isVoiceConnectionIgnored(data.connection_id)) return false;
+	if (data.channel_id !== VoiceRuntime.channelId) return false;
+	const previousState = VoiceRuntime.getVoiceStateByConnectionId(data.connection_id);
 	if (previousState?.channel_id === data.channel_id) return false;
 	return true;
 }
 
 function shouldBypassSelfDeafenedForJoinChime(data: VoiceStateUpdatePayload): boolean {
-	return data.connection_id === MediaEngine.connectionId;
+	return data.connection_id === VoiceRuntime.connectionId;
 }
 
 function shouldPlayLeaveChime(data: VoiceStateUpdatePayload): boolean {
-	if (!MediaEngine.connected) return false;
-	if (!MediaEngine.channelId) return false;
+	if (!VoiceRuntime.connected) return false;
+	if (!VoiceRuntime.channelId) return false;
 	if (!data.connection_id) return false;
-	if (MediaEngine.isVoiceConnectionIgnored(data.connection_id)) return false;
-	const previousState = MediaEngine.getVoiceStateByConnectionId(data.connection_id);
-	if (previousState?.channel_id !== MediaEngine.channelId) return false;
+	if (VoiceRuntime.isVoiceConnectionIgnored(data.connection_id)) return false;
+	const previousState = VoiceRuntime.getVoiceStateByConnectionId(data.connection_id);
+	if (previousState?.channel_id !== VoiceRuntime.channelId) return false;
 	if (data.channel_id === previousState.channel_id) return false;
 	return true;
 }
@@ -128,16 +128,16 @@ export function handleVoiceStateUpdate(data: VoiceStateUpdatePayload, _context: 
 	const playJoinChime =
 		!teleportingInPlace && shouldPlayJoinChime(data) && !shouldSuppressDuplicateJoinChime(data, now);
 	const playLeaveChime = !teleportingInPlace && !playJoinChime && shouldPlayLeaveChime(data);
-	const previousState = data.connection_id ? MediaEngine.getVoiceStateByConnectionId(data.connection_id) : null;
+	const previousState = data.connection_id ? VoiceRuntime.getVoiceStateByConnectionId(data.connection_id) : null;
 	if (previousState && previousState.channel_id !== data.channel_id) {
 		const otherConnectionRemains = Object.values(
-			MediaEngine.getAllVoiceStatesInChannel(previousState.guild_id, previousState.channel_id),
+			VoiceRuntime.getAllVoiceStatesInChannel(previousState.guild_id, previousState.channel_id),
 		).some((state) => state.user_id === data.user_id && state.connection_id !== data.connection_id);
 		if (!otherConnectionRemains) {
 			discardVoiceJoinChimeSequence({userId: data.user_id, channelId: previousState.channel_id});
 		}
 	}
-	MediaEngine.handleGatewayVoiceStateUpdate(guildId, voiceState);
+	VoiceRuntime.handleGatewayVoiceStateUpdate(guildId, voiceState);
 	if (playJoinChime) {
 		if (!data.channel_id) return;
 		rememberJoinChime(data, now);

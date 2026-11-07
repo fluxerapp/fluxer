@@ -43,11 +43,13 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isPwaOnMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
 import Users from '@app/features/user/state/Users';
 import {canPerform} from '@app/features/user/utils/AccountGates';
-import {CompactVoiceCallStreamHeaderInfo} from '@app/features/voice/components/CompactVoiceCallStreamHeaderInfo';
+import {
+	LazyCompactVoiceCallStreamHeaderInfo,
+	LazyVoiceCallView,
+} from '@app/features/voice/components/LazyVoiceComponents';
 import {useVoiceCallFullscreenViewState} from '@app/features/voice/components/useVoiceCallAppFullscreen';
-import {VoiceCallView} from '@app/features/voice/components/VoiceCallView';
 import {VoiceE2EEIndicator} from '@app/features/voice/components/VoiceE2EEIndicator';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useCompactCallExpansionState} from '@app/features/voice/hooks/useCompactCallExpansionState';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
@@ -180,9 +182,9 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 	const {enabled: isMobileLayout} = MobileLayout;
 	const windowSize = Window.windowSize;
 	const isPwaVoiceTextSplitLayout = isMobileLayout && isPwaOnMobileOrTablet() && isPortraitDisplay(windowSize);
-	const room = MediaEngine.room;
-	const connectedChannelId = MediaEngine.channelId;
-	const connectedGuildId = MediaEngine.guildId;
+	const room = VoiceRuntime.room;
+	const connectedChannelId = VoiceRuntime.channelId;
+	const connectedGuildId = VoiceRuntime.guildId;
 	const isConnectedToThisChannel = Boolean(
 		isVoiceChannel &&
 			connectedChannelId === channelId &&
@@ -448,7 +450,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 		const isVoiceTextSplitView = isPwaVoiceTextSplitLayout && !isVoiceTextCallExpanded;
 		const shouldRenderMemberList = isMemberListVisible && !isMobileLayout && !isSearchActive;
 		const compactVoiceCallHeaderSupplement = isConnectedToThisChannel ? (
-			<CompactVoiceCallStreamHeaderInfo
+			<LazyCompactVoiceCallStreamHeaderInfo
 				channel={channel}
 				enabled={isConnectedToThisChannel}
 				onOpenChange={setIsVoiceCallChromePinnedByStreamInfo}
@@ -461,7 +463,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 					className={clsx(styles.voiceChannelContainer, styles.voiceChannelFullscreenShell)}
 					data-flx="channel.channel-view.guild-channel-view.voice-channel"
 				>
-					<VoiceCallView
+					<LazyVoiceCallView
 						channel={channel}
 						fullscreenRequestNonce={voiceCallFullscreenRequestNonce}
 						onCloseFullscreenView={handleCollapseVoiceTextCallFullscreen}

@@ -29,7 +29,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), ch-dpr=(self), ch-save-data=(self), ch-viewport-width=(self), ch-width=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
+const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
 const X_ROBOTS_TAG_VALUE: &str = "noindex, nofollow";
 
 pub fn build_router(state: AppState) -> Router {

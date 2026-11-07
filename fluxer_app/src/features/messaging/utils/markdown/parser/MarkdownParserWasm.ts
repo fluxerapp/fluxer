@@ -3,11 +3,13 @@
 import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
 import {flattenAST} from '@app/features/messaging/utils/markdown/parser/AstUtils';
 import {getEmojiParserConfig} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
-import {MARKDOWN_PARSER_WASM_BASE64} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as StringUtils from '@app/features/messaging/utils/markdown/parser/StringUtils';
 import * as URLUtils from '@app/features/messaging/utils/markdown/parser/UrlUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {LRUMap} from '@app/lib/list/ListLruMap';
+import markdownParserWasmUrl from '@pkgs/markdown_parser/markdown_parser.wasm';
+import {observable, runInAction} from 'mobx';
 
 interface WasmExports {
 	memory: {buffer: ArrayBuffer};
@@ -44,25 +46,18 @@ type CleanableNode = Node & {
 const RESULT_HEADER_BYTES = 16;
 const MAX_RETAINED_WASM_MEMORY_BYTES = 64 * 1024 * 1024;
 const LINK_URL_CACHE_CAPACITY = 512;
+const LOAD_RETRY_DELAY_MS = 2000;
+const logger = new Logger('MarkdownParserWasm');
 const textEncoder = new TextEncoder();
 const lenientTextDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: false});
 
 let textDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: true});
 let wasm: WasmExports | null = null;
-let wasmModule: unknown = null;
+let wasmModule: WebAssembly.Module | null = null;
 let cachedMemory: Uint8Array | null = null;
 let replacingOversizedInstance = false;
-
-interface WasmInstance {
-	exports: Record<string, unknown>;
-}
-
-declare const WebAssembly: {
-	Module: new (bytes: Uint8Array) => unknown;
-	Instance: new (module: unknown, imports?: Record<string, unknown>) => WasmInstance;
-	compile(bytes: Uint8Array): Promise<unknown>;
-	instantiate(module: unknown, imports?: Record<string, unknown>): Promise<WasmInstance>;
-};
+let loadPromise: Promise<void> | null = null;
+const parserReady = observable.box(false);
 
 function getWasmMemory(exports: Record<string, unknown>): WasmExports['memory'] {
 	const memory = exports.memory;
@@ -92,39 +87,57 @@ function createWasmExports(exports: Record<string, unknown>): WasmExports {
 	};
 }
 
-function decodeBase64(value: string): Uint8Array {
-	if (typeof Buffer !== 'undefined') {
-		return new Uint8Array(Buffer.from(value, 'base64'));
-	}
-	const binary = atob(value);
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-	return bytes;
-}
-
-function setWasmInstance(instance: WasmInstance): WasmExports {
+function setWasmInstance(instance: WebAssembly.Instance): WasmExports {
 	wasm = createWasmExports(instance.exports);
 	cachedMemory = null;
 	return wasm;
 }
 
-export async function preloadMarkdownParserWasm(): Promise<void> {
-	if (wasm) return;
-	wasmModule ??= await WebAssembly.compile(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
+async function compileMarkdownParserWasm(): Promise<WebAssembly.Module> {
+	const response = await fetch(markdownParserWasmUrl);
+	if (!response.ok) {
+		throw new Error(`markdown parser wasm request failed with status ${response.status}`);
+	}
+	if (response.headers.get('content-type')?.split(';')[0]?.trim() === 'application/wasm') {
+		return WebAssembly.compileStreaming(response);
+	}
+	return WebAssembly.compile(await response.arrayBuffer());
+}
+
+async function instantiateMarkdownParserWasm(): Promise<void> {
+	wasmModule ??= await compileMarkdownParserWasm();
 	const instance = await WebAssembly.instantiate(wasmModule, {});
-	if (!wasm) setWasmInstance(instance);
+	setWasmInstance(instance);
+	runInAction(() => {
+		parserReady.set(true);
+	});
+}
+
+function loadMarkdownParserWasm(): Promise<void> {
+	loadPromise ??= instantiateMarkdownParserWasm().catch((error: unknown) => {
+		logger.warn('Failed to load the markdown parser:', error);
+		setTimeout(() => {
+			loadPromise = null;
+		}, LOAD_RETRY_DELAY_MS);
+	});
+	return loadPromise;
+}
+
+export function isMarkdownParserReady(): boolean {
+	return parserReady.get();
 }
 
 function getWasm(): WasmExports {
 	if (wasm) return wasm;
-	wasmModule ??= new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
-	return setWasmInstance(new WebAssembly.Instance(wasmModule, {}));
+	throw new Error('markdown parser wasm is not loaded');
 }
 
 function releaseOversizedWasmMemory(): void {
-	if (replacingOversizedInstance || (wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
+	if (
+		replacingOversizedInstance ||
+		wasmModule == null ||
+		(wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES
+	) {
 		return;
 	}
 	const oversized = wasm;
@@ -469,6 +482,10 @@ function mergeCleanedTextNodes(nodes: Array<Node>): void {
 }
 
 export function parseMarkdownAstWithWasm(input: string, parserFlags: number): {nodes: Array<Node>} {
+	if (wasm == null) {
+		void loadMarkdownParserWasm();
+		return {nodes: input ? [{type: 'Text', content: input}] : []};
+	}
 	const inputBytes = passString(input);
 	const emojiContext = passString(buildEmojiContext(input));
 	const outPtr = alloc(RESULT_HEADER_BYTES);

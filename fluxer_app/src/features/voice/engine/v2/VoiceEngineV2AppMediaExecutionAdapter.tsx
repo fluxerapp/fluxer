@@ -17,6 +17,12 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {Store} from '@app/features/voice/engine/Store';
+import {
+	getLatchedLocalSelfMute,
+	getVoiceAudioControlsFromAppState,
+	isPushToMuteActiveFromAppState,
+	isPushToTalkActiveFromAppState,
+} from '@app/features/voice/engine/VoiceAudioControls';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type {EffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
@@ -25,7 +31,6 @@ import {acquireVoiceInputContext, type VoiceInputContextLease} from '@app/featur
 import {
 	createVoiceMicrophoneFailureLatchSnapshot,
 	isVoiceMicrophoneFailureLatchActive,
-	selectVoiceLocalAudioEffectiveSelfMute,
 	selectVoiceMicrophoneFailureCount,
 	transitionVoiceMicrophoneFailureLatchSnapshot,
 	type VoiceMicrophoneFailureLatchEvent,
@@ -79,9 +84,7 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppMicrophoneTransaction';
 import {
 	selectVoiceEngineV2AppEffectiveSelfMuteFromAudioControls,
-	selectVoiceEngineV2AppMuteReason,
 	selectVoiceEngineV2AppParticipant,
-	type VoiceEngineV2AppVoiceMuteReason,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {ensureNativeMediaPermission} from '@app/features/voice/engine/voice_screen_share_manager/NativePermissionGate';
@@ -100,20 +103,15 @@ import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppre
 import {readCaptureNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {applyBackgroundProcessor, clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {readVoiceInputProcessor, VoiceInputTrackProcessor} from '@app/features/voice/utils/VoiceInputProcessor';
-import {
-	isVoicePermissionMuteActive,
-	isVoiceSpeakPermissionDenied,
-} from '@app/features/voice/utils/VoicePermissionUtils';
+import {isVoiceSpeakPermissionDenied} from '@app/features/voice/utils/VoicePermissionUtils';
 import {
 	applyContentHintToTrack,
-	getActiveVoiceProcessingMode,
 	type ResolvedVoiceProcessing,
 	resolveVoiceProcessingFromStateForDeviceLabel,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import type {
 	VoiceEngineV2AudioControls,
-	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2MicrophoneOptions,
 } from '@fluxer/voice_engine_v2/src/protocol/types';
@@ -131,7 +129,6 @@ import {Track, TrackEvent} from 'livekit-client';
 const logger = new Logger('VoiceEngineV2AppMediaExecutionAdapter');
 const CAMERA_PUBLISH_CODEC_CORRECTION_MAX = 1;
 const REPUBLISH_MICROPHONE_GUARD_MS = 150;
-type VoiceMuteReason = VoiceEngineV2AppVoiceMuteReason;
 
 interface SetCameraEnabledOptions {
 	deviceId?: string;
@@ -169,22 +166,6 @@ function extractUserIdFromVoiceIdentity(identity: string): string | null {
 	return match ? match[1] : null;
 }
 
-function isPushToTalkActiveFromAppState(): boolean {
-	if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
-	return Keybind.isPushToTalkEffective();
-}
-
-function isPushToMuteActiveFromAppState(): boolean {
-	if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
-	return Keybind.isPushToMuteEffective();
-}
-
-function getVoiceEngineV2AudioModeFromAppState(): VoiceEngineV2AudioMode {
-	if (isPushToTalkActiveFromAppState()) return 'pushToTalk';
-	if (isPushToMuteActiveFromAppState()) return 'pushToMute';
-	return 'voiceActivity';
-}
-
 let microphoneFailureLatchSnapshot = createVoiceMicrophoneFailureLatchSnapshot();
 
 function applyMicrophoneFailureLatchEvent(event: VoiceMicrophoneFailureLatchEvent): boolean {
@@ -204,28 +185,8 @@ function isMicrophoneEnableFailureLatched(): boolean {
 	return isVoiceMicrophoneFailureLatchActive(microphoneFailureLatchSnapshot);
 }
 
-function getLatchedLocalSelfMute(): boolean {
-	return selectVoiceLocalAudioEffectiveSelfMute({
-		localSelfMute: LocalVoiceState.getSelfMute(),
-		microphoneFailureLatched: isMicrophoneEnableFailureLatched(),
-	});
-}
-
 function getVoiceEngineV2AudioControlsFromAppState(): VoiceEngineV2AudioControls {
-	return {
-		mode: getVoiceEngineV2AudioModeFromAppState(),
-		locallyMuted: getLatchedLocalSelfMute(),
-		preferredLocallyMuted: LocalVoiceState.getSelfMute(),
-		locallyDeafened: LocalVoiceState.getSelfDeaf(),
-		mutedByPermission: LocalVoiceState.getMutedByPermission(),
-		hasUserSetMute: LocalVoiceState.getHasUserSetMute(),
-		hasUserSetDeaf: LocalVoiceState.getHasUserSetDeaf(),
-		shouldUnmuteOnUndeafen: LocalVoiceState.shouldUnmuteOnUndeafen,
-		pushToTalkActive: isPushToTalkActiveFromAppState() && Keybind.pushToTalkHeld,
-		pushToMuteActive: isPushToMuteActiveFromAppState() && Keybind.pushToMuteHeld,
-		inputVolume: VoiceSettings.inputVolume,
-		outputVolume: VoiceSettings.outputVolume,
-	};
+	return getVoiceAudioControlsFromAppState(isMicrophoneEnableFailureLatched());
 }
 
 function getEffectiveSelfMuteForVoiceStatePayloadFromV2AudioControls(): boolean {
@@ -528,7 +489,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		const audioState = this.getEffectiveAudioState({
 			serverMute: params.serverMute || permissionMuted,
 			serverDeaf: params.serverDeaf,
-			selfMute: getLatchedLocalSelfMute(),
+			selfMute: getLatchedLocalSelfMute(isMicrophoneEnableFailureLatched()),
 		});
 		logger.info('Reconciling local media after voice state update', {
 			channelId: params.channelId,
@@ -1581,19 +1542,6 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.syncVoiceState({self_mute: targetMute});
 		this.updateMediaAudioControls();
 		this.syncLocalSpeaking(room);
-	}
-
-	getMuteReason(voiceState: VoiceState | null, guildId?: string | null, channelId?: string | null): VoiceMuteReason {
-		if (voiceState !== null) {
-			assertObjectLike<VoiceState>(voiceState, 'getMuteReason.voiceState');
-		}
-		assertOptionalNonEmptyString(guildId, 'getMuteReason.guildId');
-		assertOptionalNonEmptyString(channelId, 'getMuteReason.channelId');
-		return selectVoiceEngineV2AppMuteReason({
-			voiceState,
-			permissionMuted: isVoicePermissionMuteActive(voiceState, guildId, channelId),
-			audio: getVoiceEngineV2AudioControlsFromAppState(),
-		});
 	}
 
 	private getLocalAudioTrack(room: Room): LocalAudioTrack | null {

@@ -78,7 +78,7 @@ import type {MenuActionEvent, MenuGroupType, MenuItemType} from '@app/features/u
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {VoiceP2pConsentModal} from '@app/features/voice/components/alerts/VoiceP2pConsentModal';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CompactVoiceCallHeight, {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
 import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
 import VoiceP2pRollout from '@app/features/voice/state/VoiceP2pRollout';
@@ -184,7 +184,7 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		isVoiceChannel &&
 		!channel.rtcP2p &&
 		VoiceP2pRollout.enabled &&
-		Object.keys(MediaEngine.getAllVoiceStatesInChannel(channel.guildId ?? ME, channel.id)).length === 0 &&
+		Object.keys(VoiceRuntime.getAllVoiceStatesInChannel(channel.guildId ?? ME, channel.id)).length === 0 &&
 		Permission.can(Permissions.CONNECT, {channelId: channel.id, guildId: channel.guildId});
 	const canFollow = canFollowAnnouncementChannel(channel);
 	const developerMode = UserSettings.developerMode;
@@ -298,7 +298,7 @@ export function useChannelMenuData(
 							allowStandard={false}
 							onP2p={() => {
 								VoiceP2pConsent.agree(channel.id);
-								void MediaEngine.connectToVoiceChannel(guildId, channel.id);
+								void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(guildId, channel.id));
 							}}
 							onCancel={() => {}}
 							data-flx="ui.action-menu.items.channel-menu-data.handle-start-p2p-call.voice-p2p-consent-modal"

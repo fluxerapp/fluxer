@@ -21,7 +21,7 @@ import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ChannelFrecencyStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
@@ -142,9 +142,9 @@ class ChannelFrecency {
 			{equals: compareShallow, fireImmediately: true},
 		);
 		reaction(
-			() => [MediaEngine.guildId, MediaEngine.channelId] as const,
+			() => [VoiceRuntime.guildId, VoiceRuntime.channelId] as const,
 			([guildId, channelId]) => {
-				if (channelId === null && MediaEngine.localDisconnectReason === 'channelMove') return;
+				if (channelId === null && VoiceRuntime.engine?.localDisconnectReason === 'channelMove') return;
 				this.recordSelection(guildId, channelId);
 			},
 			{equals: compareShallow},

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {router} from '@app/app/Router';
+import {authRouter} from '@app/app/AuthRouter';
 import {Routes} from '@app/app/Routes';
 import {resolveAuthShellCategory} from '@app/features/app/components/skeleton/AuthShellHint';
 import {readHashParam} from '@app/features/app/hooks/useHashParam';
@@ -33,7 +33,7 @@ async function prepareRuntimeDependentFirstScreen(runtime: RuntimeConfigSnapshot
 	if (pathname === Routes.FORGOT_PASSWORD) {
 		const redirect = resolveForgotPasswordRedirect(runtime);
 		if (redirect !== null) {
-			await router.preload(redirect);
+			await authRouter.preload(redirect);
 		}
 		return;
 	}
@@ -42,7 +42,7 @@ async function prepareRuntimeDependentFirstScreen(runtime: RuntimeConfigSnapshot
 	}
 	const token = readHashParam(hash, 'token');
 	if (token === null) {
-		await router.preload(resolveMissingResetTokenRedirect(runtime));
+		await authRouter.preload(resolveMissingResetTokenRedirect(runtime));
 		return;
 	}
 	const {warmResetPasswordTokenCheck} = await loadLazyModule(
@@ -55,7 +55,7 @@ export async function prepareSignedOutFirstScreen(): Promise<void> {
 	const signal = AbortSignal.timeout(FIRST_SCREEN_BUDGET_MS);
 	const path = resolveSignedOutFirstScreenPath(window.location.pathname, window.location.search);
 	const work = Promise.allSettled([
-		router.preload(path),
+		authRouter.preload(path),
 		warmAuthRuntimeTarget(signal).then(prepareRuntimeDependentFirstScreen),
 	]).then((results) => {
 		for (const result of results) {

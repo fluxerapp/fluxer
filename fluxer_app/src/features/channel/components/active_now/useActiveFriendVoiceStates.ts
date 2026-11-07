@@ -5,8 +5,8 @@ import Guilds from '@app/features/guild/state/Guilds';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {UserVoiceActivity} from '@app/features/voice/hooks/useUserVoiceActivities';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -34,7 +34,7 @@ function collectParticipantUsers(channelStates: Readonly<Record<string, Normaliz
 
 export function useActiveFriendVoiceStates(): ReadonlyArray<UserVoiceActivity> {
 	const relationships = Relationships.getRelationships();
-	const allVoiceStates = MediaEngine.getAllVoiceStates();
+	const allVoiceStates = VoiceRuntime.getAllVoiceStates();
 	const currentUser = Users.getCurrentUser();
 	const currentUserId = currentUser?.id ?? null;
 	return useMemo(() => {

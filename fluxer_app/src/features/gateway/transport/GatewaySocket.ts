@@ -242,6 +242,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	private reconnectTimeoutId: number | null = null;
 	private invalidSessionTimeoutId: number | null = null;
 	private isUserInitiatedDisconnect = false;
+	private socketGeneration = 0;
 	private shouldReconnectImmediately = false;
 	private deferredEmitQueue: Array<() => void> = [];
 	private deferredEmitBytes = 0;
@@ -770,8 +771,10 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	private openSocket(): void {
 		this.teardownSocket();
+		const generation = this.socketGeneration;
 		this.buildGatewayUrl()
 			.then((url) => {
+				if (generation !== this.socketGeneration) return;
 				this.log.debug(`Opening gateway connection to ${url}`);
 				try {
 					const compression: CompressionType = this.options.compression ?? 'zstd-stream';
@@ -800,12 +803,14 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				}
 			})
 			.catch((error) => {
+				if (generation !== this.socketGeneration) return;
 				this.log.error('Failed to build gateway URL', error);
 				this.handleConnectionFailure();
 			});
 	}
 
 	private teardownSocket(): void {
+		this.socketGeneration++;
 		if (this.payloadDecompressor) {
 			this.payloadDecompressor.destroy();
 			this.payloadDecompressor = null;

@@ -41,7 +41,7 @@ import {AnimePresence, AnimeSpan, createAnimeFlxElement} from '@app/features/ui/
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {flxElementClassName} from '@app/lib/react';
 import {
 	GuildFolderFlags,
@@ -328,7 +328,7 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 		let hasScreenshare = false;
 		let hasVideo = false;
 		for (const guild of guilds) {
-			const guildVoiceStates = MediaEngine.getAllVoiceStatesInGuild(guild.id);
+			const guildVoiceStates = VoiceRuntime.getAllVoiceStatesInGuild(guild.id);
 			if (guildVoiceStates == null) continue;
 			for (const channelId in guildVoiceStates) {
 				const channelStates = guildVoiceStates[channelId];

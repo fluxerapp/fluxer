@@ -8,8 +8,8 @@ import Guilds from '@app/features/guild/state/Guilds';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {useMemo} from 'react';
 
@@ -64,8 +64,8 @@ function collectParticipantUsers(channelStates: Readonly<Record<string, Normaliz
 }
 
 function useUserVoiceActivities(userId: string): ReadonlyArray<UserVoiceActivity> {
-	useMediaEngineVersion();
-	const allVoiceStates = MediaEngine.getAllVoiceStates();
+	useVoiceRuntimeVersion();
+	const allVoiceStates = VoiceRuntime.getAllVoiceStates();
 	return useMemo(() => {
 		const activities: Array<UserVoiceActivity> = [];
 		for (const guildKey in allVoiceStates) {

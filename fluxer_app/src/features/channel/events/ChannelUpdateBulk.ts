@@ -5,7 +5,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import Permission from '@app/features/permissions/state/Permission';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
 type ChannelBulkUpdatePayload = Partial<Channel> & {
@@ -25,7 +25,7 @@ export function handleChannelUpdateBulk(data: ChannelUpdateBulkPayload, _context
 		Permission.handleChannelUpdate(payload.id);
 		GuildReadState.handleGenericUpdate(payload.id);
 		if (payload.bitrate !== undefined) {
-			void MediaEngine.refreshMicrophonePublishSettingsForChannel(payload.id);
+			void VoiceRuntime.engine?.refreshMicrophonePublishSettingsForChannel(payload.id);
 		}
 	}
 	QuickSwitcher.recomputeIfOpen();

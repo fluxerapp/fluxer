@@ -14,7 +14,6 @@ import {
 	normalizeArchitectureValue,
 } from '@fluxer/desktop_ipc/src/DesktopLabels';
 import Bowser from 'bowser';
-import {isE2EESupported} from 'livekit-client';
 
 const logger = new Logger('ClientInfoUtils');
 
@@ -310,12 +309,10 @@ function isLiveKitE2EECapable(): boolean {
 	if (!globalThis.crypto?.subtle) {
 		return false;
 	}
-	try {
-		return isE2EESupported();
-	} catch (error) {
-		logger.warn('Failed to detect LiveKit E2EE support', error);
-		return false;
+	if (typeof window.RTCRtpScriptTransform !== 'undefined') {
+		return true;
 	}
+	return typeof window.RTCRtpSender !== 'undefined' && 'createEncodedStreams' in window.RTCRtpSender.prototype;
 }
 
 export async function getGatewayClientProperties(geo?: {latitude?: string | null; longitude?: string | null}) {

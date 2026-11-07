@@ -41,7 +41,7 @@ import {isStandalonePwa} from '@app/features/ui/utils/PwaUtils';
 import StatusPage from '@app/features/user/state/StatusPage';
 import Users from '@app/features/user/state/Users';
 import {needsEmailConfirmation} from '@app/features/user/utils/AccountGates';
-import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {selectVoiceEngineV2AppConnectionWithFallback} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import CallState from '@app/features/voice/state/CallState';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
@@ -88,7 +88,8 @@ export const useAppLayoutState = (): AppLayoutState => {
 	return {isStandalone};
 };
 export const useNagbarConditions = (): NagbarConditions => {
-	const voiceEngineV2Model = useVoiceEngineV2Model();
+	useVoiceRuntimeVersion();
+	const voiceEngineV2Model = VoiceRuntime.voiceEngineV2Model;
 	const user = Users.currentUser;
 	const nagbarState = Nagbar;
 	const premiumOverrideType = DeveloperOptions.premiumTypeOverride;
@@ -109,15 +110,18 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const voiceSessionRestoreChannel = voiceSessionRestoreSnapshot
 		? Channels.getChannel(voiceSessionRestoreSnapshot.channelId)
 		: null;
-	const voiceConnectionContext = MediaEngine.connectionContext;
-	const voiceEngineV2Connection = selectVoiceEngineV2AppConnectionWithFallback(voiceEngineV2Model, {
-		connected: voiceConnectionContext.connected,
-		connecting: voiceConnectionContext.connecting,
-		reconnecting: voiceConnectionContext.reconnecting,
-		guildId: voiceConnectionContext.guildId,
-		channelId: voiceConnectionContext.channelId,
-		sessionId: voiceConnectionContext.connectionId,
-	});
+	const voiceConnectionContext = VoiceRuntime.connection;
+	const voiceEngineV2Connection =
+		voiceEngineV2Model === null
+			? voiceConnectionContext
+			: selectVoiceEngineV2AppConnectionWithFallback(voiceEngineV2Model, {
+					connected: voiceConnectionContext.connected,
+					connecting: voiceConnectionContext.connecting,
+					reconnecting: voiceConnectionContext.reconnecting,
+					guildId: voiceConnectionContext.guildId,
+					channelId: voiceConnectionContext.channelId,
+					sessionId: voiceConnectionContext.connectionId,
+				});
 	const shouldShowDesktopNotification = (() => {
 		if (isDesktop() || !NotificationUtils.hasNotification()) return false;
 		if (typeof Notification !== 'undefined') {

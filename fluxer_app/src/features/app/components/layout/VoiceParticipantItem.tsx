@@ -24,7 +24,7 @@ import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamWatchHoverPopout} from '@app/features/voice/components/StreamWatchHoverPopout';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
 import {resolveVoiceParticipantDisplayState} from '@app/features/voice/components/VoiceParticipantDisplayState';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {useStreamWatchDoubleClick} from '@app/features/voice/hooks/useStreamWatchDoubleClick';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
@@ -76,10 +76,10 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 	isCurrentUser?: boolean;
 }) {
 	const {i18n} = useLingui();
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	const connectionId = voiceState?.connection_id ?? '';
-	const participant = MediaEngine.getParticipantByUserIdAndConnectionId(user.id, connectionId);
-	const connectedChannelId = MediaEngine.channelId;
+	const participant = VoiceRuntime.getParticipantByUserIdAndConnectionId(user.id, connectionId);
+	const connectedChannelId = VoiceRuntime.channelId;
 	const currentChannelId = voiceState?.channel_id ?? connectedChannelId ?? null;
 	const canMoveMembers = Permission.can(Permissions.MOVE_MEMBERS, {guildId});
 	const canDragParticipant = canMoveMembers && currentChannelId !== null;

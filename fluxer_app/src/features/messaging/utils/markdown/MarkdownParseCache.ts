@@ -2,6 +2,7 @@
 
 import type {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
+import {isMarkdownParserReady} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {WasmParser} from '@app/features/messaging/utils/markdown/parser/WasmParser';
 import {LRUMap} from '@app/lib/list/ListLruMap';
@@ -39,12 +40,15 @@ function cacheParseResult(cacheKey: string, result: ParseResult): void {
 }
 
 export function parseMarkdownContent({content, context}: {content: string; context: MarkdownContext}): ParseResult {
+	const flags = getParserFlagsForContext(context);
+	if (!isMarkdownParserReady()) {
+		return new WasmParser(content, flags).parse();
+	}
 	const cacheKey = getParseCacheKey(content, context);
 	const cached = parseCache.get(cacheKey);
 	if (cached !== undefined) {
 		return cached;
 	}
-	const flags = getParserFlagsForContext(context);
 	const parser = new WasmParser(content, flags);
 	const result = parser.parse();
 	cacheParseResult(cacheKey, result);

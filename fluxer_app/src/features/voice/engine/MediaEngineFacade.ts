@@ -16,7 +16,7 @@ import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMe
 import Keybind from '@app/features/input/state/InputKeybind';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
-import {SoundType, setSoundOutputDeviceIdResolver} from '@app/features/notification/utils/SoundUtils';
+import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -26,7 +26,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import Idle from '@app/features/ui/state/Idle';
-import Sound from '@app/features/ui/state/Sound';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
 import {openAccountGateFlow} from '@app/features/user/utils/AccountGatePresentation';
@@ -105,6 +104,7 @@ import {startVoiceMediaGraphTimerScheduler} from '@app/features/voice/engine/Voi
 import {bindOutputDeviceSync} from '@app/features/voice/engine/VoiceOutputDeviceSync';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {bindRoomEvents, type RoomEventDependencies} from '@app/features/voice/engine/VoiceRoomEventBinder';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {VoiceStateSyncPartial, VoiceStateSyncPayload} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {
 	deferStopWatchingStreamKey,
@@ -329,8 +329,6 @@ interface ConnectDirectlyOptions {
 
 type TerminalUnloadVoiceDisconnectReason = 'pagehide' | 'beforeunload' | 'unload';
 
-type VoiceMuteReason = 'guild' | 'permission' | 'voice_push_to_talk' | 'self' | null;
-
 interface VoiceEngineConnectionContext {
 	guildId: string | null;
 	channelId: string | null;
@@ -445,9 +443,6 @@ class MediaEngineFacade extends Store {
 		this.initializeE2EEStatusSync();
 		this.initializeP2pPeerFailedModalSync();
 		this.initializeTerminalUnloadVoiceDisconnect();
-		Sound.setSelfDeafenedResolver(() => getEffectiveAudioState().effectiveDeaf);
-		setSoundOutputDeviceIdResolver(() => VoiceSettings.getOutputDeviceId());
-		this.prewarmVoiceEngineV2InBackground('startup');
 		(
 			window as typeof window & {
 				_mediaEngine?: MediaEngineFacade;
@@ -492,7 +487,7 @@ class MediaEngineFacade extends Store {
 		});
 	}
 
-	private prewarmVoiceEngineV2InBackground(reason: string): void {
+	prewarmInBackground(reason: string): void {
 		void this.voiceEngineV2Host
 			.runAndWait(
 				() => {
@@ -2329,10 +2324,6 @@ class MediaEngineFacade extends Store {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
-	getMuteReason(voiceState: VoiceState | null): VoiceMuteReason {
-		return voiceEngineV2AppMediaExecutionAdapter.getMuteReason(voiceState, this.guildId, this.channelId);
-	}
-
 	isMicrophoneFailureLatched(): boolean {
 		return voiceEngineV2AppMediaExecutionAdapter.isMicrophoneFailureLatched();
 	}
@@ -2802,6 +2793,7 @@ class MediaEngineFacade extends Store {
 }
 
 const instance = new MediaEngineFacade();
+VoiceRuntime.registerEngine(instance);
 
 export function useMediaEngineVersion(): number {
 	return useStoreVersion(instance);

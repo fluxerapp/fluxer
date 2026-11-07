@@ -13,7 +13,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {accountGateReason, openAccountGateFlow} from '@app/features/user/utils/AccountGatePresentation';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallState from '@app/features/voice/state/CallState';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
@@ -50,8 +50,8 @@ const JOIN_VIDEO_CALL_DESCRIPTOR = msg({
 const VoiceCallButton = observer(({channel}: {channel: Channel}) => {
 	const {i18n} = useLingui();
 	const call = CallState.getCall(channel.id);
-	const isConnected = MediaEngine.connected;
-	const connectedChannelId = MediaEngine.channelId;
+	const isConnected = VoiceRuntime.connected;
+	const connectedChannelId = VoiceRuntime.channelId;
 	const isInCall = isConnected && connectedChannelId === channel.id;
 	const hasActiveCall = CallState.hasActiveCall(channel.id);
 	const participants = call ? CallState.getParticipants(channel.id) : [];
@@ -111,8 +111,8 @@ const VoiceCallButton = observer(({channel}: {channel: Channel}) => {
 const VideoCallButton = observer(({channel}: {channel: Channel}) => {
 	const {i18n} = useLingui();
 	const call = CallState.getCall(channel.id);
-	const isConnected = MediaEngine.connected;
-	const connectedChannelId = MediaEngine.channelId;
+	const isConnected = VoiceRuntime.connected;
+	const connectedChannelId = VoiceRuntime.channelId;
 	const isInCall = isConnected && connectedChannelId === channel.id;
 	const hasActiveCall = CallState.hasActiveCall(channel.id);
 	const participants = call ? CallState.getParticipants(channel.id) : [];
@@ -127,7 +127,7 @@ const VideoCallButton = observer(({channel}: {channel: Channel}) => {
 			}
 			if (isInCall) {
 				const enable = !LocalVoiceState.getSelfVideo();
-				await MediaEngine.setCameraEnabled(enable, {
+				await VoiceRuntime.engine?.setCameraEnabled(enable, {
 					deviceId: VoiceSettings.getVideoDeviceId(),
 				});
 			} else if (hasActiveCall) {

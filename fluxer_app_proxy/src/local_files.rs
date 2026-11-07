@@ -490,7 +490,7 @@ fn modification_entity_tag(metadata: &std::fs::Metadata) -> Option<HeaderValue> 
     .ok()
 }
 
-fn entity_tag_matches(request_headers: &HeaderMap, entity_tag: &HeaderValue) -> bool {
+pub(crate) fn entity_tag_matches(request_headers: &HeaderMap, entity_tag: &HeaderValue) -> bool {
     let entity_tag_text = entity_tag
         .to_str()
         .expect("a local file entity tag must contain only visible ASCII");

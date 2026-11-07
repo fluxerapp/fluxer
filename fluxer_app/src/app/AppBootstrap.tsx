@@ -6,6 +6,7 @@ import reactiveI18n, {initI18n} from '@app/app/I18n';
 import {AppErrorBoundary} from '@app/features/app/components/AppErrorBoundary';
 import {ErrorFallback} from '@app/features/app/components/ErrorFallback';
 import type {DomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
+import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import {installSelfXssNotice} from '@app/features/devtools/utils/SelfXssNotice';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {installLocaleSwitchWatchdog} from '@app/features/i18n/utils/LocaleSwitchWatchdog';
@@ -29,7 +30,7 @@ import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontL
 import {installVoiceSubscriptionDebugApi} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugApi';
 import {PASSKEY_BRIDGE_PATH} from '@fluxer/constants/src/PasskeyConstants';
 import {i18n} from '@lingui/core';
-import {type ReactNode, startTransition} from 'react';
+import {type ComponentType, type ReactNode, startTransition} from 'react';
 import ReactDOM from 'react-dom/client';
 
 const logger = new Logger('index');
@@ -79,17 +80,6 @@ async function logClientInfo(): Promise<void> {
 	} catch (error) {
 		logger.warn('Failed to load full client info:', error);
 		logger.info(`[CLIENT INFO] ${getFormattedClientInfoSync()}`);
-	}
-}
-
-async function preloadMarkdownParser(): Promise<void> {
-	try {
-		const {preloadMarkdownParserWasm} = await loadLazyModule(
-			() => import('@app/features/messaging/utils/markdown/parser/MarkdownParserWasm'),
-		);
-		await preloadMarkdownParserWasm();
-	} catch (error) {
-		logger.warn('Failed to preload markdown parser:', error);
 	}
 }
 
@@ -167,51 +157,68 @@ async function prepareSignedOutFirstScreen(): Promise<void> {
 	}
 }
 
-async function bootstrapApp(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
-	const markdownParserReady = preloadMarkdownParser();
+interface SignedInApp {
+	readonly App: ComponentType;
+	readonly preloadAfterMount: () => void;
+}
+
+async function loadSignedInApp(): Promise<SignedInApp> {
 	const [
 		{App},
+		{default: ChannelDisplayName},
+		_channelFrecency,
+		{default: Keybind},
+		{default: NewDeviceMonitoring},
+		{default: Notification},
+		{default: QuickSwitcher},
+	] = await Promise.all([
+		loadLazyModule(() => import(/* webpackChunkName: "boot-app" */ '@app/app/App')),
+		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
+		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
+		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
+		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
+		loadLazyModule(() => import('@app/features/ui/state/Notification')),
+		loadLazyModule(() => import('@app/features/search/state/QuickSwitcher')),
+	]);
+	QuickSwitcher.setI18n(reactiveI18n);
+	ChannelDisplayName.setI18n(reactiveI18n);
+	Keybind.setI18n(reactiveI18n);
+	NewDeviceMonitoring.setI18n(reactiveI18n);
+	Notification.setI18n(reactiveI18n);
+	return {App, preloadAfterMount: () => QuickSwitcher.preloadModal()};
+}
+
+async function loadSignedInAppAfterLogin(): Promise<ComponentType> {
+	const {App, preloadAfterMount} = await loadSignedInApp();
+	preloadAfterMount();
+	return App;
+}
+
+async function bootstrapApp(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
+	const [
 		{setupHttp},
 		{default: CaptchaInterceptor},
 		{initializeEmojiParser},
 		{registerServiceWorker},
 		{default: Accounts},
-		{default: ChannelDisplayName},
-		_channelFrecency,
 		_geoIp,
-		{default: Keybind},
-		{default: NewDeviceMonitoring},
-		{default: Notification},
-		{default: QuickSwitcher},
 		_runtimeConfig,
 		{default: StatusPage},
 		{installMigratedDeviceRemap},
 		{migrateThemeProfiles},
 	] = await Promise.all([
-		loadLazyModule(() => import(/* webpackChunkName: "boot-app" */ '@app/app/App')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
 		loadLazyModule(() => import('@app/features/auth/altcha/CaptchaInterceptor')),
 		loadLazyModule(() => import('@app/features/messaging/utils/markdown/EmojiProviderSetup')),
 		loadLazyModule(() => import('@app/features/platform/service_worker/Register')),
 		loadLazyModule(() => import('@app/features/auth/state/Accounts')),
-		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
-		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
 		loadLazyModule(() => import('@app/features/app/state/GeoIP')),
-		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
-		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
-		loadLazyModule(() => import('@app/features/ui/state/Notification')),
-		loadLazyModule(() => import('@app/features/search/state/QuickSwitcher')),
 		loadLazyModule(() => import('@app/features/app/state/RuntimeConfig')),
 		loadLazyModule(() => import('@app/features/user/state/StatusPage')),
 		loadLazyModule(() => import('@app/features/app/domain_migration/DomainMigrationDeviceRemap')),
 		loadLazyModule(() => import('@app/features/theme/state/ThemeProfileMigration')),
 	]);
 	void preloadClientInfo();
-	QuickSwitcher.setI18n(reactiveI18n);
-	ChannelDisplayName.setI18n(reactiveI18n);
-	Keybind.setI18n(reactiveI18n);
-	NewDeviceMonitoring.setI18n(reactiveI18n);
-	Notification.setI18n(reactiveI18n);
 	CaptchaInterceptor.setI18n(reactiveI18n);
 	void StatusPage.checkIncidents();
 	StatusPage.startPolling();
@@ -221,14 +228,24 @@ async function bootstrapApp(storageBootstrap: AppStorageBootstrapHandle): Promis
 	if (Accounts.currentUserId === null) {
 		void probeSignedOutDomainMigration();
 	}
-	if (Accounts.currentAccount === null) {
+	const signedOut = Accounts.currentAccount === null && !isAccountHandoffArrival(window.location.pathname);
+	const signedInApp = signedOut ? null : loadSignedInApp();
+	const authRoot = signedOut ? loadLazyModule(() => import('@app/app/AuthRoot')) : null;
+	if (signedOut) {
 		await Promise.all([activateSignedOutDocumentInstance(), prepareSignedOutFirstScreen()]);
+	} else if (Accounts.currentAccount === null) {
+		await activateSignedOutDocumentInstance();
 	}
 	setupHttp();
 	initializeEmojiParser();
-	await markdownParserReady;
-	mountRoot(<App data-flx="index.bootstrap.app" />, 'index.bootstrap');
-	QuickSwitcher.preloadModal();
+	if (signedInApp !== null) {
+		const {App, preloadAfterMount} = await signedInApp;
+		mountRoot(<App data-flx="index.bootstrap.app" />, 'index.bootstrap');
+		preloadAfterMount();
+	} else if (authRoot !== null) {
+		const {AuthRoot} = await authRoot;
+		mountRoot(<AuthRoot loadApp={loadSignedInAppAfterLogin} data-flx="index.bootstrap.auth-root" />, 'index.bootstrap');
+	}
 	registerServiceWorker();
 }
 

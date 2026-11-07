@@ -4,7 +4,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 
 interface VoiceJoinEligibility {
@@ -18,7 +18,7 @@ export function useVoiceJoinEligibility({
 	guildId: string | null;
 	channelId: string | null;
 }): VoiceJoinEligibility {
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	if (!channelId) return {canJoin: false};
 	const channel = Channels.getChannel(channelId);
 	if (!channel) return {canJoin: false};
@@ -30,8 +30,8 @@ export function useVoiceJoinEligibility({
 	}
 	if (effectiveGuildId && !Permission.can(Permissions.CONNECT, channel)) return {canJoin: false};
 	if (effectiveGuildId && channel.userLimit && channel.userLimit > 0 && currentUserId) {
-		const voiceStates = MediaEngine.getAllVoiceStatesInChannel(effectiveGuildId, channelId);
-		const currentConnectionId = MediaEngine.connectionId;
+		const voiceStates = VoiceRuntime.getAllVoiceStatesInChannel(effectiveGuildId, channelId);
+		const currentConnectionId = VoiceRuntime.connectionId;
 		let adjustedCount = 0;
 		for (const connectionId in voiceStates) {
 			const voiceState = voiceStates[connectionId];

@@ -40,15 +40,11 @@
 		"wasm:codegen": "../tools/ci/run.sh build-app-wasm"
 	},
 	"browserslist": [
-		"chrome >= 47",
-		"edge >= 12",
-		"firefox >= 44",
-		"safari >= 9",
-		"ios >= 9",
-		"last 2 versions",
-		"not dead",
-		"> 0.2%",
-		"not op_mini all"
+		"chrome >= 111",
+		"edge >= 111",
+		"firefox >= 114",
+		"safari >= 16.4",
+		"ios >= 16.4"
 	],
 	"dependencies": {
 		"@arborium/ada": "2.18.2",

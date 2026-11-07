@@ -16,7 +16,6 @@ export default {
 				'custom-properties': true,
 				'custom-media-queries': true,
 			},
-			browsers: 'last 10 years, > 0.5%, not dead',
 		}),
 		autoprefixer({
 			flexbox: 'no-2009',

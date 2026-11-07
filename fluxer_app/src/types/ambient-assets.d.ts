@@ -12,6 +12,11 @@ declare module '@arborium/*/grammar_bg.wasm' {
 	export default url;
 }
 
+declare module '@pkgs/markdown_parser/markdown_parser.wasm' {
+	const url: string;
+	export default url;
+}
+
 declare module '@arborium/arborium/arborium_host_bg.wasm' {
 	const url: string;
 	export default url;

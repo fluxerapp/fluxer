@@ -34047,7 +34047,7 @@ msgid "Skip this step"
 msgstr "Ohita tämä vaihe"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx
+#: src/app/SkipToContentLink.tsx
 msgid "Skip to content"
 msgstr "Siirry sisältöön"
 

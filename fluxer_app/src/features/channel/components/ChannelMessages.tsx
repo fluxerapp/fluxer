@@ -62,6 +62,7 @@ import type {User} from '@app/features/user/models/User';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import Window from '@app/features/window/state/Window';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
@@ -558,6 +559,9 @@ const CachedMessages = observer(function CachedMessages({channel, allowAutoAck =
 		}
 		void MessageCommands.ensureMembersForMessages(messages.toArray());
 	}, [channel.id, state.messages?.ready, state.messageVersion]);
+	useEffect(() => {
+		if (state.messages?.ready) VoiceRuntime.noteChannelContentRendered();
+	}, [state.messages?.ready]);
 	const immediateHighlightedMessageId = (() => {
 		const messages = state.messages;
 		if (!messages?.ready || !messages.hasJumped || !messages.jumpHighlight || !messages.jumpDestinationId) {
