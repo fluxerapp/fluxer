@@ -16,7 +16,7 @@ import {
 	sendFriendRequestByTag,
 } from '@app/api/user/tests/RelationshipTestUtils';
 import {fetchUserMe} from '@app/api/user/tests/UserTestUtils';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {DELETED_USER_ID, RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 async function markUserScheduledForDeletion(harness: ApiTestHarness, userId: string): Promise<void> {
@@ -254,6 +254,16 @@ describe('UserRelationshipStateTransitions', () => {
 				})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
 				.execute();
+		});
+		test('cannot send friend request to the deleted user placeholder', async () => {
+			const alice = await createTestAccount(harness);
+			await createBuilder(harness, alice.token)
+				.post(`/users/@me/relationships/${DELETED_USER_ID.toString()}`)
+				.body({})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
+				.execute();
+			const {json: aliceRels} = await listRelationships(harness, alice.token);
+			expect(aliceRels).toHaveLength(0);
 		});
 		test('cannot accept request when requester is deleted', async () => {
 			const alice = await createTestAccount(harness);

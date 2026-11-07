@@ -2,6 +2,7 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {UserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -765,6 +766,9 @@ export class UserRelationshipService {
 	private isDeletedUser(user: User | null | undefined): boolean {
 		if (!user) {
 			return false;
+		}
+		if (isSyntheticUserId(user.id)) {
+			return true;
 		}
 		if (user.pendingDeletionAt !== null) {
 			return false;
