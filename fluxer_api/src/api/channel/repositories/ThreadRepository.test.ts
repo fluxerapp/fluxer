@@ -683,7 +683,7 @@ function describeThreadRepository(backend: string, makeExecutor: () => Promise<C
 		});
 
 		it('indexes forums separately, merges them into guild collections, and removes their side index on deletion', async () => {
-			await repositories.channelData.upsert(channelRow(FORUM_ID, ChannelTypes.GUILD_FORUM));
+			await repositories.channelData.create(channelRow(FORUM_ID, ChannelTypes.GUILD_FORUM));
 			expect(
 				await fetchMany(ThreadOnlyChannelsByGuild.selectCql({where: ThreadOnlyChannelsByGuild.where.eq('guild_id')}), {
 					guild_id: GUILD_ID,

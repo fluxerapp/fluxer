@@ -47,7 +47,7 @@ describe('thread user settings', () => {
 	async function createForum(guildId: string, textChannelId: string): Promise<string> {
 		const text = await repository.channelData.findUnique(createChannelID(BigInt(textChannelId)));
 		const forumId = (BigInt(textChannelId) + 7n).toString();
-		await repository.channelData.upsert({
+		await repository.channelData.create({
 			...text!.toRow(),
 			channel_id: createChannelID(BigInt(forumId)),
 			type: ChannelTypes.GUILD_FORUM,

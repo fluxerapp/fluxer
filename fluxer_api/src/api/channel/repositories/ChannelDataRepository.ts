@@ -15,8 +15,8 @@ import {
 	fetchOne,
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
-import {Db} from '@app/api/database/CassandraTypes';
-import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import {Db, nextVersion} from '@app/api/database/CassandraTypes';
+import {buildPatchFromData} from '@app/api/database/CassandraVersionedUpdate';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {CHANNEL_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import type {ThreadStatsRow} from '@app/api/database/types/ThreadTypes';
@@ -26,6 +26,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {Channel} from '@app/api/models/Channel';
 import {Channels, ChannelsByGuild, PrivateChannels, ThreadOnlyChannelsByGuild, ThreadStats} from '@app/api/Tables';
 import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 
 export type GuildChannelListMode = 'enrolled' | 'maintenance' | 'complete';
 
@@ -43,6 +44,8 @@ const FETCH_THREAD_ONLY_CHANNELS_BY_GUILD_ID = ThreadOnlyChannelsByGuild.select(
 	where: ThreadOnlyChannelsByGuild.where.eq('guild_id'),
 });
 const THREAD_STATS_CAS_ATTEMPTS = 16;
+const CHANNEL_UPDATE_ATTEMPTS = 3;
+const CHANNEL_PK: ReadonlyArray<keyof ChannelRow> = ['channel_id', 'soft_deleted'];
 const FETCH_THREAD_STATS = ThreadStats.select({where: ThreadStats.where.eq('thread_id'), limit: 1});
 const FETCH_OPEN_PRIVATE_CHANNEL_TARGET = PrivateChannels.selectCql({
 	columns: ['user_id'],
@@ -67,31 +70,49 @@ export class ChannelDataRepository {
 		return channel ? new Channel(channel) : null;
 	}
 
+	async create(data: ChannelRow): Promise<Channel> {
+		this.requestCache?.channels.delete(data.channel_id);
+		const version = nextVersion(null);
+		await upsertOne(
+			Channels.patchByPk(
+				{channel_id: data.channel_id, soft_deleted: false},
+				{...buildPatchFromData(data, null, CHANNEL_COLUMNS, CHANNEL_PK), version: Db.set(version)},
+			),
+		);
+		return this.afterWrite({...data, version});
+	}
+
 	async upsert(data: ChannelRow, oldData?: ChannelRow | null): Promise<Channel> {
 		const channelId = data.channel_id;
 		this.requestCache?.channels.delete(channelId);
-		const result = await executeVersionedUpdate<ChannelRow, 'channel_id' | 'soft_deleted'>(
-			async () => fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: channelId, soft_deleted: false})),
-			(current) => ({
-				pk: {channel_id: channelId, soft_deleted: false},
-				patch: buildPatchFromData(data, current, CHANNEL_COLUMNS, ['channel_id', 'soft_deleted']),
-			}),
-			Channels,
-			{initialData: oldData},
-		);
-		if (data.guild_id && !THREAD_CHANNEL_TYPES.has(data.type)) {
+		const base = oldData ?? (await this.fetchRow(channelId));
+		const version = nextVersion(base?.version ?? null);
+		const patch = {...buildPatchFromData(data, base, CHANNEL_COLUMNS, CHANNEL_PK), version: Db.set(version)};
+		let expectedType = base?.type ?? null;
+		for (let attempt = 0; attempt < CHANNEL_UPDATE_ATTEMPTS && expectedType != null; attempt++) {
+			const applied = await executeConditional(
+				Channels.conditionalPatchByPk({channel_id: channelId, soft_deleted: false}, patch, {type: expectedType}),
+			);
+			if (applied) return this.afterWrite({...data, version});
+			expectedType = (await this.fetchRow(channelId))?.type ?? null;
+		}
+		throw new UnknownChannelError();
+	}
+
+	private async fetchRow(channelId: ChannelID): Promise<ChannelRow | null> {
+		return fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: channelId, soft_deleted: false}));
+	}
+
+	private async afterWrite(row: ChannelRow): Promise<Channel> {
+		if (row.guild_id && !THREAD_CHANNEL_TYPES.has(row.type)) {
 			await upsertOne(
-				THREAD_ONLY_CHANNEL_TYPES.has(data.type)
-					? ThreadOnlyChannelsByGuild.upsertAll({guild_id: data.guild_id, channel_id: channelId})
-					: ChannelsByGuild.upsertAll({
-							guild_id: data.guild_id,
-							channel_id: channelId,
-						}),
+				THREAD_ONLY_CHANNEL_TYPES.has(row.type)
+					? ThreadOnlyChannelsByGuild.upsertAll({guild_id: row.guild_id, channel_id: row.channel_id})
+					: ChannelsByGuild.upsertAll({guild_id: row.guild_id, channel_id: row.channel_id}),
 			);
 		}
-		const finalRow: ChannelRow = {...data, version: result.finalVersion ?? 0};
-		await this.writeThroughPrivateChannelMetadata(finalRow);
-		return new Channel(finalRow);
+		await this.writeThroughPrivateChannelMetadata(row);
+		return new Channel(row);
 	}
 
 	async updateLastMessageId(channelId: ChannelID, messageId: MessageID, opts?: {isInsert?: boolean}): Promise<void> {

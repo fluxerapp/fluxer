@@ -223,7 +223,7 @@ describe('thread permission bits across guild modes', () => {
 		const repository = new ChannelRepository();
 		const source = (await repository.channelData.findUnique(createChannelID(BigInt(text.id))))!;
 		const forumId = createChannelID(BigInt(text.id) + 1n);
-		await repository.channelData.upsert({
+		await repository.channelData.create({
 			...source.toRow(),
 			channel_id: forumId,
 			type: ChannelTypes.GUILD_FORUM,
