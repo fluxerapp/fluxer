@@ -3,11 +3,9 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"maps"
 	"net"
 	"net/netip"
@@ -491,7 +489,7 @@ func (in *installer) ensureEngine(ctx context.Context) error {
 
 func dockerInstalled() bool {
 	if path, err := exec.LookPath("docker"); err == nil {
-		return !podmanDockerWrapper(path)
+		return !engine.PodmanDockerWrapper(path)
 	}
 	switch runtime.GOOS {
 	case "windows":
@@ -502,23 +500,6 @@ func dockerInstalled() bool {
 		return fileExists("/Applications/Docker.app") || (home != "" && fileExists(filepath.Join(home, "Applications", "Docker.app")))
 	}
 	return false
-}
-
-func podmanDockerWrapper(path string) bool {
-	if runtime.GOOS != "linux" {
-		return false
-	}
-	if target, err := filepath.EvalSymlinks(path); err == nil && filepath.Base(target) == "podman" {
-		return true
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-	head := make([]byte, 512)
-	n, _ := io.ReadFull(f, head)
-	return bytes.HasPrefix(head[:n], []byte("#!")) && bytes.Contains(head[:n], []byte("podman"))
 }
 
 func (in *installer) startPodman(ctx context.Context) error {

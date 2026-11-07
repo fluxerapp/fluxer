@@ -116,6 +116,9 @@ func (e *Env) diskRole(path string) string {
 	case e.Dir:
 		return fmt.Sprintf("%s, the instance folder,", path)
 	case e.imageStore():
+		if e.Engine == nil {
+			return fmt.Sprintf("%s, where the container engine will keep Fluxer's images and data,", path)
+		}
 		return fmt.Sprintf("%s, where the container engine keeps Fluxer's images and data,", path)
 	}
 	return fmt.Sprintf("%s, the backup folder,", path)
@@ -123,7 +126,7 @@ func (e *Env) diskRole(path string) string {
 
 func (e *Env) installDiskFix(path string) string {
 	if path != e.Dir {
-		return fmt.Sprintf("Free up space on the disk that holds %s, or move the container engine's data root to a bigger disk, then run rexctl doctor.", path)
+		return fmt.Sprintf("Free up space on the disk that holds %s, or move the container engine's data root to a bigger disk, then run rexctl install again.", path)
 	}
 	return fmt.Sprintf("Free up space on the disk that holds %s, or pass --dir with a folder on a bigger disk.", path)
 }
