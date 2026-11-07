@@ -8,6 +8,7 @@ import {
 } from '@app/api/database/CassandraQueryExecution';
 import type {KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
 import {createGiftCodeRow} from '@app/api/models/GiftCode';
+import {GiftCodesByRedeemer} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {GiftCodeRepository} from '@app/api/user/repositories/GiftCodeRepository';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
@@ -59,6 +60,7 @@ class FlakyWrites implements CassandraQueryExecutorForTesting {
 }
 
 const CREATOR = createUserID(1940000000000000001n);
+const REDEEMER = createUserID(1940000000000000002n);
 
 function giftRow(code: string) {
 	return createGiftCodeRow({
@@ -110,5 +112,39 @@ describe('GiftCodeRepository.createGiftCode', () => {
 
 		expect((await repository.findGiftCodesByCreator(CREATOR)).map((gift) => gift.code)).toEqual(['cleangift']);
 		expect((await repository.findGiftCodeByPaymentIntent('pi_cleangift'))?.code).toBe('cleangift');
+	});
+});
+
+describe('GiftCodeRepository.redeemGiftCode', () => {
+	let executor: FlakyWrites;
+	let repository: GiftCodeRepository;
+
+	beforeEach(async () => {
+		executor = new FlakyWrites();
+		setCassandraQueryExecutorForTesting(executor);
+		repository = new GiftCodeRepository();
+		await repository.createGiftCode(giftRow('redeemgift'));
+	});
+
+	afterEach(() => {
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
+	});
+
+	it('writes the redeemer index with the gift code', async () => {
+		await repository.redeemGiftCode('redeemgift', REDEEMER);
+
+		expect((await repository.findGiftCode('redeemgift'))?.redeemedByUserId).toBe(REDEEMER);
+		expect((await repository.findGiftCodesByRedeemer(REDEEMER)).map((gift) => gift.code)).toEqual(['redeemgift']);
+	});
+
+	it('leaves the gift code unredeemed when the redeemer index write is rejected', async () => {
+		executor.failure = {table: GiftCodesByRedeemer.name, outcome: 'reject'};
+		await expect(repository.redeemGiftCode('redeemgift', REDEEMER)).rejects.toThrow();
+		executor.failure = null;
+
+		const gift = await repository.findGiftCode('redeemgift');
+		expect(gift?.redeemedByUserId).toBeNull();
+		expect(gift?.redeemedAt).toBeNull();
+		expect(await repository.findGiftCodesByRedeemer(REDEEMER)).toEqual([]);
 	});
 });
