@@ -143,6 +143,7 @@ Display, motion, message, media, voice and interaction preferences.
 | sequential_file_send? | bool | Whether multiple files are sent one message at a time |
 | mobile_splash_zoom_animation? | bool | Whether the mobile splash screen plays its zoom animation |
 | message_double_click_actions? | bool | Whether double-clicking a message edits your own message or replies to others |
+| announce_call_joins_and_leaves? | bool | Whether a screen reader announces people joining and leaving calls. Clients treat it as on when it's unset |
 
 ### Channel typing indicator modes
 
