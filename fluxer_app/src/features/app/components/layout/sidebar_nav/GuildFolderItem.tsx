@@ -765,7 +765,7 @@ interface MiniGuildIconProps {
 }
 
 const MiniGuildIcon = observer(({guild}: MiniGuildIconProps) => {
-	const iconURL = useRecoveringBackgroundImageURL(AvatarSourceUtils.getGuildIconURL(guild, false));
+	const iconURL = useRecoveringBackgroundImageURL(AvatarSourceUtils.getGuildRailIconURL(guild, false));
 	if (iconURL != null) {
 		return (
 			<flx-app-mini-guild-icon

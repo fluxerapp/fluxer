@@ -149,7 +149,7 @@ function GuildListItemBadges({
 }
 
 function CombinePreviewIcon({guild}: {readonly guild: Guild}) {
-	const url = AvatarSourceUtils.getGuildIconURL(guild, false);
+	const url = AvatarSourceUtils.getGuildRailIconURL(guild, false);
 	const backgroundStyle: React.CSSProperties = {};
 	if (url.length > 0) {
 		backgroundStyle.backgroundImage = `url(${url})`;

@@ -54,6 +54,11 @@
 		background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
 }
 
+.modalRoot.modalRoot.modalRoot {
+	--settings-modal-inner-radius: calc(clamp(0.5rem, 1vw, 0.75rem) - 0.0625rem);
+	overflow: visible;
+}
+
 .containerFullscreen {
 	--settings-edge-gutter: clamp(1rem, 3vw, 1.5rem);
 	max-width: 87.5rem;
@@ -95,8 +100,10 @@
 	flex: 0 0 clamp(15.75rem, 24svw, 20rem);
 	display: flex;
 	border-inline-end: 0.0625rem solid var(--settings-border-color);
+	border-start-start-radius: var(--settings-modal-inner-radius, 0);
+	border-end-start-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--settings-surface-background);
-	overflow: hidden;
+	min-width: 0;
 	position: relative;
 }
 
@@ -108,6 +115,8 @@
 	height: 100%;
 	flex: 1 1 auto;
 	min-width: 0;
+	position: relative;
+	overflow: hidden;
 }
 
 .desktopSidebar,
@@ -124,10 +133,11 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	border-start-end-radius: var(--settings-modal-inner-radius, 0);
+	border-end-end-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--background-secondary);
 	min-width: 0;
 	min-height: 0;
-	overflow: hidden;
 }
 
 .desktopContentPad {
@@ -161,6 +171,7 @@
 	justify-content: space-between;
 	padding: 0 1rem;
 	flex-shrink: 0;
+	border-start-end-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--background-secondary);
 	border-bottom: 0.0625rem solid var(--settings-border-color);
 	contain: layout style paint;
@@ -171,6 +182,14 @@
 	min-height: 0;
 	overflow-anchor: none;
 	scroll-padding-top: 0;
+}
+
+.desktopScroll + [data-flx='ui.scroller.scroller-track.presentation.track-pointer-down'] {
+	clip-path: inset(-100vh 0 0 -100vw round var(--settings-modal-inner-radius, 0));
+}
+
+:global(html[dir='rtl']) .desktopScroll + [data-flx='ui.scroller.scroller-track.presentation.track-pointer-down'] {
+	clip-path: inset(-100vh -100vw 0 0 round var(--settings-modal-inner-radius, 0));
 }
 
 .desktopScrollInner {

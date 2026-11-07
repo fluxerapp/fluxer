@@ -29,8 +29,15 @@ const USER_STYLE_ELEMENT_IDS: ReadonlySet<string> = new Set([
 	INSTANCE_CUSTOM_CSS_ELEMENT_ID,
 ]);
 
+const USER_STYLESHEETS_CLASS = 'user-stylesheets';
+
 export function excludeUserStylesheets(node: Element): boolean {
 	return USER_STYLE_ELEMENT_IDS.has(node.id);
+}
+
+function syncUserStylesheetsClass(): void {
+	const applied = [...USER_STYLE_ELEMENT_IDS].some((id) => document.getElementById(id) !== null);
+	document.documentElement.classList.toggle(USER_STYLESHEETS_CLASS, applied);
 }
 
 interface CustomThemeStyleOptions {
@@ -54,6 +61,7 @@ export function useInstanceCustomCss(instanceCss: string | null, gatedOrigins: R
 		if (!css) {
 			if (existing) {
 				existing.remove();
+				syncUserStylesheetsClass();
 				clearRemScaleCache();
 			}
 			return;
@@ -64,6 +72,7 @@ export function useInstanceCustomCss(instanceCss: string | null, gatedOrigins: R
 		if (!existing) {
 			document.head.insertBefore(styleElement, document.getElementById(CUSTOM_THEME_STYLE_ELEMENT_ID));
 		}
+		syncUserStylesheetsClass();
 		clearRemScaleCache();
 	}, [instanceCss, gatedOriginsKey]);
 }
@@ -137,6 +146,7 @@ function writeThemeStyle(applier: ThemeCssApplier, css: string, objectUrls: Arra
 		revokeObjectUrls(applier.objectUrls);
 		applier.objectUrls = objectUrls;
 	}
+	syncUserStylesheetsClass();
 	clearRemScaleCache();
 }
 

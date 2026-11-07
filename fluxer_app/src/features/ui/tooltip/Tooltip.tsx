@@ -46,6 +46,8 @@ const logger = new Logger('Tooltip');
 export type TooltipPosition = 'top' | 'left' | 'right' | 'bottom';
 type TooltipType = 'normal' | 'error';
 
+const HOVER_VERIFY_INTERVAL_MS = 100;
+
 const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,
 	ancestorResize: true,
@@ -679,21 +681,13 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!tooltipModel.hovered || tooltipModel.dismissed || mobileLayout.enabled) return;
 			const ownerWindow = getTooltipOwnerWindow();
-			let frameId: number | null = null;
-			const verifyTargetHover = () => {
-				const target = targetRef.current;
-				if (!target?.matches(':hover')) {
+			const intervalId = ownerWindow.setInterval(() => {
+				if (!targetRef.current?.matches(':hover')) {
 					endVisibilityDriver('hover');
-					frameId = null;
-					return;
 				}
-				frameId = ownerWindow.requestAnimationFrame(verifyTargetHover);
-			};
-			frameId = ownerWindow.requestAnimationFrame(verifyTargetHover);
+			}, HOVER_VERIFY_INTERVAL_MS);
 			return () => {
-				if (frameId != null) {
-					ownerWindow.cancelAnimationFrame(frameId);
-				}
+				ownerWindow.clearInterval(intervalId);
 			};
 		}, [
 			endVisibilityDriver,

@@ -2,7 +2,11 @@ import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {DESKTOP_PREBOOT_THEME_CHANNEL, LOCAL_DEVELOPMENT_INSTANCE_URL} from '@electron/common/Constants';
+import {
+	DESKTOP_PREBOOT_THEME_CHANNEL,
+	LOCAL_DEVELOPMENT_INSTANCE_URL,
+	RELEASE_RENDERER_MEMORY_CHANNEL,
+} from '@electron/common/Constants';
 import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {readExactPlainRecord} from '@electron/common/PlainRecord';
 import type {
@@ -937,6 +941,10 @@ ipcRenderer.on('spellcheck-engine-resolved', (_event, info: SpellcheckResolvedEn
 	if (info?.mode === 'hunspell') {
 		installSpellcheckProvider();
 	}
+});
+
+ipcRenderer.on(RELEASE_RENDERER_MEMORY_CHANNEL, () => {
+	webFrame.clearCache();
 });
 
 contextBridge.exposeInMainWorld('electron', api);

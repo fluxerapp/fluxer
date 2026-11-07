@@ -2287,6 +2287,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 				<TopNagbarContext.Provider value={activeNagbars.length}>
 					<OutlineFrame
 						className={clsx(styles.outlineFrame, isVoiceCallFullscreenActive && styles.outlineFrameFullscreen)}
+						cornerCap={!isVoiceCallFullscreenActive}
 						sidebarDivider={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
 						sidebarResizeHandle={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
 						nagbar={

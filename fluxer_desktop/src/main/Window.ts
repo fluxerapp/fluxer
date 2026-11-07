@@ -26,6 +26,7 @@ import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/Deskt
 import {wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
 import {isNativeGatewayAvailable} from '@electron/main/GatewaySocketNativeBoundary';
+import {armHiddenWindowMemoryRelease} from '@electron/main/HiddenWindowMemory';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
 import {getDesktopLocalAppAuthorization} from '@electron/main/LocalAppProtocolAuthorization';
 import {isLocalAppRendererDocumentURL, isLocalAppURL} from '@electron/main/LocalAppURL';
@@ -736,6 +737,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		windowOptions.center = true;
 	}
 	mainWindow = new BrowserWindow(windowOptions);
+	armHiddenWindowMemoryRelease(mainWindow);
 	signalMainWindowCreated(mainWindow);
 	mainWindowRendererGone = false;
 	installHtmlFullscreenChromeGuard(mainWindow);

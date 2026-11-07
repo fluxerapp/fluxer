@@ -12,6 +12,7 @@
 	position: relative;
 	overflow: hidden;
 	contain: strict;
+	content-visibility: auto;
 	transition: none;
 	padding-top: 1rem;
 	padding-bottom: var(--message-filler-padding-bottom);

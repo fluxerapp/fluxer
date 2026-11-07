@@ -145,7 +145,6 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	const hasBlockingModal = Modal.hasModalOpen();
 	const room = MediaEngine.room;
 	const ringsContainerRef = useRef<HTMLDivElement>(null);
-	const overlayScopeRef = useRef<HTMLDivElement>(null);
 	useElectronScreenSharePicker();
 	useTextInputContextMenu();
 	const handleSkipLinkFocus = useTabKeyFocusGuard();
@@ -262,7 +261,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 						{children}
 					</FocusRingScope>
 				</div>
-				<div ref={overlayScopeRef} className={styles.overlayScope} data-flx="app.app.app-wrapper.overlay-scope">
+				<div className={styles.overlayScope} data-flx="app.app.app-wrapper.overlay-scope">
 					<NekoSprite data-flx="app.app.app-wrapper.neko-sprite" />
 					<div
 						id={QUICK_SWITCHER_PORTAL_ID}

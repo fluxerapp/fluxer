@@ -521,6 +521,10 @@
 	--outline-radius: 0px;
 }
 
+.outlineFrame.outlineFrameFullscreen {
+	--outline-frame-clip-radius: 0px;
+}
+
 .outlineFrameFullscreen {
 	border: none;
 	border-radius: 0;
@@ -540,6 +544,7 @@
 }
 
 :global(html.platform-native) .outlineFrame {
+	--outline-frame-top-border-width: 0.0625rem;
 	border-top: 0.0625rem solid var(--user-area-divider-color);
 	--outline-radius: var(--outline-frame-radius-native);
 }

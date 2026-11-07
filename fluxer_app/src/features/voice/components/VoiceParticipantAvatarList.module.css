@@ -41,18 +41,10 @@
 	transform-origin: center;
 }
 
-.wrapAvatarSlotAnimated {
-	will-change: width, flex-basis;
-}
-
 .wrapAvatar {
 	width: var(--voice-participant-avatar-size);
 	height: var(--voice-participant-avatar-size);
 	flex: 0 0 var(--voice-participant-avatar-size);
-}
-
-.wrapAvatarAnimated {
-	will-change: opacity, transform;
 }
 
 .remainingCount {

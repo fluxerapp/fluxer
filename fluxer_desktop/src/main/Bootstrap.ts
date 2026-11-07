@@ -188,6 +188,7 @@ async function runModuleBootstrap(): Promise<void> {
 	const {buildSplashDiagnosticsText} = await import('@electron/main/SplashDiagnostics');
 	const {
 		closeSplashWindow,
+		discardPreloadedSplashWindow,
 		focusSplashWindow,
 		markSplashLaunching,
 		onSplashCopyDiagnostics,
@@ -637,15 +638,27 @@ async function runModuleBootstrap(): Promise<void> {
 		let takeoverSplash: BrowserWindow | null = null;
 		let takeoverHidden: ReadonlyArray<BrowserWindow> = [];
 		let takeoverActive = false;
-		const preloadUpdateSplash = (): void => {
+		let launchSettled = false;
+		let shellUpdatePending = false;
+		const syncUpdateSplashPreload = (): void => {
+			if (takeoverActive) return;
+			if (!shellUpdatePending) {
+				discardPreloadedSplashWindow();
+				return;
+			}
+			if (!launchSettled) return;
 			const timer = setTimeout(() => {
-				if (takeoverActive) return;
+				if (takeoverActive || !shellUpdatePending) return;
 				void import('@electron/main/Window').then((windows) => {
 					takeoverWindows = windows;
-					if (!takeoverActive) preloadSplashWindow();
+					if (!takeoverActive && shellUpdatePending) preloadSplashWindow();
 				});
 			}, UPDATE_SPLASH_PRELOAD_DELAY_MS);
 			timer.unref();
+		};
+		const trackShellUpdate = (check: {readonly shellNewer: boolean}): void => {
+			shellUpdatePending = check.shellNewer;
+			syncUpdateSplashPreload();
 		};
 		const updateTakeover: DesktopUpdateTakeover = {
 			begin: async () => {
@@ -687,7 +700,7 @@ async function runModuleBootstrap(): Promise<void> {
 				takeoverHidden = [];
 				closeSplashWindow();
 				takeoverActive = false;
-				preloadUpdateSplash();
+				syncUpdateSplashPreload();
 			},
 			closeApp: async () => {
 				if (takeoverSplash != null) {
@@ -699,7 +712,7 @@ async function runModuleBootstrap(): Promise<void> {
 				takeoverWindows?.endMainWindowTakeover();
 				takeoverActive = false;
 				reopenMainWindow(launchAttempt);
-				preloadUpdateSplash();
+				syncUpdateSplashPreload();
 			},
 			reloadInPlace: async (launchAttempt) => {
 				const windows = takeoverWindows ?? (await import('@electron/main/Window'));
@@ -762,6 +775,7 @@ async function runModuleBootstrap(): Promise<void> {
 					takeover: updateTakeover,
 					publish: (check) => {
 						recordPendingUpdate(check);
+						trackShellUpdate(check);
 						publishDesktopUpdateCheck(check);
 					},
 					reportFailure: (failure) => {
@@ -800,6 +814,7 @@ async function runModuleBootstrap(): Promise<void> {
 				check: async (manual) => {
 					const check = await desktopUpdate.check({manual});
 					recordPendingUpdate(check);
+					trackShellUpdate(check);
 					return check;
 				},
 				start: () => desktopUpdate.start(),
@@ -810,7 +825,8 @@ async function runModuleBootstrap(): Promise<void> {
 				return;
 			}
 			desktopUpdate.markLaunchSettled();
-			preloadUpdateSplash();
+			launchSettled = true;
+			syncUpdateSplashPreload();
 			armDesktopUpdatePoll(
 				{
 					plan: resolveModulePollPlan(readDevModulePollInterval()),

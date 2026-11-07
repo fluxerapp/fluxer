@@ -596,7 +596,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			return (
 				<motion.div
 					key={shouldAnimateAvatarChanges ? `${slot.key}:motion` : `${slot.key}:static`}
-					className={clsx(styles.wrapAvatarSlot, shouldAnimateAvatarChanges && styles.wrapAvatarSlotAnimated)}
+					className={styles.wrapAvatarSlot}
 					onContextMenu={(event) => handleContextMenu(event, slot.entry)}
 					initial={shouldAnimateAvatarChanges && isEntering ? {width: 0, flexBasis: 0} : false}
 					animate={
@@ -609,7 +609,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 					data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot"
 				>
 					<motion.div
-						className={clsx(styles.wrapAvatar, shouldAnimateAvatarChanges && styles.wrapAvatarAnimated)}
+						className={styles.wrapAvatar}
 						initial={shouldAnimateAvatarChanges && isEntering ? {opacity: 0, scale: 0.92} : false}
 						animate={
 							shouldAnimateAvatarChanges ? {opacity: isCollapsed ? 0 : 1, scale: isCollapsed ? 0.9 : 1} : undefined

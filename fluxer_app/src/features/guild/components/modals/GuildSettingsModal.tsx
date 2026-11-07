@@ -5,6 +5,7 @@ import {DesktopGuildSettingsView} from '@app/features/app/components/dialogs/com
 import {MobileGuildSettingsView} from '@app/features/app/components/dialogs/components/MobileGuildSettingsView';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsModalContainer} from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
+import settingsModalStyles from '@app/features/app/components/dialogs/shared/SettingsModalLayout.module.css';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import GuildSettingsModalState from '@app/features/guild/state/GuildSettingsModal';
@@ -158,7 +159,12 @@ export const GuildSettingsModal: React.FC<GuildSettingsModalProps> = observer(
 			return null;
 		}
 		return (
-			<Modal.Root size="fullscreen" onClose={handleClose} data-flx="guild.guild-settings-modal.modal-root">
+			<Modal.Root
+				size="fullscreen"
+				className={settingsModalStyles.modalRoot}
+				onClose={handleClose}
+				data-flx="guild.guild-settings-modal.modal-root"
+			>
 				<Modal.ScreenReaderLabel
 					text={i18n._(GUILD_SETTINGS_LABEL_DESCRIPTOR)}
 					data-flx="guild.guild-settings-modal.modal-screen-reader-label"
