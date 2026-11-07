@@ -66,11 +66,10 @@ import {type StepTitleChangeHandler, useReportStepTitle} from '@app/features/aut
 import {getAuthErrorMessage} from '@app/features/auth/hooks/useAuthForm';
 import {
 	PasskeyLoginCapability,
-	resolveInitialPasskeyLoginCapability,
-	resolvePasskeyLoginCapability,
 	type StoredAccountLoginPayload,
 	useAccountSwitchController,
 	useLoginFormController,
+	useResolvedPasskeyLoginCapability,
 } from '@app/features/auth/hooks/useLoginFlow';
 import {isPasskeyAvailableForCurrentClient} from '@app/features/auth/PasskeyAvailability';
 import {usePasskeyBridgeReturn} from '@app/features/auth/passkey_migration/usePasskeyBridgeReturn';
@@ -518,9 +517,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		initialInstanceSelected,
 		startWithAddAccount,
 	});
-	const [passkeyLoginCapability, setPasskeyLoginCapability] = useState<PasskeyLoginCapability>(
-		resolveInitialPasskeyLoginCapability,
-	);
+	const passkeyLoginCapability = useResolvedPasskeyLoginCapability();
 	const {
 		showWelcome: showClientWelcome,
 		showPreferences: shouldShowClientPreferencesStep,
@@ -569,7 +566,6 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 			redirectPath: redirectPath ?? undefined,
 			inviteCode: inviteCode ?? undefined,
 			runtimeSnapshot: resolvedAuthRuntimeSnapshot,
-			onDesktopPasskeyHandoff: handleShowBrowserStep,
 			onLoginSuccess: handleLoginSuccess,
 			onRequireMfa: (challenge) => {
 				AuthenticationCommands.setMfaTicket({
@@ -644,20 +640,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		onSessionExpired: showMethodsForStoredAccount,
 		onLoginWithStoredAccount: handleStoredAccountLogin,
 	});
-	useEffect(() => {
-		let cancelled = false;
-		void resolvePasskeyLoginCapability()
-			.catch(() => PasskeyLoginCapability.UNAVAILABLE)
-			.then((capability) => {
-				if (!cancelled) {
-					setPasskeyLoginCapability(capability);
-				}
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, []);
-	const showPasskeyOption = passkeyLoginCapability !== PasskeyLoginCapability.UNAVAILABLE;
+	const showPasskeyOption = passkeyLoginCapability === PasskeyLoginCapability.AVAILABLE;
 	const passkeyControlsDisabled =
 		isLoading || Boolean(form.isSubmitting) || isPasskeyLoading || isPasskeyBridgeRedeeming;
 	const handleContinueFromInstance = useCallback(
