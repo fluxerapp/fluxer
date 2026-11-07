@@ -47,13 +47,18 @@ func (s BootUnitState) Needed() bool {
 	return s.Supported && (s.Missing || s.Stale || s.CopyStale || s.Disabled || s.NoLinger)
 }
 
-func BootUnitSupported() bool {
-	if runtime.GOOS != "linux" || !has("systemctl") {
-		return false
+var (
+	systemUnitDir     = "/etc/systemd/system"
+	bootUnitSupported = func() bool {
+		if runtime.GOOS != "linux" || !has("systemctl") {
+			return false
+		}
+		_, err := os.Stat("/run/systemd/system")
+		return err == nil
 	}
-	_, err := os.Stat("/run/systemd/system")
-	return err == nil
-}
+)
+
+func BootUnitSupported() bool { return bootUnitSupported() }
 
 func (u BootUnit) Name() string { return u.Project + ".service" }
 
@@ -67,7 +72,7 @@ func (u BootUnit) Path() (string, error) {
 
 func unitDir(rootless bool) (string, error) {
 	if !rootless {
-		return "/etc/systemd/system", nil
+		return systemUnitDir, nil
 	}
 	dir := os.Getenv("XDG_CONFIG_HOME")
 	if dir == "" {
@@ -124,6 +129,10 @@ func (u BootUnit) render(waitNetwork bool, runAs string) string {
 	}
 	bin := systemdQuote(u.execPath())
 	dir := systemdQuote(u.Dir)
+	refresh := ""
+	if runAs != "" {
+		refresh = fmt.Sprintf("-+/usr/bin/install -D -m 0755 %s %s\n", systemdQuote(u.Binary), LibexecBinary)
+	}
 	var b strings.Builder
 	b.WriteString("[Unit]\n")
 	fmt.Fprintf(&b, "Description=Fluxer in %s\n", strings.ReplaceAll(u.Dir, "%", "%%"))
@@ -140,7 +149,13 @@ func (u BootUnit) render(waitNetwork bool, runAs string) string {
 	if runAs != "" {
 		fmt.Fprintf(&b, "User=%s\n", runAs)
 	}
+	if refresh != "" {
+		b.WriteString("ExecStartPre=" + refresh)
+	}
 	fmt.Fprintf(&b, "ExecStart=%s start --boot --dir %s\n", bin, dir)
+	if refresh != "" {
+		b.WriteString("ExecStop=" + refresh)
+	}
 	fmt.Fprintf(&b, "ExecStop=%s stop --boot --dir %s\n", bin, dir)
 	b.WriteString("TimeoutStartSec=15min\n")
 	fmt.Fprintf(&b, "TimeoutStopSec=%d\n", int(BootStopTimeout(u.StopGrace).Seconds()))
@@ -160,12 +175,15 @@ func systemdQuote(s string) string {
 	return `"` + s + `"`
 }
 
-func (u BootUnit) content(ctx context.Context) string {
-	runAs := ""
-	if !u.Rootless && !u.Podman {
-		runAs = dirOwner(u.Dir)
+func (u BootUnit) runAs() string {
+	if u.Rootless || u.Podman {
+		return ""
 	}
-	return u.render(u.Rootless && unitExists(ctx, true, userWaitNetwork), runAs)
+	return dirOwner(u.Dir)
+}
+
+func (u BootUnit) content(ctx context.Context) string {
+	return u.render(u.Rootless && unitExists(ctx, true, userWaitNetwork), u.runAs())
 }
 
 func unitExists(ctx context.Context, rootless bool, name string) bool {
@@ -223,7 +241,7 @@ func CheckBootUnit(ctx context.Context, u BootUnit) (BootUnitState, error) {
 		s.Stale = string(data) != u.content(ctx)
 		s.Disabled = !unitIs(ctx, u.Rootless, u.Name(), "enabled")
 	}
-	if !u.Rootless {
+	if !u.Rootless && u.runAs() == "" {
 		s.CopyStale = !sameFile(u.Binary, LibexecBinary)
 	}
 	if u.Rootless {
@@ -270,22 +288,19 @@ func (u BootUnit) InstallSteps(ctx context.Context) ([]Step, error) {
 	return steps, nil
 }
 
-func RefreshBootUnit(ctx context.Context, u BootUnit) error {
+func (u BootUnit) RefreshSteps(ctx context.Context) ([]Step, error) {
 	if !BootUnitSupported() {
-		return nil
+		return nil, nil
 	}
 	path, err := u.Path()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil
+		return nil, nil
 	}
 	steps, _, err := u.writeSteps(ctx)
-	if err != nil {
-		return err
-	}
-	return RunSteps(ctx, steps)
+	return steps, err
 }
 
 func (u BootUnit) RemoveSteps(ctx context.Context) ([]Step, error) {
@@ -351,18 +366,20 @@ func (u BootUnit) writeSteps(ctx context.Context) ([]Step, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+	content := []byte(u.content(ctx))
+	old, readErr := os.ReadFile(path)
+	write := readErr != nil || !bytes.Equal(old, content)
 	var steps []Step
-	if !u.Rootless && !sameFile(u.Binary, LibexecBinary) {
+	if !u.Rootless && (write || u.runAs() == "") && !sameFile(u.Binary, LibexecBinary) {
 		steps = append(steps, Step{
 			Do:      "Copies this rexctl to " + LibexecBinary + " for the service to use.",
 			Command: rootCmd("install " + strings.Join(installArgs(u.Binary, LibexecBinary), " ")),
 			Run:     func(ctx context.Context) error { return installBinary(ctx, true, u.Binary, LibexecBinary) },
 		})
 	}
-	content := []byte(u.content(ctx))
-	if old, err := os.ReadFile(path); err != nil || !bytes.Equal(old, content) {
+	if write {
 		undo := ""
-		if os.IsNotExist(err) {
+		if os.IsNotExist(readErr) {
 			undo = joinCommands(u.removeSteps(path, false))
 		}
 		steps = append(steps, Step{
@@ -407,14 +424,12 @@ func installArgs(src, dst string) []string {
 	return append(args, src, dst)
 }
 
-var asRoot = isRoot
-
 func unitFiles(project string) (map[string]bool, error) {
 	boot, upgrade := BootUnit{Project: project}.Name(), AutoUpgrade{Project: project}.ServiceName()
 	units := map[string]bool{
-		filepath.Join("/etc/systemd/system", boot):    true,
-		filepath.Join("/etc/systemd/system", upgrade): true,
-		filepath.Join(cronDir, project+"-upgrade"):    true,
+		filepath.Join(systemUnitDir, boot):         true,
+		filepath.Join(systemUnitDir, upgrade):      true,
+		filepath.Join(cronDir, project+"-upgrade"): true,
 	}
 	if asRoot() {
 		return units, nil

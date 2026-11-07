@@ -1349,12 +1349,22 @@ func installBootUnit(ctx context.Context, inst *instance.Instance, e *engine.Eng
 	return host.RunSteps(ctx, steps)
 }
 
-func refreshBootUnit(ctx context.Context, inst *instance.Instance, e *engine.Engine, p *engine.Project) error {
+func refreshBootUnit(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, p *engine.Project) error {
 	u, err := checks.BootUnitFor(inst, e, p)
 	if err != nil {
 		return err
 	}
-	return host.RefreshBootUnit(ctx, u)
+	steps, err := u.RefreshSteps(ctx)
+	if err != nil || len(steps) == 0 {
+		return err
+	}
+	if !u.Rootless && euid() != 0 {
+		app.UI.Info("Updating the service that starts Fluxer with this machine needs root, so sudo may ask for your password.")
+		for _, s := range steps {
+			app.UI.Info("  %s", s.Do)
+		}
+	}
+	return host.RunSteps(ctx, steps)
 }
 
 func (in *installer) waitCertificate(ctx context.Context, inst *instance.Instance, p *engine.Project) {
