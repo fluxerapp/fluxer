@@ -462,8 +462,35 @@ export class AttachmentProcessingService {
 		} else {
 			await this.scanContentModerationWithLocalFile({localPath: null, bucket, key, message});
 		}
-		if (!isSupportedMediaContentType(attachment.content_type)) {
+		return this.classifyStoredMedia({attachment, bucket, key, nsfwMode});
+	}
+
+	async classifyStoredMedia(params: {
+		attachment: MessageAttachment;
+		bucket: string;
+		key: string;
+		nsfwMode: MediaProxyNsfwMode;
+	}): Promise<MessageAttachment> {
+		const {attachment, bucket, key, nsfwMode} = params;
+		if (!(await this.isExplicitStoredMedia({contentType: attachment.content_type, bucket, key, nsfwMode}))) {
 			return attachment;
+		}
+		return {
+			...attachment,
+			nsfw: true,
+			flags: attachment.flags | MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA,
+		};
+	}
+
+	async isExplicitStoredMedia(params: {
+		contentType: string | null;
+		bucket: string;
+		key: string;
+		nsfwMode: MediaProxyNsfwMode;
+	}): Promise<boolean> {
+		const {contentType, bucket, key, nsfwMode} = params;
+		if (!contentType || !isSupportedMediaContentType(contentType)) {
+			return false;
 		}
 		let metadata: MediaProxyMetadataResponse | null;
 		try {
@@ -473,17 +500,10 @@ export class AttachmentProcessingService {
 				await this.storageService.deleteObject(bucket, key);
 				throw error;
 			}
-			Logger.warn({error, context: METADATA_PROBE_DEGRADED_CONTEXT, key}, 'Favorite meme media probe failed');
-			return attachment;
+			Logger.warn({error, context: METADATA_PROBE_DEGRADED_CONTEXT, key}, 'Stored media probe failed');
+			return false;
 		}
-		if (!metadata?.nsfw) {
-			return attachment;
-		}
-		return {
-			...attachment,
-			nsfw: true,
-			flags: attachment.flags | MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA,
-		};
+		return metadata?.nsfw === true;
 	}
 
 	private async getAttachmentMediaMetadata(params: {

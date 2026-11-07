@@ -332,7 +332,7 @@ export async function createMessageSnapshotsForForward(
 
 export const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG = 1 << 30;
 
-function isOwnedEmbedAttachment(media: Pick<MessageEmbedMedia, 'flags'>): boolean {
+export function isOwnedEmbedAttachment(media: Pick<MessageEmbedMedia, 'flags'>): boolean {
 	return (media.flags & EMBED_MEDIA_OWNED_ATTACHMENT_FLAG) !== 0;
 }
 
@@ -387,6 +387,18 @@ async function cloneOwnedEmbedAttachments(
 			media.flags |= EMBED_MEDIA_OWNED_ATTACHMENT_FLAG;
 		}
 	}
+}
+
+export function ownedEmbedAttachmentKeys(embeds: ReadonlyArray<MessageEmbed>, channelId: ChannelID): Set<string> {
+	const mediaPrefix = `${Config.endpoints.media}/`;
+	const ownPrefix = `${mediaPrefix}attachments/${channelId}/`;
+	const keys = new Set<string>();
+	forEachEmbedMedia(embeds, (media) => {
+		if (media.url?.startsWith(ownPrefix) && isOwnedEmbedAttachment(media)) {
+			keys.add(media.url.slice(mediaPrefix.length));
+		}
+	});
+	return keys;
 }
 
 export function collectOwnedEmbedAttachments(message: Message): Array<{key: string; media: MessageEmbedMedia}> {

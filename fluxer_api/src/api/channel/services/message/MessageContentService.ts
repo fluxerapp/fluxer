@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import {
+	channelToContentWarningView,
+	computeEffectiveChannelNsfw,
+	guildResponseToContentWarningView,
+} from '@app/api/channel/utils/EffectiveContentWarning';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -21,10 +26,15 @@ export interface DmNsfwContext {
 
 interface NsfwScope {
 	channel?: Channel;
+	parentCategory?: Channel | null;
 	guild?: GuildResponse | null;
 	member?: GuildMemberResponse | null;
 	isBot?: boolean;
 	dmNsfwContext?: DmNsfwContext;
+}
+
+function isGuildMessageChannel(channel: Channel): boolean {
+	return GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type);
 }
 
 export class MessageContentService {
@@ -106,15 +116,26 @@ export class MessageContentService {
 		if (!this.isNSFWContentAllowed(params)) {
 			return 'block';
 		}
-		return this.isMatureContext(params) ? 'allow' : 'flag';
+		return this.skipsMediaScan(params) ? 'allow' : 'flag';
 	}
 
-	private isMatureContext({channel, guild}: NsfwScope): boolean {
-		if (
-			channel &&
-			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
-			channel.isNsfw
-		) {
+	skipsMediaScan(params: NsfwScope): boolean {
+		if (!this.isMatureContext(params)) {
+			return false;
+		}
+		const {channel, parentCategory, guild} = params;
+		if (!channel || !guild || !isGuildMessageChannel(channel)) {
+			return true;
+		}
+		return computeEffectiveChannelNsfw(
+			channelToContentWarningView(channel),
+			parentCategory ? channelToContentWarningView(parentCategory) : null,
+			guildResponseToContentWarningView(guild),
+		);
+	}
+
+	isMatureContext({channel, guild}: NsfwScope): boolean {
+		if (channel && isGuildMessageChannel(channel) && channel.isNsfw) {
 			return true;
 		}
 		if (channel?.type === ChannelTypes.DM_PERSONAL_NOTES) {
