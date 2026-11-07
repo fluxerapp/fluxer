@@ -3,6 +3,7 @@
 use crate::{
     config::Config,
     server::{
+        relay::body::{RelayBodyStream, RelayBodyStreamRequest, relay_body_chunks},
         routes::relay::{relay_error, relay_put},
         state::AppState,
     },
@@ -18,7 +19,12 @@ use axum::{
 };
 use base64::engine::general_purpose::STANDARD;
 use bytes::Bytes;
-use std::{collections::HashMap, sync::Arc};
+use futures_util::StreamExt as _;
+use std::{
+    collections::HashMap,
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
 fn upload_relay_test_config(
     mode: &str,
@@ -210,6 +216,30 @@ async fn relay_put_never_forwards_an_injected_content_type_upstream() {
         assert!(!value.as_bytes().windows(8).any(|w| w == b"Injected"));
     }
     assert!(response.headers().get(header::ETAG).is_none());
+}
+
+#[tokio::test]
+async fn relay_body_chunks_coalesce_small_client_frames() {
+    let payload: Vec<u8> = (0..300_000u32).map(|i| (i % 251) as u8).collect();
+    let frames: Vec<Result<Bytes, std::io::Error>> = payload
+        .chunks(1400)
+        .map(|frame| Ok(Bytes::copy_from_slice(frame)))
+        .collect();
+    let stream = RelayBodyStream::new(RelayBodyStreamRequest {
+        body: Body::from_stream(futures_util::stream::iter(frames)),
+        declared_length: payload.len() as u64,
+        deadline: tokio::time::Instant::now() + Duration::from_secs(30),
+        failure: Arc::new(OnceLock::new()),
+    });
+
+    let chunks: Vec<Bytes> = relay_body_chunks(stream)
+        .map(|chunk| chunk.unwrap())
+        .collect()
+        .await;
+
+    assert_eq!(5, chunks.len());
+    assert!(chunks[..4].iter().all(|chunk| chunk.len() >= 64 * 1024));
+    assert_eq!(payload, chunks.concat());
 }
 
 use fluxer_common::secret::SecretBytes;
