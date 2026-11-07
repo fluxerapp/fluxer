@@ -12,7 +12,8 @@
     clear_shard_pid/1,
     lookup_cached_guild_pid/1,
     maybe_cache_guild_pid/3,
-    cleanup_guild_from_cache/1
+    cleanup_guild_from_cache/1,
+    forget_cached_guild_pid/2
 ]).
 
 -type guild_id() :: integer().
@@ -120,6 +121,14 @@ cleanup_guild_from_cache(Pid) ->
     Matches = safe_match_object(?GUILD_PID_CACHE, {'$1', Pid}),
     lists:foreach(fun delete_cached_match/1, Matches),
     ok.
+
+-spec forget_cached_guild_pid(guild_id(), pid()) -> ok.
+forget_cached_guild_pid(GuildId, Pid) ->
+    try ets:delete_object(?GUILD_PID_CACHE, {GuildId, Pid}) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
 
 -spec delete_cached_match(term()) -> ok.
 delete_cached_match({GuildId, _Pid}) ->

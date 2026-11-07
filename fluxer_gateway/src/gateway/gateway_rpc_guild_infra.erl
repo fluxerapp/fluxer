@@ -299,12 +299,18 @@ cache_and_return_guild_pid(GuildId, Pid) ->
 -spec cache_guild_pid(integer(), pid()) -> ok.
 cache_guild_pid(GuildId, Pid) ->
     try ets:insert(guild_pid_cache, {GuildId, Pid}) of
-        _ -> ok
+        _ -> watch_remote_guild_pid(GuildId, Pid)
     catch
         throw:_Reason -> ok;
         error:_Reason -> ok;
         exit:_Reason -> ok
     end.
+
+-spec watch_remote_guild_pid(integer(), pid()) -> ok.
+watch_remote_guild_pid(_GuildId, Pid) when node(Pid) =:= node() ->
+    ok;
+watch_remote_guild_pid(GuildId, Pid) ->
+    gen_server:cast(guild_manager, {watch_cached_guild_pid, GuildId, Pid}).
 
 -spec delete_cached_guild_pid(integer(), pid()) -> ok.
 delete_cached_guild_pid(GuildId, Pid) ->
