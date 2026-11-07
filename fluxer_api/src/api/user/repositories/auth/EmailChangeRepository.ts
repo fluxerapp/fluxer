@@ -3,6 +3,9 @@
 import {deleteOneOrMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {EmailChangeTicketRow, EmailChangeTokenRow} from '@app/api/database/types/AuthTypes';
 import {EmailChangeTickets, EmailChangeTokens} from '@app/api/Tables';
+import {seconds} from 'itty-time';
+
+const EMAIL_CHANGE_RETENTION_SECONDS = seconds('1 day');
 
 const FETCH_TICKET_CQL = EmailChangeTickets.selectCql({
 	where: EmailChangeTickets.where.eq('ticket'),
@@ -15,11 +18,11 @@ const FETCH_TOKEN_CQL = EmailChangeTokens.selectCql({
 
 export class EmailChangeRepository {
 	async createTicket(row: EmailChangeTicketRow): Promise<void> {
-		await upsertOne(EmailChangeTickets.insert(row));
+		await upsertOne(EmailChangeTickets.insertWithTtl(row, EMAIL_CHANGE_RETENTION_SECONDS));
 	}
 
 	async updateTicket(row: EmailChangeTicketRow): Promise<void> {
-		await upsertOne(EmailChangeTickets.upsertAll(row));
+		await upsertOne(EmailChangeTickets.upsertAllWithTtl(row, EMAIL_CHANGE_RETENTION_SECONDS));
 	}
 
 	async findTicket(ticket: string): Promise<EmailChangeTicketRow | null> {
@@ -27,7 +30,7 @@ export class EmailChangeRepository {
 	}
 
 	async createToken(row: EmailChangeTokenRow): Promise<void> {
-		await upsertOne(EmailChangeTokens.insert(row));
+		await upsertOne(EmailChangeTokens.insertWithTtl(row, EMAIL_CHANGE_RETENTION_SECONDS));
 	}
 
 	async findToken(token: string): Promise<EmailChangeTokenRow | null> {
