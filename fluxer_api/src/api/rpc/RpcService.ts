@@ -39,6 +39,7 @@ import {
 	mapGuildToGuildResponse,
 } from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import {enqueueEndGuildVisitsForCode} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {resolveSessionGuildVisits} from '@app/api/guild/visits/GuildVisitSession';
 import {stripAnimationPrefix} from '@app/api/infrastructure/AssetEntitlementUtils';
@@ -1971,6 +1972,7 @@ export class RpcService {
 						]);
 						if (member?.isTemporary && guild) {
 							await this.guildRepository.deleteMember(guildId, userId);
+							await new GuildMemberSearchIndexService().deleteMember(guildId, userId);
 							await this.guildRepository.syncMemberCount(guildId);
 							await this.gatewayService.dispatchGuild({
 								guildId,
