@@ -33506,8 +33506,11 @@ msgstr "Rodyti nutildytus kanalus"
 msgid "Show my own camera"
 msgstr "Rodyti mano kamerą"
 
+#. Toggle label in the mobile video settings bottom sheet. Controls whether the local screen share tile is in the call view.
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx
+#: src/features/voice/components/VoiceSettingsMenus.tsx
 msgid "Show my screen share"
 msgstr "Rodyti mano ekrano bendrinimą"
 
@@ -35464,11 +35467,6 @@ msgstr "Srautas buferizuojamas"
 #: src/features/voice/components/voice_participant_tile/shared.ts
 msgid "Stream ended"
 msgstr "Transliacija baigėsi"
-
-#. Overlay text on a participant tile when the local user hid the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts
-msgid "Stream hidden"
-msgstr "Srautas paslėptas"
 
 #. Plutonium page perk card title about stream quality.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

@@ -33505,8 +33505,11 @@ msgstr "음소거한 채널 표시"
 msgid "Show my own camera"
 msgstr "내 카메라 표시"
 
+#. Toggle label in the mobile video settings bottom sheet. Controls whether the local screen share tile is in the call view.
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx
+#: src/features/voice/components/VoiceSettingsMenus.tsx
 msgid "Show my screen share"
 msgstr "내 화면 공유 표시"
 
@@ -35463,11 +35466,6 @@ msgstr "스트림 버퍼링 중"
 #: src/features/voice/components/voice_participant_tile/shared.ts
 msgid "Stream ended"
 msgstr "스트림 종료됨"
-
-#. Overlay text on a participant tile when the local user hid the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts
-msgid "Stream hidden"
-msgstr "화면 공유 숨김"
 
 #. Plutonium page perk card title about stream quality.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

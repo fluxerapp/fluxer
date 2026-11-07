@@ -3,7 +3,6 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import Channels from '@app/features/channel/state/Channels';
-import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {dimColor} from '@app/features/theme/utils/ColorUtils';
@@ -27,7 +26,7 @@ import {FeedHiddenOverlay} from '@app/features/voice/components/FeedHiddenOverla
 import {getPlaceholderAvatarColor} from '@app/features/voice/components/GetPlaceholderAvatarColor';
 import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_player/components/MediaVerticalVolumeControl';
 import {
-	getOwnStreamHiddenState,
+	isOwnCameraFeedHidden,
 	useOwnScreenSharePreviewState,
 	useWindowFocus,
 } from '@app/features/voice/components/OwnStreamPreviewState';
@@ -92,7 +91,6 @@ import {
 	SHOW_CAMERA_DESCRIPTOR,
 	STREAM_BUFFERING_DESCRIPTOR,
 	STREAM_ENDED_DESCRIPTOR,
-	STREAM_HIDDEN_DESCRIPTOR,
 	TILE_AVATAR_BASE,
 	TILE_AVATAR_MEDIA_SIZE,
 	TILE_AVATAR_STYLE,
@@ -343,11 +341,10 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const isInteractiveScreenShareTile = isScreenShare && !isFocusedPlaceholderTile;
 	const isOwnScreenShare = isScreenShare && isLocalParticipant;
 	const isOwnContent = isLocalParticipant && isCurrentUser;
-	const {isOwnScreenShareHidden, isOwnCameraHidden} = getOwnStreamHiddenState({
+	const isOwnCameraHidden = isOwnCameraFeedHidden({
 		isOwnContent,
 		isScreenShare,
 		showMyOwnCamera: VoiceSettings.showMyOwnCamera,
-		showMyOwnScreenShare: VoiceSettings.showMyOwnScreenShare,
 	});
 	const callId = MediaEngine.connectionId ?? '';
 	const streamKey = useMemo(() => getStreamKey(guildId, channelId, connectionId), [guildId, channelId, connectionId]);
@@ -850,13 +847,11 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const handleRevealHiddenFeed = useCallback(
 		(e: React.SyntheticEvent) => {
 			e.stopPropagation();
-			if (isOwnScreenShareHidden) {
-				VoiceSettingsCommands.update({showMyOwnScreenShare: true});
-			} else if (isOwnCameraHidden) {
+			if (isOwnCameraHidden) {
 				VoiceSettingsCommands.update({showMyOwnCamera: true});
 			}
 		},
-		[isOwnScreenShareHidden, isOwnCameraHidden],
+		[isOwnCameraHidden],
 	);
 	const handleMouseEnter = useCallback(() => {
 		if (isFocusPresentationTile || !previewEnabled) return;
@@ -884,7 +879,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const showOwnScreenShareCapturePaused =
 		isOwnScreenShare &&
 		!isFocusedPlaceholderTile &&
-		!isOwnScreenShareHidden &&
 		!isOwnStreamPreviewPaused &&
 		isActiveLocalScreenShareConnection &&
 		LocalVoiceState.getSelfStream() &&
@@ -1130,14 +1124,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 							</div>
 						</div>
 					)}
-					{isOwnScreenShareHidden && !isFocusedPlaceholderTile && (
-						<FeedHiddenOverlay
-							message={i18n._(STREAM_HIDDEN_DESCRIPTOR)}
-							buttonLabel={i18n._(WATCH_STREAM_DESCRIPTOR)}
-							onReveal={handleRevealHiddenFeed}
-							data-flx="voice.voice-participant-tile.voice-participant-tile-inner.feed-hidden-overlay"
-						/>
-					)}
 					{isOwnCameraHidden && !isFocusedPlaceholderTile && (
 						<FeedHiddenOverlay
 							message={i18n._(CAMERA_HIDDEN_DESCRIPTOR)}
@@ -1146,7 +1132,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 							data-flx="voice.voice-participant-tile.voice-participant-tile-inner.feed-hidden-overlay--2"
 						/>
 					)}
-					{isOwnScreenShare && !isOwnScreenShareHidden && !isFocusedPlaceholderTile && isOwnStreamPreviewPaused && (
+					{isOwnScreenShare && !isFocusedPlaceholderTile && isOwnStreamPreviewPaused && (
 						<div
 							className={clsx(styles.selfStreamOverlay, styles.paused)}
 							data-flx="voice.voice-participant-tile.voice-participant-tile-inner.self-stream-overlay"
@@ -1207,7 +1193,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 					{isScreenShare &&
 						!isFocusPresentationTile &&
 						!isFocusedPlaceholderTile &&
-						!isOwnScreenShareHidden &&
 						!showStreamEnded &&
 						!showWatchFailed &&
 						!isOwnStreamPreviewPaused && (

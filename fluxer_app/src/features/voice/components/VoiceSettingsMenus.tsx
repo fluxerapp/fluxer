@@ -73,6 +73,7 @@ import {
 	GearIcon,
 	GridFourIcon,
 	HandTapIcon,
+	MonitorIcon,
 	SpeakerSlashIcon,
 	UsersIcon,
 } from '@phosphor-icons/react';
@@ -802,6 +803,20 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 					data-flx="voice.voice-settings-menus.voice-more-options-menu.checkbox-item--2"
 				>
 					<Trans>Show my own camera</Trans>
+				</CheckboxItem>
+				<CheckboxItem
+					icon={
+						<MonitorIcon
+							weight="fill"
+							className={styles.icon}
+							data-flx="voice.voice-settings-menus.voice-more-options-menu.icon.show-my-screen-share"
+						/>
+					}
+					checked={voiceSettings.showMyOwnScreenShare}
+					onCheckedChange={(checked) => VoiceSettingsCommands.update({showMyOwnScreenShare: checked})}
+					data-flx="voice.voice-settings-menus.voice-more-options-menu.checkbox-item.show-my-screen-share"
+				>
+					<Trans>Show my screen share</Trans>
 				</CheckboxItem>
 				<CheckboxItem
 					icon={
