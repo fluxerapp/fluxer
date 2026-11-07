@@ -27,6 +27,7 @@ import {
 	GuildMFALevel,
 	GuildVerificationLevel,
 	getEffectiveGuildVerificationLevel,
+	guildRequiresMfa,
 } from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -39,6 +40,11 @@ const ONLY_OWNER_CAN_CHANGE_TOOLTIP_DESCRIPTOR = msg({
 	message: 'Only the community owner can change this setting',
 	comment:
 		'Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the viewer is not the owner. Plain explanatory tone.',
+});
+const MFA_REQUIRED_BY_STATUS_TOOLTIP_DESCRIPTOR = msg({
+	message: 'Verified and partnered communities always require 2FA for moderators',
+	comment:
+		'Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.',
 });
 const ENABLE_2FA_TO_CHANGE_TOOLTIP_DESCRIPTOR = msg({
 	message: 'Enable 2FA on your account to change this setting',
@@ -250,8 +256,12 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		) : (
 			label
 		);
-	const isMfaDisabled = !isGuildOwner || !currentUserHas2FA;
+	const isMfaRequiredByStatus = !RuntimeConfig.isSelfHosted() && guildRequiresMfa(guild.features);
+	const isMfaDisabled = !isGuildOwner || !currentUserHas2FA || isMfaRequiredByStatus;
 	const getMfaTooltipText = (): string | undefined => {
+		if (isMfaRequiredByStatus) {
+			return i18n._(MFA_REQUIRED_BY_STATUS_TOOLTIP_DESCRIPTOR);
+		}
 		if (!isGuildOwner) {
 			return i18n._(ONLY_OWNER_CAN_CHANGE_TOOLTIP_DESCRIPTOR);
 		}

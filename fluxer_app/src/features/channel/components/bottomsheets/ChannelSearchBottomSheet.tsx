@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSortModeOptions} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
+import {
+	getSearchPageCount,
+	getSortModeOptions,
+} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {useSearchResultCollapsedGroups} from '@app/features/channel/hooks/useSearchResultCollapsedGroups';
 import {msg} from '@lingui/core/macro';
 import '@app/features/channel/components/ChannelSearchHighlight.css';
@@ -242,7 +245,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 		}, [reset]);
 		const handleNextPage = useCallback(() => {
 			if (machineState.status !== 'success') return;
-			const totalPages = Math.max(1, Math.ceil(machineState.total / machineState.hitsPerPage));
+			const {totalPages} = getSearchPageCount(machineState.total, machineState.hitsPerPage);
 			if (machineState.page < totalPages) {
 				goToPage(machineState.page + 1);
 			}
@@ -550,7 +553,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 							</div>
 						);
 					}
-					const totalPages = Math.max(1, Math.ceil(total / hitsPerPage));
+					const {totalPages} = getSearchPageCount(total, hitsPerPage);
 					const hasMultipleChannels = countSearchResultChannels(resultGroups) > 1;
 					return (
 						<>

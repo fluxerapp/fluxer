@@ -688,10 +688,11 @@ export function requestCopyMessageId(message: Message, i18n: I18n): void {
 	void TextCopyCommands.copy(i18n, message.id);
 }
 
-export function requestToggleBookmark(message: Message, i18n: I18n): void {
+export async function requestToggleBookmark(message: Message, i18n: I18n): Promise<void> {
 	if (isClientSystemMessage(message)) {
 		return;
 	}
+	await SavedMessageCommands.ensureAllLoaded();
 	if (SavedMessages.isSaved(message.id)) {
 		SavedMessageCommands.remove(i18n, message.id);
 		return;
@@ -722,5 +723,5 @@ export function requestToggleSuppressEmbeds(message: Message, i18n: I18n): void 
 }
 
 export function requestSpeakMessage(message: Message): void {
-	TtsUtils.speakMessage(getEffectiveContent(message));
+	TtsUtils.speakMessage(getEffectiveContent(message), Channels.getChannel(message.channelId)?.guildId ?? null);
 }

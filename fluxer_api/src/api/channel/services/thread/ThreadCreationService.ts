@@ -319,12 +319,15 @@ export class ThreadCreationService {
 		await dispatchThreadEvents(this.ctx.gatewayService, view.state.guildId, [
 			threadCreateEvent(view, {members, newlyCreated: true}),
 		]);
+		let starter: Message;
 		try {
-			return await params.sendStarter(view.channel);
+			starter = await params.sendStarter(view.channel);
 		} catch (error) {
 			await this.discardThread(view, members, parent);
 			throw error;
 		}
+		if (starter.channelId !== view.channel.id) await this.discardThread(view, members, parent);
+		return starter;
 	}
 
 	private async discardThread(view: ThreadView, members: Array<ThreadMember>, parent: Channel): Promise<void> {

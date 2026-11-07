@@ -5,12 +5,14 @@ use crate::http_fetch;
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
 use std::future::Future;
 use std::pin::Pin;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use url::Url;
 
 const CURATED_PROVIDER_NSFW_MODE: &str = "allow";
 const KLIPY_API_MAX_BYTES: usize = 512 * 1024;
 const KLIPY_API_TIMEOUT: Duration = Duration::from_secs(10);
+const KLIPY_API_RETRY_DELAYS: [Duration; 2] = [Duration::from_secs(1), Duration::from_secs(3)];
+const KLIPY_API_RETRY_BUDGET: Duration = Duration::from_secs(6);
 const KLIPY_SIZE_PREFERENCE: &[&str] = &["hd", "md", "sm", "xs"];
 const KLIPY_THUMBNAIL_FORMATS: &[&str] = &["webp", "gif"];
 const KLIPY_VIDEO_FORMATS: &[&str] = &["webm", "mp4"];
@@ -115,11 +117,17 @@ async fn resolve_media_via_api(
         return Ok(None);
     };
     let url = fluxer_common::klipy::direct_items_url(api_key, path.kind, &path.slug)?;
-    let response = http_fetch::fetch_url(
-        &ctx.http_client,
-        url.as_str(),
-        KLIPY_API_MAX_BYTES,
-        KLIPY_API_TIMEOUT,
+    let response = fetch_items_with_retry(
+        || {
+            http_fetch::fetch_url(
+                &ctx.http_client,
+                url.as_str(),
+                KLIPY_API_MAX_BYTES,
+                KLIPY_API_TIMEOUT,
+            )
+        },
+        &KLIPY_API_RETRY_DELAYS,
+        Instant::now() + KLIPY_API_RETRY_BUDGET,
     )
     .await?;
 
@@ -135,6 +143,34 @@ async fn resolve_media_via_api(
     Ok(payload
         .pointer("/data/data/0")
         .and_then(extract_klipy_api_media))
+}
+
+async fn fetch_items_with_retry<F, Fut>(
+    mut fetch: F,
+    retry_delays: &[Duration],
+    deadline: Instant,
+) -> anyhow::Result<http_fetch::FetchResult>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = anyhow::Result<http_fetch::FetchResult>>,
+{
+    let mut response = fetch().await?;
+    for delay in retry_delays {
+        if !is_transient_status(response.status) || Instant::now() + *delay > deadline {
+            break;
+        }
+        tracing::warn!(
+            status = response.status,
+            "KLIPY direct API lookup returned a transient status, retrying"
+        );
+        tokio::time::sleep(*delay).await;
+        response = fetch().await?;
+    }
+    Ok(response)
+}
+
+fn is_transient_status(status: u16) -> bool {
+    status == 429 || (500..600).contains(&status)
 }
 
 fn extract_klipy_api_media(item: &serde_json::Value) -> Option<KlipyMediaFormats> {
@@ -217,3 +253,44 @@ fn extract_media_format(value: Option<&serde_json::Value>) -> Option<KlipyMediaF
 }
 
 use super::default_helpers::resolve_http_url;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    async fn run(statuses: &[u16]) -> (u16, usize) {
+        let calls = Mutex::new(0usize);
+        let response = fetch_items_with_retry(
+            || {
+                let mut count = calls.lock().unwrap();
+                let status = statuses[(*count).min(statuses.len() - 1)];
+                *count += 1;
+                async move {
+                    Ok(http_fetch::FetchResult {
+                        bytes: Vec::new(),
+                        headers: reqwest::header::HeaderMap::new(),
+                        status,
+                    })
+                }
+            },
+            &[Duration::ZERO, Duration::ZERO],
+            Instant::now() + Duration::from_secs(60),
+        )
+        .await
+        .unwrap();
+        (response.status, *calls.lock().unwrap())
+    }
+
+    #[tokio::test]
+    async fn retries_a_rate_limited_lookup() {
+        assert_eq!(run(&[429, 200]).await, (200, 2));
+        assert_eq!(run(&[503, 429, 200]).await, (200, 3));
+    }
+
+    #[tokio::test]
+    async fn does_not_retry_a_final_answer() {
+        assert_eq!(run(&[404]).await, (404, 1));
+        assert_eq!(run(&[429, 429, 429, 200]).await, (429, 3));
+    }
+}

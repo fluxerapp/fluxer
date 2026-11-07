@@ -79,7 +79,7 @@ Other refused voice joins get no opcode 12.
 
 <sup>2</sup> The Gateway counts guilds after the shard filter. Raise `shard_count` until each shard has at most 2,500.
 
-If the connection had a session, you can [Resume](/gateway/commands/#resume) it for 60,000 ms after any close, including a network failure or a normal `1000` or `1001` close. When a Resume closes with `4004` or `4007`, the session stays and you can try again. Resume only replays events still in the [replay buffer](/gateway/limits-and-rate-limits/#replay-and-backpressure).
+If the connection had a session, you can [Resume](/gateway/commands/#resume) it for 60,000 ms after a network failure or any close except `1000` and `1001`. A `1000` or `1001` close from the client ends the session right away, so close with another code, such as `4000`, when you plan to resume. When a Resume closes with `4004` or `4007`, the session stays and you can try again. Resume only replays events still in the [replay buffer](/gateway/limits-and-rate-limits/#replay-and-backpressure).
 
 Change the token, shard pair or version before you reconnect after `4004`, `4010` or `4012`.
 

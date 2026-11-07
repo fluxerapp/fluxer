@@ -178,13 +178,14 @@ function isMuted(config: MuteConfig, now: number): boolean {
 function readChannelOverrides(value: unknown): ReadonlyMap<string, ChannelNotificationOverride> {
 	const overrides = new Map<string, ChannelNotificationOverride>();
 	const record = asRecord(value);
-	const entries = record === null ? asArray(value) : Object.values(record);
-	for (const entry of entries) {
+	const entries: ReadonlyArray<[string | null, unknown]> =
+		record === null ? asArray(value).map((entry) => [null, entry]) : Object.entries(record);
+	for (const [key, entry] of entries) {
 		const override = asRecord(entry);
 		if (override === null) {
 			continue;
 		}
-		const channelId = asString(override.channel_id);
+		const channelId = asString(override.channel_id) ?? key;
 		if (channelId === null) {
 			continue;
 		}

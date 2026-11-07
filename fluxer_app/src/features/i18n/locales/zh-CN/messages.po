@@ -20012,11 +20012,6 @@ msgstr "授权请求无效"
 msgid "Invalid bot permissions."
 msgstr "机器人权限无效。"
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "表情名称无效"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"
@@ -25697,6 +25692,11 @@ msgstr "只有 CSS 文本会在设备间同步。上传的资源、桌面端文�
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "仅同步 CSS 文本。上传的资源和本地文件引用将保留在此设备上。"
+
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "只能显示前 {maxPages} 页结果。请尝试更具体的搜索。"
 
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -41216,6 +41216,11 @@ msgstr "验证失败"
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified & partnered community"
 msgstr "已认证的合作社区"
+
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "已验证和合作伙伴社区始终要求版主启用双重认证"
 
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx

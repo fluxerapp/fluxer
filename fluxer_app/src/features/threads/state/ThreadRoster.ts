@@ -73,10 +73,14 @@ class ThreadRoster {
 		if (!entry) return;
 		if (entry.count <= 1) {
 			this.subscriptionCounts.delete(threadId);
-			this.rosters.delete(threadId);
+			queueMicrotask(() => this.dropUnsubscribedRoster(threadId));
 			return;
 		}
 		this.subscriptionCounts.set(threadId, {...entry, count: entry.count - 1});
+	}
+
+	private dropUnsubscribedRoster(threadId: string): void {
+		if (!this.subscriptionCounts.has(threadId)) this.rosters.delete(threadId);
 	}
 
 	handleListUpdate(payload: ThreadMemberListPayload): void {

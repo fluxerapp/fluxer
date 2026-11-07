@@ -52,9 +52,12 @@
 	flex-direction: column;
 	justify-content: center;
 	gap: 0.35rem;
+	max-width: 100%;
+	min-width: 0;
 }
 
 .dialogTitle {
+	overflow-wrap: anywhere;
 	font-weight: 600;
 	font-size: 1.05rem;
 	color: var(--text-primary);

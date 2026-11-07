@@ -77,7 +77,7 @@ export const ChannelPinsContent = observer(({channel, onJump}: ChannelPinsConten
 	const hasMore = ChannelPins.getHasMore(channel.id);
 	const isLoading = ChannelPins.getIsLoading(channel.id);
 	const isDMChannel = channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
-	const canUnpin = isDMChannel || Permission.can(Permissions.MANAGE_MESSAGES, channel);
+	const canUnpin = isDMChannel || Permission.can(Permissions.PIN_MESSAGES, channel);
 	const mobileLayout = MobileLayout;
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
 	const resolvePinnedScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);

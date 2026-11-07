@@ -82,6 +82,19 @@ describe('webhooks on forum and media channels', () => {
 		});
 	}
 
+	it('returns the first post when a nonce repeats', async () => {
+		const s = await setup();
+		const body = {content: 'News', thread_name: 'News', nonce: 'probe-1'};
+		const first = await execute(s, body).execute();
+		const second = await execute(s, body).execute();
+		expect(second.id).toBe(first.id);
+		expect(second.channel_id).toBe(first.channel_id);
+		const forum = await threadsRequest<ChannelResponse>(harness, s.owner.token)
+			.get(`/channels/${s.forum.id}`)
+			.execute();
+		expect(forum.last_message_id).toBe(first.channel_id);
+	});
+
 	it('rejects an invalid starter before creating the post', async () => {
 		const s = await setup();
 		await execute(s, {thread_name: 'empty'}).expect(400, APIErrorCodes.CANNOT_SEND_EMPTY_MESSAGE).execute();

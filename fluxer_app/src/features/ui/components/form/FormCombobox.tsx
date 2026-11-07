@@ -5,6 +5,7 @@ import styles from '@app/features/ui/components/form/FormCombobox.module.css';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import LayerManager from '@app/features/ui/state/LayerManager';
 import {Combobox as BaseCombobox} from '@base-ui/react/combobox';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -12,7 +13,7 @@ import {CaretDownIcon, CheckIcon, CircleNotchIcon, XIcon} from '@phosphor-icons/
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useId, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
 
 type Primitive = string | number | null;
 export interface ComboboxOption<V extends Primitive = string> {
@@ -173,6 +174,20 @@ export const Combobox = observer(function Combobox<
 	const controlRef = useRef<HTMLDivElement | null>(null);
 	const [open, setOpen] = useState(false);
 	const [isTyping, setIsTyping] = useState(false);
+	useEffect(() => {
+		if (!open) return;
+		const layerKey = `form-combobox-${inputId}`;
+		LayerManager.addLayer(
+			'popout',
+			layerKey,
+			() => {
+				setIsTyping(false);
+				setOpen(false);
+			},
+			inputRef.current?.ownerDocument ?? document,
+		);
+		return () => LayerManager.removeLayer('popout', layerKey);
+	}, [open, inputId]);
 	const selectedOptions = useMemo(() => {
 		return options.find((option) => Object.is(option.value, value as V)) ?? null;
 	}, [options, value]);

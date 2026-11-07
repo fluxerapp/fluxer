@@ -212,14 +212,14 @@ function getResolvedMentionCount({
 	return fallbackCount;
 }
 
-function shouldBlockSubmissionForSlowmode(
+export function shouldBlockSubmissionForSlowmode(
 	isSlowmodeActive: boolean,
-	editingMessage: Message | null,
+	isEditing: boolean,
 	parsedCommand: CommandUtils.ParsedCommand | null,
 	lexicalCommand: LexicalMessageCommandResolution | null,
 	hasReplaceCommand: boolean,
 ): boolean {
-	if (!isSlowmodeActive || editingMessage !== null) {
+	if (!isSlowmodeActive || isEditing) {
 		return false;
 	}
 	if (hasReplaceCommand) {
@@ -458,13 +458,14 @@ export const useTextareaSubmit = ({
 			composerHandle = composerHandleRef.current;
 		}
 		let lexicalCommand: LexicalMessageCommandResolution | null = null;
-		let actualContent = displayToActual(value).trim();
+		let untrimmedContent = displayToActual(value);
 		if (composerHandle !== null) {
 			if (commandsEnabled) {
 				lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
 			}
-			actualContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue()).trim();
+			untrimmedContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue());
 		}
+		const actualContent = untrimmedContent.trim();
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
 		let parsedCommand: CommandUtils.ParsedCommand | null = null;
 		if (lexicalCommand === null) {
@@ -473,7 +474,7 @@ export const useTextareaSubmit = ({
 		} else if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.VALID_COMMAND) {
 			parsedCommand = lexicalCommand.command;
 		}
-		const replaceCommand = commandsEnabled ? ReplaceCommandUtils.parseReplaceCommand(actualContent) : null;
+		const replaceCommand = commandsEnabled ? ReplaceCommandUtils.parseReplaceCommand(untrimmedContent) : null;
 		const reactionShorthand =
 			commandsEnabled && editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
 				? parseReactionShorthand(actualContent, Channels.getChannel(channelId) ?? null, guildId, i18n)
@@ -491,7 +492,7 @@ export const useTextareaSubmit = ({
 		if (
 			shouldBlockSubmissionForSlowmode(
 				isSlowmodeActive,
-				editingMessage,
+				editingMessage !== null,
 				parsedCommand,
 				lexicalCommand,
 				replaceCommand !== null,

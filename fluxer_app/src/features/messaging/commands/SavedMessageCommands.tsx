@@ -116,6 +116,22 @@ export async function loadMore(): Promise<Array<SavedMessageEntry>> {
 	return runSavedMessagesFetch(`Loading more saved messages before ${before}`, true, {before});
 }
 
+let loadingAll: Promise<void> | null = null;
+
+export function ensureAllLoaded(): Promise<void> {
+	if (SavedMessages.fetched && !SavedMessages.getHasMore()) return Promise.resolve();
+	loadingAll ??= (async () => {
+		try {
+			if (!SavedMessages.fetched) await fetch();
+			while (SavedMessages.getHasMore() && (await loadMore()).length > 0) {}
+		} catch {
+		} finally {
+			loadingAll = null;
+		}
+	})();
+	return loadingAll;
+}
+
 export async function create(i18n: I18n, channelId: string, messageId: string): Promise<void> {
 	try {
 		logger.debug(`Saving message ${messageId} from channel ${channelId}`);

@@ -40,7 +40,13 @@ use std::ptr;
 pub(super) fn source_supports_pages(mime: &str) -> bool {
     matches!(
         mime,
-        "image/webp" | "image/gif" | "image/apng" | "image/heic" | "image/heif" | "image/avif"
+        "image/webp"
+            | "image/gif"
+            | "image/apng"
+            | "image/heic"
+            | "image/heif"
+            | "image/avif"
+            | "image/jxl"
     )
 }
 

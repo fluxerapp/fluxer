@@ -20012,11 +20012,6 @@ msgstr "अमान्य ऑथराइज़ेशन अनुरोध"
 msgid "Invalid bot permissions."
 msgstr "अमान्य बॉट अनुमतियाँ।"
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "अमान्य इमोजी नाम"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"
@@ -25697,6 +25692,11 @@ msgstr "केवल CSS टेक्स्ट डिवाइसों मे�
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "केवल CSS टेक्स्ट सिंक होता है। अपलोड की गई एसेट और लोकल फ़ाइल रेफ़रेंस इसी डिवाइस पर रहते हैं।"
+
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "परिणामों के केवल पहले {maxPages} पेज ही दिखाए जा सकते हैं। ज़्यादा सटीक खोज आज़माएँ।"
 
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -41216,6 +41216,11 @@ msgstr "वेरिफ़िकेशन नहीं हो पाया"
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified & partnered community"
 msgstr "वेरिफ़ाइड और पार्टनर कम्युनिटी"
+
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "सत्यापित और पार्टनर समुदाय मॉडरेटर के लिए हमेशा 2FA ज़रूरी रखते हैं"
 
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx

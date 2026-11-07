@@ -24,7 +24,11 @@ import {
 	formatImageUploadRecommendedHintWithNote,
 } from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
-import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
+import {
+	isAssetUploadFileAllowed,
+	isSvgFile,
+	readImageFileAsUploadDataUrl,
+} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
 	CANCEL_DESCRIPTOR,
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -145,7 +149,8 @@ export function useChangeAvatarAction({
 				return;
 			}
 			const svg = isSvgFile(file);
-			if (!svg && !(await canCropFile(file))) {
+			const croppable = svg || (await canCropFile(file));
+			if (!croppable && !isAssetUploadFileAllowed('avatar', file)) {
 				showGenericErrorModal({
 					title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
 					message: getAssetFormatErrorMessage(i18n, 'avatar', 'unsupported_mime'),
@@ -222,6 +227,10 @@ export function useChangeAvatarAction({
 				return;
 			}
 			const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
+			if (!croppable) {
+				onAvatarChange(base64);
+				return;
+			}
 			ModalCommands.push(
 				modal(() => (
 					<AssetCropModal

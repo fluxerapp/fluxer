@@ -192,6 +192,11 @@ export class VoiceInputGraph {
 		return this.level?.rms ?? 0;
 	}
 
+	readGateOpen(): boolean | null {
+		if (!this.gateNode || !this.level?.gated) return null;
+		return this.level.open;
+	}
+
 	configure(): Promise<void> {
 		if (this.disposed) return Promise.resolve();
 		this.configureDirty = true;
@@ -524,6 +529,11 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 
 	reportRuntime(): void {
 		if (this.state === 'live') this.graph?.reportRuntime(this);
+	}
+
+	readGateOpen(): boolean | null {
+		if (this.state !== 'live') return null;
+		return this.graph?.readGateOpen() ?? null;
 	}
 
 	private noteLevel(): void {

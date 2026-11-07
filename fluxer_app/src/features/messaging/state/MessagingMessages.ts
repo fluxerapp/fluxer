@@ -22,6 +22,7 @@ import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {ChannelId} from '@fluxer/schema/src/branded/WireIds';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {makeAutoObservable, reaction} from 'mobx';
 
 const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
@@ -201,6 +202,19 @@ class Messages {
 
 	private hasLoadedPage(messages: ChannelMessages): boolean {
 		return messages.ready && messages.length > 0 && !messages.cached;
+	}
+
+	handlePassiveLastMessageUpdates(channels: Record<string, string>): void {
+		let changed = false;
+		for (const [channelId, lastMessageId] of Object.entries(channels)) {
+			const messages = ChannelMessages.get(channelId);
+			const newestLoadedId = messages?.last()?.id;
+			if (!messages || messages.cached || !newestLoadedId || !messages.hasNewestMessages()) continue;
+			if (SnowflakeUtils.compare(lastMessageId, newestLoadedId) <= 0) continue;
+			this.commitMessages(messages.withPatch({cached: true}));
+			changed = true;
+		}
+		if (changed) this.notifyChange();
 	}
 
 	shouldPreloadLatestPage(channelId: string): boolean {
@@ -419,7 +433,13 @@ class Messages {
 			channelId: selectedChannelId,
 			messageId: undefined,
 		});
-		if (!didChannelSelect && currentMessages && currentMessages.length === 0 && !currentMessages.ready) {
+		if (
+			!didChannelSelect &&
+			currentMessages &&
+			currentMessages.length === 0 &&
+			!currentMessages.ready &&
+			!currentMessages.loadingMore
+		) {
 			this.commitMessages(currentMessages.withPatch({loadingMore: true}));
 			MessageCommands.fetchMessages(selectedChannelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 			this.notifyChange();
@@ -562,6 +582,13 @@ class Messages {
 		this.commitMessages(messages);
 		this.notifyChange();
 		return true;
+	}
+
+	clearReferencedMessage(channelId: string, messageId: string): void {
+		const existing = ChannelMessages.get(channelId);
+		if (!existing?.get(messageId)?.referencedMessage) return;
+		this.commitMessages(existing.update(messageId, (message) => message.withoutReferencedMessage()));
+		this.notifyChange();
 	}
 
 	handleMessageDeleteBulk(action: {ids: Array<string>; channelId: string}): boolean {

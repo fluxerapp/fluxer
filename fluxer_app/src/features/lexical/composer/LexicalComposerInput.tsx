@@ -12,6 +12,10 @@ import {registerComposerEnter} from '@app/features/lexical/composer/ComposerEnte
 import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
 import {resetComposerHistory} from '@app/features/lexical/composer/ComposerHistory';
 import {registerComposerIMECommandGuard} from '@app/features/lexical/composer/ComposerIME';
+import {
+	moveSelectionToLineBoundary,
+	registerComposerLineStartInsertion,
+} from '@app/features/lexical/composer/ComposerLineBoundary';
 import {registerComposerMarkdownHighlight} from '@app/features/lexical/composer/ComposerMarkdownHighlight';
 import {registerComposerMarkdownShortcuts} from '@app/features/lexical/composer/ComposerMarkdownShortcuts';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
@@ -166,22 +170,6 @@ export interface LexicalComposerInputProps {
 	onFocus?: () => void;
 	onBlur?: () => void;
 	onSlashCommandStateChange?: (state: SlashCommandComposerState) => void;
-}
-
-function moveSelectionToLineBoundary(event: React.KeyboardEvent<HTMLElement>): boolean {
-	if (event.key !== 'Home' && event.key !== 'End') {
-		return false;
-	}
-	if (event.ctrlKey || event.metaKey || event.altKey) {
-		return false;
-	}
-	const selection = event.currentTarget.ownerDocument.defaultView?.getSelection();
-	if (selection == null || selection.rangeCount === 0) {
-		return false;
-	}
-	selection.modify(event.shiftKey ? 'extend' : 'move', event.key === 'Home' ? 'backward' : 'forward', 'lineboundary');
-	event.preventDefault();
-	return true;
 }
 
 export const LexicalComposerInput = observer((props: LexicalComposerInputProps) => {
@@ -575,6 +563,7 @@ const ComposerInner = ({
 			registerContextMenuUndoRedo(editor),
 			registerComposerIMECommandGuard(editor),
 			registerComposerSoftWrapDeletion(editor),
+			registerComposerLineStartInsertion(editor),
 			registerComposerTypeaheadModifierGuard(editor, typeaheadActiveState),
 			registerComposerMarkdownShortcuts(editor),
 			registerComposerCodeIndent(editor, typeaheadActiveState),
@@ -651,7 +640,7 @@ const ComposerInner = ({
 	const handleEditableKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLElement>) => {
 			if (!event.defaultPrevented && !isIMEComposing(event)) {
-				if (moveSelectionToLineBoundary(event)) {
+				if (moveSelectionToLineBoundary(event, editor)) {
 					return;
 				}
 				if (onKeyDown != null) {
@@ -659,7 +648,7 @@ const ComposerInner = ({
 				}
 			}
 		},
-		[onKeyDown],
+		[editor, onKeyDown],
 	);
 	const handleEditablePointerDown = useCallback(
 		(event: React.PointerEvent<HTMLElement>) => {

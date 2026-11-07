@@ -476,7 +476,7 @@ export function useChannelMenuData(
 				menuGroups.push({items: metaItems});
 			}
 			const inviteItems: Array<MenuItemType> = [];
-			if (state.canInvite && !channel.isThreadOnly()) {
+			if (state.canInvite) {
 				inviteItems.push({
 					icon: <InviteIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.invite-icon" />,
 					label: i18n._(INVITE_PEOPLE_DESCRIPTOR),

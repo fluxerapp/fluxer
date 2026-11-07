@@ -307,7 +307,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		const targetId = ReadStates.getOldestUnreadMessageId(channelId);
+		const targetId = ReadStates.getOldestUnreadJumpTargetId(channelId);
 		if (!targetId) return;
 		goToMessage(channelId, targetId, {jumpType: JumpTypes.ANIMATED});
 	});

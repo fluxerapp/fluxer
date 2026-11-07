@@ -888,13 +888,17 @@ export class MessageSendService {
 							? [
 									{
 										step: 'thread_mention_members',
-										promise: this.deps.threadActivity.addMentionedUsers({
-											channel,
-											parent: authChannel.thread.parent,
-											isModerator: authChannel.thread.isModerator,
-											authorId: user.id,
-											mentionUserIds: mentionData.mentionUserIds,
-										}),
+										promise: this.deps.mentionService
+											.withoutUsersBlockingAuthor(user.id, mentionData.mentionUserIds)
+											.then((mentionUserIds) =>
+												this.deps.threadActivity.addMentionedUsers({
+													channel,
+													parent: authChannel.thread!.parent,
+													isModerator: authChannel.thread!.isModerator,
+													authorId: user.id,
+													mentionUserIds,
+												}),
+											),
 									},
 								]
 							: []),
@@ -1025,6 +1029,7 @@ export class MessageSendService {
 			userId: webhookActorId,
 			nonce: data.nonce,
 			expectedChannelId: channelId,
+			forumParentId: forumStarter ? (thread?.parentId ?? undefined) : undefined,
 			existing: (message) => message,
 			send: async (recordNonce) => {
 				const messageIdTask = startEarly(

@@ -30,6 +30,7 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 	UNPIN_MESSAGE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
@@ -175,7 +176,10 @@ export const useMessageActionMenuData = (
 		() => createMessageActionHandlers(message, {i18n, onClose, channel: permissions?.channel ?? sourceChannel}),
 		[message, permissions?.channel, sourceChannel, onClose, i18n.locale],
 	);
-	const isSaved = useMemo(() => SavedMessages.isSaved(message.id), [message.id]);
+	const isSaved = SavedMessages.isSaved(message.id);
+	useEffect(() => {
+		void SavedMessageCommands.ensureAllLoaded();
+	}, []);
 	const channel = permissions?.channel ?? sourceChannel ?? null;
 	const shouldBuildQuickReactions = permissions?.canAddReactions === true && message.state === MessageStates.SENT;
 	const reactionEmojiLimit = Math.max(quickReactionCount, submenuReactionCount);

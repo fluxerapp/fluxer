@@ -84,7 +84,8 @@ do_session_connect(Pid, Attempt, State) when is_map(State) ->
         status => Status,
         afk => Afk,
         mobile => Mobile,
-        socket_pid => SocketPid
+        socket_pid => SocketPid,
+        guild_ids => session_visits:member_guild_ids(State)
     },
     ConnectStartedAt = gateway_timings:start(),
     Result = safe_call(fun() ->

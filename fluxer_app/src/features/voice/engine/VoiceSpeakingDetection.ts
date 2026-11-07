@@ -40,6 +40,11 @@ export function createSpeakingSamples(): Float32Array<ArrayBuffer> {
 	return new Float32Array(new ArrayBuffer(SPEAKING_ANALYSER_FFT_SIZE * Float32Array.BYTES_PER_ELEMENT));
 }
 
+export interface LocalTransmitGate {
+	suppressed: boolean;
+	open: boolean | null;
+}
+
 interface SpeakingMeterTap {
 	context: BaseAudioContext;
 	source: MediaStreamAudioSourceNode;
@@ -56,6 +61,7 @@ export class VoiceSpeakingMeter {
 	constructor(
 		private readonly readTrack: () => MediaStreamTrack | null,
 		private readonly onChange: () => void,
+		private readonly readGate: () => LocalTransmitGate,
 	) {
 		this.timer = setInterval(() => this.tick(performance.now()), SPEAKING_ANALYSER_INTERVAL_MS);
 	}
@@ -66,6 +72,15 @@ export class VoiceSpeakingMeter {
 
 	tick(nowMs: number): void {
 		const tap = this.syncTap();
+		const gate = this.readGate();
+		if (gate.suppressed) {
+			this.update(SILENT_SPEAKING_HYSTERESIS);
+			return;
+		}
+		if (gate.open !== null) {
+			this.update({...SILENT_SPEAKING_HYSTERESIS, speaking: gate.open});
+			return;
+		}
 		if (!tap) {
 			this.update(SILENT_SPEAKING_HYSTERESIS);
 			return;

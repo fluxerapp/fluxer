@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MessageFlags, MessageFlagsDescriptions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_MESSAGE_LENGTH_NON_PREMIUM, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {
+	MAX_MESSAGE_LENGTH_NON_PREMIUM,
+	MAX_MESSAGE_LENGTH_PREMIUM,
+	MESSAGE_SEARCH_MAX_PAGE,
+} from '@fluxer/constants/src/LimitConstants';
 import {
 	ClientAttachmentReferenceRequest,
 	ClientAttachmentRequest,
@@ -37,7 +41,7 @@ function omitEmbedObjectWithoutRequiredField(value: unknown, requiredField: stri
 		return value;
 	}
 	const record = value as Record<string, unknown>;
-	if (record[requiredField] === undefined || record[requiredField] === null) {
+	if (record[requiredField] === undefined || record[requiredField] === null || record[requiredField] === '') {
 		return undefined;
 	}
 	return value;
@@ -222,7 +226,7 @@ export const MessageSearchRequest = z.object({
 		.number()
 		.int()
 		.min(1)
-		.max(400)
+		.max(MESSAGE_SEARCH_MAX_PAGE)
 		.default(1)
 		.describe('Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this.'),
 	cursor: z

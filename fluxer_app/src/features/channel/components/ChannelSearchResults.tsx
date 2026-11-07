@@ -14,12 +14,14 @@ import {
 	EMPTY_SEARCH_CHANNELS,
 	EMPTY_SEARCH_MESSAGES,
 	getAdaptiveVisiblePageCount,
+	getSearchPageCount,
 	getSearchResultChannelRenderData,
 	getSortModeOptions,
 	RESULTS_PER_PAGE,
 	renderScopeIcon,
 	renderSortIcon,
 	runChannelSearch,
+	SEARCH_PAGE_LIMIT_DESCRIPTOR,
 } from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {shouldSearchResultRowJump} from '@app/features/channel/components/channel_search_results/SearchResultRowClick';
 import {SearchResultsHeader} from '@app/features/channel/components/channel_search_results/SearchResultsHeader';
@@ -509,7 +511,7 @@ export const ChannelSearchResults = observer(
 					if (results.length === 0) {
 						return <SearchEmptyState data-flx="channel.channel-search-results.render-content.search-empty-state" />;
 					}
-					const totalPages = Math.max(1, Math.ceil(total / hitsPerPage));
+					const {totalPages, capped} = getSearchPageCount(total, hitsPerPage);
 					return (
 						<CollapsedMessageVisibilityProvider
 							value={collapsedMessageVisibility}
@@ -638,6 +640,14 @@ export const ChannelSearchResults = observer(
 										onJumpToPage={handlePaginationJump}
 										data-flx="channel.channel-search-results.render-content.search-results-pagination"
 									/>
+									{capped && currentPage === totalPages && (
+										<p
+											className={styles.pageLimitNotice}
+											data-flx="channel.channel-search-results.render-content.page-limit-notice"
+										>
+											{i18n._(SEARCH_PAGE_LIMIT_DESCRIPTOR, {maxPages: totalPages})}
+										</p>
+									)}
 								</Scroller>
 							</NearViewportSurfaceContext.Provider>
 						</CollapsedMessageVisibilityProvider>

@@ -3,6 +3,7 @@
 import {escapeRegex} from '@app/features/messaging/utils/RegexUtils';
 
 const REPLACE_REGEX = /^s\/(.+?)\/(.*?)(?:\/(g)?)?$/;
+const TRAILING_LINE_BREAKS_REGEX = /[\r\n]+$/;
 
 interface ReplaceCommand {
 	source: string;
@@ -11,7 +12,7 @@ interface ReplaceCommand {
 }
 
 export function parseReplaceCommand(content: string): ReplaceCommand | null {
-	const match = content.match(REPLACE_REGEX);
+	const match = content.trimStart().replace(TRAILING_LINE_BREAKS_REGEX, '').match(REPLACE_REGEX);
 	if (!match) {
 		return null;
 	}
@@ -46,5 +47,5 @@ export function executeReplaceCommand(text: string, command: ReplaceCommand): st
 }
 
 export function isReplaceCommand(content: string): boolean {
-	return REPLACE_REGEX.test(content);
+	return parseReplaceCommand(content) !== null;
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
@@ -88,7 +89,9 @@ export async function isUsernameTaken(
 	username: string,
 	exceptUserId?: UserID,
 ): Promise<boolean> {
-	if (username.toLowerCase() === DELETED_USER_USERNAME.toLowerCase()) return true;
+	const usernameLower = username.toLowerCase();
+	if (usernameLower === DELETED_USER_USERNAME.toLowerCase()) return true;
+	if (usernameLower === getInstanceProductName().toLowerCase()) return true;
 	const holders = await findUsernameHolders(users, username);
 	return holders.some(
 		(user) => user.id !== exceptUserId && (isPerson(user) || user.discriminator === USERNAME_MODE_DISCRIMINATOR),

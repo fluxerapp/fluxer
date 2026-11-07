@@ -14,9 +14,16 @@
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
 	gap: 1rem;
 	padding: 1rem;
+}
+
+.body > * {
+	flex-shrink: 0;
+}
+
+.body > :first-child {
+	margin-top: auto;
 }
 
 .icon {

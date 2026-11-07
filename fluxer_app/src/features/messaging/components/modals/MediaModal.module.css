@@ -135,13 +135,18 @@
 }
 
 .modalOverlay {
+	--media-titlebar-offset: 0px;
 	position: fixed;
-	inset: var(--native-titlebar-height, 0px) 0 0;
+	inset: var(--media-titlebar-offset) 0 0;
 	z-index: var(--z-index-modal);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	pointer-events: auto;
+}
+
+:global(html.platform-native:not(.platform-macos)) .modalOverlay {
+	--media-titlebar-offset: var(--native-titlebar-height);
 }
 
 .modalBackdrop {
@@ -191,7 +196,7 @@
 	--media-fit-max-width: max(0px, calc(100dvw - (2 * var(--media-fit-safe-inset-inline))));
 	--media-fit-max-height: max(
 		0px,
-		calc(100dvh - var(--native-titlebar-height, 0px) - (2 * var(--media-fit-safe-inset-block)))
+		calc(100dvh - var(--media-titlebar-offset, 0px) - (2 * var(--media-fit-safe-inset-block)))
 	);
 	--media-content-inner-gap: 0.75rem;
 	--media-content-inner-padding: 0px;

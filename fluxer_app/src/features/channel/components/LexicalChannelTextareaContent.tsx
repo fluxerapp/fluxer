@@ -49,7 +49,6 @@ import ChannelSearch from '@app/features/channel/state/ChannelSearch';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelUtils';
-import * as CommandUtils from '@app/features/devtools/utils/CommandUtils';
 import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
@@ -78,7 +77,7 @@ import {useTextareaEditing} from '@app/features/messaging/hooks/useTextareaEditi
 import {useTextareaExpressionHandlers} from '@app/features/messaging/hooks/useTextareaExpressionHandlers';
 import {useTextareaExpressionPicker} from '@app/features/messaging/hooks/useTextareaExpressionPicker';
 import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
-import {useTextareaSubmit} from '@app/features/messaging/hooks/useTextareaSubmit';
+import {shouldBlockSubmissionForSlowmode, useTextareaSubmit} from '@app/features/messaging/hooks/useTextareaSubmit';
 import {
 	createMentionConfirmationSnapshot,
 	type MentionConfirmationEvent,
@@ -99,6 +98,7 @@ import {
 	getComposerMessageContent,
 	hasVisibleMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
+import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {
 	resolveTypedEmojiShortcodes,
@@ -579,22 +579,17 @@ export const LexicalChannelTextareaContent = observer(
 			[isEditingMessageOnMobile, trimmedMessageContent],
 		);
 		const hasMessageContent = useMemo(() => hasVisibleMessageContent(composerMessageContent), [composerMessageContent]);
-		const isSubmissionBlockedBySlowmode = useMemo(() => {
-			if (!isSlowmodeActive || isEditingMessageInComposer) {
-				return false;
-			}
-			if (!enableSlashCommands) {
-				return true;
-			}
-			const resolution = LexicalMessageCommandResolver.resolve(handleRef.current);
-			if (resolution.status === LexicalMessageCommandResolutionStatus.NO_COMMAND) {
-				return true;
-			}
-			if (resolution.status === LexicalMessageCommandResolutionStatus.INVALID_COMMAND) {
-				return false;
-			}
-			return CommandUtils.doesCommandSendCurrentChannelMessage(resolution.command);
-		}, [enableSlashCommands, handleRef, isEditingMessageInComposer, isSlowmodeActive, value]);
+		const isSubmissionBlockedBySlowmode = useMemo(
+			() =>
+				shouldBlockSubmissionForSlowmode(
+					isSlowmodeActive,
+					isEditingMessageInComposer,
+					null,
+					enableSlashCommands ? LexicalMessageCommandResolver.resolve(handleRef.current) : null,
+					enableSlashCommands && ReplaceCommandUtils.isReplaceCommand(wireValue),
+				),
+			[enableSlashCommands, handleRef, isEditingMessageInComposer, isSlowmodeActive, value, wireValue],
+		);
 		useChannelComposerPaste({
 			channel,
 			attachmentKey: composerKey,

@@ -30,7 +30,7 @@ function createOverflowingWorkerService(): RecordingWorkerService {
 describe('per-message worker jobs', () => {
 	it('drops mention fanout instead of failing the send when the jobs stream is full', async () => {
 		const mentionService = new MessageMentionService(
-			null as never,
+			{listUserIdsBlockingTarget: async () => new Set()} as never,
 			null as never,
 			null as never,
 			createOverflowingWorkerService(),

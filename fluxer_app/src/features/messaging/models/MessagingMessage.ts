@@ -342,6 +342,13 @@ export class Message {
 		);
 	}
 
+	withoutReferencedMessage(): Message {
+		return new Message(
+			{...this.toJSON(), referenced_message: null},
+			{skipUserCache: true, instanceId: this.instanceId, skipReactionHydration: true},
+		);
+	}
+
 	withoutReactionEmoji(emoji: ReactionEmoji): Message {
 		return this.withUpdates({
 			reactions: this.reactions.filter((reaction) => !emojiEquals(reaction.emoji, emoji)),

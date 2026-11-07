@@ -62,6 +62,7 @@ import {
 	isPrivilegedRendererDocumentSender,
 	requirePrivilegedRendererDocumentSender,
 } from '@electron/main/PrivilegedRendererDocuments';
+import {saveDialogFilters, withDefaultExtension} from '@electron/main/SaveDialogFileType';
 import {getDesktopSelectedInstanceClient} from '@electron/main/SelectedInstanceFetch';
 import {getStreamerModeCaptureAppStatus} from '@electron/main/StreamerModeProcessDetection';
 import {
@@ -444,12 +445,14 @@ export function registerIpcHandlers(): void {
 			try {
 				const result = await dialog.showSaveDialog(win, {
 					defaultPath: options.defaultPath,
+					filters: saveDialogFilters(options.defaultPath),
 				});
 				if (result.canceled || !result.filePath) {
 					return {success: false, canceled: true};
 				}
-				await downloadFile(options.url, result.filePath, {sha256: options.sha256});
-				return {success: true, path: result.filePath};
+				const filePath = withDefaultExtension(result.filePath, options.defaultPath);
+				await downloadFile(options.url, filePath, {sha256: options.sha256});
+				return {success: true, path: filePath};
 			} catch (error) {
 				if (error instanceof DownloadChecksumError) {
 					return {success: false, checksumMismatch: true, error: error.message};

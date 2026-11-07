@@ -446,6 +446,7 @@ function generateForumPermissionSpec(i18n: I18n): PermissionSpec {
 				description: ForumDescriptors.MANAGE_POSTS_PERMISSION_DESCRIPTION_DESCRIPTOR,
 			}),
 			makePermissionEntry(i18n, Permissions.MANAGE_MESSAGES, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.PIN_MESSAGES, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.EMBED_LINKS, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.ATTACH_FILES, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.READ_MESSAGE_HISTORY, {scope: 'channel'}),

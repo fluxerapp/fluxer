@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
 import {
 	stripGuildBannerForFeatures,
@@ -15,6 +16,7 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildRole} from '@app/api/models/GuildRole';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {hiddenGuildMember, isHiddenPartial} from '@app/api/user/ProfileVisibility';
+import {getEffectiveGuildMfaLevel} from '@fluxer/constants/src/GuildConstants';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -67,7 +69,7 @@ export function mapGuildToGuildResponse(
 		afk_channel_id: guild.afkChannelId ? guild.afkChannelId.toString() : null,
 		afk_timeout: guild.afkTimeout,
 		verification_level: guild.verificationLevel,
-		mfa_level: guild.mfaLevel,
+		mfa_level: getEffectiveGuildMfaLevel(guild.mfaLevel, guild.features, Config.instance.selfHosted),
 		nsfw_level: guild.nsfwLevel,
 		nsfw: guild.nsfw,
 		content_warning_level: guild.contentWarningLevel as 0 | 1,

@@ -14,6 +14,12 @@ export const normalizeKeyboardShortcutKey = (key: string): string => {
 };
 const isPrintableNonLetterShortcutKey = (key: string | undefined | null): boolean =>
 	!!key && key.length === 1 && !/^[a-z]$/i.test(key);
+const latinKeyCode = (key: string): string | null => {
+	if (/^[a-z]$/i.test(key)) return `Key${key.toUpperCase()}`;
+	if (/^[0-9]$/.test(key)) return `Digit${key}`;
+	return null;
+};
+const isNonAsciiLayoutKey = (key: string): boolean => key.length === 1 && key.charCodeAt(0) > 0x7f;
 const hasTriggerKey = (combo: KeyCombo): boolean => (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
 const keyboardEventIsModifierKey = (
 	event: Pick<KeyboardShortcutEvent, 'key' | 'code'>,
@@ -34,6 +40,10 @@ export const keyboardEventTriggerMatchesCombo = (combo: KeyCombo, event: Keyboar
 	const expectedLayoutKey = combo.key || combo.code;
 	if (shouldPreferLayoutKey(combo) && expectedLayoutKey) {
 		if (normalizeKeyboardShortcutKey(event.key) === normalizeKeyboardShortcutKey(expectedLayoutKey)) return true;
+		const hasCommandModifier = Boolean(combo.ctrl || combo.ctrlOrMeta || combo.alt || combo.meta);
+		if (hasCommandModifier && isNonAsciiLayoutKey(event.key) && event.code === latinKeyCode(expectedLayoutKey)) {
+			return true;
+		}
 		return Boolean(combo.code && event.code === combo.code && combo.ctrlOrMeta && combo.alt);
 	}
 	const expectedCode = combo.code;

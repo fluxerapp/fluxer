@@ -114,6 +114,19 @@ describe('forum and media channels', () => {
 				.execute();
 			expect(forum.available_tags!.map((tag) => tag.name).sort()).toEqual(names);
 		});
+
+		it('creates invites for forum and media channels', async () => {
+			const s = await setup();
+			const media = await createForum(s.owner.token, s.guildId, {}, ChannelTypes.GUILD_MEDIA);
+			for (const channelId of [s.forumId, media.id]) {
+				const invite = await threadsRequest<{code: string; channel: {id: string}}>(harness, s.owner.token)
+					.post(`/channels/${channelId}/invites`)
+					.body({})
+					.expect(200)
+					.execute();
+				expect(invite.channel.id).toBe(channelId);
+			}
+		});
 	});
 
 	describe('posts', () => {

@@ -117,6 +117,7 @@ export const AutocompleteGif = observer(
 					className={styles.scroller}
 					orientation="horizontal"
 					fade={true}
+					scrollbarTrackMode="reserve"
 					key="autocomplete-gif-scroller"
 					data-flx="channel.autocomplete-gif.scroller"
 				>

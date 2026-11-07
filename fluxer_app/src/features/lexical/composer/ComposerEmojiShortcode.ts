@@ -148,6 +148,8 @@ function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver):
 		const resolved = resolve(match.name);
 		if (resolved != null) {
 			edits.push({start: match.start, end: match.end, replacement: resolved});
+		} else if (!match.surrogate) {
+			searchFrom = match.end - 1;
 		}
 	}
 	if (edits.length === 0) {

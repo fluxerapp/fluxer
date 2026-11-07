@@ -10,6 +10,7 @@ import {makeAutoObservable} from 'mobx';
 
 interface ActiveScreenShareSourceOptions {
 	readonly isOwnWindow?: boolean;
+	readonly portalSurface?: 'window' | 'monitor';
 }
 
 export type PublishedScreenShareSource = 'web' | 'wayland' | 'device' | 'app' | 'display';
@@ -17,6 +18,7 @@ export type PublishedScreenShareSource = 'web' | 'wayland' | 'device' | 'app' | 
 class ActiveScreenShareSource {
 	sourceId: string | null = null;
 	ownWindow = false;
+	portalWindowShare = false;
 	publishedSource: PublishedScreenShareSource | null = null;
 	windowAudioScope: WindowShareAudioScope = 'window';
 	pendingWindowAudioScope: WindowShareAudioScope | null = null;
@@ -39,6 +41,7 @@ class ActiveScreenShareSource {
 		this.publishedSource = publishedSource;
 		this.sourceId = sourceId;
 		this.ownWindow = sourceId !== null && options.isOwnWindow === true;
+		this.portalWindowShare = publishedSource === 'wayland' && options.portalSurface === 'window';
 	}
 
 	getSourceId(): string | null {
@@ -118,7 +121,7 @@ class ActiveScreenShareSource {
 	}
 
 	getShareContext(): StreamSettingsShareContext | null {
-		if (this.publishedSource === 'app') return 'app';
+		if (this.publishedSource === 'app' || this.portalWindowShare) return 'app';
 		if (this.publishedSource === 'device') return 'device';
 		if (this.publishedSource === null) return null;
 		return 'display';
@@ -127,6 +130,7 @@ class ActiveScreenShareSource {
 	clear(): void {
 		this.sourceId = null;
 		this.ownWindow = false;
+		this.portalWindowShare = false;
 		this.publishedSource = null;
 		this.windowAudioScope = 'window';
 		this.pendingWindowAudioScope = null;

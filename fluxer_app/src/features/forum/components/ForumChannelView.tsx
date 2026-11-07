@@ -16,6 +16,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -61,11 +62,13 @@ const ForumGuidelines = observer(({forum}: {forum: Channel}) => {
 			</FocusRing>
 			{expanded && (
 				<div className={styles.guidelinesBody} data-flx="forum.forum-channel-view.forum-guidelines.guidelines-body">
-					<SafeMarkdown
-						content={forum.topic}
-						options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
-						data-flx="forum.forum-channel-view.forum-guidelines.safe-markdown"
-					/>
+					<div className={markupStyles.markup} data-flx="forum.forum-channel-view.forum-guidelines.markup">
+						<SafeMarkdown
+							content={forum.topic}
+							options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
+							data-flx="forum.forum-channel-view.forum-guidelines.safe-markdown"
+						/>
+					</div>
 				</div>
 			)}
 		</div>

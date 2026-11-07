@@ -44,7 +44,7 @@ import {
 	buildSearchSegmentsFromHints,
 	formatSearchHistoryEntryForStreamerMode,
 } from '@app/features/search/utils/SearchPrivacyUtils';
-import {matchSearchDateWords} from '@app/features/search/utils/SearchQueryParser';
+import {getSearchableGuildChannels, matchSearchDateWords} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {getSearchFilterOptions} from '@app/features/search/utils/SearchUtils';
@@ -55,7 +55,7 @@ import Users from '@app/features/user/state/Users';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {DateTime} from 'luxon';
@@ -70,12 +70,8 @@ function isDmSearchChannel(channel: Channel): boolean {
 	return channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
 }
 
-function isGuildSearchChannel(channel: Channel): boolean {
-	return (
-		channel.guildId != null &&
-		GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) &&
-		Permission.can(Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY, channel)
-	);
+function canSearchChannel(channel: Channel): boolean {
+	return Permission.can(Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY, channel);
 }
 
 function isHistoryFilterRow(option: AutocompleteOption): option is HistoryFilterRow {
@@ -457,16 +453,16 @@ export function useMessageSearchAutocomplete({
 					if (!plan.currentGuildId) {
 						throw new Error('Current guild channel suggestion mode requires a guild ID');
 					}
-					for (const guildChannel of Channels.getGuildChannels(plan.currentGuildId)) {
-						if (isGuildSearchChannel(guildChannel)) {
+					for (const guildChannel of getSearchableGuildChannels(plan.currentGuildId)) {
+						if (canSearchChannel(guildChannel)) {
 							addCandidate(guildChannel);
 						}
 					}
 					break;
 				case 'all_guilds':
-					for (const guildChannels of Channels.channelGroups.byGuild.values()) {
-						for (const guildChannel of guildChannels) {
-							if (isGuildSearchChannel(guildChannel)) {
+					for (const guildId of Channels.channelGroups.byGuild.keys()) {
+						for (const guildChannel of getSearchableGuildChannels(guildId)) {
+							if (canSearchChannel(guildChannel)) {
 								addCandidate(guildChannel);
 							}
 						}

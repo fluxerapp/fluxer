@@ -334,6 +334,19 @@ class ReadStates {
 		return state?.supportsUnreadTracking() ? state.oldestUnreadMessageId : null;
 	}
 
+	getOldestUnreadJumpTargetId(channelId: string): string | null {
+		const state = this.getIfExists(channelId);
+		if (!state?.supportsUnreadTracking() || !state.hasUnread()) return null;
+		const ackMessageId = state.ackMessageId;
+		if (ackMessageId == null) return state.oldestUnreadMessageId;
+		const messages = Messages.getMessages(channelId);
+		let boundaryLoaded = !messages.hasMoreBefore;
+		messages.forEachBuffered((message) => {
+			if (!isNewerMessageId(message.id, ackMessageId)) boundaryLoaded = true;
+		});
+		return boundaryLoaded ? (state.oldestUnreadMessageId ?? ackMessageId) : ackMessageId;
+	}
+
 	getVisualUnreadMessageId(channelId: string): string | null {
 		const state = this.getIfExists(channelId);
 		return state?.supportsUnreadTracking() ? state.visualUnreadMessageId : null;

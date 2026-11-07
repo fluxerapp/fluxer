@@ -20013,11 +20013,6 @@ msgstr "Netinkama autorizacijos užklausa"
 msgid "Invalid bot permissions."
 msgstr "Netinkami boto leidimai."
 
-#. Title of the error modal shown when a custom emoji name fails validation.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx
-msgid "Invalid emoji name"
-msgstr "Neteisingas jaustuko pavadinimas"
-
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "Invalid gift code"
@@ -25698,6 +25693,11 @@ msgstr "Tik CSS tekstas sinchronizuojamas visuose įrenginiuose. Įkelti ištekl
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "Sinchronizuojamas tik CSS tekstas. Įkelti ištekliai ir vietinių failų nuorodos lieka šiame įrenginyje."
+
+#. Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.
+#: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
+msgid "Only the first {maxPages} pages of results can be shown. Try a more specific search."
+msgstr "Galima rodyti tik pirmuosius {maxPages} rezultatų puslapius. Pabandykite tikslesnę paiešką."
 
 #. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -41217,6 +41217,11 @@ msgstr "Patvirtinimas nepavyko"
 #: src/features/guild/components/GuildBadge.tsx
 msgid "Verified & partnered community"
 msgstr "Patvirtinta ir partnerių bendruomenė"
+
+#. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Verified and partnered communities always require 2FA for moderators"
+msgstr "Patvirtintos ir partnerių bendruomenės visada reikalauja moderatorių 2FA"
 
 #. Short label in the community badge. Keep it concise.
 #: src/features/guild/components/GuildBadge.tsx
