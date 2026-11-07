@@ -29,7 +29,7 @@ const LEGACY_REPORT_SCHEMAS = {
 	guild: ReportGuildRequest,
 } as const;
 
-export function isUrgentFlowSubmission(target: ReportFlowTargetType, body: unknown): boolean {
+function isUrgentFlowSubmission(target: ReportFlowTargetType, body: unknown): boolean {
 	const parsed = FLOW_SUBMISSION_SCHEMAS[target].safeParse(body);
 	if (!parsed.success) return false;
 	try {
@@ -44,7 +44,7 @@ export function isUrgentFlowSubmission(target: ReportFlowTargetType, body: unkno
 	}
 }
 
-export function isUrgentLegacyReport(target: ReportFlowTargetType, body: unknown): boolean {
+function isUrgentLegacyReport(target: ReportFlowTargetType, body: unknown): boolean {
 	const parsed = LEGACY_REPORT_SCHEMAS[target].safeParse(body);
 	return parsed.success && isUrgentLegacyCategory(target, parsed.data.category);
 }
