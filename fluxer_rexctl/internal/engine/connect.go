@@ -365,6 +365,8 @@ func contextFor(host string) string {
 	return ""
 }
 
+func HostPlatform() string { return platform(runtime.GOARCH) }
+
 func platform(arch string) string {
 	switch strings.ToLower(arch) {
 	case "x86_64", "amd64":
