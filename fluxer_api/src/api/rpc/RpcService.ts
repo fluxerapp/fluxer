@@ -272,13 +272,6 @@ export class RpcService {
 		await ensurePersonalNotesChannelExists({channelRepository: this.channelRepository.channelData, userId: user.id});
 	}
 
-	private async updateGuildMemberCount(guild: Guild, actualMemberCount: number): Promise<Guild> {
-		if (guild.memberCount === actualMemberCount) {
-			return guild;
-		}
-		return await this.guildRepository.upsertPartial(guild.id, {member_count: actualMemberCount}, guild.toRow());
-	}
-
 	private async migrateStickerAnimated(sticker: GuildSticker): Promise<GuildSticker> {
 		if (sticker.animated !== null && sticker.animated !== undefined) {
 			return sticker;
@@ -1267,8 +1260,7 @@ export class RpcService {
 	}): Promise<RpcResponseGuildCollectionData> {
 		const guild = await this.getGuildOrThrow(guildId);
 		await this.ensureThreadPermissionsSeeded(guildId);
-		const memberCount = await this.guildRepository.countMembers(guildId);
-		const repairedMemberCountGuild = await this.updateGuildMemberCount(guild, memberCount);
+		const repairedMemberCountGuild = (await this.guildRepository.syncMemberCount(guildId)) ?? guild;
 
 		const repairedBannerGuild = await this.repairGuildAssetDimensions(
 			repairedMemberCountGuild,
@@ -1979,7 +1971,7 @@ export class RpcService {
 						]);
 						if (member?.isTemporary && guild) {
 							await this.guildRepository.deleteMember(guildId, userId);
-							await this.updateGuildMemberCount(guild, Math.max(0, guild.memberCount - 1));
+							await this.guildRepository.syncMemberCount(guildId);
 							await this.gatewayService.dispatchGuild({
 								guildId,
 								event: 'GUILD_MEMBER_REMOVE',

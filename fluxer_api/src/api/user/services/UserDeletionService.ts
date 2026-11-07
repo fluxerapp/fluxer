@@ -282,14 +282,7 @@ export async function processUserDeletion(
 					}
 				}
 				await guildRepository.deleteMember(guildId, userId);
-				const guild = await guildRepository.findUnique(guildId);
-				if (guild) {
-					await guildRepository.upsertPartial(
-						guildId,
-						{member_count: Math.max(0, guild.memberCount - 1)},
-						guild.toRow(),
-					);
-				}
+				await guildRepository.syncMemberCount(guildId);
 				await gatewayService.dispatchGuild({
 					guildId,
 					event: 'GUILD_MEMBER_REMOVE',

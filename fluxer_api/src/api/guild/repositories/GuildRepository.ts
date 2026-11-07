@@ -301,6 +301,17 @@ export class GuildRepository {
 		return result ? Number(result.count) : 0;
 	}
 
+	async syncMemberCount(guildId: GuildID): Promise<Guild | null> {
+		this.requestCache?.guilds.delete(guildId);
+		const [row, memberCount] = await Promise.all([
+			fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId}),
+			this.countMembers(guildId),
+		]);
+		if (!row) return null;
+		if ((row.member_count ?? 0) === memberCount) return new Guild(row);
+		return await this.upsertPartial(guildId, {member_count: memberCount}, row);
+	}
+
 	async upsertMember(data: GuildMemberRow, oldData?: GuildMemberRow | null): Promise<GuildMember> {
 		const guildId = data.guild_id;
 		const userId = data.user_id;

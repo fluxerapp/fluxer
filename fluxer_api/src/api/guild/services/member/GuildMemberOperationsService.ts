@@ -421,15 +421,8 @@ export class GuildMemberOperationsService {
 	private async deleteKickedMember(targetMember: GuildMember, actorId: UserID): Promise<void> {
 		const {guildId, userId: targetId} = targetMember;
 		await this.snapshotMembershipMetadata(targetMember);
-		const guild = await this.guildRepository.findUnique(guildId);
 		await this.guildRepository.deleteMember(guildId, targetId);
-		if (guild) {
-			await this.guildRepository.upsertPartial(
-				guildId,
-				{member_count: Math.max(0, guild.memberCount - 1)},
-				guild.toRow(),
-			);
-		}
+		await this.guildRepository.syncMemberCount(guildId);
 		await this.gatewayService.leaveGuild({userId: targetId, guildId});
 		await emitGuildMemberRemoved({guildId, userId: targetId, actorId, kind: 'kicked'});
 	}
@@ -526,7 +519,7 @@ export class GuildMemberOperationsService {
 			mention_flags: null,
 			version: 1,
 		});
-		await this.guildRepository.upsertPartial(guildId, {member_count: guild.memberCount + 1}, guild.toRow());
+		const syncedGuild = await this.guildRepository.syncMemberCount(guildId);
 		if (visit) {
 			await endGuildVisit({userId, guildId, reason: GuildVisitEndReasons.JOINED, notify: false});
 		}
@@ -543,7 +536,7 @@ export class GuildMemberOperationsService {
 		void emitActivity('guild_joined', userId.toString(), {
 			user_id: userId.toString(),
 			guild_id: guildId.toString(),
-			member_count: guild.memberCount + 1,
+			member_count: syncedGuild?.memberCount ?? guild.memberCount + 1,
 			discoverable: guild.features.has(GuildFeatures.DISCOVERABLE),
 			invite_code: sourceInviteCode,
 			inviter_id: inviterId ? inviterId.toString() : null,
@@ -572,16 +565,12 @@ export class GuildMemberOperationsService {
 			throw InputValidationError.fromCode('guild_id', ValidationErrorCodes.CANNOT_LEAVE_GUILD_AS_OWNER);
 		}
 		const user = await this.userRepository.findUnique(userId);
-		const guild = await this.guildRepository.findUnique(guildId);
 		const leavingMember = await this.guildRepository.getMember(guildId, userId);
 		if (leavingMember) {
 			await this.snapshotMembershipMetadata(leavingMember);
 		}
 		await this.guildRepository.deleteMember(guildId, userId);
-		if (guild) {
-			const newMemberCount = Math.max(0, guild.memberCount - 1);
-			await this.guildRepository.upsertPartial(guildId, {member_count: newMemberCount}, guild.toRow());
-		}
+		await this.guildRepository.syncMemberCount(guildId);
 		if (user && !user.isBot) {
 			await removeGuildFromUserFolders({
 				userId,

@@ -206,14 +206,7 @@ export class GuildModerationService {
 		await onGuildBanAdded({guildId, targetUserId: targetId, targetIp, gateway: this.gatewayService});
 		if (targetMember) {
 			await this.guildRepository.deleteMember(guildId, targetId);
-			const guild = await this.guildRepository.findUnique(guildId);
-			if (guild) {
-				await this.guildRepository.upsertPartial(
-					guildId,
-					{member_count: Math.max(0, guild.memberCount - 1)},
-					guild.toRow(),
-				);
-			}
+			await this.guildRepository.syncMemberCount(guildId);
 			await this.dispatchGuildMemberRemove({guildId, userId: targetId});
 			await this.gatewayService.leaveGuild({userId: targetId, guildId});
 			const guildForSearch = await this.guildRepository.findUnique(guildId);
