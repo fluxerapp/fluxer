@@ -348,6 +348,12 @@ export class UserRelationshipService {
 				userId,
 				targetId: targetId.toString(),
 			});
+			if (
+				relationshipType === RelationshipTypes.BLOCKED &&
+				(await this.userRepository.getRelationship(targetId, userId, RelationshipTypes.OUTGOING_REQUEST))
+			) {
+				await this.userRepository.deleteRelationship(targetId, userId, RelationshipTypes.OUTGOING_REQUEST);
+			}
 			return;
 		}
 		if (relationshipType === RelationshipTypes.OUTGOING_REQUEST) {
