@@ -254,7 +254,7 @@ func (e *Env) runningSet() Running {
 
 func (e *Env) platform() string {
 	if e.Engine == nil {
-		return ""
+		return engine.HostPlatform()
 	}
 	return e.Engine.Platform
 }

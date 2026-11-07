@@ -3,11 +3,16 @@
 package checks
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -50,5 +55,42 @@ func TestRunningRefsUsesThePinned3rdPartyImage(t *testing.T) {
 	refs = RunningRefs(set, map[string]string{"postgres": pinned}, Running{Chosen: func(k string) string { return chosen[k] }})
 	if !slices.Contains(refs, "postgres:16.9-alpine") || slices.Contains(refs, pinned) {
 		t.Fatalf("used the pinned image instead of FLUXER_POSTGRES_IMAGE: %v", refs)
+	}
+}
+
+func TestInstallNeedSizesImagesBeforeAnEngineIsFound(t *testing.T) {
+	platform := engine.HostPlatform()
+	if platform == "" {
+		t.Skip("no image platform for this machine")
+	}
+	e := &Env{Dir: t.TempDir()}
+	set := stack.ImageSet{Release: "test", Images: map[string]string{}, Layers: map[string]stack.Layer{}, Platforms: map[string]map[string][]string{platform: {}}}
+	for svc, ok := range stack.RegistryServices() {
+		if ok {
+			set.Images[svc] = "ghcr.io/fluxerapp/fluxer-" + svc + "@sha256:" + svc
+		}
+	}
+	refs := RunningRefs(stack.Embedded(), set.Images, e.runningSet())
+	for i, ref := range refs {
+		digest := fmt.Sprintf("sha256:layer%d", i)
+		set.Layers[digest] = stack.Layer{DiffID: digest, Compressed: 1 << 20, Unpacked: 2 << 20}
+		set.Platforms[platform][ref] = []string{digest}
+	}
+	data, err := json.Marshal(set)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "imageset.json")
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(stack.ImageSetEnv, path)
+
+	got := e.InstallNeed(context.Background())
+	if len(got) == 0 {
+		t.Skip("can't read free disk space here")
+	}
+	if want := uint64(len(refs))*(3<<20) + firstStartBytes + diskReserve; got[0].Need != want {
+		t.Fatalf("need %d, want %d for %d images", got[0].Need, want, len(refs))
 	}
 }
