@@ -466,22 +466,6 @@ export class RpcService {
 					data: {success: true},
 				};
 			}
-			case 'voice_update_participant_permissions': {
-				await this.requireVoiceService().updateParticipantPermissions({
-					guildId: request.guild_id !== undefined ? createGuildID(request.guild_id) : undefined,
-					channelId: createChannelID(request.channel_id),
-					userId: createUserID(request.user_id),
-					connectionId: request.connection_id,
-					canSpeak: request.can_speak,
-					canStream: request.can_stream,
-					canVideo: request.can_video,
-					deaf: request.deaf,
-				});
-				return {
-					type: 'voice_update_participant_permissions',
-					data: {success: true},
-				};
-			}
 			case 'kick_temporary_member': {
 				const success = await this.kickTemporaryMember({
 					userId: createUserID(request.user_id),

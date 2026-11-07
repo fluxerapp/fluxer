@@ -43,19 +43,6 @@ export interface MuteMicrophoneTrackParams {
 	trackSid: string;
 }
 
-export interface UpdateParticipantPermissionsParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	canSpeak: boolean;
-	canStream: boolean;
-	canVideo: boolean;
-	deaf?: boolean;
-}
-
 export interface DisconnectParticipantParams {
 	userId: UserID;
 	guildId?: GuildID;
@@ -133,8 +120,6 @@ export abstract class ILiveKitService {
 	}>;
 
 	abstract updateParticipant(params: UpdateParticipantParams): Promise<void>;
-
-	abstract updateParticipantPermissions(params: UpdateParticipantPermissionsParams): Promise<void>;
 
 	abstract muteMicrophoneTrack(params: MuteMicrophoneTrackParams): Promise<void>;
 

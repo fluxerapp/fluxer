@@ -18,8 +18,6 @@ export class DisabledLiveKitService implements ILiveKitService {
 
 	async updateParticipant(): Promise<void> {}
 
-	async updateParticipantPermissions(): Promise<void> {}
-
 	async muteMicrophoneTrack(): Promise<void> {}
 
 	async disconnectParticipant(): Promise<void> {}

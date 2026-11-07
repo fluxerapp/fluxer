@@ -21,6 +21,9 @@
 -type voice_state() :: map().
 -type user_id() :: integer().
 -type channel_id() :: integer().
+-type target() :: {user_id(), binary()}.
+
+-define(RESYNC_TIMEOUT_MS, 15000).
 
 -spec sync_user_voice_permissions(user_id(), guild_state()) -> ok.
 sync_user_voice_permissions(UserId, State) ->
@@ -29,24 +32,26 @@ sync_user_voice_permissions(UserId, State) ->
         undefined ->
             ok;
         GuildId ->
-            sync_matching_user_voice_states(GuildId, UserId, VoiceStates, State)
+            Targets = sync_matching_user_voice_states(GuildId, UserId, VoiceStates, State),
+            dispatch_livekit_resync(GuildId, Targets)
     end.
 
--spec sync_matching_user_voice_states(integer(), user_id(), map(), guild_state()) -> ok.
+-spec sync_matching_user_voice_states(integer(), user_id(), map(), guild_state()) -> [target()].
 sync_matching_user_voice_states(GuildId, UserId, VoiceStates, State) ->
-    maps:foreach(
-        fun(_ConnId, VoiceState) ->
-            maybe_sync_user_voice_state(GuildId, UserId, VoiceState, State)
+    maps:fold(
+        fun(_ConnId, VoiceState, Acc) ->
+            maybe_sync_user_voice_state(GuildId, UserId, VoiceState, State) ++ Acc
         end,
+        [],
         VoiceStates
-    ),
-    ok.
+    ).
 
--spec maybe_sync_user_voice_state(integer(), user_id(), voice_state(), guild_state()) -> ok.
+-spec maybe_sync_user_voice_state(integer(), user_id(), voice_state(), guild_state()) ->
+    [target()].
 maybe_sync_user_voice_state(GuildId, UserId, VoiceState, State) ->
     case voice_state_utils:voice_state_user_id(VoiceState) of
         UserId -> sync_voice_state_permissions(GuildId, UserId, VoiceState, State);
-        _ -> ok
+        _ -> []
     end.
 
 -spec sync_all_voice_permissions_for_channels([channel_id()], guild_state()) -> ok.
@@ -58,40 +63,40 @@ sync_all_voice_permissions_for_channels(ChannelIds, State) ->
         undefined ->
             ok;
         GuildId ->
-            sync_channels(GuildId, ChannelIds, VoiceStates, State)
+            Targets = sync_channels(GuildId, ChannelIds, VoiceStates, State),
+            dispatch_livekit_resync(GuildId, Targets)
     end.
 
--spec sync_channels(integer(), [channel_id()], map(), guild_state()) -> ok.
+-spec sync_channels(integer(), [channel_id()], map(), guild_state()) -> [target()].
 sync_channels(GuildId, ChannelIds, VoiceStates, State) ->
-    lists:foreach(
-        fun(ChannelId) ->
-            do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
+    lists:append([
+        do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
+     || ChannelId <- ChannelIds
+    ]).
+
+-spec do_sync_channel_permissions(integer(), channel_id(), map(), guild_state()) -> [target()].
+do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State) ->
+    maps:fold(
+        fun(_ConnId, VoiceState, Acc) ->
+            maybe_sync_channel_voice_state(GuildId, ChannelId, VoiceState, State) ++ Acc
         end,
-        ChannelIds
+        [],
+        VoiceStates
     ).
 
--spec do_sync_channel_permissions(integer(), channel_id(), map(), guild_state()) -> ok.
-do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State) ->
-    maps:foreach(
-        fun(_ConnId, VoiceState) ->
-            maybe_sync_channel_voice_state(GuildId, ChannelId, VoiceState, State)
-        end,
-        VoiceStates
-    ),
-    ok.
-
 -spec maybe_sync_channel_voice_state(integer(), channel_id(), voice_state(), guild_state()) ->
-    ok.
+    [target()].
 maybe_sync_channel_voice_state(GuildId, ChannelId, VoiceState, State) ->
     case voice_state_utils:voice_state_channel_id(VoiceState) of
         ChannelId -> sync_channel_voice_state_permissions(GuildId, VoiceState, State);
-        _ -> ok
+        _ -> []
     end.
 
--spec sync_channel_voice_state_permissions(integer(), voice_state(), guild_state()) -> ok.
+-spec sync_channel_voice_state_permissions(integer(), voice_state(), guild_state()) ->
+    [target()].
 sync_channel_voice_state_permissions(GuildId, VoiceState, State) ->
     case voice_state_utils:voice_state_user_id(VoiceState) of
-        undefined -> ok;
+        undefined -> [];
         UserId -> sync_voice_state_permissions(GuildId, UserId, VoiceState, State)
     end.
 
@@ -105,22 +110,23 @@ maybe_sync_permissions_on_member_update(MemberUpdate, State) ->
             sync_user_voice_permissions(UserId, State)
     end.
 
--spec sync_voice_state_permissions(integer(), user_id(), voice_state(), guild_state()) -> ok.
+-spec sync_voice_state_permissions(integer(), user_id(), voice_state(), guild_state()) ->
+    [target()].
 sync_voice_state_permissions(GuildId, UserId, VoiceState, State) ->
     ChannelId = voice_state_utils:voice_state_channel_id(VoiceState),
     ConnectionId = maps:get(<<"connection_id">>, VoiceState, undefined),
     case {ChannelId, ConnectionId} of
         {undefined, _} ->
-            ok;
+            [];
         {_, undefined} ->
-            ok;
+            [];
         {ChId, ConnId} when is_integer(ChId), is_binary(ConnId) ->
             sync_validated_voice_state(GuildId, UserId, ChId, ConnId, VoiceState, State)
     end.
 
 -spec sync_validated_voice_state(
     integer(), user_id(), channel_id(), binary(), voice_state(), guild_state()
-) -> ok.
+) -> [target()].
 sync_validated_voice_state(GuildId, UserId, ChId, ConnId, VoiceState, State) ->
     case user_has_base_voice_access(UserId, ChId, State) of
         true ->
@@ -129,11 +135,10 @@ sync_validated_voice_state(GuildId, UserId, ChId, ConnId, VoiceState, State) ->
                 deaf => maps:get(<<"deaf">>, VoiceState, false)
             },
             ok = maybe_clear_self_stream(ChId, VoiceState, VoicePermissions, State),
-            dispatch_permission_update(
-                GuildId, ChId, UserId, ConnId, VoicePermissions, State
-            );
+            dispatch_permission_update(GuildId, ChId, UserId, ConnId, VoicePermissions, State);
         false ->
-            dispatch_force_disconnect(GuildId, ChId, UserId, ConnId, State)
+            ok = dispatch_force_disconnect(GuildId, ChId, UserId, ConnId, State),
+            []
     end.
 
 -spec maybe_clear_self_stream(
@@ -195,18 +200,31 @@ spawn_force_disconnect(GuildId, ChannelId, UserId, ConnectionId) ->
 -spec dispatch_permission_update(
     integer(), channel_id(), user_id(), binary(), voice_utils:voice_permissions(), guild_state()
 ) ->
-    ok.
+    [target()].
 dispatch_permission_update(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, State) ->
     case maps:get(test_permission_sync_fun, State, undefined) of
         Fun when is_function(Fun, 5) ->
             _ = Fun(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions),
-            ok;
+            [];
         _ ->
-            Req = voice_utils:build_update_participant_permissions_rpc_request(
-                GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-            ),
-            voice_permission_sync_queue:enqueue(ConnectionId, Req)
+            [{UserId, ConnectionId}]
     end.
+
+-spec dispatch_livekit_resync(integer(), [target()]) -> ok.
+dispatch_livekit_resync(_GuildId, []) ->
+    ok;
+dispatch_livekit_resync(GuildId, Targets) ->
+    GuildPid = self(),
+    _ = spawn(fun() ->
+        VoicePid = guild_voice_server:resolve(GuildId, GuildPid),
+        Request = #{livekit_resync => Targets},
+        try gen_server:call(VoicePid, {update_member_voice, Request}, ?RESYNC_TIMEOUT_MS) of
+            _ -> ok
+        catch
+            exit:_ -> ok
+        end
+    end),
+    ok.
 
 -spec sync_roles_after_change([integer()], guild_state(), guild_state()) -> ok.
 sync_roles_after_change([], _OldState, _State) ->
@@ -217,15 +235,18 @@ sync_roles_after_change(RoleIds, OldState, State) ->
             ok;
         GuildId ->
             Affected = affected_role_users(GuildId, RoleIds, OldState, State),
-            sync_affected_voice_states(GuildId, Affected, State)
+            Targets = sync_affected_voice_states(GuildId, Affected, State),
+            dispatch_livekit_resync(GuildId, Targets)
     end.
 
--spec sync_affected_voice_states(integer(), all | sets:set(user_id()), guild_state()) -> ok.
+-spec sync_affected_voice_states(integer(), all | sets:set(user_id()), guild_state()) ->
+    [target()].
 sync_affected_voice_states(GuildId, Affected, State) ->
-    maps:foreach(
-        fun(_ConnId, VoiceState) ->
-            maybe_sync_affected_voice_state(GuildId, Affected, VoiceState, State)
+    maps:fold(
+        fun(_ConnId, VoiceState, Acc) ->
+            maybe_sync_affected_voice_state(GuildId, Affected, VoiceState, State) ++ Acc
         end,
+        [],
         guild_voice_lifecycle:authoritative_voice_states(State)
     ).
 
@@ -251,20 +272,20 @@ affected_role_users(GuildId, RoleIds, OldState, State) ->
 
 -spec maybe_sync_affected_voice_state(
     integer(), all | sets:set(user_id()), voice_state(), guild_state()
-) -> ok.
+) -> [target()].
 maybe_sync_affected_voice_state(GuildId, Affected, VoiceState, State) ->
     case voice_state_utils:voice_state_user_id(VoiceState) of
-        undefined -> ok;
+        undefined -> [];
         UserId -> sync_if_affected(GuildId, UserId, Affected, VoiceState, State)
     end.
 
 -spec sync_if_affected(
     integer(), user_id(), all | sets:set(user_id()), voice_state(), guild_state()
-) -> ok.
+) -> [target()].
 sync_if_affected(GuildId, UserId, Affected, VoiceState, State) ->
     case is_affected(UserId, Affected) of
         true -> sync_voice_state_permissions(GuildId, UserId, VoiceState, State);
-        false -> ok
+        false -> []
     end.
 
 -spec is_affected(user_id(), all | sets:set(user_id())) -> boolean().
