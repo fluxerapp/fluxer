@@ -16,6 +16,7 @@ import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -282,6 +283,7 @@ export async function processUserDeletion(
 					}
 				}
 				await guildRepository.deleteMember(guildId, userId);
+				await new GuildMemberSearchIndexService().deleteMember(guildId, userId);
 				await guildRepository.syncMemberCount(guildId);
 				await gatewayService.dispatchGuild({
 					guildId,
