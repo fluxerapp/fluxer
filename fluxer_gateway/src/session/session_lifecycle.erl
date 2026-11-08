@@ -61,7 +61,7 @@ any_hash_matches(AuthHash, Hashes) ->
 
 -spec terminate(term(), session_state()) -> ok.
 terminate(_Reason, State) ->
-    try_decrement_user_sessions(State),
+    try_remove_user_session(State),
     maybe_release_transferred_resources(State),
     try_cleanup_guild_monitors(State),
     try_cleanup_call_monitors(State),
@@ -76,10 +76,10 @@ maybe_release_transferred_resources(State) ->
     try_cleanup_presence(State),
     ok.
 
--spec try_decrement_user_sessions(session_state()) -> ok.
-try_decrement_user_sessions(#{user_id := UserId}) when is_integer(UserId) ->
-    session_abuse_protection:decrement_user_sessions(UserId);
-try_decrement_user_sessions(_) ->
+-spec try_remove_user_session(session_state()) -> ok.
+try_remove_user_session(#{user_id := UserId}) when is_integer(UserId) ->
+    session_abuse_protection:remove_user_session(UserId);
+try_remove_user_session(_) ->
     ok.
 
 -spec try_voice_disconnect(session_state()) -> ok.

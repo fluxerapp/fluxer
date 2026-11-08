@@ -69,27 +69,13 @@ maybe_spawn_guild_connect(GuildId, Attempt, SessionId, UserId, State) ->
             erlang:send_after(50, self(), {guild_connect, GuildId, Attempt}),
             {noreply, State};
         {false, false} ->
-            try_acquire_and_spawn(GuildId, Attempt, SessionId, UserId, Inflight0, State)
-    end.
-
--spec try_acquire_and_spawn(guild_id(), attempt(), binary(), integer(), map(), session_state()) ->
-    {noreply, session_state()}.
-try_acquire_and_spawn(GuildId, Attempt, SessionId, UserId, Inflight0, State) ->
-    Bot = ensure_bool(maps:get(bot, State, false)),
-    IsStaff = ensure_bool(maps:get(is_staff, State, false)),
-    case gateway_concurrency:try_acquire_guild_start() of
-        {error, at_capacity} ->
-            Jitter = rand:uniform(200),
-            erlang:send_after(50 + Jitter, self(), {guild_connect, GuildId, Attempt}),
-            {noreply, State};
-        ok ->
             Request = #{
                 guild_id => GuildId,
                 attempt => Attempt,
                 session_id => SessionId,
                 user_id => UserId,
-                bot => Bot,
-                is_staff => IsStaff
+                bot => ensure_bool(maps:get(bot, State, false)),
+                is_staff => ensure_bool(maps:get(is_staff, State, false))
             },
             spawn_guild_connect_worker(Request, Inflight0, State)
     end.
@@ -125,10 +111,15 @@ spawn_guild_connect_worker(
 
 -spec do_guild_connect_with_release(map()) -> ok.
 do_guild_connect_with_release(Ctx) ->
-    try
-        do_guild_connect(Ctx)
-    after
-        gateway_concurrency:release_guild_start()
+    case gateway_concurrency:try_acquire_guild_start() of
+        ok ->
+            try
+                do_guild_connect(Ctx)
+            after
+                gateway_concurrency:release_guild_start()
+            end;
+        {error, at_capacity} ->
+            exit(guild_start_at_capacity)
     end.
 
 -spec do_guild_connect(map()) -> ok.
@@ -205,11 +196,27 @@ handle_guild_connect_worker_down(WorkerRef, Reason, State) ->
         ->
             {guild_connect_worker,
                 {noreply, put_guild_connect_workers(RemainingWorkers, State)}};
+        {{GuildId, Attempt, _WorkerPid}, RemainingWorkers} when
+            Reason =:= guild_start_at_capacity
+        ->
+            State1 = put_guild_connect_workers(RemainingWorkers, State),
+            {guild_connect_worker, retry_at_capacity(GuildId, Attempt, State1)};
         {{GuildId, Attempt, _WorkerPid}, RemainingWorkers} ->
             State1 = put_guild_connect_workers(RemainingWorkers, State),
             fail_dead_guild_connect_worker(GuildId, Attempt, Reason, State1);
         error ->
             not_guild_connect_worker
+    end.
+
+-spec retry_at_capacity(guild_id(), attempt(), session_state()) -> session_result().
+retry_at_capacity(GuildId, Attempt, State) ->
+    case maps:get(GuildId, guild_connect_inflight(State), undefined) of
+        Attempt ->
+            Jitter = rand:uniform(200),
+            erlang:send_after(50 + Jitter, self(), {guild_connect, GuildId, Attempt}),
+            {noreply, remove_guild_connect_inflight(GuildId, State)};
+        _Other ->
+            {noreply, State}
     end.
 
 -spec fail_dead_guild_connect_worker(guild_id(), attempt(), term(), session_state()) ->

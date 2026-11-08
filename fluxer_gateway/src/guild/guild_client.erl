@@ -4,6 +4,8 @@
 
 -typing([eqwalizer]).
 
+-dialyzer({nowarn_function, execute_with_slot/3}).
+
 -export([voice_state_update/4]).
 -export([do_call/3]).
 -export([request_trace/1]).
@@ -43,29 +45,43 @@
 
 -spec execute_with_slot(pid(), map(), timeout()) -> voice_state_update_result().
 execute_with_slot(TargetPid, Request, Timeout) ->
-    try
-        circuit_breaker_execute(TargetPid, Request, Timeout)
-    after
-        guild_client_circuit_breaker:release_slot(TargetPid)
+    {_Worker, Ref} = spawn_monitor(fun() ->
+        exit({?MODULE, acquire_and_execute(TargetPid, Request, Timeout)})
+    end),
+    receive
+        {'DOWN', Ref, process, _, {?MODULE, Result}} ->
+            Result;
+        {'DOWN', Ref, process, Worker, _Reason} ->
+            guild_client_circuit_breaker:release_slot(TargetPid, Worker),
+            {error, unknown, internal_error}
+    end.
+
+-spec acquire_and_execute(pid(), map(), timeout()) -> voice_state_update_result().
+acquire_and_execute(TargetPid, Request, Timeout) ->
+    case guild_client_circuit_breaker:acquire_slot(TargetPid) of
+        ok ->
+            try
+                circuit_breaker_execute(TargetPid, Request, Timeout)
+            after
+                guild_client_circuit_breaker:release_slot(TargetPid, self())
+            end;
+        {error, too_many_requests} ->
+            {error, too_many_requests}
     end.
 
 -spec voice_state_update(pid(), integer(), map(), timeout()) -> voice_state_update_result().
 voice_state_update(GuildPid, GuildId, Request, Timeout) ->
     guild_client_circuit_breaker:ensure_table(),
-    maybe
-        {ok, TargetPid} ?= resolve_voice_pid(GuildId, GuildPid),
-        ok ?= guild_client_circuit_breaker:acquire_slot(TargetPid),
-        execute_with_slot(TargetPid, Request, Timeout)
-    else
+    case resolve_voice_pid(GuildId, GuildPid) of
+        {ok, TargetPid} ->
+            execute_with_slot(TargetPid, Request, Timeout);
         {error, not_found} ->
             logger:warning(
                 "guild_client_no_voice_server:"
                 " guild_id=~p guild_pid=~p request=~p",
                 [GuildId, GuildPid, request_trace(Request)]
             ),
-            {error, noproc};
-        {error, Reason} ->
-            {error, Reason}
+            {error, noproc}
     end.
 
 -spec resolve_voice_pid(integer(), pid()) -> {ok, pid()} | {error, not_found}.

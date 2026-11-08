@@ -100,6 +100,13 @@ ensure_core_tables() ->
         {voice_state_count_servers, RW},
         {guild_unavailability_cache, RO},
         {guild_circuit_breaker, RW},
+        {guild_circuit_breaker_slots, [
+            named_table,
+            public,
+            ordered_set,
+            {read_concurrency, true},
+            {write_concurrency, true}
+        ]},
         {guild_permission_cache, RO},
         {guild_read_model, RO},
         {guild_health_status, RO},

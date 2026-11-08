@@ -148,15 +148,8 @@ handle_user_session_limit_result(ok, Ctx) ->
         maps:get(sessions, Ctx),
         maps:get(state, Ctx)
     ),
-    ok = release_session_reservation(maps:get(user_data_map, Ctx), UserId),
+    ok = session_abuse_protection:remove_user_session(UserId),
     StartResult.
-
--spec release_session_reservation(map(), integer()) -> ok.
-release_session_reservation(UserDataMap, UserId) ->
-    case is_bot_identify(UserDataMap) of
-        true -> ok;
-        false -> session_abuse_protection:decrement_user_sessions(UserId)
-    end.
 
 -spec validate_identify_payload(term()) ->
     {ok, map(), integer(), binary()} | {error, term()}.

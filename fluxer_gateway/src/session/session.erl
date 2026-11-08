@@ -98,7 +98,7 @@ init(SessionData) ->
         ScheduleStartedAt,
         gateway_timings:from_state(State0)
     ),
-    ok = session_abuse_protection:increment_user_sessions(maps:get(user_id, State0, undefined)),
+    ok = session_abuse_protection:add_user_session(maps:get(user_id, State0, undefined)),
     {ok, gateway_timings:put_state(GwTimings, State0)}.
 
 -spec handle_call(term(), gen_server:from(), session_state()) ->
