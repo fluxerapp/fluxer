@@ -22,3 +22,4 @@
 -kernel logger_level warning
 -kernel inet_dist_listen_min ${FLUXER_ERLANG_DIST_PORT}
 -kernel inet_dist_listen_max ${FLUXER_ERLANG_DIST_PORT}
+-kernel prevent_overlapping_partitions false
