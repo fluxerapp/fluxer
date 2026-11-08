@@ -23,7 +23,8 @@
 -type handoff_result() :: #{attempted := non_neg_integer(), handed_off := non_neg_integer()}.
 -type state() :: #{
     shards := #{non_neg_integer() => shard_map()},
-    shard_count := pos_integer()
+    shard_count := pos_integer(),
+    cached_pid_watches => #{{guild_id(), pid()} => true}
 }.
 
 -spec start_link() -> gen_server:start_ret().
@@ -203,6 +204,10 @@ sync_handoff_shards(Manager, NewState) ->
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast({handoff_shards_sync, WorkerShards}, State) when is_map(WorkerShards) ->
     {noreply, reconcile_handoff_shards(eqwalizer:dynamic_cast(WorkerShards), State)};
+handle_cast({watch_cached_guild_pid, GuildId, Pid}, State) when
+    is_integer(GuildId), is_pid(Pid)
+->
+    {noreply, watch_cached_guild_pid(GuildId, Pid, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -234,6 +239,17 @@ adopt_worker_shard_for_pid(Index, WorkerShard, Acc, Pid) ->
         false -> Acc#{Index => WorkerShard}
     end.
 
+-spec watch_cached_guild_pid(guild_id(), pid(), state()) -> state().
+watch_cached_guild_pid(GuildId, Pid, State) ->
+    Watches = maps:get(cached_pid_watches, State, #{}),
+    case maps:is_key({GuildId, Pid}, Watches) of
+        true ->
+            State;
+        false ->
+            _ = erlang:monitor(process, Pid, [{tag, {cached_guild_pid_down, GuildId}}]),
+            State#{cached_pid_watches => Watches#{{GuildId, Pid} => true}}
+    end.
+
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     Shards = maps:get(shards, State),
@@ -244,6 +260,10 @@ handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref),
             guild_manager_cache:cleanup_guild_from_cache(Pid),
             {noreply, State}
     end;
+handle_info({{cached_guild_pid_down, GuildId}, _Ref, process, Pid, _Reason}, State) ->
+    guild_manager_cache:forget_cached_guild_pid(GuildId, Pid),
+    Watches = maps:get(cached_pid_watches, State, #{}),
+    {noreply, State#{cached_pid_watches => maps:remove({GuildId, Pid}, Watches)}};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     Shards = maps:get(shards, State),
     case shard_utils:find_shard_by_pid(Pid, Shards) of
