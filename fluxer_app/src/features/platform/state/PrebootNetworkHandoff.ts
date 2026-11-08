@@ -76,6 +76,11 @@ export function takePrebootDiscoveryResponse(url: string, signal?: AbortSignal |
 	return signal == null ? discovery.response : waitForAbortablePromise(discovery.response, signal);
 }
 
+export function discardPrebootGatewaySocket(): void {
+	const handoff = readHandoff();
+	if (handoff != null) discardGateway(handoff);
+}
+
 export function takePrebootGatewaySocket(url: string): PrebootGatewaySocket | null {
 	const handoff = readHandoff();
 	const gateway = handoff?.gateway;
@@ -102,9 +107,13 @@ function boundedUrl(value: string | null, protocols: ReadonlyArray<string>): str
 
 export function writePrebootNetworkHint(hint: PrebootNetworkHint): void {
 	if (typeof window === 'undefined') return;
-	const desktop = isDesktopLocalAppDocument();
-	const gateway = boundedUrl(hint.gatewayEndpoint, desktop ? ['wss:'] : ['ws:', 'wss:']);
-	if (gateway == null || hint.accountKey.length === 0 || hint.accountKey.length > MAX_HINT_FIELD_LENGTH) {
+	const gateway = boundedUrl(hint.gatewayEndpoint, ['ws:', 'wss:']);
+	if (
+		isDesktopLocalAppDocument() ||
+		gateway == null ||
+		hint.accountKey.length === 0 ||
+		hint.accountKey.length > MAX_HINT_FIELD_LENGTH
+	) {
 		writeRawStorageItem(PREBOOT_NETWORK_HINT_STORAGE_KEY, null);
 		return;
 	}
@@ -114,7 +123,7 @@ export function writePrebootNetworkHint(hint: PrebootNetworkHint): void {
 			v: PREBOOT_NETWORK_HINT_VERSION,
 			a: hint.accountKey,
 			g: gateway,
-			d: desktop ? null : boundedUrl(hint.discoveryUrl, ['http:', 'https:']),
+			d: boundedUrl(hint.discoveryUrl, ['http:', 'https:']),
 		}),
 	);
 }

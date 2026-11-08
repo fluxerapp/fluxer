@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
-import {type PrebootGatewaySocket, takePrebootGatewaySocket} from '@app/features/platform/state/PrebootNetworkHandoff';
+import {
+	discardPrebootGatewaySocket,
+	type PrebootGatewaySocket,
+	takePrebootGatewaySocket,
+} from '@app/features/platform/state/PrebootNetworkHandoff';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -786,13 +790,11 @@ function getDesktopGatewayTransportRouter(api: NativeGatewayTransportAPI): Deskt
 }
 
 export function createGatewayWireTransport(url: string, options: GatewayWireTransportOptions): GatewayWireTransport {
-	const preboot = options.adoptPrebootSocket === true ? takePrebootGatewaySocket(url) : null;
-	if (preboot != null) {
-		return new BrowserGatewayWireTransport(url, options, preboot);
-	}
 	const api = resolveNativeGatewayTransportAPI(url);
 	if (api != null) {
+		discardPrebootGatewaySocket();
 		return new DesktopNativeGatewayWireTransport(url, getDesktopGatewayTransportRouter(api));
 	}
-	return new BrowserGatewayWireTransport(url, options, null);
+	const preboot = options.adoptPrebootSocket === true ? takePrebootGatewaySocket(url) : null;
+	return new BrowserGatewayWireTransport(url, options, preboot);
 }

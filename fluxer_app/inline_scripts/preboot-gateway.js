@@ -3,6 +3,9 @@
 		if (typeof WebSocket !== 'function' || typeof fetch !== 'function') {
 			return;
 		}
+		if (location.protocol === 'fluxer-app:') {
+			return;
+		}
 		const path = location.pathname;
 		if (path === '/' || path.startsWith('/migrate/') || path.startsWith('/oauth2/')) {
 			return;
