@@ -217,12 +217,10 @@ export class UserChannelRepository {
 	}
 
 	async closeDmForUser(userId: UserID, channelId: ChannelID): Promise<void> {
-		await deleteOneOrMany(
-			PrivateChannels.deleteByPk({
-				user_id: userId,
-				channel_id: channelId,
-			}),
-		);
+		const batch = new BatchBuilder();
+		batch.addPrepared(PrivateChannels.deleteByPk({user_id: userId, channel_id: channelId}));
+		batch.addPrepared(PinnedDms.deleteByPk({user_id: userId, channel_id: channelId}));
+		await batch.execute();
 	}
 
 	async createDmChannelAndState(user1Id: UserID, user2Id: UserID, channelId: ChannelID): Promise<Channel> {
@@ -381,7 +379,7 @@ export class UserChannelRepository {
 	private async cleanupOrphanedPrivateChannels(userId: UserID, channelIds: Array<ChannelID>): Promise<void> {
 		try {
 			for (const channelId of channelIds) {
-				await deleteOneOrMany(PrivateChannels.deleteByPk({user_id: userId, channel_id: channelId}));
+				await this.closeDmForUser(userId, channelId);
 				await deleteOneOrMany(UserDmHistory.deleteByPk({user_id: userId, channel_id: channelId}));
 			}
 			Logger.warn(
