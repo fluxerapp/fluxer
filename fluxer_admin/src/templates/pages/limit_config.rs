@@ -13,7 +13,7 @@ use crate::{
                 danger_button, form_actions, secondary_button, submit_button,
             },
             icons,
-            page_container::{card_with_header, card_with_header_extended, page_header},
+            page_container::{card_with_header, card_with_header_desc, page_header},
             tooltip,
         },
         layout::admin_layout,
@@ -76,13 +76,13 @@ const FILTER_PREVIEW_SCRIPT: &str = r#"
 		var scopeLabel;
 		var values;
 		if (hasTraits && !hasFeatures) {
-			scopeLabel = 'users with the trait: ';
+			scopeLabel = 'users given the trait: ';
 			values = traits.join(', ');
 		} else if (!hasTraits && hasFeatures) {
-			scopeLabel = 'communities with the feature: ';
+			scopeLabel = 'communities given the feature: ';
 			values = features.join(', ');
 		} else {
-			scopeLabel = 'users or communities with a matching trait or feature';
+			scopeLabel = 'users given this rule as a trait or communities given this rule as a feature';
 			values = '';
 		}
 
@@ -194,9 +194,9 @@ fn render_limit_page(
         .unwrap_or("default");
     let active_rule = rules.iter().find(|rule| rule.id == active_rule_id);
     let description = if response.self_hosted.unwrap_or(false) {
-        "Configure limits by adding rules to customize user or community restrictions. Rules are then applied to users or communities, depending on filters. The default rule applies to all users and communities and cannot be overridden by rules that restrict features and limits under the default."
+        "Configure limits by adding rules that raise limits ABOVE the default for specific users or communities. Rules apply to users or communities depending on their filters. The default rule applies to everyone and sets the baseline; filtered rules can only raise values above it, never lower them."
     } else {
-        "Configure limit rules that control user and guild restrictions. Different rules apply based on user traits or guild features."
+        "Configure limit rules that raise limits above the default for users or communities, based on user traits or community features."
     };
     html! {
         (page_header("Limit Configuration", Some(description)))
@@ -433,13 +433,14 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
     } else {
         "…".to_owned()
     };
-    card_with_header_extended(
+    card_with_header_desc(
         "Filters",
         Some(html! {
-            "Write custom filter names to restrict this rule to specified users or communities. These filters can then be assigned as traits to a "
+            "Write custom filter names to only apply this rule to specific users or communities. These filters can then be assigned as traits to a "
             a href={(base) "/users"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "user" }
             ", or a feature for a "
-            a href={(base) "/guilds"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "community" } "."
+            a href={(base) "/guilds"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "community" }
+            ". A filtered rule can only raise a value above the default, and a rule filtered by guild feature never applies user-wide limits."
         }),
         html! {
             div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
@@ -463,8 +464,8 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
             @if is_default_rule {
                 div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
                     data-default-rule-warning hidden[!show_default_warning] {
-                    strong class="font-semibold" { "Not recommended on rule: Default." }
-                    " The default rule is the fallback that applies to every user and community. Adding filters here narrows it, so anyone who does not match is left with no rule at all instead of this rule's limits. Create a dedicated rule for to apply grants or restrictions to users or communities."
+                    strong class="font-semibold" { "Not recommended on the default rule." }
+                    " The default rule is the baseline for every user and community. Filtering it does not restrict anyone, it means anything that does not match falls back to the built-in defaults. Exceptions, for example Community Creation Access, are best used in their own rule."
                 }
             }
             div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3" {
@@ -473,7 +474,13 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
                         data-filter-scope="default" data-state=(state_for("default")) {
                         span aria-hidden="true"
                             class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
-                        span { "This rule is applied to everyone." }
+                        span {
+                            @if is_default_rule {
+                                "This rule is applied to everyone."
+                            } @else {
+                                "No filters set, so this rule matches every user and community."
+                            }
+                        }
                     }
                     li class="group flex items-start gap-2 opacity-50 transition-opacity data-[state=active]:opacity-100"
                         data-filter-scope="either" data-state=(state_for("either")) {
@@ -490,9 +497,9 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
                         span aria-hidden="true"
                             class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
                         span {
-                            "Applied only to users given the trait: "
+                            "Applied only when a user has the trait: "
                             span class="font-mono text-neutral-700" data-filter-value="user_values" { (traits_display) }
-                            " and communities given the feature: "
+                            " and their community has the feature: "
                             span class="font-mono text-neutral-700" data-filter-value="guild_values" { (guild_features_display) }
                         }
                     }

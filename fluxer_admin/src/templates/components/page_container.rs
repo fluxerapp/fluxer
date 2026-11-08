@@ -81,10 +81,10 @@ pub fn card(content: Markup) -> Markup {
 }
 
 pub fn card_with_header(title: &str, content: Markup) -> Markup {
-    card_with_header_extended(title, None, content)
+    card_with_header_desc(title, None, content)
 }
 
-pub fn card_with_header_extended(title: &str, desc: Option<Markup>, content: Markup) -> Markup {
+pub fn card_with_header_desc(title: &str, desc: Option<Markup>, content: Markup) -> Markup {
     html! {
         div class="rounded-lg bg-white transition-all border border-neutral-200" {
             div class="border-b border-neutral-200 px-6 py-3" {
