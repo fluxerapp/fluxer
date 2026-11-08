@@ -46,6 +46,12 @@ function assertOrdinaryUserPatch(patch: UserPatch): void {
 	}
 }
 
+function withWholeTag(patch: UserPatch, row: UserRow | null): UserPatch {
+	if (!row || (patch.username === undefined) === (patch.discriminator === undefined)) return patch;
+	if (patch.username === undefined) return {...patch, username: Db.set(row.username)};
+	return {...patch, discriminator: Db.set(row.discriminator)};
+}
+
 function assertWritableUserId(userId: UserID): void {
 	if (isSyntheticUserId(userId)) {
 		throw new Error(`Refusing to write a users row for synthetic user ${userId}`);
@@ -149,20 +155,21 @@ export class UserDataRepository {
 	}> {
 		assertWritableUserId(userId);
 		assertOrdinaryUserPatch(patch);
+		let written = patch;
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
 			},
-			(_current) => ({
-				pk: {user_id: userId},
-				patch,
-			}),
+			(current) => {
+				written = withWholeTag(patch, current);
+				return {pk: {user_id: userId}, patch: written};
+			},
 			Users,
 			{initialData: oldData},
 		);
 		const previousData = result.previousData;
 		const updatedData = {
-			...(applyPatchToRow<UserRow>(previousData, patch) as UserRow),
+			...(applyPatchToRow<UserRow>(previousData, written) as UserRow),
 			user_id: userId,
 			version: result.finalVersion ?? nextVersion(previousData?.version),
 		};
