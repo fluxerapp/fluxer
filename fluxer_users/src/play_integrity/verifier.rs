@@ -74,8 +74,7 @@ pub struct AgeSignalsClientData {
     pub challenge: String,
     pub age_lower: u8,
     pub age_upper: Option<u8>,
-    #[serde(rename = "age_range_source")]
-    _age_range_source: AgeRangeSource,
+    pub age_range_source: AgeRangeSource,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -85,6 +84,12 @@ pub enum AgeRangeSource {
     TierB,
     TierC,
     TierD,
+}
+
+impl AgeRangeSource {
+    pub fn is_verified(self) -> bool {
+        matches!(self, Self::TierC | Self::TierD)
+    }
 }
 
 impl AgeSignalsClientData {
@@ -269,7 +274,7 @@ mod tests {
                 challenge: String::new(),
                 age_lower: lower,
                 age_upper: upper,
-                _age_range_source: AgeRangeSource::TierA,
+                age_range_source: AgeRangeSource::TierA,
             }
             .age_floor()
         };
@@ -282,5 +287,13 @@ mod tests {
         assert_eq!(floor(16, Some(15)), None);
         assert_eq!(floor(18, Some(17)), None);
         assert_eq!(floor(19, None), None);
+    }
+
+    #[test]
+    fn only_checked_age_sources_are_verified() {
+        assert!(!AgeRangeSource::TierA.is_verified());
+        assert!(!AgeRangeSource::TierB.is_verified());
+        assert!(AgeRangeSource::TierC.is_verified());
+        assert!(AgeRangeSource::TierD.is_verified());
     }
 }

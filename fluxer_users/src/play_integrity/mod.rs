@@ -212,5 +212,6 @@ pub enum PlayIntegrityRejection {
     InvalidToken,
     AppNotRecognized,
     DeviceNotTrusted,
+    SourceNotVerified,
     Unavailable,
 }

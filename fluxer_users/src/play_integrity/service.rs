@@ -3,11 +3,11 @@
 use super::google::{DecodeError, GoogleClient};
 use super::verifier::{self, AgeSignalsClientData};
 use super::{PlayIntegrityConfig, PlayIntegrityRejection};
-use crate::app_attest::ChallengePurpose;
 use crate::app_attest::service::{
     MAX_CLIENT_DATA_BYTES, consume_challenge, decode_limited, issue_challenge, unix_ms,
 };
 use crate::app_attest::store::{AppAttestStore, iso_millis};
+use crate::app_attest::{AgeFloor, ChallengePurpose};
 use crate::types::UserResponse;
 use ring::rand::SystemRandom;
 use std::time::SystemTime;
@@ -141,6 +141,10 @@ impl PlayIntegrityService {
         ) {
             tracing::info!(user_id, ?rejection, "play integrity verdict rejected");
             return Ok(Err(rejection));
+        }
+        if age_floor == AgeFloor::Adult && !parsed.age_range_source.is_verified() {
+            tracing::info!(user_id, source = ?parsed.age_range_source, "play integrity age source not verified");
+            return Ok(Err(PlayIntegrityRejection::SourceNotVerified));
         }
         tracing::info!(user_id, "play integrity age range accepted");
         Ok(Ok(UserResponse::AppAttestAgeAccepted {

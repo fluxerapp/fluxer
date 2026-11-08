@@ -72,6 +72,7 @@ const PLAY_INTEGRITY_REJECTION_CODES = [
 	'invalid_token',
 	'app_not_recognized',
 	'device_not_trusted',
+	'source_not_verified',
 	'unavailable',
 ] as const;
 
