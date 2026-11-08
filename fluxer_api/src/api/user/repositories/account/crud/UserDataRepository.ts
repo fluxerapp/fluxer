@@ -366,15 +366,14 @@ export class UserDataRepository {
 		await upsertOne(
 			Users.patchByPk(
 				{user_id: userId},
-				{
-					last_active_at: Db.set(lastActiveAt),
-					last_active_ip: lastActiveIp !== undefined ? Db.set(lastActiveIp) : Db.clear(),
-				},
+				lastActiveIp !== undefined
+					? {last_active_at: Db.set(lastActiveAt), last_active_ip: Db.set(lastActiveIp)}
+					: {last_active_at: Db.set(lastActiveAt)},
 			),
 		);
 		return {
 			previousData,
-			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? null},
+			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? previousData.last_active_ip},
 		};
 	}
 
