@@ -3,6 +3,8 @@
 export const ERROR_I18N_MESSAGES = {
 	'account.age_range_not_adult': "An age range only counts here when it shows that you're 18 or older.",
 	'account.age_range_not_needed': "You don't need an age range where you are.",
+	'account.age_range_source_not_verified':
+		"An age you only entered yourself in your Google account doesn't count here. It counts once Google has checked it, for example with a card or an ID.",
 	'account.already_claimed': 'This account is already set up to sign in from other devices.',
 	'account.app_attest_assertion_invalid': "We couldn't confirm the age range your device sent.",
 	'account.app_attest_attestation_invalid': "We couldn't confirm this device key.",

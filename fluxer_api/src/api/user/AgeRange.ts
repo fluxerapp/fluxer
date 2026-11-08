@@ -21,6 +21,7 @@ import {type AppAttestChallengePurpose, AttestedAgeFloors} from '@fluxer/constan
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {AgeRangeNotAdultError} from '@fluxer/errors/src/domains/user/AgeRangeNotAdultError';
 import {AgeRangeNotNeededError} from '@fluxer/errors/src/domains/user/AgeRangeNotNeededError';
+import {AgeRangeSourceNotVerifiedError} from '@fluxer/errors/src/domains/user/AgeRangeSourceNotVerifiedError';
 import {AppAttestAssertionInvalidError} from '@fluxer/errors/src/domains/user/AppAttestAssertionInvalidError';
 import {AppAttestAttestationInvalidError} from '@fluxer/errors/src/domains/user/AppAttestAttestationInvalidError';
 import {AppAttestChallengeInvalidError} from '@fluxer/errors/src/domains/user/AppAttestChallengeInvalidError';
@@ -100,6 +101,8 @@ function playIntegrityRejectionError(code: PlayIntegrityRejectionCode): Error {
 			return new PlayIntegrityAppNotRecognizedError();
 		case 'device_not_trusted':
 			return new PlayIntegrityDeviceNotTrustedError();
+		case 'source_not_verified':
+			return new AgeRangeSourceNotVerifiedError();
 		case 'unavailable':
 			return new PlayIntegrityUnavailableError();
 	}
