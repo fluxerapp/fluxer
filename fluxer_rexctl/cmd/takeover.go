@@ -311,9 +311,9 @@ func installTakeoverBootUnit(ctx context.Context, app *App, inst *instance.Insta
 	if e == nil || !host.BootUnitSupported() {
 		return
 	}
-	if err := installBootUnit(ctx, inst, e, nil); err != nil {
+	if err := setupBootService(ctx, app, inst, e, nil, ""); err != nil {
 		app.UI.Detail("%v", err)
-		app.UI.Warn("Fluxer won't start by itself when this machine restarts.", "Run rexctl doctor --fix to set that up.")
+		app.UI.Warn("Fluxer won't start by itself when this machine restarts.", "Run rexctl boot on to set that up.")
 	}
 }
 

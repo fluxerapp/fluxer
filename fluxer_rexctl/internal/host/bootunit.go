@@ -589,3 +589,46 @@ func fileHash(path string) ([]byte, error) {
 	}
 	return h.Sum(nil), nil
 }
+
+func LibexecRemoveSteps(ctx context.Context, u BootUnit) []Step {
+	if u.Rootless {
+		return nil
+	}
+	if _, err := os.Stat(LibexecBinary); err != nil {
+		return nil
+	}
+	own, err := u.Path()
+	if err != nil || libexecReferenced(systemUnitDir, own) {
+		return nil
+	}
+	dir := filepath.Dir(LibexecBinary)
+	return []Step{{
+		Do:      "Deletes the copy of rexctl in " + LibexecBinary + ", which nothing else uses.",
+		Command: rootCmd("rm -f " + LibexecBinary),
+		Run: func(ctx context.Context) error {
+			if err := removeHostFiles(ctx, false, LibexecBinary); err != nil {
+				return err
+			}
+			_, _ = output(ctx, false, "rmdir", "--ignore-fail-on-non-empty", dir)
+			return nil
+		},
+	}}
+}
+
+func libexecReferenced(unitDir, except string) bool {
+	entries, err := os.ReadDir(unitDir)
+	if err != nil {
+		return true
+	}
+	for _, entry := range entries {
+		path := filepath.Join(unitDir, entry.Name())
+		if path == except || entry.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(path)
+		if err == nil && bytes.Contains(data, []byte(LibexecBinary)) {
+			return true
+		}
+	}
+	return false
+}
