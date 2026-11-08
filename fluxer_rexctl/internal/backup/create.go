@@ -413,9 +413,12 @@ func helperImage(ctx context.Context, inst *instance.Instance, p *engine.Project
 	cs, _ := p.PS(ctx)
 	for _, svc := range helperServices {
 		if model != nil {
-			if img := model.Services[svc].Image; img != "" {
-				return img, nil
-			}
+    	if _, off := model.DisabledServices[svc]; off {
+      	continue
+      }
+      if img := model.Services[svc].Image; img != "" {
+      	return img, nil
+      }
 		}
 		for _, c := range cs {
 			if c.Service == svc && c.Image != "" {
