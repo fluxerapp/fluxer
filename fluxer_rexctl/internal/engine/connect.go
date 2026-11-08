@@ -310,8 +310,14 @@ func dial(ctx context.Context, host string) (*Engine, *conn, error) {
 	}
 	if _, local := socketPath(host); local && runtime.GOOS == "linux" && e.Desktop == "" {
 		e.DataRoot = info.Info.DockerRootDir
-		if e.Kind == Docker && !e.Rootless && containerdStore(info.Info.DriverStatus) {
-			e.DataRoot = containerdRoot
+		e.ImageRoot = e.DataRoot
+		if e.Kind == Docker && e.DataRoot != "" && containerdStore(info.Info.DriverStatus) {
+			var address string
+			if info.Info.Containerd != nil {
+				address = info.Info.Containerd.Address
+			}
+			conf, _ := os.ReadFile(ContainerdConfig)
+			e.ImageRoot = containerdImageRoot(e.DataRoot, address, conf, exists)
 		}
 	}
 	if e.Kind == Podman {

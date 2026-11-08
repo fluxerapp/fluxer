@@ -391,7 +391,7 @@ func validateDomain(v string) error {
 }
 
 func (in *installer) runChecks(ctx context.Context, phase checks.Phase, ids ...string) bool {
-	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Bind: in.f.Bind, Settings: in.settings()}
+	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine)}
 	if in.engine == nil {
 		env.SetEngine(in.found, in.findErr)
 	}
@@ -1150,7 +1150,7 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	if in.storage != nil {
 		maps.Copy(st.Settings, in.storage.values())
 	}
-	store := engine.ImageStore(inst.Dir, in.engine)
+	store := engine.Stores(inst.Dir, in.engine, "").Data
 	if total, err := host.DiskSize(store); err == nil {
 		if profile := stack.DiskProfileFor(total); profile != "" {
 			st.Settings[settings.DiskProfile] = profile
