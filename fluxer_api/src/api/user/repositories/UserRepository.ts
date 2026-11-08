@@ -749,7 +749,7 @@ export class UserRepository {
 		return this.visionarySlotRepository.expandVisionarySlots(byCount);
 	}
 
-	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {
+	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<boolean> {
 		return this.visionarySlotRepository.reserveVisionarySlot(slotIndex, userId);
 	}
 

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import {createUserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -21,6 +20,7 @@ import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumS
 import type {GiftTrialExtension, StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import {bumpGiftInventory} from '@app/api/user/GiftInventory';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {GIFT_PARKED_SLOT_HOLDER} from '@app/api/user/repositories/VisionarySlotRepository';
 import {getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -130,6 +130,7 @@ export class StripeGiftService {
 			await this.userRepository.redeemGiftCode(code, userId);
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');
 			let stackedOntoStripe = false;
+			let claimedVisionarySlot: number | null = null;
 			try {
 				const premiumType = giftCode.durationQuantity === 0 ? UserPremiumTypes.LIFETIME : UserPremiumTypes.SUBSCRIPTION;
 				Logger.debug({userId, giftCode: code, premiumType}, 'Computed premium type from gift duration');
@@ -171,27 +172,29 @@ export class StripeGiftService {
 						await this.premiumService.recordGiftTrialExtension(userId, stackedSubscription.subscription);
 					}
 				} else if (premiumType === UserPremiumTypes.LIFETIME && giftCode.visionarySequenceNumber != null) {
-					const GIFT_CODE_SENTINEL_USER_ID = createUserID(-1n);
-					Logger.debug(
-						{
+					const visionarySequenceNumber = giftCode.visionarySequenceNumber;
+					if (await this.userRepository.reserveVisionarySlot(visionarySequenceNumber, userId)) {
+						claimedVisionarySlot = visionarySequenceNumber;
+						await this.premiumService.grantPremiumFromGiftWithDuration(
 							userId,
-							giftCode: code,
-							visionarySequenceNumber: giftCode.visionarySequenceNumber,
-						},
-						'Applying lifetime gift through visionary-slot transfer flow',
-					);
-					await this.userRepository.unreserveVisionarySlot(
-						giftCode.visionarySequenceNumber,
-						GIFT_CODE_SENTINEL_USER_ID,
-					);
-					await this.premiumService.grantPremiumFromGiftWithDuration(
-						userId,
-						premiumType,
-						giftCode.durationType,
-						giftCode.durationQuantity,
-						giftCode.visionarySequenceNumber,
-					);
-					await this.userRepository.reserveVisionarySlot(giftCode.visionarySequenceNumber, userId);
+							premiumType,
+							giftCode.durationType,
+							giftCode.durationQuantity,
+							visionarySequenceNumber,
+						);
+					} else {
+						Logger.error(
+							{userId, giftCode: code, visionarySequenceNumber},
+							'Gift visionary number belongs to another account; granting the next free number instead',
+						);
+						await this.premiumService.extendPremiumByGift(
+							userId,
+							premiumType,
+							giftCode.durationType,
+							giftCode.durationQuantity,
+							false,
+						);
+					}
 				} else {
 					Logger.debug(
 						{
@@ -217,16 +220,6 @@ export class StripeGiftService {
 				if (stackedOntoStripe || (await this.didGiftGrantPersist(user))) {
 					await this.cacheService.set(`redeemed_gift_codes:${code}`, true, seconds('5 minutes'));
 					await this.cacheService.set(appliedKey, true, seconds('365 days'));
-					if (giftCode.durationQuantity === 0 && giftCode.visionarySequenceNumber != null) {
-						try {
-							await this.userRepository.reserveVisionarySlot(giftCode.visionarySequenceNumber, userId);
-						} catch (reserveError: unknown) {
-							Logger.error(
-								{userId, giftCode: code, reserveError},
-								'Failed to reserve visionary slot after gift entitlement grant failure',
-							);
-						}
-					}
 					Logger.warn(
 						{userId, giftCode: code, error: entitlementError},
 						'Gift entitlement grant threw after premium state was saved; keeping redemption',
@@ -235,6 +228,10 @@ export class StripeGiftService {
 				}
 				try {
 					await this.userRepository.unredeemGiftCode(code, userId);
+					if (claimedVisionarySlot !== null) {
+						await this.userRepository.unreserveVisionarySlot(claimedVisionarySlot, userId);
+						await this.userRepository.reserveVisionarySlot(claimedVisionarySlot, GIFT_PARKED_SLOT_HOLDER);
+					}
 					await this.cacheService.delete(appliedKey);
 					Logger.warn(
 						{userId, giftCode: code, error: entitlementError},
