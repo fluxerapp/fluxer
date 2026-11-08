@@ -61,8 +61,8 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 export class GiftCodeRepository {
 	async createGiftCode(data: GiftCodeRow): Promise<void> {
 		const normalisedData = normaliseGiftCodeRowForWrite(data);
-		await upsertOne(GiftCodes.insert(normalisedData));
 		const batch = new BatchBuilder();
+		batch.addPrepared(GiftCodes.insert(normalisedData));
 		batch.addPrepared(
 			GiftCodesByCreator.upsertAll({
 				created_by_user_id: normalisedData.created_by_user_id,
