@@ -94,3 +94,37 @@ func TestInstallNeedSizesImagesBeforeAnEngineIsFound(t *testing.T) {
 		t.Fatalf("need %d, want %d for %d images", got[0].Need, want, len(refs))
 	}
 }
+
+func TestDiskTextNamesTheRightStore(t *testing.T) {
+	dir, data, images := t.TempDir(), t.TempDir(), t.TempDir()
+	e := &Env{Dir: dir, Engine: &engine.Engine{DataRoot: data, ImageRoot: images}}
+	if fix := e.installDiskFix(images); !strings.Contains(fix, engine.ContainerdConfig) {
+		t.Errorf("containerd image root fix doesn't point at %s: %q", engine.ContainerdConfig, fix)
+	}
+	if fix := e.installDiskFix(data); !strings.Contains(fix, "data root") {
+		t.Errorf("data root fix: %q", fix)
+	}
+	managed := filepath.Join(data, "containerd", "daemon")
+	if err := os.MkdirAll(managed, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	e = &Env{Dir: dir, Engine: &engine.Engine{DataRoot: data, ImageRoot: managed}}
+	if fix := e.installDiskFix(managed); strings.Contains(fix, engine.ContainerdConfig) {
+		t.Errorf("containerd inside docker's data root should move with the data root: %q", fix)
+	}
+	if role := e.diskRole(managed); !strings.Contains(role, "images and data") {
+		t.Errorf("images on the data disk: %q", role)
+	}
+}
+
+func TestWantsSkipsAnUnknownImageStore(t *testing.T) {
+	dir := t.TempDir()
+	e := &Env{Dir: dir, planned: &engine.Roots{Data: dir}}
+	got := e.wants(5<<30, firstStartBytes)
+	if slices.ContainsFunc(got, func(sp Space) bool { return sp.Images }) {
+		t.Fatalf("an unknown image store was still checked: %+v", got)
+	}
+	if _, ok := spaceOn(spaces(got), dir); !ok {
+		t.Fatal("the data store wasn't checked")
+	}
+}

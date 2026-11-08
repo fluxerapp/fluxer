@@ -33,7 +33,7 @@ func runDisk(ctx context.Context, e *Env) Result {
 	case e.installed():
 		return e.installedDisk(ctx)
 	case e.phase&Voice != 0:
-		return e.reserveDisk(spaces([]Space{{Path: e.imageStore(), Images: true}, {Path: e.Dir}}))
+		return e.reserveDisk(spaces(e.wants(0, 0)))
 	}
 	spaces := e.InstallNeed(ctx)
 	if len(spaces) == 0 {
@@ -48,19 +48,23 @@ func runDisk(ctx context.Context, e *Env) Result {
 		}
 	}
 	if r.Status == "" {
-		img := spaces[0]
-		growth := e.growthCap(img.Path)
+		stores := e.stores()
+		data, dataFound := spaceOn(spaces, stores.Data)
+		img, imgFound := spaceOn(spaces, stores.Images)
+		growth := e.growthCap(stores.Data)
 		next := e.nextReleaseNeed()
-		has := fmt.Sprintf("%s has %s of free disk space and this install needs about %s.", e.diskRole(img.Path), size(img.Free), size(img.Need))
+		has := func(sp Space) string {
+			return fmt.Sprintf("%s has %s of free disk space and this install needs about %s.", e.diskRole(sp.Path), size(sp.Free), size(sp.Need))
+		}
 		switch {
-		case img.Free < img.Need+growth:
-			r = warn(fmt.Sprintf("%s Fluxer's logs, database write-ahead log, upload spool and message queue can then use up to %s more as it runs, plus the space for messages and uploads.", has, size(growth)),
-				fmt.Sprintf("Free up about %s more on the disk that holds %s.", size(img.Need+growth-img.Free), img.Path))
-		case img.Free < img.Need+next:
-			r = warn(fmt.Sprintf("%s The next upgrade needs about %s more to download the new release.", has, size(next)),
+		case dataFound && data.Free < data.Need+growth:
+			r = warn(fmt.Sprintf("%s Fluxer's logs, database write-ahead log, upload spool and message queue can then use up to %s more as it runs, plus the space for messages and uploads.", has(data), size(growth)),
+				fmt.Sprintf("Free up about %s more on the disk that holds %s.", size(data.Need+growth-data.Free), data.Path))
+		case imgFound && img.Free < img.Need+next:
+			r = warn(fmt.Sprintf("%s The next upgrade needs about %s more to download the new release.", has(img), size(next)),
 				fmt.Sprintf("Free up about %s more on the disk that holds %s before you upgrade.", size(img.Need+next-img.Free), img.Path))
 		default:
-			r = pass(has)
+			r = pass(has(spaces[0]))
 		}
 	}
 	e.noteVMDisk(&r)
@@ -112,26 +116,75 @@ func (e *Env) noteVMDisk(r *Result) {
 func size(n uint64) string { return ui.Bytes(int64(n)) }
 
 func (e *Env) diskRole(path string) string {
-	switch path {
-	case e.Dir:
+	if path == e.Dir {
 		return fmt.Sprintf("%s, the instance folder,", path)
-	case e.imageStore():
-		if e.Engine == nil {
-			return fmt.Sprintf("%s, where the container engine will keep Fluxer's images and data,", path)
-		}
-		return fmt.Sprintf("%s, where the container engine keeps Fluxer's images and data,", path)
+	}
+	stores := e.stores()
+	keeps := "keeps"
+	if e.Engine == nil {
+		keeps = "will keep"
+	}
+	switch {
+	case path == stores.Images && sameDisk(stores.Images, stores.Data):
+		return fmt.Sprintf("%s, where the container engine %s Fluxer's images and data,", path, keeps)
+	case path == stores.Images:
+		return fmt.Sprintf("%s, where the container engine %s Fluxer's images,", path, keeps)
+	case path == stores.Data:
+		return fmt.Sprintf("%s, where the container engine %s Fluxer's data,", path, keeps)
 	}
 	return fmt.Sprintf("%s, the backup folder,", path)
 }
 
 func (e *Env) installDiskFix(path string) string {
-	if path != e.Dir {
-		return fmt.Sprintf("Free up space on the disk that holds %s, or move the container engine's data root to a bigger disk, then run rexctl install again.", path)
+	if path == e.Dir {
+		return fmt.Sprintf("Free up space on the disk that holds %s, or pass --dir with a folder on a bigger disk.", path)
 	}
-	return fmt.Sprintf("Free up space on the disk that holds %s, or pass --dir with a folder on a bigger disk.", path)
+	if stores := e.stores(); path == stores.Images && stores.Images != stores.Data && !strings.HasPrefix(stores.Images, stores.Data+"/") {
+		return fmt.Sprintf("Free up space on the disk that holds %s, or set \"root\" in %s to a folder on a bigger disk, then run rexctl install again.", path, engine.ContainerdConfig)
+	}
+	return fmt.Sprintf("Free up space on the disk that holds %s, or move the container engine's data root to a bigger disk, then run rexctl install again.", path)
 }
 
-func (e *Env) imageStore() string { return engine.ImageStore(e.Dir, e.Engine) }
+func (e *Env) stores() engine.Roots {
+	if e.Engine != nil {
+		return engine.Stores(e.Dir, e.Engine, "")
+	}
+	if e.planned == nil {
+		planned := engine.Stores(e.Dir, nil, e.Prefer)
+		e.planned = &planned
+	}
+	return *e.planned
+}
+
+func (e *Env) wants(pull, data uint64) []Space {
+	stores := e.stores()
+	var out []Space
+	if stores.Images != "" {
+		out = append(out, Space{Path: stores.Images, Images: true, Need: pull})
+	}
+	return append(out, Space{Path: stores.Data, Need: data}, Space{Path: e.Dir})
+}
+
+func spaceOn(list []Space, path string) (Space, bool) {
+	if path == "" {
+		return Space{}, false
+	}
+	for _, sp := range list {
+		if sp.Path == path || sameDisk(sp.Path, path) {
+			return sp, true
+		}
+	}
+	return Space{}, false
+}
+
+func sameDisk(a, b string) bool {
+	if a == b {
+		return true
+	}
+	x, errX := host.DiskID(a)
+	y, errY := host.DiskID(b)
+	return errX == nil && errY == nil && x == y
+}
 
 type Space struct {
 	Path   string
@@ -143,7 +196,7 @@ type Space struct {
 func (s Space) Short() bool { return s.Free < s.Need }
 
 func (e *Env) UpgradeSpace(pull, backup uint64) []Space {
-	wants := []Space{{Path: e.imageStore(), Images: true, Need: pull + e.startAllowance()}, {Path: e.Dir}}
+	wants := e.wants(pull, e.startAllowance())
 	if e.Instance != nil {
 		wants = append(wants, Space{Path: e.Instance.BackupDir(), Need: backup})
 	}
@@ -189,7 +242,7 @@ func (e *Env) installRefs() (stack.ImageSet, []string) {
 func (e *Env) InstallNeed(ctx context.Context) []Space {
 	images, refs := e.installRefs()
 	need := images.Need(e.platform(), refs, e.localDiffIDs(ctx))
-	return spaces([]Space{{Path: e.imageStore(), Images: true, Need: need + firstStartBytes}, {Path: e.Dir}})
+	return spaces(e.wants(need, firstStartBytes))
 }
 
 func (e *Env) nextReleaseNeed() uint64 {
@@ -233,7 +286,7 @@ func PullSpace(ctx context.Context, en *engine.Engine, dir string, refs []string
 	if need == 0 {
 		return Space{}, false
 	}
-	out := spaces([]Space{{Path: engine.ImageStore(dir, en), Images: true, Need: need}})
+	out := spaces([]Space{{Path: engine.Stores(dir, en, "").Images, Images: true, Need: need}})
 	if len(out) == 0 {
 		return Space{}, false
 	}

@@ -100,11 +100,30 @@ func restoreDataNeed(m *Manifest) uint64 {
 	return n
 }
 
-func checkRestoreSpace(store, dir string, need uint64) error {
-	if err := needFree(store, need+DiskReserve); err != nil || sameDisk(store, dir) {
-		return err
+type restoreNeed struct {
+	path string
+	need uint64
+}
+
+func checkRestoreSpace(stores engine.Roots, dir string, pull, data uint64) error {
+	var disks []restoreNeed
+	for _, want := range []restoreNeed{{stores.Data, data}, {stores.Images, pull}, {dir, 0}} {
+		if want.path == "" {
+			continue
+		}
+		i := slices.IndexFunc(disks, func(d restoreNeed) bool { return sameDisk(d.path, want.path) })
+		if i >= 0 {
+			disks[i].need += want.need
+			continue
+		}
+		disks = append(disks, want)
 	}
-	return needFree(dir, DiskReserve)
+	for _, d := range disks {
+		if err := needFree(d.path, d.need+DiskReserve); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func needFree(path string, need uint64) error {
@@ -488,7 +507,7 @@ func pullFromBackup(ctx context.Context, path, dir string, e *engine.Engine, m *
 		return &PullError{Err: err}
 	}
 	images, _ := stack.EmbeddedImages()
-	if err := checkRestoreSpace(engine.ImageStore(dir, e), dir, data+e.PullNeed(ctx, images, p.Images(), nil)); err != nil {
+	if err := checkRestoreSpace(engine.Stores(dir, e, ""), dir, e.PullNeed(ctx, images, p.Images(), nil), data); err != nil {
 		return err
 	}
 	if err := p.Pull(ctx, onEvent); err != nil {

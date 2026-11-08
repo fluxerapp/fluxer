@@ -5,6 +5,8 @@ package backup
 import (
 	"errors"
 	"testing"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 )
 
 func TestRestoreRefusesWhenTheDiskIsShort(t *testing.T) {
@@ -13,12 +15,12 @@ func TestRestoreRefusesWhenTheDiskIsShort(t *testing.T) {
 	if got, want := restoreDataNeed(m), uint64(3<<20); got != want {
 		t.Fatalf("data need %d, want %d with room to load the database dump", got, want)
 	}
-	if err := checkRestoreSpace(dir, dir, restoreDataNeed(m)); err != nil {
+	if err := checkRestoreSpace(engine.Roots{Data: dir, Images: dir}, dir, 0, restoreDataNeed(m)); err != nil {
 		t.Fatalf("a small backup was refused: %v", err)
 	}
 	var space *RestoreSpaceError
-	err := checkRestoreSpace(dir, dir, 1<<60)
+	err := checkRestoreSpace(engine.Roots{Data: dir, Images: dir}, dir, 1<<59, 1<<59)
 	if !errors.As(err, &space) || space.Need != 1<<60+DiskReserve {
-		t.Fatalf("got %v, want a refusal that needs %d", err, uint64(1<<60+DiskReserve))
+		t.Fatalf("got %v, want a refusal that adds the pull and the data on one disk and needs %d", err, uint64(1<<60+DiskReserve))
 	}
 }

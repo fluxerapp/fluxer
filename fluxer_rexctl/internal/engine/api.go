@@ -37,6 +37,7 @@ type Engine struct {
 	Rootless   bool
 	Desktop    string
 	DataRoot   string
+	ImageRoot  string
 	Platform   string
 	TooOld     bool
 }
