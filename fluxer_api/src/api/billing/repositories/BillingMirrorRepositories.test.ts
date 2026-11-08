@@ -3,10 +3,10 @@
 import {mapStripeInvoiceToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
-import {BillingPaymentsByInvoice} from '@app/api/Tables';
+import {BillingPaymentsByInvoice, BillingRefundsByInvoice} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import type Stripe from 'stripe';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 const CREATED_AT = 1_779_000_000;
 function invoice(
@@ -107,5 +107,57 @@ describe('billing mirror persistence', () => {
 				invoice_id: '',
 			}),
 		).toEqual([]);
+	});
+
+	test('keeps the invoice and user of a refund when a webhook mirrors it again without them', async () => {
+		const refunds = getBillingRepository().refunds;
+		const refund = {
+			id: 're_mirror',
+			charge: 'ch_mirror',
+			payment_intent: 'pi_mirror',
+			status: 'pending',
+			amount: 100,
+			currency: 'usd',
+			created: CREATED_AT,
+			metadata: {},
+		} as Stripe.Refund;
+		await refunds.upsertFromStripe(refund, {invoiceId: 'in_mirror', customerId: 'cus_mirror', userId: 42n});
+		await refunds.upsertFromStripe({...refund, status: 'succeeded'}, {livemode: true});
+		expect(await refunds.findById('re_mirror')).toMatchObject({
+			invoice_id: 'in_mirror',
+			customer_id: 'cus_mirror',
+			user_id: 42n,
+			livemode: true,
+			status: 'succeeded',
+		});
+		expect(
+			await fetchMany(BillingRefundsByInvoice.selectCql({where: BillingRefundsByInvoice.where.eq('invoice_id')}), {
+				invoice_id: 'in_mirror',
+			}),
+		).toMatchObject([{provider_id: 're_mirror', status: 'succeeded'}]);
+		expect(await refunds.listByPaymentIntent('pi_mirror')).toMatchObject([{provider_id: 're_mirror'}]);
+	});
+
+	test('keeps the invoice and user of a refund when a webhook read the row before they were written', async () => {
+		const refunds = getBillingRepository().refunds;
+		const refund = {
+			id: 're_race',
+			charge: 'ch_race',
+			payment_intent: 'pi_race',
+			status: 'succeeded',
+			amount: 100,
+			currency: 'usd',
+			created: CREATED_AT,
+			metadata: {},
+		} as Stripe.Refund;
+		await refunds.upsertFromStripe(refund, {invoiceId: 'in_race', customerId: 'cus_race', userId: 43n});
+		vi.spyOn(refunds, 'findById').mockResolvedValueOnce(null);
+		await refunds.upsertFromStripe(refund, {livemode: true});
+		expect(await refunds.findById('re_race')).toMatchObject({
+			invoice_id: 'in_race',
+			customer_id: 'cus_race',
+			user_id: 43n,
+			livemode: true,
+		});
 	});
 });

@@ -26,6 +26,14 @@ const FETCH_BY_PROVIDER_IDS = BillingRefunds.selectCql({
 	where: BillingRefunds.where.in('provider_id', 'provider_ids'),
 });
 
+const HINT_COLUMNS: ReadonlySet<string> = new Set(['invoice_id', 'customer_id', 'user_id', 'livemode']);
+
+function withoutUnknownHints(row: BillingRefundRow): BillingRefundRow {
+	return Object.fromEntries(
+		Object.entries(row).filter(([column, value]) => value !== null || !HINT_COLUMNS.has(column)),
+	) as unknown as BillingRefundRow;
+}
+
 export class BillingRefundRepository {
 	async findById(providerId: string): Promise<BillingRefundRow | null> {
 		return fetchOne<BillingRefundRow>(FETCH_BY_ID, {provider_id: providerId});
@@ -55,12 +63,18 @@ export class BillingRefundRepository {
 		changed: boolean;
 		row: BillingRefundRow;
 	}> {
-		const mapped = mapStripeRefundToRow(r, hints);
-		const existing = await this.findById(mapped.primary.provider_id);
-		return upsertMirrorRow(BillingRefunds, existing, mapped.primary, [
+		const existing = r.id ? await this.findById(r.id) : null;
+		const mapped = mapStripeRefundToRow(r, {
+			invoiceId: hints?.invoiceId ?? existing?.invoice_id ?? undefined,
+			customerId: hints?.customerId ?? existing?.customer_id ?? undefined,
+			userId: hints?.userId ?? existing?.user_id ?? undefined,
+			livemode: hints?.livemode ?? existing?.livemode ?? undefined,
+		});
+		const result = await upsertMirrorRow(BillingRefunds, existing, withoutUnknownHints(mapped.primary), [
 			[BillingRefundsByCharge, mapped.byCharge],
 			[BillingRefundsByPaymentIntent, mapped.byPaymentIntent],
 			[BillingRefundsByInvoice, mapped.byInvoice],
 		]);
+		return result.changed ? {changed: true, row: mapped.primary} : result;
 	}
 }
