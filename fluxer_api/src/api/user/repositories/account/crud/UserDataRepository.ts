@@ -35,7 +35,7 @@ const FETCH_ACTIVITY_TRACKING_CQL = Users.selectCql({
 	limit: 1,
 });
 const FETCH_ACTIVITY_TARGET_CQL = Users.selectCql({
-	columns: ['username', 'flags', 'deletion_started_at', 'last_active_at', 'last_active_ip'],
+	columns: ['username', 'flags', 'bot', 'deletion_started_at', 'last_active_at', 'last_active_ip'],
 	where: Users.where.eq('user_id'),
 	limit: 1,
 });
@@ -339,6 +339,7 @@ export class UserDataRepository {
 	}
 
 	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<{
+		isBot: boolean;
 		previousData: {
 			last_active_at: Date | null;
 			last_active_ip: string | null;
@@ -351,7 +352,7 @@ export class UserDataRepository {
 		const {userId, lastActiveAt, lastActiveIp} = params;
 		assertWritableUserId(userId);
 		const current = await fetchOne<
-			Pick<UserRow, 'username' | 'flags' | 'deletion_started_at' | 'last_active_at' | 'last_active_ip'>
+			Pick<UserRow, 'username' | 'flags' | 'bot' | 'deletion_started_at' | 'last_active_at' | 'last_active_ip'>
 		>(FETCH_ACTIVITY_TARGET_CQL, {user_id: userId});
 		if (
 			!current?.username ||
@@ -372,6 +373,7 @@ export class UserDataRepository {
 			),
 		);
 		return {
+			isBot: current.bot ?? false,
 			previousData,
 			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? previousData.last_active_ip},
 		};

@@ -68,7 +68,7 @@ function memoPart(value: string | null | undefined, toKey: (value: string) => st
 
 export async function assertNotBannedFromGuildVisit(params: {
 	guildId: GuildID;
-	user: Pick<User, 'id' | 'email' | 'lastActiveIp'>;
+	user: Pick<User, 'id' | 'email' | 'moderationIp'>;
 	ip: string | null;
 }): Promise<void> {
 	const {guildId, user, ip} = params;
@@ -76,7 +76,7 @@ export async function assertNotBannedFromGuildVisit(params: {
 	const generation = await readGuildBanGeneration(guildId);
 	const ipDecisionKey = (value: string) => getSameIpDecisionKey(value) ?? value;
 	const ipKey = memoPart(ip, ipDecisionKey);
-	const lastActiveIpKey = memoPart(user.lastActiveIp, ipDecisionKey);
+	const lastActiveIpKey = memoPart(user.moderationIp, ipDecisionKey);
 	const emailKey = memoPart(user.email, (value) =>
 		createHash('sha256').update(value.toLowerCase()).digest('hex').slice(0, 16),
 	);
@@ -87,7 +87,7 @@ export async function assertNotBannedFromGuildVisit(params: {
 		generation,
 		userId: user.id,
 		email: user.email,
-		ips: [ip, user.lastActiveIp],
+		ips: [ip, user.moderationIp],
 	});
 	await kv.setex(memoKey, BAN_MEMO_TTL_SECONDS, '1');
 }

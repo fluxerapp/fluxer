@@ -170,6 +170,10 @@ export class User {
 		return getEffectivePremiumUntil(this);
 	}
 
+	get moderationIp(): string | null {
+		return this.isBot ? null : this.lastActiveIp;
+	}
+
 	toRow(): UserRow {
 		return {
 			user_id: this.id,
