@@ -564,6 +564,27 @@ describe('Auth SSO flow', () => {
 				Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
 			}
 		});
+		it('joins a provisioned user to the invite community from redirect_to', async () => {
+			const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+			const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+			await enableSso(harness, admin.token);
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+				.post('/auth/sso/start')
+				.body({redirect_to: `/invite/${invite.code}`})
+				.execute();
+			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: `sso-invite-redirect-${Date.now()}@example.com`,
+					state: startData.state,
+					client_binding: startData.client_binding,
+				})
+				.execute();
+			await createBuilder(harness, owner.token)
+				.get(`/guilds/${guild.id}/members/${completeData.user_id}`)
+				.expect(200)
+				.execute();
+		});
 		it('replays the auto-join invite when an SSO registration is approved', async () => {
 			const reviewer = await setUserACLs(harness, await createTestAccount(harness), [
 				AdminACLs.AUTHENTICATE,
