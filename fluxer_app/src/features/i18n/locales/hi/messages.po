@@ -25186,6 +25186,11 @@ msgstr "सेट नहीं है"
 msgid "Not set up"
 msgstr "सेट अप नहीं है"
 
+#. Warning title in the Explore tab in community settings when the community has mature content turned on.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Not shown in Explore"
+msgstr "एक्सप्लोर में नहीं दिखता"
+
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -37458,6 +37463,11 @@ msgstr "इस कम्युनिटी में अभी कोई इन�
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
 msgstr "इस कम्युनिटी में अभी तक कोई वेबहुक नहीं है। वेबहुक बनाने के लिए {channelWebhooksSettingsPath} पर जाएँ।"
+
+#. Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "This community has \"Mature content\" turned on, so it isn't shown in Explore."
+msgstr "इस समुदाय में \"वयस्क सामग्री\" चालू है, इसलिए यह एक्सप्लोर में नहीं दिखता।"
 
 #. Invite page notice shown when community admins have paused invites.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

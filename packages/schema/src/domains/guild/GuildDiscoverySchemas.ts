@@ -157,6 +157,7 @@ export const DiscoveryAdminPendingApplicationResponse = z.object({
 	guild_owner_discriminator: z.string().nullable().describe('Guild owner discriminator'),
 	guild_member_count: z.number().describe('Approximate member count'),
 	guild_nsfw_level: NSFWLevelSchema.nullable().describe('NSFW level of the guild'),
+	guild_nsfw: z.boolean().describe('Whether the guild has mature content turned on'),
 	guild_features: z.array(z.string()).describe('Guild feature flags'),
 	description: z.string().describe('Discovery description'),
 	category_type: z.number().describe('Discovery category type'),

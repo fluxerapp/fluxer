@@ -23447,6 +23447,7 @@
 						"description": "NSFW level of the guild",
 						"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]
 					},
+					"guild_nsfw": {"type": "boolean", "description": "Whether the guild has mature content turned on"},
 					"guild_features": {"type": "array", "items": {"type": "string"}, "description": "Guild feature flags"},
 					"description": {"type": "string", "description": "Discovery description"},
 					"category_type": {"type": "number", "description": "Discovery category type"},
@@ -23464,6 +23465,7 @@
 					"guild_owner_discriminator",
 					"guild_member_count",
 					"guild_nsfw_level",
+					"guild_nsfw",
 					"guild_features",
 					"description",
 					"category_type",
@@ -23508,6 +23510,7 @@
 						"description": "NSFW level of the guild",
 						"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]
 					},
+					"guild_nsfw": {"type": "boolean", "description": "Whether the guild has mature content turned on"},
 					"guild_features": {"type": "array", "items": {"type": "string"}, "description": "Guild feature flags"},
 					"description": {"type": "string", "description": "Discovery description"},
 					"category_type": {"type": "number", "description": "Discovery category type"},
@@ -23526,6 +23529,7 @@
 					"guild_owner_discriminator",
 					"guild_member_count",
 					"guild_nsfw_level",
+					"guild_nsfw",
 					"guild_features",
 					"description",
 					"category_type",

@@ -25187,6 +25187,11 @@ msgstr "Nenustatyta"
 msgid "Not set up"
 msgstr "Nenustatyta"
 
+#. Warning title in the Explore tab in community settings when the community has mature content turned on.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Not shown in Explore"
+msgstr "Nerodoma skiltyje „Naršyti“"
+
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -37459,6 +37464,11 @@ msgstr "Ši bendruomenė dar neturi jokių kvietimo nuorodų. Eikite į kanalą 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
 msgstr "Ši bendruomenė dar neturi nė vieno webhooko. Eikite į {channelWebhooksSettingsPath} ir jį sukurkite."
+
+#. Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "This community has \"Mature content\" turned on, so it isn't shown in Explore."
+msgstr "Šioje bendruomenėje įjungtas „Brandus turinys“, todėl ji nerodoma skiltyje „Naršyti“."
 
 #. Invite page notice shown when community admins have paused invites.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

@@ -139,6 +139,11 @@ fn guild_card(config: &AdminConfig, base: &str, guild: &DiscoveryGuild, actions:
                             h2 class="text-lg font-semibold text-neutral-900" { (name) }
                             (nsfw_badge(guild.guild_nsfw_level))
                         }
+                        @if guild.guild_nsfw && !config.self_hosted {
+                            p class="text-sm text-amber-700" {
+                                "Not shown in Explore on fluxer.com, because \"Mature content\" is on."
+                            }
+                        }
                         p class="text-sm text-neutral-500 break-all" {
                             "ID: "
                             a href={(base) "/guilds/" (guild.guild_id)}
