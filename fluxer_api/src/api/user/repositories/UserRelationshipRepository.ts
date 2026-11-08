@@ -2,6 +2,7 @@
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {
+	BatchBuilder,
 	deleteOneOrMany,
 	executeGroupedBatches,
 	fetchMany,
@@ -51,10 +52,29 @@ const FETCH_RELATIONSHIP_CQL = Relationships.selectCql({
 	],
 	limit: 1,
 });
+const FETCH_RELATIONSHIP_BY_TARGET_CQL = RelationshipsByTarget.selectCql({
+	columns: ['version'],
+	where: [
+		RelationshipsByTarget.where.eq('target_user_id'),
+		RelationshipsByTarget.where.eq('source_user_id'),
+		RelationshipsByTarget.where.eq('type'),
+	],
+	limit: 1,
+});
 const FETCH_ALL_NOTES_FOR_DELETE_QUERY = Notes.selectCql({
 	columns: ['source_user_id', 'target_user_id'],
 	limit: 10000,
 });
+
+export interface RelationshipKey {
+	source_user_id: UserID;
+	target_user_id: UserID;
+	type: number;
+}
+
+function sameRelationshipKey(a: RelationshipKey, b: RelationshipKey): boolean {
+	return a.source_user_id === b.source_user_id && a.target_user_id === b.target_user_id && a.type === b.type;
+}
 
 export class UserRelationshipRepository {
 	async clearUserNote(sourceUserId: UserID, targetUserId: UserID): Promise<void> {
@@ -121,22 +141,9 @@ export class UserRelationshipRepository {
 	}
 
 	async deleteRelationship(sourceUserId: UserID, targetUserId: UserID, type: number): Promise<void> {
-		await Promise.all([
-			deleteOneOrMany(
-				Relationships.deleteByPk({
-					source_user_id: sourceUserId,
-					target_user_id: targetUserId,
-					type,
-				}),
-			),
-			deleteOneOrMany(
-				RelationshipsByTarget.deleteByPk({
-					target_user_id: targetUserId,
-					source_user_id: sourceUserId,
-					type,
-				}),
-			),
-		]);
+		await this.writeRelationships({
+			deletes: [{source_user_id: sourceUserId, target_user_id: targetUserId, type}],
+		});
 	}
 
 	async getRelationship(sourceUserId: UserID, targetUserId: UserID, type: number): Promise<Relationship | null> {
@@ -205,65 +212,69 @@ export class UserRelationshipRepository {
 	}
 
 	async upsertRelationship(relationship: RelationshipRow): Promise<Relationship> {
-		const result = await executeVersionedUpdate<RelationshipRow, 'source_user_id' | 'target_user_id' | 'type'>(
-			() =>
-				fetchOne(FETCH_RELATIONSHIP_CQL, {
-					source_user_id: relationship.source_user_id,
-					target_user_id: relationship.target_user_id,
-					type: relationship.type,
-				}),
-			(current) => ({
-				pk: {
-					source_user_id: relationship.source_user_id,
-					target_user_id: relationship.target_user_id,
-					type: relationship.type,
-				},
-				patch: {
-					nickname: Db.set(relationship.nickname),
-					since: Db.set(relationship.since),
-					share_voice_activity: Db.set(relationship.share_voice_activity ?? null),
-					version: Db.set(nextVersion(current?.version)),
-				},
-			}),
-			Relationships,
-		);
-		const finalRelationship: RelationshipRow = {
-			...relationship,
-			version: result.finalVersion ?? 1,
-		};
-		await executeVersionedUpdate<RelationshipRow, 'target_user_id' | 'source_user_id' | 'type'>(
-			() =>
-				fetchOne(
-					RelationshipsByTarget.selectCql({
-						where: [
-							RelationshipsByTarget.where.eq('target_user_id'),
-							RelationshipsByTarget.where.eq('source_user_id'),
-							RelationshipsByTarget.where.eq('type'),
-						],
-						limit: 1,
+		const [written] = await this.writeRelationships({upserts: [relationship]});
+		return written!;
+	}
+
+	async writeRelationships({
+		upserts = [],
+		deletes = [],
+	}: {
+		upserts?: ReadonlyArray<RelationshipRow>;
+		deletes?: ReadonlyArray<RelationshipKey>;
+	}): Promise<Array<Relationship>> {
+		const currentVersions = await Promise.all(
+			upserts.map((row) =>
+				Promise.all([
+					fetchOne<Pick<RelationshipRow, 'version'>>(FETCH_RELATIONSHIP_CQL, {
+						source_user_id: row.source_user_id,
+						target_user_id: row.target_user_id,
+						type: row.type,
 					}),
-					{
-						target_user_id: relationship.target_user_id,
-						source_user_id: relationship.source_user_id,
-						type: relationship.type,
-					},
-				),
-			(current) => ({
-				pk: {
-					target_user_id: relationship.target_user_id,
-					source_user_id: relationship.source_user_id,
-					type: relationship.type,
-				},
-				patch: {
-					nickname: Db.set(relationship.nickname),
-					since: Db.set(relationship.since),
-					share_voice_activity: Db.set(relationship.share_voice_activity ?? null),
-					version: Db.set(nextVersion(current?.version)),
-				},
-			}),
-			RelationshipsByTarget,
+					fetchOne<Pick<RelationshipRow, 'version'>>(FETCH_RELATIONSHIP_BY_TARGET_CQL, {
+						target_user_id: row.target_user_id,
+						source_user_id: row.source_user_id,
+						type: row.type,
+					}),
+				]),
+			),
 		);
-		return new Relationship(finalRelationship);
+		const batch = new BatchBuilder();
+		for (const key of deletes) {
+			if (upserts.some((row) => sameRelationshipKey(row, key))) continue;
+			batch.addPrepared(Relationships.deleteByPk(key));
+			batch.addPrepared(
+				RelationshipsByTarget.deleteByPk({
+					target_user_id: key.target_user_id,
+					source_user_id: key.source_user_id,
+					type: key.type,
+				}),
+			);
+		}
+		const written = upserts.map((row, index) => {
+			const [current, currentByTarget] = currentVersions[index]!;
+			const version = nextVersion(current?.version);
+			const fields = {
+				nickname: Db.set(row.nickname),
+				since: Db.set(row.since),
+				share_voice_activity: Db.set(row.share_voice_activity ?? null),
+			};
+			batch.addPrepared(
+				Relationships.patchByPk(
+					{source_user_id: row.source_user_id, target_user_id: row.target_user_id, type: row.type},
+					{...fields, version: Db.set(version)},
+				),
+			);
+			batch.addPrepared(
+				RelationshipsByTarget.patchByPk(
+					{target_user_id: row.target_user_id, source_user_id: row.source_user_id, type: row.type},
+					{...fields, version: Db.set(nextVersion(currentByTarget?.version))},
+				),
+			);
+			return new Relationship({...row, version});
+		});
+		await batch.execute();
+		return written;
 	}
 
 	async bulkUpdateFriendShareVoiceActivity(sourceUserId: UserID, value: boolean): Promise<Array<Relationship>> {
