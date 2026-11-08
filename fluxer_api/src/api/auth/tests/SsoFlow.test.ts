@@ -585,6 +585,96 @@ describe('Auth SSO flow', () => {
 				.expect(200)
 				.execute();
 		});
+		it('joins both the redirect_to invite and the auto-join invite communities', async () => {
+			const invited = await setupTestGuildWithMembers(harness, 0);
+			const invitedInvite = await createChannelInvite(harness, invited.owner.token, invited.guild.system_channel_id!);
+			const operator = await setupTestGuildWithMembers(harness, 0);
+			const operatorInvite = await createChannelInvite(
+				harness,
+				operator.owner.token,
+				operator.guild.system_channel_id!,
+			);
+			await enableSso(harness, admin.token);
+			const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+			Config.instance.autoJoinInviteCode = operatorInvite.code;
+			try {
+				const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+					.post('/auth/sso/start')
+					.body({redirect_to: `/invite/${invitedInvite.code}`})
+					.execute();
+				const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+					.post('/auth/sso/complete')
+					.body({
+						code: `sso-invite-both-${Date.now()}@example.com`,
+						state: startData.state,
+						client_binding: startData.client_binding,
+					})
+					.execute();
+				await createBuilder(harness, invited.owner.token)
+					.get(`/guilds/${invited.guild.id}/members/${completeData.user_id}`)
+					.expect(200)
+					.execute();
+				await createBuilder(harness, operator.owner.token)
+					.get(`/guilds/${operator.guild.id}/members/${completeData.user_id}`)
+					.expect(200)
+					.execute();
+			} finally {
+				Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+			}
+		});
+		it('joins both communities when an SSO registration with an invite is approved', async () => {
+			const reviewer = await setUserACLs(harness, await createTestAccount(harness), [
+				AdminACLs.AUTHENTICATE,
+				AdminACLs.REGISTRATION_REVIEW,
+			]);
+			const invited = await setupTestGuildWithMembers(harness, 0);
+			const invitedInvite = await createChannelInvite(harness, invited.owner.token, invited.guild.system_channel_id!);
+			const operator = await setupTestGuildWithMembers(harness, 0);
+			const operatorInvite = await createChannelInvite(
+				harness,
+				operator.owner.token,
+				operator.guild.system_channel_id!,
+			);
+			await enableSso(harness, admin.token);
+			await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+			const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+			Config.instance.autoJoinInviteCode = operatorInvite.code;
+			try {
+				const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+					.post('/auth/sso/start')
+					.body({redirect_to: `/invite/${invitedInvite.code}`})
+					.execute();
+				await createBuilderWithoutAuth(harness)
+					.post('/auth/sso/complete')
+					.body({
+						code: `sso-invite-both-approval-${Date.now()}@example.com`,
+						state: startData.state,
+						client_binding: startData.client_binding,
+					})
+					.expect(403, 'REGISTRATION_PENDING_APPROVAL')
+					.execute();
+				const listed = await createBuilder<PendingRegistrationListResponse>(harness, reviewer.token)
+					.get('/admin/instance/pending-registrations')
+					.expect(200)
+					.execute();
+				const pendingUserId = listed.pending_registrations[0]!.user_id;
+				await createBuilder(harness, reviewer.token)
+					.patch(`/admin/instance/pending-registrations/${pendingUserId}`)
+					.body({status: 'approved'})
+					.expect(200)
+					.execute();
+				await createBuilder(harness, invited.owner.token)
+					.get(`/guilds/${invited.guild.id}/members/${pendingUserId}`)
+					.expect(200)
+					.execute();
+				await createBuilder(harness, operator.owner.token)
+					.get(`/guilds/${operator.guild.id}/members/${pendingUserId}`)
+					.expect(200)
+					.execute();
+			} finally {
+				Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+			}
+		});
 		it('replays the auto-join invite when an SSO registration is approved', async () => {
 			const reviewer = await setUserACLs(harness, await createTestAccount(harness), [
 				AdminACLs.AUTHENTICATE,

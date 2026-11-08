@@ -34,6 +34,7 @@ import type {GuildMemberService} from '@app/api/guild/services/GuildMemberServic
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {parseInviteCodeList} from '@app/api/instance/AutoJoinInviteCodes';
 import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
 import {
 	type InstanceConfigRepository,
@@ -736,9 +737,12 @@ export class SsoService {
 			await assertEmailNotBlocklisted(email, 'email');
 		}
 		const pendingApproval = registrationConfig.mode === 'approval';
-		const inviteCodeFromRedirect = extractInviteCodeFromRedirect(redirectTo);
 		const autoJoinInviteCode =
-			inviteCodeFromRedirect || this.apiContext.services.config.instance.autoJoinInviteCode?.trim() || null;
+			parseInviteCodeList(
+				[extractInviteCodeFromRedirect(redirectTo), this.apiContext.services.config.instance.autoJoinInviteCode]
+					.filter(Boolean)
+					.join(','),
+			).join(',') || null;
 		const user = await this.provisionUserFromClaims({...claims, email}, config, {
 			usernameMode,
 			uniqueUsernames: accountIdentity.tagStyle === TagStyles.NONE,
