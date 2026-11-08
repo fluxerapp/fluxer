@@ -534,6 +534,7 @@ class RequestServices implements RequestScopedServices {
 			entityAssetService: getEntityAssetService(),
 			discriminatorService: getDiscriminatorService(),
 			botAuthService: getBotAuthService(),
+			guildRepository: getGuildRepository(),
 		});
 		return this.cachedApplicationService;
 	}
