@@ -9,16 +9,17 @@ use crate::{
     templates::{
         components::{
             form::{
-                FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, secondary_button,
-                submit_button,
+                BUTTON_BASE_CLASS, FORM_INPUT_CLASS, SECONDARY_BUTTON_CLASS, csrf_input,
+                danger_button, form_actions, secondary_button, submit_button,
             },
-            page_container::{card_with_header, page_header},
+            icons,
+            page_container::{card_with_header, card_with_header_extended, page_header},
             tooltip,
         },
         layout::admin_layout,
     },
 };
-use maud::{Markup, html};
+use maud::{Markup, PreEscaped, html};
 
 const CATEGORY_ORDER: &[&str] = &[
     "features",
@@ -30,6 +31,126 @@ const CATEGORY_ORDER: &[&str] = &[
     "social",
     "media",
 ];
+
+const DESCRIPTION_LINK_CLASS: &str = "rounded font-medium text-brand-primary underline underline-offset-2 \
+     transition-colors hover:text-neutral-900 hover:decoration-2 focus:outline-none focus-visible:ring-2 \
+     focus-visible:ring-brand-primary focus-visible:ring-offset-2";
+
+const FILTER_PREVIEW_SCRIPT: &str = r#"
+(function () {
+	if (window.__fluxerLimitFilterPreview) return;
+	window.__fluxerLimitFilterPreview = true;
+
+	var FIELDS = ['traits', 'guild_features', 'field_scope'];
+	var EMPTY = '___';
+
+	function parse(value) {
+		return (value || '')
+			.split(',')
+			.map(function (item) { return item.trim(); })
+			.filter(function (item) { return item.length > 0; });
+	}
+
+	function fieldValue(form, name) {
+		var input = form.querySelector('[name="' + name + '"]');
+		return input ? input.value : '';
+	}
+
+	function setValue(form, key, text) {
+		Array.prototype.forEach.call(form.querySelectorAll('[data-filter-value="' + key + '"]'), function (node) {
+			node.textContent = text;
+		});
+	}
+
+	function sync(form) {
+		var traits = parse(fieldValue(form, 'traits'));
+		var features = parse(fieldValue(form, 'guild_features'));
+		var hasTraits = traits.length > 0;
+		var hasFeatures = features.length > 0;
+		var activeScope = hasTraits && hasFeatures ? 'both' : (hasTraits || hasFeatures ? 'either' : 'default');
+
+		Array.prototype.forEach.call(form.querySelectorAll('[data-filter-scope]'), function (row) {
+			row.setAttribute('data-state', row.getAttribute('data-filter-scope') === activeScope ? 'active' : 'inactive');
+		});
+
+		var scopeLabel;
+		var values;
+		if (hasTraits && !hasFeatures) {
+			scopeLabel = 'users with the trait: ';
+			values = traits.join(', ');
+		} else if (!hasTraits && hasFeatures) {
+			scopeLabel = 'communities with the feature: ';
+			values = features.join(', ');
+		} else {
+			scopeLabel = 'users or communities with a matching trait or feature';
+			values = '';
+		}
+
+		setValue(form, 'scope', scopeLabel);
+		setValue(form, 'values', values);
+		setValue(form, 'user_values', traits.join(',') || EMPTY);
+		setValue(form, 'guild_values', features.join(',') || EMPTY);
+		var warning = form.querySelector('[data-default-rule-warning]');
+		if (warning) {
+			warning.hidden = !(fieldValue(form, 'rule_id') === 'default' && (hasTraits || hasFeatures));
+		}	}
+
+	function syncAll(root) {
+		var scope = root && root.querySelectorAll ? root : document;
+		if (scope instanceof HTMLFormElement) {
+			sync(scope);
+			return;
+		}
+		Array.prototype.forEach.call(scope.querySelectorAll('form'), sync);
+	}
+
+	document.addEventListener('input', function (event) {
+		var control = event.target;
+		if (!(control instanceof Element)) return;
+		if (FIELDS.indexOf(control.name) < 0) return;
+		var form = control.closest('form');
+		if (form) sync(form);
+	});
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', function () {
+			syncAll(document);
+		});
+	} else {
+		syncAll(document);
+	}
+
+	document.body.addEventListener('htmx:load', function (event) {
+		syncAll(event.detail && event.detail.elt ? event.detail.elt : event.target);
+	});
+
+	document.addEventListener('htmx:afterRequest', function (event) {
+		var detail = event.detail || {};
+		if (!detail.successful) return;
+		var triggerElement = detail.elt || (detail.requestConfig && detail.requestConfig.elt);
+		var form = triggerElement && triggerElement.closest ? triggerElement.closest('form') : null;
+		if (!form || form.id !== 'create-rule') return;
+
+		var xhr = detail.xhr;
+		var toastHeader = xhr && xhr.getResponseHeader ? xhr.getResponseHeader('X-Fluxer-Admin-Toast') : null;
+		if (!toastHeader) return;
+		var toast;
+		try {
+			toast = JSON.parse(toastHeader);
+		} catch (error) {
+			return;
+		}
+
+		if (!toast || toast.level !== 'success') return;
+		if (String(toast.message || '').toLowerCase().indexOf('created') < 0) return;
+
+		var refreshPrompt = form.querySelector('[data-refresh-after-create]');
+		if (!refreshPrompt) return;
+		refreshPrompt.hidden = false;
+		refreshPrompt.focus();
+	});
+})();
+"#;
 
 pub fn limit_config_page(
     config: &AdminConfig,
@@ -73,7 +194,7 @@ fn render_limit_page(
         .unwrap_or("default");
     let active_rule = rules.iter().find(|rule| rule.id == active_rule_id);
     let description = if response.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled by default. Configure limits to customize user and guild restrictions."
+        "Configure limits by adding rules to customize user or community restrictions. Rules are then applied to users or communities, depending on filters. The default rule applies to all users and communities and cannot be overridden by rules that restrict features and limits under the default."
     } else {
         "Configure limit rules that control user and guild restrictions. Different rules apply based on user traits or guild features."
     };
@@ -97,9 +218,10 @@ fn render_limit_page(
                 }
             }
             @if can_update {
-                (create_rule_section(config, csrf_token, response))
+                (create_rule_section(config, csrf_token, response, active_rule_id))
             }
         }
+        script { (PreEscaped(FILTER_PREVIEW_SCRIPT)) }
     }
 }
 
@@ -246,7 +368,7 @@ fn rule_editor(
             input type="hidden" name="rule_id" value=(rule.id);
             div class="space-y-6" {
                 @if can_update {
-                    (filter_inputs(rule))
+                    (filter_inputs(&config.base_path, rule))
                 }
                 @for category in CATEGORY_ORDER {
                     @let keys = keys_for_category(response, category);
@@ -266,7 +388,7 @@ fn rule_editor(
     }
 }
 
-fn filter_inputs(rule: &LimitRule) -> Markup {
+fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
     let traits = rule
         .filters
         .as_ref()
@@ -277,13 +399,53 @@ fn filter_inputs(rule: &LimitRule) -> Markup {
         .as_ref()
         .map(|filters| filters.guild_features.join(", "))
         .unwrap_or_default();
-    card_with_header(
+    let has_traits = !traits.trim().is_empty();
+    let has_features = !guild_features.trim().is_empty();
+    let is_default_rule = rule.id == "default";
+    let show_default_warning = is_default_rule && (has_traits || has_features);
+    let active_scope = match (has_traits, has_features) {
+        (true, true) => "both",
+        (false, false) => "default",
+        _ => "either",
+    };
+    let state_for = |scope: &str| {
+        if scope == active_scope {
+            "active"
+        } else {
+            "inactive"
+        }
+    };
+    let (scope_display, values_display) = match (has_traits, has_features) {
+        (true, false) => ("users given the trait: ", traits.clone()),
+        (false, true) => ("communities given the feature: ", guild_features.clone()),
+        _ => (
+            "users given this rule as a trait or communities given this rule as a feature",
+            String::new(),
+        ),
+    };
+    let traits_display = if has_traits {
+        traits.clone()
+    } else {
+        "…".to_owned()
+    };
+    let guild_features_display = if has_features {
+        guild_features.clone()
+    } else {
+        "…".to_owned()
+    };
+    card_with_header_extended(
         "Filters",
+        Some(html! {
+            "Write custom filter names to restrict this rule to specified users or communities. These filters can then be assigned as traits to a "
+            a href={(base) "/users"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "user" }
+            ", or a feature for a "
+            a href={(base) "/guilds"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "community" } "."
+        }),
         html! {
             div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                 div class="space-y-2" {
                     label for="traits" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                        "User Traits (Optional)"
+                        "Custom User Traits (Optional)"
                     }
                     input type="text" id="traits" name="traits" value=(traits)
                         placeholder="e.g., premium, supporter" class=(FORM_INPUT_CLASS);
@@ -291,11 +453,49 @@ fn filter_inputs(rule: &LimitRule) -> Markup {
                 }
                 div class="space-y-2" {
                     label for="guild_features" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                        "Guild Features (Optional)"
+                        "Custom Guild Features (Optional)"
                     }
                     input type="text" id="guild_features" name="guild_features" value=(guild_features)
                         placeholder="e.g., VIP_SERVERS, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
                     p class="text-xs text-neutral-500" { "Separate values with commas; leave blank to disable this filter." }
+                }
+            }
+            @if is_default_rule {
+                div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+                    data-default-rule-warning hidden[!show_default_warning] {
+                    strong class="font-semibold" { "Not recommended on rule: Default." }
+                    " The default rule is the fallback that applies to every user and community. Adding filters here narrows it, so anyone who does not match is left with no rule at all instead of this rule's limits. Create a dedicated rule for to apply grants or restrictions to users or communities."
+                }
+            }
+            div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3" {
+                ul class="space-y-1.5 text-xs text-neutral-500" {
+                    li class="group flex items-start gap-2 opacity-50 transition-opacity data-[state=active]:opacity-100"
+                        data-filter-scope="default" data-state=(state_for("default")) {
+                        span aria-hidden="true"
+                            class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
+                        span { "This rule is applied to everyone." }
+                    }
+                    li class="group flex items-start gap-2 opacity-50 transition-opacity data-[state=active]:opacity-100"
+                        data-filter-scope="either" data-state=(state_for("either")) {
+                        span aria-hidden="true"
+                            class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
+                        span {
+                            "Applied only to "
+                            span data-filter-value="scope" { (scope_display) }
+                            span class="font-mono text-neutral-700" data-filter-value="values" { (values_display) }
+                        }
+                    }
+                    li class="group flex items-start gap-2 opacity-50 transition-opacity data-[state=active]:opacity-100"
+                        data-filter-scope="both" data-state=(state_for("both")) {
+                        span aria-hidden="true"
+                            class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
+                        span {
+                            "Applied only to users given the trait: "
+                            span class="font-mono text-neutral-700" data-filter-value="user_values" { (traits_display) }
+                            " and communities given the feature: "
+                            span class="font-mono text-neutral-700" data-filter-value="guild_values" { (guild_features_display) }
+                        }
+                    }
                 }
             }
         },
@@ -614,6 +814,7 @@ fn create_rule_section(
     config: &AdminConfig,
     csrf_token: &str,
     response: &LimitConfigResponse,
+    active_rule_id: &str,
 ) -> Markup {
     let existing_ids = sorted_rules(response)
         .iter()
@@ -655,6 +856,12 @@ fn create_rule_section(
                     }
                     (form_actions(html! {
                         (submit_button("Create Rule"))
+                        a href={(config.base_path) "/limit-config?rule=" (active_rule_id)}
+                            role="button" hx-boost="false" hidden data-refresh-after-create
+                            class={(BUTTON_BASE_CLASS) " " (SECONDARY_BUTTON_CLASS)} {
+                            (icons::arrow_up_icon())
+                            span { "Scroll up & refresh" }
+                        }
                     }))
                 }
             }

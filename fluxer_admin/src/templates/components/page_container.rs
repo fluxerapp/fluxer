@@ -58,7 +58,7 @@ pub fn page_header_full(
                 div class="flex min-w-0 flex-1 flex-col gap-2" {
                     h1 class="break-words font-bold text-2xl text-gray-900 sm:text-3xl" { (title) }
                     @if let Some(desc) = description {
-                        p class="text-base text-gray-600" { (desc) }
+                        p class="text-base text-gray-600 max-w-4xl" { (desc) }
                     }
                 }
                 @if let Some(actions) = actions {
@@ -81,11 +81,22 @@ pub fn card(content: Markup) -> Markup {
 }
 
 pub fn card_with_header(title: &str, content: Markup) -> Markup {
+    card_with_header_extended(title, None, content)
+}
+
+pub fn card_with_header_extended(title: &str, desc: Option<Markup>, content: Markup) -> Markup {
     html! {
         div class="rounded-lg bg-white transition-all border border-neutral-200" {
             div class="border-b border-neutral-200 px-6 py-3" {
                 h3 class="font-medium text-lg text-neutral-900" {
                     (title)
+                }
+                @if let Some(desc) = desc {
+                    div class="pt-2" {
+                        p class="text-sm text-neutral-500" {
+                            (desc)
+                        }
+                    }
                 }
             }
             div class="p-6" {
