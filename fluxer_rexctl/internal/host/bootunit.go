@@ -443,29 +443,53 @@ func unitFiles(project string) (map[string]bool, error) {
 	return units, nil
 }
 
-func RefreshUnitBinaries(ctx context.Context, project, bin string) error {
+func RefreshUnitBinarySteps(project, bin string) ([]Step, error) {
 	if runtime.GOOS != "linux" {
-		return nil
+		return nil, nil
 	}
 	units, err := unitFiles(project)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for path, system := range units {
+	return unitBinarySteps(units, bin)
+}
+
+func unitBinarySteps(units map[string]bool, bin string) ([]Step, error) {
+	paths := make([]string, 0, len(units))
+	for path := range units {
+		paths = append(paths, path)
+	}
+	slices.Sort(paths)
+	var steps []Step
+	seen := map[string]bool{}
+	for _, path := range paths {
 		data, err := os.ReadFile(path)
 		if os.IsNotExist(err) {
 			continue
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
-		for _, b := range unitBinaries(data) {
-			if err := installBinary(ctx, system, bin, b); err != nil {
-				return err
+		system := units[path]
+		for _, dst := range unitBinaries(data) {
+			if seen[dst] || sameFile(bin, dst) {
+				continue
 			}
+			seen[dst] = true
+			command := "install " + strings.Join(installArgs(bin, dst), " ")
+			if system {
+				command = rootCmd(command)
+			}
+			steps = append(steps, Step{
+				Do:      "Updates " + dst + ", the copy of rexctl that " + path + " runs.",
+				Command: command,
+				Run: func(ctx context.Context) error {
+					return installBinary(ctx, system, bin, dst)
+				},
+			})
 		}
 	}
-	return nil
+	return steps, nil
 }
 
 func unitBinaries(data []byte) []string {

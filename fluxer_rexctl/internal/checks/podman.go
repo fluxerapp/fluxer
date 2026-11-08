@@ -13,7 +13,7 @@ import (
 
 func init() {
 	Register(Check{ID: "podman-subids", Phases: Preinstall | Installed, Run: runPodmanSubIDs})
-	Register(Check{ID: "podman-setup", Phases: Installed, Run: runPodmanSetup, Fix: fixPodmanSetup, SafeFix: true})
+	Register(Check{ID: "podman-setup", Phases: Installed, Run: runPodmanSetup, Fix: fixPodmanSetup})
 }
 
 func (e *Env) podmanSetup(ctx context.Context) (host.PodmanSetup, bool) {

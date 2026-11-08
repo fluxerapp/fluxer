@@ -22,7 +22,7 @@ const (
 const overcommitOff = "Memory overcommit is off, so Fluxer's cache can fail to save data when memory runs low."
 
 func init() {
-	Register(Check{ID: "memory-overcommit", Phases: Preinstall | Installed, Run: runOvercommit, Fix: fixOvercommit, SafeFix: true})
+	Register(Check{ID: "memory-overcommit", Phases: Preinstall | Installed, Run: runOvercommit, Fix: fixOvercommit})
 }
 
 func runOvercommit(_ context.Context, e *Env) Result {
