@@ -12,6 +12,7 @@ import {
 	assertRelationshipType,
 	blockUser,
 	listRelationships,
+	removeRelationship,
 	sendFriendRequest,
 } from '@app/api/user/tests/RelationshipTestUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -43,6 +44,22 @@ describe('RelationshipBlocking', () => {
 		assertRelationshipType(aliceRelsAfterBlock[0]!, RelationshipTypes.BLOCKED);
 		const {json: bobRelsAfterBlock} = await listRelationships(harness, bob.token);
 		expect(bobRelsAfterBlock).toHaveLength(0);
+	});
+	test('unblocking does not turn an old request into a friendship', async () => {
+		const alice = await createTestAccount(harness);
+		const bob = await createTestAccount(harness);
+		await sendFriendRequest(harness, bob.token, alice.userId);
+		await blockUser(harness, alice.token, bob.userId);
+		await removeRelationship(harness, alice.token, bob.userId);
+		const {json: bobRelsAfterUnblock} = await listRelationships(harness, bob.token);
+		expect(bobRelsAfterUnblock).toHaveLength(0);
+		await sendFriendRequest(harness, alice.token, bob.userId);
+		const {json: aliceRels} = await listRelationships(harness, alice.token);
+		const {json: bobRels} = await listRelationships(harness, bob.token);
+		expect(aliceRels).toHaveLength(1);
+		assertRelationshipType(aliceRels[0]!, RelationshipTypes.OUTGOING_REQUEST);
+		expect(bobRels).toHaveLength(1);
+		assertRelationshipType(bobRels[0]!, RelationshipTypes.INCOMING_REQUEST);
 	});
 	test('blocked user cannot send friend request', async () => {
 		const alice = await createTestAccount(harness);
