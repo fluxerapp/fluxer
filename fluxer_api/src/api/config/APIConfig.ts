@@ -51,7 +51,6 @@ export interface OperatorPassConfig {
 	labsGuildId: bigint | null;
 	labsOperatorRoleId: bigint | null;
 	labsVisionaryRoleId: bigint | null;
-	labsAccessRoleId: bigint | null;
 	labsOperatorsChannelId: bigint | null;
 	standardPricesMinor: OperatorPassPriceTable | null;
 	releaseLists: OperatorPassReleaseListTable;

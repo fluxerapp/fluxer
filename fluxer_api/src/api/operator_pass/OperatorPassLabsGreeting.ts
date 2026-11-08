@@ -3,6 +3,7 @@
 import {createChannelID, createGuildID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {MessageDeleteService} from '@app/api/channel/services/message/MessageDeleteService';
 import type {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {OperatorPassLabsGreetingRow} from '@app/api/database/types/OperatorPassTypes';
@@ -15,8 +16,10 @@ import {
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {
 	getLabsOperatorsChannelId,
-	hidesOperatorsChannel,
 	isBlockedFromLabsAutoJoin,
+	labsProfilePrivacy,
+	labsRolesFor,
+	showsOperatorBadgeInLabs,
 } from '@app/api/operator_pass/OperatorPassLabsRole';
 import {type OperatorPassLockLease, withOperatorPassLock} from '@app/api/operator_pass/OperatorPassLocks';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
@@ -38,10 +41,11 @@ export class OperatorPassLabsGreetingBusyError extends Error {
 
 export interface OperatorPassLabsGreetingDeps {
 	repository: OperatorPassRepository;
-	userRepository: Pick<UserRepository, 'findUnique'>;
+	userRepository: Pick<UserRepository, 'findUnique' | 'findSettings'>;
 	guildRepository: Pick<GuildRepository, 'getMember'>;
 	channelRepository: Pick<ChannelRepository, 'channelData' | 'messages'>;
-	messages: Pick<MessageSendService, 'sendSystemGuildMessage'>;
+	messages: Pick<MessageSendService, 'sendSystemGuildMessage' | 'editSystemGuildMessage'>;
+	deletion: Pick<MessageDeleteService, 'deleteSystemGuildMessage'>;
 	snowflakeService: Pick<ISnowflakeService, 'generateForChannel'>;
 	cacheService: ICacheService;
 }
@@ -65,9 +69,7 @@ function sortUserIds(userIds: ReadonlyArray<UserID>): Array<UserID> {
 	return [...userIds].sort(compareSnowflakes);
 }
 
-export async function runOperatorPassLabsGreeting(
-	deps: OperatorPassLabsGreetingDeps,
-): Promise<OperatorPassLabsGreetingSummary | null> {
+async function findOperatorsChannel(deps: OperatorPassLabsGreetingDeps): Promise<Channel | null> {
 	const channelId = getLabsOperatorsChannelId();
 	const guildId = Config.operatorPass.labsGuildId;
 	if (channelId === null || guildId === null) {
@@ -76,6 +78,57 @@ export async function runOperatorPassLabsGreeting(
 	const channel = await deps.channelRepository.channelData.findUnique(createChannelID(channelId));
 	if (!channel || channel.guildId !== createGuildID(guildId)) {
 		throw new Error('FLUXER_LABS_OPERATORS_CHANNEL_ID is not a channel in Fluxer Labs');
+	}
+	return channel;
+}
+
+export async function retractOperatorPassLabsGreeting(
+	deps: OperatorPassLabsGreetingDeps,
+	userId: UserID,
+): Promise<boolean> {
+	const channel = await findOperatorsChannel(deps);
+	if (!channel) {
+		return false;
+	}
+	return withOperatorPassLock(
+		deps.cacheService,
+		LOCK_KEY,
+		async () => {
+			const messageId = (await deps.repository.findLabsMember(userId))?.greeting_message_id;
+			if (messageId == null) {
+				return false;
+			}
+			const user = await deps.userRepository.findUnique(userId);
+			if (user && showsOperatorBadgeInLabs(user, await labsProfilePrivacy(deps.userRepository, userId))) {
+				return false;
+			}
+			const message = await deps.channelRepository.messages.getMessage(channel.id, createMessageID(messageId));
+			if (message) {
+				const others = sortUserIds([...message.mentionedUserIds].filter((mentioned) => mentioned !== userId));
+				if (others.length === 0) {
+					await deps.deletion.deleteSystemGuildMessage(channel, message);
+				} else {
+					await deps.messages.editSystemGuildMessage({
+						channel,
+						messageId: message.id,
+						content: renderGreeting(others),
+						mentionUserIds: others,
+					});
+				}
+			}
+			await deps.repository.clearLabsGreetingMessage(userId);
+			return true;
+		},
+		() => new OperatorPassLabsGreetingBusyError(),
+	);
+}
+
+export async function runOperatorPassLabsGreeting(
+	deps: OperatorPassLabsGreetingDeps,
+): Promise<OperatorPassLabsGreetingSummary | null> {
+	const channel = await findOperatorsChannel(deps);
+	if (!channel) {
+		return null;
 	}
 	return withOperatorPassLock(
 		deps.cacheService,
@@ -106,7 +159,7 @@ class LabsGreetingRun {
 			claimed.set(row.message_id, [...(claimed.get(row.message_id) ?? []), row.user_id]);
 		}
 		for (const [messageId, userIds] of claimed) {
-			await this.send(createMessageID(messageId), userIds);
+			await this.sendClaimed(createMessageID(messageId), userIds);
 		}
 		waiting.sort(
 			(left, right) =>
@@ -144,19 +197,42 @@ class LabsGreetingRun {
 		await this.send(messageId, userIds);
 	}
 
+	private async sendClaimed(messageId: MessageID, userIds: ReadonlyArray<UserID>): Promise<void> {
+		if (await this.deps.channelRepository.messages.getMessage(this.channel.id, messageId)) {
+			await this.send(messageId, userIds);
+			return;
+		}
+		const greetable: Array<UserID> = [];
+		for (const userId of userIds) {
+			if (await this.isGreetable(userId)) {
+				greetable.push(userId);
+			} else {
+				await this.deps.repository.removeLabsGreeting(userId);
+				this.summary.dropped++;
+			}
+		}
+		if (greetable.length > 0) {
+			await this.send(messageId, greetable);
+		}
+	}
+
 	private async isGreetable(userId: UserID): Promise<boolean> {
 		const record = await this.deps.repository.findLabsMember(userId);
 		if (record?.greeting === false || record?.greeted_at != null) {
 			return false;
 		}
 		const user = await this.deps.userRepository.findUnique(userId);
-		if (!user || hidesOperatorsChannel(user) || isBlockedFromLabsAutoJoin(user, new Date())) {
+		if (!user || isBlockedFromLabsAutoJoin(user, new Date())) {
 			return false;
 		}
 		if (!this.channel.guildId || !(await this.deps.guildRepository.getMember(this.channel.guildId, userId))) {
 			return false;
 		}
-		return isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.deps.repository, userId));
+		return labsRolesFor({
+			user,
+			entitled: isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.deps.repository, userId)),
+			profilePrivacy: await labsProfilePrivacy(this.deps.userRepository, userId),
+		}).operator;
 	}
 
 	private async send(messageId: MessageID, userIds: ReadonlyArray<UserID>): Promise<void> {

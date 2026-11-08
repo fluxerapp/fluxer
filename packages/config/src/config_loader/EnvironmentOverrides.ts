@@ -328,7 +328,6 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_LABS_GUILD_ID: {path: ['operator_pass', 'labs_guild_id']},
 	FLUXER_LABS_OPERATOR_ROLE_ID: {path: ['operator_pass', 'labs_operator_role_id']},
 	FLUXER_LABS_VISIONARY_ROLE_ID: {path: ['operator_pass', 'labs_visionary_role_id']},
-	FLUXER_LABS_ACCESS_ROLE_ID: {path: ['operator_pass', 'labs_access_role_id']},
 	FLUXER_LABS_OPERATORS_CHANNEL_ID: {path: ['operator_pass', 'labs_operators_channel_id']},
 	FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT: {path: ['payment_disputes', 'closure_effective_at']},
 	FLUXER_OPERATOR_PASS_PRICE_RISES_AT: {path: ['operator_pass', 'price_rises_at']},

@@ -35,6 +35,7 @@ import {
 	type ThreadParentSettingsInput,
 } from '@app/api/channel/services/thread/ThreadParentSettings';
 import {enqueueDeleteChannelThreads} from '@app/api/channel/threads/ThreadJobs';
+import {withRetryingLock} from '@app/api/channel/utils/RetryingLock';
 import {valuesEqual} from '@app/api/database/CassandraVersionedUpdate';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
@@ -137,18 +138,25 @@ export class ChannelOperationsService {
 		requestCache: RequestCache,
 		guildId: GuildID,
 	): Promise<void> {
-		const current = await this.channelRepository.channelData.findUnique(channelId);
-		if (!current) throw new UnknownChannelError();
-		const overwrites = new Map(current.permissionOverwrites ?? []);
-		applyChange(overwrites);
-		const updated = await this.channelRepository.channelData.upsert(
-			{
-				...current.toRow(),
-				permission_overwrites: new Map(
-					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
-				),
+		const {current, updated} = await withRetryingLock(
+			this.cacheService,
+			`channel:${channelId}:overwrites`,
+			async () => {
+				const current = await this.channelRepository.channelData.findUnique(channelId);
+				if (!current) throw new UnknownChannelError();
+				const overwrites = new Map(current.permissionOverwrites ?? []);
+				applyChange(overwrites);
+				const updated = await this.channelRepository.channelData.upsert(
+					{
+						...current.toRow(),
+						permission_overwrites: new Map(
+							Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
+						),
+					},
+					current.toRow(),
+				);
+				return {current, updated};
 			},
-			current.toRow(),
 		);
 		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: requestCache});
 		if (current.type === ChannelTypes.GUILD_CATEGORY) {
@@ -924,6 +932,29 @@ export class ChannelOperationsService {
 			next: new Map([[targetId, nextOverwrite]]),
 			reason: params.auditLogReason,
 		});
+	}
+
+	async systemSetMemberOverwrite(params: {
+		channelId: ChannelID;
+		userId: UserID;
+		allow: bigint | null;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const channel = await this.channelRepository.channelData.findUnique(params.channelId);
+		if (!channel?.guildId) throw new UnknownChannelError();
+		const {userId, allow} = params;
+		await this.persistOverwritesAndDispatch(
+			channel.id,
+			(overwrites) => {
+				if (allow === null) {
+					overwrites.delete(userId);
+				} else {
+					overwrites.set(userId, new ChannelPermissionOverwrite({type: 1, allow_: allow, deny_: 0n}));
+				}
+			},
+			params.requestCache,
+			channel.guildId,
+		);
 	}
 
 	async deleteChannelPermissionOverwrite(params: {

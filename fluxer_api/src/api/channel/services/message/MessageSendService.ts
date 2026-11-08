@@ -1010,6 +1010,34 @@ export class MessageSendService {
 		return message;
 	}
 
+	async editSystemGuildMessage(params: {
+		channel: Channel;
+		messageId: MessageID;
+		content: string;
+		mentionUserIds: Array<UserID>;
+	}): Promise<Message | null> {
+		const {channel, messageId, content, mentionUserIds} = params;
+		const updated = await this.deps.messageWriteLock.withFreshMessage(channel.id, messageId, async (fresh) => {
+			if (!fresh || fresh.authorId !== SYSTEM_USER_ID) return null;
+			const previous = fresh.toRow();
+			return this.deps.channelRepository.messages.upsertMessage(
+				{
+					...previous,
+					content,
+					edited_timestamp: new Date(),
+					mention_users: mentionUserIds.length > 0 ? new Set(mentionUserIds) : null,
+				},
+				previous,
+			);
+		});
+		if (!updated) return null;
+		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updated});
+		if (channel.indexedAt != null) {
+			void this.deps.searchService.updateMessageIndex(updated);
+		}
+		return updated;
+	}
+
 	async sendWebhookMessage({
 		webhook,
 		thread,

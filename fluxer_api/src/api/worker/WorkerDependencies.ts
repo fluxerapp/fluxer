@@ -288,6 +288,8 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 				userRepository,
 				guildRepository,
 				guildService,
+				channelRepository,
+				channelService,
 				emailService,
 				gatewayService,
 			});
