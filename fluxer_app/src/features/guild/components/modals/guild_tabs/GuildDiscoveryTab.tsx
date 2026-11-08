@@ -2,9 +2,11 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.module.css';
+import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -34,6 +36,7 @@ import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {InfoIcon, WarningIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
+import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
@@ -189,8 +192,9 @@ function StatusBadge({status}: {status: string}) {
 	);
 }
 
-const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
+const GuildDiscoveryTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const {i18n} = useLingui();
+	const hiddenForMatureContent = !RuntimeConfig.isSelfHosted() && (Guilds.getGuild(guildId)?.nsfw ?? false);
 	const [status, setStatus] = useState<DiscoveryStatusResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -365,6 +369,46 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 					</div>
 				</div>
 			)}
+			{hiddenForMatureContent && (
+				<div className={styles.warning} data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning">
+					<div
+						className={styles.warningContent}
+						data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-content"
+					>
+						<div
+							className={styles.warningIcon}
+							data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-icon"
+						>
+							<WarningIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-icon--2"
+							/>
+						</div>
+						<div
+							className={styles.warningBody}
+							data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-body"
+						>
+							<p
+								className={styles.warningTitle}
+								data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-title"
+							>
+								<Trans comment="Warning title in the Explore tab in community settings when the community has mature content turned on.">
+									Not shown in Explore
+								</Trans>
+							</p>
+							<p
+								className={styles.warningText}
+								data-flx="guild.guild-tabs.guild-discovery-tab.mature-content-warning-text"
+							>
+								<Trans comment="Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.">
+									This community has "Mature content" turned on, so it isn't shown in Explore.
+								</Trans>
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 			{application != null && (
 				<div className={styles.statusCard} data-flx="guild.guild-tabs.guild-discovery-tab.status-card">
 					<div className={styles.statusRow} data-flx="guild.guild-tabs.guild-discovery-tab.status-row">
@@ -380,7 +424,7 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 					)}
 				</div>
 			)}
-			{application?.status === DiscoveryApplicationStatus.APPROVED && (
+			{application?.status === DiscoveryApplicationStatus.APPROVED && !hiddenForMatureContent && (
 				<div className={styles.info} data-flx="guild.guild-tabs.guild-discovery-tab.info">
 					<div className={styles.infoContent} data-flx="guild.guild-tabs.guild-discovery-tab.info-content">
 						<div className={styles.infoIcon} data-flx="guild.guild-tabs.guild-discovery-tab.info-icon">
@@ -647,6 +691,6 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 			)}
 		</div>
 	);
-};
+});
 
 export default GuildDiscoveryTab;

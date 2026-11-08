@@ -25186,6 +25186,11 @@ msgstr "Nincs beállítva"
 msgid "Not set up"
 msgstr "Nincs beállítva"
 
+#. Warning title in the Explore tab in community settings when the community has mature content turned on.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Not shown in Explore"
+msgstr "Nem jelenik meg a Felfedezésben"
+
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -37458,6 +37463,11 @@ msgstr "Ennek a közösségnek még nincsenek meghívólinkjei. Menj egy csatorn
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
 msgstr "Ennek a közösségnek még nincsenek webhookjai. Lépj a(z) {channelWebhooksSettingsPath} oldalra egy létrehozásához."
+
+#. Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "This community has \"Mature content\" turned on, so it isn't shown in Explore."
+msgstr "Ebben a közösségben be van kapcsolva a „Felnőtt tartalom”, ezért nem jelenik meg a Felfedezésben."
 
 #. Invite page notice shown when community admins have paused invites.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

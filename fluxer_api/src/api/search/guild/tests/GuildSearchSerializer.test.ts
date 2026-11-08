@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {Guild} from '@app/api/models/Guild';
 import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSerializer';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
+
+const adultDiscovery = {
+	description: 'Adults only.',
+	categoryId: 8,
+	primaryLanguage: 'en-US',
+	tags: ['adults'],
+};
 
 function guildRow(features: Set<string>, nsfw = false): GuildRow {
 	return {
@@ -79,15 +87,28 @@ describe('GuildSearchSerializer', () => {
 		expect(result.discoveryDescription).toBeNull();
 		expect(result.discoveryTags).toEqual([]);
 	});
-	it('an 18+ guild with DISCOVERABLE is not discoverable', () => {
-		const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
-		const result = convertToSearchableGuild(guild, {
-			description: 'Adults only.',
-			categoryId: 8,
-			primaryLanguage: 'en-US',
-			tags: ['adults'],
-		});
-		expect(result.isDiscoverable).toBe(false);
-		expect(result.discoveryDescription).toBeNull();
+	it('an 18+ guild with DISCOVERABLE is not discoverable on fluxer.com', () => {
+		const original = Config.instance.selfHosted;
+		Config.instance.selfHosted = false;
+		try {
+			const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
+			const result = convertToSearchableGuild(guild, adultDiscovery);
+			expect(result.isDiscoverable).toBe(false);
+			expect(result.discoveryDescription).toBeNull();
+		} finally {
+			Config.instance.selfHosted = original;
+		}
+	});
+	it('an 18+ guild with DISCOVERABLE is discoverable on a self-hosted instance', () => {
+		const original = Config.instance.selfHosted;
+		Config.instance.selfHosted = true;
+		try {
+			const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
+			const result = convertToSearchableGuild(guild, adultDiscovery);
+			expect(result.isDiscoverable).toBe(true);
+			expect(result.discoveryDescription).toBe('Adults only.');
+		} finally {
+			Config.instance.selfHosted = original;
+		}
 	});
 });

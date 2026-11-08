@@ -25186,6 +25186,11 @@ msgstr "未设置"
 msgid "Not set up"
 msgstr "未设置"
 
+#. Warning title in the Explore tab in community settings when the community has mature content turned on.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Not shown in Explore"
+msgstr "不在探索中显示"
+
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -37458,6 +37463,11 @@ msgstr "此社区还没有任何邀请链接。前往频道并创建邀请，即
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
 msgstr "此社区还没有任何 Webhook。前往 {channelWebhooksSettingsPath} 创建一个。"
+
+#. Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "This community has \"Mature content\" turned on, so it isn't shown in Explore."
+msgstr "此社区已开启“成人内容”，因此不会在探索中显示。"
 
 #. Invite page notice shown when community admins have paused invites.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

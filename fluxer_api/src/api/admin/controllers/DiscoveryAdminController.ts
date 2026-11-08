@@ -60,6 +60,7 @@ interface GuildEnrichment {
 	owner_discriminator: string | null;
 	member_count: number;
 	nsfw_level: number | null;
+	nsfw: boolean;
 	features: Array<string>;
 }
 
@@ -96,6 +97,7 @@ async function enrichGuilds(
 			...formatOwnerFields(owner),
 			member_count: guild.memberCount,
 			nsfw_level: guild.nsfwLevel,
+			nsfw: guild.nsfw,
 			features: mapGuildFeatures(guild.features),
 		});
 	}
@@ -114,6 +116,7 @@ function mapPendingResponse(row: GuildDiscoveryRow, enrichment: GuildEnrichment 
 		guild_owner_discriminator: enrichment?.owner_discriminator ?? null,
 		guild_member_count: enrichment?.member_count ?? 0,
 		guild_nsfw_level: enrichment?.nsfw_level ?? null,
+		guild_nsfw: enrichment?.nsfw ?? false,
 		guild_features: enrichment?.features ?? [],
 		description: row.description,
 		category_type: row.category_type,

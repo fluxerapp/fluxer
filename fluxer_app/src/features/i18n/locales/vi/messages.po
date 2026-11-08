@@ -25186,6 +25186,11 @@ msgstr "Chưa đặt"
 msgid "Not set up"
 msgstr "Chưa thiết lập"
 
+#. Warning title in the Explore tab in community settings when the community has mature content turned on.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Not shown in Explore"
+msgstr "Không hiển thị trong Khám phá"
+
 #. Reason spoken by screen readers when a slash-command argument is not true or false.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Not true or false"
@@ -37458,6 +37463,11 @@ msgstr "Cộng đồng này chưa có liên kết mời nào. Hãy vào một k�
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
 msgstr "Cộng đồng này chưa có webhook nào. Hãy vào {channelWebhooksSettingsPath} để tạo webhook."
+
+#. Warning in the Explore tab in community settings. 'Mature content' is the label of the setting in the Moderation tab.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "This community has \"Mature content\" turned on, so it isn't shown in Explore."
+msgstr "Cộng đồng này đã bật \"Nội dung người lớn\" nên không hiển thị trong Khám phá."
 
 #. Invite page notice shown when community admins have paused invites.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

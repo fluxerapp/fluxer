@@ -3,6 +3,7 @@
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createUserID, type GuildID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {Config} from '@app/api/Config';
 import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
 import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
@@ -198,6 +199,34 @@ describe('Discovery Search and Join', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(after.guilds.some((g) => g.id === guild.id)).toBe(false);
+		});
+		test('an approved 18+ guild stays in search on a self-hosted instance', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const owner = await createTestAccount(harness);
+			const searcher = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Self Hosted Adult Guild');
+			await setGuildMemberCount(harness, guild.id, 10);
+			await applyAndApprove(
+				harness,
+				owner.token,
+				admin.token,
+				guild.id,
+				'Self Hosted Adult Guild welcomes adults',
+				DiscoveryCategories.GAMING,
+			);
+			const originalSelfHosted = Config.instance.selfHosted;
+			Config.instance.selfHosted = true;
+			try {
+				await updateGuild(harness, owner.token, guild.id, {nsfw: true});
+				const result = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+					.get('/discovery/guilds')
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				expect(result.guilds.some((g) => g.id === guild.id)).toBe(true);
+			} finally {
+				Config.instance.selfHosted = originalSelfHosted;
+			}
 		});
 	});
 	describe('join', () => {

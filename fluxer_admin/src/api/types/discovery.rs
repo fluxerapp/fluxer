@@ -12,6 +12,7 @@ pub struct DiscoveryGuild {
     pub guild_owner_discriminator: Option<String>,
     pub guild_member_count: u64,
     pub guild_nsfw_level: Option<i32>,
+    pub guild_nsfw: bool,
     pub description: String,
     pub category_type: i32,
     pub primary_language: Option<String>,
