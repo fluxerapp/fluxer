@@ -2,6 +2,7 @@
 
 import {
 	type MapStripeSubscriptionHints,
+	mapBillingSubscriptionIndexRows,
 	mapStripeSubscriptionToRow,
 	normalizeBillingSubscriptionRow,
 	type StripeSubscriptionPayload,
@@ -53,18 +54,17 @@ export class BillingSubscriptionRepository {
 		changed: boolean;
 		row: BillingSubscriptionRow;
 	}> {
-		const mapped = mapStripeSubscriptionToRow(s, hints);
-		const existing = await this.findById(mapped.primary.provider_id);
+		const primary = mapStripeSubscriptionToRow(s, hints);
+		const existing = await this.findById(primary.provider_id);
 		const result = await upsertVersionedMirrorRow(
 			BillingSubscriptions,
 			BILLING_SUBSCRIPTION_COLUMNS,
 			existing,
-			mapped.primary,
+			primary,
 		);
-		if (result.changed) {
-			await upsertOne(BillingSubscriptionsByCustomer.upsertAll(mapped.byCustomer));
-			if (mapped.byUser) await upsertOne(BillingSubscriptionsByUser.upsertAll(mapped.byUser));
-		}
+		const index = mapBillingSubscriptionIndexRows(result.row);
+		await upsertOne(BillingSubscriptionsByCustomer.upsertAll(index.byCustomer));
+		if (index.byUser) await upsertOne(BillingSubscriptionsByUser.upsertAll(index.byUser));
 		return result;
 	}
 }
