@@ -15,7 +15,6 @@ import {
 	ENTRANCE_SOUND_MAX_PER_USER,
 	ENTRANCE_SOUND_MIN_DURATION_MS,
 	ENTRANCE_SOUND_NAME_MAX_LENGTH,
-	type EntranceSoundExtension,
 	entranceSoundExtensionFromFormat,
 	entranceSoundExtensionFromMime,
 	isValidEntranceSoundScopeId,
@@ -49,6 +48,10 @@ export interface EntranceSoundLibraryEntry {
 
 const SOUND_PATH_PREFIX = 'entrance-sounds';
 
+export function entranceSoundStorageKey(userId: UserID, hash: string, extension: string): string {
+	return `${SOUND_PATH_PREFIX}/${userId}/${hash}.${extension}`;
+}
+
 export class EntranceSoundService {
 	constructor(
 		private readonly repository: EntranceSoundRepository,
@@ -58,10 +61,6 @@ export class EntranceSoundService {
 
 	cdnUrlFor(sound: EntranceSound): string {
 		return `${Config.endpoints.media}/${SOUND_PATH_PREFIX}/${sound.userId}/${sound.hash}.${sound.extension}`;
-	}
-
-	private s3KeyFor(userId: UserID, hash: string, extension: EntranceSoundExtension): string {
-		return `${SOUND_PATH_PREFIX}/${userId}/${hash}.${extension}`;
 	}
 
 	private async objectIsReferenced(
@@ -148,7 +147,7 @@ export class EntranceSoundService {
 		}
 		const hash = crypto.createHash('md5').update(bytes).digest('hex').slice(0, 16);
 		const contentType = ENTRANCE_SOUND_EXT_TO_MIME[extension];
-		const s3Key = this.s3KeyFor(userId, hash, extension);
+		const s3Key = entranceSoundStorageKey(userId, hash, extension);
 		try {
 			await this.storageService.uploadObject({
 				bucket: Config.s3.buckets.cdn,
@@ -207,7 +206,7 @@ export class EntranceSoundService {
 		if (await this.objectIsReferenced(userId, existing.hash, existing.extension, soundId).catch(() => true)) {
 			return;
 		}
-		const s3Key = this.s3KeyFor(userId, existing.hash, existing.extension as EntranceSoundExtension);
+		const s3Key = entranceSoundStorageKey(userId, existing.hash, existing.extension);
 		await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key).catch((error) => {
 			Logger.error({error, userId: userId.toString(), s3Key}, 'Failed to delete entrance sound from S3');
 		});

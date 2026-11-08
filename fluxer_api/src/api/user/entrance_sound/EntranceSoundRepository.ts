@@ -51,6 +51,16 @@ export class EntranceSoundRepository {
 		await deleteOneOrMany(UserEntranceSoundSelections.deleteByPk({user_id: userId, scope_id: scopeId}));
 	}
 
+	async deleteAllForUser(userId: UserID): Promise<void> {
+		await deleteOneOrMany(
+			UserEntranceSoundSelections.deleteCql({where: UserEntranceSoundSelections.where.eq('user_id')}),
+			{user_id: userId},
+		);
+		await deleteOneOrMany(UserEntranceSounds.deleteCql({where: UserEntranceSounds.where.eq('user_id')}), {
+			user_id: userId,
+		});
+	}
+
 	async deleteSelectionsForSound(userId: UserID, soundId: EntranceSoundID): Promise<void> {
 		const selections = await this.listSelections(userId);
 		for (const selection of selections) {

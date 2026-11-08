@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
+import {createApplicationID, createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -10,6 +11,7 @@ import {
 	getGuildRepository,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
 import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
 import {RelationshipsByTarget} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -45,6 +47,28 @@ describe('applicationProcessDeletion task', () => {
 		clearWorkerDependencies();
 	});
 
+	test('removes guild bans of the deleted bot, also when the bot was already anonymised', async () => {
+		const account = await createTestAccount(harness);
+		const createResult = await createOAuth2Application(harness, account.token, {
+			name: createUniqueApplicationName(),
+		});
+		const guild = await createGuild(harness, account.token, `Bot Ban Worker Cleanup ${Date.now()}`);
+		const guildId = createGuildID(BigInt(guild.id));
+		const botUserId = createUserID(BigInt(createResult.botUserId));
+		await banUser(harness, account.token, guild.id, createResult.botUserId);
+		const userRepository = getUserRepository();
+		await userRepository.updateFlags(botUserId, (flags) => flags | UserFlags.DELETED);
+		const guildRepository = getGuildRepository();
+		expect(await guildRepository.getBan(guildId, botUserId)).not.toBeNull();
+
+		await applicationProcessDeletion(
+			{applicationId: createResult.application.id},
+			createTestWorkerHelpers({jobId: 7200000000000000001n}),
+		);
+
+		expect(await guildRepository.getBan(guildId, botUserId)).toBeNull();
+		expect(await guildRepository.listBans(guildId)).toHaveLength(0);
+	});
 	test('keeps the bot as author of its messages and clears its profile', async () => {
 		const account = await createTestAccount(harness);
 		const createResult = await createOAuth2Application(harness, account.token, {
