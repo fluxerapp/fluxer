@@ -5,6 +5,7 @@ import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import {applicationIdToUserId} from '@app/api/BrandedTypes';
 import type {ApplicationRow} from '@app/api/database/types/OAuth2Types';
 import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
@@ -46,6 +47,7 @@ interface ApplicationServiceDeps {
 	botAuthService: BotAuthService;
 	entityAssetService: EntityAssetService;
 	userCacheService: UserCacheService;
+	guildRepository: GuildRepository;
 }
 
 const BOT_IMAGE_FIELDS = [
@@ -246,6 +248,7 @@ export class ApplicationService {
 			await this.apiContext.services.users.deleteUserSecondaryIndices(botUserId);
 			await this.apiContext.services.users.removeFromAllGuilds(botUserId);
 			await this.apiContext.services.users.deleteAllRelationships(botUserId);
+			await this.deps.guildRepository.deleteAllBansForUser(botUserId);
 			for (const guildId of guildIds) {
 				try {
 					await this.apiContext.services.gateway.dispatchGuild({

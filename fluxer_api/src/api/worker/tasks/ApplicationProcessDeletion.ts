@@ -35,6 +35,7 @@ const applicationProcessDeletion: WorkerTaskHandler = async (payload, helpers) =
 		}
 		const botUser = await userRepository.findUniqueAssert(botUserId);
 		await userRepository.deleteAllRelationships(botUserId);
+		await guildRepository.deleteAllBansForUser(botUserId);
 		if (botUser.flags & UserFlags.DELETED) {
 			Logger.info({applicationId, botUserId}, 'Bot user already marked as deleted, skipping profile update');
 			await applicationRepository.deleteApplication(applicationId);
