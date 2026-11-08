@@ -13,6 +13,7 @@ import {User} from '@app/api/models/User';
 import {Users} from '@app/api/Tables';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
+import {isAccountClosed} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
@@ -30,6 +31,11 @@ const FETCH_USER_BY_ID_CQL = Users.selectCql({
 const FETCH_ALL_USERS_SCAN_CQL = Users.selectCql();
 const FETCH_ACTIVITY_TRACKING_CQL = Users.selectCql({
 	columns: ['last_active_at', 'last_active_ip'],
+	where: Users.where.eq('user_id'),
+	limit: 1,
+});
+const FETCH_ACTIVITY_TARGET_CQL = Users.selectCql({
+	columns: ['username', 'flags', 'deletion_started_at', 'last_active_at', 'last_active_ip'],
 	where: Users.where.eq('user_id'),
 	limit: 1,
 });
@@ -341,10 +347,22 @@ export class UserDataRepository {
 			last_active_at: Date | null;
 			last_active_ip: string | null;
 		};
-	}> {
+	} | null> {
 		const {userId, lastActiveAt, lastActiveIp} = params;
 		assertWritableUserId(userId);
-		const previousData = (await this.getActivityTracking(userId)) ?? {last_active_at: null, last_active_ip: null};
+		const current = await fetchOne<
+			Pick<UserRow, 'username' | 'flags' | 'deletion_started_at' | 'last_active_at' | 'last_active_ip'>
+		>(FETCH_ACTIVITY_TARGET_CQL, {user_id: userId});
+		if (
+			!current?.username ||
+			isAccountClosed({flags: current.flags ?? 0n, deletionStartedAt: current.deletion_started_at ?? null})
+		) {
+			return null;
+		}
+		const previousData = {
+			last_active_at: current.last_active_at ?? null,
+			last_active_ip: current.last_active_ip ?? null,
+		};
 		await upsertOne(
 			Users.patchByPk(
 				{user_id: userId},
