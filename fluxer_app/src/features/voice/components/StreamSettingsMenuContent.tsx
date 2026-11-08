@@ -14,6 +14,7 @@ import styles from '@app/features/voice/components/StreamSettingsMenuContent.mod
 import {
 	CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR,
 	type OfferedScreenShareResolution,
+	offeredScreenShareResolution,
 	type StreamSettingsAudioMenuViewState,
 	type StreamSettingsQualityWrite,
 	selectStreamSettingsAudioMenuState,
@@ -47,6 +48,7 @@ import {
 import {
 	resolveScreenShareFrameRate,
 	resolveScreenShareTarget,
+	resolveStreamingModeSettings,
 	type ScreenShareQualityInput,
 	type ScreenShareTarget,
 } from '@app/features/voice/utils/ScreenShareOptions';
@@ -68,7 +70,8 @@ import {
 	shouldReconfigureAudioForActiveStreamSettings,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
-import {hasHigherVideoQuality as resolveHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {isFullVideoQuality, type VideoQualityCaps} from '@app/features/voice/utils/VideoQualityCaps';
+import {getVideoQualityCaps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {
 	CUSTOM_DESCRIPTOR,
@@ -87,25 +90,16 @@ import type {Track} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-const SMOOTH_60_FPS_AT_UP_TO_1440P_DESCRIPTOR = msg({
-	message: 'Smooth 60 FPS at up to 1440p',
+const GAMING_PRESET_QUALITY_DESCRIPTOR = msg({
+	message: 'Smooth {frameRate} FPS at up to {resolution}',
 	comment:
-		'Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.',
-});
-const SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR = msg({
-	message: 'Smooth 30 FPS at up to 720p',
-	comment: 'Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.',
+		'Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.',
 });
 
-const SHARP_TEXT_AT_UP_TO_1080P_DESCRIPTOR = msg({
-	message: 'Sharp text at up to 1080p, 30 FPS',
+const SCREENSHARE_PRESET_QUALITY_DESCRIPTOR = msg({
+	message: 'Sharp text at up to {resolution}, {frameRate} FPS',
 	comment:
-		'Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.',
-});
-const SHARP_TEXT_AT_720P_DESCRIPTOR = msg({
-	message: 'Sharp text at 720p, up to 30 FPS',
-	comment:
-		'Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.',
+		'Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.',
 });
 
 const DIAL_IN_YOUR_OWN_NUMBERS_DESCRIPTOR = msg({
@@ -190,9 +184,9 @@ const PremiumBadge = () => (
 	</span>
 );
 
-export function useHasHigherVideoQuality(): boolean {
+export function useVideoQualityCaps(): VideoQualityCaps {
 	useMediaEngineVersion();
-	return resolveHigherVideoQuality();
+	return getVideoQualityCaps();
 }
 
 function getScreenShareResolutionLabel(i18n: I18n, resolution: OfferedScreenShareResolution): string {
@@ -336,7 +330,7 @@ export const StreamSettingsMenuContent = observer(
 	}: StreamSettingsMenuContentProps) => {
 		const {i18n} = useLingui();
 		useMediaEngineVersion();
-		const hasHigherVideoQuality = useHasHigherVideoQuality();
+		const videoQualityCaps = useVideoQualityCaps();
 		const showPremiumFeatures = shouldShowPremiumFeatures();
 		const isDeviceShare = shareContext === 'device';
 		const isAppShare = shareContext === 'app';
@@ -348,7 +342,7 @@ export const StreamSettingsMenuContent = observer(
 			mode: currentMode,
 			storedResolution: currentResolution,
 			storedFrameRate: currentFrameRate,
-			entitled: hasHigherVideoQuality,
+			caps: videoQualityCaps,
 			context: shareContext,
 		};
 		const target: ScreenShareTarget = resolveScreenShareTarget({
@@ -415,13 +409,16 @@ export const StreamSettingsMenuContent = observer(
 			],
 		);
 		const modeOptions: Array<Option<StreamingMode>> = useMemo(() => {
+			const gaming = resolveStreamingModeSettings('gaming', 'medium', 30, videoQualityCaps);
+			const screenshare = resolveStreamingModeSettings('screenshare', 'medium', 30, videoQualityCaps);
 			const modes: Array<Option<StreamingMode>> = [
 				{
 					value: 'gaming',
 					label: i18n._(GAMING_DESCRIPTOR),
-					description: hasHigherVideoQuality
-						? i18n._(SMOOTH_60_FPS_AT_UP_TO_1440P_DESCRIPTOR)
-						: i18n._(SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR),
+					description: i18n._(GAMING_PRESET_QUALITY_DESCRIPTOR, {
+						frameRate: gaming.frameRate,
+						resolution: getScreenShareResolutionLabel(i18n, offeredScreenShareResolution(gaming.resolution)),
+					}),
 					isPremium: false,
 				},
 			];
@@ -429,9 +426,10 @@ export const StreamSettingsMenuContent = observer(
 				modes.push({
 					value: 'screenshare',
 					label: i18n._(SCREENSHARE_DESCRIPTOR),
-					description: hasHigherVideoQuality
-						? i18n._(SHARP_TEXT_AT_UP_TO_1080P_DESCRIPTOR)
-						: i18n._(SHARP_TEXT_AT_720P_DESCRIPTOR),
+					description: i18n._(SCREENSHARE_PRESET_QUALITY_DESCRIPTOR, {
+						frameRate: screenshare.frameRate,
+						resolution: getScreenShareResolutionLabel(i18n, offeredScreenShareResolution(screenshare.resolution)),
+					}),
 					isPremium: false,
 				});
 			}
@@ -442,7 +440,7 @@ export const StreamSettingsMenuContent = observer(
 				isPremium: false,
 			});
 			return modes;
-		}, [isDeviceShare, hasHigherVideoQuality, i18n.locale]);
+		}, [isDeviceShare, videoQualityCaps, i18n.locale]);
 		const qualityMenuState = selectStreamSettingsQualityMenuState({quality, target, showPremiumFeatures});
 		const audioDeviceOptions = useMemo(() => {
 			const real = inputDevices.filter((d) => d.deviceId && d.deviceId !== 'default');
@@ -493,7 +491,7 @@ export const StreamSettingsMenuContent = observer(
 		);
 		const handleModeSelect = useCallback(
 			(option: Option<StreamingMode>) => {
-				if (option.isPremium && !hasHigherVideoQuality) {
+				if (option.isPremium && !isFullVideoQuality(videoQualityCaps)) {
 					if (showPremiumFeatures) {
 						PremiumModalCommands.open();
 					}
@@ -503,7 +501,7 @@ export const StreamSettingsMenuContent = observer(
 				VoiceSettingsCommands.update({streamingMode: option.value});
 				runApply();
 			},
-			[hasHigherVideoQuality, runApply, showPremiumFeatures, target.mode],
+			[videoQualityCaps, runApply, showPremiumFeatures, target.mode],
 		);
 		const handleCaptureAudioToggle = useCallback(
 			(checked: boolean) => {

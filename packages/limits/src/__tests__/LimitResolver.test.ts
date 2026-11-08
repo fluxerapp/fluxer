@@ -6,6 +6,20 @@ import type {LimitConfigSnapshot, LimitMatchContext} from '@fluxer/limits/src/Li
 import {describe, expect, test} from 'vitest';
 
 describe('LimitResolver', () => {
+	test('video quality limits default to 720p at 30 FPS and can be raised for everyone', () => {
+		const ctx: LimitMatchContext = {traits: new Set(), guildFeatures: new Set()};
+		const unset = resolveLimits({traitDefinitions: [], rules: []}, ctx).limits;
+		expect(unset.max_screen_share_resolution).toBe(720);
+		expect(unset.max_screen_share_frame_rate).toBe(30);
+		expect(unset.max_camera_resolution).toBe(720);
+		const snapshot: LimitConfigSnapshot = {
+			traitDefinitions: [],
+			rules: [{id: 'default', limits: {max_screen_share_resolution: 1080, feature_higher_video_quality: 0}}],
+		};
+		expect(resolveLimit(snapshot, ctx, 'max_screen_share_resolution')).toBe(1080);
+		expect(resolveLimit(snapshot, ctx, 'max_screen_share_frame_rate')).toBe(30);
+		expect(resolveLimit(snapshot, ctx, 'feature_higher_video_quality')).toBe(0);
+	});
 	test('resolveLimits returns default free limits for empty snapshot', () => {
 		const snapshot: LimitConfigSnapshot = {
 			traitDefinitions: [],

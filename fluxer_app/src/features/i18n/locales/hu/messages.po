@@ -33097,15 +33097,10 @@ msgstr "Megosztott ablak"
 msgid "Shared window audio"
 msgstr "Megosztott ablak hangja"
 
-#. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at 720p, up to 30 FPS"
-msgstr "Éles kép 720p-ben, akár 30 FPS"
-
-#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 1080p, 30 FPS"
-msgstr "Éles szöveg akár 1080p-ben, 30 FPS"
+msgid "Sharp text at up to {resolution}, {frameRate} FPS"
+msgstr "Éles szöveg akár {resolution}-ben, {frameRate} FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34342,15 +34337,10 @@ msgstr "Mosolygó arc"
 msgid "Smileys"
 msgstr "Emotikonok"
 
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 30 FPS at up to 720p"
-msgstr "Kiegyensúlyozott 30 FPS, akár 720p felbontásig"
-
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 60 FPS at up to 1440p"
-msgstr "Simulékony 60 FPS, akár 1440p felbontásig"
+msgid "Smooth {frameRate} FPS at up to {resolution}"
+msgstr "Simulékony {frameRate} FPS, akár {resolution} felbontásig"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -37740,10 +37730,10 @@ msgstr "Ezen a példányon már vannak fiókok, ezért a bejelentkezés módja m
 msgid "This instance already has an administrator. Sign in with that account to finish setting it up."
 msgstr "Ennek a példánynak már van adminisztrátora. Jelentkezz be azzal a fiókkal a beállítás befejezéséhez."
 
-#. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
+#. Neutral video settings note shown when instance limits cap screen share quality. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
-msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
-msgstr "Ez a példány jelenleg legfeljebb 720p felbontású, 30 FPS-es képernyőmegosztást engedélyez."
+msgid "This instance currently allows screen sharing up to {resolution} at {frameRate} FPS."
+msgstr "Ez a példány jelenleg legfeljebb {resolution} felbontású, {frameRate} FPS-es képernyőmegosztást engedélyez."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx

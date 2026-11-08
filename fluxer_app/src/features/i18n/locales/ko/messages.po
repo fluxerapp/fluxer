@@ -33097,15 +33097,10 @@ msgstr "공유된 창"
 msgid "Shared window audio"
 msgstr "공유된 창 오디오"
 
-#. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at 720p, up to 30 FPS"
-msgstr "720p에서 최대 30FPS의 선명한 텍스트"
-
-#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 1080p, 30 FPS"
-msgstr "최대 1080p의 선명한 텍스트, 30 FPS"
+msgid "Sharp text at up to {resolution}, {frameRate} FPS"
+msgstr "최대 {resolution}의 선명한 텍스트, {frameRate} FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34342,15 +34337,10 @@ msgstr "스마일"
 msgid "Smileys"
 msgstr "이모티콘"
 
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 30 FPS at up to 720p"
-msgstr "최대 720p에서 부드러운 30 FPS"
-
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 60 FPS at up to 1440p"
-msgstr "1440p 해상도에서 최대 60 FPS로 부드럽게"
+msgid "Smooth {frameRate} FPS at up to {resolution}"
+msgstr "{resolution} 해상도에서 최대 {frameRate} FPS로 부드럽게"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -37740,10 +37730,10 @@ msgstr "이 인스턴스에는 이미 계정이 있어서 로그인 방식을 �
 msgid "This instance already has an administrator. Sign in with that account to finish setting it up."
 msgstr "이 인스턴스에는 이미 관리자가 있습니다. 그 계정으로 로그인해서 설정을 마치세요."
 
-#. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
+#. Neutral video settings note shown when instance limits cap screen share quality. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
-msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
-msgstr "이 인스턴스에서는 현재 최대 720p, 30 FPS로 화면 공유가 가능합니다."
+msgid "This instance currently allows screen sharing up to {resolution} at {frameRate} FPS."
+msgstr "이 인스턴스에서는 현재 최대 {resolution}, {frameRate} FPS로 화면 공유가 가능합니다."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx
