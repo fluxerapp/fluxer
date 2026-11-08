@@ -28,11 +28,11 @@ import {
 	type WindowsDesktopAudioSelection,
 	windowsEndpointsEqual,
 } from '@app/features/voice/utils/native_audio_capture_bridge/shared';
-import type {ScreenShareAudioCaptureDebugInfo} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import {
-	acquireSelfWindowScreenShareAudioTrack,
-	releaseSelfWindowScreenShareAudioTrack,
-} from '@app/features/voice/utils/SelfWindowScreenShareAudio';
+	type ScreenShareAudioCaptureDebugInfo,
+	ScreenShareAudioCaptureError,
+} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
+import {releaseSelfWindowScreenShareAudioTrack} from '@app/features/voice/utils/SelfWindowScreenShareAudio';
 import {
 	type MixedSelfWindowAudioTrack,
 	mixTrackWithSelfWindowScreenShareAudio,
@@ -64,7 +64,6 @@ interface NativeAudioStartedCaptureDiagnostic {
 	sourceMode?: 'system' | 'specific';
 	targetPid?: number;
 	linuxRule?: NativeAudioStartOptions['linuxRule'];
-	macBackend?: NativeAudioStartOptions['macBackend'];
 	macCaptureScope?: NativeAudioStartOptions['macCaptureScope'];
 	winCaptureScope?: NativeAudioStartOptions['winCaptureScope'];
 	winEndpoints?: Array<string>;
@@ -174,15 +173,12 @@ function summarizeArmedCapture(capture: ArmedNativeAudioCapture | null): Record<
 			includeSelfWindowAudio: capture.includeSelfWindowAudio,
 		};
 	}
-	if (capture.kind === 'capture') {
-		return {
-			kind: capture.kind,
-			captureId: capture.captureId,
-			includeSelfWindowAudio: capture.includeSelfWindowAudio,
-			winEndpoints: capture.winEndpoints ? [...capture.winEndpoints] : undefined,
-		};
-	}
-	return {kind: capture.kind};
+	return {
+		kind: capture.kind,
+		captureId: capture.captureId,
+		includeSelfWindowAudio: capture.includeSelfWindowAudio,
+		winEndpoints: capture.winEndpoints ? [...capture.winEndpoints] : undefined,
+	};
 }
 
 function rememberStartedCapture(capture: NativeAudioStartedCaptureDiagnostic): void {
@@ -302,10 +298,6 @@ function cleanupManagedBridgeById(
 }
 
 async function stopArmedCapture(capture: ArmedNativeAudioCapture, logContext: string): Promise<void> {
-	if (capture.kind === 'self-window-web-audio') {
-		releaseSelfWindowScreenShareAudioTrack();
-		return;
-	}
 	if (capture.kind !== 'capture') return;
 	await getNativeAudioApi()
 		?.stop(capture.captureId)
@@ -472,40 +464,6 @@ function installPatchIfNeeded(): void {
 		}
 		if (pendingCapture && armedCapture === pendingCapture) {
 			armedCapture = null;
-			if (pendingCapture.kind === 'self-window-web-audio') {
-				const track = acquireSelfWindowScreenShareAudioTrack();
-				if (track) {
-					const cleanupListeners: Array<() => void> = [];
-					const restoreStops: Array<() => void> = [];
-					let cleanedUpSelf = false;
-					const cleanupSelf = (): void => {
-						if (cleanedUpSelf) return;
-						cleanedUpSelf = true;
-						for (const removeListener of cleanupListeners.splice(0)) {
-							removeListener();
-						}
-						for (const restoreStop of restoreStops.splice(0)) {
-							restoreStop();
-						}
-						releaseSelfWindowScreenShareAudioTrack(track);
-					};
-					try {
-						await replaceStreamAudioTrack(stream, track);
-						for (const otherTrack of [...stream.getVideoTracks(), track]) {
-							const onEnded = (): void => cleanupSelf();
-							otherTrack.addEventListener('ended', onEnded);
-							cleanupListeners.push(() => otherTrack.removeEventListener('ended', onEnded));
-							restoreStops.push(patchTrackStopForCleanup(otherTrack, cleanupSelf));
-						}
-					} catch (error) {
-						logger.warn('Failed to attach self-window screen-share audio tap; degrading to video-only', {error});
-						cleanupSelf();
-					}
-				} else {
-					logger.warn('Self-window screen-share audio tap unavailable; degrading to video-only');
-				}
-				return stream;
-			}
 			let handle: NativeAudioBridgeHandle | null = null;
 			let captureId = getArmedCaptureId(pendingCapture);
 			try {
@@ -520,11 +478,9 @@ function installPatchIfNeeded(): void {
 					return stream;
 				}
 				const previousBridge = activeBridge;
-				handle =
-					(pendingCapture.kind === 'capture' || pendingCapture.kind === 'linux-routing') &&
-					pendingCapture.includeSelfWindowAudio
-						? await createNativeAudioBridgeWithSelfWindowAudio(captureId)
-						: await createNativeAudioBridge(captureId);
+				handle = pendingCapture.includeSelfWindowAudio
+					? await createNativeAudioBridgeWithSelfWindowAudio(captureId)
+					: await createNativeAudioBridge(captureId);
 				await replaceStreamAudioTrack(stream, handle.track);
 				const cleanup = attachNativeAudioCleanup(stream, captureId, handle);
 				activeBridge =
@@ -535,7 +491,7 @@ function installPatchIfNeeded(): void {
 					supersededBridge = previousBridge;
 				}
 			} catch (error) {
-				logger.warn('Failed to substitute native audio capture into display stream; degrading to video-only', {
+				logger.warn('Failed to substitute native audio capture into display stream; stopping the capture', {
 					captureId,
 					error,
 				});
@@ -556,6 +512,15 @@ function installPatchIfNeeded(): void {
 							});
 						});
 				}
+				for (const track of stream.getTracks()) {
+					track.stop();
+				}
+				throw new ScreenShareAudioCaptureError({
+					captureId,
+					platform: getElectronAPI()?.platform ?? null,
+					reason: 'native-audio-substitution-failed',
+					detail: getNativeAudioErrorDetail(error),
+				});
 			}
 		}
 		return stream;
@@ -769,7 +734,6 @@ export async function armNativeSystemAudioForNextCapture(
 			includeProcessTree: electronApi.platform !== 'win32',
 			...(electronApi.platform === 'darwin'
 				? {
-						macBackend: 'sck' as const,
 						macCaptureScope: 'system' as const,
 					}
 				: windowsStart),
@@ -781,7 +745,6 @@ export async function armNativeSystemAudioForNextCapture(
 			sourceMode: 'system',
 			...(electronApi.platform === 'darwin'
 				? {
-						macBackend: 'sck' as const,
 						macCaptureScope: 'system' as const,
 					}
 				: windowsStart),

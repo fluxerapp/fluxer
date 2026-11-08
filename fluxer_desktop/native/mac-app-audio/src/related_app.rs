@@ -4,20 +4,6 @@ pub fn trim_ascii_whitespace(value: &str) -> &str {
     value.trim_matches(|c: char| matches!(c, ' ' | '\t' | '\r' | '\n'))
 }
 
-pub fn has_prefix_with_suffix(value: &str, prefix: &str, suffix: &str) -> bool {
-    let pb = prefix.as_bytes();
-    let sb = suffix.as_bytes();
-    let vb = value.as_bytes();
-    if vb.len() < pb.len() + sb.len() {
-        return false;
-    }
-    &vb[..pb.len()] == pb && &vb[pb.len()..pb.len() + sb.len()] == sb
-}
-
-pub fn related_by_prefix_either_way(a: &str, b: &str, suffix: &str) -> bool {
-    has_prefix_with_suffix(a, b, suffix) || has_prefix_with_suffix(b, a, suffix)
-}
-
 pub fn helper_bundle_base(value: &str) -> &str {
     let suffixes = [".helper", ".Helper", "-helper", "-Helper"];
     for suffix in suffixes {
@@ -55,29 +41,67 @@ pub fn looks_related_by_strings(
     candidate_name: &str,
     target_name: &str,
 ) -> bool {
-    if !target_bundle.is_empty() && !candidate_bundle.is_empty() {
-        let tb = helper_bundle_base(target_bundle);
-        let cb = helper_bundle_base(candidate_bundle);
-        if candidate_bundle == target_bundle
-            || cb == tb
-            || related_by_prefix_either_way(candidate_bundle, target_bundle, ".")
-            || related_by_prefix_either_way(candidate_bundle, target_bundle, "-")
-        {
-            return true;
-        }
+    if !target_bundle.is_empty()
+        && !candidate_bundle.is_empty()
+        && helper_bundle_base(candidate_bundle) == helper_bundle_base(target_bundle)
+    {
+        return true;
     }
     let tn = trim_ascii_whitespace(target_name);
-    let cn = trim_ascii_whitespace(candidate_name);
-    if !tn.is_empty() {
-        let tnb = helper_name_base(tn);
-        let cnb = helper_name_base(cn);
-        if cn == tn
-            || cnb == tnb
-            || related_by_prefix_either_way(cn, tn, " ")
-            || related_by_prefix_either_way(cn, tn, " Helper")
-        {
-            return true;
-        }
+    !tn.is_empty() && helper_name_base(candidate_name) == helper_name_base(tn)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::looks_related_by_strings;
+
+    #[test]
+    fn helpers_are_related_to_their_app() {
+        assert!(looks_related_by_strings(
+            "com.google.Chrome.helper",
+            "com.google.Chrome",
+            "Google Chrome Helper",
+            "Google Chrome",
+        ));
+        assert!(looks_related_by_strings(
+            "com.google.Chrome.helper.renderer",
+            "com.google.Chrome",
+            "Google Chrome Helper (Renderer)",
+            "Google Chrome",
+        ));
+        assert!(looks_related_by_strings(
+            "",
+            "com.google.Chrome",
+            "Google Chrome Helper (Renderer)",
+            "Google Chrome",
+        ));
     }
-    false
+
+    #[test]
+    fn sibling_builds_are_not_related() {
+        assert!(!looks_related_by_strings(
+            "com.google.Chrome.canary",
+            "com.google.Chrome",
+            "Google Chrome Canary",
+            "Google Chrome",
+        ));
+        assert!(!looks_related_by_strings(
+            "com.microsoft.VSCodeInsiders",
+            "com.microsoft.VSCode",
+            "Code - Insiders",
+            "Code",
+        ));
+        assert!(!looks_related_by_strings(
+            "app.fluxer.canary",
+            "app.fluxer",
+            "Fluxer Canary",
+            "Fluxer",
+        ));
+        assert!(!looks_related_by_strings(
+            "org.mozilla.nightly",
+            "org.mozilla.firefox",
+            "Firefox Nightly",
+            "Firefox",
+        ));
+    }
 }

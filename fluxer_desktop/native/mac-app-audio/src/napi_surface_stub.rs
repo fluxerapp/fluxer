@@ -32,28 +32,19 @@ pub struct MacAppAudioBackendInfo {
     pub reason: String,
     #[napi(js_name = "minMacosVersion")]
     pub min_macos_version: String,
-    #[napi(js_name = "minMacosVersionCoreaudio")]
-    pub min_macos_version_coreaudio: String,
     #[napi(js_name = "detectedMacosVersion")]
     pub detected_macos_version: Option<String>,
-    #[napi(js_name = "sckAvailable")]
-    pub sck_available: bool,
-    #[napi(js_name = "coreaudioAvailable")]
-    pub coreaudio_available: bool,
 }
 
 #[napi(js_name = "getBackendInfo")]
 pub fn get_backend_info() -> MacAppAudioBackendInfo {
-    use crate::os_version::{COREAUDIO_TAP_MIN_MACOS, SCK_MIN_MACOS, format_version};
+    use crate::os_version::{SCK_AUDIO_MIN_MACOS, format_version};
     MacAppAudioBackendInfo {
         backend: "mac-app-audio".to_owned(),
         supported: false,
         reason: "@fluxer/mac-app-audio is only supported on macOS".to_owned(),
-        min_macos_version: format_version(SCK_MIN_MACOS),
-        min_macos_version_coreaudio: format_version(COREAUDIO_TAP_MIN_MACOS),
+        min_macos_version: format_version(SCK_AUDIO_MIN_MACOS),
         detected_macos_version: None,
-        sck_available: false,
-        coreaudio_available: false,
     }
 }
 

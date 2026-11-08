@@ -28,9 +28,6 @@ export type ArmedNativeAudioCapture =
 			kind: 'linux-routing';
 			linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>;
 			includeSelfWindowAudio?: boolean;
-	  }
-	| {
-			kind: 'self-window-web-audio';
 	  };
 
 type NativeAudioBridgeCleanup = (stopRemote?: boolean, endDetail?: string) => Promise<void>;
