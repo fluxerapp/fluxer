@@ -144,6 +144,31 @@ export class UserHarvestRepository {
 		);
 	}
 
+	async markUnqueuedAsTerminallyFailed(harvest: UserHarvest, errorMessage: string): Promise<void> {
+		const failedAt = new Date();
+		const applied = await executeConditional(
+			UserHarvests.conditionalPatchByPk(
+				{user_id: harvest.userId, harvest_id: harvest.harvestId},
+				{
+					failed_at: Db.set(failedAt),
+					terminal_failed_at: Db.set(failedAt),
+					error_message: Db.set(errorMessage),
+					progress_step: Db.set('Failed'),
+				},
+				{
+					requested_at: harvest.requestedAt,
+					attempt_id: null,
+					completed_at: null,
+					terminal_failed_at: null,
+				},
+			),
+		);
+		Logger.error(
+			{userId: harvest.userId, harvestId: harvest.harvestId, errorMessage, applied},
+			'Marked unqueued harvest as terminally failed',
+		);
+	}
+
 	private async patchOwned(harvest: UserHarvest, patch: UserHarvestPatch): Promise<void> {
 		assert(harvest.attemptId, 'A claimed harvest attempt is required');
 		const applied = await executeConditional(
