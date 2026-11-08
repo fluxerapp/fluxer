@@ -15,10 +15,19 @@ import {
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 
 export class UserIndexRepository {
-	async syncIndices(data: UserRow, oldData?: UserRow | null): Promise<void> {
+	async syncIndices(
+		data: UserRow,
+		oldData?: UserRow | null,
+		writtenColumns?: ReadonlySet<keyof UserRow>,
+	): Promise<void> {
+		const written = (...columns: Array<keyof UserRow>) =>
+			!writtenColumns || columns.some((column) => writtenColumns.has(column));
+		if (writtenColumns && oldData) {
+			oldData = {...data, ...pickColumns(oldData, writtenColumns)};
+		}
 		const batch = new BatchBuilder();
 		const acls = new Set(data.acls ?? []);
-		for (const acl of acls) {
+		for (const acl of written('acls') ? acls : []) {
 			batch.addPrepared(UserByAcl.upsertAll({acl, user_id: data.user_id}));
 		}
 		for (const acl of oldData?.acls ?? []) {
@@ -26,7 +35,7 @@ export class UserIndexRepository {
 				batch.addPrepared(UserByAcl.deleteByPk({acl, user_id: data.user_id}));
 			}
 		}
-		if (data.username && data.discriminator != null && data.discriminator !== undefined) {
+		if (written('username', 'discriminator') && data.username && data.discriminator != null) {
 			batch.addPrepared(
 				UserByUsername.upsertAll({
 					username: data.username.toLowerCase(),
@@ -49,7 +58,7 @@ export class UserIndexRepository {
 				);
 			}
 		}
-		if (data.email) {
+		if (written('email') && data.email) {
 			batch.addPrepared(UserByEmail.upsertAll({email_lower: data.email.toLowerCase(), user_id: data.user_id}));
 		}
 		if (oldData?.email && oldData.email.toLowerCase() !== data.email?.toLowerCase()) {
@@ -60,7 +69,7 @@ export class UserIndexRepository {
 				}),
 			);
 		}
-		if (data.stripe_subscription_id) {
+		if (written('stripe_subscription_id') && data.stripe_subscription_id) {
 			batch.addPrepared(
 				UserByStripeSubscriptionId.upsertAll({
 					stripe_subscription_id: data.stripe_subscription_id,
@@ -76,7 +85,7 @@ export class UserIndexRepository {
 				}),
 			);
 		}
-		if (data.stripe_customer_id) {
+		if (written('stripe_customer_id') && data.stripe_customer_id) {
 			batch.addPrepared(
 				UserByStripeCustomerId.upsertAll({
 					stripe_customer_id: data.stripe_customer_id,
@@ -92,7 +101,7 @@ export class UserIndexRepository {
 				}),
 			);
 		}
-		if (data.last_active_ip) {
+		if (written('last_active_ip', 'last_active_at') && data.last_active_ip) {
 			batch.addPrepared(
 				UserByLastActiveIp.upsertAll({
 					last_active_ip: data.last_active_ip,
@@ -248,4 +257,10 @@ export class UserIndexRepository {
 		}
 		await batch.execute();
 	}
+}
+
+function pickColumns(row: UserRow, columns: ReadonlySet<keyof UserRow>): Partial<UserRow> {
+	const picked: Partial<Record<keyof UserRow, unknown>> = {};
+	for (const column of columns) picked[column] = row[column];
+	return picked as Partial<UserRow>;
 }
