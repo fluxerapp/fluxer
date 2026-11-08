@@ -112,6 +112,7 @@ func newRoot(app *App) *cobra.Command {
 		newRestartCmd(app),
 		newUpgradeCmd(app),
 		newAutoUpgradeCmd(app),
+		newBootCmd(app),
 		newRollbackCmd(app),
 		newBackupCmd(app),
 		newRestoreCmd(app),

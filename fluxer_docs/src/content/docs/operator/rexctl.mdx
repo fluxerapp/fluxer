@@ -162,6 +162,30 @@ Check that a backup is complete and readable.
 rexctl backup verify <file>
 ```
 
+## rexctl boot
+
+Show whether a systemd service starts Fluxer when this machine starts. With Docker, Docker already starts Fluxer again after a restart, and the service also starts its services in order and stops them cleanly. Podman has no daemon to do that, so it needs the service.
+
+```sh
+rexctl boot
+```
+
+### rexctl boot off
+
+Remove the systemd service that starts Fluxer with this machine, and the copy of rexctl in /usr/local/libexec/rexctl/rexctl when nothing else uses it. With Docker, Docker still starts Fluxer again after a restart. rexctl lists every change and asks first, unless you pass --yes.
+
+```sh
+rexctl boot off
+```
+
+### rexctl boot on
+
+Write a systemd service that starts Fluxer when this machine starts and stops it cleanly when it shuts down. On a root install it also copies rexctl to /usr/local/libexec/rexctl/rexctl for the service to run. rexctl lists every change and asks first, unless you pass --yes.
+
+```sh
+rexctl boot on
+```
+
 ## rexctl branding
 
 Change your instance's name, colour and images.
@@ -369,6 +393,10 @@ rexctl install [flags]
 - `--bind string`
 
   Address your proxy or tunnel connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
+
+- `--boot-service string`
+
+  On or off: add a systemd service that starts Fluxer with this machine. Podman needs it. With Docker, rexctl asks, and leaves it off without a terminal.
 
 - `--confirm string`
 

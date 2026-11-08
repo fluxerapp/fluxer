@@ -491,19 +491,36 @@ func (a *App) holding(ctx context.Context, inst *instance.Instance, l *instance.
 	return fn()
 }
 
-var refreshUnitBinaries = func(ctx context.Context, inst *instance.Instance) error {
+var errUnitBinariesDeclined = errors.New("the services that start Fluxer still need their copy of rexctl updated")
+
+var refreshUnitBinaries = func(ctx context.Context, a *App, inst *instance.Instance) error {
 	bin, err := checks.RunningBinary()
 	if err != nil {
 		return err
 	}
-	return host.RefreshUnitBinaries(ctx, inst.Project(), bin)
+	steps, err := host.RefreshUnitBinarySteps(inst.Project(), bin)
+	if err != nil || len(steps) == 0 {
+		return err
+	}
+	ok, err := confirmHostSteps(a, steps, "Update the copy of rexctl that starts Fluxer?")
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errUnitBinariesDeclined
+	}
+	return host.RunSteps(ctx, steps)
 }
 
 func (a *App) migrate(ctx context.Context, inst *instance.Instance) {
 	if a.keepLayout || !inst.OldLayout() {
 		return
 	}
-	if err := inst.Migrate(func() error { return refreshUnitBinaries(ctx, inst) }); err != nil {
+	err := inst.Migrate(func() error { return refreshUnitBinaries(ctx, a, inst) })
+	switch {
+	case errors.Is(err, errUnitBinariesDeclined):
+		a.UI.Warn("rexctl keeps Fluxer's files in "+inst.Dir+" for now, because the services that start Fluxer still need their copy of rexctl updated.", "Run rexctl doctor --fix in a terminal, or run it with --yes, to update it.")
+	case err != nil:
 		a.UI.Detail("rexctl keeps Fluxer's files in %s for now: %v", inst.Dir, err)
 	}
 }

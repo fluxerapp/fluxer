@@ -443,29 +443,53 @@ func unitFiles(project string) (map[string]bool, error) {
 	return units, nil
 }
 
-func RefreshUnitBinaries(ctx context.Context, project, bin string) error {
+func RefreshUnitBinarySteps(project, bin string) ([]Step, error) {
 	if runtime.GOOS != "linux" {
-		return nil
+		return nil, nil
 	}
 	units, err := unitFiles(project)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for path, system := range units {
+	return unitBinarySteps(units, bin)
+}
+
+func unitBinarySteps(units map[string]bool, bin string) ([]Step, error) {
+	paths := make([]string, 0, len(units))
+	for path := range units {
+		paths = append(paths, path)
+	}
+	slices.Sort(paths)
+	var steps []Step
+	seen := map[string]bool{}
+	for _, path := range paths {
 		data, err := os.ReadFile(path)
 		if os.IsNotExist(err) {
 			continue
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
-		for _, b := range unitBinaries(data) {
-			if err := installBinary(ctx, system, bin, b); err != nil {
-				return err
+		system := units[path]
+		for _, dst := range unitBinaries(data) {
+			if seen[dst] || sameFile(bin, dst) {
+				continue
 			}
+			seen[dst] = true
+			command := "install " + strings.Join(installArgs(bin, dst), " ")
+			if system {
+				command = rootCmd(command)
+			}
+			steps = append(steps, Step{
+				Do:      "Updates " + dst + ", the copy of rexctl that " + path + " runs.",
+				Command: command,
+				Run: func(ctx context.Context) error {
+					return installBinary(ctx, system, bin, dst)
+				},
+			})
 		}
 	}
-	return nil
+	return steps, nil
 }
 
 func unitBinaries(data []byte) []string {
@@ -588,4 +612,47 @@ func fileHash(path string) ([]byte, error) {
 		return nil, err
 	}
 	return h.Sum(nil), nil
+}
+
+func LibexecRemoveSteps(ctx context.Context, u BootUnit) []Step {
+	if u.Rootless {
+		return nil
+	}
+	if _, err := os.Stat(LibexecBinary); err != nil {
+		return nil
+	}
+	own, err := u.Path()
+	if err != nil || libexecReferenced(systemUnitDir, own) {
+		return nil
+	}
+	dir := filepath.Dir(LibexecBinary)
+	return []Step{{
+		Do:      "Deletes the copy of rexctl in " + LibexecBinary + ", which nothing else uses.",
+		Command: rootCmd("rm -f " + LibexecBinary),
+		Run: func(ctx context.Context) error {
+			if err := removeHostFiles(ctx, false, LibexecBinary); err != nil {
+				return err
+			}
+			_, _ = output(ctx, false, "rmdir", "--ignore-fail-on-non-empty", dir)
+			return nil
+		},
+	}}
+}
+
+func libexecReferenced(unitDir, except string) bool {
+	entries, err := os.ReadDir(unitDir)
+	if err != nil {
+		return true
+	}
+	for _, entry := range entries {
+		path := filepath.Join(unitDir, entry.Name())
+		if path == except || entry.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(path)
+		if err == nil && bytes.Contains(data, []byte(LibexecBinary)) {
+			return true
+		}
+	}
+	return false
 }

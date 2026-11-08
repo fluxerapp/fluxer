@@ -50,6 +50,7 @@ type State struct {
 	BackupDir       string            `json:"backup_dir,omitempty"`
 	KeepBackups     int               `json:"keep_backups,omitempty"`
 	NotifyURL       string            `json:"notify_url,omitempty"`
+	BootService     string            `json:"boot_service,omitempty"`
 	Voice           []VoiceServer     `json:"voice,omitempty"`
 	VoiceEdge       *VoiceEdge        `json:"voice_edge,omitempty"`
 	InstalledAt     time.Time         `json:"installed_at"`
@@ -61,6 +62,11 @@ type State struct {
 }
 
 const KindVoice = "voice"
+
+const (
+	BootServiceOn  = "on"
+	BootServiceOff = "off"
+)
 
 type VoiceServer struct {
 	ID        string    `json:"id"`
@@ -252,7 +258,7 @@ var stateFields = map[string]bool{
 	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "previous_backup": true, "failed_release": true,
 	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
 	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "moved_sites": true, "ejected": true,
-	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true,
+	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true, "boot_service": true,
 	"kind": true, "voice": true, "voice_edge": true,
 }
 

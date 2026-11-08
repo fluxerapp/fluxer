@@ -209,6 +209,16 @@ rexctl config edit
 
 To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. `rexctl voice add` writes a `voice-` file there for each voice server it adds, and `rexctl voice remove` deletes it again. To serve a whole extra site, such as another domain on the same machine, put its `.caddy` file in `caddy.d/sites`. Fluxer loads those files next to its own site, and `rexctl upgrade` moves a file of whole sites from `caddy.d` to `caddy.d/sites` for you. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
 
+### Start with the machine
+
+With Docker, Docker starts Fluxer again after the machine restarts. `rexctl install` asks whether to also add a systemd service, which starts Fluxer's services in order and stops them cleanly when the machine shuts down. Without a terminal it leaves it off, and `--boot-service on` or `--boot-service off` decides it for you. Podman has no daemon to start Fluxer, so a Podman install always adds the service.
+
+The service is in `/etc/systemd/system`, or in your user's systemd folder when you run rexctl without root. On a root install rexctl also copies itself to `/usr/local/libexec/rexctl/rexctl` for the service to run. rexctl lists these changes and asks before it makes them, unless you pass `--yes`. Run `rexctl boot` to see whether you have the service, `rexctl boot on` to add it and `rexctl boot off` to remove it.
+
+```sh
+rexctl boot off
+```
+
 ## When something is wrong
 
 ```sh
