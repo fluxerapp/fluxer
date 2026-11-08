@@ -52,6 +52,13 @@ export function sanitizeSsoRedirectTo(redirectTo?: string): string | undefined {
 	return path.startsWith('//') || path.startsWith('/\\') ? undefined : path;
 }
 
+export function extractInviteCodeFromRedirect(redirectTo?: string): string | null {
+	const sanitized = sanitizeSsoRedirectTo(redirectTo);
+	if (!sanitized) return null;
+	const match = sanitized.match(/^\/invite\/([a-zA-Z0-9_-]+)(?:[?#]|$)/);
+	return match ? match[1] : null;
+}
+
 export function parseTokenEndpointResponse(
 	contentTypeHeader: string | null,
 	rawResponseBody: string,
