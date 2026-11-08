@@ -8,7 +8,9 @@ import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
 import Accounts from '@app/features/auth/state/Accounts';
+import Authentication from '@app/features/auth/state/Authentication';
 import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
+import Guilds from '@app/features/guild/state/Guilds';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteAcceptModal.module.css';
@@ -30,7 +32,9 @@ import {
 	RAID_INVITES_PAUSED_SHORT_DESCRIPTOR,
 } from '@app/features/invite/utils/InviteMessageDescriptors';
 import {findInviteOnOtherAccount, type InviteAccountMatch} from '@app/features/invite/utils/InviteOtherAccountLookup';
-import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
+import {REPORT_COMMUNITY_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportGuildModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {currentInstanceTarget, type InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -181,6 +185,20 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code, targ
 			setIsAccepting(false);
 		}
 	}, [code, i18n, target]);
+	const reportableGuild =
+		invite != null &&
+		isGuildInvite(invite) &&
+		target.instanceKey === currentInstanceTarget().instanceKey &&
+		Guilds.getGuild(invite.guild.id)?.isOwner(Authentication.currentUserId) !== true
+			? invite.guild
+			: null;
+	const handleReportGuild = useCallback(() => {
+		if (reportableGuild === null) return;
+		openReportGuildModal({
+			guild: {id: reportableGuild.id, name: reportableGuild.name, icon: reportableGuild.icon ?? null},
+			inviteCode: code,
+		});
+	}, [code, reportableGuild]);
 	const handleOpenWithOtherAccount = useCallback(() => {
 		if (otherAccountMatch == null) return;
 		ModalCommands.pop();
@@ -272,6 +290,19 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code, targ
 						{primaryLabel}
 					</Button>
 				</div>
+				{reportableGuild !== null && (
+					<div className={styles.reportActions} data-flx="invite.invite-accept-modal.render-body.report-actions">
+						<Button
+							variant="ghost"
+							small
+							fitContent
+							onClick={handleReportGuild}
+							data-flx="invite.invite-accept-modal.render-body.button.report-guild"
+						>
+							{i18n._(REPORT_COMMUNITY_DESCRIPTOR)}
+						</Button>
+					</div>
+				)}
 			</div>
 		);
 	};

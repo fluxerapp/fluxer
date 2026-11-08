@@ -9532,6 +9532,11 @@ msgstr "कम्युनिटी अपडेट की गई"
 msgid "Community voice"
 msgstr "कम्युनिटी वॉइस"
 
+#. Report flow: section heading above the card of the community being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Community you're reporting"
+msgstr "जिस कम्युनिटी की आप रिपोर्ट कर रहे हैं"
+
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Community-wide"
@@ -27340,6 +27345,11 @@ msgstr "अनुमतियाँ"
 msgid "Permissions for {0}"
 msgstr "{0} के लिए अनुमतियाँ"
 
+#. Report flow: section heading above the card of the person being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Person you're reporting"
+msgstr "आप जिस व्यक्ति की रिपोर्ट कर रहे हैं"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personal dictionary"
@@ -28348,11 +28358,6 @@ msgstr "प्रोफ़ाइल प्रकार"
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Profile updated"
 msgstr "प्रोफ़ाइल अपडेट की गई"
-
-#. Report flow: section heading above the card of the user whose profile is being reported.
-#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
-msgid "Profile you're reporting"
-msgstr "आप जिस प्रोफ़ाइल की रिपोर्ट कर रहे हैं"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -29975,6 +29980,11 @@ msgstr "{replyAuthorName} को जवाब देते हुए, {authorNam
 msgid "Replying to <0>{authorNickname}</0>"
 msgstr "<0>{authorNickname}</0> को जवाब दे रहे हैं"
 
+#. Voice and call participant menu action that reports this person to the safety team, for example for something they said or showed in the call.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
+msgid "Report"
+msgstr "रिपोर्ट करें"
+
 #. Report flow target option. Selects reporting an entire community (server). Use the localized term for community, not server.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a community"
@@ -29989,6 +29999,11 @@ msgstr "मैसेज की रिपोर्ट करें"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a user profile"
 msgstr "किसी यूज़र प्रोफ़ाइल की रिपोर्ट करें"
+
+#. Action label in community menus, on invites and in Explore, and the title of the report window it opens. Reports a whole community to the safety team.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts
+msgid "Report community"
+msgstr "कम्युनिटी की रिपोर्ट करें"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "Report details"
@@ -30010,7 +30025,12 @@ msgstr "समस्या की रिपोर्ट करें"
 msgid "Report message"
 msgstr "मैसेज की रिपोर्ट करें"
 
-#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#. Action in a forum post's menu. Reports the post's opening message to the safety team. A post is a topic thread in a forum channel.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "Report post"
+msgstr "पोस्ट की रिपोर्ट करें"
+
+#. Action label in user right-click menus and the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
 msgid "Report profile"
 msgstr "प्रोफ़ाइल की रिपोर्ट करें"
@@ -36527,6 +36547,11 @@ msgstr "<0>गोपनीयता नीति</0> और <1>{OPERATOR_PASS_NA
 #: src/features/auth/flow/RegistrationLegalNotice.tsx
 msgid "The <0>privacy policy</0> explains how we handle your data."
 msgstr "<0>गोपनीयता नीति</0> बताती है कि हम आपके डेटा को कैसे संभालते हैं।"
+
+#. Report flow: body of the final screen after a report was sent, on a self-hosted instance whose own administrators handle reports. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "The administrators of this instance will review your report. We won't reveal that it came from you."
+msgstr "इस इंस्टेंस के एडमिनिस्ट्रेटर आपकी रिपोर्ट की समीक्षा करेंगे। हम यह नहीं बताएंगे कि यह आपसे आई है।"
 
 #. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -44176,6 +44201,11 @@ msgstr "आप पुराने मैसेज देख रहे हैं"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "आपने ग्रुप DM की अनुमत संख्या से ज़्यादा लोगों को जोड़ दिया है। कुछ लोगों को हटाएँ और फिर से कोशिश करें।"
+
+#. Report flow: note on the summary screen when the reporter already reported this community.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "You've already reported this community."
+msgstr "आपने इस कम्युनिटी की पहले ही रिपोर्ट कर दी है।"
 
 #. Report flow: note on the summary screen when the reporter already reported this message.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts

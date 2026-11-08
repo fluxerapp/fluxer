@@ -88,13 +88,13 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({
 			event.stopPropagation();
 			ContextMenuCommands.openFromEvent(event, (props) => (
 				<DiscoveryGuildContextMenu
-					guild={{id: guild.id, name: guild.name}}
+					guild={{id: guild.id, name: guild.name, icon: guild.icon}}
 					onClose={props.onClose}
 					data-flx="discovery.discovery.discovery-guild-card.handle-context-menu.discovery-guild-context-menu"
 				/>
 			));
 		},
-		[guild.id, guild.name],
+		[guild.icon, guild.id, guild.name],
 	);
 	return (
 		<article

@@ -34,6 +34,7 @@ import {
 	REMOVE_TIMEOUT_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportUserProfileModal} from '@app/features/moderation/utils/ReportActionUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -72,6 +73,7 @@ import {
 	MessageUserIcon,
 	PopOutIcon,
 	RemoveFriendIcon,
+	ReportMessageIcon,
 	SelfDeafenIcon,
 	SelfMuteIcon,
 	SendFriendRequestIcon,
@@ -181,6 +183,11 @@ const ENTRANCE_SOUND_SUBMENU_DESCRIPTOR = msg({
 const MUTE_ENTRANCE_SOUND_DESCRIPTOR = msg({
 	message: 'Mute entrance sound',
 	comment: "Voice menu checkbox label that locally silences a user's entrance sound.",
+});
+const REPORT_PARTICIPANT_DESCRIPTOR = msg({
+	message: 'Report',
+	comment:
+		'Voice and call participant menu action that reports this person to the safety team, for example for something they said or showed in the call.',
 });
 const ENTRANCE_SOUND_VOLUME_DESCRIPTOR = msg({
 	message: 'Entrance sound volume',
@@ -1158,6 +1165,21 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 						danger: true,
 					});
 				}
+				nextRelationshipActions.push({
+					icon: (
+						<ReportMessageIcon
+							size={16}
+							data-flx="ui.action-menu.items.voice-participant-menu-data.groups.report-message-icon"
+						/>
+					),
+					label: i18n._(REPORT_PARTICIPANT_DESCRIPTOR),
+					onClick: () => {
+						ModalCommands.runAfterBottomSheetClose(onClose, () =>
+							openReportUserProfileModal({user, guildId: guildId ?? undefined}),
+						);
+					},
+					danger: true,
+				});
 			}
 			if (nextRelationshipActions.length > 0) {
 				relationshipActions.push(...nextRelationshipActions);

@@ -15,7 +15,8 @@ const logger = new Logger('ReportFlow');
 
 export type ReportFlowSubmissionTarget =
 	| {type: 'message'; channelId: string; messageId: string}
-	| {type: 'user'; userId: string; guildId?: string};
+	| {type: 'user'; userId: string; guildId?: string}
+	| {type: 'guild'; guildId: string; inviteCode?: string};
 
 export async function fetchReportFlow(
 	targetType: ReportFlowTargetType,
@@ -34,6 +35,10 @@ function buildTargetFields(target: ReportFlowSubmissionTarget): Record<string, s
 			return {channel_id: target.channelId, message_id: target.messageId};
 		case 'user':
 			return target.guildId ? {user_id: target.userId, guild_id: target.guildId} : {user_id: target.userId};
+		case 'guild':
+			return target.inviteCode
+				? {guild_id: target.guildId, invite_code: target.inviteCode}
+				: {guild_id: target.guildId};
 	}
 }
 

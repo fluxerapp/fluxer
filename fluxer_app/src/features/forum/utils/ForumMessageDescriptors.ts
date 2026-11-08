@@ -120,6 +120,11 @@ export const PIN_POST_DESCRIPTOR = msg({
 	message: 'Pin post',
 	comment: 'Post menu action that pins a forum post to the top of the forum.',
 });
+export const REPORT_POST_DESCRIPTOR = msg({
+	message: 'Report post',
+	comment:
+		"Action in a forum post's menu. Reports the post's opening message to the safety team. A post is a topic thread in a forum channel.",
+});
 export const UNPIN_POST_DESCRIPTOR = msg({
 	message: 'Unpin post',
 	comment: 'Post menu action that unpins a forum post.',

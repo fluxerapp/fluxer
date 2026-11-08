@@ -38,6 +38,8 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {InviteModal} from '@app/features/invite/components/modals/InviteModal';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
+import {REPORT_COMMUNITY_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportGuildModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
@@ -56,6 +58,7 @@ import {
 	MuteIcon,
 	NotificationSettingsIcon,
 	PrivacySettingsIcon,
+	ReportMessageIcon,
 	SettingsIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -259,6 +262,11 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 			handleLeaveCommunity: () => {
 				ModalCommands.runAfterBottomSheetClose(onClose, () => leaveGuild(guild.id));
 			},
+			handleReportCommunity: () => {
+				ModalCommands.runAfterBottomSheetClose(onClose, () =>
+					openReportGuildModal({guild: {id: guild.id, name: guild.name, icon: guild.icon}}),
+				);
+			},
 			handleDeleteMyMessagesInCommunity: () => {
 				ModalCommands.runAfterBottomSheetClose(onClose, () => deleteMyMessagesInGuild(guild.id));
 			},
@@ -456,6 +464,14 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 				danger: true,
 			},
 		];
+		if (!isOwner) {
+			dangerActions.push({
+				icon: <ReportMessageIcon size={20} data-flx="ui.action-menu.items.guild-menu-data.groups.report-icon" />,
+				label: i18n._(REPORT_COMMUNITY_DESCRIPTOR),
+				onClick: handlers.handleReportCommunity,
+				danger: true,
+			});
+		}
 		if (!isOwner && !isStockCommunityGuild(guild.id)) {
 			dangerActions.push({
 				icon: <LeaveIcon size={20} data-flx="ui.action-menu.items.guild-menu-data.groups.leave-icon" />,
