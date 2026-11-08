@@ -46,6 +46,19 @@ async function cancelHolderDeletionAndSuspend(
 	return updated;
 }
 
+const SESSION_REVOKE_ATTEMPTS = 3;
+
+async function revokeSessionsOfSuspendedUser(services: ApiContext['services'], userId: UserID): Promise<void> {
+	for (let attempt = 1; ; attempt++) {
+		try {
+			await revokeAllAuthSessions(services, userId);
+			return;
+		} catch (error) {
+			if (attempt >= SESSION_REVOKE_ATTEMPTS) throw error;
+		}
+	}
+}
+
 export async function applySuspension(
 	deps: ClosureStateDeps,
 	user: User,
@@ -65,7 +78,7 @@ export async function applySuspension(
 		);
 		updated = (await users.updateFlags(user.id, (flags) => flags | UserFlags.DISABLED)) ?? suspended;
 	}
-	await revokeAllAuthSessions(apiContext.services, user.id);
+	await revokeSessionsOfSuspendedUser(apiContext.services, user.id);
 	await propagateUserUpdate(userUpdateDeps, user, updated);
 	return updated;
 }
