@@ -3,13 +3,14 @@
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
-import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {getUserActivityBuffer, getUserRepository} from '@app/api/middleware/ServiceSingletons';
-import {Users} from '@app/api/Tables';
+import {AuthSessions, AuthSessionsByAppChannel, AuthSessionsByUserId, Users} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
 import {
 	deleteAccount,
 	setPendingDeletionAt,
@@ -112,5 +113,57 @@ describe('User activity buffering', () => {
 		await waitForDeletionCompletion(harness, account.userId, 20000);
 		const indexed = await getUserRepository().listUserIdsByLastActiveIp(REGISTRATION_IP, 100, 0);
 		expect(indexed.userIds.map((id) => id.toString())).not.toContain(account.userId);
+	});
+	test('a session revoked while its activity flushes leaves no session or app channel rows', async () => {
+		const account = await createTestAccount(harness);
+		const userId = createUserID(BigInt(account.userId));
+		const clientProperties = {
+			os: 'android',
+			client_platform: 'android',
+			client_version: '2026.11.1',
+			release_channel: 'beta',
+			build_number: 7,
+		};
+		const debounced = await harness.kvProvider.scan('auth_session_activity:touched:*', 100);
+		if (debounced.length > 0) await harness.kvProvider.del(...debounced);
+		await createBuilder(harness, account.token)
+			.get('/users/@me')
+			.header('user-agent', 'Fluxer Android/2026.11.1 (beta)')
+			.header('x-fluxer-client-properties', Buffer.from(JSON.stringify(clientProperties)).toString('base64'))
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const [ref] = await fetchMany<{session_id_hash: Buffer}>(
+			AuthSessionsByUserId.selectCql({columns: ['session_id_hash'], where: AuthSessionsByUserId.where.eq('user_id')}),
+			{user_id: userId},
+		);
+		expect(ref).toBeDefined();
+		const sessionIdHash = ref!.session_id_hash;
+		let revoked = false;
+		const buffer = new UserActivityBuffer(harness.kvProvider, async (query, params) => {
+			if (!revoked) {
+				revoked = true;
+				await getUserRepository().deleteAuthSessions(userId, [sessionIdHash]);
+			}
+			await upsertOne(query, params);
+		});
+		await buffer.drainAndFlush();
+		expect(revoked).toBe(true);
+		const channelRows = await fetchMany<{session_id_hash: Buffer}>(
+			AuthSessionsByAppChannel.select({
+				columns: ['session_id_hash'],
+				where: [
+					AuthSessionsByAppChannel.where.eq('app_platform'),
+					AuthSessionsByAppChannel.where.eq('app_release_channel'),
+				],
+			}).bind({app_platform: 'android', app_release_channel: 'beta'}),
+		);
+		expect(channelRows.map((row) => row.session_id_hash.toString('base64url'))).not.toContain(
+			sessionIdHash.toString('base64url'),
+		);
+		const sessionRows = await fetchMany<{session_id_hash: Buffer}>(
+			AuthSessions.selectCql({columns: ['session_id_hash'], where: AuthSessions.where.eq('session_id_hash')}),
+			{session_id_hash: sessionIdHash},
+		);
+		expect(sessionRows).toEqual([]);
 	});
 });
