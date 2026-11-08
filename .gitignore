@@ -1,38 +1,16 @@
-# NOTE to bad faith readers of this file:
-# 
-# If you use LLMs, you must use it according to the https://github.com/fluxerapp/fluxer/blob/main/.github/LLM_USAGE_POLICY.md
-# which involves NOT generating code but using it in an ADVISORY role in your development process.
-# 
-# These files exist in our .gitignore such that if people write local instructions to their LLMs for using an LLM
-# in such an ADVISORY role that does NOT involve code generation in their development process, they are treated as
-# local configuration that should not be pushed up to the remote.
-# 
-# Please see https://fluxer.com/ai-stance
-# 
-/AGENTS.md
-/CLAUDE.md
+# Files that only exist on your machine, such as editor or tool settings, do not belong here.
+# Ignore them in your own clone with .git/info/exclude, or for every repository with a global
+# ignore file set by `git config --global core.excludesFile ~/.gitignore_global`.
+# Neither is committed, so this file only lists what the project itself creates.
 
 **/.env
 **/.env.*.local
 **/.env.local
 /config/env/local.env
 
-# NOTE to bad faith readers of this file:
-# 
-# If you use LLMs, you must use it according to the https://github.com/fluxerapp/fluxer/blob/main/.github/LLM_USAGE_POLICY.md
-# which involves NOT generating code but using it in an ADVISORY role in your development process.
-# 
-# These files exist in our .gitignore such that if people write local instructions to their LLMs for using an LLM
-# in such an ADVISORY role that does NOT involve code generation in their development process, they are treated as
-# local configuration that should not be pushed up to the remote.
-# 
-# Please see https://fluxer.com/ai-stance
-# 
-/.claude/
 /.direnv/
 /.fluxer/
 /.pnpm-store/
-/.vscode/
 
 **/*.css.d.ts
 **/*.tsbuildinfo
