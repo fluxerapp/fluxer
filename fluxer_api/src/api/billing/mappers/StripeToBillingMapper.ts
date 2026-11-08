@@ -456,11 +456,7 @@ export interface MapStripeSubscriptionHints {
 export function mapStripeSubscriptionToRow(
 	s: StripeSubscriptionPayload,
 	hints?: MapStripeSubscriptionHints,
-): {
-	primary: BillingSubscriptionRow;
-	byCustomer: BillingSubscriptionByCustomerRow;
-	byUser: BillingSubscriptionByUserRow | null;
-} {
+): BillingSubscriptionRow {
 	if (!s.id) {
 		throw new BillingMappingError('Subscription is missing id');
 	}
@@ -530,23 +526,30 @@ export function mapStripeSubscriptionToRow(
 		mirrored_at: now,
 		version: null,
 	} as BillingSubscriptionRow;
+	return primary;
+}
+
+export function mapBillingSubscriptionIndexRows(row: BillingSubscriptionRow): {
+	byCustomer: BillingSubscriptionByCustomerRow;
+	byUser: BillingSubscriptionByUserRow | null;
+} {
 	const byCustomer: BillingSubscriptionByCustomerRow = {
-		customer_id: customerId,
-		provider_id: s.id,
-		status: s.status ?? null,
-		current_period_end: unixToDate(periodEnd),
+		customer_id: row.customer_id,
+		provider_id: row.provider_id,
+		status: row.status,
+		current_period_end: row.current_period_end,
 	} as BillingSubscriptionByCustomerRow;
 	const byUser: BillingSubscriptionByUserRow | null =
-		userId !== null && userId !== undefined
+		row.user_id !== null && row.user_id !== undefined
 			? ({
-					user_id: userId,
-					provider_id: s.id,
-					customer_id: customerId,
-					status: s.status ?? null,
-					current_period_end: unixToDate(periodEnd),
+					user_id: row.user_id,
+					provider_id: row.provider_id,
+					customer_id: row.customer_id,
+					status: row.status,
+					current_period_end: row.current_period_end,
 				} as BillingSubscriptionByUserRow)
 			: null;
-	return {primary, byCustomer, byUser};
+	return {byCustomer, byUser};
 }
 
 export function mapStripeInvoiceToRow(
