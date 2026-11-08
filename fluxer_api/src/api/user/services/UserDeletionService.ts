@@ -35,6 +35,8 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
+import {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
+import {entranceSoundStorageKey} from '@app/api/user/entrance_sound/EntranceSoundService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import {
@@ -55,6 +57,7 @@ import type Stripe from 'stripe';
 
 const CHUNK_SIZE = 100;
 const ssoIdentityRepository = new SsoIdentityRepository();
+const entranceSoundRepository = new EntranceSoundRepository();
 
 interface UserDeletionDependencies {
 	operatorPassServices: Pick<OperatorPassServices, 'repository' | 'wallService' | 'holdingService'>;
@@ -457,6 +460,19 @@ export async function processUserDeletion(
 		}
 	}
 	await favoriteMemeRepository.deleteAllByUserId(userId);
+	const entranceSoundKeys = new Set(
+		(await entranceSoundRepository.listSounds(userId)).map((sound) =>
+			entranceSoundStorageKey(userId, sound.hash, sound.extension),
+		),
+	);
+	for (const key of entranceSoundKeys) {
+		try {
+			await storageService.deleteObject(Config.s3.buckets.cdn, key);
+		} catch (error) {
+			Logger.error({error, userId}, 'Failed to delete entrance sound');
+		}
+	}
+	await entranceSoundRepository.deleteAllForUser(userId);
 	Logger.debug({userId}, 'Deleting OAuth tokens');
 	await Promise.all([
 		oauth2TokenRepository.deleteAllAccessTokensForUser(userId),
