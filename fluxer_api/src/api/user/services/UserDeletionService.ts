@@ -34,6 +34,7 @@ import type {ApplicationRepository} from '@app/api/oauth/repositories/Applicatio
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
 import {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
 import {entranceSoundStorageKey} from '@app/api/user/entrance_sound/EntranceSoundService';
@@ -80,6 +81,15 @@ interface UserDeletionDependencies {
 	adminRepository: AdminRepository;
 	cacheService: ICacheService;
 	emailService: IEmailService;
+}
+
+async function hasSubscriptionEnded(stripe: Stripe, subscriptionId: string): Promise<boolean> {
+	try {
+		const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+		return subscription.status === 'canceled' || subscription.status === 'incomplete_expired';
+	} catch (error) {
+		return isMissingOrCancelledSubscriptionError(error);
+	}
 }
 
 async function releaseSsoIdentitiesOf(user: User, deletionReasonCode: number): Promise<void> {
@@ -188,6 +198,14 @@ export async function processUserDeletion(
 				lastError = null;
 				break;
 			} catch (error) {
+				if (await hasSubscriptionEnded(stripe, scheduledUser.stripeSubscriptionId)) {
+					Logger.info(
+						{userId, subscriptionId: scheduledUser.stripeSubscriptionId},
+						'Stripe subscription already ended, continuing account deletion',
+					);
+					lastError = null;
+					break;
+				}
 				lastError = error;
 				const isLastAttempt = attempt === MAX_RETRIES - 1;
 				Logger.error(
