@@ -25,6 +25,7 @@
 		"generate:colors": "pnpm tsx scripts/GenerateColorSystem.ts",
 		"generate:css-types": "pnpm tsx scripts/GenerateCssTypes.ts",
 		"generate:css-types:watch": "pnpm tsx scripts/GenerateCssTypes.ts --watch",
+		"generate:emoji-data": "pnpm tsx scripts/GenerateEmojiData.ts",
 		"generate:emoji-sprites": "pnpm tsx scripts/GenerateEmojiSprites.ts",
 		"generate:message-layout": "pnpm tsx scripts/GenerateMessageLayoutCss.ts",
 		"generate:theme-variables": "pnpm tsx scripts/GenerateThemeVariables.ts",
