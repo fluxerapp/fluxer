@@ -9532,6 +9532,11 @@ msgstr "Comunitate actualizată"
 msgid "Community voice"
 msgstr "Voce în comunitate"
 
+#. Report flow: section heading above the card of the community being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Community you're reporting"
+msgstr "Comunitatea pe care o raportezi"
+
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Community-wide"
@@ -27340,6 +27345,11 @@ msgstr "Permisiuni"
 msgid "Permissions for {0}"
 msgstr "Permisiuni pentru {0}"
 
+#. Report flow: section heading above the card of the person being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Person you're reporting"
+msgstr "Persoana pe care o raportezi"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personal dictionary"
@@ -28348,11 +28358,6 @@ msgstr "Tip profil"
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Profile updated"
 msgstr "Profil actualizat"
-
-#. Report flow: section heading above the card of the user whose profile is being reported.
-#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
-msgid "Profile you're reporting"
-msgstr "Profilul pe care îl raportezi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -29975,6 +29980,11 @@ msgstr "Ca răspuns la {replyAuthorName}, {authorName} a spus: {formatted}"
 msgid "Replying to <0>{authorNickname}</0>"
 msgstr "Ca răspuns la <0>{authorNickname}</0>"
 
+#. Voice and call participant menu action that reports this person to the safety team, for example for something they said or showed in the call.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
+msgid "Report"
+msgstr "Raportează"
+
 #. Report flow target option. Selects reporting an entire community (server). Use the localized term for community, not server.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a community"
@@ -29989,6 +29999,11 @@ msgstr "Raportează un mesaj"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a user profile"
 msgstr "Raportează un profil de utilizator"
+
+#. Action label in community menus, on invites and in Explore, and the title of the report window it opens. Reports a whole community to the safety team.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts
+msgid "Report community"
+msgstr "Raportează comunitatea"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "Report details"
@@ -30010,7 +30025,12 @@ msgstr "Raportează o problemă"
 msgid "Report message"
 msgstr "Raportează mesajul"
 
-#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#. Action in a forum post's menu. Reports the post's opening message to the safety team. A post is a topic thread in a forum channel.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "Report post"
+msgstr "Raportează postarea"
+
+#. Action label in user right-click menus and the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
 msgid "Report profile"
 msgstr "Raportează profilul"
@@ -36527,6 +36547,11 @@ msgstr "<0>Politica de confidențialitate</0> și <1>nota de confidențialitate 
 #: src/features/auth/flow/RegistrationLegalNotice.tsx
 msgid "The <0>privacy policy</0> explains how we handle your data."
 msgstr "<0>Politica de confidențialitate</0> explică modul în care gestionăm datele tale."
+
+#. Report flow: body of the final screen after a report was sent, on a self-hosted instance whose own administrators handle reports. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "The administrators of this instance will review your report. We won't reveal that it came from you."
+msgstr "Administratorii acestei instanțe vor analiza raportul tău. Nu vom dezvălui că a venit de la tine."
 
 #. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -44176,6 +44201,11 @@ msgstr "Vizualizezi mesaje mai vechi"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Ai adăugat mai multe persoane decât permite un DM de grup. Elimină câteva și încearcă din nou."
+
+#. Report flow: note on the summary screen when the reporter already reported this community.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "You've already reported this community."
+msgstr "Ai raportat deja această comunitate."
 
 #. Report flow: note on the summary screen when the reporter already reported this message.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts

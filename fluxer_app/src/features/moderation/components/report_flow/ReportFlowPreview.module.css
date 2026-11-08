@@ -13,7 +13,7 @@
 	pointer-events: none;
 }
 
-.userCard {
+.targetCard {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
@@ -23,14 +23,14 @@
 	background-color: var(--background-secondary-alt);
 }
 
-.userText {
+.targetText {
 	display: flex;
 	flex-direction: column;
 	gap: 0.125rem;
 	min-width: 0;
 }
 
-.userName {
+.targetName {
 	overflow: hidden;
 	color: var(--text-primary);
 	font-size: 0.9375rem;
@@ -40,7 +40,7 @@
 	white-space: nowrap;
 }
 
-.userTag {
+.targetTag {
 	overflow: hidden;
 	color: var(--text-primary-muted);
 	font-size: 0.8125rem;

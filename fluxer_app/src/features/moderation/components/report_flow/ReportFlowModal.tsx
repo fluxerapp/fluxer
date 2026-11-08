@@ -2,6 +2,7 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import Authentication from '@app/features/auth/state/Authentication';
+import {describeAccountTierBlock} from '@app/features/auth/utils/AccountTierPrompt';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	BACK_DESCRIPTOR,
@@ -15,6 +16,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {type ReportFlowSubmissionTarget, submitReportFlow} from '@app/features/moderation/commands/ReportFlowCommands';
 import {
+	ALREADY_REPORTED_COMMUNITY_DESCRIPTOR,
 	ALREADY_REPORTED_MESSAGE_DESCRIPTOR,
 	ALREADY_REPORTED_PROFILE_DESCRIPTOR,
 	FINISH_ACCOUNT_SETUP_DESCRIPTOR,
@@ -24,6 +26,7 @@ import {
 	RATE_LIMITED_DESCRIPTOR,
 	REPORT_SUMMARY_SUBTITLE_DESCRIPTOR,
 	REPORT_SUMMARY_TITLE_DESCRIPTOR,
+	SELECTED_COMMUNITY_DESCRIPTOR,
 	SELECTED_MESSAGE_DESCRIPTOR,
 	SELECTED_USER_DESCRIPTOR,
 	SUBMIT_FAILED_DESCRIPTOR,
@@ -34,6 +37,7 @@ import {
 import styles from '@app/features/moderation/components/report_flow/ReportFlowModal.module.css';
 import {ReportFlowNotice} from '@app/features/moderation/components/report_flow/ReportFlowNotice';
 import {
+	ReportFlowGuildPreview,
 	ReportFlowMessagePreview,
 	ReportFlowUserPreview,
 } from '@app/features/moderation/components/report_flow/ReportFlowPreview';
@@ -57,8 +61,11 @@ import {
 	toggleReportFlowItem,
 } from '@app/features/moderation/components/report_flow/ReportFlowWalk';
 import ReportFlows from '@app/features/moderation/state/ReportFlows';
-import {REPORT_USER_PROFILE_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {reportGate, showReportRestrictionDialog} from '@app/features/moderation/utils/ReportVerificationGate';
+import {
+	REPORT_COMMUNITY_DESCRIPTOR,
+	REPORT_USER_PROFILE_DESCRIPTOR,
+} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {needsReportAccountSetup, openReportAccountSetup} from '@app/features/moderation/utils/ReportVerificationGate';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -79,7 +86,16 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
-export type ReportFlowContext = {type: 'message'; message: Message} | {type: 'user'; user: User; guildId?: string};
+export interface ReportedGuild {
+	id: string;
+	name: string;
+	icon: string | null;
+}
+
+export type ReportFlowContext =
+	| {type: 'message'; message: Message}
+	| {type: 'user'; user: User; guildId?: string}
+	| {type: 'guild'; guild: ReportedGuild; inviteCode?: string};
 
 interface ReportFlowSession {
 	flow: ReportFlowResponse;
@@ -101,14 +117,28 @@ function toSubmissionTarget(context: ReportFlowContext): ReportFlowSubmissionTar
 			return {type: 'message', channelId: context.message.channelId, messageId: context.message.id};
 		case 'user':
 			return {type: 'user', userId: context.user.id, guildId: context.guildId};
+		case 'guild':
+			return {type: 'guild', guildId: context.guild.id, inviteCode: context.inviteCode};
 	}
 }
 
 function getReportedUser(context: ReportFlowContext): User | null {
-	const user = context.type === 'message' ? context.message.author : context.user;
+	if (context.type === 'guild') return null;
 	if (context.type === 'message' && context.message.webhookId) return null;
+	const user = context.type === 'message' ? context.message.author : context.user;
 	if (user.id === Authentication.currentUserId || user.system) return null;
 	return user;
+}
+
+function getContextGuildId(context: ReportFlowContext): string | null | undefined {
+	switch (context.type) {
+		case 'message':
+			return Channels.getChannel(context.message.channelId)?.guildId ?? context.message.guildId;
+		case 'user':
+			return context.guildId;
+		case 'guild':
+			return context.guild.id;
+	}
 }
 
 function resolveLinkUrl(url: string, context: ReportFlowContext): string {
@@ -119,67 +149,112 @@ function resolveLinkUrl(url: string, context: ReportFlowContext): string {
 		return url;
 	}
 	if (!parsed.pathname.replace(/\/+$/, '').endsWith('/report')) return url;
-	if (context.type === 'message') {
-		const channel = Channels.getChannel(context.message.channelId);
-		parsed.searchParams.set('type', 'message');
-		parsed.searchParams.set(
-			'message_link',
-			buildMessageJumpLink({
-				guildId: channel?.guildId ?? context.message.guildId,
-				channelId: context.message.channelId,
-				messageId: context.message.id,
-			}),
-		);
-	} else {
-		parsed.searchParams.set('type', 'user');
-		parsed.searchParams.set('user_id', context.user.id);
+	parsed.searchParams.set('type', context.type);
+	switch (context.type) {
+		case 'message':
+			parsed.searchParams.set(
+				'message_link',
+				buildMessageJumpLink({
+					guildId: getContextGuildId(context),
+					channelId: context.message.channelId,
+					messageId: context.message.id,
+				}),
+			);
+			break;
+		case 'user':
+			parsed.searchParams.set('user_id', context.user.id);
+			break;
+		case 'guild':
+			break;
 	}
 	return parsed.toString();
 }
 
-function getContextGuildId(context: ReportFlowContext): string | null | undefined {
-	if (context.type === 'user') return context.guildId;
-	return Channels.getChannel(context.message.channelId)?.guildId ?? context.message.guildId;
-}
-
-const REPORT_TIER_CODES: ReadonlySet<string> = new Set([
-	APIErrorCodes.ACCOUNT_VERIFICATION_REQUIRED,
-	APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED,
-	APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS,
-]);
-
-function isTerminalSubmitFailure(code: string | undefined): boolean {
+function isRejectedSubmitFailure(code: string | undefined): boolean {
 	return (
-		code === APIErrorCodes.CONFLICT ||
-		code === APIErrorCodes.UNKNOWN_MESSAGE ||
-		code === APIErrorCodes.UNKNOWN_USER ||
+		code === APIErrorCodes.REPORT_BANNED ||
+		code?.startsWith('UNKNOWN_') === true ||
 		code?.startsWith('CANNOT_REPORT_') === true
 	);
 }
 
+function isTerminalSubmitFailure(code: string | undefined): boolean {
+	return code === APIErrorCodes.CONFLICT || isRejectedSubmitFailure(code);
+}
+
+function describeAlreadyReported(i18n: I18n, context: ReportFlowContext): string {
+	switch (context.type) {
+		case 'message':
+			return i18n._(ALREADY_REPORTED_MESSAGE_DESCRIPTOR);
+		case 'user':
+			return i18n._(ALREADY_REPORTED_PROFILE_DESCRIPTOR);
+		case 'guild':
+			return i18n._(ALREADY_REPORTED_COMMUNITY_DESCRIPTOR);
+	}
+}
+
 function describeSubmitFailure(i18n: I18n, context: ReportFlowContext, error: unknown): string {
 	const code = failureCode(error);
-	if (code === APIErrorCodes.CONFLICT) {
-		return context.type === 'message'
-			? i18n._(ALREADY_REPORTED_MESSAGE_DESCRIPTOR)
-			: i18n._(ALREADY_REPORTED_PROFILE_DESCRIPTOR);
-	}
+	if (code === APIErrorCodes.CONFLICT) return describeAlreadyReported(i18n, context);
 	if (
 		code === APIErrorCodes.RATE_LIMITED ||
 		(error instanceof HttpError && error.status === HttpStatus.TOO_MANY_REQUESTS)
 	) {
 		return i18n._(RATE_LIMITED_DESCRIPTOR);
 	}
-	if (
-		code === APIErrorCodes.REPORT_BANNED ||
-		(code !== undefined && REPORT_TIER_CODES.has(code)) ||
-		code === APIErrorCodes.UNKNOWN_MESSAGE ||
-		code === APIErrorCodes.UNKNOWN_USER ||
-		code?.startsWith('CANNOT_REPORT_')
-	) {
-		return failureMessage(error) ?? i18n._(SUBMIT_FAILED_DESCRIPTOR);
-	}
+	if (isRejectedSubmitFailure(code)) return failureMessage(error) ?? i18n._(SUBMIT_FAILED_DESCRIPTOR);
 	return i18n._(SUBMIT_FAILED_DESCRIPTOR);
+}
+
+function describeAccountSetupNeed(i18n: I18n, error: unknown): string {
+	const gate = describeAccountTierBlock(error);
+	if (gate !== null) return accountGateReason(i18n, gate);
+	return failureMessage(error) ?? i18n._(SUBMIT_FAILED_DESCRIPTOR);
+}
+
+interface ReportTargetPresentation {
+	fallbackTitle: string;
+	previewHeading: string;
+	preview: React.ReactNode;
+}
+
+function describeReportTarget(i18n: I18n, context: ReportFlowContext): ReportTargetPresentation {
+	switch (context.type) {
+		case 'message':
+			return {
+				fallbackTitle: i18n._(REPORT_MESSAGE_DESCRIPTOR),
+				previewHeading: i18n._(SELECTED_MESSAGE_DESCRIPTOR),
+				preview: (
+					<ReportFlowMessagePreview
+						message={context.message}
+						data-flx="moderation.report-flow.report-flow-modal.describe-report-target.report-flow-message-preview"
+					/>
+				),
+			};
+		case 'user':
+			return {
+				fallbackTitle: i18n._(REPORT_USER_PROFILE_DESCRIPTOR),
+				previewHeading: i18n._(SELECTED_USER_DESCRIPTOR),
+				preview: (
+					<ReportFlowUserPreview
+						user={context.user}
+						guildId={context.guildId}
+						data-flx="moderation.report-flow.report-flow-modal.describe-report-target.report-flow-user-preview"
+					/>
+				),
+			};
+		case 'guild':
+			return {
+				fallbackTitle: i18n._(REPORT_COMMUNITY_DESCRIPTOR),
+				previewHeading: i18n._(SELECTED_COMMUNITY_DESCRIPTOR),
+				preview: (
+					<ReportFlowGuildPreview
+						guild={context.guild}
+						data-flx="moderation.report-flow.report-flow-modal.describe-report-target.report-flow-guild-preview"
+					/>
+				),
+			};
+	}
 }
 
 interface ReportFlowModalProps {
@@ -215,11 +290,11 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 	const [submitting, setSubmitting] = useState(false);
 	const [submitNote, setSubmitNote] = useState<string | null>(null);
 	const [submitClosed, setSubmitClosed] = useState(false);
+	const [accountSetupError, setAccountSetupError] = useState<unknown>(null);
 	const [blockTarget] = useState(() => {
 		const user = getReportedUser(context);
 		return user !== null && !Relationships.isBlocked(user.id) ? user : null;
 	});
-	const accountGate = reportGate();
 	if (loadState?.status === 'loaded' && session?.flow !== loadState.flow) {
 		const keepWalk = session !== null && session.flow.revision_hash === loadState.flow.revision_hash;
 		setSession({
@@ -291,9 +366,9 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 	}, [targetType, locale]);
 	const handleSubmit = useCallback(async () => {
 		if (session === null || session.walk.phase !== 'summary') return;
-		if (showReportRestrictionDialog()) return;
 		setSubmitting(true);
 		setSubmitNote(null);
+		setAccountSetupError(null);
 		const submission = submitReportFlow(toSubmissionTarget(context), session.flow, session.walk.steps);
 		submissionRef.current = submission;
 		try {
@@ -308,7 +383,10 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 				void ReportFlows.restart(targetType, SURFACE, locale);
 				return;
 			}
-			if (code !== undefined && REPORT_TIER_CODES.has(code) && showReportRestrictionDialog()) return;
+			if (needsReportAccountSetup(error)) {
+				setAccountSetupError(error);
+				return;
+			}
 			setSubmitClosed(isTerminalSubmitFailure(code));
 			setSubmitNote(describeSubmitFailure(i18n, context, error));
 		} finally {
@@ -316,23 +394,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 			setSubmitting(false);
 		}
 	}, [context, finishFlow, i18n, locale, session, targetType, updateWalk]);
-	const fallbackTitle =
-		context.type === 'message' ? i18n._(REPORT_MESSAGE_DESCRIPTOR) : i18n._(REPORT_USER_PROFILE_DESCRIPTOR);
-	const previewHeading =
-		context.type === 'message' ? i18n._(SELECTED_MESSAGE_DESCRIPTOR) : i18n._(SELECTED_USER_DESCRIPTOR);
-	const preview =
-		context.type === 'message' ? (
-			<ReportFlowMessagePreview
-				message={context.message}
-				data-flx="moderation.report-flow.report-flow-modal.report-flow-message-preview"
-			/>
-		) : (
-			<ReportFlowUserPreview
-				user={context.user}
-				guildId={context.guildId}
-				data-flx="moderation.report-flow.report-flow-modal.report-flow-user-preview"
-			/>
-		);
+	const {fallbackTitle, previewHeading, preview} = describeReportTarget(i18n, context);
 	const screen = flow !== null && walk !== null ? getReportFlowScreen(flow, walk.screenId) : null;
 	const notice =
 		flow !== null && walk?.phase === 'notice'
@@ -389,7 +451,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 						walk={walk}
 						onChooseOption={handleChooseOption}
 						onToggleItem={handleToggleItem}
-						previewHeading={isStart && context.type === 'user' ? previewHeading : undefined}
+						previewHeading={isStart && context.type !== 'message' ? previewHeading : undefined}
 						preview={isStart ? preview : undefined}
 						data-flx="moderation.report-flow.report-flow-modal.render-body.report-flow-screen-view"
 					/>
@@ -406,7 +468,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 							preview={preview}
 							data-flx="moderation.report-flow.report-flow-modal.render-body.report-flow-summary"
 						/>
-						{!accountGate.allowed && (
+						{accountSetupError !== null && (
 							<div
 								className={styles.accountNotice}
 								data-flx="moderation.report-flow.report-flow-modal.render-body.account-notice"
@@ -421,7 +483,7 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 									className={styles.accountNoticeText}
 									data-flx="moderation.report-flow.report-flow-modal.render-body.account-notice-text"
 								>
-									{accountGateReason(i18n, accountGate)}
+									{describeAccountSetupNeed(i18n, accountSetupError)}
 								</span>
 								<div
 									className={styles.accountNoticeActions}
@@ -431,8 +493,8 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 										variant="secondary"
 										small
 										fitContent
-										onClick={showReportRestrictionDialog}
-										data-flx="moderation.report-flow.report-flow-modal.render-body.button.show-report-restriction-dialog"
+										onClick={() => openReportAccountSetup(accountSetupError)}
+										data-flx="moderation.report-flow.report-flow-modal.render-body.button.open-report-account-setup"
 									>
 										{i18n._(FINISH_ACCOUNT_SETUP_DESCRIPTOR)}
 									</Button>
@@ -556,7 +618,6 @@ export const ReportFlowModal: React.FC<ReportFlowModalProps> = observer(({contex
 								variant="danger"
 								onClick={handleSubmit}
 								submitting={submitting || walk?.phase === 'thanks'}
-								disabled={!accountGate.allowed}
 								data-flx="moderation.report-flow.report-flow-modal.render-footer.button.submit"
 							>
 								{i18n._(SUBMIT_REPORT_DESCRIPTOR)}

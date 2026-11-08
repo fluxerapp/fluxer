@@ -9532,6 +9532,11 @@ msgstr "Η κοινότητα ενημερώθηκε"
 msgid "Community voice"
 msgstr "Φωνητικό κοινότητας"
 
+#. Report flow: section heading above the card of the community being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Community you're reporting"
+msgstr "Κοινότητα που αναφέρετε"
+
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Community-wide"
@@ -27340,6 +27345,11 @@ msgstr "Δικαιώματα"
 msgid "Permissions for {0}"
 msgstr "Δικαιώματα για {0}"
 
+#. Report flow: section heading above the card of the person being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Person you're reporting"
+msgstr "Άτομο που αναφέρετε"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personal dictionary"
@@ -28348,11 +28358,6 @@ msgstr "Τύπος προφίλ"
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Profile updated"
 msgstr "Το προφίλ ενημερώθηκε"
-
-#. Report flow: section heading above the card of the user whose profile is being reported.
-#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
-msgid "Profile you're reporting"
-msgstr "Προφίλ που αναφέρετε"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -29975,6 +29980,11 @@ msgstr "Απαντώντας σε {replyAuthorName}, {authorName} είπε: {for
 msgid "Replying to <0>{authorNickname}</0>"
 msgstr "Απάντηση στον/στην <0>{authorNickname}</0>"
 
+#. Voice and call participant menu action that reports this person to the safety team, for example for something they said or showed in the call.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
+msgid "Report"
+msgstr "Αναφορά"
+
 #. Report flow target option. Selects reporting an entire community (server). Use the localized term for community, not server.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a community"
@@ -29989,6 +29999,11 @@ msgstr "Αναφορά μηνύματος"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a user profile"
 msgstr "Αναφορά προφίλ χρήστη"
+
+#. Action label in community menus, on invites and in Explore, and the title of the report window it opens. Reports a whole community to the safety team.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts
+msgid "Report community"
+msgstr "Αναφορά κοινότητας"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "Report details"
@@ -30010,7 +30025,12 @@ msgstr "Αναφορά προβλήματος"
 msgid "Report message"
 msgstr "Αναφορά μηνύματος"
 
-#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#. Action in a forum post's menu. Reports the post's opening message to the safety team. A post is a topic thread in a forum channel.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "Report post"
+msgstr "Αναφορά ανάρτησης"
+
+#. Action label in user right-click menus and the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
 msgid "Report profile"
 msgstr "Αναφορά προφίλ"
@@ -36527,6 +36547,11 @@ msgstr "Η <0>πολιτική απορρήτου</0> και η <1>ειδοπο�
 #: src/features/auth/flow/RegistrationLegalNotice.tsx
 msgid "The <0>privacy policy</0> explains how we handle your data."
 msgstr "Η <0>πολιτική απορρήτου</0> εξηγεί πώς χειριζόμαστε τα δεδομένα σας."
+
+#. Report flow: body of the final screen after a report was sent, on a self-hosted instance whose own administrators handle reports. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "The administrators of this instance will review your report. We won't reveal that it came from you."
+msgstr "Οι διαχειριστές αυτής της παρουσίας θα ελέγξουν την αναφορά σας. Δεν θα αποκαλύψουμε ότι προήλθε από εσάς."
 
 #. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -44176,6 +44201,11 @@ msgstr "Βλέπετε παλιότερα μηνύματα"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Έχετε προσθέσει περισσότερα άτομα από όσα επιτρέπει μια ομαδική συνομιλία. Αφαιρέστε μερικά και δοκιμάστε ξανά."
+
+#. Report flow: note on the summary screen when the reporter already reported this community.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "You've already reported this community."
+msgstr "Έχετε ήδη αναφέρει αυτήν την κοινότητα."
 
 #. Report flow: note on the summary screen when the reporter already reported this message.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts

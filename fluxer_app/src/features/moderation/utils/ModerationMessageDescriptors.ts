@@ -13,7 +13,12 @@ export const REMOVE_TIMEOUT_DESCRIPTOR = msg({
 export const REPORT_USER_PROFILE_DESCRIPTOR = msg({
 	message: 'Report profile',
 	comment:
-		"Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.",
+		"Action label in user right-click menus and the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.",
+});
+export const REPORT_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Report community',
+	comment:
+		'Action label in community menus, on invites and in Explore, and the title of the report window it opens. Reports a whole community to the safety team.',
 });
 export const TIMEOUT_DESCRIPTOR = msg({
 	message: 'Timeout',

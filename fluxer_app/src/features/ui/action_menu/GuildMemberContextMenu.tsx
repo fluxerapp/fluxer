@@ -40,6 +40,7 @@ import {
 	UnblockUserMenuItem,
 } from '@app/features/ui/action_menu/items/RelationshipMenuItems';
 import {ReportMessageMenuItem} from '@app/features/ui/action_menu/items/ReportMessageMenuItem';
+import {ReportUserProfileMenuItem} from '@app/features/ui/action_menu/items/ReportUserProfileMenuItem';
 import {shouldShowSpammerOverrideMenuItems} from '@app/features/ui/action_menu/items/SpammerOverrideMenuItems';
 import {StaffDeveloperUserControlsMenuItem} from '@app/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem';
 import {shouldShowStaffUserControlsMenuItems} from '@app/features/ui/action_menu/items/StaffUserControlsMenuItems';
@@ -254,6 +255,12 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 								data-flx="ui.action-menu.guild-member-context-menu.report-message-menu-item"
 							/>
 						)}
+						<ReportUserProfileMenuItem
+							user={user}
+							guildId={guildId}
+							onClose={onClose}
+							data-flx="ui.action-menu.guild-member-context-menu.report-user-profile-menu-item"
+						/>
 						{relationshipType === RelationshipTypes.BLOCKED ? (
 							<UnblockUserMenuItem
 								user={user}

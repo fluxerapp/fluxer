@@ -2,7 +2,9 @@
 
 import {Message} from '@app/features/channel/components/ChannelMessage';
 import Channels from '@app/features/channel/state/Channels';
+import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
+import type {ReportedGuild} from '@app/features/moderation/components/report_flow/ReportFlowModal';
 import styles from '@app/features/moderation/components/report_flow/ReportFlowPreview.module.css';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -59,7 +61,7 @@ export const ReportFlowMessagePreview: React.FC<{message: MessageModel}> = obser
 
 export const ReportFlowUserPreview: React.FC<{user: User; guildId?: string}> = observer(({user, guildId}) => (
 	<div
-		className={styles.userCard}
+		className={styles.targetCard}
 		data-flx="moderation.report-flow.report-flow-preview.report-flow-user-preview.user-card"
 	>
 		<Avatar
@@ -69,21 +71,43 @@ export const ReportFlowUserPreview: React.FC<{user: User; guildId?: string}> = o
 			data-flx="moderation.report-flow.report-flow-preview.report-flow-user-preview.avatar"
 		/>
 		<div
-			className={styles.userText}
+			className={styles.targetText}
 			data-flx="moderation.report-flow.report-flow-preview.report-flow-user-preview.user-text"
 		>
 			<span
-				className={styles.userName}
+				className={styles.targetName}
 				data-flx="moderation.report-flow.report-flow-preview.report-flow-user-preview.user-name"
 			>
 				{NicknameUtils.getDisplayName(user)}
 			</span>
 			<span
-				className={styles.userTag}
+				className={styles.targetTag}
 				data-flx="moderation.report-flow.report-flow-preview.report-flow-user-preview.user-tag"
 			>
 				{NicknameUtils.formatUserTagForStreamerMode(user)}
 			</span>
 		</div>
+	</div>
+));
+
+export const ReportFlowGuildPreview: React.FC<{guild: ReportedGuild}> = observer(({guild}) => (
+	<div
+		className={styles.targetCard}
+		data-flx="moderation.report-flow.report-flow-preview.report-flow-guild-preview.target-card"
+	>
+		<GuildIcon
+			id={guild.id}
+			name={guild.name}
+			icon={guild.icon}
+			sizePx={40}
+			containerProps={{'aria-hidden': true}}
+			data-flx="moderation.report-flow.report-flow-preview.report-flow-guild-preview.guild-icon"
+		/>
+		<span
+			className={styles.targetName}
+			data-flx="moderation.report-flow.report-flow-preview.report-flow-guild-preview.target-name"
+		>
+			{guild.name}
+		</span>
 	</div>
 ));

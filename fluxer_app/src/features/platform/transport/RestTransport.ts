@@ -46,6 +46,7 @@ const RETRY_BACKOFF_FACTOR = 2;
 const RETRY_BACKOFF_JITTER = 0.25;
 const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 504, 507, 522, 523, 524, 598, 599]);
 const SUDO_HEADER = 'x-fluxer-sudo-mode-jwt';
+const UNPACED_PATH_PREFIX = '/reports/';
 const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 	'password',
 	'mfa_method',
@@ -104,7 +105,7 @@ interface Plan {
 	path: string;
 	routing: RestRuntimeRouting | null;
 	url: string;
-	rateLimitKey: string;
+	rateLimitKey: string | null;
 	body: BodyShape;
 	headers: Record<string, string>;
 	parse: RestResponseFormat;
@@ -467,7 +468,7 @@ function composePlan(
 		path,
 		routing,
 		url,
-		rateLimitKey: `${method} ${path}`,
+		rateLimitKey: isUnpacedPath(path) ? null : `${method} ${path}`,
 		body,
 		headers,
 		parse: options.parse ?? 'auto',
@@ -627,7 +628,12 @@ function inferContentType(body: BodyShape): string | null {
 	}
 }
 
-function consultPacing(pacing: Map<string, PacingEntry>, key: string): PacingEntry | null {
+function isUnpacedPath(path: string): boolean {
+	return path.startsWith(UNPACED_PATH_PREFIX);
+}
+
+function consultPacing(pacing: Map<string, PacingEntry>, key: string | null): PacingEntry | null {
+	if (key === null) return null;
 	const entry = pacing.get(key);
 	if (!entry) return null;
 	if (entry.until <= Date.now()) {
@@ -887,14 +893,16 @@ function reactToRateLimit(state: RuntimeState, plan: Plan, reply: RestResponse):
 	const headerMs = readNumericHeader(reply.headers['x-ratelimit-reset-after']);
 	const note = extractMessage(reply.body);
 	const code = extractCode(reply.body);
-	recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
+	if (plan.rateLimitKey !== null) {
+		recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
+	}
 	if (plan.mode === 'silent') {
 		return {next: 'deliver', reply};
 	}
 	if (plan.mode === 'strict') {
 		return {next: 'fail', error: new HttpError(failureDetail(plan, reply))};
 	}
-	const entry = state.pacing.get(plan.rateLimitKey);
+	const entry = plan.rateLimitKey !== null ? state.pacing.get(plan.rateLimitKey) : undefined;
 	const delayMs = entry ? Math.max(0, entry.until - Date.now()) : (retryAfterSeconds ?? 1) * 1000;
 	return {next: 'retry-after', delayMs, mode: 'fixed'};
 }

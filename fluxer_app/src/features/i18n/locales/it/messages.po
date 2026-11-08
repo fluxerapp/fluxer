@@ -9532,6 +9532,11 @@ msgstr "Community aggiornata"
 msgid "Community voice"
 msgstr "Chat vocale della community"
 
+#. Report flow: section heading above the card of the community being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Community you're reporting"
+msgstr "Community che stai segnalando"
+
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Community-wide"
@@ -27340,6 +27345,11 @@ msgstr "Permessi"
 msgid "Permissions for {0}"
 msgstr "Permessi per {0}"
 
+#. Report flow: section heading above the card of the person being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "Person you're reporting"
+msgstr "Persona che stai segnalando"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personal dictionary"
@@ -28348,11 +28358,6 @@ msgstr "Tipo di profilo"
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Profile updated"
 msgstr "Profilo aggiornato"
-
-#. Report flow: section heading above the card of the user whose profile is being reported.
-#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
-msgid "Profile you're reporting"
-msgstr "Profilo che stai segnalando"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -29975,6 +29980,11 @@ msgstr "In risposta a {replyAuthorName}, {authorName} ha detto: {formatted}"
 msgid "Replying to <0>{authorNickname}</0>"
 msgstr "In risposta a <0>{authorNickname}</0>"
 
+#. Voice and call participant menu action that reports this person to the safety team, for example for something they said or showed in the call.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
+msgid "Report"
+msgstr "Segnala"
+
 #. Report flow target option. Selects reporting an entire community (server). Use the localized term for community, not server.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a community"
@@ -29989,6 +29999,11 @@ msgstr "Segnala un messaggio"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Report a user profile"
 msgstr "Segnala un profilo utente"
+
+#. Action label in community menus, on invites and in Explore, and the title of the report window it opens. Reports a whole community to the safety team.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts
+msgid "Report community"
+msgstr "Segnala community"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "Report details"
@@ -30010,7 +30025,12 @@ msgstr "Segnala un problema"
 msgid "Report message"
 msgstr "Segnala messaggio"
 
-#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#. Action in a forum post's menu. Reports the post's opening message to the safety team. A post is a topic thread in a forum channel.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "Report post"
+msgstr "Segnala post"
+
+#. Action label in user right-click menus and the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
 msgid "Report profile"
 msgstr "Segnala profilo"
@@ -36527,6 +36547,11 @@ msgstr "L'<0>informativa sulla privacy</0> e l'<1>avviso sulla privacy dell'{OPE
 #: src/features/auth/flow/RegistrationLegalNotice.tsx
 msgid "The <0>privacy policy</0> explains how we handle your data."
 msgstr "L'<0>informativa sulla privacy</0> spiega come trattiamo i tuoi dati."
+
+#. Report flow: body of the final screen after a report was sent, on a self-hosted instance whose own administrators handle reports. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "The administrators of this instance will review your report. We won't reveal that it came from you."
+msgstr "Gli amministratori di questa istanza esamineranno la tua segnalazione. Non riveleremo che proviene da te."
 
 #. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -44176,6 +44201,11 @@ msgstr "Stai visualizzando messaggi meno recenti"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Hai aggiunto più persone di quelle consentite in un DM di gruppo. Rimuovine alcune e riprova."
+
+#. Report flow: note on the summary screen when the reporter already reported this community.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts
+msgid "You've already reported this community."
+msgstr "Hai già segnalato questa community."
 
 #. Report flow: note on the summary screen when the reporter already reported this message.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts

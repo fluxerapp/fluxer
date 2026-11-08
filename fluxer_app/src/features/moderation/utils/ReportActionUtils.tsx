@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {type ReportFlowContext, ReportFlowModal} from '@app/features/moderation/components/report_flow/ReportFlowModal';
+import {
+	type ReportedGuild,
+	type ReportFlowContext,
+	ReportFlowModal,
+} from '@app/features/moderation/components/report_flow/ReportFlowModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import type {User} from '@app/features/user/models/User';
@@ -24,4 +28,8 @@ export function openReportMessageModal(message: Message, options: {onFinish?: ()
 
 export function openReportUserProfileModal(params: {user: User; guildId?: string}): void {
 	openReportModal({type: 'user', user: params.user, guildId: params.guildId});
+}
+
+export function openReportGuildModal(params: {guild: ReportedGuild; inviteCode?: string}): void {
+	openReportModal({type: 'guild', guild: params.guild, inviteCode: params.inviteCode});
 }

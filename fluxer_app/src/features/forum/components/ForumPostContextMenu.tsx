@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ForumCommands from '@app/features/forum/commands/ForumCommands';
 import {ForumPostTagsModal} from '@app/features/forum/components/ForumPostTagsModal';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
 import {reportForumError} from '@app/features/forum/utils/ForumErrors';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {canEditPostTags} from '@app/features/forum/utils/ForumPermissions';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
+import {Message} from '@app/features/messaging/models/MessagingMessage';
+import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import {useThreadMenuData} from '@app/features/threads/hooks/useThreadMenuData';
 import {canPatchThread, isThreadModeratorFor} from '@app/features/threads/utils/ThreadActionRules';
+import {ReportMessageIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {DataMenuRenderer} from '@app/features/ui/action_menu/DataMenuRenderer';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -20,6 +25,7 @@ import {useLingui} from '@lingui/react/macro';
 import {PushPinSimpleIcon, PushPinSimpleSlashIcon, TagIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useMemo} from 'react';
 
 function openForumPostTagsModal(post: Channel): void {
 	ModalCommands.push(
@@ -35,6 +41,12 @@ function openForumPostTagsModal(post: Channel): void {
 function useForumPostMenuData(post: Channel, onClose: () => void): Array<MenuGroupType> {
 	const {i18n} = useLingui();
 	const {groups} = useThreadMenuData(post, {onClose});
+	const firstMessage = ForumPosts.getFirstMessage(post.id);
+	const reportableMessage = useMemo(() => {
+		if (!firstMessage) return null;
+		const message = new Message(firstMessage, {skipReactionHydration: true});
+		return canReportMessage(message) ? message : null;
+	}, [firstMessage]);
 	const forum = getPostForum(post);
 	if (!forum) return groups;
 	const pinned = isPinnedPost(post);
@@ -71,7 +83,26 @@ function useForumPostMenuData(post: Channel, onClose: () => void): Array<MenuGro
 			},
 		});
 	}
-	return items.length > 0 ? [{items}, ...groups] : groups;
+	const reportItems: MenuGroupType['items'] = [];
+	if (reportableMessage) {
+		reportItems.push({
+			icon: (
+				<ReportMessageIcon
+					size={20}
+					data-flx="forum.forum-post-context-menu.use-forum-post-menu-data.report-message-icon"
+				/>
+			),
+			label: i18n._(D.REPORT_POST_DESCRIPTOR),
+			onClick: () => {
+				ModalCommands.runAfterBottomSheetClose(onClose, () => openReportMessageModal(reportableMessage));
+			},
+			danger: true,
+		});
+	}
+	const postGroups = items.length > 0 ? [{items}, ...groups] : groups;
+	if (reportItems.length === 0) return postGroups;
+	if (postGroups.length === 0) return [{items: reportItems}];
+	return [...postGroups.slice(0, -1), {items: reportItems}, postGroups[postGroups.length - 1]];
 }
 
 const ForumPostContextMenu = observer(({post, onClose}: {post: Channel; onClose: () => void}) => {
