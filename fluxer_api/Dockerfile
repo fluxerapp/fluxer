@@ -23,7 +23,8 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter fluxer_api run build
 RUN pnpm deploy --legacy --filter=fluxer_api --prod --config.allow-unused-patches=true /out && \
-	rm -rf /out/pkgs /out/dist
+	rm -rf /out/pkgs /out/dist /out/node_modules/.pnpm/@pkgs+email@*/node_modules/@pkgs/email/src/operator_pass_certificate/fonts && \
+	find /out/node_modules -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' -o -name '*.js.map' -o -name '*.mjs.map' -o -name '*.cjs.map' -o -name '*.ts.map' \) -delete
 
 FROM node:26-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072
 

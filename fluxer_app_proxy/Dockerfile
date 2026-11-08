@@ -106,6 +106,7 @@ RUN --mount=type=bind,from=app-dist,source=/dist,target=/dist \
 		esac; \
 		find /assets/assets -type f ! -name 'fonts-*.txt' -delete; \
 	fi \
+	&& find /assets/assets -type f -name '*.map' -delete \
 	&& /usr/local/bin/precompress_assets.sh /assets
 
 FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static
