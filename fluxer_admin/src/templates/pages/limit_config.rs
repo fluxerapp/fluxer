@@ -82,7 +82,14 @@ fn render_limit_page(
         div class="space-y-6" {
             (rule_tabs(config, &rules, active_rule_id, can_update))
             @if let Some(rule) = active_rule {
-                (rule_header(&config.base_path, csrf_token, rule, can_update, response.defaults.contains_key(&rule.id)))
+                (rule_header(
+                    &config.base_path,
+                    csrf_token,
+                    rule,
+                    can_update,
+                    response.defaults.contains_key(&rule.id),
+                    unused_value_count(response, rule),
+                ))
                 (rule_editor(config, csrf_token, response, rule, can_update))
             } @else {
                 div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm" {
@@ -157,6 +164,7 @@ fn rule_header(
     rule: &LimitRule,
     can_update: bool,
     has_defaults: bool,
+    unused_count: usize,
 ) -> Markup {
     let can_reset = can_update
         && has_defaults
@@ -180,6 +188,22 @@ fn rule_header(
                             }
                             @if !filters.guild_features.is_empty() {
                                 p { "Guild Features: " (filters.guild_features.join(", ")) }
+                            }
+                        }
+                    }
+                    @if has_filters(rule) {
+                        p class="max-w-2xl text-sm text-neutral-600" {
+                            "This rule applies only when every listed trait and guild feature matches. "
+                            "Rules with filters can only raise limits, so a value here is used only when it's higher than what the Default rule gives. "
+                            "To lower a limit, change it in the Default rule."
+                        }
+                    }
+                    @if unused_count > 0 {
+                        p class="max-w-2xl rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" {
+                            @if unused_count == 1 {
+                                "1 value in this rule never applies. It's marked below."
+                            } @else {
+                                (unused_count) " values in this rule never apply. They're marked below."
                             }
                         }
                     }
@@ -339,7 +363,7 @@ fn limit_field(
         .modified_fields
         .as_ref()
         .is_some_and(|fields| fields.iter().any(|field| field == key));
-    if metadata.is_toggle {
+    let field = if metadata.is_toggle {
         toggle_field(base, key, metadata, current_value, modified, can_update)
     } else {
         numeric_field(
@@ -351,6 +375,105 @@ fn limit_field(
             modified,
             can_update,
         )
+    };
+    match unused_value_reason(response, rule, key, metadata) {
+        Some(reason) => html! {
+            div class="space-y-2" {
+                (field)
+                p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" {
+                    (unused_value_message(reason, metadata))
+                }
+            }
+        },
+        None => field,
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UnusedValueReason {
+    BelowDefault(u64),
+    UserLimitWithGuildFeatures,
+    GuildLimitWithOnlyTraits,
+}
+
+fn has_filters(rule: &LimitRule) -> bool {
+    rule.filters
+        .as_ref()
+        .is_some_and(|filters| !filters.traits.is_empty() || !filters.guild_features.is_empty())
+}
+
+fn default_rule_value(response: &LimitConfigResponse, key: &str) -> Option<u64> {
+    response
+        .limit_config
+        .rules
+        .iter()
+        .find(|rule| rule.id == "default")
+        .and_then(|rule| rule.limits.get(key))
+        .or_else(|| {
+            response
+                .defaults
+                .get("default")
+                .and_then(|defaults| defaults.get(key))
+        })
+        .copied()
+}
+
+fn unused_value_reason(
+    response: &LimitConfigResponse,
+    rule: &LimitRule,
+    key: &str,
+    metadata: &LimitKeyMetadata,
+) -> Option<UnusedValueReason> {
+    let filters = rule.filters.as_ref()?;
+    let has_traits = !filters.traits.is_empty();
+    let has_guild_features = !filters.guild_features.is_empty();
+    if !has_traits && !has_guild_features {
+        return None;
+    }
+    let value = *rule.limits.get(key)?;
+    let baseline = default_rule_value(response, key)?;
+    if value == baseline {
+        return None;
+    }
+    if has_guild_features && metadata.scope == "user" {
+        return Some(UnusedValueReason::UserLimitWithGuildFeatures);
+    }
+    if !has_guild_features && metadata.scope == "guild" {
+        return Some(UnusedValueReason::GuildLimitWithOnlyTraits);
+    }
+    if value < baseline {
+        return Some(UnusedValueReason::BelowDefault(baseline));
+    }
+    None
+}
+
+fn unused_value_count(response: &LimitConfigResponse, rule: &LimitRule) -> usize {
+    response
+        .limit_keys
+        .iter()
+        .filter(|key| {
+            response.metadata.get(*key).is_some_and(|metadata| {
+                unused_value_reason(response, rule, key, metadata).is_some()
+            })
+        })
+        .count()
+}
+
+fn unused_value_message(reason: UnusedValueReason, metadata: &LimitKeyMetadata) -> String {
+    match reason {
+        UnusedValueReason::BelowDefault(_) if metadata.is_toggle => {
+            "This never applies. It's on in the Default rule, and rules with filters can only raise limits, so it stays on. To turn it off, change it in the Default rule.".to_owned()
+        }
+        UnusedValueReason::BelowDefault(baseline) => format!(
+            "This never applies. It's lower than the Default rule's {}, and rules with filters can only raise limits. To lower it, change it in the Default rule.",
+            format_value_with_unit(baseline, metadata.unit.as_deref())
+        ),
+        UnusedValueReason::UserLimitWithGuildFeatures => {
+            "This never applies. It's a user limit, which is checked without a guild, so a rule with guild features never matches it. Remove the guild features from this rule, or set this limit in a rule with only user traits.".to_owned()
+        }
+        UnusedValueReason::GuildLimitWithOnlyTraits => {
+            "This never applies. It's a guild limit, which only uses rules with guild features or no filters. Add a guild feature to this rule, or set this limit in the Default rule.".to_owned()
+        }
     }
 }
 
@@ -556,5 +679,97 @@ fn format_value_with_unit(value: u64, unit: Option<&str>) -> String {
         Some("bytes") => format!("{value} bytes"),
         Some("count") | None => value.to_string(),
         Some(other) => format!("{value} {other}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn response() -> LimitConfigResponse {
+        let metadata = |key: &str, scope: &str| {
+            serde_json::json!({
+                "key": key, "label": key, "description": "", "category": "files",
+                "scope": scope, "isToggle": false, "unit": null, "min": 0, "max": null
+            })
+        };
+        serde_json::from_value(serde_json::json!({
+            "limit_config": {"traitDefinitions": [], "rules": [
+                {"id": "default", "limits": {"max_attachments_per_message": 10, "max_screen_share_bitrate": 9000000, "emoji_max_size": 524288}},
+                {"id": "no_uploads", "filters": {"traits": ["no_uploads"], "guildFeatures": ["no_uploads"]},
+                    "limits": {"max_attachments_per_message": 0, "max_screen_share_bitrate": 9000000, "emoji_max_size": 524288}},
+                {"id": "streaming", "filters": {"traits": ["fast"], "guildFeatures": ["fast"]},
+                    "limits": {"max_attachments_per_message": 20, "max_screen_share_bitrate": 50000000, "emoji_max_size": 524288}},
+                {"id": "traits_only", "filters": {"traits": ["fast"]},
+                    "limits": {"max_attachments_per_message": 10, "max_screen_share_bitrate": 50000000, "emoji_max_size": 1048576}}
+            ]},
+            "limit_config_json": "", "self_hosted": true, "defaults": {}, "categories": null, "bounds": null,
+            "limit_keys": ["max_attachments_per_message", "max_screen_share_bitrate", "emoji_max_size"],
+            "metadata": {
+                "max_attachments_per_message": metadata("max_attachments_per_message", "both"),
+                "max_screen_share_bitrate": metadata("max_screen_share_bitrate", "user"),
+                "emoji_max_size": metadata("emoji_max_size", "guild")
+            }
+        }))
+        .unwrap()
+    }
+
+    fn reasons(rule_id: &str) -> Vec<(String, Option<UnusedValueReason>)> {
+        let response = response();
+        let rule = response
+            .limit_config
+            .rules
+            .iter()
+            .find(|rule| rule.id == rule_id)
+            .unwrap();
+        response
+            .limit_keys
+            .iter()
+            .map(|key| {
+                let metadata = response.metadata.get(key).unwrap();
+                (
+                    key.clone(),
+                    unused_value_reason(&response, rule, key, metadata),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn flags_values_that_can_never_apply() {
+        assert!(
+            reasons("default")
+                .iter()
+                .all(|(_, reason)| reason.is_none())
+        );
+        assert_eq!(
+            reasons("no_uploads")[0],
+            (
+                "max_attachments_per_message".to_owned(),
+                Some(UnusedValueReason::BelowDefault(10))
+            )
+        );
+        assert_eq!(
+            reasons("streaming"),
+            vec![
+                ("max_attachments_per_message".to_owned(), None),
+                (
+                    "max_screen_share_bitrate".to_owned(),
+                    Some(UnusedValueReason::UserLimitWithGuildFeatures)
+                ),
+                ("emoji_max_size".to_owned(), None),
+            ]
+        );
+        assert_eq!(
+            reasons("traits_only"),
+            vec![
+                ("max_attachments_per_message".to_owned(), None),
+                ("max_screen_share_bitrate".to_owned(), None),
+                (
+                    "emoji_max_size".to_owned(),
+                    Some(UnusedValueReason::GuildLimitWithOnlyTraits)
+                ),
+            ]
+        );
     }
 }
