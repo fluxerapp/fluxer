@@ -265,7 +265,11 @@ export class UserAccountRepository {
 			await this.finalizeEmailClaimOrRevert(emailClaim, userId, previousData);
 			await this.releasePreviousEmailIfChanged(previousData, updatedData);
 			if (deletionTransition !== 'anonymise') {
-				await this.indexRepo.syncIndices(updatedData, previousData);
+				await this.indexRepo.syncIndices(
+					updatedData,
+					previousData,
+					new Set(Object.keys(userPatch) as Array<keyof UserRow>),
+				);
 			}
 			await this.searchRepo.updateUser(updatedUser);
 			if (legacyHiddenProfileBadges(updatedData.flags ?? 0n, updatedData.premium_flags ?? 0).length > 0) {
