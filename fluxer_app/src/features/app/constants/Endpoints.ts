@@ -296,4 +296,6 @@ export const Endpoints = {
 	BLUESKY_AUTHORIZE: '/users/@me/connections/bluesky/authorize',
 	CONNECTION: (type: string, connectionId: string) => `/users/@me/connections/${type}/${connectionId}`,
 	CONNECTIONS_REORDER: '/users/@me/connections/reorder',
+	CONNECTION_OAUTH_AUTHORIZE: (providerId: string) =>
+		`/users/@me/connections/oauth/${encodeURIComponent(providerId)}/authorize`,
 } as const;

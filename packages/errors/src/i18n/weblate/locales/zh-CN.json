@@ -312,6 +312,7 @@
 	"connections.invalid_type": "不支持的连接类型。",
 	"connections.limit_reached": "你已达到最大连接数（{limit}）。",
 	"connections.not_found": "未知连接。",
+	"connections.unknown_provider": "此实例不提供这种连接。",
 	"connections.verification_failed": "连接验证失败。请确保验证令牌放置正确。",
 	"content_and_safety.content_blocked": "此内容已被安全系统拦截。",
 	"content_and_safety.explicit_content_cannot_be_sent": "无法发送露骨内容。",

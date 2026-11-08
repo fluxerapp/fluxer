@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Типът на връзката не се поддържа.",
 	"connections.limit_reached": "Достигна максималния брой връзки ({limit}).",
 	"connections.not_found": "Неизвестна връзка.",
+	"connections.unknown_provider": "Този вид връзка не е налична на тази инстанция.",
 	"connections.verification_failed": "Проверката на връзката се провали. Увери се, че токенът за проверка е поставен правилно.",
 	"content_and_safety.content_blocked": "Това съдържание беше блокирано от системите за безопасност.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Изрично съдържание не може да бъде изпратено.",

@@ -507,6 +507,11 @@
     "nullable": true
   },
   {
+    "key": "integrations.connection_providers",
+    "type": "json",
+    "help": "Replaces the whole provider list. Only self-hosted instances can have providers"
+  },
+  {
     "key": "integrations.email.delivery",
     "type": "string",
     "help": "How the instance sends email, or null to use the environment",

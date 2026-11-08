@@ -18254,9 +18254,14 @@
 									"key_count"
 								],
 								"additionalProperties": false
+							},
+							"connection_providers": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/ConnectionProviderConfigResponse"},
+								"description": "Profile connection providers. Always empty outside self-hosted instances"
 							}
 						},
-						"required": ["gif", "youtube", "email", "bluesky"],
+						"required": ["gif", "youtube", "email", "bluesky", "connection_providers"],
 						"additionalProperties": false
 					},
 					"media": {
@@ -18828,6 +18833,12 @@
 										}
 									}
 								}
+							},
+							"connection_providers": {
+								"description": "Replaces the whole provider list. Only self-hosted instances can have providers",
+								"maxItems": 20,
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/ConnectionProviderUpdate"}
 							}
 						}
 					},
@@ -24266,6 +24277,62 @@
 					"legacy_prices": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/BillingLegacyPricesSchema"}]}
 				}
 			},
+			"ConnectionProviderUpdate": {
+				"type": "object",
+				"properties": {
+					"id": {"allOf": [{"$ref": "#/components/schemas/ConnectionProviderIdType"}]},
+					"name": {"type": "string", "minLength": 1, "maxLength": 32, "description": "Name shown to people"},
+					"enabled": {"type": "boolean"},
+					"kind": {
+						"description": "How Fluxer signs in to a connection provider",
+						"x-enumNames": ["OIDC", "OAUTH2"],
+						"x-enumDescriptions": [
+							"OpenID Connect provider found through its issuer",
+							"OAuth 2.0 provider with a JSON user endpoint"
+						],
+						"enum": ["oidc", "oauth2"],
+						"type": "string"
+					},
+					"client_id": {"type": "string", "minLength": 1, "maxLength": 256},
+					"scope": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 512,
+						"description": "Space-separated scopes. OpenID Connect providers need openid"
+					},
+					"issuer": {"nullable": true, "type": "string", "maxLength": 2048},
+					"authorization_url": {"nullable": true, "type": "string", "maxLength": 2048},
+					"token_url": {"nullable": true, "type": "string", "maxLength": 2048},
+					"userinfo_url": {"nullable": true, "type": "string", "maxLength": 2048},
+					"name_claim": {
+						"nullable": true,
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}$",
+						"description": "Dot path into the JSON user object, for example data.0.login"
+					},
+					"id_path": {
+						"nullable": true,
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}$",
+						"description": "Dot path into the JSON user object, for example data.0.login"
+					},
+					"name_path": {
+						"nullable": true,
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}$",
+						"description": "Dot path into the JSON user object, for example data.0.login"
+					},
+					"profile_url_template": {"nullable": true, "type": "string", "maxLength": 2048},
+					"icon_url": {"nullable": true, "type": "string", "maxLength": 2048},
+					"client_secret": {
+						"description": "Leave out to keep the saved secret of the provider with the same id",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 512
+					}
+				},
+				"required": ["id", "name", "enabled", "kind", "client_id", "scope"]
+			},
 			"EmailDeliveryModeSchema": {
 				"description": "How the instance sends email",
 				"x-enumNames": ["OFF", "SMTP"],
@@ -24585,6 +24652,11 @@
 				"enum": ["off", "ask", "require_new_accounts", "require_all"],
 				"type": "string"
 			},
+			"ConnectionProviderIdType": {
+				"type": "string",
+				"pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+				"description": "Connection provider id: lowercase letters, digits, hyphens and underscores, up to 32 characters"
+			},
 			"BillingLegacyPricesSchema": {
 				"type": "object",
 				"additionalProperties": {
@@ -24738,6 +24810,78 @@
 					"stripe_serviceable",
 					"catalog_mode",
 					"webhook_url"
+				],
+				"additionalProperties": false
+			},
+			"ConnectionProviderConfigResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"allOf": [{"$ref": "#/components/schemas/ConnectionProviderIdType"}]},
+					"name": {"type": "string", "minLength": 1, "maxLength": 32, "description": "Name shown to people"},
+					"enabled": {"type": "boolean"},
+					"kind": {
+						"description": "How Fluxer signs in to a connection provider",
+						"x-enumNames": ["OIDC", "OAUTH2"],
+						"x-enumDescriptions": [
+							"OpenID Connect provider found through its issuer",
+							"OAuth 2.0 provider with a JSON user endpoint"
+						],
+						"enum": ["oidc", "oauth2"],
+						"type": "string"
+					},
+					"client_id": {"type": "string", "minLength": 1, "maxLength": 256},
+					"scope": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 512,
+						"description": "Space-separated scopes. OpenID Connect providers need openid"
+					},
+					"issuer": {"nullable": true, "description": "Issuer URL, required for oidc", "type": "string"},
+					"authorization_url": {"nullable": true, "type": "string"},
+					"token_url": {"nullable": true, "type": "string"},
+					"userinfo_url": {"nullable": true, "type": "string"},
+					"name_claim": {
+						"nullable": true,
+						"description": "oidc claim with the account name, preferred_username when null",
+						"type": "string"
+					},
+					"id_path": {
+						"nullable": true,
+						"description": "oauth2 path to the account id in the user object",
+						"type": "string"
+					},
+					"name_path": {
+						"nullable": true,
+						"description": "oauth2 path to the account name in the user object",
+						"type": "string"
+					},
+					"profile_url_template": {
+						"nullable": true,
+						"description": "HTTPS link to the account with {id} and {name} placeholders after the host",
+						"type": "string"
+					},
+					"icon_url": {"nullable": true, "type": "string"},
+					"client_secret_set": {"type": "boolean"},
+					"callback_url": {"type": "string", "description": "Redirect URL to register at the provider"}
+				},
+				"required": [
+					"id",
+					"name",
+					"enabled",
+					"kind",
+					"client_id",
+					"scope",
+					"issuer",
+					"authorization_url",
+					"token_url",
+					"userinfo_url",
+					"name_claim",
+					"id_path",
+					"name_path",
+					"profile_url_template",
+					"icon_url",
+					"client_secret_set",
+					"callback_url"
 				],
 				"additionalProperties": false
 			},
@@ -27269,6 +27413,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_BADGE",
 					"UNKNOWN_CHANNEL",
+					"UNKNOWN_CONNECTION_PROVIDER",
 					"UNKNOWN_EMOJI",
 					"UNKNOWN_ENFORCEMENT_DECISION",
 					"UNKNOWN_FAVORITE_MEME",
@@ -27661,6 +27806,7 @@
 					"Claim your account to submit reports.",
 					"Badge wasn't found.",
 					"Channel wasn't found.",
+					"This kind of connection isn't available on this instance.",
 					"Unknown emoji.",
 					"Unknown enforcement decision.",
 					"Unknown saved media.",

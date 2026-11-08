@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {ConnectionIcon, connectionLabel} from '@app/features/connection/components/ConnectionIcon';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {AddRoleButton, RoleList} from '@app/features/guild/components/RoleManagement';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {
-	DOMAIN_DESCRIPTOR,
 	MINUTES_DURATION_PLURAL_DESCRIPTOR as MINUTES_DURATION_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
 	ROLES_DESCRIPTOR,
@@ -17,7 +16,6 @@ import {handleExternalLinkAuxClick, openExternalUrlWithWarning} from '@app/featu
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
-import {BlueskyIcon} from '@app/features/ui/components/icons/BlueskyIcon';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
 import {UnverifiedConnectionIcon} from '@app/features/ui/components/icons/UnverifiedConnectionIcon';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
@@ -33,13 +31,13 @@ import {
 	THIS_CONNECTION_HAS_BEEN_VERIFIED_DESCRIPTOR,
 	THIS_CONNECTION_HAS_NOT_BEEN_VERIFIED_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
-import {ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
+import type {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
 import type {UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowSquareOutIcon, GlobeSimpleIcon} from '@phosphor-icons/react';
+import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -395,30 +393,22 @@ export const UserProfileRoles: React.FC<{
 	) : null;
 });
 
-function getConnectionUrl(type: string, name: string): string {
-	return type === ConnectionTypes.BLUESKY ? `https://bsky.app/profile/${name}` : `https://${name}`;
-}
-
 const ConnectionCard: React.FC<{
-	connection: {id: string; type: string; name: string; verified: boolean};
+	connection: ConnectionResponse;
 	onLinkClick: (e: React.MouseEvent<HTMLAnchorElement>, url: string) => void;
 	mobile?: boolean;
-}> = ({connection, onLinkClick, mobile}) => {
+}> = observer(({connection, onLinkClick, mobile}) => {
 	const {i18n} = useLingui();
-	const url = getConnectionUrl(connection.type, connection.name);
-	const iconLabel = connection.type === ConnectionTypes.BLUESKY ? BLUESKY_PROVIDER_NAME : i18n._(DOMAIN_DESCRIPTOR);
+	const url = connection.url ?? null;
+	const kind = {type: connection.type, providerId: connection.provider_id};
 	const icon = (
-		<Tooltip text={iconLabel} data-flx="user.user-profile-shared.connection-card.tooltip">
+		<Tooltip text={connectionLabel(i18n, kind)} data-flx="user.user-profile-shared.connection-card.tooltip">
 			<div className={styles.connectionIcon} data-flx="user.user-profile-shared.connection-card.connection-icon">
-				{connection.type === ConnectionTypes.BLUESKY ? (
-					<BlueskyIcon size={18} data-flx="user.user-profile-shared.connection-card.bluesky-icon" />
-				) : (
-					<GlobeSimpleIcon
-						size={remFromPx(18)}
-						className={styles.connectionDomainIcon}
-						data-flx="user.user-profile-shared.connection-card.connection-domain-icon"
-					/>
-				)}
+				<ConnectionIcon
+					connection={kind}
+					size={18}
+					data-flx="user.user-profile-shared.connection-card.connection-icon"
+				/>
 			</div>
 		</Tooltip>
 	);
@@ -457,6 +447,14 @@ const ConnectionCard: React.FC<{
 			</Tooltip>
 		</div>
 	);
+	if (url === null) {
+		return (
+			<div className={styles.connectionCard} data-flx="user.user-profile-shared.connection-card.connection-card">
+				{icon}
+				{nameRow}
+			</div>
+		);
+	}
 	if (mobile) {
 		return (
 			<a
@@ -504,7 +502,7 @@ const ConnectionCard: React.FC<{
 			</Tooltip>
 		</div>
 	);
-};
+});
 export const UserProfileConnections: React.FC<{
 	profile: Profile;
 	variant?: 'compact' | 'cards' | 'mobile';
@@ -536,7 +534,15 @@ export const UserProfileConnections: React.FC<{
 					data-flx="user.user-profile-shared.user-profile-connections.connections-compact"
 				>
 					{connections.map((connection) => {
-						const url = getConnectionUrl(connection.type, connection.name);
+						const url = connection.url ?? null;
+						const kind = {type: connection.type, providerId: connection.provider_id};
+						const icon = (
+							<ConnectionIcon
+								connection={kind}
+								size={16}
+								data-flx="user.user-profile-shared.user-profile-connections.connection-icon"
+							/>
+						);
 						return (
 							<Tooltip
 								key={connection.id}
@@ -569,28 +575,26 @@ export const UserProfileConnections: React.FC<{
 								data-flx="user.user-profile-shared.user-profile-connections.tooltip"
 							>
 								<div data-flx="user.user-profile-shared.user-profile-connections.div">
-									<a
-										href={url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.connectionCompactIcon}
-										onClick={(e) => handleConnectionClick(e, url)}
-										onAuxClick={(e) => handleExternalLinkAuxClick(e, url)}
-										data-flx="user.user-profile-shared.user-profile-connections.connection-compact-icon.connection-click"
-									>
-										{connection.type === ConnectionTypes.BLUESKY ? (
-											<BlueskyIcon
-												size={16}
-												data-flx="user.user-profile-shared.user-profile-connections.bluesky-icon"
-											/>
-										) : (
-											<GlobeSimpleIcon
-												size={remFromPx(16)}
-												className={styles.connectionDomainIcon}
-												data-flx="user.user-profile-shared.user-profile-connections.connection-domain-icon"
-											/>
-										)}
-									</a>
+									{url === null ? (
+										<span
+											className={styles.connectionCompactIcon}
+											data-flx="user.user-profile-shared.user-profile-connections.connection-compact-icon"
+										>
+											{icon}
+										</span>
+									) : (
+										<a
+											href={url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className={styles.connectionCompactIcon}
+											onClick={(e) => handleConnectionClick(e, url)}
+											onAuxClick={(e) => handleExternalLinkAuxClick(e, url)}
+											data-flx="user.user-profile-shared.user-profile-connections.connection-compact-icon.connection-click"
+										>
+											{icon}
+										</a>
+									)}
 								</div>
 							</Tooltip>
 						);

@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Tento typ propojení není podporován.",
 	"connections.limit_reached": "Dosáhli jste maximálního počtu propojení ({limit}).",
 	"connections.not_found": "Neznámé propojení.",
+	"connections.unknown_provider": "Tento druh propojení není na této instanci k dispozici.",
 	"connections.verification_failed": "Ověření propojení se nezdařilo. Zkontrolujte, zda je ověřovací token správně umístěn.",
 	"content_and_safety.content_blocked": "Tento obsah byl zablokován bezpečnostními systémy.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Explicitní obsah nelze odeslat.",

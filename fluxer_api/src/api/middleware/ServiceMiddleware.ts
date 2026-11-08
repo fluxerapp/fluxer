@@ -19,6 +19,7 @@ import {StreamService} from '@app/api/channel/services/StreamService';
 import {ThreadService} from '@app/api/channel/services/thread/ThreadService';
 import {ConnectionRequestService} from '@app/api/connection/ConnectionRequestService';
 import {ConnectionService} from '@app/api/connection/ConnectionService';
+import {OAuthConnectionService} from '@app/api/connection/OAuthConnectionService';
 import {DonationService} from '@app/api/donation/DonationService';
 import {DonationCheckoutService} from '@app/api/donation/services/DonationCheckoutService';
 import {DonationMagicLinkService} from '@app/api/donation/services/DonationMagicLinkService';
@@ -228,6 +229,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedMessageRequestService: MessageRequestService | undefined;
 	private cachedConnectionService: ConnectionService | undefined;
 	private cachedConnectionRequestService: ConnectionRequestService | undefined;
+	private cachedOAuthConnectionService: OAuthConnectionService | undefined;
 	private cachedStreamService: StreamService | undefined;
 	private cachedFavoriteMemeService: FavoriteMemeService | undefined;
 	private cachedFavoriteMemeRequestService: FavoriteMemeRequestService | undefined;
@@ -657,6 +659,15 @@ class RequestServices implements RequestScopedServices {
 			Config.auth.connectionInitiationSecret,
 		);
 		return this.cachedConnectionRequestService;
+	}
+
+	get oauthConnectionService(): OAuthConnectionService {
+		this.cachedOAuthConnectionService ??= new OAuthConnectionService(
+			this.context,
+			getInstanceConfigRepository(),
+			this.connectionService,
+		);
+		return this.cachedOAuthConnectionService;
 	}
 
 	get streamService(): StreamService {

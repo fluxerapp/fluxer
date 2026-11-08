@@ -312,6 +312,7 @@
 	"connections.invalid_type": "कनेक्शन टाइप समर्थित नहीं है।",
 	"connections.limit_reached": "आप कनेक्शन की अधिकतम सीमा ({limit}) तक पहुँच गए हैं।",
 	"connections.not_found": "अज्ञात कनेक्शन।",
+	"connections.unknown_provider": "इस इंस्टेंस पर यह कनेक्शन उपलब्ध नहीं है।",
 	"connections.verification_failed": "कनेक्शन वेरिफ़िकेशन फेल हो गया। पक्का करें कि वेरिफ़िकेशन टोकन सही जगह पर रखा गया है।",
 	"content_and_safety.content_blocked": "इस कंटेंट को सेफ्टी सिस्टम ने ब्लॉक कर दिया है।",
 	"content_and_safety.explicit_content_cannot_be_sent": "एक्सप्लिसिट कंटेंट नहीं भेजा जा सकता।",

@@ -33,7 +33,7 @@ export const DEPLOYED_OFFICIAL_DOCUMENT = {
 	},
 	registration: {mode: 'open', admin_registration_urls_enabled: true},
 	community: {single_community: false, single_community_guild_id: null, direct_messages_disabled: false},
-	services: {gif_enabled: true, youtube_enabled: true, bluesky_enabled: false},
+	services: {gif_enabled: true, youtube_enabled: true, bluesky_enabled: false, connection_providers: []},
 	limits: {
 		version: 2,
 		traitDefinitions: ['premium'],
@@ -93,7 +93,7 @@ export const SELF_HOSTED_API_TOPOLOGY_DOCUMENT = {
 	},
 	registration: {mode: 'closed', admin_registration_urls_enabled: false},
 	community: {single_community: true, single_community_guild_id: '1', direct_messages_disabled: false},
-	services: {gif_enabled: false, youtube_enabled: false, bluesky_enabled: false},
+	services: {gif_enabled: false, youtube_enabled: false, bluesky_enabled: false, connection_providers: []},
 	limits: {version: 1, traitDefinitions: [], rules: []},
 	push: {public_vapid_key: null},
 	app_public: {

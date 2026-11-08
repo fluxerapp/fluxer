@@ -2185,6 +2185,10 @@ msgstr "A(z) {productName} nem frissül indulás közben. Ha elérhető egy fris
 msgid "{productName} wordmark"
 msgstr "{productName} szöveges logó"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "A(z) {providerName} megnyílik a böngésződben. Jelentkezz be ott a fiókod összekapcsolásához."
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "Tegyél \";\"-t a sor végére."
 msgid "Add \":\" between the property and its value."
 msgstr "Tegyél \":\"-t a tulajdonság és az értéke közé."
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "{blueskyProviderName} kapcsolat hozzáadása"
+msgid "Add {providerName} connection"
+msgstr "{providerName} kapcsolat hozzáadása"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "Nem sikerült elküldeni az ellenőrző e-mailt"
 msgid "Couldn't sign you in"
 msgstr "Nem tudtunk bejelentkeztetni"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "Nem sikerült elindítani a(z) {blueskyProviderName} engedélyezési folyamatát"
+msgid "Couldn't start {providerName} authorization"
+msgstr "Nem sikerült elindítani a(z) {providerName} engedélyezési folyamatát"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "Linkfigyelmeztetések"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "Kapcsold össze a {BLUESKY_PROVIDER_NAME} fiókodat, vagy igazolj domaintulajdonjogot, hogy megjelenjenek a profilodon."
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "Kapcsold össze a fiókjaidat, vagy igazolj domaintulajdonjogot, hogy megjelenjenek a profilodon."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "Nincs hivatkozott helyi fájl"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "Még nincsenek naplók"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "Már nem érhető el"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "A forrásközösség letiltotta a másolást, ezért ez nem másolható.
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Lehet, hogy a keresett közösséget törölték, vagy nincs hozzáférésed."
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "A kapcsolatot nem engedélyezték. Bezárhatod ezt a lapot, és újrapróbálhatod."
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "Már van egy csoportod ezekkel a felhasználókkal. Biztosan újat szere
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Már van élethosszig tartó {premiumProductName} előfizetésed"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "Már elérted az egy fiókhoz tartozó kapcsolatok legnagyobb számát. Távolíts el egyet, és próbáld újra."
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

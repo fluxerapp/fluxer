@@ -22,6 +22,8 @@ import type {
 	UpdateConnectionRequest,
 	VerifyAndCreateConnectionRequest,
 } from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
+import type {OAuthConnectionAuthorizeResponse} from '@fluxer/schema/src/domains/connection/OAuthConnectionSchemas';
+import type {InstanceConnectionProvider} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -30,9 +32,9 @@ const FAILED_TO_INITIATE_CONNECTION_DESCRIPTOR = msg({
 	comment: 'Toast error shown when creating a new account connection fails.',
 });
 const FAILED_TO_START_AUTHORISATION_DESCRIPTOR = msg({
-	message: "Couldn't start {blueskyProviderName} authorization",
+	message: "Couldn't start {providerName} authorization",
 	comment:
-		'Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.',
+		'Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.',
 });
 const CONNECTION_VERIFIED_DESCRIPTOR = msg({
 	message: 'Connection verified',
@@ -130,7 +132,23 @@ export async function authorizeBlueskyConnection(i18n: I18n, handle: string): Pr
 		logger.error(`Failed to start Bluesky OAuth flow for ${handle}:`, error);
 		showErrorModal(i18n, error, {
 			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,
-			values: {blueskyProviderName: BLUESKY_PROVIDER_NAME},
+			values: {providerName: BLUESKY_PROVIDER_NAME},
+		});
+		throw error;
+	}
+}
+
+export async function authorizeOAuthConnection(i18n: I18n, provider: InstanceConnectionProvider): Promise<void> {
+	try {
+		const response = await http.post<OAuthConnectionAuthorizeResponse>(
+			Endpoints.CONNECTION_OAUTH_AUTHORIZE(provider.id),
+		);
+		window.open(response.body.authorize_url, '_blank', 'noopener,noreferrer');
+	} catch (error) {
+		logger.error(`Failed to start the ${provider.id} connection flow:`, error);
+		showErrorModal(i18n, error, {
+			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,
+			values: {providerName: provider.name},
 		});
 		throw error;
 	}

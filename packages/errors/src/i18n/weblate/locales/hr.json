@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Ova vrsta veze nije podržana.",
 	"connections.limit_reached": "Dosegnut je maksimalan broj veza ({limit}).",
 	"connections.not_found": "Nepoznata veza.",
+	"connections.unknown_provider": "Ova vrsta veze nije dostupna na ovoj instanci.",
 	"connections.verification_failed": "Provjera veze nije uspjela. Uvjeri se da je token za provjeru ispravno postavljen.",
 	"content_and_safety.content_blocked": "Sigurnosni sustavi blokirali su ovaj sadržaj.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Eksplicitni sadržaj ne može se poslati.",

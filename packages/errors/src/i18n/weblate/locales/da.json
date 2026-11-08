@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Forbindelsestypen understøttes ikke.",
 	"connections.limit_reached": "Du har nået det maksimale antal forbindelser ({limit}).",
 	"connections.not_found": "Ukendt forbindelse.",
+	"connections.unknown_provider": "Denne slags forbindelse er ikke tilgængelig på denne instans.",
 	"connections.verification_failed": "Verifikation af forbindelsen mislykkedes. Sørg for, at verifikationstokenet er placeret korrekt.",
 	"content_and_safety.content_blocked": "Dette indhold blev blokeret af sikkerhedssystemer.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Eksplicit indhold kan ikke sendes.",

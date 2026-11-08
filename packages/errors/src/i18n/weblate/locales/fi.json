@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Yhteyden tyyppiä ei tueta.",
 	"connections.limit_reached": "Olet saavuttanut yhteyksien enimmäismäärän ({limit}).",
 	"connections.not_found": "Tuntematon yhteys.",
+	"connections.unknown_provider": "Tämäntyyppinen yhteys ei ole käytettävissä tässä instanssissa.",
 	"connections.verification_failed": "Yhteyden vahvistus epäonnistui. Varmista, että vahvistustunnus on sijoitettu oikeaan paikkaan.",
 	"content_and_safety.content_blocked": "Turvajärjestelmät estivät tämän sisällön.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Seksuaalisesti eksplisiittistä sisältöä ei voi lähettää.",

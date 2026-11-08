@@ -18886,6 +18886,70 @@
 				}
 			}
 		},
+		"/users/@me/connections/oauth/{provider_id}/authorize": {
+			"post": {
+				"operationId": "authorize_oauth_connection",
+				"summary": "Start a provider connection",
+				"tags": ["Connections"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/OAuthConnectionAuthorizeResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Starts connecting an account at one of the OAuth or OpenID Connect providers listed in the instance discovery document under services.connection_providers. Open authorize_url in a browser. The provider sends the browser back to the API, which adds the connection and redirects to the web app.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "provider_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/ConnectionProviderIdType"},
+						"description": "Connection provider id: lowercase letters, digits, hyphens and underscores, up to 32 characters"
+					}
+				]
+			}
+		},
 		"/users/@me/connections/reorder": {
 			"patch": {
 				"operationId": "reorder_connections",
@@ -31704,9 +31768,13 @@
 			},
 			"ConnectionType": {
 				"description": "The type of external connection",
-				"x-enumNames": ["BLUESKY", "DOMAIN"],
-				"x-enumDescriptions": ["Bluesky social account connection", "Custom domain ownership connection"],
-				"enum": ["bsky", "domain"],
+				"x-enumNames": ["BLUESKY", "DOMAIN", "OAUTH"],
+				"x-enumDescriptions": [
+					"Bluesky social account connection",
+					"Custom domain ownership connection",
+					"Account at an OAuth or OpenID Connect provider set up by the instance"
+				],
+				"enum": ["bsky", "domain", "oauth"],
 				"type": "string"
 			},
 			"UpdateConnectionRequest": {
@@ -31750,9 +31818,17 @@
 					"sort_order": {
 						"description": "The display order of this connection",
 						"$ref": "#/components/schemas/Int32Type"
+					},
+					"provider_id": {
+						"description": "For oauth connections, the id of the instance connection provider, or null while that provider is removed, turned off or set to another identity provider. Null for other types",
+						"type": ["string", "null"]
+					},
+					"url": {
+						"description": "Link to the connected account or domain, when there is one",
+						"type": ["string", "null"]
 					}
 				},
-				"required": ["id", "type", "name", "verified", "visibility_flags", "sort_order"],
+				"required": ["id", "type", "name", "verified", "visibility_flags", "sort_order", "provider_id", "url"],
 				"additionalProperties": false
 			},
 			"ReorderConnectionsRequest": {
@@ -31767,6 +31843,22 @@
 					}
 				},
 				"required": ["connection_ids"]
+			},
+			"ConnectionProviderIdType": {
+				"type": "string",
+				"pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+				"description": "Connection provider id: lowercase letters, digits, hyphens and underscores, up to 32 characters"
+			},
+			"OAuthConnectionAuthorizeResponse": {
+				"type": "object",
+				"properties": {
+					"authorize_url": {
+						"type": "string",
+						"description": "The URL to open so the user can approve the connection at the provider"
+					}
+				},
+				"required": ["authorize_url"],
+				"additionalProperties": false
 			},
 			"BlueskyAuthorizeRequest": {
 				"type": "object",
@@ -39704,9 +39796,14 @@
 					"bluesky_enabled": {
 						"type": "boolean",
 						"description": "Whether Bluesky profile connections are enabled for this instance"
+					},
+					"connection_providers": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/InstanceConnectionProviderSchema"},
+						"description": "OAuth and OpenID Connect providers people can connect to their profile on this instance"
 					}
 				},
-				"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled"],
+				"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled", "connection_providers"],
 				"additionalProperties": false,
 				"description": "Optional third-party service integrations enabled for this instance"
 			},
@@ -40050,6 +40147,17 @@
 				],
 				"enum": ["open", "approval", "closed"],
 				"type": "string"
+			},
+			"InstanceConnectionProviderSchema": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "description": "Provider id used in connection routes"},
+					"name": {"type": "string", "description": "Name of the provider shown to people"},
+					"icon_url": {"description": "Media proxy URL of the provider icon", "type": ["string", "null"]}
+				},
+				"required": ["id", "name", "icon_url"],
+				"additionalProperties": false,
+				"description": "A profile connection provider set up by the instance"
 			},
 			"InstancePushDeliveryModeSchema": {"type": "string", "enum": ["direct", "external_relay", "hybrid"]},
 			"AccountIdentityLockReasonSchema": {
@@ -47313,6 +47421,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_BADGE",
 					"UNKNOWN_CHANNEL",
+					"UNKNOWN_CONNECTION_PROVIDER",
 					"UNKNOWN_EMOJI",
 					"UNKNOWN_ENFORCEMENT_DECISION",
 					"UNKNOWN_FAVORITE_MEME",
@@ -47705,6 +47814,7 @@
 					"Claim your account to submit reports.",
 					"Badge wasn't found.",
 					"Channel wasn't found.",
+					"This kind of connection isn't available on this instance.",
 					"Unknown emoji.",
 					"Unknown enforcement decision.",
 					"Unknown saved media.",

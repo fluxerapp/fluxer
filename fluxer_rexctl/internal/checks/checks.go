@@ -129,6 +129,7 @@ var order = []string{
 	"voice-health",
 	"client-ip",
 	"sso-provider",
+	"connection-providers",
 	"backup-age",
 }
 

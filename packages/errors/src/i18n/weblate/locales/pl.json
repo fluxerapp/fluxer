@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Typ połączenia jest nieobsługiwany.",
 	"connections.limit_reached": "Osiągnięto maksymalną liczbę połączeń ({limit}).",
 	"connections.not_found": "Nieznane połączenie.",
+	"connections.unknown_provider": "Ten rodzaj połączenia nie jest dostępny na tej instancji.",
 	"connections.verification_failed": "Nie udało się zweryfikować połączenia. Upewnij się, że token weryfikacyjny jest poprawnie umieszczony.",
 	"content_and_safety.content_blocked": "Systemy bezpieczeństwa zablokowały tę treść.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Nie można wysyłać treści o jednoznacznie seksualnym charakterze.",

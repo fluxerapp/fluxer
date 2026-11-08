@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Bağlantı türü desteklenmiyor.",
 	"connections.limit_reached": "Maksimum bağlantı sayısına ulaştın ({limit}).",
 	"connections.not_found": "Bilinmeyen bağlantı.",
+	"connections.unknown_provider": "Bu bağlantı türü bu kurulumda kullanılamıyor.",
 	"connections.verification_failed": "Bağlantı doğrulaması başarısız. Doğrulama belirtecinin doğru yerleştirildiğinden emin ol.",
 	"content_and_safety.content_blocked": "Bu içerik güvenlik sistemleri tarafından engellendi.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Müstehcen içerik gönderilemez.",

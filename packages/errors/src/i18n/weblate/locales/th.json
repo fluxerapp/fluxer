@@ -312,6 +312,7 @@
 	"connections.invalid_type": "ไม่รองรับประเภทการเชื่อมต่อ",
 	"connections.limit_reached": "ถึงขีดจำกัดการเชื่อมต่อแล้ว ({limit})",
 	"connections.not_found": "ไม่พบการเชื่อมต่อ",
+	"connections.unknown_provider": "การเชื่อมต่อประเภทนี้ไม่พร้อมใช้งานบนอินสแตนซ์นี้",
 	"connections.verification_failed": "การยืนยันการเชื่อมต่อล้มเหลว ตรวจสอบให้แน่ใจว่าวางโทเค็นการยืนยันไว้ถูกต้อง",
 	"content_and_safety.content_blocked": "เนื้อหานี้ถูกบล็อกโดยระบบความปลอดภัย",
 	"content_and_safety.explicit_content_cannot_be_sent": "ไม่สามารถส่งเนื้อหาที่ไม่เหมาะสมได้",

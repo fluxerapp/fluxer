@@ -358,6 +358,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `UNKNOWN_APPLICATION` | Unknown application |
 | `UNKNOWN_BADGE` | Badge wasn't found |
 | `UNKNOWN_CHANNEL` | Channel wasn't found |
+| `UNKNOWN_CONNECTION_PROVIDER` | This kind of connection isn't available on this instance |
 | `UNKNOWN_EMOJI` | Unknown emoji |
 | `UNKNOWN_ENFORCEMENT_DECISION` | Unknown enforcement decision |
 | `UNKNOWN_FAVORITE_MEME` | Unknown saved media |

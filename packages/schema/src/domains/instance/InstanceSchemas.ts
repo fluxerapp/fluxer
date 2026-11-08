@@ -371,11 +371,23 @@ export const InstanceCommunitySchema = z
 	.describe('Community topology and direct-message policy for this instance');
 export type InstanceCommunity = z.infer<typeof InstanceCommunitySchema>;
 
+export const InstanceConnectionProviderSchema = z
+	.object({
+		id: z.string().describe('Provider id used in connection routes'),
+		name: z.string().describe('Name of the provider shown to people'),
+		icon_url: z.string().nullable().describe('Media proxy URL of the provider icon'),
+	})
+	.describe('A profile connection provider set up by the instance');
+export type InstanceConnectionProvider = z.infer<typeof InstanceConnectionProviderSchema>;
+
 export const InstanceServicesSchema = z
 	.object({
 		gif_enabled: z.boolean().describe('Whether the GIF picker is enabled for this instance'),
 		youtube_enabled: z.boolean().describe('Whether YouTube link enrichment is enabled for this instance'),
 		bluesky_enabled: z.boolean().describe('Whether Bluesky profile connections are enabled for this instance'),
+		connection_providers: z
+			.array(InstanceConnectionProviderSchema)
+			.describe('OAuth and OpenID Connect providers people can connect to their profile on this instance'),
 	})
 	.describe('Optional third-party service integrations enabled for this instance');
 export type InstanceServices = z.infer<typeof InstanceServicesSchema>;

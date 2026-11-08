@@ -61,13 +61,16 @@ export function normalizeSsoButtonLabel(value: string | null): string | null {
 	if (normalized === null) {
 		return null;
 	}
-	if (
-		SSO_BUTTON_LABEL_FORBIDDEN_REGEX.test(normalized) ||
-		normalized.replace(SSO_BUTTON_LABEL_INVISIBLE_REGEX, '').length === 0
-	) {
+	if (!isDisplayableLabel(normalized)) {
 		throw InputValidationError.fromCode('button_label', ValidationErrorCodes.INVALID_FORMAT);
 	}
 	return normalized;
+}
+
+export function isDisplayableLabel(value: string): boolean {
+	return (
+		!SSO_BUTTON_LABEL_FORBIDDEN_REGEX.test(value) && value.replace(SSO_BUTTON_LABEL_INVISIBLE_REGEX, '').length > 0
+	);
 }
 
 function throwInvalidDomain(field: string, domain: string): never {
@@ -149,7 +152,7 @@ export function isHttpsSsoUrl(rawUrl: string): boolean {
 	return url?.protocol === 'https:' && !url.username && !url.password && !url.hash;
 }
 
-async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
+export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(rawUrl);

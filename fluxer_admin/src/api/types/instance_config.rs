@@ -275,6 +275,29 @@ pub struct InstanceIntegrationsResponse {
     pub email: InstanceEmailIntegrationResponse,
     #[serde(default)]
     pub bluesky: InstanceBlueskyIntegrationResponse,
+    #[serde(default)]
+    pub connection_providers: Vec<ConnectionProviderResponse>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ConnectionProviderResponse {
+    pub id: String,
+    pub name: String,
+    pub enabled: bool,
+    pub kind: String,
+    pub issuer: Option<String>,
+    pub authorization_url: Option<String>,
+    pub token_url: Option<String>,
+    pub userinfo_url: Option<String>,
+    pub client_id: String,
+    pub scope: String,
+    pub name_claim: Option<String>,
+    pub id_path: Option<String>,
+    pub name_path: Option<String>,
+    pub profile_url_template: Option<String>,
+    pub icon_url: Option<String>,
+    pub client_secret_set: bool,
+    pub callback_url: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1088,6 +1111,29 @@ pub struct InstanceIntegrationsUpdateRequest {
     pub email: Option<InstanceEmailIntegrationUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bluesky: Option<InstanceBlueskyIntegrationUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connection_providers: Option<Vec<ConnectionProviderUpdateRequest>>,
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ConnectionProviderUpdateRequest {
+    pub id: String,
+    pub name: String,
+    pub enabled: bool,
+    pub kind: String,
+    pub issuer: Option<String>,
+    pub authorization_url: Option<String>,
+    pub token_url: Option<String>,
+    pub userinfo_url: Option<String>,
+    pub client_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<String>,
+    pub scope: String,
+    pub name_claim: Option<String>,
+    pub id_path: Option<String>,
+    pub name_path: Option<String>,
+    pub profile_url_template: Option<String>,
+    pub icon_url: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

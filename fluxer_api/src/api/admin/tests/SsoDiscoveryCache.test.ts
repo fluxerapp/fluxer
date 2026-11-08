@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
+import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/OidcClient';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {getCacheService} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';

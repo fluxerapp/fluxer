@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Тип підключення не підтримується.",
 	"connections.limit_reached": "Досягнуто максимальної кількості підключень ({limit}).",
 	"connections.not_found": "Невідоме підключення.",
+	"connections.unknown_provider": "Цей тип підключення недоступний на цьому екземплярі.",
 	"connections.verification_failed": "Не вдалося підтвердити підключення. Переконайся, що токен підтвердження розміщено правильно.",
 	"content_and_safety.content_blocked": "Цей вміст заблоковано системами безпеки.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Відвертий вміст не можна надсилати.",

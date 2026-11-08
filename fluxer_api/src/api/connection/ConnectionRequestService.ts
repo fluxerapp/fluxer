@@ -3,7 +3,7 @@
 import {createHmac} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import {signInitiationToken, verifyInitiationToken} from '@app/api/connection/ConnectionInitiationToken';
-import {mapConnectionToResponse} from '@app/api/connection/ConnectionMappers';
+import {mapConnectionsToResponse} from '@app/api/connection/ConnectionMappers';
 import type {ConnectionService} from '@app/api/connection/ConnectionService';
 import {ConnectionInitiationTokenInvalidError} from '@app/api/connection/errors/ConnectionInitiationTokenInvalidError';
 import {
@@ -27,8 +27,7 @@ export class ConnectionRequestService {
 	) {}
 
 	async listConnections(userId: UserID): Promise<Array<ConnectionResponse>> {
-		const rows = await this.connectionService.getConnectionsForUser(userId);
-		return rows.sort((a, b) => a.sort_order - b.sort_order).map((row) => mapConnectionToResponse(row));
+		return mapConnectionsToResponse(await this.connectionService.getConnectionsForUser(userId));
 	}
 
 	async initiateConnection(userId: UserID, body: CreateConnectionRequest): Promise<ConnectionVerificationResponse> {
@@ -66,7 +65,8 @@ export class ConnectionRequestService {
 			payload.verificationCode,
 			body.visibility_flags ?? 1,
 		);
-		return mapConnectionToResponse(row);
+		const [connection] = await mapConnectionsToResponse([row]);
+		return connection!;
 	}
 
 	async updateConnection(

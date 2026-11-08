@@ -312,6 +312,7 @@
 	"connections.invalid_type": "不支援此連線類型。",
 	"connections.limit_reached": "你已達到連線數上限（{limit}）。",
 	"connections.not_found": "未知的連線。",
+	"connections.unknown_provider": "此實例不提供這種連線。",
 	"connections.verification_failed": "連線驗證失敗。請確認驗證權杖是否放置正確。",
 	"content_and_safety.content_blocked": "此內容已被安全系統封鎖。",
 	"content_and_safety.explicit_content_cannot_be_sent": "無法傳送露骨內容。",

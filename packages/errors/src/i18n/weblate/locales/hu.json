@@ -312,6 +312,7 @@
 	"connections.invalid_type": "A kapcsolattípus nem támogatott.",
 	"connections.limit_reached": "Elérted a maximális kapcsolatszámot ({limit}).",
 	"connections.not_found": "Ismeretlen kapcsolat.",
+	"connections.unknown_provider": "Ez a kapcsolattípus nem érhető el ezen a példányon.",
 	"connections.verification_failed": "A kapcsolat ellenőrzése sikertelen. Ellenőrizd, hogy az ellenőrző token a helyén van.",
 	"content_and_safety.content_blocked": "Ezt a tartalmat a biztonsági rendszerek blokkolták.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Explicit tartalom nem küldhető.",

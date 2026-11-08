@@ -391,6 +391,7 @@ Each provider's saved settings, a `_set` boolean for each secret and whether it 
 | youtube | object | `api_key_set` and `effective_available` |
 | email | [email integration](#email-integration-object) object | Outgoing email settings |
 | bluesky | [Bluesky integration](#bluesky-integration-object) object | Bluesky client settings |
+| connection_providers | array[[connection provider](#connection-provider-object) object] | Providers people can connect to their profile. Always empty outside self-hosted instances |
 
 ## Email integration object
 
@@ -433,6 +434,32 @@ The client details the instance shows to Bluesky.
 | tos_uri | ?string | Client terms URI |
 | policy_uri | ?string | Client policy URI |
 | key_count | integer | Number of signing keys |
+
+## Connection provider object
+
+An OAuth 2.0 or OpenID Connect provider for [profile connections](/http-api/connections/).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Lowercase letters, digits, `-` and `_`, up to 32 characters |
+| name | string | Name shown to people, 1-32 characters |
+| enabled | boolean | Whether people can connect it |
+| kind | string | `oidc` or `oauth2` |
+| issuer | ?string | Issuer URL, required for `oidc` |
+| authorization_url | ?string | Required for `oauth2`. For `oidc`, null uses the discovery document |
+| token_url | ?string | Required for `oauth2`. For `oidc`, null uses the discovery document |
+| userinfo_url | ?string | Required for `oauth2`, where it returns the account as JSON. For `oidc`, null uses the discovery document |
+| client_id | string | Client ID at the provider |
+| scope | string | Space-separated scopes. `oidc` needs `openid` |
+| name_claim | ?string | `oidc` claim with the account name, null for `preferred_username` and then `name` |
+| id_path | ?string | `oauth2` dot path to the account ID in the user JSON, such as `data.0.id` |
+| name_path | ?string | `oauth2` dot path to the account name, null to show the ID |
+| profile_url_template | ?string | HTTPS link to the account. `{id}` and `{name}` after the host are replaced |
+| icon_url | ?string | HTTPS icon URL, served to clients through the media proxy |
+| client_secret_set | boolean | Whether a client secret is saved |
+| callback_url | string | Redirect URL to register at the provider |
 
 ## Instance billing object
 
@@ -689,7 +716,7 @@ Merges the body into the saved configuration and returns the [instance configura
 | experiment_delivery? | object | Any [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode`, `admin_registration_urls_enabled` and `allowed_email_domains` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal` and `registration` objects, each merged field by field |
-| integrations?<sup>3</sup> | object | `gif`, `youtube`, `email` and `bluesky` objects, and `bluesky.keys` |
+| integrations?<sup>3</sup> | object | `gif`, `youtube`, `email` and `bluesky` objects, `bluesky.keys` and `connection_providers` |
 | media? | object | `attachment_decay` overrides, null to restore a default |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium and gating policy |
 | billing?<sup>4</sup> | object | [Instance billing](#instance-billing-object) fields, plus `stripe_secret_key` and `stripe_webhook_secret` |
@@ -703,7 +730,7 @@ Merges the body into the saved configuration and returns the [instance configura
 
 <sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters, and `branding.theme_color` and `branding.premium_page_color` are hex colors. `branding.premium_page_color` only works on self-hosted instances. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
 
-<sup>3</sup> A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out. `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`. `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`
+<sup>3</sup> A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out. `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`. `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`. `connection_providers` replaces the provider list with up to 20 [connection provider](#connection-provider-object) objects without `client_secret_set` and `callback_url`, plus `client_secret`. A provider that leaves out `client_secret` keeps the one saved under its `id`, unless it is new or its issuer, token URL or user URL host changed. Only self-hosted instances can save providers
 
 <sup>4</sup> `prices`, `country_currencies` and `legacy_prices` replace the saved value, and an empty `prices` object goes back to the environment prices. Billing can't be on while the premium mode is `everyone`
 

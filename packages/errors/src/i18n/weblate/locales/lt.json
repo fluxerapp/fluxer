@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Ryšio tipas nepalaikomas.",
 	"connections.limit_reached": "Pasiekei maksimalų ryšių skaičių ({limit}).",
 	"connections.not_found": "Nežinomas ryšys.",
+	"connections.unknown_provider": "Šios rūšies ryšys šioje instancijoje nepasiekiamas.",
 	"connections.verification_failed": "Ryšio patvirtinimas nepavyko. Įsitikink, kad patvirtinimo žetonas įdėtas teisingai.",
 	"content_and_safety.content_blocked": "Šį turinį užblokavo saugumo sistemos.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Nepadorus turinys negali būti siunčiamas.",

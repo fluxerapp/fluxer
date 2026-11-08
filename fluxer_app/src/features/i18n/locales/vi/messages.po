@@ -2185,6 +2185,10 @@ msgstr "{productName} sẽ không cập nhật khi đang khởi động. Khi có
 msgid "{productName} wordmark"
 msgstr "Logo chữ {productName}"
 
+#: src/features/connection/components/modals/AddConnectionModal.tsx
+msgid "{providerName} opens in your browser. Sign in there to connect your account."
+msgstr "{providerName} sẽ mở trong trình duyệt của bạn. Đăng nhập ở đó để kết nối tài khoản của bạn."
+
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
@@ -3339,10 +3343,10 @@ msgstr "Thêm \";\" ở cuối dòng này."
 msgid "Add \":\" between the property and its value."
 msgstr "Thêm \":\" giữa thuộc tính và giá trị."
 
-#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
+#. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {providerName}; it is the provider name, inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Add {blueskyProviderName} connection"
-msgstr "Thêm kết nối {blueskyProviderName}"
+msgid "Add {providerName} connection"
+msgstr "Thêm kết nối {providerName}"
 
 #. OAuth scope description shown on the consent screen for the bot scope.
 #: src/features/app/constants/AppConstants.ts
@@ -11321,10 +11325,10 @@ msgstr "Không thể gửi email xác minh"
 msgid "Couldn't sign you in"
 msgstr "Không thể đăng nhập cho bạn"
 
-#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
+#. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {providerName}; it is the provider name, inserted by code, and must appear verbatim in the translation.
 #: src/features/connection/commands/ConnectionCommands.ts
-msgid "Couldn't start {blueskyProviderName} authorization"
-msgstr "Không thể bắt đầu ủy quyền {blueskyProviderName}"
+msgid "Couldn't start {providerName} authorization"
+msgstr "Không thể bắt đầu ủy quyền {providerName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -21460,8 +21464,8 @@ msgid "Link warnings"
 msgstr "Cảnh báo liên kết"
 
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
-msgid "Link your {BLUESKY_PROVIDER_NAME} account or verify domain ownership to display them on your profile."
-msgstr "Liên kết tài khoản {BLUESKY_PROVIDER_NAME} của bạn hoặc xác minh quyền sở hữu miền để hiển thị chúng trên hồ sơ của bạn."
+msgid "Link your accounts or verify domain ownership to display them on your profile."
+msgstr "Liên kết các tài khoản của bạn hoặc xác minh quyền sở hữu miền để hiển thị chúng trên hồ sơ của bạn."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -24648,6 +24652,11 @@ msgstr "Không có tệp cục bộ nào được tham chiếu"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx
 msgid "No logs yet"
 msgstr "Chưa có nhật ký"
+
+#. Label for a linked account whose provider this instance removed or turned off. The account is hidden from the profile.
+#: src/features/connection/components/ConnectionIcon.tsx
+msgid "No longer available"
+msgstr "Không còn khả dụng"
 
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx
 msgid "No matches"
@@ -36579,6 +36588,10 @@ msgstr "Cộng đồng nguồn đã tắt tính năng nhân bản, nên không t
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Cộng đồng bạn tìm kiếm có thể đã bị xóa hoặc bạn không có quyền truy cập."
 
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "The connection was not allowed. You can close this tab and try again."
+msgstr "Kết nối không được cho phép. Bạn có thể đóng tab này và thử lại."
+
 #. Body of the confirmation dialog before replacing the private link to an Operator certificate page. The certificate is a PDF, and each page has a number and the date and time of payment. The new copy of the page has the new link printed on it.
 #: src/features/premium/components/operator_pass/OperatorPassPurchasesSection.tsx
 msgid "The current link stops working right away, for you and for anyone you've shared it with. We make a new copy of this page with the new link printed on it, with the same number and date."
@@ -43184,6 +43197,10 @@ msgstr "Bạn đã có một nhóm với những người dùng này rồi. Bạ
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Bạn đã có {premiumProductName} trọn đời"
+
+#: src/features/connection/components/pages/ConnectionCallbackPage.tsx
+msgid "You already have the most connections an account can have. Remove one and try again."
+msgstr "Bạn đã có số kết nối tối đa mà một tài khoản có thể có. Hãy xóa một kết nối và thử lại."
 
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx

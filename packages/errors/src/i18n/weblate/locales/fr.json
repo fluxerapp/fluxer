@@ -312,6 +312,7 @@
 	"connections.invalid_type": "Le type de connexion n'est pas pris en charge.",
 	"connections.limit_reached": "Vous avez atteint le nombre maximal de connexions ({limit}).",
 	"connections.not_found": "Connexion inconnue.",
+	"connections.unknown_provider": "Ce type de connexion n'est pas disponible sur cette instance.",
 	"connections.verification_failed": "La vérification de la connexion a échoué. Vérifiez que le jeton de vérification est placé correctement.",
 	"content_and_safety.content_blocked": "Ce contenu a été bloqué par les systèmes de sécurité.",
 	"content_and_safety.explicit_content_cannot_be_sent": "Le contenu explicite ne peut pas être envoyé.",
