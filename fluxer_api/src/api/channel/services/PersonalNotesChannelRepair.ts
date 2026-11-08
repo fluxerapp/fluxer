@@ -10,7 +10,7 @@ import {PersonalNotesDisabledError} from '@fluxer/errors/src/domains/channel/Per
 
 interface PersonalNotesChannelRepository {
 	findUnique(channelId: ChannelID): Promise<Channel | null>;
-	upsert(data: ChannelRow): Promise<Channel>;
+	create(data: ChannelRow): Promise<Channel>;
 }
 
 export function isPersonalNotesChannelId({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
@@ -69,5 +69,5 @@ export async function ensurePersonalNotesChannelExists({
 	if (existingChannel) {
 		return existingChannel;
 	}
-	return channelRepository.upsert(buildPersonalNotesChannelRow(userId));
+	return channelRepository.create(buildPersonalNotesChannelRow(userId));
 }

@@ -504,7 +504,7 @@ export class UserChannelService {
 			indexed_at: null,
 			version: 1,
 		};
-		const newChannel = await this.channelRepository.channelData.upsert(channelData);
+		const newChannel = await this.channelRepository.channelData.create(channelData);
 		for (const recipientId of allRecipients) {
 			await this.userRepository.openPrivateChannelForUser(recipientId, newChannel);
 		}

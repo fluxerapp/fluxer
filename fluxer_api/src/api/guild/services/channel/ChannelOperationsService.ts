@@ -213,7 +213,7 @@ export class ChannelOperationsService {
 		const requestedContentWarningText =
 			trimmedContentWarningText && trimmedContentWarningText.length > 0 ? trimmedContentWarningText : null;
 		const channelId = createChannelID(await this.snowflakeService.generate());
-		const channel = await this.channelRepository.channelData.upsert({
+		const channel = await this.channelRepository.channelData.create({
 			channel_id: channelId,
 			guild_id: params.guildId,
 			type: params.data.type,
