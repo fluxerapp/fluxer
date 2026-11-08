@@ -28,6 +28,7 @@
     session_pending => #{{pid(), term()} => pos_integer()},
     session_holders => #{pid() => pos_integer()},
     session_held => non_neg_integer(),
+    guild_holders => #{pid() => true},
     monitors => #{pid() => reference()}
 }.
 
@@ -57,46 +58,16 @@ session_queue_length() ->
 
 -spec try_acquire_guild_start() -> ok | {error, at_capacity}.
 try_acquire_guild_start() ->
-    try_acquire(?GUILD_START_IDX, fun gateway_rollout_config:max_concurrent_guild_starts/0).
-
--spec try_acquire(pos_integer(), fun(() -> pos_integer())) -> ok | {error, at_capacity}.
-try_acquire(Idx, LimitFun) ->
+    Limit = gateway_rollout_config:max_concurrent_guild_starts(),
     try
-        gen_server:call(?MODULE, {acquire, Idx, LimitFun()}, infinity)
+        gen_server:call(?MODULE, {acquire_guild_start, Limit}, infinity)
     catch
         exit:_ -> ok
     end.
 
--spec do_acquire(pos_integer(), integer(), counters:counters_ref()) ->
-    ok | {error, at_capacity}.
-do_acquire(Idx, Limit, Ref) ->
-    Count = counters:get(Ref, Idx),
-    case Count >= Limit of
-        true ->
-            {error, at_capacity};
-        false ->
-            counters:add(Ref, Idx, 1),
-            ok
-    end.
-
 -spec release_guild_start() -> ok.
 release_guild_start() ->
-    release_counter(?GUILD_START_IDX).
-
--spec release_counter(pos_integer()) -> ok.
-release_counter(Idx) ->
-    try
-        Ref = persistent_term:get(gateway_concurrency_counters),
-        case counters:get(Ref, Idx) of
-            Value when Value > 0 ->
-                counters:sub(Ref, Idx, 1);
-            _ ->
-                counters:put(Ref, Idx, 0)
-        end,
-        ok
-    catch
-        error:badarg -> ok
-    end.
+    gen_server:cast(?MODULE, {release_guild_start, self()}).
 
 -spec session_start_count() -> non_neg_integer().
 session_start_count() ->
@@ -121,14 +92,22 @@ init([]) ->
         session_pending => #{},
         session_holders => #{},
         session_held => 0,
+        guild_holders => #{},
         monitors => #{}
     }}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
-handle_call({acquire, Idx, Limit}, _From, #{counters := Ref} = State) when
-    is_integer(Idx), is_integer(Limit)
+handle_call({acquire_guild_start, Limit}, {Pid, _Tag}, State) when
+    is_integer(Limit), is_pid(Pid)
 ->
-    {reply, do_acquire(Idx, Limit, Ref), State};
+    Holders = maps:get(guild_holders, State, #{}),
+    case map_size(Holders) >= Limit of
+        true ->
+            {reply, {error, at_capacity}, State};
+        false ->
+            Held = ensure_monitor(Pid, State#{guild_holders => Holders#{Pid => true}}),
+            {reply, ok, publish_guild_held(Held)}
+    end;
 handle_call(session_queue_length, _From, State) ->
     {reply, maps:get(session_queued, State, 0), State};
 handle_call(_Request, _From, State) ->
@@ -159,6 +138,8 @@ handle_cast({release_session_start, Pid}, State) when is_pid(Pid) ->
         true -> {noreply, admit_session_starts(release_held(Pid, 1, State))};
         false -> {noreply, State}
     end;
+handle_cast({release_guild_start, Pid}, State) when is_pid(Pid) ->
+    {noreply, release_guild_held(Pid, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -168,7 +149,9 @@ handle_info({'DOWN', MonitorRef, process, Pid, _Reason}, State) when is_pid(Pid)
     case maps:get(Pid, Monitors, undefined) of
         MonitorRef ->
             Held = maps:get(Pid, maps:get(session_holders, State, #{}), 0),
-            Released = release_held(Pid, Held, State#{monitors => maps:remove(Pid, Monitors)}),
+            Released = release_guild_held(
+                Pid, release_held(Pid, Held, State#{monitors => maps:remove(Pid, Monitors)})
+            ),
             {Gone, Kept} = split_pending(Pid, maps:get(session_pending, Released, #{})),
             Dropped = drop_queued(Gone, Kept, Released),
             {noreply, admit_session_starts(Dropped)};
@@ -231,6 +214,16 @@ release_held(Pid, Count, State) ->
     set_held(max(0, maps:get(session_held, State, 0) - Count), State#{
         session_holders => NewHolders
     }).
+
+-spec release_guild_held(pid(), state()) -> state().
+release_guild_held(Pid, State) ->
+    Holders = maps:get(guild_holders, State, #{}),
+    publish_guild_held(State#{guild_holders => maps:remove(Pid, Holders)}).
+
+-spec publish_guild_held(state()) -> state().
+publish_guild_held(#{counters := Ref} = State) ->
+    counters:put(Ref, ?GUILD_START_IDX, map_size(maps:get(guild_holders, State, #{}))),
+    State.
 
 -spec set_held(non_neg_integer(), state()) -> state().
 set_held(Held, #{counters := Ref} = State) ->

@@ -6,7 +6,9 @@
 
 -export([start_link/0, request/6]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
--export([pick_sharded_profile/1, ensure_started/0, cleanup_max_age_ms/0]).
+-export([pick_sharded_profile/1, cleanup_max_age_ms/0]).
+
+-dialyzer({nowarn_function, run_in_request_worker/1}).
 
 -define(SERVER, ?MODULE).
 -define(CIRCUIT_TABLE, gateway_http_circuit_breaker).
@@ -44,19 +46,10 @@
 
 -spec start_link() -> {ok, pid()} | {error, term()}.
 start_link() ->
-    case whereis(?SERVER) of
-        undefined ->
-            start_server();
-        Pid when is_pid(Pid) ->
-            {ok, Pid}
-    end.
-
--spec start_server() -> {ok, pid()} | {error, term()}.
-start_server() ->
     case gen_server:start_link({local, ?SERVER}, ?MODULE, [], []) of
-        {error, {already_started, Pid}} when is_pid(Pid) -> {ok, Pid};
         {ok, Pid} -> {ok, Pid};
-        {error, E} -> {error, E}
+        ignore -> {error, ignore};
+        {error, Reason} -> {error, Reason}
     end.
 
 -spec request(
@@ -64,7 +57,6 @@ start_server() ->
 ) ->
     response().
 request(Workload, Method, Url, Headers, Body, Opts) when is_map(Opts) ->
-    ensure_runtime(Workload),
     WorkloadOpts = merged_workload_options(Workload, Opts),
     MaxConcurrency = maps:get(max_concurrency, WorkloadOpts),
     FailureThreshold = maps:get(failure_threshold, WorkloadOpts),
@@ -88,13 +80,6 @@ request(Workload, Method, Url, Headers, Body, Opts) when is_map(Opts) ->
 pick_sharded_profile(rpc) ->
     Idx = erlang:phash2(self(), ?RPC_PROFILE_SHARDS),
     sharded_profile_name(rpc, Idx).
-
--spec ensure_started() -> ok.
-ensure_started() ->
-    case start_link() of
-        {ok, _Pid} -> ok;
-        _ -> ok
-    end.
 
 -spec cleanup_max_age_ms() -> pos_integer().
 cleanup_max_age_ms() ->
@@ -122,6 +107,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(cleanup_circuits, State) ->
     gateway_http_client_response:prune_circuit_table(),
+    gateway_http_client_response:prune_inflight_slots(),
     schedule_cleanup(),
     {noreply, State};
 handle_info(_Info, State) ->
@@ -162,19 +148,32 @@ do_request_with_circuit(
 ) ->
     case gateway_http_client_response:allow_circuit_request(CircuitKey, RecoveryTimeoutMs) of
         ok ->
-            do_request_with_slot(
-                CircuitKey,
-                Workload,
-                Method,
-                Url,
-                Headers,
-                Body,
-                WorkloadOpts,
-                MaxConcurrency,
-                FailureThreshold
-            );
+            run_in_request_worker(fun() ->
+                do_request_with_slot(
+                    CircuitKey,
+                    Workload,
+                    Method,
+                    Url,
+                    Headers,
+                    Body,
+                    WorkloadOpts,
+                    MaxConcurrency,
+                    FailureThreshold
+                )
+            end);
         {error, circuit_open} ->
             {error, circuit_open}
+    end.
+
+-spec run_in_request_worker(fun(() -> response())) -> response().
+run_in_request_worker(Request) ->
+    {_Worker, Ref} = spawn_monitor(fun() -> exit({?MODULE, Request()}) end),
+    receive
+        {'DOWN', Ref, process, _, {?MODULE, Result}} ->
+            Result;
+        {'DOWN', Ref, process, Worker, Reason} ->
+            gateway_http_client_response:release_inflight_slot(Worker),
+            {error, {request_worker_down, Reason}}
     end.
 
 -spec do_request_with_slot(
@@ -199,7 +198,7 @@ do_request_with_slot(
     MaxConcurrency,
     FailureThreshold
 ) ->
-    case gateway_http_client_response:acquire_inflight_slot(Workload, MaxConcurrency) of
+    case gateway_http_client_response:acquire_inflight_slot(MaxConcurrency) of
         ok ->
             request_with_acquired_slot(
                 CircuitKey, Workload, Method, Url, Headers, Body, WorkloadOpts, FailureThreshold
@@ -239,7 +238,7 @@ request_with_acquired_slot(
             ),
             Result
     after
-        gateway_http_client_response:release_inflight_slot(Workload)
+        gateway_http_client_response:release_inflight_slot(self())
     end.
 
 -spec resolve_host_key(iodata(), request_options()) -> binary().
@@ -248,12 +247,6 @@ resolve_host_key(Url, Opts) ->
         Host when is_binary(Host) -> Host;
         _ -> gateway_http_client_request:extract_host_key(Url)
     end.
-
--spec ensure_runtime(workload()) -> ok.
-ensure_runtime(Workload) ->
-    ok = ensure_started(),
-    _ = Workload,
-    ok.
 
 -spec ensure_table(atom()) -> ok.
 ensure_table(Name) ->

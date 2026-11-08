@@ -7,7 +7,7 @@
 -export([
     ensure_table/0,
     acquire_slot/1,
-    release_slot/1,
+    release_slot/2,
     prune_dead/0,
     get_circuit_state/1,
     execute_with_circuit_breaker/3
@@ -15,58 +15,43 @@
 
 -type circuit_state() :: closed | open | half_open.
 
--type row() :: {pid(), integer(), closed | open, integer(), integer() | undefined}.
+-type row() :: {pid(), closed | open, integer(), integer() | undefined}.
 
 -export_type([circuit_state/0]).
 
 -define(CIRCUIT_BREAKER_TABLE, guild_circuit_breaker).
+-define(SLOT_TABLE, guild_circuit_breaker_slots).
 -define(FAILURE_THRESHOLD, 5).
 -define(RECOVERY_TIMEOUT_MS, 30000).
 -define(MAX_CONCURRENT, 50).
--define(CONCURRENT_POS, 2).
--define(STATE_POS, 3).
--define(FAILURES_POS, 4).
--define(OPENED_AT_POS, 5).
+-define(STATE_POS, 2).
+-define(FAILURES_POS, 3).
+-define(OPENED_AT_POS, 4).
 
 -spec ensure_table() -> ok.
 ensure_table() ->
-    guild_ets_utils:ensure_table(?CIRCUIT_BREAKER_TABLE, [
-        named_table,
-        public,
-        set,
-        {read_concurrency, true},
-        {write_concurrency, true}
-    ]).
+    Options = [public, named_table, {read_concurrency, true}, {write_concurrency, true}],
+    ok = guild_ets_utils:ensure_table(?CIRCUIT_BREAKER_TABLE, [set | Options]),
+    guild_ets_utils:ensure_table(?SLOT_TABLE, [ordered_set | Options]).
 
 -spec acquire_slot(pid()) -> ok | {error, too_many_requests}.
 acquire_slot(GuildPid) ->
-    case safe_update_counter(GuildPid, {?CONCURRENT_POS, 1}) of
-        {ok, C} when C =< ?MAX_CONCURRENT ->
-            ok;
-        {ok, _C} ->
-            _ = safe_update_counter(GuildPid, {?CONCURRENT_POS, -1}),
-            {error, too_many_requests};
-        error ->
-            ok
-    end.
-
--spec release_slot(pid()) -> ok.
-release_slot(GuildPid) ->
-    case safe_update_counter(GuildPid, {?CONCURRENT_POS, -1}) of
-        {ok, C} when C < 0 ->
-            safe_update_element(GuildPid, [{?CONCURRENT_POS, 0}]),
-            drop_idle_row(GuildPid);
-        {ok, 0} ->
-            drop_idle_row(GuildPid);
-        _ ->
-            ok
-    end.
-
--spec drop_idle_row(pid()) -> ok.
-drop_idle_row(GuildPid) ->
     try
-        ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, 0, closed, 0, '_'}, [], [true]}])
+        true = ets:insert_new(?SLOT_TABLE, {{GuildPid, self()}}),
+        ets:select_count(?SLOT_TABLE, [{{{GuildPid, '_'}}, [], [true]}])
     of
+        Count when Count =< ?MAX_CONCURRENT ->
+            ok;
+        _Count ->
+            release_slot(GuildPid, self()),
+            {error, too_many_requests}
+    catch
+        error:_ -> ok
+    end.
+
+-spec release_slot(pid(), pid()) -> ok.
+release_slot(GuildPid, Worker) ->
+    try ets:delete(?SLOT_TABLE, {GuildPid, Worker}) of
         _ -> ok
     catch
         error:badarg -> ok
@@ -75,31 +60,52 @@ drop_idle_row(GuildPid) ->
 -spec prune_dead() -> ok.
 prune_dead() ->
     drop_unknown_rows(),
-    Pids = idle_pids(),
-    Alive = process_liveness:are_alive(Pids),
-    lists:foreach(fun drop_dead_row/1, [Pid || Pid <- Pids, not maps:get(Pid, Alive, true)]).
+    Slots = slot_keys(),
+    GuildPids = lists:usort([GuildPid || {GuildPid, _Worker} <- Slots] ++ circuit_pids()),
+    Alive = process_liveness:are_alive(GuildPids),
+    IsAlive = fun(Pid) -> maps:get(Pid, Alive, true) end,
+    lists:foreach(
+        fun({GuildPid, Worker}) -> release_slot(GuildPid, Worker) end,
+        [
+            Slot
+         || {GuildPid, Worker} = Slot <- Slots,
+            not (IsAlive(GuildPid) andalso is_process_alive(Worker))
+        ]
+    ),
+    lists:foreach(fun safe_delete/1, [Pid || Pid <- GuildPids, not IsAlive(Pid)]).
 
 -spec drop_unknown_rows() -> ok.
 drop_unknown_rows() ->
-    try ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{'_', '_'}, [], [true]}]) of
+    try
+        ets:select_delete(?CIRCUIT_BREAKER_TABLE, [
+            {{'_', '_'}, [], [true]}, {{'_', '_', '_', '_', '_'}, [], [true]}
+        ])
+    of
         _ -> ok
     catch
         error:badarg -> ok
     end.
 
--spec idle_pids() -> [pid()].
-idle_pids() ->
-    try ets:select(?CIRCUIT_BREAKER_TABLE, [{{'$1', 0, '_', '_', '_'}, [], ['$1']}]) of
+-spec slot_keys() -> [{pid(), pid()}].
+slot_keys() ->
+    try ets:select(?SLOT_TABLE, [{{'$1'}, [], ['$1']}]) of
+        Keys ->
+            [{GuildPid, Worker} || {GuildPid, Worker} <- Keys, is_pid(GuildPid), is_pid(Worker)]
+    catch
+        error:badarg -> []
+    end.
+
+-spec circuit_pids() -> [pid()].
+circuit_pids() ->
+    try ets:select(?CIRCUIT_BREAKER_TABLE, [{{'$1', '_', '_', '_'}, [], ['$1']}]) of
         Pids -> [Pid || Pid <- Pids, is_pid(Pid)]
     catch
         error:badarg -> []
     end.
 
--spec drop_dead_row(pid()) -> ok.
-drop_dead_row(GuildPid) ->
-    try
-        ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, 0, '_', '_', '_'}, [], [true]}])
-    of
+-spec safe_delete(pid()) -> ok.
+safe_delete(GuildPid) ->
+    try ets:delete(?CIRCUIT_BREAKER_TABLE, GuildPid) of
         _ -> ok
     catch
         error:badarg -> ok
@@ -108,7 +114,7 @@ drop_dead_row(GuildPid) ->
 -spec get_circuit_state(pid()) -> circuit_state().
 get_circuit_state(GuildPid) ->
     case safe_lookup(GuildPid) of
-        [{_, _, open, _, OpenedAt}] when is_integer(OpenedAt) ->
+        [{_, open, _, OpenedAt}] when is_integer(OpenedAt) ->
             check_recovery_timeout(OpenedAt);
         _ ->
             closed
@@ -216,10 +222,10 @@ safe_update_counter(GuildPid, Op) ->
 
 -spec drop_unknown_row(pid()) -> ok.
 drop_unknown_row(GuildPid) ->
-    try ets:select_delete(?CIRCUIT_BREAKER_TABLE, [{{GuildPid, '_'}, [], [true]}]) of
-        _ -> ok
-    catch
-        error:badarg -> ok
+    case safe_lookup(GuildPid) of
+        [{_, _, _, _}] -> ok;
+        [] -> ok;
+        _ -> safe_delete(GuildPid)
     end.
 
 -spec try_update_counter(pid(), {pos_integer(), integer()}) -> {ok, integer()} | error.
@@ -232,7 +238,7 @@ try_update_counter(GuildPid, Op) ->
 
 -spec default_row(pid()) -> row().
 default_row(GuildPid) ->
-    {GuildPid, 0, closed, 0, undefined}.
+    {GuildPid, closed, 0, undefined}.
 
 -spec safe_update_element(pid(), [{pos_integer(), term()}]) -> ok.
 safe_update_element(GuildPid, Changes) ->
