@@ -241,33 +241,27 @@ export class StripePremiumService {
 	}
 
 	private async allocateVisionarySequence(userId: UserID): Promise<number> {
-		const allSlots = await this.userRepository.listVisionarySlots();
-		const myReservedSlot = allSlots
-			.slice()
-			.sort((a, b) => a.slotIndex - b.slotIndex)
-			.find((slot) => slot.userId === userId);
+		const allSlots = (await this.userRepository.listVisionarySlots()).sort((a, b) => a.slotIndex - b.slotIndex);
+		const myReservedSlot = allSlots.find((slot) => slot.userId === userId);
 		if (myReservedSlot) {
 			await this.addToVisionariesGuild(userId);
 			return myReservedSlot.slotIndex;
 		}
-		const unreservedSlot = allSlots
-			.slice()
-			.sort((a, b) => a.slotIndex - b.slotIndex)
-			.find((slot) => !slot.isReserved());
-		let newSequence: number;
-		if (!unreservedSlot) {
-			const maxSlotIndex = allSlots.length > 0 ? Math.max(...allSlots.map((s) => s.slotIndex)) : -1;
-			newSequence = maxSlotIndex + 1;
-			await this.userRepository.expandVisionarySlots(1);
-			await this.userRepository.reserveVisionarySlot(newSequence, userId);
-			Logger.warn(
-				{userId, newSlotIndex: newSequence, totalSlots: allSlots.length + 1},
-				'Auto-expanded visionary slots due to payment completion',
-			);
-		} else {
-			newSequence = unreservedSlot.slotIndex;
-			await this.userRepository.reserveVisionarySlot(unreservedSlot.slotIndex, userId);
+		for (const slot of allSlots) {
+			if (!slot.isReserved() && (await this.userRepository.reserveVisionarySlot(slot.slotIndex, userId))) {
+				await this.addToVisionariesGuild(userId);
+				return slot.slotIndex;
+			}
 		}
+		const newSequence = allSlots.length > 0 ? Math.max(...allSlots.map((s) => s.slotIndex)) + 1 : 1;
+		await this.userRepository.expandVisionarySlots(1);
+		if (!(await this.userRepository.reserveVisionarySlot(newSequence, userId))) {
+			throw new StripeError('Visionary number was taken while it was being assigned');
+		}
+		Logger.warn(
+			{userId, newSlotIndex: newSequence, totalSlots: allSlots.length + 1},
+			'Auto-expanded visionary slots due to payment completion',
+		);
 		await this.addToVisionariesGuild(userId);
 		return newSequence;
 	}

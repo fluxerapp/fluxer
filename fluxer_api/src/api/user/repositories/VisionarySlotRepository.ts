@@ -6,6 +6,8 @@ import type {VisionarySlotRow} from '@app/api/database/types/PaymentTypes';
 import {VisionarySlot} from '@app/api/models/VisionarySlot';
 import {VisionarySlots} from '@app/api/Tables';
 
+export const GIFT_PARKED_SLOT_HOLDER = createUserID(-1n);
+
 const FETCH_ALL_VISIONARY_SLOTS_QUERY = VisionarySlots.selectCql();
 const FETCH_VISIONARY_SLOT_QUERY = VisionarySlots.selectCql({
 	where: VisionarySlots.where.eq('slot_index'),
@@ -34,36 +36,28 @@ export class VisionarySlotRepository {
 		await batch.execute();
 	}
 
-	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {
+	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<boolean> {
 		const existingSlot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
 			slot_index: slotIndex,
 		});
-		if (!existingSlot) {
-			await upsertOne(
-				VisionarySlots.upsertAll({
-					slot_index: slotIndex,
-					user_id: userId,
-				}),
-			);
-		} else {
-			await upsertOne(
-				VisionarySlots.upsertAll({
-					slot_index: slotIndex,
-					user_id: userId,
-				}),
-			);
+		const holder = existingSlot?.user_id ?? null;
+		if (holder !== null && holder !== userId && holder !== GIFT_PARKED_SLOT_HOLDER) {
+			return false;
 		}
+		await upsertOne(
+			VisionarySlots.upsertAll({
+				slot_index: slotIndex,
+				user_id: userId,
+			}),
+		);
+		return true;
 	}
 
 	async unreserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {
 		const existingSlot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
 			slot_index: slotIndex,
 		});
-		if (!existingSlot) {
-			return;
-		}
-		const sentinelUserId = createUserID(BigInt(-1));
-		if (userId !== sentinelUserId && existingSlot.user_id !== userId) {
+		if (existingSlot?.user_id !== userId) {
 			return;
 		}
 		await upsertOne(
