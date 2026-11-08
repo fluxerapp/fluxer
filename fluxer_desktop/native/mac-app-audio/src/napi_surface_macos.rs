@@ -25,12 +25,8 @@ use objc2_screen_capture_kit::{
 };
 
 use crate::audio_source::{Source, SourceOptions};
-use crate::coreaudio_tap::{self, Capture, CaptureScope, CreateError};
 use crate::foundation;
-use crate::os_version::{
-    self, COREAUDIO_TAP_MIN_MACOS, SCK_MIN_MACOS, SupportClassification, classify_support,
-    format_version,
-};
+use crate::os_version::{self, SCK_AUDIO_MIN_MACOS, classify_support, format_version};
 use crate::pcm_pool::{PCM_POOL_CAP, PCM_SLOT_SAMPLES_MAX, PcmFramePool, PooledPcmFrame};
 use crate::process_tree;
 use crate::related_app::looks_related_by_strings;
@@ -47,11 +43,16 @@ const MAX_CALLBACK_OUTPUT_FRAMES: u32 = 192_000;
 const PCM_CALLBACK_CHANNELS: usize = 2;
 const SCK_LATE_SPAWN_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CaptureScope {
+    Process,
+    System,
+}
+
 struct LoopbackState {
     lifecycle_tsfn: Option<LifecycleTsfn>,
     source: Option<Box<Source>>,
     stream: Option<Retained<SCStream>>,
-    coreaudio_capture: Option<Box<Capture>>,
 
     sck_refresher: Option<SckRefresherHandle>,
 }
@@ -446,6 +447,9 @@ fn collect_capture_apps(
             }
             let candidate = apps.objectAtIndex(i);
             let candidate_pid = unsafe { candidate.processID() };
+            if is_self_or_related_process(candidate_pid) {
+                continue;
+            }
             let candidate_bundle = unsafe { candidate.bundleIdentifier() }.to_string();
             let candidate_name = unsafe { candidate.applicationName() }.to_string();
             let same_tree =
@@ -633,24 +637,19 @@ fn stop_loopback(inner: &LoopbackInner) -> Result<()> {
     inner
         .running
         .store(false, std::sync::atomic::Ordering::Release);
-    let (stream_opt, mut source, coreaudio_capture, sck_refresher) = {
+    let (stream_opt, mut source, sck_refresher) = {
         let mut state = lock_loopback_state(inner)?;
         let stream = state.stream.take();
         let source = state.source.take();
-        let coreaudio_capture = state.coreaudio_capture.take();
         let refresher = state.sck_refresher.take();
-        (stream, source, coreaudio_capture, refresher)
+        (stream, source, refresher)
     };
 
     if let Some(mut r) = sck_refresher {
         r.shutdown();
     }
 
-    if stream_opt.is_none() && coreaudio_capture.is_none() {
-        return Ok(());
-    }
-
-    if let Some(_capture) = coreaudio_capture {
+    if stream_opt.is_none() {
         return Ok(());
     }
 
@@ -684,7 +683,6 @@ impl ProcessLoopback {
                     lifecycle_tsfn: None,
                     source: None,
                     stream: None,
-                    coreaudio_capture: None,
                     sck_refresher: None,
                 }),
                 frame_tsfn: parking_lot::RwLock::new(None),
@@ -727,16 +725,11 @@ impl ProcessLoopback {
     pub async fn start(
         &self,
         pid: i32,
-        _exclude_self: Option<bool>,
         include_process_tree: Option<bool>,
-        backend: Option<String>,
         capture_scope: Option<String>,
     ) -> Result<()> {
         let include_tree = include_process_tree.unwrap_or(true);
-        let backend_pref = backend.as_deref().unwrap_or("auto");
-        let scope_pref = capture_scope.as_deref().unwrap_or("process");
-
-        let scope = if scope_pref == "system" {
+        let scope = if capture_scope.as_deref() == Some("system") {
             CaptureScope::System
         } else {
             CaptureScope::Process
@@ -749,23 +742,9 @@ impl ProcessLoopback {
             ));
         }
 
-        {
-            let detected = os_version::current_macos_version();
-            let SupportClassification {
-                supported,
-                sck_available,
-                coreaudio_available,
-                reason,
-            } = classify_support(detected);
-
-            let backend_ok = match backend_pref {
-                "coreaudio" => coreaudio_available,
-                "sck" => sck_available,
-                _ => supported,
-            };
-            if !backend_ok {
-                return Err(napi::Error::new(Status::GenericFailure, reason));
-            }
+        let support = classify_support(os_version::current_macos_version());
+        if !support.supported {
+            return Err(napi::Error::new(Status::GenericFailure, support.reason));
         }
         if scope == CaptureScope::Process && is_self_or_related_process(pid) {
             return Err(napi::Error::new(
@@ -778,7 +757,6 @@ impl ProcessLoopback {
             let state = lock_loopback_state(&self.inner)?;
             if state.stream.is_some()
                 || state.source.is_some()
-                || state.coreaudio_capture.is_some()
                 || self
                     .inner
                     .running
@@ -791,55 +769,6 @@ impl ProcessLoopback {
             }
         }
 
-        let mut coreaudio_error: Option<CreateError> = None;
-        let should_try_coreaudio = backend_pref == "coreaudio"
-            || (backend_pref == "auto" && scope == CaptureScope::Process);
-        if should_try_coreaudio {
-            match Capture::create(pid, include_tree, scope) {
-                Ok(mut capture) => {
-                    let ctx = std::sync::Arc::as_ptr(&self.inner) as *mut c_void;
-                    capture.set_pcm_callback(on_pcm_trampoline, ctx);
-                    capture.set_pcm_pool(self.inner.pcm_pool.clone());
-                    {
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state.coreaudio_capture = Some(capture);
-                    }
-                    self.inner
-                        .running
-                        .store(true, std::sync::atomic::Ordering::Release);
-                    let start_res = {
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state
-                            .coreaudio_capture
-                            .as_mut()
-                            .map(|c| c.start())
-                            .unwrap_or(Err(CreateError::StartDeviceFailed))
-                    };
-                    if let Err(e) = start_res {
-                        self.inner
-                            .running
-                            .store(false, std::sync::atomic::Ordering::Release);
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state.coreaudio_capture = None;
-                        return Err(napi::Error::new(
-                            Status::GenericFailure,
-                            coreaudio_tap::coreaudio_error_message(&e),
-                        ));
-                    }
-                    return Ok(());
-                }
-                Err(e) => {
-                    if backend_pref == "coreaudio" || scope == CaptureScope::System {
-                        return Err(napi::Error::new(
-                            Status::GenericFailure,
-                            coreaudio_tap::coreaudio_error_message(&e),
-                        ));
-                    }
-                    coreaudio_error = Some(e);
-                }
-            }
-        }
-
         let mut built = match if scope == CaptureScope::System {
             build_system_stream()
         } else {
@@ -848,10 +777,7 @@ impl ProcessLoopback {
             Ok(b) => b,
             Err(e) => {
                 let msg = match e {
-                    BuildStreamErr::PidNotFound => match &coreaudio_error {
-                        Some(ce) => coreaudio_tap::coreaudio_error_message(ce),
-                        None => "No running application for pid",
-                    },
+                    BuildStreamErr::PidNotFound => "No running application for pid",
                     BuildStreamErr::NoApps | BuildStreamErr::NoDisplays => "No display available",
                     BuildStreamErr::Other => "ProcessLoopback.start failed",
                 };
@@ -990,17 +916,9 @@ pub struct SckAvailability {
     pub macos_version: Option<String>,
 }
 
-#[napi(object, js_name = "MacBackendCoreAudioAvailability")]
-pub struct CoreAudioAvailability {
-    pub supported: bool,
-}
-
 #[napi(object, js_name = "MacBackendAvailability")]
 pub struct BackendAvailability {
     pub sck: SckAvailability,
-    pub coreaudio: CoreAudioAvailability,
-    pub screen_permission: String,
-    pub audio_permission: String,
 }
 
 #[napi(object, js_name = "MacAppAudioBackendInfo")]
@@ -1010,51 +928,30 @@ pub struct MacAppAudioBackendInfo {
     pub reason: String,
     #[napi(js_name = "minMacosVersion")]
     pub min_macos_version: String,
-    #[napi(js_name = "minMacosVersionCoreaudio")]
-    pub min_macos_version_coreaudio: String,
     #[napi(js_name = "detectedMacosVersion")]
     pub detected_macos_version: Option<String>,
-    #[napi(js_name = "sckAvailable")]
-    pub sck_available: bool,
-    #[napi(js_name = "coreaudioAvailable")]
-    pub coreaudio_available: bool,
 }
 
 #[napi(js_name = "getBackendInfo")]
 pub fn get_backend_info() -> MacAppAudioBackendInfo {
     let detected = os_version::current_macos_version();
-    let SupportClassification {
-        supported,
-        sck_available,
-        coreaudio_available,
-        reason,
-    } = classify_support(detected);
+    let support = classify_support(detected);
     MacAppAudioBackendInfo {
         backend: "mac-app-audio".to_owned(),
-        supported,
-        reason,
-        min_macos_version: format_version(SCK_MIN_MACOS),
-        min_macos_version_coreaudio: format_version(COREAUDIO_TAP_MIN_MACOS),
+        supported: support.supported,
+        reason: support.reason,
+        min_macos_version: format_version(SCK_AUDIO_MIN_MACOS),
         detected_macos_version: detected.map(format_version),
-        sck_available,
-        coreaudio_available,
     }
 }
 
 #[napi(js_name = "getBackendAvailability")]
 pub async fn get_backend_availability() -> Result<BackendAvailability> {
-    use objc2::runtime::AnyClass;
-    let sck_supported = AnyClass::get(c"SCStream").is_some();
-    let version_str = Some(foundation::operating_system_version_string());
+    let support = classify_support(os_version::current_macos_version());
     Ok(BackendAvailability {
         sck: SckAvailability {
-            supported: sck_supported,
-            macos_version: version_str,
+            supported: support.supported,
+            macos_version: Some(foundation::operating_system_version_string()),
         },
-        coreaudio: CoreAudioAvailability {
-            supported: coreaudio_tap::is_supported(),
-        },
-        screen_permission: "not-determined".to_string(),
-        audio_permission: "not-determined".to_string(),
     })
 }

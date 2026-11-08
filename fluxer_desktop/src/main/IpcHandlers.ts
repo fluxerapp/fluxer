@@ -465,9 +465,6 @@ export function registerIpcHandlers(): void {
 		if (process.platform !== 'darwin') {
 			return 'granted';
 		}
-		if (type === 'audio-capture') {
-			return 'not-determined';
-		}
 		if (type === 'screen') {
 			return refreshTccStatus('screen-recording');
 		}
@@ -476,9 +473,6 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('request-media-access', async (_event, type: MediaAccessType): Promise<boolean> => {
 		if (process.platform !== 'darwin') {
 			return true;
-		}
-		if (type === 'audio-capture') {
-			return false;
 		}
 		if (type === 'screen') {
 			return (await refreshTccStatus('screen-recording')) === 'granted';
@@ -493,7 +487,6 @@ export function registerIpcHandlers(): void {
 			microphone: 'Privacy_Microphone',
 			camera: 'Privacy_Camera',
 			screen: 'Privacy_ScreenCapture',
-			'audio-capture': 'Privacy_AudioCapture',
 		};
 		await shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?${privacyKeys[type]}`);
 	});

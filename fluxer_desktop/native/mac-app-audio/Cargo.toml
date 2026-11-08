@@ -22,7 +22,6 @@ libc = "0.2.191"
 objc2 = "0.6"
 objc2-foundation = {version = "0.3", features = ["NSString", "NSArray", "NSDictionary", "NSError", "NSValue", "NSBundle", "NSProcessInfo"]}
 objc2-screen-capture-kit = {version = "0.3", features = ["SCStream", "SCShareableContent", "objc2-core-graphics", "objc2-core-media", "objc2-core-foundation", "block2", "dispatch2", "libc"]}
-objc2-core-audio = {version = "0.3", features = ["AudioHardware", "AudioHardwareDeprecated", "HostTime", "objc2-core-audio-types", "objc2-foundation"]}
 objc2-core-audio-types = "0.3"
 objc2-core-media = "0.3"
 objc2-core-foundation = {version = "0.3", features = ["CFArray", "CFDictionary", "CFNumber", "CFString", "CFBase"]}

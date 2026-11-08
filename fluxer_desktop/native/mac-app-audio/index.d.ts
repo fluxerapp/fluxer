@@ -7,10 +7,7 @@ export interface MacAppAudioBackendInfo {
 	supported: boolean;
 	reason: string;
 	minMacosVersion: string;
-	minMacosVersionCoreaudio: string;
 	detectedMacosVersion?: string;
-	sckAvailable: boolean;
-	coreaudioAvailable: boolean;
 }
 
 export declare function getBackendInfo(): MacAppAudioBackendInfo;
@@ -20,11 +17,6 @@ export interface MacBackendAvailability {
 		supported: boolean;
 		macosVersion?: string;
 	};
-	coreaudio?: {
-		supported: boolean;
-	};
-	screenPermission?: string;
-	audioPermission?: string;
 }
 
 export interface MacApplicationDescriptor {
@@ -34,13 +26,8 @@ export interface MacApplicationDescriptor {
 }
 
 export interface ProcessLoopbackOptions {
-	excludeSelf?: boolean;
 	includeProcessTree?: boolean;
-	backend?: 'sck' | 'coreaudio' | 'auto';
-	macBackend?: 'sck' | 'coreaudio' | 'auto';
 	captureScope?: 'process' | 'system';
-	macCaptureScope?: 'process' | 'system';
-	scope?: 'process' | 'system';
 }
 
 export interface AudioFrame {

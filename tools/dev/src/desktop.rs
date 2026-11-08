@@ -38,10 +38,6 @@ const MACOS_DEV_ELECTRON_USAGE_DESCRIPTIONS: &[(&str, &str)] = &[
         "Fluxer needs access to Apple Events for automation features.",
     ),
     (
-        "NSAudioCaptureUsageDescription",
-        "Fluxer captures audio from the screen or window you choose to share.",
-    ),
-    (
         "NSScreenCaptureUsageDescription",
         "Fluxer captures the screen or window you choose to share.",
     ),

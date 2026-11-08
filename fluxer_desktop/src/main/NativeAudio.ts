@@ -88,11 +88,6 @@ interface MacBackendAvailability {
 		supported: boolean;
 		macosVersion?: string;
 	};
-	coreaudio?: {
-		supported: boolean;
-	};
-	screenPermission?: string;
-	audioPermission?: string;
 }
 
 interface MacNativeAudioModule {
@@ -102,11 +97,8 @@ interface MacNativeAudioModule {
 	ProcessLoopback: new (
 		pid: number,
 		options?: {
-			excludeSelf?: boolean;
 			includeProcessTree?: boolean;
-			backend?: 'sck' | 'coreaudio' | 'auto';
 			captureScope?: 'process' | 'system';
-			macCaptureScope?: 'process' | 'system';
 		},
 	) => NativeCaptureInstance;
 	loadError?: Error | null;
@@ -455,15 +447,14 @@ async function getNativeAudioAvailability(): Promise<NativeAudioAvailability> {
 	try {
 		const addon = loadResult.addon as MacNativeAudioModule;
 		const backendAvailability = await addon.getBackendAvailability();
-		const coreAudioSupported = backendAvailability.coreaudio?.supported === true;
 		const sckSupported = backendAvailability.sck?.supported === true;
-		const backend = sckSupported ? 'macos-sck' : 'macos-coreaudio';
+		const backend = 'macos-sck';
 		const capabilities = {
-			process: sckSupported || coreAudioSupported,
-			system: sckSupported || coreAudioSupported,
-			systemExcludesSelf: sckSupported || coreAudioSupported,
+			process: sckSupported,
+			system: sckSupported,
+			systemExcludesSelf: sckSupported,
 		};
-		if (!coreAudioSupported && !sckSupported) {
+		if (!sckSupported) {
 			return {
 				available: false,
 				backend,
@@ -781,9 +772,7 @@ async function startNativeAudioCapture(
 	} else if (loadResult.platform === 'darwin') {
 		if (!isValidTargetPid(targetPidForCapture)) throw new Error('Invalid native audio target PID');
 		capture = new (loadResult.addon as MacNativeAudioModule).ProcessLoopback(targetPidForCapture, {
-			excludeSelf: true,
 			includeProcessTree: macSystemCapture ? true : (options.includeProcessTree ?? true),
-			backend: options.macBackend ?? (macSystemCapture ? 'sck' : 'auto'),
 			captureScope: macCaptureScope,
 		});
 	} else if (loadResult.platform === 'linux') {

@@ -1826,7 +1826,6 @@ module.exports = {
 			NSMicrophoneUsageDescription: 'Fluxer needs access to your microphone to enable voice chat features.',
 			NSCameraUsageDescription: 'Fluxer needs access to your camera to enable video chat features.',
 			NSAppleEventsUsageDescription: 'Fluxer needs access to Apple Events for automation features.',
-			NSAudioCaptureUsageDescription: 'Fluxer captures audio from the screen or window you choose to share.',
 			NSScreenCaptureUsageDescription: 'Fluxer captures the screen or window you choose to share.',
 			CFBundleIconName: 'AppIcon',
 			NSLocalNetworkUsageDescription:

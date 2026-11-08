@@ -76,11 +76,8 @@ function getBackendInfo() {
 				process.platform === 'darwin'
 					? `@fluxer/mac-app-audio native binary unavailable: ${loadError?.message ?? 'unknown reason'}`
 					: `@fluxer/mac-app-audio is only supported on macOS, got ${process.platform}`,
-			minMacosVersion: '12.3',
-			minMacosVersionCoreaudio: '14.2',
+			minMacosVersion: '13.0',
 			detectedMacosVersion: undefined,
-			sckAvailable: false,
-			coreaudioAvailable: false,
 		};
 	}
 	return binding.getBackendInfo();
@@ -88,12 +85,7 @@ function getBackendInfo() {
 
 function getBackendAvailability() {
 	if (!binding) {
-		return Promise.resolve({
-			sck: {supported: false},
-			coreaudio: {supported: false},
-			screenPermission: 'not-determined',
-			audioPermission: 'not-determined',
-		});
+		return Promise.resolve({sck: {supported: false}});
 	}
 	return binding.getBackendAvailability();
 }
@@ -105,11 +97,8 @@ class ProcessLoopback extends EventEmitter {
 			throw loadError || new Error('@fluxer/mac-app-audio binding unavailable');
 		}
 		this.pid = pid;
-		void options.excludeSelf;
-		this.excludeSelf = true;
 		this.includeProcessTree = options.includeProcessTree ?? true;
-		this.backend = options.backend ?? options.macBackend ?? 'auto';
-		this.captureScope = options.captureScope ?? options.macCaptureScope ?? options.scope ?? 'process';
+		this.captureScope = options.captureScope ?? 'process';
 		this.started = false;
 		this.stopped = false;
 		this.closedEmitted = false;
@@ -157,7 +146,7 @@ class ProcessLoopback extends EventEmitter {
 		if (this.started || this.stopped) return;
 		this.started = true;
 		try {
-			await this.native.start(this.pid, this.excludeSelf, this.includeProcessTree, this.backend, this.captureScope);
+			await this.native.start(this.pid, this.includeProcessTree, this.captureScope);
 		} catch (error) {
 			this.stopped = true;
 			this.emit('error', error instanceof Error ? error : new Error(String(error)));

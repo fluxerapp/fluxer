@@ -20,8 +20,6 @@ pub mod source_state;
 #[cfg(target_os = "macos")]
 pub mod audio_source;
 #[cfg(target_os = "macos")]
-pub mod coreaudio_tap;
-#[cfg(target_os = "macos")]
 pub mod foundation;
 #[cfg(target_os = "macos")]
 pub mod sck;

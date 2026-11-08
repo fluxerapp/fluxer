@@ -268,7 +268,7 @@ unsafe fn fill_abl_scratch(sample_buffer: &CMSampleBuffer, abl: &mut AblScratch)
         sample_buffer.audio_buffer_list_with_retained_block_buffer(
             ptr::null_mut(),
             abl_ptr,
-            core::mem::size_of::<AblScratch>(),
+            abl_size,
             None::<&CFAllocator>,
             None::<&CFAllocator>,
             0,

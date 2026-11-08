@@ -124,40 +124,6 @@ pub unsafe fn buffer_at(list: *const AudioBufferList, index: usize) -> *const Au
     unsafe { buffers.add(index) }
 }
 
-pub unsafe fn input_frame_count_for_buffer_list(
-    asbd: &AudioStreamBasicDescription,
-    list: *const AudioBufferList,
-) -> Result<u32, PcmConvertError> {
-    if !is_linear_pcm(asbd) {
-        return Err(PcmConvertError::UnsupportedFormat);
-    }
-    let nb = unsafe { (*list).m_number_buffers };
-    if nb == 0 {
-        return Err(PcmConvertError::MissingData);
-    }
-    let first = unsafe { &*buffer_at(list, 0) };
-    if first.m_data.is_null() || first.m_data_byte_size == 0 {
-        return Ok(0);
-    }
-    let channels = if asbd.m_channels_per_frame == 0 {
-        1
-    } else {
-        asbd.m_channels_per_frame
-    };
-    let bps = bytes_per_sample(asbd)?;
-    let frame_stride = if asbd.m_bytes_per_frame != 0 {
-        asbd.m_bytes_per_frame
-    } else if is_non_interleaved(asbd) {
-        bps
-    } else {
-        bps * channels
-    };
-    if frame_stride == 0 {
-        return Ok(0);
-    }
-    Ok(first.m_data_byte_size / frame_stride)
-}
-
 fn read_unsigned(bytes: &[u8], big_endian: bool) -> u64 {
     let mut out: u64 = 0;
     if big_endian {
