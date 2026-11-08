@@ -315,7 +315,7 @@ export class UserAccountRepository {
 
 	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<void> {
 		const activityUpdate = await this.dataRepo.updateLastActiveAt(params);
-		if (activityUpdate && params.lastActiveIp !== undefined) {
+		if (activityUpdate && !activityUpdate.isBot && params.lastActiveIp !== undefined) {
 			await this.indexRepo.updateLastActiveIpIndex(
 				params.userId,
 				activityUpdate.updatedData.last_active_ip ?? params.lastActiveIp,

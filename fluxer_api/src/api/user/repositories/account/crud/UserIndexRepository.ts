@@ -101,7 +101,7 @@ export class UserIndexRepository {
 				}),
 			);
 		}
-		if (written('last_active_ip', 'last_active_at') && data.last_active_ip) {
+		if (written('last_active_ip', 'last_active_at') && data.last_active_ip && !data.bot) {
 			batch.addPrepared(
 				UserByLastActiveIp.upsertAll({
 					last_active_ip: data.last_active_ip,

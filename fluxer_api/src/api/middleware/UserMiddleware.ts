@@ -171,7 +171,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			const botUser = await ctx.get('apiContext').services.users.findUnique(botUserId);
 			if (botUser) {
 				ctx.set('authTokenType', 'bot');
-				setUserInContext(ctx, botUser, false);
+				setUserInContext(ctx, botUser, true);
 			}
 		} else {
 			recordAuthFailure(resolvedClientIp, tokenHash);

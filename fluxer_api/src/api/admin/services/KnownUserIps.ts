@@ -17,8 +17,8 @@ interface RecentUserIp {
 
 async function collectSightings(userRepository: UserRepository, user: User): Promise<Array<IpSighting>> {
 	const sightings: Array<IpSighting> = [];
-	if (user.lastActiveIp) {
-		sightings.push({ip: user.lastActiveIp, seenAt: user.lastActiveAt});
+	if (user.moderationIp) {
+		sightings.push({ip: user.moderationIp, seenAt: user.lastActiveAt});
 	}
 	try {
 		for (const {ip} of await userRepository.getAuthorizedIps(user.id)) {
