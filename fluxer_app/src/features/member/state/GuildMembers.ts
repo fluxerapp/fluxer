@@ -84,20 +84,17 @@ class GuildMembers {
 	nonMembers: Record<string, Set<string>> = {};
 	pendingRequests: Map<string, PendingMemberRequest> = new Map();
 	loadedGuilds: Set<string> = new Set();
-	private pendingMessageMemberHydration: Map<string, Set<string>> = new Map();
-	private inFlightMessageMembers: Map<string, Set<string>> = new Map();
-	private messageMemberRequestGeneration: number = 0;
+	private pendingMemberHydration: Map<string, Set<string>> = new Map();
+	private inFlightMemberRequests: Map<string, Set<string>> = new Map();
+	private memberRequestGeneration: number = 0;
 
 	constructor() {
-		makeAutoObservable<
-			this,
-			'pendingMessageMemberHydration' | 'inFlightMessageMembers' | 'messageMemberRequestGeneration'
-		>(
+		makeAutoObservable<this, 'pendingMemberHydration' | 'inFlightMemberRequests' | 'memberRequestGeneration'>(
 			this,
 			{
-				pendingMessageMemberHydration: false,
-				inFlightMessageMembers: false,
-				messageMemberRequestGeneration: false,
+				pendingMemberHydration: false,
+				inFlightMemberRequests: false,
+				memberRequestGeneration: false,
 			},
 			{autoBind: true},
 		);
@@ -147,11 +144,11 @@ class GuildMembers {
 		this.members = {};
 		this.nonMembers = {};
 		this.loadedGuilds.clear();
-		this.resetMessageMemberRequests();
+		this.resetMemberRequests();
 		const availableGuildIds = new Set(guilds.map((guild) => guild.id));
-		for (const guildId of Array.from(this.pendingMessageMemberHydration.keys())) {
+		for (const guildId of Array.from(this.pendingMemberHydration.keys())) {
 			if (!availableGuildIds.has(guildId)) {
-				this.pendingMessageMemberHydration.delete(guildId);
+				this.pendingMemberHydration.delete(guildId);
 			}
 		}
 		for (const guild of guilds) {
@@ -185,15 +182,15 @@ class GuildMembers {
 		}
 		if (options?.synced || GatewaySessions.foregroundConnection.hasCompletedGuildSync(guild.id)) {
 			this.loadedGuilds.add(guild.id);
-			void this.requestPendingMessageMembers(guild.id);
+			void this.requestPendingMembers(guild.id);
 		}
 	}
 
 	handleGuildDelete(guildId: string): void {
 		delete this.members[guildId];
 		delete this.nonMembers[guildId];
-		this.pendingMessageMemberHydration.delete(guildId);
-		this.inFlightMessageMembers.delete(guildId);
+		this.pendingMemberHydration.delete(guildId);
+		this.inFlightMemberRequests.delete(guildId);
 		this.loadedGuilds.delete(guildId);
 	}
 
@@ -411,31 +408,31 @@ class GuildMembers {
 		await this.fetchMembers(guildId, {userIds: missingIds, markMissingAsNonMembers: true});
 	}
 
-	async ensureMembersLoadedForMessages(guildId: string, userIds: Array<string>): Promise<void> {
+	async hydrateMembers(guildId: string, userIds: Array<string>): Promise<void> {
 		const missingIds = this.getMissingMemberIds(guildId, userIds);
 		if (missingIds.length === 0) {
 			return;
 		}
-		this.queuePendingMessageMemberHydration(guildId, missingIds);
+		this.queuePendingMemberHydration(guildId, missingIds);
 		if (
 			!GatewaySessions.foregroundConnection.hasCompletedGuildSync(guildId) &&
 			SelectedGuild.selectedGuildId === guildId
 		) {
-			GatewaySessions.foregroundConnection.syncGuildIfNeeded(guildId, 'message-member-hydration');
+			GatewaySessions.foregroundConnection.syncGuildIfNeeded(guildId, 'member-hydration');
 		}
-		await this.requestPendingMessageMembers(guildId);
+		await this.requestPendingMembers(guildId);
 	}
 
 	handleConnectionResumed(): void {
-		this.resetMessageMemberRequests();
-		for (const guildId of Array.from(this.pendingMessageMemberHydration.keys())) {
-			void this.requestPendingMessageMembers(guildId);
+		this.resetMemberRequests();
+		for (const guildId of Array.from(this.pendingMemberHydration.keys())) {
+			void this.requestPendingMembers(guildId);
 		}
 	}
 
-	private resetMessageMemberRequests(): void {
-		this.messageMemberRequestGeneration += 1;
-		this.inFlightMessageMembers.clear();
+	private resetMemberRequests(): void {
+		this.memberRequestGeneration += 1;
+		this.inFlightMemberRequests.clear();
 	}
 
 	private getMissingMemberIds(guildId: string, userIds: Array<string>): Array<string> {
@@ -444,22 +441,22 @@ class GuildMembers {
 		return [...new Set(userIds)].filter((id) => !known?.[id] && !negativeCache?.has(id));
 	}
 
-	private queuePendingMessageMemberHydration(guildId: string, userIds: Array<string>): void {
-		let pending = this.pendingMessageMemberHydration.get(guildId);
+	private queuePendingMemberHydration(guildId: string, userIds: Array<string>): void {
+		let pending = this.pendingMemberHydration.get(guildId);
 		if (!pending) {
 			pending = new Set();
-			this.pendingMessageMemberHydration.set(guildId, pending);
+			this.pendingMemberHydration.set(guildId, pending);
 		}
 		for (const userId of userIds) {
 			pending.add(userId);
 		}
 	}
 
-	private async requestPendingMessageMembers(guildId: string): Promise<void> {
+	private async requestPendingMembers(guildId: string): Promise<void> {
 		if (!GatewaySessions.foregroundConnection.hasCompletedGuildSync(guildId)) {
 			return;
 		}
-		const pending = this.pendingMessageMemberHydration.get(guildId);
+		const pending = this.pendingMemberHydration.get(guildId);
 		if (!pending || pending.size === 0) {
 			return;
 		}
@@ -470,13 +467,13 @@ class GuildMembers {
 			}
 		}
 		if (pending.size === 0) {
-			this.pendingMessageMemberHydration.delete(guildId);
+			this.pendingMemberHydration.delete(guildId);
 			return;
 		}
-		let inFlight = this.inFlightMessageMembers.get(guildId);
+		let inFlight = this.inFlightMemberRequests.get(guildId);
 		if (!inFlight) {
 			inFlight = new Set();
-			this.inFlightMessageMembers.set(guildId, inFlight);
+			this.inFlightMemberRequests.set(guildId, inFlight);
 		}
 		const userIds = Array.from(pending).filter((userId) => !inFlight.has(userId));
 		if (userIds.length === 0) {
@@ -485,27 +482,27 @@ class GuildMembers {
 		for (const userId of userIds) {
 			inFlight.add(userId);
 		}
-		const generation = this.messageMemberRequestGeneration;
+		const generation = this.memberRequestGeneration;
 		try {
 			await this.fetchMembers(guildId, {userIds, markMissingAsNonMembers: true});
-			if (generation === this.messageMemberRequestGeneration) {
-				this.forgetPendingMessageMembers(guildId, userIds);
+			if (generation === this.memberRequestGeneration) {
+				this.forgetPendingMembers(guildId, userIds);
 			}
 		} catch (error) {
-			logger.warn('Failed to hydrate message author members, will retry on the next load or reconnect', {
+			logger.warn('Failed to hydrate members, will retry on the next load or reconnect', {
 				guildId,
 				userIds,
 				error,
 			});
 		} finally {
-			if (generation === this.messageMemberRequestGeneration) {
-				this.releaseInFlightMessageMembers(guildId, userIds);
+			if (generation === this.memberRequestGeneration) {
+				this.releaseInFlightMembers(guildId, userIds);
 			}
 		}
 	}
 
-	private forgetPendingMessageMembers(guildId: string, userIds: Array<string>): void {
-		const pending = this.pendingMessageMemberHydration.get(guildId);
+	private forgetPendingMembers(guildId: string, userIds: Array<string>): void {
+		const pending = this.pendingMemberHydration.get(guildId);
 		if (!pending) {
 			return;
 		}
@@ -513,12 +510,12 @@ class GuildMembers {
 			pending.delete(userId);
 		}
 		if (pending.size === 0) {
-			this.pendingMessageMemberHydration.delete(guildId);
+			this.pendingMemberHydration.delete(guildId);
 		}
 	}
 
-	private releaseInFlightMessageMembers(guildId: string, userIds: Array<string>): void {
-		const inFlight = this.inFlightMessageMembers.get(guildId);
+	private releaseInFlightMembers(guildId: string, userIds: Array<string>): void {
+		const inFlight = this.inFlightMemberRequests.get(guildId);
 		if (!inFlight) {
 			return;
 		}
@@ -526,7 +523,7 @@ class GuildMembers {
 			inFlight.delete(userId);
 		}
 		if (inFlight.size === 0) {
-			this.inFlightMessageMembers.delete(guildId);
+			this.inFlightMemberRequests.delete(guildId);
 		}
 	}
 

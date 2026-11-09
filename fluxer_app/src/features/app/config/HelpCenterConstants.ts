@@ -3,6 +3,6 @@
 export enum HelpCenterArticleSlug {
 	AttachmentExpiry = 'attachment-expiry',
 	ChangeDateOfBirth = 'change-date-of-birth',
-	NoIdOrFaceScans = 'no-id-or-face-scans',
 	TranslateFluxer = 'translate-fluxer',
+	WhyDateOfBirth = 'why-date-of-birth',
 }

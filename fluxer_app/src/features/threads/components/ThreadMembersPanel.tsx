@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {OutlineFrame} from '@app/features/app/components/layout/OutlineFrame';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/ChannelMembers.module.css';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
@@ -21,7 +20,6 @@ import type {User} from '@app/features/user/models/User';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {filterDisplayRoles} from '@fluxer/constants/src/RoleDisplayUtils';
 import {isOfflineStatus, type StatusType} from '@fluxer/constants/src/StatusConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -109,7 +107,7 @@ function resolveMembers(guildId: string | undefined, roster: ReadonlyArray<Threa
 
 function getHoistedRoles(guild: Guild | undefined): Array<GuildRole> {
 	if (!guild) return [];
-	return filterDisplayRoles(Object.values(guild.roles), RuntimeConfig.hiddenRoleIds)
+	return Object.values(guild.roles)
 		.filter((role) => role.hoist && role.id !== guild.id)
 		.sort((a, b) => b.effectiveHoistPosition - a.effectiveHoistPosition || (BigInt(a.id) < BigInt(b.id) ? -1 : 1));
 }

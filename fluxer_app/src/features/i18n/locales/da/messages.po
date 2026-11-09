@@ -16896,6 +16896,11 @@ msgstr "Fluxer kunne ikke oprette forbindelse til {host}. Serveren svarede: \"{e
 msgid "Fluxer couldn't connect to {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
 msgstr "Fluxer kunne ikke nå {instanceName} for at tjekke, om din browser godkendte dette login. Tjek din forbindelse, og vælg så \"Prøv igen\"."
 
+#. Error shown in the desktop app when a passkey prompt starts but no security key is connected to the computer.
+#: src/features/auth/utils/PasskeyErrorMessages.ts
+msgid "Fluxer couldn't find a security key on this computer. Connect your security key and try again, or open Fluxer in your web browser and use your passkey there."
+msgstr "Fluxer kunne ikke finde en sikkerhedsnøgle på denne computer. Tilslut din sikkerhedsnøgle, og prøv igen, eller åbn Fluxer i din webbrowser, og brug din adgangsnøgle der."
+
 #. Name of the section in the Operator Pass settings tab about the Fluxer Labs community. Fluxer Labs is the name of a community, keep it as is.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "Fluxer Labs"
@@ -27181,6 +27186,11 @@ msgstr "Folk kan stadig oprette sig og logge ind. Indtil du tilføjer en e-mailt
 msgid "People choose a username and a password, and nobody needs an email address. If someone forgets their password, they use the recovery kit they saved, or an admin makes them a reset link."
 msgstr "Folk vælger et brugernavn og en adgangskode, og ingen behøver en e-mailadresse. Hvis nogen glemmer deres adgangskode, bruger de det gendannelsessæt, de gemte, eller en administrator laver et nulstillingslink til dem."
 
+#. Sentence after a note about how Fluxer Labs shows a person with a hidden Operator Pass or Visionary badge, and in the "Show #operators" setting. #operators is a channel name, keep it as is. Everyone who can open the channel sees who else is in it.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "People in #operators can see that you're in it."
+msgstr "Folk i #operators kan se, at du er med."
+
 #. Describes the current setting in the privacy setup modal when community members can send direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "People in your communities can message you without being friends."
@@ -33097,15 +33107,10 @@ msgstr "Delt vindue"
 msgid "Shared window audio"
 msgstr "Lyd fra delt vindue"
 
-#. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at 720p, up to 30 FPS"
-msgstr "Skarp tekst i 720p, op til 30 FPS"
-
-#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 1080p, 30 FPS"
-msgstr "Skarp tekst i op til 1080p, 30 FPS"
+msgid "Sharp text at up to {resolution}, {frameRate} FPS"
+msgstr "Skarp tekst i op til {resolution}, {frameRate} FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34342,15 +34347,10 @@ msgstr "Smilende ansigt"
 msgid "Smileys"
 msgstr "Tekstsmileyer"
 
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 30 FPS at up to 720p"
-msgstr "Glat 30 FPS ved op til 720p"
-
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 60 FPS at up to 1440p"
-msgstr "Glat 60 FPS ved op til 1440p"
+msgid "Smooth {frameRate} FPS at up to {resolution}"
+msgstr "Glat {frameRate} FPS ved op til {resolution}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -36794,16 +36794,6 @@ msgstr "Antallet af pas er ændret, så sæt flueben i leveringsfeltet igen."
 msgid "The Operator badge"
 msgstr "Operator-badget"
 
-#. Description of the Fluxer Labs section in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "The Operator role opens #operators in {labsName}, where you can talk about self-hosting, bots and the API."
-msgstr "Operator-rollen åbner #operators i {labsName}, hvor du kan tale om selvhosting, bots og API'et."
-
-#. Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. Operator is the role's name, keep it in English. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the role gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
-msgid "The Operator role opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can."
-msgstr "Operator-rollen åbner #operators, hvor du kan snakke om selvhosting, bots og API'et. Hampus, der skabte {productName}, er med, når han kan."
-
 #. Activity log detail row under a removed channel permission override, listing the permissions it explicitly allowed before it was removed. It describes the removed override. It does not mean these permissions are allowed now. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "The override allowed {permissions}"
@@ -36822,6 +36812,11 @@ msgstr "Siden du leder efter, findes ikke eller er blevet flyttet."
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "The pass is yours now."
 msgstr "Passet er dit nu."
+
+#. Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. The pass is the Operator Pass. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the pass gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
+msgid "The pass opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can."
+msgstr "Passet åbner #operators, hvor man taler om selvhosting, bots og API'et. Hampus, der skabte {productName}, er med, når han kan."
 
 #. Error shown when the browser passkey prompt ends without a passkey.
 #: src/features/auth/utils/PasskeyErrorMessages.ts
@@ -37740,10 +37735,10 @@ msgstr "Denne instans har allerede konti, så hvordan folk logger ind, kan ikke 
 msgid "This instance already has an administrator. Sign in with that account to finish setting it up."
 msgstr "Denne instans har allerede en administrator. Log ind med den konto for at gøre opsætningen færdig."
 
-#. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
+#. Neutral video settings note shown when instance limits cap screen share quality. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
-msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
-msgstr "Denne instans tillader i øjeblikket skærmdeling op til 720p ved 30 FPS."
+msgid "This instance currently allows screen sharing up to {resolution} at {frameRate} FPS."
+msgstr "Denne instans tillader i øjeblikket skærmdeling op til {resolution} ved {frameRate} FPS."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx
@@ -39313,8 +39308,8 @@ msgstr "Hvis du slår dette fra, skjules dit kamera kun for dig selv. Andre i op
 
 #. Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again."
-msgstr "Hvis du slår dette fra, fjernes de roller, der åbner #operators i {labsName}, og vi giver dem ikke tilbage, før du slår det til igen."
+msgid "Turning this off takes away your access to #operators in {labsName} until you turn it on again."
+msgstr "Hvis du slår dette fra, mister du adgangen til #operators i {labsName}, indtil du slår det til igen."
 
 #. Help under the Klipy API key field in the setup wizard.
 #: src/features/app/components/setup/SetupServicesStep.tsx
@@ -40670,6 +40665,11 @@ msgstr "Brug en anden konto"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Use a different email"
 msgstr "Brug en anden e-mail"
+
+#. Action label on the sign-in screen that starts sign-in with a passkey or security key registered on the old web address. host is that address, for example web.fluxer.app.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Use a passkey saved for {host}"
+msgstr "Brug en adgangsnøgle gemt til {host}"
 
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Use a self-hosted instance URL"
@@ -42363,10 +42363,10 @@ msgstr "Vi har sendt en kode til {email}."
 msgid "We sent a new code."
 msgstr "Vi sendte en ny kode."
 
-#. Description under the switch "Welcome me in #operators" in the Operator Pass settings. #operators is a channel in the Fluxer Labs community, keep it as is. Turning the switch on after the pass is delivered still queues the one welcome.
+#. Description under the switch "Welcome me in #operators" in the Operator Pass settings. #operators is a channel in the Fluxer Labs community, keep it as is. Turning the switch on after the pass is delivered still queues the one welcome. Operator Pass is a product name and stays untranslated. A limited profile means the profile privacy setting is anything other than "Friends and all communities". A welcome already sent is edited so it no longer mentions the person.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "We welcome you by name in #operators once, soon after your pass is delivered or you turn this on."
-msgstr "Vi byder dig velkommen med navn i #operators én gang, kort efter at dit pass er leveret, eller efter at du slår dette til."
+msgid "We welcome you by name in #operators once, soon after your pass is delivered or you turn this on. While your Operator Pass badge is hidden or your profile is limited, we skip the welcome and take your name out of one we already sent."
+msgstr "Vi byder dig velkommen med navn i #operators én gang, kort efter at dit pass er leveret, eller efter at du slår dette til. Mens dit Operator Pass-badge er skjult, eller din profil er begrænset, springer vi velkomsten over og fjerner dit navn fra en velkomst, vi allerede har sendt."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
@@ -42845,6 +42845,16 @@ msgstr "Hvilke samtaler"
 msgid "While push-to-talk is on, your keybind controls your microphone, so the mute button is disabled."
 msgstr "Når Tryk for at tale er slået til, styrer genvejen din mikrofon, så knappen til at slå mikrofonen fra er deaktiveret."
 
+#. Note under the Visionary badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Visionary is the role name and #operators is a channel name, keep both as is. Masked means the switch "Mask Visionary as subscription" is on.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "While this badge is hidden or masked, {labsName} shows you without the Visionary role, and you keep #operators."
+msgstr "Mens dette badge er skjult eller vises som et abonnement, viser {labsName} dig uden Visionary-rollen, og du beholder #operators."
+
+#. Note under the Operator Pass badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Operator is the role name and #operators is a channel name, keep both as is.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators."
+msgstr "Mens dette badge er skjult, viser {labsName} dig uden Operator-rollen, og du beholder #operators."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Who can add"
@@ -43038,6 +43048,11 @@ msgstr "Med et brugernavn"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "With an email address"
 msgstr "Med en e-mailadresse"
+
+#. Privacy > Profile privacy: note under the section title, shown to people with an Operator Pass or Visionary. "Friends and all communities" is the label of the first option, translate it the same way. {labsName} is the name of the official community, such as Fluxer Labs. Operator and Visionary are role names and #operators is a channel name, keep them as is.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx
+msgid "With any choice other than \"Friends and all communities\", {labsName} shows you without the Operator and Visionary roles, and you keep #operators."
+msgstr "Med alle andre valg end \"Venner og alle fællesskaber\" viser {labsName} dig uden Operator- og Visionary-rollerne, og du beholder #operators."
 
 #. Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
@@ -44153,10 +44168,10 @@ msgstr "Du er i talekanalen"
 msgid "You're no longer previewing {community}."
 msgstr "Du forhåndsviser ikke længere {community}."
 
-#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name and Operator is the role name, keep both as is. {labsName} is the name of the community, such as Fluxer Labs.
+#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "You're not in {labsName}. Joining gives you the Operator role, which opens #operators, where you can talk about self-hosting, bots and the API."
-msgstr "Du er ikke med i {labsName}. Når du bliver medlem, får du Operator-rollen, som åbner #operators, hvor du kan tale om selvhosting, bots og API'et."
+msgid "You're not in {labsName}. Joining opens #operators, where you can talk about self-hosting, bots and the API."
+msgstr "Du er ikke med i {labsName}. Når du bliver medlem, åbner det #operators, hvor du kan tale om selvhosting, bots og API'et."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx
@@ -44733,6 +44748,11 @@ msgstr "Alle dine andre pas er allerede tilbudt til nogen. Dette er dit sidste."
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
 msgid "Your pass comes with this certificate. It's a PDF with one page for each pass, and each page has its own number, the name you choose at checkout and the date and time you paid. We email it to you, and in settings each page has its own link that you can open, print or share. Buying for someone else? Put their name on their certificate."
 msgstr "Dit pas kommer med dette certifikat. Det er en PDF med én side for hvert pas, og hver side har sit eget nummer, det navn, du vælger ved betalingen, og datoen og tidspunktet, hvor du betalte. Vi sender det til dig på e-mail, og i indstillingerne har hver side sit eget link, som du kan åbne, udskrive eller dele. Køber du til en anden? Skriv deres navn på deres certifikat."
+
+#. Description of the Fluxer Labs section in the Operator Pass settings. The pass is the Operator Pass. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Your pass opens #operators in {labsName}, where you can talk about self-hosting, bots and the API."
+msgstr "Dit pass åbner #operators i {labsName}, hvor du kan tale om selvhosting, bots og API'et."
 
 #. Name of the section in the Operator Pass settings tab that lists the Operator Passes the account holds.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts

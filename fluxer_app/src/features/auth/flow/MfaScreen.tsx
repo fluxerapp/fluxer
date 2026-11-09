@@ -3,7 +3,10 @@
 import {MFA_CODE_DIGIT_COUNT} from '@app/features/app/config/I18nDisplayConstants';
 import {SIGN_IN_WITH_BROWSER_DESCRIPTOR} from '@app/features/auth/AuthMessageDescriptors';
 import FormField from '@app/features/auth/flow/AuthFormField';
-import {AuthLoginBrowserStep} from '@app/features/auth/flow/auth_login_core/AuthLoginBrowserStep';
+import {
+	AuthLoginBrowserStep,
+	resolveShouldOfferBrowserStep,
+} from '@app/features/auth/flow/auth_login_core/AuthLoginBrowserStep';
 import styles from '@app/features/auth/flow/MfaScreen.module.css';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {type StepTitleChangeHandler, useReportStepTitle} from '@app/features/auth/flow/useReportStepTitle';
@@ -93,12 +96,17 @@ const MfaScreen = ({
 		);
 	}
 	const showCodeForm = supports.totp || supports.backupCodes;
-	const showBrowserSignIn =
-		supports.webauthn && offerBrowserSignIn && passkeyLoginCapability === PasskeyLoginCapability.BROWSER_HANDOFF;
 	const showWebAuthn =
 		supports.webauthn && (!offerBrowserSignIn || passkeyLoginCapability === PasskeyLoginCapability.AVAILABLE);
+	const showBrowserSignIn =
+		supports.webauthn &&
+		offerBrowserSignIn &&
+		resolveShouldOfferBrowserStep() &&
+		(passkeyLoginCapability === PasskeyLoginCapability.AVAILABLE ||
+			passkeyLoginCapability === PasskeyLoginCapability.BROWSER_HANDOFF);
 	const backupCodeOnly = !supports.totp;
 	const isCodePrimary = supports.totp || !(showWebAuthn || showBrowserSignIn);
+	const isBrowserSignInPrimary = !isCodePrimary && !showWebAuthn;
 	return (
 		<div className={styles.container} data-flx="auth.flow.mfa-screen.container--2">
 			{onStepTitleChange == null ? (
@@ -172,10 +180,10 @@ const MfaScreen = ({
 					<Button
 						type="button"
 						fitContainer
-						variant={isCodePrimary ? 'secondary' : 'primary'}
+						variant={isBrowserSignInPrimary ? 'primary' : 'secondary'}
 						onClick={handleShowBrowserStep}
-						autoFocus={!isCodePrimary}
-						data-step-focus={isCodePrimary ? undefined : 'true'}
+						autoFocus={isBrowserSignInPrimary}
+						data-step-focus={isBrowserSignInPrimary ? 'true' : undefined}
 						data-flx="auth.flow.mfa-screen.button.browser-sign-in"
 					>
 						{i18n._(SIGN_IN_WITH_BROWSER_DESCRIPTOR)}

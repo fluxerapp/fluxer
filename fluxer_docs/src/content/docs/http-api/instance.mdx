@@ -348,7 +348,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | feature_early_access | Beta features (user) |
 | feature_global_expressions | Using expressions in every guild (user) |
 | feature_guild_create | Creating communities while the instance restricts it (user) |
-| feature_higher_video_quality | Higher video streaming quality (user) |
+| feature_higher_video_quality | Higher video streaming quality: screen shares up to 2160p at 120 FPS and cameras up to 1080p, whatever the `max_screen_share_resolution`, `max_screen_share_frame_rate` and `max_camera_resolution` limits say (user) |
 | feature_per_guild_profiles | A different profile in each guild (user) |
 | feature_voice_entrance_sounds | A sound when joining voice (user) |
 | guild_visit_history_days_unverified | Days of history an unverified account sees while [visiting](/http-api/guilds/#visiting-guilds) a guild (user) |
@@ -357,6 +357,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_bio_length | Maximum characters in a bio, 320 by default and at most 1000 (user) |
 | max_bookmarks | Maximum bookmarked messages (user) |
 | max_bot_attachment_file_size | Maximum size of each attachment a bot uploads in bytes, 52428800 by default. A bot gets the lower of this and `max_attachment_file_size` (user and guild) |
+| max_camera_resolution | Tallest camera video in pixels, 720 or 1080 (user) |
 | max_channels_per_category | Maximum channels per category (guild) |
 | max_custom_backgrounds | Maximum custom profile backgrounds (user) |
 | max_embeds_per_message | Maximum embeds per message (user and guild) |
@@ -382,6 +383,8 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_reactions_per_message | Maximum distinct reactions per message (guild) |
 | max_relationships | Maximum friends and blocked users (user) |
 | max_screen_share_bitrate | Highest screen share bitrate in bits per second, 1000000 to 50000000 (user) |
+| max_screen_share_frame_rate | Highest screen share frame rate, 30 to 120, rounded down to 30, 60 or 120 (user) |
+| max_screen_share_resolution | Tallest screen share in pixels, 720 to 2160, rounded down to 720, 1080, 1440 or 2160, where 2160 also allows the source resolution (user) |
 | max_users_per_message_reaction | Maximum users per reaction on a message (guild) |
 | max_voice_message_duration | Maximum voice message length in seconds (user and guild) |
 | max_webhooks_per_channel | Maximum webhooks per channel (guild) |
@@ -428,7 +431,7 @@ What a client needs before anyone signs in.
 | premium_showcase_profile_url | ?string | Image next to the profile card on the premium page of a self-hosted instance, or null |
 | premium_showcase_stream_url | ?string | Image next to the stream card on the premium page of a self-hosted instance, or null |
 | premium_showcase_upload_url | ?string | Image next to the upload card on the premium page of a self-hosted instance, or null |
-| custom_css | ?string | CSS the web and desktop app apply before the person's own theme, except on sign-in pages, or null |
+| custom_css | ?string | CSS the web and desktop app apply, including on sign-in pages, before the person's own theme, or null |
 | upload_limit_message | ?string | Markdown shown when a file is over the upload limit, or null for the default text |
 | trusted_domains | string[] | Extra domains whose links open without a warning. Entries are hostnames, and a `*.` prefix also covers subdomains |
 

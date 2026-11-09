@@ -286,6 +286,7 @@ export async function startWorkerRuntime(options: WorkerRuntimeOptions): Promise
 						messageDeletionDelayMs: Config.automatedMessageDeletionDelayDays * ms('1 day'),
 					},
 					dependencies.channelRepository,
+					dependencies.operatorPassServices.roleService,
 				),
 				guildInvites: guildInvitePauseDeps(dependencies),
 			});

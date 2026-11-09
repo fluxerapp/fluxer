@@ -33,7 +33,7 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {classifyVideoEncoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {getVideoQualityCaps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	BackupCodecPolicy,
 	type LocalParticipant,
@@ -217,7 +217,7 @@ export function resolveConfiguredScreenShareTarget(
 		mode: VoiceSettings.getStreamingMode(),
 		storedResolution: VoiceSettings.getScreenshareResolution(),
 		storedFrameRate: VoiceSettings.getVideoFrameRate(),
-		entitled: hasHigherVideoQuality(),
+		caps: getVideoQualityCaps(),
 		context,
 		sourceDimensions,
 		hintSetting: VoiceSettings.getScreenShareContentHint(),

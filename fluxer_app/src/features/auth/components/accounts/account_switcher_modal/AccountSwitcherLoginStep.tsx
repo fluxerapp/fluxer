@@ -86,6 +86,7 @@ export function AccountSwitcherLoginStep({
 			ssoRedirectPath={null}
 			suppressInlineBackButtons={true}
 			allowSsoAutoStart={false}
+			passkeyBridgePageAvailable={false}
 			onLoginComplete={onLoginComplete}
 			data-flx="auth.accounts.account-switcher-modal.account-switcher-login-step.auth-login-layout"
 		/>

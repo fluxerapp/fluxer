@@ -85,7 +85,6 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
-	readonly hiddenRoleIds: ReadonlyArray<string>;
 }
 
 export class InvalidRuntimeConfigSnapshotError extends Error {
@@ -665,16 +664,6 @@ function readHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuil
 	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
 }
 
-function readHiddenRoleIds(value: unknown): ReadonlyArray<string> {
-	if (value === undefined) {
-		return [];
-	}
-	if (!Array.isArray(value) || !value.every((id) => typeof id === 'string')) {
-		invalid('hiddenRoleIds', 'must be an array of strings');
-	}
-	return [...value];
-}
-
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
 	const source = readRecord(value, 'root');
 	return {
@@ -712,6 +701,5 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 				: readNonEmptyString(source, 'customBadgesVersion', 'customBadgesVersion'),
 		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
 		hiddenBuiltInGuildBadges: readHiddenBuiltInGuildBadges(source.hiddenBuiltInGuildBadges),
-		hiddenRoleIds: readHiddenRoleIds(source.hiddenRoleIds),
 	};
 }

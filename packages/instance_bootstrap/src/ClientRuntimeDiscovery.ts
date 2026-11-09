@@ -70,7 +70,6 @@ export interface ClientRuntimeDiscovery {
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
-	readonly hiddenRoleIds: ReadonlyArray<string>;
 }
 
 export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocument): ClientRuntimeDiscovery {
@@ -95,7 +94,6 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		customBadgesVersion: document.customBadgesVersion ?? null,
 		builtInGuildBadgeImages: document.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES,
 		hiddenBuiltInGuildBadges: document.hiddenBuiltInGuildBadges ?? [],
-		hiddenRoleIds: document.hiddenRoleIds ?? [],
 	};
 }
 

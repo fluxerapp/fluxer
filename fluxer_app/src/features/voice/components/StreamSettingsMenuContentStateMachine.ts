@@ -7,6 +7,8 @@ import {
 	prestartAudioToggleIsPickerOwned,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
 import {
+	capsAllowScreenShareFrameRate,
+	capsAllowScreenShareResolution,
 	normaliseResolutionForContext,
 	normaliseStreamingModeForContext,
 	resolveScreenShareQualityPick,
@@ -15,7 +17,6 @@ import {
 	type ScreenShareQualityPatch,
 	type ScreenShareQualityPick,
 	type ScreenShareTarget,
-	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {
@@ -28,6 +29,7 @@ import {
 	selectAppShareAudioRoute,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {BASE_VIDEO_QUALITY_CAPS, FULL_VIDEO_QUALITY_CAPS} from '@app/features/voice/utils/VideoQualityCaps';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {initialTransition, setup, transition} from 'xstate';
@@ -226,12 +228,12 @@ export type StreamSettingsQualityWrite =
 interface StreamSettingsQualitySignals {
 	quality: ScreenShareQualityInput;
 	pick: ScreenShareQualityPick;
-	premiumOption: boolean;
+	locked: boolean;
 	showPremiumFeatures: boolean;
 }
 
 function selectStreamSettingsQualityWrite(signals: StreamSettingsQualitySignals): StreamSettingsQualityWrite {
-	if (signals.premiumOption && !signals.quality.entitled) {
+	if (signals.locked) {
 		return signals.showPremiumFeatures ? {kind: 'premium'} : {kind: 'none'};
 	}
 	const patch = resolveScreenShareQualityPick(signals.quality, signals.pick);
@@ -252,14 +254,14 @@ export function offeredScreenShareResolution(resolution: ScreenshareResolution):
 	return resolution === 'low_240p' ? 'low_480p' : resolution;
 }
 
-const STREAM_SETTINGS_FREE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['low_480p', 'medium'];
-const STREAM_SETTINGS_PREMIUM_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['high', 'ultra', 'source'];
-const STREAM_SETTINGS_FREE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30];
-const STREAM_SETTINGS_PREMIUM_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [60, 120];
+export const OFFERED_SCREEN_SHARE_FRAME_RATES = [
+	15, 30, 60, 120,
+] as const satisfies ReadonlyArray<SupportedScreenShareFrameRate>;
 
 interface StreamSettingsQualityOption<T> {
 	value: T;
 	premium: boolean;
+	locked: boolean;
 	selected: boolean;
 	write: StreamSettingsQualityWrite;
 }
@@ -279,27 +281,29 @@ export function contextAllowsScreenShareResolution(
 	resolution: OfferedScreenShareResolution,
 	context: ScreenShareContext,
 ): boolean {
-	return normaliseResolutionForContext(resolution, context, true) === resolution;
+	return normaliseResolutionForContext(resolution, context, FULL_VIDEO_QUALITY_CAPS) === resolution;
 }
 
 export function selectStreamSettingsQualityMenuState(
 	signals: StreamSettingsQualityMenuSignals,
 ): StreamSettingsQualityMenuViewState {
-	const offersPremium = signals.quality.entitled || signals.showPremiumFeatures;
+	const caps = signals.quality.caps;
 	const selectedResolution = offeredScreenShareResolution(signals.target.resolution);
 	const buildOption = <T>(
 		value: T,
 		premium: boolean,
+		locked: boolean,
 		selected: boolean,
 		pick: ScreenShareQualityPick,
 	): StreamSettingsQualityOption<T> => ({
 		value,
 		premium,
+		locked,
 		selected,
 		write: selectStreamSettingsQualityWrite({
 			quality: signals.quality,
 			pick,
-			premiumOption: premium,
+			locked,
 			showPremiumFeatures: signals.showPremiumFeatures,
 		}),
 	});
@@ -307,26 +311,28 @@ export function selectStreamSettingsQualityMenuState(
 		resolutions: OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
 			(value) =>
 				value === selectedResolution ||
-				STREAM_SETTINGS_FREE_RESOLUTIONS.includes(value) ||
-				(offersPremium &&
-					STREAM_SETTINGS_PREMIUM_RESOLUTIONS.includes(value) &&
-					contextAllowsScreenShareResolution(value, signals.quality.context)),
+				(contextAllowsScreenShareResolution(value, signals.quality.context) &&
+					(capsAllowScreenShareResolution(caps, value) || signals.showPremiumFeatures)),
 		).map((value) =>
-			buildOption(value, STREAM_SETTINGS_PREMIUM_RESOLUTIONS.includes(value), value === selectedResolution, {
-				axis: 'resolution',
-				resolution: value,
-			}),
+			buildOption(
+				value,
+				!capsAllowScreenShareResolution(BASE_VIDEO_QUALITY_CAPS, value),
+				!capsAllowScreenShareResolution(caps, value),
+				value === selectedResolution,
+				{axis: 'resolution', resolution: value},
+			),
 		),
-		frameRates: SUPPORTED_SCREEN_SHARE_FRAME_RATES.filter(
+		frameRates: OFFERED_SCREEN_SHARE_FRAME_RATES.filter(
 			(value) =>
-				value === signals.target.frameRate ||
-				STREAM_SETTINGS_FREE_FRAME_RATES.includes(value) ||
-				(offersPremium && STREAM_SETTINGS_PREMIUM_FRAME_RATES.includes(value)),
+				value === signals.target.frameRate || capsAllowScreenShareFrameRate(caps, value) || signals.showPremiumFeatures,
 		).map((value) =>
-			buildOption(value, !STREAM_SETTINGS_FREE_FRAME_RATES.includes(value), value === signals.target.frameRate, {
-				axis: 'frameRate',
-				frameRate: value,
-			}),
+			buildOption(
+				value,
+				!capsAllowScreenShareFrameRate(BASE_VIDEO_QUALITY_CAPS, value),
+				!capsAllowScreenShareFrameRate(caps, value),
+				value === signals.target.frameRate,
+				{axis: 'frameRate', frameRate: value},
+			),
 		),
 	};
 }

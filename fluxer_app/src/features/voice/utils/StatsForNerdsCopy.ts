@@ -42,7 +42,7 @@ import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareE
 import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
 import {getScreenShareDecodeFailures} from '@app/features/voice/utils/VideoDecoderCapabilities';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {getVideoQualityCaps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
 	collectScreenShareAudioPublicationDiagnostics,
@@ -267,7 +267,7 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
 		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality(),
+		getVideoQualityCaps(),
 	);
 	return {
 		inputDeviceIdHash: hashString(VoiceSettings.getInputDeviceId()),
@@ -487,7 +487,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
 		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality(),
+		getVideoQualityCaps(),
 	);
 	const localParticipant = MediaEngine.room?.localParticipant ?? null;
 	const voicePresentation = buildVoiceStatsForNerdsPresentation({

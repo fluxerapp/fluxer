@@ -196,6 +196,7 @@ interface MfaWebAuthnOptionsRequest {
 
 interface WebAuthnOptionsRequest {
 	target: InstanceHTTPTarget;
+	rpId?: string;
 }
 
 interface WebAuthnLoginRequest {
@@ -383,11 +384,15 @@ export async function getWebAuthnMfaOptions({
 
 export async function getWebAuthnAuthenticationOptions({
 	target,
+	rpId,
 }: WebAuthnOptionsRequest): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	try {
 		const response = await instanceRequest<PublicKeyCredentialRequestOptionsJSON>({
 			method: 'POST',
-			path: Endpoints.AUTH_WEBAUTHN_OPTIONS,
+			path:
+				rpId === undefined
+					? Endpoints.AUTH_WEBAUTHN_OPTIONS
+					: `${Endpoints.AUTH_WEBAUTHN_OPTIONS}?${new URLSearchParams({rp_id: rpId})}`,
 			target,
 			headers: withAuthLocaleHeader(),
 		});

@@ -692,7 +692,6 @@ class RuntimeConfig {
 			customBadgesVersion: resolution.snapshot.customBadgesVersion,
 			builtInGuildBadgeImages: resolution.snapshot.builtInGuildBadgeImages,
 			hiddenBuiltInGuildBadges: resolution.snapshot.hiddenBuiltInGuildBadges,
-			hiddenRoleIds: resolution.snapshot.hiddenRoleIds,
 			limits: resolution.snapshot.limits,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
@@ -945,10 +944,6 @@ class RuntimeConfig {
 
 	get hiddenBuiltInGuildBadges(): InstanceHiddenBuiltInGuildBadges {
 		return this.activeRuntime?.snapshot.hiddenBuiltInGuildBadges ?? [];
-	}
-
-	get hiddenRoleIds(): ReadonlyArray<string> {
-		return this.activeRuntime?.snapshot.hiddenRoleIds ?? [];
 	}
 
 	get gifEnabled(): boolean {

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import {getOperatorPassWallService} from '@app/api/middleware/ServiceSingletons';
+import {getCacheService, getOperatorPassWallService} from '@app/api/middleware/ServiceSingletons';
 import {OperatorPassHoldingService} from '@app/api/operator_pass/OperatorPassHoldingService';
 import {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {OperatorPassRemovalService} from '@app/api/operator_pass/OperatorPassRemovalService';
@@ -17,6 +19,8 @@ interface OperatorPassServiceDependencies {
 	userRepository: UserRepository;
 	guildRepository: GuildRepository;
 	guildService: GuildService;
+	channelRepository: Pick<ChannelRepository, 'channelData'>;
+	channelService: ChannelService;
 	emailService: IEmailService;
 	gatewayService: IGatewayService;
 }
@@ -41,10 +45,17 @@ class LazyOperatorPassServices implements OperatorPassServices {
 	}
 
 	get roleService(): OperatorPassLabsRoleService {
-		this.cachedRoleService ??= new OperatorPassLabsRoleService(
-			this.dependencies.guildRepository,
-			this.dependencies.guildService,
-		);
+		const dependencies = this.dependencies;
+		this.cachedRoleService ??= new OperatorPassLabsRoleService({
+			guildRepository: dependencies.guildRepository,
+			guildService: dependencies.guildService,
+			userRepository: dependencies.userRepository,
+			cacheService: getCacheService(),
+			channelRepository: dependencies.channelRepository,
+			get channelOverwrites() {
+				return dependencies.channelService.channelData.operations;
+			},
+		});
 		return this.cachedRoleService;
 	}
 

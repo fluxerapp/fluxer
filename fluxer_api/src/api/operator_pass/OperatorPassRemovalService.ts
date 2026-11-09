@@ -10,11 +10,7 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
 import type {User} from '@app/api/models/User';
-import {
-	dispatchOperatorPassUserUpdate,
-	isOperatorPassEntitled,
-	loadOperatorPassEntitlementState,
-} from '@app/api/operator_pass/OperatorPassEntitlementService';
+import {dispatchOperatorPassUserUpdate} from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {
 	keepsOperatorsThroughVisionary,
 	type OperatorPassLabsRoleService,
@@ -294,10 +290,7 @@ export class OperatorPassRemovalService {
 	}
 
 	private async syncHolder(userId: UserID): Promise<void> {
-		const user = await this.userRepository.findUnique(userId);
-		const entitled =
-			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.repository, userId));
-		await this.roleService.syncLabsRoles(userId, user, entitled);
+		await this.roleService.resyncLabsRoles(userId);
 		await dispatchOperatorPassUserUpdate(
 			{repository: this.repository, userRepository: this.userRepository, gatewayService: this.gatewayService},
 			userId,

@@ -113,7 +113,7 @@ export const InstanceBrandingSchema = z
 			.string()
 			.nullable()
 			.describe(
-				'Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages',
+				'Optional stylesheet a self-hosted instance applies to its web and desktop app, including on sign-in pages',
 			),
 		upload_limit_message: z
 			.string()
@@ -556,13 +556,6 @@ export const WellKnownFluxerResponse = z.object({
 		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
 	),
 	hidden_built_in_guild_badges: InstanceHiddenBuiltInGuildBadgesSchema.optional(),
-	hidden_role_ids: z
-		.array(SnowflakeStringType)
-		.max(16)
-		.optional()
-		.describe(
-			"IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
-		),
 	voice_origins: z
 		.array(z.string())
 		.max(1000)

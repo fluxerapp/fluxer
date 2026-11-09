@@ -248,7 +248,7 @@ async function requestMissingGuildMembers(channelId: string, messages: Array<Wir
 	if (userIds.length === 0) {
 		return;
 	}
-	await GuildMembers.ensureMembersLoadedForMessages(guildId, userIds);
+	await GuildMembers.hydrateMembers(guildId, userIds);
 }
 
 async function applyDeveloperFetchDelay(): Promise<void> {
@@ -370,9 +370,7 @@ export async function ensureMembersForMessages(messages: ReadonlyArray<MessageMo
 		}
 	}
 	if (byGuild.size === 0) return;
-	await Promise.all(
-		Array.from(byGuild, ([guildId, ids]) => GuildMembers.ensureMembersLoadedForMessages(guildId, Array.from(ids))),
-	);
+	await Promise.all(Array.from(byGuild, ([guildId, ids]) => GuildMembers.hydrateMembers(guildId, Array.from(ids))));
 }
 
 interface SendMessageParams {

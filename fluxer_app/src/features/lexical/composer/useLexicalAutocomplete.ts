@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {
 	type AutocompleteOption,
@@ -97,7 +96,6 @@ import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {formatUserTagForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {filterDisplayRoles} from '@fluxer/constants/src/RoleDisplayUtils';
 import type {UserId} from '@fluxer/schema/src/branded/WireIds';
 import type {I18n} from '@lingui/core';
 import {matchSorter} from 'match-sorter';
@@ -396,10 +394,9 @@ export function useLexicalAutocomplete({
 						recentSpeakers.length > 0
 							? recentSpeakers
 							: filterGuildMembers(memberSearchResults, parsedQuery, true, canViewChannel, memberSearchRank);
-					const mentionableRoles = filterDisplayRoles(
-						Guilds.getGuildRoles(channel.guildId),
-						RuntimeConfig.hiddenRoleIds,
-					).filter((role) => canMentionEveryone || role.mentionable);
+					const mentionableRoles = Guilds.getGuildRoles(channel.guildId).filter(
+						(role) => canMentionEveryone || role.mentionable,
+					);
 					const matchedRoles =
 						queryForMatching.length > 0
 							? matchSorter(mentionableRoles, queryForMatching, {
