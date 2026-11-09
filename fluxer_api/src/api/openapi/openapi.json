@@ -39720,7 +39720,7 @@
 						"type": ["string", "null"]
 					},
 					"custom_css": {
-						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages",
+						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, including on sign-in pages",
 						"type": ["string", "null"]
 					},
 					"upload_limit_message": {
