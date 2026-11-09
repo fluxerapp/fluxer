@@ -19,6 +19,12 @@ const PASSKEY_ALREADY_REGISTERED_DESCRIPTOR = msg({
 	message: 'This device or security key already has a passkey for your account.',
 	comment: 'Error shown when adding a passkey with an authenticator that already holds one for this account.',
 });
+const PASSKEY_NO_AUTHENTICATOR_DESCRIPTOR = msg({
+	message:
+		"Fluxer couldn't find a security key on this computer. Connect your security key and try again, or open Fluxer in your web browser and use your passkey there.",
+	comment:
+		'Error shown in the desktop app when a passkey prompt starts but no security key is connected to the computer.',
+});
 const PASSKEY_DOMAIN_MISMATCH_DESCRIPTOR = msg({
 	message:
 		'Your browser blocked the passkey because this page is not on {rpId}, the passkey domain of this instance. Ask the instance owner to check the passkey domain setting.',
@@ -71,6 +77,8 @@ export function describePasskeyError(i18n: I18n, error: unknown, rpId: string | 
 			return withErrorName(describePasskeyPromptEnded(i18n), error.name);
 		case 'InvalidStateError':
 			return withErrorName(i18n._(PASSKEY_ALREADY_REGISTERED_DESCRIPTOR), error.name);
+		case 'NoAuthenticatorError':
+			return withErrorName(i18n._(PASSKEY_NO_AUTHENTICATOR_DESCRIPTOR), error.name);
 		case 'SecurityError':
 			return withErrorName(
 				rpId !== null && (code === null || DOMAIN_ERROR_CODES.has(code))

@@ -8,7 +8,6 @@ import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/plat
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
-import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -125,11 +124,12 @@ class SudoPrompt {
 				if (token) {
 					Sudo.setToken(token);
 				}
-				this.handleTokenReceived(token);
+				this.settle();
 			},
 			invalidate: Sudo.clearToken,
 			prompt: this.handleSudoPrompt,
 			onFailure: this.onSudoVerificationFailed,
+			onSettled: this.settle,
 		});
 		void makeSyncedField(this, {
 			field: 'sudoPrompt',
@@ -250,7 +250,7 @@ class SudoPrompt {
 		this.cleanup();
 	}
 
-	handleTokenReceived(_token: string | null): void {
+	settle(): void {
 		if (!this.isOpen && !this.isVerifying) {
 			return;
 		}
@@ -260,10 +260,6 @@ class SudoPrompt {
 	private onSudoVerificationFailed = (error: unknown): void => {
 		runInAction(() => {
 			this.isVerifying = false;
-			if (isAbortError(error)) {
-				this.cleanup();
-				return;
-			}
 			const responseErr = error instanceof HttpError ? error : null;
 			this.rawError = responseErr;
 			this.mergeFromError(error);

@@ -22,7 +22,7 @@ interface NativeCeremonyRequestContext {
 	instanceKey?: string;
 }
 
-const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError): /u;
+const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError|NoAuthenticatorError): /u;
 
 function withNativeCeremonyErrorName(error: unknown): unknown {
 	const name = error instanceof Error ? NATIVE_CEREMONY_ERROR_NAME.exec(error.message)?.[1] : undefined;

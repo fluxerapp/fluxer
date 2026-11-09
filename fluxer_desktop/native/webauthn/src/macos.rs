@@ -29,6 +29,10 @@ use objc2_authentication_services::{
     ASAuthorizationPublicKeyCredentialAttestationKindNone,
     ASAuthorizationPublicKeyCredentialParameters,
     ASAuthorizationPublicKeyCredentialRegistrationRequest,
+    ASAuthorizationPublicKeyCredentialResidentKeyPreference,
+    ASAuthorizationPublicKeyCredentialResidentKeyPreferenceDiscouraged,
+    ASAuthorizationPublicKeyCredentialResidentKeyPreferencePreferred,
+    ASAuthorizationPublicKeyCredentialResidentKeyPreferenceRequired,
     ASAuthorizationPublicKeyCredentialUserVerificationPreferenceDiscouraged,
     ASAuthorizationPublicKeyCredentialUserVerificationPreferencePreferred,
     ASAuthorizationPublicKeyCredentialUserVerificationPreferenceRequired, ASAuthorizationRequest,
@@ -419,6 +423,21 @@ fn user_verification_value(value: u32) -> Retained<NSString> {
     opt.map(copy_ns_string).unwrap_or_else(|| ns_string(""))
 }
 
+fn resident_key_value(
+    require: bool,
+    prefer: bool,
+) -> Option<&'static ASAuthorizationPublicKeyCredentialResidentKeyPreference> {
+    unsafe {
+        if require {
+            ASAuthorizationPublicKeyCredentialResidentKeyPreferenceRequired
+        } else if prefer {
+            ASAuthorizationPublicKeyCredentialResidentKeyPreferencePreferred
+        } else {
+            ASAuthorizationPublicKeyCredentialResidentKeyPreferenceDiscouraged
+        }
+    }
+}
+
 fn attestation_value(value: u32, security_key: bool) -> Retained<NSString> {
     let opt = if !security_key {
         unsafe { ASAuthorizationPublicKeyCredentialAttestationKindNone }
@@ -700,6 +719,7 @@ struct CeremonyInputsCreate {
     user_verification: u32,
     attestation: u32,
     require_resident_key: bool,
+    prefer_resident_key: bool,
 }
 
 struct CeremonyInputsGet {
@@ -729,6 +749,7 @@ fn run_create(input: &CreateInput) -> std::result::Result<CreateResult, String> 
         user_verification: input.user_verification,
         attestation: input.attestation,
         require_resident_key: input.require_resident_key,
+        prefer_resident_key: input.prefer_resident_key,
     };
 
     let semaphore = DispatchSemaphore::new(0);
@@ -967,6 +988,10 @@ fn build_create_controller(
         );
         if security_key_excluded.count() > 0 {
             unsafe { request.setExcludedCredentials(&security_key_excluded) };
+        }
+        if let Some(preference) = resident_key_value(s.require_resident_key, s.prefer_resident_key)
+        {
+            unsafe { request.setResidentKeyPreference(preference) };
         }
         let req_obj: &ASAuthorizationRequest =
             unsafe { &*(&*request as *const _ as *const ASAuthorizationRequest) };

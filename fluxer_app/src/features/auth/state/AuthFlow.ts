@@ -137,8 +137,12 @@ export async function authenticateMfaWithWebAuthn({
 
 export async function getWebAuthnAuthenticationOptions(
 	runtimeSnapshot: RuntimeConfigSnapshot,
+	rpId?: string,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
-	return AuthenticationCommands.getWebAuthnAuthenticationOptions({target: instanceTargetFromSnapshot(runtimeSnapshot)});
+	return AuthenticationCommands.getWebAuthnAuthenticationOptions({
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+		rpId,
+	});
 }
 
 export async function authenticateWithWebAuthn({

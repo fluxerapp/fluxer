@@ -16896,6 +16896,11 @@ msgstr "Fluxer se nedokázal připojit k {host}. Server odpověděl: „{error}�
 msgid "Fluxer couldn't connect to {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
 msgstr "Fluxer se nemohl spojit s {instanceName} a ověřit, zda prohlížeč schválil toto přihlášení. Zkontrolujte připojení a pak zvolte „Zkusit znovu“."
 
+#. Error shown in the desktop app when a passkey prompt starts but no security key is connected to the computer.
+#: src/features/auth/utils/PasskeyErrorMessages.ts
+msgid "Fluxer couldn't find a security key on this computer. Connect your security key and try again, or open Fluxer in your web browser and use your passkey there."
+msgstr "Fluxer na tomto počítači nenašel žádný bezpečnostní klíč. Připojte bezpečnostní klíč a zkuste to znovu, nebo otevřete Fluxer ve webovém prohlížeči a použijte přístupový klíč tam."
+
 #. Name of the section in the Operator Pass settings tab about the Fluxer Labs community. Fluxer Labs is the name of a community, keep it as is.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "Fluxer Labs"
@@ -40670,6 +40675,11 @@ msgstr "Použít jiný účet"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Use a different email"
 msgstr "Použít jiný e-mail"
+
+#. Action label on the sign-in screen that starts sign-in with a passkey or security key registered on the old web address. host is that address, for example web.fluxer.app.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Use a passkey saved for {host}"
+msgstr "Použít přístupový klíč uložený pro {host}"
 
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Use a self-hosted instance URL"
