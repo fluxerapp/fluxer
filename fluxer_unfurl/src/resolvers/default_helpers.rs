@@ -109,9 +109,9 @@ pub fn normalize_url(url: &str) -> Option<String> {
 
 pub async fn fetch_oembed_data(
     ctx: &ResolveContext<'_>,
-    html: &str,
+    page: &crate::html_parser::PageMetadata,
 ) -> Option<oembed::OEmbedResponse> {
-    for ep in &oembed::discover_oembed_url(html) {
+    for ep in &page.oembed_endpoints {
         let endpoint = ctx
             .url
             .join(&ep.url)
@@ -136,9 +136,9 @@ pub struct MediaWikiArticle {
 
 pub async fn fetch_mediawiki_article(
     ctx: &ResolveContext<'_>,
-    html: &str,
+    page: &crate::html_parser::PageMetadata,
 ) -> Option<MediaWikiArticle> {
-    let query_url = mediawiki_query_url(&ctx.url, html)?;
+    let query_url = mediawiki_query_url(&ctx.url, page.rsd_url.as_deref()?)?;
     let result = http_fetch::fetch_url(
         &ctx.http_client,
         &query_url,
@@ -175,9 +175,8 @@ fn mediawiki_text(page: &serde_json::Value, key: &str) -> Option<String> {
     (!value.is_empty()).then(|| value.to_owned())
 }
 
-fn mediawiki_query_url(page_url: &Url, html: &str) -> Option<String> {
-    let rsd = crate::html_parser::find_rsd_url(html)?;
-    let endpoint = page_url.join(&rsd).ok()?;
+fn mediawiki_query_url(page_url: &Url, rsd: &str) -> Option<String> {
+    let endpoint = page_url.join(rsd).ok()?;
     if !matches!(endpoint.scheme(), "http" | "https") {
         return None;
     }

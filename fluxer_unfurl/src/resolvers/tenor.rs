@@ -48,9 +48,10 @@ impl Resolver for TenorResolver {
                     .get(reqwest::header::CONTENT_TYPE)
                     .and_then(|value| value.to_str().ok()),
             );
-            let og = html_parser::parse_opengraph(&html);
+            let (og, json_ld) = html_parser::with_document(&html, |doc| {
+                (html_parser::opengraph_of(doc), extract_json_ld_urls(doc))
+            });
             let nsfw_str = MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
-            let json_ld = extract_json_ld_urls(&html);
             let thumbnail_url = json_ld
                 .as_ref()
                 .and_then(|urls| urls.thumbnail_url.clone())
@@ -143,8 +144,7 @@ struct TenorJsonLdUrls {
     video_url: Option<String>,
 }
 
-fn extract_json_ld_urls(html: &str) -> Option<TenorJsonLdUrls> {
-    let doc = html_parser::parse_document(html);
+fn extract_json_ld_urls(doc: &scraper::Html) -> Option<TenorJsonLdUrls> {
     let selector = Selector::parse(r#"script.dynamic[type="application/ld+json"]"#).ok()?;
 
     for script in doc.select(&selector) {

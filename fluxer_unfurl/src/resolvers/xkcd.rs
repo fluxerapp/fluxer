@@ -46,14 +46,12 @@ impl Resolver for XkcdResolver {
                     .get(reqwest::header::CONTENT_TYPE)
                     .and_then(|value| value.to_str().ok()),
             );
-            let og = html_parser::parse_opengraph(&html);
+            let (og, image_alt) = html_parser::with_document(&html, |doc| {
+                (html_parser::opengraph_of(doc), extract_comic_alt(doc))
+            });
 
             let title = og.title.as_deref().map(|t| parse_text(t, 70));
 
-            let image_alt = {
-                let doc = html_parser::parse_document(&html);
-                extract_comic_alt(&doc)
-            };
             let footer_text = image_alt.clone();
             let image_media = match og.image.as_deref() {
                 Some(image_url) => {
