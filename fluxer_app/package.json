@@ -38,7 +38,7 @@
 		"i18n:refresh": "pnpm i18n:extract && pnpm i18n:compile",
 		"lingui:compile": "lingui compile --strict",
 		"lingui:extract": "lingui extract --clean",
-		"wasm:codegen": "../tools/ci/run.sh build-app-wasm"
+		"wasm:codegen": "bash ../tools/ci/run.sh build-app-wasm"
 	},
 	"browserslist": [
 		"chrome >= 111",

@@ -73,6 +73,28 @@ COPY fluxer_app/index.html fluxer_app/lingui.config.js fluxer_app/package.json f
 COPY fluxer_app/inline_scripts/ ./fluxer_app/inline_scripts/
 COPY fluxer_app/pkgs/livekit-client/ ./fluxer_app/pkgs/livekit-client/
 COPY fluxer_app/rust/ ./fluxer_app/rust/
+COPY Cargo.lock ./
+RUN printf '%s\n' \
+	'[workspace]' \
+	'members = [' \
+	'    "fluxer_app/rust/libfluxcore",' \
+	'    "fluxer_app/rust/libfluxwebp",' \
+	']' \
+	'exclude = [' \
+	'    "tools/ci",' \
+	'    "packages/markdown_parser/rust",' \
+	']' \
+	'resolver = "2"' \
+	'' \
+	'[profile.wasm-release]' \
+	'inherits = "release"' \
+	'codegen-units = 1' \
+	'lto = true' \
+	'opt-level = "z"' \
+	'panic = "abort"' \
+	'strip = true' \
+	> Cargo.toml \
+	&& cargo update --workspace
 COPY fluxer_app/scripts/ ./fluxer_app/scripts/
 COPY fluxer_app/src/ ./fluxer_app/src/
 

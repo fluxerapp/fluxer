@@ -585,6 +585,9 @@ mod tests {
     fn dockerfile_workspace_manifest_keeps_the_release_profile() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let manifest = dockerfile
+            .split("AS rust-builder")
+            .nth(1)
+            .expect("rust-builder stage")
             .split("'[workspace]'")
             .nth(1)
             .expect("synthesized workspace manifest")

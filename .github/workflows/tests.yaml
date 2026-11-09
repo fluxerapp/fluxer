@@ -133,11 +133,8 @@ jobs:
       - name: Check Rust dependencies
         run: cargo deny --locked check -D warnings
 
-      - name: Check libfluxwebp dependencies
-        run: cargo deny --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml --config deny.toml --locked check licenses bans sources
-
-      - name: Check desktop native dependencies
-        run: tools/ci/check-desktop-native-workspaces.sh dependencies
+      - name: Check desktop native crates are in the root workspace
+        run: tools/ci/check-desktop-native-crates.sh inventory
 
       - name: Check advisories in every Cargo.lock
         run: tools/ci/check-cargo-lockfiles.sh
@@ -191,17 +188,11 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Check formatting (libfluxwebp)
-        run: cargo fmt --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml -- --check
-
-      - name: Check formatting (desktop native workspaces)
-        run: tools/ci/check-desktop-native-workspaces.sh fmt
-
       - name: Clippy (warnings as errors)
-        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+        run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
-      - name: Clippy (desktop native workspaces on Linux and Windows backends, warnings as errors)
-        run: tools/ci/check-desktop-native-workspaces.sh clippy
+      - name: Clippy (desktop native crates on Linux and Windows backends, warnings as errors)
+        run: tools/ci/check-desktop-native-crates.sh clippy
 
       - name: Verify the source-built ffmpeg CLI is on PATH
         run: |
@@ -213,7 +204,7 @@ jobs:
       - name: Run tests
         env:
           FLUXER_REQUIRE_MEDIA_FIXTURES: "1"
-        run: cargo test --workspace --all-features --locked
+        run: cargo test --all-features --locked
 
   gateway:
     runs-on: ubuntu-24.04

@@ -8,6 +8,7 @@ import {app} from 'electron';
 
 const logger = createChildLogger('LinuxLaunchPath');
 
+const PACKAGE_LAUNCH_COMMAND = process.env.FLUXER_LAUNCH_COMMAND ?? '';
 const PREFERRED_RELAUNCH_SHELL = '/bin/bash';
 const FALLBACK_RELAUNCH_SHELL = '/bin/sh';
 
@@ -21,7 +22,7 @@ function getAppImagePath(): string | null {
 }
 
 export function getStableLinuxLaunchPath(): string {
-	return getAppImagePath() ?? process.execPath;
+	return getAppImagePath() ?? (PACKAGE_LAUNCH_COMMAND || process.execPath);
 }
 
 export function relaunchStableLaunchPath(): void {

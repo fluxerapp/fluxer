@@ -81,6 +81,13 @@ const isLinuxBuild = targetPlatform === 'linux';
 const customLinuxElectron =
 	isLinuxBuild && process.env.FLUXER_ELECTRON_DIST?.trim() ? require('./scripts/custom-electron.cjs') : null;
 const linuxElectronDist = customLinuxElectron?.resolveLinuxElectronDist() ?? null;
+const allowStockLinuxElectron = isLinuxBuild && process.env.FLUXER_ALLOW_STOCK_ELECTRON === '1';
+const pinnedElectronVersion = require('./electron/runtime.json').electronVersion;
+if (allowStockLinuxElectron && customLinuxElectron) {
+	throw new Error(
+		'FLUXER_ALLOW_STOCK_ELECTRON=1 cannot be combined with FLUXER_ELECTRON_DIST. Release builds package the patched Electron, and distro builds set only FLUXER_ALLOW_STOCK_ELECTRON=1.',
+	);
+}
 const verifiedLinuxElectronArtifacts = new Map();
 const productName = channel.productName;
 const linuxOptDirName = channel.linuxOptDirName;
@@ -352,7 +359,6 @@ const nativeBuildArtifactExcludes = [
 	'!node_modules/@fluxer/**/target/**/*',
 	'!node_modules/@fluxer/**/build/**/*',
 	'!node_modules/@fluxer/**/Cargo.toml',
-	'!node_modules/@fluxer/**/Cargo.lock',
 	'!node_modules/@fluxer/**/CMakeLists.txt',
 	'!node_modules/@fluxer/**/tsconfig.json',
 	'!node_modules/@fluxer/**/*.d.ts',
@@ -637,7 +643,7 @@ async function expectedNativeRuntimeArtifactsForAppDir(platform, arch, appDir) {
 	const artifacts = expectedNativeRuntimeArtifacts(platform, arch);
 	if (platform !== 'linux') return artifacts;
 	const webAuthnRoot = path.join(appDir, 'node_modules', '@fluxer', 'webauthn');
-	const linuxWebAuthnRuntimeLibraries = new Set(['libfido2.so.1']);
+	const linuxWebAuthnRuntimeLibraries = new Set(process.env.FLUXER_SYSTEM_LIBS === '1' ? [] : ['libfido2.so.1']);
 	try {
 		for (const entry of await fs.readdir(webAuthnRoot, {withFileTypes: true})) {
 			if (entry.isFile() && isLinuxSharedLibraryArtifact(entry.name)) {
@@ -815,16 +821,45 @@ async function verifyNativePackageInputs(context) {
 	await verifyDarwinNativeArchitectures(platform, arch, entries, 'before packaging');
 }
 
+async function stockLinuxElectronVersion(context) {
+	const electronDist = context.packager.config.electronDist;
+	if (typeof electronDist === 'string' && electronDist !== '') {
+		try {
+			const version = await fs.readFile(
+				path.join(path.resolve(context.packager.projectDir, electronDist), 'version'),
+				'utf8',
+			);
+			return version.trim().replace(/^v/u, '');
+		} catch (error) {
+			if (error?.code !== 'ENOENT') throw error;
+		}
+	}
+	return context.packager.framework.version;
+}
+
+async function verifyStockLinuxElectronMajor(context) {
+	const expected = pinnedElectronVersion.split('.')[0];
+	const actual = await stockLinuxElectronVersion(context);
+	if (actual.split('.')[0] !== expected) {
+		throw new Error(
+			`FLUXER_ALLOW_STOCK_ELECTRON=1 packages Electron ${actual}, but this shell is built for Electron ${expected}. Use an Electron ${expected} release.`,
+		);
+	}
+	console.log(`Packaging stock Electron ${actual} without the VA-API patch (FLUXER_ALLOW_STOCK_ELECTRON=1).`);
+}
+
 async function beforePack(context) {
 	if (linuxElectronDist && context.electronPlatformName !== 'linux') {
 		throw new Error(
 			'The patched Linux Electron distribution cannot package other platforms. Use separate electron-builder invocations for Linux and macOS or Windows.',
 		);
 	}
-	if (context.electronPlatformName === 'linux') {
+	if (context.electronPlatformName === 'linux' && allowStockLinuxElectron) {
+		await verifyStockLinuxElectronMajor(context);
+	} else if (context.electronPlatformName === 'linux') {
 		if (!linuxElectronDist) {
 			throw new Error(
-				'Linux packaging requires patched Electron. Set FLUXER_ELECTRON_DIST to the directory containing its ZIP and build manifest.',
+				'Linux packaging requires patched Electron. Set FLUXER_ELECTRON_DIST to the directory containing its ZIP and build manifest, or set FLUXER_ALLOW_STOCK_ELECTRON=1 to package any Electron of the same major version.',
 			);
 		}
 		let arch;
@@ -1193,7 +1228,7 @@ async function readAsarEntry(asarPath, entryPath) {
 }
 
 async function afterPack(context) {
-	if (context.electronPlatformName === 'linux') {
+	if (context.electronPlatformName === 'linux' && !allowStockLinuxElectron) {
 		if (!customLinuxElectron) {
 			throw new Error('Custom Electron was not configured before Linux packaging.');
 		}

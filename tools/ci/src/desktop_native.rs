@@ -52,6 +52,7 @@ struct BuiltNodeAddon {
     target: String,
 }
 
+const NATIVE_PROFILE: &str = "desktop-native";
 const LINUX_AUDIO_CAPTURE_PKG_CONFIG: &[PkgConfigRequirement] = &[PkgConfigRequirement {
     package: "libpipewire-0.3",
     message: "@fluxer/linux-audio-capture requires libpipewire-0.3-dev (or your distro's equivalent: `apt install libpipewire-0.3-dev`, `dnf install pipewire-devel`, `apk add pipewire-dev`) to build. Install it on the build host, then re-run `pnpm build`.",
@@ -362,7 +363,9 @@ fn build_rust_node_addon_for_arch(
     let target_root = cargo_target_root_for_build(addon_root, platform)?;
     let mut args = vec![
         OsString::from("build"),
-        OsString::from("--release"),
+        OsString::from("--profile"),
+        OsString::from(NATIVE_PROFILE),
+        OsString::from("--locked"),
         OsString::from("--target"),
         OsString::from(&target),
         OsString::from("--manifest-path"),
@@ -375,10 +378,8 @@ fn build_rust_node_addon_for_arch(
 
     let mut command = CommandSpec::new(resolve_cargo_bin())
         .args(args)
-        .current_dir(addon_root);
-    if env::var_os("CARGO_TARGET_DIR").is_none() && platform == "win32" {
-        command = command.env("CARGO_TARGET_DIR", target_root.as_os_str());
-    }
+        .current_dir(addon_root)
+        .env("CARGO_TARGET_DIR", target_root.as_os_str());
     if platform == "win32" && arch == "arm64" {
         command = configure_windows_arm64_msvc_cc(command);
     }
@@ -387,17 +388,15 @@ fn build_rust_node_addon_for_arch(
     }
 
     println!("[buildRustNodeAddon] cwd={}", addon_root.display());
-    if env::var_os("CARGO_TARGET_DIR").is_some() || platform == "win32" {
-        println!(
-            "[buildRustNodeAddon] CARGO_TARGET_DIR={}",
-            target_root.display()
-        );
-    }
+    println!(
+        "[buildRustNodeAddon] CARGO_TARGET_DIR={}",
+        target_root.display()
+    );
     run_command(command)?;
 
     let source = target_root
         .join(&target)
-        .join("release")
+        .join(NATIVE_PROFILE)
         .join(cargo_dynamic_library_file_name(addon.crate_name, platform)?);
     let out_file = addon_root.join(format!("{}.{}.node", addon.node_file_stem, tag));
     ensure!(
@@ -596,6 +595,12 @@ fn default_windows_cargo_target_root(addon_root: &Path) -> Result<PathBuf> {
 
 fn copy_webauthn_linux_shared_libraries(native_path: &Path, root: &Path) -> Result<()> {
     if current_platform() != "linux" {
+        return Ok(());
+    }
+    if env::var("FLUXER_SYSTEM_LIBS").as_deref() == Ok("1") {
+        println!(
+            "[webauthn] FLUXER_SYSTEM_LIBS=1, linking the system libfido2 without bundling it"
+        );
         return Ok(());
     }
     for dependency in collect_linux_shared_library_dependencies(native_path)? {
