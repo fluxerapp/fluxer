@@ -332,7 +332,7 @@ func readRestoreMarker(dir string) *restoreMarker {
 func keptVolumes(m *Manifest) []string {
 	out := slices.Clone(m.Left)
 	if m.WithoutUploads() {
-		out = append(out, UploadsVolume)
+		out = append(out, m.Uploads.VolumeShort())
 	}
 	return out
 }
@@ -727,7 +727,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		if !ok {
 			return &RestoreError{Part: short, Err: errors.New("the volume wasn't created")}
 		}
-		if short == UploadsVolume && v.bind != "" {
+		if uploadsVolume(short) && v.bind != "" {
 			uploadsBind = v.bind
 		}
 		pr, pw := io.Pipe()
@@ -822,7 +822,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 
 func forgetUploadsID(bind string) error {
 	if err := os.Remove(filepath.Join(bind, UploadsIDFile)); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return &RestoreError{Part: UploadsVolume, Err: err}
+		return &RestoreError{Part: "uploads", Err: err}
 	}
 	return nil
 }

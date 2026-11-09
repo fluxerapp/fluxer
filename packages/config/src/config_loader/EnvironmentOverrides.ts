@@ -56,6 +56,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_KV_MODE: {path: ['internal', 'kv_mode']},
 	FLUXER_KV_POSTGRES_MAX_CONNECTIONS: {path: ['internal', 'kv_postgres', 'max_connections'], parse: parseInteger},
 	FLUXER_KV_POSTGRES_MAX_BYTES: {path: ['internal', 'kv_postgres', 'max_bytes'], parse: parseInteger},
+	FLUXER_STORAGE_BACKEND: {path: ['storage', 'backend']},
+	FLUXER_STORAGE_ROOT: {path: ['storage', 'root']},
+	FLUXER_STORAGE_UPLOADS_TTL: {path: ['storage', 'uploads_ttl']},
+	FLUXER_STORAGE_READ_ONLY: {path: ['storage', 'read_only'], parse: parseBoolean},
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: {path: ['internal', 'media_proxy']},
 	FLUXER_S3_ENDPOINT: {path: ['s3', 'endpoint']},
 	FLUXER_S3_PUBLIC_ENDPOINT: {path: ['s3', 'presigned_url_base']},
@@ -600,6 +604,7 @@ function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKey>, val
 const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'FLUXER_MEDIA_PROXY_ENDPOINT',
 	FLUXER_NATS_URL: 'FLUXER_NATS_CORE_URL',
+	FLUXER_STORAGE_UPLOADS_TTL: 'FLUXER_SEAWEEDFS_UPLOADS_TTL',
 };
 
 function nonBlank(value: string | undefined): string | undefined {

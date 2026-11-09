@@ -77,6 +77,7 @@ import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import sendOperatorPassWithdrawalReceipt from '@app/api/worker/tasks/SendOperatorPassWithdrawalReceipt';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
+import sweepFilesystemStorage from '@app/api/worker/tasks/SweepFilesystemStorage';
 import sweepVoiceParticipants from '@app/api/worker/tasks/SweepVoiceParticipants';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -167,6 +168,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	pollGooglePlayVoidedPurchases,
 	pollAppStoreNotificationHistory,
 	prunePostgresKvTtl,
+	sweepFilesystemStorage,
 	sweepVoiceParticipants,
 	pruneGuildVisits: pruneGuildVisitsTask,
 	refreshSearchIndex,

@@ -14,7 +14,7 @@ import type {
 } from '@app/api/database/types/MessageTypes';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {type IStorageService, isStorageObjectMissing} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -24,7 +24,6 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
-import {S3ServiceException} from '@aws-sdk/client-s3';
 import {MessageFlags, SENDABLE_MESSAGE_FLAGS, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
@@ -153,13 +152,6 @@ export function attachmentStorageChannelId(message: Pick<Message, 'flags' | 'cha
 	return message.channelId;
 }
 
-function isMissingStorageObjectError(error: unknown): boolean {
-	return (
-		(error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) ||
-		(error instanceof Error && (error.name === 'NoSuchKey' || error.name === 'NotFound'))
-	);
-}
-
 async function copyCdnObject(
 	storageService: IStorageService,
 	sourceKey: string,
@@ -178,7 +170,7 @@ async function copyCdnObject(
 		});
 		return true;
 	} catch (error) {
-		if (isMissingStorageObjectError(error)) {
+		if (isStorageObjectMissing(error)) {
 			Logger.warn({error, sourceKey, destinationKey}, 'Skipping missing attachment while cloning message');
 			return false;
 		}

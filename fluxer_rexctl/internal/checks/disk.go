@@ -355,10 +355,10 @@ func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string
 		chosen = func(string) string { return "" }
 	}
 	modes := map[string]string{}
-	for _, k := range []string{settings.KVMode} {
+	for _, k := range []string{settings.StorageBackend, settings.KVMode} {
 		modes[k] = chosen(k)
 	}
-	external := run.ExternalStore
+	external := run.ExternalStore || stack.FilesystemStorage(modes)
 	var out []string
 	for svc, value := range stack.ComposeImages(compose) {
 		switch {

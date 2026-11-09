@@ -97,6 +97,7 @@ const LANE_CONFIG = {
 			'pollGooglePlayVoidedPurchases',
 			'pollAppStoreNotificationHistory',
 			'prunePostgresKvTtl',
+			'sweepFilesystemStorage',
 			'sweepVoiceParticipants',
 			'refreshSearchIndex',
 			'seedThreadPermissions',

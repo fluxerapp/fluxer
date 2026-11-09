@@ -4,10 +4,9 @@ import crypto from 'node:crypto';
 import {Config} from '@app/api/Config';
 import {stripAnimationPrefix} from '@app/api/infrastructure/AssetEntitlementUtils';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {type IStorageService, isStorageObjectMissing} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import {S3ServiceException} from '@aws-sdk/client-s3';
 import sharp from 'sharp';
 
 const OPERATOR_PASS_WALL_AVATAR_BASE_SIZE = 48;
@@ -88,7 +87,7 @@ export class OperatorPassWallAvatarStore {
 				AVATAR_SOURCE_MAX_BYTES,
 			);
 		} catch (error) {
-			if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
+			if (isStorageObjectMissing(error)) {
 				return null;
 			}
 			throw error;

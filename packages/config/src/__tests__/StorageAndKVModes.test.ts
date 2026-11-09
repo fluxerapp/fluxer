@@ -1,7 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
+import {readFileSync} from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {loadConfig, parseUploadsTtlMs, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+
+const VECTORS_PATH = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	'../../../../fluxer_common/src/testdata/filesystem_storage_vectors.json',
+);
+
+const uploadsTtl = (
+	JSON.parse(readFileSync(VECTORS_PATH, 'utf8')) as {
+		uploads_ttl: {valid: Array<string>; invalid: Array<string>};
+	}
+).uploads_ttl;
+
+const DAY_MS = 86_400_000;
 
 const BASE_ENV: Record<string, string> = {
 	FLUXER_ENV: 'test',
@@ -29,6 +45,26 @@ function stubEnv(overrides: Record<string, string>): void {
 	}
 }
 
+describe('uploads TTL grammar', () => {
+	test('accepts every shared valid value and rejects every shared invalid one', () => {
+		for (const value of uploadsTtl.valid) {
+			expect(() => parseUploadsTtlMs(value), value).not.toThrow();
+		}
+		for (const value of uploadsTtl.invalid) {
+			expect(() => parseUploadsTtlMs(value), JSON.stringify(value)).toThrow('FLUXER_STORAGE_UPLOADS_TTL');
+		}
+	});
+
+	test('uses the SeaweedFS unit lengths and treats a zero count as off', () => {
+		expect(parseUploadsTtlMs('30m')).toBe(30 * 60_000);
+		expect(parseUploadsTtlMs('2w')).toBe(14 * DAY_MS);
+		expect(parseUploadsTtlMs('1M')).toBe(30 * DAY_MS);
+		expect(parseUploadsTtlMs('1y')).toBe(365 * DAY_MS);
+		expect(parseUploadsTtlMs('0d')).toBeNull();
+		expect(parseUploadsTtlMs('off')).toBeNull();
+	});
+});
+
 describe('storage and key-value modes', () => {
 	beforeEach(() => resetConfig());
 	afterEach(() => {
@@ -36,18 +72,53 @@ describe('storage and key-value modes', () => {
 		vi.unstubAllEnvs();
 	});
 
+	test('filesystem mode starts without S3 credentials and reads the SeaweedFS TTL as a fallback', async () => {
+		stubEnv({
+			FLUXER_STORAGE_BACKEND: 'filesystem',
+			FLUXER_STORAGE_ROOT: '/var/lib/fluxer/objects',
+			FLUXER_SEAWEEDFS_UPLOADS_TTL: '12h',
+		});
+		const config = await loadConfig();
+		expect(config.storage).toEqual({
+			backend: 'filesystem',
+			root: '/var/lib/fluxer/objects',
+			uploads_ttl: '12h',
+			read_only: false,
+		});
+	});
+
+	test('filesystem mode needs an absolute root and a valid TTL', async () => {
+		stubEnv({FLUXER_STORAGE_BACKEND: 'filesystem'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_STORAGE_ROOT is required');
+		resetConfig();
+		stubEnv({FLUXER_STORAGE_BACKEND: 'filesystem', FLUXER_STORAGE_ROOT: 'objects'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_STORAGE_ROOT must be an absolute path');
+		resetConfig();
+		stubEnv({
+			FLUXER_STORAGE_BACKEND: 'filesystem',
+			FLUXER_STORAGE_ROOT: '/srv/objects',
+			FLUXER_SEAWEEDFS_UPLOADS_TTL: '30',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_STORAGE_UPLOADS_TTL must be');
+	});
+
+	test('s3 mode still requires the S3 credentials', async () => {
+		stubEnv({});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_S3_ACCESS_KEY_ID is required');
+	});
+
 	test('postgres key-value mode needs the postgres database backend', async () => {
 		stubEnv({
-			FLUXER_S3_ACCESS_KEY_ID: 'test-access-key',
-			FLUXER_S3_SECRET_ACCESS_KEY: 'test-secret-key',
+			FLUXER_STORAGE_BACKEND: 'filesystem',
+			FLUXER_STORAGE_ROOT: '/srv/objects',
 			FLUXER_KV_MODE: 'postgres',
 			FLUXER_KV_POSTGRES_MAX_CONNECTIONS: '6',
 		});
 		expect((await loadConfig()).internal.kv_postgres).toEqual({max_connections: 6});
 		resetConfig();
 		stubEnv({
-			FLUXER_S3_ACCESS_KEY_ID: 'test-access-key',
-			FLUXER_S3_SECRET_ACCESS_KEY: 'test-secret-key',
+			FLUXER_STORAGE_BACKEND: 'filesystem',
+			FLUXER_STORAGE_ROOT: '/srv/objects',
 			FLUXER_KV_MODE: 'postgres',
 			FLUXER_DATABASE_BACKEND: 'cassandra',
 		});

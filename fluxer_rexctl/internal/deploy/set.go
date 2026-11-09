@@ -367,16 +367,21 @@ func revert(ctx context.Context, inst *instance.Instance, rs *stack.Set, oldP *e
 
 func stageOverlays(inst *instance.Instance, rs *stack.Set, chosen map[string]string) ([]string, error) {
 	var created []string
+	var rendered map[string][]byte
 	for _, o := range stack.OverlaysFor(chosen) {
 		name := stack.OverlayFiles[o]
 		target := inst.Generated(name)
 		if _, err := os.Stat(target); err == nil {
 			continue
 		}
-		data, err := stack.ReadFile(rs, name)
+		var err error
+		if rendered == nil {
+			rendered, err = stack.Files(rs, stack.OverlaysFor(chosen), inst.State.Images.Refs, inst.Project())
+		}
 		if err == nil {
-			if !inst.OldLayout() {
-				data = stack.Managed(name, data)
+			data := rendered[name]
+			if inst.OldLayout() {
+				data = stack.Plain(name, data)
 			}
 			err = os.WriteFile(target, data, 0o644)
 		}

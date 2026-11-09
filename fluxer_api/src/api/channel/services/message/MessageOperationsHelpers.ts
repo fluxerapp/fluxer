@@ -10,12 +10,11 @@ import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {type IStorageService, isStorageObjectMissing} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import {S3ServiceException} from '@aws-sdk/client-s3';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -210,7 +209,7 @@ export class MessageOperationsHelpers {
 				newContentType: favoriteMeme.contentType,
 			});
 		} catch (error) {
-			if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
+			if (isStorageObjectMissing(error)) {
 				throw InputValidationError.fromCode('favorite_meme_id', ValidationErrorCodes.FAVORITE_MEME_NOT_FOUND);
 			}
 			throw error;

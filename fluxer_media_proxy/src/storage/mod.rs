@@ -97,6 +97,8 @@ pub enum StorageError {
     InvalidKey,
     #[error("invalid bucket")]
     InvalidBucket,
+    #[error("no such multipart upload")]
+    NoSuchUpload,
     #[error("read-only storage")]
     ReadOnlyStorage,
     #[error("stream too long")]
@@ -152,7 +154,10 @@ impl Store {
         cfg: Config,
         metrics: Arc<StorageMetrics>,
         http_client_metrics: Arc<HTTPClientMetrics>,
-    ) -> Result<Self, reqwest::Error> {
+    ) -> anyhow::Result<Self> {
+        if matches!(cfg.storage.backend, StorageBackend::Local) {
+            local::prepare_local_root(&cfg.storage.root)?;
+        }
         let socket_io_timeout =
             NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
         let options = HTTPClientOptions::streaming(socket_io_timeout, socket_io_timeout);
@@ -173,16 +178,26 @@ impl Store {
         bucket: &str,
         key: &str,
         data: &[u8],
-        _content_type: &str,
+        content_type: &str,
     ) -> Result<(), StorageError> {
-        if self.cfg.read_only {
-            return Err(StorageError::ReadOnlyStorage);
-        }
         assert!(
             matches!(self.cfg.storage.backend, StorageBackend::Local),
             "write_object is a local-only test fixture"
         );
-        self.write_local(bucket, key, data).await
+        self.relay_put_object(
+            bucket,
+            key,
+            RelayPutOptions {
+                body: RelayBody::Buffered(Bytes::copy_from_slice(data)),
+                content_length: data.len() as u64,
+                content_type: Some(content_type.to_owned()),
+                upload_id: None,
+                part_number: None,
+                timeout_ms: 0,
+            },
+        )
+        .await
+        .map(|_| ())
     }
 
     pub async fn relay_put_object(
@@ -195,10 +210,7 @@ impl Store {
             return Err(StorageError::ReadOnlyStorage);
         }
         match self.cfg.storage.backend {
-            StorageBackend::Local => {
-                self.write_local_relay(bucket, key, options).await?;
-                Ok(None)
-            }
+            StorageBackend::Local => self.write_local_relay(bucket, key, options).await,
             StorageBackend::S3 => self.relay_put_s3(bucket, key, options).await,
         }
     }
@@ -232,12 +244,4 @@ fn error_with_causes(error: &(dyn std::error::Error + 'static)) -> String {
         cause = error.source();
     }
     message
-}
-
-fn map_not_found(err: std::io::Error) -> StorageError {
-    if err.kind() == std::io::ErrorKind::NotFound {
-        StorageError::NotFound
-    } else {
-        StorageError::Io(err)
-    }
 }

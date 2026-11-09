@@ -173,9 +173,10 @@ func runStatus(ctx context.Context, app *App) error {
 		}
 	}
 	if e != nil {
-		if c, ok := checks.Get("disk"); ok {
-			if r := checks.RunIn(ctx, checkEnv(ctx, inst, e, p), checks.Installed, c); r.Status == checks.Warn || r.Status == checks.Fail {
-				app.UI.Warn(r.Message, r.Fix)
+		env := checkEnv(ctx, inst, e, p)
+		for _, id := range []string{"disk", "objects-filesystem"} {
+			if c, ok := checks.Get(id); ok {
+				warnCheck(app, checks.RunIn(ctx, env, checks.Installed, c))
 			}
 		}
 	}
@@ -216,5 +217,11 @@ func warnUnusedRootFiles(ctx context.Context, app *App, inst *instance.Instance)
 	}
 	for _, name := range inst.UnusedRootFiles(ctx) {
 		app.UI.Warn(fmt.Sprintf("Fluxer no longer uses %s, which you changed after rexctl moved its files. Put your Caddy directives in a .caddy file in %s/ instead.", inst.Path(name), instance.CaddyDropInDir), "")
+	}
+}
+
+func warnCheck(app *App, r checks.Result) {
+	if r.Status == checks.Warn || r.Status == checks.Fail {
+		app.UI.Warn(r.Message, r.Fix)
 	}
 }

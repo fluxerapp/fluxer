@@ -221,7 +221,7 @@ export class AttachmentUploadService {
 		clientIp,
 		attachments,
 	}: RequestPresignedAttachmentUploadUrlsParams): Promise<Array<PresignedAttachmentUploadResponseItem>> {
-		if (!Config.presignedAttachmentUploadsEnabled) {
+		if (!Config.presignedAttachmentUploadsEnabled || Config.storage.readOnly) {
 			throw new FeatureTemporarilyDisabledError();
 		}
 		const {maxFileSize, assertCanAttachFiles} = await this.prepareFormDataUpload({userId, viewer, channelId});
@@ -248,14 +248,14 @@ export class AttachmentUploadService {
 					requestIp: clientIp,
 				});
 				if (attachment.file_size <= ATTACHMENT_UPLOAD_CHUNK_THRESHOLD) {
-					const presigned_upload_url = await this.storageService.getPresignedUploadURL({
-						bucket,
-						key: uploadKey,
-						contentType: derivedContentType,
-						contentLength: attachment.file_size,
-					});
-					const upload_url = applyUploadRelayDecision({
-						presignedUrl: presigned_upload_url,
+					const upload_url = await applyUploadRelayDecision({
+						presign: () =>
+							this.storageService.getPresignedUploadURL({
+								bucket,
+								key: uploadKey,
+								contentType: derivedContentType,
+								contentLength: attachment.file_size,
+							}),
 						bucket,
 						key: uploadKey,
 						relayDecision: uploadRelayDecision,
@@ -289,15 +289,15 @@ export class AttachmentUploadService {
 						const partNumber = index + 1;
 						const partContentLength =
 							partNumber < partCount ? partSize : attachment.file_size - partSize * (partCount - 1);
-						const presigned_upload_url = await this.storageService.getPresignedUploadPartURL({
-							bucket,
-							key: uploadKey,
-							uploadId,
-							partNumber,
-							contentLength: partContentLength,
-						});
-						const upload_url = applyUploadRelayDecision({
-							presignedUrl: presigned_upload_url,
+						const upload_url = await applyUploadRelayDecision({
+							presign: () =>
+								this.storageService.getPresignedUploadPartURL({
+									bucket,
+									key: uploadKey,
+									uploadId,
+									partNumber,
+									contentLength: partContentLength,
+								}),
 							bucket,
 							key: uploadKey,
 							relayDecision: uploadRelayDecision,
