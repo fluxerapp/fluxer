@@ -1,0 +1,16 @@
+weed amd64 tgz 8b538c22d47d0c3fb6792adaa6b0c735a967401270a53427d5a476dcaca9b7ae https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz weed
+weed arm64 tgz b70a09540bf8aa2b9ea2a48b3b16abe27e162e90a0c3bf041f8d414caf52de8a https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_arm64.tar.gz weed
+meilisearch amd64 bin b1ffed74645730b3994afab738e4fc75111761e7069c96470d30fd1c5d80f892 https://github.com/meilisearch/meilisearch/releases/download/v1.53.3/meilisearch-linux-amd64
+meilisearch arm64 bin cf5d9bfe4352d8f87007d3207646408c8421550df526965c5a449440afdb9b5c https://github.com/meilisearch/meilisearch/releases/download/v1.53.3/meilisearch-linux-aarch64
+livekit-server amd64 tgz 9b89eb169c6c5795393bad6b52a9d0c73640a5993b37162558b4e249e5fe3aee https://github.com/livekit/livekit/releases/download/v1.12.0/livekit_1.12.0_linux_amd64.tar.gz livekit-server
+livekit-server arm64 tgz e72adb7d824b300ce54dde7c80c901d4062d1ca2f74b14d6fa56cbe32cc2b07a https://github.com/livekit/livekit/releases/download/v1.12.0/livekit_1.12.0_linux_arm64.tar.gz livekit-server
+valkey any src 184e34ed2d9b51879b682b5b15205e2b9d677c60280e3cb453be8f520d04e293 https://github.com/valkey-io/valkey/archive/refs/tags/9.1.3.tar.gz
+seaweedfs/LICENSE any license d789d433cc11da163273d1e39be2e8fa67642f9a58ef220d3f258fa9c14ef613 https://raw.githubusercontent.com/seaweedfs/seaweedfs/4.52/LICENSE
+meilisearch/LICENSE any license 315c57000333ab29e78c67d46e96494e987cdc2b76479fb745e4ad6b496de642 https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.3/LICENSE
+meilisearch/LICENSE-MIT any license 121168e4b0db909bf16badd9d1c51ad9aa356241487bf02ef69f8d1ef9e4be6f https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.3/LICENSE-MIT
+meilisearch/LICENSE-EE any license 941a2a776ed309d8ab8ef8c52cea052e9771394326bde8a4dfe8cfe61b63cfbb https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.3/LICENSE-EE
+livekit-server/LICENSE any license cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 https://raw.githubusercontent.com/livekit/livekit/v1.12.0/LICENSE
+ffmpeg/COPYING.LGPLv2.1 any license 246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30 https://raw.githubusercontent.com/FFmpeg/FFmpeg/n9.0.2/COPYING.LGPLv2.1
+ffmpeg/LICENSE.md any license 2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af https://raw.githubusercontent.com/FFmpeg/FFmpeg/n9.0.2/LICENSE.md
+libheif/COPYING any license fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596 https://raw.githubusercontent.com/strukturag/libheif/v1.23.6/COPYING
+erlang-otp/LICENSE.txt any license 809fa1ed21450f59827d1e9aec720bbc4b687434fa22283c6cb5dd82a47ab9c0 https://raw.githubusercontent.com/erlang/otp/OTP-28.5.0.8/LICENSE.txt

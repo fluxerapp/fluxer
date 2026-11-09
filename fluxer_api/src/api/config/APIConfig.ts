@@ -83,6 +83,7 @@ type APIGeoipConfig = APIGeoipFilesystemConfig | APIGeoipS3Config;
 export interface APIConfig {
 	nodeEnv: 'development' | 'production';
 	port: number;
+	host?: string;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 	maxInflightRequests: number;

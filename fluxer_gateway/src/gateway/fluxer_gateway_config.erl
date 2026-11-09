@@ -104,6 +104,7 @@ env_gateway_config() ->
 env_gateway_base_config() ->
     #{
         <<"port">> => env_int("FLUXER_GATEWAY_PORT", 8771),
+        <<"bind_host">> => env_optional_binary("FLUXER_GATEWAY_BIND_HOST"),
         <<"gateway_role">> => env_optional_binary("FLUXER_GATEWAY_ROLE"),
         <<"rpc_auth_token">> => env_binary("FLUXER_GATEWAY_RPC_AUTH_TOKEN", <<>>),
         <<"push_enabled">> => env_bool("FLUXER_GATEWAY_PUSH_ENABLED", true),
@@ -195,6 +196,7 @@ build_config(RawConfig) ->
 build_core_config(Service, Internal, Nats, Proxy) ->
     #{
         port => get_int(Service, <<"port">>, 8080),
+        bind_ip => parse_bind_ip(get_optional_binary(Service, <<"bind_host">>)),
         gateway_role => normalize_gateway_role(get_value(Service, <<"gateway_role">>)),
         client_ip_header => get_binary(Proxy, <<"client_ip_header">>, <<"x-forwarded-for">>),
         trust_client_ip_header => get_bool(Proxy, <<"trust_client_ip_header">>, false),
@@ -206,6 +208,15 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         gateway_nats_rpc_max_handlers =>
             get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512)
     }.
+
+-spec parse_bind_ip(binary() | undefined) -> inet:ip_address() | undefined.
+parse_bind_ip(undefined) ->
+    undefined;
+parse_bind_ip(Host) ->
+    case inet:parse_address(string:trim(binary_to_list(Host))) of
+        {ok, Ip} -> Ip;
+        {error, einval} -> erlang:error({invalid_gateway_bind_host, Host})
+    end.
 
 -spec build_push_config(map(), map(), map()) -> config().
 build_push_config(Service, Public, Instance) ->

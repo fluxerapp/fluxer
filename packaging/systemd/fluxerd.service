@@ -1,0 +1,32 @@
+[Unit]
+Description=Fluxer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=fluxer
+Group=fluxer
+ExecStart=/opt/fluxer/current/bin/fluxerd run
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+RestartSteps=6
+RestartMaxDelaySec=5min
+TimeoutStartSec=15min
+TimeoutStopSec=90
+KillMode=mixed
+RuntimeDirectory=fluxer
+RuntimeDirectoryMode=0750
+StateDirectory=fluxer
+StateDirectoryMode=0750
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+LimitNOFILE=65536
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/fluxer
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

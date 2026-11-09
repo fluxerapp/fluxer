@@ -19,6 +19,7 @@
 **/_build/
 **/coverage/
 **/dist/
+!/tools/dist/
 **/node_modules/
 **/target/
 **/test-results.json
@@ -64,3 +65,5 @@
 
 **/.DS_Store
 **/Thumbs.db
+
+/fluxer_native/fluxerd

@@ -2062,7 +2062,7 @@ The Rust services the one Rust process runs, separated by commas.
 
 ### `FLUXER_SNOWFLAKES_WORKER_GUARD`
 
-Whether the snowflakes service refuses to start while another snowflakes service with the same worker id answers on NATS. The guard waits up to one second for an answer and refuses only when another running snowflakes service answers, so a second snowflakes service started by hand can't hand out the same IDs. The Docker Compose stack sets it to `true` for the snowflakes service, including the one inside the single Rust process. The Helm chart leaves it unset and the guard off, because a rolling update can briefly run two pods with the same worker id. Docker Compose sets it to `true`.
+Whether the snowflakes service refuses to start while another snowflakes service with the same worker id answers on NATS. The guard waits up to one second for an answer and refuses only when another running snowflakes service answers, so a second snowflakes service started by hand can't hand out the same IDs. fluxerd sets it to `true` for every snowflakes service, including the one inside the single Rust process. The Helm chart leaves it unset and the guard off, because a rolling update can briefly run two pods with the same worker id. Docker Compose sets it to `true`.
 
 ### `UV_THREADPOOL_SIZE`
 
@@ -2244,6 +2244,10 @@ The OAuth2 redirect URL of the admin panel. The admin service works it out from 
 
 The single sign-on redirect URL of the admin panel. The admin service works it out from its own address.
 
+### `FLUXER_API_HOST`
+
+The address the api service listens on. When it's empty, it listens on every interface.
+
 ### `FLUXER_API_WORKER_LANE`
 
 The job lane a worker runs when `FLUXER_API_WORKER_MODE` is `single_lane`. Each worker container in the stack runs every lane.
@@ -2272,6 +2276,10 @@ A file that has the gateway's Erlang cookie. The stack passes `FLUXER_ERLANG_COO
 
 The URL the gateway sends API RPC requests to. When it's empty, the gateway uses `FLUXER_INTERNAL_API_ENDPOINT` followed by `/internal/rpc`.
 
+### `FLUXER_GATEWAY_BIND_HOST`
+
+The IP address the gateway listens on. When it's empty, it listens on every interface.
+
 ### `FLUXER_GATEWAY_NATS_RPC_ENABLED`
 
 Whether the gateway responds to RPC requests over NATS. The gateway responds to the API only over NATS RPC and must keep it turned on.
@@ -2291,6 +2299,10 @@ The directory the media proxy keeps files in when it stores them on disk. The st
 ### `FLUXER_NATS_CORE_URL`
 
 The older name for `FLUXER_NATS_URL`, which only the api and worker read. Docker Compose passes `FLUXER_NATS_URL`.
+
+### `FLUXER_OPERATOR_SOCKET`
+
+The socket path the api listens on for operator requests and the operator relay connects to. When it's empty, both use `/run/fluxer/operator.sock`.
 
 ### `FLUXER_PUSH_SERVICE_HOST`
 
@@ -2827,10 +2839,6 @@ Only tests and development use these.
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
 Whether rate limits are off.
-
-#### `FLUXER_OPERATOR_SOCKET`
-
-The socket path the operator relay connects to. The api listens on `/run/fluxer/operator.sock`.
 
 #### `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`
 
