@@ -20,9 +20,6 @@
 		"mac-app-audio.darwin-x64.node",
 		"mac-app-audio.darwin-arm64.node"
 	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon"
-	},
 	"binary": {
 		"napi_versions": [
 			8

@@ -20,8 +20,5 @@
 		"platform-info.win32-arm64-msvc.node",
 		"platform-info.linux-x64-gnu.node",
 		"platform-info.linux-arm64-gnu.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon"
-	}
+	]
 }

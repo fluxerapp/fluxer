@@ -206,12 +206,6 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step update_version
 
-      - name: Set build channel
-        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
-        run: >-
-          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step set_build_channel
-
       - name: Build shared renderer assets
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop
         run: >-
@@ -415,12 +409,6 @@ jobs:
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step update_version
-
-      - name: Set build channel
-        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
-        run: >-
-          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step set_build_channel
 
       - name: Download shared renderer artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093

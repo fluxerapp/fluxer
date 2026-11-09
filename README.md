@@ -136,6 +136,7 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 
 - [Open Fluxer in a browser](https://fluxer.com/app), no install needed.
 - [Host your own instance][docs-selfhost] from this repository.
+- [Build the desktop app from source](fluxer_desktop/PACKAGING.md) for a Linux distribution.
 
 ## Documentation
 

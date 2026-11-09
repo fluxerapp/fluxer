@@ -5,9 +5,6 @@ edition = "2024"
 license = "AGPL-3.0-or-later"
 publish = false
 
-[workspace]
-resolver = "2"
-
 [lib]
 crate-type = ["rlib"]
 

@@ -62,8 +62,7 @@
 				"scripts/generate-windows-badges.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
-			"ignoreDependencies": ["electron-builder"]
+			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"]
 		},
 		"fluxer_docs": {
 			"entry": ["scripts/*.ts", "src/**/*.astro"],

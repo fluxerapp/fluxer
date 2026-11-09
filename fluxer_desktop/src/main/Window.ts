@@ -19,7 +19,7 @@ import {
 	shouldIgnoreWindowStateForLaunch,
 	shouldOpenDevToolsOnLaunch,
 } from '@electron/main/DesktopDebugInfo';
-import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
+import {getAppResourcesPath, getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
 import {resolveDesktopLandingUrl} from '@electron/main/DesktopLastRoute';
 import {DesktopRuntimeSecurity} from '@electron/main/DesktopRuntimeSecurity';
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
@@ -621,8 +621,8 @@ export function desktopTransparencyPendingRestart(): boolean {
 function getLinuxWindowIconPath(): string | null {
 	const baseIconName = '512x512.png';
 	const candidatePaths = [
-		path.join(process.resourcesPath, 'icons', baseIconName),
-		path.join(process.resourcesPath, baseIconName),
+		path.join(getAppResourcesPath(), 'icons', baseIconName),
+		path.join(getAppResourcesPath(), baseIconName),
 		path.join(path.dirname(app.getPath('exe')), baseIconName),
 	];
 	for (const candidatePath of candidatePaths) {

@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import type {BuildChannel} from '@electron/common/BuildChannel';
+import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -115,7 +116,7 @@ function safeFileFingerprint(filePath: string): {mtimeMs: number | null; size: n
 
 function getRuntimeCacheKey(): string {
 	const executable = safeFileFingerprint(process.execPath);
-	const appBundle = safeFileFingerprint(path.join(process.resourcesPath, 'app.asar'));
+	const appBundle = safeFileFingerprint(path.join(getAppResourcesPath(), 'app.asar'));
 	return JSON.stringify({
 		appVersion: app.getVersion(),
 		electronVersion: process.versions.electron ?? null,

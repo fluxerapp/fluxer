@@ -401,6 +401,8 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     let mut inputs = collect_file_digests(
         project_root,
         &[
+            PathBuf::from("../Cargo.toml"),
+            PathBuf::from("../Cargo.lock"),
             PathBuf::from("../tools/ci/Cargo.toml"),
             PathBuf::from("../tools/ci/src/app_dev_server.rs"),
             PathBuf::from("../tools/ci/src/app_wasm.rs"),

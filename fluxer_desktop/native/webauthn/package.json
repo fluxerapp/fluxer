@@ -22,8 +22,5 @@
 		"webauthn.darwin-arm64.node",
 		"webauthn.win32-x64-msvc.node",
 		"webauthn.win32-arm64-msvc.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon"
-	}
+	]
 }
