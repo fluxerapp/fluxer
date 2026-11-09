@@ -206,10 +206,6 @@ func (e *SettingError) Fix() string {
 	return "Run rexctl config set " + e.Key + " <value>, or rexctl config unset " + e.Key + " to go back to the default."
 }
 
-func LoadState(path string) (*State, error) {
-	return loadState(path, nil)
-}
-
 func loadState(path string, repairing []string) (*State, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
