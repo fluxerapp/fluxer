@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -62,6 +63,20 @@ func (s *Stack) fluxerdCmd(ctx context.Context, set *stack.Set, args ...string) 
 func (s *Stack) runuserArgs(args ...string) []string {
 	argv := []string{"-u", ServiceUser, "--", s.Fluxerd(), args[0], "--config", s.EnvFile(), "--caddy-dir", s.Inst.Path(instance.CaddyDropInDir), "--certs-dir", s.Inst.Path(instance.CertsDir)}
 	return append(argv, args[1:]...)
+}
+
+func ExecArgs(service string, cmd ...string) []string {
+	return append([]string{"exec", service, "--"}, cmd...)
+}
+
+func (s *Stack) Exec(ctx context.Context, set *stack.Set, service string, opts engine.ExecOptions, cmd ...string) error {
+	c, err := s.fluxerdCmd(ctx, set, ExecArgs(service, cmd...)...)
+	if err != nil {
+		return err
+	}
+	c.Env = append(c.Env, opts.Env...)
+	c.Stdin, c.Stdout, c.Stderr = opts.Stdin, opts.Stdout, opts.Stderr
+	return c.Run()
 }
 
 func (s *Stack) run(ctx context.Context, set *stack.Set, log io.Writer, args ...string) (string, error) {

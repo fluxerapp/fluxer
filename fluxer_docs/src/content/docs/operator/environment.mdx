@@ -501,7 +501,7 @@ How long the bundled object store keeps files in the uploads bucket before it de
 
 ### `FLUXER_STORAGE_BACKEND`
 
-filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint. Where Fluxer keeps uploaded files. `s3` uses the bundled SeaweedFS or the object store at `FLUXER_S3_ENDPOINT`. `filesystem` keeps them as plain files under `FLUXER_STORAGE_ROOT` and needs `FLUXER_S3_ENDPOINT` to be empty. When it's empty, Fluxer uses `s3`. A new native install writes `filesystem`. With rexctl, use `rexctl config set storage.backend`.
+filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint. Where Fluxer keeps uploaded files. `s3` uses the bundled SeaweedFS or the object store at `FLUXER_S3_ENDPOINT`. `filesystem` keeps them as plain files under `FLUXER_STORAGE_ROOT` and needs `FLUXER_S3_ENDPOINT` to be empty. When it's empty, Fluxer uses `s3`. A new native install writes `filesystem`. To switch an instance that already has files, use `rexctl migrate --experimental-native`. With rexctl, use `rexctl config set storage.backend`.
 
 ### `FLUXER_STORAGE_ROOT`
 
@@ -513,7 +513,7 @@ How long Fluxer keeps files in the uploads bucket when `FLUXER_STORAGE_BACKEND` 
 
 ### `FLUXER_STORAGE_READ_ONLY`
 
-Whether the api and worker refuse to write or delete files. Use `true` or `false`. With rexctl, use `rexctl config set FLUXER_STORAGE_READ_ONLY`.
+Whether the api and worker refuse to write or delete files. Use `true` or `false`. `rexctl migrate --experimental-native` turns it on while you check the files it moved, and turns it off when you confirm. With rexctl, use `rexctl config set FLUXER_STORAGE_READ_ONLY`.
 
 ## Database
 
@@ -565,7 +565,7 @@ The Valkey or Redis URL Fluxer uses for its cache, rate limits and other short-l
 
 ### `FLUXER_KV_MODE`
 
-postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at `FLUXER_KV_URL`. Where Fluxer keeps its cache, rate limits and other short-lived data. Use `standalone` for a single Valkey or Redis node at `FLUXER_KV_URL`, `cluster` for a Redis-compatible cluster, or `postgres` for tables in Fluxer's own Postgres database. When it's empty, Fluxer uses `standalone`. A new native install writes `postgres`. `postgres` needs `FLUXER_DATABASE_BACKEND` to be `postgres` and `FLUXER_KV_URL` to be empty. A transaction-mode pooler such as PgBouncer in transaction mode breaks the LISTEN connection `postgres` needs, so connect directly or through a session-mode pooler. With rexctl, use `rexctl config set kv.mode`.
+postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at `FLUXER_KV_URL`. Where Fluxer keeps its cache, rate limits and other short-lived data. Use `standalone` for a single Valkey or Redis node at `FLUXER_KV_URL`, `cluster` for a Redis-compatible cluster, or `postgres` for tables in Fluxer's own Postgres database. When it's empty, Fluxer uses `standalone`. A new native install writes `postgres`. `postgres` needs `FLUXER_DATABASE_BACKEND` to be `postgres` and `FLUXER_KV_URL` to be empty. A transaction-mode pooler such as PgBouncer in transaction mode breaks the LISTEN connection `postgres` needs, so connect directly or through a session-mode pooler. To switch an instance that already has data, use `rexctl migrate --experimental-native`. With rexctl, use `rexctl config set kv.mode`.
 
 ### `FLUXER_NATS_URL`
 

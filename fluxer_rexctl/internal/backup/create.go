@@ -220,6 +220,11 @@ func instanceValues(inst *instance.Instance) map[string]string {
 	return values
 }
 
+func ExternalData(inst *instance.Instance) (database, uploads bool) {
+	values := instanceValues(inst)
+	return externalPostgres(values), externalUploads(inst, values)
+}
+
 func externalPostgres(values map[string]string) bool {
 	if h := values["FLUXER_POSTGRES_HOST"]; h != "" && h != postgresService {
 		return true

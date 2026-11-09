@@ -22,6 +22,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
@@ -30,8 +31,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
-
-const liveKitEnabledVar = "FLUXER_LIVEKIT_ENABLED"
 
 const nativeCommands = "rexctl start, stop, restart, down, status, logs, config, backup, restore or upgrade"
 
@@ -457,6 +456,9 @@ func restoreNative(ctx context.Context, app *App, inst *instance.Instance, n *na
 	if err := adoptNativeSecrets(inst, n); err != nil {
 		return ui.Wrap(err, "Restored the backup, but couldn't read its secrets.", "Check "+n.SecretsFile()+", then run rexctl restart.")
 	}
+	if err := forgetRestoredMigrations(inst, m.CreatedAt); err != nil {
+		return err
+	}
 	if err := startNative(ctx, inst, n, set, s, "Starting"); err != nil {
 		return err
 	}
@@ -868,7 +870,7 @@ func (in *installer) writeNative(inst *instance.Instance) error {
 	if f.NoVoice {
 		st.Settings[settings.VoiceBundled] = "false"
 	} else {
-		st.Settings[liveKitEnabledVar] = "true"
+		st.Settings[migrate.LiveKitEnabledVar] = "true"
 	}
 	if f.VoiceTCPPort > 0 {
 		st.Settings[settings.VoiceTCPPort] = strconv.Itoa(f.VoiceTCPPort)

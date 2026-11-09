@@ -255,6 +255,9 @@ func restoreInto(ctx context.Context, app *App, e *engine.Engine, path, dir stri
 		return restoreErr(path, err, restoreFailureLog(ctx, e, dir, err))
 	}
 	warnBackupSkipped(app, m)
+	if err := forgetRestoredMigrations(inst, m.CreatedAt); err != nil {
+		return err
+	}
 
 	p, err := deploy.Load(ctx, inst, e)
 	if err != nil {

@@ -127,7 +127,7 @@ func SignsAttachments(mode string) bool {
 
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
 
-const migrateConfirm = "Data already stored stays where it is. rexctl doesn't move it."
+const migrateConfirm = "Data already stored stays where it is. Run rexctl migrate --experimental-native to move it over instead."
 
 var named = buildNamed()
 
@@ -377,4 +377,23 @@ func DockerOnly(name string) bool {
 		return true
 	}
 	return slices.ContainsFunc(dockerOnlySuffixes, func(s string) bool { return strings.HasSuffix(name, s) })
+}
+
+func ForNative(set *stack.Set, chosen map[string]string) (kept map[string]string, left, refused []string) {
+	kept = map[string]string{}
+	for _, name := range slices.Sorted(maps.Keys(chosen)) {
+		value := chosen[name]
+		k, named := namedKey(name)
+		switch {
+		case DockerOnly(name):
+			if strings.TrimSpace(value) != "" {
+				left = append(left, name)
+			}
+		case named && releaseReads(set, nil, k), !named && isRawName(name) && slices.Contains(set.Vars, name):
+			kept[name] = value
+		default:
+			refused = append(refused, name)
+		}
+	}
+	return kept, left, refused
 }

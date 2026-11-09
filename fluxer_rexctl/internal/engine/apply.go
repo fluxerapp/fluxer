@@ -413,6 +413,17 @@ func (p *Project) DownKeeping(ctx context.Context, keep ...string) error {
 	return nil
 }
 
+func (e *Engine) RemoveVolume(ctx context.Context, name string) error {
+	a, err := e.api()
+	if err != nil {
+		return err
+	}
+	if _, err := a.VolumeRemove(ctx, name, client.VolumeRemoveOptions{}); err != nil && !cerrdefs.IsNotFound(err) {
+		return &Error{Op: "volume", Class: ClassOf(err), Err: err}
+	}
+	return nil
+}
+
 func volumesToDrop(model *types.Project, vols []Volume, project string, keep []string) []string {
 	var kept, out []string
 	if model != nil {
