@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "不支援要求的權限範圍，或你沒有權限要求此範圍。",
 	"auth_and_oauth.invalid_sso_authorization_code": "無效的 SSO 授權代碼。",
 	"auth_and_oauth.invalid_sso_token": "無效的 SSO 權杖。",
+	"auth_and_oauth.local_sign_in_method_required": "需要使用本機登入方式",
 	"auth_and_oauth.missing_authorization": "授權標頭遺失或無效。",
 	"auth_and_oauth.must_start_session_before_sending_messages": "你必須先開始工作階段才能傳送訊息。",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "此登入轉移與您發起的不一致。",

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "요청한 권한 범위가 지원되지 않거나 요청할 권한이 없어요.",
 	"auth_and_oauth.invalid_sso_authorization_code": "잘못된 SSO 인증 코드예요.",
 	"auth_and_oauth.invalid_sso_token": "잘못된 SSO 토큰이에요.",
+	"auth_and_oauth.local_sign_in_method_required": "로컬 로그인 방법이 필요합니다",
 	"auth_and_oauth.missing_authorization": "인증 헤더가 없거나 유효하지 않아요.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "메시지를 보내기 전에 세션을 시작해야 해요.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "이 로그인 이전 요청이 시작하신 요청과 일치하지 않습니다.",

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Phạm vi được yêu cầu không được hỗ trợ hoặc bạn không có quyền yêu cầu phạm vi này.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Mã ủy quyền SSO không hợp lệ.",
 	"auth_and_oauth.invalid_sso_token": "Token SSO không hợp lệ.",
+	"auth_and_oauth.local_sign_in_method_required": "Cần có phương thức đăng nhập cục bộ",
 	"auth_and_oauth.missing_authorization": "Header ủy quyền bị thiếu hoặc không hợp lệ.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Bạn phải bắt đầu một phiên trước khi gửi tin nhắn.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Lần chuyển đăng nhập này không khớp với lần bạn đã bắt đầu.",

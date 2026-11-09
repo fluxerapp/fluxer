@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "要求されたスコープはサポートされていないか、権限がありません。",
 	"auth_and_oauth.invalid_sso_authorization_code": "SSO認証コードが無効です。",
 	"auth_and_oauth.invalid_sso_token": "SSOトークンが無効です。",
+	"auth_and_oauth.local_sign_in_method_required": "ローカルのサインイン方法が必要です",
 	"auth_and_oauth.missing_authorization": "認証ヘッダーが見つからないか、無効です。",
 	"auth_and_oauth.must_start_session_before_sending_messages": "メッセージを送信する前にセッションを開始してください。",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "このサインインの引き継ぎは、開始したものと一致しません。",

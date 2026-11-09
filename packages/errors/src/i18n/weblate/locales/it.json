@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "L’ambito di autorizzazione richiesto non è supportato o non hai il permesso di richiederlo.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Codice di autorizzazione SSO non valido.",
 	"auth_and_oauth.invalid_sso_token": "Token SSO non valido.",
+	"auth_and_oauth.local_sign_in_method_required": "È richiesto un metodo di accesso locale",
 	"auth_and_oauth.missing_authorization": "Header di autorizzazione mancante o non valido.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Devi avviare una sessione prima di inviare messaggi.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Questo trasferimento di accesso non corrisponde a quello che hai avviato.",

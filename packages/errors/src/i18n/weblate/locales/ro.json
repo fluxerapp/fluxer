@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Domeniul de autorizare solicitat nu este acceptat sau nu ai permisiunea de a-l solicita.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Cod de autorizare SSO invalid.",
 	"auth_and_oauth.invalid_sso_token": "Token SSO invalid.",
+	"auth_and_oauth.local_sign_in_method_required": "Este necesară o metodă de conectare locală",
 	"auth_and_oauth.missing_authorization": "Headerul de autorizare lipsește sau este invalid.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Trebuie să începi o sesiune înainte de a trimite mesaje.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Acest transfer de autentificare nu corespunde celui pe care l-ai început.",

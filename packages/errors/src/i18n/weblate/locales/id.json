@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Cakupan yang diminta tidak didukung atau kamu tidak punya izin untuk memintanya.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Kode otorisasi SSO tidak valid.",
 	"auth_and_oauth.invalid_sso_token": "Token SSO tidak valid.",
+	"auth_and_oauth.local_sign_in_method_required": "Metode masuk lokal diperlukan",
 	"auth_and_oauth.missing_authorization": "Header otorisasi hilang atau tidak valid.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Kamu harus memulai sesi sebelum mengirim pesan.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Transfer masuk ini tidak cocok dengan yang kamu mulai.",

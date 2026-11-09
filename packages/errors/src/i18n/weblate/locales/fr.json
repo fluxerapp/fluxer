@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "La portée demandée n’est pas prise en charge ou vous n’avez pas la permission de la demander.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Code d'autorisation SSO non valide.",
 	"auth_and_oauth.invalid_sso_token": "Jeton SSO non valide.",
+	"auth_and_oauth.local_sign_in_method_required": "Une méthode de connexion locale est requise",
 	"auth_and_oauth.missing_authorization": "En-tête d'autorisation manquant ou non valide.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Vous devez démarrer une session avant d’envoyer des messages.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Ce transfert de connexion ne correspond pas à celui que vous avez lancé.",

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "ไม่รองรับขอบเขตสิทธิ์ที่ร้องขอ หรือคุณไม่มีสิทธิ์ในการร้องขอ",
 	"auth_and_oauth.invalid_sso_authorization_code": "รหัสอนุญาต SSO ไม่ถูกต้อง",
 	"auth_and_oauth.invalid_sso_token": "โทเค็น SSO ไม่ถูกต้อง",
+	"auth_and_oauth.local_sign_in_method_required": "จำเป็นต้องใช้วิธีลงชื่อเข้าใช้ภายในเครื่อง",
 	"auth_and_oauth.missing_authorization": "ส่วนหัว Authorization หายไปหรือไม่ถูกต้อง",
 	"auth_and_oauth.must_start_session_before_sending_messages": "ต้องเริ่มเซสชันก่อนส่งข้อความ",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "การโอนการลงชื่อเข้าใช้นี้ไม่ตรงกับรายการที่คุณเริ่มไว้",

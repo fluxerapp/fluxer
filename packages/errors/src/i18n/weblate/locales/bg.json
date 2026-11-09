@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Заявеният обхват не се поддържа или нямаш разрешение да го заявиш.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Невалиден SSO оторизационен код.",
 	"auth_and_oauth.invalid_sso_token": "Невалиден SSO токен.",
+	"auth_and_oauth.local_sign_in_method_required": "Изисква се локален метод за влизане",
 	"auth_and_oauth.missing_authorization": "Липсваща или невалидна заглавка за оторизация.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Трябва да започнеш сесия, преди да изпращаш съобщения.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Това прехвърляне на влизането не съвпада с започнатото от теб.",

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "O escopo solicitado não é compatível ou você não tem permissão para solicitá-lo.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Código de autorização SSO inválido.",
 	"auth_and_oauth.invalid_sso_token": "Token SSO inválido.",
+	"auth_and_oauth.local_sign_in_method_required": "É necessário um método de login local",
 	"auth_and_oauth.missing_authorization": "Cabeçalho de autorização ausente ou inválido.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Você deve iniciar uma sessão antes de enviar mensagens.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Esta transferência de login não corresponde à que você iniciou.",

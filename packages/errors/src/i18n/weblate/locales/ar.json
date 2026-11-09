@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "نطاق الصلاحيات المطلوب غير مدعوم أو لا تملك إذن طلبه.",
 	"auth_and_oauth.invalid_sso_authorization_code": "رمز تفويض SSO غير صالح.",
 	"auth_and_oauth.invalid_sso_token": "رمز SSO غير صالح.",
+	"auth_and_oauth.local_sign_in_method_required": "مطلوب استخدام طريقة تسجيل دخول محلية",
 	"auth_and_oauth.missing_authorization": "رأس التفويض مفقود أو غير صالح.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "يجب عليك بدء جلسة قبل إرسال الرسائل.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "عملية نقل تسجيل الدخول هذه لا تطابق العملية التي بدأتها.",

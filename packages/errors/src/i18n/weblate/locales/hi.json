@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "रिक्वेस्टेड स्कोप सपोर्टेड नहीं है या आपके पास इसे रिक्वेस्ट करने की अनुमति नहीं है।",
 	"auth_and_oauth.invalid_sso_authorization_code": "अमान्य SSO ऑथराइज़ेशन कोड।",
 	"auth_and_oauth.invalid_sso_token": "अमान्य SSO टोकन।",
+	"auth_and_oauth.local_sign_in_method_required": "स्थानीय साइन-इन विधि आवश्यक है",
 	"auth_and_oauth.missing_authorization": "ऑथराइज़ेशन हेडर गायब या अमान्य है।",
 	"auth_and_oauth.must_start_session_before_sending_messages": "मैसेज भेजने से पहले आपको एक सेशन शुरू करना होगा।",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "यह साइन-इन ट्रांसफ़र आपके द्वारा शुरू किए गए ट्रांसफ़र से मेल नहीं खाता।",

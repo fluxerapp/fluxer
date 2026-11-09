@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Der angeforderte Scope wird nicht unterstützt oder du hast keine Berechtigung, ihn anzufordern.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Ungültiger SSO-Autorisierungscode.",
 	"auth_and_oauth.invalid_sso_token": "Ungültiges SSO-Token.",
+	"auth_and_oauth.local_sign_in_method_required": "Eine lokale Anmeldemethode ist erforderlich",
 	"auth_and_oauth.missing_authorization": "Fehlender oder ungültiger Autorisierungsheader.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Du musst eine Sitzung starten, bevor du Nachrichten senden kannst.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Diese Anmeldeübertragung stimmt nicht mit der von dir gestarteten überein.",

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Pyydettyä käyttöoikeusaluetta ei tueta tai sinulla ei ole oikeutta pyytää sitä.",
 	"auth_and_oauth.invalid_sso_authorization_code": "SSO-valtuutuskoodi on virheellinen.",
 	"auth_and_oauth.invalid_sso_token": "SSO-tunnus on virheellinen.",
+	"auth_and_oauth.local_sign_in_method_required": "Paikallinen kirjautumistapa vaaditaan",
 	"auth_and_oauth.missing_authorization": "Valtuutusotsake puuttuu tai on virheellinen.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Sinun on aloitettava istunto ennen viestien lähettämistä.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Tämä kirjautumisen siirto ei vastaa aloittamaasi siirtoa.",

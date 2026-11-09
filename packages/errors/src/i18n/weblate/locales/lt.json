@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Prašoma leidimų sritis nepalaikoma arba neturi leidimo jos prašyti.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Negaliojantis SSO autorizacijos kodas.",
 	"auth_and_oauth.invalid_sso_token": "Negaliojantis SSO žetonas.",
+	"auth_and_oauth.local_sign_in_method_required": "Reikalingas vietinis prisijungimo būdas",
 	"auth_and_oauth.missing_authorization": "Trūksta autorizacijos antraštės arba ji neteisinga.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Kad galėtum siųsti žinutes, pirmiausia pradėk seansą.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Šis prisijungimo perkėlimas nesutampa su tuo, kurį pradėjote.",

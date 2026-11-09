@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "היקף ההרשאה המבוקש אינו נתמך או שאין לך הרשאה לבקש אותו.",
 	"auth_and_oauth.invalid_sso_authorization_code": "קוד הרשאת SSO שגוי.",
 	"auth_and_oauth.invalid_sso_token": "אסימון SSO שגוי.",
+	"auth_and_oauth.local_sign_in_method_required": "נדרשת שיטת התחברות מקומית",
 	"auth_and_oauth.missing_authorization": "כותרת ההרשאה חסרה או שגויה.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "יש להתחיל סשן לפני שליחת הודעות.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "העברת ההתחברות הזו אינה תואמת לזו שהתחלת.",

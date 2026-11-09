@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "El ámbito solicitado no es compatible o no tienes permiso para solicitarlo.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Código de autorización de SSO no válido.",
 	"auth_and_oauth.invalid_sso_token": "Token de SSO no válido.",
+	"auth_and_oauth.local_sign_in_method_required": "Se requiere un método de inicio de sesión local",
 	"auth_and_oauth.missing_authorization": "Falta el encabezado de autorización o no es válido.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Debes iniciar una sesión antes de enviar mensajes.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Esta transferencia de inicio de sesión no coincide con la que iniciaste.",

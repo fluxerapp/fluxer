@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "The requested scope isn't supported or you don't have permission to request it.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Invalid SSO authorization code.",
 	"auth_and_oauth.invalid_sso_token": "Invalid SSO token.",
+	"auth_and_oauth.local_sign_in_method_required": "Local sign-in method required",
 	"auth_and_oauth.missing_authorization": "Missing or invalid authorization header.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "You must start a session before sending messages.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "This sign-in transfer doesn't match the one you started.",

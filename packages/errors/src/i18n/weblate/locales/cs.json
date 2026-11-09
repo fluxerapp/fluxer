@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Požadovaný rozsah oprávnění není podporován nebo nemáte oprávnění o něj požádat.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Neplatný autorizační kód pro SSO.",
 	"auth_and_oauth.invalid_sso_token": "Neplatný token SSO.",
+	"auth_and_oauth.local_sign_in_method_required": "Je vyžadována místní metoda přihlášení",
 	"auth_and_oauth.missing_authorization": "Chybí nebo je neplatná autorizační hlavička.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Před odesíláním zpráv musíte zahájit relaci.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Tento přenos přihlášení neodpovídá tomu, který jste zahájili.",

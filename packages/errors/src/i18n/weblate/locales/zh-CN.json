@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "请求的权限范围不受支持，或者你无权请求。",
 	"auth_and_oauth.invalid_sso_authorization_code": "无效的 SSO 授权码。",
 	"auth_and_oauth.invalid_sso_token": "无效的 SSO 令牌。",
+	"auth_and_oauth.local_sign_in_method_required": "需要使用本地登录方式",
 	"auth_and_oauth.missing_authorization": "缺少或无效的授权请求头。",
 	"auth_and_oauth.must_start_session_before_sending_messages": "你必须先开始会话才能发送消息。",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "此登录转移与你发起的不一致。",

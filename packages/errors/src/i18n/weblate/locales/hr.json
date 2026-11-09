@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "Zatraženi opseg nije podržan ili nemaš dopuštenje da ga zatražiš.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Nevažeći autorizacijski kod za SSO.",
 	"auth_and_oauth.invalid_sso_token": "Nevažeći token za SSO.",
+	"auth_and_oauth.local_sign_in_method_required": "Potreban je lokalni način prijave",
 	"auth_and_oauth.missing_authorization": "Nedostaje ili je nevažeće autorizacijsko zaglavlje.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Moraš započeti sesiju prije slanja poruka.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Ovaj prijenos prijave ne odgovara onome koji ste započeli.",

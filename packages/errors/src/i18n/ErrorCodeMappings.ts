@@ -293,6 +293,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.SLOWMODE_RATE_LIMITED]: 'rate_limits.slowmode_rate_limited',
 	[APIErrorCodes.SSO_PROVIDER_UNAVAILABLE]: 'auth_and_oauth.sso_provider_unavailable',
 	[APIErrorCodes.SSO_REQUIRED]: 'auth_and_oauth.sso_required',
+	[APIErrorCodes.LOCAL_SIGN_IN_METHOD_REQUIRED]: 'auth_and_oauth.local_sign_in_method_required',
 	[APIErrorCodes.STORE_BILLING_UNAVAILABLE]: 'store_billing.unavailable',
 	[APIErrorCodes.STORE_NOTIFICATION_UNAUTHORIZED]: 'store_billing.notification_unauthorized',
 	[APIErrorCodes.STORE_PURCHASE_INVALID]: 'store_billing.purchase_invalid',

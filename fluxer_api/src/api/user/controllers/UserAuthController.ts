@@ -27,6 +27,7 @@ import {Validator} from '@app/api/Validator';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {LocalSignInMethodRequiredError} from '@fluxer/errors/src/domains/auth/LocalSignInMethodRequiredError';
 import {SsoRequiredError, SsoRequiredReasons} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
@@ -242,7 +243,6 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const user = ctx.get('user');
 			const body = ctx.req.valid('json');
-			await requireSudoMode(ctx, user, body);
 
 			const instanceConfig = getInstanceConfigRepository();
 			const ssoConfig = await instanceConfig.getSsoConfig();
@@ -260,8 +260,10 @@ export function UserAuthController(app: HonoApp) {
 				!user.emailBounced &&
 				(await instanceConfig.isEmailEnabled());
 			if (!hasLocalPassword && !hasEmailCodeSignIn) {
-				throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
+				throw new LocalSignInMethodRequiredError();
 			}
+
+			await requireSudoMode(ctx, user, body);
 
 			if (user.traits.has(UserTraits.SSO)) {
 				await new SsoIdentityLinkService(ctx.get('userRepository')).unlink(user, ssoProviderIdOf(ssoConfig));

@@ -158,6 +158,7 @@
 	"auth_and_oauth.invalid_scope": "İstenen kapsam desteklenmiyor veya bunu isteme yetkin yok.",
 	"auth_and_oauth.invalid_sso_authorization_code": "Geçersiz SSO yetkilendirme kodu.",
 	"auth_and_oauth.invalid_sso_token": "Geçersiz SSO belirteci.",
+	"auth_and_oauth.local_sign_in_method_required": "Yerel bir oturum açma yöntemi gerekiyor",
 	"auth_and_oauth.missing_authorization": "Eksik veya geçersiz yetkilendirme başlığı.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Mesaj göndermeden önce bir oturum başlatmalısın.",
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Bu oturum açma aktarımı başlattığınız aktarımla eşleşmiyor.",
