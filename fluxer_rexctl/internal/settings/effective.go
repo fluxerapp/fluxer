@@ -31,6 +31,9 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 			fixed[name] = value
 		}
 	}
+	if mode := chosen[KVMode]; mode != "" {
+		fixed[stack.KVModeVar] = mode
+	}
 	if len(set.Profiles) > 0 {
 		for v, value := range stack.Sizing(Hardware(), chosen[MemoryProfile] == "", fixed) {
 			put(v, value)

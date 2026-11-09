@@ -5,6 +5,7 @@ package settings
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"maps"
 	"slices"
 	"strings"
@@ -32,6 +33,7 @@ type Key struct {
 	Confirm  string
 	Validate func(string) error
 	Options  []string
+	File     string
 	Help     string
 }
 
@@ -65,7 +67,16 @@ const (
 	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
+	KVMode          = "kv.mode"
 )
+
+const (
+	KVStandalone = "standalone"
+	KVCluster    = "cluster"
+	KVPostgres   = "postgres"
+)
+
+const KVPostgresOverlayFile = "kv-postgres.compose.yml"
 
 const (
 	EdgeBundled = "bundled"
@@ -105,6 +116,8 @@ func SignsAttachments(mode string) bool {
 }
 
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
+
+const migrateConfirm = "Data already stored stays where it is. rexctl doesn't move it."
 
 var named = buildNamed()
 
@@ -169,6 +182,9 @@ func buildNamed() []Key {
 			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
+		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: KVPostgresOverlayFile,
+			Confirm: migrateConfirm,
+			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},
 	}
 	for _, svc := range slices.Sorted(maps.Keys(ImageVars)) {
 		help := "The image the " + svc + " container runs"
@@ -278,6 +294,14 @@ func otherName(name, use string) error {
 }
 
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
+	if k.File != "" {
+		if set.Files == nil {
+			return false
+		}
+		if _, err := fs.Stat(set.Files, k.File); err != nil {
+			return false
+		}
+	}
 	if k.Name == MemoryProfile {
 		return len(set.Profiles) > 0
 	}

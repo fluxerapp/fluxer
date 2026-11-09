@@ -50,18 +50,27 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 	setInt(out, "FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS", min(c, clamp((c+1)/2, 2, 8)))
 	setInt(out, "FLUXER_MALLOC_ARENA_MAX", max(2, small))
 	embedded := embeddedWorker(hw, fixed)
+	kv := kvPostgres(fixed)
 	if embedded {
 		setInt(out, "FLUXER_API_POSTGRES_MAX_CONNECTIONS", clamp(3*c, 4, 25))
 	} else {
 		setInt(out, "FLUXER_API_POSTGRES_MAX_CONNECTIONS", clamp(2*c, 4, 25))
+	}
+	if kv {
+		setInt(out, KVPoolVar, num("FLUXER_API_POSTGRES_MAX_CONNECTIONS", 25))
 	}
 	setInt(out, "FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS", clamp(c, 2, 25))
 	setInt(out, "FLUXER_USERS_POSTGRES_MAX_CONNECTIONS", clamp(c, 2, 20))
 	setInt(out, "FLUXER_MESSAGES_POSTGRES_MAX_CONNECTIONS", clamp(c, 2, 20))
 	clients := num("FLUXER_API_POSTGRES_MAX_CONNECTIONS", 25) +
 		num("FLUXER_USERS_POSTGRES_MAX_CONNECTIONS", 20) + num("FLUXER_MESSAGES_POSTGRES_MAX_CONNECTIONS", 20)
+	workers := 0
 	if !embedded {
-		clients += num("FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS", 25)
+		workers = num(WorkerReplicasVar, 1)
+		clients += workers * num("FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS", 25)
+	}
+	if kv {
+		clients += (1 + workers) * (num(KVPoolVar, 25) + 1)
 	}
 	setInt(out, "FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS", clients+10)
 	setInt(out, "FLUXER_POSTGRES_AUTOVACUUM_MAX_WORKERS", clamp(c, 1, 3))
@@ -108,9 +117,16 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 	out["FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY"] = strconv.Itoa(share("FLUXER_MEILISEARCH_MEMORY_LIMIT", 15, 512, 4096)/3) + "mb"
 
 	out["FLUXER_VALKEY_MEMORY_LIMIT"] = strconv.Itoa(clamp(m*45/1000+32, 224, 1568)) + "mb"
-	out["FLUXER_VALKEY_MAXMEMORY"] = strconv.Itoa((size("FLUXER_VALKEY_MEMORY_LIMIT", 256)-32)*2/3) + "mb"
+	valkey := size("FLUXER_VALKEY_MEMORY_LIMIT", 256)
+	maxmemory := (valkey - 32) * 2 / 3
+	out["FLUXER_VALKEY_MAXMEMORY"] = strconv.Itoa(maxmemory) + "mb"
 
 	pg := share("FLUXER_POSTGRES_MEMORY_LIMIT", 22, 448, 16384)
+	if kv {
+		out["FLUXER_POSTGRES_MEMORY_LIMIT"] = strconv.Itoa(clamp(m*22/100, 448, 16384)+valkey) + "mb"
+		pg = size("FLUXER_POSTGRES_MEMORY_LIMIT", pg)
+		setBytes(out, KVMaxBytesVar, size("FLUXER_VALKEY_MAXMEMORY", maxmemory)*kvRowOverhead)
+	}
 	reserve("FLUXER_POSTGRES_MEMORY_RESERVATION", pg)
 	out["FLUXER_POSTGRES_SHARED_BUFFERS"] = strconv.Itoa(clamp(pg/4, 64, 4096)&^15) + "MB"
 	buffers := size("FLUXER_POSTGRES_SHARED_BUFFERS", 512)
@@ -129,6 +145,16 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 }
 
 const EmbeddedWorkerVar = "FLUXER_API_EMBEDDED_WORKER"
+
+const (
+	KVPoolVar     = "FLUXER_KV_POSTGRES_MAX_CONNECTIONS"
+	KVMaxBytesVar = "FLUXER_KV_POSTGRES_MAX_BYTES"
+	kvRowOverhead = 4
+)
+
+func kvPostgres(fixed map[string]string) bool {
+	return strings.TrimSpace(fixed[KVModeVar]) == "postgres"
+}
 
 const SettingsLoadedVar = "FLUXER_SETTINGS_LOADED"
 
@@ -159,7 +185,7 @@ func FoldWorker(hw Hardware, env, fixed map[string]string) map[string]string {
 }
 
 func SizingKeys() []string {
-	return slices.Sorted(maps.Keys(Sizing(Hardware{MemoryBytes: 4 << 30, CPUs: 2}, true, nil)))
+	return slices.Sorted(maps.Keys(Sizing(Hardware{MemoryBytes: 4 << 30, CPUs: 2}, true, map[string]string{KVModeVar: "postgres"})))
 }
 
 func clamp(v, lo, hi int) int { return max(lo, min(hi, v)) }

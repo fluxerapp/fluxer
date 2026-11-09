@@ -14,6 +14,7 @@ import {
 import {
 	ACCOUNT_IDENTITY_MODE_NAMES,
 	CACHE_PURGE_ADAPTER_NAMES,
+	KV_MODE_NAMES,
 	type MasterConfig,
 	STORE_PRODUCT_SLOT_NAMES,
 	TAG_STYLE_NAMES,
@@ -545,6 +546,22 @@ function validateReportRetentionConfig(config: MasterConfig): void {
 	assertBoolean(retention.dry_run, 'FLUXER_REPORT_RETENTION_DRY_RUN');
 }
 
+function validateKVConfig(config: MasterConfig): void {
+	assertOneOf(config.internal.kv_mode, KV_MODE_NAMES, 'FLUXER_KV_MODE');
+	const pool = config.internal.kv_postgres;
+	if (pool?.max_connections !== undefined) {
+		assertIntegerInRange(pool.max_connections, 'FLUXER_KV_POSTGRES_MAX_CONNECTIONS', 1, 1000);
+	}
+	if (pool?.max_bytes !== undefined) {
+		assertIntegerInRange(pool.max_bytes, 'FLUXER_KV_POSTGRES_MAX_BYTES', 1, Number.MAX_SAFE_INTEGER);
+	}
+	if (config.internal.kv_mode === 'postgres' && config.database.backend !== 'postgres') {
+		throw new Error(
+			'FLUXER_KV_MODE=postgres keeps key-value data in the main Postgres database, so FLUXER_DATABASE_BACKEND must be postgres',
+		);
+	}
+}
+
 function validateStorageChangeFeedConfig(config: MasterConfig): void {
 	const feed = config.services.api?.storage_change_feed;
 	if (!feed?.enabled) {
@@ -728,7 +745,6 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.env, ['development', 'production', 'test'], 'FLUXER_ENV');
 	assertOneOf(config.domain.public_scheme, ['http', 'https'], 'FLUXER_PUBLIC_SCHEME');
 	assertOneOf(config.database.backend, ['postgres', 'cassandra'], 'FLUXER_DATABASE_BACKEND');
-	assertOneOf(config.internal.kv_mode, ['standalone', 'cluster'], 'FLUXER_KV_MODE');
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	if (config.integrations.email.delivery !== undefined) {
 		assertOneOf(config.integrations.email.delivery, ['off', 'smtp'], 'FLUXER_EMAIL_DELIVERY');
@@ -742,6 +758,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 		assertOneOf(config.instance.account_identity, ACCOUNT_IDENTITY_MODE_NAMES, 'FLUXER_ACCOUNT_IDENTITY');
 	}
 	validatePostgresConfig(config);
+	validateKVConfig(config);
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
 	validateReportRetentionConfig(config);

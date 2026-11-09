@@ -14,10 +14,12 @@
 	"dependencies": {
 		"@fluxer/constants": "workspace:*",
 		"@fluxer/errors": "workspace:*",
-		"ioredis": "catalog:"
+		"ioredis": "catalog:",
+		"pg": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
+		"@types/pg": "catalog:",
 		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}

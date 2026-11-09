@@ -115,7 +115,9 @@ export interface APIConfig {
 	};
 	kv: {
 		url: string;
-		mode: 'standalone' | 'cluster';
+		mode: 'standalone' | 'cluster' | 'postgres';
+		postgresMaxConnections: number;
+		postgresMaxBytes: number;
 	};
 	nats: {
 		coreUrl: string;

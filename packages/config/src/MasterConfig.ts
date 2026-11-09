@@ -4,6 +4,8 @@ import type {DerivedEndpoints} from '@fluxer/config/src/EndpointDerivation';
 
 type RuntimeEnv = 'development' | 'production' | 'test';
 type DatabaseBackend = 'postgres' | 'cassandra';
+export const KV_MODE_NAMES = ['standalone', 'cluster', 'postgres'] as const;
+type KVModeName = (typeof KV_MODE_NAMES)[number];
 type PublicScheme = 'http' | 'https';
 export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http', 'controller'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
@@ -63,7 +65,11 @@ export interface MasterConfig {
 	endpoints: DerivedEndpoints;
 	internal: {
 		kv: string;
-		kv_mode: 'standalone' | 'cluster';
+		kv_mode: KVModeName;
+		kv_postgres?: {
+			max_connections?: number;
+			max_bytes?: number;
+		};
 		media_proxy: string;
 	};
 	database: {

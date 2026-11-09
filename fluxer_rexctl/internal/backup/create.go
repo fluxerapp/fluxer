@@ -295,16 +295,27 @@ func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[stri
 	if scope == ScopeWithoutUploads {
 		definition = uploadsDefinition(inst)
 	}
-	return pickVolumes(model, p.Name, have, externalUploads(inst, values), scope, definition, mark, m), nil
+	var chosen map[string]string
+	if inst.State != nil {
+		chosen = inst.State.Settings
+	}
+	return pickVolumes(model, p.Name, have, chosen, externalUploads(inst, values), scope, definition, mark, m), nil
 }
 
-func pickVolumes(model *types.Project, project string, have []engine.Volume, skipUploads bool, scope, definition string, mark bool, m *Manifest) []volumeRef {
+func pickVolumes(model *types.Project, project string, have []engine.Volume, chosen map[string]string, skipUploads bool, scope, definition string, mark bool, m *Manifest) []volumeRef {
 	if skipUploads {
 		m.Skipped = append(m.Skipped, SkippedUploads)
 	}
+	left := stack.SkippedVolumes(chosen)
 	var out []volumeRef
 	for _, short := range stack.BackupVolumes {
 		v, ok := dataVolume(model, project, have, short)
+		if slices.Contains(left, short) {
+			if ok {
+				m.Left = append(m.Left, short)
+			}
+			continue
+		}
 		if short == UploadsVolume && ok && !skipUploads && scope == ScopeWithoutUploads && definition != "" {
 			if ref := uploadsRef(v, have, mark); ref != nil {
 				ref.Definition = definition

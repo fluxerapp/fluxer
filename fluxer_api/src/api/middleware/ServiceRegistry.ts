@@ -29,6 +29,7 @@ import {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {KVClient} from '@pkgs/kv_client/src/KVClient';
+import {PostgresKVProvider} from '@pkgs/kv_client/src/PostgresKVProvider';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
@@ -48,7 +49,7 @@ export function createSnowflakeService(): SnowflakeService {
 	});
 }
 
-let _kvClient: KVClient | null = null;
+let _kvClient: KVClient | PostgresKVProvider | null = null;
 let _injectedKVProvider: IKVProvider | undefined;
 
 export function setInjectedKVProvider(provider: IKVProvider | undefined): void {
@@ -59,22 +60,43 @@ export function getKVClient(): IKVProvider {
 	if (_injectedKVProvider) {
 		return _injectedKVProvider;
 	}
-	if (!_kvClient) {
-		_kvClient = new KVClient({
-			url: Config.kv.url,
-			mode: Config.kv.mode,
-		});
-	}
+	_kvClient ??= createKVClient();
 	return _kvClient;
 }
 
-export function closeOwnedKVClient(): void {
+function createKVClient(): KVClient | PostgresKVProvider {
+	const {kv, postgres} = Config;
+	if (kv.mode === 'postgres') {
+		return new PostgresKVProvider({
+			connection: {
+				url: postgres.url,
+				host: postgres.host,
+				port: postgres.port,
+				database: postgres.database,
+				username: postgres.username,
+				password: postgres.password,
+				ssl: postgres.ssl,
+				sslCa: postgres.sslCa,
+			},
+			maxConnections: kv.postgresMaxConnections,
+			maxBytes: kv.postgresMaxBytes,
+		});
+	}
+	return new KVClient({url: kv.url, mode: kv.mode});
+}
+
+export function getPostgresKVProvider(): PostgresKVProvider | null {
+	const client = getKVClient();
+	return client instanceof PostgresKVProvider ? client : null;
+}
+
+export async function closeOwnedKVClient(): Promise<void> {
 	const client = _kvClient;
 	if (client === null) {
 		return;
 	}
-	client.close();
 	_kvClient = null;
+	await client.close();
 }
 
 let _injectedWorkerService: IWorkerService<WorkerTaskName> | undefined;
