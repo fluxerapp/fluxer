@@ -212,15 +212,15 @@ func (i *Instance) Project() string {
 
 func (i *Instance) Set() (*stack.Set, error) {
 	release := i.State.Release
+	if embedded := stack.Embedded(); release == "" || release == embedded.Release {
+		return embedded, nil
+	}
 	set, err := stack.LoadSet(i.SetDir(release))
 	if err == nil {
 		return set, nil
 	}
 	if !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
-	}
-	if embedded := stack.Embedded(); release == "" || release == embedded.Release {
-		return embedded, nil
 	}
 	return nil, fmt.Errorf("%w: %s", ErrNoReleaseSet, release)
 }

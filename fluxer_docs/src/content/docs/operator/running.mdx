@@ -67,6 +67,12 @@ Custom badges are stored in their own tables. The first start of a version with 
 
 Set how many badges one user or one guild can have under Limits on the Badges page of the admin panel.
 
+## Run Fluxer without containers
+
+`rexctl install --experimental-native` installs a new instance as one systemd service on Debian 13, with no containers. This is experimental. The instance runs the eight Rust services (snowflakes, users, messages, gifs, unfurl, push, app-proxy and admin) in one process, keeps uploaded files as plain files on disk, and keeps the cache, rate limits and queues in Fluxer's Postgres database. rexctl sizes Fluxer for the machine's CPUs and memory and runs the bundled LiveKit for calls. If people connect to the machine at another address than the one LiveKit finds through STUN, pass that address with `--voice-ip`.
+
+`rexctl start`, `stop`, `restart`, `down`, `status`, `logs`, `config`, `backup`, `restore` and `upgrade` work on this instance as they do on one that runs in containers. `rexctl config edit` opens the settings rexctl keeps for Fluxer as `setting=value` lines. rexctl refuses settings that only change containers, such as image and memory limit settings.
+
 ## Back up and restore
 
 ```sh

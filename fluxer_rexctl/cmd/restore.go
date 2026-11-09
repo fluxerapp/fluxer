@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -20,6 +21,9 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -31,7 +35,7 @@ func newRestoreCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "restore <file>",
 		Short: "Restore your instance from a backup",
-		Long:  "Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are.",
+		Long:  "Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are. A backup of a Fluxer that runs without containers restores into an empty folder or an instance that runs the same way.",
 		Args:  exactArgs("the backup file"),
 		RunE: func(c *cobra.Command, args []string) error {
 			return runRestore(c.Context(), app, args[0], confirm, engineFlag)
@@ -76,6 +80,35 @@ func runRestore(ctx context.Context, app *App, arg, confirm, engineFlag string) 
 		if err := managed(existing); err != nil {
 			return err
 		}
+	}
+	if existing != nil && existing.State.IsNative() {
+		if engineFlag != "" {
+			return ui.Usage("A native instance restores without --engine.")
+		}
+		if native.New(existing).Running() == "" {
+			return runNativeRestoreFresh(ctx, app, dir, path, m, confirm)
+		}
+		return runNativeRestore(ctx, app, existing, path, m, confirm)
+	}
+	na, err := backup.FromNative(path)
+	if err != nil {
+		return backupFileErr(path, err)
+	}
+	switch {
+	case na.Native && existing != nil:
+		return ui.Refused(
+			fmt.Sprintf("This backup of %s comes from a Fluxer that runs without containers, and the instance in %s runs in containers.", m.Domain, dir),
+			"Restore it into an empty folder with --dir.",
+		)
+	case na.Native && engineFlag != "":
+		return ui.Usage("A backup of a Fluxer that runs without containers restores without --engine.")
+	case na.Native && na.State == nil:
+		return ui.Refused(
+			fmt.Sprintf("This backup of %s comes from a Fluxer installed with install.sh, and it doesn't hold rexctl's settings for it.", m.Domain),
+			fmt.Sprintf("Run rexctl install --experimental-native --domain %s in %s first, then run this again.", m.Domain, dir),
+		)
+	case na.Native:
+		return runNativeRestoreFresh(ctx, app, dir, path, m, confirm)
 	}
 
 	old := oldEngineRef(existing)
@@ -482,4 +515,110 @@ func restoreErr(path string, err error, logPath string) error {
 		return engineFailure(err)
 	}
 	return ui.Wrap(err, "Couldn't restore your instance.", "Run rexctl restore again with --verbose to see why.")
+}
+
+func nativePackagesStep(ctx context.Context, app *App, n *native.Stack, version string) error {
+	return app.UI.Step(ctx, "Installing the system packages Fluxer needs", func(ctx context.Context, s *ui.Step) error {
+		if err := n.EnsurePackages(ctx, version, s.Log); err != nil {
+			return nativeFailure(err, "Couldn't install the system packages Fluxer needs.")
+		}
+		if err := native.EnsureUser(ctx); err != nil {
+			return nativeFailure(err, "Couldn't create the account "+native.ServiceUser+".")
+		}
+		s.Done("Installed the system packages Fluxer needs.")
+		return nil
+	})
+}
+
+func runNativeRestoreFresh(ctx context.Context, app *App, dir, path string, m *backup.Manifest, confirm string) error {
+	if err := nativeRoot("rexctl restore"); err != nil {
+		return err
+	}
+	if err := nativeAlone(ctx); err != nil {
+		return err
+	}
+	_, found := instance.Find(dir)
+	if errors.Is(found, instance.ErrNotFound) && native.HoldsReleases(dir) {
+		return ui.Refused(fmt.Sprintf("%s holds a Fluxer install from install.sh.", dir), "Restore into another folder with --dir.")
+	}
+	if other := otherNativeInstance(dir); other != "" {
+		return ui.Refused(fmt.Sprintf("This machine already runs a native Fluxer instance in %s.", other), "A machine runs one native instance. Restore into "+other+" with --dir "+other+".")
+	}
+	version := ""
+	if release.Valid(m.Release) {
+		version = m.Release
+	}
+	what := fmt.Sprintf("This restores %s in %s from the backup made on %s, and runs it without containers.", m.Domain, dir, backupTime(m.CreatedAt))
+	if err := app.UI.ConfirmDestructive(what, m.Domain, confirm); err != nil {
+		return err
+	}
+	rel, err := resolveRelease(ctx, version)
+	if err != nil {
+		return err
+	}
+	err = found
+	if errors.Is(err, instance.ErrNotFound) {
+		_, err = instance.Create(dir, cmp.Or(m.Project, "fluxer"))
+	}
+	if err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't create %s.", dir), "Check that you can write to it, or pass --dir.")
+	}
+	if err := backup.ExtractNativeFiles(path, dir); err != nil {
+		return restoreErr(path, err, "")
+	}
+	inst, err := instance.Find(dir)
+	if err != nil {
+		return ui.Wrap(err, "Couldn't read rexctl's settings from the backup.", "Run rexctl restore again with --verbose to see why.")
+	}
+	st := inst.State
+	set := stack.Embedded()
+	st.Runtime = instance.RuntimeNative
+	st.Engine = instance.EngineRef{}
+	st.Upgrade, st.Pending = nil, nil
+	st.Mounted = nil
+	st.Stopped = false
+	st.Release = set.Release
+	if err := release.WriteRelease(inst, set); err != nil {
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "rexctl restore")
+	}
+	if err := saveNative(inst); err != nil {
+		return err
+	}
+	app.remember(inst.Dir)
+	return app.Locked(ctx, inst, func() error {
+		n := native.New(inst)
+		err := app.UI.Step(ctx, "Downloading Fluxer", func(ctx context.Context, s *ui.Step) error {
+			if _, err := n.Fetch(ctx, rel, s.Progress); err != nil {
+				return nativeFailure(err, "Couldn't download Fluxer.")
+			}
+			if err := n.Flip(rel.Version); err != nil {
+				return nativeFailure(err, "Couldn't unpack Fluxer.")
+			}
+			s.Done("Downloaded Fluxer %s.", rel.Version)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		if err := nativePackagesStep(ctx, app, n, rel.Version); err != nil {
+			return err
+		}
+		nset, err := deploy.ReleaseSet(inst)
+		if err != nil {
+			return err
+		}
+		err = app.UI.Step(ctx, "Restoring your instance", func(ctx context.Context, s *ui.Step) error {
+			if _, err := n.Render(nset); err != nil {
+				return nativeFailure(err, "Couldn't write Fluxer's settings.")
+			}
+			return restoreNative(ctx, app, inst, n, nset, path, m, s)
+		})
+		if err != nil {
+			return err
+		}
+		if origin := inst.Origin(); origin != "" {
+			app.UI.Highlight(origin)
+		}
+		return nil
+	})
 }

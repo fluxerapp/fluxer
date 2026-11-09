@@ -56,6 +56,7 @@ type Release struct {
 	MinDocker     string  `json:"min_docker,omitempty"`
 	StateSchema   int     `json:"state_schema,omitempty"`
 	Assets        []Asset `json:"assets"`
+	Dist          []Asset `json:"dist,omitempty"`
 }
 
 type TooOldError struct {
@@ -203,4 +204,13 @@ func (r *Release) AssetFor(goos, goarch string) (Asset, error) {
 		}
 	}
 	return Asset{}, errors.New("release: no build for " + goos + "/" + goarch)
+}
+
+func (r *Release) DistFor(goarch string) (Asset, error) {
+	for _, a := range r.Dist {
+		if a.OS == "linux" && a.Arch == goarch {
+			return a, nil
+		}
+	}
+	return Asset{}, errors.New("release: no native build for linux/" + goarch)
 }

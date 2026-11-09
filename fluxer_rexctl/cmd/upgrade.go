@@ -135,6 +135,9 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err := managed(inst); err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeUpgrade(ctx, app, inst, f)
+	}
 	if !f.DryRun && inst.State.Upgrade != nil {
 		if handedOver, err := updateBeforeRecovery(ctx, app, f.Resume, f.To, "rexctl upgrade"); err != nil || handedOver {
 			return err
@@ -500,6 +503,9 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
+	}
+	if inst.State.IsNative() {
+		return resumeNativeUpgrade(ctx, app, inst, f)
 	}
 	return app.Change(ctx, inst, func(e *engine.Engine) error {
 		p := inst.State.Upgrade
@@ -1771,7 +1777,7 @@ func fluxerName(short string) string {
 
 func versionPair(a, b string) (string, string) {
 	sa, sb := release.Short(a), release.Short(b)
-	if sa == sb {
+	if sa == sb || !release.Valid(a) || !release.Valid(b) {
 		return a, b
 	}
 	return sa, sb

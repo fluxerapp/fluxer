@@ -22,6 +22,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -590,6 +591,87 @@ func extractFiles(path, dir string) error {
 				return err
 			}
 			return writeFile(target, r, os.FileMode(hdr.Mode).Perm(), rel == instance.EnvFileName)
+		}
+		return nil
+	})
+	if errors.Is(err, errStop) {
+		return nil
+	}
+	return err
+}
+
+const (
+	nativeSecretsName = "secrets.env"
+	maxStateSize      = 16 << 20
+)
+
+type NativeArchive struct {
+	Native bool
+	State  []byte
+}
+
+func FromNative(path string) (NativeArchive, error) {
+	name := FilesPrefix + instance.StateDirName + "/" + instance.StateFileName
+	var out NativeArchive
+	hasSecrets := false
+	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+		if !strings.HasPrefix(hdr.Name, FilesPrefix) {
+			return errStop
+		}
+		hasSecrets = hasSecrets || hdr.Name == FilesPrefix+nativeSecretsName
+		if hdr.Name == name {
+			data, err := io.ReadAll(io.LimitReader(r, maxStateSize+1))
+			if err != nil {
+				return err
+			}
+			if len(data) > maxStateSize {
+				return fmt.Errorf("%w: %s is too large", ErrDamaged, hdr.Name)
+			}
+			out.State = data
+		}
+		return nil
+	})
+	if errors.Is(err, errStop) {
+		err = nil
+	}
+	if err != nil {
+		return out, err
+	}
+	if out.State == nil {
+		out.Native = hasSecrets
+		return out, nil
+	}
+	var st struct {
+		Runtime string `json:"runtime"`
+	}
+	if err := json.Unmarshal(out.State, &st); err != nil {
+		return out, fmt.Errorf("%w: %s: %v", ErrDamaged, name, err)
+	}
+	out.Native = st.Runtime == instance.RuntimeNative
+	return out, nil
+}
+
+func ExtractNativeFiles(path, dir string) error {
+	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+		if !strings.HasPrefix(hdr.Name, FilesPrefix) {
+			return errStop
+		}
+		rel := strings.TrimSuffix(strings.TrimPrefix(hdr.Name, FilesPrefix), "/")
+		if rel == "" || !slices.ContainsFunc(native.InstanceFiles, func(f string) bool { return rel == f || strings.HasPrefix(rel, f+"/") }) {
+			return nil
+		}
+		if !filepath.IsLocal(filepath.FromSlash(rel)) {
+			return fmt.Errorf("%w: unsafe path %q", ErrDamaged, hdr.Name)
+		}
+		target := filepath.Join(dir, filepath.FromSlash(rel))
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			return os.MkdirAll(target, dirMode(hdr.Mode))
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+				return err
+			}
+			return writeFile(target, r, os.FileMode(hdr.Mode).Perm(), false)
 		}
 		return nil
 	})

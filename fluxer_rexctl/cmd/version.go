@@ -3,12 +3,14 @@
 package cmd
 
 import (
+	"cmp"
 	"runtime"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 )
 
 type versionJSON struct {
@@ -34,6 +36,9 @@ func newVersionCmd(app *App) *cobra.Command {
 				MinPodman: engine.MinPodman, MinDocker: engine.MinDocker, StateSchema: instance.StateSchema}
 			if inst, err := app.Instance(); err == nil && inst.State != nil && inst.State.Release != "" {
 				r := inst.State.Release
+				if inst.State.IsNative() {
+					r = cmp.Or(native.New(inst).Running(), r)
+				}
 				v.Fluxer = &r
 			}
 			if app.Flags.JSON {

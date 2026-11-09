@@ -44,7 +44,8 @@ func newConfigEditCmd(app *App) *cobra.Command {
 		Use:   "edit",
 		Short: "Edit " + instance.CustomCompose + ", check it and apply it",
 		Long: "Opens " + instance.CustomCompose + " in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. " +
-			"Your file stays as it was until it passes the check.",
+			"Your file stays as it was until it passes the check. " +
+			"On a native instance, it opens the settings rexctl keeps for Fluxer as setting=value lines instead, checks them as rexctl config set does and restarts Fluxer with them.",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runConfigEdit(c.Context(), app)
@@ -141,6 +142,12 @@ func runConfigEdit(ctx context.Context, app *App) error {
 	if inst.State.Upgrade != nil {
 		return ui.Refused("An upgrade of this instance hasn't finished.", "Run rexctl upgrade to finish it, then try again.")
 	}
+	if inst.State.IsNative() {
+		if err := nativeRoot(app.command); err != nil {
+			return err
+		}
+		return app.Locked(ctx, inst, func() error { return editNativeSettings(ctx, app, inst) })
+	}
 	return app.Locked(ctx, inst, func() error {
 		e, err := app.guard(ctx, inst, true)
 		if err != nil {
@@ -164,7 +171,7 @@ func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engin
 	case rerr != nil:
 		return ui.Wrap(rerr, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Check that you can read it, then try again.")
 	}
-	draft, err := newDraft(inst, start)
+	draft, err := newDraft(inst, "custom.compose-*.yml", start)
 	if err != nil {
 		return ui.Wrap(err, "Couldn't make a copy to edit.", "Check that you can write to "+inst.Dir+", then try again.")
 	}
@@ -177,7 +184,7 @@ func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engin
 			os.Remove(draft)
 			return
 		}
-		kept, kerr := keepDraft(inst, draft)
+		kept, kerr := keepDraft(inst, draft, instance.CustomCompose)
 		if kerr != nil {
 			kept = draft
 		}
@@ -229,12 +236,12 @@ func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engin
 	return applyCustom(ctx, app, inst, e, draft, start, existed, after)
 }
 
-func newDraft(inst *instance.Instance, data []byte) (string, error) {
+func newDraft(inst *instance.Instance, pattern string, data []byte) (string, error) {
 	dir := inst.Path(instance.StateDirName, editDir)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
-	f, err := os.CreateTemp(dir, "custom.compose-*.yml")
+	f, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		return "", err
 	}
@@ -250,12 +257,12 @@ func newDraft(inst *instance.Instance, data []byte) (string, error) {
 	return f.Name(), nil
 }
 
-func keepDraft(inst *instance.Instance, draft string) (string, error) {
+func keepDraft(inst *instance.Instance, draft, name string) (string, error) {
 	dir := inst.Path(instance.StateDirName, instance.EditedDir)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
-	kept := filepath.Join(dir, instance.CustomCompose+"."+time.Now().UTC().Format("20060102-150405"))
+	kept := filepath.Join(dir, name+"."+time.Now().UTC().Format("20060102-150405"))
 	return kept, os.Rename(draft, kept)
 }
 
@@ -481,4 +488,129 @@ func applyCustom(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	}
 	app.UI.Warn(startFailure(existed), "Run rexctl restart to start Fluxer with the file as it was.")
 	return err
+}
+
+const nativeSettingsDraft = "settings.env"
+
+func settingsDraft(chosen map[string]string) []byte {
+	var b bytes.Buffer
+	for _, k := range slices.Sorted(maps.Keys(chosen)) {
+		b.WriteString(k + "=" + envfile.Quote(chosen[k]) + "\n")
+	}
+	return b.Bytes()
+}
+
+func draftChanges(chosen map[string]string, data []byte) (map[string]*string, string) {
+	for i, line := range strings.Split(strings.ReplaceAll(string(data), "\r", ""), "\n") {
+		body := strings.TrimSpace(line)
+		if body == "" || body[0] == '#' {
+			continue
+		}
+		name, _, ok := strings.Cut(strings.TrimPrefix(body, "export "), "=")
+		if !ok || !envfile.ValidKey(strings.TrimSpace(name)) {
+			return nil, fmt.Sprintf("Line %d isn't a setting=value line.", i+1)
+		}
+	}
+	f, err := envfile.Parse(nativeSettingsDraft, data)
+	if err != nil {
+		return nil, err.Error()
+	}
+	next := f.Map()
+	changes := map[string]*string{}
+	for k, v := range next {
+		if old, ok := chosen[k]; !ok || old != v {
+			changes[k] = &v
+		}
+	}
+	for k := range chosen {
+		if _, ok := next[k]; !ok {
+			changes[k] = nil
+		}
+	}
+	return changes, ""
+}
+
+func settingsProblem(inst *instance.Instance, changes map[string]*string) string {
+	err := refuseDockerOnly(changes)
+	if err == nil {
+		_, err = deploy.Prepare(inst, changes)
+	}
+	var ee *ui.ExitError
+	switch {
+	case err == nil:
+		return ""
+	case errors.As(err, &ee) && ee.Msg != "":
+		return strings.TrimSpace(ee.Msg + "\n" + ee.Fix)
+	}
+	return err.Error()
+}
+
+func editNativeSettings(ctx context.Context, app *App, inst *instance.Instance) (err error) {
+	start := settingsDraft(inst.State.Settings)
+	draft, err := newDraft(inst, "settings-*.env", start)
+	if err != nil {
+		return ui.Wrap(err, "Couldn't make a copy to edit.", "Check that you can write to "+inst.Dir+", then try again.")
+	}
+	after := start
+	defer func() {
+		if now, rerr := os.ReadFile(draft); rerr == nil {
+			after = now
+		}
+		if err == nil || bytes.Equal(after, start) {
+			os.Remove(draft)
+			return
+		}
+		kept, kerr := keepDraft(inst, draft, nativeSettingsDraft)
+		if kerr != nil {
+			kept = draft
+		}
+		app.UI.Info("Your draft is in %s.", kept)
+	}()
+	kept := ui.Refused("Kept your settings as they were.", "")
+	failed := false
+	var changes map[string]*string
+	for {
+		if err := openEditor(ctx, draft); err != nil {
+			return err
+		}
+		next, err := os.ReadFile(draft)
+		if err != nil {
+			return err
+		}
+		same := bytes.Equal(next, after)
+		after = next
+		var problem string
+		changes, problem = draftChanges(inst.State.Settings, after)
+		if problem == "" && len(changes) == 0 {
+			app.UI.OK("Nothing changed.")
+			return nil
+		}
+		if failed && same {
+			return kept
+		}
+		if problem == "" {
+			problem = settingsProblem(inst, changes)
+		}
+		if problem == "" {
+			break
+		}
+		failed = true
+		app.UI.Fail("Your change to the settings doesn't work.", "")
+		for _, line := range strings.Split(problem, "\n") {
+			app.UI.Info("  %s", line)
+		}
+		again, err := askEdit(app.UI, "Edit it again? No keeps the settings as they were.", true)
+		if errors.Is(err, errNotAsked) || err == nil && !again {
+			return kept
+		}
+		if err != nil {
+			return err
+		}
+	}
+	change, err := applyNativeSettings(ctx, app, inst, changes)
+	if err != nil {
+		return err
+	}
+	reportConfigChange(app, change, changes, nil, inst.State.Upgrade != nil)
+	return nil
 }

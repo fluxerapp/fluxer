@@ -52,6 +52,7 @@ type Env struct {
 	Project  *engine.Project
 	Host     *host.Info
 	Behind   bool
+	Native   bool
 	Bind     string
 	Admin    *adminapi.Client
 	Settings map[string]string
