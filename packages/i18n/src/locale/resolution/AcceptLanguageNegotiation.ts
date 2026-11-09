@@ -83,6 +83,10 @@ function findLanguageFallbackMatch(preferences: ReadonlyArray<AcceptLanguagePref
 		if (chineseVariantLocale) {
 			return chineseVariantLocale;
 		}
+		const portugueseVariantLocale = findPortugueseVariantLocale(languageCode, subtags);
+		if (portugueseVariantLocale) {
+			return portugueseVariantLocale;
+		}
 		const languageLocale = getLocaleByCode(languageCode);
 		if (languageLocale) {
 			return languageLocale;
@@ -97,6 +101,17 @@ function findLanguageFallbackMatch(preferences: ReadonlyArray<AcceptLanguagePref
 		}
 	}
 	return null;
+}
+
+function findPortugueseVariantLocale(languageCode: string, subtags: ReadonlyArray<string>): LocaleCode | null {
+	if (languageCode !== 'pt') {
+		return null;
+	}
+	const region = subtags.find((subtag) => subtag.length === 2 || /^\d{3}$/.test(subtag));
+	if (region === undefined || region === 'br') {
+		return null;
+	}
+	return Locales.PT_PT;
 }
 
 function findChineseVariantLocale(languageCode: string, subtags: ReadonlyArray<string>): LocaleCode | null {

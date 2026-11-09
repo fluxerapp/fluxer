@@ -27,7 +27,10 @@ for pkg in $(awk '{ sub("/.*", "", $2); print $2 }' "$manifest" | sort -u); do
 	tar -xzf "$tmp/$pkg.tgz" -C "$tmp/$pkg"
 	for file in $(awk -v prefix="$pkg/" 'index($2, prefix) == 1 { print substr($2, length(prefix) + 1) }' "$manifest"); do
 		case $file in
-		LICENSE) source=license ;;
+		LICENSE)
+			source=license
+			[ -e "$tmp/$pkg/package/$source" ] || source=LICENSE
+			;;
 		*) source=$file ;;
 		esac
 		cp "$tmp/$pkg/package/$source" "$tmp/out/$pkg/$file"

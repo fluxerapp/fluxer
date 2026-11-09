@@ -9,8 +9,9 @@ import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import timestampRendererStyles from '@app/features/theme/styles/TimestampRenderer.module.css';
 import Tick from '@app/features/ui/state/Tick';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattedDateTimeWithSeconds} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import {getFormattedDateTimeWithSeconds} from '@fluxer/date_utils/src/DateFormatting';
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {DateTime} from 'luxon';
 import {computed} from 'mobx';
 import {observer} from 'mobx-react-lite';
@@ -38,7 +39,7 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 	const i18n = options.i18n;
 	const date = getDateFromUnixTimestampSeconds(timestamp);
 	const locale = getCurrentLocale();
-	const fullDateTime = date !== null ? getFormattedDateTimeWithSeconds(date, locale) : null;
+	const fullDateTime = date !== null ? getFormattedDateTimeWithSeconds(date) : null;
 	const isRelativeStyle = style === TimestampStyle.RelativeTime;
 	const relativeLabels = useMemo(
 		() =>
@@ -53,7 +54,7 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 					}
 					return {
 						displayTime: formatTimestamp(timestamp, style, i18n),
-						relativeTime: DateTime.fromJSDate(labelDate).setLocale(locale).toRelative(),
+						relativeTime: DateTime.fromJSDate(labelDate).setLocale(resolveFormattingLocale(locale)).toRelative(),
 					};
 				},
 				{equals: areRelativeLabelsEqual},

@@ -159,11 +159,27 @@
 	color: var(--pl-on);
 }
 
-:global(:root:is(:lang(de), :lang(fr), :lang(fi), :lang(el), :lang(ru), :lang(uk), :lang(pl), :lang(hu))) .root {
+:global(
+		:root:is(
+			:lang(de),
+			:lang(fr),
+			:lang(fi),
+			:lang(el),
+			:lang(ru),
+			:lang(uk),
+			:lang(pl),
+			:lang(hu),
+			:lang(be),
+			:lang(lv),
+			:lang(sk),
+			:lang(sl)
+		)
+	)
+	.root {
 	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
 }
 
-:global(:root:is(:lang(th), :lang(hi), :lang(vi), :lang(ja), :lang(ko), :lang(zh-CN), :lang(zh-TW))) .root {
+:global(:root:is(:lang(th), :lang(hi), :lang(bn), :lang(vi), :lang(ja), :lang(ko), :lang(zh-CN), :lang(zh-TW))) .root {
 	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
 	--pl-text-title: clamp(1.5rem, 1.2rem + 1.3cqw, 2.5rem);
 	--pl-text-display-line-height: 1.3;
@@ -387,7 +403,13 @@
 			:lang(bg),
 			:lang(ro),
 			:lang(tr),
-			:lang(pt-BR)
+			:lang(pt-BR),
+			:lang(pt-PT),
+			:lang(be),
+			:lang(ca),
+			:lang(lv),
+			:lang(sk),
+			:lang(sl)
 		)
 	)
 	:is(.displayHeading, .titleHeading, .perkTitle) {

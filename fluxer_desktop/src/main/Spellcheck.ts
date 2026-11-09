@@ -459,6 +459,7 @@ const detectPreferredLanguages = (session: Session): Array<string> => {
 	return result;
 };
 const ISO6393_TO_DICTIONARY_BASE: Record<string, string> = {
+	bel: 'be',
 	bul: 'bg',
 	cat: 'ca',
 	ces: 'cs',

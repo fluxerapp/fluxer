@@ -44,6 +44,7 @@ describe('report flow menu translations', () => {
 			const expected = [...extractMessageTemplateVariables(SOURCE[key])].sort().join();
 			for (const locale of LOCALES) {
 				const template = TRANSLATED[locale][key];
+				if (template === '') continue;
 				const translatedNames = placeholderNames(template);
 				const dropped = [...sourceNames].filter((name) => !translatedNames.has(name)).sort();
 				if (dropped.length > 0) {

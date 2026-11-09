@@ -8,6 +8,7 @@ import SearchHistory from '@app/features/search/state/SearchHistory';
 import {addUniqueSearchParam as addUnique, parseQuery} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import {ingestSearchThreads} from '@app/features/threads/commands/ThreadCommands';
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -247,7 +248,7 @@ export interface SearchFilterOption {
 }
 
 export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
-	const valuesListFormatter = new Intl.ListFormat(i18n.locale, {type: 'disjunction'});
+	const valuesListFormatter = new Intl.ListFormat(resolveFormattingLocale(i18n.locale), {type: 'disjunction'});
 	const hasContentValues: Array<SearchValueOption> = [
 		{
 			value: 'image',

@@ -4148,6 +4148,11 @@ msgctxt "us-state"
 msgid "Alaska"
 msgstr "アラスカ州"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Albanian"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Alert sound"
@@ -6233,6 +6238,11 @@ msgstr "BANの理由"
 msgid "Bandwidth"
 msgstr "帯域幅"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Bangla"
+msgstr ""
+
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Banned {targetUserTag} from the community"
 msgstr "{targetUserTag}さんをコミュニティからBANしました"
@@ -6316,6 +6326,11 @@ msgstr "ここに最初に投稿しましょう。"
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 msgid "Before date"
 msgstr "以前"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Belarusian"
+msgstr ""
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
@@ -7349,6 +7364,11 @@ msgstr "カードの配置"
 #: src/features/ui/card_alignment_controls/CardAlignmentControls.tsx
 msgid "Card alignment controls"
 msgstr "カードの配置設定"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Catalan"
+msgstr ""
 
 #. Heading above the category filter list in the Explore search sidebar.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
@@ -16619,6 +16639,11 @@ msgstr "ファイル名"
 msgid "Files will be sent immediately without preview."
 msgstr "ファイルはプレビューなしで直ちに送信されます。"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Filipino"
+msgstr ""
+
 #. Short label in the authentication submit tooltip. Preserve {fieldList}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/auth/flow/SubmitTooltip.tsx
 msgid "Fill out the following fields: {fieldList}"
@@ -21008,6 +21033,11 @@ msgstr "後で"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Latvia"
 msgstr "ラトビア"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Latvian"
+msgstr ""
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -27809,6 +27839,11 @@ msgstr "ポルトガル"
 msgid "Portuguese (Brazil)"
 msgstr "ポルトガル語（ブラジル）"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Portuguese (Portugal)"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Position"
@@ -34188,6 +34223,11 @@ msgstr "ステップ値付きスライダー"
 msgid "Sliders"
 msgstr "スライダー"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Slovak"
+msgstr ""
+
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Slovakia"
@@ -34197,6 +34237,11 @@ msgstr "スロバキア"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Slovenia"
 msgstr "スロベニア"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Slovenian"
+msgstr ""
 
 #. Modal body shown when an action is blocked by rate limiting. Keep plain.
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx
@@ -38718,6 +38763,11 @@ msgstr "音声入力を切り替え"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts
 msgid "Token"
 msgstr "トークン"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Toki Pona"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts

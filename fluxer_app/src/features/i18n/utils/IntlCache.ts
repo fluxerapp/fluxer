@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
+
 const numberFormatCache = new Map<string, Intl.NumberFormat>();
 const collatorCache = new Map<string, Intl.Collator>();
 const listFormatCache = new Map<string, Intl.ListFormat>();
@@ -15,7 +17,7 @@ export function getCachedNumberFormat(locale?: string, options?: Intl.NumberForm
 	const key = getCacheKey(locale, options);
 	let formatter = numberFormatCache.get(key);
 	if (!formatter) {
-		formatter = new Intl.NumberFormat(locale, options);
+		formatter = new Intl.NumberFormat(locale === undefined ? undefined : resolveFormattingLocale(locale), options);
 		numberFormatCache.set(key, formatter);
 	}
 	return formatter;
@@ -25,7 +27,7 @@ export function getCachedCollator(locale?: string, options?: Intl.CollatorOption
 	const key = getCacheKey(locale, options);
 	let collator = collatorCache.get(key);
 	if (!collator) {
-		collator = new Intl.Collator(locale, options);
+		collator = new Intl.Collator(locale === undefined ? undefined : resolveFormattingLocale(locale), options);
 		collatorCache.set(key, collator);
 	}
 	return collator;
@@ -35,7 +37,7 @@ export function getCachedListFormat(locale: string, options: Intl.ListFormatOpti
 	const key = getCacheKey(locale, options);
 	let formatter = listFormatCache.get(key);
 	if (!formatter) {
-		formatter = new Intl.ListFormat(locale, options);
+		formatter = new Intl.ListFormat(resolveFormattingLocale(locale), options);
 		listFormatCache.set(key, formatter);
 	}
 	return formatter;

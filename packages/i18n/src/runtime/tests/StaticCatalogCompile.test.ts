@@ -78,6 +78,7 @@ describe('static i18n catalogs', () => {
 				if (sourceEntry === undefined) return [`${key}: not in the source catalog`];
 				const sourceTemplates = new Map(templates(sourceEntry));
 				return templates(entry).flatMap(([part, template]) => {
+					if (template === '') return [];
 					const expected = sortedVariables(sourceTemplates.get(part) ?? '');
 					const actual = sortedVariables(template);
 					return expected.join(',') === actual.join(',') ? [] : [`${key}${part}: ${actual} != ${expected}`];

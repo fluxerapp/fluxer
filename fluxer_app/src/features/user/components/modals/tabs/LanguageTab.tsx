@@ -36,9 +36,10 @@ import {getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
 import {localeUses12Hour} from '@fluxer/date_utils/src/DateHourCycle';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
+import {TranslateIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useMemo, useState} from 'react';
+import {type ReactElement, useCallback, useMemo, useState} from 'react';
 
 const LANGUAGE_FLAG_DESCRIPTOR = msg({message: '{languageName} flag'});
 const MISSING_LANGUAGE_DESCRIPTOR = msg({
@@ -157,7 +158,7 @@ interface LanguageSelectOption extends ComboboxOption<string> {
 	code: string;
 	name: string;
 	nativeName: string;
-	flag: string;
+	flag: string | null;
 	searchText: string;
 }
 
@@ -175,6 +176,41 @@ interface LanguageSelectorProps {
 	openMenuOnFocus?: boolean;
 	maxMenuHeight?: number | null;
 	menuPlacement?: 'auto' | 'bottom' | 'top';
+}
+
+function renderLanguageMark(flag: string | null, flagLabel: string): ReactElement {
+	if (flag === null) {
+		return (
+			<TranslateIcon
+				aria-hidden={true}
+				className={styles.languageMark}
+				data-flx="user.language-selector.render-language-content.language-mark"
+			/>
+		);
+	}
+	const flagUrl = EmojiUtils.getEmojiURL(flag);
+	if (flagUrl) {
+		return (
+			<img
+				src={flagUrl}
+				alt={flagLabel}
+				aria-hidden={true}
+				className={styles.flagImage}
+				draggable={false}
+				data-flx="user.language-selector.render-language-content.flag-image"
+			/>
+		);
+	}
+	return (
+		<span
+			className={styles.flagImageText}
+			role="img"
+			aria-label={flagLabel}
+			data-flx="user.language-selector.render-language-content.flag-image-text"
+		>
+			{flag}
+		</span>
+	);
 }
 
 export const LanguageSelector = observer(function LanguageSelector({
@@ -203,27 +239,7 @@ export const LanguageSelector = observer(function LanguageSelector({
 	const renderLanguageContent = useCallback(
 		(option: LanguageSelectOption, selected: boolean, compact = false) => {
 			const isEnGB = option.code === 'en-GB';
-			const flagUrl = EmojiUtils.getEmojiURL(option.flag);
-			const flagLabel = i18n._(LANGUAGE_FLAG_DESCRIPTOR, {languageName: option.name});
-			const flagImg = flagUrl ? (
-				<img
-					src={flagUrl}
-					alt={flagLabel}
-					aria-hidden={true}
-					className={styles.flagImage}
-					draggable={false}
-					data-flx="user.language-selector.render-language-content.flag-image"
-				/>
-			) : (
-				<span
-					className={styles.flagImageText}
-					role="img"
-					aria-label={flagLabel}
-					data-flx="user.language-selector.render-language-content.flag-image-text"
-				>
-					{option.flag}
-				</span>
-			);
+			const flagImg = renderLanguageMark(option.flag, i18n._(LANGUAGE_FLAG_DESCRIPTOR, {languageName: option.name}));
 			return (
 				<div
 					className={clsx(
