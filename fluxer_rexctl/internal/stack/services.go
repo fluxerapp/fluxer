@@ -10,7 +10,7 @@ import (
 var Services = []string{
 	"edge", "postgres", "valkey", "nats", "meilisearch", "seaweedfs", "seaweedfs-init", "livekit",
 	"api", "worker", "gateway", "media-proxy", "push", "static-proxy", "app-proxy", "admin",
-	"snowflakes", "users", "gifs", "messages", "unfurl", ObjectsInitService,
+	"snowflakes", "users", "gifs", "messages", "unfurl", RustService, ObjectsInitService,
 }
 
 const (

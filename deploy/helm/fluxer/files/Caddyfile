@@ -52,11 +52,11 @@
 
 	handle {$FLUXER_ADMIN_BASE_PATH:/admin} {
 		rewrite * /
-		import upstream admin:8080
+		import upstream {$FLUXER_ADMIN_UPSTREAM:admin:8080}
 	}
 
 	handle_path {$FLUXER_ADMIN_BASE_PATH:/admin}/* {
-		import upstream admin:8080
+		import upstream {$FLUXER_ADMIN_UPSTREAM:admin:8080}
 	}
 
 	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*

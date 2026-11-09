@@ -1,0 +1,27 @@
+[package]
+name = "fluxer-server"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "fluxer-server"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+fluxer_admin = { path = "../fluxer_admin" }
+fluxer_app_proxy = { path = "../fluxer_app_proxy" }
+fluxer_common = { path = "../fluxer_common", features = ["healthcheck"] }
+fluxer-gifs = { path = "../fluxer_gifs" }
+fluxer-messages = { path = "../fluxer_messages" }
+fluxer-push = { path = "../fluxer_push" }
+fluxer-snowflakes = { path = "../fluxer_snowflakes" }
+fluxer-svc = { path = "../fluxer_svc" }
+fluxer-unfurl = { path = "../fluxer_unfurl" }
+fluxer-users = { path = "../fluxer_users" }
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs"] }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "time"] }
+tokio-util = "0.7.20"
+tracing = "0.1.44"

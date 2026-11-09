@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{env, fs};
+use std::fs;
 
-pub fn env_value(name: &str) -> Option<String> {
-    resolve_env_value(name, |key| env::var(key).ok()).unwrap_or_else(|error| panic!("{error}"))
-}
-
-pub fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
+fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
 where
     F: Fn(&str) -> Option<String>,
 {
@@ -28,6 +24,11 @@ where
     Ok(non_blank(Some(contents.to_owned())))
 }
 
+fn file_setting(key: &str) -> Option<&str> {
+    key.strip_suffix("_FILE")
+        .filter(|name| name.starts_with("FLUXER_"))
+}
+
 pub fn resolve_env_files<I>(vars: I) -> Result<Vec<(String, String)>, String>
 where
     I: IntoIterator<Item = (String, String)>,
@@ -39,10 +40,7 @@ where
     };
     let mut resolved = Vec::new();
     for (key, _) in &vars {
-        let Some(name) = key
-            .strip_suffix("_FILE")
-            .filter(|name| name.starts_with("FLUXER_"))
-        else {
+        let Some(name) = file_setting(key) else {
             continue;
         };
         if let Some(value) = resolve_env_value(name, get)? {
@@ -51,38 +49,12 @@ where
     }
     let rest: Vec<(String, String)> = vars
         .iter()
+        .filter(|(key, _)| file_setting(key).is_none())
         .filter(|(key, _)| !resolved.iter().any(|(name, _)| name == key))
         .cloned()
         .collect();
     resolved.extend(rest);
     Ok(resolved)
-}
-
-pub fn read_env(name: &str, fallback: &str) -> String {
-    env_value(name).unwrap_or_else(|| fallback.to_owned())
-}
-
-pub fn read_first_env(names: &[&str], fallback: &str) -> String {
-    names
-        .iter()
-        .find_map(|name| env_value(name))
-        .unwrap_or_else(|| fallback.to_owned())
-}
-
-pub fn read_bool_env(name: &str, fallback: bool) -> bool {
-    let Some(value) = env_value(name) else {
-        return fallback;
-    };
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "1" | "true" | "yes" | "on"
-    )
-}
-
-pub fn env_filter(default: &str) -> tracing_subscriber::EnvFilter {
-    env_value("RUST_LOG")
-        .and_then(|filter| tracing_subscriber::EnvFilter::try_new(filter).ok())
-        .unwrap_or_else(|| tracing_subscriber::EnvFilter::new(default))
 }
 
 pub fn normalize_base_path(value: &str) -> String {
@@ -221,15 +193,6 @@ pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Opti
     format!("{}:{port}{}", &url[..authority_end], &url[authority_end..])
 }
 
-pub fn try_normalize_public_endpoint_from_env(url: &str) -> anyhow::Result<String> {
-    let (base_domain, public_port) = resolve_public_domain_and_port(env_value)?;
-    Ok(normalize_public_endpoint(url, &base_domain, public_port))
-}
-
-pub fn normalize_public_endpoint_from_env(url: &str) -> String {
-    try_normalize_public_endpoint_from_env(url).unwrap_or_else(|error| panic!("{error}"))
-}
-
 #[derive(Debug, Default)]
 pub struct EnvMap(Vec<(String, String)>);
 
@@ -247,11 +210,75 @@ impl EnvMap {
         )
     }
 
+    pub fn resolved<I, K, V>(vars: I) -> anyhow::Result<Self>
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Into<String>,
+    {
+        let vars = vars.into_iter().map(|(k, v)| (k.into(), v.into()));
+        resolve_env_files(vars)
+            .map(Self)
+            .map_err(anyhow::Error::msg)
+    }
+
+    pub fn from_process() -> anyhow::Result<Self> {
+        Self::resolved(
+            std::env::vars_os().filter_map(|(key, value)| {
+                Some((key.into_string().ok()?, value.into_string().ok()?))
+            }),
+        )
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.0.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
     pub fn get(&self, key: &str) -> Option<&str> {
         self.0
             .iter()
             .find_map(|(k, v)| (k == key).then_some(v.as_str()))
             .filter(|v| !v.trim().is_empty())
+    }
+
+    pub fn value(&self, key: &str) -> Option<String> {
+        self.get(key).map(str::to_owned)
+    }
+
+    pub fn read(&self, key: &str, fallback: &str) -> String {
+        self.get(key).unwrap_or(fallback).to_owned()
+    }
+
+    pub fn read_first(&self, keys: &[&str], fallback: &str) -> String {
+        keys.iter()
+            .find_map(|key| self.get(key))
+            .unwrap_or(fallback)
+            .to_owned()
+    }
+
+    pub fn read_bool(&self, key: &str, fallback: bool) -> bool {
+        let Some(value) = self.get(key) else {
+            return fallback;
+        };
+        matches!(
+            value.trim().to_ascii_lowercase().as_str(),
+            "1" | "true" | "yes" | "on"
+        )
+    }
+
+    pub fn public_domain_and_port(&self) -> anyhow::Result<(String, Option<u16>)> {
+        resolve_public_domain_and_port(|name| self.value(name))
+    }
+
+    pub fn normalize_public_endpoint(&self, url: &str) -> anyhow::Result<String> {
+        let (base_domain, public_port) = self.public_domain_and_port()?;
+        Ok(normalize_public_endpoint(url, &base_domain, public_port))
+    }
+
+    pub fn tracing_filter(&self, default: &str) -> tracing_subscriber::EnvFilter {
+        self.get("RUST_LOG")
+            .and_then(|filter| tracing_subscriber::EnvFilter::try_new(filter).ok())
+            .unwrap_or_else(|| tracing_subscriber::EnvFilter::new(default))
     }
 }
 
@@ -296,6 +323,33 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn file_settings_resolve_once_and_leave_no_file_keys() {
+        let dir = std::env::temp_dir().join(format!("fluxer-common-env-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        let secret = dir.join("secret");
+        let nested = dir.join("nested");
+        fs::write(&secret, "s3cret\n").expect("write secret");
+        fs::write(&nested, "unused").expect("write nested");
+        let env = EnvMap::resolved([
+            ("FLUXER_SECRET_FILE", secret.to_str().expect("utf8 path")),
+            ("FLUXER_PLAIN", "plain"),
+            ("SSL_CERT_FILE", "/etc/ssl/cert.pem"),
+        ])
+        .expect("resolves");
+        assert_eq!(env.get("FLUXER_SECRET"), Some("s3cret"));
+        assert_eq!(env.get("FLUXER_SECRET_FILE"), None);
+        assert_eq!(env.get("FLUXER_PLAIN"), Some("plain"));
+        assert_eq!(env.get("SSL_CERT_FILE"), Some("/etc/ssl/cert.pem"));
+        let again = EnvMap::resolved(
+            env.iter()
+                .chain([("FLUXER_SECRET_FILE", nested.to_str().expect("utf8 path"))]),
+        );
+        assert!(again.is_err(), "a value and its _FILE together are refused");
+        assert!(EnvMap::resolved([("FLUXER_A", "x"), ("FLUXER_A_FILE", "/nonexistent")]).is_err());
+        fs::remove_dir_all(&dir).ok();
+    }
 
     #[test]
     fn matches_the_typescript_normalizer_on_the_shared_vectors() {

@@ -15,6 +15,7 @@ use axum::{
 use std::time::Duration;
 use tokio::sync::{OwnedSemaphorePermit, TryAcquireError, mpsc};
 use tokio::time::Instant;
+use tracing::Instrument as _;
 
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 const MAX_ASSET_SIZE_BYTES: u64 = 100 * 1024 * 1024;
@@ -110,15 +111,18 @@ fn upstream_asset_body(
     deadline: Instant,
 ) -> Body {
     let (sender, receiver) = mpsc::channel::<AssetBodyItem>(ASSET_BODY_BUFFERED_CHUNKS);
-    tokio::spawn(async move {
-        let _permit = upstream_slot;
-        if tokio::time::timeout_at(deadline, forward_upstream_asset(upstream_response, &sender))
-            .await
-            .is_err()
-        {
-            tracing::warn!("upstream asset body timed out");
+    tokio::spawn(
+        async move {
+            let _permit = upstream_slot;
+            if tokio::time::timeout_at(deadline, forward_upstream_asset(upstream_response, &sender))
+                .await
+                .is_err()
+            {
+                tracing::warn!("upstream asset body timed out");
+            }
         }
-    });
+        .in_current_span(),
+    );
     Body::from_stream(futures_util::stream::unfold(
         Some(receiver),
         |receiver| async move {

@@ -25,6 +25,9 @@ const INVALID_ARGUMENT: &str = "INVALID_ARGUMENT";
 pub fn http_client() -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(HTTP_TIMEOUT)
         .build()
@@ -33,6 +36,9 @@ pub fn http_client() -> reqwest::Result<reqwest::Client> {
 pub fn web_push_http_client(private_hosts: &[String]) -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .dns_resolver(PublicOnlyResolver::new(private_hosts))
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(HTTP_TIMEOUT)
@@ -42,6 +48,9 @@ pub fn web_push_http_client(private_hosts: &[String]) -> reqwest::Result<reqwest
 pub fn apns_http_client() -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .http2_prior_knowledge()
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(APNS_TIMEOUT)

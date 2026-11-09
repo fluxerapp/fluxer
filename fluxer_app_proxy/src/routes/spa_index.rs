@@ -20,6 +20,7 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 use std::sync::{Arc, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tracing::Instrument as _;
 
 use super::assets_proxy::serve_local_asset;
 use super::file_stream::stream_file;
@@ -554,10 +555,10 @@ async fn load_spa_index_html(state: &AppState, request_path: &str) -> Result<Str
         match in_flight.as_ref().filter(|(_, task)| !task.is_finished()) {
             Some((fetch, _)) => fetch.clone(),
             None => {
-                let task = tokio::spawn(fetch_upstream_spa_index(
-                    state.http_client.clone(),
-                    upstream.url.clone(),
-                ));
+                let task = tokio::spawn(
+                    fetch_upstream_spa_index(state.http_client.clone(), upstream.url.clone())
+                        .in_current_span(),
+                );
                 let abort_handle = task.abort_handle();
                 let fetch = task
                     .map(|joined| joined.unwrap_or(Err(StatusCode::INTERNAL_SERVER_ERROR)))

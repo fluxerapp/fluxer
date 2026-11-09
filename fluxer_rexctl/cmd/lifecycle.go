@@ -3,9 +3,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -78,6 +80,36 @@ func servicesForName(name string) ([]string, error) {
 		Code: ui.ExitUsage,
 		Msg:  fmt.Sprintf("There's no service called %s.", name),
 		Fix:  "Pick " + ui.JoinOr(logServiceNames()) + ".",
+	}
+}
+
+type rustLogs struct {
+	w    io.Writer
+	only []string
+	buf  []byte
+}
+
+func (r *rustLogs) Write(p []byte) (int, error) {
+	r.buf = append(r.buf, p...)
+	for {
+		i := bytes.IndexByte(r.buf, '\n')
+		if i < 0 {
+			return len(p), nil
+		}
+		line := string(r.buf[:i])
+		r.buf = r.buf[i+1:]
+		if msg, ok := strings.CutPrefix(line, stack.RustService+" | "); ok {
+			svc := stack.RustLogService(msg)
+			if len(r.only) > 0 && !slices.Contains(r.only, svc) {
+				continue
+			}
+			if svc != "" {
+				line = svc + " | " + msg
+			}
+		}
+		if _, err := io.WriteString(r.w, line+"\n"); err != nil {
+			return len(p), err
+		}
 	}
 }
 
@@ -476,7 +508,17 @@ func newLogsCmd(app *App) *cobra.Command {
 			if services, err = runningPart(inst, args, services); err != nil {
 				return err
 			}
-			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: app.UI.Stdout()}
+			var inRust []string
+			if len(services) > 0 {
+				if services, inRust = stack.ModeServices(inst.State.Settings, services); len(services) == 0 {
+					return ui.Refused(fmt.Sprintf("This instance runs without %s, so it has no logs here.", args[0]), "Run rexctl status to see what runs.")
+				}
+			}
+			out := app.UI.Stdout()
+			if stack.RustSingle(inst.State.Settings) {
+				out = &rustLogs{w: out, only: inRust}
+			}
+			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: out}
 			if since == "" {
 				opts.Tail = 200
 			}

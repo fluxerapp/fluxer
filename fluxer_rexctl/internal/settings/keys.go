@@ -67,11 +67,14 @@ const (
 	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
+	RustProcess     = "rust.process"
 	StorageBackend  = "storage.backend"
 	KVMode          = "kv.mode"
 )
 
 const (
+	RustSingle        = "single"
+	RustPerService    = "per-service"
 	StorageS3         = "s3"
 	StorageFilesystem = "filesystem"
 	KVStandalone      = "standalone"
@@ -80,6 +83,7 @@ const (
 )
 
 const (
+	RustServerOverlayFile       = "rust-server.compose.yml"
 	FilesystemObjectOverlayFile = "filesystem-object-store.compose.yml"
 	KVPostgresOverlayFile       = "kv-postgres.compose.yml"
 )
@@ -188,6 +192,9 @@ func buildNamed() []Key {
 			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
+		{Name: RustProcess, Type: "choice", Vars: []string{"FLUXER_RUST_PROCESS"}, Options: []string{RustPerService, RustSingle}, Validate: oneOf(RustPerService, RustSingle), File: RustServerOverlayFile,
+			Confirm: "The Rust services restart.",
+			Help:    "single to run the Rust services in one container, or per-service for one container each"},
 		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: FilesystemObjectOverlayFile,
 			Confirm: migrateConfirm,
 			Help:    "filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint"},

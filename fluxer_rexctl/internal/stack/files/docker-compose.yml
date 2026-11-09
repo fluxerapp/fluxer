@@ -804,6 +804,7 @@ services:
       <<: *fluxer-rust-env
       FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: combined
+      FLUXER_SNOWFLAKES_WORKER_GUARD: "true"
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}

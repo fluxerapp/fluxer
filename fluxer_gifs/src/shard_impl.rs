@@ -3,7 +3,7 @@
 use crate::klipy::{KlipyClient, resolve_cache_key};
 use crate::media_proxy::MediaProxyUrlBuilder;
 use crate::types::{GifCategoryTag, GifItem, GifMediaFormat, GifRequest, GifServiceResponse};
-use fluxer_svc::config::optional_env;
+use fluxer_common::config::EnvMap;
 use fluxer_svc::shard::ShardService;
 use moka::notification::RemovalCause;
 use moka::ops::compute::{CompResult, Op};
@@ -17,6 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::time::MissedTickBehavior;
+use tracing::Instrument;
 
 const SEARCH_SOFT_TTL: Duration = Duration::from_secs(30);
 const SEARCH_HARD_TTL: Duration = Duration::from_secs(5 * 60);
@@ -225,8 +226,8 @@ struct CacheBudgets {
 }
 
 impl CacheBudgets {
-    fn from_env() -> anyhow::Result<Self> {
-        let total = match optional_env("FLUXER_GIFS_SHARD_CACHE_MAX_BYTES") {
+    fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        let total = match env.get("FLUXER_GIFS_SHARD_CACHE_MAX_BYTES") {
             Some(value) => value.parse::<u64>().map_err(|error| {
                 anyhow::anyhow!("invalid FLUXER_GIFS_SHARD_CACHE_MAX_BYTES: {error}")
             })?,
@@ -360,11 +361,27 @@ where
     }
 }
 
+pub struct ShardConfig {
+    media_proxy: MediaProxyUrlBuilder,
+    budgets: CacheBudgets,
+}
+
+impl ShardConfig {
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        Ok(Self {
+            media_proxy: MediaProxyUrlBuilder::from_env(env)?,
+            budgets: CacheBudgets::from_env(env)?,
+        })
+    }
+}
+
 impl GifsShard {
-    pub fn new() -> anyhow::Result<Self> {
-        let media_proxy = MediaProxyUrlBuilder::from_env()?;
+    pub fn new(config: ShardConfig) -> anyhow::Result<Self> {
+        let ShardConfig {
+            media_proxy,
+            budgets,
+        } = config;
         let klipy = KlipyClient::new(media_proxy)?;
-        let budgets = CacheBudgets::from_env()?;
         tracing::info!(
             total_cache_max_bytes = budgets.total,
             gif_list_cache_max_bytes = budgets.gif_lists,
@@ -481,7 +498,7 @@ impl GifsShard {
             key: refresh_key,
         };
 
-        tokio::spawn(async move {
+        let refresh = async move {
             let _permit = permit;
             let _registration = registration;
             match fetch().await {
@@ -527,7 +544,8 @@ impl GifsShard {
                     tracing::debug!(error = %error, cache_key = %key, "background GIF cache refresh failed");
                 }
             }
-        });
+        };
+        tokio::spawn(refresh.in_current_span());
     }
 
     async fn handle_available(&self, api_key: Option<String>) -> GifServiceResponse {
@@ -889,7 +907,7 @@ where
 
 fn spawn_cache_maintenance(inner: &Arc<GifsShardInner>) {
     let weak_inner = Arc::downgrade(inner);
-    tokio::spawn(async move {
+    let maintenance = async move {
         let mut interval = tokio::time::interval(CACHE_MAINTENANCE_INTERVAL);
         interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
         loop {
@@ -904,5 +922,6 @@ fn spawn_cache_maintenance(inner: &Arc<GifsShardInner>) {
                 inner.resolved.cache.run_pending_tasks(),
             );
         }
-    });
+    };
+    tokio::spawn(maintenance.in_current_span());
 }

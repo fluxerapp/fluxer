@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::config as cfg;
+use fluxer_common::config::EnvMap;
 use reqwest::Url;
 use std::env;
 use std::fmt;
@@ -368,28 +368,29 @@ pub struct CspConfig {
 }
 
 impl CspConfig {
-    pub fn from_env() -> Self {
+    pub fn from_env(env: &EnvMap) -> Self {
         Self {
-            extra_default_src: read_csp_sources("FLUXER_CSP_EXTRA_DEFAULT_SRC"),
-            extra_connect_src: read_csp_sources("FLUXER_CSP_EXTRA_CONNECT_SRC"),
-            voice_connect_src: cfg::env_value("FLUXER_LIVEKIT_URL")
+            extra_default_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_DEFAULT_SRC"),
+            extra_connect_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_CONNECT_SRC"),
+            voice_connect_src: env
+                .value("FLUXER_LIVEKIT_URL")
                 .map(|value| voice_connect_sources("FLUXER_LIVEKIT_URL", &value))
                 .unwrap_or_default(),
-            extra_img_src: read_csp_sources("FLUXER_CSP_EXTRA_IMG_SRC"),
-            extra_media_src: read_csp_sources("FLUXER_CSP_EXTRA_MEDIA_SRC"),
-            extra_font_src: read_csp_sources("FLUXER_CSP_EXTRA_FONT_SRC"),
-            extra_script_src: read_csp_sources("FLUXER_CSP_EXTRA_SCRIPT_SRC"),
-            extra_style_src: read_csp_sources("FLUXER_CSP_EXTRA_STYLE_SRC"),
-            extra_frame_src: read_csp_sources("FLUXER_CSP_EXTRA_FRAME_SRC"),
-            extra_worker_src: read_csp_sources("FLUXER_CSP_EXTRA_WORKER_SRC"),
-            extra_manifest_src: read_csp_sources("FLUXER_CSP_EXTRA_MANIFEST_SRC"),
-            report_uri: read_csp_report_uri("FLUXER_CSP_REPORT_URI"),
+            extra_img_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_IMG_SRC"),
+            extra_media_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_MEDIA_SRC"),
+            extra_font_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_FONT_SRC"),
+            extra_script_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_SCRIPT_SRC"),
+            extra_style_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_STYLE_SRC"),
+            extra_frame_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_FRAME_SRC"),
+            extra_worker_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_WORKER_SRC"),
+            extra_manifest_src: read_csp_sources(env, "FLUXER_CSP_EXTRA_MANIFEST_SRC"),
+            report_uri: read_csp_report_uri(env, "FLUXER_CSP_REPORT_URI"),
         }
     }
 }
 
-fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
-    cfg::read_env(name, "")
+fn read_csp_sources(env: &EnvMap, name: &'static str) -> Vec<CspSource> {
+    env.read(name, "")
         .split([',', ' ', '\t', '\n'])
         .map(str::trim)
         .filter(|source| !source.is_empty())
@@ -427,20 +428,20 @@ pub fn voice_connect_sources(name: &'static str, value: &str) -> Vec<CspSource> 
         .collect()
 }
 
-fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
-    let value = cfg::env_value(name)?;
+fn read_csp_report_uri(env: &EnvMap, name: &'static str) -> Option<CspReportUri> {
+    let value = env.value(name)?;
     CspReportUri::parse(name, value.trim())
         .inspect_err(warn_invalid)
         .ok()
 }
 
 impl AppProxyConfig {
-    pub fn from_env() -> Self {
+    pub fn from_env(env: &EnvMap) -> Self {
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
-            cfg::env_value("FLUXER_S3_PUBLIC_ENDPOINT"),
+            env.value("FLUXER_S3_PUBLIC_ENDPOINT"),
         );
-        let s3_uploads_bucket = cfg::read_env("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
+        let s3_uploads_bucket = env.read("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
         let s3_uploads_endpoint = s3_public_endpoint.as_ref().and_then(|endpoint| {
             endpoint
                 .with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim())
@@ -448,54 +449,52 @@ impl AppProxyConfig {
                 .ok()
         });
 
-        let self_hosted = cfg::read_bool_env("FLUXER_SELF_HOSTED", false);
+        let self_hosted = env.read_bool("FLUXER_SELF_HOSTED", false);
         Self {
-            host: cfg::read_env("FLUXER_APP_PROXY_HOST", "0.0.0.0"),
+            host: env.read("FLUXER_APP_PROXY_HOST", "0.0.0.0"),
             port: parse_env_or_warn(
                 "FLUXER_APP_PROXY_PORT",
-                &cfg::read_env("FLUXER_APP_PROXY_PORT", "8080"),
+                &env.read("FLUXER_APP_PROXY_PORT", "8080"),
                 8080u16,
             ),
-            static_dir: cfg::read_env("FLUXER_STATIC_DIR", "./static"),
+            static_dir: env.read("FLUXER_STATIC_DIR", "./static"),
             index_upstream_url: parse_optional_http_url(
                 "FLUXER_APP_PROXY_INDEX_UPSTREAM_URL",
-                cfg::env_value("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
+                env.value("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
             ),
             static_cdn_endpoint: parse_optional_http_endpoint(
                 "FLUXER_STATIC_CDN_ENDPOINT",
-                cfg::env_value("FLUXER_STATIC_CDN_ENDPOINT"),
+                env.value("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
             media_endpoint: parse_optional_http_endpoint(
                 "FLUXER_MEDIA_ENDPOINT",
-                cfg::env_value("FLUXER_MEDIA_ENDPOINT"),
+                env.value("FLUXER_MEDIA_ENDPOINT"),
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
-            branding: crate::branding_images::snapshot_from_environment(cfg::env_value),
-            discovery_upstream_url: cfg::read_env(
-                "DISCOVERY_UPSTREAM_URL",
-                DEFAULT_DISCOVERY_UPSTREAM_URL,
-            ),
+            branding: crate::branding_images::snapshot_from_environment(|name| env.value(name)),
+            discovery_upstream_url: env
+                .read("DISCOVERY_UPSTREAM_URL", DEFAULT_DISCOVERY_UPSTREAM_URL),
             discovery_refresh_interval_ms: parse_env_or_warn(
                 "DISCOVERY_REFRESH_INTERVAL_MS",
-                &cfg::read_env("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
+                &env.read("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
                 60_000u64,
             ),
-            build_version: cfg::read_first_env(
+            build_version: env.read_first(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
-            csp: CspConfig::from_env(),
+            csp: CspConfig::from_env(env),
             same_origin_hosts: parse_same_origin_hosts(
                 "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
-                &cfg::read_env("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
+                &env.read("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
             ),
             manifest_scope_extensions: parse_manifest_scope_extensions(
                 "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
-                &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
+                &env.read("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
             ),
             release_channel: resolve_release_channel(
-                parse_release_channel("RELEASE_CHANNEL", &cfg::read_env("RELEASE_CHANNEL", "")),
+                parse_release_channel("RELEASE_CHANNEL", &env.read("RELEASE_CHANNEL", "")),
                 self_hosted,
             ),
             self_hosted,

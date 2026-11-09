@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_svc::config::optional_env;
+use fluxer_common::config::EnvMap;
 use hmac::{KeyInit, Mac};
 use std::sync::{LazyLock, OnceLock};
 
@@ -31,7 +31,11 @@ pub struct Pseudonym {
     pub discriminator: i32,
 }
 
-pub fn configure(secret: Option<String>, environment: Option<&str>) -> anyhow::Result<()> {
+pub fn secret_from_env(env: &EnvMap) -> anyhow::Result<Vec<u8>> {
+    resolve_secret(env.value(SECRET_ENV), env.get("FLUXER_ENV"))
+}
+
+fn resolve_secret(secret: Option<String>, environment: Option<&str>) -> anyhow::Result<Vec<u8>> {
     let secret = match secret.filter(|value| !value.trim().is_empty()) {
         Some(value) => value,
         None if matches!(environment, Some("development" | "test")) => {
@@ -40,16 +44,15 @@ pub fn configure(secret: Option<String>, environment: Option<&str>) -> anyhow::R
         }
         None => anyhow::bail!("{SECRET_ENV} is required"),
     };
-    SECRET
-        .set(secret.into_bytes())
-        .map_err(|_| anyhow::anyhow!("{SECRET_ENV} was already configured"))
+    Ok(secret.into_bytes())
 }
 
-pub fn configure_from_env() -> anyhow::Result<()> {
-    configure(
-        optional_env(SECRET_ENV),
-        optional_env("FLUXER_ENV").as_deref(),
-    )
+pub fn configure(secret: Vec<u8>) -> anyhow::Result<()> {
+    let configured = SECRET.get_or_init(|| secret.clone());
+    if *configured != secret {
+        anyhow::bail!("{SECRET_ENV} was already configured with a different value");
+    }
+    Ok(())
 }
 
 pub fn pseudonym(user_id: i64) -> Pseudonym {
@@ -185,7 +188,7 @@ mod tests {
 
     #[test]
     fn configuration_requires_a_secret_outside_development() {
-        assert!(configure(None, None).is_err());
-        assert!(configure(Some("  ".to_owned()), Some("production")).is_err());
+        assert!(resolve_secret(None, None).is_err());
+        assert!(resolve_secret(Some("  ".to_owned()), Some("production")).is_err());
     }
 }

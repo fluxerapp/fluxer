@@ -17,6 +17,11 @@ on:
         type: string
         required: false
         default: ""
+      build-args:
+        description: "Extra build arguments, one NAME=value per line"
+        type: string
+        required: false
+        default: ""
 permissions:
   actions: read
   contents: write
@@ -110,6 +115,7 @@ jobs:
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             SOURCE_SHA=${{ github.sha }}
             SOURCE_DATE=${{ steps.source.outputs.date }}
+            ${{ inputs['build-args'] }}
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }}
           cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
         env:

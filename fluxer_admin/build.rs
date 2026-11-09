@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![allow(clippy::disallowed_methods)]
+
 use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;

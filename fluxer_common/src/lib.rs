@@ -8,6 +8,7 @@ pub mod user_flags;
 pub mod http_range;
 pub mod server;
 pub mod shutdown;
+pub mod svc_span;
 
 pub mod time;
 pub mod user_partial;
