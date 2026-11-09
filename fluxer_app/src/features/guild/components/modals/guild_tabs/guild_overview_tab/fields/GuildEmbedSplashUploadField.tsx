@@ -14,6 +14,7 @@ import {useGuildImageAssetField} from '@app/features/guild/components/modals/gui
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -76,7 +77,7 @@ export const GuildEmbedSplashUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_CHAT_EMBED_BACKGROUND_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHintWithNote(i18n, {
 			formats: STATIC_IMAGE_WITH_AVIF_FORMATS,
-			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+			maxSize: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 			minimumSize: embedSplashMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 			note: i18n._(SHOWN_IN_INVITE_EMBEDS_IN_CHAT_DESCRIPTOR),

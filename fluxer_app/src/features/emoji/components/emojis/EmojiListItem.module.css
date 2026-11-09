@@ -60,7 +60,7 @@
 .deleteButton {
 	position: absolute;
 	top: 0;
-	right: 0;
+	inset-inline-end: 0;
 	transform: translate(40%, -40%);
 	border-radius: 624.9375rem;
 	border: 0.0625rem solid var(--background-header-secondary);
@@ -104,6 +104,11 @@
 	border: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-secondary);
 	transform: translate(40%, -40%);
+}
+
+:global(html[dir='rtl']) .deleteButton,
+:global(html[dir='rtl']) .deleteButtonFloating {
+	transform: translate(-40%, -40%);
 }
 
 .listCard {

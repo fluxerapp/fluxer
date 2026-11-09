@@ -4,8 +4,8 @@ import styles from '@app/features/app/components/dialogs/components/plutonium/In
 import {downloadBillingDocument} from '@app/features/premium/commands/BillingDocumentCommands';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {Button} from '@app/features/ui/button/Button';
+import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
 import {formatMinorUnitPrice} from '@fluxer/number_utils/src/PriceFormatting';
 import type {BillingDocumentResponse} from '@fluxer/schema/src/domains/billing_documents/BillingDocumentSchemas';
 import type {I18n} from '@lingui/core';
@@ -67,7 +67,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = observer(({documents}) =>
 			{documents.map((document) => (
 				<div className={styles.row} key={document.id} data-flx="app.plutonium.invoice-list.row">
 					<span className={styles.date} data-flx="app.plutonium.invoice-list.date">
-						{getFormattedShortDate(new Date(document.issued_at), getCurrentLocale())}
+						{getFormattedShortDate(new Date(document.issued_at))}
 					</span>
 					<span className={styles.amount} data-flx="app.plutonium.invoice-list.amount">
 						{formatDocumentAmount(i18n, document)}

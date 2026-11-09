@@ -83,10 +83,14 @@
 	mask-image: radial-gradient(circle at 85% 15%, transparent 0.34375rem, #000 calc(0.34375rem + 0.03125rem));
 }
 
+:global(html[dir='rtl']) .settingsIconWithDot {
+	mask-image: radial-gradient(circle at 15% 15%, transparent 0.34375rem, #000 calc(0.34375rem + 0.03125rem));
+}
+
 .settingsDot {
 	position: absolute;
 	top: 0.5625rem;
-	right: 0.5625rem;
+	inset-inline-end: 0.5625rem;
 }
 
 .userInfo {

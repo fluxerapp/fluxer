@@ -6,6 +6,7 @@ import type {SetupBrandingAssetKind} from '@app/features/app/components/setup/Se
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {contrastRatio} from '@app/features/theme/utils/InstanceBrandColors';
 import {Button} from '@app/features/ui/button/Button';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {formatAssetUploadExtensions, getPolicy} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -308,7 +309,7 @@ export const BrandingAssetField = observer(
 		const {i18n} = useLingui();
 		const copy = ASSET_COPY[asset.kind];
 		const policy = getPolicy(brandingAssetPolicyKind(asset.kind));
-		const size = formatFileSize(i18n.locale, policy.maxBytes);
+		const size = formatFileSize(getFormattingLocale(), policy.maxBytes);
 		const source = asset.preview ?? asset.url;
 		const [dimensions, setDimensions] = useState<{source: string; width: number; height: number} | null>(null);
 		const [readability, setReadability] = useState<{source: string; result: WordmarkReadability} | null>(null);

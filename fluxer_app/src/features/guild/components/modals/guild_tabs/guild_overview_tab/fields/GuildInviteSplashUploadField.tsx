@@ -16,6 +16,7 @@ import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOvervie
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -82,7 +83,7 @@ export const GuildInviteSplashUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_INVITE_BACKGROUND_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHint(i18n, {
 			formats: STATIC_IMAGE_WITH_AVIF_FORMATS,
-			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+			maxSize: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 			minimumSize: splashMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 		}),

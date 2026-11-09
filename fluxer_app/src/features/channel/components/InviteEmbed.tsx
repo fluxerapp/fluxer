@@ -53,7 +53,7 @@ import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {QuestionIcon} from '@phosphor-icons/react';
@@ -122,7 +122,7 @@ const createTitleKeyDownHandler = (callback: () => void) => (event: React.Keyboa
 };
 
 function formatInviteCount(value: number): string {
-	return formatNumber(value, getCurrentLocale());
+	return formatNumber(value, getFormattingLocale());
 }
 
 interface InviteEmbedProps {

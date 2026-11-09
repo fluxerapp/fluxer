@@ -36,6 +36,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader.module.css';
 import type {ProfileAssetMode} from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileAssetCustomizationStateMachine';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	DON_T_SHOW_DESCRIPTOR,
 	USE_CUSTOM_IMAGE_DESCRIPTOR,
@@ -182,7 +183,7 @@ export const BannerUploader = observer(
 					showGenericErrorModal({
 						title: i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
 						message: i18n._(BANNER_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+							imageMaxSizeLabel: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 						}),
 						dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
 					});
@@ -264,7 +265,7 @@ export const BannerUploader = observer(
 				title: i18n._(CHANGE_BANNER_DESCRIPTOR),
 				uploadHint: formatImageUploadMinimumHint(i18n, {
 					formats: ANIMATED_IMAGE_FORMATS,
-					maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+					maxSize: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 					minimumSize: BANNER_MINIMUM_SIZE_LABEL,
 					aspectRatio: BANNER_ASPECT_RATIO_LABEL,
 				}),

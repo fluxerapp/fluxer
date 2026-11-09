@@ -5083,11 +5083,6 @@ msgstr "Значка на иконата на приложението"
 msgid "App icons"
 msgstr "Икони на приложението"
 
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "App language: {format}"
-msgstr "Час според езика на приложението: {format}"
-
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "App settings"
 msgstr "Настройки на приложението"
@@ -6761,11 +6756,6 @@ msgstr "Браузър: напред"
 msgctxt "keyboard-key-name"
 msgid "Browser home"
 msgstr "Браузър: начална страница"
-
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Browser locale: {format}"
-msgstr "Час според настройките на браузъра: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
@@ -8453,6 +8443,11 @@ msgstr "Избери приятели, на които да пишеш."
 msgid "Choose how chat moves after you send a message"
 msgstr "Избери какво да се случва с чата, след като изпратиш съобщение"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose how dates, times and numbers are written"
+msgstr ""
+
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Choose how messages are displayed in chat channels."
@@ -8490,6 +8485,11 @@ msgstr "Избери какво да споделиш"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Choose the category that best describes your community. You can change this any time."
 msgstr "Избери категорията, която най-добре описва общността ти. Можеш да я промениш по всяко време."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose the order of day, month and year in dates"
+msgstr ""
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -12396,6 +12396,16 @@ msgstr "Дата"
 msgid "Date and time"
 msgstr "Дата и час"
 
+#. Title of the language settings section that picks a fixed order for numeric dates. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Date format"
+msgstr ""
+
+#. Accessible label for the date format choices in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Date format selection"
+msgstr ""
+
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
@@ -12409,6 +12419,11 @@ msgstr "Дата на раждане"
 msgid "Date options"
 msgstr "Опции за дата"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Date order"
+msgstr ""
+
 #. Accessible label for the date picker dialog.
 #: src/features/ui/components/form/DateTimePickerField.tsx
 msgid "Date picker"
@@ -12421,10 +12436,20 @@ msgstr "Избор на дата"
 msgid "Date posted"
 msgstr "Дата на публикуване"
 
+#. Help text under the regional format picker in the language settings.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Dates, times and numbers follow this format. Prices stay in the currency of your billing country."
+msgstr ""
+
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
 #: src/features/auth/flow/DateOfBirthField.tsx
 msgid "Day"
 msgstr "Ден"
+
+#. Date format option that writes day/month/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Day first"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts
@@ -20405,6 +20430,13 @@ msgstr "Ирландия"
 msgid "Is this instance for one community or many?"
 msgstr "Тази инстанция за една общност ли е, или за много?"
 
+#. Date format option named after the international standard. Keep "ISO 8601" as is.
+#. Settings search synonym for the international date format standard. Keep "ISO 8601" as is.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "ISO 8601"
+msgstr ""
+
 #. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
@@ -23291,6 +23323,11 @@ msgstr "Монтана"
 msgid "Month"
 msgstr "Месец"
 
+#. Date format option that writes month/day/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Month first"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Monthly"
@@ -25397,6 +25434,11 @@ msgstr "Num Lock"
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Number"
 msgstr "Число"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Number format"
+msgstr ""
 
 #. Label of the control that sets how many Operator Passes to buy. All of them go to your own account.
 #: src/features/premium/components/operator_pass/checkout/CheckoutChooseStage.tsx
@@ -29272,6 +29314,21 @@ msgstr "Генерирането на нова тайна ще направи т
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Генерирането на нов токен ще направи текущия невалиден. Актуализирай всеки код, който използва старата стойност."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Region"
+msgstr ""
+
+#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Regional format"
+msgstr ""
+
+#. Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Regional format: {format}"
+msgstr ""
+
 #. Generic authentication action label for opening or submitting account registration.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Register"
@@ -31057,6 +31114,11 @@ msgstr "Руски"
 msgid "Safety"
 msgstr "Безопасност"
 
+#. Regional format option that writes dates, times and numbers the way the interface language does. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Same as language"
+msgstr ""
+
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "Same time as you"
@@ -31595,6 +31657,11 @@ msgstr "Търсене на всичко..."
 msgid "Search for channels, people, or communities"
 msgstr "Търсене на канали, хора или общности"
 
+#. Placeholder in the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Search formats…"
+msgstr ""
+
 #. Generic search-input placeholder for filtering the current friends list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Search friends"
@@ -32064,6 +32131,11 @@ msgstr "Избери език на интерфейса"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Select one to add a rule for it to your CSS."
 msgstr "Изберете една, за да добавите правило за нея към вашия CSS."
+
+#. Accessible label for the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Select regional format"
+msgstr ""
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
@@ -36102,10 +36174,10 @@ msgstr "Системните DM не поддържат видеоразгово
 msgid "System DMs cannot host voice calls"
 msgstr "Системните DM не поддържат гласови повиквания"
 
-#. Label in the language tab. Preserve {format}.
+#. Regional format option that uses the date, time and number settings of the device or browser. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "System locale: {format}"
-msgstr "Час според настройките на системата: {format}"
+msgid "System format"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -40766,11 +40838,6 @@ msgstr "Използвай друг акаунт"
 msgid "Use autoscrolling"
 msgstr "Използване на автоматично превъртане"
 
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use browser locale for time format"
-msgstr "Използване на езиковите настройки на браузъра за формат на часа"
-
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "Use card"
@@ -40925,11 +40992,6 @@ msgstr "Използвай стикери от други общности с {p
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use stickers from other communities."
 msgstr "Използване на стикери от други общности."
-
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use system locale for time format"
-msgstr "Използване на езиковите настройки на системата за формат на часа"
 
 #. Switch label in Settings > Themes on the desktop app, also used as its settings search entry. When on, the account uses the theme shared by every account in the desktop app.
 #: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts

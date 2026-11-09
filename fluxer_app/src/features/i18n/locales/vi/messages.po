@@ -5083,11 +5083,6 @@ msgstr "Huy hiệu trên biểu tượng ứng dụng"
 msgid "App icons"
 msgstr "Biểu tượng ứng dụng"
 
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "App language: {format}"
-msgstr "Định dạng giờ theo ngôn ngữ ứng dụng: {format}"
-
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "App settings"
 msgstr "Cài đặt ứng dụng"
@@ -6761,11 +6756,6 @@ msgstr "Trình duyệt: tiến"
 msgctxt "keyboard-key-name"
 msgid "Browser home"
 msgstr "Trình duyệt: trang chủ"
-
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Browser locale: {format}"
-msgstr "Định dạng giờ của trình duyệt: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
@@ -8453,6 +8443,11 @@ msgstr "Chọn bạn bè để nhắn tin."
 msgid "Choose how chat moves after you send a message"
 msgstr "Chọn cách khung trò chuyện di chuyển sau khi bạn gửi tin nhắn"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose how dates, times and numbers are written"
+msgstr ""
+
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Choose how messages are displayed in chat channels."
@@ -8490,6 +8485,11 @@ msgstr "Chọn nội dung để chia sẻ"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Choose the category that best describes your community. You can change this any time."
 msgstr "Chọn danh mục mô tả đúng nhất về cộng đồng của bạn. Bạn có thể thay đổi bất cứ lúc nào."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose the order of day, month and year in dates"
+msgstr ""
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -12396,6 +12396,16 @@ msgstr "Ngày"
 msgid "Date and time"
 msgstr "Ngày và giờ"
 
+#. Title of the language settings section that picks a fixed order for numeric dates. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Date format"
+msgstr ""
+
+#. Accessible label for the date format choices in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Date format selection"
+msgstr ""
+
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
@@ -12409,6 +12419,11 @@ msgstr "Ngày sinh"
 msgid "Date options"
 msgstr "Tùy chọn ngày"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Date order"
+msgstr ""
+
 #. Accessible label for the date picker dialog.
 #: src/features/ui/components/form/DateTimePickerField.tsx
 msgid "Date picker"
@@ -12421,10 +12436,20 @@ msgstr "Bộ chọn ngày"
 msgid "Date posted"
 msgstr "Ngày đăng"
 
+#. Help text under the regional format picker in the language settings.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Dates, times and numbers follow this format. Prices stay in the currency of your billing country."
+msgstr ""
+
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
 #: src/features/auth/flow/DateOfBirthField.tsx
 msgid "Day"
 msgstr "Ngày"
+
+#. Date format option that writes day/month/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Day first"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts
@@ -20405,6 +20430,13 @@ msgstr "Ireland"
 msgid "Is this instance for one community or many?"
 msgstr "Máy chủ này dành cho một cộng đồng hay nhiều cộng đồng?"
 
+#. Date format option named after the international standard. Keep "ISO 8601" as is.
+#. Settings search synonym for the international date format standard. Keep "ISO 8601" as is.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "ISO 8601"
+msgstr ""
+
 #. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
@@ -23291,6 +23323,11 @@ msgstr "Montana"
 msgid "Month"
 msgstr "Tháng"
 
+#. Date format option that writes month/day/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Month first"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Monthly"
@@ -25397,6 +25434,11 @@ msgstr "Num Lock"
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 msgid "Number"
 msgstr "Số"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Number format"
+msgstr ""
 
 #. Label of the control that sets how many Operator Passes to buy. All of them go to your own account.
 #: src/features/premium/components/operator_pass/checkout/CheckoutChooseStage.tsx
@@ -29272,6 +29314,21 @@ msgstr "Việc tạo lại sẽ làm mất hiệu lực mã bí mật hiện t�
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Việc tạo lại sẽ làm mất hiệu lực token hiện tại. Hãy cập nhật mọi đoạn mã đang dùng giá trị cũ."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Region"
+msgstr ""
+
+#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Regional format"
+msgstr ""
+
+#. Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Regional format: {format}"
+msgstr ""
+
 #. Generic authentication action label for opening or submitting account registration.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Register"
@@ -31057,6 +31114,11 @@ msgstr "Tiếng Nga"
 msgid "Safety"
 msgstr "An toàn"
 
+#. Regional format option that writes dates, times and numbers the way the interface language does. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Same as language"
+msgstr ""
+
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "Same time as you"
@@ -31595,6 +31657,11 @@ msgstr "Tìm kiếm bất cứ điều gì..."
 msgid "Search for channels, people, or communities"
 msgstr "Tìm kênh, người hoặc cộng đồng"
 
+#. Placeholder in the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Search formats…"
+msgstr ""
+
 #. Generic search-input placeholder for filtering the current friends list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Search friends"
@@ -32064,6 +32131,11 @@ msgstr "Chọn ngôn ngữ giao diện"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Select one to add a rule for it to your CSS."
 msgstr "Chọn một để thêm quy tắc cho nó vào CSS của bạn."
+
+#. Accessible label for the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Select regional format"
+msgstr ""
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
@@ -36102,10 +36174,10 @@ msgstr "DM hệ thống không thể tổ chức cuộc gọi video"
 msgid "System DMs cannot host voice calls"
 msgstr "DM hệ thống không thể tổ chức cuộc gọi thoại"
 
-#. Label in the language tab. Preserve {format}.
+#. Regional format option that uses the date, time and number settings of the device or browser. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "System locale: {format}"
-msgstr "Định dạng giờ của hệ thống: {format}"
+msgid "System format"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -40766,11 +40838,6 @@ msgstr "Sử dụng tài khoản khác"
 msgid "Use autoscrolling"
 msgstr "Dùng tự động cuộn"
 
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use browser locale for time format"
-msgstr "Dùng ngôn ngữ trình duyệt cho định dạng thời gian"
-
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "Use card"
@@ -40925,11 +40992,6 @@ msgstr "Dùng nhãn dán từ các cộng đồng khác với {premiumProductNam
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use stickers from other communities."
 msgstr "Sử dụng nhãn dán từ các cộng đồng khác."
-
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use system locale for time format"
-msgstr "Dùng ngôn ngữ hệ thống cho định dạng thời gian"
 
 #. Switch label in Settings > Themes on the desktop app, also used as its settings search entry. When on, the account uses the theme shared by every account in the desktop app.
 #: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts

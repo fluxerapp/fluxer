@@ -12,10 +12,10 @@ import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import NagbarState from '@app/features/ui/state/Nagbar';
 import StatusPage, {type MaintenanceStatus, type StatusPageMaintenance} from '@app/features/user/state/StatusPage';
+import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {HOURS_PER_DAY, MINUTES_PER_HOUR, MS_PER_HOUR} from '@fluxer/date_utils/src/DateConstants';
-import {getFormattedDateTime} from '@fluxer/date_utils/src/DateFormatting';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -51,12 +51,12 @@ const LEARN_MORE_DESCRIPTOR = msg({
 	comment: 'CTA on the planned-maintenance banner. Opens the external status-page maintenance notice.',
 });
 
-function formatMaintenanceTimeLabel(value: string, locale: string): string {
+function formatMaintenanceTimeLabel(value: string): string {
 	const parsedDate = new Date(value);
 	if (Number.isNaN(parsedDate.getTime())) {
 		return value;
 	}
-	return getFormattedDateTime(parsedDate, locale);
+	return getFormattedDateTime(parsedDate);
 }
 
 function formatMaintenanceDurationLabel(durationMinutes: number, locale: string): string {
@@ -118,7 +118,7 @@ export const ScheduledMaintenanceNagbar = observer(({isMobile}: {isMobile: boole
 			return null;
 		}
 		return {
-			startLabel: formatMaintenanceTimeLabel(scheduledMaintenance.start, locale),
+			startLabel: formatMaintenanceTimeLabel(scheduledMaintenance.start),
 			durationLabel: formatMaintenanceDurationLabel(scheduledMaintenance.durationMinutes, locale),
 		};
 	}, [locale, scheduledMaintenance]);

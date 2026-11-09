@@ -11,6 +11,7 @@ import {
 	UndeafenIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import styles from '@app/features/voice/components/bottomsheets/VoiceLobbyShared.module.css';
 import {
 	formatMilliseconds,
@@ -233,7 +234,6 @@ export function VoiceLobbyConnectionStats({
 	audioPacketLoss,
 	jitter,
 }: VoiceLobbyConnectionStatsProps) {
-	const {i18n} = useLingui();
 	const prettyEndpoint = (() => {
 		if (!voiceServerEndpoint) return null;
 		try {
@@ -263,7 +263,7 @@ export function VoiceLobbyConnectionStats({
 						label={labels.ping}
 						value={
 							<span className={styles.statValuePrimary} data-flx={`${dataFlx}.stat-value-primary`}>
-								{formatMilliseconds(currentLatency, i18n.locale)}
+								{formatMilliseconds(currentLatency, getFormattingLocale())}
 							</span>
 						}
 						data-flx={`${dataFlx}.row`}
@@ -305,7 +305,7 @@ export function VoiceLobbyConnectionStats({
 						label={labels.packetLoss}
 						value={
 							<span className={styles.statValuePrimary} data-flx={`${dataFlx}.stat-value-primary--2`}>
-								{formatPacketLossPercent(audioPacketLoss, i18n.locale)}
+								{formatPacketLossPercent(audioPacketLoss, getFormattingLocale())}
 							</span>
 						}
 						data-flx={`${dataFlx}.row--4`}
@@ -317,7 +317,7 @@ export function VoiceLobbyConnectionStats({
 						label={labels.jitter}
 						value={
 							<span className={styles.statValuePrimary} data-flx={`${dataFlx}.stat-value-primary--3`}>
-								{formatMilliseconds(jitter, i18n.locale)}
+								{formatMilliseconds(jitter, getFormattingLocale())}
 							</span>
 						}
 						data-flx={`${dataFlx}.row--5`}

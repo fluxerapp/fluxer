@@ -207,6 +207,10 @@
 	transform: translate(25%, -25%);
 }
 
+:global(html[dir='rtl']) .actionBar {
+	transform: translate(-25%, -25%);
+}
+
 .button {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 }

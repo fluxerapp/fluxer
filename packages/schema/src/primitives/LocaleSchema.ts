@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {REGIONAL_FORMAT_PATTERN} from '@fluxer/constants/src/Locales';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {createNamedStringLiteralUnion, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {z} from 'zod';
 
 export const LocaleSchema = withOpenApiType(
 	createNamedStringLiteralUnion(
@@ -54,3 +57,11 @@ export const LocaleSchema = withOpenApiType(
 	),
 	'Locale',
 );
+
+export const RegionalFormatSchema = z
+	.string()
+	.regex(REGIONAL_FORMAT_PATTERN, ValidationErrorCodes.INVALID_FORMAT)
+	.nullable()
+	.describe(
+		'The locale used to write dates, times and numbers, such as de-DE, or "system" for the device locale. Null follows the interface language. Currency follows the billing country either way.',
+	);

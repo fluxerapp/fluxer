@@ -10,9 +10,7 @@
 
 .layer {
 	position: fixed;
-	inset: 0;
-	left: var(--quick-css-dock-left, 0px);
-	right: var(--quick-css-dock-right, 0px);
+	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -58,9 +56,7 @@
 
 .layer.layerFullscreen {
 	position: absolute;
-	inset: 0;
-	left: var(--quick-css-dock-left, 0px);
-	right: var(--quick-css-dock-right, 0px);
+	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
 	--fullscreen-pad-y: clamp(0.5rem, 1.5vh, 1rem);
 	--fullscreen-pad-x: clamp(0.75rem, 2vw, 1.5rem);
 	--fullscreen-view-height: min(100dvh, 100svh, 100vh);
@@ -396,7 +392,7 @@
 .insetCloseButtonContainer {
 	position: absolute;
 	top: calc(0.75rem + env(safe-area-inset-top, 0px));
-	right: calc(0.75rem + env(safe-area-inset-right, 0px));
+	inset-inline-end: calc(0.75rem + var(--safe-area-inset-inline-end));
 	z-index: 10;
 	pointer-events: auto;
 }

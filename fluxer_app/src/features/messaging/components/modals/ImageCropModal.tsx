@@ -14,6 +14,7 @@ import {Button} from '@app/features/ui/button/Button';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopOwningModal} from '@app/features/ui/utils/ModalUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -425,7 +426,7 @@ function getCropErrorMessage(
 ): string | null {
 	if (error instanceof CropSizeLimitError) {
 		return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-			maxSizeLabel: formatFileSize(i18n.locale, error.maxBytes),
+			maxSizeLabel: formatFileSize(getFormattingLocale(), error.maxBytes),
 		});
 	}
 	if (!(error instanceof CropPipelineError)) {
@@ -436,7 +437,7 @@ function getCropErrorMessage(
 			return null;
 		case 'too_large':
 			return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-				maxSizeLabel: formatFileSize(i18n.locale, sizeLimitBytes),
+				maxSizeLabel: formatFileSize(getFormattingLocale(), sizeLimitBytes),
 			});
 		case 'budget_exceeded':
 			return i18n._(ANIMATION_TOO_LONG_OR_TOO_LARGE_DESCRIPTOR);

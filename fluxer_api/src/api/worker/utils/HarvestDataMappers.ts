@@ -92,6 +92,8 @@ interface ArchivedUserSettings {
 	}>;
 	afk_timeout: number;
 	time_format: UserSettings['timeFormat'];
+	regional_format: UserSettings['regionalFormat'];
+	timestamp_format: UserSettings['timestampFormat'];
 	suppress_unprivileged_self_mentions: boolean;
 	suppress_unprivileged_self_mentions_bypass_user_ids: Array<string>;
 	staff_dm_access_user_ids: Array<string>;
@@ -394,6 +396,8 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			})),
 			afk_timeout: userSettings.afkTimeout,
 			time_format: userSettings.timeFormat,
+			regional_format: userSettings.regionalFormat,
+			timestamp_format: userSettings.timestampFormat,
 			suppress_unprivileged_self_mentions: userSettings.suppressUnprivilegedSelfMentions,
 			suppress_unprivileged_self_mentions_bypass_user_ids: Array.from(
 				userSettings.suppressUnprivilegedSelfMentionBypassUserIds,

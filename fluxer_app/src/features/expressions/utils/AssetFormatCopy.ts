@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
-
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ASSET_FORMAT_POLICY, type AssetKind} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -37,7 +37,7 @@ export function getAssetFormatErrorMessage(i18n: I18n, kind: AssetKind, reason: 
 			return i18n._(UNSUPPORTED_FILE_TYPE_ALLOWED_FORMATS_DESCRIPTOR);
 		}
 		case 'too_large': {
-			const maxSize = formatFileSize(i18n.locale, policy.maxBytes);
+			const maxSize = formatFileSize(getFormattingLocale(), policy.maxBytes);
 			return i18n._(FILE_IS_TOO_LARGE_MAXIMUM_SIZE_IS_DESCRIPTOR, {maxSize});
 		}
 		case 'bad_dimensions': {

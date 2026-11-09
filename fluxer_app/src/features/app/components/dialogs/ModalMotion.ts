@@ -6,6 +6,7 @@ export interface ModalMotionInput {
 	transitionPreset: ModalTransitionPreset;
 	prefersReducedMotion: boolean;
 	isFullscreenOnMobile: boolean;
+	isRtl: boolean;
 }
 
 export interface ModalBackdropMotionInput {
@@ -32,6 +33,7 @@ export function resolveModalMotionSpec({
 	transitionPreset,
 	prefersReducedMotion,
 	isFullscreenOnMobile,
+	isRtl,
 }: ModalMotionInput) {
 	if (transitionPreset === 'instant') {
 		return {
@@ -66,10 +68,11 @@ export function resolveModalMotionSpec({
 		};
 	}
 	if (transitionPreset === 'profile-slide') {
+		const slideOffset = isRtl ? -14 : 14;
 		return {
-			initial: {opacity: 0, x: 14},
+			initial: {opacity: 0, x: slideOffset},
 			animate: {opacity: 1, x: 0},
-			exit: {opacity: 0, x: 14},
+			exit: {opacity: 0, x: slideOffset},
 			transition: {duration: 0.14, ease: 'easeOut'},
 		};
 	}

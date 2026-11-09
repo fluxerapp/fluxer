@@ -24,6 +24,7 @@ import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerFiel
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {getPolicy} from '@fluxer/constants/src/AssetFormatPolicy';
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {MessageDescriptor} from '@lingui/core';
@@ -457,7 +458,7 @@ export const BrandingFields = observer(
 		let caption: React.ReactNode = null;
 		if (highlight != null && highlight !== 'theme_color') {
 			const copy = ASSET_COPY[highlight];
-			const size = formatFileSize(i18n.locale, getPolicy(brandingAssetPolicyKind(highlight)).maxBytes);
+			const size = formatFileSize(getFormattingLocale(), getPolicy(brandingAssetPolicyKind(highlight)).maxBytes);
 			caption = (
 				<>
 					<p data-flx="app.setup.setup-branding-step.caption.p">{i18n._(copy.help, {size})}</p>

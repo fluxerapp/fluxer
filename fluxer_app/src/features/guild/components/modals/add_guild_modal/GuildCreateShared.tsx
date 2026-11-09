@@ -32,6 +32,7 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import Users from '@app/features/user/state/Users';
 import {AccountGateSlate} from '@app/features/user/utils/AccountGatePresentation';
 import {canPerform} from '@app/features/user/utils/AccountGates';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -86,7 +87,7 @@ export function useGuildCreateIconField({
 			if (file.size > GlobalLimits.getAvatarMaxSize()) {
 				showIconUploadErrorModal(
 					i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-						imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+						imageMaxSizeLabel: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 					}),
 				);
 				return;
@@ -137,7 +138,7 @@ export function useGuildCreateIconField({
 			title: i18n._(messages.changeIcon),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+				maxSize: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUpload,

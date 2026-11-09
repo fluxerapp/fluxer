@@ -22,7 +22,7 @@ import {ConnectionResponse} from '@fluxer/schema/src/domains/connection/Connecti
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {ProfileBadgeListResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
-import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
+import {LocaleSchema, RegionalFormatSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
 import {
 	createBitflagInt32Type,
 	createNamedStringLiteralUnion,
@@ -44,6 +44,7 @@ import {
 	SensitiveMediaGuildFilterLevelSchema,
 	StickerAnimationOptionsSchema,
 	TimeFormatTypesSchema,
+	TimestampFormatTypesSchema,
 	UserAuthenticatorTypesSchema,
 	UserNotificationSettingsSchema,
 	UserPremiumTypesSchema,
@@ -360,6 +361,7 @@ export const UserSettingsResponse = z.object({
 	status_resets_to: z.string().nullish().describe('The status to reset to after the scheduled reset'),
 	theme: z.string().describe('The UI theme preference'),
 	locale: LocaleSchema,
+	regional_format: RegionalFormatSchema,
 	restricted_guilds: z.array(SnowflakeStringType).describe('Guild IDs where direct messages are restricted'),
 	bot_restricted_guilds: z.array(SnowflakeStringType).describe('Guild IDs where bot direct messages are restricted'),
 	default_guilds_restricted: z.boolean().describe('Whether new guilds have DM restrictions by default'),
@@ -413,6 +415,7 @@ export const UserSettingsResponse = z.object({
 	custom_status: CustomStatusResponse.nullable().describe('The custom status set by the user'),
 	afk_timeout: Int32Type.describe('The idle timeout in seconds before going AFK'),
 	time_format: withFieldDescription(TimeFormatTypesSchema, 'The preferred time format setting'),
+	timestamp_format: withFieldDescription(TimestampFormatTypesSchema, 'The preferred timestamp format preset'),
 	developer_mode: z.boolean().describe('Whether developer mode is enabled'),
 	trusted_domains: z.array(z.string()).describe('List of trusted external link domains'),
 	default_hide_muted_channels: z.boolean().describe('Whether muted channels are hidden by default in new guilds'),

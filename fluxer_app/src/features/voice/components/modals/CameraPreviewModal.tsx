@@ -24,6 +24,7 @@ import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/compo
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import styles from '@app/features/voice/components/modals/CameraPreviewModal.module.css';
 import {useMaybeVoiceRoom} from '@app/features/voice/components/VoiceRoomContext';
@@ -326,7 +327,7 @@ interface CameraEffectStrengthSliderProps {
 const CameraEffectStrengthSlider = ({label, value, onChange, resetLabel, dataFlx}: CameraEffectStrengthSliderProps) => {
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
-		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 		[i18n, i18n.locale],
 	);
 	const [draftValue, setDraftValueState] = useState(value);

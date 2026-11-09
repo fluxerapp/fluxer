@@ -29207,6 +29207,10 @@
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
 					"locale": {"$ref": "#/components/schemas/Locale"},
+					"regional_format": {
+						"anyOf": [{"type": "string", "pattern": "^(?:system|[a-z]{2,3}-(?:[A-Z]{2}|\\d{3}))$"}, {"type": "null"}],
+						"description": "The locale used to write dates, times and numbers, such as de-DE, or \"system\" for the device locale. Null follows the interface language. Currency follows the billing country either way."
+					},
 					"restricted_guilds": {
 						"description": "Guilds with DM restrictions",
 						"maxItems": 10000,
@@ -29291,6 +29295,10 @@
 						"description": "AFK timeout in seconds (60-600)"
 					},
 					"time_format": {"$ref": "#/components/schemas/TimeFormatTypesInput"},
+					"timestamp_format": {
+						"$ref": "#/components/schemas/TimestampFormatTypesInput",
+						"description": "Timestamp format preset"
+					},
 					"developer_mode": {"type": "boolean", "description": "Developer mode enabled"},
 					"trusted_domains": {
 						"maxItems": 1000,
@@ -29379,6 +29387,10 @@
 					},
 					"theme": {"type": "string", "description": "The UI theme preference"},
 					"locale": {"$ref": "#/components/schemas/Locale"},
+					"regional_format": {
+						"anyOf": [{"type": "string", "pattern": "^(?:system|[a-z]{2,3}-(?:[A-Z]{2}|\\d{3}))$"}, {"type": "null"}],
+						"description": "The locale used to write dates, times and numbers, such as de-DE, or \"system\" for the device locale. Null follows the interface language. Currency follows the billing country either way."
+					},
 					"restricted_guilds": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
@@ -29461,6 +29473,10 @@
 						"$ref": "#/components/schemas/TimeFormatTypes",
 						"description": "The preferred time format setting"
 					},
+					"timestamp_format": {
+						"$ref": "#/components/schemas/TimestampFormatTypes",
+						"description": "The preferred timestamp format preset"
+					},
 					"developer_mode": {"type": "boolean", "description": "Whether developer mode is enabled"},
 					"trusted_domains": {
 						"type": "array",
@@ -29532,6 +29548,7 @@
 					"status",
 					"theme",
 					"locale",
+					"regional_format",
 					"restricted_guilds",
 					"bot_restricted_guilds",
 					"default_guilds_restricted",
@@ -29552,6 +29569,7 @@
 					"custom_status",
 					"afk_timeout",
 					"time_format",
+					"timestamp_format",
 					"developer_mode",
 					"trusted_domains",
 					"default_hide_muted_channels",
@@ -46773,6 +46791,19 @@
 					"Completely hide sensitive media"
 				]
 			},
+			"TimestampFormatTypes": {
+				"description": "Timestamp format preference",
+				"type": "integer",
+				"enum": [0, 1, 2, 3],
+				"format": "int32",
+				"x-enumNames": ["AUTO", "ISO_8601", "DAY_MONTH_YEAR", "MONTH_DAY_YEAR"],
+				"x-enumDescriptions": [
+					"Write dates the way the regional format does",
+					"Write dates as year-month-day, such as 2026-11-06 21:23",
+					"Write dates as day/month/year, such as 06/11/2026",
+					"Write dates as month/day/year, such as 11/06/2026"
+				]
+			},
 			"TimeFormatTypes": {
 				"description": "Time format preference",
 				"type": "integer",
@@ -46961,6 +46992,21 @@
 					"Completely hide sensitive media"
 				],
 				"enum": [0, 1, 2]
+			},
+			"TimestampFormatTypesInput": {
+				"description": "Timestamp format preference",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["AUTO", "ISO_8601", "DAY_MONTH_YEAR", "MONTH_DAY_YEAR"],
+				"x-enumDescriptions": [
+					"Write dates the way the regional format does",
+					"Write dates as year-month-day, such as 2026-11-06 21:23",
+					"Write dates as day/month/year, such as 06/11/2026",
+					"Write dates as month/day/year, such as 11/06/2026"
+				],
+				"enum": [0, 1, 2, 3]
 			},
 			"TimeFormatTypesInput": {
 				"description": "Time format preference",

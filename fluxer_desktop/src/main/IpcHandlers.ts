@@ -519,6 +519,7 @@ export function registerIpcHandlers(): void {
 		}
 	});
 	ipcMain.handle('get-accessibility-support-enabled', (): boolean => app.accessibilitySupportEnabled);
+	ipcMain.handle('system-locale-get', (): string => app.getSystemLocale());
 	app.on('accessibility-support-changed', (_event, accessibilitySupportEnabled) => {
 		const mainWindow = getMainWindow();
 		if (!mainWindow || mainWindow.isDestroyed()) return;

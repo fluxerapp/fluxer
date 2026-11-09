@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {
 	SettingsTabContainer,
@@ -13,6 +11,8 @@ import {HelpCenterArticleSlug} from '@app/features/app/config/HelpCenterConstant
 import {I18N_WEBLATE_DOMAIN, I18N_WEBLATE_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
+import SystemLocale from '@app/features/i18n/state/SystemLocale';
+import {getCachedCollator, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {Button} from '@app/features/ui/button/Button';
 import {Combobox, type ComboboxFilterOption, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
@@ -24,16 +24,22 @@ import * as HelpCenterUtils from '@app/features/ui/utils/HelpCenterUtils';
 import * as NativeUtils from '@app/features/ui/utils/NativeUtils';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/tabs/LanguageTab.module.css';
+import {
+	DATE_FORMAT_DESCRIPTOR,
+	REGIONAL_FORMAT_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {resolveHour12} from '@app/features/user/utils/DateFormatting';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {
 	INTERFACE_LANGUAGE_DESCRIPTOR,
 	PERSONAL_DICTIONARY_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import type {SpellcheckEngine} from '@app/types/electron.d';
-import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
-import {getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
-import {localeUses12Hour} from '@fluxer/date_utils/src/DateHourCycle';
+import {REGIONAL_FORMAT_SYSTEM, RegionalFormatLocales, resolveFormattingLocale} from '@fluxer/constants/src/Locales';
+import {TimeFormatTypes, TimestampFormatTypes} from '@fluxer/constants/src/UserConstants';
+import {formatPresetDateTime, toDateFormatPreset} from '@fluxer/date_utils/src/DateFormatPresets';
+import {getFormattedDateTime, getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {TranslateIcon} from '@phosphor-icons/react';
@@ -48,17 +54,48 @@ const MISSING_LANGUAGE_DESCRIPTOR = msg({
 		'Link under the Weblate line in the language settings. It opens a help article on fluxer.com about suggesting a new language and helping translate the app. Keep it a short question.',
 });
 
-const SYSTEM_LOCALE_DESCRIPTOR = msg({
-	message: 'System locale: {format}',
-	comment: 'Label in the language tab. Preserve {format}.',
+const REGIONAL_FORMAT_EXAMPLE_DESCRIPTOR = msg({
+	message: 'Regional format: {format}',
+	comment:
+		'Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.',
 });
-const BROWSER_LOCALE_DESCRIPTOR = msg({
-	message: 'Browser locale: {format}',
-	comment: 'Label in the language tab. Preserve {format}.',
+const REGIONAL_FORMAT_HELP_DESCRIPTOR = msg({
+	message: 'Dates, times and numbers follow this format. Prices stay in the currency of your billing country.',
+	comment: 'Help text under the regional format picker in the language settings.',
 });
-const APP_LANGUAGE_DESCRIPTOR = msg({
-	message: 'App language: {format}',
-	comment: 'Label in the language tab. Preserve {format}.',
+const SAME_AS_LANGUAGE_DESCRIPTOR = msg({
+	message: 'Same as language',
+	comment:
+		'Regional format option that writes dates, times and numbers the way the interface language does. Keep it concise.',
+});
+const SYSTEM_FORMAT_DESCRIPTOR = msg({
+	message: 'System format',
+	comment:
+		'Regional format option that uses the date, time and number settings of the device or browser. Keep it concise.',
+});
+const SEARCH_REGIONAL_FORMATS_DESCRIPTOR = msg({
+	message: 'Search formats…',
+	comment: 'Placeholder in the regional format picker in the language settings. Keep it concise.',
+});
+const SELECT_REGIONAL_FORMAT_DESCRIPTOR = msg({
+	message: 'Select regional format',
+	comment: 'Accessible label for the regional format picker in the language settings. Keep it concise.',
+});
+const DATE_FORMAT_SELECTION_DESCRIPTOR = msg({
+	message: 'Date format selection',
+	comment: 'Accessible label for the date format choices in the language settings. Keep it concise.',
+});
+const ISO_8601_DESCRIPTOR = msg({
+	message: 'ISO 8601',
+	comment: 'Date format option named after the international standard. Keep "ISO 8601" as is.',
+});
+const DAY_FIRST_DESCRIPTOR = msg({
+	message: 'Day first',
+	comment: 'Date format option that writes day/month/year. Keep it concise.',
+});
+const MONTH_FIRST_DESCRIPTOR = msg({
+	message: 'Month first',
+	comment: 'Date format option that writes month/day/year. Keep it concise.',
 });
 const AUTO_DESCRIPTOR = msg({
 	message: 'Auto',
@@ -75,14 +112,6 @@ const MESSAGE_24_HOUR_DESCRIPTOR = msg({
 const TIME_FORMAT_SELECTION_DESCRIPTOR = msg({
 	message: 'Time format selection',
 	comment: 'Short label in the language tab. Keep it concise.',
-});
-const USE_SYSTEM_LOCALE_FOR_TIME_FORMAT_DESCRIPTOR = msg({
-	message: 'Use system locale for time format',
-	comment: 'Label in the language tab.',
-});
-const USE_BROWSER_LOCALE_FOR_TIME_FORMAT_DESCRIPTOR = msg({
-	message: 'Use browser locale for time format',
-	comment: 'Label in the language tab.',
 });
 const SEARCH_LANGUAGES_DESCRIPTOR = msg({
 	message: 'Search languages…',
@@ -153,6 +182,22 @@ const REMOVE_FROM_DICTIONARY_DESCRIPTOR = msg({
 	comment:
 		'Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.',
 });
+
+const REGIONAL_FORMAT_LANGUAGE = 'language';
+const FORMAT_SAMPLE_DATE = new Date(2026, 10, 24, 14, 30, 0);
+const FORMAT_SAMPLE_NUMBER = 1234.56;
+
+interface RegionalFormatSelectOption extends ComboboxOption<string> {
+	name: string;
+	sample: string;
+	searchText: string;
+}
+
+function getRegionalFormatSample(locale: string): string {
+	const date = getFormattedDateTime(FORMAT_SAMPLE_DATE, locale);
+	const number = getCachedNumberFormat(locale, {minimumFractionDigits: 2}).format(FORMAT_SAMPLE_NUMBER);
+	return `${date} · ${number}`;
+}
 
 interface LanguageSelectOption extends ComboboxOption<string> {
 	code: string;
@@ -316,37 +361,159 @@ export const LanguageSelector = observer(function LanguageSelector({
 	);
 });
 
+const RegionalFormatSelector = observer(function RegionalFormatSelector() {
+	const {i18n} = useLingui();
+	const regionalFormat = UserSettings.regionalFormat;
+	const value = regionalFormat ?? REGIONAL_FORMAT_LANGUAGE;
+	const languageLocale = resolveFormattingLocale(LocaleUtils.getCurrentLocale());
+	const systemLocale = resolveFormattingLocale(SystemLocale.locale);
+	const options = useMemo<ReadonlyArray<RegionalFormatSelectOption>>(() => {
+		const displayLocale = resolveFormattingLocale(i18n.locale);
+		const displayNames = new Intl.DisplayNames([displayLocale], {type: 'language'});
+		const collator = getCachedCollator(displayLocale, {sensitivity: 'base'});
+		const toOption = (code: string): RegionalFormatSelectOption => {
+			const name = displayNames.of(code) ?? code;
+			return {
+				value: code,
+				label: name,
+				name,
+				sample: getRegionalFormatSample(code),
+				searchText: normalizeLanguageSearchText(`${name} ${code}`),
+			};
+		};
+		const codes =
+			regionalFormat === null ||
+			regionalFormat === REGIONAL_FORMAT_SYSTEM ||
+			RegionalFormatLocales.includes(regionalFormat)
+				? RegionalFormatLocales
+				: [...RegionalFormatLocales, regionalFormat];
+		const regions = codes.map(toOption).sort((a, b) => collator.compare(a.name, b.name));
+		const sameAsLanguage = i18n._(SAME_AS_LANGUAGE_DESCRIPTOR);
+		const systemFormat = i18n._(SYSTEM_FORMAT_DESCRIPTOR);
+		return [
+			{
+				value: REGIONAL_FORMAT_LANGUAGE,
+				label: sameAsLanguage,
+				name: sameAsLanguage,
+				sample: getRegionalFormatSample(languageLocale),
+				searchText: normalizeLanguageSearchText(sameAsLanguage),
+			},
+			{
+				value: REGIONAL_FORMAT_SYSTEM,
+				label: systemFormat,
+				name: systemFormat,
+				sample: getRegionalFormatSample(systemLocale),
+				searchText: normalizeLanguageSearchText(`${systemFormat} ${SystemLocale.locale}`),
+			},
+			...regions,
+		];
+	}, [i18n, i18n.locale, languageLocale, regionalFormat, systemLocale]);
+	const renderRegionalFormat = useCallback(
+		(option: RegionalFormatSelectOption, selected: boolean, compact = false) => (
+			<div
+				className={clsx(
+					styles.languageOption,
+					selected && styles.languageOptionSelected,
+					!compact && styles.languageOptionMenu,
+					compact && styles.languageOptionCompact,
+				)}
+				data-flx="user.regional-format-selector.option"
+			>
+				<span className={styles.languageName} data-flx="user.regional-format-selector.option-name">
+					{option.name}
+				</span>
+				<div className={styles.languageDetails} data-flx="user.regional-format-selector.option-details">
+					<span className={styles.languageCode} data-flx="user.regional-format-selector.option-sample">
+						{option.sample}
+					</span>
+				</div>
+			</div>
+		),
+		[],
+	);
+	const filterRegionalFormat = useCallback(
+		(option: ComboboxFilterOption<RegionalFormatSelectOption>, inputValue: string) => {
+			const query = normalizeLanguageSearchText(inputValue.trim());
+			return query.length === 0 || option.data.searchText.includes(query);
+		},
+		[],
+	);
+	return (
+		<Combobox<string, RegionalFormatSelectOption>
+			options={options}
+			value={value}
+			onChange={(next) =>
+				UserSettingsCommands.update({regionalFormat: next === REGIONAL_FORMAT_LANGUAGE ? null : next})
+			}
+			renderOption={(option, selected) => renderRegionalFormat(option, selected)}
+			renderValue={(option) => (option ? renderRegionalFormat(option, false, true) : null)}
+			filterOption={filterRegionalFormat}
+			placeholder={i18n._(SEARCH_REGIONAL_FORMATS_DESCRIPTOR)}
+			isSearchable={true}
+			openMenuOnFocus={true}
+			density="compact"
+			className={styles.languageSelect}
+			aria-label={i18n._(SELECT_REGIONAL_FORMAT_DESCRIPTOR)}
+			data-flx="user.regional-format-selector.combobox"
+		/>
+	);
+});
+
 const LanguageTab = observer(() => {
 	const {i18n} = useLingui();
 	const currentLocale = LocaleUtils.getCurrentLocale();
-	const {timeFormat} = UserSettings;
-	const isDesktop = NativeUtils.isDesktop();
-	const getAutoTimeFormatDescription = () => {
-		const appLocale = UserSettings.locale;
-		const browserLocale = navigator.language;
-		const effectiveLocale = Accessibility.useBrowserLocaleForTimeFormat ? browserLocale : appLocale;
-		const uses12Hour = localeUses12Hour(effectiveLocale);
-		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
-		const format = getFormattedTime(sampleDate, effectiveLocale, uses12Hour);
-		if (Accessibility.useBrowserLocaleForTimeFormat) {
-			return isDesktop ? i18n._(SYSTEM_LOCALE_DESCRIPTOR, {format}) : i18n._(BROWSER_LOCALE_DESCRIPTOR, {format});
-		}
-		return i18n._(APP_LANGUAGE_DESCRIPTOR, {format});
-	};
-	const get12HourExample = () => {
-		const locale = UserSettings.locale;
-		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
-		return getFormattedTime(sampleDate, locale, true);
-	};
-	const get24HourExample = () => {
-		const locale = UserSettings.locale;
-		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
-		return getFormattedTime(sampleDate, locale, false);
-	};
+	const {timeFormat, timestampFormat} = UserSettings;
+	const formattingLocale = LocaleUtils.getFormattingLocale();
+	const autoTime = getFormattedTime(
+		FORMAT_SAMPLE_DATE,
+		formattingLocale,
+		resolveHour12(formattingLocale, TimeFormatTypes.AUTO, timestampFormat),
+	);
 	const timeFormatOptions: ReadonlyArray<RadioOption<number>> = [
-		{value: TimeFormatTypes.AUTO, name: i18n._(AUTO_DESCRIPTOR), desc: getAutoTimeFormatDescription()},
-		{value: TimeFormatTypes.TWELVE_HOUR, name: i18n._(MESSAGE_12_HOUR_DESCRIPTOR), desc: get12HourExample()},
-		{value: TimeFormatTypes.TWENTY_FOUR_HOUR, name: i18n._(MESSAGE_24_HOUR_DESCRIPTOR), desc: get24HourExample()},
+		{
+			value: TimeFormatTypes.AUTO,
+			name: i18n._(AUTO_DESCRIPTOR),
+			desc: i18n._(REGIONAL_FORMAT_EXAMPLE_DESCRIPTOR, {format: autoTime}),
+		},
+		{
+			value: TimeFormatTypes.TWELVE_HOUR,
+			name: i18n._(MESSAGE_12_HOUR_DESCRIPTOR),
+			desc: getFormattedTime(FORMAT_SAMPLE_DATE, formattingLocale, true),
+		},
+		{
+			value: TimeFormatTypes.TWENTY_FOUR_HOUR,
+			name: i18n._(MESSAGE_24_HOUR_DESCRIPTOR),
+			desc: getFormattedTime(FORMAT_SAMPLE_DATE, formattingLocale, false),
+		},
+	];
+	const getPresetExample = (format: number): string => {
+		const hour12 = resolveHour12(formattingLocale, timeFormat, format);
+		const preset = toDateFormatPreset(format);
+		return preset === null
+			? getFormattedDateTime(FORMAT_SAMPLE_DATE, formattingLocale, hour12)
+			: formatPresetDateTime(FORMAT_SAMPLE_DATE, preset, formattingLocale, hour12);
+	};
+	const dateFormatOptions: ReadonlyArray<RadioOption<number>> = [
+		{
+			value: TimestampFormatTypes.AUTO,
+			name: i18n._(AUTO_DESCRIPTOR),
+			desc: i18n._(REGIONAL_FORMAT_EXAMPLE_DESCRIPTOR, {format: getPresetExample(TimestampFormatTypes.AUTO)}),
+		},
+		{
+			value: TimestampFormatTypes.ISO_8601,
+			name: i18n._(ISO_8601_DESCRIPTOR),
+			desc: getPresetExample(TimestampFormatTypes.ISO_8601),
+		},
+		{
+			value: TimestampFormatTypes.DAY_MONTH_YEAR,
+			name: i18n._(DAY_FIRST_DESCRIPTOR),
+			desc: getPresetExample(TimestampFormatTypes.DAY_MONTH_YEAR),
+		},
+		{
+			value: TimestampFormatTypes.MONTH_DAY_YEAR,
+			name: i18n._(MONTH_FIRST_DESCRIPTOR),
+			desc: getPresetExample(TimestampFormatTypes.MONTH_DAY_YEAR),
+		},
 	];
 	const translateHelpUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.TranslateFluxer);
 	const handleLocaleChange = (newLocale: string) => {
@@ -391,6 +558,18 @@ const LanguageTab = observer(() => {
 					</div>
 				</SettingsSection>
 				<SettingsSection
+					id="regional-format"
+					title={i18n._(REGIONAL_FORMAT_DESCRIPTOR)}
+					data-flx="user.language-tab.settings-tab-section.regional-format"
+				>
+					<div className={styles.languageControls} data-flx="user.language-tab.regional-format-controls">
+						<RegionalFormatSelector data-flx="user.language-tab.regional-format-selector" />
+						<p className={styles.noticeText} data-flx="user.language-tab.regional-format-help">
+							{i18n._(REGIONAL_FORMAT_HELP_DESCRIPTOR)}
+						</p>
+					</div>
+				</SettingsSection>
+				<SettingsSection
 					id="time-format"
 					title={<Trans>Time format</Trans>}
 					data-flx="user.language-tab.settings-tab-section.time-format"
@@ -403,21 +582,20 @@ const LanguageTab = observer(() => {
 							aria-label={i18n._(TIME_FORMAT_SELECTION_DESCRIPTOR)}
 							data-flx="user.language-tab.radio-group.update"
 						/>
-						{timeFormat === TimeFormatTypes.AUTO && (
-							<div className={styles.switchWrapper} data-flx="user.language-tab.switch-wrapper">
-								<Switch
-									label={
-										isDesktop
-											? i18n._(USE_SYSTEM_LOCALE_FOR_TIME_FORMAT_DESCRIPTOR)
-											: i18n._(USE_BROWSER_LOCALE_FOR_TIME_FORMAT_DESCRIPTOR)
-									}
-									value={Accessibility.useBrowserLocaleForTimeFormat}
-									onChange={(value) => AccessibilityCommands.update({useBrowserLocaleForTimeFormat: value})}
-									data-flx="user.language-tab.switch.update"
-								/>
-							</div>
-						)}
 					</div>
+				</SettingsSection>
+				<SettingsSection
+					id="date-format"
+					title={i18n._(DATE_FORMAT_DESCRIPTOR)}
+					data-flx="user.language-tab.settings-tab-section.date-format"
+				>
+					<RadioGroup
+						options={dateFormatOptions}
+						value={timestampFormat}
+						onChange={(value) => UserSettingsCommands.update({timestampFormat: value})}
+						aria-label={i18n._(DATE_FORMAT_SELECTION_DESCRIPTOR)}
+						data-flx="user.language-tab.radio-group.date-format"
+					/>
 				</SettingsSection>
 				<SpellcheckSettingsSection data-flx="user.language-tab.spellcheck-settings-section" />
 			</SettingsTabContent>

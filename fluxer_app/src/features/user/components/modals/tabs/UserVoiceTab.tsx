@@ -36,6 +36,7 @@ import {SystemShortcutsPushToTalkAlert} from '@app/features/user/components/moda
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
 import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	ENTRANCE_SOUND_DESCRIPTOR,
 	MIC_TEST_DESCRIPTOR,
@@ -192,7 +193,7 @@ interface VoiceTabProps {
 export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
-		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 		[i18n, i18n.locale],
 	);
 	const {
@@ -218,7 +219,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 	const pttReleaseDelay = Keybind.pushToTalkReleaseDelay;
 	const selectedPttReleaseDelay = getNearestPushToTalkReleaseDelay(pttReleaseDelay);
 	const pttReleaseDelayOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(() => {
-		const formatter = getCachedNumberFormat(i18n.locale, {
+		const formatter = getCachedNumberFormat(getFormattingLocale(), {
 			style: 'unit',
 			unit: 'millisecond',
 			unitDisplay: 'narrow',

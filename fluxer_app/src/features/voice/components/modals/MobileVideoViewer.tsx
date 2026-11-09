@@ -14,6 +14,7 @@ import type {ZoomState} from '@app/features/messaging/components/modals/media_mo
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {
 	clampMediaTime,
@@ -421,7 +422,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 						aria-hidden="true"
 						data-flx="voice.mobile-video-viewer.seek-feedback"
 					>
-						{getCachedNumberFormat(i18n.locale, {
+						{getCachedNumberFormat(getFormattingLocale(), {
 							style: 'unit',
 							unit: 'second',
 							unitDisplay: 'narrow',
@@ -515,7 +516,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									aria-valuenow={Math.round(displayProgress * 100)}
 									aria-valuemin={0}
 									aria-valuemax={100}
-									aria-valuetext={formatDuration(displayCurrentTime, i18n.locale)}
+									aria-valuetext={formatDuration(displayCurrentTime, getFormattingLocale())}
 									aria-label={i18n._(VIDEO_PROGRESS_DESCRIPTOR)}
 									data-flx="voice.mobile-video-viewer.progress-bar-wrapper.progress-seek"
 								>
@@ -538,7 +539,8 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									</div>
 								</div>
 								<span className={styles.timeDisplay} data-flx="voice.mobile-video-viewer.time-display">
-									{formatDuration(displayCurrentTime, i18n.locale)} / {formatDuration(duration, i18n.locale)}
+									{formatDuration(displayCurrentTime, getFormattingLocale())} /{' '}
+									{formatDuration(duration, getFormattingLocale())}
 								</span>
 							</div>
 						</div>

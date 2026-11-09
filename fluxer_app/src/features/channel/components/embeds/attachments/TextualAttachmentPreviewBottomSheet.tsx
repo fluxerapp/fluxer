@@ -14,6 +14,7 @@ import {downloadFile} from '@app/features/messaging/utils/FileDownloadUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {MenuBottomSheet, type MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {DotsThreeIcon, DownloadSimpleIcon} from '@phosphor-icons/react';
@@ -53,7 +54,7 @@ export const TextualAttachmentPreviewBottomSheet = observer(function TextualAtta
 	const fileName = getAttachmentFileName(attachment);
 	let fileSizeLabel = '';
 	if (typeof attachment.size === 'number') {
-		fileSizeLabel = formatFileSize(i18n.locale, attachment.size);
+		fileSizeLabel = formatFileSize(getFormattingLocale(), attachment.size);
 	}
 	const handleDownload = useCallback(async () => {
 		const downloadUrl = attachment.proxy_url ?? attachment.url;

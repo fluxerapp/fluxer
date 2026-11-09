@@ -218,7 +218,7 @@ export const useSubscriptionActions = (countryCode?: string | null) => {
 				ToastCommands.error(i18n._(SWITCH_TO_LIST_PRICE_UNAVAILABLE_DESCRIPTOR));
 				return;
 			}
-			const effectiveDate = getFormattedLongDate(result.effective_at, LocaleUtils.getCurrentLocale());
+			const effectiveDate = getFormattedLongDate(result.effective_at, LocaleUtils.getFormattingLocale());
 			ToastCommands.success(
 				result.status === 'already_scheduled'
 					? i18n._(THE_NEW_PRICE_IS_ALREADY_SCHEDULED_DESCRIPTOR, {effectiveDate})

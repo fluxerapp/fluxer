@@ -41,7 +41,6 @@ import {TranslateMenuItems} from '@app/features/ui/action_menu/items/TranslateMe
 import {WebSearchMenuItems} from '@app/features/ui/action_menu/items/WebSearchMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -49,6 +48,7 @@ import {CTRL_DESCRIPTOR} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ContextMenu as BaseContextMenu} from '@base-ui/react/context-menu';
 import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
@@ -163,7 +163,7 @@ const RemoveReactionsSubmenuItem = observer(
 				icon={renderEmojiPreview()}
 				onClick={handleSelect}
 				closeOnSelect={false}
-				hint={getCachedNumberFormat(i18n.locale).format(reaction.count)}
+				hint={getCachedNumberFormat(getFormattingLocale()).format(reaction.count)}
 				data-flx="ui.action-menu.message-context-menu.remove-reactions-submenu-item.menu-item.select"
 			>
 				{label}

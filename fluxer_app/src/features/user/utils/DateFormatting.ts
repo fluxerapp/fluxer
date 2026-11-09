@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {TimeFormatTypes, TimestampFormatTypes} from '@fluxer/constants/src/UserConstants';
+import {
+	type DateFormatPreset,
+	formatPresetDate,
+	formatPresetDateTime,
+	formatPresetTime,
+	toDateFormatPreset,
+} from '@fluxer/date_utils/src/DateFormatPresets';
 import {
 	getFormattedCompactDateTime as getFormattedCompactDateTimeBase,
 	getFormattedDateTime as getFormattedDateTimeBase,
@@ -28,69 +34,87 @@ const YESTERDAY_AT_DESCRIPTOR = msg({
 		'Short label in the date and time formatting. Keep it concise. Preserve {timeString}; it is inserted by code.',
 });
 
-export function shouldUse12HourFormat(locale: string): boolean {
-	const timeFormat = UserSettings.timeFormat;
+export function resolveHour12(locale: string, timeFormat: number, timestampFormat: number): boolean {
 	switch (timeFormat) {
 		case TimeFormatTypes.TWELVE_HOUR:
 			return true;
 		case TimeFormatTypes.TWENTY_FOUR_HOUR:
 			return false;
-		default: {
-			const useBrowserLocale = Accessibility.useBrowserLocaleForTimeFormat;
-			const effectiveLocale = useBrowserLocale ? navigator.language : locale;
-			return localeUses12Hour(effectiveLocale);
-		}
+		default:
+			return timestampFormat !== TimestampFormatTypes.ISO_8601 && localeUses12Hour(locale);
 	}
 }
 
+export function shouldUse12HourFormat(locale: string): boolean {
+	return resolveHour12(locale, UserSettings.timeFormat, UserSettings.timestampFormat);
+}
+
+export function getDateFormatPreset(): DateFormatPreset | null {
+	return toDateFormatPreset(UserSettings.timestampFormat);
+}
+
+function formatTime(timestamp: number | Date | string, locale: string, hour12: boolean): string {
+	const preset = getDateFormatPreset();
+	return preset === null
+		? getFormattedTimeBase(timestamp, locale, hour12)
+		: formatPresetTime(timestamp, preset, locale, hour12);
+}
+
 export function getRelativeDateString(timestamp: number | Date | string, i18n: I18n): string {
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hour12 = shouldUse12HourFormat(locale);
 	const baseString = getRelativeDateStringBase(timestamp, locale, hour12);
 	const date = new Date(
 		typeof timestamp === 'string' || typeof timestamp === 'number' ? new Date(timestamp) : timestamp,
 	);
 	if (baseString.startsWith('Today at ')) {
-		const timeString = getFormattedTimeBase(date, locale, hour12);
-		return i18n._(TODAY_AT_DESCRIPTOR, {timeString});
+		return i18n._(TODAY_AT_DESCRIPTOR, {timeString: formatTime(date, locale, hour12)});
 	}
 	if (baseString.startsWith('Yesterday at ')) {
-		const timeString = getFormattedTimeBase(date, locale, hour12);
-		return i18n._(YESTERDAY_AT_DESCRIPTOR, {timeString});
+		return i18n._(YESTERDAY_AT_DESCRIPTOR, {timeString: formatTime(date, locale, hour12)});
 	}
-	return baseString;
+	const preset = getDateFormatPreset();
+	return preset === null ? baseString : formatPresetDateTime(date, preset, locale, hour12);
 }
 
 export function getFormattedDateTime(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hour12 = shouldUse12HourFormat(locale);
-	return getFormattedDateTimeBase(timestamp, locale, hour12);
+	const preset = getDateFormatPreset();
+	return preset === null
+		? getFormattedDateTimeBase(timestamp, locale, hour12)
+		: formatPresetDateTime(timestamp, preset, locale, hour12);
 }
 
 export function getFormattedShortDate(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
-	return getFormattedShortDateBase(timestamp, locale);
+	const locale = getFormattingLocale();
+	const preset = getDateFormatPreset();
+	return preset === null ? getFormattedShortDateBase(timestamp, locale) : formatPresetDate(timestamp, preset, locale);
 }
 
 export function getFormattedTime(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
-	const hour12 = shouldUse12HourFormat(locale);
-	return getFormattedTimeBase(timestamp, locale, hour12);
+	const locale = getFormattingLocale();
+	return formatTime(timestamp, locale, shouldUse12HourFormat(locale));
 }
 
 export function getFormattedCompactDateTime(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hour12 = shouldUse12HourFormat(locale);
-	return getFormattedCompactDateTimeBase(timestamp, locale, hour12);
+	const preset = getDateFormatPreset();
+	return preset === null
+		? getFormattedCompactDateTimeBase(timestamp, locale, hour12)
+		: formatPresetDateTime(timestamp, preset, locale, hour12);
 }
 
 export function getFormattedFullDate(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
-	return getFormattedFullDateBase(timestamp, locale);
+	return getFormattedFullDateBase(timestamp, getFormattingLocale());
 }
 
 export function getFormattedDateTimeWithSeconds(timestamp: number | Date | string): string {
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hour12 = shouldUse12HourFormat(locale);
-	return getFormattedDateTimeWithSecondsBase(timestamp, locale, hour12);
+	const preset = getDateFormatPreset();
+	return preset === null
+		? getFormattedDateTimeWithSecondsBase(timestamp, locale, hour12)
+		: formatPresetDateTime(timestamp, preset, locale, hour12, true);
 }

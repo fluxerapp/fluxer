@@ -29,6 +29,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -199,7 +200,7 @@ const MessageReactionItem = observer(
 									transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
 									data-flx="channel.message-reactions.message-reaction-item.div"
 								>
-									{getCachedNumberFormat(i18n.locale).format(reaction.count)}
+									{getCachedNumberFormat(getFormattingLocale()).format(reaction.count)}
 								</motion.div>
 							</AnimatePresence>
 						</div>

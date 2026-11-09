@@ -12,7 +12,6 @@ import {formatDuration, getFileExtension} from '@app/features/channel/components
 import {PickerThumbnail} from '@app/features/channel/components/pickers/shared/PickerThumbnail';
 import {usePooledVideo} from '@app/features/channel/components/pickers/shared/usePooledVideo';
 import MemesPicker from '@app/features/emoji/state/MemesPicker';
-
 import {EditFavoriteMemeModal} from '@app/features/expressions/components/modals/EditFavoriteMemeModal';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
@@ -23,6 +22,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MusicNoteIcon, PencilSimpleIcon, TrashIcon} from '@phosphor-icons/react';
@@ -222,7 +222,7 @@ export const MemeGridItem = observer(
 							<div className={styles.audioMeta} data-flx="channel.pickers.memes.meme-grid-item.audio-meta">
 								{meme.duration && (
 									<div className={styles.audioDuration} data-flx="channel.pickers.memes.meme-grid-item.audio-duration">
-										{formatDuration(meme.duration, i18n.locale)}
+										{formatDuration(meme.duration, getFormattingLocale())}
 									</div>
 								)}
 								<Tooltip text={meme.filename} data-flx="channel.pickers.memes.meme-grid-item.tooltip">

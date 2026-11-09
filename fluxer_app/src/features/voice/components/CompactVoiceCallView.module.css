@@ -205,7 +205,7 @@
 
 .fullscreenButtonWrap {
 	position: absolute;
-	right: max(0.75rem, env(safe-area-inset-right, 0px));
+	inset-inline-end: max(0.75rem, var(--safe-area-inset-inline-end));
 	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	margin-bottom: var(--voice-call-corner-lift, 0px);
 	z-index: 13;
@@ -217,7 +217,7 @@
 
 .heightToggleButtonWrap {
 	position: absolute;
-	left: max(0.75rem, env(safe-area-inset-left, 0px));
+	inset-inline-start: max(0.75rem, var(--safe-area-inset-inline-start));
 	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	margin-bottom: var(--voice-call-corner-lift, 0px);
 	z-index: 13;

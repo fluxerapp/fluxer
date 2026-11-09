@@ -5,6 +5,7 @@ import styles from '@app/features/premium/components/operator_pass/OperatorPassW
 import type {OperatorPassWallQuoteProblem} from '@app/features/premium/utils/OperatorPassUtils';
 import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/CharacterCountAnnouncer';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	countOperatorPassWallQuoteCharacters,
 	normalizeOperatorPassWallQuote,
@@ -67,7 +68,7 @@ export const OperatorPassWallQuoteField = observer(function OperatorPassWallQuot
 	onQuoteChange: (quote: string) => void;
 }) {
 	const {i18n} = useLingui();
-	const numberFormat = getCachedNumberFormat(i18n.locale);
+	const numberFormat = getCachedNumberFormat(getFormattingLocale());
 	const length = countOperatorPassWallQuoteCharacters(normalizeOperatorPassWallQuote(quote) ?? '');
 	return (
 		<Input

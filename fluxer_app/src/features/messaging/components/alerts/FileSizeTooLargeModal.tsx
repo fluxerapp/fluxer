@@ -12,6 +12,7 @@ import * as PremiumModalCommands from '@app/features/premium/commands/PremiumMod
 import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM, ATTACHMENT_MAX_SIZE_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -77,7 +78,7 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 	const maxAttachmentFileSize = user?.maxAttachmentFileSize ?? ATTACHMENT_MAX_SIZE_NON_PREMIUM;
 	const premiumMaxAttachmentFileSize = Limits.getStockValue('max_attachment_file_size', ATTACHMENT_MAX_SIZE_PREMIUM);
 	const canUpgradeAttachmentLimit = maxAttachmentFileSize < premiumMaxAttachmentFileSize;
-	const maxSizeFormatted = formatFileSize(i18n.locale, maxAttachmentFileSize);
+	const maxSizeFormatted = formatFileSize(getFormattingLocale(), maxAttachmentFileSize);
 	const hasKnownOversizedFileCount = oversizedFileCount != null;
 	const hasMultipleOversizedFiles = (oversizedFileCount ?? 0) > 1;
 	const instanceNote = RuntimeConfig.appPublic.branding.upload_limit_message;
@@ -112,7 +113,7 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 			description={withInstanceNote(
 				`${baseDescription} ${i18n._(PREMIUM_FILE_SIZE_UPSELL_DESCRIPTOR, {
 					premiumProductName: getPremiumProductName(),
-					fileSizeLimit: formatFileSize(i18n.locale, premiumMaxAttachmentFileSize),
+					fileSizeLimit: formatFileSize(getFormattingLocale(), premiumMaxAttachmentFileSize),
 				})}`,
 				instanceNote,
 			)}

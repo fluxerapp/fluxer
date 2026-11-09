@@ -187,7 +187,7 @@ const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 						}
 						style={{
 							width: `calc((100% - 0.375rem) / ${options.length})`,
-							left: `calc(0.1875rem + (100% - 0.375rem) * ${selectedIndex} / ${options.length})`,
+							insetInlineStart: `calc(0.1875rem + (100% - 0.375rem) * ${selectedIndex} / ${options.length})`,
 						}}
 						data-flx={`${dataFlx}.indicator`}
 					/>

@@ -11,6 +11,7 @@ import {
 } from '@app/features/ui/character_counter/CharacterCountMessages';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -28,7 +29,7 @@ export const CharacterCounter = observer(
 	({currentLength, maxLength, canUpgrade, premiumMaxLength, onUpgradeClick, className}: CharacterCounterProps) => {
 		const {i18n} = useLingui();
 		const remaining = maxLength - currentLength;
-		const formattedRemaining = getCachedNumberFormat(i18n.locale).format(remaining);
+		const formattedRemaining = getCachedNumberFormat(getFormattingLocale()).format(remaining);
 		const isOverLimit = remaining < 0;
 		const isNearingLimit = remaining < 50;
 		const showPremiumFeatures = shouldShowPremiumFeatures();

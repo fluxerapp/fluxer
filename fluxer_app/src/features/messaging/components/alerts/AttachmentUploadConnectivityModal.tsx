@@ -6,6 +6,7 @@ import {SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO} from '@app/features/app/config/I18n
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE} from '@app/features/messaging/utils/AttachmentUploadFallbackUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -16,7 +17,7 @@ const ATTACHMENT_UPLOAD_UNAVAILABLE_DESCRIPTOR = msg({
 });
 export const AttachmentUploadConnectivityModal = observer(() => {
 	const {i18n} = useLingui();
-	const fallbackSizeFormatted = formatFileSize(i18n.locale, MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE);
+	const fallbackSizeFormatted = formatFileSize(getFormattingLocale(), MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE);
 	return (
 		<GenericErrorModal
 			title={i18n._(ATTACHMENT_UPLOAD_UNAVAILABLE_DESCRIPTOR)}

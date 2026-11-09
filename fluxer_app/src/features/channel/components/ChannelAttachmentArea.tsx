@@ -25,6 +25,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -557,7 +558,7 @@ const SortableAttachmentItem = observer(
 								className={styles.fileSize}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.file-size"
 							>
-								{formatFileSize(i18n.locale, attachment.file.size)}
+								{formatFileSize(getFormattingLocale(), attachment.file.size)}
 							</span>
 							<span
 								className={styles.fileExtension}

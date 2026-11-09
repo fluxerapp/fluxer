@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ScreenReader from '@app/features/accessibility/state/ScreenReader';
+import SystemLocale from '@app/features/i18n/state/SystemLocale';
 import {attachExternalLinkInterceptor} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
 import {ensureAutostartDefaultEnabled} from '@app/features/platform/utils/Autostart';
@@ -29,6 +30,7 @@ export function useAppPlatformBridges(): void {
 		startDesktopLocaleBridge();
 		const disposeJumpList = startDesktopJumpListBridge();
 		ScreenReader.startDesktopBridge();
+		SystemLocale.startDesktopBridge();
 		return disposeJumpList;
 	}, []);
 	useStopFlashFrameOnFocus();

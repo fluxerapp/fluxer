@@ -61,7 +61,7 @@ export const PremiumStatusNagbar = observer(
 					premiumProductName: getPremiumProductName(),
 					formattedGraceDate: getFormattedLongDate(
 						getPremiumGraceEndDate(new Date(user.premiumUntil), user.premiumGraceEndsAt),
-						LocaleUtils.getCurrentLocale(),
+						LocaleUtils.getFormattingLocale(),
 					),
 				});
 		return (

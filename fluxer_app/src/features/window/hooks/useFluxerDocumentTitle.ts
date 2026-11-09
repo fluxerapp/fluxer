@@ -2,7 +2,7 @@
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {formatNumber} from '@app/features/i18n/utils/IntlCache';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {useEffect} from 'react';
 
 type TitlePart = string | null | undefined;
@@ -32,7 +32,7 @@ const buildDocumentTitle = (parts: ReadonlyArray<string>): string => {
 };
 const applyBadgePrefix = (baseTitle: string, badge: BadgeState): string => {
 	if (badge.mentionCount > 0) {
-		return `(${formatNumber(badge.mentionCount, getCurrentLocale())}) ${baseTitle}`;
+		return `(${formatNumber(badge.mentionCount, getFormattingLocale())}) ${baseTitle}`;
 	}
 	if (badge.hasUnread) {
 		return `• ${baseTitle}`;

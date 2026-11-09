@@ -21,6 +21,7 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Button} from '@app/features/ui/button/Button';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import type {EnforcementNotice, NetworkBlock} from '@fluxer/schema/src/domains/auth/EnforcementNoticeSchemas';
 import {msg} from '@lingui/core/macro';
@@ -314,7 +315,7 @@ export function NetworkBlockDetails({block}: {block: NetworkBlock}) {
 			{expiresAt == null ? null : (
 				<p className={styles.text} data-flx="auth.flow.account-restriction-screen.network-block-details.ends">
 					{i18n._(NETWORK_BLOCK_ENDS_DESCRIPTOR, {
-						date: `${getDateFormatter(i18n.locale, {dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC'}).format(new Date(expiresAt))} UTC`,
+						date: `${getDateFormatter(getFormattingLocale(), {dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC'}).format(new Date(expiresAt))} UTC`,
 					})}
 				</p>
 			)}

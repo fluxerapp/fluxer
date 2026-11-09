@@ -603,6 +603,10 @@
 	transform: translateX(0.5rem);
 }
 
+:global(html[dir='rtl']) .messageTimestampHover {
+	transform: translateX(-0.5rem);
+}
+
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageHovered
 	.messageTimestampHover {

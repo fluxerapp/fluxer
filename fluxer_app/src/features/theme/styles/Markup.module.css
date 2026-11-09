@@ -267,7 +267,7 @@
 
 .markup pre {
 	direction: ltr;
-	text-align: left;
+	text-align: start;
 	font-family: var(--font-mono);
 	font-size: 0.75em;
 	line-height: 1.333333;

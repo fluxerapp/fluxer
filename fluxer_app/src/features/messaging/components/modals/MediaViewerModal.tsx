@@ -49,6 +49,7 @@ import LayerManager from '@app/features/ui/state/LayerManager';
 import MediaViewer, {type MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {snapMediaProxyImageSize} from '@app/features/user/utils/AvatarUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {AudioPlayer} from '@app/features/voice/components/media_player/components/AudioPlayer';
 import {VideoPlayer} from '@app/features/voice/components/media_player/components/VideoPlayer';
 import {msg} from '@lingui/core/macro';
@@ -540,7 +541,8 @@ const MediaViewerModalComponent: FC = observer(() => {
 			? `${currentItem.naturalWidth}×${currentItem.naturalHeight}`
 			: undefined;
 	const fileName = currentItem.filename || currentItem.originalSrc.split('/').pop()?.split('?')[0] || 'media';
-	const fileSize = currentItem.fileSize != null ? formatFileSize(i18n.locale, currentItem.fileSize) : undefined;
+	const fileSize =
+		currentItem.fileSize != null ? formatFileSize(getFormattingLocale(), currentItem.fileSize) : undefined;
 	const expiryInfo =
 		currentItem.expiresAt && currentItem.expiresAt.length > 0
 			? {

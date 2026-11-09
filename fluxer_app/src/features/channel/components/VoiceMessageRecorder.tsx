@@ -8,6 +8,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {
 	computeVoiceWaveformFromAudioBuffer,
@@ -169,7 +170,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	);
 	const maxRecordingMs = useMemo(() => maxRecordingSeconds * 1000, [maxRecordingSeconds]);
 	const formattedDuration = useMemo(
-		() => formatDuration(recordingDurationMs / 1000, i18n.locale),
+		() => formatDuration(recordingDurationMs / 1000, getFormattingLocale()),
 		[recordingDurationMs, i18n.locale],
 	);
 	const reducedMotion = Accessibility.useReducedMotion;

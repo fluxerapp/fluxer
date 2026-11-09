@@ -44,6 +44,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {MobileVideoViewer} from '@app/features/voice/components/modals/MobileVideoViewer';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -691,7 +692,12 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onPointerLeave={handleHudPointerLeave}
 									data-flx="messaging.media-modal.bottom-info-bar"
 								>
-									{[fileName, dimensions, fileSize, formatRoundedPercentage(i18n.locale, panZoomInfo.zoomPercent)]
+									{[
+										fileName,
+										dimensions,
+										fileSize,
+										formatRoundedPercentage(getFormattingLocale(), panZoomInfo.zoomPercent),
+									]
 										.filter(Boolean)
 										.map((part, index) => (
 											<span

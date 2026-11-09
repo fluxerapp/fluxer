@@ -26,6 +26,7 @@ import {FontSizeTabContent} from '@app/features/user/components/modals/tabs/appe
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	COMFY_DESCRIPTOR,
 	DENSE_DESCRIPTOR,
@@ -225,7 +226,9 @@ export const MessagesTabContent: React.FC = observer(() => {
 		() =>
 			MESSAGE_GROUP_SPACING_OPTIONS.map((value) => ({
 				value,
-				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: getCachedNumberFormat(i18n.locale).format(value)}),
+				label: i18n._(PIXELS_DESCRIPTOR, {
+					messageGroupSpacing: getCachedNumberFormat(getFormattingLocale()).format(value),
+				}),
 			})),
 		[i18n.locale],
 	);

@@ -10147,6 +10147,14 @@
 					"type": "int"
 				},
 				{
+					"name": "regional_format",
+					"type": "text"
+				},
+				{
+					"name": "timestamp_format",
+					"type": "int"
+				},
+				{
 					"name": "incoming_call_flags",
 					"type": "int"
 				},
