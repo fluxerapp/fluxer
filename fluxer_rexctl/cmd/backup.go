@@ -84,6 +84,9 @@ func runBackup(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeBackup(ctx, app, inst)
+	}
 	p, err := app.Named(ctx, inst)
 	if err != nil {
 		return err

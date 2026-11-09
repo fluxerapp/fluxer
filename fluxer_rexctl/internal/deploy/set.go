@@ -70,26 +70,27 @@ func keyError(err error) error {
 	return err
 }
 
-func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes map[string]*string, o ApplyOptions) (*Change, error) {
-	keys := slices.Sorted(maps.Keys(changes))
+type Prepared struct {
+	Set       *stack.Set
+	Keys      []string
+	Settings  map[string]string
+	Secrets   map[string]string
+	Preview   Preview
+	Unchanged bool
+}
+
+func Changeable(inst *instance.Instance) error {
 	if err := refuseEjected(inst); err != nil {
-		return nil, err
+		return err
 	}
 	if inst.State.Pending != nil {
-		return nil, ui.Refused("An earlier settings change didn't finish.", "Run rexctl doctor --fix to put the old values back, then try again.")
+		return ui.Refused("An earlier settings change didn't finish.", "Run rexctl doctor --fix to put the old values back, then try again.")
 	}
-	if _, ok := changes[settings.EngineHost]; ok {
-		if len(changes) > 1 {
-			return nil, ui.Usage("Change engine.host on its own, without other settings.")
-		}
-		if err := refuseUpgrade(inst); err != nil {
-			return nil, err
-		}
-		return setEngineHost(ctx, inst, e, changes[settings.EngineHost])
-	}
-	if err := checkDrift(inst, false); err != nil {
-		return nil, err
-	}
+	return nil
+}
+
+func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, error) {
+	keys := slices.Sorted(maps.Keys(changes))
 	rs, err := ReleaseSet(inst)
 	if err != nil {
 		return nil, err
@@ -137,7 +138,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		}
 	}
 	if maps.Equal(next, st.Settings) {
-		return &Change{Keys: keys, Unchanged: true}, nil
+		return &Prepared{Set: rs, Keys: keys, Unchanged: true}, nil
 	}
 	if next[settings.StorageSecret] != st.Settings[settings.StorageSecret] && next[settings.StorageEndpoint] == "" && next[settings.StorageSecret] != "" {
 		return nil, ui.Refused("storage.secret_key only applies to your own object store.", "Set storage.endpoint in the same command, for example rexctl config set storage.endpoint=https://s3.example.com storage.secret_key=-.")
@@ -148,11 +149,44 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		}
 	}
 	slices.Sort(promised)
-	preview := Preview{Keys: changed, Promised: slices.Compact(promised)}
 	nextSecrets, err := signingSecrets(rs, st, next)
 	if err != nil {
 		return nil, err
 	}
+	withSecrets := *st
+	withSecrets.Secrets = nextSecrets
+	if _, err := Environment(rs, &withSecrets, next); err != nil {
+		return nil, err
+	}
+	return &Prepared{Set: rs, Keys: keys, Settings: next, Secrets: nextSecrets, Preview: Preview{Keys: changed, Promised: slices.Compact(promised)}}, nil
+}
+
+func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes map[string]*string, o ApplyOptions) (*Change, error) {
+	if err := Changeable(inst); err != nil {
+		return nil, err
+	}
+	if _, ok := changes[settings.EngineHost]; ok {
+		if len(changes) > 1 {
+			return nil, ui.Usage("Change engine.host on its own, without other settings.")
+		}
+		if err := refuseUpgrade(inst); err != nil {
+			return nil, err
+		}
+		return setEngineHost(ctx, inst, e, changes[settings.EngineHost])
+	}
+	if err := checkDrift(inst, false); err != nil {
+		return nil, err
+	}
+	pr, err := Prepare(inst, changes)
+	if err != nil {
+		return nil, err
+	}
+	if pr.Unchanged {
+		return &Change{Keys: pr.Keys, Unchanged: true}, nil
+	}
+	st := inst.State
+	rs, next, nextSecrets, preview := pr.Set, pr.Settings, pr.Secrets, pr.Preview
+	changed, keys := preview.Keys, pr.Keys
 	withSecrets := *st
 	withSecrets.Secrets = nextSecrets
 	newEnv, err := Environment(rs, &withSecrets, next)

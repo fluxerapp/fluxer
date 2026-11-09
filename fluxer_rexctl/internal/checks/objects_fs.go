@@ -57,10 +57,16 @@ func init() {
 }
 
 func runObjectsFS(_ context.Context, e *Env) Result {
-	if e.chosen(settings.StorageBackend) != settings.StorageFilesystem {
+	var path string
+	switch {
+	case e.Native:
+		path = filepath.Join(e.Dir, "data", "objects")
+	case e.chosen(settings.StorageBackend) == settings.StorageFilesystem:
+		path = e.stores().Data
+	default:
 		return skip("")
 	}
-	return ObjectsFS(e.stores().Data)
+	return ObjectsFS(path)
 }
 
 func ObjectsFS(path string) Result {

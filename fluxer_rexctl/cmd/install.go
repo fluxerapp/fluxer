@@ -39,6 +39,7 @@ const defaultProject = "fluxer"
 type installFlags struct {
 	Domain        string
 	Engine        string
+	Native        bool
 	BehindProxy   bool
 	Bind          string
 	VoiceIP       string
@@ -90,6 +91,7 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl := c.Flags()
 	fl.StringVar(&f.Domain, "domain", "", "address people will use to open your instance, like chat.example.com")
 	fl.StringVar(&f.Engine, "engine", "", "container engine to use (docker or podman)")
+	fl.BoolVar(&f.Native, "experimental-native", false, "install Fluxer as one systemd service without containers, set up for this machine. This is experimental")
 	fl.BoolVar(&f.BehindProxy, "behind-proxy", false, "serve plain HTTP for your own reverse proxy or tunnel")
 	fl.StringVar(&f.Bind, "bind", "127.0.0.1:8080", "address your proxy or tunnel connects to, with --behind-proxy")
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
@@ -168,6 +170,9 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 	}
 	if names := f.Setup.passedNames(c); f.SetupWhere == "browser" && len(names) > 0 {
 		return &ui.ExitError{Code: ui.ExitUsage, Msg: fmt.Sprintf("--setup browser doesn't take %s.", ui.JoinAnd(names)), Fix: "Pass --setup terminal instead, or leave out the setup options and enter them in the browser."}
+	}
+	if f.Native {
+		return runNativeInstall(ctx, app, c, f)
 	}
 	dir, err := installTarget(app)
 	if err != nil {
@@ -396,7 +401,7 @@ func validateDomain(v string) error {
 }
 
 func (in *installer) runChecks(ctx context.Context, phase checks.Phase, ids ...string) bool {
-	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine)}
+	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Native: in.f.Native, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine)}
 	if in.engine == nil {
 		env.SetEngine(in.found, in.findErr)
 	}

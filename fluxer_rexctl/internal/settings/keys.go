@@ -364,3 +364,17 @@ func CheckCombination(chosen map[string]string) error {
 	}
 	return nil
 }
+
+var dockerOnlyVars = []string{"FLUXER_IMAGE_TAG", "FLUXER_REGISTRY", "FLUXER_REGISTRY_OWNER", "FLUXER_POSTGRES_SHM_SIZE", "FLUXER_WORKER_REPLICAS"}
+
+var dockerOnlySuffixes = []string{"_MEMORY_LIMIT", "_MEMORY_RESERVATION", "_HEALTHCHECK_INTERVAL", "_HEALTHCHECK_RETRIES", "_HEALTHCHECK_START_PERIOD"}
+
+func DockerOnly(name string) bool {
+	switch {
+	case name == ImagesRegistry, name == IPv6, name == EngineHost, strings.HasPrefix(name, ImagesPrefix):
+		return true
+	case slices.Contains(dockerOnlyVars, name), slices.Contains(slices.Collect(maps.Values(ImageVars)), name):
+		return true
+	}
+	return slices.ContainsFunc(dockerOnlySuffixes, func(s string) bool { return strings.HasSuffix(name, s) })
+}

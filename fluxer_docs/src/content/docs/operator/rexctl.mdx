@@ -220,7 +220,7 @@ Read and change Fluxer's settings.
 
 ### rexctl config edit
 
-Opens custom.compose.yml in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. Your file stays as it was until it passes the check.
+Opens custom.compose.yml in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. Your file stays as it was until it passes the check. On a native instance, it opens the settings rexctl keeps for Fluxer as setting=value lines instead, checks them as rexctl config set does and restarts Fluxer with them.
 
 ```sh
 rexctl config edit
@@ -417,6 +417,10 @@ rexctl install [flags]
 - `--engine string`
 
   Container engine to use (docker or podman).
+
+- `--experimental-native`
+
+  Install Fluxer as one systemd service without containers, set up for this machine. This is experimental.
 
 - `--install-docker`
 
@@ -671,7 +675,7 @@ rexctl restart
 
 ## rexctl restore
 
-Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are.
+Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are. A backup of a Fluxer that runs without containers restores into an empty folder or an instance that runs the same way.
 
 ```sh
 rexctl restore <file> [flags]

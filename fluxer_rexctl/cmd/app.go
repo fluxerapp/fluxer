@@ -332,6 +332,9 @@ func socketOwner(host string) (int, bool) {
 }
 
 func (a *App) Engine(ctx context.Context, inst *instance.Instance) (*engine.Engine, error) {
+	if inst != nil && inst.State.IsNative() {
+		return nil, a.composeOnly()
+	}
 	if err := rootlessGuard(inst); err != nil {
 		return nil, err
 	}
@@ -391,6 +394,9 @@ func (a *App) Admin(ctx context.Context) (*adminapi.Client, *instance.Instance, 
 	if err != nil {
 		return nil, nil, err
 	}
+	if inst.State.IsNative() {
+		return a.adminClient(inst, nil), inst, nil
+	}
 	p, err := a.Named(ctx, inst)
 	if err != nil {
 		return nil, nil, err
@@ -399,7 +405,13 @@ func (a *App) Admin(ctx context.Context) (*adminapi.Client, *instance.Instance, 
 }
 
 func (a *App) adminClient(inst *instance.Instance, p *engine.Project) *adminapi.Client {
-	c := adminapi.New(adminapi.NewExec(p), a.Version)
+	var t adminapi.Transport
+	if inst.State.IsNative() {
+		t = nativeTransport(inst)
+	} else {
+		t = adminapi.NewExec(p)
+	}
+	c := adminapi.New(t, a.Version)
 	c.OnSkew = func(apiVersion string) {
 		if inst.State != nil && (inst.State.Release == a.Version || inst.State.Upgrade != nil && inst.State.Upgrade.To == a.Version) {
 			return
@@ -544,6 +556,9 @@ func (a *App) change(ctx context.Context, inst *instance.Instance, withEnv bool,
 }
 
 func (a *App) guard(ctx context.Context, inst *instance.Instance, withEnv bool) (*engine.Engine, error) {
+	if inst.State.IsNative() {
+		return nil, a.composeOnly()
+	}
 	if err := managed(inst); err != nil {
 		return nil, err
 	}

@@ -70,7 +70,11 @@ check_host() {
 }
 
 check_other_instance() {
-    local port
+    local sock port
+    for sock in /run/rexctl/*/fluxerd.sock; do
+        [ -S "$sock" ] || continue
+        die "a Fluxer instance managed by rexctl runs on this machine ($sock), stop it with rexctl stop in its folder first"
+    done
     systemctl is-active --quiet "$UNIT" && return 0
     for port in 14222 15432; do
         if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then

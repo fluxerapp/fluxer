@@ -5,12 +5,18 @@ package adminapi
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	osuser "os/user"
 	"strings"
+	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 )
@@ -91,6 +97,122 @@ func (t *ExecTransport) Do(ctx context.Context, req Request) (*Response, error) 
 	return &resp, nil
 }
 
+const (
+	hostUserHeader = "X-Fluxer-Operator-Host-User"
+	hostTimeout    = 120 * time.Second
+)
+
+type HostTransport struct {
+	Socket         string
+	APIAddr        string
+	ClientIPHeader string
+	HostUser       string
+}
+
+func NewHost(socket, apiAddr, clientIPHeader string) *HostTransport {
+	return &HostTransport{Socket: socket, APIAddr: apiAddr, ClientIPHeader: clientIPHeader, HostUser: HostUser()}
+}
+
+func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) {
+	if req.HostUser == "" {
+		req.HostUser = t.HostUser
+	}
+	if !strings.HasPrefix(req.Path, "/") {
+		return nil, &RelayError{Detail: "path must start with /", Err: ErrBadRequest}
+	}
+	headers := http.Header{}
+	for k, v := range req.Headers {
+		headers.Set(k, v)
+	}
+	client := &http.Client{Timeout: hostTimeout}
+	base := "http://" + t.APIAddr
+	switch req.Target {
+	case TargetOperator:
+		if req.Path != "/admin" && !strings.HasPrefix(req.Path, "/admin/") {
+			return nil, &RelayError{Detail: "the operator target serves /admin paths only", Err: ErrBadRequest}
+		}
+		if req.HostUser != "" {
+			headers.Set(hostUserHeader, req.HostUser)
+		}
+		socket := t.Socket
+		client.Transport = &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			var d net.Dialer
+			return d.DialContext(ctx, "unix", socket)
+		}}
+		base = "http://operator"
+	case TargetLoopback:
+		name := t.ClientIPHeader
+		if name == "" {
+			name = "x-forwarded-for"
+		}
+		if headers.Get(name) == "" {
+			headers.Set(name, "127.0.0.1")
+		}
+	default:
+		return nil, &RelayError{Detail: fmt.Sprintf("unknown target %s", req.Target), Err: ErrBadRequest}
+	}
+	var body io.Reader
+	switch {
+	case req.BodyBase64 != "":
+		data, err := base64.StdEncoding.DecodeString(req.BodyBase64)
+		if err != nil {
+			return nil, &RelayError{Detail: "the body is not base64", Err: err}
+		}
+		body = bytes.NewReader(data)
+	case len(req.Body) > 0 && string(req.Body) != "null":
+		if headers.Get("Content-Type") == "" {
+			headers.Set("Content-Type", "application/json")
+		}
+		body = bytes.NewReader(req.Body)
+	}
+	u := base + req.Path
+	if len(req.Query) > 0 {
+		q := url.Values{}
+		for k, v := range req.Query {
+			q.Set(k, v)
+		}
+		u += "?" + q.Encode()
+	}
+	method := req.Method
+	if method == "" {
+		method = http.MethodGet
+	}
+	hreq, err := http.NewRequestWithContext(ctx, method, u, body)
+	if err != nil {
+		return nil, &RelayError{Detail: err.Error(), Err: err}
+	}
+	hreq.Header = headers
+	resp, err := client.Do(hreq)
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	if err != nil {
+		return nil, &RelayError{Detail: err.Error(), Err: err}
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &RelayError{Detail: err.Error(), Err: err}
+	}
+	out := &Response{Status: resp.StatusCode, Headers: map[string]string{}, APIVersion: resp.Header.Get("X-Fluxer-Version"), SchemaMajor: SchemaMajor}
+	for k, v := range resp.Header {
+		out.Headers[strings.ToLower(k)] = strings.Join(v, ", ")
+	}
+	out.Body = hostBody(data, resp.Header.Get("Content-Type"))
+	return out, nil
+}
+
+func hostBody(data []byte, contentType string) json.RawMessage {
+	if len(data) == 0 {
+		return nil
+	}
+	if strings.Contains(contentType, "json") && json.Valid(data) {
+		return data
+	}
+	text, _ := json.Marshal(string(data))
+	return text
+}
+
 func firstLine(s, fallback string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -164,5 +286,7 @@ func fieldName(path string) string {
 }
 
 var ErrNoRelay = errors.New("adminapi: this Fluxer release has no operator relay")
+
+var ErrBadRequest = errors.New("adminapi: the request can't be sent")
 
 var ErrSchemaMismatch = errors.New("adminapi: rexctl and Fluxer versions differ")

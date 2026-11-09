@@ -59,6 +59,9 @@ func runStatus(ctx context.Context, app *App) error {
 	if inst.State.IsVoice() {
 		return listVoiceMachine(ctx, app, inst)
 	}
+	if inst.State.IsNative() {
+		return runNativeStatus(ctx, app, inst)
+	}
 	out := statusJSON{
 		URL:      inst.Origin(),
 		Domain:   inst.Domain(),

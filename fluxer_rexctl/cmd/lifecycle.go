@@ -501,6 +501,9 @@ func newLogsCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if inst.State.IsNative() {
+				return runNativeLogs(ctx, app, inst, follow, since, services)
+			}
 			p, err := app.Named(ctx, inst)
 			if err != nil {
 				return err
@@ -563,6 +566,9 @@ func runStart(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeStart(ctx, app, inst)
+	}
 	return app.Change(ctx, inst, func(e *engine.Engine) error {
 		if inst.State.Stopped {
 			inst.State.Stopped = false
@@ -617,7 +623,7 @@ func runBootStart(ctx context.Context, app *App) error {
 	if err != nil || inst == nil {
 		return err
 	}
-	if inst.State.Stopped || inst.State.Ejected != nil {
+	if inst.State.Stopped || inst.State.Ejected != nil || inst.State.IsNative() {
 		return nil
 	}
 	if !bootStackUp(ctx, app, inst) {
@@ -767,6 +773,9 @@ func runStop(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeStop(ctx, app, inst, false)
+	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
@@ -818,6 +827,9 @@ func runDown(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeStop(ctx, app, inst, true)
+	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
@@ -862,7 +874,7 @@ func runBootStop(ctx context.Context, app *App) error {
 	if err != nil || inst == nil {
 		return err
 	}
-	if inst.State.Ejected != nil {
+	if inst.State.Ejected != nil || inst.State.IsNative() {
 		return nil
 	}
 	e, err := app.Engine(ctx, inst)
@@ -887,6 +899,9 @@ func newRestartCmd(app *App) *cobra.Command {
 			inst, err := app.Instance()
 			if err != nil {
 				return err
+			}
+			if inst.State.IsNative() {
+				return runNativeRestart(ctx, app, inst)
 			}
 			return app.Change(ctx, inst, func(e *engine.Engine) error {
 				return app.UI.Step(ctx, "Restarting Fluxer", func(ctx context.Context, s *ui.Step) error {
