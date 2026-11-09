@@ -79,10 +79,10 @@ RUN printf '%s\n' \
 	'members = [' \
 	'    "fluxer_app/rust/libfluxcore",' \
 	'    "fluxer_app/rust/libfluxwebp",' \
+	'    "packages/markdown_parser/rust",' \
 	']' \
 	'exclude = [' \
 	'    "tools/ci",' \
-	'    "packages/markdown_parser/rust",' \
 	']' \
 	'resolver = "2"' \
 	'' \
