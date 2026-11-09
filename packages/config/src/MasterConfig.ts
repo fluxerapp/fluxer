@@ -347,7 +347,6 @@ export interface MasterConfig {
 		labs_guild_id?: string;
 		labs_operator_role_id?: string;
 		labs_visionary_role_id?: string;
-		labs_access_role_id?: string;
 		labs_operators_channel_id?: string;
 		standard_prices_minor?: Partial<Record<string, number>>;
 		release_lists?: string;

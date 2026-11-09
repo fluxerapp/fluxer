@@ -229,9 +229,10 @@ export class GuildMemberService {
 		guildId: GuildID;
 		managedRoleIds: ReadonlySet<RoleID>;
 		grantedRoleIds: ReadonlySet<RoleID>;
+		recordAudit: boolean;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const {targetId, guildId, managedRoleIds, grantedRoleIds, requestCache} = params;
+		const {targetId, guildId, managedRoleIds, grantedRoleIds, recordAudit, requestCache} = params;
 		const existingRoleIds = new Set((await this.guildRepository.listRoles(guildId)).map((role) => role.id));
 		const member = await withGuildMemberRoleWriteLock(this.cacheService, guildId, targetId, async () => {
 			const currentMember = await this.guildRepository.getMember(guildId, targetId);
@@ -256,6 +257,7 @@ export class GuildMemberService {
 		if (!updatedMember) return;
 		await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
 		await this.refreshMemberSearchIndex(updatedMember);
+		if (!recordAudit) return;
 		await this.guildAuditLogService.record({
 			guildId,
 			userId: SYSTEM_USER_ID,

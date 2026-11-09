@@ -18,6 +18,7 @@ import {
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -90,6 +91,12 @@ export class MessageDeleteService {
 
 	constructor(private readonly deps: MessageDeleteServiceDeps) {
 		this.guildAuditLogService = deps.guildAuditLogService;
+	}
+
+	async deleteSystemGuildMessage(channel: Channel, message: Message): Promise<void> {
+		if (message.authorId !== SYSTEM_USER_ID) return;
+		await this.finishDelete(channel, message);
+		await this.deps.searchService.deleteMessageIndex(message.id);
 	}
 
 	async deleteMessage({

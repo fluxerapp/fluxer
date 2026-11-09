@@ -275,10 +275,6 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	if (labsVisionaryRoleId !== null && labsGuildId === null) {
 		throw new Error('FLUXER_LABS_VISIONARY_ROLE_ID needs FLUXER_LABS_GUILD_ID');
 	}
-	const labsAccessRoleId = parseOptionalSnowflake(source.labs_access_role_id, 'FLUXER_LABS_ACCESS_ROLE_ID');
-	if (labsAccessRoleId !== null && labsGuildId === null) {
-		throw new Error('FLUXER_LABS_ACCESS_ROLE_ID needs FLUXER_LABS_GUILD_ID');
-	}
 	const labsOperatorsChannelId = parseOptionalSnowflake(
 		source.labs_operators_channel_id,
 		'FLUXER_LABS_OPERATORS_CHANNEL_ID',
@@ -293,13 +289,7 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
 		);
 	}
-	if (
-		hostedSale &&
-		(labsGuildId === null ||
-			labsOperatorRoleId === null ||
-			labsVisionaryRoleId === null ||
-			labsOperatorsChannelId === null)
-	) {
+	if (hostedSale && (labsGuildId === null || labsVisionaryRoleId === null || labsOperatorsChannelId === null)) {
 		throw new Error(
 			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
 		);
@@ -311,7 +301,6 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		labsGuildId,
 		labsOperatorRoleId,
 		labsVisionaryRoleId,
-		labsAccessRoleId,
 		labsOperatorsChannelId,
 		standardPricesMinor,
 		releaseLists: parseOperatorPassReleaseLists(source.release_lists),

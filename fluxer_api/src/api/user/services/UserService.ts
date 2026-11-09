@@ -41,7 +41,7 @@ export class UserService {
 		contactChangeLogService: UserContactChangeLogService,
 		connectionRepository: ConnectionRepository,
 		limitConfigService: LimitConfigService,
-		operatorPassServices: Pick<OperatorPassServices, 'holdingService'> | null,
+		operatorPassServices: Pick<OperatorPassServices, 'holdingService' | 'roleService'> | null,
 	) {
 		this.accountService = new UserAccountService(
 			apiContext,
@@ -54,6 +54,7 @@ export class UserService {
 			contactChangeLogService,
 			connectionRepository,
 			limitConfigService,
+			operatorPassServices?.roleService ?? null,
 		);
 		this.relationshipService = new UserRelationshipService(
 			apiContext,

@@ -4,13 +4,18 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
-import {getCacheService, getOperatorPassWallService, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	getCacheService,
+	getChannelRepository,
+	getOperatorPassWallService,
+	getUserRepository,
+} from '@app/api/middleware/ServiceSingletons';
 import {OperatorPassCertificateService} from '@app/api/operator_pass/OperatorPassCertificateService';
 import {
 	endOperatorPassesForDeletion,
 	OperatorPassHoldingService,
 } from '@app/api/operator_pass/OperatorPassHoldingService';
-import {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import {type OperatorPassLabsRoleDeps, OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {
 	describeOperatorPassVisionary,
@@ -63,10 +68,14 @@ function createServices() {
 	const repository = new OperatorPassRepository();
 	const emails = new TestEmailService();
 	const userRepository = getUserRepository();
-	const roleService = new OperatorPassLabsRoleService(
-		{getMember: vi.fn(async () => null)} as unknown as ConstructorParameters<typeof OperatorPassLabsRoleService>[0],
-		{members: {}} as unknown as ConstructorParameters<typeof OperatorPassLabsRoleService>[1],
-	);
+	const roleService = new OperatorPassLabsRoleService({
+		guildRepository: {getMember: vi.fn(async () => null)} as unknown as OperatorPassLabsRoleDeps['guildRepository'],
+		guildService: {members: {}} as unknown as OperatorPassLabsRoleDeps['guildService'],
+		userRepository,
+		cacheService: getCacheService(),
+		channelRepository: getChannelRepository(),
+		channelOverwrites: {systemSetMemberOverwrite: vi.fn()},
+	});
 	const deliverToLabs = vi.spyOn(roleService, 'deliver');
 	const wallService = getOperatorPassWallService();
 	const dispatchPresence = vi.fn();

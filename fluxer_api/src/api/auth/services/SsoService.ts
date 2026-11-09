@@ -789,6 +789,7 @@ export class SsoService {
 						.filter(({group}) => memberOf.has(group))
 						.map(({roleId}) => createRoleID(BigInt(roleId))),
 				),
+				recordAudit: true,
 				requestCache,
 			});
 		} catch (error) {

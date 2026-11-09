@@ -296,7 +296,7 @@ export class UserAccountRequestService {
 				user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||
 				userUpdateData.premium_badge_masked !== undefined)
 		) {
-			await this.labsRoleService.resyncLabsRoles(updatedUser);
+			await this.labsRoleService.resyncLabsRoles(updatedUser.id);
 		}
 		if (
 			(user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||

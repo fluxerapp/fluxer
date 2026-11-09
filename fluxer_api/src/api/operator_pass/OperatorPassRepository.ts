@@ -903,6 +903,10 @@ export class OperatorPassRepository {
 		);
 	}
 
+	async clearLabsGreetingMessage(userId: UserID): Promise<void> {
+		await upsertOne(OperatorPassLabsMembers.patchByPk({user_id: userId}, {greeting_message_id: Db.clear()}));
+	}
+
 	async deleteLabsMember(userId: UserID): Promise<void> {
 		await deleteOneOrMany(OperatorPassLabsMembers.deleteByPk({user_id: userId}));
 		await this.removeLabsGreeting(userId);

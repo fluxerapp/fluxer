@@ -39443,12 +39443,6 @@
 						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
 					},
 					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
-					"hidden_role_ids": {
-						"description": "IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
-						"maxItems": 16,
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
-					},
 					"voice_origins": {
 						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com",
 						"maxItems": 1000,
@@ -39473,7 +39467,6 @@
 				],
 				"additionalProperties": false
 			},
-			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"InstanceHiddenBuiltInGuildBadgesSchema": {
 				"maxItems": 3,
 				"type": "array",
@@ -40195,6 +40188,7 @@
 				"pattern": "^-?[0-9]{1,19}$",
 				"description": "Display position of the badge. Badges are shown in ascending order of this value"
 			},
+			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"BotFlags": {
 				"type": "integer",
 				"minimum": 0,

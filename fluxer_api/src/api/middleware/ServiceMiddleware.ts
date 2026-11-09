@@ -811,6 +811,8 @@ class RequestServices implements RequestScopedServices {
 			userRepository: getUserRepository(),
 			guildRepository: getGuildRepository(),
 			guildService: this.guildService,
+			channelRepository: getChannelRepository(),
+			channelService: this.channelService,
 			get emailService() {
 				return getEmailService();
 			},
