@@ -6,6 +6,7 @@ toolchain go1.27.3
 
 require (
 	github.com/caddyserver/caddy/v2 v2.11.9
+	github.com/klauspost/compress v1.20.3
 	github.com/nats-io/nats-server/v2 v2.14.9
 	golang.org/x/sys v0.49.0
 )
@@ -74,7 +75,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.11.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/libdns/libdns v1.1.1 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
