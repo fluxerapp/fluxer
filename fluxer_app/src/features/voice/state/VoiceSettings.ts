@@ -4,6 +4,7 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import type {
 	CodecPreference,
 	ScreenShareContentHint,
@@ -14,9 +15,13 @@ import {
 	isVoiceNoiseSuppressionBackend,
 	type VoiceNoiseSuppressionBackend,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
-import type {ScreenShareBitrateBudget} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	normaliseResolutionForContext,
+	type ScreenShareBitrateBudget,
+} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	getScreenShareBitrateCeilingBps,
+	getVideoQualityCaps,
 	hasHigherVideoQuality,
 } from '@app/features/voice/utils/VideoQualityEntitlement';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
@@ -48,9 +53,7 @@ const MAX_VOICE_PROCESSING_DEVICE_OVERRIDES = 16;
 const VIDEO_FRAME_RATE_MIN = 15;
 const VIDEO_FRAME_RATE_MAX = 120;
 const VIDEO_FRAME_RATE_DEFAULT = 30;
-const FREE_VIDEO_FRAME_RATE_MAX = 30;
 const RETIRED_SCREENSHARE_RESOLUTION_REPLACEMENT: ScreenshareResolution = 'low_480p';
-const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new Set(['high', 'ultra', 'source']);
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
 export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
@@ -787,10 +790,8 @@ class VoiceSettings {
 	}
 
 	getCameraResolution(): CameraResolution {
-		if (this.cameraResolution === 'high' && !hasHigherVideoQuality()) {
-			return 'medium';
-		}
-		return this.cameraResolution;
+		const allowed = getCameraCaptureDimensions(this.cameraResolution).height <= getVideoQualityCaps().cameraMaxHeight;
+		return allowed ? this.cameraResolution : 'medium';
 	}
 
 	getMirrorCamera(): boolean {
@@ -798,17 +799,11 @@ class VoiceSettings {
 	}
 
 	getScreenshareResolution(): ScreenshareResolution {
-		if (PREMIUM_SCREENSHARE_RESOLUTIONS.has(this.screenshareResolution) && !hasHigherVideoQuality()) {
-			return 'medium';
-		}
-		return this.screenshareResolution;
+		return normaliseResolutionForContext(this.screenshareResolution, 'display', getVideoQualityCaps());
 	}
 
 	getVideoFrameRate(): number {
-		if (this.videoFrameRate > FREE_VIDEO_FRAME_RATE_MAX && !hasHigherVideoQuality()) {
-			return FREE_VIDEO_FRAME_RATE_MAX;
-		}
-		return this.videoFrameRate;
+		return Math.min(this.videoFrameRate, getVideoQualityCaps().screenShareMaxFrameRate);
 	}
 
 	getStreamingMode(): StreamingMode {

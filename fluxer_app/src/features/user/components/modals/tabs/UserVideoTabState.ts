@@ -3,6 +3,7 @@
 import {SCREEN_SHARE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	contextAllowsScreenShareResolution,
+	OFFERED_SCREEN_SHARE_FRAME_RATES,
 	OFFERED_SCREEN_SHARE_RESOLUTIONS,
 	type OfferedScreenShareResolution,
 	offeredScreenShareResolution,
@@ -11,6 +12,8 @@ import {
 import type {StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import type {ScreenShareContentHint} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {
+	capsAllowScreenShareFrameRate,
+	capsAllowScreenShareResolution,
 	resolveScreenShareFrameRate,
 	resolveScreenShareTarget,
 	type ScreenShareBitrateBudget,
@@ -19,6 +22,7 @@ import {
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
+import type {VideoQualityCaps} from '@app/features/voice/utils/VideoQualityCaps';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -30,10 +34,6 @@ export const SCREEN_SHARE_PRESET_DESCRIPTORS: Record<Exclude<StreamingMode, 'cus
 	screenshare: SCREEN_SHARE_DESCRIPTOR,
 };
 
-const FREE_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['low_480p', 'medium'];
-const PREMIUM_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['high', 'ultra', 'source'];
-const FREE_SCREEN_SHARE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30];
-const PREMIUM_SCREEN_SHARE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30, 60, 120];
 const SCREEN_SHARE_BITRATE_STEPS_BPS: ReadonlyArray<number> = [
 	2_000_000, 4_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000,
 	50_000_000,
@@ -64,28 +64,29 @@ export interface UserVideoTabScreenShareState {
 }
 
 function buildResolutionOptions(
-	entitled: boolean,
+	caps: VideoQualityCaps,
 	selfHosted: boolean,
 	context: ScreenShareContext,
 	effective: OfferedScreenShareResolution,
 ): ReadonlyArray<UserVideoTabResolutionOption> {
-	const offersPremium = entitled || !selfHosted;
 	return OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
 		(value) =>
 			value === effective ||
-			FREE_SCREEN_SHARE_RESOLUTIONS.includes(value) ||
-			(offersPremium &&
-				PREMIUM_SCREEN_SHARE_RESOLUTIONS.includes(value) &&
-				contextAllowsScreenShareResolution(value, context)),
-	).map((value) => ({value, isDisabled: !entitled && PREMIUM_SCREEN_SHARE_RESOLUTIONS.includes(value)}));
+			(contextAllowsScreenShareResolution(value, context) &&
+				(capsAllowScreenShareResolution(caps, value) || !selfHosted)),
+	).map((value) => ({value, isDisabled: !capsAllowScreenShareResolution(caps, value)}));
 }
 
 function buildFrameRateOptions(
-	entitled: boolean,
+	caps: VideoQualityCaps,
 	effective: SupportedScreenShareFrameRate,
 ): ReadonlyArray<SupportedScreenShareFrameRate> {
-	const offered = entitled ? PREMIUM_SCREEN_SHARE_FRAME_RATES : FREE_SCREEN_SHARE_FRAME_RATES;
-	return SUPPORTED_SCREEN_SHARE_FRAME_RATES.filter((value) => value === effective || offered.includes(value));
+	return SUPPORTED_SCREEN_SHARE_FRAME_RATES.filter(
+		(value) =>
+			value === effective ||
+			((OFFERED_SCREEN_SHARE_FRAME_RATES as ReadonlyArray<number>).includes(value) &&
+				capsAllowScreenShareFrameRate(caps, value)),
+	);
 }
 
 function buildBitrateOptions(budget: ScreenShareBitrateBudget): ReadonlyArray<number> {
@@ -106,13 +107,8 @@ export function resolveUserVideoTabScreenShareState(input: UserVideoTabScreenSha
 	return {
 		resolution,
 		frameRate: target.frameRate,
-		resolutionOptions: buildResolutionOptions(
-			input.quality.entitled,
-			input.selfHosted,
-			input.quality.context,
-			resolution,
-		),
-		frameRateOptions: buildFrameRateOptions(input.quality.entitled, target.frameRate),
+		resolutionOptions: buildResolutionOptions(input.quality.caps, input.selfHosted, input.quality.context, resolution),
+		frameRateOptions: buildFrameRateOptions(input.quality.caps, target.frameRate),
 		bitrate: input.bitrate.chosenBps,
 		bitrateOptions: buildBitrateOptions(input.bitrate),
 		preset: input.quality.mode === 'custom' ? null : input.quality.mode,
