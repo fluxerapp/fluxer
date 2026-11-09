@@ -3388,6 +3388,7 @@ msgstr "Kezdéshez vegyél fel egy ismerőst."
 msgid "Add a keybind"
 msgstr "Billentyűparancs hozzáadása"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Adjon hozzá egy helyi bejelentkezési módot a {providerName} leállítása előtt."
@@ -10040,6 +10041,7 @@ msgstr "Híváshoz csatlakoztatva"
 msgid "Connected to voice"
 msgstr "Csatlakozva a hangcsevegéshez"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Csatlakoztatva. Leállíthatja ezt a bejelentkezési módot."
@@ -37910,6 +37912,7 @@ msgstr "Ez az instance nem használ HTTPS-t"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Ez az instance még nem fejezte be az egyszeri bejelentkezés beállítását. Kérj meg egy rendszergazdát, hogy engedélyezze."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Ez az példány {providerName} bejelentkezést igényel."

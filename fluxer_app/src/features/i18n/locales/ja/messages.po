@@ -3388,6 +3388,7 @@ msgstr "友達を追加して始めましょう。"
 msgid "Add a keybind"
 msgstr "ショートカットを追加"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "{providerName} を解除する前に、ローカルのサインイン方法を追加してください。"
@@ -10040,6 +10041,7 @@ msgstr "通話に接続しました"
 msgid "Connected to voice"
 msgstr "ボイスに接続しました"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "接続済み。このサインイン方法を解除できます。"
@@ -37910,6 +37912,7 @@ msgstr "このインスタンスはHTTPSを使用していません"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "このインスタンスではシングルサインオンの設定が完了していません。管理者に有効化を依頼してください。"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "このインスタンスには {providerName} が必要です。"

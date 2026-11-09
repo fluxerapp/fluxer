@@ -3388,6 +3388,7 @@ msgstr "Πρόσθεσε έναν φίλο για να ξεκινήσεις."
 msgid "Add a keybind"
 msgstr "Προσθήκη συντόμευσης"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Προσθέστε μια τοπική μέθοδο σύνδεσης πριν αποσυνδέσετε το {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Συνδεδεμένοι στην κλήση"
 msgid "Connected to voice"
 msgstr "Συνδεδεμένοι στο φωνητικό κανάλι"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Συνδεδεμένο. Μπορείτε να αποσυνδέσετε αυτή τη μέθοδο σύνδεσης."
@@ -37910,6 +37912,7 @@ msgstr "Αυτή η παρουσία δεν χρησιμοποιεί HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Αυτή η παρουσία δεν έχει ολοκληρώσει τη ρύθμιση της ενιαίας σύνδεσης. Ζητήστε από έναν διαχειριστή να την ενεργοποιήσει."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Αυτή η υπηρεσία απαιτεί το {providerName}."

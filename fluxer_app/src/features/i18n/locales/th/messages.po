@@ -3388,6 +3388,7 @@ msgstr "เพิ่มเพื่อนเพื่อเริ่มต้น
 msgid "Add a keybind"
 msgstr "เพิ่มปุ่มลัด"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "เพิ่มวิธีการลงชื่อเข้าใช้แบบท้องถิ่นก่อนที่จะยกเลิก {providerName}"
@@ -10040,6 +10041,7 @@ msgstr "เชื่อมต่อสายแล้ว"
 msgid "Connected to voice"
 msgstr "เชื่อมต่อกับช่องเสียงแล้ว"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "เชื่อมต่อแล้ว คุณสามารถยกเลิกวิธีการลงชื่อเข้าใช้นี้ได้"
@@ -37910,6 +37912,7 @@ msgstr "อินสแตนซ์นี้ไม่ได้ใช้ HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "อินสแตนซ์นี้ยังตั้งค่าการลงชื่อเข้าระบบครั้งเดียวไม่เสร็จสมบูรณ์ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "อินสแตนซ์นี้ต้องใช้ {providerName}"

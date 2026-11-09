@@ -3388,6 +3388,7 @@ msgstr "Tambahkan teman untuk memulai."
 msgid "Add a keybind"
 msgstr "Tambahkan pintasan"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Tambahkan metode masuk lokal sebelum memutuskan {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Tersambung ke panggilan"
 msgid "Connected to voice"
 msgstr "Terhubung ke obrolan suara"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Terhubung. Anda dapat memutuskan metode masuk ini."
@@ -37910,6 +37912,7 @@ msgstr "Instance ini tidak menggunakan HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Instance ini belum selesai menyiapkan single sign-on. Mintalah administrator untuk mengaktifkannya."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Instansi ini memerlukan {providerName}."

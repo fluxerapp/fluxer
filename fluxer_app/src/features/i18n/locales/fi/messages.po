@@ -3388,6 +3388,7 @@ msgstr "Aloita lisäämällä kaveri."
 msgid "Add a keybind"
 msgstr "Lisää pikanäppäin"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Lisää paikallinen kirjautumismenetelmä ennen {providerName}-palvelun purkamista."
@@ -10040,6 +10041,7 @@ msgstr "Yhdistetty puheluun"
 msgid "Connected to voice"
 msgstr "Yhdistetty äänikanavaan"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Yhdistetty. Voit purkaa tämän kirjautumismenetelmän."
@@ -37910,6 +37912,7 @@ msgstr "Tämä instanssi ei käytä HTTPS:ää"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Tähän instanssiin ei ole vielä määritetty kertakirjautumista. Pyydä ylläpitäjää ottamaan se käyttöön."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Tämä instanssi vaatii {providerName}."

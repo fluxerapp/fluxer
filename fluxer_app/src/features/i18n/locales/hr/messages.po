@@ -3388,6 +3388,7 @@ msgstr "Dodajte prijatelja za početak."
 msgid "Add a keybind"
 msgstr "Dodaj prečac"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Dodajte lokalnu metodu prijave prije prekida {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Povezano s pozivom"
 msgid "Connected to voice"
 msgstr "Povezano s glasovnim kanalom"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Povezano. Možete prekinuti ovu metodu prijave."
@@ -37910,6 +37912,7 @@ msgstr "Ova instanca ne koristi HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Ova instanca nije dovršila postavljanje jedinstvene prijave. Zamolite administratora da je omogući."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Ova instanca zahtijeva {providerName}."

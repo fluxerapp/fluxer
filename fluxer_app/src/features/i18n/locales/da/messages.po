@@ -3388,6 +3388,7 @@ msgstr "Tilføj en ven for at komme i gang."
 msgid "Add a keybind"
 msgstr "Tilføj en genvej"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Tilføj en lokal loginmetode, før du afbryder {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Forbundet til opkald"
 msgid "Connected to voice"
 msgstr "Forbundet til taleopkald"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Forbundet. Du kan afbryde denne loginmetode."
@@ -37910,6 +37912,7 @@ msgstr "Denne instans bruger ikke HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Denne instans har ikke færdiggjort opsætningen af single sign-on. Bed en administrator om at aktivere det."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Denne instans kræver {providerName}."

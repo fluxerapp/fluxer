@@ -3388,6 +3388,7 @@ msgstr "Füge einen Freund hinzu, um loszulegen."
 msgid "Add a keybind"
 msgstr "Tastenkombination hinzufügen"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Fügen Sie eine lokale Anmeldemethode hinzu, bevor Sie {providerName} trennen."
@@ -10040,6 +10041,7 @@ msgstr "Mit Anruf verbunden"
 msgid "Connected to voice"
 msgstr "Mit Sprachkanal verbunden"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Verbunden. Sie können diese Anmeldemethode trennen."
@@ -37910,6 +37912,7 @@ msgstr "Diese Instanz verwendet kein HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Diese Instanz hat die Einrichtung von Single Sign-On noch nicht abgeschlossen. Bitte einen Administrator, es zu aktivieren."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Diese Instanz erfordert {providerName}."

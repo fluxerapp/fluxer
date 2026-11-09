@@ -3388,6 +3388,7 @@ msgstr "הוסף חבר כדי להתחיל."
 msgid "Add a keybind"
 msgstr "הוספת קיצור דרך"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "הוסף שיטת התחברות מקומית לפני ניתוק {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "מחובר לשיחה"
 msgid "Connected to voice"
 msgstr "מחובר לערוץ הקולי"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "מחובר. ניתן לנתק שיטת התחברות זו."
@@ -37910,6 +37912,7 @@ msgstr "המופע הזה לא משתמש ב-HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "ההגדרה של כניסה יחידה (SSO) במערכת זו עדיין לא הושלמה. אנא פנה למנהל המערכת כדי לאפשר זאת."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "מופע זה דורש {providerName}."

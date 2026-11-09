@@ -52,9 +52,23 @@ export function canDisconnectSso(user: User): boolean {
 }
 
 function getDisconnectDescription(canDisconnect: boolean, isEnforced: boolean, providerName: string) {
-	if (canDisconnect) return <Trans>Connected. You can disconnect this sign-in method.</Trans>;
-	if (isEnforced) return <Trans>This instance requires {providerName}.</Trans>;
-	return <Trans>Add a local sign-in method before disconnecting {providerName}.</Trans>;
+	if (canDisconnect)
+		return (
+			<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider.">
+				Connected. You can disconnect this sign-in method.
+			</Trans>
+		);
+	if (isEnforced)
+		return (
+			<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.">
+				This instance requires {providerName}.
+			</Trans>
+		);
+	return (
+		<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.">
+			Add a local sign-in method before disconnecting {providerName}.
+		</Trans>
+	);
 }
 
 function isLocalSignInMethodRequiredError(error: unknown): boolean {

@@ -3388,6 +3388,7 @@ msgstr "Thêm bạn bè để bắt đầu."
 msgid "Add a keybind"
 msgstr "Thêm phím tắt"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Thêm phương thức đăng nhập cục bộ trước khi ngắt kết nối {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Đã kết nối cuộc gọi"
 msgid "Connected to voice"
 msgstr "Đã kết nối thoại"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Đã kết nối. Bạn có thể ngắt kết nối phương thức đăng nhập này."
@@ -37910,6 +37912,7 @@ msgstr "Máy chủ này không dùng HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Phiên này chưa thiết lập xong đăng nhập một lần. Hãy yêu cầu quản trị viên bật tính năng này."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Thực thể này yêu cầu {providerName}."

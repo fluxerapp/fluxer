@@ -3388,6 +3388,7 @@ msgstr "新增好友以開始使用。"
 msgid "Add a keybind"
 msgstr "新增快速鍵"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "在中斷 {providerName} 之前，請新增本地登入方式。"
@@ -10040,6 +10041,7 @@ msgstr "已連線到通話"
 msgid "Connected to voice"
 msgstr "已連線到語音"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "已連接。您可以中斷此登入方式。"
@@ -37910,6 +37912,7 @@ msgstr "此執行個體未使用 HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "此伺服器尚未完成單一登入設定。請詢問管理員啟用它。"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "此執行個體需要 {providerName}。"

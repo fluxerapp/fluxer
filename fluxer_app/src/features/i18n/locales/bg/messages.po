@@ -3388,6 +3388,7 @@ msgstr "Добави приятел, за да започнеш."
 msgid "Add a keybind"
 msgstr "Добавяне на клавишна комбинация"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Добавете локален метод за вход, преди да прекъснете {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "В разговора"
 msgid "Connected to voice"
 msgstr "В гласовия канал"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Свързано. Можете да прекъснете този метод за вход."
@@ -37910,6 +37912,7 @@ msgstr "Тази инстанция не използва HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Тази инстанция не е завършила настройката на единично влизане. Помолете администратор да го активира."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Тази инстанция изисква {providerName}."

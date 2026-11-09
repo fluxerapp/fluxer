@@ -3388,6 +3388,7 @@ msgstr "Přidejte si přítele a začněte."
 msgid "Add a keybind"
 msgstr "Přidat zkratku"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Před odpojením {providerName} přidejte metodu místního přihlášení."
@@ -10040,6 +10041,7 @@ msgstr "Připojeno k hovoru"
 msgid "Connected to voice"
 msgstr "Připojeno k hlasovému hovoru"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Připojeno. Tuto metodu přihlášení můžete odpojit."
@@ -37910,6 +37912,7 @@ msgstr "Tato instance nepoužívá HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Tato instance ještě nedokončila nastavení jednotného přihlašování. Požádejte administrátora o jeho povolení."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Tato instance vyžaduje {providerName}."

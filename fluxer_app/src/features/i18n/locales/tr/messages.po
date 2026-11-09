@@ -3388,6 +3388,7 @@ msgstr "Başlamak için bir arkadaş ekleyin."
 msgid "Add a keybind"
 msgstr "Kısayol ekle"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "{providerName} bağlantısını kesmeden önce yerel bir oturum açma yöntemi ekleyin."
@@ -10040,6 +10041,7 @@ msgstr "Aramaya bağlandı"
 msgid "Connected to voice"
 msgstr "Sese bağlandı"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Bağlı. Bu oturum açma yöntemini devre dışı bırakabilirsiniz."
@@ -37910,6 +37912,7 @@ msgstr "Bu kurulum HTTPS kullanmıyor"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Bu örnek, tek oturum açmayı henüz ayarlamamış. Bir yöneticiye etkinleştirmesini sorun."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Bu örnek {providerName} gerektirir."

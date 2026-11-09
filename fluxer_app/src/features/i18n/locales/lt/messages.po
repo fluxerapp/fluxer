@@ -3388,6 +3388,7 @@ msgstr "Pridėkite draugą, kad pradėtumėte."
 msgid "Add a keybind"
 msgstr "Pridėti spartųjį klavišą"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "Pridėkite vietinį prisijungimo metodą prieš atjungiant {providerName}."
@@ -10040,6 +10041,7 @@ msgstr "Prisijungta prie skambučio"
 msgid "Connected to voice"
 msgstr "Prisijungta prie balso pokalbio"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "Prisijungta. Galite atjungti šį prisijungimo metodą."
@@ -37911,6 +37913,7 @@ msgstr "Ši instancija nenaudoja HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Ši paskyra nebaigė nustatyti vieno prisijungimo. Paprašykite administratoriaus jį įjungti."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "Ši instancija reikalauja {providerName}."

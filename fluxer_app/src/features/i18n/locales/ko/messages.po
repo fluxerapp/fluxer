@@ -3388,6 +3388,7 @@ msgstr "친구를 추가하여 시작해 보세요."
 msgid "Add a keybind"
 msgstr "단축키 추가"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Add a local sign-in method before disconnecting {providerName}."
 msgstr "{providerName}을(를) 해제하기 전에 로컬 로그인 방법을 추가하세요."
@@ -10040,6 +10041,7 @@ msgstr "통화 연결됨"
 msgid "Connected to voice"
 msgstr "음성 연결됨"
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Connected. You can disconnect this sign-in method."
 msgstr "연결됨. 이 로그인 방법을 해제할 수 있습니다."
@@ -37910,6 +37912,7 @@ msgstr "이 인스턴스는 HTTPS를 사용하지 않습니다"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "이 인스턴스에서 싱글 사인온 설정을 완료하지 않았습니다. 관리자에게 활성화해 달라고 요청하세요."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires {providerName}."
 msgstr "이 인스턴스에는 {providerName}이(가) 필요합니다."
