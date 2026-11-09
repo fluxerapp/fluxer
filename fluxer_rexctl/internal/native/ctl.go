@@ -114,6 +114,18 @@ func (s *Stack) Entries(ctx context.Context) ([]PsEntry, error) {
 	return out, nil
 }
 
+func (s *Stack) PS(ctx context.Context) ([]engine.Container, error) {
+	entries, err := s.Entries(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]engine.Container, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, Container(e))
+	}
+	return out, nil
+}
+
 func Container(e PsEntry) engine.Container {
 	c := engine.Container{ID: e.Name, Name: e.Name, Service: e.Name, Health: e.Health, ExitCode: e.ExitCode, RestartCount: e.Restarts, Created: e.StartedAt}
 	switch e.State {
@@ -321,6 +333,18 @@ func (s *Stack) WaitReady(ctx context.Context, timeout time.Duration, onTick fun
 		case <-ticker.C:
 		}
 	}
+}
+
+func (s *Stack) Crashing(ctx context.Context) error {
+	st := s.Status(ctx)
+	if len(st.Crashing) > 0 || st.Unit == "failed" {
+		crashing := st.Crashing
+		if st.Unit == "failed" {
+			crashing = append(crashing, Supervisor)
+		}
+		return &engine.NotReadyError{Readiness: st.Readiness, Fatal: st.Fatal, Crashing: crashing}
+	}
+	return nil
 }
 
 var journalctlCmd = func(ctx context.Context, args []string, stdout io.Writer) error {

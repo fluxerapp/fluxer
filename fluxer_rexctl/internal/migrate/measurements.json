@@ -1,0 +1,243 @@
+{
+	"schema": 1,
+	"basis": {
+		"vm": "Incus system container on the OrbStack VM fluxrun (Apple silicon host, arm64, kernel 7.2.9-orbstack, Debian 13), limited to 4 CPUs and an 8 GiB memory cgroup, root filesystem btrfs on virtio. Other jobs ran on the host machine at the same time, but nothing else ran on fluxrun during the runs",
+		"cpus": 4,
+		"memory_bytes": 8589934592,
+		"disk": "btrfs on a virtio disk, Incus dir storage pool",
+		"versions": {
+			"fluxer": "2026.1109.6000 (native dist, with the Rust services rebuilt from the current tree), compose images 2026.1108.4100 (gateway ghcr v1)",
+			"docker": "26.1.5",
+			"postgres": "16 (compose image postgres:16-alpine), 17.11 (native, Debian)",
+			"valkey": "9.1.3",
+			"seaweedfs": "4.52",
+			"nats": "2.14 (compose container), 2.14.9 embedded in fluxerd (native)",
+			"livekit": "1.12.0 (compose image and native binary)",
+			"incus": "6.0.4"
+		},
+		"date": "2026-11-09 (native), 2026-11-08 (compose)",
+		"method": "One instance at a time on fluxrun. Both sides run the bundled LiveKit: the compose instances run its container, and the native instances run it as a child of fluxerd with FLUXER_LIVEKIT_ENABLED=true, as a native install does by default. Native instances were fresh installs from the dist, each seeded with 2 accounts, 60 messages and 5 attachments (12 MiB). Compose instances were clones of one seeded all-off instance, switched with rexctl migrate before measuring. Memory is the sum of PSS of every process in the instance's cgroups (Docker container scopes on compose, fluxerd.service on native), threads from /proc status, CPU from cgroup cpu.stat over 60 s as a share of the 4 CPUs. Idle is 60 s after a 60 s settle. Load is 8 client threads for 90 s doing logins, message sends, 64 KiB uploads and link unfurls, sampled for 60 s. Disk is the images and volumes in use on compose, and the release plus data folder on native. After a compose storage switch, the old SeaweedFS volume stays until rexctl migrate --clean-up, so its disk figure still counts it. One run per configuration, so treat small differences as noise."
+	},
+	"runs": [
+		{
+			"runtime": "compose",
+			"options": [],
+			"load": "idle",
+			"memory_bytes": 913629184,
+			"cpu_percent": 0.84,
+			"disk_bytes": 4949432927,
+			"processes": 34,
+			"containers": 20,
+			"threads": 152
+		},
+		{
+			"runtime": "compose",
+			"options": [],
+			"load": "load",
+			"memory_bytes": 1063622656,
+			"cpu_percent": 3.57,
+			"disk_bytes": 4965956231,
+			"processes": 41,
+			"containers": 20,
+			"threads": 162
+		},
+		{
+			"runtime": "compose",
+			"options": ["kv"],
+			"load": "idle",
+			"memory_bytes": 887011328,
+			"cpu_percent": 0.86,
+			"disk_bytes": 4904563467,
+			"processes": 35,
+			"containers": 19,
+			"threads": 145
+		},
+		{
+			"runtime": "compose",
+			"options": ["kv"],
+			"load": "load",
+			"memory_bytes": 1040549888,
+			"cpu_percent": 3.76,
+			"disk_bytes": 4917861374,
+			"processes": 51,
+			"containers": 19,
+			"threads": 166
+		},
+		{
+			"runtime": "compose",
+			"options": ["rust"],
+			"load": "idle",
+			"memory_bytes": 841827328,
+			"cpu_percent": 0.81,
+			"disk_bytes": 4193933359,
+			"processes": 27,
+			"containers": 13,
+			"threads": 131
+		},
+		{
+			"runtime": "compose",
+			"options": ["rust"],
+			"load": "load",
+			"memory_bytes": 1004716032,
+			"cpu_percent": 3.45,
+			"disk_bytes": 4208523476,
+			"processes": 35,
+			"containers": 13,
+			"threads": 142
+		},
+		{
+			"runtime": "compose",
+			"options": ["storage"],
+			"load": "idle",
+			"memory_bytes": 715267072,
+			"cpu_percent": 0.78,
+			"disk_bytes": 4216227327,
+			"processes": 33,
+			"containers": 19,
+			"threads": 168
+		},
+		{
+			"runtime": "compose",
+			"options": ["storage"],
+			"load": "load",
+			"memory_bytes": 738552832,
+			"cpu_percent": 3.54,
+			"disk_bytes": 4222966456,
+			"processes": 40,
+			"containers": 19,
+			"threads": 182
+		},
+		{
+			"runtime": "compose",
+			"options": ["kv", "rust", "storage"],
+			"load": "idle",
+			"memory_bytes": 662268928,
+			"cpu_percent": 0.52,
+			"disk_bytes": 3415832442,
+			"processes": 26,
+			"containers": 11,
+			"threads": 136
+		},
+		{
+			"runtime": "compose",
+			"options": ["kv", "rust", "storage"],
+			"load": "load",
+			"memory_bytes": 779147264,
+			"cpu_percent": 3.17,
+			"disk_bytes": 3421257963,
+			"processes": 43,
+			"containers": 11,
+			"threads": 162
+		},
+		{
+			"runtime": "native",
+			"options": [],
+			"load": "idle",
+			"memory_bytes": 817703936,
+			"cpu_percent": 0.56,
+			"disk_bytes": 2042184082,
+			"processes": 28,
+			"containers": 0,
+			"threads": 145
+		},
+		{
+			"runtime": "native",
+			"options": [],
+			"load": "load",
+			"memory_bytes": 878151680,
+			"cpu_percent": 2.92,
+			"disk_bytes": 2055688663,
+			"processes": 35,
+			"containers": 0,
+			"threads": 157
+		},
+		{
+			"runtime": "native",
+			"options": ["kv"],
+			"load": "idle",
+			"memory_bytes": 672538624,
+			"cpu_percent": 0.8,
+			"disk_bytes": 2042550764,
+			"processes": 28,
+			"containers": 0,
+			"threads": 136
+		},
+		{
+			"runtime": "native",
+			"options": ["kv"],
+			"load": "load",
+			"memory_bytes": 938700800,
+			"cpu_percent": 3.97,
+			"disk_bytes": 2058132744,
+			"processes": 46,
+			"containers": 0,
+			"threads": 160
+		},
+		{
+			"runtime": "native",
+			"options": ["rust"],
+			"load": "idle",
+			"memory_bytes": 747986944,
+			"cpu_percent": 0.8,
+			"disk_bytes": 2042193924,
+			"processes": 21,
+			"containers": 0,
+			"threads": 116
+		},
+		{
+			"runtime": "native",
+			"options": ["rust"],
+			"load": "load",
+			"memory_bytes": 935709696,
+			"cpu_percent": 3.96,
+			"disk_bytes": 2053951240,
+			"processes": 27,
+			"containers": 0,
+			"threads": 128
+		},
+		{
+			"runtime": "native",
+			"options": ["storage"],
+			"load": "idle",
+			"memory_bytes": 579265536,
+			"cpu_percent": 0.28,
+			"disk_bytes": 2028404850,
+			"processes": 26,
+			"containers": 0,
+			"threads": 136
+		},
+		{
+			"runtime": "native",
+			"options": ["storage"],
+			"load": "load",
+			"memory_bytes": 618770432,
+			"cpu_percent": 4.09,
+			"disk_bytes": 2033403444,
+			"processes": 32,
+			"containers": 0,
+			"threads": 153
+		},
+		{
+			"runtime": "native",
+			"options": ["kv", "rust", "storage"],
+			"load": "idle",
+			"memory_bytes": 576641024,
+			"cpu_percent": 0.27,
+			"disk_bytes": 2028678548,
+			"processes": 19,
+			"containers": 0,
+			"threads": 97
+		},
+		{
+			"runtime": "native",
+			"options": ["kv", "rust", "storage"],
+			"load": "load",
+			"memory_bytes": 656927744,
+			"cpu_percent": 3.31,
+			"disk_bytes": 2034552716,
+			"processes": 39,
+			"containers": 0,
+			"threads": 127
+		}
+	]
+}

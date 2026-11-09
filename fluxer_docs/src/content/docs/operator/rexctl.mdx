@@ -601,6 +601,50 @@ rexctl logs [service] [flags]
 
   Show lines newer than this, like 10m or 2h.
 
+## rexctl migrate
+
+Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. This is experimental, so rexctl migrate runs only with --experimental-native. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. The old data stays until you remove it with --clean-up after a newer backup.
+
+```sh
+rexctl migrate [flags]
+```
+
+- `--clean-up`
+
+  Remove the Valkey or SeaweedFS data a change left behind, once a newer backup holds what replaced it.
+
+- `--confirm string`
+
+  Your domain, to confirm --clean-up without a prompt.
+
+- `--details`
+
+  Show the machine, versions, date and method behind the typical figures.
+
+- `--dry-run`
+
+  Show what each change saves and removes without changing anything.
+
+- `--experimental-native`
+
+  Turn on rexctl migrate, which is experimental.
+
+- `--migrate string`
+
+  The changes to make, separated by commas: docker, kv, rust and storage.
+
+- `--native-dir string`
+
+  The folder for the instance that runs without Docker, with --migrate docker.
+
+- `--open-writes`
+
+  Let people upload again after the move off SeaweedFS. rexctl can't move the files back after this.
+
+- `--undo string`
+
+  Go back from a change rexctl migrate made: kv, or storage until you open writes.
+
 ## rexctl proxy
 
 Use your own reverse proxy or tunnel in front of Fluxer.
@@ -869,9 +913,17 @@ rexctl upgrade [flags]
 
   Show what would happen without changing anything.
 
+- `--experimental-native`
+
+  After the upgrade, show the experimental changes that run Fluxer with fewer services, and make the ones you pick.
+
 - `--json`
 
   Print JSON.
+
+- `--migrate string`
+
+  With --experimental-native, make these changes after the upgrade, separated by commas: docker, kv, rust and storage.
 
 - `--no-backup`
 

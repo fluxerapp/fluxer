@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -271,6 +272,7 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 			Entrypoint:   append([]string{"sh", "-c", heartbeatScript, "rexctl"}, o.Entrypoint...),
 			Cmd:          o.Command,
 			Env:          o.Env,
+			User:         o.User,
 			AttachStdin:  o.Stdin != nil,
 			AttachStdout: true,
 			AttachStderr: true,
@@ -282,7 +284,7 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 				api.OneoffLabel:  "True",
 			},
 		},
-		HostConfig: &container.HostConfig{Mounts: mounts, NetworkMode: "none", LogConfig: container.LogConfig{Type: "none"}},
+		HostConfig: &container.HostConfig{Mounts: mounts, GroupAdd: o.GroupAdd, NetworkMode: container.NetworkMode(cmp.Or(o.Network, "none")), LogConfig: container.LogConfig{Type: "none"}},
 		Name:       p.Name + "-rexctl-helper-" + randomID(),
 	})
 	if err != nil {

@@ -68,6 +68,8 @@ type upgradeCheckJSON struct {
 
 func newUpgradeCmd(app *App) *cobra.Command {
 	var f upgradeFlags
+	var migrateList string
+	var experimental bool
 	c := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade rexctl and Fluxer to the latest release",
@@ -76,11 +78,17 @@ func newUpgradeCmd(app *App) *cobra.Command {
 			if !c.Flags().Changed("backup") {
 				f.Backup = ""
 			}
+			if migrateList != "" && !experimental {
+				return ui.Usage("Pass --migrate together with --experimental-native.")
+			}
 			err := runUpgrade(c.Context(), app, &f)
 			if !f.Check && !f.DryRun {
 				notifyUpgrade(c.Context(), app, err)
 			}
-			return err
+			if err != nil || f.Check || f.DryRun || f.Prefetch || !experimental {
+				return err
+			}
+			return offerMigrations(c.Context(), app, migrateList)
 		},
 	}
 	fl := c.Flags()
@@ -90,6 +98,8 @@ func newUpgradeCmd(app *App) *cobra.Command {
 	fl.BoolVar(&f.NoBackup, "no-backup", false, "skip the backup before upgrading")
 	fl.StringVar(&f.Backup, "backup", backup.ScopeFull, "what the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway.")
 	fl.BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
+	fl.BoolVar(&experimental, "experimental-native", false, "after the upgrade, show the experimental changes that run Fluxer with fewer services, and make the ones you pick")
+	fl.StringVar(&migrateList, "migrate", "", "with --experimental-native, make these changes after the upgrade, separated by commas: docker, kv, rust and storage")
 	fl.StringVar(&f.Resume, release.ResumeFlag, "", "")
 	_ = fl.MarkHidden(release.ResumeFlag)
 	app.jsonFlag(c)
