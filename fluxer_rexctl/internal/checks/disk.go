@@ -354,6 +354,10 @@ func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string
 	if chosen == nil {
 		chosen = func(string) string { return "" }
 	}
+	modes := map[string]string{}
+	for _, k := range []string{settings.KVMode} {
+		modes[k] = chosen(k)
+	}
 	external := run.ExternalStore
 	var out []string
 	for svc, value := range stack.ComposeImages(compose) {
@@ -361,6 +365,8 @@ func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string
 		case svc == "livekit" && !run.Voice:
 			continue
 		case (svc == "seaweedfs" || svc == "seaweedfs-init") && external:
+			continue
+		case svc == "valkey" && stack.KVPostgres(modes):
 			continue
 		}
 		ref := imageFor(svc, value, fluxer, chosen)

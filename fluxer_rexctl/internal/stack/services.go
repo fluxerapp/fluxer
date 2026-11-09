@@ -13,13 +13,19 @@ var Services = []string{
 	"snowflakes", "users", "gifs", "messages", "unfurl",
 }
 
+const (
+	ValkeyVolume      = "valkey-data"
+	KVModeVar         = "FLUXER_KV_MODE"
+	WorkerReplicasVar = "FLUXER_WORKER_REPLICAS"
+)
+
 var OneShot = map[string]bool{"seaweedfs-init": true}
 
 var Volumes = []string{
-	"edge-data", "edge-config", "postgres-data", "valkey-data", "nats-data", "meilisearch-data", "seaweedfs-data",
+	"edge-data", "edge-config", "postgres-data", ValkeyVolume, "nats-data", "meilisearch-data", "seaweedfs-data",
 }
 
-var BackupVolumes = []string{"seaweedfs-data", "valkey-data", "nats-data", "meilisearch-data"}
+var BackupVolumes = []string{"seaweedfs-data", ValkeyVolume, "nats-data", "meilisearch-data"}
 
 var UploadsServices = []string{"seaweedfs", "seaweedfs-init"}
 
@@ -30,10 +36,21 @@ type DataMount struct {
 
 var DataMounts = map[string]DataMount{
 	"postgres-data":    {Service: "postgres", Target: "/var/lib/postgresql/data"},
-	"valkey-data":      {Service: "valkey", Target: "/data"},
+	ValkeyVolume:       {Service: "valkey", Target: "/data"},
 	"nats-data":        {Service: "nats", Target: "/data"},
 	"meilisearch-data": {Service: "meilisearch", Target: "/meili_data"},
 	"seaweedfs-data":   {Service: "seaweedfs", Target: "/data"},
+}
+
+func KVPostgres(settings map[string]string) bool {
+	return strings.TrimSpace(settings["kv.mode"]) == "postgres"
+}
+
+func SkippedVolumes(settings map[string]string) []string {
+	if KVPostgres(settings) {
+		return []string{ValkeyVolume}
+	}
+	return nil
 }
 
 var PublishedPorts = []Port{

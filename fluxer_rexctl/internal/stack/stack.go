@@ -34,6 +34,7 @@ const (
 	OverlayProxy               Overlay = "proxy"
 	OverlayTunnel              Overlay = "tunnel"
 	OverlayExternalObjectStore Overlay = "external-object-store"
+	OverlayKVPostgres          Overlay = "kv-postgres"
 	OverlayIPv6                Overlay = "ipv6"
 	OverlayExternalVoice       Overlay = "external-voice"
 )
@@ -42,11 +43,15 @@ var OverlayFiles = map[Overlay]string{
 	OverlayProxy:               "docker-compose.proxy.yml",
 	OverlayTunnel:              "tunnel.compose.yml",
 	OverlayExternalObjectStore: "external-object-store.compose.yml",
+	OverlayKVPostgres:          "kv-postgres.compose.yml",
 	OverlayIPv6:                "ipv6.compose.yml",
 	OverlayExternalVoice:       "external-voice.compose.yml",
 }
 
-var overlayOrder = []Overlay{OverlayProxy, OverlayTunnel, OverlayExternalObjectStore, OverlayIPv6, OverlayExternalVoice}
+var overlayOrder = []Overlay{
+	OverlayProxy, OverlayTunnel, OverlayExternalObjectStore,
+	OverlayKVPostgres, OverlayIPv6, OverlayExternalVoice,
+}
 
 var MountedFiles = map[string][]string{
 	Caddyfile: {"edge"},
@@ -106,6 +111,9 @@ func OverlaysFor(settings map[string]string) []Overlay {
 	}
 	if strings.TrimSpace(settings["storage.endpoint"]) != "" {
 		out = append(out, OverlayExternalObjectStore)
+	}
+	if KVPostgres(settings) {
+		out = append(out, OverlayKVPostgres)
 	}
 	if on, err := strconv.ParseBool(strings.TrimSpace(settings["network.ipv6"])); err == nil && on {
 		out = append(out, OverlayIPv6)

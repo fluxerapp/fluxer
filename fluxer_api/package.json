@@ -9,6 +9,7 @@
 		"dev": "tsx watch --clear-screen=false src/AppEntrypoint.ts",
 		"start": "tsx src/AppEntrypoint.ts",
 		"start:worker": "tsx src/WorkerEntrypoint.ts",
+		"migrate": "tsx src/MigrateEntrypoint.ts",
 		"operator-relay": "node bin/operator-relay.mjs",
 		"generate:operator-pass-name-data": "node scripts/GenerateOperatorPassNameData.mjs"
 	},

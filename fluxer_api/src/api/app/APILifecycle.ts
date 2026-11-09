@@ -422,7 +422,7 @@ export function createShutdown(config: APIConfig, logger: LoggerInterface): () =
 				unsupportedDatabaseBackend(config.database.backend);
 		}
 		try {
-			closeOwnedKVClient();
+			await closeOwnedKVClient();
 			logger.info('Key-value client closed');
 		} catch (error) {
 			logger.error({error}, 'Error closing key-value client');

@@ -30,7 +30,6 @@
 				"bidi-js",
 				"emoji-regex",
 				"harfbuzzjs",
-				"ioredis",
 				"maxmind",
 				"nodemailer",
 				"pg",

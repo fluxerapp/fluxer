@@ -70,6 +70,7 @@ type Manifest struct {
 	Database  string      `json:"database"`
 	Volumes   []string    `json:"volumes"`
 	Skipped   []string    `json:"skipped,omitempty"`
+	Left      []string    `json:"left,omitempty"`
 	Scope     string      `json:"scope,omitempty"`
 	Uploads   *UploadsRef `json:"uploads,omitempty"`
 	Entries   []Entry     `json:"entries"`

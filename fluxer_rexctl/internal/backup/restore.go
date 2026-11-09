@@ -330,10 +330,11 @@ func readRestoreMarker(dir string) *restoreMarker {
 }
 
 func keptVolumes(m *Manifest) []string {
+	out := slices.Clone(m.Left)
 	if m.WithoutUploads() {
-		return []string{UploadsVolume}
+		out = append(out, UploadsVolume)
 	}
-	return nil
+	return out
 }
 
 func CheckUploadsInPlace(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, m *Manifest) error {

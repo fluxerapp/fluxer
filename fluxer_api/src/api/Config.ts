@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {availableParallelism} from 'node:os';
 import type {
 	AgePolicyConfig,
 	APIConfig,
@@ -311,6 +312,13 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	};
 }
 
+const VALKEY_DEFAULT_MAXMEMORY_BYTES = 192 * 1024 * 1024;
+const KV_POSTGRES_ROW_OVERHEAD_FACTOR = 4;
+
+function defaultKVPostgresMaxConnections(embeddedWorker: boolean): number {
+	return Math.min(25, Math.max(4, (embeddedWorker ? 3 : 2) * availableParallelism()));
+}
+
 export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	if (!master.internal) {
 		throw new Error('internal configuration is required for the API');
@@ -382,6 +390,11 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		kv: {
 			url: master.internal.kv,
 			mode: master.internal.kv_mode,
+			postgresMaxConnections:
+				master.internal.kv_postgres?.max_connections ??
+				defaultKVPostgresMaxConnections(apiWorkerConfig?.embedded ?? false),
+			postgresMaxBytes:
+				master.internal.kv_postgres?.max_bytes ?? VALKEY_DEFAULT_MAXMEMORY_BYTES * KV_POSTGRES_ROW_OVERHEAD_FACTOR,
 		},
 		nats: {
 			coreUrl: master.services.nats?.core_url ?? 'nats://127.0.0.1:4222',
