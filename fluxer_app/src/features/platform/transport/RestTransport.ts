@@ -54,6 +54,11 @@ const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 	'webauthn_response',
 	'webauthn_challenge',
 ]);
+const SUDO_EMAIL_CODE_ERROR_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.INVALID_SIGN_IN_CODE,
+	APIErrorCodes.SIGN_IN_CODE_EXPIRED,
+	APIErrorCodes.UNKNOWN_SIGN_IN_TICKET,
+]);
 
 type RestMode = NonNullable<RestRequestOptions['mode']>;
 type PlanOptions = RestRequestOptions & {skipIntercept?: boolean};
@@ -320,9 +325,9 @@ async function runWithSudoEscalation<T>(
 	} catch (err) {
 		const sudo = state.sudo;
 		const sudoRequired = isSudoRequiredFailure(err);
-		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err);
+		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err, effective.body);
 		if (!sudo || (!sudoRequired && !sudoVerificationFailed)) {
-			if (sudoApplied) sudo?.onFailure(err);
+			if (sudoApplied) sudo?.onSettled();
 			throw err;
 		}
 		const reprompt = async (nextPhase: SudoPhase): Promise<RestResponse<T>> => {
@@ -353,7 +358,7 @@ async function runWithSudoEscalation<T>(
 				return reprompt('reissued-twice');
 			}
 			case 'reissued-twice': {
-				sudo.onFailure(err);
+				sudo.onSettled();
 				throw err;
 			}
 		}
@@ -366,10 +371,14 @@ function isSudoRequiredFailure(err: unknown): boolean {
 	return isRecord(body) && body.code === APIErrorCodes.SUDO_MODE_REQUIRED;
 }
 
-function isSudoVerificationFailure(err: unknown): boolean {
+function isSudoVerificationFailure(err: unknown, sentBody: unknown): boolean {
 	if (!(err instanceof HttpError) || err.status !== HttpStatus.BAD_REQUEST) return false;
 	const body = err.body;
-	if (!isRecord(body) || body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
+	if (!isRecord(body)) return false;
+	if (typeof body.code === 'string' && SUDO_EMAIL_CODE_ERROR_CODES.has(body.code)) {
+		return isRecord(sentBody) && sentBody.mfa_method === 'email_code';
+	}
+	if (body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
 	const errors = body.errors;
 	if (!Array.isArray(errors)) return false;
 	return errors.some((error) => {

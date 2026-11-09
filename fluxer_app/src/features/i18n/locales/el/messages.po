@@ -16896,6 +16896,11 @@ msgstr "Το Fluxer δεν μπόρεσε να συνδεθεί στο {host}. �
 msgid "Fluxer couldn't connect to {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
 msgstr "Το Fluxer δεν μπόρεσε να συνδεθεί με το {instanceName} για να ελέγξει αν ο περιηγητής σας ενέκρινε αυτήν τη σύνδεση. Ελέγξτε τη σύνδεσή σας και επιλέξτε «Δοκιμάστε ξανά»."
 
+#. Error shown in the desktop app when a passkey prompt starts but no security key is connected to the computer.
+#: src/features/auth/utils/PasskeyErrorMessages.ts
+msgid "Fluxer couldn't find a security key on this computer. Connect your security key and try again, or open Fluxer in your web browser and use your passkey there."
+msgstr "Το Fluxer δεν βρήκε κλειδί ασφαλείας σε αυτόν τον υπολογιστή. Συνδέστε το κλειδί ασφαλείας σας και δοκιμάστε ξανά ή ανοίξτε το Fluxer στο πρόγραμμα περιήγησής σας και χρησιμοποιήστε εκεί το κλειδί πρόσβασής σας."
+
 #. Name of the section in the Operator Pass settings tab about the Fluxer Labs community. Fluxer Labs is the name of a community, keep it as is.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "Fluxer Labs"
@@ -40670,6 +40675,11 @@ msgstr "Χρήση διαφορετικού λογαριασμού"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Use a different email"
 msgstr "Χρήση διαφορετικού email"
+
+#. Action label on the sign-in screen that starts sign-in with a passkey or security key registered on the old web address. host is that address, for example web.fluxer.app.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Use a passkey saved for {host}"
+msgstr "Χρήση κλειδιού πρόσβασης που έχει αποθηκευτεί για το {host}"
 
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Use a self-hosted instance URL"

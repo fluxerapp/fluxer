@@ -45,6 +45,7 @@ export interface SudoBindings {
 	invalidate: () => void;
 	prompt: (method: HttpMethod, path: string, triggeringFailure: unknown) => Promise<Record<string, unknown> | null>;
 	onFailure: (error: unknown) => void;
+	onSettled: () => void;
 }
 
 export interface RestClientHooks {
