@@ -119,6 +119,12 @@ export interface APIConfig {
 		postgresMaxConnections: number;
 		postgresMaxBytes: number;
 	};
+	storage: {
+		backend: 's3' | 'filesystem';
+		root: string;
+		uploadsTtlMs: number | null;
+		readOnly: boolean;
+	};
 	nats: {
 		coreUrl: string;
 		jetStreamUrl: string;

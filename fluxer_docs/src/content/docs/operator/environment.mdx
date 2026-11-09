@@ -109,6 +109,7 @@ The optional compose files change how Fluxer runs. To use one, list it after `do
 - `docker-compose.proxy.yml` for your own reverse proxy
 - `tunnel.compose.yml` for a tunnel
 - `external-object-store.compose.yml` for your own object store
+- `filesystem-object-store.compose.yml` for uploaded files kept as plain files in a volume instead of SeaweedFS
 - `kv-postgres.compose.yml` for cache, rate limit and queue data kept in Postgres instead of Valkey
 - `ipv6.compose.yml` for IPv6 on Fluxer's network
 - `external-voice.compose.yml` for voice servers of your own without the bundled LiveKit
@@ -415,7 +416,7 @@ The email address the voice edge gives Let's Encrypt for notices about its certi
 
 ## Object storage
 
-By default Fluxer keeps files in the bundled object store. To use your own S3-compatible store, set its address and buckets, add `external-object-store.compose.yml` to `COMPOSE_FILE` and put its keys in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
+By default Fluxer keeps files in the bundled object store. To keep them as plain files in a volume instead, add `filesystem-object-store.compose.yml` to `COMPOSE_FILE`. To use your own S3-compatible store, set its address and buckets, add `external-object-store.compose.yml` to `COMPOSE_FILE` and put its keys in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
 
 ### `FLUXER_S3_ENDPOINT`
 
@@ -496,6 +497,22 @@ How many rounds, about two seconds apart, the bundled object store's setup job t
 ### `FLUXER_SEAWEEDFS_UPLOADS_TTL`
 
 How long the bundled object store keeps files in the uploads bucket before it deletes them, such as `1d` or `12h`. Use `off` to keep them. A new value applies to uploads written after the next start, and files already stored keep their old expiry. The default is `1d`. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_UPLOADS_TTL`.
+
+### `FLUXER_STORAGE_BACKEND`
+
+filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint. Where Fluxer keeps uploaded files. `s3` uses the bundled SeaweedFS or the object store at `FLUXER_S3_ENDPOINT`. `filesystem` keeps them as plain files under `FLUXER_STORAGE_ROOT` and needs `FLUXER_S3_ENDPOINT` to be empty. When it's empty, Fluxer uses `s3`. With rexctl, use `rexctl config set storage.backend`.
+
+### `FLUXER_STORAGE_ROOT`
+
+The folder that holds the files when `FLUXER_STORAGE_BACKEND` is `filesystem`. The api, worker and media-proxy services must see the same folder. The api and worker log a warning when the disk that holds it has less than 10% of its inodes or space free, and refuse new uploads when it is almost full. With rexctl, use `rexctl config set FLUXER_STORAGE_ROOT`.
+
+### `FLUXER_STORAGE_UPLOADS_TTL`
+
+How long Fluxer keeps files in the uploads bucket when `FLUXER_STORAGE_BACKEND` is `filesystem`. Use a number followed by `m`, `h`, `d`, `w`, `M` for months or `y`, such as `1d`, or `off` to keep them. When it's empty, Fluxer uses `FLUXER_SEAWEEDFS_UPLOADS_TTL`, and `1d` when that is empty too. With rexctl, use `rexctl config set FLUXER_STORAGE_UPLOADS_TTL`.
+
+### `FLUXER_STORAGE_READ_ONLY`
+
+Whether the api and worker refuse to write or delete files. Use `true` or `false`. With rexctl, use `rexctl config set FLUXER_STORAGE_READ_ONLY`.
 
 ## Database
 
@@ -2022,6 +2039,10 @@ The domain the services build their addresses from, set from `FLUXER_DOMAIN`.
 
 The database the services use. Docker Compose sets it to `postgres`.
 
+### `UV_THREADPOOL_SIZE`
+
+The size of the libuv thread pool in the api and worker, which file reads and writes use when `FLUXER_STORAGE_BACKEND` is `filesystem`.
+
 ### `FLUXER_EDGE_TLS_DIRECTIVE`
 
 The tls line of the edge Caddyfile, set from `FLUXER_EDGE_TLS`.
@@ -2161,6 +2182,10 @@ The role the bundled Postgres creates on its first start, set from `FLUXER_POSTG
 ### `TOKIO_WORKER_THREADS`
 
 How many async worker threads the Rust services use, set from `FLUXER_TOKIO_WORKER_THREADS` or `FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS`.
+
+### `WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH`
+
+The longest name in bytes SeaweedFS accepts for one part of an object key. Docker Compose sets it to `1024`, the longest key S3 allows, so attachments with long file names upload. Docker Compose sets it to `1024`.
 
 ### `WEED_MASTER_VOLUME_GROWTH_COPY_1`
 

@@ -7,14 +7,21 @@ import {
 	MigrationUsageError,
 } from '@app/api/migrate/MigrationCli';
 import {
+	parseS3FilesystemArgs,
+	runS3FilesystemMigration,
+	STORAGE_MIGRATION_USAGE,
+} from '@app/api/migrate/S3FilesystemMigration';
+import {
 	KV_MIGRATION_USAGE,
 	parseValkeyPostgresArgs,
 	runValkeyPostgresMigration,
 } from '@app/api/migrate/ValkeyPostgresMigration';
 
-const USAGE = `usage: MigrateEntrypoint <kv> [flags]
+const USAGE = `usage: MigrateEntrypoint <kv|storage> [flags]
 
-${KV_MIGRATION_USAGE}`;
+${KV_MIGRATION_USAGE}
+
+${STORAGE_MIGRATION_USAGE}`;
 
 async function initialize(): Promise<void> {
 	const [{initializeConfig}, {initializeLogger}, {Config}, {Logger}] = await Promise.all([
@@ -40,6 +47,13 @@ async function main(argv: ReadonlyArray<string>): Promise<MigrateExitCode> {
 				const options = parseValkeyPostgresArgs(rest);
 				await initialize();
 				const report = await runValkeyPostgresMigration(options, output);
+				output.report(report);
+				return report.verified ? MIGRATE_EXIT.ok : MIGRATE_EXIT.mismatch;
+			}
+			case 'storage': {
+				const options = parseS3FilesystemArgs(rest, process.env);
+				await initialize();
+				const report = await runS3FilesystemMigration(options, output);
 				output.report(report);
 				return report.verified ? MIGRATE_EXIT.ok : MIGRATE_EXIT.mismatch;
 			}

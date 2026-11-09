@@ -17,6 +17,9 @@ import (
 )
 
 func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (map[string]string, error) {
+	if err := CheckCombination(chosen); err != nil {
+		return nil, err
+	}
 	env := map[string]string{}
 	reads := func(v string) bool { return slices.Contains(set.Vars, v) }
 	put := func(v, value string) {

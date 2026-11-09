@@ -39,7 +39,11 @@ const INPUT_NAMES: Record<string, string> = {
 const OWN_POOL_SIZES = new Set(['api', 'worker', 'users', 'messages']);
 const OBJECT_STORE_CREDENTIALS = ['FLUXER_S3_ACCESS_KEY', 'FLUXER_S3_SECRET_KEY'];
 const OBJECT_STORE_CLIENTS = ['api', 'worker', 'media-proxy'];
+const FILESYSTEM_OBJECT_STORE_OVERLAY = 'filesystem-object-store.compose.yml';
 const KV_POSTGRES_OVERLAY = 'kv-postgres.compose.yml';
+const OBJECTS_VOLUME = 'objects-data';
+const MEDIA_PROXY_GROUP = '10001';
+const ROOT_USERS = new Set(['0', 'root', '0:0', 'root:root']);
 const KV_CLIENTS = ['api', 'worker', 'gateway'];
 
 const problems: Array<string> = [];
@@ -78,6 +82,18 @@ function inactive(service: ConfigObject): boolean {
 
 function dependency(service: ConfigObject, name: string): unknown {
 	return mapping(service.depends_on)[name];
+}
+
+function mountTargets(service: ConfigObject, volume: string): Array<string> {
+	const volumes = Array.isArray(service.volumes) ? service.volumes : [];
+	return volumes.flatMap((entry) => {
+		if (typeof entry === 'string') {
+			const [source, target] = entry.split(':');
+			return source === volume && target ? [target] : [];
+		}
+		const long = mapping(entry);
+		return long.source === volume && typeof long.target === 'string' ? [long.target] : [];
+	});
 }
 
 function checkHelmChart(): void {
@@ -167,6 +183,54 @@ function checkComposeForwarding(): void {
 	}
 }
 
+function checkFilesystemObjectStoreOverlay(): void {
+	const file = FILESYSTEM_OBJECT_STORE_OVERLAY;
+	const overlay = composeServices(file);
+	if (overlay === null) {
+		return;
+	}
+	const {service} = overlay;
+	checkForwarding(file, overlay.names, service);
+	for (const name of ['seaweedfs', 'seaweedfs-init']) {
+		if (!inactive(service(name))) {
+			problems.push(`${file} must move ${name} into a profile`);
+		}
+	}
+	const init = service('objects-init');
+	if (!overlay.names.includes('objects-init') || inactive(init)) {
+		problems.push(`${file} must run objects-init`);
+	} else if (!ROOT_USERS.has(String(init.user))) {
+		problems.push(`${file}: objects-init must run as root to create the folders`);
+	}
+	for (const name of OBJECT_STORE_CLIENTS) {
+		const client = service(name);
+		if (dependency(client, 'seaweedfs-init') !== null) {
+			problems.push(`${file}: ${name} must reset its seaweedfs-init dependency`);
+		}
+		if (mapping(dependency(client, 'objects-init')).condition !== 'service_completed_successfully') {
+			problems.push(`${file}: ${name} must wait for objects-init to complete successfully`);
+		}
+		const rootKey = name === 'media-proxy' ? 'FLUXER_MEDIA_PROXY_STORAGE_ROOT' : 'FLUXER_STORAGE_ROOT';
+		const root = environmentOf(client)[rootKey];
+		if (root === undefined || !mountTargets(client, OBJECTS_VOLUME).includes(root)) {
+			problems.push(`${file}: ${name} must mount ${OBJECTS_VOLUME} at its ${rootKey}`);
+		}
+	}
+	for (const name of ['api', 'worker']) {
+		const client = service(name);
+		if (environmentOf(client).FLUXER_STORAGE_BACKEND !== 'filesystem') {
+			problems.push(`${file}: ${name} must set FLUXER_STORAGE_BACKEND to filesystem`);
+		}
+		const groups = Array.isArray(client.group_add) ? client.group_add.map(String) : [];
+		if (!groups.includes(MEDIA_PROXY_GROUP)) {
+			problems.push(`${file}: ${name} must join group ${MEDIA_PROXY_GROUP} to write the files media-proxy owns`);
+		}
+	}
+	if (environmentOf(service('media-proxy')).FLUXER_MEDIA_PROXY_STORAGE_BACKEND !== 'local') {
+		problems.push(`${file}: media-proxy must set FLUXER_MEDIA_PROXY_STORAGE_BACKEND to local`);
+	}
+}
+
 function checkKVPostgresOverlay(): void {
 	const file = KV_POSTGRES_OVERLAY;
 	const overlay = composeServices(file);
@@ -192,6 +256,7 @@ function checkKVPostgresOverlay(): void {
 
 checkHelmChart();
 checkComposeForwarding();
+checkFilesystemObjectStoreOverlay();
 checkKVPostgresOverlay();
 
 if (problems.length > 0) {

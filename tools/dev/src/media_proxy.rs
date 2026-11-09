@@ -117,6 +117,7 @@ fn start_dev_seaweedfs() -> Result<()> {
         .env("AWS_ACCESS_KEY_ID", DEV_S3_ACCESS_KEY_ID)
         .env("AWS_SECRET_ACCESS_KEY", DEV_S3_SECRET_ACCESS_KEY)
         .env("S3_BUCKET", DEV_S3_BUCKETS)
+        .env("WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH", "1024")
         .stdin(Stdio::null())
         .stdout(Stdio::from(log))
         .stderr(Stdio::from(stderr))

@@ -50,7 +50,7 @@ var logParts = []logPart{
 	{"push", []string{"push"}},
 	{"database", []string{"postgres"}},
 	{"search", []string{"meilisearch"}},
-	{"storage", []string{"seaweedfs", "seaweedfs-init"}},
+	{"storage", []string{"seaweedfs", "seaweedfs-init", stack.ObjectsInitService}},
 	{"cache", []string{"valkey"}},
 	{"queue", []string{"nats"}},
 	{"internal", []string{"snowflakes", "users", "gifs", "messages", "unfurl"}},

@@ -6,6 +6,8 @@ type RuntimeEnv = 'development' | 'production' | 'test';
 type DatabaseBackend = 'postgres' | 'cassandra';
 export const KV_MODE_NAMES = ['standalone', 'cluster', 'postgres'] as const;
 type KVModeName = (typeof KV_MODE_NAMES)[number];
+export const STORAGE_BACKEND_NAMES = ['s3', 'filesystem'] as const;
+type StorageBackendName = (typeof STORAGE_BACKEND_NAMES)[number];
 type PublicScheme = 'http' | 'https';
 export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http', 'controller'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
@@ -95,6 +97,12 @@ export interface MasterConfig {
 			kv_table: string;
 			prepared_statements: boolean;
 		};
+	};
+	storage: {
+		backend: StorageBackendName;
+		root: string;
+		uploads_ttl: string;
+		read_only: boolean;
 	};
 	s3?: {
 		endpoint: string;

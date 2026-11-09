@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
 const (
@@ -45,7 +47,6 @@ const (
 const (
 	ScopeFull           = "full"
 	ScopeWithoutUploads = "without-uploads"
-	UploadsVolume       = "seaweedfs-data"
 )
 
 var (
@@ -77,6 +78,7 @@ type Manifest struct {
 }
 
 type UploadsRef struct {
+	Short      string `json:"short,omitempty"`
 	Volume     string `json:"volume,omitempty"`
 	CreatedAt  string `json:"created_at,omitempty"`
 	Bind       string `json:"bind,omitempty"`
@@ -87,6 +89,17 @@ type UploadsRef struct {
 
 func (m *Manifest) WithoutUploads() bool {
 	return m.Scope == ScopeWithoutUploads
+}
+
+func (u *UploadsRef) VolumeShort() string {
+	if u == nil || u.Short == "" {
+		return stack.SeaweedFSVolume
+	}
+	return u.Short
+}
+
+func uploadsVolume(short string) bool {
+	return short == stack.SeaweedFSVolume || short == stack.ObjectsVolume
 }
 
 func (m *Manifest) HasSkipped(what string) bool {

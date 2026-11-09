@@ -67,16 +67,22 @@ const (
 	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
+	StorageBackend  = "storage.backend"
 	KVMode          = "kv.mode"
 )
 
 const (
-	KVStandalone = "standalone"
-	KVCluster    = "cluster"
-	KVPostgres   = "postgres"
+	StorageS3         = "s3"
+	StorageFilesystem = "filesystem"
+	KVStandalone      = "standalone"
+	KVCluster         = "cluster"
+	KVPostgres        = "postgres"
 )
 
-const KVPostgresOverlayFile = "kv-postgres.compose.yml"
+const (
+	FilesystemObjectOverlayFile = "filesystem-object-store.compose.yml"
+	KVPostgresOverlayFile       = "kv-postgres.compose.yml"
+)
 
 const (
 	EdgeBundled = "bundled"
@@ -182,6 +188,9 @@ func buildNamed() []Key {
 			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
+		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: FilesystemObjectOverlayFile,
+			Confirm: migrateConfirm,
+			Help:    "filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint"},
 		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: KVPostgresOverlayFile,
 			Confirm: migrateConfirm,
 			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},
@@ -338,4 +347,13 @@ func generatedStateful(name string) bool {
 		}
 	}
 	return false
+}
+
+func CheckCombination(chosen map[string]string) error {
+	if strings.TrimSpace(chosen[StorageBackend]) == StorageFilesystem && strings.TrimSpace(chosen[StorageEndpoint]) != "" {
+		return &Error{Key: StorageBackend,
+			Problem: "storage.backend filesystem keeps files on this machine, and storage.endpoint points at another object store.",
+			Fix:     "Run rexctl config unset storage.endpoint, or rexctl config set storage.backend s3."}
+	}
+	return nil
 }

@@ -21,6 +21,7 @@ import {OperatorPassRateLimitConfigs} from '@app/api/rate_limit_configs/Operator
 import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
 import {trimTrailingSlash} from '@app/api/utils/UrlUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {parseUploadsTtlMs} from '@fluxer/config/src/ConfigLoader';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {EmailDeliveryModes} from '@fluxer/constants/src/AccountConfigConstants';
 import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
@@ -319,6 +320,14 @@ function defaultKVPostgresMaxConnections(embeddedWorker: boolean): number {
 	return Math.min(25, Math.max(4, (embeddedWorker ? 3 : 2) * availableParallelism()));
 }
 
+function buildStorageConfig(master: MasterConfig): APIConfig['storage'] {
+	const {backend, root, uploads_ttl, read_only} = master.storage;
+	if (backend === 's3') {
+		return {backend, root: '', uploadsTtlMs: null, readOnly: read_only};
+	}
+	return {backend, root, uploadsTtlMs: parseUploadsTtlMs(uploads_ttl), readOnly: read_only};
+}
+
 export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	if (!master.internal) {
 		throw new Error('internal configuration is required for the API');
@@ -327,6 +336,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	const postgresSource = master.database.postgres;
 	const apiWorkerConfig = master.services.api?.worker;
 	const s3Config = master.s3;
+	const storage = buildStorageConfig(master);
 	const geoipSourceConfig = resolveGeoipRuntimeSourceConfig(parseGeoipSourceConfig(master.geoip.maxmind_db_path), {
 		serviceName: 'api',
 	});
@@ -401,6 +411,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			jetStreamUrl: master.services.nats?.jetstream_url ?? 'nats://127.0.0.1:4223',
 			authToken: master.services.nats?.auth_token ?? '',
 		},
+		storage,
 		storageChangeFeed: {
 			enabled: master.services.api.storage_change_feed?.enabled ?? false,
 			stream: master.services.api.storage_change_feed?.stream ?? 'STORAGE_CHANGES',
@@ -648,7 +659,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			validateResponses: resolveValidateResponses(master),
 		},
 		presignedAttachmentUploadsEnabled: master.services.api.presigned_attachment_uploads_enabled ?? false,
-		presignedHarvestDownloadsEnabled: master.services.api.presigned_harvest_downloads_enabled ?? true,
+		presignedHarvestDownloadsEnabled:
+			storage.backend === 's3' && (master.services.api.presigned_harvest_downloads_enabled ?? true),
 		attachmentDecayEnabled: master.attachment_decay_enabled,
 		deletionGracePeriodHours: master.dev.test_mode_enabled ? 0.01 : master.deletion_grace_period_hours,
 		inactivityDeletionThresholdDays: master.inactivity_deletion_threshold_days,
