@@ -9,6 +9,7 @@ members = [
 	"fluxer_messages",
 	"fluxer_push",
 	"fluxer_snowflakes",
+	"fluxer_server",
 	"tools/ci",
 	"tools/dev",
 	"fluxer_users",

@@ -106,7 +106,11 @@ pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest:
     let mut builder = reqwest::Client::builder()
         .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(crate::constants::OUTBOUND_USER_AGENT);
+        .user_agent(crate::constants::OUTBOUND_USER_AGENT)
+        .no_gzip()
+        .no_brotli()
+        .no_zstd()
+        .no_deflate();
     if let Some(request_timeout_ms) = options.request_timeout_ms {
         builder = builder.timeout(Duration::from_millis(request_timeout_ms.get()));
     }

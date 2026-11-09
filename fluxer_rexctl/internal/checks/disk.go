@@ -355,18 +355,25 @@ func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string
 		chosen = func(string) string { return "" }
 	}
 	modes := map[string]string{}
-	for _, k := range []string{settings.StorageBackend, settings.KVMode} {
+	for _, k := range []string{settings.RustProcess, settings.StorageBackend, settings.KVMode} {
 		modes[k] = chosen(k)
 	}
 	external := run.ExternalStore || stack.FilesystemStorage(modes)
+	single := stack.RustSingle(modes)
+	images := stack.ComposeImages(compose)
+	if single {
+		images[stack.RustService] = "${FLUXER_REGISTRY}"
+	}
 	var out []string
-	for svc, value := range stack.ComposeImages(compose) {
+	for svc, value := range images {
 		switch {
 		case svc == "livekit" && !run.Voice:
 			continue
 		case (svc == "seaweedfs" || svc == "seaweedfs-init") && external:
 			continue
 		case svc == "valkey" && stack.KVPostgres(modes):
+			continue
+		case stack.RunsIn(svc, single) != svc:
 			continue
 		}
 		ref := imageFor(svc, value, fluxer, chosen)

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub use fluxer_common::config::env_value as optional_env;
-
+use fluxer_common::config::EnvMap;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
@@ -37,6 +36,7 @@ pub struct ServiceConfig {
     pub postgres_max_connections: usize,
     pub postgres_kv_table: String,
     pub postgres_prepared_statements: bool,
+    pub build_version: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,21 +82,17 @@ impl ServiceConfig {
             postgres_max_connections: 1,
             postgres_kv_table: "fluxer_kv".to_owned(),
             postgres_prepared_statements: true,
+            build_version: "dev".to_owned(),
         }
     }
 
-    pub fn from_env() -> anyhow::Result<Self> {
-        Self::from_env_reader(fluxer_common::config::env_value)
-    }
+    pub fn from_env_map(env: &EnvMap) -> anyhow::Result<Self> {
+        let service_name = env
+            .value("FLUXER_SVC_NAME")
+            .unwrap_or_else(|| "default".to_owned());
 
-    fn from_env_reader<F>(get: F) -> anyhow::Result<Self>
-    where
-        F: Fn(&str) -> Option<String>,
-    {
-        let service_name =
-            optional_from(&get, "FLUXER_SVC_NAME").unwrap_or_else(|| "default".to_owned());
-
-        let database_backend = match optional_from(&get, "FLUXER_DATABASE_BACKEND")
+        let database_backend = match env
+            .value("FLUXER_DATABASE_BACKEND")
             .unwrap_or_else(|| "postgres".to_owned())
             .trim()
             .to_ascii_lowercase()
@@ -107,22 +103,22 @@ impl ServiceConfig {
             other => anyhow::bail!("unsupported FLUXER_DATABASE_BACKEND: {other}"),
         };
 
-        let mode = match optional_from(&get, "FLUXER_SVC_MODE").as_deref() {
+        let mode = match env.value("FLUXER_SVC_MODE").as_deref() {
             None | Some("router") => Mode::Router,
             Some("shard") => Mode::Shard,
             Some("combined") => Mode::Combined,
             Some(other) => anyhow::bail!("unsupported FLUXER_SVC_MODE: {other}"),
         };
 
-        let shard_count = optional_from(&get, "FLUXER_SVC_SHARD_COUNT")
+        let shard_count = env
+            .value("FLUXER_SVC_SHARD_COUNT")
             .map(|v| v.parse::<u32>())
             .transpose()?
             .unwrap_or(1);
 
-        let shard_id = match optional_from(&get, "FLUXER_SVC_SHARD_ID") {
+        let shard_id = match env.value("FLUXER_SVC_SHARD_ID") {
             Some(v) => v.parse::<u32>()?,
-            None => shard_id_from_pod_name(&optional_from(&get, "POD_NAME").unwrap_or_default())
-                .unwrap_or(0),
+            None => shard_id_from_pod_name(&env.value("POD_NAME").unwrap_or_default()).unwrap_or(0),
         };
 
         if shard_id >= shard_count {
@@ -131,30 +127,36 @@ impl ServiceConfig {
             );
         }
 
-        let listen_host =
-            optional_from(&get, "FLUXER_SVC_LISTEN_HOST").unwrap_or_else(|| "0.0.0.0".to_owned());
-        let listen_port = optional_from(&get, "FLUXER_SVC_PORT")
+        let listen_host = env
+            .value("FLUXER_SVC_LISTEN_HOST")
+            .unwrap_or_else(|| "0.0.0.0".to_owned());
+        let listen_port = env
+            .value("FLUXER_SVC_PORT")
             .map(|v| v.parse::<u16>())
             .transpose()?
             .unwrap_or(8090);
 
-        let nats_url = optional_from(&get, "FLUXER_SVC_NATS_URL")
+        let nats_url = env
+            .value("FLUXER_SVC_NATS_URL")
             .unwrap_or_else(|| "nats://127.0.0.1:4222".to_owned());
 
-        let nats_auth_token = optional_from(&get, "FLUXER_NATS_AUTH_TOKEN");
+        let nats_auth_token = env.value("FLUXER_NATS_AUTH_TOKEN");
 
-        let cache_ttl_ms = optional_from(&get, "FLUXER_SVC_CACHE_TTL_MS")
+        let cache_ttl_ms = env
+            .value("FLUXER_SVC_CACHE_TTL_MS")
             .map(|v| v.parse::<u64>())
             .transpose()?
             .unwrap_or(30_000);
 
-        let cassandra_port = optional_from(&get, "FLUXER_CASSANDRA_PORT")
+        let cassandra_port = env
+            .value("FLUXER_CASSANDRA_PORT")
             .map(|v| v.parse::<u16>())
             .transpose()?
             .unwrap_or(9042);
 
         let default_scylla_hosts = || vec![normalize_host("127.0.0.1", cassandra_port)];
-        let scylla_hosts = optional_from(&get, "FLUXER_CASSANDRA_HOSTS")
+        let scylla_hosts = env
+            .value("FLUXER_CASSANDRA_HOSTS")
             .map(|hosts| {
                 parse_hosts(&hosts)
                     .into_iter()
@@ -164,26 +166,30 @@ impl ServiceConfig {
             .filter(|hosts| !hosts.is_empty())
             .unwrap_or_else(default_scylla_hosts);
 
-        let postgres_port = optional_from(&get, "FLUXER_POSTGRES_PORT")
+        let postgres_port = env
+            .value("FLUXER_POSTGRES_PORT")
             .map(|v| v.parse::<u16>())
             .transpose()?
             .unwrap_or(5432);
-        let postgres_ssl = optional_from(&get, "FLUXER_POSTGRES_SSL")
+        let postgres_ssl = env
+            .value("FLUXER_POSTGRES_SSL")
             .map(|v| parse_bool(&v))
             .transpose()?
             .unwrap_or(false);
-        let postgres_max_connections = optional_from(&get, "FLUXER_POSTGRES_MAX_CONNECTIONS")
+        let postgres_max_connections = env
+            .value("FLUXER_POSTGRES_MAX_CONNECTIONS")
             .map(|v| v.parse::<usize>())
             .transpose()?
             .unwrap_or(20)
             .max(1);
-        let postgres_prepared_statements =
-            optional_from(&get, "FLUXER_POSTGRES_PREPARED_STATEMENTS")
-                .map(|v| parse_bool(&v))
-                .transpose()?
-                .unwrap_or(true);
+        let postgres_prepared_statements = env
+            .value("FLUXER_POSTGRES_PREPARED_STATEMENTS")
+            .map(|v| parse_bool(&v))
+            .transpose()?
+            .unwrap_or(true);
 
-        let max_concurrent_requests = optional_from(&get, "FLUXER_SVC_MAX_CONCURRENT_REQUESTS")
+        let max_concurrent_requests = env
+            .value("FLUXER_SVC_MAX_CONCURRENT_REQUESTS")
             .map(|v| v.parse::<usize>())
             .transpose()?
             .unwrap_or_else(|| default_max_concurrent_requests(&service_name))
@@ -198,33 +204,41 @@ impl ServiceConfig {
             listen_addr: format!("{listen_host}:{listen_port}").parse()?,
             nats_url,
             nats_auth_token,
-            cache_max_entries: optional_from(&get, "FLUXER_SVC_CACHE_MAX_ENTRIES")
+            cache_max_entries: env
+                .value("FLUXER_SVC_CACHE_MAX_ENTRIES")
                 .map(|v| v.parse::<u64>())
                 .transpose()?
                 .unwrap_or(100_000),
             cache_ttl: Duration::from_millis(cache_ttl_ms),
             max_concurrent_requests,
             scylla_hosts,
-            scylla_keyspace: optional_from(&get, "FLUXER_CASSANDRA_KEYSPACE")
+            scylla_keyspace: env
+                .value("FLUXER_CASSANDRA_KEYSPACE")
                 .unwrap_or_else(|| "fluxer".to_owned()),
-            scylla_username: optional_from(&get, "FLUXER_CASSANDRA_USERNAME"),
-            scylla_password: optional_from(&get, "FLUXER_CASSANDRA_PASSWORD"),
-            postgres_url: optional_from(&get, "FLUXER_POSTGRES_URL"),
-            postgres_host: optional_from(&get, "FLUXER_POSTGRES_HOST")
+            scylla_username: env.value("FLUXER_CASSANDRA_USERNAME"),
+            scylla_password: env.value("FLUXER_CASSANDRA_PASSWORD"),
+            postgres_url: env.value("FLUXER_POSTGRES_URL"),
+            postgres_host: env
+                .value("FLUXER_POSTGRES_HOST")
                 .unwrap_or_else(|| "127.0.0.1".to_owned()),
             postgres_port,
-            postgres_database: optional_from(&get, "FLUXER_POSTGRES_DATABASE")
+            postgres_database: env
+                .value("FLUXER_POSTGRES_DATABASE")
                 .unwrap_or_else(|| "fluxer".to_owned()),
-            postgres_username: optional_from(&get, "FLUXER_POSTGRES_USERNAME")
+            postgres_username: env
+                .value("FLUXER_POSTGRES_USERNAME")
                 .unwrap_or_else(|| "fluxer".to_owned()),
-            postgres_password: optional_from(&get, "FLUXER_POSTGRES_PASSWORD")
+            postgres_password: env
+                .value("FLUXER_POSTGRES_PASSWORD")
                 .or_else(|| Some("fluxer".to_owned())),
             postgres_ssl,
-            postgres_ssl_ca: optional_from(&get, "FLUXER_POSTGRES_SSL_CA"),
+            postgres_ssl_ca: env.value("FLUXER_POSTGRES_SSL_CA"),
             postgres_max_connections,
-            postgres_kv_table: optional_from(&get, "FLUXER_POSTGRES_KV_TABLE")
+            postgres_kv_table: env
+                .value("FLUXER_POSTGRES_KV_TABLE")
                 .unwrap_or_else(|| "fluxer_kv".to_owned()),
             postgres_prepared_statements,
+            build_version: env.read("BUILD_VERSION", "dev"),
         })
     }
 }
@@ -235,13 +249,6 @@ fn default_max_concurrent_requests(service_name: &str) -> usize {
         "snowflakes" => SNOWFLAKES_MAX_CONCURRENT_REQUESTS,
         _ => DEFAULT_MAX_CONCURRENT_REQUESTS,
     }
-}
-
-fn optional_from<F>(get: &F, name: &str) -> Option<String>
-where
-    F: Fn(&str) -> Option<String>,
-{
-    get(name).filter(|v| !v.trim().is_empty())
 }
 
 pub fn parse_hosts(hosts: &str) -> Vec<String> {

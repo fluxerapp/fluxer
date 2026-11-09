@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError, watch};
 use tokio::task::JoinSet;
-use tracing::{error, info, warn};
+use tracing::{Instrument as _, error, info, warn};
 
 const JOB_REPLY_DEADLINE: Duration = Duration::from_secs(90);
 const RING_JOB_DEADLINE: Duration = Duration::from_secs(10);
@@ -279,16 +279,19 @@ async fn run_subject<T: Transport>(
             let job_state = Arc::clone(&state);
             let job_sends = Arc::clone(&sends);
             let job_transport = transport.clone();
-            running.spawn(async move {
-                let _permit = permit;
-                let result = run_job(&job_state, &job_sends, job).await;
-                if matches!(result, Answer::Done) {
-                    for claim in claims {
-                        claim.done();
+            running.spawn(
+                async move {
+                    let _permit = permit;
+                    let result = run_job(&job_state, &job_sends, job).await;
+                    if matches!(result, Answer::Done) {
+                        for claim in claims {
+                            claim.done();
+                        }
                     }
+                    answer(&job_transport, reply_to, result).await;
                 }
-                answer(&job_transport, reply_to, result).await;
-            });
+                .in_current_span(),
+            );
         }
     }
 

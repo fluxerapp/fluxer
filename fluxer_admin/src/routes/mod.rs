@@ -59,8 +59,8 @@ const IMMUTABLE_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
 const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(), geolocation=(), \
     gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
 
-pub fn build_router(config: AdminConfig) -> Router {
-    let state = AppState::new(config);
+pub fn build_router(config: AdminConfig) -> anyhow::Result<Router> {
+    let state = AppState::try_new(config)?;
     let protected = Router::new()
         .merge(users::router())
         .merge(guilds::router())
@@ -97,7 +97,7 @@ pub fn build_router(config: AdminConfig) -> Router {
             middleware::auth::require_auth,
         ));
 
-    Router::new()
+    Ok(Router::new()
         .route("/_health", get(health))
         .route("/robots.txt", get(robots_txt))
         .route("/static/app.css", get(app_css))
@@ -116,7 +116,7 @@ pub fn build_router(config: AdminConfig) -> Router {
                 .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
         )
         .layer(TraceLayer::new_for_http())
-        .with_state(state)
+        .with_state(state))
 }
 
 async fn security_headers_middleware(

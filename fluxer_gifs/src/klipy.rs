@@ -143,6 +143,10 @@ impl KlipyClient {
         let http_client = reqwest::Client::builder()
             .user_agent(FLUXER_USER_AGENT)
             .timeout(Duration::from_secs(30))
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
+            .http1_only()
             .build()
             .context("failed to build KLIPY HTTP client")?;
         Ok(Self {

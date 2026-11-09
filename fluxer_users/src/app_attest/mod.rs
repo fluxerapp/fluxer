@@ -4,7 +4,7 @@ pub mod service;
 pub mod store;
 pub mod verifier;
 
-use fluxer_svc::config::optional_env;
+use fluxer_common::config::EnvMap;
 use serde::{Deserialize, Serialize};
 
 const APP_IDS_ENV: &str = "FLUXER_APP_ATTEST_APP_IDS";
@@ -18,11 +18,8 @@ pub struct AppAttestConfig {
 }
 
 impl AppAttestConfig {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Self::parse(
-            optional_env(APP_IDS_ENV).as_deref(),
-            optional_env(ALLOW_DEVELOPMENT_ENV).as_deref(),
-        )
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        Self::parse(env.get(APP_IDS_ENV), env.get(ALLOW_DEVELOPMENT_ENV))
     }
 
     pub fn parse(app_ids: Option<&str>, allow_development: Option<&str>) -> anyhow::Result<Self> {

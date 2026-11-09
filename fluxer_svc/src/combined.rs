@@ -10,6 +10,7 @@ use crate::transport::{Transport, TransportMessage, reply_bytes, reply_json_erro
 use bytes::Bytes;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tokio_util::sync::CancellationToken;
 use tracing::warn;
 
 #[derive(Debug)]
@@ -40,6 +41,7 @@ pub async fn run_combined<R, S>(
     router: R,
     shard: S,
     transport: impl Transport,
+    shutdown: CancellationToken,
 ) -> anyhow::Result<()>
 where
     R: RouterService,
@@ -81,7 +83,7 @@ where
                 handler_metrics.clone(),
             )
         },
-        crate::shutdown::wait_for_shutdown(),
+        shutdown,
     )
     .await
 }

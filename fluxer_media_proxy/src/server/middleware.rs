@@ -125,7 +125,10 @@ pub(in crate::server) fn build_version() -> &'static str {
     static BUILD_VERSION: OnceLock<String> = OnceLock::new();
     BUILD_VERSION
         .get_or_init(|| {
-            fluxer_common::config::env_value("BUILD_VERSION").unwrap_or_else(|| "dev".to_owned())
+            fluxer_common::config::EnvMap::from_process()
+                .ok()
+                .and_then(|env| env.value("BUILD_VERSION"))
+                .unwrap_or_else(|| "dev".to_owned())
         })
         .as_str()
 }

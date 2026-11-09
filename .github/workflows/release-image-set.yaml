@@ -197,6 +197,10 @@ jobs:
               builds[service] = versions[component]
           if not services or len(services) != compose.count("\n    image: "):
               sys.exit("could not map every service in the compose override to an image")
+          if "fluxer-server" not in images:
+              sys.exit("the manifest has no fluxer-server image for the rust service in rust-server.compose.yml")
+          services["rust"] = images["fluxer-server"]
+          builds["rust"] = versions["fluxer-server"]
           with open("fluxer_rexctl/internal/stack/imageset.json", "w") as f:
               json.dump({"release": version, "images": dict(sorted(services.items())), "builds": dict(sorted(builds.items()))}, f, indent=2)
               f.write("\n")

@@ -36,6 +36,7 @@ const (
 	OverlayExternalObjectStore Overlay = "external-object-store"
 	OverlayFilesystemStore     Overlay = "filesystem-object-store"
 	OverlayKVPostgres          Overlay = "kv-postgres"
+	OverlayRustServer          Overlay = "rust-server"
 	OverlayIPv6                Overlay = "ipv6"
 	OverlayExternalVoice       Overlay = "external-voice"
 )
@@ -46,13 +47,14 @@ var OverlayFiles = map[Overlay]string{
 	OverlayExternalObjectStore: "external-object-store.compose.yml",
 	OverlayFilesystemStore:     "filesystem-object-store.compose.yml",
 	OverlayKVPostgres:          "kv-postgres.compose.yml",
+	OverlayRustServer:          "rust-server.compose.yml",
 	OverlayIPv6:                "ipv6.compose.yml",
 	OverlayExternalVoice:       "external-voice.compose.yml",
 }
 
 var overlayOrder = []Overlay{
 	OverlayProxy, OverlayTunnel, OverlayExternalObjectStore, OverlayFilesystemStore,
-	OverlayKVPostgres, OverlayIPv6, OverlayExternalVoice,
+	OverlayKVPostgres, OverlayRustServer, OverlayIPv6, OverlayExternalVoice,
 }
 
 var MountedFiles = map[string][]string{
@@ -123,6 +125,9 @@ func OverlaysFor(settings map[string]string) []Overlay {
 	}
 	if KVPostgres(settings) {
 		out = append(out, OverlayKVPostgres)
+	}
+	if RustSingle(settings) {
+		out = append(out, OverlayRustServer)
 	}
 	if on, err := strconv.ParseBool(strings.TrimSpace(settings["network.ipv6"])); err == nil && on {
 		out = append(out, OverlayIPv6)
@@ -240,11 +245,18 @@ func renderFiles(set *Set, selected []Overlay, images map[string]string, project
 		return nil, nil, err
 	}
 	out := []renderedFile{{ComposeFile, compose}, {Caddyfile, caddy}}
+	before := [][]byte{compose}
 	for _, o := range overlays {
 		data, err := ReadFile(set, OverlayFiles[o])
 		if err != nil {
 			return nil, nil, err
 		}
+		if o == OverlayRustServer {
+			if data, err = renderRustOverlay(data, before); err != nil {
+				return nil, nil, err
+			}
+		}
+		before = append(before, data)
 		if set.Release != LegacyRelease {
 			if data, err = pinImages(data, set.Release, images); err != nil {
 				return nil, nil, err

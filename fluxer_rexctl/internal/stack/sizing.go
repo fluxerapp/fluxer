@@ -46,8 +46,10 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 
 	c := hw.CPUs
 	small := min(c, clamp((c+3)/4, 2, 4))
+	wide := min(c, clamp((c+1)/2, 2, 8))
 	setInt(out, "FLUXER_TOKIO_WORKER_THREADS", small)
-	setInt(out, "FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS", min(c, clamp((c+1)/2, 2, 8)))
+	setInt(out, "FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS", wide)
+	setInt(out, RustWorkerThreadsVar, wide)
 	setInt(out, "FLUXER_MALLOC_ARENA_MAX", max(2, small))
 	embedded := embeddedWorker(hw, fixed)
 	kv := kvPostgres(fixed)
@@ -107,7 +109,9 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 	media := share("FLUXER_MEDIA_PROXY_MEMORY_LIMIT", 8, 320, 1024)
 	setBytes(out, "FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_BYTES", media/8)
 	setBytes(out, "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES", media/4)
-	setBytes(out, "FLUXER_GIFS_SHARD_CACHE_MAX_BYTES", min(clamp(m/64, 64, 128), size("FLUXER_GIFS_MEMORY_LIMIT", 256)/2))
+	gifsCache := min(clamp(m/64, 64, 128), size("FLUXER_GIFS_MEMORY_LIMIT", 256)/2)
+	setBytes(out, "FLUXER_GIFS_SHARD_CACHE_MAX_BYTES", gifsCache)
+	out[RustMemoryLimitVar] = strconv.Itoa(clamp(m*6/100, 384, 1536)+gifsCache) + "mb"
 
 	out["FLUXER_LIVEKIT_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_LIVEKIT_MEMORY_LIMIT", 6, 320, 2048)*85/100) + "MiB"
 	out["FLUXER_NATS_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_NATS_MEMORY_LIMIT", 3, 192, 1024)*4/5) + "MiB"
@@ -147,9 +151,11 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 const EmbeddedWorkerVar = "FLUXER_API_EMBEDDED_WORKER"
 
 const (
-	KVPoolVar     = "FLUXER_KV_POSTGRES_MAX_CONNECTIONS"
-	KVMaxBytesVar = "FLUXER_KV_POSTGRES_MAX_BYTES"
-	kvRowOverhead = 4
+	RustWorkerThreadsVar = "FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS"
+	RustMemoryLimitVar   = "FLUXER_RUST_MEMORY_LIMIT"
+	KVPoolVar            = "FLUXER_KV_POSTGRES_MAX_CONNECTIONS"
+	KVMaxBytesVar        = "FLUXER_KV_POSTGRES_MAX_BYTES"
+	kvRowOverhead        = 4
 )
 
 func kvPostgres(fixed map[string]string) bool {
