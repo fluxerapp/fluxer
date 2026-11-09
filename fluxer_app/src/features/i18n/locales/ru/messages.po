@@ -33107,15 +33107,10 @@ msgstr "Демонстрируемое окно"
 msgid "Shared window audio"
 msgstr "Звук демонстрируемого окна"
 
-#. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at 720p, up to 30 FPS"
-msgstr "Четкий текст в 720p, до 30 кадров/сек"
-
-#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 1080p, 30 FPS"
-msgstr "Четкий текст до 1080p, 30 кадров/сек"
+msgid "Sharp text at up to {resolution}, {frameRate} FPS"
+msgstr "Четкий текст до {resolution}, {frameRate} кадров/сек"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34352,15 +34347,10 @@ msgstr "Смайлик"
 msgid "Smileys"
 msgstr "Смайлики"
 
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 30 FPS at up to 720p"
-msgstr "Плавное видео 30 FPS с разрешением до 720p"
-
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 60 FPS at up to 1440p"
-msgstr "Плавные 60 FPS при разрешении до 1440p"
+msgid "Smooth {frameRate} FPS at up to {resolution}"
+msgstr "Плавные {frameRate} FPS при разрешении до {resolution}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -37745,10 +37735,10 @@ msgstr "На этом экземпляре уже есть аккаунты, п�
 msgid "This instance already has an administrator. Sign in with that account to finish setting it up."
 msgstr "У этого экземпляра уже есть администратор. Войдите в этот аккаунт, чтобы завершить его настройку."
 
-#. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
+#. Neutral video settings note shown when instance limits cap screen share quality. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
-msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
-msgstr "В этом экземпляре демонстрация экрана ограничена качеством 720p при 30 FPS."
+msgid "This instance currently allows screen sharing up to {resolution} at {frameRate} FPS."
+msgstr "В этом экземпляре демонстрация экрана ограничена качеством {resolution} при {frameRate} FPS."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx
