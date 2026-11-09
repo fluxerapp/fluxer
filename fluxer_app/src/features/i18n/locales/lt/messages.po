@@ -3388,6 +3388,10 @@ msgstr "Pridėkite draugą, kad pradėtumėte."
 msgid "Add a keybind"
 msgstr "Pridėti spartųjį klavišą"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a local sign-in method before disconnecting {providerName}."
+msgstr "Pridėkite vietinį prisijungimo metodą prieš atjungiant {providerName}."
+
 #. Body of the optional, dismissible offer to add a passkey.
 #: src/features/auth/components/modals/AuthenticatorOfferModal.tsx
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
@@ -10036,6 +10040,10 @@ msgstr "Prisijungta prie skambučio"
 msgid "Connected to voice"
 msgstr "Prisijungta prie balso pokalbio"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Connected. You can disconnect this sign-in method."
+msgstr "Prisijungta. Galite atjungti šį prisijungimo metodą."
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -11038,6 +11046,11 @@ msgstr "Nepavyko ištrinti šio webhooko"
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "Nepavyko ištrinti jūsų žinučių"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "Nepavyko atjungti single sign-on"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13742,10 +13755,17 @@ msgstr "Atmesti įrašą"
 msgid "Discard voice message"
 msgstr "Atmesti balso žinutę"
 
+#. Button to disconnect the account from single sign-on.
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect"
 msgstr "Atjungti"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "Atjungti {providerName}?"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -34200,10 +34220,12 @@ msgstr "Vienas sluoksnis"
 msgid "Single line"
 msgstr "Viena eilutė"
 
+#. Fallback label for the SSO provider in account security when no display name is configured.
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
 #. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Single sign-on"
 msgstr "Vienkartinis prisijungimas"
 
@@ -37888,6 +37910,10 @@ msgstr "Ši instancija nenaudoja HTTPS"
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Ši paskyra nebaigė nustatyti vieno prisijungimo. Paprašykite administratoriaus jį įjungti."
+
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires {providerName}."
+msgstr "Ši instancija reikalauja {providerName}."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -44100,6 +44126,11 @@ msgstr "Moderatoriai išjungė jūsų garsą"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Po autorizacijos būsite nukreipti į {redirectHostname}."
+
+#. Warning shown before disconnecting single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You will disconnect {providerName} from your account. You will be able to sign in to your account using a different method."
+msgstr "Atjungsite {providerName} nuo savo paskyros. Galėsite prisijungti prie savo paskyros naudodami kitą metodą."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx

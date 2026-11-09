@@ -80,6 +80,10 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:password:update',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_SSO_UNLINK: {
+		bucket: 'user:sso:unlink',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
 	USER_ACCOUNT_DISABLE: {
 		bucket: 'user:account:disable',
 		config: {limit: 5, windowMs: ms('1 hour')},

@@ -6,6 +6,7 @@ import {
 	getPasskeyMigration,
 	getPasskeyMigrationRegistrationOptions,
 } from '@app/api/auth/services/PasskeyMigrationService';
+import {SsoIdentityLinkService, ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {
 	RequireEmailAccountIdentity,
@@ -16,13 +17,17 @@ import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware
 import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
+import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {SsoRequiredError, SsoRequiredReasons} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {
@@ -215,6 +220,53 @@ export function UserAuthController(app: HonoApp) {
 			}
 			await requireSudoMode(ctx, user, ctx.req.valid('json'));
 			return ctx.json(await ctx.get('ssoService').startLink(user, authSession.sessionIdHash));
+		},
+	);
+	app.delete(
+		'/users/@me/sso',
+		RateLimitMiddleware(RateLimitConfigs.USER_SSO_UNLINK),
+		LoginRequired,
+		DefaultUserOnly,
+		SudoModeMiddleware,
+		Validator('json', SudoVerificationSchema),
+		OpenAPI({
+			operationId: 'unlink_sso',
+			summary: 'Disconnect single sign-on',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['sessionToken'],
+			tags: ['Users'],
+			description:
+				'Disconnect the instance single sign-on provider from the current account. Requires sudo mode verification and an alternative local sign-in method.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			await requireSudoMode(ctx, user, body);
+
+			const instanceConfig = getInstanceConfigRepository();
+			const ssoConfig = await instanceConfig.getSsoConfig();
+			if (ssoConfig.enforced) {
+				throw new SsoRequiredError(SsoRequiredReasons.SIGN_IN);
+			}
+
+			const hasLocalPassword = user.passwordHash !== null;
+			const {identifierFirst} = await instanceConfig.getSignInFeatures();
+			const hasEmailCodeSignIn =
+				identifierFirst &&
+				(await instanceConfig.getAccountIdentityMode()) === AccountIdentityModes.EMAIL &&
+				user.email !== null &&
+				user.emailVerified &&
+				!user.emailBounced &&
+				(await instanceConfig.isEmailEnabled());
+			if (!hasLocalPassword && !hasEmailCodeSignIn) {
+				throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
+			}
+
+			if (user.traits.has(UserTraits.SSO)) {
+				await new SsoIdentityLinkService(ctx.get('userRepository')).unlink(user, ssoProviderIdOf(ssoConfig));
+			}
+			return ctx.body(null, 204);
 		},
 	);
 	app.post(

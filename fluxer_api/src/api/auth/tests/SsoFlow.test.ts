@@ -1133,6 +1133,33 @@ describe('Auth SSO flow', () => {
 			expect(signedIn.user_id).toBe(account.userId);
 		});
 
+		it('lets a regular user disconnect SSO', async () => {
+			const account = await createTestAccount(harness);
+			await enableSso(harness, admin.token, {enforced: false});
+			const sub = `itest-sso-unlink-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink'), sub));
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(1);
+
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(204)
+				.execute();
+
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
+		});
+
+		it('does not allow users to disconnect SSO while the instance enforces it', async () => {
+			const account = await accountThenSso();
+			const sub = `itest-sso-unlink-enforced-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-enforced'), sub));
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(403, 'SSO_REQUIRED')
+				.execute();
+		});
+
 		it('refuses to connect an identity another account already uses', async () => {
 			const account = await accountThenSso();
 			const sub = `itest-sso-link-taken-${Date.now()}`;

@@ -3388,6 +3388,10 @@ msgstr "Πρόσθεσε έναν φίλο για να ξεκινήσεις."
 msgid "Add a keybind"
 msgstr "Προσθήκη συντόμευσης"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a local sign-in method before disconnecting {providerName}."
+msgstr "Προσθέστε μια τοπική μέθοδο σύνδεσης πριν αποσυνδέσετε το {providerName}."
+
 #. Body of the optional, dismissible offer to add a passkey.
 #: src/features/auth/components/modals/AuthenticatorOfferModal.tsx
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
@@ -10036,6 +10040,10 @@ msgstr "Συνδεδεμένοι στην κλήση"
 msgid "Connected to voice"
 msgstr "Συνδεδεμένοι στο φωνητικό κανάλι"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Connected. You can disconnect this sign-in method."
+msgstr "Συνδεδεμένο. Μπορείτε να αποσυνδέσετε αυτή τη μέθοδο σύνδεσης."
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -11038,6 +11046,11 @@ msgstr "Δεν ήταν δυνατή η διαγραφή αυτού του webho
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "Δεν ήταν δυνατή η διαγραφή των μηνυμάτων σας"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "Αποτυχία αποσύνδεσης από το single sign-on"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13742,10 +13755,17 @@ msgstr "Απόρριψη δημοσίευσης"
 msgid "Discard voice message"
 msgstr "Απόρριψη φωνητικού μηνύματος"
 
+#. Button to disconnect the account from single sign-on.
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect"
 msgstr "Αποσύνδεση"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "Αποσύνδεση από το {providerName};"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -34199,10 +34219,12 @@ msgstr "Μονό επίπεδο"
 msgid "Single line"
 msgstr "Μία γραμμή"
 
+#. Fallback label for the SSO provider in account security when no display name is configured.
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
 #. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Single sign-on"
 msgstr "Ενιαία σύνδεση"
 
@@ -37887,6 +37909,10 @@ msgstr "Αυτή η παρουσία δεν χρησιμοποιεί HTTPS"
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Αυτή η παρουσία δεν έχει ολοκληρώσει τη ρύθμιση της ενιαίας σύνδεσης. Ζητήστε από έναν διαχειριστή να την ενεργοποιήσει."
+
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires {providerName}."
+msgstr "Αυτή η υπηρεσία απαιτεί το {providerName}."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -44099,6 +44125,11 @@ msgstr "Είστε σε σίγαση ήχου από συντονιστές"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Θα μεταφερθείτε στο {redirectHostname} μετά την εξουσιοδότηση."
+
+#. Warning shown before disconnecting single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You will disconnect {providerName} from your account. You will be able to sign in to your account using a different method."
+msgstr "Θα αποσυνδέσετε το {providerName} από τον λογαριασμό σας. Θα μπορείτε να συνδεθείτε στον λογαριασμό σας χρησιμοποιώντας μια διαφορετική μέθοδο."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
