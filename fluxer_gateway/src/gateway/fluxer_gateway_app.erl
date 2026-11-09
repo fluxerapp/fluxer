@@ -41,7 +41,7 @@ start_cowboy() ->
         cowboy:start_clear(
             http,
             #{
-                socket_opts => [{port, Port}],
+                socket_opts => bind_opts(fluxer_gateway_env:get(bind_ip)) ++ [{port, Port}],
                 max_connections => infinity
             },
             #{
@@ -54,6 +54,10 @@ start_cowboy() ->
         {ok, Pid} -> {ok, Pid};
         {error, E} -> {error, E}
     end.
+
+-spec bind_opts(inet:ip_address() | undefined) -> [{ip, inet:ip_address()}].
+bind_opts(undefined) -> [];
+bind_opts(Ip) -> [{ip, Ip}].
 
 -spec prep_stop(term()) -> term().
 prep_stop(State) ->

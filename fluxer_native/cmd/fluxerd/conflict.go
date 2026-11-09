@@ -27,7 +27,7 @@ func otherInstance(l spec.Layout, specs []spec.Child) error {
 		}
 		if c, err := net.DialTimeout("unix", sock, time.Second); err == nil {
 			c.Close()
-			return fmt.Errorf("%w: the fluxerd behind %s answers. Stop it first", errOtherInstance, sock)
+			return fmt.Errorf("%w: the fluxerd behind %s answers. Stop it first, with systemctl stop fluxerd for an install.sh install", errOtherInstance, sock)
 		}
 	}
 	ports := []int{spec.PortNATS}

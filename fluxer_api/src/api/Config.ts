@@ -367,6 +367,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	return {
 		nodeEnv: master.env === 'test' ? 'development' : master.env,
 		port: master.services.api.port,
+		host: master.services.api.host,
 		headersTimeoutMs: master.services.api.headers_timeout_ms,
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
@@ -721,6 +722,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 
 interface APIServerOptions {
 	port: number;
+	hostname?: string;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 }
@@ -728,6 +730,7 @@ interface APIServerOptions {
 export function buildAPIServerOptions(config: APIConfig): APIServerOptions {
 	return {
 		port: config.port,
+		hostname: config.host,
 		headersTimeoutMs: config.headersTimeoutMs,
 		requestTimeoutMs: config.requestTimeoutMs,
 	};
