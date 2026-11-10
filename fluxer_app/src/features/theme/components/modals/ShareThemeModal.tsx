@@ -191,7 +191,7 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 					/>
 				)}
 			</Modal.Content>
-			<Modal.Footer data-flx="theme.share-theme-modal.modal-footer">
+			<Modal.Footer className={selectorStyles.selectorFooter} data-flx="theme.share-theme-modal.modal-footer">
 				<CopyLinkSection
 					label={<Trans>Or copy the link:</Trans>}
 					value={themeUrl || ''}

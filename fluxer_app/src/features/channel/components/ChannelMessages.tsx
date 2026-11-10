@@ -73,7 +73,7 @@ import {clsx} from 'clsx';
 import {runInAction} from 'mobx';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const MESSAGE_LIST_FOR_DESCRIPTOR = msg({
 	message: 'Message list for {channelName}',
@@ -779,6 +779,8 @@ export const Messages = observer(function Messages(props: MessagesProps) {
 		/>
 	);
 });
+const JUMP_START_TIMEOUT_MS = 1500;
+
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,
 	landedAtLiveEdge,
@@ -789,7 +791,29 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 	onJumpToPresent: () => void;
 }) {
 	const {i18n} = useLingui();
-	const jumpIsActiveNow = loadingMore && landedAtLiveEdge;
+	const [pressed, setPressed] = useState(false);
+	const sawLoadRef = useRef(false);
+	useEffect(() => {
+		if (!pressed) return;
+		if (loadingMore) {
+			sawLoadRef.current = true;
+			return;
+		}
+		if (sawLoadRef.current) {
+			sawLoadRef.current = false;
+			setPressed(false);
+			return;
+		}
+		const timer = window.setTimeout(() => setPressed(false), JUMP_START_TIMEOUT_MS);
+		return () => window.clearTimeout(timer);
+	}, [pressed, loadingMore]);
+	const jumpIsActiveNow = pressed || (loadingMore && landedAtLiveEdge);
+	const handleJump = () => {
+		if (jumpIsActiveNow) return;
+		sawLoadRef.current = false;
+		setPressed(true);
+		onJumpToPresent();
+	};
 	return (
 		<div
 			className={[styles.newMessagesBar, styles.messageBottomPill, styles.jumpToPresentBar].join(' ')}
@@ -804,7 +828,7 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 				compact
 				fitContent
 				className={styles.newMessagesBarAction}
-				onClick={onJumpToPresent}
+				onClick={handleJump}
 				submitting={jumpIsActiveNow}
 				disabled={jumpIsActiveNow}
 				data-flx="channel.messages.jump-to-present-bar.new-messages-bar-action"
