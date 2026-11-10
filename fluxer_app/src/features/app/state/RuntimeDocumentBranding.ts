@@ -2,7 +2,7 @@
 
 import {DEFAULT_APP_SHELL_BRANDING} from '@app/features/app/state/AppShellBranding';
 import {getServedDocumentBranding} from '@app/features/app/state/ServedDocumentBranding';
-import {setDocumentTitleProductName} from '@app/features/window/hooks/useFluxerDocumentTitle';
+import {setDocumentTitleProductName} from '@app/features/window/state/DocumentTitle';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
 
 const LIGHT_SCHEME_MEDIA = '(prefers-color-scheme: light)';
