@@ -20,7 +20,8 @@ const PREFLIGHT_CHILD_ENV = 'FLUXER_NATIVE_MODULE_PREFLIGHT_CHILD';
 const PROBE_TIMEOUT_ENV = 'FLUXER_NATIVE_PROBE_TIMEOUT_MS';
 const DEFAULT_PROBE_TIMEOUT_MS = 30000;
 const PROBE_CACHE_ENV = 'FLUXER_NATIVE_PROBE_CACHE_FILE';
-const PROBE_CACHE_VERSION = 1;
+const PROBE_CACHE_VERSION = 2;
+const MAX_PROBE_CACHE_ENTRIES = 64;
 const PROBE_REACHED_REQUIRE_MARKER = '__fluxer_native_probe_reached_require__';
 const PROBE_SOURCE = `require('node:fs').writeSync(1, ${JSON.stringify(PROBE_REACHED_REQUIRE_MARKER)});require(process.argv[1]);`;
 
@@ -529,11 +530,20 @@ function readProbeCache(cacheFile) {
 	return {};
 }
 
+function probeCacheKey(nativePath) {
+	return `${process.execPath}\n${nativePath}`;
+}
+
+function probeCacheEntryStillInstalled(key, entry) {
+	const nativePath = key.slice(key.indexOf('\n') + 1);
+	return existsSync(entry.execPath) && existsSync(nativePath);
+}
+
 function hasCachedProbePass(nativePath) {
 	const cacheFile = process.env[PROBE_CACHE_ENV];
 	if (!cacheFile) return false;
 	const identity = nativeBinaryIdentity(nativePath);
-	return identity != null && sameNativeBinaryIdentity(readProbeCache(cacheFile)[nativePath], identity);
+	return identity != null && sameNativeBinaryIdentity(readProbeCache(cacheFile)[probeCacheKey(nativePath)], identity);
 }
 
 function recordProbePass(nativePath) {
@@ -541,15 +551,18 @@ function recordProbePass(nativePath) {
 	if (!cacheFile) return;
 	const identity = nativeBinaryIdentity(nativePath);
 	if (identity == null) return;
+	const key = probeCacheKey(nativePath);
 	const cached = readProbeCache(cacheFile);
-	if (sameNativeBinaryIdentity(cached[nativePath], identity)) return;
-	const binaries = {};
-	for (const [path, entry] of Object.entries(cached)) {
-		if (entry && entry.execPath === identity.execPath && entry.runtime === identity.runtime) {
-			binaries[path] = entry;
-		}
-	}
-	binaries[nativePath] = identity;
+	if (sameNativeBinaryIdentity(cached[key], identity)) return;
+	const kept = Object.entries(cached).filter(
+		([cachedKey, entry]) =>
+			cachedKey !== key &&
+			entry &&
+			entry.runtime === identity.runtime &&
+			probeCacheEntryStillInstalled(cachedKey, entry),
+	);
+	const binaries = Object.fromEntries(kept.slice(-(MAX_PROBE_CACHE_ENTRIES - 1)));
+	binaries[key] = identity;
 	const temporary = `${cacheFile}.${process.pid}.${Date.now()}.tmp`;
 	try {
 		mkdirSync(dirname(cacheFile), {recursive: true});
