@@ -32,7 +32,7 @@ const CATEGORY_ORDER: &[&str] = &[
     "media",
 ];
 
-const DESCRIPTION_LINK_CLASS: &str = "rounded font-medium text-brand-primary underline underline-offset-2 \
+const DESCRIPTION_LINK_CLASS: &str = "rounded font-medium text-blue-800 underline underline-offset-2 \
      transition-colors hover:text-neutral-900 hover:decoration-2 focus:outline-none focus-visible:ring-2 \
      focus-visible:ring-brand-primary focus-visible:ring-offset-2";
 
@@ -76,13 +76,13 @@ const FILTER_PREVIEW_SCRIPT: &str = r#"
 		var scopeLabel;
 		var values;
 		if (hasTraits && !hasFeatures) {
-			scopeLabel = 'users given the trait: ';
+			scopeLabel = 'Applied only to users with the trait: ';
 			values = traits.join(', ');
 		} else if (!hasTraits && hasFeatures) {
-			scopeLabel = 'communities given the feature: ';
+			scopeLabel = 'Applied only inside communities with the feature: ';
 			values = features.join(', ');
 		} else {
-			scopeLabel = 'users given this rule as a trait or communities given this rule as a feature';
+			scopeLabel = 'Applied to users with a trait, or inside communities with a feature';
 			values = '';
 		}
 
@@ -93,6 +93,11 @@ const FILTER_PREVIEW_SCRIPT: &str = r#"
 		var warning = form.querySelector('[data-default-rule-warning]');
 		if (warning) {
 			warning.hidden = !(fieldValue(form, 'rule_id') === 'default' && (hasTraits || hasFeatures));
+		}
+
+		var featureCondition = form.querySelector('[data-show-when-features]');
+		if (featureCondition) {
+			featureCondition.hidden = !hasFeatures;
 		}	}
 
 	function syncAll(root) {
@@ -194,7 +199,7 @@ fn render_limit_page(
         .unwrap_or("default");
     let active_rule = rules.iter().find(|rule| rule.id == active_rule_id);
     let description = if response.self_hosted.unwrap_or(false) {
-        "Configure limits by adding rules that raise limits ABOVE the default for specific users or communities. Rules apply to users or communities depending on their filters. The default rule applies to everyone and sets the baseline; filtered rules can only raise values above it, never lower them."
+        "Configure limits by adding rules that raise limits ABOVE the default for specific users or communities.\nRules apply to users or communities depending on their filters. The default rule applies to everyone and sets the baseline. Filtered rules can only raise values above it, never lower them."
     } else {
         "Configure limit rules that raise limits above the default for users or communities, based on user traits or community features."
     };
@@ -402,7 +407,9 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
     let has_traits = !traits.trim().is_empty();
     let has_features = !guild_features.trim().is_empty();
     let is_default_rule = rule.id == "default";
+    let is_premium_rule = rule.id == "premium";
     let show_default_warning = is_default_rule && (has_traits || has_features);
+    let show_feature_text = has_features;
     let active_scope = match (has_traits, has_features) {
         (true, true) => "both",
         (false, false) => "default",
@@ -416,10 +423,13 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
         }
     };
     let (scope_display, values_display) = match (has_traits, has_features) {
-        (true, false) => ("users given the trait: ", traits.clone()),
-        (false, true) => ("communities given the feature: ", guild_features.clone()),
+        (true, false) => ("Applied only to users with the trait: ", traits.clone()),
+        (false, true) => (
+            "Applied only inside communities with the feature: ",
+            guild_features.clone(),
+        ),
         _ => (
-            "users given this rule as a trait or communities given this rule as a feature",
+            "Applied to users with a trait, or inside communities with a feature",
             String::new(),
         ),
     };
@@ -440,7 +450,7 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
             a href={(base) "/users"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "user" }
             ", or a feature for a "
             a href={(base) "/guilds"} hx-boost="false" class=(DESCRIPTION_LINK_CLASS) { "community" }
-            ". A filtered rule can only raise a value above the default, and a rule filtered by guild feature never applies user-wide limits."
+            ". A filtered rule can only raise a value above the default. User-wide limits are checked without a community, so they never match a guild feature."
         }),
         html! {
             div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
@@ -458,17 +468,23 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
                     }
                     input type="text" id="guild_features" name="guild_features" value=(guild_features)
                         placeholder="e.g., VIP_SERVERS, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
-                    p class="text-xs text-neutral-500" { "Separate values with commas; leave blank to disable this filter." }
+                    p class="text-xs text-neutral-500" { "Separate values with commas; leave blank to disable this filter. Uppercase is recommended with the Guild Feature naming scheme." }
                 }
             }
             @if is_default_rule {
-                div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+                div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 whitespace-pre-line"
                     data-default-rule-warning hidden[!show_default_warning] {
                     strong class="font-semibold" { "Not recommended on the default rule." }
-                    " The default rule is the baseline for every user and community. Filtering it does not restrict anyone, it means anything that does not match falls back to the built-in defaults. Exceptions, for example Community Creation Access, are best used in their own rule."
+                    "\nThe default rule is the baseline for every user and community. Filtering it does not restrict anyone — anything that does not match falls back to the built-in defaults. \nIn order to restrict a value, it should be disabled or lowered in the default rule, so that a new rule with filters can be used to grant the feature instead."
                 }
             }
             div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3" {
+                @if is_premium_rule {
+                    p class="mb-2 text-xs text-blue-800" {
+                        strong class="font-semibold" { "Expected on the premium rule." }
+                        " This user trait filter is assigned automatically when a user becomes premium. It is not recommended to rename this value."
+                    }
+                }
                 ul class="space-y-1.5 text-xs text-neutral-500" {
                     li class="group flex items-start gap-2 opacity-50 transition-opacity data-[state=active]:opacity-100"
                         data-filter-scope="default" data-state=(state_for("default")) {
@@ -487,7 +503,6 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
                         span aria-hidden="true"
                             class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
                         span {
-                            "Applied only to "
                             span data-filter-value="scope" { (scope_display) }
                             span class="font-mono text-neutral-700" data-filter-value="values" { (values_display) }
                         }
@@ -497,12 +512,19 @@ fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
                         span aria-hidden="true"
                             class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-400 group-data-[state=active]:bg-emerald-500" {}
                         span {
-                            "Applied only when a user has the trait: "
+                            "Applied only to users with the trait: "
                             span class="font-mono text-neutral-700" data-filter-value="user_values" { (traits_display) }
-                            " and their community has the feature: "
+                            " while they are in a community with the feature: "
                             span class="font-mono text-neutral-700" data-filter-value="guild_values" { (guild_features_display) }
                         }
                     }
+                }
+                p class="mt-2 text-xs text-neutral-500" {
+                    "Traits decide who the rule applies to, with features deciding where. If there is no guild feature filter, a trait applies to that user everywhere."
+                }
+                p class="mt-1 pt-2 text-xs text-amber-800"
+                    data-show-when-features hidden[!show_feature_text] {
+                    "Only limits that are checked inside a community can use this rule. User-wide limits are skipped because they are checked without a community; add a second rule filtered by the user trait alone if you need to change those."
                 }
             }
         },
