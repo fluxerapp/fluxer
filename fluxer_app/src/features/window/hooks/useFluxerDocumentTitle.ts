@@ -1,21 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {pushDocumentTitleParts, setDocumentTitleBadge} from '@app/features/window/state/DocumentTitle';
 import {useEffect} from 'react';
 
 type TitlePart = string | null | undefined;
 type TitleInput = TitlePart | Array<TitlePart>;
-
-interface BadgeState {
-	mentionCount: number;
-	hasUnread: boolean;
-}
-
-let titleProductName = PRODUCT_NAME;
-let currentTitleParts: ReadonlyArray<string> = [];
-let currentBadgeState: BadgeState = {mentionCount: 0, hasUnread: false};
 
 const normalizeTitleParts = (value?: TitleInput): Array<string> => {
 	if (!value) {
@@ -24,42 +14,11 @@ const normalizeTitleParts = (value?: TitleInput): Array<string> => {
 	const parts = Array.isArray(value) ? value : [value];
 	return parts.map((part) => part?.trim()).filter((part): part is string => Boolean(part));
 };
-const buildDocumentTitle = (parts: ReadonlyArray<string>): string => {
-	if (!parts.length) {
-		return titleProductName;
-	}
-	return [titleProductName, ...parts].join(' | ');
-};
-const applyBadgePrefix = (baseTitle: string, badge: BadgeState): string => {
-	if (badge.mentionCount > 0) {
-		return `(${formatNumber(badge.mentionCount, getFormattingLocale())}) ${baseTitle}`;
-	}
-	if (badge.hasUnread) {
-		return `• ${baseTitle}`;
-	}
-	return baseTitle;
-};
-const updateDocumentTitle = (): void => {
-	document.title = applyBadgePrefix(buildDocumentTitle(currentTitleParts), currentBadgeState);
-};
-export const setDocumentTitleProductName = (productName: string): void => {
-	if (titleProductName === productName) return;
-	titleProductName = productName;
-	updateDocumentTitle();
-};
 export const updateDocumentTitleBadge = (mentionCount: number, hasUnread: boolean): void => {
-	currentBadgeState = {mentionCount, hasUnread};
-	updateDocumentTitle();
+	setDocumentTitleBadge(mentionCount, hasUnread, getFormattingLocale);
 };
+
 export const useFluxerDocumentTitle = (title?: TitleInput) => {
 	const partsKey = JSON.stringify(normalizeTitleParts(title));
-	useEffect(() => {
-		const previousParts = currentTitleParts;
-		currentTitleParts = JSON.parse(partsKey) as Array<string>;
-		updateDocumentTitle();
-		return () => {
-			currentTitleParts = previousParts;
-			updateDocumentTitle();
-		};
-	}, [partsKey]);
+	useEffect(() => pushDocumentTitleParts(JSON.parse(partsKey) as Array<string>), [partsKey]);
 };
