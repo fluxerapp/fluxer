@@ -4585,7 +4585,7 @@ msgstr "כבר יש לך חשבון?"
 msgid "Already joined"
 msgstr "כבר הצטרפת"
 
-#. Status pill on a gift code embed when the gift has already been claimed.
+#. Status line on a gift code embed when the gift has already been claimed.
 #: src/features/channel/components/GiftEmbed.tsx
 msgid "Already redeemed"
 msgstr "כבר מומש"
@@ -17981,11 +17981,6 @@ msgstr "העניקו במתנה {premiumProductName} לחבר לחודש או ל
 msgid "Gift already redeemed"
 msgstr "המתנה כבר מומשה"
 
-#. Toast confirmation shown after successfully claiming a gift from the gift code embed.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift claimed"
-msgstr "המתנה התקבלה"
-
 #. Error message in the gift inventory tab.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code cannot be empty"
@@ -18000,10 +17995,6 @@ msgstr "קוד המתנה נדרש"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code is too long"
 msgstr "קוד המתנה ארוך מדי"
-
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
-msgid "Gift code:"
-msgstr "קוד מתנה:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
@@ -18070,11 +18061,6 @@ msgstr "המתנה מומשה!"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Gift subscription"
 msgstr "מתנת מנוי"
-
-#. Title shown on a gift code embed when the gift cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift unavailable"
-msgstr "המתנה אינה זמינה"
 
 #. Short label in the gift inventory tab. Keep it concise.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

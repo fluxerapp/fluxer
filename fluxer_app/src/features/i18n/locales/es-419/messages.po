@@ -4585,7 +4585,7 @@ msgstr "¿Ya tienes una cuenta?"
 msgid "Already joined"
 msgstr "Ya te uniste"
 
-#. Status pill on a gift code embed when the gift has already been claimed.
+#. Status line on a gift code embed when the gift has already been claimed.
 #: src/features/channel/components/GiftEmbed.tsx
 msgid "Already redeemed"
 msgstr "Ya canjeado"
@@ -17981,11 +17981,6 @@ msgstr "Regala {premiumProductName} a un amigo por un mes o todo un año. Los re
 msgid "Gift already redeemed"
 msgstr "Regalo ya canjeado"
 
-#. Toast confirmation shown after successfully claiming a gift from the gift code embed.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift claimed"
-msgstr "Regalo reclamado"
-
 #. Error message in the gift inventory tab.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code cannot be empty"
@@ -18000,10 +17995,6 @@ msgstr "Se requiere el código de regalo"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code is too long"
 msgstr "El código de regalo es demasiado largo"
-
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
-msgid "Gift code:"
-msgstr "Código de regalo:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
@@ -18070,11 +18061,6 @@ msgstr "¡Regalo canjeado!"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Gift subscription"
 msgstr "Suscripción de regalo"
-
-#. Title shown on a gift code embed when the gift cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift unavailable"
-msgstr "Regalo no disponible"
 
 #. Short label in the gift inventory tab. Keep it concise.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
