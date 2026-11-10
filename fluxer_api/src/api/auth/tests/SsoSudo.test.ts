@@ -78,7 +78,7 @@ describe('sudo mode for SSO accounts without credentials', () => {
 			.body({date_of_birth: '2000-01-01'})
 			.expect(200)
 			.execute();
-		await createBuilder<{code: string; errors: Array<{path: string; code: string}>}>(harness, token)
+		await createBuilder(harness, token)
 			.delete('/users/@me/sso')
 			.body({})
 			.expect(403, 'LOCAL_SIGN_IN_METHOD_REQUIRED')
