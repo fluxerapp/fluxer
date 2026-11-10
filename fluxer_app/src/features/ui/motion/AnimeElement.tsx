@@ -1363,6 +1363,14 @@ function createAnimeElement({tagName, normalizeClassName}: CreateAnimeElementReq
 				if (animationOwner.takeFirstMount()) {
 					if (shouldSettleOnMount(from)) {
 						if (animateTarget != null) {
+							assignTarget({element, target: animateTarget, baseTransform});
+							animationOwner.beginAnimation({
+								phase: AnimeAnimationPhase.ENTER,
+								key: animationKeyFor({phase: AnimeAnimationPhase.ENTER, target: animateTarget}),
+							});
+							return;
+						}
+						if (animateTarget != null) {
 							startAnimation({
 								phase: AnimeAnimationPhase.ENTER,
 								element,

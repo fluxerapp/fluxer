@@ -66,6 +66,7 @@ export class GuildMember {
 			? new Date(guildMember.communication_disabled_until).getTime()
 			: null;
 		return (
+			this.joinedAt.getTime() === new Date(guildMember.joined_at).getTime() &&
 			this.nick === (guildMember.nick ?? null) &&
 			this.avatar === (guildMember.avatar ?? null) &&
 			this.banner === (guildMember.banner ?? null) &&

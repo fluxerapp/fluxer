@@ -10,15 +10,29 @@ import {
 	DefinePlugin,
 	HtmlRspackPlugin,
 	LightningCssMinimizerRspackPlugin,
+	NormalModuleReplacementPlugin,
 	SubresourceIntegrityPlugin,
 	SwcJsMinimizerRspackPlugin,
 	sources,
 } from '@rspack/core';
 import {transformSync} from 'esbuild';
+import {
+	BOOT_FRAME_INPUT_HELD_ATTRIBUTE,
+	BOOT_FRAME_MAX_REPLAYED_INPUTS,
+	BOOT_FRAME_MAX_REPLAYED_TEXT_LENGTH,
+	BOOT_FRAME_TEXT_TARGET_SELECTOR,
+	BOOT_STATE_EXPECTED_ATTRIBUTE,
+	BOOT_STATE_EXPECTED_VALUE,
+	BOOT_STATE_FORMAT_META_NAME,
+	bootStatePayloadFormat,
+} from '../packages/desktop_ipc/src/BootStateContract.ts';
 import {getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 import {moduleMapPlugin} from './scripts/module-map/index.ts';
+import * as BootStateBrowserFormat from './src/features/boot_state/BootStateBrowserFormat.ts';
+import {SNAPSHOT_SCHEMA_EPOCH} from './src/features/gateway/snapshot/SnapshotSchemaEpoch.ts';
 import {APP_SHELL_BUILD_META_NAME} from './src/features/platform/service_worker/WorkerCacheCleanup.ts';
+import * as AppStorageDatabase from './src/features/platform/state/AppStorageDatabase.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,6 +52,8 @@ const BOOT_PRELOAD_FONT_FILES = [
 	'FluxerSans/FluxerSans-Regular.woff2',
 	'FluxerSans/FluxerSans-SemiBold.woff2',
 	'FluxerSans/FluxerSans-Bold.woff2',
+	'FluxerSans/FluxerSans-Italic.woff2',
+	'FluxerMono/FluxerMono-Regular.woff2',
 ];
 const BOOT_LOW_PRIORITY_FONT_FILES = ['FluxerSans/FluxerSans-Medium.woff2'];
 const AUTH_ENTRY_DOCUMENT = 'auth-index.html';
@@ -144,7 +160,8 @@ function isMainRuntimeChunk(chunk) {
 
 function mirrorCacheGroups(groups) {
 	const mirrored = {};
-	for (const [key, group] of Object.entries(groups)) {
+	for (const [key, originalGroup] of Object.entries(groups)) {
+		const group = isDesktopRenderer ? {...originalGroup, name: false} : originalGroup;
 		if (group.chunks != null) {
 			mirrored[key] = group;
 			continue;
@@ -152,7 +169,7 @@ function mirrorCacheGroups(groups) {
 		mirrored[key] = {...group, chunks: (chunk) => isMainRuntimeChunk(chunk) && chunk.canBeInitial()};
 		mirrored[`${key}Async`] = {
 			...group,
-			name: `${group.name}-async`,
+			name: isDesktopRenderer ? false : `${group.name}-async`,
 			chunks: (chunk) => isMainRuntimeChunk(chunk) && !chunk.canBeInitial(),
 		};
 	}
@@ -203,12 +220,46 @@ function inlineScriptTag(name, replacements = {}) {
 	return `<script data-cfasync="false" nonce="{{CSP_NONCE_PLACEHOLDER}}">${code}</script>`;
 }
 
-function inlineScriptsPlugin() {
+function inlineScriptReplacements(buildVersion) {
+	return {
+		'boot-state': {
+			...Object.fromEntries(
+				Object.entries({
+					...BootStateBrowserFormat,
+					...AppStorageDatabase,
+					BOOT_FRAME_MAX_HOLD_MS: 30_000,
+					BOOT_FRAME_COMPOSER_PLACEHOLDER_SELECTOR: 'flx-lexical-composer-input-placeholder',
+					BOOT_FRAME_STYLESHEET_TIMEOUT_MS: 10_000,
+					BOOT_FRAME_GATE_TIMEOUT_MS: 400,
+					BOOT_FRAME_IMAGE_WAIT_MS: 40,
+					BOOT_FRAME_CLICK_IDENTITY_SELECTOR:
+						'[data-scroll-id],[data-channel-id],[data-guild-id],[data-user-id],[data-message-id]',
+					BOOT_FRAME_INPUT_HELD_ATTRIBUTE,
+					BOOT_FRAME_MAX_REPLAYED_INPUTS,
+					BOOT_FRAME_MAX_REPLAYED_TEXT_LENGTH,
+					BOOT_FRAME_TEXT_TARGET_SELECTOR,
+					BOOT_STATE_EXPECTED_ATTRIBUTE,
+					BOOT_STATE_EXPECTED_VALUE,
+				}).map(([name, value]) => [`{{${name}}}`, String(value)]),
+			),
+			'{{BOOT_STATE_FORMAT}}': bootStatePayloadFormat(SNAPSHOT_SCHEMA_EPOCH),
+			'{{BOOT_FRAME_BUILD}}': buildVersion,
+		},
+		'boot-shell': {
+			'{{BOOT_FRAME_ELEMENT_ID}}': BootStateBrowserFormat.BOOT_FRAME_ELEMENT_ID,
+		},
+	};
+}
+
+function inlineScriptsPlugin(buildVersion) {
+	const replacements = inlineScriptReplacements(buildVersion);
 	return {
 		apply(compiler) {
 			compiler.hooks.thisCompilation.tap('InlineScriptsPlugin', (compilation) => {
 				HtmlRspackPlugin.getCompilationHooks(compilation).beforeEmit.tap('InlineScriptsPlugin', (data) => {
-					data.html = data.html.replace(INLINE_SCRIPT_MARKER_PATTERN, (_marker, name) => inlineScriptTag(name));
+					data.html = data.html.replace(INLINE_SCRIPT_MARKER_PATTERN, (_marker, name) =>
+						inlineScriptTag(name, replacements[name]),
+					);
 					return data;
 				});
 			});
@@ -278,6 +329,7 @@ function bootPreloadPlugin({withIntegrity}) {
 									inlineScriptTag('signed-in-preloads', {
 										'{{SIGNED_IN_HINT_STORAGE_KEY}}': SIGNED_IN_HINT_STORAGE_KEY,
 										'{{SIGNED_IN_PRELOADS_ELEMENT_ID}}': SIGNED_IN_PRELOADS_ELEMENT_ID,
+										'{{BOOT_FRAME_GLOBAL}}': BootStateBrowserFormat.BOOT_FRAME_GLOBAL,
 									});
 						if (links === '' && signedInPreloadTags === '') {
 							return;
@@ -602,6 +654,54 @@ export default () => {
 					ROOT_DIR,
 					'node_modules/@arborium/arborium/dist/arborium_host_bg.wasm',
 				),
+				...Object.fromEntries(
+					[
+						'@app/features/user/components/modals/UserProfileModal$',
+						'@app/features/guild/components/modals/AddGuildModal$',
+						'@app/features/messaging/components/modals/ForwardModal$',
+						'@app/features/messaging/components/modals/ImageCropModal$',
+						'@app/features/guild/components/modals/GuildNotificationSettingsModal$',
+						'@app/features/invite/components/modals/InviteModal$',
+						'@app/features/channel/components/modals/ChannelCreateModal$',
+						'@app/features/channel/components/modals/ChannelFollowModal$',
+						'@app/features/channel/components/modals/EditGroupModal$',
+						'@app/features/ui/action_menu/DMContextMenu$',
+						'@app/features/ui/action_menu/GroupDMContextMenu$',
+						'@app/features/ui/action_menu/VoiceParticipantContextMenu$',
+						'@app/features/ui/action_menu/MediaContextMenu$',
+						'@app/features/ui/action_menu/FavoritesChannelContextMenu$',
+						'@app/features/ui/action_menu/FluxerButtonContextMenu$',
+						'@app/features/ui/action_menu/SettingsContextMenu$',
+						'@app/features/messaging/components/modals/MessageCrosspostConfirmModal$',
+						'@app/features/auth/components/modals/ClaimAccountModal$',
+						'@app/features/auth/components/modals/RecoveryKitModal$',
+						'@app/features/premium/components/modals/GiftPlutoniumModal$',
+						'@app/features/voice/components/bottomsheets/VoiceParticipantBottomSheet$',
+						'@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet$',
+						'@app/features/ui/action_menu/GuildFolderContextMenu$',
+						'@app/features/channel/components/textarea/TextareaContextMenu$',
+						'@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet$',
+						'@app/features/channel/components/bottomsheets/ChannelSearchBottomSheet$',
+						'@app/features/relationship/components/modals/AddFriendsToGroupModal$',
+						'@app/features/user/components/modals/CustomStatusModal$',
+						'@app/features/channel/components/modals/CreateDMModal$',
+						'@app/features/channel/components/modals/GroupInvitesModal$',
+						'@app/features/guild/components/modals/GuildFolderSettingsModal$',
+						'@app/features/app/components/dialogs/ConfirmModal$',
+						'@app/features/auth/components/modals/OAuthAuthorizeModal$',
+						'@app/features/premium/components/PremiumCheckoutReturnWatcher$',
+						'@app/features/channel/components/EmojiPicker$',
+						'@app/features/channel/components/StickersPicker$',
+						'@app/features/channel/components/pickers/gif/GifPicker$',
+						'@app/features/channel/components/pickers/memes/MemesPicker$',
+						'@app/features/expressions/components/modals/ExpressionPickerSheet$',
+						'@app/features/ui/action_menu/UserContextMenu$',
+						'@app/features/ui/action_menu/GuildMemberContextMenu$',
+						'@app/features/ui/action_menu/MessageContextMenu$',
+						'@app/features/ui/action_menu/GuildContextMenu$',
+						'@app/features/ui/action_menu/ChannelContextMenu$',
+					].map((request) => [request, path.join(SRC_DIR, 'app/desktop/DesktopDeferredComponents.tsx')]),
+				),
 				'@app': SRC_DIR,
 				'@fluxer/voice_engine_v2/bridge': path.join(
 					MONOREPO_ROOT,
@@ -628,6 +728,7 @@ export default () => {
 			mainFields: ['browser', 'module', 'main'],
 		},
 		module: {
+			...(isDesktopRenderer ? {parser: {javascript: {exportsPresence: 'error'}}} : {}),
 			rules: [
 				{
 					test: /[\\/]@arborium[\\/]arborium[\\/]dist[\\/]arborium\.js$/,
@@ -788,8 +889,17 @@ export default () => {
 			},
 		},
 		plugins: [
+			...(isDesktopRenderer
+				? [
+						new NormalModuleReplacementPlugin(/^livekit-client$/, (resource) => {
+							if (resource.contextInfo.issuer.endsWith('/VoiceEngineV2AppCameraResolutionPresets.ts')) {
+								resource.request = path.join(PKGS_DIR, 'livekit-client/src/room/track/options.ts');
+							}
+						}),
+					]
+				: []),
 			nodeAssertStrictSchemePlugin(),
-			inlineScriptsPlugin(),
+			inlineScriptsPlugin(buildInfo.version),
 			fontPreloadPlugin(),
 			libfluxcoreWasmUrlPlugin({publicPath: workerWasmPublicPath ?? publicPath}),
 			rocketLoaderOptOutPlugin(),
@@ -806,7 +916,9 @@ export default () => {
 				inject: 'body',
 				scriptLoading: 'module',
 				excludeChunks: ['sw'],
-				...(isDesktopRenderer ? {publicPath: '/'} : {meta: {[APP_SHELL_BUILD_META_NAME]: buildInfo.version}}),
+				...(isDesktopRenderer
+					? {publicPath: '/', meta: {[BOOT_STATE_FORMAT_META_NAME]: bootStatePayloadFormat(SNAPSHOT_SCHEMA_EPOCH)}}
+					: {meta: {[APP_SHELL_BUILD_META_NAME]: buildInfo.version}}),
 			}),
 			new CopyRspackPlugin({
 				patterns: [
@@ -875,6 +987,15 @@ export default () => {
 						maxInitialRequests: 15,
 						maxAsyncSize: 2_000_000,
 						cacheGroups: mirrorCacheGroups({
+							reactServer: {
+								test: /[\\/]node_modules[\\/]react-dom[\\/](server\.|cjs[\\/]react-dom-server)/,
+								name: 'react-server',
+								priority: 61,
+								reuseExistingChunk: true,
+								enforce: true,
+								maxAsyncSize: Number.POSITIVE_INFINITY,
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
+							},
 							icons: {
 								test: /[\\/]node_modules[\\/]@phosphor-icons[\\/]/,
 								name: 'icons',
@@ -1100,7 +1221,11 @@ export default () => {
 					minimizerOptions: {
 						compress: true,
 						mangle: true,
-						format: {comments: false, asciiOnly: isDesktopRenderer},
+						format: {
+							comments: false,
+							asciiOnly: isDesktopRenderer,
+							...(isDesktopRenderer ? {preamble: '//# allFunctionsCalledOnLoad\n'} : {}),
+						},
 					},
 					exclude: /\.worklet\.js$/,
 				}),

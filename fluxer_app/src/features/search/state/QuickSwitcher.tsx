@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AccountEngine from '@app/features/account_engine/state/AccountEngine';
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import Guilds from '@app/features/guild/state/Guilds';
 import {OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
@@ -219,6 +220,7 @@ class QuickSwitcher {
 	}
 
 	show(options: {scope?: QuickSwitcherScope} = {}): void {
+		flushBootHydration();
 		const scope = options.scope ?? 'all';
 		if (this.isOpen) {
 			if (this.scope !== scope) {

@@ -12,7 +12,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 const RESIZE_SIDEBAR_HANDLE_DESCRIPTOR = msg({
 	message: 'Resize sidebar',
@@ -98,7 +98,7 @@ export const SidebarResizeHandle = observer(() => {
 		return () => finalizeDrag(false);
 	}, [finalizeDrag]);
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		const handle = handleRef.current;
 		if (handle == null || dragRef.current != null) return;
 		const measuredWidth = measureSidebarWidth(handle);

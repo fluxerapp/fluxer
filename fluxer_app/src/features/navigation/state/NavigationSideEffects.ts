@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -29,8 +30,10 @@ class NavigationSideEffects {
 				threadId: Navigation.threadId,
 				threadMessageId: Navigation.threadMessageId,
 				threadsActive: Navigation.threadId != null && ThreadGuilds.isActive(Navigation.guildId),
+				stale: Initialization.isStale,
 			}),
-			({guildId, channelId, messageId, threadId, threadMessageId, threadsActive}) => {
+			({guildId, channelId, messageId, threadId, threadMessageId, threadsActive, stale}) => {
+				if (stale) return;
 				this.handleRouteChange(guildId, channelId, messageId);
 				this.handleThreadRouteChange(guildId, threadsActive ? threadId : null, threadMessageId);
 			},
@@ -66,7 +69,7 @@ class NavigationSideEffects {
 
 	handleGatewayReady(): void {
 		const {guildId, threadId, threadMessageId} = Navigation;
-		if (threadId == null || Channels.getChannel(threadId)) return;
+		if (Initialization.isStale || threadId == null || Channels.getChannel(threadId)) return;
 		this.lastThreadKey = null;
 		this.handleThreadRouteChange(guildId, ThreadGuilds.isActive(guildId) ? threadId : null, threadMessageId);
 	}

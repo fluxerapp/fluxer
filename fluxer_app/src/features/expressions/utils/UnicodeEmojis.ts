@@ -320,6 +320,8 @@ function buildEmojiIndex(): EmojiIndex {
 	};
 }
 
+const PRINTABLE_ASCII_RE = /[!-~]/;
+
 function getEmojiIndex(): EmojiIndex {
 	cachedEmojiIndex ??= buildEmojiIndex();
 	return cachedEmojiIndex;
@@ -454,6 +456,9 @@ export default {
 		const trimmed = emojiName.trim();
 		const name =
 			trimmed.startsWith(':') && trimmed.endsWith(':') && trimmed.length > 2 ? trimmed.slice(1, -1) : trimmed;
+		if (!PRINTABLE_ASCII_RE.test(name)) {
+			return trimmed;
+		}
 		return getEmojiIndex().nameToSurrogate[name] || trimmed;
 	},
 	nameForSurrogate: (surrogate: string, includeColons = true, defaultName = ''): string => {

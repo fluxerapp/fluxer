@@ -113,7 +113,7 @@ async function instantiateMarkdownParserWasm(): Promise<void> {
 	});
 }
 
-function loadMarkdownParserWasm(): Promise<void> {
+export function loadMarkdownParserWasm(): Promise<void> {
 	loadPromise ??= instantiateMarkdownParserWasm().catch((error: unknown) => {
 		logger.warn('Failed to load the markdown parser:', error);
 		setTimeout(() => {

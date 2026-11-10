@@ -39,7 +39,7 @@ import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootM
 import {type ResetClientStateOptions, resetClientState} from '@app/features/platform/state/ResetClientState';
 import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {instanceRequest, instanceRequestWithinAccountTransition} from '@app/features/platform/transport/InstanceHTTP';
-import LocalPresence from '@app/features/presence/state/LocalPresence';
+import {captureLocalPresenceIntent, restoreLocalPresenceIntent} from '@app/features/presence/state/LocalPresenceIntent';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {UserSettingsAccountTransitionCheckpoint} from '@app/features/user/state/UserSettings';
 import {Headers} from '@fluxer/constants/src/Headers';
@@ -183,8 +183,8 @@ export function createDefaultAuthSessionDependencies(): AuthSessionDependencies 
 					}),
 				),
 		},
-		captureLocalPresenceIntent: () => LocalPresence.captureIntent(),
-		restoreLocalPresenceIntent: (intent) => LocalPresence.restoreIntent(intent),
+		captureLocalPresenceIntent,
+		restoreLocalPresenceIntent,
 		now: () => Date.now(),
 	};
 }

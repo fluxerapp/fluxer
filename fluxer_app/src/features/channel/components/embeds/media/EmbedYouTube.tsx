@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {YOUTUBE_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {forgetRestoredImageSource, wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
 import styles from '@app/features/channel/components/embeds/media/EmbedYouTube.module.css';
 import {OverlayActionButton, OverlayPlayButton} from '@app/features/channel/components/embeds/media/MediaButtons';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
@@ -42,6 +43,9 @@ const VIDEO_DESCRIPTOR = msg({
 const YOUTUBE_CONFIG = {
 	DEFAULT_WIDTH: 400,
 } as const;
+const isPosterCached = (posterSrc: string): boolean =>
+	ImageCacheUtils.hasImage(posterSrc) || wasShownBeforeRestart(posterSrc);
+
 const youtubeCalculator = createCalculator({
 	maxWidth: EMBED_MAX_WIDTH,
 	maxHeight: EMBED_MAX_HEIGHT,
@@ -152,24 +156,28 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 	const hasInteracted = ActiveIframeEmbed.isActive(embedId);
 	const posterSrc = embed.thumbnail?.proxy_url || '';
 	const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: posterSrc});
-	const [posterCacheAtMount] = useState(() => ({src: posterSrc, cached: ImageCacheUtils.hasImage(posterSrc)}));
+	const [posterCacheAtMount] = useState(() => ({src: posterSrc, cached: isPosterCached(posterSrc)}));
 	const posterCachedOnMount = posterCacheAtMount.src === posterSrc && posterCacheAtMount.cached;
 	const [loadedPosterSrc, setLoadedPosterSrc] = useState<string | null>(() => {
-		if (posterSrc.length > 0 && ImageCacheUtils.hasImage(posterSrc)) return posterSrc;
+		if (posterSrc.length > 0 && isPosterCached(posterSrc)) return posterSrc;
 		return null;
 	});
 	const posterLoaded = posterSrc.length > 0 && loadedPosterSrc === posterSrc;
 	useEffect(() => {
 		if (!isNearViewport) return;
-		if (posterSrc.length === 0 || loadedPosterSrc === posterSrc) return;
+		if (posterSrc.length === 0) return;
 		if (ImageCacheUtils.hasImage(posterSrc)) {
-			setLoadedPosterSrc(posterSrc);
+			if (loadedPosterSrc !== posterSrc) setLoadedPosterSrc(posterSrc);
 			return;
 		}
+		if (loadedPosterSrc === posterSrc && !wasShownBeforeRestart(posterSrc)) return;
 		const cleanup = ImageCacheUtils.loadImage(
 			posterSrc,
 			() => setLoadedPosterSrc(posterSrc),
-			() => setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource)),
+			() => {
+				forgetRestoredImageSource(posterSrc);
+				setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource));
+			},
 		);
 		return cleanup;
 	}, [isNearViewport, loadedPosterSrc, posterSrc]);

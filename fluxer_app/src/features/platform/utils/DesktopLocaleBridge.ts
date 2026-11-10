@@ -240,17 +240,27 @@ const UPDATE_APP_NOW_DESCRIPTOR = msg({
 	comment:
 		'Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).',
 });
+const RELOAD_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Reload {appName} to update',
+	comment:
+		'Tray menu item shown only while a downloaded update of the app files is waiting. Clicking it reloads the window to apply it. {appName} is the desktop app name (typically Fluxer).',
+});
+const RESTART_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Restart {appName} to update',
+	comment:
+		'Tray menu item shown only while a downloaded update of the desktop app itself is waiting. Clicking it restarts the app to apply it. {appName} is the desktop app name (typically Fluxer).',
+});
 const CHECK_FOR_UPDATES_MENU_DESCRIPTOR = msg({
 	message: 'Check for updates...',
 	comment:
 		'Desktop app menu item that looks for a new desktop version. The trailing ellipsis shows that a dialog follows.',
 });
 const UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR = msg({
-	message: 'An update for {appName} is available.',
-	comment: 'Native desktop dialog headline after a manual update check found an update.',
+	message: 'An update for {appName} is ready to install.',
+	comment: 'Native desktop dialog headline shown once an update has been downloaded and can be applied.',
 });
 const UPDATE_AVAILABLE_DETAIL_DESCRIPTOR = msg({
-	message: '{appName} will close, install the update and open again.',
+	message: '{appName} will restart to finish updating.',
 	comment:
 		'Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.',
 });
@@ -557,6 +567,8 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.tray.disconnectVoice': DISCONNECT_FROM_VOICE_DESCRIPTOR,
 	'desktop.tray.checkForUpdates': CHECK_FOR_UPDATES_DESCRIPTOR,
 	'desktop.tray.updateNow': UPDATE_APP_NOW_DESCRIPTOR,
+	'desktop.tray.reloadToUpdate': RELOAD_TO_UPDATE_DESCRIPTOR,
+	'desktop.tray.restartToUpdate': RESTART_TO_UPDATE_DESCRIPTOR,
 	'desktop.appMenu.checkForUpdates': CHECK_FOR_UPDATES_MENU_DESCRIPTOR,
 	'desktop.update.availableMessage': UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR,
 	'desktop.update.availableDetail': UPDATE_AVAILABLE_DETAIL_DESCRIPTOR,

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resetBootHydration} from '@app/features/boot_state/BootHydration';
+import {wipeAllBootState} from '@app/features/boot_state/BootStateBridge';
 import {resolveLegacyAppStorageKey} from '@app/features/platform/state/LegacyAppStorageKeyMap';
 import {LEGACY_APP_STORAGE_MIGRATION_MARKER_KEY} from '@app/features/platform/state/LegacyAppStorageMigration';
 import {
@@ -114,7 +116,13 @@ function clearLegacyStorageCorpus(keysToKeep: ReadonlySet<string>): void {
 	}
 }
 
+async function clearBootStateForStoredAccounts(): Promise<void> {
+	const {default: SessionManager} = await import('@app/features/platform/state/AuthSession');
+	await wipeAllBootState(SessionManager.accounts.map((account) => account.storageKey));
+}
+
 export async function resetClientState(options: ResetClientStateOptions, accountScope?: string): Promise<void> {
+	resetBootHydration();
 	const keysToKeep: ReadonlyArray<string> = options.keepDrafts ? PRESERVED_RESET_STORAGE_KEYS : [];
 	await settlePendingWrites();
 	switch (options.reason) {
@@ -131,6 +139,7 @@ export async function resetClientState(options: ResetClientStateOptions, account
 			return;
 		}
 		case ResetClientStateReason.RESET_APP_DATA: {
+			await clearBootStateForStoredAccounts();
 			const preserved = [...keysToKeep, DESKTOP_LEGACY_RAW_STORAGE_SEED_MARKER_KEY];
 			const keepSet = new Set(preserved);
 			if (!(await clearScopedStoreAndMigrationMarker(keepSet))) {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
@@ -46,7 +47,10 @@ export function useNearViewport<T extends Element>({
 	const resolveScrollSurface = useContext(NearViewportSurfaceContext);
 	const viewportKey = resolveViewportKey(rememberKey);
 	const loadImmediately = disabled || typeof IntersectionObserver === 'undefined';
-	const wasRemembered = viewportKey ? rememberedViewportKeys.has(viewportKey) : false;
+	const wasRemembered =
+		rememberKey != null &&
+		viewportKey !== null &&
+		(rememberedViewportKeys.has(viewportKey) || wasShownBeforeRestart(rememberKey));
 	const [element, setElement] = useState<T | null>(null);
 	const [isNearViewport, setIsNearViewport] = useState(loadImmediately || wasRemembered);
 	const ref = useCallback((node: T | null) => {

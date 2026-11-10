@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import SudoVerificationModal from '@app/features/auth/components/modals/SudoVerificationModal';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTypes';
+import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/platform/state/AccountScopedWork';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -16,6 +16,11 @@ import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {MfaMethod, SudoPromptStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
+
+const SudoVerificationModal = createDefaultLoadableComponent<Record<string, never>>({
+	displayName: 'SudoVerificationModal',
+	load: () => import('@app/features/auth/components/modals/SudoVerificationModal'),
+});
 
 interface SudoErrorPayload {
 	has_mfa?: boolean;

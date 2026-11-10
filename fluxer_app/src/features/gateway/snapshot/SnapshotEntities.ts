@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
+import {SNAPSHOT_SCHEMA_EPOCH} from '@app/features/gateway/snapshot/SnapshotSchemaEpoch';
 import type {StateSnapshotEntries} from '@app/features/gateway/snapshot/SnapshotTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
@@ -164,7 +165,7 @@ function requireCompositePart(value: string, label: string): void {
 	}
 }
 
-export const SNAPSHOT_SCHEMA_EPOCH = 4;
+export {SNAPSHOT_SCHEMA_EPOCH};
 
 export type SnapshotUserRow = WireUser | UserPrivate | UserPartial;
 

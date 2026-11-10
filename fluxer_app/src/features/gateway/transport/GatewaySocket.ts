@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
+import {afterBootReveal, isBootRevealHeld} from '@app/features/boot_state/BootReveal';
 import {
 	type CompressionType,
 	GatewayCompression,
@@ -48,6 +50,7 @@ const GATEWAY_TIMEOUTS = {
 	MinReconnect: 1000,
 	MaxReconnect: 10000,
 	MaxReconnectWhileDispatchesFail: 60000,
+	MaxReconnectWhileShowingRestoredView: 3000,
 	ReconnectFloor: 500,
 	ReconnectSpread: 2000,
 	InvalidSessionIdentifySpread: 1000,
@@ -138,6 +141,7 @@ export interface GatewaySocketOptions {
 	initialGuildId?: string | null;
 	isMobileLayout: () => boolean;
 	geo: () => {latitude: string | null; longitude: string | null};
+	showsRestoredView: () => boolean;
 	logName?: string;
 }
 
@@ -248,6 +252,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	private deferredEmitBytes = 0;
 	private deferredEmitTimeoutId: number | null = null;
 	private deferredEmitIdleId: number | null = null;
+	private cancelRevealFlush: (() => void) | null = null;
 	private criticalWorkScheduled = false;
 	private dispatchGeneration = 0;
 	private consecutiveDispatchFailures = 0;
@@ -281,6 +286,11 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			this.log.warn(
 				`Deferred gateway emit queue reached its bound (${this.deferredEmitQueue.length} entries, ${this.deferredEmitBytes} bytes), flushing before enqueueing`,
 			);
+			if (this.cancelRevealFlush !== null) {
+				this.clearSession();
+				this.disconnect(4000, 'Gateway delivery bound exceeded before boot reveal', true);
+				return;
+			}
 			this.flushDeferredEmits();
 		}
 		this.deferredEmitQueue.push(run);
@@ -349,6 +359,18 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	private flushDeferredEmits(): void {
 		this.clearDeferredFlushWork();
+		if (this.options.showsRestoredView() && isBootRevealHeld()) {
+			if (this.cancelRevealFlush === null) {
+				this.cancelRevealFlush = afterBootReveal(() => {
+					this.cancelRevealFlush = null;
+					this.flushDeferredEmits();
+				});
+			}
+			return;
+		}
+		this.cancelRevealFlush?.();
+		this.cancelRevealFlush = null;
+		if (this.options.showsRestoredView()) flushBootHydration();
 		this.criticalWorkScheduled = false;
 		const queue = this.deferredEmitQueue;
 		this.deferredEmitQueue = [];
@@ -363,6 +385,8 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	private discardDeferredEmits(): void {
+		this.cancelRevealFlush?.();
+		this.cancelRevealFlush = null;
 		this.clearDeferredFlushWork();
 		this.criticalWorkScheduled = false;
 		this.deferredEmitQueue = [];
@@ -1312,16 +1336,23 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		}
 		this.lastReconnectAt = now;
 		this.reconnectAttempts += 1;
-		const cap =
-			this.consecutiveDispatchFailures > 0
-				? GATEWAY_TIMEOUTS.MaxReconnectWhileDispatchesFail
-				: GATEWAY_TIMEOUTS.MaxReconnect;
+		const cap = this.reconnectCeiling();
 		const ceiling = Math.min(GATEWAY_TIMEOUTS.MinReconnect * 2 ** (this.reconnectAttempts - 1), cap);
 		const delay = Math.floor(
 			GATEWAY_TIMEOUTS.ReconnectFloor + Math.random() * (ceiling - GATEWAY_TIMEOUTS.ReconnectFloor),
 		);
 		this.log.debug(`Reconnect backoff attempt=${this.reconnectAttempts} delay=${delay}ms`);
 		return delay;
+	}
+
+	private reconnectCeiling(): number {
+		if (this.consecutiveDispatchFailures > 0) {
+			return GATEWAY_TIMEOUTS.MaxReconnectWhileDispatchesFail;
+		}
+		if (this.options.showsRestoredView()) {
+			return GATEWAY_TIMEOUTS.MaxReconnectWhileShowingRestoredView;
+		}
+		return GATEWAY_TIMEOUTS.MaxReconnect;
 	}
 
 	private resetBackoffInternal(): void {
@@ -1362,6 +1393,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	private clearSession(): void {
+		if (this.cancelRevealFlush !== null) this.discardDeferredEmits();
 		const hadSession = Boolean(this.activeSessionId);
 		this.activeSessionId = null;
 		this.subscriptionLedger.clear();

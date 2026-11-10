@@ -189,7 +189,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 		prevLoadingRef.current = isLoading;
 	}, [isLoading, currentChannelId]);
 	useEffect(() => {
-		if (!inviteState) {
+		if (!inviteState || Invites.isPreviewOnly(code, instanceTarget)) {
 			void InviteCommands.fetchWithCoalescing(code, instanceTarget).catch(() => {});
 		}
 	}, [code, instanceTarget, inviteState]);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import Initialization from '@app/features/app/state/Initialization';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import {cleanupChannelLocalState} from '@app/features/channel/events/ChannelDelete';
@@ -264,16 +265,33 @@ class ChannelThreads {
 	handleGatewayReady(
 		guilds: ReadonlyArray<{id: string; unavailable?: boolean; threads?: ReadonlyArray<ChannelWire>}>,
 	): void {
-		this.threadIdsByParent.clear();
-		this.threadIdsByGuild.clear();
-		this.parentByThread.clear();
-		ThreadMemberships.clear();
-		for (const guild of guilds) {
-			if (guild.unavailable || !guild.threads) continue;
-			for (const thread of guild.threads) {
-				this.upsert(thread, guild.id, {silent: true});
+		if (Initialization.isStale) {
+			const incoming = new Set(
+				guilds.flatMap((guild) => (guild.unavailable ? [] : (guild.threads ?? []).map((thread) => thread.id))),
+			);
+			for (const id of this.parentByThread.keys()) {
+				if (!incoming.has(id)) this.remove(id);
 			}
+			for (const guild of guilds) {
+				if (guild.unavailable) continue;
+				for (const thread of guild.threads ?? []) {
+					if (thread.member === undefined) ThreadMemberships.remove(thread.id);
+				}
+			}
+		} else {
+			this.threadIdsByParent.clear();
+			this.threadIdsByGuild.clear();
+			this.parentByThread.clear();
+			ThreadMemberships.clear();
 		}
+		for (const guild of guilds) {
+			this.hydrateGuildFromSnapshot(guild);
+		}
+	}
+
+	hydrateGuildFromSnapshot(guild: {id: string; unavailable?: boolean; threads?: ReadonlyArray<ChannelWire>}): void {
+		if (guild.unavailable || !guild.threads) return;
+		for (const thread of guild.threads) this.upsert(thread, guild.id, {silent: true});
 	}
 
 	isCurrentUser(userId: string | undefined): boolean {

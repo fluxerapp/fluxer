@@ -231,6 +231,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 	const contentRef = useRef<HTMLDivElement>(null);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const scrollTimeoutRef = useRef<number>(0);
+	const hasPaintedRef = useRef(false);
 	const thumbRefreshRafRef = useRef<number | null>(null);
 	const onResizeRef = useRef(onResize);
 	const [isHovered, setIsHovered] = useState(false);
@@ -460,6 +461,12 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 		};
 	}, []);
 	useEffect(() => {
+		const frame = requestAnimationFrame(() => {
+			hasPaintedRef.current = true;
+		});
+		return () => cancelAnimationFrame(frame);
+	}, []);
+	useEffect(() => {
 		return cancelScheduledThumbRefresh;
 	}, [cancelScheduledThumbRefresh]);
 	useEffect(() => {
@@ -622,7 +629,8 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 	);
 	const handleScroll = useCallback(
 		(event: UIEvent<HTMLDivElement>) => {
-			if (fade && showTrack) {
+			const isMountScroll = !hasPaintedRef.current;
+			if (fade && showTrack && !isMountScroll) {
 				setIsScrolling(true);
 				window.clearTimeout(scrollTimeoutRef.current);
 				scrollTimeoutRef.current = window.setTimeout(() => {
@@ -799,6 +807,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 					scrollbar={scrollbar}
 					hasTrack={hasTrack}
 					isVisible={isTrackVisible}
+					animateVisibility={fade}
 					isDragging={isDragging}
 					trackRef={setTrackElement}
 					thumbRef={setThumbElement}

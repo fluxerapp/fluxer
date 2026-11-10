@@ -33,20 +33,23 @@ function normalizeUrlBase(urlBase: string | null | undefined): string | null {
 }
 
 function createPattern(config: CodeLinkConfig): RegExp {
+	const urlBases = config.urlBases;
+	const documentHost =
+		typeof location !== 'undefined' && location.host && !isDesktopLocalAppDocument() ? location.host : '';
+	const inputKey = [config.path, documentHost, ...urlBases].join('\u0000');
+	let pattern = patternCache.get(inputKey);
+	if (pattern) {
+		return pattern;
+	}
 	const normalizedBases = new Set<string>();
-	for (const urlBase of config.urlBases) {
+	for (const urlBase of urlBases) {
 		const normalized = normalizeUrlBase(urlBase);
 		if (normalized) {
 			normalizedBases.add(normalized);
 		}
 	}
-	if (typeof location !== 'undefined' && location.host && !isDesktopLocalAppDocument()) {
-		normalizedBases.add(`${location.host}/${config.path}`);
-	}
-	const cacheKey = Array.from(normalizedBases).sort().join('|');
-	let pattern = patternCache.get(cacheKey);
-	if (pattern) {
-		return pattern;
+	if (documentHost) {
+		normalizedBases.add(`${documentHost}/${config.path}`);
 	}
 	const branches: Array<string> = [];
 	const orderedBases = Array.from(normalizedBases).sort((a, b) => b.length - a.length || a.localeCompare(b));
@@ -57,7 +60,7 @@ function createPattern(config: CodeLinkConfig): RegExp {
 		branches.push(`${RegexUtils.escapeRegex(host)}(?:\\/#)?${RegexUtils.escapeRegex(path)}`);
 	}
 	pattern = new RegExp(['(?:https?:\\/\\/)?', '(?:', branches.join('|'), ')\\/', CODE_REGEX].join(''), 'gi');
-	patternCache.set(cacheKey, pattern);
+	patternCache.set(inputKey, pattern);
 	return pattern;
 }
 

@@ -1,8 +1,12 @@
 (() => {
 	try {
+		const root = document.documentElement;
+		if (document.hasFocus()) {
+			root.classList.add('window-focused');
+		}
 		const theme = localStorage.getItem('theme');
 		if (theme) {
-			document.documentElement.classList.add(`theme-${theme}`);
+			root.classList.add(`theme-${theme}`);
 		}
 	} catch {}
 })();

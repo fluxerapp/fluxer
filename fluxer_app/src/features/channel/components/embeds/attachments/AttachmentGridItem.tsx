@@ -389,8 +389,8 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 								data-flx="channel.embeds.attachments.attachment-grid-item.media-container"
 							>
 								<div
-									className={styles.loadingOverlay}
-									data-flx="channel.embeds.attachments.attachment-grid-item.loading-overlay"
+									className={styles.mediaFrame}
+									data-flx="channel.embeds.attachments.attachment-grid-item.media-frame"
 								>
 									{isAnimatedGif && (
 										<div

@@ -57,7 +57,12 @@ class SnapshotDataError extends Error {
 	}
 }
 
+const NON_ASCII_CODE_UNIT = /[\u0080-\uffff]/;
+
 function snapshotStringByteSize(value: string): number {
+	if (!NON_ASCII_CODE_UNIT.test(value)) {
+		return value.length;
+	}
 	let byteSize = 0;
 	let index = 0;
 	while (index < value.length) {

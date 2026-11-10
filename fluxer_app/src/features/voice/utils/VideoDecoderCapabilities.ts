@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {VideoCodec} from 'livekit-client';
 
@@ -168,6 +169,6 @@ export function clearScreenShareDecodeFailures(): void {
 	screenShareDecodeFailures.clear();
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !isDesktopLocalAppDocument()) {
 	void loadVideoDecoderExclusions();
 }

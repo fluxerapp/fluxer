@@ -13,6 +13,11 @@ class UserPinnedDM {
 	}
 
 	setPinnedDMs(pinnedDMs: Array<string>): void {
+		if (
+			this.pinnedDMsArray.length === pinnedDMs.length &&
+			this.pinnedDMsArray.every((id, index) => id === pinnedDMs[index])
+		)
+			return;
 		this.pinnedDMsArray = pinnedDMs;
 		logger.debug(`Set pinned DMs: ${pinnedDMs.length} channels`);
 	}

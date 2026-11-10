@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorageContract';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
+import {registerLocalPresenceIntentHandler} from '@app/features/presence/state/LocalPresenceIntent';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {CustomStatus, GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
@@ -59,25 +61,37 @@ class LocalPresence {
 				() => Idle.isAfk(),
 				() => this.updatePresence(),
 			);
+			reaction(
+				() => Initialization.isStale,
+				() => this.updatePresence(),
+			);
 		});
 	}
 
 	updatePresence(): void {
 		const isMobile = MobileLayout.isMobileLayout();
 		const settings = userSettings;
-		if (!settings?.isHydrated()) {
-			if (this.restoredIntent) {
-				this.applyRestoredIntent(isMobile, settings);
-				return;
-			}
-			this.status = StatusTypes.INVISIBLE;
-			this.since = 0;
-			this.afk = false;
-			this.mobile = isMobile;
-			this.customStatus = null;
+		if (settings?.isHydrated()) {
+			this.restoredIntent = null;
+			this.applySettings(isMobile, settings);
 			return;
 		}
-		this.restoredIntent = null;
+		if (this.restoredIntent) {
+			this.applyRestoredIntent(isMobile, settings);
+			return;
+		}
+		if (settings !== null && Initialization.isStale) {
+			this.applySettings(isMobile, settings);
+			return;
+		}
+		this.status = StatusTypes.INVISIBLE;
+		this.since = 0;
+		this.afk = false;
+		this.mobile = isMobile;
+		this.customStatus = null;
+	}
+
+	private applySettings(isMobile: boolean, settings: LocalPresenceUserSettings): void {
 		const userStatus = settings.status;
 		const idleSince = Idle.getIdleSince();
 		const afk = this.syncAfk(isMobile, settings);
@@ -193,4 +207,6 @@ class LocalPresence {
 	}
 }
 
-export default new LocalPresence();
+const localPresence = new LocalPresence();
+registerLocalPresenceIntentHandler(localPresence);
+export default localPresence;

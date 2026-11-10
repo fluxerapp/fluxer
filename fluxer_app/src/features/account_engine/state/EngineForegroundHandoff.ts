@@ -199,7 +199,7 @@ export class EngineForegroundHandoff {
 		}
 	}
 
-	async bootForeground(accountKey: string): Promise<ForegroundPromotionMode> {
+	async bootForeground(accountKey: string, options: {storesRestored: boolean}): Promise<ForegroundPromotionMode> {
 		if (!this.host.engine.available) {
 			return 'cold';
 		}
@@ -211,7 +211,7 @@ export class EngineForegroundHandoff {
 			}
 			return 'cold';
 		}
-		if (!this.canBoot(accountKey)) {
+		if (!this.canBoot(accountKey, options.storesRestored)) {
 			return 'cold';
 		}
 		const request = this.requestPromotion(accountKey);
@@ -221,8 +221,12 @@ export class EngineForegroundHandoff {
 			void request.then((late) => this.settleAbandonedBoot(accountKey, late));
 			return 'cold';
 		}
-		if (!this.canBoot(accountKey)) {
+		if (!this.canBoot(accountKey, options.storesRestored)) {
 			this.settleAbandonedBoot(accountKey, promotion);
+			return 'cold';
+		}
+		if (options.storesRestored) {
+			this.settleCold(accountKey, promotion);
 			return 'cold';
 		}
 		return await this.adoptAndSettle(accountKey, promotion, true);
@@ -238,11 +242,11 @@ export class EngineForegroundHandoff {
 		}
 	}
 
-	private canBoot(accountKey: string): boolean {
+	private canBoot(accountKey: string, storesRestored: boolean): boolean {
 		return (
 			this.active === null &&
 			this.host.isCurrentAccount(accountKey) &&
-			this.host.foreground.foregroundAccountKey === null
+			(storesRestored || this.host.foreground.foregroundAccountKey === null)
 		);
 	}
 

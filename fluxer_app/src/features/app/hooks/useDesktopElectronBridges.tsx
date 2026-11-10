@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {isClientBooting} from '@app/features/app/state/ClientReadiness';
+import Initialization from '@app/features/app/state/Initialization';
 import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {initializeDesktopTrayBridge} from '@app/features/platform/utils/DesktopTrayBridge';
@@ -36,7 +37,7 @@ export function useDesktopElectronBridges(): void {
 		const unsubZoomReset = electronApi.onZoomReset?.(() => Accessibility.updateSettings({zoomLevel: 1.0}));
 		const unsubOpenSettings = electronApi.onOpenSettings?.(() => {
 			if (!Authentication.isAuthenticated) return;
-			if (isClientBooting()) return;
+			if (isClientBooting() || Initialization.isStale) return;
 			void loadLazyModule(() => import('@app/features/user/components/modals/UserSettingsModal'))
 				.then(({UserSettingsModal}) => {
 					ModalCommands.push(

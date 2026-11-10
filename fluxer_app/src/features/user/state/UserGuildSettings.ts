@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
+import {journaledGuildSettingsWrites} from '@app/features/user/state/GuildSettingsWriteJournal';
 import {resolveUnreadInboxVisibility} from '@app/features/user/state/UnreadInboxVisibility';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
+import isEqual from 'lodash/isEqual';
 import {action, computed, makeObservable, observable, reaction} from 'mobx';
 
 const logger = new Logger('UserGuildSettings');
@@ -321,6 +324,7 @@ class UserGuildSettings {
 			channel_overrides: this.normalizeChannelOverrides(overridesInput),
 		};
 		const sanitized = this.sanitizeChannelMutes(this.sanitizeGuildMute(merged));
+		if (isEqual(existing, sanitized)) return;
 		this.guildSettings.set(key as GuildId, sanitized);
 		this.updateMutedChannelsCache(key, sanitized);
 		this.setupMuteTimers(key, sanitized);
@@ -501,17 +505,30 @@ class UserGuildSettings {
 	}
 
 	handleGatewayReady(userGuildSettings: Array<GatewayGuildSettings>): void {
-		this.clearAllTimers();
-		this.guildSettings.clear();
-		this.mutedChannelsByGuild.clear();
-		for (const settings of userGuildSettings) {
-			this.updateGuildSettings(settings.guild_id, settings);
+		if (!Initialization.isStale) {
+			this.clearAllTimers();
+			this.guildSettings.clear();
+			this.mutedChannelsByGuild.clear();
+		} else {
+			const incoming = new Set(userGuildSettings.map((settings) => this.storageKeyFor(settings.guild_id)));
+			for (const id of this.guildSettings.keys()) {
+				if (incoming.has(id)) continue;
+				this.clearGuildMuteTimer(id);
+				this.clearGuildChannelTimers(id);
+				this.guildSettings.delete(id);
+				this.mutedChannelsByGuild.delete(id);
+				this.markGuildUpdated(id);
+				this.notifyChange();
+			}
 		}
-		this.notifyChange();
+		for (const settings of userGuildSettings) this.updateGuildSettings(settings.guild_id, settings);
 	}
 
 	hydrateFromSnapshot(userGuildSettings: ReadonlyArray<GatewayGuildSettings>): void {
 		this.handleGatewayReady([...userGuildSettings]);
+		for (const [key, updates] of journaledGuildSettingsWrites()) {
+			this.updateGuildSettings(key === ME ? null : key, updates as Partial<GatewayGuildSettings>);
+		}
 	}
 
 	handleUserGuildSettingsUpdate(data: GatewayGuildSettings): void {

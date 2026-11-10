@@ -4,7 +4,12 @@ import type {AppStorageBootstrapHandle} from '@app/features/platform/state/AppSt
 import {DesktopStorageAuthority} from '@app/features/platform/state/AppStorageDesktopAuthority';
 import {AppStorageFinalizationSession} from '@app/features/platform/state/AppStorageFinalizationSession';
 import {AppStorageMigrationCoordinator} from '@app/features/platform/state/AppStorageMigrationCoordinator';
-import {activateAppStorageScope, initializeAppStorage} from '@app/features/platform/state/PersistentStorage';
+import {
+	activateAppStorageScope,
+	getAppStorageScope,
+	initializeAppStorage,
+	UNAUTHENTICATED_APP_STORAGE_SCOPE,
+} from '@app/features/platform/state/PersistentStorage';
 import {getPersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
@@ -15,7 +20,9 @@ export type {
 
 async function initializeSignedOutStorage(): Promise<void> {
 	await initializeAppStorage();
-	await activateAppStorageScope(null);
+	if (getAppStorageScope() !== UNAUTHENTICATED_APP_STORAGE_SCOPE) {
+		await activateAppStorageScope(null);
+	}
 	Logger.refreshGlobalLogLevel();
 }
 

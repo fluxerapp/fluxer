@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import {getBrowserNavigation} from '@app/features/platform/components/router/BrowserNavigation';
 import type {HistoryAdapter, HistoryLocation} from '@app/features/platform/components/router/RouterTypes';
 
@@ -95,6 +96,7 @@ export function createBrowserHistory(): HistoryAdapter {
 		state: window.history.state ?? null,
 	});
 	const notify = () => {
+		flushBootHydration();
 		const loc = getLocation();
 		for (const l of listeners) l(loc, 'pop');
 	};
