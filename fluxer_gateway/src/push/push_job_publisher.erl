@@ -90,7 +90,16 @@ message_job(
             ChannelName
         )
     },
-    maps:merge(Job, push_job_fields:thread(MessageData, ChannelName)).
+    maps:merge(
+        with_age_restricted(MessageData, Job), push_job_fields:thread(MessageData, ChannelName)
+    ).
+
+-spec with_age_restricted(map(), map()) -> map().
+with_age_restricted(MessageData, Job) ->
+    case push_recipients:is_age_restricted(MessageData) of
+        true -> Job#{<<"age_restricted">> => true};
+        false -> Job
+    end.
 
 -spec publish_recipients(map(), [integer()], meta()) -> ok | {error, term()}.
 publish_recipients(Job, UserIds, Meta) ->

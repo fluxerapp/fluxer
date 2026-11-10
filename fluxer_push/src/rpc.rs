@@ -92,13 +92,14 @@ impl RpcClient {
     pub async fn push_subscriptions(
         &self,
         user_ids: &[String],
+        age_restricted: bool,
     ) -> Result<HashMap<String, Vec<Subscription>>, RpcError> {
         let mut subscriptions = HashMap::new();
         for batch in user_ids.chunks(USER_BATCH_MAX) {
             let data: HashMap<String, Vec<Subscription>> = self
                 .call(
                     RpcMethod::GetPushSubscriptions,
-                    &json!({"type": "get_push_subscriptions", "user_ids": batch}),
+                    &push_subscriptions_request(batch, age_restricted),
                 )
                 .await?;
             subscriptions.extend(data);
@@ -203,6 +204,14 @@ struct PushServiceDeliveryConfigData {
 struct BadgeCountsData {
     #[serde(default)]
     badge_counts: HashMap<String, u32>,
+}
+
+fn push_subscriptions_request(user_ids: &[String], age_restricted: bool) -> Value {
+    let mut request = json!({"type": "get_push_subscriptions", "user_ids": user_ids});
+    if age_restricted {
+        request["age_restricted"] = Value::Bool(true);
+    }
+    request
 }
 
 fn backoff_delay_ms(attempt: u32) -> u64 {

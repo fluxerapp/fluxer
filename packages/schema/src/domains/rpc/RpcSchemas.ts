@@ -105,6 +105,10 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('get_push_subscriptions').describe('Request type for fetching push notification subscriptions'),
 		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch subscriptions for'),
+		age_restricted: z
+			.boolean()
+			.optional()
+			.describe('Leave out iOS app subscriptions of users who have not allowed 18+ content on iOS'),
 	}),
 	z.object({
 		type: z.literal('get_badge_counts').describe('Request type for fetching notification badge counts'),

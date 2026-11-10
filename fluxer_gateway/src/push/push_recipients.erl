@@ -3,7 +3,7 @@
 -module(push_recipients).
 -typing([eqwalizer]).
 
--export([filter_eligible/9, counters/0]).
+-export([filter_eligible/9, age_gate/2, is_age_restricted/1, counters/0]).
 
 -define(CNT_FETCH_ATTEMPTS, push_blocked_ids_fetch_attempts).
 -define(CNT_FETCH_FAILURES, push_blocked_ids_fetch_failures).
@@ -60,10 +60,19 @@ filter_eligible(
     Unblocked = drop_blocked_recipients(
         EligibleUsers, AuthorId, fetch_missing_blocked_ids(EligibleUsers)
     ),
-    case push_job_fields:is_mature(MessageData) of
-        true -> adult_recipients(Unblocked);
-        false -> Unblocked
+    age_gate(MessageData, Unblocked).
+
+-spec age_gate(map(), [integer()]) -> [integer()].
+age_gate(MessageData, UserIds) ->
+    case is_age_restricted(MessageData) of
+        true -> adult_recipients(UserIds);
+        false -> UserIds
     end.
+
+-spec is_age_restricted(map()) -> boolean().
+is_age_restricted(#{<<"__push_mature">> := true}) -> true;
+is_age_restricted(#{<<"channel_nsfw">> := true}) -> true;
+is_age_restricted(_MessageData) -> false.
 
 -spec adult_recipients([integer()]) -> [integer()].
 adult_recipients([]) ->

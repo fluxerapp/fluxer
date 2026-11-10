@@ -63,6 +63,7 @@ import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
 import type {ReadState} from '@app/api/models/ReadState';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {User} from '@app/api/models/User';
@@ -99,7 +100,7 @@ import {
 	mapUserToPrivateResponse,
 	mapWebAuthnCredentialToResponse,
 } from '@app/api/user/UserMappers';
-import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent, isMatureContentUnlocked} from '@app/api/utils/AgeUtils';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import {allSettledWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
@@ -189,6 +190,7 @@ interface UserData {
 const GUILD_COLLECTION_DEFAULT_LIMIT = 250;
 const GUILD_COLLECTION_MAX_LIMIT = 1000;
 const RPC_RESPONSE_MAP_CONCURRENCY = 32;
+const IOS_APP_PUSH_PLATFORMS: ReadonlySet<string> = new Set(['ios_apns', 'ios_apns_voip']);
 const VOICE_STATE_KV_KEY_PREFIX = 'voice:guild:states:';
 const PREMIUM_RECONCILE_ENQUEUE_COOLDOWN_SECONDS = 10 * 60;
 const PREMIUM_RECONCILE_ENQUEUE_COOLDOWN_KEY_PREFIX = 'rpc:premium:reconcile:enqueue:';
@@ -370,6 +372,7 @@ export class RpcService {
 					type: 'get_push_subscriptions',
 					data: await this.getPushSubscriptions({
 						userIds: request.user_ids.map(createUserID),
+						ageRestricted: request.age_restricted === true,
 					}),
 				};
 			case 'get_badge_counts': {
@@ -1736,7 +1739,7 @@ export class RpcService {
 		return {user_guild_settings: userGuildSettings};
 	}
 
-	private async getPushSubscriptions(params: {userIds: Array<UserID>}): Promise<
+	private async getPushSubscriptions(params: {userIds: Array<UserID>; ageRestricted: boolean}): Promise<
 		Record<
 			string,
 			Array<{
@@ -1751,8 +1754,9 @@ export class RpcService {
 			}>
 		>
 	> {
-		const {userIds} = params;
+		const {userIds, ageRestricted} = params;
 		const subscriptionsMap = await this.userRepository.getBulkPushSubscriptions(userIds);
+		const iosLocked = ageRestricted ? await this.usersWithoutIosMatureContent(subscriptionsMap) : new Set<UserID>();
 		const result: Record<
 			string,
 			Array<{
@@ -1766,7 +1770,10 @@ export class RpcService {
 				thread_channels?: true;
 			}>
 		> = {};
-		for (const [userId, subscriptions] of subscriptionsMap.entries()) {
+		for (const [userId, allSubscriptions] of subscriptionsMap.entries()) {
+			const subscriptions = iosLocked.has(userId)
+				? allSubscriptions.filter((sub) => !IOS_APP_PUSH_PLATFORMS.has(sub.platform))
+				: allSubscriptions;
 			result[userId.toString()] = subscriptions.map((sub) => ({
 				subscription_id: sub.subscriptionId,
 				endpoint: sub.endpoint,
@@ -1779,6 +1786,24 @@ export class RpcService {
 			}));
 		}
 		return result;
+	}
+
+	private async usersWithoutIosMatureContent(
+		subscriptionsMap: Map<UserID, Array<PushSubscription>>,
+	): Promise<Set<UserID>> {
+		const iosUserIds = Array.from(subscriptionsMap.entries())
+			.filter(([, subscriptions]) => subscriptions.some((sub) => IOS_APP_PUSH_PLATFORMS.has(sub.platform)))
+			.map(([userId]) => userId);
+		const settled = await allSettledWithConcurrency(iosUserIds, RPC_RESPONSE_MAP_CONCURRENCY, (userId) =>
+			this.userRepository.findSettings(userId),
+		);
+		const locked = new Set<UserID>();
+		for (const [index, settings] of settled.entries()) {
+			if (settings.status === 'rejected' || settings.value?.allowMatureContentOnIos !== true) {
+				locked.add(iosUserIds[index]!);
+			}
+		}
+		return locked;
 	}
 
 	private async getBadgeCounts(params: {userIds: Array<UserID>}): Promise<Record<string, number>> {
@@ -1957,7 +1982,32 @@ export class RpcService {
 
 	private async getUsersAdultContentAllowed(userIds: Array<UserID>): Promise<Array<string>> {
 		const users = await this.userRepository.listUsers(userIds);
-		return users.filter((user) => canUserAccessNsfwContent(user)).map((user) => user.id.toString());
+		const adults = users.filter((user) => canUserAccessNsfwContent(user));
+		const restrictedCountries = new Set(
+			Config.instance.agePolicy.restricted
+				.filter((geo) => geo.regionCode === null)
+				.map((geo) => geo.countryCode.toUpperCase()),
+		);
+		if (restrictedCountries.size === 0) {
+			return adults.map((user) => user.id.toString());
+		}
+		const settled = await allSettledWithConcurrency(adults, RPC_RESPONSE_MAP_CONCURRENCY, async (user) => {
+			if (isMatureContentUnlocked(user)) return true;
+			const sessions = await this.userRepository.listAuthSessions(user.id);
+			const latest = sessions.reduce<(typeof sessions)[number] | null>(
+				(newest, session) =>
+					newest === null || session.approximateLastUsedAt > newest.approximateLastUsedAt ? session : newest,
+				null,
+			);
+			const country = latest?.clientCountry?.toUpperCase() ?? null;
+			return country === null || !restrictedCountries.has(country);
+		});
+		return adults
+			.filter((_user, index) => {
+				const allowed = settled[index]!;
+				return allowed.status === 'fulfilled' && allowed.value;
+			})
+			.map((user) => user.id.toString());
 	}
 
 	private async kickTemporaryMember(params: {userId: UserID; guildIds: Array<GuildID>}): Promise<boolean> {
