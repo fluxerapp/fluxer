@@ -64,6 +64,7 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 });
 
 interface TextareaPlusMenuProps {
+	giftChannelId?: string;
 	onUploadFile: () => void;
 	canAttachFiles: boolean;
 	canSendMessages: boolean;
@@ -75,6 +76,7 @@ interface TextareaPlusMenuProps {
 
 export const TextareaPlusMenu = observer(
 	({
+		giftChannelId,
 		onUploadFile,
 		canAttachFiles,
 		canSendMessages,
@@ -142,7 +144,7 @@ export const TextareaPlusMenu = observer(
 				{canSendGift && (
 					<MenuItem
 						icon={<GiftIcon data-flx="channel.textarea.textarea-plus-menu.gift-icon" />}
-						onClick={() => PremiumModalCommands.open(true)}
+						onClick={() => PremiumModalCommands.open({defaultGiftMode: true, giftChannelId})}
 						disabled={sendGiftHint != null}
 						hint={sendGiftHint}
 						data-flx="channel.textarea.textarea-plus-menu.menu-item.open"

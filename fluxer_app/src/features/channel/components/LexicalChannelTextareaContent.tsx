@@ -1118,6 +1118,7 @@ export const LexicalChannelTextareaContent = observer(
 					plusButton,
 					() => (
 						<TextareaPlusMenu
+							giftChannelId={draftChannelId == null ? channel.id : undefined}
 							onUploadFile={handleFileButtonClick}
 							canAttachFiles={canAttachFilesInChannel(channel)}
 							canSendMessages={!textareaInputDisabled}
@@ -1479,6 +1480,7 @@ export const LexicalChannelTextareaContent = observer(
 							data-flx="channel.lexical-channel-textarea-content.expression-picker-sheet"
 						/>
 						<MobileTextareaPlusBottomSheet
+							giftChannelId={draftChannelId == null ? channel.id : undefined}
 							isOpen={mobilePlusSheetOpen}
 							onClose={handleCloseMobilePlusSheet}
 							onUploadFile={handleFileButtonClick}

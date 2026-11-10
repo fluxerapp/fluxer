@@ -5,6 +5,7 @@ import {useCheckoutActions} from '@app/features/app/components/dialogs/component
 import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import GeoIP from '@app/features/app/state/GeoIP';
+import {beginChatGiftSend, clearChatGiftSend} from '@app/features/gift/state/ChatGiftSend';
 import {
 	CANCEL_DESCRIPTOR,
 	ONE_MONTH_DURATION_DESCRIPTOR as ONE_MONTH_DESCRIPTOR,
@@ -72,7 +73,7 @@ const BLOCKED_NOTES: Readonly<Record<PurchaseBlockedReason, MessageDescriptor>> 
 
 const PRICE_PLACEHOLDER = '...';
 
-export const GiftPlutoniumModal = observer(() => {
+export const GiftPlutoniumModal = observer(({chatChannelId}: {chatChannelId?: string}) => {
 	const {i18n} = useLingui();
 	const currentUser = Users.currentUser;
 	const premiumState = PremiumState.loadedForUserId === currentUser?.id ? PremiumState.state : null;
@@ -95,7 +96,11 @@ export const GiftPlutoniumModal = observer(() => {
 			setCnpjError(i18n._(CNPJ_INVALID_DESCRIPTOR));
 			return;
 		}
-		accountGate.start(() => void handleSelectPlan(plan, {isBusiness, cnpj: companyCnpj}));
+		accountGate.start(() => {
+			if (chatChannelId) beginChatGiftSend(chatChannelId);
+			else clearChatGiftSend();
+			void handleSelectPlan(plan, {isBusiness, cnpj: companyCnpj});
+		});
 	};
 	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
 	const giftsAvailable = areGiftPurchasesAvailable(priceIds, userPurchaseDisabled);

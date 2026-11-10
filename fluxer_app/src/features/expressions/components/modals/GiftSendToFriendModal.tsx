@@ -101,7 +101,10 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 					data-flx="expressions.gift-send-to-friend-modal.recipient-list"
 				/>
 			</Modal.Content>
-			<Modal.Footer data-flx="expressions.gift-send-to-friend-modal.modal-footer">
+			<Modal.Footer
+				className={selectorStyles.selectorFooter}
+				data-flx="expressions.gift-send-to-friend-modal.modal-footer"
+			>
 				<CopyLinkSection
 					label={<Trans>or send the gift link to a friend:</Trans>}
 					value={giftUrl}
@@ -109,14 +112,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 					onInputClick={(event) => event.currentTarget.select()}
 					inputProps={{placeholder: i18n._(GIFT_LINK_DESCRIPTOR)}}
 					data-flx="expressions.gift-send-to-friend-modal.copy-link-section"
-				>
-					<p className={styles.giftCodeText} data-flx="expressions.gift-send-to-friend-modal.gift-code-text">
-						<Trans>Gift code:</Trans>{' '}
-						<span className={styles.giftCode} data-flx="expressions.gift-send-to-friend-modal.gift-code">
-							{code}
-						</span>
-					</p>
-				</CopyLinkSection>
+				></CopyLinkSection>
 			</Modal.Footer>
 		</Modal.Root>
 	);

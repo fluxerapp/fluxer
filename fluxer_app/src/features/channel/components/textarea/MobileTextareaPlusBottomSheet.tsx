@@ -24,6 +24,7 @@ const SEND_GIFT_DESCRIPTOR = msg({
 });
 
 interface MobileTextareaPlusBottomSheetProps {
+	giftChannelId?: string;
 	isOpen: boolean;
 	onClose: () => void;
 	onUploadFile: () => void;
@@ -32,7 +33,14 @@ interface MobileTextareaPlusBottomSheetProps {
 }
 
 export const MobileTextareaPlusBottomSheet = observer(
-	({isOpen, onClose, onUploadFile, textareaValue, onUploadAsFile}: MobileTextareaPlusBottomSheetProps) => {
+	({
+		giftChannelId,
+		isOpen,
+		onClose,
+		onUploadFile,
+		textareaValue,
+		onUploadAsFile,
+	}: MobileTextareaPlusBottomSheetProps) => {
 		const {i18n} = useLingui();
 		const canSendGift = useCanSendGift(isOpen);
 		const groups: Array<MenuGroupType> = useMemo(() => {
@@ -69,7 +77,9 @@ export const MobileTextareaPlusBottomSheet = observer(
 					icon: <GiftIcon data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.gift-icon" />,
 					label: i18n._(SEND_GIFT_DESCRIPTOR),
 					onClick: () => {
-						ModalCommands.runAfterBottomSheetClose(onClose, () => PremiumModalCommands.open(true));
+						ModalCommands.runAfterBottomSheetClose(onClose, () =>
+							PremiumModalCommands.open({defaultGiftMode: true, giftChannelId}),
+						);
 					},
 				});
 			}

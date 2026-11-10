@@ -4585,7 +4585,7 @@ msgstr "هل لديك حساب بالفعل؟"
 msgid "Already joined"
 msgstr "انضممت بالفعل"
 
-#. Status pill on a gift code embed when the gift has already been claimed.
+#. Status line on a gift code embed when the gift has already been claimed.
 #: src/features/channel/components/GiftEmbed.tsx
 msgid "Already redeemed"
 msgstr "تم التفعيل بالفعل"
@@ -17981,11 +17981,6 @@ msgstr "أهدِ {premiumProductName} لصديق لمدة شهر أو لسنة �
 msgid "Gift already redeemed"
 msgstr "تم تفعيل الهدية بالفعل"
 
-#. Toast confirmation shown after successfully claiming a gift from the gift code embed.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift claimed"
-msgstr "تم استلام الهدية"
-
 #. Error message in the gift inventory tab.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code cannot be empty"
@@ -18000,10 +17995,6 @@ msgstr "رمز الهدية مطلوب"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code is too long"
 msgstr "رمز الهدية طويل جدًا"
-
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
-msgid "Gift code:"
-msgstr "رمز الهدية:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
@@ -18070,11 +18061,6 @@ msgstr "تم تفعيل الهدية!"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Gift subscription"
 msgstr "اشتراك هدية"
-
-#. Title shown on a gift code embed when the gift cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift unavailable"
-msgstr "الهدية غير متاحة"
 
 #. Short label in the gift inventory tab. Keep it concise.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
