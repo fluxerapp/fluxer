@@ -7,7 +7,6 @@ import {
 import {
 	type AppShellRuntime,
 	fetchAppShellNavigation,
-	isCacheableResponse,
 	type PrecacheEntry,
 	precacheAssets,
 	seedAppShell,
@@ -17,7 +16,11 @@ import {
 	WORKER_CACHE_PREFIX,
 	WORKER_NAVIGATION_CACHE_PREFIX,
 } from '@app/features/platform/service_worker/WorkerCacheCleanup';
-import {getWorkerFetchRoute} from '@app/features/platform/service_worker/WorkerFetchRouting';
+import {
+	getWorkerFetchRoute,
+	getWorkerStaticRoutes,
+	type WorkerStaticRoute,
+} from '@app/features/platform/service_worker/WorkerFetchRouting';
 import {
 	getBadgeCount,
 	getPushNotificationClientState,
@@ -40,7 +43,6 @@ type SwLogLevel = 'debug' | 'info' | 'warn' | 'error';
 declare const self: ServiceWorkerGlobalScope &
 	typeof globalThis & {
 		skipWaiting(): void;
-		__WB_MANIFEST: unknown;
 		console: Console;
 	};
 
@@ -50,6 +52,11 @@ const workerNavigator = self.navigator as {readonly userAgent: string; readonly 
 const ensureServiceWorkerReady: Promise<void> = Promise.resolve();
 const SERVICE_WORKER_VERSION = typeof __FLUXER_SW_VERSION__ === 'string' ? __FLUXER_SW_VERSION__ : 'dev';
 const PRECACHE_MANIFEST = typeof __FLUXER_PRECACHE_MANIFEST__ === 'undefined' ? [] : __FLUXER_PRECACHE_MANIFEST__;
+const CRITICAL_ASSET_URLS = new Set(
+	PRECACHE_MANIFEST.filter((entry) => entry.integrity !== null).map(
+		(entry) => new URL(entry.url, self.location.origin).href,
+	),
+);
 const PRECACHE_CACHE = `${WORKER_CACHE_PREFIX}-precache-${SERVICE_WORKER_VERSION}`;
 const NAVIGATION_CACHE = `${WORKER_NAVIGATION_CACHE_PREFIX}${SERVICE_WORKER_VERSION}`;
 const EXPECTED_CACHES = new Set([PRECACHE_CACHE, NAVIGATION_CACHE]);
@@ -83,31 +90,16 @@ const appShellRuntime: AppShellRuntime = {
 	caches: serviceWorkerCaches,
 	fetch: (request) => fetch(request),
 	origin: self.location.origin,
+	version: SERVICE_WORKER_VERSION,
 	precacheName: PRECACHE_CACHE,
 	navigationCacheName: NAVIGATION_CACHE,
 	networkTimeoutMs: NAVIGATION_NETWORK_TIMEOUT_MS,
+	onBuildMismatch: () => self.registration.update(),
 	onCacheWriteError: (error) => {
 		void log('warn', 'app shell cache put failed', {error: describeError(error)});
 	},
 };
-const cacheRequest = async (cacheName: string, request: Request | string, response: Response): Promise<void> => {
-	if (!isCacheableResponse(response)) {
-		return;
-	}
-	try {
-		if (!serviceWorkerCaches) {
-			return;
-		}
-		const cache = await serviceWorkerCaches.open(cacheName);
-		await cache.put(request, response.clone());
-	} catch (error) {
-		await log('warn', 'cache put failed', {cacheName, error: describeError(error)});
-	}
-};
 const cleanupOldCaches = async (): Promise<void> => {
-	if (!serviceWorkerCaches) {
-		return;
-	}
 	const names = await serviceWorkerCaches.keys();
 	await Promise.all(
 		names.map((name) => {
@@ -120,11 +112,9 @@ const cleanupOldCaches = async (): Promise<void> => {
 };
 const fetchNetworkFirst = async (request: Request): Promise<Response> => {
 	try {
-		const response = await fetch(request);
-		await cacheRequest(PRECACHE_CACHE, request, response);
-		return response;
+		return await fetch(request);
 	} catch (error) {
-		const cached = await serviceWorkerCaches?.match(request);
+		const cached = await serviceWorkerCaches.match(request, {cacheName: PRECACHE_CACHE});
 		if (cached) {
 			return cached;
 		}
@@ -134,19 +124,25 @@ const fetchNetworkFirst = async (request: Request): Promise<Response> => {
 
 const instanceManifestUrl = (): string => new URL('/manifest.json', self.location.origin).href;
 const instanceManifestSources: InstanceManifestSources = {
-	fetchManifest: async (signal) => {
-		const response = await fetch(instanceManifestUrl(), {signal});
-		await cacheRequest(PRECACHE_CACHE, instanceManifestUrl(), response);
-		return response;
-	},
-	readCachedManifest: async () => (await serviceWorkerCaches?.match(instanceManifestUrl())) ?? undefined,
+	fetchManifest: (signal) => fetch(instanceManifestUrl(), {signal}),
+	readCachedManifest: async () =>
+		(await serviceWorkerCaches.match(instanceManifestUrl(), {cacheName: PRECACHE_CACHE})) ?? undefined,
 };
 
+interface StaticRoutingInstallEvent extends ExtendableEvent {
+	addRoutes?: (rules: ReadonlyArray<WorkerStaticRoute>) => Promise<void>;
+}
+
 self.addEventListener('install', (event: ExtendableEvent) => {
+	const installEvent = event as StaticRoutingInstallEvent;
 	event.waitUntil(
 		(async () => {
+			await installEvent
+				.addRoutes?.(getWorkerStaticRoutes(CRITICAL_ASSET_URLS, self.location.origin, PRECACHE_CACHE))
+				.catch((error: unknown) => log('warn', 'static routes were refused', error));
 			await ensureServiceWorkerReady;
-			await Promise.allSettled([precacheAssets(appShellRuntime, PRECACHE_MANIFEST), seedAppShell(appShellRuntime)]);
+			await precacheAssets(appShellRuntime, PRECACHE_MANIFEST);
+			await seedAppShell(appShellRuntime);
 			await log('info', 'install');
 			self.skipWaiting();
 		})(),
@@ -167,9 +163,15 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 
 self.addEventListener('fetch', (event: FetchEvent) => {
 	const request = event.request;
-	const route = getWorkerFetchRoute(request, self.location.origin);
+	const route = getWorkerFetchRoute(request, self.location.origin, CRITICAL_ASSET_URLS);
+	if (route === 'asset') {
+		event.respondWith(
+			serviceWorkerCaches.match(request, {cacheName: PRECACHE_CACHE}).then((cached) => cached ?? fetch(request)),
+		);
+		return;
+	}
 	if (route === 'navigation') {
-		event.respondWith(fetchAppShellNavigation(appShellRuntime, request));
+		event.respondWith(fetchAppShellNavigation(appShellRuntime, request, (work) => event.waitUntil(work)));
 		return;
 	}
 	if (route === 'metadata') {
