@@ -116,20 +116,21 @@ const detectArchitectureFromNavigator = (): string | undefined => {
 let cachedClientInfo: ClientInfo | null = null;
 let preloadPromise: Promise<ClientInfo> | null = null;
 
-const parseUserAgent = (): ClientInfo => {
-	const userAgent = navigator.userAgent;
-	const parser = Bowser.getParser(userAgent);
-	const result = parser.getResult();
-	const isMac = isNavigatorPlatformMac(navigator);
-	const fallbackArch = !isMac ? normalizeArchitectureValue(navigator.platform) : undefined;
-	const arch = detectArchitectureFromNavigator() ?? fallbackArch;
+const parseBrowserFromUserAgent = (): ClientInfo => {
+	const result = Bowser.getParser(navigator.userAgent).getResult();
 	return {
 		browserName: normalize(result.browser.name),
 		browserVersion: normalize(result.browser.version),
 		osName: normalize(result.os.name),
 		osVersion: normalize(result.os.version),
-		arch: arch,
 	};
+};
+
+const parseUserAgent = (): ClientInfo => {
+	const browser = parseBrowserFromUserAgent();
+	const isMac = isNavigatorPlatformMac(navigator);
+	const fallbackArch = !isMac ? normalizeArchitectureValue(navigator.platform) : undefined;
+	return {...browser, arch: detectArchitectureFromNavigator() ?? fallbackArch};
 };
 
 export function getClientInfoSync(): ClientInfo {
@@ -228,17 +229,25 @@ async function getDesktopInfo(): Promise<DesktopInfo | null> {
 	}
 }
 
+function parseBrowserSafely(): ClientInfo {
+	try {
+		return parseBrowserFromUserAgent();
+	} catch {
+		return {};
+	}
+}
+
 export async function getClientInfo(): Promise<ClientInfo> {
-	const base = getClientInfoSync();
 	if (!isDesktop()) {
 		const hintsArch = await detectArchitectureFromClientHints();
+		const base = hintsArch ? (cachedClientInfo ?? parseBrowserSafely()) : getClientInfoSync();
 		return {...base, arch: hintsArch ?? base.arch};
 	}
 	const desktopInfo = await getDesktopInfo();
 	if (!desktopInfo) {
-		return base;
+		return getClientInfoSync();
 	}
-	return {...base, ...getOsContextFromInfo(desktopInfo), ...getDesktopContextFromInfo(desktopInfo)};
+	return {...parseBrowserSafely(), ...getOsContextFromInfo(desktopInfo), ...getDesktopContextFromInfo(desktopInfo)};
 }
 
 function formatTranslationDomGuardFires(): string {

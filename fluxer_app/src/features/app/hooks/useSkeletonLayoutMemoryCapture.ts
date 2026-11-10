@@ -6,8 +6,11 @@ import {
 	SKELETON_UNMEASURED_WIDTH_PX,
 	setSkeletonLayoutCaptureEnabled,
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import {useEffect, useRef} from 'react';
+
+const SKELETON_REPORT_IDLE_TIMEOUT_MS = 2000;
 
 function scheduleIdleShellHintWrite(): () => void {
 	if (typeof requestIdleCallback === 'function') {
@@ -89,6 +92,25 @@ export function useSkeletonLayoutReport(report: () => void, changeKey: string): 
 	const reportRef = useRef(report);
 	reportRef.current = report;
 	useEffect(() => {
-		reportRef.current();
+		let active = true;
+		let cancelReport = () => {};
+		const stopWaiting = afterBootReveal(() => {
+			if (!active) return;
+			const run = () => {
+				if (active) reportRef.current();
+			};
+			if (typeof requestIdleCallback === 'function') {
+				const handle = requestIdleCallback(run, {timeout: SKELETON_REPORT_IDLE_TIMEOUT_MS});
+				cancelReport = () => cancelIdleCallback(handle);
+			} else {
+				const handle = window.setTimeout(run, 0);
+				cancelReport = () => window.clearTimeout(handle);
+			}
+		});
+		return () => {
+			active = false;
+			stopWaiting();
+			cancelReport();
+		};
 	}, [changeKey]);
 }

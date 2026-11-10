@@ -54,6 +54,7 @@ import {LOCAL_SHORTCUT_ACTION_PRIORITY} from '@app/features/app/keybindings/util
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
 import Authentication from '@app/features/auth/state/Authentication';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -520,7 +521,9 @@ class KeybindManager {
 		this.initialized = true;
 		this.ensureCombokeys();
 		this.registerDefaultHandlers(i18n);
-		await Keybind.refreshKeyboardShortcutLayout();
+		afterBootReveal(() => {
+			void Keybind.refreshKeyboardShortcutLayout();
+		});
 		this.routeSuspended = !this.isAppRoute(Navigation.pathname);
 		this.refreshLocalShortcuts();
 		this.disposers.push(

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable, observable} from 'mobx';
 
 interface ThreadMembership {
@@ -43,7 +44,8 @@ class ThreadMemberships {
 	}
 
 	set(threadId: string, member: ThreadMemberResponse): void {
-		this.memberships.set(threadId, toMembership(threadId, member));
+		const next = toMembership(threadId, member);
+		if (!isEqual(this.memberships.get(threadId), next)) this.memberships.set(threadId, next);
 	}
 
 	remove(threadId: string): void {

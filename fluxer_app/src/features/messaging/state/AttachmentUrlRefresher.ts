@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import Initialization from '@app/features/app/state/Initialization';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
@@ -20,7 +21,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {RefreshAttachmentUrlsResponse} from '@fluxer/schema/src/domains/message/AttachmentSchemas';
-import {makeAutoObservable, runInAction, untracked} from 'mobx';
+import {type IReactionDisposer, makeAutoObservable, runInAction, untracked, when} from 'mobx';
 
 const logger = new Logger('AttachmentUrlRefresher');
 
@@ -66,6 +67,7 @@ class AttachmentUrlRefresher {
 	readonly inFlight = new Map<string, Promise<string | null>>();
 	readonly deferred = new Map<string, string>();
 	flushTimer: ReturnType<typeof setTimeout> | null = null;
+	flushAfterStaleView: IReactionDisposer | null = null;
 	wakeTimer: ReturnType<typeof setTimeout> | null = null;
 	wakeAtMs = 0;
 	retryAtMs = 0;
@@ -83,6 +85,7 @@ class AttachmentUrlRefresher {
 				inFlight: false,
 				deferred: false,
 				flushTimer: false,
+				flushAfterStaleView: false,
 				wakeTimer: false,
 				wakeAtMs: false,
 				retryAtMs: false,
@@ -191,6 +194,8 @@ class AttachmentUrlRefresher {
 			clearTimeout(this.flushTimer);
 			this.flushTimer = null;
 		}
+		this.flushAfterStaleView?.();
+		this.flushAfterStaleView = null;
 		if (this.wakeTimer !== null) {
 			clearTimeout(this.wakeTimer);
 			this.wakeTimer = null;
@@ -302,6 +307,14 @@ class AttachmentUrlRefresher {
 		});
 	}
 
+	private dropUnawaitedRequests(): void {
+		for (const [key, queued] of Array.from(this.queued)) {
+			if (queued.resolvers.length === 0) {
+				this.queued.delete(key);
+			}
+		}
+	}
+
 	private scheduleFlush(): void {
 		if (this.flushTimer !== null) return;
 		this.flushTimer = setTimeout(() => {
@@ -312,6 +325,17 @@ class AttachmentUrlRefresher {
 
 	private async flush(): Promise<void> {
 		if (this.queued.size === 0) return;
+		if (Initialization.isStale) {
+			this.flushAfterStaleView ??= when(
+				() => !Initialization.isStale,
+				() => {
+					this.flushAfterStaleView = null;
+					this.dropUnawaitedRequests();
+					this.scheduleFlush();
+				},
+			);
+			return;
+		}
 		const nowMs = Date.now();
 		if (nowMs < this.cooldownUntilMs) {
 			this.deferQueue();

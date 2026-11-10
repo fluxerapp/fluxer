@@ -266,7 +266,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowVoiceSessionRestore = (() => {
 		if (nagbarState.forceHideVoiceSessionRestore) return false;
 		if (nagbarState.forceVoiceSessionRestore) return true;
-		if (!GatewaySessions.foregroundConnection.socket || !Initialization.canNavigateToProtectedRoutes) return false;
+		if (!GatewaySessions.foregroundConnection.socket || !Initialization.isReady) return false;
 		if (!voiceSessionRestoreHydrated || !currentUserId) return false;
 		if (!voiceSessionRestoreSnapshot || !voiceSessionRestoreChannel) return false;
 		if (voiceEngineV2Connection.connected || voiceEngineV2Connection.connecting) return false;

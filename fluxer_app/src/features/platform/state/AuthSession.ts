@@ -4,6 +4,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {clearBootState} from '@app/features/boot_state/BootStateBridge';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
 import {AuthSessionAccountCatalog} from '@app/features/platform/state/auth_session/AuthSessionAccountCatalog';
 import {
@@ -521,6 +522,7 @@ export class AuthSessionManager {
 			return;
 		}
 		this.send({type: 'account.markInvalid', accountKey: resolved.accountKey});
+		void clearBootState(resolved.accountKey);
 		void this.deps.accountStorage
 			.updateAccountValidity(resolved.accountKey, false, expectedToken)
 			.catch((error: unknown) => {
@@ -616,13 +618,22 @@ export class AuthSessionManager {
 
 	async logout(options: {notifyServer?: boolean} = {}): Promise<void> {
 		await this.initialize();
+		const accountKey = this.currentAccountKey;
+		if (accountKey !== null) {
+			await clearBootState(accountKey);
+		}
 		await this.lifecycle.logout(options);
 	}
 
 	async removeAccount(accountKey: string): Promise<void> {
 		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved !== null) {
+			await clearBootState(resolved.accountKey);
+		}
 		await this.lifecycle.removeAccount(accountKey);
 	}
+
 	handleConnectionReady(): void {
 		this.send({type: 'connection.ready'});
 	}
@@ -663,7 +674,10 @@ export class AuthSessionManager {
 		const cleanupErrors: Array<unknown> = [];
 		if (resolved !== null) {
 			try {
-				await this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false);
+				await Promise.all([
+					this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false),
+					clearBootState(resolved.accountKey),
+				]);
 			} catch (error) {
 				cleanupErrors.push(error);
 			}

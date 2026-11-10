@@ -49,6 +49,13 @@ function transformMessageCall(call?: MessageCall | null): TransformedMessageCall
 	return null;
 }
 
+function wireMessageCall(call: TransformedMessageCall | null): MessageCall | null {
+	if (call === null) {
+		return null;
+	}
+	return {participants: call.participants, ended_timestamp: call.endedTimestamp?.toISOString() ?? null};
+}
+
 let embedIdCounter = 0;
 
 const generateEmbedId = (): string => {
@@ -516,6 +523,14 @@ export class Message {
 			blocked: this.blocked,
 			_allowedMentions: this._allowedMentions,
 			_favoriteMemeId: this._favoriteMemeId,
+		};
+	}
+
+	toBootStateJSON(): WireMessage {
+		return {
+			...this.toJSON(),
+			referenced_message: this.referencedMessage?.toBootStateJSON(),
+			call: wireMessageCall(this.call),
 		};
 	}
 }

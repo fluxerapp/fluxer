@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	APP_STORAGE_INDEXED_DB_NAME,
+	APP_STORAGE_INDEXED_DB_VERSION,
+	APP_STORAGE_OBJECT_STORE,
+	APP_STORAGE_SCOPE_INDEX,
+} from '@app/features/platform/state/AppStorageDatabase';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {
 	createLegacyHarvestValueDecoder,
 	type LegacyHarvestValueDecoder,
 } from '@app/features/platform/state/LegacyHarvestValueDecoder';
 import {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/PersistentStorage';
-import {
-	APP_STORAGE_INDEXED_DB_NAME,
-	APP_STORAGE_INDEXED_DB_VERSION,
-	APP_STORAGE_OBJECT_STORE,
-	APP_STORAGE_SCOPE_INDEX,
-	appStorageRecordId,
-	getPersistentStorageBackend,
-} from '@app/features/platform/state/PersistentStorageBackend';
+import {appStorageRecordId, getPersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 import {getProtectedIndexedDB, getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AccountEngine from '@app/features/account_engine/state/AccountEngine';
+import {webBootStateAvailable} from '@app/features/boot_state/BootStateBridge';
 import type {ReadyPayload} from '@app/features/gateway/events/GatewayReady';
 import {InMemorySnapshotStore} from '@app/features/gateway/snapshot/InMemorySnapshotStore';
 import type {SnapshotDispatch} from '@app/features/gateway/snapshot/SnapshotDispatchEvent';
@@ -31,6 +32,7 @@ function snapshotSyncError(error: unknown): Error {
 class SnapshotSyncOwner {
 	private readonly store = new InMemorySnapshotStore();
 	private readonly accounts = new Map<string, SnapshotAccount>();
+	private readonly listeners = new Set<() => void>();
 
 	constructor(private readonly isEnabled: () => boolean) {}
 
@@ -46,6 +48,7 @@ class SnapshotSyncOwner {
 			this.evictOthers(storageKey);
 			const account = this.accounts.get(storageKey) ?? this.createAccount(storageKey, new SnapshotReducer());
 			account.writer.setCursor(account.reducer.applyReady(account.writer.enqueue, data));
+			this.notify();
 		} catch (error) {
 			this.invalidate(storageKey, snapshotSyncError(error));
 		}
@@ -58,6 +61,7 @@ class SnapshotSyncOwner {
 		}
 		try {
 			account.reducer.applyDispatch(account.writer.enqueue, dispatch);
+			this.notify();
 		} catch (error) {
 			this.invalidate(storageKey, snapshotSyncError(error));
 		}
@@ -84,6 +88,19 @@ class SnapshotSyncOwner {
 		} catch (error) {
 			this.invalidate(storageKey, snapshotSyncError(error));
 			return false;
+		}
+	}
+
+	subscribe(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => {
+			this.listeners.delete(listener);
+		};
+	}
+
+	private notify(): void {
+		for (const listener of this.listeners) {
+			listener();
 		}
 	}
 
@@ -148,6 +165,6 @@ class SnapshotSyncOwner {
 	}
 }
 
-const snapshotSync = new SnapshotSyncOwner(() => AccountEngine.available);
+const snapshotSync = new SnapshotSyncOwner(() => AccountEngine.available || webBootStateAvailable());
 
 export default snapshotSync;

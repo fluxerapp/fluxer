@@ -35,8 +35,13 @@ class GuildList {
 		}
 		if (availableGuilds.length > 0) {
 			this.sortGuildArrayInPlace(availableGuilds);
-			this.guilds = availableGuilds;
-		} else {
+			if (
+				this.guilds.length !== availableGuilds.length ||
+				this.guilds.some((guild, index) => guild !== availableGuilds[index])
+			) {
+				this.guilds = availableGuilds;
+			}
+		} else if (this.guilds.length > 0) {
 			this.guilds = [];
 		}
 	}

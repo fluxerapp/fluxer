@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import type {ContextMenu, ContextMenuConfig, ContextMenuTargetElement} from '@app/features/ui/state/ContextMenu';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import type React from 'react';
@@ -68,6 +69,7 @@ export function openAtPoint(
 	config?: ContextMenuConfig,
 	target: ContextMenuTargetElement = nativeContextMenuTarget,
 ): void {
+	flushBootHydration();
 	const contextMenu: ContextMenu = {
 		id: makeId('context-menu'),
 		target: {x: point.x, y: point.y, target},

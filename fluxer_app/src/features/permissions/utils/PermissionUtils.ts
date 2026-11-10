@@ -52,6 +52,41 @@ export interface PermissionSpec {
 	}>;
 }
 
+type GuildRecord = NonNullable<ReturnType<typeof Guilds.getGuild>>;
+
+interface GuildPermissionInputs {
+	readonly guild: Guild;
+	readonly roles: Record<RoleId, Role>;
+}
+
+const guildPermissionInputs = new WeakMap<GuildRecord, GuildPermissionInputs>();
+
+function guildRolesOf(guildRecord: GuildRecord): Record<RoleId, Role> {
+	return Object.fromEntries(
+		Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
+			id,
+			{
+				id: roleRecord.id,
+				permissions: roleRecord.permissions,
+				position: roleRecord.position,
+			},
+		]),
+	);
+}
+
+function permissionInputsOf(guildRecord: GuildRecord): GuildPermissionInputs {
+	let inputs = guildPermissionInputs.get(guildRecord);
+	if (inputs === undefined) {
+		inputs = {guild: guildRecord.toJSON(), roles: guildRolesOf(guildRecord)};
+		guildPermissionInputs.set(guildRecord, inputs);
+	}
+	return inputs;
+}
+
+export function permissionGuildOf(guildRecord: GuildRecord): Guild {
+	return permissionInputsOf(guildRecord).guild;
+}
+
 function calculateElevatedPermissions(permissions: bigint, guild: Guild, userId: string, checkElevated = true): bigint {
 	if (
 		checkElevated &&
@@ -94,33 +129,16 @@ export function computePermissions(
 		overwrites = overwrites != null ? {...convertedOverwrites, ...overwrites} : convertedOverwrites;
 		const guildRecord = channel.guild_id != null ? Guilds.getGuild(channel.guild_id) : null;
 		if (guildRecord) {
-			guild = guildRecord.toJSON();
-			guildRoles = Object.fromEntries(
-				Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
-					id,
-					{
-						id: roleRecord.id,
-						permissions: roleRecord.permissions,
-						position: roleRecord.position,
-					},
-				]),
-			);
+			const inputs = permissionInputsOf(guildRecord);
+			guild = inputs.guild;
+			guildRoles = inputs.roles;
 		}
 	} else {
 		overwrites = overwrites || {};
 		guild = context as Guild;
 		const guildRecord = Guilds.getGuild(guild.id);
 		if (guildRecord) {
-			guildRoles = Object.fromEntries(
-				Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
-					id,
-					{
-						id: roleRecord.id,
-						permissions: roleRecord.permissions,
-						position: roleRecord.position,
-					},
-				]),
-			);
+			guildRoles = permissionInputsOf(guildRecord).roles;
 		}
 	}
 	if (guild == null) {

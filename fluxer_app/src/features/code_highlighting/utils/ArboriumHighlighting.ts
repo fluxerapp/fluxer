@@ -147,6 +147,14 @@ interface HighlightCacheEntry {
 
 const highlightCache = new Map<string, HighlightCacheEntry>();
 let highlightCacheBytes = 0;
+const highlightListeners = new Set<() => void>();
+
+export function subscribeRetainedCodeHighlights(listener: () => void): () => void {
+	highlightListeners.add(listener);
+	return () => {
+		highlightListeners.delete(listener);
+	};
+}
 
 let arboriumModule: ArboriumModule | null = null;
 let arboriumPromise: Promise<ArboriumModule> | null = null;
@@ -159,9 +167,7 @@ function loadArborium(): Promise<ArboriumModule> {
 		arboriumPromise = (async () => {
 			const [arborium] = await Promise.all([
 				import('@arborium/arborium'),
-				import('@arborium/arborium/themes/github-dark.css'),
-				import('@arborium/arborium/themes/github-light.css'),
-				import('@app/features/code_highlighting/utils/ArboriumThemeBridge.css'),
+				import('@app/features/code_highlighting/utils/ArboriumStyles'),
 			]);
 			arboriumModule = arborium;
 			return arborium;
@@ -353,6 +359,7 @@ function loadHighlightedHtml(language: string, source: string, signal?: AbortSig
 				return highlightedHtml;
 			}
 			entry.html = highlightedHtml;
+			for (const listener of highlightListeners) listener();
 			const nextRetainedBytes = (source.length + highlightedHtml.length) * 2;
 			highlightCacheBytes += nextRetainedBytes - entry.retainedBytes;
 			entry.retainedBytes = nextRetainedBytes;
@@ -461,6 +468,75 @@ async function highlightCodeHtml(
 	}
 }
 
+export type RetainedCodeHighlight = readonly [language: string, source: string, html: string];
+
+const MAX_RETAINED_CODE_HIGHLIGHTS = 32;
+const MAX_RETAINED_CODE_HIGHLIGHT_BYTES = 256 * 1024;
+
+const codeSources = new WeakMap<HTMLElement, {language: string; source: string}>();
+
+export function registerRetainedCodeSource(element: HTMLElement, language: string, source: string): () => void {
+	const entry = {language, source};
+	codeSources.set(element, entry);
+	return () => {
+		if (codeSources.get(element) === entry) codeSources.delete(element);
+	};
+}
+
+export function captureRetainedCodeHighlights(messageIds: ReadonlySet<string>): Array<RetainedCodeHighlight> {
+	const captured = new Map<string, RetainedCodeHighlight>();
+	let bytes = 0;
+	const blocks = Array.from(document.querySelectorAll<HTMLElement>('#root code')).filter((code) =>
+		codeSources.has(code),
+	);
+	const visible = (code: HTMLElement) => {
+		const rect = code.getBoundingClientRect();
+		return rect.bottom > 0 && rect.top < innerHeight && rect.width > 0;
+	};
+	blocks.sort((left, right) => Number(visible(right)) - Number(visible(left)));
+	for (const code of blocks) {
+		const messageId = code.closest('[data-message-id]')?.getAttribute('data-message-id');
+		const entry = codeSources.get(code);
+		if (entry === undefined) continue;
+		const language = resolveHighlightLanguage(entry.language);
+		const source = entry.source;
+		if (!messageId || !messageIds.has(messageId) || !language || source.length >= MAX_CODE_HIGHLIGHT_SOURCE_LENGTH)
+			continue;
+		const key = getCacheKey(language, source);
+		if (captured.has(key)) continue;
+		const html = code.innerHTML;
+		if (html === escapeCodeHtml(source)) continue;
+		const size = (source.length + html.length) * 2;
+		if (bytes + size > MAX_RETAINED_CODE_HIGHLIGHT_BYTES || captured.size === MAX_RETAINED_CODE_HIGHLIGHTS) continue;
+		bytes += size;
+		captured.set(key, [language, source, html]);
+	}
+	return Array.from(captured.values());
+}
+
+export function seedRetainedCodeHighlights(highlights: ReadonlyArray<RetainedCodeHighlight>): void {
+	if (highlights.length === 0) {
+		return;
+	}
+	for (const [language, source, html] of highlights) {
+		const cacheKey = getCacheKey(language, source);
+		if (highlightCache.has(cacheKey)) {
+			continue;
+		}
+		const retainedBytes = (source.length + html.length) * 2;
+		highlightCache.set(cacheKey, {
+			promise: Promise.resolve(html),
+			html,
+			retainedBytes,
+			subscribers: 0,
+			settled: true,
+			abortController: new AbortController(),
+		});
+		highlightCacheBytes += retainedBytes;
+	}
+	trimHighlightCache();
+}
+
 interface RetainedHighlight {
 	cacheKey: string;
 	entry: HighlightCacheEntry;
@@ -468,7 +544,7 @@ interface RetainedHighlight {
 }
 
 function findRetainedHighlight(language?: string | null, source?: string | null): RetainedHighlight | null {
-	if (!source || source.length > MAX_CACHED_SOURCE_LENGTH) {
+	if (!source) {
 		return null;
 	}
 	const resolvedLanguage = resolveHighlightLanguage(language);

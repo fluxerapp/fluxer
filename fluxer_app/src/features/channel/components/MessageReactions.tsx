@@ -303,7 +303,10 @@ export const MessageReactions = observer(
 		}, [emojiPickerOpen, onPopoutToggle]);
 		const hasReactions = reactions.length > 0;
 		return (
-			<div className={styles.reactionsGrid} data-flx="channel.message-reactions.reactions-grid">
+			<div
+				className={clsx(styles.reactionsGrid, styles.uniformRows)}
+				data-flx="channel.message-reactions.reactions-grid"
+			>
 				{reactions.map((reaction) => (
 					<MessageReactionItem
 						key={getReactionKey(message.id, reaction.emoji)}

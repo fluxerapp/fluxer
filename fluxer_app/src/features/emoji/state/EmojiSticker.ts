@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import type {Channel} from '@app/features/channel/models/Channel';
 import StickerPicker from '@app/features/emoji/state/StickerPicker';
 import {GuildSticker} from '@app/features/expressions/models/GuildSticker';
@@ -8,6 +9,7 @@ import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type {GuildSticker as WireGuildSticker} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable} from 'mobx';
 
 interface GuildStickerContext {
@@ -68,38 +70,54 @@ class Sticker {
 	}
 
 	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
-		this.guildStickers.clear();
-		this.stickerById.clear();
-		for (const guild of guilds) {
-			if (guild.stickers && guild.stickers.length > 0) {
-				const stickerRecords = guild.stickers.map((sticker) => new GuildSticker(guild.id, sticker));
-				const sortedStickers = sortBySnowflakeDesc(stickerRecords);
-				this.guildStickers.set(guild.id, {stickers: sortedStickers});
-				for (const sticker of sortedStickers) {
-					this.stickerById.set(sticker.id, sticker);
-				}
+		if (Initialization.isStale) {
+			const present = new Set(guilds.map((guild) => guild.id));
+			for (const guildId of this.guildStickers.keys()) {
+				if (!present.has(guildId)) this.handleGuildDelete(guildId);
 			}
 		}
-		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
+		this.hydrateFromSnapshot(
+			guilds.map((guild) => ({guildId: guild.id, stickers: guild.stickers ?? []})),
+			{append: Initialization.isStale},
+		);
 	}
 
 	hydrateFromSnapshot(
 		guildStickers: ReadonlyArray<{guildId: string; stickers: ReadonlyArray<WireGuildSticker>}>,
+		options: {append: boolean} = {append: false},
 	): void {
-		this.guildStickers.clear();
-		this.stickerById.clear();
+		if (!options.append) {
+			this.guildStickers.clear();
+			this.stickerById.clear();
+		}
+		let changed = !options.append;
 		for (const {guildId, stickers} of guildStickers) {
+			const existing = this.guildStickers.get(guildId)?.stickers;
+			const incoming = new Map(stickers.map((sticker) => [sticker.id, sticker]));
+			if (
+				existing !== undefined &&
+				existing.length === stickers.length &&
+				existing.every((sticker) => {
+					const next = incoming.get(sticker.id);
+					return (
+						next !== undefined &&
+						sticker.name === next.name &&
+						sticker.description === next.description &&
+						sticker.animated === next.animated &&
+						isEqual(sticker.tags, next.tags) &&
+						isEqual(sticker.user, next.user)
+					);
+				})
+			)
+				continue;
 			if (stickers.length === 0) {
+				if (existing !== undefined) this.handleGuildDelete(guildId);
 				continue;
 			}
-			const stickerRecords = stickers.map((sticker) => new GuildSticker(guildId, sticker));
-			const sortedStickers = sortBySnowflakeDesc(stickerRecords);
-			this.guildStickers.set(guildId, {stickers: sortedStickers});
-			for (const sticker of sortedStickers) {
-				this.stickerById.set(sticker.id, sticker);
-			}
+			this.updateGuildStickers(guildId, stickers);
+			changed = true;
 		}
-		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
+		if (changed) ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	handleGuildUpdate(guild: GuildStickersPayload): void {
@@ -107,10 +125,12 @@ class Sticker {
 			return;
 		}
 		this.updateGuildStickers(guild.id, guild.stickers);
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	handleGuildStickersUpdate(guildId: string, stickers: ReadonlyArray<WireGuildSticker>): void {
 		this.updateGuildStickers(guildId, stickers);
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 		patchGuildStickerCacheFromGateway(guildId, stickers);
 	}
 
@@ -134,7 +154,6 @@ class Sticker {
 		for (const sticker of sortedStickers) {
 			this.stickerById.set(sticker.id, sticker);
 		}
-		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	private sortByFrecency(stickers: ReadonlyArray<GuildSticker>): ReadonlyArray<GuildSticker> {

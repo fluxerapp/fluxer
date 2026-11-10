@@ -148,7 +148,10 @@ class Permission {
 		if (!currentUser) return;
 		const guild = Guilds.getGuild(guildId);
 		if (!guild) return;
-		this.guildPermissions.set(guildId as GuildId, PermissionUtils.computePermissions(currentUser, guild.toJSON()));
+		this.guildPermissions.set(
+			guildId as GuildId,
+			PermissionUtils.computePermissions(currentUser, PermissionUtils.permissionGuildOf(guild)),
+		);
 		const threads: Array<ChannelModel> = [];
 		for (const channel of Channels.channels) {
 			if (channel.guildId === guildId) {
@@ -177,11 +180,26 @@ class Permission {
 			this.bumpGlobalVersion();
 			return;
 		}
-		this.guildPermissions.clear();
-		this.channelPermissions.clear();
+		let changed = false;
+		const guildIds = new Set(Guilds.getGuildIds());
+		const channelIds = new Set(Channels.channels.map((channel) => channel.id));
+		for (const id of this.guildPermissions.keys()) {
+			if (guildIds.has(id)) continue;
+			this.guildPermissions.delete(id);
+			this.guildVersions.delete(id);
+			changed = true;
+		}
+		for (const id of this.channelPermissions.keys()) {
+			if (channelIds.has(id)) continue;
+			this.channelPermissions.delete(id);
+			changed = true;
+		}
 		for (const guild of Guilds.getGuilds()) {
-			this.guildPermissions.set(guild.id as GuildId, PermissionUtils.computePermissions(user, guild.toJSON()));
+			const permissions = PermissionUtils.computePermissions(user, PermissionUtils.permissionGuildOf(guild));
+			if (this.guildPermissions.get(guild.id as GuildId) === permissions) continue;
+			this.guildPermissions.set(guild.id as GuildId, permissions);
 			this.bumpGuildVersion(guild.id);
+			changed = true;
 		}
 		const threads: Array<ChannelModel> = [];
 		for (const channel of Channels.channels) {
@@ -189,25 +207,23 @@ class Permission {
 				threads.push(channel);
 				continue;
 			}
-			if (Object.keys(channel.permissionOverwrites).length === 0) {
-				if (channel.guildId != null) {
-					const guildPerms = this.guildPermissions.get(channel.guildId as GuildId) ?? PermissionUtils.NONE;
-					this.channelPermissions.set(channel.id as ChannelId, guildPerms);
-				} else {
-					this.channelPermissions.set(channel.id as ChannelId, PermissionUtils.NONE);
-				}
-			} else {
-				this.channelPermissions.set(
-					channel.id as ChannelId,
-					PermissionUtils.computePermissions(user, channel.toJSON()),
-				);
+			let permissions = PermissionUtils.NONE;
+			if (Object.keys(channel.permissionOverwrites).length > 0) {
+				permissions = PermissionUtils.computePermissions(user, channel.toJSON());
+			} else if (channel.guildId != null) {
+				permissions = this.guildPermissions.get(channel.guildId as GuildId) ?? PermissionUtils.NONE;
 			}
+			if (this.channelPermissions.get(channel.id as ChannelId) === permissions) continue;
+			this.channelPermissions.set(channel.id as ChannelId, permissions);
 			this.bumpGuildVersion(channel.guildId);
+			changed = true;
 		}
 		for (const thread of threads) {
+			const previous = this.channelPermissions.get(thread.id as ChannelId);
 			this.setThreadPermissions(thread);
+			if (previous !== this.channelPermissions.get(thread.id as ChannelId)) changed = true;
 		}
-		this.bumpGlobalVersion();
+		if (changed) this.bumpGlobalVersion();
 	}
 
 	private bumpGlobalVersion(): void {

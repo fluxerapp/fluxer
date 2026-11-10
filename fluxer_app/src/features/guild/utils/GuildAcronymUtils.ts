@@ -16,14 +16,22 @@ let measureContext: CanvasRenderingContext2D | null | undefined;
 
 export const GUILD_ACRONYM_FALLBACK = '?';
 
-const graphemeSegmenter =
-	typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
-		? new Intl.Segmenter(undefined, {granularity: 'grapheme'})
-		: null;
+let graphemeSegmenter: Intl.Segmenter | null | undefined;
+
+function getGraphemeSegmenter(): Intl.Segmenter | null {
+	if (graphemeSegmenter === undefined) {
+		graphemeSegmenter =
+			typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+				? new Intl.Segmenter(undefined, {granularity: 'grapheme'})
+				: null;
+	}
+	return graphemeSegmenter;
+}
 
 function firstGrapheme(wordRun: string, leadingCharacterWithMarks: string): string {
-	if (graphemeSegmenter == null) return leadingCharacterWithMarks;
-	for (const {segment} of graphemeSegmenter.segment(wordRun)) {
+	const segmenter = getGraphemeSegmenter();
+	if (segmenter == null) return leadingCharacterWithMarks;
+	for (const {segment} of segmenter.segment(wordRun)) {
 		return segment;
 	}
 	return leadingCharacterWithMarks;
@@ -34,9 +42,10 @@ export function getGuildAcronym(name: string): string {
 }
 
 function getGuildAcronymLength(acronym: string): number {
-	if (graphemeSegmenter == null) return Array.from(acronym).length;
+	const segmenter = getGraphemeSegmenter();
+	if (segmenter == null) return Array.from(acronym).length;
 	let length = 0;
-	for (const _segment of graphemeSegmenter.segment(acronym)) {
+	for (const _segment of segmenter.segment(acronym)) {
 		length += 1;
 	}
 	return length;

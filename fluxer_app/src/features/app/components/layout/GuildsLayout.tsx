@@ -27,6 +27,7 @@ import {
 	type DMListRow,
 	useFrameBatchedDMListRows,
 } from '@app/features/app/components/layout/guilds_layout/GuildListDMAnimation';
+import {GuildRailLayoutItem} from '@app/features/app/components/layout/guilds_layout/GuildRailLayoutAnimation';
 import {OutlineFrame} from '@app/features/app/components/layout/OutlineFrame';
 import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorStateMachine';
 import {AddGuildButton} from '@app/features/app/components/layout/sidebar_nav/AddGuildButton';
@@ -74,6 +75,9 @@ import {
 } from '@app/features/app/hooks/useNavigationList';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
+import BootStateRestore from '@app/features/boot_state/BootStateRestore';
+import {currentUserAreaOverlayHeight, recordUserAreaOverlayHeight} from '@app/features/boot_state/BootViewport';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -150,17 +154,24 @@ const GUILD_ROW_STYLE_WITH_GAP: React.CSSProperties = Object.freeze({
 	paddingBottom: 'var(--guild-list-item-gap)',
 });
 
-interface GuildsLayoutSidebarStyle extends React.CSSProperties {
-	'--layout-sidebar-width': string;
+interface GuildsLayoutStyle extends React.CSSProperties {
+	'--layout-sidebar-width'?: string;
+	'--layout-user-area-overlay-height'?: string;
 }
 
-function resolveGuildsLayoutSidebarStyle(
+function resolveGuildsLayoutStyle(
 	mobileEnabled: boolean,
 	sidebarWidth: string | null,
+	initialOverlayHeightPx: number | null,
 ): React.CSSProperties | undefined {
-	if (mobileEnabled || sidebarWidth == null || sidebarWidth === '') return undefined;
-	const style: GuildsLayoutSidebarStyle = {'--layout-sidebar-width': sidebarWidth};
-	return style;
+	const style: GuildsLayoutStyle = {};
+	if (!mobileEnabled && sidebarWidth != null && sidebarWidth !== '') {
+		style['--layout-sidebar-width'] = sidebarWidth;
+	}
+	if (initialOverlayHeightPx !== null) {
+		style['--layout-user-area-overlay-height'] = `${initialOverlayHeightPx}px`;
+	}
+	return Object.keys(style).length === 0 ? undefined : style;
 }
 
 function resolveGuildFolderId(folderId: number | null): number {
@@ -1595,7 +1606,9 @@ const GuildList = observer(() => {
 		}
 		return rows;
 	}, [filteredDMChannels, pinnedCallChannel, unreadDMChannelIdSet]);
-	const visibleDMListRows = useFrameBatchedDMListRows(targetDMListRows);
+	const visibleDMListRows = useFrameBatchedDMListRows(targetDMListRows, isDragging);
+	const dmLayoutRevision = visibleDMListRows.map((row) => `${row.channel.id}:${row.pendingRemoval}`).join('|');
+	const dmLayoutRemoving = visibleDMListRows.some((row) => row.pendingRemoval);
 	const shouldRenderGuildListItems = hasUnavailableGuilds || organizedItems.length > 0;
 	const initialGuildListScrollTop = useMemo(() => {
 		const liveScrollTop = untracked(() => Dimension.currentGuildListDimensions().scrollTop);
@@ -1932,6 +1945,7 @@ const GuildList = observer(() => {
 						isSelected={isSelectedPath(location.pathname, Routes.dmChannel(channel.id))}
 						pendingRemoval={pendingRemoval}
 						reducedMotion={Accessibility.useReducedMotion}
+						paused={isDragging}
 						onHoverStart={handleInlineDMHoverStart}
 						onHoverEnd={handleInlineDMHoverEnd}
 						onRemovalAnimationComplete={handleInlineDMRemovalAnimationComplete}
@@ -2108,20 +2122,28 @@ const GuildList = observer(() => {
 		const listPosition = getGuildRowListPosition(index);
 		if (listPosition == null) {
 			return (
-				<div
+				<GuildRailLayoutItem
 					key={row.key}
+					layoutRevision={dmLayoutRevision}
+					removing={dmLayoutRemoving}
+					paused={isDragging}
+					reducedMotion={Accessibility.useReducedMotion}
 					data-navigation-index={index}
 					role="presentation"
 					style={style}
 					data-flx="app.guilds-layout.render-guild-navigation-list-item.presentation"
 				>
 					{renderGuildNavigationRow(row)}
-				</div>
+				</GuildRailLayoutItem>
 			);
 		}
 		return (
-			<div
+			<GuildRailLayoutItem
 				key={row.key}
+				layoutRevision={dmLayoutRevision}
+				removing={dmLayoutRemoving}
+				paused={isDragging}
+				reducedMotion={Accessibility.useReducedMotion}
 				data-navigation-index={index}
 				role="listitem"
 				aria-posinset={listPosition.position}
@@ -2130,7 +2152,7 @@ const GuildList = observer(() => {
 				data-flx="app.guilds-layout.render-guild-navigation-list-item.listitem"
 			>
 				{renderGuildNavigationRow(row)}
-			</div>
+			</GuildRailLayoutItem>
 		);
 	};
 	return (
@@ -2182,6 +2204,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 	const shouldReserveUserAreaSpace = !!user && !mobileLayout.enabled && !isVoiceCallFullscreenActive;
 	const layoutRef = useRef<HTMLDivElement | null>(null);
 	const userAreaWrapperRef = useRef<HTMLDivElement | null>(null);
+	const [initialOverlayHeightPx] = useState(currentUserAreaOverlayHeight);
 	const showGuildListOnMobile =
 		!isVoiceCallFullscreenActive &&
 		mobileLayout.enabled &&
@@ -2198,7 +2221,16 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 			location.pathname === Routes.YOU ||
 			(Routes.isGuildChannelRoute(location.pathname) && location.pathname.split('/').length === 3));
 	const nagbarConditions = useNagbarConditions();
-	const activeNagbars = useActiveNagbars(nagbarConditions);
+	const shownNagbars = useActiveNagbars(nagbarConditions);
+	const restoredViewShown = BootStateRestore.phase === 'stale';
+	const activeNagbars = useMemo(
+		() => (restoredViewShown ? shownNagbars.filter((nagbar) => nagbar.type !== NagbarType.CONNECTION) : shownNagbars),
+		[restoredViewShown, shownNagbars],
+	);
+	const overlayNagbars = useMemo(
+		() => (restoredViewShown ? shownNagbars.filter((nagbar) => nagbar.type === NagbarType.CONNECTION) : []),
+		[restoredViewShown, shownNagbars],
+	);
 	const skeletonNagbarRows = useMemo(() => activeNagbars.map(createSkeletonNagbarRow), [activeNagbars]);
 	const skeletonNagbarRowKey = useMemo(
 		() => skeletonNagbarRows.map((row) => `${row.tone}:${row.hasActions}:${row.dismissible}`).join(','),
@@ -2221,6 +2253,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 		const layoutElement = layoutRef.current;
 		if (!layoutElement) return;
 		const clearOverlayHeight = () => {
+			recordUserAreaOverlayHeight(null);
 			layoutElement.style.removeProperty('--layout-user-area-overlay-height');
 		};
 		if (!shouldReserveUserAreaSpace) {
@@ -2232,15 +2265,13 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 			clearOverlayHeight();
 			return;
 		}
-		let currentOverlayHeight: number | null = null;
 		const applyOverlayHeight = (height: number) => {
 			const roundedHeight = Math.ceil(height);
 			if (roundedHeight > 0) {
-				if (currentOverlayHeight === roundedHeight) return;
-				currentOverlayHeight = roundedHeight;
+				if (currentUserAreaOverlayHeight() === roundedHeight) return;
+				recordUserAreaOverlayHeight(roundedHeight);
 				layoutElement.style.setProperty('--layout-user-area-overlay-height', `${roundedHeight}px`);
 			} else {
-				currentOverlayHeight = null;
 				clearOverlayHeight();
 			}
 		};
@@ -2257,7 +2288,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 		};
 	}, [shouldReserveUserAreaSpace]);
 	useEffect(() => {
-		preloadMacPermissionsModal();
+		afterBootReveal(preloadMacPermissionsModal);
 	}, []);
 	const shouldShowSidebarDivider = !mobileLayout.enabled;
 	return (
@@ -2270,7 +2301,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 				shouldReserveUserAreaSpace && styles.guildsLayoutReserveSpace,
 				showBottomNav && styles.guildsLayoutReserveMobileBottomNav,
 			)}
-			style={resolveGuildsLayoutSidebarStyle(mobileLayout.enabled, SidebarWidth.cssValue)}
+			style={resolveGuildsLayoutStyle(mobileLayout.enabled, SidebarWidth.cssValue, initialOverlayHeightPx)}
 			data-flx="app.guilds-layout.guilds-layout"
 		>
 			{!isVoiceCallFullscreenActive && (!mobileLayout.enabled || showGuildListOnMobile) && (
@@ -2292,11 +2323,20 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 						sidebarDivider={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
 						sidebarResizeHandle={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
 						nagbar={
-							!isVoiceCallFullscreenActive && activeNagbars.length > 0 ? (
-								<div className={styles.nagbarStack} data-flx="app.guilds-layout.nagbar-stack">
-									<NagbarContainer nagbars={activeNagbars} data-flx="app.guilds-layout.nagbar-container" />
-								</div>
-							) : null
+							isVoiceCallFullscreenActive ? null : (
+								<>
+									{activeNagbars.length > 0 && (
+										<div className={styles.nagbarStack} data-flx="app.guilds-layout.nagbar-stack">
+											<NagbarContainer nagbars={activeNagbars} data-flx="app.guilds-layout.nagbar-container" />
+										</div>
+									)}
+									{overlayNagbars.length > 0 && (
+										<div className={styles.nagbarOverlay} data-flx="app.guilds-layout.nagbar-overlay">
+											<NagbarContainer nagbars={overlayNagbars} data-flx="app.guilds-layout.nagbar-overlay-container" />
+										</div>
+									)}
+								</>
+							)
 						}
 						data-flx="app.guilds-layout.outline-frame"
 					>

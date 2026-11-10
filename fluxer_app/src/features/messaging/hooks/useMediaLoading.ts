@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {forgetRestoredImageSource, wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
 import AttachmentUrlRefresher, {sameAttachmentSource} from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
@@ -131,7 +132,7 @@ export function useMediaLoading(
 	const loadEnabled = enabled && src.length > 0;
 	const sourceIdentity = useMemo<MediaLoadingSourceIdentity>(() => ({src, loadEnabled}), [loadEnabled, src]);
 	const committedSourceIdentityRef = useRef(sourceIdentity);
-	const initialCached = loadEnabled && ImageCacheUtils.hasImage(src);
+	const initialCached = loadEnabled && (ImageCacheUtils.hasImage(src) || wasShownBeforeRestart(src));
 	const [cacheAtMount] = useState<MediaLoadingCacheAtMount>(() => ({
 		src,
 		loadEnabled,
@@ -164,11 +165,12 @@ export function useMediaLoading(
 			}
 			if (status === 'error') {
 				ImageCacheUtils.forgetImage(src);
+				forgetRestoredImageSource(src);
 				setSourceState({src, loadEnabled, cached: false, loaded: false, error: true});
 				return;
 			}
 		}
-		const cached = ImageCacheUtils.hasImage(src);
+		const cached = ImageCacheUtils.hasImage(src) || wasShownBeforeRestart(src);
 		setSourceState((currentState) =>
 			keepsLoadedState(currentState, src, loadEnabled)
 				? {...currentState, src}
@@ -193,6 +195,7 @@ export function useMediaLoading(
 			if (mediaElementRef.current !== element) return;
 			if (!mediaElementMatchesSource(element, src)) return;
 			ImageCacheUtils.forgetImage(src);
+			forgetRestoredImageSource(src);
 			if (refreshedSourceRef.current !== src) {
 				refreshedSourceRef.current = src;
 				void AttachmentUrlRefresher.refresh(src, {force: true});

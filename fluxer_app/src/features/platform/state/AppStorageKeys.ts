@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APP_STORAGE_DRAFTS_KEY} from '@app/features/platform/state/AppStorageDatabase';
 import {AuthSessionStorageKey} from '@app/features/platform/state/auth_session/AuthSessionStorage';
 
 export const AppStorageKey = Object.freeze({
@@ -18,7 +19,7 @@ export const AppStorageKey = Object.freeze({
 	DELETED_KEYS: 'fluxer:internal:deleted-keys',
 	I18N_CHOSEN_LOCALE: 'fluxer:i18n:chosen-locale',
 	INSTALLATION_THEME: 'InstallationTheme',
-	MESSAGING_DRAFTS: 'Drafts',
+	MESSAGING_DRAFTS: APP_STORAGE_DRAFTS_KEY,
 	MESSAGING_MESSAGE_EDIT: 'MessageEdit',
 	NOTIFICATION: 'Notification',
 	QUICK_CSS_EDITOR_HISTORY: 'QuickCssEditor:history:v1',

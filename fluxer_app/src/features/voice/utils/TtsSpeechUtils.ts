@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {isChromiumBrowser} from '@app/features/ui/utils/NativeUtils';
 
 const DEFAULT_CHUNK_LENGTH = 180;
@@ -32,8 +33,15 @@ const PREFERRED_VOICE_NAMES_BY_LOCALE: Record<string, Array<string>> = {
 	'en-US': ['Google US English', 'Samantha', 'Alex', 'Ava', 'Allison', 'Susan'],
 	'en-GB': ['Google UK English Female', 'Daniel', 'Serena', 'Kate'],
 };
+function speechSynthesisPresent(): boolean {
+	if (isDesktopLocalAppDocument()) {
+		return 'speechSynthesis' in window;
+	}
+	return window.speechSynthesis != null;
+}
+
 const synthesisSupported =
-	typeof window !== 'undefined' && window.speechSynthesis != null && typeof SpeechSynthesisUtterance !== 'undefined';
+	typeof window !== 'undefined' && speechSynthesisPresent() && typeof SpeechSynthesisUtterance !== 'undefined';
 
 export function nativeApiPresent(): boolean {
 	return synthesisSupported;

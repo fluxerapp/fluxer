@@ -2,6 +2,7 @@
 
 import type {DesktopAccountStorageAPI} from '@fluxer/desktop_ipc/src/AccountContract';
 import type {AccountEngineRendererAPI} from '@fluxer/desktop_ipc/src/AccountEngineContract';
+import type {DesktopBootStateAPI} from '@fluxer/desktop_ipc/src/BootStateContract';
 import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import type {
@@ -402,11 +403,12 @@ export interface ElectronAPI {
 	desktopUpdate?: DesktopUpdateAPI;
 	reportLastRoute?: (routePath: string) => void;
 	reportInstanceProductName?: (instanceKey: string, productName: string) => void;
-	notifyFirstContentPainted?: () => void;
+	notifyFirstContentPainted?: (view?: 'restored') => void;
 	localAppUpload?: DesktopLocalAppUploadAPI;
 	localApp?: DesktopLocalAppInfo;
 	nativeGatewayTransport?: NativeGatewayTransportAPI;
 	accountEngine?: AccountEngineRendererAPI;
+	bootState?: DesktopBootStateAPI;
 	setZoomFactor(factor: number): void;
 }
 

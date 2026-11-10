@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {BootStateGuildReadState} from '@app/features/boot_state/BootStateCodec';
 import Channels from '@app/features/channel/state/Channels';
 import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {
@@ -105,6 +106,7 @@ function getChannelContribution(channel: ContributeChannel, channelId: string): 
 class GuildReadState {
 	private readonly guildStates = observable.map(new Map<GuildId, GuildReadStateEntry>());
 	private readonly unreadGuildIds = observable.set(new Set<GuildId>());
+	private readonly restoredGuilds = new Set<string>();
 	updateCounter = 0;
 	private readStateReactionInstalled = false;
 
@@ -191,6 +193,7 @@ class GuildReadState {
 
 	private recomputeChannels(guildId: string | null, channelIds: Array<ChannelId>): boolean {
 		const id = guildId ?? PRIVATE_CHANNEL_SENTINEL;
+		if (this.restoredGuilds.has(id)) return false;
 		const state = this.getOrCreate(id);
 		const previousUnread = state.unread.get();
 		const previousFirstUnread = state.firstUnreadChannelId.get();
@@ -278,6 +281,7 @@ class GuildReadState {
 
 	private recomputeAll(guildId: string | null, skipIfMuted = false): boolean {
 		const id = guildId ?? PRIVATE_CHANNEL_SENTINEL;
+		if (this.restoredGuilds.has(id)) return false;
 		const newState = new GuildReadStateEntry();
 		if (guildId == null) {
 			const privateChannels = Channels.getPrivateChannels();
@@ -318,23 +322,24 @@ class GuildReadState {
 
 	private commitState(guildId: string, newState: GuildReadStateEntry, prevState: GuildReadStateEntry): boolean {
 		if (
+			prevState.mentionChannels.size !== newState.mentionChannels.size ||
+			Array.from(newState.mentionChannels).some((channelId) => !prevState.mentionChannels.has(channelId))
+		)
+			prevState.mentionChannels.replace(newState.mentionChannels);
+		if (
 			newState.unread.get() === prevState.unread.get() &&
 			newState.firstUnreadChannelId.get() === prevState.firstUnreadChannelId.get() &&
 			newState.mentionCount.get() === prevState.mentionCount.get()
-		) {
+		)
 			return false;
+		prevState.unread.set(newState.unread.get());
+		prevState.firstUnreadChannelId.set(newState.firstUnreadChannelId.get());
+		prevState.mentionCount.set(newState.mentionCount.get());
+		if (guildId !== PRIVATE_CHANNEL_SENTINEL) {
+			if (newState.unread.get()) this.unreadGuildIds.add(guildId as GuildId);
+			else this.unreadGuildIds.delete(guildId as GuildId);
 		}
-		runInAction(() => {
-			this.guildStates.set(guildId as GuildId, newState);
-			if (guildId !== PRIVATE_CHANNEL_SENTINEL) {
-				if (newState.unread.get()) {
-					this.unreadGuildIds.add(guildId as GuildId);
-				} else {
-					this.unreadGuildIds.delete(guildId as GuildId);
-				}
-			}
-			this.bumpChangeTicket(guildId === PRIVATE_CHANNEL_SENTINEL ? null : guildId);
-		});
+		this.bumpChangeTicket(guildId === PRIVATE_CHANNEL_SENTINEL ? null : guildId);
 		return true;
 	}
 
@@ -409,15 +414,55 @@ class GuildReadState {
 		return false;
 	}
 
-	handleGatewayReady(): void {
+	captureBootState(): Record<string, BootStateGuildReadState> {
+		return Object.fromEntries(
+			Array.from(this.guildStates, ([id, state]) => [
+				id,
+				{
+					unread: state.unread.get(),
+					mentionCount: state.mentionCount.get(),
+					firstUnreadChannelId: state.firstUnreadChannelId.get(),
+				},
+			]),
+		);
+	}
+
+	restoreBootState(summaries: Readonly<Record<string, BootStateGuildReadState>>): void {
 		this.guildStates.clear();
 		this.unreadGuildIds.clear();
-		this.updateCounter = 0;
+		this.restoredGuilds.clear();
+		for (const [id, summary] of Object.entries(summaries)) {
+			const state = this.getOrCreate(id);
+			state.unread.set(summary.unread);
+			state.mentionCount.set(summary.mentionCount);
+			state.firstUnreadChannelId.set(summary.firstUnreadChannelId as ChannelId | null);
+			if (id !== PRIVATE_CHANNEL_SENTINEL && summary.unread) this.unreadGuildIds.add(id as GuildId);
+			this.restoredGuilds.add(id);
+		}
+	}
+
+	completeBootStateGuild(guildId: string | null): void {
+		ReadStates.consumePendingChanges();
+		this.restoredGuilds.delete(guildId ?? PRIVATE_CHANNEL_SENTINEL);
+		this.recomputeAll(guildId);
+	}
+
+	discardBootState(): void {
+		this.restoredGuilds.clear();
+	}
+
+	handleGatewayReady(): void {
+		const present = new Set([PRIVATE_CHANNEL_SENTINEL, ...Guilds.getGuildIds()]);
+		for (const id of this.guildStates.keys()) {
+			if (!present.has(id)) {
+				this.guildStates.delete(id);
+				this.unreadGuildIds.delete(id);
+			}
+		}
 		this.recomputeAll(null);
 		for (const guildId of Guilds.getGuildIds()) {
 			this.recomputeAll(guildId);
 		}
-		this.notifyChange();
 	}
 
 	handleGuildCreate(action: {

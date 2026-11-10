@@ -4,8 +4,8 @@ import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes
 import {makeAutoObservable, observable} from 'mobx';
 
 class GuildAvailability {
-	unavailableGuilds: Set<string> = observable.set();
-	degradedGuilds: Set<string> = observable.set();
+	unavailableGuilds = observable.set<string>();
+	degradedGuilds = observable.set<string>();
 
 	constructor() {
 		makeAutoObservable(
@@ -48,26 +48,17 @@ class GuildAvailability {
 	}
 
 	loadUnavailableGuilds(guilds: ReadonlyArray<GuildReadyData>): void {
-		this.unavailableGuilds.clear();
-		this.degradedGuilds.clear();
-		for (const guild of guilds) {
-			if (guild.degraded && !guild.unavailable) {
-				this.degradedGuilds.add(guild.id);
-			}
-			if (guild.unavailable && !guild.unavailable_hidden) {
-				this.unavailableGuilds.add(guild.id);
-			}
-		}
+		this.unavailableGuilds.replace(
+			guilds.filter((guild) => guild.unavailable && !guild.unavailable_hidden).map((guild) => guild.id),
+		);
+		this.degradedGuilds.replace(
+			guilds.filter((guild) => guild.degraded && !guild.unavailable).map((guild) => guild.id),
+		);
 	}
 
 	hydrateFromSnapshot(guilds: ReadonlyArray<{readonly id: string; readonly unavailable: boolean}>): void {
-		this.unavailableGuilds.clear();
+		this.unavailableGuilds.replace(guilds.filter((guild) => guild.unavailable).map((guild) => guild.id));
 		this.degradedGuilds.clear();
-		for (const guild of guilds) {
-			if (guild.unavailable) {
-				this.unavailableGuilds.add(guild.id);
-			}
-		}
 	}
 
 	get totalUnavailableGuilds(): number {

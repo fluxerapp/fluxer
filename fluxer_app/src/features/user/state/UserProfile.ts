@@ -16,10 +16,26 @@ class UserProfile {
 	private logger = new Logger('UserProfile');
 	profiles: Record<string, ProfilesByGuildId> = {};
 	profileTimeouts: Record<string, NodeJS.Timeout> = {};
+	private retained = new Map<string, {count: number; expired: boolean}>();
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
+		makeAutoObservable<this, 'retained'>(this, {retained: false}, {autoBind: true});
 		onLocaleChange(() => this.clearAllProfiles());
+	}
+
+	retainProfile(userId: string, guildId?: string): () => void {
+		const targetGuildId = guildId ?? ME;
+		const key = this.createTimeoutKey(userId, targetGuildId);
+		const lease = this.retained.get(key) ?? {count: 0, expired: false};
+		lease.count += 1;
+		this.retained.set(key, lease);
+		return () => {
+			if (this.retained.get(key) !== lease) return;
+			lease.count -= 1;
+			if (lease.count > 0) return;
+			this.retained.delete(key);
+			if (lease.expired) runInAction(() => this.removeProfile(userId, targetGuildId));
+		};
 	}
 
 	getProfile(userId: string, guildId?: string): Profile | null {
@@ -92,6 +108,7 @@ class UserProfile {
 	private clearAllProfiles(): void {
 		Object.values(this.profileTimeouts).forEach(clearTimeout);
 		this.profiles = {};
+		this.retained.clear();
 		this.profileTimeouts = {};
 	}
 
@@ -137,9 +154,13 @@ class UserProfile {
 	private setProfileTimeout(userId: string, guildId: string): void {
 		const timeoutKey = this.createTimeoutKey(userId, guildId);
 		this.clearProfileTimeout(userId, guildId);
+		const retained = this.retained.get(timeoutKey);
+		if (retained !== undefined) retained.expired = false;
 		const timeout = setTimeout(() => {
 			runInAction(() => {
-				this.removeProfile(userId, guildId);
+				const lease = this.retained.get(timeoutKey);
+				if (lease === undefined) this.removeProfile(userId, guildId);
+				else lease.expired = true;
 				const {[timeoutKey]: _, ...remainingTimeouts} = this.profileTimeouts;
 				this.profileTimeouts = remainingTimeouts;
 			});

@@ -6,6 +6,7 @@ import {
 	AppStorageBroadcast,
 	withAppStorageLock,
 } from '@app/features/platform/state/AppStorageBroadcast';
+import {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/AppStorageDatabase';
 import {
 	AppStorageKey,
 	isGlobalAppStorageKey,
@@ -81,7 +82,7 @@ export interface AppStorageScopeActivation {
 
 type AppStorageDegradedListener = (reason: Error) => void;
 
-export const GLOBAL_APP_STORAGE_SCOPE = 'global';
+export {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/AppStorageDatabase';
 export const UNAUTHENTICATED_APP_STORAGE_SCOPE = 'unauthenticated';
 
 export const RAW_MIRROR_SCOPE_PREFIX = 'fluxer:app-storage-mirror:';

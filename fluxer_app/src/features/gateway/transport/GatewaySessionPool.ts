@@ -133,8 +133,12 @@ class GatewaySessionPool {
 			return;
 		}
 		this.start();
+		const storesRestored = Initialization.isStale;
+		if (storesRestored) {
+			this.startForegroundRecovery(accountKey);
+		}
 		void this.handoff
-			.bootForeground(accountKey)
+			.bootForeground(accountKey, {storesRestored})
 			.catch((error: unknown) => {
 				logger.warn('Failed to restore the foreground account from the account engine', {accountKey, error});
 			})

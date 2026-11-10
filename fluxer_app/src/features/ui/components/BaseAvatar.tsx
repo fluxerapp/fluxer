@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
+import {wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
 import {useImageRecovery} from '@app/features/messaging/hooks/useImageRecovery';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -18,7 +19,7 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import React, {useCallback, useId, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useId, useMemo, useState} from 'react';
 
 const AVATAR_DESCRIPTOR = msg({
 	message: 'Avatar',
@@ -34,7 +35,7 @@ const STATUS_DESCRIPTOR = msg({
 });
 const DEFAULT_CUSTOM_STATUS_BADGE_SCALE = 1.25;
 const DEFAULT_CUSTOM_STATUS_BADGE_CUTOUT_PADDING_SCALE = 1.2;
-const PLACEHOLDER_FAST_FADE_WINDOW_MS = 200;
+const PLACEHOLDER_DELAY_MS = 200;
 
 type AvatarCSSProperties = React.CSSProperties & {
 	'--avatar-status-width'?: string;
@@ -47,7 +48,7 @@ type AvatarCSSProperties = React.CSSProperties & {
 	'--avatar-typing-dot-size'?: string;
 };
 
-type PlaceholderFade = 'instant' | 'fast' | 'gradual';
+type PlaceholderFade = 'instant' | 'gradual';
 
 interface PaintedAvatarImage {
 	url: string;
@@ -161,8 +162,9 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		const reducedMotion = Accessibility.useReducedMotion;
 		const candidateUrl = animatedMediaPlaybackEnabled ? hoverAvatarUrl || '' : avatarUrl;
 		const {failed: imgError, reportError: handleImageError} = useImageRecovery(candidateUrl);
-		const [wasCachedAtMount] = useState(() => ImageCacheUtils.hasImage(candidateUrl));
-		const [mountedAt] = useState(() => Date.now());
+		const [wasCachedAtMount] = useState(
+			() => ImageCacheUtils.hasImage(candidateUrl) || wasShownBeforeRestart(candidateUrl),
+		);
 		const [paintedImage, setPaintedImage] = useState<PaintedAvatarImage | null>(() =>
 			wasCachedAtMount ? {url: candidateUrl, fade: 'instant'} : null,
 		);
@@ -185,19 +187,24 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 				const src = image.getAttribute('src');
 				ImageCacheUtils.rememberImage(src, image);
 				if (src != null && src.length > 0) {
-					const fade: PlaceholderFade = Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS ? 'fast' : 'gradual';
-					setPaintedImage((current) => (current?.url === src ? current : {url: src, fade}));
+					setPaintedImage((current) => (current?.url === src ? current : {url: src, fade: 'gradual'}));
 					onImageLoaded?.(src);
 				}
 			},
-			[mountedAt, onImageLoaded],
+			[onImageLoaded],
 		);
 		const showFallback = !candidateUrl || imgError;
 		const paintedCandidate = paintedImage?.url === candidateUrl ? paintedImage : null;
-		const shouldMountPlaceholder = showSkeleton && !wasCachedAtMount;
+		const [placeholderDue, setPlaceholderDue] = useState(false);
+		const awaitingFirstPaint = showSkeleton && !wasCachedAtMount && paintedCandidate == null && !placeholderDue;
+		useEffect(() => {
+			if (!awaitingFirstPaint) return;
+			const timer = window.setTimeout(() => setPlaceholderDue(true), PLACEHOLDER_DELAY_MS);
+			return () => window.clearTimeout(timer);
+		}, [awaitingFirstPaint]);
+		const shouldMountPlaceholder = showSkeleton && !wasCachedAtMount && placeholderDue;
 		const isPlaceholderVisible = showSkeleton && paintedCandidate == null;
 		const placeholderStyle = paintedCandidate?.fade === 'instant' ? PLACEHOLDER_INSTANT_STYLE : undefined;
-		const placeholderFastFade = paintedCandidate?.fade === 'fast';
 		let statusMaskId: string;
 		if (shouldShowCustomStatusBadge) {
 			statusMaskId = customStatusBadgeMaskId ?? 'flx-mask-presence-online';
@@ -375,7 +382,7 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 					)}
 					{shouldMountPlaceholder && (
 						<rect
-							className={`${styles.placeholder} ${isPlaceholderVisible ? styles.placeholderVisible : styles.placeholderHidden} ${placeholderFastFade ? styles.placeholderFastFade : ''}`.trim()}
+							className={`${styles.placeholder} ${isPlaceholderVisible ? styles.placeholderVisible : styles.placeholderHidden}`}
 							style={placeholderStyle}
 							x={0}
 							y={0}

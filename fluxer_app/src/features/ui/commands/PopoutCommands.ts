@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import type {Popout} from '@app/features/ui/popover';
 import PopoutState from '@app/features/ui/state/Popout';
 
 export function open(popout: Popout): void {
+	flushBootHydration();
 	PopoutState.open(popout);
 }
 

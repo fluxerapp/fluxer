@@ -41,10 +41,6 @@
 	transition: opacity 0.2s ease;
 }
 
-:global(html:not(.reduced-motion)) .placeholderFastFade {
-	transition: opacity 0.05s ease;
-}
-
 .placeholderVisible {
 	opacity: 1;
 }

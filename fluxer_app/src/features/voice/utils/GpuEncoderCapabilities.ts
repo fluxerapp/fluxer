@@ -645,6 +645,8 @@ export function getGpuEncoderReportSync(): HardwareEncodeReport | null {
 	return cachedReport;
 }
 
-if (typeof window !== 'undefined' && isDesktop()) {
-	void loadGpuEncoderReport();
+export function prewarmGpuEncoderReport(): void {
+	requestIdleCallback(() => {
+		void loadGpuEncoderReport();
+	});
 }

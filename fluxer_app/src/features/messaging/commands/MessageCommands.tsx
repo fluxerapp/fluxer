@@ -35,6 +35,7 @@ import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import {prefetchMessageAuthors} from '@app/features/messaging/utils/MessageAuthorPrefetch';
 import {
 	collectMessageModelGuildMemberUserIds,
 	collectWireMessageGuildMemberUserIds,
@@ -83,6 +84,7 @@ import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {runInAction} from 'mobx';
 import {observer} from 'mobx-react-lite';
 
 const MessageEditFailedModal_YOUR_MESSAGE_DIDN_T_UPDATE_DESCRIPTOR = msg({
@@ -164,6 +166,8 @@ const TRY_PUBLISHING_AGAIN_DESCRIPTOR = msg({
 	comment: 'Fallback body of the error alert shown when publishing an announcement message fails.',
 });
 const logger = new Logger('MessageCommands');
+
+const SEEDED_RECONCILE_AUTHOR_PREFETCH_MS = 300;
 const MESSAGE_EDIT_MAX_RETRIES = 5;
 const MESSAGE_EDIT_TIMEOUT_MS = 30_000;
 const pendingDeletePromises = new Map<string, Promise<void>>();
@@ -196,6 +200,13 @@ export interface JumpToMessageOptions {
 interface FetchMessagesOptions {
 	throwOnError?: boolean;
 	staleRefetch?: boolean;
+	reconcileSeeded?: {
+		readonly around: string | null;
+		readonly newer?: boolean;
+		readonly through?: string;
+		readonly generation?: number;
+	};
+	deferCommit?: (commit: () => void) => void;
 }
 
 interface MessagePageState {
@@ -227,8 +238,13 @@ function makeFetchKey(
 	const SEP = '\x1f';
 	const throwOnError = options?.throwOnError ? '1' : '0';
 	const staleRefetch = options?.staleRefetch ? '1' : '0';
+	const seeded =
+		options?.reconcileSeeded == null
+			? ''
+			: `s${options.reconcileSeeded.newer === true ? 'newer' : (options.reconcileSeeded.around ?? '')}${SEP}${options.reconcileSeeded.generation ?? ''}`;
+	const reconciliationBoundary = options?.reconcileSeeded?.through ?? '';
 	if (!jump) {
-		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${staleRefetch}`;
+		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${staleRefetch}${SEP}${seeded}${SEP}${reconciliationBoundary}`;
 	}
 	return (
 		`${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${staleRefetch}${SEP}` +
@@ -271,11 +287,10 @@ async function requestChannelMessages(
 	before: string | null,
 	after: string | null,
 	limit: number,
-	jump?: JumpOptions,
+	around: string | null,
 ): Promise<Array<WireMessage>> {
-	const around = jump?.messageId;
 	const response = await http.get<Array<WireMessage>>(Endpoints.CHANNEL_MESSAGES(channelId), {
-		query: {before, after, limit, around: around ?? null},
+		query: {before, after, limit, around},
 		retries: 2,
 	});
 	return response.body ?? [];
@@ -287,9 +302,8 @@ function calculateMessagePageState(
 	after: string | null,
 	limit: number,
 	messages: Array<WireMessage>,
-	jump?: JumpOptions,
+	around: string | null,
 ): MessagePageState {
-	const around = jump?.messageId;
 	const targetIndex = around == null ? -1 : messages.findIndex((msg: WireMessage) => msg.id === around);
 	const knownLatestMessageId =
 		around == null
@@ -301,7 +315,7 @@ function calculateMessagePageState(
 		after,
 		limit,
 		messageCount: messages.length,
-		aroundMessageId: around ?? null,
+		aroundMessageId: around,
 		aroundTargetIndex: targetIndex,
 		newestFetchedMessageId,
 		knownLatestMessageId,
@@ -324,12 +338,20 @@ function calculateMessagePageState(
 	};
 }
 
+function isSupersededSeededReconcile(channelId: string, options: FetchMessagesOptions | undefined): boolean {
+	return (
+		options?.reconcileSeeded?.generation !== undefined &&
+		!Messages.isSeededReconcileCurrent(channelId, options.reconcileSeeded.generation)
+	);
+}
+
 function handleMessageFetchSuccess(
 	channelId: string,
 	messages: Array<WireMessage>,
 	pageState: MessagePageState,
 	cached: boolean,
-	jump?: JumpOptions,
+	jump: JumpOptions | undefined,
+	reconcileSeeded: FetchMessagesOptions['reconcileSeeded'],
 ): void {
 	if (ThreadGuilds.anyActive) {
 		ChannelThreads.ingestMessageThreads(messages);
@@ -343,6 +365,15 @@ function handleMessageFetchSuccess(
 		hasMoreAfter: pageState.hasMoreAfter,
 		cached,
 		jump,
+		...(reconcileSeeded == null
+			? {}
+			: {
+					reconcileSeeded: {
+						around: reconcileSeeded.around != null,
+						newer: reconcileSeeded.newer === true,
+						through: reconcileSeeded.through,
+					},
+				}),
 	});
 	ReadStates.handleLoadMessages({
 		channelId,
@@ -478,7 +509,7 @@ export async function fetchMessages(
 		hasInFlightRequest: inFlight != null,
 		accountTransitionActive: AccountScopedWork.isSuspended,
 		shouldBlockForGate: shouldBlockMessageFetch(channelId),
-		cacheHit: getMessageFetchCacheHit(channelId, before, after, jump),
+		cacheHit: options?.reconcileSeeded == null ? getMessageFetchCacheHit(channelId, before, after, jump) : null,
 	});
 	switch (preflightDecision.type) {
 		case 'useInFlightRequest':
@@ -498,33 +529,78 @@ export async function fetchMessages(
 		case 'startFetch':
 			break;
 	}
+	const generation = Messages.cacheGeneration;
+	const jumpTicket = Messages.getMessages(channelId).jumpTicket;
+	const canCommit = () => {
+		if (generation !== Messages.cacheGeneration) return false;
+		if (AccountScopedWork.isSuspended) {
+			Messages.handleLoadMessagesBlocked({channelId});
+			return false;
+		}
+		return true;
+	};
 	const promise = (async () => {
 		await applyDeveloperFetchDelay();
+		if (!canCommit()) return [];
 		const executionDecision = resolveMessageFetchExecutionDecision({
 			forceFailure: DeveloperOptions.forceFailMessageLoads,
 		});
 		if (executionDecision.type === 'simulateFailure') {
 			return handleForcedMessageLoadFailure(channelId, jump);
 		}
-		Messages.handleLoadMessages({channelId, jump});
+		if (options?.staleRefetch !== true) {
+			Messages.handleLoadMessages({channelId, jump});
+		}
 		const connectedAtRequest = GatewaySessions.foregroundConnection.isConnected;
 		const epochAtRequest = GatewaySessions.foregroundConnection.connectionEpoch;
 		try {
 			const timeStart = Date.now();
 			logger.debug(`Fetching messages for channel ${channelId}`);
-			const messages = await requestChannelMessages(channelId, before, after, limit, jump);
+			const around = jump?.messageId ?? options?.reconcileSeeded?.around ?? null;
+			const messages = await requestChannelMessages(channelId, before, after, limit, around);
 			const cached = resolveMessageFetchWindowCached({
 				connectedAtRequest,
 				connectedAtResponse: GatewaySessions.foregroundConnection.isConnected,
 				epochAtRequest,
 				epochAtResponse: GatewaySessions.foregroundConnection.connectionEpoch,
 			});
-			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, jump);
+			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, around);
 			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
-			handleMessageFetchSuccess(channelId, messages, pageState, cached, jump);
+			if (options?.reconcileSeeded != null) {
+				await prefetchMessageAuthors(
+					Channels.getChannel(channelId)?.guildId ?? null,
+					messages.filter((message) => Messages.getMessage(channelId, message.id) === undefined),
+					SEEDED_RECONCILE_AUTHOR_PREFETCH_MS,
+				);
+			}
+			if (!canCommit() || isSupersededSeededReconcile(channelId, options)) return [];
+			const commit = () => {
+				if (!canCommit() || isSupersededSeededReconcile(channelId, options)) return;
+				if (
+					options?.reconcileSeeded &&
+					(Channels.getChannel(channelId) === undefined || Messages.getMessages(channelId).jumpTicket !== jumpTicket)
+				)
+					return;
+				runInAction(() =>
+					handleMessageFetchSuccess(
+						channelId,
+						messages,
+						pageState,
+						options?.reconcileSeeded ? false : cached,
+						jump,
+						options?.reconcileSeeded,
+					),
+				);
+			};
+			if (options?.deferCommit === undefined) commit();
+			else options.deferCommit(commit);
 			return messages;
 		} catch (error) {
+			if (generation !== Messages.cacheGeneration) return [];
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);
+			if (isSupersededSeededReconcile(channelId, options)) {
+				return [];
+			}
 			if (isAccountTransitionAbortError(error)) {
 				Messages.handleLoadMessagesBlocked({channelId});
 			} else {
@@ -537,7 +613,10 @@ export async function fetchMessages(
 		}
 	})();
 	pendingFetchPromises.set(key, promise);
-	promise.finally(() => pendingFetchPromises.delete(key));
+	const finish = () => {
+		if (pendingFetchPromises.get(key) === promise) pendingFetchPromises.delete(key);
+	};
+	void promise.then(finish, finish);
 	return promise;
 }
 

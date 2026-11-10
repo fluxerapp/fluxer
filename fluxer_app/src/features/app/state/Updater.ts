@@ -600,7 +600,10 @@ class Updater {
 
 	private showCurrentUpdateState(): void {
 		if (this.desktopUpdateAvailable) {
-			showUpdaterModal((modals) => modals.pushDesktopUpdateAvailableModal(() => this.startDesktopUpdate()));
+			const replacesShell = this.desktopUpdateReplacesShell;
+			showUpdaterModal((modals) =>
+				modals.pushDesktopUpdateAvailableModal({replacesShell, onUpdate: () => this.startDesktopUpdate()}),
+			);
 			return;
 		}
 		if (this.nativeManualUpdateAvailable) {

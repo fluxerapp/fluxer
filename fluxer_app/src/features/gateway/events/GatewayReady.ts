@@ -5,6 +5,7 @@ import Initialization from '@app/features/app/state/Initialization';
 import {syncAccountUserData} from '@app/features/auth/state/AccountUserDataSync';
 import Authentication from '@app/features/auth/state/Authentication';
 import AuthSession from '@app/features/auth/state/AuthSession';
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
 import Channels from '@app/features/channel/state/Channels';
 import UserConnection from '@app/features/connection/state/UserConnection';
@@ -105,6 +106,7 @@ export function handleReady(data: ReadyPayload, context: GatewayHandlerContext):
 	if (expectedUserId != null && data.user.id !== expectedUserId) {
 		throw new GatewayReadyIdentityMismatchError(expectedUserId, data.user.id);
 	}
+	flushBootHydration();
 	runInAction(() => handleReadyInternal(data, context, accountKey));
 }
 
@@ -148,7 +150,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	Relationships.loadRelationships(data.relationships ?? []);
 	FavoriteMemes.loadFavoriteMemes(data.favorite_memes ?? []);
 	RtcRegions.setRegions(data.rtc_regions ?? []);
-	Users.handleGatewayReady(accountKey, data.user);
+	Users.handleGatewayReady(accountKey, data.user, {keepRestoredUsers: Initialization.isStale});
 	Users.cacheUsers(data.users ?? []);
 	syncAccountUserData(accountKey, data.user);
 	Authentication.handleGatewayReady({user: data.user});
@@ -156,7 +158,8 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	UserSettings.handleGatewayReady(data.user_settings);
 	GuildList.handleGatewayReady(guilds);
 	GuildCount.handleGatewayReady(guilds);
-	GuildMembers.handleGatewayReady(guilds);
+	GuildMembers.handleGatewayReady(guilds, {keepRestoredMembers: Initialization.isStale});
+	MemberSidebar.handleGatewayReady();
 	GuildVerification.handleGatewayReady();
 	ThreadGuilds.handleGatewayReady(guilds);
 	Channels.handleGatewayReady({channels});
@@ -166,7 +169,9 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	ForumReadState.handleGatewayReady();
 	NavigationSideEffects.handleGatewayReady();
 	AuthSession.handleGatewayReady(data.auth_session_id_hash ?? null);
-	MessageReactions.handleGatewayReady();
+	if (!Initialization.isStale) {
+		MessageReactions.handleGatewayReady();
+	}
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});
 	Permission.handleGatewayReady();
