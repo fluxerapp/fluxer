@@ -77,8 +77,8 @@ export function readWindowsIntermediateStoreRoots(): ReadonlyArray<Buffer> {
 	}
 }
 
-export function isNativeGatewayAvailable(): boolean {
-	return loadGatewaySocketBinding() !== null;
+export function isNativeGatewayPermitted(): boolean {
+	return bindingCache === undefined ? getNativeGatewayDisableReason() === null : bindingCache !== null;
 }
 
 export function createGatewaySocketBoundary(

@@ -15,7 +15,7 @@ class UntrustedRendererDocumentSenderError extends Error {
 	}
 }
 
-export function isPrivilegedRendererDocumentSender(event: IpcMainInvokeEvent): boolean {
+export function isPrivilegedRendererDocumentSender(event: Pick<IpcMainInvokeEvent, 'senderFrame'>): boolean {
 	const frame = event.senderFrame;
 	if (frame == null) {
 		return false;

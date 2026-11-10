@@ -25,12 +25,17 @@ const BUNDLED_RENDERER_ENTRIES = Object.freeze([...REQUIRED_RENDERER_ENTRIES, 'v
 const BUNDLED_RENDERER_VERSION_PATTERN = /^\d+\.\d+\.\d+$/u;
 const FORBIDDEN_RENDERER_ENTRIES = Object.freeze(['sw.js', 'sw.js.map']);
 const SUPPORTED_BUILD_ARGUMENTS = Object.freeze(['--shared-assets', '--use-shared-renderer']);
-const MAIN_BOOTSTRAP_ENTRY_NAME = 'index';
+const MAIN_LAUNCH_ENTRY_NAME = 'index';
+const MAIN_BOOTSTRAP_ENTRY_NAME = 'Bootstrap';
+const MAIN_BOOTSTRAP_OUTPUT_FILE_NAME = `${MAIN_BOOTSTRAP_ENTRY_NAME}.js`;
+const MAIN_BOOTSTRAP_OUTPUT_FILE_DEFINE = '__FLUXER_MAIN_BOOTSTRAP_OUTPUT_FILE__';
 const MAIN_APP_ENTRY_NAME = 'MainApp';
 const MAIN_APP_OUTPUT_FILE_NAME = `${MAIN_APP_ENTRY_NAME}.js`;
 const MAIN_APP_OUTPUT_FILE_DEFINE = '__FLUXER_MAIN_APP_OUTPUT_FILE__';
+const MAIN_LAUNCH_SOURCE = path.join(SRC_DIR, 'main', 'LaunchEntry.ts');
 const MAIN_BOOTSTRAP_SOURCE = path.join(SRC_DIR, 'main', 'Bootstrap.ts');
 const MAIN_APP_SOURCE = path.join(SRC_DIR, 'main', 'index.ts');
+const CERTIFICATE_WORKER_SOURCE = path.join(SRC_DIR, 'main', 'DesktopTrustedCertificatesWorker.ts');
 const SPLASH_WINDOW_SOURCE = path.join(SRC_DIR, 'main', 'SplashWindow.ts');
 const DESKTOP_TSCONFIG = path.join(ROOT_DIR, 'tsconfig.json');
 const APP_SRC_DIR = path.join(MONOREPO_ROOT, 'fluxer_app', 'src');
@@ -656,8 +661,19 @@ function buildNativeAddons() {
 
 async function buildMain() {
 	console.log('Building main process...');
+	const certificateWorker = await esbuild.build({
+		entryPoints: [CERTIFICATE_WORKER_SOURCE],
+		bundle: true,
+		write: false,
+		platform: 'node',
+		target: 'node22',
+		format: 'cjs',
+		minify: isProduction,
+		tsconfig: DESKTOP_TSCONFIG,
+	});
 	const result = await esbuild.build({
 		entryPoints: {
+			[MAIN_LAUNCH_ENTRY_NAME]: MAIN_LAUNCH_SOURCE,
 			[MAIN_BOOTSTRAP_ENTRY_NAME]: MAIN_BOOTSTRAP_SOURCE,
 			[MAIN_APP_ENTRY_NAME]: MAIN_APP_SOURCE,
 		},
@@ -678,6 +694,8 @@ async function buildMain() {
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 			[MAIN_APP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_APP_OUTPUT_FILE_NAME),
+			__FLUXER_CERTIFICATE_WORKER_SOURCE__: JSON.stringify(certificateWorker.outputFiles[0].text),
+			[MAIN_BOOTSTRAP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_BOOTSTRAP_OUTPUT_FILE_NAME),
 			...buildInfoDefines(),
 		},
 		banner: {
@@ -686,8 +704,13 @@ async function buildMain() {
 	});
 	assertMainProcessEntryOutput(
 		result.metafile,
+		MAIN_LAUNCH_SOURCE,
+		path.join(DIST_DIR, 'main', `${MAIN_LAUNCH_ENTRY_NAME}.js`),
+	);
+	assertMainProcessEntryOutput(
+		result.metafile,
 		MAIN_BOOTSTRAP_SOURCE,
-		path.join(DIST_DIR, 'main', `${MAIN_BOOTSTRAP_ENTRY_NAME}.js`),
+		path.join(DIST_DIR, 'main', MAIN_BOOTSTRAP_OUTPUT_FILE_NAME),
 	);
 	assertMainProcessEntryOutput(
 		result.metafile,

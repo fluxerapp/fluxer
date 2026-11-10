@@ -64,7 +64,7 @@ export interface AccountEngineHostDependencies {
 	readonly clearTimeout: (timer: unknown) => void;
 	readonly cachePath: string;
 	readonly preferWebSocket: boolean;
-	readonly trustedCertificates: () => ReadonlyArray<string>;
+	readonly trustedCertificates: () => Promise<ReadonlyArray<string>>;
 }
 
 export interface AccountEngineLabel extends AccountEngineAccountLabel {
@@ -104,7 +104,7 @@ export class AccountEngineHostController {
 	private readonly accountsRetryTimers = new Set<unknown>();
 	private stopping = false;
 	private available = true;
-	private started = false;
+	private startup: Promise<void> | null = null;
 	private shutdownResolve: (() => void) | null = null;
 
 	constructor(deps: AccountEngineHostDependencies) {
@@ -115,16 +115,13 @@ export class AccountEngineHostController {
 		return this.available;
 	}
 
-	async start(): Promise<void> {
-		if (this.started) {
-			return;
-		}
-		this.started = true;
-		await this.spawn();
+	start(): Promise<void> {
+		this.startup ??= this.spawn();
+		return this.startup;
 	}
 
 	accountsChanged(): void {
-		if (!this.started || this.stopping || this.accountsTimer !== null) {
+		if (this.startup === null || this.stopping || this.accountsTimer !== null) {
 			return;
 		}
 		this.accountsTimer = this.deps.setTimeout(() => {
@@ -214,6 +211,7 @@ export class AccountEngineHostController {
 			accountsComplete = false;
 			this.deps.log('warn', 'Account engine could not read accounts', error);
 		}
+		const trustedCertificates = await this.deps.trustedCertificates();
 		if (this.stopping) {
 			return;
 		}
@@ -237,7 +235,7 @@ export class AccountEngineHostController {
 			accounts: entries.map((entry) => entry.record),
 			accountsComplete,
 			preferWebSocket: this.deps.preferWebSocket,
-			trustedCertificates: this.deps.trustedCertificates(),
+			trustedCertificates,
 		});
 		if (!accountsComplete) {
 			this.accountsChanged();

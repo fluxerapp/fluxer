@@ -46,7 +46,6 @@ const TRAY_POSITION_GUID = TRAY_POSITION_GUIDS[BUILD_CHANNEL];
 interface DesktopTrayController {
 	createWindow: () => BrowserWindow;
 	getMainWindow: () => BrowserWindow | null;
-	isMainWindowTakenOver: () => boolean;
 	hideWindow: () => void;
 	setQuitting: (quitting: boolean) => void;
 	showWindow: () => void;
@@ -336,7 +335,7 @@ export function setDesktopTrayUnreadBadge(badge: number): void {
 function ensureMainWindowVisible(): void {
 	if (!controller) return;
 	const mainWindow = controller.getMainWindow();
-	if ((!mainWindow || mainWindow.isDestroyed()) && !controller.isMainWindowTakenOver()) {
+	if (!mainWindow || mainWindow.isDestroyed()) {
 		controller.createWindow();
 	}
 	controller.showWindow();
@@ -493,9 +492,12 @@ function buildTrayMenu(): Menu {
 			click: () => runTrayMenuAction(() => dispatchTrayAction({action: 'toggle-custom-css'})),
 		});
 	}
-	if (getDesktopUpdateState().available) {
+	const desktopUpdate = getDesktopUpdateState();
+	if (desktopUpdate.available) {
 		menuTemplate.push({
-			label: t('desktop.tray.updateNow', {appName: APP_NAME}),
+			label: t(desktopUpdate.replacesShell === true ? 'desktop.tray.restartToUpdate' : 'desktop.tray.reloadToUpdate', {
+				appName: APP_NAME,
+			}),
 			click: () => runTrayMenuAction(startDesktopUpdateFromShell),
 		});
 	}

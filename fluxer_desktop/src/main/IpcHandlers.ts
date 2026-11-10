@@ -602,6 +602,10 @@ export function registerGatewayTransportHandlers(): void {
 	}
 }
 
+export function warmGatewayTransport(): void {
+	nativeGatewayTransport?.warm();
+}
+
 export function cleanupGatewayTransportHandlers(): void {
 	nativeGatewayTransport?.cleanup();
 	nativeGatewayTransport = null;

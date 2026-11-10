@@ -12,8 +12,9 @@ import {
 import {getDesktopWindowBehaviorSettings, getLaunchProductName, getPrebootTheme} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
-import {isAccountEngineAvailable} from '@electron/main/AccountEngineHost';
 import {createAppLoadRetry} from '@electron/main/AppLoadRetry';
+import {readBootFrameInputs, replayBootFrameInputs} from '@electron/main/BootFrameInputReplay';
+import {prepareBootStateReload, requestBootStateFlush} from '@electron/main/BootState';
 import {
 	shouldForwardRendererConsoleToMainLog,
 	shouldIgnoreWindowStateForLaunch,
@@ -21,26 +22,33 @@ import {
 } from '@electron/main/DesktopDebugInfo';
 import {getAppResourcesPath, getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
 import {resolveDesktopLandingUrl} from '@electron/main/DesktopLastRoute';
+import {allowRememberedRuntimePlans} from '@electron/main/DesktopRuntimeDiscovery';
 import {DesktopRuntimeSecurity} from '@electron/main/DesktopRuntimeSecurity';
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
 import {wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
-import {isNativeGatewayAvailable} from '@electron/main/GatewaySocketNativeBoundary';
+import {isNativeGatewayPermitted} from '@electron/main/GatewaySocketNativeBoundary';
 import {armHiddenWindowMemoryRelease} from '@electron/main/HiddenWindowMemory';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
 import {getDesktopLocalAppAuthorization} from '@electron/main/LocalAppProtocolAuthorization';
 import {isLocalAppRendererDocumentURL, isLocalAppURL} from '@electron/main/LocalAppURL';
 import {cancelPendingFullScreenHide, hideWindowLeavingFullScreen} from '@electron/main/MacFullScreenHide';
 import {t} from '@electron/main/MainI18n';
+import {MainWindowBootFrame} from '@electron/main/MainWindowBootFrame';
 import {getMainWindowCloseAction} from '@electron/main/MainWindowClose';
-import {MainWindowRevealGate, MainWindowRevealReason} from '@electron/main/MainWindowReveal';
+import {
+	MAIN_WINDOW_LIVE_FRAME_WAIT_MS,
+	MainWindowRevealGate,
+	MainWindowRevealReason,
+} from '@electron/main/MainWindowReveal';
 import {signalMainWindowCreated, signalMainWindowReady} from '@electron/main/ModuleBootHandoff';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
+import {dimAndCaptureForReload} from '@electron/main/ReloadTransition';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
 import {resetStreamingPriority} from '@electron/main/StreamingPriority';
 import {getMainWindowRendererGoneAction} from '@electron/main/WindowRendererLifecycle';
 import {refreshWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
-import {ACCOUNT_ENGINE_AVAILABLE_RENDERER_ARG} from '@fluxer/desktop_ipc/src/AccountEngineContract';
+import {DESKTOP_BOOT_STATE_CHANNELS, type DesktopBootFrame} from '@fluxer/desktop_ipc/src/BootStateContract';
 import {NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import {app, BrowserWindow, dialog, ipcMain, screen} from 'electron';
 import log from 'electron-log';
@@ -51,6 +59,8 @@ const runtimeSecurity = new DesktopRuntimeSecurity({
 	localAppAuthorization: getDesktopLocalAppAuthorization(),
 });
 const LIVE_RESIZE_IDLE_MS = 400;
+const MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS = 250;
+const RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS = 1500;
 const VISIBILITY_MARGIN = 32;
 const RENDERER_GONE_REPEAT_WINDOW_MS = 30000;
 const CLOSE_FOR_UPDATE_TIMEOUT_MS = 5000;
@@ -139,6 +149,8 @@ interface WindowBounds {
 
 interface CreateWindowOptions {
 	startHidden?: boolean;
+	rendererReadiness?: Promise<unknown>;
+	liveFrameDeadlineMs?: number;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -152,9 +164,20 @@ let mainWindowRendererGone = false;
 let closingMainWindowForUpdate = false;
 let quitAfterMainWindowCloses = false;
 const SHELL_PAGE_URL_PREFIX = 'file:';
-let mainWindowTakeover: (() => void) | null = null;
-const takeoverEndedListeners = new Set<() => void>();
 let pendingMainWindowReveal: {readonly window: BrowserWindow; readonly requestShow: () => void} | null = null;
+
+let mainWindowBootFrame: MainWindowBootFrame | null = null;
+
+export function prepareMainWindowBootFrame(readFrame: (() => Promise<DesktopBootFrame | null>) | null): Promise<void> {
+	if (readFrame === null) mainWindowBootFrame?.dispose();
+	else return mainWindowBootFrame?.prepare(readFrame) ?? Promise.resolve();
+	return Promise.resolve();
+}
+
+export function takeMainWindowBootFrame(sender: Electron.WebContents): Promise<DesktopBootFrame | null> {
+	if (sender !== mainWindow?.webContents) return Promise.resolve(null);
+	return mainWindowBootFrame?.takeFrame() ?? Promise.resolve(null);
+}
 
 const maximizeChangeForwarders = new WeakSet<BrowserWindow>();
 const voicePopoutWindows = new Map<string, BrowserWindow>();
@@ -557,8 +580,7 @@ function getRendererAdditionalArguments(
 	const args: Array<string> = [];
 	if (allowTransparency) args.push(ACTIVE_ALLOW_TRANSPARENCY_RENDERER_ARG);
 	if (useNativeTitleBar) args.push(ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG);
-	if (allowNativeGateway && isNativeGatewayAvailable()) args.push(NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG);
-	if (allowNativeGateway && isAccountEngineAvailable()) args.push(ACCOUNT_ENGINE_AVAILABLE_RENDERER_ARG);
+	if (allowNativeGateway && isNativeGatewayPermitted()) args.push(NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG);
 	return args;
 }
 
@@ -672,7 +694,7 @@ function getTitleBarWindowOptions(
 function getSharedWebPreferences(
 	allowTransparency: boolean,
 	useNativeTitleBar: boolean,
-	allowNativeGateway = false,
+	allowNativeGateway: boolean,
 ): Electron.WebPreferences {
 	return {
 		preload: getDesktopDistributionPath('preload', 'index.cjs'),
@@ -685,8 +707,47 @@ function getSharedWebPreferences(
 		spellcheck: process.platform !== 'linux',
 		transparent: allowTransparency,
 		additionalArguments: getRendererAdditionalArguments(allowTransparency, useNativeTitleBar, allowNativeGateway),
-		v8CacheOptions: shouldDisableV8CodeCache(process.argv) ? 'none' : 'code',
+		v8CacheOptions: shouldDisableV8CodeCache(process.argv) ? 'none' : 'bypassHeatCheck',
 	};
+}
+
+export function reloadWindowAfterBootStateFlush(window: BrowserWindow, ignoreCache: boolean): void {
+	const reload = (): void => {
+		if (window.isDestroyed()) return;
+		if (ignoreCache) window.webContents.reloadIgnoringCache();
+		else window.webContents.reload();
+	};
+	if (window !== mainWindow) {
+		reload();
+		return;
+	}
+	void Promise.all([
+		requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false}).catch(
+			() => undefined,
+		),
+		dimAndCaptureForReload(window),
+	]).finally(reload);
+}
+
+function revealMaximizedAfterRepaint(window: BrowserWindow, maximize: () => void): void {
+	window.setOpacity(0);
+	maximize();
+	const {width, height} = window.getContentBounds();
+	const zoom = window.webContents.getZoomFactor();
+	const repainted = window.webContents.executeJavaScript(
+		`new Promise((resolve) => {
+			const settle = () => requestAnimationFrame(() => requestAnimationFrame(resolve));
+			if (Math.abs(innerWidth * ${zoom} - ${width}) < 2 && Math.abs(innerHeight * ${zoom} - ${height}) < 2) settle();
+			else addEventListener('resize', settle, {once: true});
+		})`,
+		true,
+	);
+	const deadline = new Promise<void>((resolve) => setTimeout(resolve, MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS));
+	void Promise.race([repainted, deadline])
+		.catch(() => {})
+		.finally(() => {
+			if (!window.isDestroyed()) window.setOpacity(1);
+		});
 }
 
 export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
@@ -761,7 +822,12 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		onReveal: (reason) => {
 			releasePendingReveal();
 			logger.info('Main window revealed', {reason, revealShowsWindow, elapsedMs: Date.now() - startedAt});
-			if (reason !== MainWindowRevealReason.CONTENT_PAINTED) {
+			if (
+				reason !== MainWindowRevealReason.CONTENT_PAINTED &&
+				reason !== MainWindowRevealReason.NATIVE_FRAME_DEADLINE &&
+				reason !== MainWindowRevealReason.NATIVE_FRAME_READY &&
+				reason !== MainWindowRevealReason.FRAME_PAINTED
+			) {
 				logger.warn('The renderer never reported painted content, revealing the main window anyway', {reason});
 			}
 			if (!revealShowsWindow) {
@@ -769,24 +835,69 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 				return;
 			}
 			if (!isAliveWindow(createdWindow) || createdWindow.isVisible()) return;
+			if (pendingMaximize && process.platform !== 'linux') {
+				revealMaximizedAfterRepaint(createdWindow, () => applyPendingMaximize(createdWindow));
+				return;
+			}
 			applyPendingMaximize(createdWindow);
 			createdWindow.show();
 		},
 	});
+	const bootFrame = new MainWindowBootFrame(
+		createdWindow,
+		options.liveFrameDeadlineMs ?? process.uptime() * 1000 + MAIN_WINDOW_LIVE_FRAME_WAIT_MS,
+		(late) => revealGate.markNativeFramePainted(late),
+	);
+	mainWindowBootFrame = bootFrame;
 	pendingMainWindowReveal = {
 		window: createdWindow,
 		requestShow: () => {
 			revealShowsWindow = true;
 		},
 	};
+	const isTopFrameOfCreatedWindow = (event: Electron.IpcMainEvent): boolean =>
+		!createdWindow.isDestroyed() &&
+		event.sender === createdWindow.webContents &&
+		event.senderFrame != null &&
+		event.senderFrame.parent == null;
 	const onFirstContentPainted = (event: Electron.IpcMainEvent): void => {
-		if (createdWindow.isDestroyed() || event.sender !== createdWindow.webContents) return;
-		if (event.senderFrame == null || event.senderFrame.parent != null) return;
-		revealGate.markContentPainted();
+		if (isTopFrameOfCreatedWindow(event) && isTrustedOrigin(event.senderFrame?.url)) {
+			bootFrame.dispose();
+			revealGate.markContentPainted();
+		}
+	};
+	const onBootFramePainted = (event: Electron.IpcMainEvent): void => {
+		if (isTopFrameOfCreatedWindow(event) && isTrustedOrigin(event.senderFrame?.url)) {
+			if (!bootFrame.markDOMFramePainted()) {
+				bootFrame.dispose();
+				revealGate.markFramePainted();
+			}
+		}
+	};
+	const onBootFrameDropped = (event: Electron.IpcMainEvent): void => {
+		if (isTopFrameOfCreatedWindow(event)) bootFrame.dispose();
+	};
+	const onBootFrameInput = (event: Electron.IpcMainEvent, value: unknown): void => {
+		if (!isTopFrameOfCreatedWindow(event) || !isTrustedOrigin(event.senderFrame?.url ?? '')) return;
+		const inputs = readBootFrameInputs(value);
+		if (inputs === null) {
+			logger.warn('Ignored input held under the boot frame because it was malformed');
+			return;
+		}
+		logger.info('Replaying input held under the boot frame', {count: inputs.length});
+		replayBootFrameInputs(createdWindow.webContents, inputs);
 	};
 	ipcMain.on(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL, onFirstContentPainted);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.framePainted, onBootFramePainted);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.frameDropped, onBootFrameDropped);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.replayInput, onBootFrameInput);
 	createdWindow.once('closed', () => {
+		bootFrame.dispose();
+		if (mainWindowBootFrame === bootFrame) mainWindowBootFrame = null;
 		ipcMain.removeListener(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL, onFirstContentPainted);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.framePainted, onBootFramePainted);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.frameDropped, onBootFrameDropped);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.replayInput, onBootFrameInput);
 		releasePendingReveal();
 		revealGate.dispose();
 	});
@@ -795,8 +906,19 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		revealGate.dispose();
 		signalMainWindowReady();
 	});
-	createdWindow.once('ready-to-show', () => revealGate.markReadyToShow());
-	revealGate.start();
+	let readyToShow = false;
+	createdWindow.once('ready-to-show', () => {
+		readyToShow = true;
+	});
+	void (options.rendererReadiness ?? Promise.resolve()).then(
+		() => {
+			if (createdWindow.isDestroyed()) return;
+			revealGate.start();
+			if (readyToShow) revealGate.markReadyToShow();
+			else createdWindow.once('ready-to-show', () => revealGate.markReadyToShow());
+		},
+		() => revealGate.dispose(),
+	);
 	let saveTimeout: NodeJS.Timeout | null = null;
 	const debouncedSave = () => {
 		if (saveTimeout) clearTimeout(saveTimeout);
@@ -962,10 +1084,18 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 			reloadMainWindowRendererAfterGone(`render-process-gone:${details.reason}`, details);
 		}
 	});
+	let firstDocumentLoaded = false;
+	webContents.once('did-finish-load', () => {
+		firstDocumentLoaded = true;
+	});
 	webContents.on('did-start-navigation', (_event, _url, isSameDoc, isMainFrame) => {
 		if (isMainFrame && !isSameDoc) {
 			drainPendingDisplayMediaRequests('did-start-navigation');
 			resetStreamingPriority();
+			if (firstDocumentLoaded) {
+				allowRememberedRuntimePlans();
+				void prepareBootStateReload();
+			}
 		}
 	});
 	registerSpellcheck(webContents);
@@ -1119,10 +1249,6 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 }
 
 export function showWindow(): void {
-	if (mainWindowTakeover != null) {
-		mainWindowTakeover();
-		return;
-	}
 	if (mainWindow && pendingMainWindowReveal?.window === mainWindow && !mainWindow.isVisible()) {
 		pendingMainWindowReveal.requestShow();
 		return;
@@ -1175,36 +1301,11 @@ export function hideWindow(): void {
 
 export function setQuitting(quitting: boolean): void {
 	isQuitting = quitting;
-}
-
-export function beginMainWindowTakeover(focus: () => void): void {
-	mainWindowTakeover = focus;
-}
-
-export function endMainWindowTakeover(): void {
-	if (mainWindowTakeover == null) return;
-	mainWindowTakeover = null;
-	for (const listener of Array.from(takeoverEndedListeners)) {
-		try {
-			listener();
-		} catch (error) {
-			logger.error('A main window takeover listener threw', error);
-		}
-	}
-}
-
-export function onMainWindowTakeoverEnded(listener: () => void): () => void {
-	takeoverEndedListeners.add(listener);
-	return () => {
-		takeoverEndedListeners.delete(listener);
-	};
-}
-
-export function isMainWindowTakenOver(): boolean {
-	return mainWindowTakeover != null;
+	if (quitting) mainWindowBootFrame?.dispose();
 }
 
 export async function reloadMainWindowForUpdate(): Promise<boolean> {
+	mainWindowBootFrame?.dispose();
 	const window = mainWindow;
 	if (!isAliveWindow(window) || window.webContents.isDestroyed()) {
 		return false;
@@ -1214,7 +1315,7 @@ export async function reloadMainWindowForUpdate(): Promise<boolean> {
 		return false;
 	}
 	const committed = waitForReloadCommit(window.webContents);
-	window.webContents.reloadIgnoringCache();
+	window.webContents.reload();
 	if (await committed) {
 		return true;
 	}
@@ -1243,28 +1344,11 @@ function waitForReloadCommit(contents: Electron.WebContents): Promise<boolean> {
 	});
 }
 
-export function hideAppWindowsForUpdate(keep: BrowserWindow): ReadonlyArray<BrowserWindow> {
-	const hidden: Array<BrowserWindow> = [];
-	for (const window of BrowserWindow.getAllWindows()) {
-		if (window === keep || window.isDestroyed() || !window.isVisible()) continue;
-		window.hide();
-		hidden.push(window);
-	}
-	return hidden;
-}
-
-export function restoreAppWindowsAfterUpdate(hidden: ReadonlyArray<BrowserWindow>): void {
-	for (const window of hidden) {
-		if (window.isDestroyed()) continue;
-		window.show();
-	}
-}
-
 function showsShellPage(window: BrowserWindow): boolean {
 	return !window.webContents.isDestroyed() && window.webContents.getURL().startsWith(SHELL_PAGE_URL_PREFIX);
 }
 
-export async function closeAppWindowsForUpdate(
+async function closeAppWindowsForUpdate(
 	keep: BrowserWindow,
 	{keepShellPages = false}: {readonly keepShellPages?: boolean} = {},
 ): Promise<void> {

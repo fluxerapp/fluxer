@@ -40,6 +40,8 @@ interface ModuleBootHandoffState {
 	readonly bufferedOpenUrls: Array<string>;
 	quitGateArmed: boolean;
 	quitStarted: boolean;
+	moduleLaunchGranted: boolean;
+	startupWindowSettled: boolean;
 	readonly committedModuleFilesListeners: Set<CommittedModuleFilesListener>;
 	readonly mainWindowListeners: Set<MainWindowListener>;
 	readonly mainWindowReadyListeners: Set<MainWindowReadyListener>;
@@ -60,6 +62,8 @@ const handoffState: ModuleBootHandoffState = {
 	bufferedOpenUrls: [],
 	quitGateArmed: false,
 	quitStarted: false,
+	moduleLaunchGranted: false,
+	startupWindowSettled: false,
 	committedModuleFilesListeners: new Set(),
 	mainWindowListeners: new Set(),
 	mainWindowReadyListeners: new Set(),
@@ -85,6 +89,22 @@ function armQuitGate(): void {
 
 export function hasQuitStarted(): boolean {
 	return handoffState.quitStarted;
+}
+
+export function markModuleLaunchGranted(): void {
+	handoffState.moduleLaunchGranted = true;
+}
+
+export function isModuleLaunchGranted(): boolean {
+	return handoffState.moduleLaunchGranted;
+}
+
+export function isStartupWindowPending(): boolean {
+	return !handoffState.startupWindowSettled;
+}
+
+export function settleStartupWindow(): void {
+	handoffState.startupWindowSettled = true;
 }
 
 export function armSecondInstanceForwarding(): void {
@@ -198,9 +218,12 @@ export function getMainWindowFactory(): MainWindowFactory | null {
 }
 
 export function signalMainWindowCreated(window: BrowserWindow | null): void {
+	handoffState.mainWindow = window;
+	window?.once('closed', () => {
+		if (handoffState.mainWindow === window) handoffState.mainWindow = null;
+	});
 	if (!handoffState.mainWindowSignalled) {
 		handoffState.mainWindowSignalled = true;
-		handoffState.mainWindow = window;
 		const listeners = Array.from(handoffState.mainWindowListeners);
 		handoffState.mainWindowListeners.clear();
 		for (const listener of listeners) {

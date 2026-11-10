@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	ACCOUNT_ENGINE_AVAILABLE_RENDERER_ARG,
 	ACCOUNT_ENGINE_CHANNELS,
 	ACCOUNT_ENGINE_LIMITS,
 	AccountEngineErrorCode,
@@ -12,6 +11,7 @@ import {
 } from '@fluxer/desktop_ipc/src/AccountEngineContract';
 
 interface AccountEnginePreloadRenderer {
+	sendSync: (channel: string) => unknown;
 	invoke: (channel: string, ...args: Array<unknown>) => Promise<unknown>;
 	on: (
 		channel: string,
@@ -45,11 +45,8 @@ function isErrorCode(value: unknown): value is AccountEngineErrorCode {
 	return Object.values(AccountEngineErrorCode).includes(value as AccountEngineErrorCode);
 }
 
-export function createAccountEnginePreloadAPI(
-	renderer: AccountEnginePreloadRenderer,
-	argv: ReadonlyArray<string> = process.argv,
-): AccountEnginePreloadAPI {
-	const isAvailable = argv.includes(ACCOUNT_ENGINE_AVAILABLE_RENDERER_ARG);
+export function createAccountEnginePreloadAPI(renderer: AccountEnginePreloadRenderer): AccountEnginePreloadAPI {
+	const isAvailable = renderer.sendSync(ACCOUNT_ENGINE_CHANNELS.isAvailable) === true;
 	const listeners = new Set<(event: AccountEngineEvent) => void>();
 	const pending = new Map<number, PendingRequest>();
 	let port: MessagePort | null = null;

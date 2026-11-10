@@ -54,7 +54,9 @@
 			"ignoreExportsUsedInFile": false,
 			"entry": [
 				"src/main/Bootstrap.ts",
+				"src/main/DesktopTrustedCertificatesWorker.ts",
 				"src/main/index.ts",
+				"src/main/LaunchEntry.ts",
 				"src/preload/index.ts",
 				"src/preload/LegacyHarvestPreload.ts",
 				"src/engine/AccountEngineMain.ts",
