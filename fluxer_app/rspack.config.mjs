@@ -18,6 +18,7 @@ import {transformSync} from 'esbuild';
 import {getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 import {moduleMapPlugin} from './scripts/module-map/index.ts';
+import {APP_SHELL_BUILD_META_NAME} from './src/features/platform/service_worker/WorkerCacheCleanup.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -805,7 +806,7 @@ export default () => {
 				inject: 'body',
 				scriptLoading: 'module',
 				excludeChunks: ['sw'],
-				...(isDesktopRenderer ? {publicPath: '/'} : {}),
+				...(isDesktopRenderer ? {publicPath: '/'} : {meta: {[APP_SHELL_BUILD_META_NAME]: buildInfo.version}}),
 			}),
 			new CopyRspackPlugin({
 				patterns: [
