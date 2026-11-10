@@ -218,9 +218,12 @@
 }
 
 .newMessagesBarAction {
-	border-radius: var(--radius-full);
 	flex: 0 0 auto;
 	white-space: nowrap;
+}
+
+.newMessagesBar button.newMessagesBarAction {
+	border-radius: var(--radius-full);
 }
 
 @media (max-width: 520px) {

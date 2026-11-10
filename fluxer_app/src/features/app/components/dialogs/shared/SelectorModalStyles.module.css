@@ -21,6 +21,10 @@
 	height: 45rem;
 }
 
+.selectorFooter {
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+}
+
 .selectorContent {
 	display: flex;
 	flex-direction: column;
