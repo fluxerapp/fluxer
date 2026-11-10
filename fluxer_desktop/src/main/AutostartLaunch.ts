@@ -5,16 +5,17 @@ import {app} from 'electron';
 
 export const AUTOSTART_LAUNCH_ARG = '--autostart';
 
+let autostartLaunch: boolean | null = null;
+
 function isAutostartLaunch(): boolean {
-	if (process.argv.includes(AUTOSTART_LAUNCH_ARG)) {
-		return true;
+	if (autostartLaunch === null) {
+		autostartLaunch =
+			process.argv.includes(AUTOSTART_LAUNCH_ARG) ||
+			(process.platform === 'darwin' && Boolean(app.getLoginItemSettings().wasOpenedAtLogin));
 	}
-	if (process.platform === 'darwin') {
-		return Boolean(app.getLoginItemSettings().wasOpenedAtLogin);
-	}
-	return false;
+	return autostartLaunch;
 }
 
 export function isStartMinimizedLaunch(): boolean {
-	return isAutostartLaunch() && getDesktopWindowBehaviorSettings().startMinimized;
+	return getDesktopWindowBehaviorSettings().startMinimized && isAutostartLaunch();
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {notifyAccountEngineAccountsChanged} from '@electron/main/AccountEngineHost';
+import {retainBootStateForAccounts} from '@electron/main/BootState';
 import type {DesktopAppStorage} from '@electron/main/DesktopAppStorage';
 import {DESKTOP_ACCOUNT_CHANNELS} from '@fluxer/desktop_ipc/src/AccountContract';
 import {DESKTOP_KNOWN_INSTANCE_CHANNELS} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
@@ -12,6 +13,27 @@ async function afterAccountWrite<T>(write: Promise<T>, onAccountsChanged: () => 
 	const result = await write;
 	onAccountsChanged();
 	return result;
+}
+
+async function afterAccountRemoval<T>(
+	write: Promise<T>,
+	storage: DesktopAppStorage,
+	onAccountsChanged: () => void,
+): Promise<T> {
+	const result = await afterAccountWrite(write, onAccountsChanged);
+	await retainBootStateForStoredAccounts(storage);
+	return result;
+}
+
+export async function retainBootStateForStoredAccounts(storage: DesktopAppStorage): Promise<void> {
+	const status = await storage.getStoreStatus();
+	if (!status.available) {
+		return;
+	}
+	const accounts = await storage.getAllAccounts().catch(() => null);
+	if (accounts !== null) {
+		await retainBootStateForAccounts(accounts.map((account) => account.storageKey));
+	}
 }
 
 export function createDesktopAppStorageIpcRoutes(
@@ -26,11 +48,11 @@ export function createDesktopAppStorageIpcRoutes(
 		[DESKTOP_ACCOUNT_CHANNELS.compareAndSwap]: (request: unknown) =>
 			afterAccountWrite(storage.compareAndSwapAccount(request), onAccountsChanged),
 		[DESKTOP_ACCOUNT_CHANNELS.delete]: (storageKey: unknown) =>
-			afterAccountWrite(storage.deleteAccount(storageKey), onAccountsChanged),
+			afterAccountRemoval(storage.deleteAccount(storageKey), storage, onAccountsChanged),
 		[DESKTOP_ACCOUNT_CHANNELS.import]: (request: unknown) =>
-			afterAccountWrite(storage.importAccounts(request), onAccountsChanged),
+			afterAccountRemoval(storage.importAccounts(request), storage, onAccountsChanged),
 		[DESKTOP_ACCOUNT_CHANNELS.prune]: (request: unknown) =>
-			afterAccountWrite(storage.pruneAccounts(request), onAccountsChanged),
+			afterAccountRemoval(storage.pruneAccounts(request), storage, onAccountsChanged),
 		[DESKTOP_STORAGE_CHANNELS.getStatus]: () => storage.getStoreStatus(),
 		[DESKTOP_STORAGE_CHANNELS.load]: (scope: unknown) => storage.loadEntries(scope),
 		[DESKTOP_STORAGE_CHANNELS.get]: (scope: unknown, key: unknown) => storage.getEntry(scope, key),

@@ -20,6 +20,8 @@ export const ZOOM_PREBOOT_MIRROR_STORAGE_KEY = 'fluxer:accessibility:zoom-preboo
 export const GATEWAY_PREBOOT_SESSION_STORAGE_KEY = 'fluxer:gateway:preboot:session';
 export const GATEWAY_PREBOOT_SESSION_PRESENT = '1';
 export const SHELL_HINT_STORAGE_KEY = 'fluxer:ui:shell-hint';
+export const GLOBAL_STORAGE_SCOPE = 'global';
+export const ACTIVE_ACCOUNT_STORAGE_KEY = 'fluxer:auth:active-account-key';
 
 export const DESKTOP_LEGACY_IMPORT_MARKER_KEY = 'legacy_import.v1';
 export const DESKTOP_LEGACY_IMPORT_FAILURE_MARKER_KEY = 'legacy_import.failures';

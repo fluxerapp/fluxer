@@ -24,7 +24,7 @@ import {
 	readBoundedMessage,
 	readMessageContentLength,
 } from '@electron/main/DesktopOutboundHTTP';
-import {resolveDesktopGatewayTrustedCertificates} from '@electron/main/DesktopSystemTrustVerifier';
+import {resolveDesktopGatewayTrustedCertificates} from '@electron/main/DesktopTrustedCertificates';
 import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {prefersAccountEngineWebSocketTransport} from '@electron/main/LaunchOptions';
 import {
@@ -191,12 +191,14 @@ async function persistRotatedToken(
 
 function registerConnectHandler(host: AccountEngineHostController): void {
 	const owners = createPrivilegedRendererDocumentOwners('AccountEngine');
-	ipcMain.handle(ACCOUNT_ENGINE_CHANNELS.connect, (event) => {
+	ipcMain.handle(ACCOUNT_ENGINE_CHANNELS.connect, async (event) => {
 		requirePrivilegedRendererDocumentSender(event, ACCOUNT_ENGINE_CHANNELS.connect);
 		if (getMainWindow()?.webContents !== event.sender) {
 			return false;
 		}
 		const owner = owners.capture(event, ACCOUNT_ENGINE_CHANNELS.connect);
+		await host.start();
+		if (!owner.isCurrent()) return false;
 		const link: AccountEngineRendererLink = {
 			createPortPair: () => {
 				const {port1, port2} = new MessageChannelMain();

@@ -34,16 +34,12 @@ class DesktopUpdatePoll {
 		this.options = options;
 	}
 
-	public start(immediately: boolean): void {
+	public start(): void {
 		this.options.logger.info('Polling the desktop update feeds', {
 			intervalMs: this.options.plan.intervalMs,
 			jitterRatio: this.options.plan.jitterRatio,
 		});
-		if (immediately) {
-			this.tick();
-		} else {
-			this.schedule();
-		}
+		this.tick();
 	}
 
 	public wake(): void {
@@ -91,7 +87,7 @@ class DesktopUpdatePoll {
 					this.failures = 0;
 				}
 				if (state.available && !this.available) {
-					logger.info('A desktop update is available, waiting for the user to start it');
+					logger.info('A desktop update is staged and ready, waiting for the user to apply it');
 				}
 				this.available = state.available;
 			})
@@ -110,12 +106,12 @@ class DesktopUpdatePoll {
 
 let armedPoll: DesktopUpdatePoll | null = null;
 
-export function armDesktopUpdatePoll(options: DesktopUpdatePollOptions, immediately: boolean): void {
+export function armDesktopUpdatePoll(options: DesktopUpdatePollOptions): void {
 	if (armedPoll != null) {
 		return;
 	}
 	armedPoll = new DesktopUpdatePoll(options);
-	armedPoll.start(immediately);
+	armedPoll.start();
 }
 
 export function wakeDesktopUpdatePoll(): void {

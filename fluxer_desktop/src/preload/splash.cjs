@@ -3,7 +3,6 @@
 const {ipcRenderer} = require('electron');
 
 const SPLASH_STATE_CHANNEL = 'desktop-splash:state';
-const SPLASH_REVEALED_CHANNEL = 'desktop-splash:revealed';
 const SPLASH_READY_CHANNEL = 'desktop-splash:ready';
 const SPLASH_RETRY_CHANNEL = 'desktop-splash:retry-now';
 const SPLASH_QUIT_CHANNEL = 'desktop-splash:quit';
@@ -385,15 +384,8 @@ function restartDiagnosticsReveal() {
 	}, DIAGNOSTICS_REVEAL_MS);
 }
 
-ipcRenderer.on(SPLASH_REVEALED_CHANNEL, () => {
-	restartDiagnosticsReveal();
-	render();
-});
-
 window.addEventListener('DOMContentLoaded', () => {
-	if (!/(?:^|[?&])held=1(?:&|$)/.test(window.location?.search ?? '')) {
-		restartDiagnosticsReveal();
-	}
+	restartDiagnosticsReveal();
 	render();
 	const mount = document.getElementById(SPLASH_MOUNT_ID);
 	const branded = mount == null ? Promise.resolve() : waitForBranding(mount);

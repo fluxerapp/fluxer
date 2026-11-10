@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const ACCOUNT_ENGINE_CHANNELS = Object.freeze({
+	isAvailable: 'account-engine:is-available',
 	connect: 'account-engine:connect',
 	port: 'account-engine:port',
 	accounts: 'account-engine:accounts',
 } as const);
-
-export const ACCOUNT_ENGINE_AVAILABLE_RENDERER_ARG = '--fluxer-account-engine=1';
 
 export const ACCOUNT_ENGINE_LIMITS = Object.freeze({
 	accountKeyMaxChars: 4096,

@@ -565,14 +565,19 @@ interface DesktopProxiedSend {
 	readonly timeoutMs: number;
 }
 
+interface DesktopSecureAgents {
+	readonly request: https.Agent;
+	readonly originRequest: https.Agent;
+}
+
 export class DesktopOutboundHTTP {
 	private readonly httpAgent = new HappyEyeballsHttpAgent({
 		keepAlive: true,
 		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
 	});
-	private readonly httpsAgent: https.Agent;
 	private readonly originRequestHttpAgent = new HappyEyeballsHttpAgent({keepAlive: true});
-	private readonly originRequestHttpsAgent: https.Agent;
+	private readonly trustedCertificates: ReadonlyArray<string> | undefined;
+	private secureAgents: DesktopSecureAgents | null = null;
 	private readonly bindings = new Map<string, DesktopOriginAddressBinding>();
 	private readonly pendingBindings = new Map<string, DesktopPendingOriginBinding>();
 	private readonly registeredRequirements = new Map<string, DesktopAddressRequirement>();
@@ -587,17 +592,7 @@ export class DesktopOutboundHTTP {
 		this.resolveHostAddresses = options.resolveHostAddresses ?? lookupAllAddresses;
 		this.resolveProxy = options.resolveProxy ?? resolveDesktopSessionProxy;
 		this.sendThroughSession = options.sendThroughSession ?? sendThroughDesktopSession;
-		const certificates = options.trustedCertificates ?? resolveDesktopTrustedCertificates();
-		const trust = certificates.length > 0 ? {ca: [...certificates]} : {};
-		this.httpsAgent = new HappyEyeballsHttpsAgent({
-			keepAlive: true,
-			maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
-			...trust,
-		});
-		this.originRequestHttpsAgent = new HappyEyeballsHttpsAgent({
-			keepAlive: true,
-			...trust,
-		});
+		this.trustedCertificates = options.trustedCertificates;
 	}
 
 	public async get(request: DesktopOutboundGETRequest): Promise<DesktopOutboundHTTPMessage> {
@@ -762,15 +757,39 @@ export class DesktopOutboundHTTP {
 		return (binding.addresses.find((address) => address.family === 4) ?? binding.address).address;
 	}
 
+	private async getSecureAgents(): Promise<DesktopSecureAgents> {
+		if (this.secureAgents !== null) {
+			return this.secureAgents;
+		}
+		this.requireAdmission();
+		const certificates = this.trustedCertificates ?? (await resolveDesktopTrustedCertificates());
+		this.requireAdmission();
+		if (this.secureAgents !== null) return this.secureAgents;
+		const trust = certificates.length > 0 ? {ca: [...certificates]} : {};
+		this.secureAgents = {
+			request: new HappyEyeballsHttpsAgent({
+				keepAlive: true,
+				maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
+				...trust,
+			}),
+			originRequest: new HappyEyeballsHttpsAgent({
+				keepAlive: true,
+				...trust,
+			}),
+		};
+		return this.secureAgents;
+	}
+
 	public cleanup(): void {
 		if (!this.acceptingRequests) {
 			return;
 		}
 		this.acceptingRequests = false;
 		this.httpAgent.destroy();
-		this.httpsAgent.destroy();
 		this.originRequestHttpAgent.destroy();
-		this.originRequestHttpsAgent.destroy();
+		this.secureAgents?.request.destroy();
+		this.secureAgents?.originRequest.destroy();
+		this.secureAgents = null;
 		this.bindings.clear();
 		this.registeredRequirements.clear();
 	}
@@ -912,17 +931,25 @@ export class DesktopOutboundHTTP {
 		]);
 	}
 
-	private issue(
+	private async issue(
 		request: DesktopOutboundGETRequest,
 		pinned: ReadonlyArray<PinnedAddress>,
 		release: () => void,
 	): Promise<DesktopOutboundHTTPMessage> {
+		let agent: http.Agent;
+		try {
+			agent = request.url.protocol === 'https:' ? (await this.getSecureAgents()).request : this.httpAgent;
+			this.requireAdmission();
+		} catch (error) {
+			release();
+			throw error;
+		}
 		return new Promise<DesktopOutboundHTTPMessage>((resolve, reject) => {
 			const secure = request.url.protocol === 'https:';
 			const transport = secure ? https : http;
 			const connection = new AbortController();
 			const connectionOptions = {
-				agent: secure ? this.httpsAgent : this.httpAgent,
+				agent,
 				connectionSignal: connection.signal,
 				lookup: createPinnedHostLookup(request.url.hostname, pinned),
 				method: 'GET',
@@ -1067,11 +1094,14 @@ export class DesktopOutboundHTTP {
 		}
 	}
 
-	private issueOriginRequest(
+	private async issueOriginRequest(
 		request: DesktopOutboundHTTPRequest,
 		target: URL,
 		binding: DesktopOriginAddressBinding,
 	): Promise<DesktopOutboundHTTPMessage> {
+		const agent =
+			target.protocol === 'https:' ? (await this.getSecureAgents()).originRequest : this.originRequestHttpAgent;
+		this.requireAdmission();
 		return new Promise<DesktopOutboundHTTPMessage>((resolve, reject) => {
 			let attemptsRemaining = isReplayableRequest(request) ? DESKTOP_OUTBOUND_HTTP_STALE_SOCKET_ATTEMPTS : 0;
 			let active: http.ClientRequest | null = null;
@@ -1111,7 +1141,7 @@ export class DesktopOutboundHTTP {
 			const attempt = (): void => {
 				const transport = target.protocol === 'https:' ? https : http;
 				const connectionOptions = {
-					agent: target.protocol === 'https:' ? this.originRequestHttpsAgent : this.originRequestHttpAgent,
+					agent,
 					connectionSignal: connection.signal,
 					headers: requestHeaders(request.headers),
 					lookup: createPinnedHostLookup(target.hostname, binding.addresses),

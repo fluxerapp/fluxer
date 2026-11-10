@@ -58,6 +58,7 @@ export type * from '@fluxer/desktop_ipc/src/DesktopBridgeTypes';
 import type {BuildChannel} from '@electron/common/BuildChannel';
 import type {DesktopAccountStorageAPI} from '@fluxer/desktop_ipc/src/AccountContract';
 import type {AccountEngineRendererAPI} from '@fluxer/desktop_ipc/src/AccountEngineContract';
+import type {DesktopBootStateAPI} from '@fluxer/desktop_ipc/src/BootStateContract';
 import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import type {NativeGatewayTransportAPI} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
@@ -410,7 +411,7 @@ export interface ElectronAPI {
 	desktopUpdate: DesktopUpdateAPI;
 	reportLastRoute: (routePath: string) => void;
 	reportInstanceProductName: (instanceKey: string, productName: string) => void;
-	notifyFirstContentPainted: () => void;
+	notifyFirstContentPainted: (view?: 'restored') => void;
 	desktopAccounts: DesktopAccountStorageAPI;
 	desktopStorage: DesktopStorageAPI;
 	desktopKnownInstances: DesktopKnownInstanceStorageAPI;
@@ -418,6 +419,7 @@ export interface ElectronAPI {
 	nativeGatewayTransport: NativeGatewayTransportAPI;
 	accountEngine: AccountEngineRendererAPI;
 	otherPlatformTemplate: OtherPlatformTemplateAPI;
+	bootState?: DesktopBootStateAPI;
 }
 
 export interface GlobalShortcutsPortalStatus {

@@ -15,10 +15,13 @@ import {
 	shouldRewriteLocalAppStaticMetadata,
 } from '@electron/main/LocalAppStaticMetadata';
 import {t} from '@electron/main/MainI18n';
+import {consumeReloadCover, takeReloadCoverImage} from '@electron/main/ReloadTransition';
 import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
+import {RELOAD_COVER_PATH} from '@fluxer/desktop_ipc/src/BootStateContract';
 
-const LOCAL_APP_REWRITTEN_FILE_MAX_BYTES = 4 * 1024 * 1024;
+export const LOCAL_APP_REWRITTEN_FILE_MAX_BYTES = 4 * 1024 * 1024;
 
+const RELOAD_COVER_HEADERS = Object.freeze({'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store'});
 const GET_METHOD = 'GET';
 const HEAD_METHOD = 'HEAD';
 const TEXT_CONTENT_TYPE = `${MimeType.PLAIN}; charset=utf-8`;
@@ -31,6 +34,9 @@ const METHOD_NOT_ALLOWED_HEADERS: Readonly<Record<string, string>> = Object.free
 export interface LocalAppIndexContext {
 	readonly prebootTheme: string | null;
 	readonly productName: string | null;
+	readonly bootStateExpectedFor: (declaredFormat: string | null) => boolean;
+	readonly bootStatePrewarmed: () => Promise<void>;
+	readonly bootSession: () => Promise<boolean | null>;
 	readonly instanceOrigins?: ReadonlyArray<string>;
 }
 
@@ -75,6 +81,11 @@ export class DesktopLocalAppFileRequestHandler {
 				status: HttpStatus.METHOD_NOT_ALLOWED,
 				headers: METHOD_NOT_ALLOWED_HEADERS,
 			});
+		}
+		if (new URL(request.url).pathname === RELOAD_COVER_PATH) {
+			const jpeg = takeReloadCoverImage();
+			if (jpeg === null) return notFoundResponse();
+			return new Response(new Uint8Array(jpeg), {headers: RELOAD_COVER_HEADERS});
 		}
 		let resolved: LocalAppResolvedFile;
 		try {
@@ -127,7 +138,7 @@ export class DesktopLocalAppFileRequestHandler {
 		const file = await this.files.readForResponse(resolved.filePath, LOCAL_APP_REWRITTEN_FILE_MAX_BYTES, signal);
 		try {
 			if (index) {
-				return this.buildIndexResponse({request, headers, file});
+				return await this.buildIndexResponse({request, headers, file});
 			}
 			return buildRewrittenResponse(
 				request,
@@ -140,14 +151,18 @@ export class DesktopLocalAppFileRequestHandler {
 		}
 	}
 
-	private buildIndexResponse({request, headers, file}: RewrittenLocalAppFileRequest): Response {
+	private async buildIndexResponse({request, headers, file}: RewrittenLocalAppFileRequest): Promise<Response> {
 		const context = this.indexContext();
+		const [, bootSession] = await Promise.all([context.bootStatePrewarmed(), context.bootSession()]);
 		const nonce = randomLocalAppCSPNonce();
 		const html = rewriteLocalAppIndexHTML({
 			html: file.contents.toString('utf8'),
 			nonce,
 			prebootTheme: context.prebootTheme,
 			productName: context.productName,
+			bootStateExpectedFor: context.bootStateExpectedFor,
+			bootSession,
+			reloadCoverDimElapsedMs: consumeReloadCover(),
 		});
 		headers.set('Content-Security-Policy', buildLocalAppCSP({nonce, instanceOrigins: context.instanceOrigins}));
 		return buildRewrittenResponse(request, headers, file, html);
