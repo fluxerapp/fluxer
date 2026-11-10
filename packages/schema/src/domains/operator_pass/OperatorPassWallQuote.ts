@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {segmentOperatorPassText} from '@fluxer/schema/src/domains/operator_pass/OperatorPassGraphemes';
+
 export const OPERATOR_PASS_WALL_QUOTE_MAX_LENGTH = 80;
 
 export const OPERATOR_PASS_WALL_QUOTE_MAX_CODE_UNITS = 2048;
@@ -7,7 +9,6 @@ export const OPERATOR_PASS_WALL_QUOTE_MAX_CODE_UNITS = 2048;
 export type OperatorPassWallQuoteProblem = 'too_long' | 'line_break' | 'characters' | 'link';
 
 const MAX_CODE_POINTS_PER_CHARACTER = 12;
-const GRAPHEMES = new Intl.Segmenter('en', {granularity: 'grapheme'});
 const LINE_BREAK = /[\n\v\f\r\u0085\u2028\u2029]/u;
 const FORBIDDEN = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\u115F\u1160\u2800\u3164\uFFA0\uFFFE\uFFFF]|\u034F|\u17B4|\u17B5/u;
 const TAG_FLAG = /\u{1F3F4}[\u{E0030}-\u{E0039}\u{E0061}-\u{E007A}]{1,6}\u{E007F}/gu;
@@ -30,7 +31,7 @@ export function normalizeOperatorPassWallQuote(value: string | null | undefined)
 
 export function countOperatorPassWallQuoteCharacters(quote: string): number {
 	let count = 0;
-	for (const _ of GRAPHEMES.segment(quote)) {
+	for (const _ of segmentOperatorPassText(quote)) {
 		count++;
 	}
 	return count;
@@ -54,7 +55,7 @@ function hasForbiddenCharacters(quote: string): boolean {
 }
 
 export function getOperatorPassWallQuoteProblem(quote: string): OperatorPassWallQuoteProblem | null {
-	const graphemes = Array.from(GRAPHEMES.segment(quote), ({segment}) => segment);
+	const graphemes = Array.from(segmentOperatorPassText(quote), ({segment}) => segment);
 	if (graphemes.length > OPERATOR_PASS_WALL_QUOTE_MAX_LENGTH) {
 		return 'too_long';
 	}
