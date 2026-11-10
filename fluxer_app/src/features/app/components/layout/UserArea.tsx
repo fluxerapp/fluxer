@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserAreaPopout} from '@app/features/app/components/floating/UserAreaPopout';
 import styles from '@app/features/app/components/layout/UserArea.module.css';
 import {
 	selectUserAreaMicrophoneState,
@@ -13,6 +12,8 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
+import NetworkReachability from '@app/features/platform/state/NetworkReachability';
 import Presence from '@app/features/presence/state/Presence';
 import {SettingsContextMenu} from '@app/features/ui/action_menu/SettingsContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -46,12 +47,18 @@ import {
 	VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR,
 	VOICE_UNDEAFEN_SELF_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GearIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerHighIcon, SpeakerSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useRef} from 'react';
+
+const UserAreaPopout = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'UserAreaPopout',
+	load: async () => (await import('@app/features/app/components/floating/UserAreaPopout')).UserAreaPopout,
+});
 
 const PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR = msg({
 	message: 'Push to talk is on. Hold {pushToTalkHint} to speak.',
@@ -104,7 +111,7 @@ const UserAreaInner = observer(
 	}: UserAreaInnerProps) => {
 		const {i18n} = useLingui();
 		const {isOpen, openProps} = usePopout('user-area');
-		const status = Presence.getStatus(user.id);
+		const status = NetworkReachability.online ? Presence.getStatus(user.id) : StatusTypes.OFFLINE;
 		const customStatus = Presence.getCustomStatus(user.id);
 		const {inputDevices, outputDevices} = useMediaDevices();
 		const voiceConnectionRef = useRef<HTMLDivElement | null>(null);
@@ -279,7 +286,12 @@ const UserAreaInner = observer(
 								tabIndex={0}
 								data-flx="app.user-area.user-area-inner.user-info"
 							>
-								<StatusAwareAvatar user={user} size={32} data-flx="app.user-area.user-area-inner.status-aware-avatar" />
+								<StatusAwareAvatar
+									user={user}
+									size={32}
+									status={NetworkReachability.online ? undefined : StatusTypes.OFFLINE}
+									data-flx="app.user-area.user-area-inner.status-aware-avatar"
+								/>
 								<div className={styles.userInfoText} data-flx="app.user-area.user-area-inner.user-info-text">
 									<div className={styles.userName} data-flx="app.user-area.user-area-inner.user-name">
 										{displayName}
