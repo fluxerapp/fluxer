@@ -3,12 +3,9 @@
 -module(push_job_fields).
 -typing([eqwalizer]).
 
--export([notification/7, thread/2, caller/1, is_mature/1]).
+-export([notification/7, thread/2, caller/1]).
 
 -define(MAX_CALLER_NAME_BYTES, 128).
--define(MATURE_TITLE, <<"Fluxer">>).
--define(MATURE_CHANNEL_BODY, <<"Message in an 18+ channel">>).
--define(MATURE_GROUP_DM_BODY, <<"Message in an 18+ group DM">>).
 
 -spec caller(map()) -> map().
 caller(#{caller_id := CallerId, caller_name := Name} = Caller) when
@@ -37,11 +34,6 @@ caller_avatar_url(CallerIdBin, _Hash) ->
         <<"id">> => CallerIdBin, <<"avatar">> => null
     }).
 
--spec is_mature(map()) -> boolean().
-is_mature(#{<<"__push_mature">> := true}) -> true;
-is_mature(#{<<"channel_nsfw">> := true}) -> true;
-is_mature(_MessageData) -> false.
-
 -spec notification(
     map(), map(), integer(), integer(), integer(), binary() | undefined, binary() | undefined
 ) -> map().
@@ -55,32 +47,8 @@ notification(
         <<"notification_tag">> => <<"channel:", ChannelIdBin/binary>>,
         <<"url">> => push_notification_format:build_url(GuildId, ChannelId, MessageId)
     },
-    Fields =
-        case is_mature(MessageData) of
-            true ->
-                mature_fields(GuildId);
-            false ->
-                message_fields(
-                    MessageData, MarkdownContext, GuildId, GuildName, ChannelName
-                )
-        end,
+    Fields = message_fields(MessageData, MarkdownContext, GuildId, GuildName, ChannelName),
     with_badge(maps:merge(Common, Fields)).
-
--spec mature_fields(integer()) -> map().
-mature_fields(GuildId) ->
-    {Kind, Body} =
-        case GuildId of
-            0 -> {<<"group_dm">>, ?MATURE_GROUP_DM_BODY};
-            _ -> {<<"guild">>, ?MATURE_CHANNEL_BODY}
-        end,
-    #{
-        <<"title">> => ?MATURE_TITLE,
-        <<"body">> => Body,
-        <<"icon">> => push_notification_format:resolve_author_avatar_url(#{}),
-        <<"image_url">> => null,
-        <<"conversation_kind">> => Kind,
-        <<"preview_kind">> => <<"mature">>
-    }.
 
 -spec message_fields(map(), map(), integer(), binary() | undefined, binary() | undefined) ->
     map().
@@ -153,17 +121,7 @@ with_badge(Fields) ->
 thread(MessageData, ChannelName) ->
     case push_notification:thread_fields(MessageData, ChannelName) of
         Fields when map_size(Fields) =:= 0 -> Fields;
-        Fields ->
-            without_mature_names(MessageData, Fields#{
-                <<"kind">> => thread_job_kind(MessageData)
-            })
-    end.
-
--spec without_mature_names(map(), map()) -> map().
-without_mature_names(MessageData, Fields) ->
-    case is_mature(MessageData) of
-        true -> maps:without([<<"channel_name">>, <<"parent_name">>], Fields);
-        false -> Fields
+        Fields -> Fields#{<<"kind">> => thread_job_kind(MessageData)}
     end.
 
 -spec thread_job_kind(map()) -> binary().

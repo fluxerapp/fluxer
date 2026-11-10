@@ -29,6 +29,8 @@ pub struct MessageJob {
     pub parent_name: Option<String>,
     #[serde(default)]
     pub channel_name: Option<String>,
+    #[serde(default)]
+    pub age_restricted: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]

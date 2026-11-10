@@ -356,7 +356,8 @@ async fn run_message_job(
 ) -> anyhow::Result<()> {
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
-    let (badges, subscriptions) = lookup_recipients(&state.rpc, &job.user_ids, deadline).await?;
+    let (badges, subscriptions) =
+        lookup_recipients(&state.rpc, &job.user_ids, job.age_restricted, deadline).await?;
     state.metrics.record_recipients(job.user_ids.len() as u64);
 
     let envelopes = job
@@ -407,7 +408,7 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let (badges, subscriptions) = lookup_recipients(&state.rpc, user_ids, deadline).await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, user_ids, false, deadline).await?;
     state.metrics.record_recipients(1);
 
     let envelope = payload::web_push_clear(&job, badge_of(&badges, &job.user_id));
@@ -461,7 +462,7 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
 
     let deadline = Instant::now() + RING_JOB_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let subscriptions = lookup(deadline, || state.rpc.push_subscriptions(user_ids)).await?;
+    let subscriptions = lookup(deadline, || state.rpc.push_subscriptions(user_ids, false)).await?;
     state.metrics.record_recipients(1);
 
     let envelopes = vec![(job.user_id.as_str(), payload::web_push_call_ring(&job))];
@@ -497,9 +498,13 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
 async fn lookup_recipients(
     rpc: &RpcClient,
     user_ids: &[String],
+    age_restricted: bool,
     deadline: Instant,
 ) -> Result<(HashMap<String, u32>, HashMap<String, Vec<Subscription>>), RpcError> {
-    let subscriptions = lookup(deadline, || rpc.push_subscriptions(user_ids)).await?;
+    let subscriptions = lookup(deadline, || {
+        rpc.push_subscriptions(user_ids, age_restricted)
+    })
+    .await?;
     let subscribed_ids: Vec<String> = user_ids
         .iter()
         .filter(|user_id| subscribed(&subscriptions, user_id))
