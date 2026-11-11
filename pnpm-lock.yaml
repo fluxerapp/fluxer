@@ -471,6 +471,7 @@ overrides:
   zod@^4: 4.6.7
 
 patchedDependencies:
+  '@electron/universal@3.0.4': 89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb
   '@phosphor-icons/react@2.1.10': 9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea
   emscripten-wasm-loader@3.0.3: 65d0567cd2da382764aee3839187feb5284662c4a9f0b755f1e52163c5e36399
   eslint-plugin-react-google-translate@1.0.4: 343c47e52467ec6018beff92d73b6ca2cf231399d98116925687451e8bd527d8
@@ -14013,7 +14014,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/universal@3.0.4(supports-color@7.2.0)':
+  '@electron/universal@3.0.4(patch_hash=89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb)(supports-color@7.2.0)':
     dependencies:
       '@electron/asar': 4.1.1
       debug: 4.4.3(supports-color@7.2.0)
@@ -16666,7 +16667,7 @@ snapshots:
       '@electron/notarize': 3.1.1(supports-color@7.2.0)
       '@electron/osx-sign': 2.4.0(supports-color@7.2.0)
       '@electron/rebuild': 4.2.0(supports-color@7.2.0)
-      '@electron/universal': 3.0.4(supports-color@7.2.0)
+      '@electron/universal': 3.0.4(patch_hash=89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb)(supports-color@7.2.0)
       '@malept/flatpak-bundler': 0.4.0(supports-color@7.2.0)
       '@noble/hashes': 2.4.0
       '@peculiar/webcrypto': 1.7.1
