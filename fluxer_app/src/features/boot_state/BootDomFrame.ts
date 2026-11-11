@@ -9,7 +9,6 @@ import {BOOT_FRAME_LAYOUT_MOVED_ATTRIBUTE, RELOAD_COVER_ELEMENT_ID} from '@fluxe
 export const TRANSIENT_UI_SELECTOR =
 	'[data-flx="channel.typing-users.div"], [data-flx^="channel.message-action-bar"], [role="tooltip"]';
 
-const RELOAD_UNDIM_MS = 260;
 const STRIPPED_SELECTOR = `script, noscript, ${TRANSIENT_UI_SELECTOR}`;
 const INERT_MEDIA_SELECTOR = 'iframe, video, audio, source';
 const EDITABLE_SELECTOR = '[contenteditable="true"]';
@@ -200,20 +199,8 @@ function releaseDomBootFrame(...args: ContentPaintedArgs): void {
 	args[1](input, () => composer, layoutMoved);
 }
 
-export function undimAfterReload(): void {
-	const cover = document.getElementById(RELOAD_COVER_ELEMENT_ID);
-	if (cover === null) return;
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-		cover.remove();
-		return;
-	}
-	cover.style.filter = getComputedStyle(cover).filter;
-	cover.style.animation = 'none';
-	cover.style.transition = `opacity ${RELOAD_UNDIM_MS}ms ease-in`;
-	requestAnimationFrame(() => {
-		cover.style.opacity = '0';
-		setTimeout(() => cover.remove(), RELOAD_UNDIM_MS + 50);
-	});
+export function removeReloadCover(): void {
+	document.getElementById(RELOAD_COVER_ELEMENT_ID)?.remove();
 }
 
 export function notifyFirstContentPainted(...args: ContentPaintedArgs): void {
@@ -223,5 +210,4 @@ export function notifyFirstContentPainted(...args: ContentPaintedArgs): void {
 		window.electron?.notifyFirstContentPainted?.();
 	}
 	releaseDomBootFrame(...args);
-	undimAfterReload();
 }

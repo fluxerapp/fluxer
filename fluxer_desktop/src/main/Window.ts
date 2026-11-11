@@ -43,7 +43,6 @@ import {
 } from '@electron/main/MainWindowReveal';
 import {signalMainWindowCreated, signalMainWindowReady} from '@electron/main/ModuleBootHandoff';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
-import {dimAndCaptureForReload} from '@electron/main/ReloadTransition';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
 import {resetStreamingPriority} from '@electron/main/StreamingPriority';
 import {getMainWindowRendererGoneAction} from '@electron/main/WindowRendererLifecycle';
@@ -721,12 +720,9 @@ export function reloadWindowAfterBootStateFlush(window: BrowserWindow, ignoreCac
 		reload();
 		return;
 	}
-	void Promise.all([
-		requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false}).catch(
-			() => undefined,
-		),
-		dimAndCaptureForReload(window),
-	]).finally(reload);
+	void requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false})
+		.catch(() => undefined)
+		.finally(reload);
 }
 
 function revealMaximizedAfterRepaint(window: BrowserWindow, maximize: () => void): void {
