@@ -4,6 +4,7 @@ pub(in crate::server) mod error;
 
 use crate::{
     byte_budget::BudgetedBytes,
+    constants::AssetExtension,
     disposition, http_headers, range,
     server::format_policy::{extension_from_mime, image_extension_from_filename},
 };
@@ -147,7 +148,10 @@ fn download_filename_for_content_type<'a>(
     content_type: &str,
     requested_download: bool,
 ) -> Cow<'a, str> {
-    if !requested_download || filename.is_empty() {
+    if filename.is_empty()
+        || (!requested_download
+            && image_extension_from_filename(filename) != Some(AssetExtension::Svg))
+    {
         return Cow::Borrowed(filename);
     }
     let Some(expected_ext) = extension_from_mime(content_type) else {
