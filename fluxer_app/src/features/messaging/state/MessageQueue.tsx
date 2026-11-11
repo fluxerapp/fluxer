@@ -434,7 +434,7 @@ class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | un
 	}
 
 	cancelRequest(nonce: string): void {
-		logger.info('Cancel message send:', nonce);
+		logger.debug('Cancel message send:', nonce);
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
 		if (messageUpload) {
 			this.cancelTextareaAttachmentUploads(messageUpload.attachments.map((attachment) => attachment.id));
@@ -452,7 +452,7 @@ class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | un
 			}
 			const retryAfter = completion.retry.retryAfter;
 			const delay = retryAfter === undefined ? this.defaultRetryAfter : retryAfter;
-			logger.info(`Pausing immediate send retry for ${delay}ms due to retry request`);
+			logger.debug(`Pausing immediate send retry for ${delay}ms due to retry request`);
 			await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
 		}
 	}

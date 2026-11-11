@@ -114,7 +114,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	const currentSessionId = data.session_id;
 	const isNewSession = context.previousSessionId !== null && context.previousSessionId !== currentSessionId;
 	if (isNewSession) {
-		logger.info(
+		logger.debug(
 			`New session detected (previous: ${context.previousSessionId}, current: ${currentSessionId}), clearing message state`,
 		);
 		Messages.handleSessionInvalidated();

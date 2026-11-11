@@ -588,7 +588,7 @@ export async function runDesktopLegacyImport(request: DesktopLegacyImportRequest
 				return refused(DesktopLegacyImportRefusal.STICKY_FALLBACK, phase, failures, deferredAccounts);
 			}
 			const staged = await stageDeferredDesktopImport(request, context);
-			logger.info(
+			logger.debug(
 				`Staged ${context.accounts.length} qualified desktop account(s), retaining web authority for ${deferredAccounts} deferred account(s)`,
 			);
 			return deferred(context, staged.accountsImported, staged.entriesImported, failures);

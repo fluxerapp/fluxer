@@ -405,7 +405,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	disconnect(code = 1000, reason = 'Client disconnecting', resumable = false): void {
-		this.log.info(`Disconnect requested: [${code}] ${reason}, resumable=${resumable}`);
+		this.log.debug(`Disconnect requested: [${code}] ${reason}, resumable=${resumable}`);
 		this.isUserInitiatedDisconnect = !resumable;
 		this.clearHelloTimeout();
 		this.clearResumeTimeout();
@@ -438,12 +438,12 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			this.log.warn('Cannot simulate network disconnect: not connected');
 			return;
 		}
-		this.log.info('Simulating network disconnect with resumable close');
+		this.log.debug('Simulating network disconnect with resumable close');
 		this.disconnect(4000, 'Simulated network disconnect', true);
 	}
 
 	reset(shouldReconnect = true): void {
-		this.log.info(`Resetting gateway connection (reconnect=${shouldReconnect})`);
+		this.log.debug(`Resetting gateway connection (reconnect=${shouldReconnect})`);
 		this.discardDeferredEmits();
 		this.clearHelloTimeout();
 		this.clearResumeTimeout();
@@ -468,14 +468,14 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	handleNetworkStatusChange(online: boolean): void {
-		this.log.info(`Network status: ${online ? 'online' : 'offline'}`);
+		this.log.debug(`Network status: ${online ? 'online' : 'offline'}`);
 		this.emitDeferred('networkStatusChange', online);
 		if (!online) return;
 		this.probeAfterResume('online', {accelerateReconnect: true});
 	}
 
 	probeAfterResume(reason: string, options: GatewayResumeProbeOptions = {}): void {
-		this.log.info(`Probing gateway after resume: reason=${reason}, state=${this.connectionState}`);
+		this.log.debug(`Probing gateway after resume: reason=${reason}, state=${this.connectionState}`);
 		switch (this.connectionState) {
 			case GatewayState.Connected:
 				this.verifyConnectionFreshness(reason);
@@ -752,7 +752,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	closeForHandoff(code: number, reason: string): GatewayHandoffSeed | null {
-		this.log.info(`Closing for handoff: [${code}] ${reason}`);
+		this.log.debug(`Closing for handoff: [${code}] ${reason}`);
 		const release = this.subscriptionLedger.release();
 		this.isUserInitiatedDisconnect = true;
 		this.shouldReconnectImmediately = false;
@@ -852,7 +852,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	private handleSocketOpen = (event: GatewayWireOpenEvent): void => {
 		if (!this.isCurrentSocketEvent(event)) return;
-		this.log.info('Gateway connection established');
+		this.log.debug('Gateway connection established');
 		this.emitDeferred('connected');
 	};
 	private handleSocketMessage = async (event: GatewayWireMessageEvent): Promise<void> => {
@@ -960,7 +960,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			event.code === GatewayCloseCodes.SESSION_TIMEOUT ||
 			resumeWasPending
 		) {
-			this.log.info(`Resume failed or session invalidated [${event.code}], clearing session to re-identify`);
+			this.log.debug(`Resume failed or session invalidated [${event.code}], clearing session to re-identify`);
 			this.clearSession();
 		}
 		if (!this.isUserInitiatedDisconnect) {
@@ -995,7 +995,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				this.handleInvalidSessionPayload(payload);
 				break;
 			case GatewayOpcodes.RECONNECT:
-				this.log.info('Server requested reconnect');
+				this.log.debug('Server requested reconnect');
 				this.shouldReconnectImmediately = true;
 				this.disconnect(4000, 'Server requested reconnect', true);
 				break;
@@ -1025,7 +1025,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				this.resetBackoffUnlessDispatchesKeepFailing();
 				this.updateState(GatewayState.Connected);
 				const readyMs = this.connectStartedAt > 0 ? Date.now() - this.connectStartedAt : 0;
-				this.log.info(`Gateway READY, session=${this.activeSessionId}, ready_ms=${readyMs}`);
+				this.log.debug(`Gateway READY, session=${this.activeSessionId}, ready_ms=${readyMs}`);
 				this.logDispatchTimings('READY', payload.d);
 				this.emitDeferred('ready', payload.d);
 				break;
@@ -1035,7 +1035,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				this.resetHeartbeatHistory();
 				this.updateState(GatewayState.Connected);
 				this.resetBackoffUnlessDispatchesKeepFailing();
-				this.log.info('Gateway session resumed');
+				this.log.debug('Gateway session resumed');
 				this.resendPresence();
 				this.logDispatchTimings('RESUMED', payload.d);
 				this.emitDeferred('resumed', payload.d);
@@ -1101,7 +1101,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	private handleInvalidSessionPayload(payload: GatewayPayload): void {
 		const isResumable = payload.d as boolean;
-		this.log.info(`Session invalidated (resumable=${isResumable})`);
+		this.log.debug(`Session invalidated (resumable=${isResumable})`);
 		if (this.invalidSessionTimeoutId != null) {
 			clearTimeout(this.invalidSessionTimeoutId);
 			this.invalidSessionTimeoutId = null;
@@ -1125,7 +1125,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.clearResumeTimeout();
 		this.clearSession();
 		const delay = Math.floor(Math.random() * GATEWAY_TIMEOUTS.InvalidSessionIdentifySpread);
-		this.log.info(`Resume rejected, identifying on the same connection in ${delay}ms`);
+		this.log.debug(`Resume rejected, identifying on the same connection in ${delay}ms`);
 		this.invalidSessionTimeoutId = window.setTimeout(() => {
 			this.invalidSessionTimeoutId = null;
 			this.sendIdentify();
@@ -1133,7 +1133,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	private sendIdentify(): void {
-		this.log.info('Sending IDENTIFY to gateway');
+		this.log.debug('Sending IDENTIFY to gateway');
 		const flags = this.options.identifyFlags ?? 0;
 		this.sendPayload({
 			op: GatewayOpcodes.IDENTIFY,
@@ -1153,7 +1153,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			this.sendIdentify();
 			return;
 		}
-		this.log.info(`Sending RESUME for session ${this.activeSessionId}`);
+		this.log.debug(`Sending RESUME for session ${this.activeSessionId}`);
 		this.sendPayload({
 			op: GatewayOpcodes.RESUME,
 			d: {
@@ -1312,11 +1312,11 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		const wasImmediate = allowImmediate && this.shouldReconnectImmediately;
 		const delay = wasImmediate ? this.reconnectSpread() : this.nextReconnectDelay();
 		this.shouldReconnectImmediately = false;
-		this.log.info(`Scheduling reconnect in ${delay}ms${wasImmediate ? ' (immediate)' : ''}`);
+		this.log.debug(`Scheduling reconnect in ${delay}ms${wasImmediate ? ' (immediate)' : ''}`);
 		this.reconnectTimeoutId = window.setTimeout(() => {
 			this.reconnectTimeoutId = null;
 			if (!this.canResumeSession()) {
-				this.log.info('Session no longer resumable, clearing state');
+				this.log.debug('Session no longer resumable, clearing state');
 				this.clearSession();
 			}
 			this.connect();
@@ -1402,7 +1402,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.dispatchGeneration += 1;
 		this.resetHeartbeatHistory();
 		if (hadSession) {
-			this.log.info('Gateway session cleared');
+			this.log.debug('Gateway session cleared');
 		}
 	}
 
@@ -1486,7 +1486,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		if (this.connectionState === nextState) return;
 		const previous = this.connectionState;
 		this.connectionState = nextState;
-		this.log.info(`Gateway state ${previous} -> ${nextState}`);
+		this.log.debug(`Gateway state ${previous} -> ${nextState}`);
 		this.emitDeferred('stateChange', nextState, previous);
 	}
 }

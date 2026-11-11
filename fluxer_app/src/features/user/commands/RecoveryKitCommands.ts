@@ -35,7 +35,7 @@ async function createRecoveryKit(
 		if (userId) {
 			rememberRecoveryKit(userId, response.body.created_at);
 		}
-		logger.info('Created a recovery kit');
+		logger.debug('Created a recovery kit');
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to create recovery kit', error);

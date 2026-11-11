@@ -32,7 +32,7 @@ export async function clearCameraVideoProcessor(track: LocalVideoTrack): Promise
 	if (track.getProcessor()) {
 		throw new Error('Camera video processor remained attached after it was cleared');
 	}
-	logger.info('Cleared background processor');
+	logger.debug('Cleared background processor');
 }
 
 async function recoverRawCameraAfterProcessorFailure(
@@ -80,7 +80,7 @@ async function applyCameraVideoProcessor(
 		return activeProcessor;
 	});
 	if (updatedProcessor != null) {
-		logger.info(logLabel);
+		logger.debug(logLabel);
 		return updatedProcessor;
 	}
 	const processor = createCameraVideoProcessor(options);
@@ -95,7 +95,7 @@ async function applyCameraVideoProcessor(
 		if (processor.processedTrack?.readyState !== 'live') {
 			throw new Error('Camera video processor produced no live output track');
 		}
-		logger.info(logLabel);
+		logger.debug(logLabel);
 		return processor;
 	} catch (error) {
 		try {

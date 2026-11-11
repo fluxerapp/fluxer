@@ -421,7 +421,7 @@ export class AuthSessionManager {
 			}
 			const {mirror, resolution} = initialization;
 			if (resolution.usedMirroredCredential) {
-				logger.info(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
+				logger.debug(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
 			}
 			await this.restorer.activate(resolution, mirror, () => {
 				this.send({

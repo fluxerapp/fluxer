@@ -110,7 +110,7 @@ async function checkHeldInputLayout(signal: AbortSignal): Promise<void> {
 	const currentLayout = measureFrameLayout();
 	root.removeAttribute(BOOT_FRAME_WHEEL_LAYOUT_STABLE_ATTRIBUTE);
 	if (frameLayout === null || frameLayout !== currentLayout) {
-		logger.info('The live layout differs from the boot frame, so clicks held under it are dropped', {
+		logger.debug('The live layout differs from the boot frame, so clicks held under it are dropped', {
 			frameLayoutKnown: frameLayout !== null,
 		});
 		root.setAttribute(BOOT_FRAME_LAYOUT_MOVED_ATTRIBUTE, '');

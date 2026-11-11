@@ -660,7 +660,7 @@ class UserSettingsState {
 			...changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences),
 		]);
 		if (unsyncedFields.size > 0) {
-			logger.info(`Clearing ${unsyncedFields.size} unsynced synced preference field(s) left by the previous account`);
+			logger.debug(`Clearing ${unsyncedFields.size} unsynced synced preference field(s) left by the previous account`);
 		}
 		this.accountEpoch += 1;
 		this.syncFlushGeneration += 1;

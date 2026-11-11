@@ -154,7 +154,7 @@ export class VoiceEngineV2AppControllerHost {
 				actionComplete = true;
 				options.onCommandsPlanned?.(plannedCommands);
 				if (pending.size === 0) {
-					logger.info('Voice engine v2 action planned zero commands', {
+					logger.debug('Voice engine v2 action planned zero commands', {
 						description,
 						connectionStatus: this.snapshot.connection.status,
 					});

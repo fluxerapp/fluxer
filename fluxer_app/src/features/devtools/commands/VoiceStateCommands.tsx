@@ -21,7 +21,7 @@ export async function toggleSelfDeaf(_guildId: string | null = null): Promise<vo
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
 	const willDeafen = !currentDeaf;
-	logger.info('toggleSelfDeaf', {
+	logger.debug('toggleSelfDeaf', {
 		currentDeaf,
 		willUndeafen,
 		willDeafen,
@@ -32,7 +32,7 @@ export async function toggleSelfDeaf(_guildId: string | null = null): Promise<vo
 	if (willUndeafen) {
 		const hasMicPermission = MediaPermission.isMicrophoneGranted();
 		if (!hasMicPermission) {
-			logger.info('Undeafening without mic permission, keeping user muted');
+			logger.debug('Undeafening without mic permission, keeping user muted');
 			LocalVoiceState.updateSelfDeaf(false);
 			LocalVoiceState.updateSelfMute(true);
 			SoundCommands.playSound(SoundType.Undeaf);
@@ -59,14 +59,14 @@ const requestMicrophoneInVoiceChannel = async (room: Room, channelId: string | n
 			channelId,
 		)
 	) {
-		logger.info('Skipping microphone request while voice permissions mute the user');
+		logger.debug('Skipping microphone request while voice permissions mute the user');
 		return false;
 	}
 	try {
 		logger.debug('Requesting microphone permission via MediaEngineFacade');
 		await VoiceRuntime.engine?.enableMicrophone(room, channelId);
 		MediaPermission.updateMicrophonePermissionGranted();
-		logger.info('Microphone permission granted via MediaEngineFacade');
+		logger.debug('Microphone permission granted via MediaEngineFacade');
 		return true;
 	} catch (error) {
 		logger.error('Failed to enable microphone', {
@@ -87,7 +87,7 @@ const requestMicrophoneDirectly = async (): Promise<boolean> => {
 			const nativeResult = await ensureNativePermission('microphone');
 			if (nativeResult === 'granted') {
 				MediaPermission.updateMicrophonePermissionGranted();
-				logger.info('Microphone permission granted via native API');
+				logger.debug('Microphone permission granted via native API');
 				return true;
 			}
 			if (nativeResult === 'denied') {
@@ -101,7 +101,7 @@ const requestMicrophoneDirectly = async (): Promise<boolean> => {
 		const stream = await navigator.mediaDevices.getUserMedia({audio: true});
 		stream.getTracks().forEach((track) => track.stop());
 		MediaPermission.updateMicrophonePermissionGranted();
-		logger.info('Microphone permission granted via getUserMedia');
+		logger.debug('Microphone permission granted via getUserMedia');
 		return true;
 	} catch (error) {
 		logger.error('Failed to get microphone permission', {
@@ -132,7 +132,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 		VoiceRuntime.guildId,
 		connectedChannelId,
 	);
-	logger.info('toggleSelfMute', {
+	logger.debug('toggleSelfMute', {
 		currentMute,
 		currentDeaf,
 		microphoneFailureLatched,
@@ -146,7 +146,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 	});
 	if (willBeUnmuted) {
 		if (isPermissionMuted) {
-			logger.info('Voice permissions prevent unmute, staying muted');
+			logger.debug('Voice permissions prevent unmute, staying muted');
 			VoiceRuntime.engine?.syncLocalVoiceStateWithServer({self_mute: true});
 			return;
 		}
@@ -157,7 +157,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 		}
 		VoiceRuntime.engine?.clearMicrophoneFailureLatch();
 		if (!MediaPermission.isMicrophoneGranted()) {
-			logger.info('Microphone permission not granted, requesting permission');
+			logger.debug('Microphone permission not granted, requesting permission');
 			const permissionGranted = room?.localParticipant
 				? await requestMicrophoneInVoiceChannel(room, connectedChannelId)
 				: await requestMicrophoneDirectly();

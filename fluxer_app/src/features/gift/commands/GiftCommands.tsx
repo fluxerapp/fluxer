@@ -239,7 +239,7 @@ export async function redeem(i18n: I18n, rawCode: string, target: InstanceHTTPTa
 	const code = extractGiftCode(rawCode);
 	try {
 		await instanceRequest({method: 'POST', path: Endpoints.GIFT_REDEEM(code), target});
-		logger.info('Gift redeemed', {code});
+		logger.debug('Gift redeemed', {code});
 		Gifts.markAsRedeemed(code, target);
 		ModalCommands.popWithKey(giftAcceptModalKey(code));
 		ToastCommands.success(i18n._(GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR));

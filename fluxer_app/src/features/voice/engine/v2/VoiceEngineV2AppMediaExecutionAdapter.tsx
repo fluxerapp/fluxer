@@ -169,7 +169,7 @@ function applyMicrophoneFailureLatchEvent(event: VoiceMicrophoneFailureLatchEven
 	microphoneFailureLatchSnapshot = transitionVoiceMicrophoneFailureLatchSnapshot(microphoneFailureLatchSnapshot, event);
 	const isLatched = isVoiceMicrophoneFailureLatchActive(microphoneFailureLatchSnapshot);
 	if (wasLatched === isLatched) return false;
-	logger.info('Microphone failure self-mute latch changed', {
+	logger.debug('Microphone failure self-mute latch changed', {
 		event: event.type,
 		latched: isLatched,
 		failureCount: selectVoiceMicrophoneFailureCount(microphoneFailureLatchSnapshot),
@@ -487,7 +487,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			serverDeaf: params.serverDeaf,
 			selfMute: getLatchedLocalSelfMute(isMicrophoneEnableFailureLatched()),
 		});
-		logger.info('Reconciling local media after voice state update', {
+		logger.debug('Reconciling local media after voice state update', {
 			channelId: params.channelId,
 			...audioState,
 		});
@@ -803,7 +803,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			try {
 				await audioTrack.setProcessor(this.createMicrophoneProcessor(room, this.getActiveChannelId()));
 				this.endVoiceInputRecovery();
-				logger.info('Voice input processor reinstalled');
+				logger.debug('Voice input processor reinstalled');
 			} catch (error) {
 				logger.warn('Voice input processor reinstall failed; the microphone stays unprocessed', {error});
 			}
@@ -910,7 +910,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			MediaPermission.updateMicrophonePermissionGranted();
 			this.transitionMediaState({type: 'microphone.enable.success'});
 			this.transitionMicrophoneFailureLatch({type: 'microphone.enableSucceeded'});
-			logger.info('Successfully enabled microphone');
+			logger.debug('Successfully enabled microphone');
 		} catch (e: unknown) {
 			if (generation !== this.microphoneEnableGeneration) {
 				logger.warn('Microphone enable for a replaced room failed', {channelId, error: e});
@@ -1033,7 +1033,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 					.filter((track): track is LocalAudioTrack => Boolean(track));
 				this.stopLocalSpeakingDetector(room);
 				await Promise.allSettled(tracks.map((track) => participant.unpublishTrack(track)));
-				logger.info('Successfully disabled microphone', {tracksUnpublished: tracks.length});
+				logger.debug('Successfully disabled microphone', {tracksUnpublished: tracks.length});
 			}
 			this.unbindMicrophoneLifecycle();
 			this.endVoiceInputRecovery();
@@ -1083,7 +1083,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		await this.applyCameraEncodingBitrate(track, options);
 		await this.applyCameraEncodingEffects(track, options);
 		updateLocalParticipantFromRoom(room);
-		logger.info('Applied in-place camera encoding update', {
+		logger.debug('Applied in-place camera encoding update', {
 			width: options.width,
 			height: options.height,
 			frameRate: options.frameRate,
@@ -1182,7 +1182,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		});
 		if (outcome === 'applied') {
 			this.transitionMediaState({type: 'camera.success', enabled});
-			logger.info('Success', {enabled});
+			logger.debug('Success', {enabled});
 		}
 		return outcome;
 	}

@@ -207,7 +207,7 @@ function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	const deviceId = device?.deviceId ?? 0;
 	const rule = classifyDevice(vendorId, deviceId, renderer);
 	if (!rule) {
-		logger.info('GPU did not match any known family — leaving hardware-encode answers as unknown', {
+		logger.debug('GPU did not match any known family — leaving hardware-encode answers as unknown', {
 			renderer,
 			vendorId: vendorId ? `0x${vendorId.toString(16)}` : undefined,
 			deviceId: deviceId ? `0x${deviceId.toString(16)}` : undefined,
@@ -222,7 +222,7 @@ function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 			raw: info,
 		};
 	}
-	logger.info('Classified GPU for hardware-encode capability', {family: rule.family, renderer});
+	logger.debug('Classified GPU for hardware-encode capability', {family: rule.family, renderer});
 	return {
 		...rule.caps,
 		gpuLabel: buildLabel(info, device),
@@ -366,7 +366,7 @@ function recordH264HardwareProfileProbe(
 	const key = encodeProbeCacheKey(video);
 	h264HardwareProfileProbes.set(key, probe);
 	latestH264HardwareProfileProbeKey = key;
-	logger.info('Probed which H.264 profiles this host encodes in hardware', {
+	logger.debug('Probed which H.264 profiles this host encodes in hardware', {
 		profiles: [...profiles],
 		width: video.width,
 		height: video.height,
@@ -567,7 +567,7 @@ export function loadHardwareVideoEncodeProfiles(): Promise<ReadonlyArray<Hardwar
 	pendingHardwareVideoEncodeProfiles = probeHardwareVideoEncodeProfiles(getVideoEncoder())
 		.then((profiles) => {
 			hardwareVideoEncodeProfiles = profiles;
-			logger.info('Probed hardware video encode profiles', {profiles: describeHardwareVideoEncodeProfiles(profiles)});
+			logger.debug('Probed hardware video encode profiles', {profiles: describeHardwareVideoEncodeProfiles(profiles)});
 			return profiles;
 		})
 		.finally(() => {
@@ -619,7 +619,7 @@ function fetchReport(): Promise<HardwareEncodeReport | null> {
 		const baseReport = reportFromGpuInfo(info);
 		const efficiency = probeResult.status === 'fulfilled' ? probeResult.value : null;
 		const report = reconcileHardwareEncodeReport(baseReport, efficiency);
-		logger.info('Reconciled hardware-encode answers against the WebRTC encode probe', {
+		logger.debug('Reconciled hardware-encode answers against the WebRTC encode probe', {
 			probe: efficiency,
 			av1: report.av1,
 			h265: report.h265,

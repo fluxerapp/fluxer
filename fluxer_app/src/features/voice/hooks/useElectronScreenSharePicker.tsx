@@ -30,7 +30,7 @@ export const useElectronScreenSharePicker = (): void => {
 	useEffect(() => {
 		const electronApi = getElectronAPI();
 		if (!electronApi?.onDisplayMediaRequested) {
-			logger.info('Screen share picker unavailable (missing platform handler)');
+			logger.debug('Screen share picker unavailable (missing platform handler)');
 			return;
 		}
 		let handlingRequest = false;

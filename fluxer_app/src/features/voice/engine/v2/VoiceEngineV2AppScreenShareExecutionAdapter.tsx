@@ -631,7 +631,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				return;
 			case 'accept-negotiated':
 				recordScreenShareEncoderVerification('accept-negotiated', action.negotiated);
-				logger.info('Screen share publisher negotiated a different codec inside the publish policy', {
+				logger.debug('Screen share publisher negotiated a different codec inside the publish policy', {
 					requested: action.requested,
 					negotiated: action.negotiated,
 				});
@@ -677,7 +677,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			if (!isCurrentScreenShareTrack()) {
 				return;
 			}
-			logger.info('Screen share media track ended; disabling screen share', {
+			logger.debug('Screen share media track ended; disabling screen share', {
 				trigger,
 				readyState: mediaStreamTrack.readyState,
 			});
@@ -700,7 +700,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		const reportCapturePaused = (paused: boolean): void => {
 			if (!isCurrentScreenShareTrack()) return;
 			this.setScreenShareCapturePausedInternal(paused);
-			logger.info(
+			logger.debug(
 				paused
 					? 'Screen share capture stopped delivering frames; the shared surface is static or hidden'
 					: 'Screen share capture started delivering frames again',
@@ -1087,7 +1087,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		const screenShareAudioPublication = participant.getTrackPublication(Track.Source.ScreenShareAudio);
 		if (!screenShareAudioPublication) {
 			if (audio) {
-				logger.info('Cannot enable screen share audio without restarting screen share');
+				logger.debug('Cannot enable screen share audio without restarting screen share');
 			}
 			return false;
 		}

@@ -230,7 +230,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 				}),
 			},
 		});
-		logger.info('Success', {enabled});
+		logger.debug('Success', {enabled});
 	}
 
 	private async handleSetEnabledFailure(
@@ -503,7 +503,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 				}),
 			},
 		});
-		logger.info('Started device screen share', {videoDeviceId, audioIncluded: audioTrack != null});
+		logger.debug('Started device screen share', {videoDeviceId, audioIncluded: audioTrack != null});
 	}
 
 	private async handleDeviceShareFailure(
@@ -821,7 +821,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 					}),
 				},
 			});
-			logger.info('Republished active screen share with a different codec', {
+			logger.debug('Republished active screen share with a different codec', {
 				previousCodec: previousOptions.videoCodec,
 				codec,
 			});
@@ -1409,7 +1409,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		}
 		stopMediaTrack(snapshot.videoTrack);
 		this.reconcileCommittedScreenShareReplacement(room, participant, nextContentSource, effectivePublishOptions);
-		logger.info('Replaced active screen share source', {audioIncluded: tracks.audioTrack != null});
+		logger.debug('Replaced active screen share source', {audioIncluded: tracks.audioTrack != null});
 		return true;
 	}
 
@@ -1560,7 +1560,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 				}),
 			},
 		});
-		logger.info('Restored screen share after voice reconnect', {audioPublished});
+		logger.debug('Restored screen share after voice reconnect', {audioPublished});
 	}
 
 	private handleRestoreReconnectFailure(
