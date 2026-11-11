@@ -15,13 +15,10 @@ import {
 	shouldRewriteLocalAppStaticMetadata,
 } from '@electron/main/LocalAppStaticMetadata';
 import {t} from '@electron/main/MainI18n';
-import {consumeReloadCover, takeReloadCoverImage} from '@electron/main/ReloadTransition';
 import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
-import {RELOAD_COVER_PATH} from '@fluxer/desktop_ipc/src/BootStateContract';
 
 export const LOCAL_APP_REWRITTEN_FILE_MAX_BYTES = 4 * 1024 * 1024;
 
-const RELOAD_COVER_HEADERS = Object.freeze({'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store'});
 const GET_METHOD = 'GET';
 const HEAD_METHOD = 'HEAD';
 const TEXT_CONTENT_TYPE = `${MimeType.PLAIN}; charset=utf-8`;
@@ -81,11 +78,6 @@ export class DesktopLocalAppFileRequestHandler {
 				status: HttpStatus.METHOD_NOT_ALLOWED,
 				headers: METHOD_NOT_ALLOWED_HEADERS,
 			});
-		}
-		if (new URL(request.url).pathname === RELOAD_COVER_PATH) {
-			const jpeg = takeReloadCoverImage();
-			if (jpeg === null) return notFoundResponse();
-			return new Response(new Uint8Array(jpeg), {headers: RELOAD_COVER_HEADERS});
 		}
 		let resolved: LocalAppResolvedFile;
 		try {
@@ -162,7 +154,6 @@ export class DesktopLocalAppFileRequestHandler {
 			productName: context.productName,
 			bootStateExpectedFor: context.bootStateExpectedFor,
 			bootSession,
-			reloadCoverDimElapsedMs: consumeReloadCover(),
 		});
 		headers.set('Content-Security-Policy', buildLocalAppCSP({nonce, instanceOrigins: context.instanceOrigins}));
 		return buildRewrittenResponse(request, headers, file, html);

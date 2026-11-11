@@ -2,13 +2,10 @@
 
 import {randomBytes} from 'node:crypto';
 import {LOCAL_APP_STATIC_CDN_ENDPOINT_PLACEHOLDER} from '@electron/main/LocalAppStaticMetadata';
-import {RELOAD_DIM_FILTER, RELOAD_DIM_MS} from '@electron/main/ReloadTransition';
 import {
 	BOOT_STATE_EXPECTED_ATTRIBUTE,
 	BOOT_STATE_EXPECTED_VALUE,
 	BOOT_STATE_FORMAT_META_NAME,
-	RELOAD_COVER_ELEMENT_ID,
-	RELOAD_COVER_PATH,
 } from '@fluxer/desktop_ipc/src/BootStateContract';
 import {readInstanceProductName} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
 
@@ -16,7 +13,6 @@ const CSP_NONCE_PLACEHOLDER = '{{CSP_NONCE_PLACEHOLDER}}';
 const MEDIA_PRECONNECT_TAG = '<link rel="preconnect" href="{{MEDIA_ENDPOINT}}">';
 const CSP_NONCE_BYTES = 16;
 const HTML_OPEN_TAG = /<html(?=[\s>])[^>]*>/iu;
-const BODY_OPEN_TAG = /<body\b[^>]*>/iu;
 const HTML_CLASS_ATTRIBUTE = /\sclass\s*=/iu;
 const THEME_CLASS_PREFIX = 'theme-';
 const SAFE_THEME_TOKEN = /^[a-z0-9][a-z0-9_-]{0,63}$/iu;
@@ -46,7 +42,6 @@ interface LocalAppIndexHTMLInput {
 	readonly productName: string | null;
 	readonly bootStateExpectedFor: (declaredFormat: string | null) => boolean;
 	readonly bootSession: boolean | null;
-	readonly reloadCoverDimElapsedMs: number | null;
 }
 
 export function randomLocalAppCSPNonce(): string {
@@ -69,9 +64,7 @@ export function rewriteLocalAppIndexHTML(input: LocalAppIndexHTMLInput): string 
 		.replaceAll(MEDIA_PRECONNECT_TAG, '');
 	const bootStateExpected = input.bootStateExpectedFor(readDeclaredBootStateFormat(substituted));
 	const stamped = stampHTMLOpenTag(substituted, input.prebootTheme, bootStateExpected, input.bootSession);
-	const covered =
-		input.reloadCoverDimElapsedMs === null ? stamped : stampReloadCover(stamped, input.reloadCoverDimElapsedMs);
-	const preloaded = bootStateExpected ? stampSignedInPreloads(covered) : covered;
+	const preloaded = bootStateExpected ? stampSignedInPreloads(stamped) : stamped;
 	return stampProductName(preloaded, input.productName);
 }
 
@@ -156,23 +149,6 @@ function bootSessionAttribute(tag: string, signedIn: boolean | null): string {
 		return '';
 	}
 	return ` ${BOOT_SESSION_ATTRIBUTE}="${signedIn ? '1' : '0'}"`;
-}
-
-function stampReloadCover(html: string, dimElapsedMs: number): string {
-	const body = BODY_OPEN_TAG.exec(html);
-	if (body == null) {
-		return html;
-	}
-	const fadeOut = 'fluxer-reload-cover-out 300ms ease-in 5s forwards';
-	const cover =
-		'<style>@keyframes fluxer-reload-cover-out{to{opacity:0;visibility:hidden}}' +
-		`@keyframes fluxer-reload-cover-dim{from{filter:none}to{filter:${RELOAD_DIM_FILTER}}}` +
-		`@media (prefers-reduced-motion:reduce){#${RELOAD_COVER_ELEMENT_ID}{animation:${fadeOut}!important}}</style>` +
-		`<img id="${RELOAD_COVER_ELEMENT_ID}" src="${RELOAD_COVER_PATH}" alt="" decoding="sync" ` +
-		'style="position:fixed;inset:0;width:100vw;height:100vh;z-index:2147483647;pointer-events:none;' +
-		`filter:${RELOAD_DIM_FILTER};animation:fluxer-reload-cover-dim ${RELOAD_DIM_MS}ms ease-out -${Math.round(dimElapsedMs)}ms both,${fadeOut}">`;
-	const end = body.index + body[0].length;
-	return `${html.slice(0, end)}${cover}${html.slice(end)}`;
 }
 
 function bootStateAttribute(tag: string, expected: boolean): string {

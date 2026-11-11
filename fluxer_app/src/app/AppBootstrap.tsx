@@ -6,7 +6,7 @@ import reactiveI18n, {initI18n} from '@app/app/I18n';
 import {AppErrorBoundary} from '@app/features/app/components/AppErrorBoundary';
 import type {DomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
-import {notifyFirstContentPainted, undimAfterReload} from '@app/features/boot_state/BootDomFrame';
+import {notifyFirstContentPainted, removeReloadCover} from '@app/features/boot_state/BootDomFrame';
 import {afterBootReveal, releaseBootReveal} from '@app/features/boot_state/BootReveal';
 import {startBootStateRead} from '@app/features/boot_state/BootStateBridge';
 import {installSelfXssNotice} from '@app/features/devtools/utils/SelfXssNotice';
@@ -32,7 +32,6 @@ import ReactDOM from 'react-dom/client';
 const logger = new Logger('index');
 
 const SIGNED_OUT_INSTANCE_DISCOVERY_TIMEOUT_MS = 5000;
-const RELOAD_UNDIM_FALLBACK_MS = 3000;
 
 if (typeof window !== 'undefined' && window.history) {
 	bootstrapSyntheticHistory();
@@ -351,7 +350,7 @@ async function bootstrapApp(storageBootstrap: AppStorageBootstrapHandle, i18nRea
 }
 
 export async function runApp(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
-	setTimeout(undimAfterReload, RELOAD_UNDIM_FALLBACK_MS);
+	removeReloadCover();
 	scheduleNonLatinScriptFaces();
 	const i18nReady = initI18n().then(() => {
 		afterBootReveal(() => {

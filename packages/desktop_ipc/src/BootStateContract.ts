@@ -7,7 +7,6 @@ export const BOOT_STATE_MAX_PAYLOAD_BYTES = 48 * 1024 * 1024;
 export const BOOT_STATE_EXPECTED_ATTRIBUTE = 'data-boot-state';
 export const BOOT_STATE_EXPECTED_VALUE = 'expected';
 export const RELOAD_COVER_ELEMENT_ID = 'fluxer-reload-cover';
-export const RELOAD_COVER_PATH = '/__fluxer_reload_cover.jpg';
 
 export const DESKTOP_BOOT_STATE_CHANNELS = Object.freeze({
 	read: 'desktop-boot-state:read',
