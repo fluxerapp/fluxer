@@ -28,7 +28,7 @@ const AutoReconnectHandler = observer(() => {
 			return;
 		}
 		const lastChannel = {guildId: lastChannelGuildId, channelId: lastChannelId};
-		logger.debug('Attempting to reconnect to last voice channel', lastChannel);
+		logger.info('Attempting to reconnect to last voice channel', lastChannel);
 		hasAttemptedReconnection.current = true;
 		const timerId = setTimeout(() => {
 			const stillShouldReconnect = MediaEngine.getShouldReconnect();

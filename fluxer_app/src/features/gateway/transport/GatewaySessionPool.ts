@@ -280,7 +280,7 @@ class GatewaySessionPool {
 				this.stopForegroundRecovery();
 				return;
 			}
-			logger.debug('Retrying foreground gateway recovery after it was exhausted', {accountKey});
+			logger.warn('Retrying foreground gateway recovery after it was exhausted', {accountKey});
 			this.startForegroundRecovery(accountKey);
 		};
 		const handleVisibilityChange = (): void => {

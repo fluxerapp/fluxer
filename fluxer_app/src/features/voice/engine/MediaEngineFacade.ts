@@ -992,7 +992,7 @@ class MediaEngineFacade extends Store {
 			connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
 		};
 		if (shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval(removalInput)) {
-			logger.debug('Server removed current voice connection, tearing down local voice transport', {
+			logger.info('Server removed current voice connection, tearing down local voice transport', {
 				guildId,
 				connectionId,
 			});
