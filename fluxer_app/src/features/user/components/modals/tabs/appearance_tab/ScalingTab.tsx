@@ -8,22 +8,24 @@ import Accessibility, {
 } from '@app/features/accessibility/state/Accessibility';
 import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import {resolveNearestNumericOption} from '@app/features/ui/components/form/ComboboxNumericInput';
-import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Slider} from '@app/features/ui/components/Slider';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {formatRoundedPercentage, roundPercentage} from '@app/features/ui/utils/PercentageFormatting';
-import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
+import {StepSliderRow} from '@app/features/user/components/modals/tabs/appearance_tab/StepSliderRow';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo} from 'react';
+import {useCallback, useEffect} from 'react';
 
 const CHAT_FONT_SIZE_DESCRIPTOR = msg({
 	message: 'Chat font size',
-	comment: 'Accessible label for the chat font size select.',
+	comment: 'Label for the chat font size slider.',
+});
+export const PIXELS_ACCESSIBLE_DESCRIPTOR = msg({
+	message: '{value} pixels',
+	comment: 'Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.',
 });
 const RESET_FONT_SIZE_DESCRIPTOR = msg({
 	message: 'Reset font size',
@@ -40,6 +42,7 @@ const RESET_ZOOM_DESCRIPTOR = msg({
 const DEFAULT_FONT_SIZE = 16;
 const DEFAULT_ZOOM_PERCENT = 100;
 const FONT_SIZE_OPTIONS = [12, 14, 15, 16, 18, 20, 24] as const;
+const FONT_SIZE_LABELLED_STOPS = [12, DEFAULT_FONT_SIZE, 24] as const;
 
 const getNearestFontSize = (value: number): number => {
 	let nearest: number = FONT_SIZE_OPTIONS[0];
@@ -74,35 +77,28 @@ const FontSizeResetAction: React.FC = observer(() => {
 export const FontSizeTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const fontSize = Accessibility.fontSize;
-	const options: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() =>
-			FONT_SIZE_OPTIONS.map((value) => ({
-				value,
-				label: `${getCachedNumberFormat(getFormattingLocale()).format(value)}px`,
-			})),
-		[i18n.locale],
-	);
 	const selectedFontSize = getNearestFontSize(fontSize);
 	useEffect(() => {
 		if (fontSize !== selectedFontSize) AccessibilityCommands.update({fontSize: selectedFontSize});
 	}, [fontSize, selectedFontSize]);
+	const formatNumber = (value: number) => getCachedNumberFormat(getFormattingLocale()).format(value);
 	return (
-		<CompactComboboxRow<number>
+		<StepSliderRow
 			label={i18n._(CHAT_FONT_SIZE_DESCRIPTOR)}
 			action={
 				canResetFontSize() ? (
 					<FontSizeResetAction data-flx="user.appearance-tab.scaling-tab.font-size-tab-content.font-size-reset-action" />
 				) : null
 			}
+			stops={FONT_SIZE_OPTIONS}
 			value={selectedFontSize}
-			options={options}
+			defaultValue={DEFAULT_FONT_SIZE}
+			labelledStops={FONT_SIZE_LABELLED_STOPS}
+			formatValue={(value) => `${formatNumber(value)}px`}
+			formatAccessibleValue={(value) => i18n._(PIXELS_ACCESSIBLE_DESCRIPTOR, {value: formatNumber(value)})}
 			onChange={(value) => AccessibilityCommands.update({fontSize: value})}
-			autoSelectValueFromInput={resolveNearestNumericOption}
-			controlWidth="small"
-			menuMinWidth={128}
-			aria-label={i18n._(CHAT_FONT_SIZE_DESCRIPTOR)}
-			dataFlx="user.appearance-tab.scaling-tab.font-size-tab-content.select"
-			data-flx="user.appearance-tab.scaling-tab.font-size-tab-content.compact-select-row.update"
+			dataFlx="user.appearance-tab.scaling-tab.font-size-tab-content"
+			data-flx="user.appearance-tab.scaling-tab.font-size-tab-content.step-slider-row.update"
 		/>
 	);
 });

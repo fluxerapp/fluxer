@@ -1800,7 +1800,7 @@ msgstr "{mentionCount, plural, other {# lượt nhắc đến}}"
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# lượt nhắc đến} other {# lượt nhắc đến}} trên {accountCount, plural, one {# tài khoản khác} other {# tài khoản khác}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing}px"
@@ -2456,6 +2456,11 @@ msgstr "{username} đã bắt đầu một cuộc gọi."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} đã bắt đầu một chủ đề: {threadName}"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -8146,7 +8151,7 @@ msgstr "Phông chữ trò chuyện"
 msgid "Chat font scaling"
 msgstr "Tỷ lệ cỡ chữ trò chuyện"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "Cỡ chữ trò chuyện"

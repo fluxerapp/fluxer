@@ -1793,7 +1793,7 @@ msgstr ""
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr ""
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr ""
@@ -2448,6 +2448,11 @@ msgstr ""
 #. Plain text summary of the thread created system message. username is the author, threadName the thread name.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
+msgstr ""
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
 msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
@@ -8139,7 +8144,7 @@ msgstr ""
 msgid "Chat font scaling"
 msgstr ""
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr ""
