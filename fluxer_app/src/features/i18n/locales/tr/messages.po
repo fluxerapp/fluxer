@@ -11166,6 +11166,10 @@ msgstr "Bu topluluk yüklenemedi. Bir süre sonra tekrar deneyin."
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "Uygulamanın bu bölümü yüklenemedi. Bağlantınızı kontrol edin ve tekrar deneyin."
 
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
+
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
 msgid "Couldn't load voice regions"

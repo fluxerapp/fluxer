@@ -11166,6 +11166,10 @@ msgstr "이 커뮤니티를 불러올 수 없습니다. 잠시 후 다시 시도
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "앱의 이 부분을 불러올 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요."
 
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
+
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
 msgid "Couldn't load voice regions"
