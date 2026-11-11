@@ -76,7 +76,15 @@ export const ChannelSettingsModal = createNamedLoadableComponent<
 	React.ComponentProps<typeof ChannelSettingsModalComponent>
 >({
 	displayName: 'ChannelSettingsModal',
-	load: async () => (await import('@app/features/channel/components/modals/ChannelSettingsModal')).ChannelSettingsModal,
+	load: async () => {
+		const [modal] = await Promise.all([
+			import('@app/features/channel/components/modals/ChannelSettingsModal'),
+			import('@app/features/user/components/settings_utils/ChannelSettingsConstants').then((module) =>
+				module.preloadChannelSettingsOverviewTab(),
+			),
+		]);
+		return modal.ChannelSettingsModal;
+	},
 	LoadingComponent: SettingsModalPending,
 	ErrorComponent: SettingsModalUnavailable,
 });
