@@ -125,7 +125,10 @@ func imageLines(compose []byte) ([]imageLine, error) {
 		return nil, errors.New("stack: the compose file is empty")
 	}
 	services := mappingValue(doc.Content[0], "services")
-	if services == nil || services.Kind != yaml.MappingNode {
+	if services == nil {
+		return nil, nil
+	}
+	if services.Kind != yaml.MappingNode {
 		return nil, errors.New("stack: the compose file has no services")
 	}
 	var out []imageLine
