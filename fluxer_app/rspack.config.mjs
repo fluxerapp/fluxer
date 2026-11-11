@@ -158,8 +158,33 @@ function isMainRuntimeChunk(chunk) {
 	return false;
 }
 
+const SHARED_STYLE_CHUNK_NAME = 'shared-styles';
+
+function sharedStyleChunks(chunk) {
+	return isMainRuntimeChunk(chunk) && !isWorkerPath({chunk});
+}
+
+const SHARED_STYLE_CACHE_GROUPS = {
+	sharedStyles: {
+		type: /^css/,
+		name: SHARED_STYLE_CHUNK_NAME,
+		minChunks: 2,
+		chunks: sharedStyleChunks,
+		enforce: true,
+		priority: 70,
+	},
+	uiStyles: {
+		type: /^css/,
+		test: /[\\/]src[\\/]features[\\/]ui[\\/]/,
+		name: SHARED_STYLE_CHUNK_NAME,
+		chunks: sharedStyleChunks,
+		enforce: true,
+		priority: 70,
+	},
+};
+
 function mirrorCacheGroups(groups) {
-	const mirrored = {};
+	const mirrored = {...SHARED_STYLE_CACHE_GROUPS};
 	for (const [key, originalGroup] of Object.entries(groups)) {
 		const group = isDesktopRenderer ? {...originalGroup, name: false} : originalGroup;
 		if (group.chunks != null) {
