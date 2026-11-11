@@ -651,6 +651,8 @@ struct PublishArgs {
     prerelease: bool,
     #[arg(long)]
     asset_dir: Option<PathBuf>,
+    #[arg(long)]
+    check: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -837,6 +839,11 @@ fn publish(args: PublishArgs) -> Result<()> {
             baseline
         }
     };
+
+    if args.check {
+        println!("{tag} can be published from {source_sha} after {previous_sha}.");
+        return Ok(());
+    }
 
     let body = release_body(&previous_sha, &source_sha);
     let assets = local_release_assets(

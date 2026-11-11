@@ -72,6 +72,20 @@ jobs:
         run: >-
           tools/ci/run.sh resolve-calver
           --github-output
+      - name: Check this build can be released before pushing images
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          VERSION: ${{ steps.vars.outputs.build_version }}
+          RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
+        run: >-
+          tools/ci/run.sh release
+          publish
+          --check
+          --component "${{ inputs.image }}"
+          --build-version "${VERSION}"
+          --source-sha "${SOURCE_SHA}"
+          --previous-sha "${RELEASE_BASELINE_SHA}"
 
   build:
     name: build ${{ matrix.platform }}
