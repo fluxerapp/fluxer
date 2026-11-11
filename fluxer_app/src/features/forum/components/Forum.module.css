@@ -158,7 +158,7 @@
 }
 
 .filterPill {
-	border-radius: 1rem;
+	border-radius: var(--radius-lg);
 }
 
 .filterDivider {
@@ -361,13 +361,13 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 0.25rem;
-	padding: 0.125rem 0.5rem;
-	border: 0.0625rem solid transparent;
-	border-radius: 1rem;
+	padding: 0.25rem 0.625rem;
+	border: 0;
+	border-radius: var(--radius-lg);
 	background: transparent;
 	color: var(--text-primary-muted);
 	font: inherit;
-	font-size: 0.75rem;
+	font-size: 0.8125rem;
 	font-weight: 600;
 	line-height: 1.25rem;
 	cursor: pointer;
@@ -384,9 +384,9 @@
 	gap: 0.25rem;
 	max-width: 12rem;
 	padding: 0.125rem 0.5rem;
-	border: 0.0625rem solid var(--background-modifier-accent);
-	border-radius: 1rem;
-	background-color: var(--background-secondary-alt);
+	border: 0;
+	border-radius: var(--radius-lg);
+	background-color: var(--background-tertiary);
 	color: var(--text-secondary);
 	font-size: 0.75rem;
 	font-weight: 600;
@@ -394,13 +394,15 @@
 }
 
 .tagButton {
+	padding: 0.25rem 0.625rem;
 	font-family: inherit;
+	font-size: 0.8125rem;
 	cursor: pointer;
 }
 
 .tagButton:hover:not(:disabled) {
 	color: var(--text-primary);
-	background-color: var(--background-modifier-hover);
+	background-image: linear-gradient(var(--background-modifier-selected), var(--background-modifier-selected));
 }
 
 .tagButton:disabled {
@@ -409,13 +411,13 @@
 }
 
 .tagSelected {
-	border-color: var(--brand-primary);
 	background-color: var(--brand-primary);
 	color: var(--text-on-brand-primary);
 }
 
 .tagSelected:hover:not(:disabled) {
 	background-color: var(--brand-primary);
+	background-image: none;
 	color: var(--text-on-brand-primary);
 }
 
