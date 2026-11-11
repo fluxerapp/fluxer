@@ -46,8 +46,6 @@
 	font-size: 0.875rem;
 	font-weight: 600;
 	color: var(--text-secondary);
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
 }
 
 .summaryBody {

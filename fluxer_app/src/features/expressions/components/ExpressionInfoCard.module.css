@@ -75,11 +75,9 @@
 }
 
 .guildLabel {
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	font-weight: 600;
 	line-height: 1.25;
-	letter-spacing: 0.03125rem;
-	text-transform: uppercase;
 	color: var(--text-primary-muted);
 }
 

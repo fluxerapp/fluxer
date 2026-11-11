@@ -60,7 +60,6 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
 }
 
 @media (min-width: 1024px) {

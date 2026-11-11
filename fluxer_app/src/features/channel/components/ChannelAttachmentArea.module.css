@@ -76,7 +76,6 @@
 }
 
 .spoilerWarning {
-	text-transform: uppercase;
 	font-size: 0.9375rem;
 	background-color: hsla(0, 0%, 0%, 0.6);
 	cursor: pointer;

@@ -91,10 +91,8 @@
 	padding-inline-end: 0.625rem;
 	font-weight: 600;
 	color: var(--text-tertiary);
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	line-height: 1rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 }
 
 .categoryTabs {
