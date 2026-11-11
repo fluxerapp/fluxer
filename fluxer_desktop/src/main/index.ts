@@ -129,7 +129,7 @@ import {
 	GLOBAL_STORAGE_SCOPE,
 	readDesktopLegacyImportPhase,
 } from '@fluxer/desktop_ipc/src/StorageContract';
-import {app, dialog, ipcMain, netLog, session, shell} from 'electron';
+import {app, autoUpdater, dialog, ipcMain, netLog, session, shell} from 'electron';
 import log from 'electron-log';
 
 log.transports.file.level = 'info';
@@ -477,6 +477,10 @@ export function initializeMainWindowStartup(): void {
 		} else if (process.platform !== 'darwin') {
 			log.info('[Shutdown] All windows closed; keeping app alive because close-to-tray is enabled');
 		}
+	});
+	autoUpdater.on('before-quit-for-update', () => {
+		log.info('[Shutdown] before-quit-for-update received');
+		setQuitting(true);
 	});
 	app.on('before-quit', (event) => {
 		finishSyncAnswers();
