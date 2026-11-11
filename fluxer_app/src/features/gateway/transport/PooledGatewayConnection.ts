@@ -464,7 +464,7 @@ export class PooledGatewayConnection {
 		LocalPresence.updatePresence();
 		const presence = LocalPresence.getGatewayPresence();
 		const compression: CompressionType = 'zstd-stream';
-		logger.info(`Using gateway compression: ${compression}`);
+		logger.debug(`Using gateway compression: ${compression}`);
 		let identifyFlags = 0;
 		identifyFlags |= GatewayIdentifyFlags.DEBOUNCE_MESSAGE_REACTIONS;
 		identifyFlags |= GatewayIdentifyFlags.CHANNEL_THREADS;

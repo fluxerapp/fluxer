@@ -565,7 +565,7 @@ export async function fetchMessages(
 				epochAtResponse: GatewaySessions.foregroundConnection.connectionEpoch,
 			});
 			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, around);
-			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
+			logger.debug(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
 			if (options?.reconcileSeeded != null) {
 				await prefetchMessageAuthors(
 					Channels.getChannel(channelId)?.guildId ?? null,
@@ -1230,7 +1230,7 @@ export async function purgePersonalNotes(channelId: string): Promise<{deletedCou
 	try {
 		logger.debug(`Purging personal notes channel ${channelId}`);
 		const deletedCount = await requestPersonalNotesPurge(channelId);
-		logger.info(`Purged ${deletedCount} messages from personal notes ${channelId}`);
+		logger.debug(`Purged ${deletedCount} messages from personal notes ${channelId}`);
 		return {deletedCount};
 	} catch (error) {
 		logger.error(`Failed to purge personal notes channel ${channelId}:`, error);

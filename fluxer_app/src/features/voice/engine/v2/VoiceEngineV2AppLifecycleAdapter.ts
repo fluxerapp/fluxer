@@ -88,7 +88,7 @@ export class VoiceEngineV2AppLifecycleAdapter {
 			});
 			return;
 		}
-		this.logger.info({
+		this.logger.debug({
 			code: 'lifecycle.cancelled',
 			message: 'lifecycle operation cancelled',
 			detail: {operationId, reason, sourceAdapter: entry.sourceAdapter},
@@ -115,7 +115,7 @@ export class VoiceEngineV2AppLifecycleAdapter {
 			}
 			await this.disposeWithTimeout(disposable);
 		}
-		this.logger.info({
+		this.logger.debug({
 			code: 'lifecycle.teardown.complete',
 			message: 'lifecycle teardown finished',
 			detail: {disposables: this.disposables.length},

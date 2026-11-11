@@ -421,7 +421,7 @@ async function replantDatabase(
 			}
 			const planted = await replantStoreRecords(database, storeSchema, harvested.records, decode);
 			if (planted > 0) {
-				logger.info(`Replanted ${planted} record(s) into ${schema.name}/${storeSchema.name}`);
+				logger.debug(`Replanted ${planted} record(s) into ${schema.name}/${storeSchema.name}`);
 			}
 		}
 	} finally {
@@ -603,7 +603,7 @@ export async function replantLegacyMediaDeviceSelections(harvest: DesktopLegacyH
 		return;
 	}
 	await backend.set(GLOBAL_APP_STORAGE_SCOPE, AppStorageKey.VOICE_SETTINGS, remapped);
-	logger.info('Remapped the persisted voice device selections');
+	logger.debug('Remapped the persisted voice device selections');
 }
 
 function isLegacyRawStorageSeedComplete(): boolean {

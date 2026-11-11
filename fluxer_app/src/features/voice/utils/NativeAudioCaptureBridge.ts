@@ -356,7 +356,7 @@ async function createNativeAudioBridge(captureId: string): Promise<NativeAudioBr
 	if (getGeneratorCtor() && getAudioDataCtor()) {
 		return createGeneratorBridge(captureId, (id) => cleanupManagedBridgeById(id, false, 'remote end'));
 	}
-	logger.info('Falling back to ScriptProcessor native-audio bridge');
+	logger.debug('Falling back to ScriptProcessor native-audio bridge');
 	return createScriptProcessorBridge(captureId, (id) => cleanupManagedBridgeById(id, false, 'remote end'));
 }
 
@@ -891,7 +891,7 @@ export async function captureNativeAudioTrackForWindowPid(targetPid: number): Pr
 			detail,
 		});
 		if (refusedSelf) {
-			logger.info('Native window audio capture refused for Fluxer-owned process', {targetPid, detail});
+			logger.debug('Native window audio capture refused for Fluxer-owned process', {targetPid, detail});
 		} else {
 			logger.warn('Cannot capture native window audio track: native audio start failed', {error, targetPid});
 		}

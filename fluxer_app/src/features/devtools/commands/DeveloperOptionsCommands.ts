@@ -101,7 +101,7 @@ function triggerVariant(variant: MockIncomingCallVariant): void {
 	const built =
 		variant === 'group-dm' ? buildMockGroupDMIncomingCall(currentUser) : buildMockDMIncomingCall(currentUser);
 	MockIncomingCall.setMockCall(built);
-	logger.info(`Triggered mock ${variant} incoming call from user ${currentUser.username}`);
+	logger.debug(`Triggered mock ${variant} incoming call from user ${currentUser.username}`);
 }
 
 export function updateOption<K extends keyof DeveloperOptionsState>(key: K, value: DeveloperOptionsState[K]): void {

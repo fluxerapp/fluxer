@@ -211,7 +211,7 @@ class VoiceRuntime extends Store {
 	load(reason: VoiceRuntimeLoadReason): Promise<LoadedVoiceRuntime> {
 		if (this.loaded !== null) return Promise.resolve(this.loaded);
 		if (this.loading !== null) return this.loading;
-		logger.info('Loading the voice runtime', {reason});
+		logger.debug('Loading the voice runtime', {reason});
 		this.cancelIdleLoad();
 		const loading = loadLazyModule(
 			() => import(/* webpackChunkName: "voice-runtime" */ '@app/features/voice/engine/VoiceRuntimeModule'),

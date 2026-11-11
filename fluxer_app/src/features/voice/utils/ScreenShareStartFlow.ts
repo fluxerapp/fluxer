@@ -365,7 +365,7 @@ function resolveConfiguredScreenShareAudio(request: ConfiguredScreenShareRequest
 			request.preferredDisplaySurface,
 		);
 	if (!includeAudio && request.shareContext !== 'device' && supportsDesktopScreenShareAudioCapture()) {
-		logger.info('Screen share audio not requested for this surface', {
+		logger.debug('Screen share audio not requested for this surface', {
 			sourceId: request.sourceId,
 			preferredDisplaySurface: request.preferredDisplaySurface,
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
@@ -529,7 +529,7 @@ async function runConfiguredDisplayScreenShare(
 				...entry,
 			}));
 			if (requestedNativePickerAudioOnLinux && options?.preferredDisplaySurface === 'window') {
-				logger.info(
+				logger.debug(
 					'Wayland window share cannot identify the shared window; capturing the desktop mix without Fluxer instead',
 					{sourceMode},
 				);
@@ -825,7 +825,7 @@ export async function restartActiveScreenShareCapture(): Promise<boolean> {
 		});
 		return false;
 	}
-	logger.info('Restarting the live screen share capture because its geometry did not take', {
+	logger.debug('Restarting the live screen share capture because its geometry did not take', {
 		publishedSource,
 		sourceId,
 	});
@@ -870,12 +870,12 @@ async function resolveDeviceShareAudioDeviceId(videoDeviceId: string): Promise<s
 		const devices = await navigator.mediaDevices.enumerateDevices();
 		const pairedInput = findPairedDeviceShareAudioInput(devices, videoDeviceId);
 		if (!pairedInput) {
-			logger.info('The shared capture device has no audio input of its own, sharing it without audio', {
+			logger.debug('The shared capture device has no audio input of its own, sharing it without audio', {
 				videoDeviceId,
 			});
 			return undefined;
 		}
-		logger.info('Using the capture device own audio input for the device share', {
+		logger.debug('Using the capture device own audio input for the device share', {
 			videoDeviceId,
 			audioDeviceId: pairedInput.deviceId,
 		});

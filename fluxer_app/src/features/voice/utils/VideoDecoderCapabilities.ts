@@ -115,7 +115,7 @@ async function probeAllCodecs(): Promise<Array<VideoCodec>> {
 		}
 	}
 	if (excluded.length > 0) {
-		logger.info('Excluding codecs from subscriber decode', {excluded});
+		logger.debug('Excluding codecs from subscriber decode', {excluded});
 	}
 	return excluded;
 }

@@ -48,7 +48,7 @@ export async function submitReportFlow(
 	steps: ReadonlyArray<ReportFlowStep>,
 ): Promise<void> {
 	if (DeveloperOptions.noOpInAppReports) {
-		logger.info('No-op in-app reports is enabled; skipping network call.');
+		logger.debug('No-op in-app reports is enabled; skipping network call.');
 		return;
 	}
 	try {
