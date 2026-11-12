@@ -2,28 +2,19 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
-import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
-import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
-import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
+import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {i18n} from '@lingui/core';
 
 interface OpenLinkChannelOptions {
 	skipGate?: boolean;
 }
 
-function openLinkChannelDestination(channel: Channel): void {
-	if (!channel.url) return;
-	const inviteCode = InviteUtils.findInviteUrl(channel.url);
-	if (inviteCode) {
-		void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
-		return;
-	}
-	openExternalUrlWithWarning(channel.url);
-}
+const openingLinkChannelIds = new Set<string>();
 
 export function openLinkChannel(channel: Channel, options: OpenLinkChannelOptions = {}): boolean {
 	if (channel.type !== ChannelTypes.GUILD_LINK || !channel.url) return false;
+	if (openingLinkChannelIds.has(channel.id)) return true;
 	if (
 		!options.skipGate &&
 		GuildMatureContentAgree.shouldShowGate({
@@ -33,6 +24,11 @@ export function openLinkChannel(channel: Channel, options: OpenLinkChannelOption
 	) {
 		return false;
 	}
-	openLinkChannelDestination(channel);
+	openingLinkChannelIds.add(channel.id);
+	try {
+		openInAppOrExternalUrl(channel.url, {i18n, guildId: channel.guildId ?? undefined});
+	} finally {
+		openingLinkChannelIds.delete(channel.id);
+	}
 	return true;
 }

@@ -42,6 +42,8 @@ export interface LinkComponentProps {
 	url: string;
 	children: React.ReactNode;
 	className?: string;
+	messageId?: string;
+	channelId?: string;
 }
 
 export interface MediaDimensions {
