@@ -12,6 +12,19 @@ fuzz_target!(|data: &[u8]| {
             let sig = external_media_path::create_signature(&path, b"fuzz-secret");
             let _ = external_media_path::verify_signature(&path, &sig, b"fuzz-secret");
             let _ = external_media_path::verify_signature(text, &sig, b"other-secret");
+            let signed_url = external_media_path::reconstruct_original_url(&path);
+            if let Ok(url) =
+                external_media_path::verify_signed_proxy_path(text, &sig, b"fuzz-secret")
+            {
+                assert_eq!(signed_url.as_ref(), Ok(&url));
+            }
+            for received in [path.replace("%3D", "="), path.replace("%2F", "/")] {
+                if let Ok(url) =
+                    external_media_path::verify_signed_proxy_path(&received, &sig, b"fuzz-secret")
+                {
+                    assert_eq!(signed_url.as_ref(), Ok(&url));
+                }
+            }
         }
         let opaque = external_media_path::build_opaque_external_media_proxy_path(text);
         let _ = external_media_path::reconstruct_original_url(&opaque);
