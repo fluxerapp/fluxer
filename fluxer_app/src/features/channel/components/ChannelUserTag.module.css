@@ -4,6 +4,7 @@
 	display: inline-block;
 	background-color: var(--brand-primary);
 	text-indent: 0;
+	text-transform: uppercase;
 	color: var(--brand-primary-fill);
 	padding: 0 0.35rem;
 	vertical-align: baseline;
