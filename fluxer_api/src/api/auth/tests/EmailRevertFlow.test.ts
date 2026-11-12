@@ -255,6 +255,25 @@ describe('Email revert flow', () => {
 			.expect(400)
 			.execute();
 	});
+	it('clears the bounced flag when the original email is restored', async () => {
+		const account = await createTestAccount(harness);
+		const revertToken = await changeEmailAndGetRevertToken(harness, account);
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_bounced: true, email_verified: false})
+			.expect(200)
+			.execute();
+		const revertResp = await createBuilderWithoutAuth<EmailRevertResponse>(harness)
+			.post('/auth/email-revert')
+			.body({token: revertToken, password: uniquePassword()})
+			.execute();
+		const user = await createBuilder<UserPrivateResponse & {email_bounced?: boolean}>(harness, revertResp.token)
+			.get('/users/@me')
+			.execute();
+		expect(user.email).toBe(account.email);
+		expect(user.verified).toBe(true);
+		expect(user.email_bounced).toBe(false);
+	});
 	it('drops the passkey trait when a claimed revert clears the passkeys', async () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
