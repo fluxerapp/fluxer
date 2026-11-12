@@ -6901,6 +6901,11 @@ msgstr "Bouton avec menu contextuel"
 msgid "Buttons"
 msgstr "Boutons"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Les boutons et les éléments mis en évidence dans toute l'application utilisent cette couleur, et les navigateurs mobiles l'utilisent pour leur barre d'outils. Réinitialisez-la pour garder l'indigo de Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Les boutons peuvent déclencher des menus contextuels au clic en transmettant l'événement onClick directement à openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Les boutons affichent un indicateur de chargement lorsque submitting vau
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Boutons avec icônes"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Les boutons, les liens et les éléments mis en évidence dans toute l'application utilisent cette couleur, et les navigateurs mobiles l'utilisent pour leur barre d'outils. Réinitialisez-la pour garder l'indigo de Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

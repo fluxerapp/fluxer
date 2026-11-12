@@ -6901,6 +6901,11 @@ msgstr "Bağlam menülü düğme"
 msgid "Buttons"
 msgstr "Düğmeler"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Uygulama genelindeki düğmeler ve vurgular bu rengi kullanır, telefon tarayıcıları da araç çubukları için bu rengi kullanır. Fluxer'ın çivit mavisini korumak için sıfırlayın."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Düğmeler, onClick olayını doğrudan openContextMenu işlevine ileterek tıklamayla bağlam menüsü açabilir."
@@ -6917,11 +6922,6 @@ msgstr "submitting değeri true olduğunda düğmeler bir yükleme göstergesi g
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Simgeli düğmeler"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Uygulama genelindeki düğmeler, bağlantılar ve vurgular bu rengi kullanır, telefon tarayıcıları da araç çubukları için bu rengi kullanır. Fluxer'ın çivit mavisini korumak için sıfırlayın."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

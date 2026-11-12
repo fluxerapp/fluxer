@@ -6901,6 +6901,11 @@ msgstr "Buton cu meniu contextual"
 msgid "Buttons"
 msgstr "Butoane"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Butoanele și evidențierile din toată aplicația folosesc această culoare, iar browserele de pe telefon o folosesc pentru bara de instrumente. Resetează-o ca să păstrezi indigoul Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Butoanele pot declanșa meniuri contextuale la clic, prin transmiterea evenimentului onClick direct către openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Butoanele afișează un indicator de încărcare atunci când submitting
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Butoane cu pictograme"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Butoanele, linkurile și evidențierile din toată aplicația folosesc această culoare, iar browserele de pe telefon o folosesc pentru bara de instrumente. Resetează-o ca să păstrezi indigoul Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

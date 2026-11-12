@@ -6901,6 +6901,11 @@ msgstr "Knapp med kontekstmeny"
 msgid "Buttons"
 msgstr "Knapper"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Knapper og uthevinger i hele appen bruker denne fargen, og nettlesere på telefoner bruker den på verktøylinjen sin. Tilbakestill den for å beholde Fluxers indigo."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Knapper kan utløse kontekstmenyer ved klikk ved å sende onClick-hendelsen direkte til openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Knapper viser en lasteindikator når submitting er true."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Knapper med ikoner"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Knapper, lenker og uthevinger i hele appen bruker denne fargen, og nettlesere på telefoner bruker den på verktøylinjen sin. Tilbakestill den for å beholde Fluxers indigo."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

@@ -6901,6 +6901,11 @@ msgstr "Gomb helyi menüvel"
 msgid "Buttons"
 msgstr "Gombok"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Az alkalmazás gombjai és kiemelései ezt a színt használják, a telefonos böngészők pedig az eszköztárukhoz. Állítsd vissza, ha a Fluxer indigó színét szeretnéd megtartani."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "A gombok kattintásra helyi menüt nyithatnak meg, ha az onClick eseményt közvetlenül az openContextMenu kapja meg."
@@ -6917,11 +6922,6 @@ msgstr "A gombok betöltésjelzőt mutatnak, ha a submitting értéke true."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Gombok ikonokkal"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Az alkalmazás gombjai, hivatkozásai és kiemelései ezt a színt használják, a telefonos böngészők pedig az eszköztárukhoz. Állítsd vissza, ha a Fluxer indigó színét szeretnéd megtartani."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

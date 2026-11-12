@@ -6901,6 +6901,11 @@ msgstr "상황별 메뉴 버튼"
 msgid "Buttons"
 msgstr "버튼"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "앱 전체의 버튼과 강조 표시에 이 색상이 사용되며, 휴대폰 브라우저에서는 툴바 색상으로도 사용됩니다. 초기화하면 Fluxer의 인디고 색상이 유지됩니다."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "버튼을 클릭하면 onClick 이벤트를 openContextMenu에 직접 전달하여 상황별 메뉴를 트리거할 수 있습니다."
@@ -6917,11 +6922,6 @@ msgstr "submitting이 true일 때 버튼에 로딩 표시기가 나타납니다.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "아이콘 버튼"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "앱 전체의 버튼, 링크, 강조 표시에 이 색상이 사용되며, 휴대폰 브라우저에서는 툴바 색상으로도 사용됩니다. 초기화하면 Fluxer의 인디고 색상이 유지됩니다."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

@@ -6901,6 +6901,11 @@ msgstr "Gumb s kontekstnim izbornikom"
 msgid "Buttons"
 msgstr "Gumbi"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Gumbi i istaknuti elementi u cijeloj aplikaciji koriste ovu boju, a preglednici na telefonima koriste je za svoju alatnu traku. Poništite je da biste zadržali indigo boju Fluxera."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Gumbi mogu otvoriti kontekstne izbornike klikom prosljeđivanjem događaja onClick izravno funkciji openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Gumbi prikazuju indikator učitavanja kada submitting ima vrijednost tru
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Gumbi s ikonama"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Gumbi, poveznice i istaknuti elementi u cijeloj aplikaciji koriste ovu boju, a preglednici na telefonima koriste je za svoju alatnu traku. Poništite je da biste zadržali indigo boju Fluxera."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

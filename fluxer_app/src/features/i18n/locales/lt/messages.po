@@ -6901,6 +6901,11 @@ msgstr "Mygtukas su kontekstiniu meniu"
 msgid "Buttons"
 msgstr "Mygtukai"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Šią spalvą naudoja mygtukai ir paryškinimai visoje programoje, o telefonų naršyklės ja nuspalvina savo įrankių juostą. Atstatykite ją, kad liktų „Fluxer“ indigo spalva."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Mygtukai gali atidaryti kontekstinius meniu spustelėjus, perduodant „onClick“ įvykį tiesiai į „openContextMenu“."
@@ -6917,11 +6922,6 @@ msgstr "Mygtukai rodo įkėlimo indikatorių, kai submitting reikšmė yra true.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Mygtukai su piktogramomis"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Šią spalvą naudoja mygtukai, nuorodos ir paryškinimai visoje programoje, o telefonų naršyklės ja nuspalvina savo įrankių juostą. Atstatykite ją, kad liktų „Fluxer“ indigo spalva."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
