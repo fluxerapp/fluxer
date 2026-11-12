@@ -26341,6 +26341,11 @@ msgstr "시스템 설정 → 개인 정보 보호 및 보안 → 화면 녹화�
 msgid "Open template JSON"
 msgstr "템플릿 JSON 열기"
 
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "로그인하려는 {PRODUCT_NAME} 앱을 열고 '다른 기기에서 로그인 중이신가요?'를 선택한 다음, 앱에 표시된 코드를 여기에 입력하세요. 본인이 제어하는 기기에서만 코드를 입력하세요."
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Open the account switcher"
@@ -36667,11 +36672,6 @@ msgstr "모두 불러왔습니다."
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "{PRODUCT_NAME} 앱이 {requestedIdentifier}(으)로 로그인하려 했지만, {name}(으)로 선택하셨습니다."
-
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "다른 기기의 {PRODUCT_NAME} 앱에서 '다른 기기에서 로그인 중' 아래에 표시됩니다. 본인이 제어하는 기기에서만 코드를 입력하세요."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

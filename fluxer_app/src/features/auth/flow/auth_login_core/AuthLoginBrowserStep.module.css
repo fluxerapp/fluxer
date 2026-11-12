@@ -131,8 +131,20 @@
 	padding: 1rem 0.75rem;
 }
 
+.browserCodeRow {
+	display: flex;
+	max-width: 100%;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+}
+
 .browserCode {
 	max-width: 100%;
+	cursor: text;
+	user-select: text;
+	-webkit-user-select: text;
 	padding: 0.75rem 0.875rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
 	border-radius: 0.5rem;

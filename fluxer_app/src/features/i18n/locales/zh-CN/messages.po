@@ -26341,6 +26341,11 @@ msgstr "打开“系统设置”→“隐私与安全性”→“屏幕录制”
 msgid "Open template JSON"
 msgstr "打开模板 JSON"
 
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "打开您正在登录的 {PRODUCT_NAME} 应用，选择“在另一台设备上登录？”，然后在此处输入它显示的代码。请仅输入您控制的设备上的代码。"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Open the account switcher"
@@ -36667,11 +36672,6 @@ msgstr "到底了。"
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "{PRODUCT_NAME} 应用请求以 {requestedIdentifier} 身份登录，但你选择了 {name}。"
-
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "您在另一台设备上的 {PRODUCT_NAME} 应用中，可以在“在另一台设备上登录”下找到它。请仅输入您控制的设备上的代码。"
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
