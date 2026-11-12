@@ -1800,7 +1800,7 @@ msgstr "{mentionCount, plural, one {# 則提及} other {# 則提及}}"
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# 則提及} other {# 則提及}} 在 {accountCount, plural, one {# 個其他帳號} other {# 個其他帳號}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing} 像素"
@@ -2456,6 +2456,11 @@ msgstr "{username} 已開始通話。"
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} 在討論串中發起了「{threadName}」"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -8146,7 +8151,7 @@ msgstr "聊天字體"
 msgid "Chat font scaling"
 msgstr "聊天字體縮放"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "聊天字體大小"
