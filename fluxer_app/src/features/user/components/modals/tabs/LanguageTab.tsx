@@ -204,6 +204,7 @@ interface LanguageSelectOption extends ComboboxOption<string> {
 	name: string;
 	nativeName: string;
 	flag: string | null;
+	flagImageUrl?: string;
 	searchText: string;
 }
 
@@ -223,7 +224,19 @@ interface LanguageSelectorProps {
 	menuPlacement?: 'auto' | 'bottom' | 'top';
 }
 
-function renderLanguageMark(flag: string | null, flagLabel: string): ReactElement {
+function renderLanguageMark(flag: string | null, flagImageUrl: string | undefined, flagLabel: string): ReactElement {
+	if (flagImageUrl) {
+		return (
+			<img
+				src={flagImageUrl}
+				alt={flagLabel}
+				aria-hidden={true}
+				className={clsx(styles.flagImage, styles.flagImageAsset)}
+				draggable={false}
+				data-flx="user.language-selector.render-language-content.flag-image"
+			/>
+		);
+	}
 	if (flag === null) {
 		return (
 			<TranslateIcon
@@ -277,6 +290,7 @@ export const LanguageSelector = observer(function LanguageSelector({
 				name: locale.name,
 				nativeName: locale.nativeName,
 				flag: locale.flag,
+				flagImageUrl: locale.flagImageUrl,
 				searchText: normalizeLanguageSearchText(`${locale.nativeName} ${locale.name} ${locale.code}`),
 			})),
 		[availableLocales],
@@ -284,7 +298,11 @@ export const LanguageSelector = observer(function LanguageSelector({
 	const renderLanguageContent = useCallback(
 		(option: LanguageSelectOption, selected: boolean, compact = false) => {
 			const isEnGB = option.code === 'en-GB';
-			const flagImg = renderLanguageMark(option.flag, i18n._(LANGUAGE_FLAG_DESCRIPTOR, {languageName: option.name}));
+			const flagImg = renderLanguageMark(
+				option.flag,
+				option.flagImageUrl,
+				i18n._(LANGUAGE_FLAG_DESCRIPTOR, {languageName: option.name}),
+			);
 			return (
 				<div
 					className={clsx(

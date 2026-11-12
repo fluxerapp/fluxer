@@ -6,6 +6,7 @@ import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
+import arabLeagueFlagUrl from '@app/media/images/arab-league-flag.svg';
 import {DiscoverySupportedLanguages} from '@fluxer/constants/src/DiscoveryConstants';
 import {resolveRegionalFormatLocale} from '@fluxer/constants/src/Locales';
 import type {MessageDescriptor} from '@lingui/core';
@@ -194,11 +195,12 @@ interface LocaleInfo {
 	name: MessageDescriptor;
 	nativeName: string;
 	flag: string | null;
+	flagImageUrl?: string;
 	region?: string;
 }
 
 const SUPPORTED_LOCALES: Array<LocaleInfo> = [
-	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: null},
+	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: null, flagImageUrl: arabLeagueFlagUrl},
 	{code: 'be', name: BELARUSIAN_DESCRIPTOR, nativeName: 'Беларуская', flag: null},
 	{code: 'bg', name: BULGARIAN_DESCRIPTOR, nativeName: 'Български', flag: '🇧🇬'},
 	{code: 'bn', name: BANGLA_DESCRIPTOR, nativeName: 'বাংলা', flag: '🇧🇩'},
@@ -333,6 +335,7 @@ interface TranslatedLocaleInfo {
 	name: string;
 	nativeName: string;
 	flag: string | null;
+	flagImageUrl?: string;
 	region?: string;
 }
 
