@@ -729,6 +729,7 @@ export const ERROR_I18N_MESSAGES = {
 	'tos_and_age.must_be_minimum_age':
 		'You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.',
 	'unknown_entities.unknown_badge': "Badge wasn't found.",
+	'unknown_entities.unknown_ban': "Ban wasn't found.",
 	'unknown_entities.unknown_channel': "Channel wasn't found.",
 	'unknown_entities.unknown_forum_tag': "Tag wasn't found.",
 	'unknown_entities.unknown_guild': "Community wasn't found.",

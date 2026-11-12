@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Fiók létrehozásához el kell fogadnod a szolgáltatási feltételeket.",
 	"tos_and_age.must_be_minimum_age": "Legalább {minAge, plural, one {# évesnek} other {# évesnek}} kell lenned ahhoz, hogy fiókot hozz létre.",
 	"unknown_entities.unknown_badge": "A jelvény nem található.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "A csatorna nem található.",
 	"unknown_entities.unknown_forum_tag": "A címke nem található.",
 	"unknown_entities.unknown_guild": "A közösség nem található.",

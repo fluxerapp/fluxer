@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Hesap oluşturmak için Hizmet Şartlarını kabul etmeniz gerekir.",
 	"tos_and_age.must_be_minimum_age": "Hesap oluşturmak için en az {minAge, plural, one {# yaşında} other {# yaşında}} olmalısın.",
 	"unknown_entities.unknown_badge": "Rozet bulunamadı.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Kanal bulunamadı.",
 	"unknown_entities.unknown_forum_tag": "Etiket bulunamadı.",
 	"unknown_entities.unknown_guild": "Topluluk bulunamadı.",

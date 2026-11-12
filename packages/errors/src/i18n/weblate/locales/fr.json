@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Vous devez accepter les conditions d’utilisation pour créer un compte.",
 	"tos_and_age.must_be_minimum_age": "Vous devez avoir au moins {minAge, plural, =1 {# an} other {# ans}} pour créer un compte.",
 	"unknown_entities.unknown_badge": "Badge introuvable.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Salon introuvable.",
 	"unknown_entities.unknown_forum_tag": "Tag introuvable.",
 	"unknown_entities.unknown_guild": "Communauté introuvable.",

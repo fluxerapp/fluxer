@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Aby utworzyć konto, musisz zaakceptować warunki korzystania z usługi.",
 	"tos_and_age.must_be_minimum_age": "Musisz mieć co najmniej {minAge, plural, one {# rok} few {# lata} many {# lat} other {# roku}}, aby utworzyć konto.",
 	"unknown_entities.unknown_badge": "Nie znaleziono odznaki.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Nie znaleziono kanału.",
 	"unknown_entities.unknown_forum_tag": "Nie znaleziono tagu.",
 	"unknown_entities.unknown_guild": "Nie znaleziono społeczności.",

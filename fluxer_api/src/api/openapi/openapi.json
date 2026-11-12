@@ -8805,6 +8805,73 @@
 			}
 		},
 		"/guilds/{guild_id}/bans/{user_id}": {
+			"get": {
+				"operationId": "get_guild_ban",
+				"summary": "Get guild ban",
+				"tags": ["Guilds"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildBanResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Get guild ban. Requires ban_members permission. Returns the ban for the specified user including the ban reason and expiry time.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the user"
+					}
+				]
+			},
 			"put": {
 				"operationId": "ban_guild_member",
 				"summary": "Ban guild member",
@@ -36141,6 +36208,36 @@
 					}
 				}
 			},
+			"GuildBanResponse": {
+				"type": "object",
+				"properties": {
+					"user": {"description": "The banned user", "$ref": "#/components/schemas/UserPartialResponse"},
+					"reason": {"description": "The reason for the ban", "type": ["string", "null"]},
+					"moderator_id": {
+						"description": "The ID of the moderator who issued the ban",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"banned_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "ISO8601 timestamp of when the ban was issued"
+					},
+					"expires_at": {
+						"description": "ISO8601 timestamp of when the ban expires (null if permanent)",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					}
+				},
+				"required": ["user", "moderator_id", "banned_at"],
+				"additionalProperties": false
+			},
 			"GuildBanListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/GuildBanResponse"}},
 			"AuditLogActionTypeInput": {
 				"description": "The type of action that occurred",
@@ -43321,36 +43418,6 @@
 					"Thread was deleted"
 				]
 			},
-			"GuildBanResponse": {
-				"type": "object",
-				"properties": {
-					"user": {"description": "The banned user", "$ref": "#/components/schemas/UserPartialResponse"},
-					"reason": {"description": "The reason for the ban", "type": ["string", "null"]},
-					"moderator_id": {
-						"description": "The ID of the moderator who issued the ban",
-						"$ref": "#/components/schemas/SnowflakeStringType"
-					},
-					"banned_at": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "ISO8601 timestamp of when the ban was issued"
-					},
-					"expires_at": {
-						"description": "ISO8601 timestamp of when the ban expires (null if permanent)",
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						]
-					}
-				},
-				"required": ["user", "moderator_id", "banned_at"],
-				"additionalProperties": false
-			},
 			"GuildMediaChannelCreateRequest": {
 				"type": "object",
 				"properties": {
@@ -47491,6 +47558,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_BADGE",
+					"UNKNOWN_BAN",
 					"UNKNOWN_CHANNEL",
 					"UNKNOWN_CONNECTION_PROVIDER",
 					"UNKNOWN_EMOJI",
@@ -47885,6 +47953,7 @@
 					"Claim your account to send messages.",
 					"Claim your account to submit reports.",
 					"Badge wasn't found.",
+					"Ban wasn't found.",
 					"Channel wasn't found.",
 					"This kind of connection isn't available on this instance.",
 					"Unknown emoji.",

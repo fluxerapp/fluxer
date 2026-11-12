@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Bạn cần đồng ý với điều khoản dịch vụ để tạo tài khoản.",
 	"tos_and_age.must_be_minimum_age": "Bạn phải từ {minAge} {minAge, plural, other {tuổi}} trở lên để tạo tài khoản.",
 	"unknown_entities.unknown_badge": "Không tìm thấy huy hiệu này.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Không tìm thấy kênh này.",
 	"unknown_entities.unknown_forum_tag": "Không tìm thấy thẻ.",
 	"unknown_entities.unknown_guild": "Không tìm thấy cộng đồng này.",

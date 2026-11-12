@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Sinun on hyväksyttävä käyttöehdot luodaksesi tilin.",
 	"tos_and_age.must_be_minimum_age": "Sinun on oltava vähintään {minAge, plural, one {# vuoden} other {# vuotta}} ikäinen luodaksesi tilin.",
 	"unknown_entities.unknown_badge": "Merkkiä ei löytynyt.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Kanavaa ei löytynyt.",
 	"unknown_entities.unknown_forum_tag": "Tunnistetta ei löytynyt.",
 	"unknown_entities.unknown_guild": "Yhteisöä ei löytynyt.",

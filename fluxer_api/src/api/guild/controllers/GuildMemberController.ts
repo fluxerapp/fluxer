@@ -17,6 +17,7 @@ import {
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	GuildBanListResponse,
+	GuildBanResponse,
 	GuildMemberListResponse,
 	GuildMemberResponse,
 } from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -242,6 +243,30 @@ export function GuildMemberController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const requestCache = ctx.get('requestCache');
 			return ctx.json(await ctx.get('guildService').moderation.listBans({userId, guildId, requestCache}));
+		},
+	);
+	app.get(
+		'/guilds/:guild_id/bans/:user_id',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBERS),
+		LoginRequired,
+		Validator('param', GuildIdUserIdParam),
+		OpenAPI({
+			operationId: 'get_guild_ban',
+			summary: 'Get guild ban',
+			responseSchema: GuildBanResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Guilds'],
+			description:
+				'Get guild ban. Requires ban_members permission. Returns the ban for the specified user including the ban reason and expiry time.',
+		}),
+		async (ctx) => {
+			const {guild_id, user_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const guildId = createGuildID(guild_id);
+			const targetId = createUserID(user_id);
+			const requestCache = ctx.get('requestCache');
+			return ctx.json(await ctx.get('guildService').moderation.getBan({userId, guildId, targetId, requestCache}));
 		},
 	);
 	app.put(

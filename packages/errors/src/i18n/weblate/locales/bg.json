@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Трябва да приемеш общите условия, за да създадеш акаунт.",
 	"tos_and_age.must_be_minimum_age": "Трябва да си поне на {minAge} {minAge, plural, one {година} other {години}}, за да създадеш акаунт.",
 	"unknown_entities.unknown_badge": "Значката не е намерена.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Каналът не е намерен.",
 	"unknown_entities.unknown_forum_tag": "Тагът не е намерен.",
 	"unknown_entities.unknown_guild": "Общността не е намерена.",
