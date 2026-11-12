@@ -283,6 +283,7 @@ const WEB_BROWSER_RESERVED_DEFAULT_ACTIONS: ReadonlySet<KeybindCommand> = new Se
 	'chat_toggle_emoji',
 	'chat_toggle_gif',
 	'chat_toggle_sticker',
+	'chat_toggle_saved_media',
 	'voice_toggle_soundboard',
 	'misc_help',
 	'system_zoom_in',
@@ -887,7 +888,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'chat_toggle_saved_media',
 			label: i18n._(TOGGLE_SAVED_MEDIA_DESCRIPTOR),
-			combo: {key: ''},
+			combo: {key: 'g', ctrlOrMeta: true, shift: true},
 			section: 'chat',
 		},
 		{
