@@ -58,6 +58,24 @@ export function emptyStoredSessionMirror(): StoredSessionMirror {
 	return {storageKey: null, userId: null, token: null};
 }
 
+export async function readDesktopSessionMirror(): Promise<StoredSessionMirror | null> {
+	const storage = globalThis.window?.electron?.desktopStorage;
+	if (storage == null || typeof storage.getStatus !== 'function' || typeof storage.get !== 'function') {
+		return null;
+	}
+	const status = await storage.getStatus();
+	if (!status.available) {
+		return null;
+	}
+	const read = async (key: string): Promise<string | null> =>
+		parseStoredSessionValue((await storage.get(GLOBAL_APP_STORAGE_SCOPE, key))?.value ?? null);
+	return {
+		storageKey: await read(AuthSessionStorageKey.ActiveAccountKey),
+		token: await read(AuthSessionStorageKey.Token),
+		userId: await read(AuthSessionStorageKey.UserId),
+	};
+}
+
 function completeStoredSessionCredential(mirror: StoredSessionMirror): StoredSessionCredential | null {
 	if (mirror.userId === null || mirror.token === null) {
 		return null;

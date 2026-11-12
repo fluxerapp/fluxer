@@ -43,8 +43,10 @@ import {AuthSessionStoredAccountResolver} from '@app/features/platform/state/aut
 import {AuthSessionTransitionGate} from '@app/features/platform/state/auth_session/AuthSessionTransitionGate';
 import {
 	emptyStoredSessionMirror,
+	readDesktopSessionMirror,
 	type StoredSessionMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
+import {getPersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootMirror';
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -414,6 +416,8 @@ export class AuthSessionManager {
 					logger.warn(
 						`The active session could not be restored (${initialization.reason}), keeping its credential mirror intact`,
 					);
+				} else {
+					void this.reportSessionLostByWebStorage(catalog.source);
 				}
 				mirrorGatewayPrebootSession(false);
 				this.send({type: 'initialize.noToken'});
@@ -438,6 +442,20 @@ export class AuthSessionManager {
 			this.send({type: 'initialize.failed', error: failure});
 			this._initPromise = null;
 			throw failure;
+		}
+	}
+
+	private async reportSessionLostByWebStorage(accountSource: string): Promise<void> {
+		try {
+			const desktop = await readDesktopSessionMirror();
+			if (desktop === null || desktop.storageKey === null || desktop.token === null) {
+				return;
+			}
+			logger.warn(
+				`Booting signed out although the desktop store still holds the session for ${desktop.storageKey} (account source: ${accountSource}, app storage backend: ${getPersistentStorageBackend().kind})`,
+			);
+		} catch (error) {
+			logger.warn('The desktop session mirror could not be read for diagnostics', error);
 		}
 	}
 
