@@ -62,6 +62,9 @@ func runStatus(ctx context.Context, app *App) error {
 	if inst.State.IsNative() {
 		return runNativeStatus(ctx, app, inst)
 	}
+	if moved := inst.Moved(); moved != nil {
+		return movedRefusal(moved)
+	}
 	out := statusJSON{
 		URL:      inst.Origin(),
 		Domain:   inst.Domain(),

@@ -270,10 +270,15 @@ func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error
 	if a.Scheduler == "" {
 		return noScheduler()
 	}
+	if euid() == 0 {
+		if err := rootBinary(a.Binary, inst.Dir); err != nil {
+			return err
+		}
+	}
 	a.At, a.Day, a.Backup, a.FullBackup = at, day, scope, fullBackup
 	return app.Locked(ctx, inst, func() error {
 		if err := host.InstallAutoUpgrade(ctx, a); err != nil {
-			return schedulerError(err, "Couldn't turn on automatic upgrades.", "rexctl auto-upgrade on")
+			return schedulerError(err, "Couldn't turn on automatic upgrades.", "rexctl auto-upgrade on", inst.Dir)
 		}
 		if inst.State.NotifyURL != notify {
 			inst.State.NotifyURL = notify
@@ -313,7 +318,7 @@ func runAutoUpgradeOff(ctx context.Context, app *App) error {
 	return app.Locked(ctx, inst, func() error {
 		removed, err := removeAutoUpgrade(ctx, inst, e)
 		if err != nil {
-			return schedulerError(err, "Couldn't turn off automatic upgrades.", "rexctl auto-upgrade off")
+			return schedulerError(err, "Couldn't turn off automatic upgrades.", "rexctl auto-upgrade off", inst.Dir)
 		}
 		if inst.State.NotifyURL != "" {
 			inst.State.NotifyURL = ""
@@ -338,9 +343,20 @@ func removeAutoUpgrade(ctx context.Context, inst *instance.Instance, e *engine.E
 	return host.RemoveAutoUpgrade(ctx, a)
 }
 
-func schedulerError(err error, msg, command string) error {
+func rootBinary(binary, dir string) error {
+	p := instance.RootPath(binary, false)
+	if p == "" {
+		return nil
+	}
+	if p == binary {
+		p = "it"
+	}
+	return ui.Refused(fmt.Sprintf("Automatic upgrades need a rexctl that only root can change. This one is %s, and accounts other than root can change %s.", binary, p), "Install rexctl for root with curl -fsSL https://fluxer.dev/install.sh | sudo sh and then run "+sudoLine("/usr/local/bin/rexctl", os.Args[1:], dir)+".")
+}
+
+func schedulerError(err error, msg, command, dir string) error {
 	if errors.Is(err, host.ErrNeedsRoot) {
-		return ui.Refused(msg+" This needs root.", "Run sudo "+command+".")
+		return ui.Refused(msg+" This needs root, and this machine has no sudo.", "Run "+rootAgain(dir)+" as root.")
 	}
 	return ui.Wrap(err, msg, "Run "+command+" --verbose to see why.")
 }

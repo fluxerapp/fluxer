@@ -71,7 +71,7 @@ Set how many badges one user or one guild can have under Limits on the Badges pa
 
 These changes are experimental. After an upgrade, `rexctl upgrade --experimental-native` offers four optional changes and asks about each one. You can make any of them, one at a time or several together. `rexctl upgrade` without the flag and `rexctl auto-upgrade` never offer them.
 
-- `docker` moves an instance that runs with Docker Compose to one systemd service with no containers. rexctl installs Fluxer in your instance folder with `-native` added, or in the folder you pass with `--native-dir`. It restores the backup there, and the Docker instance stays stopped with its volumes and images. The new instance gets every setting you made with `rexctl config set`. Settings that only change Docker containers, such as image and memory limit settings, stay with the Docker instance. Calls keep running on the bundled LiveKit with the same voice settings. This change isn't possible when Fluxer uses your own Postgres server or your own object store, when rexctl runs voice servers on this machine, when you have a `custom.compose.yml`, when automatic upgrades are on, or when you set a variable that Fluxer without Docker doesn't use. rexctl tells you which one it is before it changes anything.
+- `docker` moves an instance that runs with Docker Compose to one systemd service with no containers. Root manages that service, so this change and every command for the new instance run with sudo. rexctl installs Fluxer in `/opt/fluxer`, or in the folder you pass with `--native-dir`. When root owns your instance folder, rexctl uses that folder with `-native` added if it can. Root must own the new folder and every folder above it, no other account may change them, and Fluxer's service account must be able to open them. It restores the backup there, and the Docker instance stays stopped with its volumes and images. rexctl doesn't start the Docker instance again while the new one is there. The new instance gets every setting you made with `rexctl config set`. Settings that only change Docker containers, such as image and memory limit settings, stay with the Docker instance. Calls keep running on the bundled LiveKit with the same voice settings. This change isn't possible when Fluxer uses your own Postgres server or your own object store, when rexctl runs voice servers on this machine, when you have a `custom.compose.yml`, when Docker or Podman runs without root, when automatic upgrades are on, or when you set a variable that Fluxer without Docker doesn't use. rexctl tells you which one it is before it changes anything.
 - `kv` moves the cache, rate limits and queues from Valkey into Fluxer's Postgres database, and the Valkey service goes away. Rate limits start over. It doesn't move a Redis-compatible cluster.
 - `rust` runs the eight Rust services (snowflakes, users, messages, gifs, unfurl, push, app-proxy and admin) in one process. When one of them fails, it restarts inside that process.
 - `storage` moves uploaded files from SeaweedFS to plain files on disk, and the SeaweedFS services go away. It doesn't move files from your own object store.
@@ -84,6 +84,12 @@ rexctl migrate --experimental-native --dry-run
 
 It shows memory, CPU, disk, processes and containers for your instance before and after each change, and for all of them together. The figures are typical values that we measured once for each setup in a test container limited to 4 CPU cores and 8 GiB of memory, with the instance idle and under load. Your instance uses different amounts. Add `--details` to see the machine, the versions, the date and how we measured.
 
+If you installed rexctl as a normal user, it's in `~/.local/bin`, and sudo doesn't look there. Run it with its full path, as in the command below. When a change needs root, rexctl prints the exact command to run. Under sudo, rexctl finds the instance of the account that ran sudo when root has none of its own, as long as only root and that account can change its folder. Anyone who can run rexctl with sudo can act as root, so give that access only to people you would give root.
+
+```sh
+sudo ~/.local/bin/rexctl migrate --experimental-native --migrate docker
+```
+
 To make changes without the questions, list them with `--migrate`, either on `rexctl upgrade --experimental-native` or on its own with `rexctl migrate --experimental-native`.
 
 ```sh
@@ -94,7 +100,7 @@ rexctl checks that each change can work, backs up your instance once, stops the 
 
 ### New installs
 
-`rexctl install --experimental-native` installs a new instance as one systemd service on Debian 13, with all four changes made. rexctl sizes Fluxer for the machine's CPUs and memory and runs the bundled LiveKit for calls. If people connect to the machine at another address than the one LiveKit finds through STUN, pass that address with `--voice-ip`.
+`rexctl install --experimental-native` installs a new instance as one systemd service on Debian 13, with all four changes made. Run it with sudo, as you do every command for that instance. If rexctl is in `~/.local/bin`, run it as `sudo ~/.local/bin/rexctl`. Automatic upgrades for a native instance need rexctl installed for root, with `curl -fsSL https://fluxer.dev/install.sh | sudo sh`. rexctl sizes Fluxer for the machine's CPUs and memory and runs the bundled LiveKit for calls. If people connect to the machine at another address than the one LiveKit finds through STUN, pass that address with `--voice-ip`.
 
 ### Uploads after the move off SeaweedFS
 
