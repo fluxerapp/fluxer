@@ -5,7 +5,6 @@ import {LongPressable} from '@app/features/app/components/LongPressable';
 import Channels from '@app/features/channel/state/Channels';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {dimColor} from '@app/features/theme/utils/ColorUtils';
 import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {STREAM_VOLUME_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
@@ -636,7 +635,10 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		() => getPlaceholderAvatarColor(participantUser, DEFAULT_ACCENT_COLOR),
 		[participantUser],
 	);
-	const placeholderBackgroundColor = useMemo(() => dimColor(placeholderColor), [placeholderColor]);
+	const placeholderBackgroundColor = useMemo(
+		() => `color-mix(in srgb, ${placeholderColor} 40%, var(--voice-surface-1, #151517))`,
+		[placeholderColor],
+	);
 	const placeholderStyle = useMemo<React.CSSProperties>(
 		() => ({backgroundColor: placeholderBackgroundColor}),
 		[placeholderBackgroundColor],

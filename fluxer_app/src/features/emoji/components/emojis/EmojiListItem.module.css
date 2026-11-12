@@ -21,7 +21,6 @@
 	font-weight: 600;
 	color: var(--text-primary-muted);
 	font-size: 0.75rem;
-	text-transform: uppercase;
 }
 
 @media (min-width: 640px) {

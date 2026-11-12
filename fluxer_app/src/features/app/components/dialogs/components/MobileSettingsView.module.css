@@ -127,11 +127,9 @@
 	padding-inline-start: 0.625rem;
 	padding-inline-end: 0.625rem;
 	font-weight: 600;
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	line-height: 1rem;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 }
 
 .categoryList {

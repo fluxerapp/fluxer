@@ -233,7 +233,7 @@
 	gap: 0.25rem;
 	padding-block: 0.25rem;
 	padding-inline: 0.625rem 0.5rem;
-	border-radius: 62.4375rem;
+	border-radius: var(--radius-lg);
 	background: var(--background-modifier-accent);
 	color: var(--text-primary);
 	font-size: 0.8125rem;
