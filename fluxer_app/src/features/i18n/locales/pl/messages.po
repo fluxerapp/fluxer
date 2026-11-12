@@ -6901,6 +6901,11 @@ msgstr "Przycisk z menu kontekstowym"
 msgid "Buttons"
 msgstr "Przyciski"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Tego koloru używają przyciski i wyróżnienia w całej aplikacji, a przeglądarki na telefonach używają go dla swojego paska narzędzi. Zresetuj go, aby zachować indygo Fluxera."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Przyciski mogą otwierać menu kontekstowe po kliknięciu, przekazując zdarzenie onClick bezpośrednio do openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Przyciski pokazują wskaźnik ładowania, gdy submitting ma wartość tr
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Przyciski z ikonami"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Tego koloru używają przyciski, linki i wyróżnienia w całej aplikacji, a przeglądarki na telefonach używają go dla swojego paska narzędzi. Zresetuj go, aby zachować indygo Fluxera."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

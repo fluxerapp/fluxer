@@ -6901,6 +6901,11 @@ msgstr "Pulsante con menu contestuale"
 msgid "Buttons"
 msgstr "Pulsanti"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Pulsanti ed elementi evidenziati in tutta l'app usano questo colore, e i browser sui telefoni lo usano per la barra degli strumenti. Reimpostalo per mantenere l'indaco di Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "I pulsanti possono aprire menu contestuali al clic, passando l'evento onClick direttamente a openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "I pulsanti mostrano un indicatore di caricamento quando submitting è tr
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Pulsanti con icone"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Pulsanti, link ed elementi evidenziati in tutta l'app usano questo colore, e i browser sui telefoni lo usano per la barra degli strumenti. Reimpostalo per mantenere l'indaco di Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

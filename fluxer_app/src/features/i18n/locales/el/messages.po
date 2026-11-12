@@ -6901,6 +6901,11 @@ msgstr "Κουμπί με μενού επιλογών"
 msgid "Buttons"
 msgstr "Κουμπιά"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Τα κουμπιά και οι επισημάνσεις σε όλη την εφαρμογή χρησιμοποιούν αυτό το χρώμα, και τα προγράμματα περιήγησης στα κινητά το χρησιμοποιούν για τη γραμμή εργαλείων τους. Κάντε επαναφορά για να κρατήσετε το λουλακί του Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Τα κουμπιά μπορούν να ανοίξουν μενού περιβάλλοντος με κλικ, περνώντας το συμβάν onClick απευθείας στο openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Τα κουμπιά εμφανίζουν μια ένδειξη φόρτ�
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Κουμπιά με εικονίδια"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Τα κουμπιά, οι σύνδεσμοι και οι επισημάνσεις σε όλη την εφαρμογή χρησιμοποιούν αυτό το χρώμα, και τα προγράμματα περιήγησης στα κινητά το χρησιμοποιούν για τη γραμμή εργαλείων τους. Κάντε επαναφορά για να κρατήσετε το λουλακί του Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

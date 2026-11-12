@@ -122,7 +122,7 @@ pub(super) fn branding_section(
                             "#4641d9",
                         ))
                         p class="text-xs leading-5 text-neutral-500" {
-                            "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Leave it empty to keep Fluxer's indigo."
+                            "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Leave it empty to keep Fluxer's indigo."
                         }
                     }
                     div class="space-y-4 border-t border-neutral-200 pt-6" {

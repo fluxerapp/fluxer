@@ -6901,6 +6901,11 @@ msgstr "Tombol dengan menu konteks"
 msgid "Buttons"
 msgstr "Tombol"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Tombol dan sorotan di seluruh aplikasi memakai warna ini, dan browser ponsel memakainya untuk bilah alatnya. Atur ulang untuk tetap memakai warna nila Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Tombol dapat memicu menu konteks saat diklik dengan meneruskan peristiwa onClick langsung ke openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Tombol menampilkan indikator pemuatan saat submitting bernilai true."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Tombol dengan ikon"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Tombol, tautan, dan sorotan di seluruh aplikasi memakai warna ini, dan browser ponsel memakainya untuk bilah alatnya. Atur ulang untuk tetap memakai warna nila Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

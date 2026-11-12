@@ -6901,6 +6901,11 @@ msgstr "Кнопка з контекстним меню"
 msgid "Buttons"
 msgstr "Кнопки"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Цей колір використовують кнопки та виділення в усьому застосунку, а мобільні браузери фарбують ним свою панель інструментів. Скиньте його, щоб залишити індиго Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Кнопки можуть викликати контекстні меню при натисканні, передаючи подію onClick безпосередньо до openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Кнопки показують індикатор завантажен�
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Кнопки з іконками"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Цей колір використовують кнопки, посилання та виділення в усьому застосунку, а мобільні браузери фарбують ним свою панель інструментів. Скиньте його, щоб залишити індиго Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

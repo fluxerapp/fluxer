@@ -6901,6 +6901,11 @@ msgstr "含操作選單的按鈕"
 msgid "Buttons"
 msgstr "按鈕"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "應用程式中的按鈕和醒目標示都會使用此顏色，手機瀏覽器也會將它用作工具列顏色。重設後將保留 Fluxer 的靛藍色。"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "按鈕可透過將 onClick 事件直接傳遞至 openContextMenu，在點擊時觸發操作選單。"
@@ -6917,11 +6922,6 @@ msgstr "當 submitting 為 true 時，按鈕會顯示載入指示器。"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "含圖示的按鈕"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "應用程式中的按鈕、連結和醒目標示都會使用此顏色，手機瀏覽器也會將它用作工具列顏色。重設後將保留 Fluxer 的靛藍色。"
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

@@ -6901,6 +6901,11 @@ msgstr "Nút có menu ngữ cảnh"
 msgid "Buttons"
 msgstr "Nút"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Các nút và điểm nhấn trong toàn ứng dụng dùng màu này, và trình duyệt trên điện thoại dùng màu này cho thanh công cụ. Đặt lại để giữ màu chàm của Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Các nút có thể mở menu ngữ cảnh khi nhấp bằng cách chuyển trực tiếp sự kiện onClick đến openContextMenu."
@@ -6917,11 +6922,6 @@ msgstr "Các nút hiển thị chỉ báo đang tải khi submitting có giá tr
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Nút có biểu tượng"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Các nút, liên kết và điểm nhấn trong toàn ứng dụng dùng màu này, và trình duyệt trên điện thoại dùng màu này cho thanh công cụ. Đặt lại để giữ màu chàm của Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

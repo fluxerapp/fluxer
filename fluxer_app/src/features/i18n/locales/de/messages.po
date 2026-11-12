@@ -6901,6 +6901,11 @@ msgstr "Schaltfläche mit Kontextmenü"
 msgid "Buttons"
 msgstr "Schaltflächen"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Buttons und Hervorhebungen in der gesamten App nutzen diese Farbe, und Browser auf dem Smartphone färben damit ihre Symbolleiste. Setze sie zurück, um das Indigo von Fluxer zu behalten."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Schaltflächen können bei Klick Kontextmenüs auslösen, indem das onClick-Ereignis direkt an openContextMenu übergeben wird."
@@ -6917,11 +6922,6 @@ msgstr "Schaltflächen zeigen einen Ladeindikator an, wenn submitting den Wert t
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Schaltflächen mit Symbolen"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Buttons, Links und Hervorhebungen in der gesamten App nutzen diese Farbe, und Browser auf dem Smartphone färben damit ihre Symbolleiste. Setze sie zurück, um das Indigo von Fluxer zu behalten."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx

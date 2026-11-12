@@ -6901,6 +6901,11 @@ msgstr "कॉन्टेक्स्ट मेन्यू वाला बट
 msgid "Buttons"
 msgstr "बटन"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "पूरे ऐप में बटन और हाइलाइट इसी रंग का उपयोग करते हैं, और फ़ोन ब्राउज़र इसे अपने टूलबार के लिए इस्तेमाल करते हैं। Fluxer का इंडिगो रंग बनाए रखने के लिए इसे रीसेट करें।"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "बटन, onClick इवेंट को सीधे openContextMenu पर पास करके क्लिक करने पर कॉन्टेक्स्ट मेन्यू ट्रिगर कर सकते हैं।"
@@ -6917,11 +6922,6 @@ msgstr "जब submitting का मान true होता है, तब ब�
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "आइकॉन वाले बटन"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "पूरे ऐप में बटन, लिंक और हाइलाइट इसी रंग का उपयोग करते हैं, और फ़ोन ब्राउज़र इसे अपने टूलबार के लिए इस्तेमाल करते हैं। Fluxer का इंडिगो रंग बनाए रखने के लिए इसे रीसेट करें।"
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
