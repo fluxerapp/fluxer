@@ -294,7 +294,8 @@ pub(super) fn accounts_section(
                     ))
                     p class="text-xs text-neutral-500" {
                         "With \u{201c}Don't ask\u{201d}, new accounts do not store a date of birth and \
-                         are treated as adults."
+                         are treated as adults. Accounts that gave a date of birth under 18 still \
+                         cannot see mature content."
                     }
                     @if !identity.mode.is_username() {
                         (choice_select(
