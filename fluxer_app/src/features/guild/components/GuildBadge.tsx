@@ -5,8 +5,8 @@ import styles from '@app/features/guild/components/GuildBadge.module.css';
 import {GuildBadgesModal} from '@app/features/guild/components/modals/GuildBadgesModal';
 import GuildBadgeDefinitions from '@app/features/guild/state/GuildBadgeDefinitions';
 import {DISCOVERABLE_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getInAppLinkClickHandler} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
-import {handleExternalLinkAuxClick, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {handleExternalLinkAuxClick} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {DiscoverableBadgeIcon} from '@app/features/ui/components/icons/DiscoverableBadgeIcon';
 import {PartneredBadgeIcon} from '@app/features/ui/components/icons/PartneredBadgeIcon';
@@ -157,13 +157,8 @@ function CustomGuildBadge({
 			className={styles.badgeWrapper}
 			onClick={(event) => {
 				event.stopPropagation();
-				const openInApp = getInAppLinkClickHandler(href, {i18n});
-				if (openInApp) {
-					openInApp(event);
-					return;
-				}
 				event.preventDefault();
-				openExternalUrlWithWarning(href);
+				openInAppOrExternalUrl(href, {i18n});
 			}}
 			onAuxClick={(event) => handleExternalLinkAuxClick(event, href)}
 			onPointerDown={(event) => event.stopPropagation()}

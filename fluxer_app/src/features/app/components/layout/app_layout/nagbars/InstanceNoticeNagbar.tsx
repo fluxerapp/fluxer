@@ -8,7 +8,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -45,7 +45,7 @@ export const InstanceNoticeNagbar = observer(({isMobile}: {isMobile: boolean}) =
 					url ? (
 						<NagbarButton
 							isMobile={isMobile}
-							onClick={() => openExternalUrlWithWarning(url)}
+							onClick={() => openInAppOrExternalUrl(url, {i18n})}
 							data-flx="app.app-layout.nagbars.instance-notice-nagbar.nagbar-button.open-link"
 						>
 							{i18n._(LEARN_MORE_DESCRIPTOR)}

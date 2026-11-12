@@ -9,7 +9,7 @@ import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import NagbarState from '@app/features/ui/state/Nagbar';
 import StatusPage, {type MaintenanceStatus, type StatusPageMaintenance} from '@app/features/user/state/StatusPage';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
@@ -126,8 +126,8 @@ export const ScheduledMaintenanceNagbar = observer(({isMobile}: {isMobile: boole
 		if (!scheduledMaintenance) {
 			return;
 		}
-		openExternalUrlWithWarning(scheduledMaintenance.url);
-	}, [scheduledMaintenance]);
+		openInAppOrExternalUrl(scheduledMaintenance.url, {i18n});
+	}, [i18n, scheduledMaintenance]);
 	const handleDismiss = useCallback(() => {
 		if (!scheduledMaintenance) {
 			return;

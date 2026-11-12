@@ -30,7 +30,7 @@ import {
 import {ExternalLinkWarningModal} from '@app/features/messaging/components/modals/ExternalLinkWarningModal';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
-import {MIDDLE_MOUSE_BUTTON} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {MIDDLE_MOUSE_BUTTON, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
@@ -203,15 +203,13 @@ export interface InAppLinkContext {
 	returnChannelId?: string;
 }
 
-type InAppLinkClickHandler = (event: React.MouseEvent) => void;
+type InAppLinkAction = () => void;
 
-export function getInAppLinkClickHandler(url: string, context: InAppLinkContext): InAppLinkClickHandler | null {
+export function getInAppLinkAction(url: string, context: InAppLinkContext): InAppLinkAction | null {
 	const {i18n} = context;
 	const userProfileId = parseUserProfileUrl(url);
 	if (userProfileId) {
-		return (event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		return () => {
 			void UserProfileCommands.openLinkedUserProfile(userProfileId, context.guildId);
 		};
 	}
@@ -220,15 +218,12 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	if (jumpTarget && !jumpChannel) {
-		return (event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		return () => {
 			showChannelAccessDeniedModal(i18n);
 		};
 	}
 	if (url === `${APP_PROTOCOL_PREFIX}dev` || url === `${APP_PROTOCOL_SCHEME}dev`) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			if (DeveloperMode.isDeveloper) {
 				ModalCommands.push(
 					modal(() => (
@@ -255,16 +250,12 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
 	const appPage = settingsTarget ? null : parseAppPageLink(url);
 	if (appPage) {
-		return (event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		return () => {
 			navigateToAppPage(appPage);
 		};
 	}
 	if (isAppProtocolUrl(url)) {
-		return (event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		return () => {
 			if (handleDeepLinkUrl(url)) return;
 			ModalCommands.push(
 				modal(() => (
@@ -278,9 +269,7 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 		};
 	}
 	if (parseOAuthAuthorizeModalUrl(url)) {
-		return (e) => {
-			e.preventDefault();
-			e.stopPropagation();
+		return () => {
 			if (!openOAuthAuthorizeModalFromUrl(url)) {
 				void openExternalUrl(url);
 			}
@@ -294,15 +283,13 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 	}
 	const inviteCode = InviteUtils.findInviteUrl(url);
 	if (inviteCode) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
 		};
 	}
 	const themeCode = ThemeUtils.findThemeUrl(url);
 	if (themeCode) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			ThemeCommands.openAcceptModal(themeCode, i18n, RuntimeConfig.getSnapshot());
 		};
 	}
@@ -310,8 +297,7 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 		return null;
 	}
 	if (messageJumpTarget && jumpChannel) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			const navigateToTarget = () => {
 				if (LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
 					return;
@@ -328,8 +314,7 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 		};
 	}
 	if (channelJumpTarget) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			const navigateToTarget = () => {
 				if (jumpChannel && LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
 					return;
@@ -346,12 +331,20 @@ export function getInAppLinkClickHandler(url: string, context: InAppLinkContext)
 		};
 	}
 	if (parseChannelUrl(url)) {
-		return (e) => {
-			e.preventDefault();
+		return () => {
 			NavigationCommands.deselectGuild();
 		};
 	}
 	return null;
+}
+
+export function openInAppOrExternalUrl(url: string, context: InAppLinkContext): void {
+	const openInApp = getInAppLinkAction(url, context);
+	if (openInApp) {
+		openInApp();
+		return;
+	}
+	openExternalUrlWithWarning(url);
 }
 
 function useJumpLinkAuxClick(url: string, interactive: boolean) {
@@ -1075,13 +1068,14 @@ export const LinkRenderer = observer(function LinkRenderer({
 			</span>
 		);
 	}
-	let handleClick = getInAppLinkClickHandler(url, {
+	const openInApp = getInAppLinkAction(url, {
 		i18n,
 		guildId: options.guildId,
 		returnToMessageId: options.messageId,
 		returnChannelId: options.channelId,
 	});
-	const isInternal = handleClick !== null;
+	const isInternal = openInApp !== null;
+	let handleClick: ((e: React.MouseEvent) => void) | undefined;
 	let isUntrustedExternalDestination = false;
 	if (!isInternal) {
 		try {
@@ -1116,6 +1110,11 @@ export const LinkRenderer = observer(function LinkRenderer({
 				onFocus={warmAttachmentUrl}
 				onClick={(e) => {
 					e.stopPropagation();
+					if (openInApp) {
+						e.preventDefault();
+						openInApp();
+						return;
+					}
 					if (handleClick) {
 						handleClick(e);
 						return;
