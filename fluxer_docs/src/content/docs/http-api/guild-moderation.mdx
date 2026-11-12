@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Guild moderation
-description: List, create and remove guild bans, including temporary bans.
+description: List, get, create and remove guild bans, including temporary bans.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -51,6 +51,21 @@ Returns every [guild ban object](#guild-ban-object) in the guild. The list isn't
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[guild ban](#guild-ban-object) object] | Bans were returned |
+
+The rate limit is 40 requests per 10 seconds, on the shared `guild:members::guild_id` bucket.
+
+## Get guild ban
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/bans/{user_id}" bot />
+
+Returns the [guild ban object](#guild-ban-object) for one account.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild ban](#guild-ban-object) object | The ban was returned |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_BAN` when the account isn't banned from the guild |
 
 The rate limit is 40 requests per 10 seconds, on the shared `guild:members::guild_id` bucket.
 

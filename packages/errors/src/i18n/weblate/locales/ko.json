@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "계정을 만들려면 이용약관에 동의해 주세요.",
 	"tos_and_age.must_be_minimum_age": "계정을 만들려면 만 {minAge, plural, other {#세}} 이상이어야 해요.",
 	"unknown_entities.unknown_badge": "배지를 찾을 수 없어요.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "채널을 찾을 수 없어요.",
 	"unknown_entities.unknown_forum_tag": "태그를 찾을 수 없어요.",
 	"unknown_entities.unknown_guild": "커뮤니티를 찾을 수 없어요.",

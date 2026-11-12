@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Debes aceptar los términos del servicio para crear una cuenta.",
 	"tos_and_age.must_be_minimum_age": "Debes tener al menos {minAge} {minAge, plural, one {año} other {años}} para crear una cuenta.",
 	"unknown_entities.unknown_badge": "No se encontró la insignia.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "No se encontró el canal.",
 	"unknown_entities.unknown_forum_tag": "No se encontró la etiqueta.",
 	"unknown_entities.unknown_guild": "No se encontró la comunidad.",

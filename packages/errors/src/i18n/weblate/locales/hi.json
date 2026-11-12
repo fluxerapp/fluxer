@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "अकाउंट बनाने के लिए आपको सेवा की शर्तें स्वीकार करनी होंगी।",
 	"tos_and_age.must_be_minimum_age": "अकाउंट बनाने के लिए आपकी उम्र कम से कम {minAge} {minAge, plural, one {साल} other {साल}} होनी चाहिए।",
 	"unknown_entities.unknown_badge": "बैज नहीं मिला।",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "चैनल नहीं मिला।",
 	"unknown_entities.unknown_forum_tag": "टैग नहीं मिला।",
 	"unknown_entities.unknown_guild": "कम्युनिटी नहीं मिली।",

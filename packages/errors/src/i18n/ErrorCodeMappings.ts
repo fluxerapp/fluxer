@@ -377,6 +377,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS]:
 		'moderation_and_reports.unclaimed_account_cannot_submit_reports',
 	[APIErrorCodes.UNKNOWN_BADGE]: 'unknown_entities.unknown_badge',
+	[APIErrorCodes.UNKNOWN_BAN]: 'unknown_entities.unknown_ban',
 	[APIErrorCodes.UNKNOWN_CHANNEL]: 'unknown_entities.unknown_channel',
 	[APIErrorCodes.UNKNOWN_CONNECTION_PROVIDER]: 'connections.unknown_provider',
 	[APIErrorCodes.UNKNOWN_EMOJI]: 'stickers_and_emojis.unknown_emoji',

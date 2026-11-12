@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "建立帳號前，你必須同意服務條款。",
 	"tos_and_age.must_be_minimum_age": "你必須至少 {minAge, plural, other {# 歲}}才能建立帳號。",
 	"unknown_entities.unknown_badge": "找不到徽章。",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "找不到頻道。",
 	"unknown_entities.unknown_forum_tag": "找不到標籤。",
 	"unknown_entities.unknown_guild": "找不到社群。",

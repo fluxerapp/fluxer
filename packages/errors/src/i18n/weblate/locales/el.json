@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Πρέπει να αποδεχτείτε τους όρους παροχής υπηρεσιών για να δημιουργήσετε λογαριασμό.",
 	"tos_and_age.must_be_minimum_age": "Πρέπει να είσαι τουλάχιστον {minAge} {minAge, plural, one {έτους} other {ετών}} για να δημιουργήσεις λογαριασμό.",
 	"unknown_entities.unknown_badge": "Δεν βρήκαμε το σήμα.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Δεν βρήκαμε το κανάλι.",
 	"unknown_entities.unknown_forum_tag": "Δεν βρέθηκε η ετικέτα.",
 	"unknown_entities.unknown_guild": "Δεν βρήκαμε την κοινότητα.",

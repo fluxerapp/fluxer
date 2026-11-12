@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "يجب أن توافق على شروط الخدمة لإنشاء حساب.",
 	"tos_and_age.must_be_minimum_age": "يجب أن يكون عمرك {minAge, plural, zero {# سنة} one {سنة واحدة} two {سنتين} few {# سنوات} many {# سنة} other {# سنة}} على الأقل لإنشاء حساب.",
 	"unknown_entities.unknown_badge": "لم يتم العثور على الشارة.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "لم يتم العثور على القناة.",
 	"unknown_entities.unknown_forum_tag": "لم يتم العثور على الوسم.",
 	"unknown_entities.unknown_guild": "لم يتم العثور على المجتمع.",

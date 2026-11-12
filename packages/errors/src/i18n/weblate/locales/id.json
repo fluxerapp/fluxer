@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Kamu harus menyetujui ketentuan layanan untuk membuat akun.",
 	"tos_and_age.must_be_minimum_age": "Kamu harus berusia minimal {minAge} {minAge, plural, other {tahun}} untuk membuat akun.",
 	"unknown_entities.unknown_badge": "Lencana tidak ditemukan.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Saluran tidak ditemukan.",
 	"unknown_entities.unknown_forum_tag": "Tag tidak ditemukan.",
 	"unknown_entities.unknown_guild": "Komunitas tidak ditemukan.",

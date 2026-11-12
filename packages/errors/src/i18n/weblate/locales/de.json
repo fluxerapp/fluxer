@@ -598,6 +598,7 @@
 	"tos_and_age.must_agree_to_tos_and_privacy": "Du musst den Nutzungsbedingungen zustimmen, um einen Account zu erstellen.",
 	"tos_and_age.must_be_minimum_age": "Du musst mindestens {minAge, plural, one {# Jahr} other {# Jahre}} alt sein, um einen Account zu erstellen.",
 	"unknown_entities.unknown_badge": "Abzeichen nicht gefunden.",
+	"unknown_entities.unknown_ban": "",
 	"unknown_entities.unknown_channel": "Kanal nicht gefunden.",
 	"unknown_entities.unknown_forum_tag": "Tag nicht gefunden.",
 	"unknown_entities.unknown_guild": "Community nicht gefunden.",
