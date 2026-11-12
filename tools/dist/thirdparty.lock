@@ -12,5 +12,5 @@ meilisearch/LICENSE-EE any license 941a2a776ed309d8ab8ef8c52cea052e9771394326bde
 livekit-server/LICENSE any license cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 https://raw.githubusercontent.com/livekit/livekit/v1.12.0/LICENSE
 ffmpeg/COPYING.LGPLv2.1 any license 246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30 https://raw.githubusercontent.com/FFmpeg/FFmpeg/n9.0.2/COPYING.LGPLv2.1
 ffmpeg/LICENSE.md any license 2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af https://raw.githubusercontent.com/FFmpeg/FFmpeg/n9.0.2/LICENSE.md
-libheif/COPYING any license fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596 https://raw.githubusercontent.com/strukturag/libheif/v1.23.6/COPYING
+libheif/COPYING any license fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596 https://raw.githubusercontent.com/strukturag/libheif/v1.23.7/COPYING
 erlang-otp/LICENSE.txt any license 809fa1ed21450f59827d1e9aec720bbc4b687434fa22283c6cb5dd82a47ab9c0 https://raw.githubusercontent.com/erlang/otp/OTP-28.5.0.8/LICENSE.txt
