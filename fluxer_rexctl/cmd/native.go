@@ -34,6 +34,8 @@ import (
 
 const nativeCommands = "rexctl start, stop, restart, down, status, logs, config, backup, restore or upgrade"
 
+const nativeInstallFix = "Run rexctl install without --experimental-native to use Docker or Podman, or try again after the next Fluxer release."
+
 var nativeComposeFlags = []string{"engine", "install-docker", "setup-podman", "take-over", "delete-old-data"}
 
 func (a *App) composeOnly() error {
@@ -101,8 +103,24 @@ func nativeFailure(err error, what string) error {
 		return ui.Refused("Behind a proxy, a native instance listens on port "+native.ProxyPort+".", "Set edge.bind in "+instance.StateDirName+"/"+instance.StateFileName+" to an address on port "+native.ProxyPort+", like 127.0.0.1:"+native.ProxyPort+".")
 	case errors.Is(err, native.ErrChecksum):
 		return ui.Wrap(err, "The Fluxer download didn't match its checksum.", "Try again.")
+	case errors.Is(err, release.ErrNoNativeBuild):
+		return ui.Refused(err.Error(), "Try again after the next Fluxer release.")
 	}
 	return ui.Wrap(err, what, "Run the command again with --verbose to see why.")
+}
+
+func nativeRelease(ctx context.Context, version, fix string) (*release.Release, error) {
+	if !release.Valid(version) {
+		version = ""
+	}
+	rel, err := resolveRelease(ctx, version)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := rel.DistFor(runtime.GOARCH); err != nil {
+		return nil, &ui.ExitError{Code: ui.ExitRefused, Msg: err.Error(), Fix: fix, Err: err}
+	}
+	return rel, nil
 }
 
 func saveNative(inst *instance.Instance) error {
@@ -516,6 +534,9 @@ func runNativeUpgrade(ctx context.Context, app *App, inst *instance.Instance, f 
 	if err := release.CheckTarget(nil, rel, inst.State.Schema); err != nil {
 		return floorRefusal(err, to)
 	}
+	if _, err := rel.DistFor(runtime.GOARCH); err != nil {
+		return nativeFailure(err, "")
+	}
 	needSelf := release.Compare(rel.Version, app.Version) != 0
 	if f.DryRun {
 		app.UI.Info("rexctl would do this:")
@@ -774,13 +795,17 @@ func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *instal
 	case inst.State.IsNative() && !inst.State.SetupDone:
 		app.UI.Info("Continuing the install in %s.", inst.Dir)
 		f.BehindProxy = inst.State.Settings[settings.EdgeMode] == settings.EdgeProxy || inst.State.Settings[settings.EdgeMode] == settings.EdgeTunnel
+		rel, err := nativeRelease(ctx, inst.State.Release, nativeInstallFix)
+		if err != nil {
+			return err
+		}
 		if err := in.askSetupWhere(); err != nil {
 			return err
 		}
 		if err := in.collectAnswers(inst.Domain()); err != nil {
 			return err
 		}
-		return app.Locked(ctx, inst, func() error { return in.startNative(ctx, inst) })
+		return app.Locked(ctx, inst, func() error { return in.startNative(ctx, inst, rel) })
 	case !inst.State.IsNative():
 		return ui.Refused(fmt.Sprintf("Fluxer already runs in Docker in %s.", dir), "To move it out of Docker, run "+sudoRun(dir, dockerMoveArgs("")...)+".")
 	default:
@@ -795,6 +820,10 @@ func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *instal
 		return ui.Refused(fmt.Sprintf("This machine already runs a native Fluxer instance in %s.", other), "A machine runs one native instance. Pass --dir "+other+" to manage it.")
 	}
 	if err := in.missingFlags(); err != nil {
+		return err
+	}
+	rel, err := nativeRelease(ctx, stack.Embedded().Release, nativeInstallFix)
+	if err != nil {
 		return err
 	}
 	app.UI.Welcome()
@@ -844,7 +873,7 @@ func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *instal
 		if err := in.writeNative(inst); err != nil {
 			return err
 		}
-		return in.startNative(ctx, inst)
+		return in.startNative(ctx, inst, rel)
 	})
 }
 
@@ -965,21 +994,13 @@ func (in *installer) showNativeSizing(inst *instance.Instance, set *stack.Set) {
 	}
 }
 
-func (in *installer) startNative(ctx context.Context, inst *instance.Instance) error {
+func (in *installer) startNative(ctx context.Context, inst *instance.Instance, rel *release.Release) error {
 	u := in.app.UI
 	in.app.remember(inst.Dir)
 	origin := inst.Origin()
 	token := setup.Token(inst.State.Secrets)
 	n := native.New(inst)
 	set, err := deploy.ReleaseSet(inst)
-	if err != nil {
-		return err
-	}
-	version := inst.State.Release
-	if !release.Valid(version) {
-		version = ""
-	}
-	rel, err := resolveRelease(ctx, version)
 	if err != nil {
 		return err
 	}

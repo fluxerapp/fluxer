@@ -1158,6 +1158,8 @@ func (h *nativeHost) DropData(_ context.Context, what string) error {
 	return nil
 }
 
+const nativeMigrateFix = "Keep this instance in Docker for now, and try again after the next Fluxer release."
+
 type nativeTarget struct {
 	app      *App
 	inst     *instance.Instance
@@ -1198,7 +1200,8 @@ func (t *nativeTarget) Preflight(ctx context.Context, chosen map[string]string) 
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	return nil
+	_, err = nativeRelease(ctx, stack.Embedded().Release, nativeMigrateFix)
+	return err
 }
 
 func (t *nativeTarget) nativeEquivalent(ctx context.Context, chosen map[string]string) error {
