@@ -11,6 +11,7 @@ import {getDefaultReaction, getForumTags} from '@app/features/forum/utils/ForumC
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
 import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -26,8 +27,10 @@ import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import Users from '@app/features/user/state/Users';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {MessageAttachmentFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {DefaultReactionEmojiResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
@@ -46,6 +49,12 @@ import {useCallback, useMemo, useState} from 'react';
 const MAX_CARD_TAGS = 3;
 const LIST_THUMBNAIL_SIZE = 96;
 const GRID_THUMBNAIL_SIZE = 480;
+
+function formatCompactCount(count: number): string {
+	const locale = getFormattingLocale();
+	if (count < 1000) return formatNumber(count, locale);
+	return getCachedNumberFormat(locale, {notation: 'compact', maximumFractionDigits: 1}).format(count);
+}
 
 function isVisualAttachment(attachment: MessageAttachment): boolean {
 	const type = attachment.content_type ?? '';
@@ -207,44 +216,66 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 						</div>
 					)}
 					<div className={styles.cardBody} data-flx="forum.forum-post-card.card-body">
-						<div className={styles.cardHeader} data-flx="forum.forum-post-card.card-header">
-							{pinned && (
-								<PushPinSimpleIcon
-									size={16}
-									weight="fill"
-									aria-label={i18n._(D.PINNED_DESCRIPTOR)}
-									data-flx="forum.forum-post-card.push-pin-simple-icon"
-								/>
-							)}
-							{isNew && (
-								<span className={styles.newBadge} data-flx="forum.forum-post-card.new-badge">
-									{i18n._(D.NEW_BADGE_DESCRIPTOR)}
-								</span>
-							)}
-							{tags.slice(0, MAX_CARD_TAGS).map((tag) => (
-								<ForumTagPill key={tag.id} tag={tag} data-flx="forum.forum-post-card.forum-tag-pill" />
-							))}
-							{tags.length > MAX_CARD_TAGS && (
-								<span
-									className={styles.tag}
-									data-flx="forum.forum-post-card.tag"
-								>{`+${tags.length - MAX_CARD_TAGS}`}</span>
-							)}
-						</div>
-						<div className={styles.cardTitle} data-flx="forum.forum-post-card.card-title">
-							{post.name}
-						</div>
-						{preview != null && (
-							<div className={styles.cardPreview} data-flx="forum.forum-post-card.card-preview">
-								{authorName && (
-									<span
-										className={styles.cardAuthor}
-										data-flx="forum.forum-post-card.card-author"
-									>{`${authorName}: `}</span>
+						<div className={styles.cardMain} data-flx="forum.forum-post-card.card-main">
+							<div className={styles.cardText} data-flx="forum.forum-post-card.card-text">
+								<div className={styles.cardHeader} data-flx="forum.forum-post-card.card-header">
+									{pinned && (
+										<PushPinSimpleIcon
+											size={16}
+											weight="fill"
+											aria-label={i18n._(D.PINNED_DESCRIPTOR)}
+											data-flx="forum.forum-post-card.push-pin-simple-icon"
+										/>
+									)}
+									{isNew && (
+										<span className={styles.newBadge} data-flx="forum.forum-post-card.new-badge">
+											{i18n._(D.NEW_BADGE_DESCRIPTOR)}
+										</span>
+									)}
+									{tags.slice(0, MAX_CARD_TAGS).map((tag) => (
+										<ForumTagPill key={tag.id} tag={tag} data-flx="forum.forum-post-card.forum-tag-pill" />
+									))}
+									{tags.length > MAX_CARD_TAGS && (
+										<span
+											className={styles.tag}
+											data-flx="forum.forum-post-card.tag"
+										>{`+${tags.length - MAX_CARD_TAGS}`}</span>
+									)}
+								</div>
+								<div className={styles.cardTitle} data-flx="forum.forum-post-card.card-title">
+									{post.name}
+								</div>
+								{preview != null && (
+									<div className={styles.cardPreview} data-flx="forum.forum-post-card.card-preview">
+										{authorName && (
+											<span
+												className={styles.cardAuthor}
+												data-flx="forum.forum-post-card.card-author"
+											>{`${authorName}: `}</span>
+										)}
+										<span data-flx="forum.forum-post-card.preview-text">{preview}</span>
+									</div>
 								)}
-								<span data-flx="forum.forum-post-card.preview-text">{preview}</span>
 							</div>
-						)}
+							{!grid && thumbnail && (
+								<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
+									<img
+										src={thumbnail}
+										alt=""
+										className={styles.cardMediaImage}
+										loading="lazy"
+										draggable={false}
+										onError={handleThumbnailError}
+										data-flx="forum.forum-post-card.card-media-image--2"
+									/>
+									{media?.video && (
+										<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
+											<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
+										</span>
+									)}
+								</div>
+							)}
+						</div>
 						<div className={styles.cardFooter} data-flx="forum.forum-post-card.card-footer">
 							<DefaultReactionButton
 								forum={forum}
@@ -259,39 +290,49 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 									aria-hidden
 									data-flx="forum.forum-post-card.chat-circle-icon--2"
 								/>
-								{i18n._(D_POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
-							</span>
-							{unread && (
-								<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">
-									{unreadCount > 0
-										? i18n._(D.UNREAD_MESSAGES_DESCRIPTOR, {count: unreadCount})
-										: i18n._(D.HAS_UNREAD_MESSAGES_DESCRIPTOR)}
+								<span aria-hidden data-flx="forum.forum-post-card.message-count">
+									{formatCompactCount(post.messageCount)}
 								</span>
-							)}
-							<span className={styles.cardMeta} data-flx="forum.forum-post-card.card-meta--2">
-								<span className={styles.cardDot} aria-hidden data-flx="forum.forum-post-card.card-dot" />
-								{DateUtils.getRelativeDateString(lastActivity, i18n)}
+								<span className={styles.srOnly} data-flx="forum.forum-post-card.message-count-label">
+									{i18n._(D_POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
+								</span>
 							</span>
+							<div className={styles.cardFooterRest} data-flx="forum.forum-post-card.card-footer-rest">
+								<span
+									className={styles.cardFooterAnchor}
+									aria-hidden
+									data-flx="forum.forum-post-card.card-footer-anchor"
+								/>
+								<time
+									className={styles.cardTime}
+									dateTime={lastActivity.toISOString()}
+									title={DateUtils.getFormattedDateTime(lastActivity)}
+									data-flx="forum.forum-post-card.card-time"
+								>
+									<span aria-hidden data-flx="forum.forum-post-card.time-short">
+										{formatShortRelativeTime(i18n, lastActivity)}
+									</span>
+									<span className={styles.srOnly} data-flx="forum.forum-post-card.time-label">
+										{DateUtils.getRelativeDateString(lastActivity, i18n)}
+									</span>
+								</time>
+								{unread && (
+									<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">
+										<span aria-hidden data-flx="forum.forum-post-card.unread-short">
+											{unreadCount > 0
+												? i18n._(D.UNREAD_MESSAGES_SHORT_DESCRIPTOR, {count: unreadCount})
+												: i18n._(D.HAS_UNREAD_MESSAGES_SHORT_DESCRIPTOR)}
+										</span>
+										<span className={styles.srOnly} data-flx="forum.forum-post-card.unread-label">
+											{unreadCount > 0
+												? i18n._(D.UNREAD_MESSAGES_DESCRIPTOR, {count: unreadCount})
+												: i18n._(D.HAS_UNREAD_MESSAGES_DESCRIPTOR)}
+										</span>
+									</span>
+								)}
+							</div>
 						</div>
 					</div>
-					{!grid && thumbnail && (
-						<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
-							<img
-								src={thumbnail}
-								alt=""
-								className={styles.cardMediaImage}
-								loading="lazy"
-								draggable={false}
-								onError={handleThumbnailError}
-								data-flx="forum.forum-post-card.card-media-image--2"
-							/>
-							{media?.video && (
-								<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
-									<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
-								</span>
-							)}
-						</div>
-					)}
 				</div>
 			</FocusRing>
 			{sheetOpen && (

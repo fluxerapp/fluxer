@@ -1261,6 +1261,12 @@ msgstr ""
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr ""
 
+#. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "{count, plural, one {# new} other {# new}}"
+msgstr ""
+
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {# Operator Pass} other {# Operator Passes}}"
@@ -24165,6 +24171,12 @@ msgstr ""
 #: src/features/channel/components/ChannelDivider.tsx
 #: src/features/channel/components/UnreadDividerSlot.tsx
 #: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "New"
+msgstr ""
+
+#. Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
 msgid "New"
 msgstr ""
 
