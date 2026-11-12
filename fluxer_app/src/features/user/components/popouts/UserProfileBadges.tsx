@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getInAppLinkClickHandler} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {handleExternalLinkAuxClick, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
 import {BadgeListModal} from '@app/features/user/components/modals/BadgeListModal';
 import styles from '@app/features/user/components/popouts/UserProfileBadges.module.css';
 import {profileBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
@@ -193,7 +194,16 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 						target="_blank"
 						rel="noopener noreferrer"
 						className={styles.link}
-						onClick={(event) => handleExternalLinkClick(event, href)}
+						onClick={(event) => {
+							const openInApp = getInAppLinkClickHandler(href, {i18n});
+							if (openInApp) {
+								openInApp(event);
+								return;
+							}
+							event.preventDefault();
+							openExternalUrlWithWarning(href);
+						}}
+						onAuxClick={(event) => handleExternalLinkAuxClick(event, href)}
 						data-flx={`${dataFlx}.link`}
 					>
 						{children}
