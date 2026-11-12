@@ -196,6 +196,164 @@ function promptForJumpGate(channel: Channel, scope: string | null | undefined, o
 	});
 }
 
+export interface InAppLinkContext {
+	i18n: I18n;
+	guildId?: string;
+	returnToMessageId?: string;
+	returnChannelId?: string;
+}
+
+type InAppLinkClickHandler = (event: React.MouseEvent) => void;
+
+export function getInAppLinkClickHandler(url: string, context: InAppLinkContext): InAppLinkClickHandler | null {
+	const {i18n} = context;
+	const userProfileId = parseUserProfileUrl(url);
+	if (userProfileId) {
+		return (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			void UserProfileCommands.openLinkedUserProfile(userProfileId, context.guildId);
+		};
+	}
+	const messageJumpTarget = parseMessageJumpLink(url);
+	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
+	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
+	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
+	if (jumpTarget && !jumpChannel) {
+		return (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			showChannelAccessDeniedModal(i18n);
+		};
+	}
+	if (url === `${APP_PROTOCOL_PREFIX}dev` || url === `${APP_PROTOCOL_SCHEME}dev`) {
+		return (e) => {
+			e.preventDefault();
+			if (DeveloperMode.isDeveloper) {
+				ModalCommands.push(
+					modal(() => (
+						<ConfirmModal
+							title={i18n._(DEVELOPER_TOOLS_DESCRIPTOR)}
+							description={i18n._(DEVELOPER_TOOLS_ARE_AVAILABLE_FROM_THE_STAFF_BADGE_DESCRIPTOR)}
+							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--2"
+						/>
+					)),
+				);
+			} else {
+				ModalCommands.push(
+					modal(() => (
+						<ConfirmModal
+							title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
+							description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
+							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--3"
+						/>
+					)),
+				);
+			}
+		};
+	}
+	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
+	const appPage = settingsTarget ? null : parseAppPageLink(url);
+	if (appPage) {
+		return (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			navigateToAppPage(appPage);
+		};
+	}
+	if (isAppProtocolUrl(url)) {
+		return (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (handleDeepLinkUrl(url)) return;
+			ModalCommands.push(
+				modal(() => (
+					<ConfirmModal
+						title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
+						description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
+						data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--4"
+					/>
+				)),
+			);
+		};
+	}
+	if (parseOAuthAuthorizeModalUrl(url)) {
+		return (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			if (!openOAuthAuthorizeModalFromUrl(url)) {
+				void openExternalUrl(url);
+			}
+		};
+	}
+	let parsed: URL;
+	try {
+		parsed = new URL(url);
+	} catch {
+		return null;
+	}
+	const inviteCode = InviteUtils.findInviteUrl(url);
+	if (inviteCode) {
+		return (e) => {
+			e.preventDefault();
+			void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
+		};
+	}
+	const themeCode = ThemeUtils.findThemeUrl(url);
+	if (themeCode) {
+		return (e) => {
+			e.preventDefault();
+			ThemeCommands.openAcceptModal(themeCode, i18n, RuntimeConfig.getSnapshot());
+		};
+	}
+	if (!isInternalChannelHost(parsed.host) || !parsed.pathname.startsWith('/channels/')) {
+		return null;
+	}
+	if (messageJumpTarget && jumpChannel) {
+		return (e) => {
+			e.preventDefault();
+			const navigateToTarget = () => {
+				if (LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
+					return;
+				}
+				goToMessage(messageJumpTarget.channelId, messageJumpTarget.messageId, {
+					returnToMessageId: context.returnToMessageId,
+					returnChannelId: context.returnChannelId,
+				});
+			};
+			if (promptForJumpGate(jumpChannel, messageJumpTarget.scope, navigateToTarget)) {
+				return;
+			}
+			navigateToTarget();
+		};
+	}
+	if (channelJumpTarget) {
+		return (e) => {
+			e.preventDefault();
+			const navigateToTarget = () => {
+				if (jumpChannel && LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
+					return;
+				}
+				NavigationCommands.selectChannel(
+					channelJumpTarget.scope === ME ? undefined : channelJumpTarget.scope,
+					channelJumpTarget.channelId,
+				);
+			};
+			if (jumpChannel && promptForJumpGate(jumpChannel, channelJumpTarget.scope, navigateToTarget)) {
+				return;
+			}
+			navigateToTarget();
+		};
+	}
+	if (parseChannelUrl(url)) {
+		return (e) => {
+			e.preventDefault();
+			NavigationCommands.deselectGuild();
+		};
+	}
+	return null;
+}
+
 function useJumpLinkAuxClick(url: string, interactive: boolean) {
 	return useCallback(
 		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
@@ -794,9 +952,6 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const {url, text} = node;
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
 	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
-	const inviteCode = InviteUtils.findInviteUrl(url);
-	const themeCode = ThemeUtils.findThemeUrl(url);
-	const userProfileId = parseUserProfileUrl(url);
 	const messageJumpTarget = parseMessageJumpLink(url);
 	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
@@ -920,164 +1075,29 @@ export const LinkRenderer = observer(function LinkRenderer({
 			</span>
 		);
 	}
-	const shouldShowAccessDeniedModal = Boolean(jumpTarget && !jumpChannel);
-	let isInternal = false;
-	let handleClick: ((e: React.MouseEvent) => void) | undefined;
+	let handleClick = getInAppLinkClickHandler(url, {
+		i18n,
+		guildId: options.guildId,
+		returnToMessageId: options.messageId,
+		returnChannelId: options.channelId,
+	});
+	const isInternal = handleClick !== null;
 	let isUntrustedExternalDestination = false;
-	if (userProfileId) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			void UserProfileCommands.openLinkedUserProfile(userProfileId, options.guildId);
-		};
-		isInternal = true;
-	} else if (shouldShowAccessDeniedModal) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			showChannelAccessDeniedModal(i18n);
-		};
-		isInternal = true;
-	} else if (url === `${APP_PROTOCOL_PREFIX}dev` || url === `${APP_PROTOCOL_SCHEME}dev`) {
-		handleClick = (e) => {
-			e.preventDefault();
-			if (DeveloperMode.isDeveloper) {
-				ModalCommands.push(
-					modal(() => (
-						<ConfirmModal
-							title={i18n._(DEVELOPER_TOOLS_DESCRIPTOR)}
-							description={i18n._(DEVELOPER_TOOLS_ARE_AVAILABLE_FROM_THE_STAFF_BADGE_DESCRIPTOR)}
-							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--2"
-						/>
-					)),
-				);
-			} else {
-				ModalCommands.push(
-					modal(() => (
-						<ConfirmModal
-							title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
-							description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
-							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--3"
-						/>
-					)),
-				);
-			}
-		};
-		isInternal = true;
-	} else if (appPage) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			navigateToAppPage(appPage);
-		};
-		isInternal = true;
-	} else if (isAppProtocolUrl(url)) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			if (handleDeepLinkUrl(url)) return;
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
-						description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
-						data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--4"
-					/>
-				)),
-			);
-		};
-		isInternal = true;
-	} else {
+	if (!isInternal) {
 		try {
-			const oauthAuthorizeUrl = parseOAuthAuthorizeModalUrl(url);
-			const parsed = oauthAuthorizeUrl ?? new URL(url);
-			if (oauthAuthorizeUrl) {
+			isUntrustedExternalDestination = !TrustedDomain.isTrustedDomain(new URL(url).hostname);
+			if (isUntrustedExternalDestination) {
 				handleClick = (e) => {
 					e.preventDefault();
-					e.stopPropagation();
-					if (!openOAuthAuthorizeModalFromUrl(url)) {
-						void openExternalUrl(url);
-					}
+					ModalCommands.push(
+						modal(() => (
+							<ExternalLinkWarningModal
+								url={url}
+								data-flx="messaging.markdown.renderers.link-renderer.handle-click.external-link-warning-modal"
+							/>
+						)),
+					);
 				};
-				isInternal = true;
-			} else {
-				isInternal = isInternalChannelHost(parsed.host) && parsed.pathname.startsWith('/channels/');
-			}
-			if (!handleClick && inviteCode) {
-				handleClick = (e) => {
-					e.preventDefault();
-					void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
-				};
-				isInternal = true;
-			} else if (!handleClick && themeCode) {
-				handleClick = (e) => {
-					e.preventDefault();
-					ThemeCommands.openAcceptModal(themeCode, i18n, RuntimeConfig.getSnapshot());
-				};
-				isInternal = true;
-			} else if (!handleClick && isInternal) {
-				const channelJump = channelJumpTarget;
-				if (messageJumpTarget && jumpChannel) {
-					const targetChannelId = messageJumpTarget.channelId;
-					const targetMessageId = messageJumpTarget.messageId;
-					handleClick = (e) => {
-						e.preventDefault();
-						const navigateToTarget = () => {
-							if (LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
-								return;
-							}
-							goToMessage(targetChannelId, targetMessageId, {
-								returnToMessageId: options.messageId,
-								returnChannelId: options.channelId,
-							});
-						};
-						if (promptForJumpGate(jumpChannel, messageJumpTarget.scope, navigateToTarget)) {
-							return;
-						}
-						navigateToTarget();
-					};
-				} else if (channelJump) {
-					handleClick = (e) => {
-						e.preventDefault();
-						const navigateToTarget = () => {
-							if (jumpChannel && LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
-								return;
-							}
-							NavigationCommands.selectChannel(
-								channelJump.scope === ME ? undefined : channelJump.scope,
-								channelJump.channelId,
-							);
-						};
-						if (jumpChannel && promptForJumpGate(jumpChannel, channelJump.scope, navigateToTarget)) {
-							return;
-						}
-						navigateToTarget();
-					};
-				} else if (parseChannelUrl(url)) {
-					handleClick = (e) => {
-						e.preventDefault();
-						NavigationCommands.deselectGuild();
-					};
-				} else {
-					isInternal = false;
-				}
-			}
-			if (!isInternal && !inviteCode) {
-				const isTrusted = TrustedDomain.isTrustedDomain(parsed.hostname);
-				isUntrustedExternalDestination = !isTrusted;
-				if (!isTrusted) {
-					handleClick = (e) => {
-						e.preventDefault();
-						ModalCommands.push(
-							modal(() => (
-								<ExternalLinkWarningModal
-									url={url}
-									data-flx="messaging.markdown.renderers.link-renderer.handle-click.external-link-warning-modal"
-								/>
-							)),
-						);
-					};
-				}
 			}
 		} catch (_error) {
 			logger.warn('Invalid URL in link:', url);

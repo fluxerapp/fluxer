@@ -219,27 +219,6 @@ export async function openExternalUrl(url: string, target: string = '_blank') {
 	window.open(refreshedUrl, target, 'noopener,noreferrer');
 }
 
-interface ExternalLinkClickEvent {
-	preventDefault(): void;
-	stopPropagation(): void;
-}
-
-interface ExternalLinkClickOptions {
-	stopPropagation?: boolean;
-}
-
-export function handleExternalLinkClick(
-	event: ExternalLinkClickEvent,
-	url: string,
-	options?: ExternalLinkClickOptions,
-): void {
-	event.preventDefault();
-	if (options?.stopPropagation) {
-		event.stopPropagation();
-	}
-	void openExternalUrl(url);
-}
-
 export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';
 
 export async function downloadWithNative(options: {

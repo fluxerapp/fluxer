@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
+import {getInAppLinkClickHandler} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {handleExternalLinkAuxClick, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import styles from '@app/features/user/components/modals/BadgeListModal.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -78,7 +79,16 @@ export const BadgeListModal = observer(function BadgeListModal({
 										target="_blank"
 										rel="noopener noreferrer"
 										className={styles.row}
-										onClick={(event) => handleExternalLinkClick(event, href)}
+										onClick={(event) => {
+											const openInApp = getInAppLinkClickHandler(href, {i18n});
+											if (openInApp) {
+												openInApp(event);
+												return;
+											}
+											event.preventDefault();
+											openExternalUrlWithWarning(href);
+										}}
+										onAuxClick={(event) => handleExternalLinkAuxClick(event, href)}
 										data-flx={`${dataFlx}.link`}
 									>
 										{body}
