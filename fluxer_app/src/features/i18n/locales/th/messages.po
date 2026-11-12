@@ -26341,6 +26341,11 @@ msgstr "เปิดการตั้งค่าระบบ → ความ�
 msgid "Open template JSON"
 msgstr "เปิดเทมเพลต JSON"
 
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "เปิดแอป {PRODUCT_NAME} ที่คุณกำลังลงชื่อเข้าใช้ เลือก \"ลงชื่อเข้าใช้อีกเครื่องใช่ไหม\" แล้วพิมพ์รหัสที่แอปแสดงไว้ที่นี่ โปรดป้อนรหัสจากอุปกรณ์ที่คุณควบคุมเท่านั้น"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Open the account switcher"
@@ -36667,11 +36672,6 @@ msgstr "ทั้งหมดมีเท่านี้"
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "แอป {PRODUCT_NAME} ขอให้ลงชื่อเข้าใช้เป็น {requestedIdentifier} แต่คุณเลือก {name}"
-
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "แอป {PRODUCT_NAME} บนอุปกรณ์อื่นของคุณจะแสดงรายการภายใต้ \"กำลังลงชื่อเข้าใช้อุปกรณ์อื่น\" โปรดป้อนรหัสจากอุปกรณ์ที่คุณควบคุมเท่านั้น"
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

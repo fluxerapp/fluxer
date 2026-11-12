@@ -26334,6 +26334,11 @@ msgstr ""
 msgid "Open template JSON"
 msgstr ""
 
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Hapni aplikacionin {PRODUCT_NAME} ku po hyni, zgjidhni \"Po hyni në një pajisje tjetër?\" dhe shkruani këtu kodin që ai shfaq. Futni vetëm një kod nga një pajisje që e kontrolloni."
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Open the account switcher"
@@ -34152,7 +34157,7 @@ msgstr ""
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Signing in on another device?"
-msgstr ""
+msgstr "Po hyni në një pajisje tjetër?"
 
 #. Title while the browser approves the sign-in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -36659,11 +36664,6 @@ msgstr ""
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
-msgstr ""
-
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
 msgstr ""
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.

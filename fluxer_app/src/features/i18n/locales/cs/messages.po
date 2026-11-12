@@ -26341,6 +26341,11 @@ msgstr "Otevřete Nastavení systému → Soukromí a zabezpečení → Nahráv�
 msgid "Open template JSON"
 msgstr "Otevřít šablonu JSON"
 
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Otevřete aplikaci {PRODUCT_NAME}, do které se přihlašujete, vyberte „Přihlašujete se na jiném zařízení?“ a zadejte sem kód, který zobrazí. Zadejte kód pouze ze zařízení, které ovládáte."
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Open the account switcher"
@@ -36667,11 +36672,6 @@ msgstr "To je vše."
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "Aplikace {PRODUCT_NAME} se pokusila přihlásit jako {requestedIdentifier}, ale vy jste vybrali {name}."
-
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "Aplikace {PRODUCT_NAME} na vašem druhém zařízení se zobrazí pod možností Přihlášení na jiném zařízení. Zadejte kód pouze ze zařízení, které ovládáte."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
