@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -64,6 +65,7 @@ func newMigrateCmd(app *App) *cobra.Command {
 		Long: "Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. " +
 			"This is experimental, so rexctl migrate runs only with --experimental-native. " +
 			"rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. " +
+			"The move out of Docker runs as root, and so does every command for the new instance. " +
 			"After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. " +
 			"The old data stays until you remove it with --clean-up after a newer backup.",
 		Args: noArgs,
@@ -132,6 +134,11 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	case f.CleanUp:
 		return runCleanUp(ctx, app, inst, f.Confirm)
 	}
+	if slices.Contains(picked, migrate.OptDocker) && runtimeOf(inst) == migrate.Compose && !f.DryRun {
+		if err := dockerMoveAllowed(app, inst, f.NativeDir); err != nil {
+			return err
+		}
+	}
 	m, err := migrate.LoadMeasurements()
 	if err != nil {
 		return err
@@ -152,18 +159,26 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	}
 	paint := migrate.Paints(app.UI)
 	if f.DryRun || (len(picked) == 0 && !app.UI.Interactive()) {
-		showChoices(ctx, app, inst, m, choices, f.Details)
+		showChoices(ctx, app, inst, m, choices, f.Details, f.NativeDir)
 		if !f.DryRun {
 			app.UI.Info("")
 			app.UI.Info("Pass --migrate with the changes you want, such as --migrate %s.", choices[0].opt)
 		}
 		return nil
 	}
+	skipped := ""
 	if len(picked) == 0 {
 		migrate.Show(app.UI, migrate.SummaryLines(paint, diffsOf(choices), nil))
 		for _, c := range choices {
 			migrate.Show(app.UI, c.diff.Lines(paint))
 			app.UI.Info("")
+			if c.opt == migrate.OptDocker {
+				if skipped = dockerNote(inst, f.NativeDir); skipped != "" {
+					app.UI.Info("%s", skipped)
+					app.UI.Info("")
+					continue
+				}
+			}
 			ok, err := app.UI.Confirm("Make this change?", false)
 			if err != nil {
 				return err
@@ -177,6 +192,9 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 		}
 		if len(picked) == 0 {
 			app.UI.Info("Nothing changed.")
+			if skipped != "" {
+				app.UI.Info("%s", skipped)
+			}
 			return nil
 		}
 	}
@@ -201,20 +219,31 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	}
 	r := &migrate.Run{Host: host, Log: migrateOutput(app), OnPhase: func(p migrate.Phase, o migrate.Option) {
 		if o == "" {
-			app.UI.Info("%s", sentence(string(p)))
+			app.UI.Info("%s", sentence(phaseWords(p)))
 			return
 		}
-		app.UI.Info("%s: %s", o.Title(), p)
+		app.UI.Info("%s: %s", o.Title(), phaseWords(p))
 	}}
 	err = migrate.Execute(ctx, r, steps)
+	if err == nil && slices.Contains(picked, migrate.OptDocker) {
+		markMoved(app, inst, r.Host.Dir())
+	}
+	giveFilesBack(app, inst)
 	var fail *migrate.Failure
+	var refused *ui.ExitError
 	switch {
 	case errors.As(err, &fail) && fail.Rollback == nil && r.Backup != "":
-		return ui.Wrap(err, "The change didn't work, and rexctl put your instance back as it was.", "The backup from before the change is "+r.Backup+".")
+		return ui.Wrap(err, "The change didn't work, and rexctl put your instance back as it was. "+migrateReason(fail.Err), "The backup from before the change is "+r.Backup+".")
 	case errors.As(err, &fail) && r.Backup != "":
-		return ui.Wrap(err, "The change didn't work, and rexctl couldn't put everything back.", "Restore the backup from before the change with rexctl restore "+r.Backup+".")
+		return ui.Wrap(err, "The change didn't work, and rexctl couldn't put everything back. "+migrateReason(fail.Err), "Restore the backup from before the change with rexctl restore "+r.Backup+".")
+	case errors.As(err, &fail) && fail.Phase == migrate.PhasePreflight && errors.As(fail.Err, &refused):
+		return refused
+	case errors.As(err, &fail) && fail.Phase == migrate.PhasePreflight:
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: "rexctl didn't change anything.", Fix: migrateReason(fail.Err), Err: err}
+	case errors.As(err, &fail):
+		return ui.Wrap(err, "rexctl didn't change anything.", migrateReason(fail.Err))
 	case err != nil:
-		return ui.Wrap(err, "rexctl didn't change anything.", "Run "+migrateCommand+" --verbose to see why.")
+		return ui.Wrap(err, "rexctl didn't change anything.", migrateReason(err))
 	}
 	st, err := migrate.LoadState(r.Host.Dir())
 	if err != nil {
@@ -229,7 +258,11 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	}
 	app.UI.OK("Made the changes. The backup from before them is %s.", r.Backup)
 	if slices.Contains(picked, migrate.OptDocker) {
-		app.UI.Info("Fluxer now runs from %s. The Docker instance in %s is stopped and stays as it was.", r.Host.Dir(), inst.Dir)
+		app.UI.Info("Fluxer now runs from %s without Docker, and root manages it. The Docker instance in %s is stopped and stays as it was, and rexctl won't start it again while the new instance is there.", r.Host.Dir(), inst.Dir)
+		app.UI.Info("To check the new instance, run %s.", sudoRun(r.Host.Dir(), "status"))
+	}
+	if skipped != "" {
+		app.UI.Info("%s", skipped)
 	}
 	if r.State.Storage != nil {
 		return offerOpenWrites(ctx, app, r.Host, &st)
@@ -237,7 +270,7 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	return nil
 }
 
-func showChoices(ctx context.Context, app *App, inst *instance.Instance, m migrate.Measurements, choices []migrateChoice, details bool) {
+func showChoices(ctx context.Context, app *App, inst *instance.Instance, m migrate.Measurements, choices []migrateChoice, details bool, nativeDir string) {
 	paint := migrate.Paints(app.UI)
 	var together *migrate.Diff
 	if len(choices) > 1 {
@@ -255,6 +288,12 @@ func showChoices(ctx context.Context, app *App, inst *instance.Instance, m migra
 		if c.step == nil {
 			app.UI.Info("  This release of rexctl can't make this change yet.")
 		}
+		if c.opt != migrate.OptDocker {
+			continue
+		}
+		if note := dockerNote(inst, nativeDir); note != "" {
+			app.UI.Info("  %s", note)
+		}
 	}
 	if together != nil {
 		migrate.Show(app.UI, together.Lines(paint))
@@ -262,6 +301,96 @@ func showChoices(ctx context.Context, app *App, inst *instance.Instance, m migra
 	if details {
 		migrate.Show(app.UI, migrate.BasisLines(paint, m))
 	}
+}
+
+func dockerMoveArgs(nativeDir string) []string {
+	args := []string{"migrate", "--experimental-native", "--migrate", "docker"}
+	if nativeDir != "" {
+		args = append(args, "--native-dir", nativeDir)
+	}
+	return args
+}
+
+func dockerBlocked(inst *instance.Instance) string {
+	if !nativeSupported() {
+		return "The move out of Docker works only on Linux with systemd."
+	}
+	if kind, name, ok := rootlessEngine(inst); ok {
+		return fmt.Sprintf("The move out of Docker needs Docker or Podman running as root, and this instance runs on %s without root under the account %s.", kind, name)
+	}
+	return ""
+}
+
+func dockerNote(inst *instance.Instance, nativeDir string) string {
+	if reason := dockerBlocked(inst); reason != "" {
+		return reason
+	}
+	if euid() == 0 {
+		return ""
+	}
+	return "The move out of Docker runs as root. To make it, run " + sudoRun(inst.Dir, dockerMoveArgs(nativeDir)...) + "."
+}
+
+func dockerMoveAllowed(app *App, inst *instance.Instance, nativeDir string) error {
+	if reason := dockerBlocked(inst); reason != "" {
+		return ui.Refused(reason, "The other changes still work. Run "+migrateCommand+" --dry-run to see them.")
+	}
+	if euid() == 0 {
+		return nil
+	}
+	again := sudoRun(inst.Dir, dockerMoveArgs(nativeDir)...)
+	if app.command == "rexctl migrate" {
+		again = sudoAgain(inst.Dir)
+	}
+	return ui.Refused("The move out of Docker runs as root.", "Run "+again+".")
+}
+
+func markMoved(app *App, inst *instance.Instance, to string) {
+	if err := instance.Forget(instance.ScopeMachine, inst.Dir); err != nil {
+		app.UI.Detail("%v", err)
+	}
+	moved, err := instance.Find(inst.Dir)
+	if err == nil {
+		moved.State.MovedTo = to
+		err = moved.Save()
+	}
+	if err != nil {
+		app.UI.Detail("recording in %s that Fluxer moved to %s: %v", inst.Dir, to, err)
+	}
+}
+
+func phaseWords(p migrate.Phase) string {
+	switch p {
+	case migrate.PhasePreflight:
+		return "checking first"
+	case migrate.PhaseBackup:
+		return "backing up"
+	case migrate.PhaseStop:
+		return "stopping writes"
+	case migrate.PhaseMigrate:
+		return "moving the data"
+	case migrate.PhaseVerify:
+		return "checking the data"
+	case migrate.PhaseSwitch:
+		return "switching over"
+	case migrate.PhaseStart:
+		return "starting"
+	case migrate.PhaseCheck:
+		return "checking that it works"
+	case migrate.PhaseRollback:
+		return "going back"
+	}
+	return string(p)
+}
+
+var errorPrefix = regexp.MustCompile(`^([a-z]+: )+`)
+
+func migrateReason(err error) string {
+	if err == nil {
+		return ""
+	}
+	reason := strings.TrimPrefix(err.Error(), migrate.ErrNoNativeEquivalent.Error()+": ")
+	return sentence(errorPrefix.ReplaceAllString(reason, ""))
 }
 
 func diffsOf(choices []migrateChoice) []migrate.Diff {
@@ -504,7 +633,7 @@ func migrateChoices(ctx context.Context, app *App, inst *instance.Instance, nati
 		c := migrateChoice{opt: o, diff: migrate.BuildDiff(m, runtime, done, []migrate.Option{o}, before, after)}
 		switch o {
 		case migrate.OptDocker:
-			c.step = migrate.NewDockerStep(&nativeTarget{app: app, inst: inst, dir: cmp.Or(nativeDir, inst.Dir+"-native")}, recorded)
+			c.step = migrate.NewDockerStep(&nativeTarget{app: app, inst: inst, dir: cmp.Or(nativeDir, defaultNativeDir(inst))}, recorded)
 		case migrate.OptKV:
 			c.step = migrate.NewKVStep()
 		case migrate.OptRust:
@@ -515,6 +644,16 @@ func migrateChoices(ctx context.Context, app *App, inst *instance.Instance, nati
 		out = append(out, c)
 	}
 	return out, nil
+}
+
+func defaultNativeDir(inst *instance.Instance) string {
+	if uid, ok := inst.OwnerUID(); ok && uid == 0 && instance.RootPath(inst.Dir+"-native", true) == "" {
+		return inst.Dir + "-native"
+	}
+	if filepath.Clean(inst.Dir) == "/opt/fluxer" {
+		return "/opt/fluxer-native"
+	}
+	return "/opt/fluxer"
 }
 
 func combinedDiff(ctx context.Context, app *App, inst *instance.Instance, m migrate.Measurements, opts []migrate.Option) (migrate.Diff, error) {
@@ -1032,25 +1171,29 @@ func (t *nativeTarget) Dir() string { return t.dir }
 
 func (t *nativeTarget) Preflight(ctx context.Context, chosen map[string]string) error {
 	t.chosen = chosen
-	if err := nativeRoot(migrateCommand); err != nil {
+	if err := nativeRoot(t.inst.Dir); err != nil {
 		return err
 	}
+	if err := nativeFolder(t.dir, "--native-dir"); err != nil {
+		return err
+	}
+	t.dir = instance.RealPath(t.dir)
 	if err := nativeAlone(ctx); err != nil {
 		return err
 	}
 	database, uploads := backup.ExternalData(t.inst)
 	switch {
 	case database:
-		return fmt.Errorf("%w, and the native runtime runs its own Postgres", migrate.ErrExternalDatabase)
+		return ui.Refused("Fluxer uses your own Postgres server, and a native instance runs its own.", "Keep this instance in Docker.")
 	case uploads:
-		return fmt.Errorf("%w at storage.endpoint, and the native runtime keeps uploads on this machine", migrate.ErrExternalS3)
+		return ui.Refused("Fluxer keeps uploads in your own object store at storage.endpoint, and a native instance keeps them on this machine.", "Keep this instance in Docker.")
 	}
 	if err := t.nativeEquivalent(ctx, chosen); err != nil {
 		return err
 	}
 	entries, err := os.ReadDir(t.dir)
 	if err == nil && len(entries) > 0 {
-		return fmt.Errorf("%s is not empty, pass --native-dir with an empty or new folder", t.dir)
+		return ui.Refused(fmt.Sprintf("The folder for the native instance, %s, already has files in it.", t.dir), "Pass --native-dir with an empty or new folder that root owns.")
 	}
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err

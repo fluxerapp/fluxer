@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,6 +57,7 @@ const (
 	FromOnly
 	FromPicked
 	FromFallback
+	FromSudoer
 )
 
 type Located struct {
@@ -75,6 +78,8 @@ func (l Located) Why() string {
 		return "the one you picked"
 	case FromOnly:
 		return "the only instance rexctl remembers"
+	case FromSudoer:
+		return "the instance of the account that ran sudo"
 	case FromRecord:
 		if l.Scope == ScopeMachine {
 			return "the default for this machine"
@@ -95,7 +100,8 @@ func (e *SeveralError) Error() string {
 
 type UntrustedError struct {
 	Path   string
-	Folder bool
+	Dir    string
+	Shared bool
 }
 
 func (e *UntrustedError) Error() string {
@@ -136,28 +142,30 @@ func loadRecord(s Scope) (Record, error) {
 	}
 	if s == ScopeMachine && asRoot() {
 		for _, p := range []string{filepath.Dir(path), path} {
-			if !rootOnly(p, true) {
+			if !rootOnly(p) {
 				return r, &UntrustedError{Path: p}
 			}
 		}
 	}
-	data, err := os.ReadFile(path)
-	if err != nil || json.Unmarshal(data, &r) != nil {
-		return Record{}, nil
-	}
-	return r, nil
+	return readRecordFile(path), nil
 }
 
-func rootOnly(path string, owned bool) bool {
+func readRecordFile(path string) Record {
+	var r Record
+	data, err := os.ReadFile(path)
+	if err != nil || json.Unmarshal(data, &r) != nil {
+		return Record{}
+	}
+	return r
+}
+
+func rootOnly(path string) bool {
 	info, err := os.Stat(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return true
 	}
 	if err != nil || info.Mode().Perm()&0o022 != 0 {
 		return false
-	}
-	if !owned {
-		return true
 	}
 	uid, ok := ownerOf(info)
 	return ok && uid == rootUID
@@ -350,10 +358,21 @@ func pickRecorded(r Record, s Scope) (Located, bool, error) {
 
 func Resolve(flag string) (Located, error) {
 	if flag != "" {
-		return Located{Dir: flag, From: FromFlag}, nil
+		l := Located{Dir: flag, From: FromFlag}
+		if !asRoot() {
+			return l, nil
+		}
+		if p, shared := untrustedPart(flag, func(os.FileInfo, int) bool { return true }); shared {
+			return l, &UntrustedError{Path: p, Dir: flag, Shared: true}
+		}
+		return l, nil
 	}
 	if wd, err := os.Getwd(); err == nil && present(wd) {
-		return Located{Dir: wd, From: FromWorkdir}, nil
+		l := Located{Dir: wd, From: FromWorkdir}
+		if asRoot() {
+			return l, rootMayUse(wd)
+		}
+		return l, nil
 	}
 	var stale Located
 	for _, s := range scopes() {
@@ -370,8 +389,10 @@ func Resolve(flag string) (Located, error) {
 		if err != nil {
 			return l, err
 		}
-		if ok && asRoot() && !rootOnly(l.Dir, false) {
-			return l, &UntrustedError{Path: l.Dir, Folder: true}
+		if ok && asRoot() {
+			if err := rootMayUse(l.Dir); err != nil {
+				return l, err
+			}
 		}
 		if ok {
 			if l.Stale == "" {
@@ -387,7 +408,132 @@ func Resolve(flag string) (Located, error) {
 		}
 	}
 	dir, err := Fallback()
+	if err == nil && asRoot() && !present(dir) {
+		if l, ok, err := sudoerInstance(); ok || err != nil {
+			return l, err
+		}
+	}
 	return Located{Dir: dir, From: FromFallback, Stale: stale.Stale, Chosen: stale.Chosen}, err
+}
+
+var sudoer = func() (int, string, bool) {
+	uid, err := strconv.Atoi(os.Getenv("SUDO_UID"))
+	if err != nil || uid <= 0 {
+		return 0, "", false
+	}
+	u, err := user.LookupId(strconv.Itoa(uid))
+	if err != nil || !filepath.IsAbs(u.HomeDir) {
+		return 0, "", false
+	}
+	return uid, filepath.Clean(u.HomeDir), true
+}
+
+func sudoerInstance() (Located, bool, error) {
+	_, home, ok := sudoer()
+	if !ok {
+		return Located{}, false, nil
+	}
+	rec := readRecordFile(filepath.Join(home, ".config", "rexctl", RecordFileName))
+	l, found, err := pickRecorded(rec, ScopeUser)
+	if err != nil {
+		return Located{}, false, err
+	}
+	for _, raw := range append([]string{rec.Default}, rec.Instances...) {
+		if found && raw != "" && same(raw, l.Dir) {
+			if err := rootMayUse(raw); err != nil {
+				return l, false, err
+			}
+		}
+	}
+	if !found {
+		l.Dir = filepath.Join(home, "fluxer")
+		if !present(l.Dir) {
+			return Located{}, false, nil
+		}
+	}
+	l.From, l.Scope, l.Stale, l.Chosen = FromSudoer, ScopeUser, "", false
+	if err := rootMayUse(l.Dir); err != nil {
+		return l, false, err
+	}
+	return l, true, nil
+}
+
+func rootMayUse(dir string) error {
+	uid, _, ok := sudoer()
+	if !ok {
+		uid = rootUID
+	}
+	p, shared := untrustedPart(dir, func(_ os.FileInfo, owner int) bool { return owner == rootUID || owner == uid })
+	if p == "" {
+		return nil
+	}
+	return &UntrustedError{Path: p, Dir: dir, Shared: shared}
+}
+
+func RootPath(path string, reachable bool) string {
+	p, _ := untrustedPart(path, func(info os.FileInfo, owner int) bool {
+		return owner == rootUID && (!reachable || !info.IsDir() || info.Mode().Perm()&0o001 != 0)
+	})
+	return p
+}
+
+func untrustedPart(path string, trusted func(os.FileInfo, int) bool) (string, bool) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = filepath.Clean(path)
+	}
+	if p, shared := untrustedWalk(abs, os.Lstat, trusted); p != "" {
+		return p, shared
+	}
+	return untrustedWalk(resolved(abs), os.Stat, trusted)
+}
+
+func untrustedWalk(path string, stat func(string) (os.FileInfo, error), trusted func(os.FileInfo, int) bool) (string, bool) {
+	leaf := true
+	for {
+		info, err := stat(path)
+		switch {
+		case err != nil && !errors.Is(err, fs.ErrNotExist):
+			return path, false
+		case err == nil && info.Mode()&fs.ModeSymlink != 0:
+			leaf = false
+		case err == nil:
+			owner, ok := ownerOf(info)
+			shared := info.Mode().Perm()&0o022 != 0 && !(info.Mode()&fs.ModeSticky != 0 && owner == rootUID && !leaf)
+			if !ok || shared || !trusted(info, owner) {
+				return path, ok && shared
+			}
+			leaf = false
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			return "", false
+		}
+		path = parent
+	}
+}
+
+func RealPath(path string) string {
+	return resolved(path)
+}
+
+func resolved(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	var rest []string
+	for {
+		if real, err := filepath.EvalSymlinks(abs); err == nil {
+			return filepath.Join(append([]string{real}, rest...)...)
+		}
+		parent := filepath.Dir(abs)
+		if parent == abs {
+			return filepath.Join(append([]string{abs}, rest...)...)
+		}
+		rest = append([]string{filepath.Base(abs)}, rest...)
+		abs = parent
+	}
 }
 
 func gone(dir string) bool {

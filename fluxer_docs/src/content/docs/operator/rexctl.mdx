@@ -603,7 +603,7 @@ rexctl logs [service] [flags]
 
 ## rexctl migrate
 
-Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. This is experimental, so rexctl migrate runs only with --experimental-native. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. The old data stays until you remove it with --clean-up after a newer backup.
+Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. This is experimental, so rexctl migrate runs only with --experimental-native. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. The move out of Docker runs as root, and so does every command for the new instance. After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. The old data stays until you remove it with --clean-up after a newer backup.
 
 ```sh
 rexctl migrate [flags]

@@ -6,7 +6,7 @@ sidebar:
   label: Build from source
 ---
 
-You can build all of Fluxer from the [repository](https://github.com/fluxerapp/fluxer) into one release tarball. You can run that tarball as a single container, or as one systemd service on Debian 13 or in a Proxmox container. Neither way needs Docker Compose or rexctl. To run the same build as one systemd service that rexctl manages, use `rexctl install --experimental-native`.
+You can build all of Fluxer from the [repository](https://github.com/fluxerapp/fluxer) into one release tarball. You can run that tarball as a single container, or as one systemd service on Debian 13 or in a Proxmox container. Neither way needs Docker Compose or rexctl. To run the same build as one systemd service that rexctl manages, run `rexctl install --experimental-native` with sudo. If rexctl is in `~/.local/bin`, run it as `sudo ~/.local/bin/rexctl install --experimental-native`.
 
 ## Build the release
 

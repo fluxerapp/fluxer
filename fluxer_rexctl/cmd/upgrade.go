@@ -291,7 +291,7 @@ func switchBack(ctx context.Context, app *App, inst *instance.Instance, e *engin
 	s, changed, err := dropScheduledBackup(ctx, inst, e)
 	if err != nil {
 		if errors.Is(err, host.ErrNeedsRoot) {
-			return nil, ui.Refused(fmt.Sprintf("Automatic upgrades pass --backup without-uploads, which rexctl %s may not know. Changing that needs root.", to), "Run sudo rexctl upgrade with the same flags.")
+			return nil, ui.Refused(fmt.Sprintf("Automatic upgrades pass --backup without-uploads, which rexctl %s may not know. Changing that needs root, and this machine has no sudo.", to), "Run "+rootAgain(inst.Dir)+" as root.")
 		}
 		return nil, ui.Wrap(err, fmt.Sprintf("Couldn't change automatic upgrades for rexctl %s.", to), "Run rexctl auto-upgrade on again without --backup and with your other flags, then run this upgrade again.")
 	}
@@ -1711,7 +1711,7 @@ func selfUpdateError(err error, inst *instance.Instance) error {
 	case errors.Is(err, context.Canceled):
 		return err
 	case errors.Is(err, fs.ErrPermission):
-		fix := fmt.Sprintf("Run sudo rexctl upgrade --dir %s.", inst.Dir)
+		fix := "Run " + sudoAgain(inst.Dir) + "."
 		switch {
 		case runtime.GOOS == "windows":
 			fix = "Run rexctl upgrade from a terminal opened as administrator."

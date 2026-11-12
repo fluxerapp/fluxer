@@ -9,10 +9,8 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"os/user"
 	"reflect"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -89,6 +87,9 @@ func selfCommand() string {
 	exe, err := os.Executable()
 	if err != nil {
 		return ""
+	}
+	if ranWithSudo() {
+		return sudoCommand(exe, nil, "")
 	}
 	if found, err := exec.LookPath("rexctl"); err == nil {
 		onPath, perr := os.Stat(found)
@@ -167,11 +168,18 @@ func (a *App) locate() (instance.Located, error) {
 
 func untrustedRefusal(err error) error {
 	var untrusted *instance.UntrustedError
-	switch {
-	case !errors.As(err, &untrusted):
+	if !errors.As(err, &untrusted) {
 		return err
-	case untrusted.Folder:
-		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl remembers Fluxer in %s, but accounts other than root can change that folder, so root doesn't use it.", untrusted.Path), Fix: "Pass --dir if you mean that folder, or run rexctl use <folder> as root with another folder.", Err: err}
+	}
+	switch {
+	case untrusted.Dir != "" && untrusted.Shared:
+		msg := fmt.Sprintf("Other accounts can change %s, so root doesn't use the instance in %s.", untrusted.Path, untrusted.Dir)
+		if untrusted.Path == untrusted.Dir {
+			msg = fmt.Sprintf("Other accounts can change %s, so root doesn't use the instance in it.", untrusted.Dir)
+		}
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: fmt.Sprintf("Make sure only you and root can change %s and the folders above it, then run the command again. For example, run chmod go-w %s.", untrusted.Path, shellWord(untrusted.Path)), Err: err}
+	case untrusted.Dir != "":
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl found Fluxer in %s, but another account owns %s, so root doesn't use it on its own.", untrusted.Dir, untrusted.Path), Fix: "If you trust that account, pass --dir " + shellWord(untrusted.Dir) + ".", Err: err}
 	}
 	return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("Accounts other than root can change %s, so root doesn't use it.", untrusted.Path), Fix: "Make root its owner and the only account that can write to it, or pass --dir.", Err: err}
 }
@@ -190,7 +198,10 @@ func (a *App) remember(dir string) {
 }
 
 func (a *App) rememberFirst(inst *instance.Instance) {
-	if inst.State == nil || inst.State.Ejected != nil {
+	if inst.State == nil || inst.State.Ejected != nil || (a.located != nil && a.located.From == instance.FromSudoer) {
+		return
+	}
+	if euid() == 0 && instance.RootPath(inst.Dir, false) != "" {
 		return
 	}
 	if err := instance.RememberFirst(instance.OwnScope(), inst.Dir); err != nil {
@@ -242,6 +253,9 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 		a.rememberFirst(inst)
 		return inst, nil
 	case errors.Is(err, instance.ErrNotFound):
+		if other := ownersInstance(); other != "" && a.located != nil && a.located.From == instance.FromFallback {
+			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s, and there's one in %s.", dir, other), "Pass --dir "+shellWord(other)+" if you mean that one.")
+		}
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
 	case errors.Is(err, instance.ErrLegacy):
 		return nil, ui.Refused(fmt.Sprintf("rexctl doesn't manage the instance in %s yet.", dir), "Run "+a.takeOverCommand()+" to hand it to rexctl.")
@@ -249,6 +263,9 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 		return nil, ui.Refused(fmt.Sprintf("A newer rexctl manages the instance in %s.", dir), "Download the latest rexctl, then try again.")
 	case errors.As(err, &se):
 		return nil, settingRefusal(dir, se)
+	}
+	if uid, ok := (&instance.Instance{Dir: dir}).OwnerUID(); ok && uid == 0 && euid() != 0 {
+		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s, because root manages it.", dir), "Run "+sudoAgain(dir)+".")
 	}
 	return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s.", dir), "Run rexctl as the account that installed Fluxer.")
 }
@@ -289,26 +306,33 @@ func (a *App) warnUnknown(inst *instance.Instance) {
 var euid = os.Geteuid
 
 func rootlessGuard(inst *instance.Instance) error {
-	if inst == nil || inst.State == nil || euid() != 0 {
+	if euid() != 0 {
 		return nil
+	}
+	kind, name, ok := rootlessEngine(inst)
+	if !ok {
+		return nil
+	}
+	return ui.Refused(fmt.Sprintf("Your instance runs on %s under the account %s, and root can't manage it.", kind, name), fmt.Sprintf("Run rexctl as %s, without sudo.", name))
+}
+
+func rootlessEngine(inst *instance.Instance) (string, string, bool) {
+	if inst == nil || inst.State == nil {
+		return "", "", false
 	}
 	uid, ok := inst.OwnerUID()
 	if !ok || uid == 0 {
-		return nil
+		return "", "", false
 	}
 	pin := inst.State.Engine
 	if pin.Host == "" {
 		if pin.Kind != string(engine.Podman) {
-			return nil
+			return "", "", false
 		}
 	} else if owner, ok := socketOwner(pin.Host); !ok || owner != uid {
-		return nil
+		return "", "", false
 	}
-	name := strconv.Itoa(uid)
-	if u, err := user.LookupId(name); err == nil {
-		name = u.Username
-	}
-	return ui.Refused(fmt.Sprintf("Your instance runs on %s under the account %s, and root can't manage it.", engine.Kind(pin.Kind).Name(), name), fmt.Sprintf("Run rexctl as %s, without sudo.", name))
+	return engine.Kind(pin.Kind).Name(), accountName(uid), true
 }
 
 func socketOwner(host string) (int, bool) {
@@ -316,7 +340,11 @@ func socketOwner(host string) (int, bool) {
 	if err != nil || u.Scheme != "unix" {
 		return 0, false
 	}
-	info, err := os.Stat(u.Path)
+	return fileOwner(u.Path)
+}
+
+func fileOwner(path string) (int, bool) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return 0, false
 	}
@@ -585,10 +613,18 @@ func (a *App) guard(ctx context.Context, inst *instance.Instance, withEnv bool) 
 func managed(inst *instance.Instance) error {
 	err := inst.Managed()
 	var ej *instance.EjectedError
-	if errors.As(err, &ej) {
+	var moved *instance.MovedError
+	switch {
+	case errors.As(err, &moved):
+		return movedRefusal(moved)
+	case errors.As(err, &ej):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: ej.Error(), Fix: ej.Fix(), Err: err}
 	}
 	return err
+}
+
+func movedRefusal(moved *instance.MovedError) *ui.ExitError {
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: moved.Error(), Fix: "To manage it, run " + sudoRun(moved.To, "status") + ".", Err: moved}
 }
 
 func (a *App) drift(inst *instance.Instance, clean, withEnv bool) error {
