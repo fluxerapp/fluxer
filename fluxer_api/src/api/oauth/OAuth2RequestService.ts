@@ -25,6 +25,7 @@ import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
@@ -201,6 +202,9 @@ export class OAuth2RequestService {
 		const channelId = params.body.channel_id ? createChannelID(params.body.channel_id) : null;
 		if (guildId && channelId) {
 			throw InputValidationError.create('channel_id', 'channel_id cannot be used with guild_id');
+		}
+		if (scopeSet.has('bot') && (guildId || channelId)) {
+			assertAccountNotLimited(await this.apiContext.services.users.findUniqueAssert(params.userId));
 		}
 		const botPermissionMask = guildId ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
 		let requestedPermissions: bigint | null = null;
