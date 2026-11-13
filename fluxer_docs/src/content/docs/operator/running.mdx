@@ -152,7 +152,7 @@ rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bi
 
 rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports. To run more voice servers for one instance, on this machine or on others, see [Add voice servers](/operator/voice-servers/).
 
-rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default.
+rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default. As root, rexctl uses a folder you pick with `--dir`, with `rexctl use` or by running it inside that folder, as long as only the folder's owner can write to it and to its `.rexctl` folder. When other accounts can change a folder above it, as with the shared folders on an Unraid, Synology or TrueNAS machine, rexctl still uses it and warns you each time it runs. That only matters if other people, or containers that run as other accounts, can write to that share. A folder that rexctl finds on its own, such as the instance of the account that ran sudo, must have no folder above it that other accounts can change.
 
 ## Manage people
 

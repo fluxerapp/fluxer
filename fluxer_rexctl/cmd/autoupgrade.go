@@ -551,7 +551,9 @@ func notifyUpgrade(ctx context.Context, app *App, runErr error) {
 	}
 	dir, err := app.Dir()
 	if err != nil {
-		app.UI.Warn(fmt.Sprintf("Couldn't find the instance to send the notice for (%v).", err), "")
+		if runErr == nil {
+			app.UI.Warn(fmt.Sprintf("Couldn't find the instance to send the notice for (%v).", err), "")
+		}
 		return
 	}
 	inst, err := instance.Find(dir)

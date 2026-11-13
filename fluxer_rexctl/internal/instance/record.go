@@ -66,6 +66,7 @@ type Located struct {
 	Scope  Scope
 	Stale  string
 	Chosen bool
+	Shared string
 }
 
 func (l Located) Why() string {
@@ -102,6 +103,8 @@ type UntrustedError struct {
 	Path   string
 	Dir    string
 	Shared bool
+	Inside bool
+	Link   string
 }
 
 func (e *UntrustedError) Error() string {
@@ -356,23 +359,20 @@ func pickRecorded(r Record, s Scope) (Located, bool, error) {
 	return l, false, &SeveralError{Dirs: live, Stale: l.Stale}
 }
 
-func Resolve(flag string) (Located, error) {
+func Resolve(flag string) (l Located, err error) {
 	if flag != "" {
 		l := Located{Dir: flag, From: FromFlag}
-		if !asRoot() {
-			return l, nil
+		if asRoot() {
+			l.Shared, err = RootNamed(flag)
 		}
-		if p, shared := untrustedPart(flag, func(os.FileInfo, int) bool { return true }); shared {
-			return l, &UntrustedError{Path: p, Dir: flag, Shared: true}
-		}
-		return l, nil
+		return l, err
 	}
-	if wd, err := os.Getwd(); err == nil && present(wd) {
+	if wd, werr := os.Getwd(); werr == nil && present(wd) {
 		l := Located{Dir: wd, From: FromWorkdir}
 		if asRoot() {
-			return l, rootMayUse(wd)
+			l.Shared, err = RootNamed(wd)
 		}
-		return l, nil
+		return l, err
 	}
 	var stale Located
 	for _, s := range scopes() {
@@ -390,7 +390,7 @@ func Resolve(flag string) (Located, error) {
 			return l, err
 		}
 		if ok && asRoot() {
-			if err := rootMayUse(l.Dir); err != nil {
+			if l.Shared, err = RootNamed(l.Dir); err != nil {
 				return l, err
 			}
 		}
@@ -458,16 +458,97 @@ func sudoerInstance() (Located, bool, error) {
 	return l, true, nil
 }
 
-func rootMayUse(dir string) error {
-	uid, _, ok := sudoer()
-	if !ok {
-		uid = rootUID
+func sudoUID() int {
+	if uid, _, ok := sudoer(); ok {
+		return uid
 	}
+	return rootUID
+}
+
+func rootMayUse(dir string) error {
+	uid := sudoUID()
 	p, shared := untrustedPart(dir, func(_ os.FileInfo, owner int) bool { return owner == rootUID || owner == uid })
 	if p == "" {
 		return nil
 	}
-	return &UntrustedError{Path: p, Dir: dir, Shared: shared}
+	return &UntrustedError{Path: p, Dir: dir, Shared: shared, Inside: same(p, dir)}
+}
+
+func RootNamed(dir string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		abs = filepath.Clean(dir)
+	}
+	uid := sudoUID()
+	shared := ""
+	for _, p := range []string{filepath.Join(abs, StateDirName, StateFileName), filepath.Join(abs, StateDirName), abs} {
+		real := resolved(p)
+		info, err := os.Stat(real)
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+		case err != nil:
+			return "", err
+		case info.Mode().Perm()&0o022 != 0:
+			return "", &UntrustedError{Path: real, Dir: dir, Shared: true, Inside: true}
+		case shared == "" && othersCanChange(info, uid):
+			shared = real
+		}
+	}
+	for _, w := range []struct {
+		path string
+		stat func(string) (os.FileInfo, error)
+	}{{abs, os.Lstat}, {resolved(abs), os.Stat}} {
+		above, err := sharedAbove(w.path, w.stat, uid)
+		if err != nil {
+			if u, ok := err.(*UntrustedError); ok {
+				u.Dir = dir
+			}
+			return "", err
+		}
+		if shared == "" {
+			shared = above
+		}
+	}
+	return shared, nil
+}
+
+func sharedAbove(path string, stat func(string) (os.FileInfo, error), uid int) (string, error) {
+	shared, link, linkTrusted := "", "", false
+	for first := true; ; first = false {
+		info, err := stat(path)
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			link = ""
+		case err != nil:
+			return "", err
+		case info.Mode()&fs.ModeSymlink != 0:
+			owner, ok := ownerOf(info)
+			link, linkTrusted = path, ok && (owner == rootUID || owner == uid)
+		default:
+			sticky := info.Mode()&fs.ModeSticky != 0
+			changeable := !first && othersCanChange(info, uid)
+			if link != "" && (changeable || (sticky && !linkTrusted)) {
+				return "", &UntrustedError{Path: path, Shared: true, Link: link}
+			}
+			if changeable && shared == "" {
+				shared = path
+			}
+			link = ""
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			return shared, nil
+		}
+		path = parent
+	}
+}
+
+func othersCanChange(info os.FileInfo, uid int) bool {
+	owner, ok := ownerOf(info)
+	if !ok || (owner != rootUID && owner != uid) {
+		return true
+	}
+	return info.Mode().Perm()&0o022 != 0 && !(info.Mode()&fs.ModeSticky != 0 && owner == rootUID)
 }
 
 func RootPath(path string, reachable bool) string {
