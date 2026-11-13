@@ -17,6 +17,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {ModalStackContext} from '@app/features/ui/utils/ModalStackContext';
 import {
+	getModalFocusInsideElements,
 	type HeaderProps,
 	type ModalContextValue,
 	type ModalProps,
@@ -262,24 +263,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 							outsideElementsInert={isInteractive}
 							returnFocus={restoreFocusOnClose}
 							visuallyHiddenDismiss={isInteractive}
-							getInsideElements={() => {
-								if (!isInteractive) {
-									return [];
-								}
-								const inside: Array<Element> = [];
-								const popoutsRoot = modalDocument.querySelector('[data-popouts-root]');
-								if (popoutsRoot) inside.push(popoutsRoot);
-								const mediaViewerPortalRoot = modalDocument.querySelector('[data-media-viewer-portal-root]');
-								if (mediaViewerPortalRoot) inside.push(mediaViewerPortalRoot);
-								modalDocument.querySelectorAll('[data-floating-ui-portal]').forEach((el) => inside.push(el));
-								modalDocument
-									.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
-									.forEach((el) => inside.push(el));
-								modalDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
-								const nativeTitlebar = modalDocument.querySelector('[data-native-titlebar]');
-								if (nativeTitlebar) inside.push(nativeTitlebar);
-								return inside;
-							}}
+							getInsideElements={() => (isInteractive ? getModalFocusInsideElements(modalDocument) : [])}
 							data-flx="app.modal.floating-focus-manager"
 						>
 							<div

@@ -124,6 +124,22 @@ export interface ModalLogicState {
 	getDefaultLabelId: (source: LabelSource) => string;
 }
 
+export function getModalFocusInsideElements(ownerDocument: Document): Array<Element> {
+	const inside: Array<Element> = [];
+	const popoutsRoot = ownerDocument.querySelector('[data-popouts-root]');
+	if (popoutsRoot) inside.push(popoutsRoot);
+	const mediaViewerPortalRoot = ownerDocument.querySelector('[data-media-viewer-portal-root]');
+	if (mediaViewerPortalRoot) inside.push(mediaViewerPortalRoot);
+	ownerDocument.querySelectorAll('[data-floating-ui-portal]').forEach((el) => inside.push(el));
+	ownerDocument
+		.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
+		.forEach((el) => inside.push(el));
+	ownerDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
+	const nativeTitlebar = ownerDocument.querySelector('[data-native-titlebar]');
+	if (nativeTitlebar) inside.push(nativeTitlebar);
+	return inside;
+}
+
 export function usePopOwningModal(): () => void {
 	const stackPlacement = useContext(ModalStackContext);
 	const portalHost = usePortalHost();

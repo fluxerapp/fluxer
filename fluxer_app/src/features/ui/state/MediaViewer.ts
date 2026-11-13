@@ -29,6 +29,13 @@ function copyMediaViewerItems(items: ReadonlyArray<MediaViewerItem>): ReadonlyAr
 	return Object.freeze(items.map((item) => Object.freeze({...item})));
 }
 
+function getFocusedElement(): HTMLElement | null {
+	if (typeof document === 'undefined') return null;
+	const active = document.activeElement;
+	if (!(active instanceof HTMLElement) || active === document.body) return null;
+	return active;
+}
+
 class MediaViewer {
 	isOpen: boolean = false;
 	items: ReadonlyArray<MediaViewerItem> = [];
@@ -39,6 +46,7 @@ class MediaViewer {
 	sourceChannel?: Channel = undefined;
 	allowAttachmentDelete: boolean = false;
 	sourcePost?: Channel = undefined;
+	returnFocusTarget: HTMLElement | null = null;
 
 	constructor() {
 		makeAutoObservable(
@@ -48,6 +56,7 @@ class MediaViewer {
 				message: observableRef,
 				sourceChannel: observableRef,
 				sourcePost: observableRef,
+				returnFocusTarget: observableRef,
 			},
 			{autoBind: true},
 		);
@@ -72,6 +81,7 @@ class MediaViewer {
 		this.sourceChannel = sourceChannel ?? undefined;
 		this.allowAttachmentDelete = allowAttachmentDelete;
 		this.sourcePost = sourcePost;
+		this.returnFocusTarget = getFocusedElement();
 	}
 
 	close(): void {
@@ -84,6 +94,7 @@ class MediaViewer {
 		this.sourceChannel = undefined;
 		this.allowAttachmentDelete = false;
 		this.sourcePost = undefined;
+		this.returnFocusTarget = null;
 	}
 
 	navigate(index: number): void {

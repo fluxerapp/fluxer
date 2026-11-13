@@ -84,6 +84,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onPointerEnter,
 		onPointerLeave,
 		rootRef,
+		closeButtonRef,
 	}: MobileMediaActionsProps) => {
 		const {i18n} = useLingui();
 		const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -370,6 +371,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					data-flx="messaging.media-modal.mobile-media-actions.action-bar"
 				>
 					<ControlButton
+						ref={closeButtonRef}
 						icon={
 							<XIcon
 								size={remFromPx(22)}
