@@ -41,6 +41,8 @@
     | idle_timeout.
 -type start_result() :: {ok, pid()} | {error, term()}.
 
+-define(ROUTING_FIELDS, [<<"region_id">>, <<"server_id">>]).
+
 -spec start_link(call_data()) -> start_result().
 start_link(CallData) ->
     normalize_start_link(gen_server:start_link(?MODULE, CallData, [])).
@@ -154,10 +156,17 @@ handle_call_request({get_sessions}, State) ->
     integer(), map(), binary(), pid(), binary() | undefined, pos_integer() | undefined, map()
 ) -> {reply, ok | {error, atom()}, map()}.
 handle_join_request(
-    UserId, VS, SId, SPid, CId, MaxParticipants, #{sessions := Sessions} = State
+    UserId,
+    VS,
+    SId,
+    SPid,
+    CId,
+    MaxParticipants,
+    #{sessions := Sessions, voice_states := VoiceStates} = State
 ) ->
+    Existing = maps:get(call_state:voice_state_connection_id(VS), VoiceStates, undefined),
     case maps:get(SId, Sessions, undefined) of
-        {UserId, SPid, _Ref} ->
+        {UserId, SPid, _Ref} when Existing =:= VS ->
             {reply, ok, State};
         _ ->
             call_voice:handle_join_internal(UserId, VS, SId, SPid, CId, MaxParticipants, State)
@@ -379,7 +388,7 @@ handle_update_region(NewRegion, State) ->
 
 -spec handle_ring_recipients([integer()], map()) -> {reply, ok, map()}.
 handle_ring_recipients(Recipients, State) ->
-    CurrentVoiceUsers = maps:keys(maps:get(voice_states, State)),
+    CurrentVoiceUsers = call_state:voice_user_ids(maps:get(voice_states, State)),
     PendingAdditions = [U || U <- Recipients, not lists:member(U, CurrentVoiceUsers)],
     NewPending = lists:usort(maps:get(pending_ringing, State) ++ PendingAdditions),
     StateWithPending = State#{pending_ringing => NewPending},
@@ -415,9 +424,12 @@ handle_confirm_connection(ConnectionId, State) ->
 
 -spec handle_update_voice_state(integer(), map(), map()) -> {reply, term(), map()}.
 handle_update_voice_state(UserId, VoiceState, State) ->
-    case maps:is_key(UserId, maps:get(voice_states, State)) of
+    ConnectionId = call_state:voice_state_connection_id(VoiceState),
+    Existing = maps:get(ConnectionId, maps:get(voice_states, State), #{}),
+    case voice_state_utils:voice_state_user_id(Existing) =:= UserId of
         true ->
-            NewState = call_voice:update_voice_state(UserId, VoiceState, State),
+            Routed = maps:merge(maps:with(?ROUTING_FIELDS, Existing), VoiceState),
+            NewState = call_voice:update_voice_state(ConnectionId, Routed, State),
             CountedState = call_state:sync_voice_state_count_diff(State, NewState),
             UpdatedState = call_ringing:dispatch_call_update(CountedState),
             {reply, ok, UpdatedState};

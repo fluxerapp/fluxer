@@ -60,7 +60,7 @@ dispatch_pending_ringing_ready(State, DispatchUpdates) ->
 
 -spec apply_pending_ringing([integer()], map(), boolean()) -> {map(), boolean()}.
 apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
-    ConnectedUsers = maps:keys(maps:get(voice_states, State)),
+    ConnectedUsers = call_state:voice_user_ids(maps:get(voice_states, State)),
     AlreadyRinging = maps:get(ringing, State),
     ToAdd = [
         User
