@@ -16,7 +16,7 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
-import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
@@ -514,9 +514,9 @@ const MediaViewerModalComponent: FC = observer(() => {
 	const imageSrc = useMemo(() => (currentItem ? buildViewerMediaURL(currentItem) : ''), [currentItem]);
 	const handleImageError = useAttachmentRefreshOnError(imageSrc);
 	const handleGifvVideoError = useAttachmentRefreshOnError(currentItem?.src);
-	const gifvPlaybackSrc = useApiAttachmentPlaybackSrc(
-		currentItem?.type === 'gifv' && !currentGifvIsActualGif ? currentItem.src : undefined,
-	);
+	const gifvVideoSrc = currentItem?.type === 'gifv' && !currentGifvIsActualGif ? currentItem.src : undefined;
+	const gifvDisplaySrc = useApiAttachmentSrc(gifvVideoSrc ?? '', gifvVideoSrc !== undefined);
+	const gifvPlaybackSrc = gifvVideoSrc === undefined ? undefined : gifvDisplaySrc;
 	const freshItemSources = freshItems.map((item) => item.src).join('\n');
 	const thumbnails = useMemo(() => {
 		const snappedThumbnailSize = snapMediaProxyImageSize(MEDIA_VIEWER_THUMBNAIL_SIZE);

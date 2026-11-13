@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool';
-import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {useEffect, useRef} from 'react';
 
@@ -23,6 +23,7 @@ export function usePooledVideo({
 	enabled = true,
 	preload,
 	playbackStartTime = null,
+	wholeFile = false,
 }: {
 	src: string | null | undefined;
 	containerRef: React.RefObject<HTMLDivElement | null>;
@@ -31,10 +32,17 @@ export function usePooledVideo({
 	enabled?: boolean;
 	preload?: HTMLVideoElement['preload'];
 	playbackStartTime?: number | null;
+	wholeFile?: boolean;
 }) {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const effectivePreload = preload ?? (autoPlay ? 'auto' : 'metadata');
-	const playbackSrc = useApiAttachmentPlaybackSrc(enabled && src ? src : undefined);
+	const requestedSrc = enabled && src ? src : undefined;
+	const streamedSrc = useApiAttachmentPlaybackSrc(wholeFile ? undefined : requestedSrc);
+	const wholeFileSrc = useApiAttachmentSrc(
+		wholeFile ? (requestedSrc ?? '') : '',
+		wholeFile && requestedSrc !== undefined,
+	);
+	const playbackSrc = wholeFile ? requestedSrc && wholeFileSrc : streamedSrc;
 	useEffect(() => {
 		if (!enabled) return;
 		if (!src || !playbackSrc) return;

@@ -19,7 +19,7 @@ import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
@@ -28,6 +28,7 @@ import {useMediaLoading} from '@app/features/messaging/hooks/useMediaLoading';
 import {useMediaViewerHoverWarm} from '@app/features/messaging/hooks/useMediaViewerHoverWarm';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentMedia, {fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
@@ -631,7 +632,8 @@ export const EmbedGifv: FC<
 		}, [dimensions.width, naturalHeight, naturalWidth, posterSource]);
 		const thumbHashURL = useMemo(() => decodeThumbHashDataURL(placeholder), [placeholder]);
 		const posterDisplayURL = useApiAttachmentSrc(posterURL, shouldLoadMedia);
-		const videoPlaybackURL = useApiAttachmentPlaybackSrc(shouldLoadMedia ? videoProxyURL : undefined);
+		const videoDisplayURL = useApiAttachmentSrc(shouldLoadMedia ? videoProxyURL : '', shouldLoadMedia);
+		const videoPlaybackURL = shouldLoadMedia ? videoDisplayURL : undefined;
 		const thumbHashCurtain = useThumbHashCurtain(posterDisplayURL ?? '', shouldLoadMedia);
 		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
 		const defaultName = deriveDefaultNameFromMessage({
@@ -904,7 +906,10 @@ export const EmbedGif: FC<
 			if (!shouldLoadMedia) return;
 			if (!animationPolicyAllowed) return;
 			if (activeSource === optimizedAnimatedURL) return;
-			return ImageCacheUtils.pinImage(optimizedAnimatedURL);
+			const fetchedKey = fetchedApiAttachmentKey(optimizedAnimatedURL);
+			return fetchedKey === null
+				? ImageCacheUtils.pinImage(optimizedAnimatedURL)
+				: apiAttachmentMedia.retain(fetchedKey);
 		}, [activeSource, animationPolicyAllowed, optimizedAnimatedURL, shouldLoadMedia]);
 		const defaultName = deriveDefaultNameFromMessage({
 			message,
