@@ -41821,6 +41821,11 @@ msgstr ""
 msgid "View plans"
 msgstr ""
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "View post"
+msgstr "Tingnan ang post"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "View profile"

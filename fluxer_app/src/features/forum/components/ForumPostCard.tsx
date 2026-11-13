@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+} from '@app/features/channel/components/embeds/attachments/AttachmentGridItem';
+import {isMediaAttachment} from '@app/features/channel/components/MessageAttachmentUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Emoji from '@app/features/emoji/state/Emoji';
 import styles from '@app/features/forum/components/Forum.module.css';
@@ -7,18 +14,25 @@ import {ForumPostMenuSheet, openForumPostContextMenu} from '@app/features/forum/
 import {ForumEmoji, ForumTagPill} from '@app/features/forum/components/ForumTagPill';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import ForumReadState from '@app/features/forum/state/ForumReadState';
-import {getDefaultReaction, getForumTags} from '@app/features/forum/utils/ForumChannelUtils';
+import {getDefaultReaction, getForumTags, isMediaChannel} from '@app/features/forum/utils/ForumChannelUtils';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
 import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatNumber, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {isSensitiveMediaBlocked} from '@app/features/messaging/hooks/useMatureMedia';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
+import {
+	attachmentsToViewerItems,
+	determineMediaType,
+	findViewerItemIndex,
+} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import Permission from '@app/features/permissions/state/Permission';
@@ -27,6 +41,7 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
+import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
@@ -64,18 +79,30 @@ function isVisualAttachment(attachment: MessageAttachment): boolean {
 		(type.startsWith('image/') || type.startsWith('video/')) &&
 		(attachment.flags & MessageAttachmentFlags.IS_SPOILER) === 0 &&
 		!attachment.nsfw &&
+		(attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) === 0 &&
 		!attachment.expired
 	);
 }
 
-function firstMedia(message: WireMessage | null | undefined): {src: string; video: boolean} | null {
+function firstMedia(
+	message: WireMessage | null | undefined,
+	channelId: string,
+): {attachment: MessageAttachment; src: string; video: boolean} | null {
+	if (isSensitiveMediaBlocked(false, channelId)) return null;
 	const attachment = message?.attachments?.find(isVisualAttachment);
 	const source = attachment?.proxy_url ?? attachment?.url;
 	if (!attachment || !source) return null;
 	const src = AttachmentUrlRefresher.freshWhenReady(source);
 	if (src === null) return null;
-	return {src, video: (attachment.content_type ?? '').startsWith('video/')};
+	return {attachment, src, video: (attachment.content_type ?? '').startsWith('video/')};
 }
+
+const FULL_VIEW_DESCRIPTORS = {
+	image: OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR,
+	gif: OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR,
+	gifv: OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+	video: OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+} as const;
 
 function defaultReactionState(
 	message: WireMessage | null | undefined,
@@ -136,13 +163,25 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	const {i18n} = useLingui();
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const firstMessage = ForumPosts.getFirstMessage(post.id);
+	const record = useMemo(
+		() => (firstMessage ? new Message(firstMessage, {skipReactionHydration: true}) : null),
+		[firstMessage],
+	);
 	const preview = useMemo(() => {
 		if (firstMessage === undefined) return null;
-		if (firstMessage === null) return i18n._(D.ORIGINAL_MESSAGE_DELETED_DESCRIPTOR);
-		const record = new Message(firstMessage, {skipReactionHydration: true});
+		if (record === null) return i18n._(D.ORIGINAL_MESSAGE_DELETED_DESCRIPTOR);
 		return buildMessageNotificationBody(record, i18n);
-	}, [firstMessage, i18n]);
-	const media = firstMedia(firstMessage);
+	}, [firstMessage, record, i18n]);
+	const media = firstMedia(firstMessage, post.id);
+	const viewerAttachments =
+		media && isMediaChannel(forum) && firstMessage
+			? (firstMessage.attachments ?? []).filter(
+					(attachment) => isVisualAttachment(attachment) && isMediaAttachment(attachment),
+				)
+			: [];
+	const opensViewer = media !== null && viewerAttachments.some((attachment) => attachment.id === media.attachment.id);
+	const mediaType = media ? determineMediaType(media.attachment) : 'image';
+	const fullViewLabel = i18n._(FULL_VIEW_DESCRIPTORS[mediaType === 'audio' ? 'image' : mediaType]);
 	const authorId = firstMessage?.author.id ?? post.ownerId;
 	const author = authorId ? Users.getUser(authorId) : undefined;
 	const authorName = author ? NicknameUtils.getNickname(author, forum.guildId, forum.id) : null;
@@ -179,6 +218,29 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 		rememberKey: thumbnail,
 	});
 	const thumbnailDisplaySrc = useApiAttachmentSrc(thumbnail ?? '', thumbnailNearViewport);
+	const handleOpenMedia = (event: React.MouseEvent | React.KeyboardEvent) => {
+		if (event.type === 'keydown' && !isKeyboardActivationKey((event as React.KeyboardEvent).key)) return;
+		event.preventDefault();
+		event.stopPropagation();
+		if (!media || !firstMessage || !record) return;
+		const items = attachmentsToViewerItems(viewerAttachments);
+		MediaViewerCommands.openMediaViewer(items, findViewerItemIndex(items, media.attachment.id), {
+			channelId: post.id,
+			messageId: firstMessage.id,
+			message: record,
+			sourceChannel: post,
+			sourcePost: post,
+		});
+	};
+	const mediaButtonProps = opensViewer
+		? {
+				role: 'button',
+				tabIndex: 0,
+				'aria-label': fullViewLabel,
+				onClick: handleOpenMedia,
+				onKeyDown: handleOpenMedia,
+			}
+		: {};
 	return (
 		<>
 			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
@@ -198,29 +260,35 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 					data-flx="forum.forum-post-card.card.open"
 				>
 					{grid && (
-						<div className={styles.cardMedia} data-flx="forum.forum-post-card.card-media">
-							{thumbnail ? (
-								<img
-									ref={thumbnailRef}
-									src={thumbnailDisplaySrc}
-									alt=""
-									className={styles.cardMediaImage}
-									loading="lazy"
-									draggable={false}
-									onError={handleThumbnailError}
-									data-flx="forum.forum-post-card.card-media-image"
-								/>
-							) : (
-								<div className={styles.cardMediaPlaceholder} data-flx="forum.forum-post-card.card-media-placeholder">
-									<ChatCircleIcon size={32} data-flx="forum.forum-post-card.chat-circle-icon" />
-								</div>
-							)}
-							{media?.video && (
-								<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play">
-									<PlayIcon size={20} weight="fill" data-flx="forum.forum-post-card.play-icon" />
-								</span>
-							)}
-						</div>
+						<FocusRing offset={-2} enabled={opensViewer} data-flx="forum.forum-post-card.card-media.focus-ring">
+							<div
+								className={clsx(styles.cardMedia, opensViewer && styles.cardMediaViewer)}
+								{...mediaButtonProps}
+								data-flx="forum.forum-post-card.card-media"
+							>
+								{thumbnail ? (
+									<img
+										ref={thumbnailRef}
+										src={thumbnailDisplaySrc}
+										alt=""
+										className={styles.cardMediaImage}
+										loading="lazy"
+										draggable={false}
+										onError={handleThumbnailError}
+										data-flx="forum.forum-post-card.card-media-image"
+									/>
+								) : (
+									<div className={styles.cardMediaPlaceholder} data-flx="forum.forum-post-card.card-media-placeholder">
+										<ChatCircleIcon size={32} data-flx="forum.forum-post-card.chat-circle-icon" />
+									</div>
+								)}
+								{media?.video && (
+									<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play">
+										<PlayIcon size={20} weight="fill" data-flx="forum.forum-post-card.play-icon" />
+									</span>
+								)}
+							</div>
+						</FocusRing>
 					)}
 					<div className={styles.cardBody} data-flx="forum.forum-post-card.card-body">
 						<div className={styles.cardMain} data-flx="forum.forum-post-card.card-main">
@@ -265,23 +333,29 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 								)}
 							</div>
 							{!grid && thumbnail && (
-								<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
-									<img
-										ref={thumbnailRef}
-										src={thumbnailDisplaySrc}
-										alt=""
-										className={styles.cardMediaImage}
-										loading="lazy"
-										draggable={false}
-										onError={handleThumbnailError}
-										data-flx="forum.forum-post-card.card-media-image--2"
-									/>
-									{media?.video && (
-										<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
-											<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
-										</span>
-									)}
-								</div>
+								<FocusRing offset={-2} enabled={opensViewer} data-flx="forum.forum-post-card.card-thumb.focus-ring">
+									<div
+										className={clsx(styles.cardThumb, opensViewer && styles.cardMediaViewer)}
+										{...mediaButtonProps}
+										data-flx="forum.forum-post-card.card-thumb"
+									>
+										<img
+											ref={thumbnailRef}
+											src={thumbnailDisplaySrc}
+											alt=""
+											className={styles.cardMediaImage}
+											loading="lazy"
+											draggable={false}
+											onError={handleThumbnailError}
+											data-flx="forum.forum-post-card.card-media-image--2"
+										/>
+										{media?.video && (
+											<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
+												<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
+											</span>
+										)}
+									</div>
+								</FocusRing>
 							)}
 						</div>
 						<div className={styles.cardFooter} data-flx="forum.forum-post-card.card-footer">

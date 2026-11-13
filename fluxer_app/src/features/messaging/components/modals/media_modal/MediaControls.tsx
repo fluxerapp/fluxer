@@ -20,6 +20,7 @@ import {
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
+	VIEW_POST_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
@@ -30,6 +31,7 @@ import {
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	ArrowsInSimpleIcon,
+	ChatCircleIcon,
 	CopySimpleIcon,
 	DownloadSimpleIcon,
 	LinkIcon,
@@ -128,6 +130,7 @@ export interface MediaOverlayActionsProps {
 	onRotateCCW?: () => void;
 	onReply?: () => void;
 	onForward?: () => void;
+	onViewPost?: () => void;
 	onClose: () => void;
 	canReset?: boolean;
 	canZoomIn?: boolean;
@@ -154,6 +157,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onRotateCCW,
 		onReply,
 		onForward,
+		onViewPost,
 		onClose,
 		canReset = false,
 		canZoomIn = true,
@@ -342,11 +346,25 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 					disabled={!enableZoomControls || !onZoomOut || !canZoomOut}
 					data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button--5"
 				/>
-				{(onReply || onForward) && (
+				{(onViewPost || onReply || onForward) && (
 					<div
 						className={styles.overlayActionLargeGap}
 						aria-hidden="true"
 						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-action-large-gap"
+					/>
+				)}
+				{onViewPost && (
+					<OverlayTooltipButton
+						icon={
+							<ChatCircleIcon
+								size={20}
+								weight="bold"
+								data-flx="messaging.media-modal.media-overlay-actions.view-post-icon"
+							/>
+						}
+						label={i18n._(VIEW_POST_DESCRIPTOR)}
+						onClick={onViewPost}
+						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button.view-post"
 					/>
 				)}
 				{onReply && (

@@ -38,6 +38,7 @@ class MediaViewer {
 	message?: Message = undefined;
 	sourceChannel?: Channel = undefined;
 	allowAttachmentDelete: boolean = false;
+	sourcePost?: Channel = undefined;
 
 	constructor() {
 		makeAutoObservable(
@@ -46,6 +47,7 @@ class MediaViewer {
 				items: observableRef,
 				message: observableRef,
 				sourceChannel: observableRef,
+				sourcePost: observableRef,
 			},
 			{autoBind: true},
 		);
@@ -59,6 +61,7 @@ class MediaViewer {
 		message?: Message,
 		sourceChannel?: Channel | null,
 		allowAttachmentDelete: boolean = false,
+		sourcePost?: Channel,
 	): void {
 		this.isOpen = true;
 		this.items = copyMediaViewerItems(items);
@@ -68,6 +71,7 @@ class MediaViewer {
 		this.message = message;
 		this.sourceChannel = sourceChannel ?? undefined;
 		this.allowAttachmentDelete = allowAttachmentDelete;
+		this.sourcePost = sourcePost;
 	}
 
 	close(): void {
@@ -79,6 +83,7 @@ class MediaViewer {
 		this.message = undefined;
 		this.sourceChannel = undefined;
 		this.allowAttachmentDelete = false;
+		this.sourcePost = undefined;
 	}
 
 	navigate(index: number): void {

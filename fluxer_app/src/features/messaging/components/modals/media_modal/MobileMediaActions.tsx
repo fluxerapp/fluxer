@@ -24,6 +24,7 @@ import {
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
+	VIEW_POST_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
@@ -38,6 +39,7 @@ import {
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	ArrowsInSimpleIcon,
+	ChatCircleIcon,
 	CopySimpleIcon,
 	DotsThreeIcon,
 	DownloadSimpleIcon,
@@ -73,6 +75,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onRotateCCW,
 		onReply,
 		onForward,
+		onViewPost,
 		onClose,
 		canReset = false,
 		canZoomIn = true,
@@ -280,6 +283,22 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					},
 					{
 						items: [
+							...(onViewPost
+								? [
+										createItem({
+											id: 'media-view-post',
+											icon: (
+												<ChatCircleIcon
+													size={iconSize}
+													weight="bold"
+													data-flx="messaging.media-modal.mobile-media-actions.groups.chat-circle-icon"
+												/>
+											),
+											label: i18n._(VIEW_POST_DESCRIPTOR),
+											action: onViewPost,
+										}),
+									]
+								: []),
 							...(onReply
 								? [
 										createItem({
@@ -330,6 +349,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 				onForward,
 				onOpenInBrowser,
 				onReply,
+				onViewPost,
 				onReset,
 				onRotateCCW,
 				onRotateCW,

@@ -673,6 +673,10 @@
 	background-color: var(--background-tertiary);
 }
 
+.cardMediaViewer {
+	cursor: zoom-in;
+}
+
 .cardMediaImage {
 	width: 100%;
 	height: 100%;
