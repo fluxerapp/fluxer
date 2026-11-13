@@ -51,6 +51,8 @@ int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *hei
     *bands = 0;
     *format = VIPS_FORMAT_NOTSET;
     if (buf == NULL || len == 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    int status = fluxer_bmff_sample_tables_validate(buf, len);
+    if (status != FLUXER_NATIVE_STATUS_OK) return status;
     VipsImage *header = vips_image_new_from_buffer(buf, len, "n=1", NULL);
     if (header == NULL) {
         return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
@@ -93,6 +95,9 @@ int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *hei
 
 VipsImage *fluxer_vips_image_new_from_buffer(const void *buf, size_t len, const char *option_string) {
     if (buf == NULL || len == 0 || option_string == NULL) return NULL;
+    if (fluxer_bmff_sample_tables_validate(buf, len) != FLUXER_NATIVE_STATUS_OK) {
+        return NULL;
+    }
     return vips_image_new_from_buffer(buf, len, option_string, NULL);
 }
 
@@ -630,6 +635,8 @@ int fluxer_vips_thumbnail_buffer_ex(
         .max_total_pixels = max_total_pixels,
     };
     status = fluxer_vips_thumbnail_request_status(&request);
+    if (status != FLUXER_NATIVE_STATUS_OK) return status;
+    status = fluxer_bmff_sample_tables_validate(buf, len);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
     const char *options = fluxer_vips_thumbnail_options(&request);
     VipsImage *loaded = vips_image_new_from_buffer(buf, len, options, NULL);
