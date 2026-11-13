@@ -2,7 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
-import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {i18n} from '@lingui/core';
 
