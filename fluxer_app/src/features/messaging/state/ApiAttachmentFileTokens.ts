@@ -4,6 +4,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {
 	apiAttachmentFileKey,
+	readAttachmentToken,
 	withAttachmentToken,
 	withoutAttachmentToken,
 } from '@app/features/messaging/utils/ApiAttachmentUrl';
@@ -82,6 +83,17 @@ class ApiAttachmentFileTokens {
 		const issued = this.issued.get(key);
 		const token = issued !== undefined && isFreshFileToken(issued) ? issued.token : await this.request(key);
 		return token === null ? bare : withAttachmentToken(bare, token);
+	}
+
+	renew(url: string): boolean {
+		const key = apiAttachmentFileKey(url);
+		const token = readAttachmentToken(url);
+		if (key === null || token === null) return false;
+		const issued = this.issued.get(key);
+		if (issued !== undefined && isFreshFileToken(issued) && issued.token === token) return false;
+		this.invalidate(key);
+		void this.request(key);
+		return true;
 	}
 
 	invalidate(url: string): void {

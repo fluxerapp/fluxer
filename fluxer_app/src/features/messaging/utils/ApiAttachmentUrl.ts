@@ -59,6 +59,10 @@ export function apiAttachmentFileKey(url: string): string | null {
 	return parsed.url.toString();
 }
 
+export function readAttachmentToken(url: string): string | null {
+	return parseApiAttachmentUrl(url)?.url.searchParams.get(ACCESS_TOKEN_PARAMETER) ?? null;
+}
+
 export function withoutAttachmentToken(url: string): string {
 	const parsed = parseApiAttachmentUrl(url);
 	if (parsed === null || !parsed.url.searchParams.has(ACCESS_TOKEN_PARAMETER)) return url;
