@@ -188,7 +188,7 @@ pub(super) fn media_access_section(
                         if media.proxy_attachments_through_api { "true" } else { "false" },
                     ))
                     p class="text-xs text-neutral-500" {
-                        "Links handed out before the change keep working until they expire. Set the media proxy to enforce signatures, or anyone who guesses a file link can fetch it without signing in."
+                        "Links handed out before the change keep working until they expire. Set the media proxy to enforce signatures, or anyone who guesses a file link can fetch it without signing in. Turning this off again breaks links handed out while it was on, such as favorite GIFs saved from attachments."
                     }
                     (form_actions(html! {
                         (submit_button("Save attachment access"))
