@@ -69,7 +69,7 @@ Changes the RTC region of an active call, even if you aren't connected to it. Se
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The region was updated, or no change was requested |
-| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `INVALID_OR_RESTRICTED_RTC_REGION` when the region is unknown or restricted |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `INVALID_OR_RESTRICTED_RTC_REGION` when the region is unknown, restricted or [hidden](/admin-api/voice/#hidden-regions) and the call isn't already in it |
 | 404 | [error response](/http-api/#error-response) | `NO_ACTIVE_CALL` when the channel has no call |
 
 The rate limit is 10 requests per 10 seconds, on the `channel:call:update::channel_id` bucket.

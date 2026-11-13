@@ -24,6 +24,7 @@ function createRegion(overrides: Partial<VoiceRegionRecord> = {}): VoiceRegionRe
 		latitude: 39.8283,
 		longitude: -98.5795,
 		isDefault: true,
+		hidden: false,
 		restrictions: {
 			vipOnly: false,
 			requiredGuildFeatures: new Set(),
