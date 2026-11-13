@@ -83,10 +83,22 @@ check_media_safe_url(Media) ->
         maps:get(<<"flags">>, Media, 0)
     ),
     Nsfw = maps:get(<<"nsfw">>, Media, false),
-    case is_safe_media_url(Url, ContentType, Flags, Nsfw) of
+    case
+        is_safe_media_url(Url, ContentType, Flags, Nsfw) andalso not is_api_attachment_url(Url)
+    of
         true when is_binary(Url) -> {ok, Url};
         _ -> unsafe
     end.
+
+-spec is_api_attachment_url(binary() | undefined) -> boolean().
+is_api_attachment_url(Url) when is_binary(Url) ->
+    re:run(
+        Url,
+        <<"^https://[^?#]*/channels/[0-9]+/attachments/[0-9]+/[^?#]+\\?(?:[^#]*&)?mid=[0-9]+(?:[&#]|$)">>,
+        [caseless, {capture, none}]
+    ) =:= match;
+is_api_attachment_url(_Url) ->
+    false.
 
 -spec is_safe_media_url(
     binary() | undefined,
