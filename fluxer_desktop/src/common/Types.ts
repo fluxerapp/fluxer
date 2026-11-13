@@ -149,7 +149,7 @@ export interface DownloadFileResult {
 	error?: string;
 }
 
-export type DownloadEntryState = 'started' | 'progressing' | 'completed' | 'failed' | 'canceled';
+type DownloadEntryState = 'started' | 'progressing' | 'completed' | 'failed' | 'canceled';
 
 export interface DownloadEntryEvent {
 	id: string;

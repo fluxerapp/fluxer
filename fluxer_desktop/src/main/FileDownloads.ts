@@ -30,7 +30,7 @@ interface DownloadFileOptions {
 	onProgress?: DownloadProgressHandler;
 }
 
-export type DownloadProgressHandler = (receivedBytes: number, totalBytes: number | null) => void;
+type DownloadProgressHandler = (receivedBytes: number, totalBytes: number | null) => void;
 
 function parseContentLength(value: string | Array<string> | undefined): number | null {
 	const raw = Array.isArray(value) ? value[0] : value;

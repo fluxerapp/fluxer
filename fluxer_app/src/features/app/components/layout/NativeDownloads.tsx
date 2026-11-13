@@ -100,9 +100,14 @@ const DOWNLOAD_PROGRESS_DESCRIPTOR = msg({
 });
 
 const DownloadsIcon: React.FC = () => (
-	<svg className={styles.icon} viewBox={NATIVE_TITLEBAR_DOWNLOADS_ICON_VIEWBOX} xmlns="http://www.w3.org/2000/svg">
+	<svg
+		className={styles.icon}
+		viewBox={NATIVE_TITLEBAR_DOWNLOADS_ICON_VIEWBOX}
+		xmlns="http://www.w3.org/2000/svg"
+		data-flx="app.native-downloads.downloads-icon.icon"
+	>
 		{NATIVE_TITLEBAR_DOWNLOADS_ICON_PATHS.map((path) => (
-			<path key={path} d={path} />
+			<path key={path} d={path} data-flx="app.native-downloads.downloads-icon.path" />
 		))}
 	</svg>
 );
@@ -204,44 +209,58 @@ export const NativeDownloads: React.FC = observer(() => {
 	return (
 		<>
 			<Popout
+				data-flx="app.native-downloads.popout"
 				{...openProps}
 				position="bottom-end"
 				offsetMainAxis={1}
 				ignoreTitlebarBoundary
 				subscribeTo="DOWNLOADS_POPOUT_OPEN"
 				render={() => (
-					<div className={styles.panel}>
-						<div className={styles.header}>
-							<span className={styles.title}>{i18n._(DOWNLOADS_TITLE_DESCRIPTOR)}</span>
-							<button type="button" className={styles.clearAll} onClick={DownloadsStore.clearAll}>
+					<div className={styles.panel} data-flx="app.native-downloads.panel">
+						<div className={styles.header} data-flx="app.native-downloads.header">
+							<span className={styles.title} data-flx="app.native-downloads.title">
+								{i18n._(DOWNLOADS_TITLE_DESCRIPTOR)}
+							</span>
+							<button
+								type="button"
+								className={styles.clearAll}
+								onClick={DownloadsStore.clearAll}
+								data-flx="app.native-downloads.clear-all.button"
+							>
 								{i18n._(CLEAR_ALL_DESCRIPTOR)}
 							</button>
 						</div>
-						<ul className={styles.list}>
+						<ul className={styles.list} data-flx="app.native-downloads.list">
 							{DownloadsStore.entries.map((entry) => {
 								const isDownloading = entry.state === 'started' || entry.state === 'progressing';
 								return (
-									<li key={entry.id} className={styles.item}>
+									<li key={entry.id} className={styles.item} data-flx="app.native-downloads.item">
 										<button
 											type="button"
 											className={styles.itemButton}
 											onClick={() => DownloadsStore.open(entry)}
 											disabled={entry.state !== 'completed'}
+											data-flx="app.native-downloads.item-button.open"
 										>
-											<span className={styles.itemBody}>
-												<span className={styles.itemName}>{entry.fileName}</span>
-												<span className={styles.itemMeta}>{displayDownload(entry)}</span>
+											<span className={styles.itemBody} data-flx="app.native-downloads.item-body">
+												<span className={styles.itemName} data-flx="app.native-downloads.item-name">
+													{entry.fileName}
+												</span>
+												<span className={styles.itemMeta} data-flx="app.native-downloads.item-meta">
+													{displayDownload(entry)}
+												</span>
 											</span>
 										</button>
-										<div className={styles.itemControls}>
+										<div className={styles.itemControls} data-flx="app.native-downloads.item-controls">
 											<button
 												key={entry.state === 'completed' ? 'reveal-ready' : 'reveal-pending'}
 												type="button"
 												className={clsx(styles.cancelOrDismiss, entry.state === 'completed' && styles.swapIcon)}
 												onClick={() => DownloadsStore.reveal(entry)}
 												aria-label={i18n._(SHOW_IN_FOLDER_DESCRIPTOR)}
+												data-flx="app.native-downloads.cancel-or-dismiss.reveal.button"
 											>
-												<FolderOpenIcon size={20} weight="bold" />
+												<FolderOpenIcon size={20} weight="bold" data-flx="app.native-downloads.folder-open-icon" />
 											</button>
 											<button
 												key={isDownloading ? 'cancel' : 'dismiss'}
@@ -255,8 +274,13 @@ export const NativeDownloads: React.FC = observer(() => {
 												aria-label={
 													isDownloading ? i18n._(CANCEL_DOWNLOAD_DESCRIPTOR) : i18n._(REMOVE_DOWNLOAD_DESCRIPTOR)
 												}
+												data-flx="app.native-downloads.cancel-or-dismiss.button"
 											>
-												{isDownloading ? <XIcon size={20} weight="bold" /> : <BroomIcon size={20} weight="bold" />}
+												{isDownloading ? (
+													<XIcon size={20} weight="bold" data-flx="app.native-downloads.x-icon" />
+												) : (
+													<BroomIcon size={20} weight="bold" data-flx="app.native-downloads.broom-icon" />
+												)}
 											</button>
 										</div>
 									</li>
@@ -266,24 +290,32 @@ export const NativeDownloads: React.FC = observer(() => {
 					</div>
 				)}
 			>
-				<FocusRing offset={0}>
+				<FocusRing offset={0} data-flx="app.native-downloads.focus-ring">
 					<button
 						ref={buttonRef}
 						type="button"
 						tabIndex={-1}
 						className={clsx(NATIVE_TITLEBAR_CLASS.action, styles.trigger, isAwaitingLanding && styles.triggerHidden)}
 						aria-label={i18n._(DOWNLOADS_DESCRIPTOR)}
+						data-flx="app.native-downloads.trigger.button"
 					>
-						<DownloadsIcon key={`icon-${landingCount}`} />
-						{landingCount > 0 && <span key={`splash-${landingCount}`} className={styles.splash} />}
+						<DownloadsIcon key={`icon-${landingCount}`} data-flx="app.native-downloads.downloads-icon" />
+						{landingCount > 0 && (
+							<span key={`splash-${landingCount}`} className={styles.splash} data-flx="app.native-downloads.splash" />
+						)}
 					</button>
 				</FocusRing>
 			</Popout>
 			{arc &&
 				createPortal(
-					<div ref={arcRef} className={styles.arc} style={{left: arc.x, top: arc.y}}>
-						<div ref={arcIconRef} className={styles.arcIcon}>
-							<DownloadSimpleIcon weight="bold" />
+					<div
+						ref={arcRef}
+						className={styles.arc}
+						style={{left: arc.x, top: arc.y}}
+						data-flx="app.native-downloads.arc"
+					>
+						<div ref={arcIconRef} className={styles.arcIcon} data-flx="app.native-downloads.arc-icon">
+							<DownloadSimpleIcon weight="bold" data-flx="app.native-downloads.download-simple-icon" />
 						</div>
 					</div>,
 					document.body,

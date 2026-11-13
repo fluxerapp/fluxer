@@ -57,7 +57,7 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 				<>
 					{brand}
 					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
-					<NativeDownloads />
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 					<NativeWindowControls data-flx="app.native-titlebar.controls" />
 				</>
 			)}
