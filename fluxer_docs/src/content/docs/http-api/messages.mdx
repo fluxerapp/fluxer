@@ -171,6 +171,8 @@ When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-obj
 
 Fetching one needs the same access as reading the message. Send your token in the `Authorization` header, or add `mt` from [Create attachment token](#create-attachment-token) when the request can't send a header, such as an `img` element. Keep `mid` as issued. A link copied for someone else should leave out `mt`.
 
+An embed image uploaded with `attachment://` names its own message in `mid`. Any other embed URL that points to a stored file names the channel of that file and has no `mid`, so it opens only for people who can read the message the file came from. Fluxer doesn't build link previews for attachment URLs in message text while the setting is on.
+
 ### Example
 
 ```json
@@ -387,7 +389,7 @@ An embed is a link preview Fluxer builds, or a rich embed you send.
 | placeholder? | string | An encoded placeholder image |
 | flags? | integer | `CONTAINS_EXPLICIT_MEDIA` and `IS_ANIMATED` from [attachment flags](#attachment-flags) |
 
-Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls).
+Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls). When [attachment URLs point at the API](#attachment-urls-on-the-api), these URLs point at the API instead.
 
 ## Embed footer object
 
@@ -893,7 +895,9 @@ Streams an attachment file. Only works when [`proxy_attachments_through_api`](/h
 | height? | integer | Resize to this height (1-8,192) |
 | format? | string | A [transformation](/media-proxy/transformations/) output format |
 | quality? | string | `low`, `high`, `lossless` or `auto` |
+| fmt? | string | The same as `format` |
 | animated? | boolean | Whether to keep animation |
+| effort? | integer | Encoder effort, 0 to 9 |
 | download? | boolean | Whether to send the file as a download |
 
 ### Response
@@ -921,7 +925,7 @@ Creates a token for the `mt` query parameter of [attachment URLs on the API](#at
 | --- | --- | --- |
 | url? | string | One attachment URL, for a token that only opens that file |
 
-Without `url`, the token opens every file you can read for 4 hours, so get a new one after 2 hours. With `url`, it opens that file for 10 minutes, which suits a link handed to a browser. The token stops working when the session it came from signs out.
+Without `url`, the token opens every file you can read for 4 hours, so get a new one before `expires_at`. Anyone who has a URL with this token can open your files until then, so leave it out of anything you share. With `url`, it opens that file for 10 minutes, which suits a link handed to a browser. The token stops working when the session it came from signs out.
 
 ### Response body
 
