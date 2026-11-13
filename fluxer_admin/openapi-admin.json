@@ -23085,7 +23085,7 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 18, 19, 21],
+				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 10, 12, 18, 19, 21],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
@@ -23096,6 +23096,7 @@
 					"CHANNEL_ICON_CHANGE",
 					"CHANNEL_PINNED_MESSAGE",
 					"USER_JOIN",
+					"OWNERSHIP_TRANSFER",
 					"CHANNEL_FOLLOW_ADD",
 					"THREAD_CREATED",
 					"REPLY",
@@ -23110,6 +23111,7 @@
 					"A system message indicating the channel icon changed",
 					"A system message indicating a message was pinned",
 					"A system message indicating a user joined",
+					"A system message indicating community ownership was transferred",
 					"System message posted when a channel starts following an announcement channel",
 					"A system message indicating a thread was created",
 					"A reply message",

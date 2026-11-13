@@ -5,6 +5,7 @@ import {ChannelFollowAddMessage} from '@app/features/channel/components/ChannelF
 import {ChannelIconChangeMessage} from '@app/features/channel/components/ChannelIconChangeMessage';
 import {ChannelNameChangeMessage} from '@app/features/channel/components/ChannelNameChangeMessage';
 import {GuildJoinMessage} from '@app/features/channel/components/GuildJoinMessage';
+import {OwnershipTransferMessage} from '@app/features/channel/components/OwnershipTransferMessage';
 import {PinSystemMessage} from '@app/features/channel/components/PinSystemMessage';
 import {RecipientAddMessage} from '@app/features/channel/components/RecipientAddMessage';
 import {RecipientRemoveMessage} from '@app/features/channel/components/RecipientRemoveMessage';
@@ -35,6 +36,13 @@ export function getMessageComponent(
 				<GuildJoinMessage
 					message={message}
 					data-flx="messaging.message-component-utils.get-message-component.guild-join-message"
+				/>
+			);
+		case MessageTypes.OWNERSHIP_TRANSFER:
+			return (
+				<OwnershipTransferMessage
+					message={message}
+					data-flx="messaging.message-component-utils.get-message-component.ownership-transfer-message"
 				/>
 			);
 		case MessageTypes.CHANNEL_PINNED_MESSAGE:

@@ -24,6 +24,11 @@ export const MessageTypeSchema = createInt32EnumType(
 		[MessageTypes.CHANNEL_PINNED_MESSAGE, 'CHANNEL_PINNED_MESSAGE', 'A system message indicating a message was pinned'],
 		[MessageTypes.USER_JOIN, 'USER_JOIN', 'A system message indicating a user joined'],
 		[
+			MessageTypes.OWNERSHIP_TRANSFER,
+			'OWNERSHIP_TRANSFER',
+			'A system message indicating community ownership was transferred',
+		],
+		[
 			MessageTypes.CHANNEL_FOLLOW_ADD,
 			'CHANNEL_FOLLOW_ADD',
 			'System message posted when a channel starts following an announcement channel',

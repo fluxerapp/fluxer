@@ -145,6 +145,10 @@ const STARTED_A_THREAD_NAMED_DESCRIPTOR = msg({
 	comment:
 		'Plain text summary of the thread created system message. username is the author, threadName the thread name.',
 });
+const OWNERSHIP_TRANSFER_DESCRIPTOR = msg({
+	message: '{username} has had the ownership of this community transferred to them.',
+	comment: 'System message shown inline when community ownership is transferred.',
+});
 
 interface StringifyableMessage {
 	id: string;
@@ -191,6 +195,21 @@ export const SystemMessageUtils = {
 			</>
 		);
 	},
+	getOwnershipTransferMessage(username: React.ReactNode, i18n: I18n): React.ReactElement {
+		return (
+			<>
+				{i18n
+					._(OWNERSHIP_TRANSFER_DESCRIPTOR, {username: '__USERNAME__'})
+					.split('__USERNAME__')
+					.map((part, i, arr) => (
+						<React.Fragment key={i}>
+							{part}
+							{i < arr.length - 1 && username}
+						</React.Fragment>
+					))}
+			</>
+		);
+	},
 	stringify(message: StringifyableMessage, i18n: I18n): string | null {
 		const author = Users.getUser(message.author.id);
 		if (!author) return null;
@@ -202,6 +221,8 @@ export const SystemMessageUtils = {
 				const messageGenerator = messageList[messageIndex];
 				return messageGenerator(username);
 			}
+			case MessageTypes.OWNERSHIP_TRANSFER:
+				return i18n._(OWNERSHIP_TRANSFER_DESCRIPTOR, {username});
 			case MessageTypes.CHANNEL_PINNED_MESSAGE:
 				return i18n._(PINNED_A_MESSAGE_TO_THIS_CHANNEL_DESCRIPTOR, {username});
 			case MessageTypes.RECIPIENT_ADD: {

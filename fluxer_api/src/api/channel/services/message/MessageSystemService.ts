@@ -37,4 +37,29 @@ export class MessageSystemService {
 		});
 		await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: systemChannel, message});
 	}
+
+	async sendOwnershipTransferSystemMessage({
+		guildId,
+		targetUserId,
+	}: {
+		guildId: GuildID;
+		targetUserId: UserID;
+	}): Promise<void> {
+		const guild = await this.guildRepository.findUnique(guildId);
+		if (!guild?.systemChannelId) return;
+		const systemChannel = await this.channelRepository.channelData.findUnique(guild.systemChannelId);
+		if (!systemChannel) return;
+		const messageId = createMessageID(await this.snowflakeService.generateForChannel(systemChannel.id));
+		const {message} = await this.persistenceService.createMessage({
+			messageId,
+			channelId: systemChannel.id,
+			userId: targetUserId,
+			type: MessageTypes.OWNERSHIP_TRANSFER,
+			content: null,
+			flags: 0,
+			guildId,
+			channel: systemChannel,
+		});
+		await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: systemChannel, message});
+	}
 }

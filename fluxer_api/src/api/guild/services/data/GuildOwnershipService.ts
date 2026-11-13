@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
@@ -23,6 +24,7 @@ export class GuildOwnershipService {
 		private readonly guildRepository: GuildRepository,
 		private readonly userRepository: UserRepository,
 		private readonly helpers: GuildDataHelpers,
+		private readonly channelService: ChannelService,
 	) {}
 
 	async transferOwnership(
@@ -68,6 +70,7 @@ export class GuildOwnershipService {
 			auditLogReason: auditLogReason ?? null,
 			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, OWNERSHIP_AUDIT_KEYS),
 		});
+		await this.channelService.messages.system.sendOwnershipTransferSystemMessage({guildId, targetUserId: newOwnerId});
 		return mapGuildToGuildResponse(updatedGuild);
 	}
 }

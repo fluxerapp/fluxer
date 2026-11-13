@@ -56,6 +56,11 @@ export class GuildDataService {
 			this.workerService,
 		);
 		this.vanity = new GuildVanityService(this.guildRepository, this.inviteRepository, this.helpers);
-		this.ownership = new GuildOwnershipService(this.guildRepository, this.userRepository, this.helpers);
+		this.ownership = new GuildOwnershipService(
+			this.guildRepository,
+			this.userRepository,
+			this.helpers,
+			this.channelService,
+		);
 	}
 }
