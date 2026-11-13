@@ -441,6 +441,7 @@ export async function copyMediaToClipboard({
 				),
 			)
 		: null;
+	const loadableSrc = await attachmentAccessToken.loadableUrl(freshSrc);
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
@@ -457,7 +458,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: unwrapDesktopLocalResourceURL(baseProxyURL || freshSrc),
+				url: unwrapDesktopLocalResourceURL(baseProxyURL || loadableSrc),
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});
@@ -476,7 +477,7 @@ export async function copyMediaToClipboard({
 	const urlsToTry: Array<string> = [];
 	if (baseProxyURL) urlsToTry.push(buildMediaProxyURL(baseProxyURL, {format: 'png'}));
 	if (baseProxyURL) urlsToTry.push(baseProxyURL);
-	urlsToTry.push(freshSrc);
+	urlsToTry.push(loadableSrc);
 	let toastId: string | null = null;
 	try {
 		toastId = ToastCommands.createToast({

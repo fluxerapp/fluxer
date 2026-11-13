@@ -105,7 +105,10 @@ class AttachmentUrlRefresher {
 	}
 
 	fresh(url: string, options: {refreshUnsigned?: boolean} = {}): string {
-		if (isApiAttachmentUrl(url)) return attachmentAccessToken.displayUrl(withoutAttachmentToken(url)) ?? url;
+		if (isApiAttachmentUrl(url)) {
+			const bare = withoutAttachmentToken(url);
+			return attachmentAccessToken.displayUrl(bare) ?? bare;
+		}
 		if (!url || !isOwnAttachmentUrl(url)) return url;
 		const key = attachmentCacheKey(url);
 		if (key === null) return url;
@@ -162,7 +165,10 @@ class AttachmentUrlRefresher {
 	async refresh(url: string, options: {force?: boolean} = {}): Promise<string> {
 		if (!url) return url;
 		const target = unwrapDesktopLocalResourceURL(url);
-		if (isApiAttachmentUrl(target)) return withoutAttachmentToken(target);
+		if (isApiAttachmentUrl(target)) {
+			if (options.force) attachmentAccessToken.recover(target);
+			return withoutAttachmentToken(target);
+		}
 		if (!isOwnAttachmentUrl(target)) return url;
 		const key = attachmentCacheKey(target);
 		if (key === null) return url;

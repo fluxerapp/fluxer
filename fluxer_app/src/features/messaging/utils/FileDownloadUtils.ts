@@ -214,7 +214,12 @@ export async function downloadFile(src: string, type: MediaType, providedFilenam
 	}
 	if (await downloadViaFileSystemAccess(target, suggestedName, type)) return;
 	if (await downloadViaFetchBlob(target, suggestedName)) return;
-	if (downloadViaAnchor(target, suggestedName)) return;
+	const anchorTarget = isApiAttachmentUrl(unwrapDesktopLocalResourceURL(target))
+		? wrapDesktopLocalResourceURL(
+				await attachmentAccessToken.shareableUrl(withoutAttachmentToken(unwrapDesktopLocalResourceURL(target))),
+			)
+		: target;
+	if (downloadViaAnchor(anchorTarget, suggestedName)) return;
 	await openExternalUrl(withoutAttachmentToken(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target))));
 }
 

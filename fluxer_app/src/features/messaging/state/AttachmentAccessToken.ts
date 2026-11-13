@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import Authentication from '@app/features/auth/state/Authentication';
 import {
 	isApiAttachmentUrl,
 	isApiProxiedAttachmentsEnabled,
@@ -11,11 +12,12 @@ import {
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AttachmentAccessTokenResponse} from '@fluxer/schema/src/domains/message/AttachmentSchemas';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('AttachmentAccessToken');
 
 const RETRY_DELAY_MS = 30_000;
+const RENEW_BEFORE_EXPIRY_MS = 15 * 60_000;
 const MAX_TIMER_DELAY_MS = 2_147_483_647;
 
 interface IssuedToken {
@@ -57,6 +59,15 @@ class AttachmentAccessToken {
 		if (this.issued !== null && this.issued.expiresAtMs > nowMs) return this.issued.token;
 		if (nowMs >= this.retryAtMs) void this.ensure();
 		return null;
+	}
+
+	recover(url: string): void {
+		if (!isApiAttachmentUrl(url) || this.pending !== null) return;
+		const failed = new URL(url).searchParams.get('mt');
+		if (failed !== null && failed !== this.issued?.token) return;
+		this.issued = null;
+		this.retryAtMs = 0;
+		void this.ensure();
 	}
 
 	displayUrl(url: string): string | null {
@@ -121,7 +132,8 @@ class AttachmentAccessToken {
 	private scheduleRenewal(issued: IssuedToken): void {
 		if (this.renewTimer !== null) clearTimeout(this.renewTimer);
 		const nowMs = Date.now();
-		const delayMs = Math.min(MAX_TIMER_DELAY_MS, Math.max(0, (issued.expiresAtMs - nowMs) / 2));
+		const lifetimeMs = issued.expiresAtMs - nowMs;
+		const delayMs = Math.min(MAX_TIMER_DELAY_MS, Math.max(lifetimeMs / 2, lifetimeMs - RENEW_BEFORE_EXPIRY_MS, 0));
 		this.renewTimer = setTimeout(() => {
 			this.renewTimer = null;
 			if (isApiProxiedAttachmentsEnabled()) void this.ensure();
@@ -131,5 +143,12 @@ class AttachmentAccessToken {
 
 const attachmentAccessToken = new AttachmentAccessToken();
 ResettableStates.register(attachmentAccessToken, () => attachmentAccessToken.reset());
+reaction(
+	() => Authentication.isAuthenticated && isApiProxiedAttachmentsEnabled(),
+	(active) => {
+		if (active) void attachmentAccessToken.ensure();
+	},
+	{fireImmediately: true},
+);
 
 export default attachmentAccessToken;

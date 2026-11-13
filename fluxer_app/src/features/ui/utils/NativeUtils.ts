@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -205,6 +206,14 @@ export async function openExternalUrl(url: string, target: string = '_blank') {
 	const safeUrl = getSafeExternalUrl(url);
 	if (!safeUrl) return;
 	const electronApi = getElectronAPI();
+	if (!electronApi && isApiAttachmentUrl(safeUrl)) {
+		const opened = window.open('about:blank', target);
+		if (opened) opened.opener = null;
+		const scopedUrl = await refreshAttachmentUrl(safeUrl);
+		if (opened) opened.location.replace(scopedUrl);
+		else window.open(scopedUrl, target, 'noopener,noreferrer');
+		return;
+	}
 	if (!electronApi && !attachmentUrlMayNeedRefresh(safeUrl, Date.now())) {
 		window.open(safeUrl, target, 'noopener,noreferrer');
 		return;
