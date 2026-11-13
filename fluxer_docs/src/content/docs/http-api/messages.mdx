@@ -161,6 +161,16 @@ A URL is valid for 24 hours from `is`. Keep the four parameters as they are, and
 
 A [data harvest](/http-api/users/data-harvest/) archive links each attachment with `uc=dp` and `ex=0`. These URLs don't expire and work until the instance removes the secret that signed them.
 
+### Attachment URLs on the API
+
+When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, `url` and `proxy_url` point at [Get attachment file](#get-attachment-file) instead of the Media Proxy, and have no signature.
+
+```text
+/v1/channels/{channel_id}/attachments/{attachment_id}/{filename}?mid={message_id}
+```
+
+Fetching one needs the same access as reading the message. Send your token in the `Authorization` header, or add `mt` from [Create attachment token](#create-attachment-token) when the request can't send a header, such as an `img` element. Keep `mid` as issued. A link copied for someone else should leave out `mt`.
+
 ### Example
 
 ```json
@@ -863,7 +873,71 @@ Signs 1 to 50 attachment URLs again. A refreshed URL is valid until its `ex`, wh
 | --- | --- | --- |
 | 200 | response body | The URLs were signed |
 
+When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, a URL of this instance comes back as an [attachment URL on the API](#attachment-urls-on-the-api) with no `mid`.
+
 The rate limit is 60 requests per 10 seconds, on the `attachment:refresh_urls` bucket.
+
+## Get attachment file
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/attachments/{attachment_id}/{filename}" bot />
+
+Streams an attachment file. Only works when [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, and returns 404 otherwise. You need to be able to [read the message](#access-and-history) the file belongs to. `HEAD` and `Range` work as they do on the Media Proxy.
+
+### Query string
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mid? | snowflake | The message the file belongs to, as issued in the URL |
+| mt? | string | A token from [Create attachment token](#create-attachment-token), for a request without an `Authorization` header |
+| width? | integer | Resize to this width (1-8,192) |
+| height? | integer | Resize to this height (1-8,192) |
+| format? | string | A [transformation](/media-proxy/transformations/) output format |
+| quality? | string | `low`, `high`, `lossless` or `auto` |
+| animated? | boolean | Whether to keep animation |
+| download? | boolean | Whether to send the file as a download |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | file | The file |
+| 206 | file | Part of the file, for a `Range` request |
+| 400 | empty | A query value is out of range |
+| 401 | empty | `mt` is expired or invalid, or names another file |
+| 404 | empty | The file doesn't exist or you can't read its message |
+| 416 | empty | The range is outside the file |
+
+The response has `Cache-Control: private`. The rate limit is 600 requests per 10 seconds, on the `channel:attachment:read` bucket.
+
+## Create attachment token
+
+<RouteHeader method="POST" path="/v1/users/@me/attachment-token" />
+
+Creates a token for the `mt` query parameter of [attachment URLs on the API](#attachment-urls-on-the-api). Only works when [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, and returns 404 otherwise. Bot and OAuth2 tokens can't use this route.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url? | string | One attachment URL, for a token that only opens that file |
+
+Without `url`, the token opens every file you can read for 4 hours, so get a new one after 2 hours. With `url`, it opens that file for 10 minutes, which suits a link handed to a browser. The token stops working when the session it came from signs out.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The value for `mt` |
+| expires_at | ISO8601 timestamp | When the token stops working |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The token |
+| 404 | empty | The setting is off, or you can't read the file in `url` |
+
+The rate limit is 30 requests per 10 seconds, on the `user:attachment_token` bucket.
 
 ## Create message
 
