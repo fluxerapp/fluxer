@@ -70,7 +70,10 @@ func TestUntrustedRefusal(t *testing.T) {
 		msg  string
 		fix  string
 	}{
-		{"others can write", &instance.UntrustedError{Path: "/home/u", Dir: "/home/u/fluxer", Shared: true}, "Other accounts can change /home/u", "chmod go-w /home/u."},
+		{"found under a folder others can change", &instance.UntrustedError{Path: "/home/u", Dir: "/home/u/fluxer", Shared: true}, "other accounts can change /home/u, so root doesn't use it on its own", "pass --dir /home/u/fluxer."},
+		{"instance folder others can change", &instance.UntrustedError{Path: "/mnt/user/appdata/fluxer", Dir: "/mnt/user/appdata/fluxer", Shared: true, Inside: true}, "Other accounts can change /mnt/user/appdata/fluxer, so root doesn't use the instance in it.", "chmod go-w /mnt/user/appdata/fluxer,"},
+		{"state folder others can change", &instance.UntrustedError{Path: "/srv/fluxer/.rexctl", Dir: "/srv/fluxer", Shared: true, Inside: true}, "Other accounts can change /srv/fluxer/.rexctl, so root doesn't use the instance in /srv/fluxer.", "chmod go-w /srv/fluxer/.rexctl,"},
+		{"link in a folder others can change", &instance.UntrustedError{Path: "/srv/shared", Dir: "/srv/shared/fluxer", Shared: true, Link: "/srv/shared/fluxer"}, "/srv/shared/fluxer is a link in /srv/shared", "Pass --dir"},
 		{"another owner", &instance.UntrustedError{Path: "/home/v/fluxer", Dir: "/home/v/fluxer"}, "another account owns /home/v/fluxer", "pass --dir /home/v/fluxer."},
 		{"record file", &instance.UntrustedError{Path: "/etc/rexctl"}, "Accounts other than root can change /etc/rexctl", "Make root its owner"},
 	}

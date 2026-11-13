@@ -128,7 +128,17 @@ func (a *App) Locate() (instance.Located, error) {
 	if err == nil && first && l.Stale != "" {
 		a.warnStale(l)
 	}
+	if err == nil && first {
+		a.warnShared(l)
+	}
 	return l, err
+}
+
+func (a *App) warnShared(l instance.Located) {
+	if l.Shared == "" {
+		return
+	}
+	a.UI.Warn(fmt.Sprintf("rexctl uses the instance in %s because you picked it, but other accounts can change %s.", l.Dir, l.Shared), "If other people have accounts on this machine, keep Fluxer in a folder only root can change, such as /opt/fluxer.")
 }
 
 func (a *App) warnStale(l instance.Located) {
@@ -172,12 +182,16 @@ func untrustedRefusal(err error) error {
 		return err
 	}
 	switch {
-	case untrusted.Dir != "" && untrusted.Shared:
+	case untrusted.Link != "":
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("%s is a link in %s, which other accounts can change, so root doesn't use the instance in %s.", untrusted.Link, untrusted.Path, untrusted.Dir), Fix: "Pass --dir " + shellWord(instance.RealPath(untrusted.Dir)) + ", the folder the link leads to.", Err: err}
+	case untrusted.Dir != "" && untrusted.Shared && untrusted.Inside:
 		msg := fmt.Sprintf("Other accounts can change %s, so root doesn't use the instance in %s.", untrusted.Path, untrusted.Dir)
-		if untrusted.Path == untrusted.Dir {
+		if instance.RealPath(untrusted.Path) == instance.RealPath(untrusted.Dir) {
 			msg = fmt.Sprintf("Other accounts can change %s, so root doesn't use the instance in it.", untrusted.Dir)
 		}
-		return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: fmt.Sprintf("Make sure only you and root can change %s and the folders above it, then run the command again. For example, run chmod go-w %s.", untrusted.Path, shellWord(untrusted.Path)), Err: err}
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: fmt.Sprintf("Make sure only its owner can write to it, for example with chmod go-w %s, then run the command again.", shellWord(untrusted.Path)), Err: err}
+	case untrusted.Dir != "" && untrusted.Shared:
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl found Fluxer in %s, but other accounts can change %s, so root doesn't use it on its own.", untrusted.Dir, untrusted.Path), Fix: "If you mean that instance, pass --dir " + shellWord(untrusted.Dir) + ".", Err: err}
 	case untrusted.Dir != "":
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl found Fluxer in %s, but another account owns %s, so root doesn't use it on its own.", untrusted.Dir, untrusted.Path), Fix: "If you trust that account, pass --dir " + shellWord(untrusted.Dir) + ".", Err: err}
 	}

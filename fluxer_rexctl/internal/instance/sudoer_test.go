@@ -137,7 +137,7 @@ func TestRootTrustsOnlyFoldersRootAndTheSudoAccountControl(t *testing.T) {
 		ok     bool
 	}{
 		{name: "current folder of the sudo account", sudo: me, mode: 0o755, how: "workdir", ok: true},
-		{name: "current folder of another account", sudo: stranger, mode: 0o755, how: "workdir"},
+		{name: "current folder of another account", sudo: stranger, mode: 0o755, how: "workdir", ok: true},
 		{name: "current folder anyone can change", sudo: me, mode: 0o777, how: "workdir", shared: true},
 		{name: "--dir of another account", sudo: stranger, mode: 0o755, how: "flag", ok: true},
 		{name: "--dir anyone can change", sudo: me, mode: 0o777, how: "flag", shared: true},
