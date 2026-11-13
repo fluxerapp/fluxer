@@ -351,7 +351,7 @@ export async function showNotification({
 			try {
 				try {
 					if (typeof electronApi.flashFrame === 'function' && !document.hasFocus()) {
-						electronApi.flashFrame(false);
+						electronApi.flashFrame(true);
 					}
 				} catch (error) {
 					logger.warn('Failed to flash the desktop window for a notification', {error});
