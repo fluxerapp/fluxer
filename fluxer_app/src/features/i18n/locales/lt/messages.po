@@ -1891,6 +1891,11 @@ msgstr "{optionName}, privaloma parinktis, tipas: {optionType}"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} saugiai apdoroja mokėjimus."
 
+#. Download progress with the total size.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{percent}% of {total}"
+msgstr ""
+
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -7245,6 +7250,11 @@ msgstr "Čia negalima įkelti failų"
 msgid "Cancel"
 msgstr "Atšaukti"
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr ""
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7315,6 +7325,11 @@ msgstr "Atšaukti metinį atnaujinimą"
 #: src/features/channel/components/friends/FriendListItem.tsx
 msgid "Cancel your friend request to {displayName}?"
 msgstr "Ar tikrai norite atšaukti draugystės užklausą, siųstą „{displayName}“?"
+
+#. Download state after the user cancels it.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Canceled, partial file removed"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -8725,6 +8740,8 @@ msgid "Clear after"
 msgstr "Išvalyti po"
 
 #. Button that removes all active filters on the community members page.
+#. Clears finished downloads from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
 #: src/features/channel/components/guild_members_page/RolesFilterMenuContent.tsx
 msgid "Clear all"
 msgstr "Išvalyti viską"
@@ -9609,6 +9626,11 @@ msgstr "Palyginimas"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
 msgstr "Užbaigti mokėjimą"
+
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
+msgstr ""
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14266,6 +14288,11 @@ msgstr "Atsisiųskite naują versiją, kad atnaujintumėte {appName}."
 msgid "Download video"
 msgstr "Atsisiųsti vaizdo įrašą"
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr ""
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16207,6 +16234,11 @@ msgstr "Imituoti nepavykusius žinučių įkėlimus"
 msgid "Fail message sends"
 msgstr "Imituoti nepavykusius žinučių siuntimus"
 
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr ""
+
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
 msgstr "Nepavyko užblokuoti nario. Bandykite dar kartą."
@@ -16514,6 +16546,11 @@ msgstr "Nepavyko įkelti jaustukų, pradedant nuo {startLabel}: {errorMsg}"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
 msgid "Failed to upload emojis. Try again."
 msgstr "Nepavyko įkelti jaustukų. Bandykite dar kartą."
+
+#. Download state with the failure reason.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed: {reason}"
+msgstr ""
 
 #. Label for the favicon branding image in the setup wizard.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29617,6 +29654,11 @@ msgstr "Pašalinti iš mėgstamiausių"
 msgid "Remove from group"
 msgstr "Pašalinti iš grupės"
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr ""
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33590,6 +33632,11 @@ msgstr "Rodyti piktogramą sutraukus"
 msgid "Show in all communities"
 msgstr "Rodyti visose bendruomenėse"
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr ""
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35232,6 +35279,11 @@ msgstr "Pradėjo {name}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts
 msgid "Started displaying members with this role separately"
 msgstr "Nuo šiol nariai, turintys šį vaidmenį, bus rodomi atskirai"
+
+#. Download state before any bytes arrive.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
+msgstr ""
 
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -41774,6 +41826,11 @@ msgstr "Peržiūrėti išsamią informaciją"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
 msgstr "Peržiūrėti įrenginius, kurie prisijungę prie jūsų paskyros"
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
+msgstr ""
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

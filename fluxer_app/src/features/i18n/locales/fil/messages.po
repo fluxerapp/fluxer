@@ -1884,6 +1884,11 @@ msgstr ""
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr ""
 
+#. Download progress with the total size.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{percent}% of {total}"
+msgstr ""
+
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -7238,6 +7243,11 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr ""
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7307,6 +7317,11 @@ msgstr ""
 #. Confirmation prompt in the channel and chat friend list item. Preserve {displayName}; it is inserted by code.
 #: src/features/channel/components/friends/FriendListItem.tsx
 msgid "Cancel your friend request to {displayName}?"
+msgstr ""
+
+#. Download state after the user cancels it.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Canceled, partial file removed"
 msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -8718,6 +8733,8 @@ msgid "Clear after"
 msgstr ""
 
 #. Button that removes all active filters on the community members page.
+#. Clears finished downloads from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
 #: src/features/channel/components/guild_members_page/RolesFilterMenuContent.tsx
 msgid "Clear all"
 msgstr ""
@@ -9601,6 +9618,11 @@ msgstr ""
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
+msgstr ""
+
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
 msgstr ""
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
@@ -14259,6 +14281,11 @@ msgstr ""
 msgid "Download video"
 msgstr ""
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr ""
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16200,6 +16227,11 @@ msgstr ""
 msgid "Fail message sends"
 msgstr ""
 
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr ""
+
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
 msgstr ""
@@ -16506,6 +16538,11 @@ msgstr ""
 #. Error message in the guild emoji tab.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
 msgid "Failed to upload emojis. Try again."
+msgstr ""
+
+#. Download state with the failure reason.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed: {reason}"
 msgstr ""
 
 #. Label for the favicon branding image in the setup wizard.
@@ -29609,6 +29646,11 @@ msgstr ""
 msgid "Remove from group"
 msgstr ""
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr ""
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33582,6 +33624,11 @@ msgstr ""
 msgid "Show in all communities"
 msgstr ""
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr ""
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35223,6 +35270,11 @@ msgstr ""
 #. Activity log detail line under an existing role that was edited to turn on the Show this role separately setting. Members with the role now appear in their own section in the member list. Separately describes how the members are displayed, not the role. This line is only used when an existing role is edited. When a role is created with the setting on, the app uses "Showed members with this role in their own section in the member list." instead. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. It is not a settings label. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts
 msgid "Started displaying members with this role separately"
+msgstr ""
+
+#. Download state before any bytes arrive.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
 msgstr ""
 
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
@@ -41765,6 +41817,11 @@ msgstr ""
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
+msgstr ""
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
 msgstr ""
 
 #: src/features/user/components/popouts/UserProfileShared.tsx

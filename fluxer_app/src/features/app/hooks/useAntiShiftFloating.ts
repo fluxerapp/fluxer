@@ -306,9 +306,7 @@ export function useAntiShiftFloating(target: ReferenceElement | null, options: U
 			if (ownerWindow == null) return;
 			const adaptivePadding = getAdaptivePadding(ownerWindow);
 			const shiftPadding = Math.max(6, adaptivePadding);
-			const boundaryPadding = ignoreTitlebarBoundary
-				? shiftPadding
-				: getBoundaryPadding(ownerDocument, shiftPadding);
+			const boundaryPadding = ignoreTitlebarBoundary ? shiftPadding : getBoundaryPadding(ownerDocument, shiftPadding);
 			const middleware: Array<Middleware> = [
 				offset({mainAxis: offsetMainAxis, crossAxis: offsetCrossAxis}),
 				flip({padding: boundaryPadding}),

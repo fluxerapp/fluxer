@@ -1891,6 +1891,11 @@ msgstr "{optionName}，必填的 {optionType} 參數"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} 安全處理付款。"
 
+#. Download progress with the total size.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{percent}% of {total}"
+msgstr ""
+
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -7245,6 +7250,11 @@ msgstr "無法在這裡上傳檔案"
 msgid "Cancel"
 msgstr "取消"
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr ""
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7315,6 +7325,11 @@ msgstr "取消年度升級"
 #: src/features/channel/components/friends/FriendListItem.tsx
 msgid "Cancel your friend request to {displayName}?"
 msgstr "要取消對 {displayName} 的好友邀請嗎？"
+
+#. Download state after the user cancels it.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Canceled, partial file removed"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -8725,6 +8740,8 @@ msgid "Clear after"
 msgstr "清除時間"
 
 #. Button that removes all active filters on the community members page.
+#. Clears finished downloads from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
 #: src/features/channel/components/guild_members_page/RolesFilterMenuContent.tsx
 msgid "Clear all"
 msgstr "全部清除"
@@ -9609,6 +9626,11 @@ msgstr "比較"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
 msgstr "完成付款"
+
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
+msgstr ""
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14266,6 +14288,11 @@ msgstr "請下載新版本以更新 {appName}。"
 msgid "Download video"
 msgstr "下載影片"
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr ""
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16207,6 +16234,11 @@ msgstr "讓訊息載入失敗"
 msgid "Fail message sends"
 msgstr "讓訊息傳送失敗"
 
+#. Download state.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr ""
+
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
 msgstr "無法停權成員。請再試一次。"
@@ -16514,6 +16546,11 @@ msgstr "無法上傳表情符號（從 {startLabel} 開始）：{errorMsg}"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
 msgid "Failed to upload emojis. Try again."
 msgstr "表情符號上傳失敗。請再試一次。"
+
+#. Download state with the failure reason.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed: {reason}"
+msgstr ""
 
 #. Label for the favicon branding image in the setup wizard.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29616,6 +29653,11 @@ msgstr "從我的最愛移除"
 msgid "Remove from group"
 msgstr "從群組中移除"
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr ""
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33589,6 +33631,11 @@ msgstr "收合時顯示圖示"
 msgid "Show in all communities"
 msgstr "在所有社群中顯示"
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr ""
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35231,6 +35278,11 @@ msgstr "由 {name} 發起"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts
 msgid "Started displaying members with this role separately"
 msgstr "開始將擁有此身分組的成員獨立顯示"
+
+#. Download state before any bytes arrive.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
+msgstr ""
 
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -41773,6 +41825,11 @@ msgstr "查看詳情"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
 msgstr "檢視已登入您帳號的裝置"
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
+msgstr ""
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

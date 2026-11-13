@@ -105,15 +105,7 @@ async function downloadFileWithRedirects(
 		if (nextUrl == null) {
 			throw new Error(`HTTP ${statusCode} redirect target is unusable`);
 		}
-		await downloadFileWithRedirects(
-			nextUrl,
-			destPath,
-			redirects + 1,
-			maxBytes,
-			hash,
-			signal,
-			onProgress,
-		);
+		await downloadFileWithRedirects(nextUrl, destPath, redirects + 1, maxBytes, hash, signal, onProgress);
 		return;
 	}
 	if (statusCode === 204 || statusCode === 205) {
@@ -150,15 +142,7 @@ export async function downloadFile(url: string, destPath: string, options: Downl
 	const hash = expectedSha256 === null ? null : createHash('sha256');
 	const maxBytes = options.maxBytes ?? DOWNLOAD_MAX_BYTES;
 	await removePartialDownload(destPath);
-	await downloadFileWithRedirects(
-		target,
-		destPath,
-		0,
-		maxBytes,
-		hash,
-		options.signal ?? null,
-		options.onProgress,
-	);
+	await downloadFileWithRedirects(target, destPath, 0, maxBytes, hash, options.signal ?? null, options.onProgress);
 	if (expectedSha256 === null || hash === null) {
 		return;
 	}

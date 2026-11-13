@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomUUID} from 'node:crypto';
+import path from 'node:path';
 import {APP_PROTOCOL, DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
 import {
 	type DesktopTroubleshootingSettings,
@@ -109,10 +111,8 @@ import {
 	DESKTOP_UPDATE_EVENTS,
 } from '@fluxer/desktop_ipc/src/ModuleContract';
 import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
-import {randomUUID} from 'crypto';
 import {app, BrowserWindow, clipboard, dialog, ipcMain, powerMonitor, shell, systemPreferences} from 'electron';
 import log from 'electron-log';
-import path from 'path';
 
 interface TrayRuntimeStateUpdate {
 	voiceConnected?: boolean;
