@@ -68,6 +68,10 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:attachment:upload::channel_id',
 		config: {limit: 10, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_ATTACHMENT_GET: {
+		bucket: 'channel:attachment:read',
+		config: {limit: 600, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	ATTACHMENT_URLS_REFRESH: {
 		bucket: 'attachment:refresh_urls',
 		config: {limit: 60, windowMs: ms('10 seconds')},

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mediaUrlForRequester} from '@app/api/attachment/AttachmentMediaAccess';
+import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import {createChannelID, createMemeID, createMessageID} from '@app/api/BrandedTypes';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
@@ -8,6 +10,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {MediaMetadataError} from '@fluxer/errors/src/domains/core/MediaMetadataError';
 import {ChannelIdMessageIdParam, MemeIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	CreateFavoriteMemeBodySchema,
@@ -55,9 +58,12 @@ export function FavoriteMemeController(app: HonoApp) {
 			description: 'Saves a new meme to favorites from a provided URL.',
 		}),
 		async (ctx) => {
+			const data = ctx.req.valid('json');
+			const mediaUrl = await mediaUrlForRequester(ctx, data.url);
+			if (mediaUrl === null) throw new MediaMetadataError('URL');
 			const meme = await ctx.get('favoriteMemeRequestService').createFromUrl({
 				user: ctx.get('user'),
-				data: ctx.req.valid('json'),
+				data: mediaUrl === undefined ? data : {...data, url: signAttachmentUrl(mediaUrl)},
 			});
 			return ctx.json(meme, 201);
 		},

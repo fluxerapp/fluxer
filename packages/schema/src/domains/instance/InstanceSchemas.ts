@@ -256,6 +256,10 @@ export const InstanceFeaturesSchema = z
 			.describe('Whether existing Stripe subscriptions can be managed, cancelled and billed on this instance'),
 		self_hosted: z.boolean().describe('Whether this is a self-hosted instance'),
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
+		proxy_attachments_through_api: z
+			.boolean()
+			.optional()
+			.describe('Whether attachment links point at the API and need the viewer to be signed in. Missing means false'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
 		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
 		discovery_enabled: z

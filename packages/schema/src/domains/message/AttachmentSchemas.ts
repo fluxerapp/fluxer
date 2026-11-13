@@ -82,3 +82,22 @@ export const RefreshAttachmentUrlsResponse = z.object({
 });
 
 export type RefreshAttachmentUrlsResponse = z.infer<typeof RefreshAttachmentUrlsResponse>;
+
+export const AttachmentMediaResponse = z.file().describe('The attachment file');
+
+export const AttachmentAccessTokenRequest = z.object({
+	url: z
+		.string()
+		.max(2048)
+		.optional()
+		.describe('An attachment link that points at the API, for a token limited to that one file'),
+});
+
+export type AttachmentAccessTokenRequest = z.infer<typeof AttachmentAccessTokenRequest>;
+
+export const AttachmentAccessTokenResponse = z.object({
+	token: z.string().describe('Value for the mt query parameter on attachment links that point at the API'),
+	expires_at: z.iso.datetime().describe('When the token stops working'),
+});
+
+export type AttachmentAccessTokenResponse = z.infer<typeof AttachmentAccessTokenResponse>;

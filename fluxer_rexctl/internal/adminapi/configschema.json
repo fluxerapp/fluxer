@@ -645,6 +645,11 @@
     "nullable": true
   },
   {
+    "key": "media.proxy_attachments_through_api",
+    "type": "boolean",
+    "help": "Whether attachment links point at the API, which checks that the viewer can read the message before it hands over the file"
+  },
+  {
     "key": "notice",
     "type": "json",
     "help": "Notice shown to everyone on the instance, such as planned maintenance",
