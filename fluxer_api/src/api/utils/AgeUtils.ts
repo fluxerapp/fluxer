@@ -73,7 +73,7 @@ export function canUserAccessNsfwContent(user: NsfwEligibilityUser): boolean {
 		return true;
 	}
 	if (!instanceCollectsDateOfBirth()) {
-		return true;
+		return !user.dateOfBirth || isUserAdult(user.dateOfBirth);
 	}
 	return isUserAdult(user.dateOfBirth);
 }

@@ -53,9 +53,14 @@ describe('canUserAccessNsfwContent', () => {
 		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: null})).toBe(true);
 	});
 
-	it('allows an account with a minor date of birth when the instance collects none', () => {
+	it('blocks an account with a minor date of birth when the instance collects none', () => {
 		setDateOfBirthPolicy(DateOfBirthPolicies.OFF);
-		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH})).toBe(true);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: MINOR_DATE_OF_BIRTH})).toBe(false);
+	});
+
+	it('allows an account with an adult date of birth when the instance collects none', () => {
+		setDateOfBirthPolicy(DateOfBirthPolicies.OFF);
+		expect(canUserAccessNsfwContent({isBot: false, dateOfBirth: ADULT_DATE_OF_BIRTH})).toBe(true);
 	});
 });
 
