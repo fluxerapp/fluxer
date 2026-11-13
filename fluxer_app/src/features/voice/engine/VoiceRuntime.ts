@@ -332,6 +332,11 @@ class VoiceRuntime extends Store {
 		this.loadForCurrentUserVoiceStates(passiveVoiceStates);
 	}
 
+	handleCallVoiceStates(callVoiceStates: ReadonlyArray<VoiceState>): void {
+		voiceStates.seedVoiceStates(null, callVoiceStates);
+		this.loadForCurrentUserVoiceStates(callVoiceStates);
+	}
+
 	handleGatewayVoiceStateUpdate(guildId: string | null, voiceState: VoiceState): void {
 		const engine = this.engine;
 		if (engine !== null) {
