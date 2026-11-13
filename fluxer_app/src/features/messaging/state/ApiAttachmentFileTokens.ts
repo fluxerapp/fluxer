@@ -2,7 +2,6 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
-import apiAttachmentMedia from '@app/features/messaging/state/ApiAttachmentMedia';
 import {
 	apiAttachmentFileKey,
 	withAttachmentToken,
@@ -40,6 +39,7 @@ class ApiAttachmentFileTokens {
 	private issued = new Map<string, IssuedFileToken>();
 	private readonly failedUntilMs = new Map<string, number>();
 	private readonly pending = new Map<string, Promise<string | null>>();
+	private readonly epochs = new Map<string, number>();
 	private readonly listeners = new Set<() => void>();
 	private generation = 0;
 
@@ -54,6 +54,16 @@ class ApiAttachmentFileTokens {
 		const key = apiAttachmentFileKey(url);
 		if (key === null) return null;
 		return this.issued.get(key) ?? (this.failedUntilMs.has(key) ? 'failed' : null);
+	}
+
+	epochOf(url: string): number {
+		const key = apiAttachmentFileKey(url);
+		return key === null ? 0 : (this.epochs.get(key) ?? 0);
+	}
+
+	retryInMs(url: string): number {
+		const key = apiAttachmentFileKey(url);
+		return key === null ? 0 : Math.max(0, (this.failedUntilMs.get(key) ?? 0) - Date.now());
 	}
 
 	ensure(url: string): void {
@@ -74,15 +84,13 @@ class ApiAttachmentFileTokens {
 		return token === null ? bare : withAttachmentToken(bare, token);
 	}
 
-	async fetchableUrl(url: string): Promise<string> {
-		return apiAttachmentMedia.isHeaderMode() ? withoutAttachmentToken(url) : this.linkUrl(url);
-	}
-
 	invalidate(url: string): void {
 		const key = apiAttachmentFileKey(url);
 		if (key === null) return;
-		const cleared = this.failedUntilMs.delete(key);
-		if (this.issued.delete(key) || cleared) this.notify();
+		this.failedUntilMs.delete(key);
+		this.issued.delete(key);
+		this.epochs.set(key, (this.epochs.get(key) ?? 0) + 1);
+		this.notify();
 	}
 
 	reset(): void {
@@ -90,6 +98,7 @@ class ApiAttachmentFileTokens {
 		this.issued = new Map();
 		this.failedUntilMs.clear();
 		this.pending.clear();
+		this.epochs.clear();
 		this.notify();
 	}
 

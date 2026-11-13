@@ -34,6 +34,7 @@ interface MediaEntry {
 	size: number;
 	failures: number;
 	retryAtMs: number;
+	retryTimer: ReturnType<typeof setTimeout> | null;
 }
 
 class NotAnApiAttachmentError extends Error {
@@ -74,10 +75,13 @@ class ApiAttachmentMedia {
 
 	isHeaderMode = (): boolean => this.headerMode;
 
+	currentGeneration = (): number => this.generation;
+
 	setHeaderMode(headerMode: boolean): void {
 		if (this.headerMode === headerMode) return;
 		this.headerMode = headerMode;
-		this.notify();
+		if (headerMode) this.reset();
+		else this.notify();
 	}
 
 	read(url: string): ApiAttachmentMediaState {
@@ -128,6 +132,7 @@ class ApiAttachmentMedia {
 			size: 0,
 			failures: 0,
 			retryAtMs: 0,
+			retryTimer: null,
 		};
 		this.entries.set(url, entry);
 		this.enqueue(entry);
@@ -140,6 +145,7 @@ class ApiAttachmentMedia {
 	}
 
 	private restart(entry: MediaEntry): void {
+		this.cancelRetry(entry);
 		entry.state = LOADING;
 		this.enqueue(entry);
 		this.notify();
@@ -171,6 +177,7 @@ class ApiAttachmentMedia {
 		}
 		entry.controller?.abort();
 		entry.controller = null;
+		this.cancelRetry(entry);
 		if (entry.state.status === 'ready') {
 			URL.revokeObjectURL(entry.state.objectUrl);
 			this.cachedBytes -= entry.size;
@@ -230,12 +237,23 @@ class ApiAttachmentMedia {
 		}
 	}
 
+	private cancelRetry(entry: MediaEntry): void {
+		if (entry.retryTimer === null) return;
+		clearTimeout(entry.retryTimer);
+		entry.retryTimer = null;
+	}
+
 	private fail(entry: MediaEntry, permanent: boolean): void {
 		entry.failures += 1;
-		entry.retryAtMs = permanent
-			? Number.POSITIVE_INFINITY
-			: Date.now() + Math.min(FAILURE_BACKOFF_MS * 2 ** (entry.failures - 1), MAX_FAILURE_BACKOFF_MS);
+		const delayMs = Math.min(FAILURE_BACKOFF_MS * 2 ** (entry.failures - 1), MAX_FAILURE_BACKOFF_MS);
+		entry.retryAtMs = permanent ? Number.POSITIVE_INFINITY : Date.now() + delayMs;
 		entry.state = FAILED;
+		if (!permanent) {
+			entry.retryTimer = setTimeout(() => {
+				entry.retryTimer = null;
+				if (entry.refs > 0 && entry.state === FAILED && this.entries.get(entry.url) === entry) this.restart(entry);
+			}, delayMs);
+		}
 		this.notify();
 	}
 
@@ -245,12 +263,12 @@ class ApiAttachmentMedia {
 }
 
 const apiAttachmentMedia = new ApiAttachmentMedia();
+ResettableStates.register(apiAttachmentMedia, () => apiAttachmentMedia.reset());
 
 export function fetchedApiAttachmentKey(url: string): string | null {
 	if (apiAttachmentMedia.isHeaderMode()) return null;
 	const target = unwrapDesktopLocalResourceURL(url);
 	return isApiAttachmentUrl(target) ? withoutAttachmentToken(target) : null;
 }
-ResettableStates.register(apiAttachmentMedia, () => apiAttachmentMedia.reset());
 
 export default apiAttachmentMedia;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {forgetRestoredImageSource, wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
-import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useApiAttachmentSource} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher, {sameAttachmentSource} from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
@@ -129,7 +129,7 @@ export function useMediaLoading(
 	options: UseMediaLoadingOptions = {},
 ): MediaLoadingState {
 	const {enabled = true} = options;
-	const displaySrc = useApiAttachmentSrc(requestedSrc, enabled);
+	const {src: displaySrc, failed: fetchFailed} = useApiAttachmentSource(requestedSrc, enabled);
 	const src = displaySrc ?? '';
 	const mediaElementRef = useRef<MediaLoadingElement | null>(null);
 	const refreshedSourceRef = useRef<string | null>(null);
@@ -216,7 +216,7 @@ export function useMediaLoading(
 	return {
 		src: displaySrc,
 		loaded: currentSourceState.loaded,
-		error: currentSourceState.error,
+		error: currentSourceState.error || fetchFailed,
 		cached: currentSourceState.cached,
 		cachedOnMount,
 		thumbHashURL,
