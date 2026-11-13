@@ -7,6 +7,7 @@ const ACCESS_TOKEN_PARAMETER = 'mt';
 const MESSAGE_PARAMETER = 'mid';
 const VERSION_PREFIX_PATTERN = /^\/v[0-9]+(?=\/)/u;
 const ATTACHMENT_ROUTE_PATTERN = /^\/channels\/[0-9]+\/attachments\/[0-9]+\/[^/]/u;
+const ENCODED_SEPARATOR_PATTERN = /%(?:2e|2f|5c)/iu;
 
 interface ParsedApiAttachmentUrl {
 	url: URL;
@@ -32,7 +33,9 @@ function parseApiAttachmentUrl(url: string): ParsedApiAttachmentUrl | null {
 	const basePath = endpoint.basePath === '/' ? '' : endpoint.basePath;
 	if (!parsed.pathname.startsWith(`${basePath}/`)) return null;
 	const routePath = parsed.pathname.slice(basePath.length).replace(VERSION_PREFIX_PATTERN, '');
-	return ATTACHMENT_ROUTE_PATTERN.test(routePath) ? {url: parsed, routePath} : null;
+	return ATTACHMENT_ROUTE_PATTERN.test(routePath) && !ENCODED_SEPARATOR_PATTERN.test(routePath)
+		? {url: parsed, routePath}
+		: null;
 }
 
 export function isApiAttachmentUrl(url: string): boolean {
