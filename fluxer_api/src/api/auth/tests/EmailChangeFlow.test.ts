@@ -11,9 +11,10 @@ import {
 	loginUser,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -183,6 +184,51 @@ describe('Email change flow', () => {
 			})
 			.execute();
 		expect(updated.email).toBe(newEmail);
+	});
+	it('clears the bounced flag when a bounced user changes email through the token flow', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_bounced: true, email_verified: false})
+			.expect(200)
+			.execute();
+		const startResp = await startEmailChange(harness, account, account.password);
+		expect(startResp.require_original).toBe(false);
+		const originalProof = startResp.original_proof!;
+		const newEmail = `integration-unbounced-${Date.now()}@example.com`;
+		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
+		const newEmailData = findLastTestEmail(await listTestEmails(harness, {recipient: newEmail}), 'email_change_new');
+		const token = await verifyNewEmailChange(
+			harness,
+			account,
+			startResp.ticket,
+			newEmailData!.metadata!.code!,
+			originalProof,
+			account.password,
+		);
+		const updated = await createBuilder<UserPrivateResponse & {email_bounced?: boolean}>(harness, account.token)
+			.patch('/users/@me')
+			.body({email_token: token, password: account.password})
+			.execute();
+		expect(updated.email).toBe(newEmail);
+		expect(updated.verified).toBe(true);
+		expect(updated.email_bounced).toBe(false);
+		const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+		await getUserRepository().patchUpsert(user.id, {password_hash: null}, user.toRow());
+		await getInstanceConfigRepository().updateAuthConfig({identifier_first: true});
+		await clearTestEmails(harness);
+		const {ticket} = await createBuilderWithoutAuth<{ticket: string}>(harness)
+			.post('/auth/identify')
+			.header('x-forwarded-for', '203.0.113.9')
+			.body({email: newEmail})
+			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/email-code/send')
+			.header('x-forwarded-for', '203.0.113.9')
+			.body({ticket})
+			.execute();
+		const signInEmails = await listTestEmails(harness, {recipient: newEmail});
+		expect(findLastTestEmail(signInEmails, 'sign_in_code')?.metadata?.code).toBeDefined();
 	});
 	it('rejects direct email field update', async () => {
 		const account = await createTestAccount(harness);
