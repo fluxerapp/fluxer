@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import type {User} from '@app/api/models/User';
+import {isAccountLimited} from '@app/api/user/AccountLimit';
 import {isEnforcementReasonCode} from '@fluxer/constants/src/EnforcementReasons';
 import {
 	DELETED_USER_DISCRIMINATOR,
@@ -128,8 +129,10 @@ export function isSignInRefused(user: Pick<User, 'flags' | 'deletionStartedAt' |
 	return isAccountClosed(user) || isTemporarilyBanned(user);
 }
 
-export function canOwnerRunBots(owner: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>): boolean {
-	return !isAccountClosed(owner) && !isAccountDisabled(owner);
+export function canOwnerRunBots(
+	owner: Pick<User, 'isBot' | 'isSystem' | 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>,
+): boolean {
+	return !isAccountClosed(owner) && !isAccountDisabled(owner) && !isAccountLimited(owner);
 }
 
 export function isContentHidden(user: Pick<User, 'contentHiddenSince'>, messageId: bigint): boolean {

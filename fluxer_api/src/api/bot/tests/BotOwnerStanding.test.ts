@@ -75,6 +75,18 @@ describe('Bot tokens follow the owner account standing', () => {
 		expect(await botRestStatus(bot.botToken)).toBe(HTTP_STATUS.OK);
 	});
 
+	test('a bot of a limited owner stops working until the limit is lifted', async () => {
+		const bot = await createTestBotAccount(harness);
+		await setOwnerStanding(bot.ownerUserId, {addFlags: UserFlags.ACCOUNT_LIMITED});
+		expect(await botRestStatus(bot.botToken)).toBe(HTTP_STATUS.UNAUTHORIZED);
+		expect(await botIdentifyStatus(bot.botToken)).toBe(HTTP_STATUS.UNAUTHORIZED);
+		await createBuilder(harness, '')
+			.post(`/test/users/${bot.ownerUserId}/security-flags`)
+			.body({clear_flags: ['ACCOUNT_LIMITED']})
+			.execute();
+		expect(await botRestStatus(bot.botToken)).toBe(HTTP_STATUS.OK);
+	});
+
 	test('a bot of a disabled owner stops working', async () => {
 		const bot = await createTestBotAccount(harness);
 		await createBuilder(harness, bot.ownerToken)
