@@ -4,7 +4,7 @@ import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {DownloadEntryEvent} from '@app/types/electron';
 import {makeAutoObservable} from 'mobx';
 
-const MAX_ENTRIES = 6;
+const MAX_ENTRIES = 10;
 
 function isClearable(entry: DownloadEntryEvent): boolean {
 	return entry.state === 'completed' || entry.state === 'canceled' || entry.state === 'failed';
@@ -60,7 +60,6 @@ class DownloadsStore {
 			const candidate = this.entries[index];
 			if (dropped.has(candidate.id)) continue;
 			dropped.add(candidate.id);
-			if (!isClearable(candidate)) this.cancel(candidate);
 		}
 		this.entries = this.entries.filter((entry) => !dropped.has(entry.id));
 	}

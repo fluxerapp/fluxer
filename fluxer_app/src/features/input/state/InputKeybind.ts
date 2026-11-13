@@ -100,6 +100,7 @@ import {
 	TOGGLE_PINNED_MESSAGES_DESCRIPTOR,
 	TOGGLE_QUICK_SWITCHER_DESCRIPTOR,
 	TOGGLE_SAVED_MEDIA_DESCRIPTOR,
+	TOGGLE_THE_DOWNLOADS_MENU_DESCRIPTOR,
 	TOGGLE_THE_EMOJI_PICKER_DESCRIPTOR,
 	TOGGLE_THE_GIF_PICKER_DESCRIPTOR,
 	TOGGLE_THE_INBOX_DESCRIPTOR,
@@ -289,6 +290,7 @@ const WEB_BROWSER_RESERVED_DEFAULT_ACTIONS: ReadonlySet<KeybindCommand> = new Se
 	'system_zoom_in',
 	'system_zoom_out',
 	'system_zoom_reset',
+	'system_toggle_downloads',
 	'system_open_account_switcher',
 	'system_switch_account_recent',
 	'system_jump_account_mention',
@@ -790,6 +792,12 @@ const getDefaultKeybinds = (
 			action: 'misc_search',
 			label: i18n._(SEARCH_MESSAGES_DESCRIPTOR),
 			combo: {key: 'f', ctrlOrMeta: true},
+			section: 'misc',
+		},
+		{
+			action: 'system_toggle_downloads',
+			label: i18n._(TOGGLE_THE_DOWNLOADS_MENU_DESCRIPTOR),
+			combo: {key: '', code: 'KeyJ', ctrlOrMeta: true},
 			section: 'misc',
 		},
 		{

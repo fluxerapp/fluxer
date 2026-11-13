@@ -4,8 +4,11 @@ import styles from '@app/features/app/components/layout/NativeDownloads.module.c
 import DownloadsStore from '@app/features/app/state/DownloadsStore';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
+import KeyboardMode from '@app/features/ui/state/KeyboardMode';
+import PopoutState from '@app/features/ui/state/Popout';
 import type {DownloadEntryEvent} from '@app/types/electron';
 import {
 	NATIVE_TITLEBAR_CLASS,
@@ -24,6 +27,7 @@ import {createPortal} from 'react-dom';
 const DOWNLOADS_POPOUT_ID = 'native-titlebar-downloads';
 const ARC_DURATION_MS = 700;
 const ORIGIN_MAX_AGE_MS = 60000;
+const popout_FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 let originRect: DOMRect | null = null;
 let originCapturedAt = 0;
 
@@ -131,7 +135,7 @@ function animateParabola(outer: HTMLElement, inner: HTMLElement, toX: number, to
 		[{transform: 'translateY(0px) rotate(30deg)'}, {transform: `translateY(${dy}px) rotate(0deg)`}],
 		{
 			duration: ARC_DURATION_MS,
-			easing: 'cubic-bezier(0.55, 0.1, 0.65, 0.5)',
+			easing: 'cubic-bezier(0.3, 0, 0.66, 0)',
 			fill: 'forwards',
 		},
 	);
@@ -167,7 +171,9 @@ export const NativeDownloads: React.FC = observer(() => {
 	};
 	const [arc, setArc] = useState<{x: number; y: number} | null>(null);
 	const [landingCount, setLandingCount] = useState(0);
+	const {isOpen, openProps} = usePopout(DOWNLOADS_POPOUT_ID);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
+	const popoutRef = useRef<HTMLDivElement | null>(null);
 	const arcRef = useRef<HTMLDivElement | null>(null);
 	const arcIconRef = useRef<HTMLDivElement | null>(null);
 	const arcEntryId = useRef<string | null>(null);
@@ -176,6 +182,38 @@ export const NativeDownloads: React.FC = observer(() => {
 			setLandingCount(0);
 		}
 	}, [DownloadsStore.hasEntries]);
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				PopoutState.requestClose(DOWNLOADS_POPOUT_ID);
+				return;
+			}
+			if (event.key !== 'Tab') return;
+			const root = popoutRef.current;
+			if (!root) return;
+			const focusable = Array.from(root.querySelectorAll<HTMLElement>(popout_FOCUSABLE_SELECTOR));
+			if (focusable.length === 0) return;
+			const focusAt = (element: HTMLElement | undefined) => {
+				if (!element) return;
+				event.preventDefault();
+				KeyboardMode.enterKeyboardMode();
+				element.focus({preventScroll: true});
+			};
+			const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+			if (currentIndex === -1) {
+				focusAt(event.shiftKey ? focusable[focusable.length - 1] : focusable[0]);
+				return;
+			}
+			if (event.shiftKey) {
+				if (currentIndex === 0) focusAt(focusable[focusable.length - 1]);
+				return;
+			}
+			if (currentIndex === focusable.length - 1) focusAt(focusable[0]);
+		};
+		document.addEventListener('keydown', handleKeyDown, true);
+		return () => document.removeEventListener('keydown', handleKeyDown, true);
+	}, [isOpen]);
 	useLayoutEffect(() => {
 		const entry = DownloadsStore.entries[0];
 		if (arc || !entry || arcEntryId.current === entry.id) return;
@@ -201,7 +239,6 @@ export const NativeDownloads: React.FC = observer(() => {
 			}
 		});
 	}, [arc, landingCount]);
-	const {openProps} = usePopout(DOWNLOADS_POPOUT_ID);
 	if (!DownloadsStore.hasEntries) {
 		return null;
 	}
@@ -216,78 +253,102 @@ export const NativeDownloads: React.FC = observer(() => {
 				ignoreTitlebarBoundary
 				subscribeTo="DOWNLOADS_POPOUT_OPEN"
 				render={() => (
-					<div className={styles.panel} data-flx="app.native-downloads.panel">
-						<div className={styles.header} data-flx="app.native-downloads.header">
-							<span className={styles.title} data-flx="app.native-downloads.title">
-								{i18n._(DOWNLOADS_TITLE_DESCRIPTOR)}
-							</span>
-							<button
-								type="button"
-								className={styles.clearAll}
-								onClick={DownloadsStore.clearAll}
-								data-flx="app.native-downloads.clear-all.button"
-							>
-								{i18n._(CLEAR_ALL_DESCRIPTOR)}
-							</button>
+					<FocusRingScope containerRef={popoutRef} data-flx="app.native-downloads.focus-ring-scope">
+						<div
+							ref={popoutRef}
+							role="dialog"
+							aria-label={i18n._(DOWNLOADS_TITLE_DESCRIPTOR)}
+							className={styles.panel}
+							data-flx="app.native-downloads.panel"
+						>
+							<div className={styles.header} data-flx="app.native-downloads.header">
+								<span className={styles.title} data-flx="app.native-downloads.title">
+									{i18n._(DOWNLOADS_TITLE_DESCRIPTOR)}
+								</span>
+								<FocusRing offset={-2} data-flx="app.native-downloads.focus-ring">
+									<button
+										type="button"
+										className={styles.clearAll}
+										onClick={DownloadsStore.clearAll}
+										data-flx="app.native-downloads.clear-all.button"
+									>
+										{i18n._(CLEAR_ALL_DESCRIPTOR)}
+									</button>
+								</FocusRing>
+							</div>
+							<ul className={styles.list} data-flx="app.native-downloads.list">
+								{DownloadsStore.entries.map((entry) => {
+									const isDownloading = entry.state === 'started' || entry.state === 'progressing';
+									return (
+										<li key={entry.id} className={styles.item} data-flx="app.native-downloads.item">
+											<FocusRing offset={-2} data-flx="app.native-downloads.focus-ring--2">
+												<button
+													type="button"
+													className={styles.itemButton}
+													onClick={() => DownloadsStore.open(entry)}
+													disabled={entry.state !== 'completed'}
+													data-flx="app.native-downloads.item-button.open"
+												>
+													<span className={styles.itemBody} data-flx="app.native-downloads.item-body">
+														<span className={styles.itemName} data-flx="app.native-downloads.item-name">
+															{entry.fileName}
+														</span>
+														<span className={styles.itemMeta} data-flx="app.native-downloads.item-meta">
+															{displayDownload(entry)}
+														</span>
+													</span>
+												</button>
+											</FocusRing>
+											<div className={styles.itemControls} data-flx="app.native-downloads.item-controls">
+												<FocusRing
+													key={entry.state === 'completed' ? 'reveal-ready' : 'reveal-pending'}
+													offset={-2}
+													data-flx="app.native-downloads.focus-ring--3"
+												>
+													<button
+														type="button"
+														className={clsx(styles.cancelOrDismiss, entry.state === 'completed' && styles.swapIcon)}
+														onClick={() => DownloadsStore.reveal(entry)}
+														aria-label={i18n._(SHOW_IN_FOLDER_DESCRIPTOR)}
+														data-flx="app.native-downloads.cancel-or-dismiss.reveal.button"
+													>
+														<FolderOpenIcon size={20} weight="bold" data-flx="app.native-downloads.folder-open-icon" />
+													</button>
+												</FocusRing>
+												<FocusRing
+													key={isDownloading ? 'cancel' : 'dismiss'}
+													offset={-2}
+													data-flx="app.native-downloads.focus-ring--4"
+												>
+													<button
+														type="button"
+														className={clsx(
+															styles.cancelOrDismiss,
+															styles.swapIcon,
+															isDownloading && styles.cancelOrDismissDanger,
+														)}
+														onClick={() =>
+															isDownloading ? DownloadsStore.cancel(entry) : DownloadsStore.dismiss(entry)
+														}
+														aria-label={
+															isDownloading ? i18n._(CANCEL_DOWNLOAD_DESCRIPTOR) : i18n._(REMOVE_DOWNLOAD_DESCRIPTOR)
+														}
+														data-flx="app.native-downloads.cancel-or-dismiss.button"
+													>
+														{isDownloading ? (
+															<XIcon size={20} weight="bold" data-flx="app.native-downloads.x-icon" />
+														) : (
+															<BroomIcon size={20} weight="bold" data-flx="app.native-downloads.broom-icon" />
+														)}
+													</button>
+												</FocusRing>
+											</div>
+										</li>
+									);
+								})}
+							</ul>
 						</div>
-						<ul className={styles.list} data-flx="app.native-downloads.list">
-							{DownloadsStore.entries.map((entry) => {
-								const isDownloading = entry.state === 'started' || entry.state === 'progressing';
-								return (
-									<li key={entry.id} className={styles.item} data-flx="app.native-downloads.item">
-										<button
-											type="button"
-											className={styles.itemButton}
-											onClick={() => DownloadsStore.open(entry)}
-											disabled={entry.state !== 'completed'}
-											data-flx="app.native-downloads.item-button.open"
-										>
-											<span className={styles.itemBody} data-flx="app.native-downloads.item-body">
-												<span className={styles.itemName} data-flx="app.native-downloads.item-name">
-													{entry.fileName}
-												</span>
-												<span className={styles.itemMeta} data-flx="app.native-downloads.item-meta">
-													{displayDownload(entry)}
-												</span>
-											</span>
-										</button>
-										<div className={styles.itemControls} data-flx="app.native-downloads.item-controls">
-											<button
-												key={entry.state === 'completed' ? 'reveal-ready' : 'reveal-pending'}
-												type="button"
-												className={clsx(styles.cancelOrDismiss, entry.state === 'completed' && styles.swapIcon)}
-												onClick={() => DownloadsStore.reveal(entry)}
-												aria-label={i18n._(SHOW_IN_FOLDER_DESCRIPTOR)}
-												data-flx="app.native-downloads.cancel-or-dismiss.reveal.button"
-											>
-												<FolderOpenIcon size={20} weight="bold" data-flx="app.native-downloads.folder-open-icon" />
-											</button>
-											<button
-												key={isDownloading ? 'cancel' : 'dismiss'}
-												type="button"
-												className={clsx(
-													styles.cancelOrDismiss,
-													styles.swapIcon,
-													isDownloading && styles.cancelOrDismissDanger,
-												)}
-												onClick={() => (isDownloading ? DownloadsStore.cancel(entry) : DownloadsStore.dismiss(entry))}
-												aria-label={
-													isDownloading ? i18n._(CANCEL_DOWNLOAD_DESCRIPTOR) : i18n._(REMOVE_DOWNLOAD_DESCRIPTOR)
-												}
-												data-flx="app.native-downloads.cancel-or-dismiss.button"
-											>
-												{isDownloading ? (
-													<XIcon size={20} weight="bold" data-flx="app.native-downloads.x-icon" />
-												) : (
-													<BroomIcon size={20} weight="bold" data-flx="app.native-downloads.broom-icon" />
-												)}
-											</button>
-										</div>
-									</li>
-								);
-							})}
-						</ul>
-					</div>
+					</FocusRingScope>
 				)}
 			>
 				<FocusRing offset={0} data-flx="app.native-downloads.focus-ring">

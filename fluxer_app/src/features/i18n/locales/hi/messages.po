@@ -38878,6 +38878,11 @@ msgstr "स्टेट में बदलाव देखने के लि�
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
+msgid "Toggle the downloads menu"
+msgstr ""
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts
 msgid "Toggle the emoji picker"
 msgstr "इमोजी पिकर टॉगल करें"
 

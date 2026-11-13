@@ -16,7 +16,7 @@ export function getAccountKeybindDefaults(applePlatform: boolean): ReadonlyArray
 		{action: 'system_open_account_switcher', combo: {key: '', code: 'KeyO', ctrlOrMeta: true, shift: true}},
 		{action: 'system_switch_account_next', combo: {key: '', code: 'BracketRight', ctrlOrMeta: true, shift: true}},
 		{action: 'system_switch_account_prev', combo: {key: '', code: 'BracketLeft', ctrlOrMeta: true, shift: true}},
-		{action: 'system_switch_account_recent', combo: {key: '', code: 'KeyJ', ctrlOrMeta: true}},
+		{action: 'system_switch_account_recent', combo: {key: '', code: 'KeyQ', ctrlOrMeta: true, shift: true}},
 		{action: 'system_jump_account_mention', combo: {key: '', code: 'KeyJ', ctrlOrMeta: true, shift: true}},
 		{action: 'nav_quick_switcher_accounts', combo: {key: '', code: 'KeyK', ctrlOrMeta: true, shift: true}},
 		...ACCOUNT_SWITCHER_SLOT_ACTIONS.map((action, index) => ({
