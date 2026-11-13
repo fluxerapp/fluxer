@@ -651,7 +651,11 @@ export const MediaModal: FC<MediaModalProps> = observer(
 												let thumbnailContent: ReactNode;
 												if (thumb.type === 'video' || thumb.type === 'gifv') {
 													thumbnailContent = (
-														<ThumbnailVideo src={thumb.src} label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)} />
+														<ThumbnailVideo
+															src={thumb.src}
+															label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)}
+															data-flx="messaging.media-modal.thumbnail-video"
+														/>
 													);
 												} else if (thumb.type === 'audio') {
 													thumbnailContent = (
@@ -663,7 +667,13 @@ export const MediaModal: FC<MediaModalProps> = observer(
 														</div>
 													);
 												} else {
-													thumbnailContent = <ThumbnailImage src={thumb.src} alt={thumb.alt ?? ''} />;
+													thumbnailContent = (
+														<ThumbnailImage
+															src={thumb.src}
+															alt={thumb.alt ?? ''}
+															data-flx="messaging.media-modal.thumbnail-image"
+														/>
+													);
 												}
 												return (
 													<FocusRing
