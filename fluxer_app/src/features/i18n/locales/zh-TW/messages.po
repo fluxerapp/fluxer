@@ -2412,6 +2412,11 @@ msgstr "{username} 更改了頻道名稱。"
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username} 已將 {name} 加入此頻道。在此發布的訊息將會顯示在這裡。"
 
+#. System message shown inline when community ownership is transferred.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} has had the ownership of this community transferred to them."
+msgstr ""
+
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."

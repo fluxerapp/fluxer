@@ -2412,6 +2412,11 @@ msgstr "{username} เปลี่ยนชื่อช่องแล้ว"
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username} ติดตาม {name} มายังช่องนี้ ข้อความที่เผยแพร่ที่นั่นจะปรากฏที่นี่"
 
+#. System message shown inline when community ownership is transferred.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} has had the ownership of this community transferred to them."
+msgstr ""
+
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."

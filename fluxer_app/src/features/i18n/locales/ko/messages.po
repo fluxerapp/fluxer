@@ -2412,6 +2412,11 @@ msgstr "{username}님이 채널 이름을 변경했습니다."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username}님이 {name}을(를) 이 채널로 팔로우했습니다. 해당 채널에 게시된 메시지가 여기에 표시됩니다."
 
+#. System message shown inline when community ownership is transferred.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} has had the ownership of this community transferred to them."
+msgstr ""
+
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."
