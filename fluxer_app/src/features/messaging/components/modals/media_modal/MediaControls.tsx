@@ -16,11 +16,11 @@ import {
 	FORWARD_MEDIA_DESCRIPTOR,
 	MEDIA_CONTROLS_DESCRIPTOR,
 	OPEN_IN_BROWSER_DESCRIPTOR,
+	OPEN_POST_DESCRIPTOR,
 	REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR,
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
-	VIEW_POST_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
@@ -362,7 +362,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 								data-flx="messaging.media-modal.media-overlay-actions.view-post-icon"
 							/>
 						}
-						label={i18n._(VIEW_POST_DESCRIPTOR)}
+						label={i18n._(OPEN_POST_DESCRIPTOR)}
 						onClick={onViewPost}
 						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button.view-post"
 					/>

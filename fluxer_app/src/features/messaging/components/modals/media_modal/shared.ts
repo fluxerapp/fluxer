@@ -84,8 +84,8 @@ export const REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
 	comment: 'Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.',
 });
-export const VIEW_POST_DESCRIPTOR = msg({
-	message: 'View post',
+export const OPEN_POST_DESCRIPTOR = msg({
+	message: 'Open post',
 	comment:
 		'Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.',
 });

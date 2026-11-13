@@ -16,7 +16,7 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
-import {VIEW_POST_DESCRIPTOR} from '@app/features/messaging/components/modals/media_modal/shared';
+import {OPEN_POST_DESCRIPTOR} from '@app/features/messaging/components/modals/media_modal/shared';
 import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
@@ -271,6 +271,7 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 		onClose,
 		onDelete,
 		sourceChannel,
+		hideReply: onViewPost != null,
 	});
 	const visibleMessageGroups = useMemo(() => messageGroups.filter((group) => group.items.length > 0), [messageGroups]);
 	const mediaMenuGroupsWithMessageActions = useMemo(() => {
@@ -285,7 +286,7 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 					data-flx="messaging.media-viewer-modal.mobile-media-options-sheet.chat-circle-icon"
 				/>
 			),
-			label: i18n._(VIEW_POST_DESCRIPTOR),
+			label: i18n._(OPEN_POST_DESCRIPTOR),
 			onClick: () => {
 				onClose();
 				onViewPost();
@@ -457,10 +458,11 @@ const MediaViewerModalComponent: FC = observer(() => {
 					naturalHeight={item.naturalHeight}
 					onClose={onClose}
 					onDelete={handleDelete}
+					hideReply={sourcePost != null}
 					data-flx="messaging.media-viewer-modal.render-media-menu.media-context-menu"
 				/>
 			),
-		[defaultName, handleDelete, sourceChannel],
+		[defaultName, handleDelete, sourceChannel, sourcePost],
 	);
 	const handleContextMenu = useCallback(
 		(event: MouseEvent<HTMLDivElement>) => {

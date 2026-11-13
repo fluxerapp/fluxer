@@ -20,11 +20,11 @@ import {
 	FORWARD_MEDIA_DESCRIPTOR,
 	MEDIA_CONTROLS_DESCRIPTOR,
 	OPEN_IN_BROWSER_DESCRIPTOR,
+	OPEN_POST_DESCRIPTOR,
 	REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR,
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
-	VIEW_POST_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
@@ -294,7 +294,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 													data-flx="messaging.media-modal.mobile-media-actions.groups.chat-circle-icon"
 												/>
 											),
-											label: i18n._(VIEW_POST_DESCRIPTOR),
+											label: i18n._(OPEN_POST_DESCRIPTOR),
 											action: onViewPost,
 										}),
 									]

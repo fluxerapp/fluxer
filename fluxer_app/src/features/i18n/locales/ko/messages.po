@@ -26255,6 +26255,11 @@ msgstr "결제 페이지 다시 열기"
 msgid "Open popup"
 msgstr "팝업 열기"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "게시물 열기"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
@@ -41827,11 +41832,6 @@ msgstr "권한 보기"
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
 msgid "View plans"
 msgstr "요금제 보기"
-
-#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
-#: src/features/messaging/components/modals/media_modal/shared.ts
-msgid "View post"
-msgstr "게시물 보기"
 
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
