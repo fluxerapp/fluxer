@@ -15,6 +15,7 @@ import {formatNumber, getCachedNumberFormat} from '@app/features/i18n/utils/Intl
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
@@ -174,7 +175,10 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 			})
 		: null;
 	const handleThumbnailError = useAttachmentRefreshOnError(media?.src);
-	const thumbnailDisplaySrc = useApiAttachmentSrc(thumbnail ?? '');
+	const {ref: thumbnailRef, isNearViewport: thumbnailNearViewport} = useNearViewport<HTMLImageElement>({
+		rememberKey: thumbnail,
+	});
+	const thumbnailDisplaySrc = useApiAttachmentSrc(thumbnail ?? '', thumbnailNearViewport);
 	return (
 		<>
 			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
@@ -197,6 +201,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 						<div className={styles.cardMedia} data-flx="forum.forum-post-card.card-media">
 							{thumbnail ? (
 								<img
+									ref={thumbnailRef}
 									src={thumbnailDisplaySrc}
 									alt=""
 									className={styles.cardMediaImage}
@@ -262,6 +267,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 							{!grid && thumbnail && (
 								<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
 									<img
+										ref={thumbnailRef}
 										src={thumbnailDisplaySrc}
 										alt=""
 										className={styles.cardMediaImage}

@@ -139,7 +139,7 @@ function ForwardMessagePreviewThumbnailFrame({thumbnail, overflowCount}: Forward
 	const {i18n} = useLingui();
 	const hasOverflow = overflowCount > 0;
 	const imageSrc = useApiAttachmentSrc(
-		buildForwardMessagePreviewThumbnailURL(thumbnail),
+		thumbnail.showsFilePlaceholder ? '' : buildForwardMessagePreviewThumbnailURL(thumbnail),
 		!thumbnail.showsFilePlaceholder,
 	);
 	return (

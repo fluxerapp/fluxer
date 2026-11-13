@@ -33,6 +33,7 @@ import {
 	type ZoomState,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
@@ -103,9 +104,11 @@ const ThumbnailVideo: FC<{src: string; label: string}> = ({src, label}) => {
 };
 
 const ThumbnailImage: FC<{src: string; alt: string}> = ({src, alt}) => {
-	const displaySrc = useApiAttachmentSrc(src);
+	const {ref, isNearViewport} = useNearViewport<HTMLImageElement>({rememberKey: src});
+	const displaySrc = useApiAttachmentSrc(src, isNearViewport);
 	return (
 		<img
+			ref={ref}
 			src={displaySrc}
 			alt={alt}
 			className={styles.thumbnailImage}
