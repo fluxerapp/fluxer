@@ -7936,7 +7936,7 @@ msgid "Channel access"
 msgstr "Kanaltilgang"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Ingen tilgang til kanal"
 
@@ -13358,13 +13358,13 @@ msgstr "Utviklerstatus"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Utviklerverktøy"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Utviklerverktøy er tilgjengelige via ansattmerket øverst i kanalen."
 
@@ -21527,7 +21527,7 @@ msgid "Link styling"
 msgstr "Lenkestil"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Lenken er utilgjengelig"
 
@@ -38057,7 +38057,7 @@ msgid "This link has expired"
 msgstr "Denne lenken har utløpt"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Denne lenken er ikke tilgjengelig for kontoen din."
 
@@ -43839,7 +43839,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Du endret taggen din mens du hadde {PREMIUM_PRODUCT_NAME}. Den byttes ut med en tilfeldig tagg når {PREMIUM_PRODUCT_NAME} utløper, med mindre {PREMIUM_PRODUCT_NAME} fornyes."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Du har ikke tilgang til kanalen meldingen ble sendt i."
 
