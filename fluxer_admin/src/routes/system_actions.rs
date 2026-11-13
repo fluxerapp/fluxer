@@ -218,6 +218,7 @@ pub async fn instance_config_post(
             "update_app_legal" => Ok(app_public::build_app_legal_update(&form)),
             "update_policy" => Ok(policy::build_policy_update(&form)),
             "update_media" => Ok(build_media_update(&form)),
+            "update_media_access" => Ok(build_media_access_update(&form)),
             "update_billing" => {
                 super::billing_actions::build_billing_update(&form).map_err(FlashData::error)
             }
@@ -551,6 +552,19 @@ fn build_media_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
                     "media_attachment_decay_renew_window_days",
                 ),
             }),
+            proxy_attachments_through_api: None,
+        }),
+        ..Default::default()
+    }
+}
+
+fn build_media_access_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
+    InstanceConfigUpdateRequest {
+        media: Some(InstanceMediaUpdateRequest {
+            attachment_decay: None,
+            proxy_attachments_through_api: form
+                .first("media_proxy_attachments_through_api")
+                .map(|value| value == "true"),
         }),
         ..Default::default()
     }

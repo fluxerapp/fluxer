@@ -11,25 +11,40 @@ interface MediaSourceResume {
 	playing: boolean;
 }
 
+interface MediaSourceResumeRefs {
+	resumeRef: RefObject<MediaSourceResume | null>;
+	playOnSwapRef: RefObject<boolean>;
+}
+
 export function useMediaSourceResume(
 	mediaRef: RefObject<HTMLMediaElement | null>,
 	attached = true,
-): RefObject<MediaSourceResume | null> {
+): MediaSourceResumeRefs {
 	const resumeRef = useRef<MediaSourceResume | null>(null);
+	const playOnSwapRef = useRef(false);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media || !attached) return;
 		let source = media.currentSrc;
 		let time = 0;
 		let playing = !media.paused;
+		let pausedByError = false;
 		const recordTime = () => {
 			if (media.readyState >= HAVE_METADATA_READY_STATE) time = media.currentTime;
 		};
 		const markPlaying = () => {
+			pausedByError = false;
 			playing = true;
 		};
 		const markStopped = () => {
+			if (pausedByError) {
+				pausedByError = false;
+				return;
+			}
 			playing = false;
+		};
+		const handleError = () => {
+			pausedByError = playing;
 		};
 		const handleEnded = () => {
 			playing = false;
@@ -38,6 +53,9 @@ export function useMediaSourceResume(
 		const handleLoadStart = () => {
 			const nextSource = media.currentSrc;
 			const swapped = source !== '' && source !== nextSource && sameAttachmentSource(source, nextSource);
+			const playOnSwap = playOnSwapRef.current;
+			playOnSwapRef.current = false;
+			pausedByError = false;
 			source = nextSource;
 			if (!swapped) {
 				resumeRef.current = null;
@@ -45,6 +63,7 @@ export function useMediaSourceResume(
 				playing = !media.paused;
 				return;
 			}
+			playing = playing || playOnSwap;
 			resumeRef.current = {time, playing};
 			if (playing) void Promise.resolve(media.play()).catch(() => {});
 		};
@@ -61,6 +80,7 @@ export function useMediaSourceResume(
 		media.addEventListener('play', markPlaying);
 		media.addEventListener('pause', markStopped);
 		media.addEventListener('ended', handleEnded);
+		media.addEventListener('error', handleError);
 		media.addEventListener('loadstart', handleLoadStart);
 		media.addEventListener('loadedmetadata', handleLoadedMetadata);
 		return () => {
@@ -69,9 +89,10 @@ export function useMediaSourceResume(
 			media.removeEventListener('play', markPlaying);
 			media.removeEventListener('pause', markStopped);
 			media.removeEventListener('ended', handleEnded);
+			media.removeEventListener('error', handleError);
 			media.removeEventListener('loadstart', handleLoadStart);
 			media.removeEventListener('loadedmetadata', handleLoadedMetadata);
 		};
 	}, [attached, mediaRef]);
-	return resumeRef;
+	return {resumeRef, playOnSwapRef};
 }

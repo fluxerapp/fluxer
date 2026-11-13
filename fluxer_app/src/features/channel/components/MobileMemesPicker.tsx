@@ -19,6 +19,7 @@ import {
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
@@ -309,6 +310,10 @@ const GridItem = observer(
 		const memeUrl = AttachmentUrlRefresher.freshWhenReady(url, {refreshUnsigned: true});
 		const thumbnailSrc =
 			memeUrl !== null && isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
+		const videoPlaybackSrc = useApiAttachmentPlaybackSrc(
+			isVisible && !isAudio && isVideo ? (memeUrl ?? undefined) : undefined,
+		);
+		const imageDisplaySrc = useApiAttachmentSrc(thumbnailSrc ?? '', isVisible && !isAudio && !isVideo);
 		const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {
 			enabled: isVisible && !isAudio && isVideo,
 			shouldPlay: shouldAnimateGif,
@@ -351,14 +356,14 @@ const GridItem = observer(
 								disablePictureInPicture={true}
 								disableRemotePlayback={true}
 								preload={shouldAnimateGif ? 'auto' : 'metadata'}
-								src={memeUrl ?? undefined}
+								src={videoPlaybackSrc}
 								data-flx="channel.mobile-memes-picker.grid-item.gif"
 							/>
 						)}
 						{isVisible && !isAudio && !isVideo && (
 							<img
 								className={styles.gif}
-								src={thumbnailSrc ?? undefined}
+								src={thumbnailSrc === null ? undefined : imageDisplaySrc}
 								alt={title}
 								data-flx="channel.mobile-memes-picker.grid-item.gif--2"
 							/>

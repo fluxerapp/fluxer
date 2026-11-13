@@ -4,7 +4,7 @@ import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {executeConditional, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
 import {GuildThreadState} from '@app/api/Tables';
-import type {HonoEnv} from '@app/api/types/HonoEnv';
+import type {AuthTokenType, HonoEnv} from '@app/api/types/HonoEnv';
 import {CHANNEL_THREADS_CLIENT_FEATURE} from '@app/api/utils/featureUtils';
 import {
 	type ChannelThreadsConfig,
@@ -56,11 +56,15 @@ export function viewerActive(viewer: ThreadViewer, _guildId: GuildID | bigint | 
 	return userViewerActive(viewer);
 }
 
+function isSessionBacked(authTokenType: AuthTokenType | undefined): boolean {
+	return authTokenType === 'session' || authTokenType === 'attachment_media';
+}
+
 export function viewerFromCtx(ctx: Context<HonoEnv>): ThreadViewer {
 	const user = ctx.get('user');
 	const bot = user.isBot;
 	const capable =
-		bot || (ctx.get('authTokenType') === 'session' && ctx.get('clientFeatures').has(CHANNEL_THREADS_CLIENT_FEATURE));
+		bot || (isSessionBacked(ctx.get('authTokenType')) && ctx.get('clientFeatures').has(CHANNEL_THREADS_CLIENT_FEATURE));
 	return {kind: 'user', userId: user.id, bot, capable};
 }
 

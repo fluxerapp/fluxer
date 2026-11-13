@@ -16,10 +16,12 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentMedia, {fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {formatAttachmentDate} from '@app/features/messaging/utils/AttachmentExpiryUtils';
@@ -141,9 +143,11 @@ const RenderReadyImage: FC<RenderReadyImageProps> = ({
 	className,
 	onError,
 	onLoad,
-	src,
+	src: requestedSrc,
 	...imageProps
 }: RenderReadyImageProps) => {
+	const displaySrc = useApiAttachmentSrc(requestedSrc ?? '');
+	const src = requestedSrc === undefined ? undefined : displaySrc;
 	const [isReady, setIsReady] = useState(false);
 	const [renderedSource, setRenderedSource] = useState(src);
 	const [decodedBeforeSwap, setDecodedBeforeSwap] = useState(() => ImageCacheUtils.hasImage(src));
@@ -323,7 +327,10 @@ const MediaViewerModalComponent: FC = observer(() => {
 	const adjacentPinUrls = resolveAdjacentPinUrls(freshItems, currentIndex, isOpen);
 	useEffect(() => {
 		if (adjacentPinUrls.length === 0) return;
-		const unpinCallbacks = adjacentPinUrls.split('\n').map((url) => ImageCacheUtils.pinImage(url));
+		const unpinCallbacks = adjacentPinUrls.split('\n').map((url) => {
+			const fetchedKey = fetchedApiAttachmentKey(url);
+			return fetchedKey === null ? ImageCacheUtils.pinImage(url) : apiAttachmentMedia.retain(fetchedKey);
+		});
 		return () => {
 			for (const unpin of unpinCallbacks) unpin();
 		};
@@ -507,6 +514,9 @@ const MediaViewerModalComponent: FC = observer(() => {
 	const imageSrc = useMemo(() => (currentItem ? buildViewerMediaURL(currentItem) : ''), [currentItem]);
 	const handleImageError = useAttachmentRefreshOnError(imageSrc);
 	const handleGifvVideoError = useAttachmentRefreshOnError(currentItem?.src);
+	const gifvVideoSrc = currentItem?.type === 'gifv' && !currentGifvIsActualGif ? currentItem.src : undefined;
+	const gifvDisplaySrc = useApiAttachmentSrc(gifvVideoSrc ?? '', gifvVideoSrc !== undefined);
+	const gifvPlaybackSrc = gifvVideoSrc === undefined ? undefined : gifvDisplaySrc;
 	const freshItemSources = freshItems.map((item) => item.src).join('\n');
 	const thumbnails = useMemo(() => {
 		const snappedThumbnailSize = snapMediaProxyImageSize(MEDIA_VIEWER_THUMBNAIL_SIZE);
@@ -587,7 +597,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 			return (
 				<video
 					key={currentItem.src}
-					src={currentItem.src}
+					src={gifvPlaybackSrc}
 					className={styles.gifvVideo}
 					style={{
 						objectFit: 'contain',

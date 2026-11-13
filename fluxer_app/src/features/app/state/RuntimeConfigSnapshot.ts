@@ -285,6 +285,7 @@ function readFeatures(value: unknown): InstanceFeatures {
 		'email_codes',
 		'date_of_birth_step',
 		'discovery_enabled',
+		'proxy_attachments_through_api',
 	] as const) {
 		const value = readOptionalBoolean(source, key, `features.${key}`);
 		if (value !== undefined) {

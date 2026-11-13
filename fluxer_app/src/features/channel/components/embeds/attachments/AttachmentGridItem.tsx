@@ -171,6 +171,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: thumbnailSrc});
 		const shouldLoadMedia = isNearViewport && !shouldBlur && !spoilerHidden;
 		const {
+			src: displaySrc,
 			loaded,
 			error,
 			thumbHashURL,
@@ -401,7 +402,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 										</div>
 									)}
 									<img
-										src={shouldLoadMedia ? thumbnailSrc : undefined}
+										src={shouldLoadMedia ? displaySrc : undefined}
 										ref={mediaRef}
 										alt={attachment.filename}
 										loading="eager"

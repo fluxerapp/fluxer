@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
+import {isGuardedAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {makeSignedAttachmentCdnUrl} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, MemeID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createAttachmentID, createMemeID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {attachmentStorageChannelId, makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	attachmentStorageChannelId,
+	isOwnedEmbedAttachment,
+	makeAttachmentCdnKey,
+} from '@app/api/channel/services/message/MessageHelpers';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
@@ -637,7 +642,7 @@ export class FavoriteMemeService {
 		channelId: ChannelID,
 	): Promise<FavoriteMemeMedia | null> {
 		const media = embed.image || embed.video || embed.thumbnail;
-		if (!media?.url) {
+		if (!media?.url || (isGuardedAttachmentUrl(media.url) && !isOwnedEmbedAttachment(media))) {
 			return null;
 		}
 		const filename = this.extractFilenameFromUrl(media.url) || fallbackFilename;

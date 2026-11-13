@@ -2,17 +2,20 @@
 
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
+import {apiFormOfMediaUrl, makeApiAttachmentUrl, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {
 	attachmentStorageChannelId,
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 	isCrosspostCopy,
+	isOwnedEmbedAttachment,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {
 	type MessageResponseAccessContext,
 	MessageResponseDataService,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
 import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {CallInfo} from '@app/api/models/CallInfo';
@@ -61,12 +64,30 @@ class NoopNatsConnectionManager implements INatsConnectionManager {
 	}
 }
 
-function signOwnUrl(url: string | null | undefined): string | null {
-	return url == null ? null : signAttachmentUrl(url);
+function withoutMediaToken(url: string): string {
+	if (parseApiAttachmentUrl(url) === null) return url;
+	const parsed = new URL(url);
+	parsed.searchParams.delete('mt');
+	return parsed.toString();
 }
 
-function mediaProxyUrl(url: string | null | undefined): string | null {
-	return url?.startsWith('http') ? signAttachmentUrl(url) : null;
+function apiOwnMediaUrl(url: string, message: Message, owned: boolean): string {
+	const owner = owned
+		? {channelId: message.channelId, messageId: message.id, storageChannelId: attachmentStorageChannelId(message)}
+		: null;
+	return apiFormOfMediaUrl(url, owner) ?? withoutMediaToken(url);
+}
+
+function signOwnUrl(url: string | null | undefined, message: Message, owned = false): string | null {
+	if (url == null) return null;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
+	return signAttachmentUrl(url);
+}
+
+function mediaProxyUrl(url: string | null | undefined, message: Message, owned = false): string | null {
+	if (!url?.startsWith('http')) return null;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
+	return signAttachmentUrl(url);
 }
 
 export class RepositoryBackedMessageResponseDataService extends MessageResponseDataService {
@@ -341,6 +362,9 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private mapAttachmentUrl(message: Message, attachment: Attachment): string {
+		if (isApiProxiedAttachments()) {
+			return makeApiAttachmentUrl(message.channelId, attachment.id, attachment.filename, message.id);
+		}
 		return makeSignedAttachmentCdnUrl(attachmentStorageChannelId(message), attachment.id, attachment.filename);
 	}
 
@@ -398,17 +422,17 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbed(embed: Embed, message: Message): MessageEmbedResponse {
 		return {
 			type: embed.type ?? 'rich',
-			url: signOwnUrl(embed.url),
+			url: signOwnUrl(embed.url, message),
 			title: embed.title,
 			color: embed.color,
 			timestamp: embed.timestamp?.toISOString() ?? null,
 			description: embed.description,
-			author: this.mapEmbedAuthor(embed.author),
+			author: this.mapEmbedAuthor(embed.author, message),
 			image: this.mapEmbedMedia(embed.image, message),
 			thumbnail: this.mapEmbedMedia(embed.thumbnail, message),
-			footer: this.mapEmbedFooter(embed.footer),
+			footer: this.mapEmbedFooter(embed.footer, message),
 			fields: embed.fields.length > 0 ? embed.fields.map((field) => this.mapEmbedField(field)) : null,
-			provider: this.mapEmbedProvider(embed.provider),
+			provider: this.mapEmbedProvider(embed.provider, message),
 			video: this.mapEmbedMedia(embed.video, message),
 			audio: this.mapEmbedMedia(embed.audio, message),
 			html: embed.html,
@@ -419,30 +443,30 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		};
 	}
 
-	private mapEmbedAuthor(author: EmbedAuthor | null) {
+	private mapEmbedAuthor(author: EmbedAuthor | null, message: Message) {
 		if (!author?.name) return null;
 		return {
 			name: author.name,
-			url: signOwnUrl(author.url),
-			icon_url: signOwnUrl(author.iconUrl),
-			proxy_icon_url: mediaProxyUrl(author.iconUrl),
+			url: signOwnUrl(author.url, message),
+			icon_url: signOwnUrl(author.iconUrl, message),
+			proxy_icon_url: mediaProxyUrl(author.iconUrl, message),
 		};
 	}
 
-	private mapEmbedProvider(provider: EmbedProvider | null) {
+	private mapEmbedProvider(provider: EmbedProvider | null, message: Message) {
 		if (!provider?.name) return null;
 		return {
 			name: provider.name,
-			url: signOwnUrl(provider.url),
+			url: signOwnUrl(provider.url, message),
 		};
 	}
 
-	private mapEmbedFooter(footer: EmbedFooter | null) {
+	private mapEmbedFooter(footer: EmbedFooter | null, message: Message) {
 		if (!footer?.text) return null;
 		return {
 			text: footer.text,
-			icon_url: signOwnUrl(footer.iconUrl),
-			proxy_icon_url: mediaProxyUrl(footer.iconUrl),
+			icon_url: signOwnUrl(footer.iconUrl, message),
+			proxy_icon_url: mediaProxyUrl(footer.iconUrl, message),
 		};
 	}
 
@@ -457,9 +481,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbedMedia(media: EmbedMedia | null, message: Message) {
 		if (!media?.url) return null;
 		const resolved = this.resolveAttachmentUrl(media.url, message);
+		const owned = isOwnedEmbedAttachment(media);
 		return {
-			url: signAttachmentUrl(resolved),
-			proxy_url: mediaProxyUrl(resolved),
+			url: signOwnUrl(resolved, message, owned) ?? resolved,
+			proxy_url: mediaProxyUrl(resolved, message, owned),
 			content_type: media.contentType,
 			content_hash: media.contentHash,
 			width: media.width,

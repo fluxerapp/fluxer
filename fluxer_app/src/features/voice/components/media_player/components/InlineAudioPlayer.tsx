@@ -120,7 +120,7 @@ export function InlineAudioPlayer({
 		: splitFilename(title);
 	const fileSizeString = fileSize ? formatFileSize(getFormattingLocale(), fileSize) : '';
 	useEffect(() => {
-		if (hasStarted && pendingPlayRef.current) {
+		if (hasStarted && sourceAttribute !== undefined && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
 				if (pendingPlayRef.current) {
 					pendingPlayRef.current = false;
@@ -130,7 +130,7 @@ export function InlineAudioPlayer({
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [hasStarted, play]);
+	}, [hasStarted, play, sourceAttribute]);
 	const handlePlayToggle = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault();

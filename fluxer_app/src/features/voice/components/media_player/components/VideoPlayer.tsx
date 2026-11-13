@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
@@ -138,6 +139,7 @@ interface VideoSeekPreviewThumbnailProps {
 
 function VideoSeekPreviewThumbnail({src, poster, time}: VideoSeekPreviewThumbnailProps) {
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const playbackSrc = useApiAttachmentPlaybackSrc(src);
 	const seekPreviewVideo = useCallback((targetTime: number) => {
 		const video = videoRef.current;
 		if (!video || video.readyState < 1) return;
@@ -156,7 +158,7 @@ function VideoSeekPreviewThumbnail({src, poster, time}: VideoSeekPreviewThumbnai
 		<video
 			ref={videoRef}
 			className={styles.seekPreviewVideo}
-			src={resolveDesktopCrossOriginMediaURL(src)}
+			src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 			poster={poster}
 			preload="metadata"
 			muted
@@ -358,6 +360,7 @@ export const VideoPlayer = observer(function VideoPlayer({
 			}),
 		[autoPlay, hasPlayed, wantsMetadata, state.error, state.isEnded, state.isPaused, state.isPlaying],
 	);
+	const playbackSrc = useApiAttachmentPlaybackSrc(renderModel.shouldAttachSource ? src : undefined);
 	useEffect(() => {
 		const snapshot = transitionVideoPlayerRenderSnapshot(renderSnapshotRef.current, {
 			type: 'video.observePlayback',
@@ -451,7 +454,7 @@ export const VideoPlayer = observer(function VideoPlayer({
 	}, [handleResize, handleObservedResize]);
 	const hasAutoPlayedRef = useRef(autoPlay);
 	useEffect(() => {
-		if (hasPlayed && !hasAutoPlayedRef.current) {
+		if (hasPlayed && playbackSrc !== undefined && !hasAutoPlayedRef.current) {
 			hasAutoPlayedRef.current = true;
 			const timer = setTimeout(() => {
 				play();
@@ -459,7 +462,7 @@ export const VideoPlayer = observer(function VideoPlayer({
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [hasPlayed, play]);
+	}, [hasPlayed, play, playbackSrc]);
 	const handlePosterClick = useCallback(() => {
 		containerRef.current?.focus({preventScroll: true});
 		setHasPlayed(true);
@@ -603,7 +606,7 @@ export const VideoPlayer = observer(function VideoPlayer({
 					<video
 						ref={mediaRef as React.RefObject<HTMLVideoElement>}
 						className={clsx(styles.video, renderModel.shouldHideVideo && styles.videoHidden)}
-						src={renderModel.shouldAttachSource ? resolveDesktopCrossOriginMediaURL(src) : undefined}
+						src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 						preload={renderModel.preloadAttribute}
 						crossOrigin="anonymous"
 						playsInline

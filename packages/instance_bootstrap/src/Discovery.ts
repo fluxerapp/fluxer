@@ -82,6 +82,7 @@ const FEATURE_FLAG_KEYS = Object.freeze([
 	'instant_accounts',
 	'email_codes',
 	'date_of_birth_step',
+	'proxy_attachments_through_api',
 ] as const) satisfies ReadonlyArray<keyof InstanceFeatures>;
 
 const BRANDING_URL_KEYS = Object.freeze([

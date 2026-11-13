@@ -770,6 +770,7 @@ const InstanceMediaResponse = z.object({
 		renew_window_days: z.number().int().positive().nullable(),
 		effective: AttachmentDecayEffectiveResponse,
 	}),
+	proxy_attachments_through_api: z.boolean(),
 });
 
 const ConnectionProviderKindSchema = createNamedStringLiteralUnion(
@@ -1092,6 +1093,12 @@ export const InstanceConfigUpdateRequest = z.object({
 				})
 				.register(schemaMetadata, {preserveNullFields: true})
 				.nullish(),
+			proxy_attachments_through_api: z
+				.boolean()
+				.optional()
+				.describe(
+					'Whether attachment links point at the API, which checks that the viewer can read the message before it hands over the file',
+				),
 		})
 		.nullish(),
 	policy: InstancePolicyUpdateSchema.nullish(),
