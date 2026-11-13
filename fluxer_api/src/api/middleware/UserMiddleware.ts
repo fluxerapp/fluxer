@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isOperatorPath, isOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
-import {verifyAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {openAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
 import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
@@ -89,7 +89,7 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 async function authenticateAttachmentMediaToken(ctx: Context<HonoEnv>): Promise<void> {
 	const token = ctx.req.query('mt');
 	if (!token) return;
-	const payload = verifyAttachmentMediaToken(token);
+	const payload = openAttachmentMediaToken(token);
 	if (!payload) return;
 	const apiContext = ctx.get('apiContext');
 	const authSession = await apiContext.services.users.getAuthSessionByToken(Buffer.from(payload.s, 'base64url'));

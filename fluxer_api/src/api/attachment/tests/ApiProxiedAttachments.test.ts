@@ -4,8 +4,8 @@ import {createHmac, randomBytes} from 'node:crypto';
 import {clearAttachmentMediaDecisionsForTesting} from '@app/api/attachment/AttachmentMediaAccess';
 import {
 	type AttachmentMediaTokenPayload,
-	signAttachmentMediaToken,
-	verifyAttachmentMediaToken,
+	openAttachmentMediaToken,
+	sealAttachmentMediaToken,
 } from '@app/api/attachment/AttachmentMediaToken';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
@@ -296,6 +296,16 @@ describe('attachments served through the API', () => {
 		expect(upstream.length).toBe(before);
 	});
 
+	test('with the setting on a grid of images loading at once is not refused', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const path = routePath(sent.url);
+		const responses = await Promise.all(Array.from({length: 24}, () => get(path, member.token)));
+		expect(responses.map((response) => response.status)).toEqual(responses.map(() => 200));
+		const bodies = await Promise.all(responses.map(async (response) => Buffer.from(await response.arrayBuffer())));
+		expect(bodies.every((body) => body.equals(FILE_BYTES))).toBe(true);
+	});
+
 	async function mintFor(token: string, url: string): Promise<string> {
 		const minted = await mintToken(token, {url});
 		expect(minted.status).toBe(200);
@@ -317,12 +327,17 @@ describe('attachments served through the API', () => {
 		const lifetimeMs = Date.parse(body.expires_at) - before;
 		expect(lifetimeMs).toBeGreaterThan(4 * 60 * 1000);
 		expect(lifetimeMs).toBeLessThanOrEqual(5 * 60 * 1000 + 1000);
-		expect(verifyAttachmentMediaToken(body.token)).toMatchObject({
+		expect(openAttachmentMediaToken(body.token)).toMatchObject({
 			c: channelId,
 			a: new URL(sent.url).pathname.split('/').at(-2),
 		});
+		const readable = Buffer.from(body.token, 'base64url').toString('latin1');
+		for (const secret of [member.userId, channelId, sent.messageId]) {
+			expect(readable.includes(secret)).toBe(false);
+		}
 		const opened = await get(withToken(path, body.token));
 		expect(opened.status).toBe(200);
+		expect(opened.headers.get('cache-control')).toBe('private, no-store');
 		expect(Buffer.from(await opened.arrayBuffer())).toEqual(FILE_BYTES);
 		expect((await get(withToken(path, body.token), undefined, {Range: 'bytes=0-9'})).status).toBe(206);
 		const tampered = `${body.token.slice(0, -2)}${body.token.endsWith('AA') ? 'BB' : 'AA'}`;
@@ -362,17 +377,17 @@ describe('attachments served through the API', () => {
 		const swapped = routePath(own.url).replace(`/channels/${ownChannelId}/`, `/channels/${channelId}/`);
 		expect((await get(withToken(swapped, outsiderToken))).status).toBe(401);
 		const memberToken = await mintFor(member.token, sent.url);
-		const payload = verifyAttachmentMediaToken(memberToken)!;
+		const payload = openAttachmentMediaToken(memberToken)!;
 		expect(payload.u).toBe(member.userId);
-		const forged = signAttachmentMediaToken({...payload, u: outsider.userId});
+		const forged = sealAttachmentMediaToken({...payload, u: outsider.userId});
 		expect((await get(withToken(routePath(sent.url), forged))).status).toBe(401);
 	});
 
 	test('with the setting on an expired file token is refused', async () => {
 		await setProxied(true);
 		const sent = await sendImage(owner.token, channelId);
-		const payload = verifyAttachmentMediaToken(await mintFor(member.token, sent.url))!;
-		const expired = signAttachmentMediaToken({...payload, expiresAt: Date.now() - 1});
+		const payload = openAttachmentMediaToken(await mintFor(member.token, sent.url))!;
+		const expired = sealAttachmentMediaToken({...payload, expiresAt: Date.now() - 1});
 		expect((await get(withToken(routePath(sent.url), expired))).status).toBe(401);
 	});
 
@@ -399,10 +414,10 @@ describe('attachments served through the API', () => {
 		const sent = await sendImage(owner.token, channelId);
 		expect((await mintToken(member.token)).status).toBe(400);
 		expect((await mintToken(member.token, {url: `${Config.endpoints.apiClient}/users/@me`})).status).toBe(404);
-		const payload = verifyAttachmentMediaToken(await mintFor(member.token, sent.url))!;
+		const payload = openAttachmentMediaToken(await mintFor(member.token, sent.url))!;
 		const {c: _channel, a: _attachment, ...accountWide} = payload;
-		const accountToken = signAttachmentMediaToken(accountWide as unknown as AttachmentMediaTokenPayload);
-		expect(verifyAttachmentMediaToken(accountToken)).toBeNull();
+		const accountToken = sealAttachmentMediaToken(accountWide as unknown as AttachmentMediaTokenPayload);
+		expect(openAttachmentMediaToken(accountToken)).toBeNull();
 		expect((await get(withToken(routePath(sent.url), accountToken))).status).toBe(401);
 		const viaHeader = await get(routePath(sent.url), member.token);
 		expect(viaHeader.status).toBe(200);

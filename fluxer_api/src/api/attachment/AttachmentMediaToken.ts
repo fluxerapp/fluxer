@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createHmac} from 'node:crypto';
+import {createCipheriv, createDecipheriv, createHmac, randomBytes} from 'node:crypto';
 import {SNOWFLAKE_REGEX} from '@app/api/attachment/AttachmentPublicUrl';
 import {Config} from '@app/api/Config';
-import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
-import {signExpiringToken, verifyExpiringToken} from '@app/api/utils/SignedExpiringToken';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 
-const KEY_DERIVATION_LABEL = 'fluxer.attachment-media.v1';
+const KEY_DERIVATION_LABEL = 'fluxer.attachment-media.v2';
+const CIPHER = 'aes-256-gcm';
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
 const MAX_FEATURES = 32;
 export const ATTACHMENT_MEDIA_TOKEN_TTL_MS = 5 * 60 * 1000;
 
@@ -44,10 +46,28 @@ function isAttachmentMediaTokenPayload(value: unknown): value is AttachmentMedia
 	);
 }
 
-export function signAttachmentMediaToken(payload: AttachmentMediaTokenPayload): string {
-	return signExpiringToken(payload, deriveKey());
+export function sealAttachmentMediaToken(payload: AttachmentMediaTokenPayload): string {
+	const iv = randomBytes(IV_BYTES);
+	const cipher = createCipheriv(CIPHER, deriveKey(), iv);
+	const sealed = Buffer.concat([cipher.update(JSON.stringify(payload), 'utf8'), cipher.final()]);
+	return Buffer.concat([iv, sealed, cipher.getAuthTag()]).toString('base64url');
 }
 
-export function verifyAttachmentMediaToken(token: string): AttachmentMediaTokenPayload | null {
-	return verifyExpiringToken(token, deriveKey(), isAttachmentMediaTokenPayload);
+export function openAttachmentMediaToken(token: string): AttachmentMediaTokenPayload | null {
+	const bytes = Buffer.from(token, 'base64url');
+	if (bytes.length <= IV_BYTES + TAG_BYTES || bytes.toString('base64url') !== token) return null;
+	let payload: AttachmentMediaTokenPayload | null;
+	try {
+		const decipher = createDecipheriv(CIPHER, deriveKey(), bytes.subarray(0, IV_BYTES));
+		decipher.setAuthTag(bytes.subarray(bytes.length - TAG_BYTES));
+		const opened = Buffer.concat([
+			decipher.update(bytes.subarray(IV_BYTES, bytes.length - TAG_BYTES)),
+			decipher.final(),
+		]);
+		payload = parseJsonWithGuard(opened.toString('utf8'), isAttachmentMediaTokenPayload);
+	} catch {
+		return null;
+	}
+	if (!payload || Date.now() > payload.expiresAt) return null;
+	return payload;
 }

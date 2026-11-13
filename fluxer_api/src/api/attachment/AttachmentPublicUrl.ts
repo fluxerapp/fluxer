@@ -24,6 +24,7 @@ const LEADING_SLASHES_REGEX = /^\/+/u;
 const VERSION_PREFIX_REGEX = /^\/v[0-9]+(?=\/)/u;
 const API_ATTACHMENT_PATH_REGEX = /^\/channels\/([0-9]{1,20})\/attachments\/([0-9]{1,20})\/(.+)$/u;
 const RESERVED_QUERY_NAMES = new Set(['mid', 'mt']);
+const ENCODED_SEPARATOR_REGEX = /%(?:2e|2f|5c)/iu;
 
 export interface ApiAttachmentLocation {
 	channelId: ChannelID;
@@ -87,7 +88,7 @@ export function makeApiAttachmentUrl(
 
 export function parseApiAttachmentRoute(routePath: string, mid: string | null): ApiAttachmentLocation | null {
 	const match = API_ATTACHMENT_PATH_REGEX.exec(routePath.replace(VERSION_PREFIX_REGEX, ''));
-	if (!match) return null;
+	if (!match || ENCODED_SEPARATOR_REGEX.test(match[3]!)) return null;
 	const filename = percentDecodeStorageKey(match[3]!);
 	if (filename === null || !isSafeFilename(filename)) return null;
 	if (mid !== null && !SNOWFLAKE_REGEX.test(mid)) return null;

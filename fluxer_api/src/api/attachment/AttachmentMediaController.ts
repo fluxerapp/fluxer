@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {resolveAttachmentForRequester} from '@app/api/attachment/AttachmentMediaAccess';
-import {ATTACHMENT_MEDIA_TOKEN_TTL_MS, signAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {ATTACHMENT_MEDIA_TOKEN_TTL_MS, sealAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
 import {fetchAttachmentFromMediaProxy, readTransformQuery} from '@app/api/attachment/AttachmentMediaUpstream';
 import {
 	type ApiAttachmentLocation,
@@ -24,6 +24,7 @@ import {
 } from '@fluxer/schema/src/domains/message/AttachmentSchemas';
 import type {Context, MiddlewareHandler} from 'hono';
 
+const MAX_REQUESTS_PER_USER = 64;
 const MAX_STREAMS_PER_USER = 16;
 const PASSED_THROUGH_STATUSES = new Set([200, 206, 304, 416]);
 const DENIED_UPSTREAM_STATUSES = new Set([403, 404]);
@@ -38,6 +39,7 @@ const PASSED_THROUGH_HEADERS = [
 ] as const;
 const STREAMED_MEDIA_PREFIXES = ['audio/', 'video/'];
 
+const openRequests = new Map<string, number>();
 const openStreams = new Map<string, number>();
 
 function enabledOnly(): MiddlewareHandler<HonoEnv> {
@@ -70,18 +72,23 @@ function scopeMatches(ctx: Context<HonoEnv>, location: ApiAttachmentLocation): b
 	);
 }
 
-function acquireStream(userKey: string): (() => void) | null {
-	const current = openStreams.get(userKey) ?? 0;
-	if (current >= MAX_STREAMS_PER_USER) return null;
-	openStreams.set(userKey, current + 1);
+function acquireSlot(counts: Map<string, number>, limit: number, userKey: string): (() => void) | null {
+	const current = counts.get(userKey) ?? 0;
+	if (current >= limit) return null;
+	counts.set(userKey, current + 1);
 	let released = false;
 	return () => {
 		if (released) return;
 		released = true;
-		const remaining = (openStreams.get(userKey) ?? 1) - 1;
-		if (remaining <= 0) openStreams.delete(userKey);
-		else openStreams.set(userKey, remaining);
+		const remaining = (counts.get(userKey) ?? 1) - 1;
+		if (remaining <= 0) counts.delete(userKey);
+		else counts.set(userKey, remaining);
 	};
+}
+
+function isStreamedMedia(headers: Headers): boolean {
+	const contentType = headers.get('content-type')?.toLowerCase() ?? '';
+	return STREAMED_MEDIA_PREFIXES.some((prefix) => contentType.startsWith(prefix));
 }
 
 function trackedBody(body: ReadableStream<Uint8Array>, release: () => void): ReadableStream<Uint8Array> {
@@ -111,15 +118,18 @@ function trackedBody(body: ReadableStream<Uint8Array>, release: () => void): Rea
 	);
 }
 
-function mediaHeaders(upstream: Response): Headers {
+function cacheControl(streamed: boolean, viaFileToken: boolean): string {
+	if (viaFileToken) return streamed ? 'private, no-store, no-transform' : 'private, no-store';
+	return streamed ? 'private, max-age=3600, no-transform' : 'private, max-age=3600';
+}
+
+function mediaHeaders(upstream: Response, viaFileToken: boolean): Headers {
 	const headers = new Headers();
 	for (const name of PASSED_THROUGH_HEADERS) {
 		const value = upstream.headers.get(name);
 		if (value !== null) headers.set(name, value);
 	}
-	const contentType = headers.get('content-type')?.toLowerCase() ?? '';
-	const streamed = STREAMED_MEDIA_PREFIXES.some((prefix) => contentType.startsWith(prefix));
-	headers.set('Cache-Control', streamed ? 'private, max-age=3600, no-transform' : 'private, max-age=3600');
+	headers.set('Cache-Control', cacheControl(isStreamedMedia(headers), viaFileToken));
 	headers.set('CDN-Cache-Control', 'no-store');
 	headers.set('Vary', 'Authorization');
 	headers.set('X-Content-Type-Options', 'nosniff');
@@ -160,7 +170,8 @@ export function AttachmentMediaController(app: HonoApp) {
 			const user = ctx.get('user');
 			const storageKey = await resolveAttachmentForRequester(ctx, location);
 			if (storageKey === null) return notFound();
-			const release = acquireStream(user.id.toString());
+			const userKey = user.id.toString();
+			const release = acquireSlot(openRequests, MAX_REQUESTS_PER_USER, userKey);
 			if (release === null) return emptyResponse(429, {'Retry-After': '1'});
 			let upstream: Response;
 			try {
@@ -180,15 +191,27 @@ export function AttachmentMediaController(app: HonoApp) {
 				await upstream.body?.cancel();
 				return DENIED_UPSTREAM_STATUSES.has(upstream.status) ? notFound() : emptyResponse(502);
 			}
+			const viaFileToken = ctx.get('authTokenType') === 'attachment_media';
 			if (!upstream.body || ctx.req.method === 'HEAD') {
 				release();
 				await upstream.body?.cancel();
-				return new Response(null, {status: upstream.status, headers: mediaHeaders(upstream)});
+				return new Response(null, {status: upstream.status, headers: mediaHeaders(upstream, viaFileToken)});
 			}
-			return new Response(trackedBody(upstream.body, release), {
-				status: upstream.status,
-				headers: mediaHeaders(upstream),
-			});
+			const releaseStream = isStreamedMedia(upstream.headers)
+				? acquireSlot(openStreams, MAX_STREAMS_PER_USER, userKey)
+				: () => {};
+			if (releaseStream === null) {
+				release();
+				await upstream.body.cancel();
+				return emptyResponse(429, {'Retry-After': '1'});
+			}
+			return new Response(
+				trackedBody(upstream.body, () => {
+					releaseStream();
+					release();
+				}),
+				{status: upstream.status, headers: mediaHeaders(upstream, viaFileToken)},
+			);
 		},
 	);
 
@@ -217,7 +240,7 @@ export function AttachmentMediaController(app: HonoApp) {
 			if (location === null) return notFound();
 			if ((await resolveAttachmentForRequester(ctx, location)) === null) return notFound();
 			const expiresAt = Date.now() + ATTACHMENT_MEDIA_TOKEN_TTL_MS;
-			const token = signAttachmentMediaToken({
+			const token = sealAttachmentMediaToken({
 				u: user.id.toString(),
 				s: Buffer.from(session.sessionIdHash).toString('base64url'),
 				f: [...ctx.get('clientFeatures')],
