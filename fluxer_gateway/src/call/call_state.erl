@@ -5,6 +5,7 @@
 
 -export([
     build_call_event/1,
+    broadcast_call_event/1,
     caller_from_state/1,
     put_caller/2,
     format_voice_state/1,
@@ -26,14 +27,20 @@
 
 -spec build_call_event(map()) -> map().
 build_call_event(State) ->
-    #{
+    broadcast_call_event(#{
         channel_id => integer_to_binary(maps:get(channel_id, State)),
         message_id => integer_to_binary(maps:get(message_id, State)),
         region => maps:get(region, State),
         ringing => integer_list_to_binaries(maps:get(ringing, State)),
+        voice_states => format_voice_states(maps:get(voice_states, State))
+    }).
+
+-spec broadcast_call_event(map()) -> map().
+broadcast_call_event(CallData) ->
+    (maps:with([channel_id, message_id, region, ringing], CallData))#{
         voice_states => [
             voice_state_utils:sanitize_voice_state_for_broadcast(VS)
-         || VS <- format_voice_states(maps:get(voice_states, State))
+         || VS <- maps:get(voice_states, CallData, [])
         ]
     }.
 

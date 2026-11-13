@@ -23,7 +23,8 @@ call_connections_test_() ->
         fun handoff_keeps_every_connection/1,
         fun handoff_from_a_user_keyed_export_keeps_every_user/1,
         fun voice_states_for_channel_lists_both_connections/1,
-        fun an_update_keeps_the_voice_server_routing/1
+        fun an_update_keeps_the_voice_server_routing/1,
+        fun call_create_after_ready_hides_voice_server_routing/1
     ]}.
 
 handoff_import_test_() ->
@@ -196,6 +197,19 @@ an_update_keeps_the_voice_server_routing(#{call := Pid}) ->
             maps:get(<<"server_id">>, Stored)
         }
     ).
+
+call_create_after_ready_hides_voice_server_routing(#{call := Pid}) ->
+    {_, _} = join(Pid, ?USER_A, <<"a1">>, #{<<"server_id">> => <<"ams-1">>}),
+    {ok, CallData} = gen_server:call(Pid, {get_state}),
+    #{voice_states := [Sent]} = Event = call_state:broadcast_call_event(CallData),
+    [
+        ?_assertEqual(call_state:build_call_event(sys:get_state(Pid)), Event),
+        ?_assertNot(maps:is_key(<<"server_id">>, Sent)),
+        ?_assertEqual(
+            [<<"ams-1">>],
+            [maps:get(<<"server_id">>, VS) || VS <- maps:get(voice_states, CallData)]
+        )
+    ].
 
 imports_a_v1_export(_) ->
     Session = fake_session(),
