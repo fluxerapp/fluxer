@@ -132,7 +132,10 @@ export async function loadMore(channelId: string): Promise<Array<Message>> {
 
 const getFailureReason = (error: HttpError): PinFailureReason => {
 	const errorCode = getApiErrorCode(error);
-	if (errorCode === APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER) {
+	if (
+		errorCode === APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER ||
+		errorCode === APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED
+	) {
 		return 'dm_restricted';
 	}
 	return 'generic';

@@ -13516,6 +13516,7 @@ msgstr "معاينات الرسائل المباشرة"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17558,6 +17559,11 @@ msgstr "يمكن للأصدقاء دائمًا إرسال رسائل إليك."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "يمكن للأصدقاء دائمًا مراسلتك. تغطي هذه الإعدادات الأشخاص والروبوتات الذين تشارك معهم مجتمعًا فقط."
+
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "يظل بإمكان الأصدقاء مراسلة بعضهم مباشرةً، وكذلك الأعضاء الذين يجمعهم مجتمع آخر. لا تتأثر الروبوتات بهذا الإعداد."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -37624,6 +37630,11 @@ msgstr "أوقف هذا المجتمع الدعوات مؤقتًا."
 msgid "This community has paused invites. You can try again later."
 msgstr "أوقف هذا المجتمع الدعوات مؤقتًا. يمكنك المحاولة مرة أخرى لاحقًا."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "أوقف هذا المجتمع الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -39335,6 +39346,11 @@ msgstr "إيقاف كاميرا الجهاز"
 msgid "Turn off device stream"
 msgstr "إيقاف بث الجهاز"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "إيقاف الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39407,6 +39423,16 @@ msgstr "تحويل الوجوه النصية إلى رموز تعبيرية"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "قم بتفعيل هذه السمة لرؤية التغييرات في التطبيق."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "تمت إعادة تفعيل الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "تم إيقاف الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -44803,6 +44829,11 @@ msgstr "تعذّر تسليم رسالتك لأن أنظمة الأمان لدي
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "تعذّر تسليم رسالتك لأن أنظمة الأمان لدينا وضعت عليها علامة. إذا كنت تعتقد أن هذا خطأ، فيُرجى التواصل مع مسؤولي هذا المثيل."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "تعذّر تسليم رسالتك. أوقف مجتمع تشترك فيه مع هذا الشخص الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

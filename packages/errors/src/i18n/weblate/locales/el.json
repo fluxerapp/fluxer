@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Δεν μπορείς να στείλεις αίτημα φιλίας σε αποκλεισμένο χρήστη.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Δεν μπορείς να στείλεις αίτημα φιλίας στον εαυτό σου.",
 	"friends_and_dms.cannot_send_messages_to_user": "Δεν μπορείς να στείλεις μηνύματα σε αυτόν τον χρήστη.",
+	"friends_and_dms.community_member_dms_disabled": "Μια κοινότητα που μοιράζεσαι με αυτό το άτομο έχει απενεργοποιήσει τα απευθείας μηνύματα μεταξύ μελών που δεν είναι φίλοι.",
 	"friends_and_dms.direct_messages_disabled": "Τα άμεσα μηνύματα είναι απενεργοποιημένα σε αυτήν την εγκατάσταση.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Δεν επιτρέπονται διπλοί παραλήπτες.",
 	"friends_and_dms.friend_request_blocked": "Αυτός ο χρήστης δεν δέχεται αιτήματα φιλίας αυτή τη στιγμή.",

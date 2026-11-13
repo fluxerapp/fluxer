@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "לא ניתן לשלוח בקשת חברות למשתמש חסום.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "לא ניתן לשלוח בקשת חברות לעצמך.",
 	"friends_and_dms.cannot_send_messages_to_user": "לא ניתן לשלוח הודעות למשתמש זה.",
+	"friends_and_dms.community_member_dms_disabled": "קהילה משותפת לך ולאדם הזה כיבתה הודעות פרטיות בין חברי קהילה שאינם חברים.",
 	"friends_and_dms.direct_messages_disabled": "הודעות פרטיות מושבתות במופע זה.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "נמענים כפולים אינם מותרים.",
 	"friends_and_dms.friend_request_blocked": "משתמש זה אינו מקבל בקשות חברות כרגע.",

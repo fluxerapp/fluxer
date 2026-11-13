@@ -120,6 +120,11 @@ export const GuildFeatureSchema = withOpenApiType(
 				'VISITS_ENABLED',
 				'People with an invite or a discovery listing can read channels that @everyone can see without joining',
 			],
+			[
+				GuildFeatures.MEMBER_DMS_DISABLED,
+				'MEMBER_DMS_DISABLED',
+				"Members who aren't friends can't use the guild as a shared guild for direct messages",
+			],
 		],
 		'A guild feature flag',
 	),

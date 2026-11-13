@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Du kan inte skicka en vänförfrågan till en blockerad användare.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Du kan inte skicka en vänförfrågan till dig själv.",
 	"friends_and_dms.cannot_send_messages_to_user": "Du kan inte skicka meddelanden till den här användaren.",
+	"friends_and_dms.community_member_dms_disabled": "En community som du delar med den här personen har stängt av direktmeddelanden mellan medlemmar som inte är vänner.",
 	"friends_and_dms.direct_messages_disabled": "Direktmeddelanden är inaktiverade på den här instansen.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Dubbletter av mottagare är inte tillåtna.",
 	"friends_and_dms.friend_request_blocked": "Användaren accepterar inte vänförfrågningar just nu.",

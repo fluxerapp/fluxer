@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "",
 	"friends_and_dms.cannot_send_friend_request_to_self": "",
 	"friends_and_dms.cannot_send_messages_to_user": "",
+	"friends_and_dms.community_member_dms_disabled": "Una comunitat que comparteixes amb aquesta persona ha desactivat els missatges directes entre membres que no són amics.",
 	"friends_and_dms.direct_messages_disabled": "",
 	"friends_and_dms.duplicate_recipients_not_allowed": "",
 	"friends_and_dms.friend_request_blocked": "",

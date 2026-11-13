@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Nu poți să trimiți o cerere de prietenie unui utilizator blocat.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Nu poți să-ți trimiți o cerere de prietenie.",
 	"friends_and_dms.cannot_send_messages_to_user": "Nu poți să trimiți mesaje acestui utilizator.",
+	"friends_and_dms.community_member_dms_disabled": "O comunitate pe care o împarți cu această persoană a dezactivat mesajele directe între membrii care nu sunt prieteni.",
 	"friends_and_dms.direct_messages_disabled": "Mesajele directe sunt dezactivate pe această instanță.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Nu sunt permiși destinatari duplicați.",
 	"friends_and_dms.friend_request_blocked": "Utilizatorul nu acceptă cereri de prietenie în acest moment.",
