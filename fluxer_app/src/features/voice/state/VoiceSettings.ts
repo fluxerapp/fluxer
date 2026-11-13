@@ -15,10 +15,7 @@ import {
 	isVoiceNoiseSuppressionBackend,
 	type VoiceNoiseSuppressionBackend,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
-import {
-	normaliseResolutionForContext,
-	type ScreenShareBitrateBudget,
-} from '@app/features/voice/utils/ScreenShareOptions';
+import {capScreenShareResolution, type ScreenShareBitrateBudget} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	getScreenShareBitrateCeilingBps,
 	getVideoQualityCaps,
@@ -799,7 +796,7 @@ class VoiceSettings {
 	}
 
 	getScreenshareResolution(): ScreenshareResolution {
-		return normaliseResolutionForContext(this.screenshareResolution, 'display', getVideoQualityCaps());
+		return capScreenShareResolution(getVideoQualityCaps(), this.screenshareResolution);
 	}
 
 	getVideoFrameRate(): number {
