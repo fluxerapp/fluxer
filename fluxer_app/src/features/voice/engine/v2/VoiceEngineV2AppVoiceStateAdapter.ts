@@ -91,12 +91,6 @@ class VoiceEngineV2AppVoiceStateAdapter extends Store {
 		return connectionId != null && this.ignoredConnectionIds.has(connectionId);
 	}
 
-	seedVoiceStates(guildId: string | null, voiceStates: ReadonlyArray<VoiceState>): void {
-		const seeded = filterIgnoredVoiceStates(this.ignoredConnectionIds, voiceStates);
-		if (!seeded || seeded.length === 0) return;
-		this.send({type: 'voiceState.seed', guildId, voiceStates: seeded});
-	}
-
 	handleGatewayReady(guilds: Array<GuildReadyData>): void {
 		this.send({
 			type: 'connection.open',
