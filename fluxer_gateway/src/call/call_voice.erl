@@ -25,7 +25,7 @@
 handle_join_internal(
     UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants, State
 ) ->
-    case join_violation(UserId, VoiceState, MaxParticipants, State) of
+    case join_violation(VoiceState, MaxParticipants, State) of
         {error, ErrorAtom} ->
             {reply, {error, ErrorAtom}, State};
         ok ->
@@ -40,12 +40,26 @@ handle_join_internal(
             {reply, ok, NewState}
     end.
 
--spec join_violation(integer(), map(), pos_integer() | undefined, map()) ->
-    ok | {error, atom()}.
-join_violation(UserId, VoiceState, MaxParticipants, #{voice_states := VoiceStates}) ->
-    voice_p2p:invariant_violation(
-        maps:values(VoiceStates#{UserId => VoiceState}), MaxParticipants
-    ).
+-spec join_violation(map(), pos_integer() | undefined, map()) -> ok | {error, atom()}.
+join_violation(VoiceState, MaxParticipants, #{voice_states := VoiceStates}) ->
+    case call_state:voice_state_connection_id(VoiceState) of
+        ConnectionId when is_binary(ConnectionId) ->
+            participant_violation(VoiceStates#{ConnectionId => VoiceState}, MaxParticipants);
+        _ ->
+            {error, voice_invalid_state}
+    end.
+
+-spec participant_violation(map(), pos_integer() | undefined) -> ok | {error, atom()}.
+participant_violation(VoiceStates, MaxParticipants) ->
+    Connections = maps:values(VoiceStates),
+    case voice_p2p:channel_mode(Connections) of
+        mixed ->
+            voice_p2p:invariant_violation(Connections, MaxParticipants);
+        _ ->
+            voice_p2p:invariant_violation(
+                maps:values(call_state:voice_states_by_user(VoiceStates)), MaxParticipants
+            )
+    end.
 
 -spec admit_join(integer(), map(), binary(), pid(), binary() | undefined, map()) -> map().
 admit_join(UserId, VoiceState, SessionId, SessionPid, PendingConnectionId, State) ->
@@ -57,7 +71,9 @@ admit_join(UserId, VoiceState, SessionId, SessionPid, PendingConnectionId, State
         participants_history := History0
     } = BaseState,
     NewState = BaseState#{
-        voice_states => VoiceStates0#{UserId => VoiceState},
+        voice_states => VoiceStates0#{
+            call_state:voice_state_connection_id(VoiceState) => VoiceState
+        },
         sessions => monitor_session_entry(Sessions0, SessionId, UserId, SessionPid),
         pending_connections => build_pending(PendingConnectionId, UserId, SessionId, BaseState),
         participants_history => sets:add_element(UserId, History0)
@@ -111,11 +127,15 @@ monitor_session_entry(Sessions, SessionId, UserId, SessionPid) ->
     SessionRef = monitor(process, SessionPid),
     Sessions#{SessionId => {UserId, SessionPid, SessionRef}}.
 
--spec maybe_remove_user_voice_state(integer(), map(), map()) -> map().
-maybe_remove_user_voice_state(UserId, RemainingSessions, VoiceStates) ->
+-spec remove_session_voice_states(binary(), integer(), map(), map()) -> map().
+remove_session_voice_states(SessionId, UserId, RemainingSessions, VoiceStates) ->
     case call_state:user_has_session(UserId, RemainingSessions) of
-        true -> VoiceStates;
-        false -> maps:remove(UserId, VoiceStates)
+        true ->
+            call_state:without_session_voice_states(SessionId, VoiceStates);
+        false ->
+            maps:without(
+                maps:keys(call_state:user_voice_states(UserId, VoiceStates)), VoiceStates
+            )
     end.
 
 -spec ensure_call_update(map(), boolean()) -> map().
@@ -129,7 +149,7 @@ handle_session_down(Pid, #{sessions := Sessions, voice_states := VoiceStates} = 
     case call_state:find_session_by_pid(Pid, Sessions) of
         {ok, SessionId, UserId} ->
             NewSess = maps:remove(SessionId, Sessions),
-            NewVS = maybe_remove_user_voice_state(UserId, NewSess, VoiceStates),
+            NewVS = remove_session_voice_states(SessionId, UserId, NewSess, VoiceStates),
             BaseState = State#{voice_states => NewVS, sessions => NewSess},
             CleanState = call_ringing:cancel_ringing_timers([UserId], BaseState),
             RingState = call_ringing:remove_users_from_ringing([UserId], CleanState),
@@ -147,52 +167,75 @@ handle_disconnect_user(
     UserId,
     ExpectedChannelId,
     ConnectionId,
+    #{voice_states := VoiceStates, pending_connections := PendingConns} = State
+) ->
+    Targets = disconnect_targets(UserId, ConnectionId, VoiceStates),
+    InChannel = maps:filter(
+        fun(_ConnId, VS) ->
+            snowflake_id:equal(ExpectedChannelId, maps:get(<<"channel_id">>, VS, undefined))
+        end,
+        Targets
+    ),
+    case {maps:size(Targets), maps:size(InChannel)} of
+        {0, _} ->
+            NewPending = voice_pending_common:remove_pending_connection(
+                ConnectionId, PendingConns
+            ),
+            Reply = #{success => true, ignored => true, reason => <<"not_in_call">>},
+            {reply, Reply, State#{pending_connections => NewPending}};
+        {_, 0} ->
+            Reply = #{success => true, ignored => true, reason => <<"channel_mismatch">>},
+            {reply, Reply, State};
+        _ ->
+            do_disconnect_cleanup(UserId, InChannel, State)
+    end.
+
+-spec disconnect_targets(integer(), binary() | undefined, map()) -> map().
+disconnect_targets(UserId, undefined, VoiceStates) ->
+    call_state:user_voice_states(UserId, VoiceStates);
+disconnect_targets(UserId, ConnectionId, VoiceStates) ->
+    maps:with([ConnectionId], call_state:user_voice_states(UserId, VoiceStates)).
+
+-spec do_disconnect_cleanup(integer(), map(), map()) ->
+    {reply, term(), map()} | {stop, normal, term(), map()}.
+do_disconnect_cleanup(
+    UserId,
+    Removed,
     #{
         voice_states := VoiceStates,
         sessions := Sessions,
         pending_connections := PendingConns
     } = State
 ) ->
-    CleanupFun = fun(DUId, DSId) ->
-        maybe_notify_session_force_disconnect(DUId, DSId, ConnectionId, State)
-    end,
-    case
-        voice_disconnect_common:disconnect_user_if_in_channel(
-            UserId, ExpectedChannelId, ConnectionId, VoiceStates, Sessions, CleanupFun
-        )
-    of
-        {not_found, _, _} ->
-            NewPending = voice_pending_common:remove_pending_connection(
-                ConnectionId, PendingConns
-            ),
-            Reply = #{success => true, ignored => true, reason => <<"not_in_call">>},
-            {reply, Reply, State#{pending_connections => NewPending}};
-        {channel_mismatch, _, _} ->
-            Reply = #{success => true, ignored => true, reason => <<"channel_mismatch">>},
-            {reply, Reply, State};
-        {ok, NewVS, NewSess} ->
-            do_disconnect_cleanup(UserId, ConnectionId, NewVS, NewSess, State)
-    end.
-
--spec do_disconnect_cleanup(integer(), binary() | undefined, map(), map(), map()) ->
-    {reply, term(), map()} | {stop, normal, term(), map()}.
-do_disconnect_cleanup(
-    UserId,
-    ConnectionId,
-    NewVS,
-    NewSess,
-    #{pending_connections := PendingConns} = State
-) ->
-    NewPending = voice_pending_common:remove_pending_connection(
-        ConnectionId, PendingConns
+    maps:foreach(
+        fun(ConnId, VS) ->
+            maybe_notify_session_force_disconnect(
+                UserId, maps:get(<<"session_id">>, VS, undefined), ConnId, State
+            )
+        end,
+        Removed
     ),
+    NewVS = maps:without(maps:keys(Removed), VoiceStates),
+    NewPending = maps:without(maps:keys(Removed), PendingConns),
     BaseState = State#{
-        voice_states => NewVS, sessions => NewSess, pending_connections => NewPending
+        voice_states => NewVS,
+        sessions => remove_idle_user_sessions(UserId, NewVS, Sessions),
+        pending_connections => NewPending
     },
     CleanState = call_ringing:cancel_ringing_timers([UserId], BaseState),
     RingState = call_ringing:remove_users_from_ringing([UserId], CleanState),
     {UpdState, Dispatched} = call_ringing:maybe_dispatch_state_update(State, RingState),
     call_ringing:maybe_stop_or_map_reply(UpdState, Dispatched, #{success => true}).
+
+-spec remove_idle_user_sessions(integer(), map(), map()) -> map().
+remove_idle_user_sessions(UserId, VoiceStates, Sessions) ->
+    Idle = [
+        SessionId
+     || {SessionId, {U, _Pid, _Ref}} <- maps:to_list(Sessions),
+        U =:= UserId,
+        not call_state:session_has_voice_state(SessionId, VoiceStates)
+    ],
+    lists:foldl(fun call_state:remove_session_entry/2, Sessions, Idle).
 
 -spec handle_leave(binary(), map()) ->
     {reply, term(), map()} | {stop, normal, term(), map()}.
@@ -201,7 +244,7 @@ handle_leave(SessionId, #{sessions := Sessions, voice_states := VoiceStates} = S
         {UserId, _Pid, Ref} ->
             demonitor(Ref, [flush]),
             NewSess = maps:remove(SessionId, Sessions),
-            NewVS = maybe_remove_user_voice_state(UserId, NewSess, VoiceStates),
+            NewVS = remove_session_voice_states(SessionId, UserId, NewSess, VoiceStates),
             BaseState = State#{voice_states => NewVS, sessions => NewSess},
             CleanState = call_ringing:cancel_ringing_timers([UserId], BaseState),
             RingState = call_ringing:remove_users_from_ringing([UserId], CleanState),
@@ -218,7 +261,7 @@ handle_leave(SessionId, #{sessions := Sessions, voice_states := VoiceStates} = S
 ) -> {noreply, map()}.
 disconnect_user_after_pending_timeout(
     ConnectionId,
-    UserId,
+    _UserId,
     SessionId,
     #{
         pending_connections := PendingConns,
@@ -229,7 +272,10 @@ disconnect_user_after_pending_timeout(
     NewPending = voice_pending_common:remove_pending_connection(
         ConnectionId, PendingConns
     ),
-    case maps:is_key(UserId, VoiceStates) of
+    case
+        maps:is_key(ConnectionId, VoiceStates) orelse
+            call_state:session_has_voice_state(SessionId, VoiceStates)
+    of
         true ->
             {noreply, State#{pending_connections => NewPending}};
         false ->
@@ -242,7 +288,7 @@ disconnect_user_after_pending_timeout(
     end.
 
 -spec maybe_notify_session_force_disconnect(
-    integer(), binary(), binary() | undefined, map()
+    integer(), binary() | undefined, binary() | undefined, map()
 ) -> ok.
 maybe_notify_session_force_disconnect(
     UserId,
@@ -296,32 +342,34 @@ spawn_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId) ->
     end),
     ok.
 
--spec update_voice_state(integer(), map(), map()) -> map().
-update_voice_state(UserId, VoiceState, #{voice_states := VoiceStates} = State) ->
-    WasP2p = voice_p2p:is_p2p(maps:get(UserId, VoiceStates)),
+-spec update_voice_state(binary(), map(), map()) -> map().
+update_voice_state(ConnectionId, VoiceState, #{voice_states := VoiceStates} = State) ->
+    WasP2p = voice_p2p:is_p2p(maps:get(ConnectionId, VoiceStates)),
     case {WasP2p, voice_p2p:is_p2p(VoiceState)} of
         {true, false} ->
-            convert_to_sfu([UserId], State#{voice_states => VoiceStates#{UserId => VoiceState}});
+            convert_to_sfu(
+                [ConnectionId], State#{voice_states => VoiceStates#{ConnectionId => VoiceState}}
+            );
         {false, true} ->
             Converted = voice_p2p:to_sfu(VoiceState),
-            NewState = State#{voice_states => VoiceStates#{UserId => Converted}},
+            NewState = State#{voice_states => VoiceStates#{ConnectionId => Converted}},
             ok = call_ringing:dispatch_voice_state_update(Converted, NewState),
             NewState;
         _ ->
-            State#{voice_states => VoiceStates#{UserId => VoiceState}}
+            State#{voice_states => VoiceStates#{ConnectionId => VoiceState}}
     end.
 
--spec convert_to_sfu([integer()], map()) -> map().
+-spec convert_to_sfu([binary()], map()) -> map().
 convert_to_sfu(
-    ExtraUserIds,
+    ExtraConnectionIds,
     #{voice_states := VoiceStates, sessions := Sessions, channel_id := ChannelId} = State
 ) ->
     Converted = maps:map(
-        fun(_UserId, VoiceState) -> voice_p2p:to_sfu(VoiceState) end,
-        maps:filter(fun(_UserId, VoiceState) -> voice_p2p:is_p2p(VoiceState) end, VoiceStates)
+        fun(_ConnId, VoiceState) -> voice_p2p:to_sfu(VoiceState) end,
+        maps:filter(fun(_ConnId, VoiceState) -> voice_p2p:is_p2p(VoiceState) end, VoiceStates)
     ),
     NewVoiceStates = maps:merge(VoiceStates, Converted),
-    Reconnecting = maps:with(ExtraUserIds ++ maps:keys(Converted), NewVoiceStates),
+    Reconnecting = maps:with(ExtraConnectionIds ++ maps:keys(Converted), NewVoiceStates),
     case maps:size(Reconnecting) of
         0 ->
             State;
@@ -337,7 +385,7 @@ convert_to_sfu(
 -spec dispatch_voice_state_updates(map(), map()) -> ok.
 dispatch_voice_state_updates(VoiceStates, State) ->
     maps:foreach(
-        fun(_UserId, VoiceState) ->
+        fun(_ConnId, VoiceState) ->
             call_ringing:dispatch_voice_state_update(VoiceState, State)
         end,
         VoiceStates
@@ -371,24 +419,22 @@ dispatch_voice_signal(_Session, _Payload) ->
 ) -> ok.
 send_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId) ->
     maps:foreach(
-        fun(_SessionId, {UserId, SessionPid, _Ref}) ->
-            maybe_send_voice_server_update(
-                UserId, SessionPid, NewRegion, ChannelId, VoiceStates
-            )
+        fun(_ConnId, VoiceState) ->
+            maybe_send_voice_server_update(VoiceState, NewRegion, ChannelId, Sessions)
         end,
-        Sessions
+        VoiceStates
     ),
     ok.
 
--spec maybe_send_voice_server_update(
-    integer(), pid(), binary() | undefined | null, integer(), map()
-) -> ok.
-maybe_send_voice_server_update(UserId, SessionPid, NewRegion, ChannelId, VoiceStates) ->
-    case maps:get(UserId, VoiceStates, undefined) of
-        undefined ->
-            ok;
-        VoiceState ->
-            send_voice_server_update(ChannelId, UserId, SessionPid, NewRegion, VoiceState)
+-spec maybe_send_voice_server_update(map(), binary() | undefined | null, integer(), map()) ->
+    ok.
+maybe_send_voice_server_update(VoiceState, NewRegion, ChannelId, Sessions) ->
+    UserId = voice_state_utils:voice_state_user_id(VoiceState),
+    case maps:get(maps:get(<<"session_id">>, VoiceState, undefined), Sessions, undefined) of
+        {UserId, SessionPid, _Ref} when is_pid(SessionPid) ->
+            send_voice_server_update(ChannelId, UserId, SessionPid, NewRegion, VoiceState);
+        _ ->
+            ok
     end.
 
 -spec send_voice_server_update(

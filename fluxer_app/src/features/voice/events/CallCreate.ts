@@ -26,7 +26,7 @@ export function handleCallCreate(data: CallCreatePayload, _context: GatewayHandl
 	};
 	Dimension.handleCallCreate(data.channel_id);
 	CallAvailability.setCallAvailable(data.channel_id);
-	if (data.voice_states) VoiceRuntime.handleCallVoiceStates(data.voice_states);
 	CallState.handleCallCreate({channelId: data.channel_id, call: callData});
+	if (data.voice_states) VoiceRuntime.handleCallVoiceStates(data.channel_id, data.voice_states);
 	if (CallState.isUserPendingRinging(data.channel_id, Users.currentUserId)) VoiceRuntime.handleCallRing();
 }
