@@ -925,13 +925,16 @@ int fluxer_vips_image_to_rgba(VipsImage *in, VipsImage **out) {
     VipsImage *scaled = NULL;
     VipsImage *depth_normalized = NULL;
     if (format == VIPS_FORMAT_USHORT) {
-        if (interpretation != VIPS_INTERPRETATION_RGB16 &&
-            interpretation != VIPS_INTERPRETATION_GREY16) {
+        VipsInterpretation eight_bit_interpretation;
+        if (interpretation == VIPS_INTERPRETATION_RGB16) {
+            eight_bit_interpretation = VIPS_INTERPRETATION_sRGB;
+        } else if (interpretation == VIPS_INTERPRETATION_GREY16) {
+            eight_bit_interpretation = VIPS_INTERPRETATION_B_W;
+        } else {
             return FLUXER_NATIVE_STATUS_UNSUPPORTED;
         }
-        if (vips_cast(
-                in, &depth_normalized, VIPS_FORMAT_UCHAR,
-                "shift", TRUE, NULL) != 0 ||
+        if (vips_colourspace(
+                in, &depth_normalized, eight_bit_interpretation, NULL) != 0 ||
             depth_normalized == NULL) {
             if (depth_normalized != NULL) g_object_unref(depth_normalized);
             return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
