@@ -251,7 +251,10 @@ function buildRoomEventDependencies(facade: {
 			isDisconnecting: () => voiceEngineV2AppConnectionHostAdapter.disconnecting,
 			isUserMovePending: () => facade.isUserMovePending(),
 			markConnected: () => voiceEngineV2AppConnectionHostAdapter.markConnected(),
-			markDisconnected: (reason) => voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason),
+			markDisconnected: (reason) => {
+				if (reason === 'server') VoiceSessionRestore.clearSnapshot();
+				voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason);
+			},
 			markReconnecting: () => voiceEngineV2AppConnectionHostAdapter.markReconnecting(),
 			markReconnected: () => voiceEngineV2AppConnectionHostAdapter.markReconnected(),
 		},
