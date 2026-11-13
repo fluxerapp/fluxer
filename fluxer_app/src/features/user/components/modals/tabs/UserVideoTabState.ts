@@ -2,7 +2,6 @@
 
 import {SCREEN_SHARE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {
-	contextAllowsScreenShareResolution,
 	OFFERED_SCREEN_SHARE_FRAME_RATES,
 	OFFERED_SCREEN_SHARE_RESOLUTIONS,
 	type OfferedScreenShareResolution,
@@ -17,7 +16,6 @@ import {
 	resolveScreenShareFrameRate,
 	resolveScreenShareTarget,
 	type ScreenShareBitrateBudget,
-	type ScreenShareContext,
 	type ScreenShareQualityInput,
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
@@ -66,14 +64,10 @@ export interface UserVideoTabScreenShareState {
 function buildResolutionOptions(
 	caps: VideoQualityCaps,
 	selfHosted: boolean,
-	context: ScreenShareContext,
 	effective: OfferedScreenShareResolution,
 ): ReadonlyArray<UserVideoTabResolutionOption> {
 	return OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
-		(value) =>
-			value === effective ||
-			(contextAllowsScreenShareResolution(value, context) &&
-				(capsAllowScreenShareResolution(caps, value) || !selfHosted)),
+		(value) => value === effective || capsAllowScreenShareResolution(caps, value) || !selfHosted,
 	).map((value) => ({value, isDisabled: !capsAllowScreenShareResolution(caps, value)}));
 }
 
@@ -107,7 +101,7 @@ export function resolveUserVideoTabScreenShareState(input: UserVideoTabScreenSha
 	return {
 		resolution,
 		frameRate: target.frameRate,
-		resolutionOptions: buildResolutionOptions(input.quality.caps, input.selfHosted, input.quality.context, resolution),
+		resolutionOptions: buildResolutionOptions(input.quality.caps, input.selfHosted, resolution),
 		frameRateOptions: buildFrameRateOptions(input.quality.caps, target.frameRate),
 		bitrate: input.bitrate.chosenBps,
 		bitrateOptions: buildBitrateOptions(input.bitrate),

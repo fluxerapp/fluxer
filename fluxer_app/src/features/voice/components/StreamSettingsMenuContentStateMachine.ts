@@ -9,7 +9,6 @@ import {
 import {
 	capsAllowScreenShareFrameRate,
 	capsAllowScreenShareResolution,
-	normaliseResolutionForContext,
 	normaliseStreamingModeForContext,
 	resolveScreenShareQualityPick,
 	type ScreenShareContext,
@@ -29,7 +28,7 @@ import {
 	selectAppShareAudioRoute,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
-import {BASE_VIDEO_QUALITY_CAPS, FULL_VIDEO_QUALITY_CAPS} from '@app/features/voice/utils/VideoQualityCaps';
+import {BASE_VIDEO_QUALITY_CAPS} from '@app/features/voice/utils/VideoQualityCaps';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {initialTransition, setup, transition} from 'xstate';
@@ -277,13 +276,6 @@ export interface StreamSettingsQualityMenuSignals {
 	showPremiumFeatures: boolean;
 }
 
-export function contextAllowsScreenShareResolution(
-	resolution: OfferedScreenShareResolution,
-	context: ScreenShareContext,
-): boolean {
-	return normaliseResolutionForContext(resolution, context, FULL_VIDEO_QUALITY_CAPS) === resolution;
-}
-
 export function selectStreamSettingsQualityMenuState(
 	signals: StreamSettingsQualityMenuSignals,
 ): StreamSettingsQualityMenuViewState {
@@ -310,9 +302,7 @@ export function selectStreamSettingsQualityMenuState(
 	return {
 		resolutions: OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
 			(value) =>
-				value === selectedResolution ||
-				(contextAllowsScreenShareResolution(value, signals.quality.context) &&
-					(capsAllowScreenShareResolution(caps, value) || signals.showPremiumFeatures)),
+				value === selectedResolution || capsAllowScreenShareResolution(caps, value) || signals.showPremiumFeatures,
 		).map((value) =>
 			buildOption(
 				value,
