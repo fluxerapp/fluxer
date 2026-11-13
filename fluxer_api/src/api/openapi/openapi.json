@@ -18303,10 +18303,10 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a short lived token that lets a browser load attachment files through the API without sending a header. With no body the token covers every attachment the account can read for four hours. With the link of one attachment it covers that one file for ten minutes, for links opened outside the app. Only active when the instance serves attachments through the API.",
+				"description": "Creates a token for the one attachment in the given link, for places that cannot send a header, such as a video player, a download or a link opened in the browser. The token works for five minutes, only for that file and only while the session that asked for it stays signed in and can still read the message. Only active when the instance serves attachments through the API.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AttachmentAccessTokenRequest"}}}
 				}
 			}
@@ -32267,19 +32267,17 @@
 				"type": "object",
 				"properties": {
 					"url": {
-						"description": "An attachment link that points at the API, for a token limited to that one file",
 						"type": "string",
-						"maxLength": 2048
+						"maxLength": 2048,
+						"description": "The attachment link on the API that the token is for"
 					}
-				}
+				},
+				"required": ["url"]
 			},
 			"AttachmentAccessTokenResponse": {
 				"type": "object",
 				"properties": {
-					"token": {
-						"type": "string",
-						"description": "Value for the mt query parameter on attachment links that point at the API"
-					},
+					"token": {"type": "string", "description": "Value for the mt query parameter on the link it was made for"},
 					"expires_at": {
 						"type": "string",
 						"format": "date-time",

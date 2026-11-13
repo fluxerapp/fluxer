@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {resolveAttachmentForRequester} from '@app/api/attachment/AttachmentMediaAccess';
-import {
-	ATTACHMENT_MEDIA_TOKEN_TTL_MS,
-	SCOPED_ATTACHMENT_MEDIA_TOKEN_TTL_MS,
-	signAttachmentMediaToken,
-} from '@app/api/attachment/AttachmentMediaToken';
+import {ATTACHMENT_MEDIA_TOKEN_TTL_MS, signAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
 import {fetchAttachmentFromMediaProxy, readTransformQuery} from '@app/api/attachment/AttachmentMediaUpstream';
 import {
 	type ApiAttachmentLocation,
@@ -67,10 +63,11 @@ function requestedLocation(ctx: Context<HonoEnv>): ApiAttachmentLocation | null 
 }
 
 function scopeMatches(ctx: Context<HonoEnv>, location: ApiAttachmentLocation): boolean {
+	if (ctx.get('authTokenType') !== 'attachment_media') return true;
 	const token = ctx.get('attachmentMediaToken');
-	if (ctx.get('authTokenType') !== 'attachment_media' || !token) return true;
-	if (token.c === undefined || token.a === undefined) return true;
-	return token.c === location.channelId.toString() && token.a === location.attachmentId.toString();
+	return (
+		token !== undefined && token.c === location.channelId.toString() && token.a === location.attachmentId.toString()
+	);
 }
 
 function acquireStream(userKey: string): (() => void) | null {
@@ -151,7 +148,7 @@ export function AttachmentMediaController(app: HonoApp) {
 			security: ['botToken', 'sessionToken'],
 			tags: ['Messages'],
 			description:
-				'Streams an attachment file after checking that the requester can read the message it belongs to. Only active when the instance serves attachments through the API. Takes the same width, height, format, quality, animated and download query parameters as the media proxy, and supports range requests. A browser that cannot send a header can pass a token from the attachment token endpoint as the mt query parameter.',
+				'Streams an attachment file after checking that the requester can read the message it belongs to. Only active when the instance serves attachments through the API. Takes the same width, height, format, quality, animated and download query parameters as the media proxy, and supports range requests. A link opened where no header can be sent, such as a video player or a download, can add the mt query parameter with a token for that one file from the attachment token endpoint.',
 		}),
 		async (ctx) => {
 			const location = requestedLocation(ctx);
@@ -210,24 +207,22 @@ export function AttachmentMediaController(app: HonoApp) {
 			security: ['sessionToken'],
 			tags: ['Messages'],
 			description:
-				'Creates a short lived token that lets a browser load attachment files through the API without sending a header. With no body the token covers every attachment the account can read for four hours. With the link of one attachment it covers that one file for ten minutes, for links opened outside the app. Only active when the instance serves attachments through the API.',
+				'Creates a token for the one attachment in the given link, for places that cannot send a header, such as a video player, a download or a link opened in the browser. The token works for five minutes, only for that file and only while the session that asked for it stays signed in and can still read the message. Only active when the instance serves attachments through the API.',
 		}),
 		async (ctx) => {
 			const session = ctx.get('authSession');
 			if (ctx.get('authTokenType') !== 'session' || !session) throw new AccessDeniedError();
 			const user = ctx.get('user');
-			const {url} = ctx.req.valid('json');
-			const location = url === undefined ? null : parseApiAttachmentUrl(url);
-			if (url !== undefined) {
-				const storageKey = location === null ? null : await resolveAttachmentForRequester(ctx, location);
-				if (storageKey === null) return notFound();
-			}
-			const expiresAt = Date.now() + (location ? SCOPED_ATTACHMENT_MEDIA_TOKEN_TTL_MS : ATTACHMENT_MEDIA_TOKEN_TTL_MS);
+			const location = parseApiAttachmentUrl(ctx.req.valid('json').url);
+			if (location === null) return notFound();
+			if ((await resolveAttachmentForRequester(ctx, location)) === null) return notFound();
+			const expiresAt = Date.now() + ATTACHMENT_MEDIA_TOKEN_TTL_MS;
 			const token = signAttachmentMediaToken({
 				u: user.id.toString(),
 				s: Buffer.from(session.sessionIdHash).toString('base64url'),
 				f: [...ctx.get('clientFeatures')],
-				...(location ? {c: location.channelId.toString(), a: location.attachmentId.toString()} : {}),
+				c: location.channelId.toString(),
+				a: location.attachmentId.toString(),
 				expiresAt,
 			});
 			return ctx.json({token, expires_at: new Date(expiresAt).toISOString()});

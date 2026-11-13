@@ -8,15 +8,14 @@ import {signExpiringToken, verifyExpiringToken} from '@app/api/utils/SignedExpir
 
 const KEY_DERIVATION_LABEL = 'fluxer.attachment-media.v1';
 const MAX_FEATURES = 32;
-export const ATTACHMENT_MEDIA_TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
-export const SCOPED_ATTACHMENT_MEDIA_TOKEN_TTL_MS = 10 * 60 * 1000;
+export const ATTACHMENT_MEDIA_TOKEN_TTL_MS = 5 * 60 * 1000;
 
 export interface AttachmentMediaTokenPayload {
 	u: string;
 	s: string;
 	f: Array<string>;
-	c?: string;
-	a?: string;
+	c: string;
+	a: string;
 	expiresAt: number;
 }
 
@@ -24,24 +23,22 @@ function deriveKey(): Buffer {
 	return createHmac('sha256', Config.auth.connectionInitiationSecret).update(KEY_DERIVATION_LABEL).digest();
 }
 
-function isOptionalSnowflake(value: unknown): boolean {
-	return value === undefined || (typeof value === 'string' && SNOWFLAKE_REGEX.test(value));
+function isSnowflake(value: unknown): boolean {
+	return typeof value === 'string' && SNOWFLAKE_REGEX.test(value);
 }
 
 function isAttachmentMediaTokenPayload(value: unknown): value is AttachmentMediaTokenPayload {
 	if (!isJsonRecord(value)) return false;
 	const features = value['f'];
 	return (
-		typeof value['u'] === 'string' &&
-		SNOWFLAKE_REGEX.test(value['u']) &&
+		isSnowflake(value['u']) &&
 		typeof value['s'] === 'string' &&
 		value['s'].length > 0 &&
 		Array.isArray(features) &&
 		features.length <= MAX_FEATURES &&
 		features.every((feature) => typeof feature === 'string') &&
-		isOptionalSnowflake(value['c']) &&
-		isOptionalSnowflake(value['a']) &&
-		(value['c'] === undefined) === (value['a'] === undefined) &&
+		isSnowflake(value['c']) &&
+		isSnowflake(value['a']) &&
 		typeof value['expiresAt'] === 'number' &&
 		Number.isFinite(value['expiresAt'])
 	);

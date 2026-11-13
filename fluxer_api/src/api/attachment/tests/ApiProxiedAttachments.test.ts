@@ -2,6 +2,11 @@
 
 import {createHmac, randomBytes} from 'node:crypto';
 import {clearAttachmentMediaDecisionsForTesting} from '@app/api/attachment/AttachmentMediaAccess';
+import {
+	type AttachmentMediaTokenPayload,
+	signAttachmentMediaToken,
+	verifyAttachmentMediaToken,
+} from '@app/api/attachment/AttachmentMediaToken';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
 import {
@@ -11,7 +16,7 @@ import {
 	sendMessageWithAttachments,
 } from '@app/api/channel/tests/AttachmentTestUtils';
 import {createDmChannel, createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
-import {acceptInvite, createChannelInvite} from '@app/api/guild/tests/GuildTestUtils';
+import {acceptInvite, createChannelInvite, leaveGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {server} from '@app/api/test/msw/server';
 import {TestMediaService} from '@app/api/test/TestMediaService';
@@ -92,6 +97,7 @@ describe('attachments served through the API', () => {
 	let member: TestAccount;
 	let outsider: TestAccount;
 	let channelId: string;
+	let guildId: string;
 
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
@@ -106,6 +112,7 @@ describe('attachments served through the API', () => {
 		member = await createTestAccount(harness);
 		outsider = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Proxy Guild');
+		guildId = guild.id;
 		channelId = (await createChannel(harness, owner.token, guild.id, 'media')).id;
 		const invite = await createChannelInvite(harness, owner.token, channelId);
 		await acceptInvite(harness, member.token, invite.code);
@@ -289,29 +296,117 @@ describe('attachments served through the API', () => {
 		expect(upstream.length).toBe(before);
 	});
 
-	test('with the setting on a media token works only where it was meant to', async () => {
+	async function mintFor(token: string, url: string): Promise<string> {
+		const minted = await mintToken(token, {url});
+		expect(minted.status).toBe(200);
+		return ((await minted.json()) as {token: string}).token;
+	}
+
+	function withToken(path: string, token: string): string {
+		return `${path}&mt=${encodeURIComponent(token)}`;
+	}
+
+	test('with the setting on a file token opens that one file for five minutes', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const path = routePath(sent.url);
+		const before = Date.now();
+		const minted = await mintToken(member.token, {url: sent.url});
+		expect(minted.status).toBe(200);
+		const body = (await minted.json()) as {token: string; expires_at: string};
+		const lifetimeMs = Date.parse(body.expires_at) - before;
+		expect(lifetimeMs).toBeGreaterThan(4 * 60 * 1000);
+		expect(lifetimeMs).toBeLessThanOrEqual(5 * 60 * 1000 + 1000);
+		expect(verifyAttachmentMediaToken(body.token)).toMatchObject({
+			c: channelId,
+			a: new URL(sent.url).pathname.split('/').at(-2),
+		});
+		const opened = await get(withToken(path, body.token));
+		expect(opened.status).toBe(200);
+		expect(Buffer.from(await opened.arrayBuffer())).toEqual(FILE_BYTES);
+		expect((await get(withToken(path, body.token), undefined, {Range: 'bytes=0-9'})).status).toBe(206);
+		const tampered = `${body.token.slice(0, -2)}${body.token.endsWith('AA') ? 'BB' : 'AA'}`;
+		const rejected = await get(withToken(path, tampered));
+		expect(rejected.status).toBe(401);
+		expect(rejected.headers.get('cache-control')).toBe('no-store');
+		expect((await get(`/users/@me?mt=${encodeURIComponent(body.token)}`)).status).toBe(401);
+		const reissue = await harness.app.request('/users/@me/attachment-token', {
+			method: 'POST',
+			headers: {'x-forwarded-for': '127.0.0.1', 'Content-Type': 'application/json'},
+			body: JSON.stringify({url: `${sent.url}&mt=${encodeURIComponent(body.token)}`}),
+		});
+		expect(reissue.status).toBe(401);
+	});
+
+	test('with the setting on a file token does not open another file', async () => {
 		await setProxied(true);
 		const sent = await sendImage(owner.token, channelId);
 		const other = await sendImage(owner.token, channelId);
-		const minted = await mintToken(member.token);
-		expect(minted.status).toBe(200);
-		const {token} = (await minted.json()) as {token: string};
-		const path = routePath(sent.url);
-		expect((await get(`${path}&mt=${encodeURIComponent(token)}`)).status).toBe(200);
-		const tampered = `${token.slice(0, -2)}${token.endsWith('AA') ? 'BB' : 'AA'}`;
-		const rejected = await get(`${path}&mt=${encodeURIComponent(tampered)}`);
-		expect(rejected.status).toBe(401);
-		expect(rejected.headers.get('cache-control')).toBe('no-store');
-		expect((await get(`/users/@me?mt=${encodeURIComponent(token)}`)).status).toBe(401);
-		const outsiderToken = ((await (await mintToken(outsider.token)).json()) as {token: string}).token;
-		expect((await get(`${path}&mt=${encodeURIComponent(outsiderToken)}`)).status).toBe(404);
-		const scoped = await mintToken(member.token, {url: sent.url});
-		const scopedToken = ((await scoped.json()) as {token: string}).token;
-		expect((await get(`${path}&mt=${encodeURIComponent(scopedToken)}`)).status).toBe(200);
-		expect((await get(`${routePath(other.url)}&mt=${encodeURIComponent(scopedToken)}`)).status).toBe(401);
+		const token = await mintFor(member.token, sent.url);
+		expect((await get(withToken(routePath(other.url), token))).status).toBe(401);
+		const otherPath = routePath(other.url).replace(`mid=${other.messageId}`, `mid=${sent.messageId}`);
+		expect((await get(withToken(otherPath, token))).status).toBe(401);
+		expect((await get(withToken(routePath(sent.url), token))).status).toBe(200);
+	});
+
+	test('with the setting on a file token is only issued to someone who can read the file', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
 		expect((await mintToken(outsider.token, {url: sent.url})).status).toBe(404);
+		const ownGuild = await createGuild(harness, outsider.token, 'Own Guild');
+		const ownChannelId = (await createChannel(harness, outsider.token, ownGuild.id, 'own')).id;
+		const own = await sendImage(outsider.token, ownChannelId);
+		const outsiderToken = await mintFor(outsider.token, own.url);
+		expect((await get(withToken(routePath(own.url), outsiderToken))).status).toBe(200);
+		expect((await get(withToken(routePath(sent.url), outsiderToken))).status).toBe(401);
+		const swapped = routePath(own.url).replace(`/channels/${ownChannelId}/`, `/channels/${channelId}/`);
+		expect((await get(withToken(swapped, outsiderToken))).status).toBe(401);
+		const memberToken = await mintFor(member.token, sent.url);
+		const payload = verifyAttachmentMediaToken(memberToken)!;
+		expect(payload.u).toBe(member.userId);
+		const forged = signAttachmentMediaToken({...payload, u: outsider.userId});
+		expect((await get(withToken(routePath(sent.url), forged))).status).toBe(401);
+	});
+
+	test('with the setting on an expired file token is refused', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const payload = verifyAttachmentMediaToken(await mintFor(member.token, sent.url))!;
+		const expired = signAttachmentMediaToken({...payload, expiresAt: Date.now() - 1});
+		expect((await get(withToken(routePath(sent.url), expired))).status).toBe(401);
+	});
+
+	test('with the setting on a file token stops working once access is gone', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const path = routePath(sent.url);
+		const token = await mintFor(member.token, sent.url);
+		expect((await get(withToken(path, token))).status).toBe(200);
+		await leaveGuild(harness, member.token, guildId);
+		clearAttachmentMediaDecisionsForTesting();
+		expect((await get(withToken(path, token))).status).toBe(404);
+		const ownerToken = await mintFor(owner.token, sent.url);
+		expect((await get(withToken(path, ownerToken))).status).toBe(200);
+		await createBuilder(harness, owner.token).post('/auth/logout').expect(204).execute();
+		clearAttachmentMediaDecisionsForTesting();
+		expect((await get(withToken(path, ownerToken))).status).toBe(401);
 		await setProxied(false);
-		expect((await get(`${path}&mt=${encodeURIComponent(token)}`)).status).toBe(404);
+		expect((await get(withToken(path, token))).status).toBe(404);
+	});
+
+	test('with the setting on no token covers the whole account', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		expect((await mintToken(member.token)).status).toBe(400);
+		expect((await mintToken(member.token, {url: `${Config.endpoints.apiClient}/users/@me`})).status).toBe(404);
+		const payload = verifyAttachmentMediaToken(await mintFor(member.token, sent.url))!;
+		const {c: _channel, a: _attachment, ...accountWide} = payload;
+		const accountToken = signAttachmentMediaToken(accountWide as unknown as AttachmentMediaTokenPayload);
+		expect(verifyAttachmentMediaToken(accountToken)).toBeNull();
+		expect((await get(withToken(routePath(sent.url), accountToken))).status).toBe(401);
+		const viaHeader = await get(routePath(sent.url), member.token);
+		expect(viaHeader.status).toBe(200);
+		expect(Buffer.from(await viaHeader.arrayBuffer())).toEqual(FILE_BYTES);
 	});
 
 	test('with the setting on refreshed links point at the API and never at the media proxy', async () => {
