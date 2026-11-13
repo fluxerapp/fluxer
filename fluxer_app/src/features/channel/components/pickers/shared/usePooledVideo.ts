@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool';
+import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {useEffect, useRef} from 'react';
 
@@ -33,9 +34,10 @@ export function usePooledVideo({
 }) {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const effectivePreload = preload ?? (autoPlay ? 'auto' : 'metadata');
+	const playbackSrc = useApiAttachmentPlaybackSrc(enabled && src ? src : undefined);
 	useEffect(() => {
 		if (!enabled) return;
-		if (!src) return;
+		if (!src || !playbackSrc) return;
 		const container = containerRef.current;
 		if (!container) return;
 		const video = videoPool.takeElement();
@@ -46,7 +48,7 @@ export function usePooledVideo({
 			void AttachmentUrlRefresher.refresh(src, {force: true});
 		};
 		video.addEventListener('error', refreshOnError, {once: true});
-		video.src = src;
+		video.src = playbackSrc;
 		container.appendChild(video);
 		videoPool.registerActive(video);
 		return () => {
@@ -57,7 +59,7 @@ export function usePooledVideo({
 				videoRef.current = null;
 			}
 		};
-	}, [src, enabled, containerRef, videoPool, effectivePreload]);
+	}, [src, playbackSrc, enabled, containerRef, videoPool, effectivePreload]);
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;

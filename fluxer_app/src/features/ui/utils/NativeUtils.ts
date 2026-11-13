@@ -195,11 +195,11 @@ export async function navigateToExternalURL(url: string): Promise<void> {
 }
 
 async function refreshAttachmentUrl(url: string): Promise<string> {
-	const [{default: AttachmentUrlRefresher}, {default: attachmentAccessToken}] = await Promise.all([
+	const [{default: AttachmentUrlRefresher}, {default: apiAttachmentFileTokens}] = await Promise.all([
 		import('@app/features/messaging/state/AttachmentUrlRefresher'),
-		import('@app/features/messaging/state/AttachmentAccessToken'),
+		import('@app/features/messaging/state/ApiAttachmentFileTokens'),
 	]);
-	return attachmentAccessToken.shareableUrl(await AttachmentUrlRefresher.refresh(url));
+	return apiAttachmentFileTokens.linkUrl(await AttachmentUrlRefresher.refresh(url));
 }
 
 export async function openExternalUrl(url: string, target: string = '_blank') {

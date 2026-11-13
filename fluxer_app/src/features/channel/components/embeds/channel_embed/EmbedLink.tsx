@@ -14,7 +14,6 @@ import {getInAppLinkAction} from '@app/features/messaging/components/markdown/re
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
-import {withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {isTrustedExternalUrl, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
@@ -28,7 +27,7 @@ import type {FC} from 'react';
 
 export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, className, messageId, channelId}) => {
 	const {i18n} = useLingui();
-	const href = withoutAttachmentToken(AttachmentUrlRefresher.fresh(url));
+	const href = AttachmentUrlRefresher.fresh(url);
 	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
 	const openInApp = getInAppLinkAction(url, {
 		i18n,

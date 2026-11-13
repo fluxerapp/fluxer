@@ -19,8 +19,10 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
+import {fetchApiAttachmentBlob} from '@app/features/messaging/state/ApiAttachmentMedia';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {
 	unwrapDesktopLocalResourceURL,
 	wrapDesktopLocalResourceURL,
@@ -254,15 +256,21 @@ async function convertImageBlobToPng(blob: Blob): Promise<Blob> {
 	}
 }
 
+async function fetchImageBlob(url: string): Promise<Blob> {
+	const response = await fetch(wrapDesktopLocalResourceURL(url));
+	if (!response.ok) {
+		throw new Error(`Unexpected response status ${response.status} for ${url}`);
+	}
+	return response.blob();
+}
+
 async function fetchFirstPngBlob(urls: Array<string>): Promise<Blob> {
 	let lastError: unknown = null;
 	for (const url of urls) {
 		try {
-			const response = await fetch(wrapDesktopLocalResourceURL(url));
-			if (!response.ok) {
-				throw new Error(`Unexpected response status ${response.status} for ${url}`);
-			}
-			const blob = await response.blob();
+			const blob = isApiAttachmentUrl(unwrapDesktopLocalResourceURL(url))
+				? await fetchApiAttachmentBlob(url)
+				: await fetchImageBlob(url);
 			return await convertImageBlobToPng(blob);
 		} catch (error) {
 			lastError = error;
@@ -436,12 +444,9 @@ export async function copyMediaToClipboard({
 	}
 	const baseProxyURL = proxyURL
 		? wrapDesktopLocalResourceURL(
-				await attachmentAccessToken.loadableUrl(
-					await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
-				),
+				await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
 			)
 		: null;
-	const loadableSrc = await attachmentAccessToken.loadableUrl(freshSrc);
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
@@ -458,7 +463,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: unwrapDesktopLocalResourceURL(baseProxyURL || loadableSrc),
+				url: await apiAttachmentFileTokens.linkUrl(unwrapDesktopLocalResourceURL(baseProxyURL || freshSrc)),
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});
@@ -477,7 +482,7 @@ export async function copyMediaToClipboard({
 	const urlsToTry: Array<string> = [];
 	if (baseProxyURL) urlsToTry.push(buildMediaProxyURL(baseProxyURL, {format: 'png'}));
 	if (baseProxyURL) urlsToTry.push(baseProxyURL);
-	urlsToTry.push(loadableSrc);
+	urlsToTry.push(freshSrc);
 	let toastId: string | null = null;
 	try {
 		toastId = ToastCommands.createToast({

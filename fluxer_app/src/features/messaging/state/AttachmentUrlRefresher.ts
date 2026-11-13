@@ -4,7 +4,8 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Initialization from '@app/features/app/state/Initialization';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
+import apiAttachmentMedia from '@app/features/messaging/state/ApiAttachmentMedia';
 import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {
 	ATTACHMENT_URL_REFRESH_MARGIN_MS,
@@ -105,10 +106,7 @@ class AttachmentUrlRefresher {
 	}
 
 	fresh(url: string, options: {refreshUnsigned?: boolean} = {}): string {
-		if (isApiAttachmentUrl(url)) {
-			const bare = withoutAttachmentToken(url);
-			return attachmentAccessToken.displayUrl(bare) ?? bare;
-		}
+		if (isApiAttachmentUrl(url)) return withoutAttachmentToken(url);
 		if (!url || !isOwnAttachmentUrl(url)) return url;
 		const key = attachmentCacheKey(url);
 		if (key === null) return url;
@@ -136,7 +134,7 @@ class AttachmentUrlRefresher {
 	}
 
 	freshWhenReady(url: string, options: {refreshUnsigned?: boolean} = {}): string | null {
-		if (isApiAttachmentUrl(url)) return attachmentAccessToken.displayUrl(withoutAttachmentToken(url));
+		if (isApiAttachmentUrl(url)) return withoutAttachmentToken(url);
 		const current = this.fresh(url, options);
 		if (!current || !isOwnAttachmentUrl(current)) return current;
 		const nowMs = Date.now();
@@ -166,8 +164,12 @@ class AttachmentUrlRefresher {
 		if (!url) return url;
 		const target = unwrapDesktopLocalResourceURL(url);
 		if (isApiAttachmentUrl(target)) {
-			if (options.force) attachmentAccessToken.recover(target);
-			return withoutAttachmentToken(target);
+			const bare = withoutAttachmentToken(target);
+			if (options.force) {
+				apiAttachmentFileTokens.invalidate(bare);
+				apiAttachmentMedia.retry(bare);
+			}
+			return bare;
 		}
 		if (!isOwnAttachmentUrl(target)) return url;
 		const key = attachmentCacheKey(target);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
-import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {isUrlOnEndpoint, parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {
 	unwrapDesktopLocalResourceURL,
@@ -201,7 +201,7 @@ export async function downloadFile(src: string, type: MediaType, providedFilenam
 	if (!src) return;
 	const suggestedName = deriveSuggestedName(src, type, providedFilename);
 	const target = wrapDesktopLocalResourceURL(
-		await attachmentAccessToken.loadableUrl(await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(src))),
+		await apiAttachmentFileTokens.linkUrl(await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(src))),
 	);
 	if (isElectron()) {
 		try {
@@ -214,13 +214,8 @@ export async function downloadFile(src: string, type: MediaType, providedFilenam
 	}
 	if (await downloadViaFileSystemAccess(target, suggestedName, type)) return;
 	if (await downloadViaFetchBlob(target, suggestedName)) return;
-	const anchorTarget = isApiAttachmentUrl(unwrapDesktopLocalResourceURL(target))
-		? wrapDesktopLocalResourceURL(
-				await attachmentAccessToken.shareableUrl(withoutAttachmentToken(unwrapDesktopLocalResourceURL(target))),
-			)
-		: target;
-	if (downloadViaAnchor(anchorTarget, suggestedName)) return;
-	await openExternalUrl(withoutAttachmentToken(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target))));
+	if (downloadViaAnchor(target, suggestedName)) return;
+	await openExternalUrl(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target)));
 }
 
 export function createDownloadHandler(src: string, type: MediaType, providedFilename?: string) {

@@ -5,7 +5,7 @@ import {
 	REVERSE_IMAGE_SEARCH_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
-import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {SearchProviderPickerModal} from '@app/features/search/components/modals/SearchProviderPickerModal';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
@@ -78,7 +78,7 @@ export function buildReverseImageSearchMenuGroups(
 			),
 			label: copyLabel,
 			onClick: async () => {
-				await TextCopyCommands.copy(i18n, withoutAttachmentToken(imageUrl), true);
+				await TextCopyCommands.copy(i18n, imageUrl, true);
 				ToastCommands.createToast({
 					type: 'success',
 					children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR),

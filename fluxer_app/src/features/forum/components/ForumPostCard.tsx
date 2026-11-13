@@ -13,6 +13,7 @@ import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
 import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatNumber, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
@@ -173,6 +174,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 			})
 		: null;
 	const handleThumbnailError = useAttachmentRefreshOnError(media?.src);
+	const thumbnailDisplaySrc = useApiAttachmentSrc(thumbnail ?? '');
 	return (
 		<>
 			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
@@ -195,7 +197,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 						<div className={styles.cardMedia} data-flx="forum.forum-post-card.card-media">
 							{thumbnail ? (
 								<img
-									src={thumbnail}
+									src={thumbnailDisplaySrc}
 									alt=""
 									className={styles.cardMediaImage}
 									loading="lazy"
@@ -260,7 +262,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 							{!grid && thumbnail && (
 								<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
 									<img
-										src={thumbnail}
+										src={thumbnailDisplaySrc}
 										alt=""
 										className={styles.cardMediaImage}
 										loading="lazy"

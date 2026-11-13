@@ -32,6 +32,7 @@ import {
 	VIDEO_PREVIEW_DESCRIPTOR,
 	type ZoomState,
 } from '@app/features/messaging/components/modals/media_modal/shared';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
@@ -83,6 +84,36 @@ const FITTED_PAN_ZOOM_INFO: PanZoomInfo = {
 	isDefault: true,
 	canZoomIn: true,
 	canZoomOut: false,
+};
+
+const ThumbnailVideo: FC<{src: string; label: string}> = ({src, label}) => {
+	const playbackSrc = useApiAttachmentPlaybackSrc(src);
+	return (
+		<video
+			className={styles.thumbnailVideo}
+			src={playbackSrc}
+			muted
+			playsInline
+			preload="metadata"
+			aria-label={label}
+			onError={() => void AttachmentUrlRefresher.refresh(src, {force: true})}
+			data-flx="messaging.media-modal.thumbnail-video"
+		/>
+	);
+};
+
+const ThumbnailImage: FC<{src: string; alt: string}> = ({src, alt}) => {
+	const displaySrc = useApiAttachmentSrc(src);
+	return (
+		<img
+			src={displaySrc}
+			alt={alt}
+			className={styles.thumbnailImage}
+			draggable={false}
+			onError={() => void AttachmentUrlRefresher.refresh(src, {force: true})}
+			data-flx="messaging.media-modal.thumbnail-image"
+		/>
+	);
 };
 
 export const MediaModal: FC<MediaModalProps> = observer(
@@ -617,16 +648,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 												let thumbnailContent: ReactNode;
 												if (thumb.type === 'video' || thumb.type === 'gifv') {
 													thumbnailContent = (
-														<video
-															className={styles.thumbnailVideo}
-															src={thumb.src}
-															muted
-															playsInline
-															preload="metadata"
-															aria-label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)}
-															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
-															data-flx="messaging.media-modal.thumbnail-video"
-														/>
+														<ThumbnailVideo src={thumb.src} label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)} />
 													);
 												} else if (thumb.type === 'audio') {
 													thumbnailContent = (
@@ -638,16 +660,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 														</div>
 													);
 												} else {
-													thumbnailContent = (
-														<img
-															src={thumb.src}
-															alt={thumb.alt ?? ''}
-															className={styles.thumbnailImage}
-															draggable={false}
-															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
-															data-flx="messaging.media-modal.thumbnail-image"
-														/>
-													);
+													thumbnailContent = <ThumbnailImage src={thumb.src} alt={thumb.alt ?? ''} />;
 												}
 												return (
 													<FocusRing
