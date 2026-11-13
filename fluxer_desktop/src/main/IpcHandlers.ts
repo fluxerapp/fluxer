@@ -11,6 +11,7 @@ import {
 } from '@electron/common/DesktopConfig';
 import type {
 	ClipboardWriteFileResult,
+	DownloadEntryEvent,
 	DownloadFileResult,
 	MediaAccessType,
 	TrayPresenceStatus,
@@ -108,8 +109,10 @@ import {
 	DESKTOP_UPDATE_EVENTS,
 } from '@fluxer/desktop_ipc/src/ModuleContract';
 import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+import {randomUUID} from 'crypto';
 import {app, BrowserWindow, clipboard, dialog, ipcMain, powerMonitor, shell, systemPreferences} from 'electron';
 import log from 'electron-log';
+import path from 'path';
 
 interface TrayRuntimeStateUpdate {
 	voiceConnected?: boolean;
@@ -168,6 +171,9 @@ function getActiveSmoothScrolling(): boolean {
 function getActiveMiddleClickAutoscroll(): boolean {
 	return process.platform === 'linux' && hasEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
 }
+
+const DOWNLOAD_PROGRESS_EMIT_INTERVAL_MS = 250;
+const activeDownloads = new Map<string, AbortController>();
 
 function applyUnreadBadge(badge: number): void {
 	if (process.platform === 'win32') {
@@ -451,8 +457,51 @@ export function registerIpcHandlers(): void {
 					return {success: false, canceled: true};
 				}
 				const filePath = withDefaultExtension(result.filePath, options.defaultPath);
-				await downloadFile(options.url, filePath, {sha256: options.sha256});
-				return {success: true, path: filePath};
+				const id = randomUUID();
+				const fileName = path.basename(filePath);
+				const emit = (payload: Omit<DownloadEntryEvent, 'id' | 'fileName' | 'filePath'>): void => {
+					if (win.isDestroyed()) return;
+					win.webContents.send('download-changed', {
+						id,
+						fileName,
+						filePath,
+						...payload,
+					});
+				};
+				const controller = new AbortController();
+				activeDownloads.set(id, controller);
+				let lastEmitAt = 0;
+				let lastReceivedBytes = 0;
+				emit({state: 'started', receivedBytes: 0, totalBytes: null});
+				try {
+					await downloadFile(options.url, filePath, {
+						sha256: options.sha256,
+						signal: controller.signal,
+						onProgress: (receivedBytes, totalBytes) => {
+							lastReceivedBytes = receivedBytes;
+							const now = Date.now();
+							if (now - lastEmitAt < DOWNLOAD_PROGRESS_EMIT_INTERVAL_MS) return;
+							lastEmitAt = now;
+							emit({state: 'progressing', receivedBytes, totalBytes});
+						},
+					});
+					emit({state: 'completed', receivedBytes: lastReceivedBytes, totalBytes: lastReceivedBytes});
+					return {success: true, path: filePath};
+				} catch (error) {
+					if (controller.signal.aborted) {
+						emit({state: 'canceled', receivedBytes: lastReceivedBytes, totalBytes: null});
+						return {success: false, canceled: true};
+					}
+					emit({
+						state: 'failed',
+						receivedBytes: lastReceivedBytes,
+						totalBytes: null,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					});
+					throw error;
+				} finally {
+					activeDownloads.delete(id);
+				}
 			} catch (error) {
 				if (error instanceof DownloadChecksumError) {
 					return {success: false, checksumMismatch: true, error: error.message};
@@ -461,6 +510,18 @@ export function registerIpcHandlers(): void {
 			}
 		},
 	);
+	ipcMain.on('download-cancel', (event, id: unknown) => {
+		if (!isPrivilegedRendererDocumentSender(event) || typeof id !== 'string') return;
+		activeDownloads.get(id)?.abort();
+	});
+	ipcMain.on('download-open', (event, filePath: unknown) => {
+		if (!isPrivilegedRendererDocumentSender(event) || typeof filePath !== 'string') return;
+		void shell.openPath(filePath);
+	});
+	ipcMain.on('download-reveal', (event, filePath: unknown) => {
+		if (!isPrivilegedRendererDocumentSender(event) || typeof filePath !== 'string') return;
+		shell.showItemInFolder(filePath);
+	});
 	ipcMain.handle('check-media-access', async (_event, type: MediaAccessType): Promise<string> => {
 		if (process.platform !== 'darwin') {
 			return 'granted';

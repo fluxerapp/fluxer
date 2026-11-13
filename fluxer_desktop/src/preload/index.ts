@@ -20,6 +20,7 @@ import type {
 	DesktopWindowBehaviorSettings,
 	DisplayMediaPortalSurfacePreference,
 	DisplayMediaRequestInfo,
+	DownloadEntryEvent,
 	DownloadFileResult,
 	ElectronAPI,
 	GetDesktopSourcesOptions,
@@ -496,7 +497,22 @@ const api: ElectronAPI = {
 		ipcRenderer.send('window-close');
 	},
 	windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke('window-is-maximized'),
-
+	onDownloadChanged: (handler: (entry: DownloadEntryEvent) => void): (() => void) => {
+		const listener = (_event: Electron.IpcRendererEvent, entry: DownloadEntryEvent): void => handler(entry);
+		ipcRenderer.on('download-changed', listener);
+		return () => {
+			ipcRenderer.off('download-changed', listener);
+		};
+	},
+	downloadCancel: (id: string): void => {
+		ipcRenderer.send('download-cancel', id);
+	},
+	downloadOpen: (filePath: string): void => {
+		ipcRenderer.send('download-open', filePath);
+	},
+	downloadReveal: (filePath: string): void => {
+		ipcRenderer.send('download-reveal', filePath);
+	},
 	popoutSetAlwaysOnTop: (key: string, flag: boolean): Promise<boolean> =>
 		ipcRenderer.invoke('popout:set-always-on-top', key, flag),
 	popoutFocus: (key: string): Promise<boolean> => ipcRenderer.invoke('popout:focus', key),
