@@ -143,7 +143,7 @@ async function checkRoom(
 	}
 	const now = deps.now();
 	for (const participant of listed.participants) {
-		const gatewayKey = participantGatewayKey(participant.identity, participant.metadata);
+		const gatewayKey = participantGatewayKey(room, participant.identity, participant.metadata);
 		if (gatewayKey !== null && known.has(gatewayKey)) {
 			continue;
 		}
@@ -167,7 +167,7 @@ async function gatewayParticipantKeys(deps: VoiceParticipantSweepDeps, room: Swe
 			guildId: isDMRoom(room.context) ? undefined : room.context.guildId,
 			channelId: room.context.channelId,
 		});
-		return new Set(voiceStates.map((voiceState) => `${voiceState.userId}|${voiceState.connectionId}`));
+		return new Set(voiceStates.map((voiceState) => gatewayKeyFor(room, voiceState.userId, voiceState.connectionId)));
 	} catch (error) {
 		if (error instanceof UnknownGuildError || error instanceof UnknownChannelError) {
 			return new Set();
@@ -177,13 +177,17 @@ async function gatewayParticipantKeys(deps: VoiceParticipantSweepDeps, room: Swe
 	}
 }
 
-function participantGatewayKey(identity: string, metadata: string): string | null {
+function gatewayKeyFor(room: SweepRoom, userId: string | bigint, connectionId: string): string {
+	return isDMRoom(room.context) ? `${userId}` : `${userId}|${connectionId}`;
+}
+
+function participantGatewayKey(room: SweepRoom, identity: string, metadata: string): string | null {
 	const parsed = metadata ? parseParticipantMetadataWithRaw(metadata) : null;
 	if (parsed) {
-		return `${parsed.context.userId}|${parsed.context.connectionId}`;
+		return gatewayKeyFor(room, parsed.context.userId, parsed.context.connectionId);
 	}
 	const match = IDENTITY_PATTERN.exec(identity);
-	return match ? `${match[1]}|${match[2]}` : null;
+	return match ? gatewayKeyFor(room, match[1], match[2]) : null;
 }
 
 async function removeIfStillMissing(

@@ -30,9 +30,15 @@ import type {
 	RemoteTrackPublication,
 	Room,
 } from 'livekit-client';
-import {ConnectionState, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
+import {ConnectionState, DisconnectReason, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
+
+function resolveRoomDisconnectReason(reason: DisconnectReason | undefined): 'error' | 'server' {
+	return reason === DisconnectReason.PARTICIPANT_REMOVED || reason === DisconnectReason.ROOM_DELETED
+		? 'server'
+		: 'error';
+}
 
 export interface RoomEventCallbacks {
 	onConnected: () => Promise<void>;
@@ -52,7 +58,7 @@ export interface RoomEventDependencies {
 		isDisconnecting: () => boolean;
 		isUserMovePending: () => boolean;
 		markConnected: () => void;
-		markDisconnected: (reason: 'error') => void;
+		markDisconnected: (reason: 'error' | 'server') => void;
 		markReconnecting: () => void;
 		markReconnected: () => void;
 	};
@@ -344,7 +350,7 @@ export function bindRoomEvents(
 	);
 	room.on(
 		RoomEvent.Disconnected,
-		guard(attemptId, () => {
+		guard(attemptId, (reason?: DisconnectReason) => {
 			roomReconnecting = false;
 			screenSharePublicationAwaitingReconnect = null;
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
@@ -362,7 +368,7 @@ export function bindRoomEvents(
 			}
 			callbacks.onDisconnected();
 			dependencies.participants.clear();
-			dependencies.connection.markDisconnected('error');
+			dependencies.connection.markDisconnected(resolveRoomDisconnectReason(reason));
 		}),
 	);
 	room.on(

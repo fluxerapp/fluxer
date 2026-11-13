@@ -21,10 +21,20 @@ class QuietLogger implements LoggerInterface {
 }
 
 const ROOM = 'guild_10_channel_20';
+const DM_ROOM = 'dm_channel_20';
 const KNOWN = 'user_1_known';
 const STRAY = 'user_2_stray';
 
-function createHarness() {
+interface HarnessOptions {
+	room?: string;
+	participants?: Array<string>;
+	gatewayStates?: Array<{connectionId: string; userId: string}>;
+}
+
+function createHarness(options: HarnessOptions = {}) {
+	const room = options.room ?? ROOM;
+	const participantIdentities = options.participants ?? [KNOWN, STRAY];
+	const gatewayStates = options.gatewayStates ?? [{connectionId: 'known', userId: '1'}];
 	const state = {
 		now: 0,
 		joinedAt: 1000,
@@ -38,13 +48,17 @@ function createHarness() {
 		dryRun: false,
 		liveKitService: {
 			listServers: () => [{regionId: 'eu', serverId: 'eu-1'}],
-			listRooms: async () => ({status: 'ok', rooms: [{name: ROOM, numParticipants: 2}]}),
+			listRooms: async () => ({
+				status: 'ok',
+				rooms: [{name: room, numParticipants: participantIdentities.length}],
+			}),
 			listParticipants: async () => ({
 				status: 'ok',
-				participants: [
-					{identity: KNOWN, joinedAt: 500, metadata: ''},
-					{identity: STRAY, joinedAt: state.joinedAt, metadata: ''},
-				],
+				participants: participantIdentities.map((identity) => ({
+					identity,
+					joinedAt: identity === STRAY ? state.joinedAt : 500,
+					metadata: '',
+				})),
 			}),
 			getParticipant: async ({identity}) => ({
 				status: 'ok',
@@ -57,7 +71,7 @@ function createHarness() {
 		gatewayService: {
 			getVoiceStatesForChannel: async () => {
 				state.gatewayReads += 1;
-				const known = [{connectionId: 'known', userId: '1', channelId: '20'}];
+				const known = gatewayStates.map((voiceState) => ({...voiceState, channelId: '20'}));
 				if (state.gatewayReads >= state.strayKnownFromRead) {
 					known.push({connectionId: 'stray', userId: '2', channelId: '20'});
 				}
@@ -101,5 +115,40 @@ describe('sweepVoiceParticipants', () => {
 		state.strayKnownFromRead = state.gatewayReads + 2;
 		expect((await sweepAt(2)).removed).toBe(0);
 		expect(state.removed).toEqual([]);
+	});
+
+	it('keeps a second device of a dm call member the gateway lists under one connection', async () => {
+		const {state, sweepAt} = createHarness({
+			room: DM_ROOM,
+			participants: ['user_1_macbook', 'user_1_pc'],
+			gatewayStates: [{connectionId: 'pc', userId: '1'}],
+		});
+		await sweepAt(0);
+		const settled = await sweepAt(3);
+		expect(settled.candidates).toBe(0);
+		expect(settled.removed).toBe(0);
+		expect(state.removed).toEqual([]);
+	});
+
+	it('still disconnects a dm participant whose user has no voice state after it settles', async () => {
+		const {state, sweepAt} = createHarness({
+			room: DM_ROOM,
+			participants: ['user_1_pc', STRAY],
+			gatewayStates: [{connectionId: 'pc', userId: '1'}],
+		});
+		expect((await sweepAt(0)).removed).toBe(0);
+		expect((await sweepAt(1)).removed).toBe(0);
+		expect((await sweepAt(2)).removed).toBe(1);
+		expect(state.removed).toEqual([STRAY]);
+	});
+
+	it('matches guild participants by connection, not by user', async () => {
+		const {state, sweepAt} = createHarness({
+			participants: [KNOWN, 'user_1_other'],
+			gatewayStates: [{connectionId: 'known', userId: '1'}],
+		});
+		await sweepAt(0);
+		expect((await sweepAt(2)).removed).toBe(1);
+		expect(state.removed).toEqual(['user_1_other']);
 	});
 });
