@@ -104,10 +104,10 @@ export function resolveTypedEmojiToken(
 		if (!emoji) return null;
 		return {
 			kind: 'standard',
-			name: emoji.uniqueName,
+			name: emoji.name,
 			surrogate: emoji.surrogates,
 			url: EmojiUtils.getEmojiURL(emoji.surrogates),
-			display: `:${emoji.uniqueName}:`,
+			display: `:${emoji.name}:`,
 		};
 	}
 	if (!CUSTOM_EMOJI_SHORTCODE_NAME_PATTERN.test(shortcodeName)) return null;

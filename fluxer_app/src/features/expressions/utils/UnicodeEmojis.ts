@@ -229,9 +229,18 @@ function buildEmojiIndex(): EmojiIndex {
 				canonicalSurrogateToName[toCanonicalSurrogate(skinToneEntry.surrogatePair)] = skinToneEntry.name;
 			});
 			const skins = (emojiObject as {skins?: ReadonlyArray<{names: ReadonlyArray<string>; surrogates: string}>}).skins;
-			skins?.slice(SKIN_TONE_SURROGATES.length).forEach((skin) => {
-				surrogateToName[skin.surrogates] = skin.names[0];
-				canonicalSurrogateToName[toCanonicalSurrogate(skin.surrogates)] = skin.names[0];
+			skins?.forEach((skin, skinIndex) => {
+				const url = EmojiUtils.getEmojiURL(skin.surrogates) ?? undefined;
+				skin.names.forEach((skinName) => {
+					const skinEmoji: UnicodeEmoji = {...emojiJson, name: skinName, surrogates: skin.surrogates, url};
+					nameToEmoji[skinName] = skinEmoji;
+					shortcodeNameToEmoji[skinName] = skinEmoji;
+					nameToSurrogate[skinName] = skin.surrogates;
+				});
+				if (skinIndex >= SKIN_TONE_SURROGATES.length) {
+					surrogateToName[skin.surrogates] = skin.names[0];
+					canonicalSurrogateToName[toCanonicalSurrogate(skin.surrogates)] = skin.names[0];
+				}
 			});
 			categoryByEmojiName[emoji.uniqueName] = category;
 			emojis.push(emojiJson);
