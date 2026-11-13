@@ -35,6 +35,7 @@ export type VoiceGatewayStateEvent =
 	| {type: 'voiceState.update'; guildId: string | null; voiceState: VoiceState}
 	| {type: 'voiceState.delete'; guildId: string; userId: string}
 	| {type: 'voiceState.removeConnection'; connectionId: string}
+	| {type: 'voiceState.seed'; guildId: string | null; voiceStates: ReadonlyArray<VoiceState>}
 	| {type: 'connection.open'; guilds: ReadonlyArray<GuildReadyData>}
 	| {type: 'guild.create'; guild: GuildReadyData}
 	| {type: 'guild.delete'; guildId: string}
@@ -220,6 +221,19 @@ function upsertConnection(
 	return addConnection(withoutStaleSession, guildId, voiceState);
 }
 
+function seedMissingConnections(
+	context: VoiceGatewayStateContext,
+	guildId: string,
+	voiceStates: ReadonlyArray<VoiceState>,
+): VoiceGatewayStateContext {
+	let next = context;
+	for (const voiceState of voiceStates) {
+		if (!voiceState.connection_id || Object.hasOwn(next.connectionVoiceStates, voiceState.connection_id)) continue;
+		next = addConnection(next, guildId, voiceState);
+	}
+	return next;
+}
+
 function removeUserFromGuild(
 	context: VoiceGatewayStateContext,
 	guildId: string,
@@ -328,6 +342,11 @@ const voiceGatewayStateMachine = setup({
 		removeVoiceStateConnection: assign(({context, event}) =>
 			event.type === 'voiceState.removeConnection' ? removeConnection(context, event.connectionId) : context,
 		),
+		seedVoiceStates: assign(({context, event}) =>
+			event.type === 'voiceState.seed'
+				? seedMissingConnections(context, resolveGuildId(event.guildId), event.voiceStates)
+				: context,
+		),
 		openConnection: assign(({event}) =>
 			event.type === 'connection.open' ? replaceAllFromGuilds(event.guilds) : createEmptyVoiceGatewayStateContext(),
 		),
@@ -349,6 +368,7 @@ const voiceGatewayStateMachine = setup({
 				'voiceState.update': {actions: 'updateVoiceState'},
 				'voiceState.delete': {actions: 'deleteVoiceState'},
 				'voiceState.removeConnection': {actions: 'removeVoiceStateConnection'},
+				'voiceState.seed': {actions: 'seedVoiceStates'},
 				'connection.open': {actions: 'openConnection'},
 				'guild.create': {actions: 'createGuild'},
 				'guild.delete': {actions: 'deleteGuild'},
