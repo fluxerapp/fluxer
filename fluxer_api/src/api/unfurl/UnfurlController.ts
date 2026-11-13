@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
+import {isGuardedAttachmentUrl, publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -69,6 +69,7 @@ export function UnfurlController(app: HonoApp) {
 		Validator('json', UnfurlRequest),
 		async (ctx) => {
 			const {url} = ctx.req.valid('json');
+			if (isGuardedAttachmentUrl(url)) return ctx.json([]);
 			const result = await getUnfurlerService().unfurlWithCachePolicy(url, 'block', {bypassCache: true});
 			return ctx.json(result.embeds.map(signEmbedTree));
 		},

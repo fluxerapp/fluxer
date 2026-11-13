@@ -11,14 +11,15 @@ import {
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import {
 	attachmentStorageKeyFromUrl,
 	isSignatureParameterName,
 	percentDecodeStorageKey,
 } from '@pkgs/media_proxy_utils/src/AttachmentUrlSignature';
 
-const SNOWFLAKE_REGEX = /^[0-9]{1,20}$/u;
-const TRAILING_SLASHES_REGEX = /\/+$/u;
+export const SNOWFLAKE_REGEX = /^[0-9]{1,20}$/u;
+export const TRAILING_SLASHES_REGEX = /\/+$/u;
 const LEADING_SLASHES_REGEX = /^\/+/u;
 const VERSION_PREFIX_REGEX = /^\/v[0-9]+(?=\/)/u;
 const API_ATTACHMENT_PATH_REGEX = /^\/channels\/([0-9]{1,20})\/attachments\/([0-9]{1,20})\/(.+)$/u;
@@ -114,7 +115,50 @@ export function parseApiAttachmentUrl(url: string): ApiAttachmentLocation | null
 	return parseApiAttachmentRoute(rawPath.slice(basePath.length), target.searchParams.get('mid'));
 }
 
-function apiFormOfMediaUrl(url: string): string | null {
+export function isAttachmentMediaRequest(method: string, path: string): boolean {
+	return (
+		isApiProxiedAttachments() &&
+		(method === 'GET' || method === 'HEAD') &&
+		API_ATTACHMENT_PATH_REGEX.test(stripApiPrefix(path))
+	);
+}
+
+export function parseMediaAttachmentUrl(url: string): ApiAttachmentLocation | null {
+	const storageKey = attachmentStorageKeyFromUrl(url, Config.endpoints.media.replace(TRAILING_SLASHES_REGEX, ''));
+	if (storageKey === null) return null;
+	const [prefix, channelSegment, attachmentSegment, ...filenameSegments] = storageKey.split('/');
+	const filename = filenameSegments.join('/');
+	if (
+		prefix !== 'attachments' ||
+		!SNOWFLAKE_REGEX.test(channelSegment ?? '') ||
+		!SNOWFLAKE_REGEX.test(attachmentSegment ?? '') ||
+		!isSafeFilename(filename)
+	) {
+		return null;
+	}
+	return {
+		channelId: createChannelID(BigInt(channelSegment!)),
+		attachmentId: createAttachmentID(BigInt(attachmentSegment!)),
+		filename,
+		messageId: null,
+	};
+}
+
+export function ownAttachmentLocation(url: string): ApiAttachmentLocation | null {
+	return parseApiAttachmentUrl(url) ?? parseMediaAttachmentUrl(url);
+}
+
+export function isGuardedAttachmentUrl(url: string): boolean {
+	return isApiProxiedAttachments() && ownAttachmentLocation(url) !== null;
+}
+
+export interface AttachmentUrlOwner {
+	channelId: ChannelID;
+	messageId: MessageID;
+	storageChannelId: ChannelID;
+}
+
+export function apiFormOfMediaUrl(url: string, owner: AttachmentUrlOwner | null = null): string | null {
 	const mediaEndpoint = Config.endpoints.media.replace(TRAILING_SLASHES_REGEX, '');
 	const storageKey = attachmentStorageKeyFromUrl(url, mediaEndpoint);
 	if (storageKey === null) return null;
@@ -125,11 +169,13 @@ function apiFormOfMediaUrl(url: string): string | null {
 	const rawKeyPath = rawPathOf(url).slice(endpointPath.length).replace(LEADING_SLASHES_REGEX, '');
 	const rawFilename = rawKeyPath.split('/').slice(3).join('/');
 	if (rawFilename.length === 0) return null;
+	const keyChannelId = createChannelID(BigInt(channelSegment!));
+	const ownedHere = owner !== null && owner.storageChannelId === keyChannelId;
 	return makeApiAttachmentUrl(
-		createChannelID(BigInt(channelSegment!)),
+		ownedHere ? owner.channelId : keyChannelId,
 		BigInt(attachmentSegment!),
 		rawFilename,
-		null,
+		ownedHere ? owner.messageId : null,
 		preservedQueryFields(query),
 	);
 }

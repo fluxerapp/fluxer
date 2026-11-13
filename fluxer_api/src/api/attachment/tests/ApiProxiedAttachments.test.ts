@@ -14,11 +14,14 @@ import {createDmChannel, createFriendship} from '@app/api/channel/tests/ChannelT
 import {acceptInvite, createChannelInvite} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {server} from '@app/api/test/msw/server';
-import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {TestMediaService} from '@app/api/test/TestMediaService';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {createSnowflakeGenerator} from '@fluxer/snowflake/src/Snowflake';
 import {canonicalInput} from '@pkgs/media_proxy_utils/src/AttachmentUrlSignature';
 import {HttpResponse, http} from 'msw';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 const FILE_BYTES = randomBytes(64);
 const IGNORED_HEADERS = new Set(['date', 'x-request-id', 'x-fluxer-version']);
@@ -313,17 +316,123 @@ describe('attachments served through the API', () => {
 
 	test('with the setting on refreshed links point at the API and never at the media proxy', async () => {
 		await setProxied(true);
-		const mediaUrl = `${Config.endpoints.media}/attachments/${channelId}/1544971349200470016/cat.png?ex=1&is=2&hm=3`;
+		const attachmentId = createSnowflakeGenerator().generate();
+		const mediaUrl = `${Config.endpoints.media}/attachments/${channelId}/${attachmentId}/cat.png?ex=1&is=2&hm=3`;
 		const refreshed = await createBuilder<{refreshed_urls: Array<{refreshed: string}>}>(harness, member.token)
 			.post('/attachments/refresh-urls')
 			.body({attachment_urls: [mediaUrl]})
 			.execute();
 		expect(refreshed.refreshed_urls[0]!.refreshed).toBe(
-			`${Config.endpoints.apiClient}/channels/${channelId}/attachments/1544971349200470016/cat.png`,
+			`${Config.endpoints.apiClient}/channels/${channelId}/attachments/${attachmentId}/cat.png`,
 		);
 		const discovery = await createBuilder<{features: Record<string, unknown>}>(harness, '')
 			.get('/.well-known/fluxer')
 			.execute();
 		expect(discovery.features.proxy_attachments_through_api).toBe(true);
+	});
+
+	function watchPrivateFetches(sent: SentMessage): () => Array<string> {
+		const spy = vi.spyOn(TestMediaService.prototype, 'getMetadata');
+		const key = `/attachments/${sent.channelId}/`;
+		return () => {
+			const urls = spy.mock.calls.flatMap(([request]) =>
+				request.type === 'external' && request.url.includes(key) ? [request.url] : [],
+			);
+			spy.mockRestore();
+			return urls;
+		};
+	}
+
+	function mediaFormOf(sent: SentMessage): string {
+		const [attachmentId, filename] = new URL(sent.url).pathname.split('/').slice(-2);
+		return `${Config.endpoints.media}/attachments/${sent.channelId}/${attachmentId}/${filename}`;
+	}
+
+	test('with the setting on a copied link cannot be turned into a meme, a GIF or an avatar by an outsider', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const before = upstream.length;
+		const privateFetches = watchPrivateFetches(sent);
+		for (const url of [mediaFormOf(sent), `${mediaFormOf(sent)}?ex=1&is=2&hm=3`, sent.url]) {
+			const meme = await harness.app.request('/users/@me/memes', {
+				method: 'POST',
+				headers: {'x-forwarded-for': '127.0.0.1', Authorization: outsider.token, 'Content-Type': 'application/json'},
+				body: JSON.stringify({url, name: 'copy'}),
+			});
+			expect(meme.status).toBe(400);
+			const resolved = await createBuilder<{
+				entries: Array<{content_type: string; width: number; placeholder: unknown}>;
+			}>(harness, outsider.token)
+				.post('/users/@me/favorite-gifs/resolve')
+				.body({urls: [url]})
+				.execute();
+			expect(resolved.entries[0]).toMatchObject({content_type: '', width: 0, placeholder: null});
+		}
+		const memes = await createBuilder<Array<unknown>>(harness, outsider.token).get('/users/@me/memes').execute();
+		expect(memes).toEqual([]);
+		expect(upstream.length).toBe(before);
+		expect(privateFetches()).toEqual([]);
+	});
+
+	test('with the setting on a linked file never borrows the access of the message that links it', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const edited = await createBuilder<{attachments: Array<unknown> | null}>(harness, owner.token)
+			.patch(`/channels/${channelId}/messages/${sent.messageId}`)
+			.body({content: 'edited', attachments: []})
+			.execute();
+		expect(edited.attachments ?? []).toEqual([]);
+		clearAttachmentMediaDecisionsForTesting();
+		expect((await get(routePath(sent.url), owner.token)).status).toBe(404);
+		const linking = await createBuilder<{embeds: Array<{image?: {url: string; proxy_url: string}}>}>(
+			harness,
+			owner.token,
+		)
+			.post(`/channels/${channelId}/messages`)
+			.body({embeds: [{title: 'linked', image: {url: mediaFormOf(sent)}}]})
+			.execute();
+		const image = linking.embeds[0]!.image!;
+		for (const url of [image.url, image.proxy_url]) {
+			expect(new URL(url).searchParams.has('mid')).toBe(false);
+			expect(url.startsWith(`${Config.endpoints.apiClient}/channels/${channelId}/attachments/`)).toBe(true);
+			expect((await get(routePath(url), owner.token)).status).toBe(404);
+			expect((await get(routePath(url), member.token)).status).toBe(404);
+		}
+	});
+
+	test('with the setting on a linked file cannot be saved or previewed by someone who cannot read it', async () => {
+		await setProxied(true);
+		const sent = await sendImage(owner.token, channelId);
+		const ownGuild = await createGuild(harness, outsider.token, 'Linking Guild');
+		const ownChannelId = (await createChannel(harness, outsider.token, ownGuild.id, 'links')).id;
+		const privateFetches = watchPrivateFetches(sent);
+		const linking = await createBuilder<{id: string}>(harness, outsider.token)
+			.post(`/channels/${ownChannelId}/messages`)
+			.body({embeds: [{title: 'linked', image: {url: mediaFormOf(sent)}}]})
+			.execute();
+		const meme = await harness.app.request(`/channels/${ownChannelId}/messages/${linking.id}/memes`, {
+			method: 'POST',
+			headers: {'x-forwarded-for': '127.0.0.1', Authorization: outsider.token, 'Content-Type': 'application/json'},
+			body: JSON.stringify({embed_index: 0, name: 'copy'}),
+		});
+		expect(meme.status).not.toBe(201);
+		const memes = await createBuilder<Array<unknown>>(harness, outsider.token).get('/users/@me/memes').execute();
+		expect(memes).toEqual([]);
+		const webhook = await createWebhook(harness, ownChannelId, outsider.token, 'linker');
+		for (const url of [mediaFormOf(sent), sent.url]) {
+			const posted = await createBuilderWithoutAuth<{author: {avatar: string | null}}>(harness)
+				.post(`/webhooks/${webhook.id}/${webhook.token}?wait=true`)
+				.body({content: 'hello', avatar_url: url})
+				.execute();
+			expect(posted.author.avatar).toBeNull();
+		}
+		for (const url of [mediaFormOf(sent), sent.url]) {
+			const unfurled = await createBuilder<Array<unknown>>(harness, outsider.token)
+				.post('/unfurl')
+				.body({url})
+				.execute();
+			expect(unfurled).toEqual([]);
+		}
+		expect(privateFetches()).toEqual([]);
 	});
 });

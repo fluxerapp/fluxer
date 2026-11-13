@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isOperatorPath, isOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
-import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentMediaRequest';
 import {verifyAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Logger} from '@app/api/Logger';
@@ -90,10 +90,7 @@ async function authenticateAttachmentMediaToken(ctx: Context<HonoEnv>): Promise<
 	const token = ctx.req.query('mt');
 	if (!token) return;
 	const payload = verifyAttachmentMediaToken(token);
-	if (!payload) {
-		recordAuthFailure(getRequestClientIp(ctx), hashRequestToken(token));
-		return;
-	}
+	if (!payload) return;
 	const apiContext = ctx.get('apiContext');
 	const authSession = await apiContext.services.users.getAuthSessionByToken(Buffer.from(payload.s, 'base64url'));
 	if (!authSession || authSession.isExpiredSsoSession() || authSession.userId.toString() !== payload.u) return;

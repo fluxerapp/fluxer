@@ -2,14 +2,14 @@
 
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
-import {makeApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
+import {apiFormOfMediaUrl, makeApiAttachmentUrl, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
-import {type ChannelID, createChannelID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {
 	attachmentStorageChannelId,
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 	isCrosspostCopy,
+	isOwnedEmbedAttachment,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {
 	type MessageResponseAccessContext,
@@ -48,7 +48,6 @@ import type {
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {NatsConnection} from '@nats-io/transport-node';
-import {attachmentStorageKeyFromUrl} from '@pkgs/media_proxy_utils/src/AttachmentUrlSignature';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
@@ -65,25 +64,29 @@ class NoopNatsConnectionManager implements INatsConnectionManager {
 	}
 }
 
-function apiOwnMediaUrl(url: string, message: Message): string | null {
-	const storageKey = attachmentStorageKeyFromUrl(url, Config.endpoints.media);
-	if (storageKey === null) return null;
-	const [, keyChannelId, attachmentId, ...filename] = storageKey.split('/');
-	const storageChannelId = attachmentStorageChannelId(message).toString();
-	return keyChannelId === storageChannelId
-		? makeApiAttachmentUrl(message.channelId, BigInt(attachmentId!), filename.join('/'), message.id)
-		: makeApiAttachmentUrl(createChannelID(BigInt(keyChannelId!)), BigInt(attachmentId!), filename.join('/'), null);
+function withoutMediaToken(url: string): string {
+	if (parseApiAttachmentUrl(url) === null) return url;
+	const parsed = new URL(url);
+	parsed.searchParams.delete('mt');
+	return parsed.toString();
 }
 
-function signOwnUrl(url: string | null | undefined, message: Message): string | null {
+function apiOwnMediaUrl(url: string, message: Message, owned: boolean): string {
+	const owner = owned
+		? {channelId: message.channelId, messageId: message.id, storageChannelId: attachmentStorageChannelId(message)}
+		: null;
+	return apiFormOfMediaUrl(url, owner) ?? withoutMediaToken(url);
+}
+
+function signOwnUrl(url: string | null | undefined, message: Message, owned = false): string | null {
 	if (url == null) return null;
-	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message) ?? url;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
 	return signAttachmentUrl(url);
 }
 
-function mediaProxyUrl(url: string | null | undefined, message: Message): string | null {
+function mediaProxyUrl(url: string | null | undefined, message: Message, owned = false): string | null {
 	if (!url?.startsWith('http')) return null;
-	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message) ?? url;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
 	return signAttachmentUrl(url);
 }
 
@@ -478,9 +481,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbedMedia(media: EmbedMedia | null, message: Message) {
 		if (!media?.url) return null;
 		const resolved = this.resolveAttachmentUrl(media.url, message);
+		const owned = isOwnedEmbedAttachment(media);
 		return {
-			url: signOwnUrl(resolved, message) ?? resolved,
-			proxy_url: mediaProxyUrl(resolved, message),
+			url: signOwnUrl(resolved, message, owned) ?? resolved,
+			proxy_url: mediaProxyUrl(resolved, message, owned),
 			content_type: media.contentType,
 			content_hash: media.contentHash,
 			width: media.width,

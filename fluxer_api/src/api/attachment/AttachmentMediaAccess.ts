@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {encodeStorageKey} from '@app/api/attachment/AttachmentMediaUpstream';
-import {type ApiAttachmentLocation, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
+import {
+	type ApiAttachmentLocation,
+	ownAttachmentLocation,
+	parseApiAttachmentUrl,
+} from '@app/api/attachment/AttachmentPublicUrl';
 import {type MessageID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {attachmentStorageChannelId, makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	attachmentStorageChannelId,
+	isOwnedEmbedAttachment,
+	makeAttachmentCdnKey,
+} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
 import {type ThreadViewer, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
@@ -131,20 +139,18 @@ function isServedEmbedUrl(
 		);
 }
 
-function embedStoredUrls(embed: Embed): Array<string> {
-	const media = [embed.image, embed.thumbnail, embed.video, embed.audio];
+function ownedEmbedMediaUrls(embed: Embed): Array<string> {
 	return [
-		embed.url,
-		embed.author?.iconUrl,
-		embed.footer?.iconUrl,
-		...media.map((entry) => entry?.url),
-		...embed.children.flatMap((child) => embedStoredUrls(child)),
+		...[embed.image, embed.thumbnail, embed.video, embed.audio]
+			.filter((media) => media !== null && isOwnedEmbedAttachment(media))
+			.map((media) => media?.url),
+		...embed.children.flatMap((child) => ownedEmbedMediaUrls(child)),
 	].filter((url): url is string => typeof url === 'string');
 }
 
 function hasOwnedEmbedKey(embeds: ReadonlyArray<Embed>, storageKey: string): boolean {
 	return embeds
-		.flatMap((embed) => embedStoredUrls(embed))
+		.flatMap((embed) => ownedEmbedMediaUrls(embed))
 		.some((url) => attachmentStorageKeyFromUrl(url, Config.endpoints.media) === storageKey);
 }
 
@@ -187,56 +193,49 @@ function isHiddenFromViewer(error: unknown): boolean {
 	return error instanceof FluxerError && (error.status === 403 || error.status === 404);
 }
 
-class AttachmentMediaAccess {
-	constructor(private readonly deps: AttachmentMediaAccessDeps) {}
+async function resolveFavoriteMeme(
+	deps: AttachmentMediaAccessDeps,
+	{user, location}: AttachmentMediaAccessRequest,
+): Promise<string | null> {
+	const memes = await deps.favoriteMemeRepository.findByUserId(user.id);
+	const owned = memes.some(
+		(meme) => meme.attachmentId === location.attachmentId && meme.filename === location.filename,
+	);
+	return owned ? makeAttachmentCdnKey(userIdToChannelId(user.id), location.attachmentId, location.filename) : null;
+}
 
-	async resolveStorageKey(request: AttachmentMediaAccessRequest): Promise<string | null> {
-		const key = decisionKey(request);
-		const cached = readCachedDecision(key);
-		if (cached !== null) return cached;
-		const storageKey = await this.resolveUncached(request);
-		if (storageKey !== null) rememberDecision(key, storageKey);
-		return storageKey;
+async function resolveUncached(
+	deps: AttachmentMediaAccessDeps,
+	request: AttachmentMediaAccessRequest,
+): Promise<string | null> {
+	const {location, user} = request;
+	if (location.messageId === null && location.channelId.toString() === user.id.toString()) {
+		return resolveFavoriteMeme(deps, request);
 	}
-
-	private async resolveUncached(request: AttachmentMediaAccessRequest): Promise<string | null> {
-		const {location, user} = request;
-		if (location.messageId === null && location.channelId.toString() === user.id.toString()) {
-			return this.resolveFavoriteMeme(request);
-		}
-		const messageId =
-			location.messageId ??
-			(await this.deps.channelRepository.messages.lookupAttachmentByChannelAndFilename(
-				location.channelId,
-				location.attachmentId,
-				location.filename,
-			));
-		if (messageId === null) return null;
-		let response: MessageResponse;
-		try {
-			response = await this.deps.messageRequestService.getMessage({
-				userId: user.id,
-				viewer: request.viewer,
-				channelId: location.channelId,
-				messageId,
-				requestCache: request.requestCache,
-			});
-		} catch (error) {
-			if (isHiddenFromViewer(error)) return null;
-			throw error;
-		}
-		const message = await this.deps.channelRepository.messages.getMessage(location.channelId, messageId);
-		if (!message) return null;
-		return storedAttachmentKey(message, response, location, messageId);
+	const messageId =
+		location.messageId ??
+		(await deps.channelRepository.messages.lookupAttachmentByChannelAndFilename(
+			location.channelId,
+			location.attachmentId,
+			location.filename,
+		));
+	if (messageId === null) return null;
+	let response: MessageResponse;
+	try {
+		response = await deps.messageRequestService.getMessage({
+			userId: user.id,
+			viewer: request.viewer,
+			channelId: location.channelId,
+			messageId,
+			requestCache: request.requestCache,
+		});
+	} catch (error) {
+		if (isHiddenFromViewer(error)) return null;
+		throw error;
 	}
-
-	private async resolveFavoriteMeme({user, location}: AttachmentMediaAccessRequest): Promise<string | null> {
-		const memes = await this.deps.favoriteMemeRepository.findByUserId(user.id);
-		const owned = memes.some(
-			(meme) => meme.attachmentId === location.attachmentId && meme.filename === location.filename,
-		);
-		return owned ? makeAttachmentCdnKey(userIdToChannelId(user.id), location.attachmentId, location.filename) : null;
-	}
+	const message = await deps.channelRepository.messages.getMessage(location.channelId, messageId);
+	if (!message) return null;
+	return storedAttachmentKey(message, response, location, messageId);
 }
 
 function credentialKey(ctx: Context<HonoEnv>): string {
@@ -245,27 +244,35 @@ function credentialKey(ctx: Context<HonoEnv>): string {
 	return Buffer.from(session.sessionIdHash).toString('base64url');
 }
 
-export function resolveAttachmentForRequester(
+export async function resolveAttachmentForRequester(
 	ctx: Context<HonoEnv>,
 	location: ApiAttachmentLocation,
 ): Promise<string | null> {
-	const access = new AttachmentMediaAccess({
-		messageRequestService: ctx.get('messageRequestService'),
-		channelRepository: ctx.get('channelRepository'),
-		favoriteMemeRepository: getFavoriteMemeRepository(),
-	});
-	return access.resolveStorageKey({
+	const request: AttachmentMediaAccessRequest = {
 		user: ctx.get('user'),
 		viewer: viewerFromCtx(ctx),
 		credentialKey: credentialKey(ctx),
 		location,
 		requestCache: ctx.get('requestCache'),
-	});
+	};
+	const key = decisionKey(request);
+	const cached = readCachedDecision(key);
+	if (cached !== null) return cached;
+	const storageKey = await resolveUncached(
+		{
+			messageRequestService: ctx.get('messageRequestService'),
+			channelRepository: ctx.get('channelRepository'),
+			favoriteMemeRepository: getFavoriteMemeRepository(),
+		},
+		request,
+	);
+	if (storageKey !== null) rememberDecision(key, storageKey);
+	return storageKey;
 }
 
 export async function mediaUrlForRequester(ctx: Context<HonoEnv>, url: string): Promise<string | null | undefined> {
 	if (!isApiProxiedAttachments()) return undefined;
-	const location = parseApiAttachmentUrl(url);
+	const location = ownAttachmentLocation(url);
 	if (location === null) return undefined;
 	const storageKey = await resolveAttachmentForRequester(ctx, location);
 	if (storageKey === null) return null;

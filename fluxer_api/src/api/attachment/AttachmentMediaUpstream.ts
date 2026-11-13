@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {TRAILING_SLASHES_REGEX} from '@app/api/attachment/AttachmentPublicUrl';
 import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import {Config} from '@app/api/Config';
 
 const UPSTREAM_HEADERS_TIMEOUT_MS = 10_000;
-const TRAILING_SLASHES_REGEX = /\/+$/u;
 const MAX_DIMENSION = 8192;
 const IMAGE_FORMATS = new Set([
 	'png',

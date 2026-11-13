@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentMediaRequest';
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {normalizeRequestPath} from '@app/api/utils/RequestPathUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';

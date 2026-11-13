@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac} from 'node:crypto';
+import {SNOWFLAKE_REGEX} from '@app/api/attachment/AttachmentPublicUrl';
 import {Config} from '@app/api/Config';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {signExpiringToken, verifyExpiringToken} from '@app/api/utils/SignedExpiringToken';
 
 const KEY_DERIVATION_LABEL = 'fluxer.attachment-media.v1';
-const SNOWFLAKE_REGEX = /^[0-9]{1,20}$/u;
 const MAX_FEATURES = 32;
 export const ATTACHMENT_MEDIA_TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 export const SCOPED_ATTACHMENT_MEDIA_TOKEN_TTL_MS = 10 * 60 * 1000;
