@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 func init() {
@@ -35,6 +36,11 @@ func fixVAPID(ctx context.Context, e *Env) error {
 	pair, err := secrets.GenerateVAPID()
 	if err != nil {
 		return err
+	}
+	for _, key := range []string{secrets.VAPIDPublicKey, secrets.VAPIDPrivateKey} {
+		if _, ok := e.state().Settings[key]; ok {
+			e.stageSetting(key, nil, settings.SecretName(key))
+		}
 	}
 	e.stageSecret(secrets.VAPIDPublicKey, pair.Public)
 	e.stageSecret(secrets.VAPIDPrivateKey, pair.Private)

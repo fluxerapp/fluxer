@@ -113,7 +113,8 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 		}
 		v := changes[name]
 		current, had := st.Settings[name]
-		repairs = repairs && had && validate(k, current) != nil
+		broken := brokenVAPID(st, name)
+		repairs = repairs && (broken || had && validate(k, current) != nil)
 		if v == nil {
 			delete(next, name)
 		} else {
@@ -128,7 +129,7 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 			}
 		}
 		if differs := (v == nil && had) || (v != nil && (!had || current != *v)); differs {
-			if k.Stateful {
+			if k.Stateful && !broken {
 				return nil, ui.Refused(
 					fmt.Sprintf("rexctl doesn't change %s once Fluxer has stored data with it.", name),
 					"Restore a backup made with the value you want with rexctl restore.")
@@ -159,6 +160,19 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 		return nil, err
 	}
 	return &Prepared{Set: rs, Keys: keys, Settings: next, Secrets: nextSecrets, Preview: Preview{Keys: changed, Promised: slices.Compact(promised)}}, nil
+}
+
+func brokenVAPID(st *instance.State, name string) bool {
+	if name != secrets.VAPIDPublicKey && name != secrets.VAPIDPrivateKey {
+		return false
+	}
+	current := func(key string) string {
+		if v, ok := st.Settings[key]; ok {
+			return v
+		}
+		return st.Secrets[key]
+	}
+	return secrets.ValidateVAPID(current(secrets.VAPIDPublicKey), current(secrets.VAPIDPrivateKey)) != nil
 }
 
 func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes map[string]*string, o ApplyOptions) (*Change, error) {
