@@ -233,7 +233,7 @@ function observeFloatingResize(floating: HTMLElement, updatePosition: () => void
 	};
 }
 
-function getNativeTitlebarInset(ownerDocument: Document): number {
+export function getNativeTitlebarInset(ownerDocument: Document): number {
 	const titlebar = ownerDocument.querySelector<HTMLElement>(TITLEBAR_SELECTOR);
 	if (titlebar == null) return 0;
 	const rect = titlebar.getBoundingClientRect();

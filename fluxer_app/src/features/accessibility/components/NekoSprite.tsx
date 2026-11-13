@@ -3,6 +3,8 @@
 
 import styles from '@app/features/accessibility/components/NekoSprite.module.css';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {getNativeTitlebarInset} from '@app/features/app/hooks/useAntiShiftFloating';
+import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import nekoSpriteUrl from '@app/media/images/neko.png';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -133,7 +135,7 @@ const MAX_FLING_SPEED = 5;
 const FLING_SAMPLE_WINDOW_MS = 100;
 const FLING_STALE_MS = 80;
 const MAX_FRAME_DT = 32;
-const SULK_NEKO_ANIMATION_THRESHOLD = 0.7;
+const SULK_NEKO_ANIMATION_THRESHOLD = 0.4;
 const WALL_SQUISH_HEAVY_SPEED = 1.5;
 const WALL_SQUISH_WINDUP_MS = 120;
 const WALL_SQUISH_SMALL_HOLD_MS = 200;
@@ -231,8 +233,15 @@ const NekoEngine = observer((): React.ReactElement => {
 		const neko = nekoRef.current;
 		if (!neko) return;
 
-		let nekoPosX = clamp(window.innerWidth - 48, NEKO_HALF, window.innerWidth - NEKO_HALF);
-		let nekoPosY = clamp(window.innerHeight - 96, NEKO_HALF, window.innerHeight - NEKO_HALF);
+		const currentTitlebarInset = (): number => (isElectron() ? getNativeTitlebarInset(document) : 0);
+		let titlebarInset = currentTitlebarInset();
+		const minXBound = (): number => NEKO_HALF;
+		const maxXBound = (): number => Math.max(NEKO_HALF, window.innerWidth - NEKO_HALF);
+		const minYBound = (): number => titlebarInset + NEKO_HALF;
+		const maxYBound = (): number => Math.max(minYBound(), window.innerHeight - NEKO_HALF);
+
+		let nekoPosX = clamp(window.innerWidth - 48, minXBound(), maxXBound());
+		let nekoPosY = clamp(window.innerHeight - 96, minYBound(), maxYBound());
 		let mousePosX = nekoPosX;
 		let mousePosY = nekoPosY;
 		let frameCount = 0;
@@ -339,7 +348,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			if (idleTime > 10 && Math.random() < 0.005 && idleAnimation == null) {
 				const available = ['sleeping', 'scratchSelf'];
 				if (nekoPosX < NEKO_CELL) available.push('scratchWallW');
-				if (nekoPosY < NEKO_CELL) available.push('scratchWallN');
+				if (nekoPosY <= minYBound() + 1) available.push('scratchWallN');
 				if (nekoPosX > window.innerWidth - NEKO_CELL) available.push('scratchWallE');
 				if (nekoPosY > window.innerHeight - NEKO_CELL) available.push('scratchWallS');
 				idleAnimation = available[Math.floor(Math.random() * available.length)];
@@ -395,15 +404,15 @@ const NekoEngine = observer((): React.ReactElement => {
 			setSprite(direction, frameCount);
 			nekoPosX -= (diffX / distance) * NEKO_SPEED;
 			nekoPosY -= (diffY / distance) * NEKO_SPEED;
-			nekoPosX = clamp(nekoPosX, NEKO_HALF, window.innerWidth - NEKO_HALF);
-			nekoPosY = clamp(nekoPosY, NEKO_HALF, window.innerHeight - NEKO_HALF);
+			nekoPosX = clamp(nekoPosX, minXBound(), maxXBound());
+			nekoPosY = clamp(nekoPosY, minYBound(), maxYBound());
 			setPosition();
 		};
 
 		const updateMomentum = (timestamp: number, dt: number): void => {
 			const frameDt = Math.min(dt, MAX_FRAME_DT);
-			const maxX = Math.max(NEKO_HALF, window.innerWidth - NEKO_HALF);
-			const maxY = Math.max(NEKO_HALF, window.innerHeight - NEKO_HALF);
+			const maxX = maxXBound();
+			const maxY = maxYBound();
 
 			const speed = Math.hypot(velocityRef.current.vx, velocityRef.current.vy);
 			const prediction = predictWallHit(
@@ -411,9 +420,9 @@ const NekoEngine = observer((): React.ReactElement => {
 				nekoPosY,
 				velocityRef.current.vx,
 				velocityRef.current.vy,
-				NEKO_HALF,
+				minXBound(),
 				maxX,
-				NEKO_HALF,
+				minYBound(),
 				maxY,
 			);
 			const timeToWall = prediction?.timeToImpactMs ?? Number.POSITIVE_INFINITY;
@@ -441,8 +450,8 @@ const NekoEngine = observer((): React.ReactElement => {
 			const impactVx = Math.abs(velocityRef.current.vx);
 			const impactVy = Math.abs(velocityRef.current.vy);
 			const impactSpeed = Math.hypot(impactVx, impactVy);
-			const nextX = reflectAxis(nekoPosX, velocityRef.current.vx, simDt, NEKO_HALF, maxX);
-			const nextY = reflectAxis(nekoPosY, velocityRef.current.vy, simDt, NEKO_HALF, maxY);
+			const nextX = reflectAxis(nekoPosX, velocityRef.current.vx, simDt, minXBound(), maxX);
+			const nextY = reflectAxis(nekoPosY, velocityRef.current.vy, simDt, minYBound(), maxY);
 			nekoPosX = nextX.position;
 			nekoPosY = nextY.position;
 			velocityRef.current.vx = nextX.velocity;
@@ -472,7 +481,7 @@ const NekoEngine = observer((): React.ReactElement => {
 				didFlingRef.current = true;
 				smash = null;
 				if (didBounce) {
-					const finalSulkTicks = 10 + Math.floor(Math.random() * 16);
+					const finalSulkTicks = 10 + Math.floor(Math.random() * 22);
 					runAnimationCycle(
 						[
 							{animation: 'sulk', ticks: 4, frame: 0},
@@ -565,8 +574,8 @@ const NekoEngine = observer((): React.ReactElement => {
 				resetIdleAnimation();
 				idleTime = 0;
 			}
-			nekoPosX = clamp(event.clientX, NEKO_HALF, window.innerWidth - NEKO_HALF);
-			nekoPosY = clamp(event.clientY, NEKO_HALF, window.innerHeight - NEKO_HALF);
+			nekoPosX = clamp(event.clientX, minXBound(), maxXBound());
+			nekoPosY = clamp(event.clientY, minYBound(), maxYBound());
 			mousePosX = nekoPosX;
 			mousePosY = nekoPosY;
 			dragBufferRef.current.push({x: event.clientX, y: event.clientY, t: event.timeStamp});
@@ -624,8 +633,9 @@ const NekoEngine = observer((): React.ReactElement => {
 		const onNekoPointerCancel = (event: PointerEvent): void => endDrag(event, false);
 
 		const onResize = (): void => {
-			nekoPosX = clamp(nekoPosX, NEKO_HALF, window.innerWidth - NEKO_HALF);
-			nekoPosY = clamp(nekoPosY, NEKO_HALF, window.innerHeight - NEKO_HALF);
+			titlebarInset = currentTitlebarInset();
+			nekoPosX = clamp(nekoPosX, minXBound(), maxXBound());
+			nekoPosY = clamp(nekoPosY, minYBound(), maxYBound());
 			setPosition();
 		};
 
