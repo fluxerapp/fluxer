@@ -2,7 +2,10 @@
 
 import {DESKTOP_APP_SCHEME, STABLE_APP_URL} from '@electron/common/Constants';
 import {isPlainRecord} from '@electron/common/PlainRecord';
-import type {ApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
+import {type ApiAttachmentAuthorization, ATTACHMENT_WINDOW_HEADER} from '@electron/main/ApiAttachmentAuthorization';
+import {parseLocalAppRuntimeRoute} from '@electron/main/LocalAppRuntimePlans';
+import {isLocalAppURL} from '@electron/main/LocalAppURL';
+import {LOCAL_APP_REMOTE_PROXY_PATH_PREFIX} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 
 const SUB_FRAME_RESOURCE_TYPE = 'subFrame';
 
@@ -128,7 +131,7 @@ export class DesktopRuntimeSecurity {
 		settlement: Record<string, unknown>,
 	): Record<string, unknown> {
 		const authorization = this.attachmentAuthorization;
-		if (authorization == null) {
+		if (authorization == null || !authorization.hasGrants()) {
 			return settlement;
 		}
 		const details = readWebRequestDetails(detailsValue);
@@ -136,13 +139,16 @@ export class DesktopRuntimeSecurity {
 		if (headers == null) {
 			return settlement;
 		}
+		const topFrameWebContentsId = readTopFrameWebContentsId(detailsValue, details.resourceType);
+		if (isRemoteProxyURL(details.url)) {
+			const next = withoutHeader(headers, ATTACHMENT_WINDOW_HEADER);
+			if (topFrameWebContentsId !== null && authorization.hasGrantFor(topFrameWebContentsId)) {
+				next[ATTACHMENT_WINDOW_HEADER] = String(topFrameWebContentsId);
+			}
+			return {...settlement, requestHeaders: next};
+		}
 		const next = authorization.applyRequestHeaders(
-			{
-				webContentsId: details.webContentsId,
-				fromSubFrame: details.fromSubFrame,
-				method: details.method,
-				url: details.url,
-			},
+			{topFrameWebContentsId, method: readRequestMethod(detailsValue), url: details.url},
 			headers,
 		);
 		return next === headers ? settlement : {...settlement, requestHeaders: next};
@@ -223,20 +229,46 @@ function parseURL(value: string): URL | null {
 interface WebRequestDetails {
 	readonly resourceType: string;
 	readonly url: string;
-	readonly method: string;
-	readonly webContentsId: number | null;
-	readonly fromSubFrame: boolean;
 	readonly requestHeadersValue: unknown;
 }
 
-function isSubFrame(value: unknown): boolean {
-	if (value == null || typeof value !== 'object') {
-		return false;
+function isRemoteProxyURL(value: string): boolean {
+	return isLocalAppURL(value) && parseLocalAppRuntimeRoute(value, LOCAL_APP_REMOTE_PROXY_PATH_PREFIX) != null;
+}
+
+function withoutHeader(headers: Record<string, string>, name: string): Record<string, string> {
+	const lowerName = name.toLowerCase();
+	const next: Record<string, string> = Object.create(null) as Record<string, string>;
+	for (const [headerName, value] of Object.entries(headers)) {
+		if (headerName.toLowerCase() !== lowerName) {
+			next[headerName] = value;
+		}
+	}
+	return next;
+}
+
+function readRequestMethod(detailsValue: unknown): string {
+	return isPlainRecord(detailsValue) && typeof detailsValue.method === 'string' ? detailsValue.method : '';
+}
+
+function readTopFrameWebContentsId(detailsValue: unknown, resourceType: string): number | null {
+	if (!isPlainRecord(detailsValue) || resourceType === SUB_FRAME_RESOURCE_TYPE) {
+		return null;
+	}
+	const webContentsId = detailsValue.webContentsId;
+	const frame = detailsValue.frame;
+	if (
+		typeof webContentsId !== 'number' ||
+		!Number.isInteger(webContentsId) ||
+		frame == null ||
+		typeof frame !== 'object'
+	) {
+		return null;
 	}
 	try {
-		return Reflect.get(value, 'parent') != null;
+		return Reflect.get(frame, 'parent') == null ? webContentsId : null;
 	} catch {
-		return true;
+		return null;
 	}
 }
 
@@ -249,13 +281,9 @@ function readWebRequestDetails(value: unknown): WebRequestDetails {
 	if (typeof resourceType !== 'string' || typeof url !== 'string') {
 		throw new InvalidWebRequestDetailsError();
 	}
-	const webContentsId = value.webContentsId;
 	return {
 		resourceType,
 		url,
-		method: typeof value.method === 'string' ? value.method : '',
-		webContentsId: typeof webContentsId === 'number' && Number.isInteger(webContentsId) ? webContentsId : null,
-		fromSubFrame: resourceType === SUB_FRAME_RESOURCE_TYPE || isSubFrame(value.frame),
 		requestHeadersValue: value.requestHeaders ?? null,
 	};
 }

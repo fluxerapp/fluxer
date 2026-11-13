@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChildLogger} from '@electron/common/Logger';
-import type {ApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
+import {type ApiAttachmentAuthorization, ATTACHMENT_WINDOW_HEADER} from '@electron/main/ApiAttachmentAuthorization';
 import {type DesktopLocalAppProxyClient, emitLocalAppUploadFailure} from '@electron/main/LocalAppProxyClient';
 import {
 	buildProxyResponseHeaders,
@@ -99,7 +99,12 @@ export class DesktopLocalAppRemoteResourceRequestHandler {
 		}
 		const uploadId = readLocalAppUploadId(request.headers);
 		const requestHeaders = buildRemoteResourceRequestHeaders(request.headers);
-		const authorization = this.attachmentAuthorization.authorizationForProxiedRequest(request.method, targetURL);
+		requestHeaders.delete(ATTACHMENT_WINDOW_HEADER);
+		const authorization = this.attachmentAuthorization.authorizationForProxiedRequest(
+			request.headers.get(ATTACHMENT_WINDOW_HEADER),
+			request.method,
+			targetURL,
+		);
 		if (authorization !== null) requestHeaders.set('Authorization', authorization);
 		let response: Response | null = null;
 		try {

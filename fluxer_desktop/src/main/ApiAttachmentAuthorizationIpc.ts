@@ -10,19 +10,28 @@ import {ipcMain, type WebContents} from 'electron';
 
 const watchedSenders = new WeakSet<WebContents>();
 
+function onDocumentGone(contents: WebContents, forget: () => void): void {
+	contents.once('destroyed', forget);
+	contents.on('render-process-gone', forget);
+	contents.on(
+		'did-start-navigation',
+		(_event: Electron.Event, _url: string, isSameDoc: boolean, isMainFrame: boolean) => {
+			if (isMainFrame && !isSameDoc) forget();
+		},
+	);
+}
+
 function watchSender(sender: WebContents): void {
 	if (watchedSenders.has(sender)) return;
 	watchedSenders.add(sender);
 	const id = sender.id;
 	const authorization = getApiAttachmentAuthorization();
-	sender.once('destroyed', () => authorization.revoke(id));
-	sender.on('render-process-gone', () => authorization.revoke(id));
-	sender.on(
-		'did-start-navigation',
-		(_event: Electron.Event, _url: string, isSameDoc: boolean, isMainFrame: boolean) => {
-			if (isMainFrame && !isSameDoc) authorization.revoke(id);
-		},
-	);
+	onDocumentGone(sender, () => authorization.revoke(id));
+	sender.on('did-create-window', (window) => {
+		const childId = window.webContents.id;
+		authorization.linkChildWindow(childId, id);
+		onDocumentGone(window.webContents, () => authorization.unlinkChildWindow(childId));
+	});
 }
 
 export function registerApiAttachmentAuthorizationIpc(): void {
