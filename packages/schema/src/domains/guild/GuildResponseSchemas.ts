@@ -125,6 +125,11 @@ export const GuildFeatureSchema = withOpenApiType(
 				'MEMBER_DMS_DISABLED',
 				"Members who aren't friends can't use the guild as a shared guild for direct messages",
 			],
+			[
+				GuildFeatures.PLANNED_JOIN_WAVES,
+				'PLANNED_JOIN_WAVES',
+				'Guild expects large planned waves of new members. Invites are not paused after a raid',
+			],
 		],
 		'A guild feature flag',
 	),

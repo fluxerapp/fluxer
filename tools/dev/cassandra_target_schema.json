@@ -6406,6 +6406,10 @@
 				{
 					"name": "invites_paused_until",
 					"type": "timestamp"
+				},
+				{
+					"name": "planned_join_waves_until",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((guild_id))",

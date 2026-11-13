@@ -35,6 +35,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
 import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {
 	getCustomBadgeCatalog,
 	getEnforcementDecisionRepository,
@@ -182,6 +183,7 @@ export class AdminService {
 			discoveryRepository: getGuildDiscoveryRepository(),
 			enforcement: this.enforcementService,
 			customBadgeCatalog: getCustomBadgeCatalog(),
+			kvClient: getKVClient(),
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
