@@ -2,6 +2,7 @@
 
 import {wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
 import {LRUCache} from 'lru-cache';
@@ -28,7 +29,7 @@ export function resolveObserverRoot(resolve: ScrollSurfaceResolver, element: Ele
 
 function resolveViewportKey(rememberKey: string | null | undefined): string | null {
 	if (!rememberKey) return null;
-	return stripAttachmentSignature(rememberKey);
+	return stripAttachmentSignature(withoutAttachmentToken(rememberKey));
 }
 
 interface UseNearViewportOptions {

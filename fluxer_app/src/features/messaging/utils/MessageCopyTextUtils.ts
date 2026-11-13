@@ -4,6 +4,7 @@ import {embedAllowsMarkdown} from '@app/features/channel/components/embeds/Embed
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import {
@@ -130,7 +131,7 @@ export function buildMessageContentCopyText(nodes: Array<Node>, context: Markdow
 export function freshAttachmentUrlsInText(text: string): string {
 	return text.replace(COPY_URL_PATTERN, (match) => {
 		const url = trimUrlCandidate(match);
-		return `${AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true})}${match.slice(url.length)}`;
+		return `${withoutAttachmentToken(AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true}))}${match.slice(url.length)}`;
 	});
 }
 

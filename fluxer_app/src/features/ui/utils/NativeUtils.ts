@@ -194,8 +194,11 @@ export async function navigateToExternalURL(url: string): Promise<void> {
 }
 
 async function refreshAttachmentUrl(url: string): Promise<string> {
-	const {default: AttachmentUrlRefresher} = await import('@app/features/messaging/state/AttachmentUrlRefresher');
-	return AttachmentUrlRefresher.refresh(url);
+	const [{default: AttachmentUrlRefresher}, {default: attachmentAccessToken}] = await Promise.all([
+		import('@app/features/messaging/state/AttachmentUrlRefresher'),
+		import('@app/features/messaging/state/AttachmentAccessToken'),
+	]);
+	return attachmentAccessToken.shareableUrl(await AttachmentUrlRefresher.refresh(url));
 }
 
 export async function openExternalUrl(url: string, target: string = '_blank') {

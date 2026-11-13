@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {TEXT_PREVIEW_MAX_BYTES} from '@app/features/messaging/utils/AttachmentPreviewUtils';
 import {wrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
@@ -65,7 +66,7 @@ function requestFailed(response: Response): Error {
 }
 
 export async function fetchTextualPreviewText(url: string, signal: AbortSignal): Promise<string> {
-	const target = await AttachmentUrlRefresher.refresh(url);
+	const target = await attachmentAccessToken.loadableUrl(await AttachmentUrlRefresher.refresh(url));
 	const response = await fetch(wrapDesktopLocalResourceURL(target), {signal});
 	if (response.ok) {
 		return readPreviewText(response);

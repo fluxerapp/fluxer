@@ -19,6 +19,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {
 	unwrapDesktopLocalResourceURL,
@@ -435,7 +436,9 @@ export async function copyMediaToClipboard({
 	}
 	const baseProxyURL = proxyURL
 		? wrapDesktopLocalResourceURL(
-				await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
+				await attachmentAccessToken.loadableUrl(
+					await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
+				),
 			)
 		: null;
 	const clipboardFileMediaType = getClipboardFileMediaType(type);

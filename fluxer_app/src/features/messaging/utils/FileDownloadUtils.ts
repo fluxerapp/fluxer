@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import attachmentAccessToken from '@app/features/messaging/state/AttachmentAccessToken';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {isUrlOnEndpoint, parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {
 	unwrapDesktopLocalResourceURL,
@@ -20,7 +22,8 @@ type MediaType = 'image' | 'gif' | 'video' | 'audio' | 'file';
 function appendMediaProxyDownloadParam(src: string): string {
 	return updateDesktopLocalResourceURLTarget(src, (target) => {
 		const mediaEndpoint = parseEndpoint(RuntimeConfig.mediaEndpoint);
-		if (!mediaEndpoint || !isUrlOnEndpoint(target, mediaEndpoint)) {
+		const onMediaEndpoint = mediaEndpoint !== null && isUrlOnEndpoint(target, mediaEndpoint);
+		if (!onMediaEndpoint && !isApiAttachmentUrl(target.toString())) {
 			return false;
 		}
 		target.searchParams.set('download', 'true');
@@ -197,7 +200,9 @@ function downloadViaAnchor(src: string, suggestedName: string, options?: {append
 export async function downloadFile(src: string, type: MediaType, providedFilename?: string): Promise<void> {
 	if (!src) return;
 	const suggestedName = deriveSuggestedName(src, type, providedFilename);
-	const target = wrapDesktopLocalResourceURL(await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(src)));
+	const target = wrapDesktopLocalResourceURL(
+		await attachmentAccessToken.loadableUrl(await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(src))),
+	);
 	if (isElectron()) {
 		try {
 			const outcome = await downloadWithNative({url: unwrapDesktopLocalResourceURL(target), suggestedName});
@@ -210,7 +215,7 @@ export async function downloadFile(src: string, type: MediaType, providedFilenam
 	if (await downloadViaFileSystemAccess(target, suggestedName, type)) return;
 	if (await downloadViaFetchBlob(target, suggestedName)) return;
 	if (downloadViaAnchor(target, suggestedName)) return;
-	await openExternalUrl(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target)));
+	await openExternalUrl(withoutAttachmentToken(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target))));
 }
 
 export function createDownloadHandler(src: string, type: MediaType, providedFilename?: string) {
