@@ -4,72 +4,65 @@ import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {DownloadEntryEvent} from '@app/types/electron';
 import {makeAutoObservable} from 'mobx';
 
-const MAX_ENTRIES = 10;
-
-function isClearable(entry: DownloadEntryEvent): boolean {
-	return entry.state === 'completed' || entry.state === 'canceled' || entry.state === 'failed';
+export function isDownloadInProgress(entry: DownloadEntryEvent): boolean {
+	return entry.state === 'started' || entry.state === 'progressing';
 }
 
 class DownloadsStore {
-	entries: Array<DownloadEntryEvent> = [];
-	private unsubscribe: (() => void) | null = null;
+	entries: ReadonlyArray<DownloadEntryEvent> = [];
+	private stopListening: (() => void) | null = null;
+	private revision = 0;
 
 	constructor() {
-		makeAutoObservable<DownloadsStore, 'unsubscribe'>(this, {unsubscribe: false}, {autoBind: true});
+		makeAutoObservable<DownloadsStore, 'stopListening' | 'revision'>(
+			this,
+			{stopListening: false, revision: false},
+			{autoBind: true},
+		);
 	}
 
 	get hasEntries(): boolean {
 		return this.entries.length > 0;
 	}
 
+	get activeCount(): number {
+		return this.entries.filter(isDownloadInProgress).length;
+	}
+
 	subscribe(): void {
-		if (this.unsubscribe) return;
-		const electronApi = getElectronAPI();
-		const unsubscribe = electronApi?.onDownloadChanged?.((entry) => {
-			this.upsert(entry);
+		const api = getElectronAPI();
+		if (this.stopListening != null || api?.onDownloadsChanged == null) return;
+		this.stopListening = api.onDownloadsChanged(this.setEntries);
+		this.load();
+	}
+
+	unsubscribe(): void {
+		this.stopListening?.();
+		this.stopListening = null;
+		this.revision++;
+		this.entries = [];
+	}
+
+	load(): void {
+		const request = getElectronAPI()?.downloadsList?.();
+		if (request == null) return;
+		const revision = this.revision;
+		void request.then((entries) => {
+			if (revision === this.revision) this.setEntries(entries);
 		});
-		this.unsubscribe = unsubscribe ?? null;
 	}
 
-	unsubscribeFromNative(): void {
-		this.unsubscribe?.();
-		this.unsubscribe = null;
-	}
-
-	upsert(entry: DownloadEntryEvent): void {
-		const index = this.entries.findIndex((existing) => existing.id === entry.id);
-		if (index === -1) {
-			this.entries = [entry, ...this.entries];
-			this.trimToLimit();
-			return;
-		}
-		const next = this.entries.slice();
-		next[index] = entry;
-		this.entries = next;
-	}
-
-	private trimToLimit(): void {
-		if (this.entries.length <= MAX_ENTRIES) return;
-		const overflow = this.entries.length - MAX_ENTRIES;
-		const dropped = new Set<string>();
-		for (let index = this.entries.length - 1; index >= 0 && dropped.size < overflow; index -= 1) {
-			const candidate = this.entries[index];
-			if (isClearable(candidate)) dropped.add(candidate.id);
-		}
-		for (let index = this.entries.length - 1; index >= 0 && dropped.size < overflow; index -= 1) {
-			const candidate = this.entries[index];
-			if (dropped.has(candidate.id)) continue;
-			dropped.add(candidate.id);
-		}
-		this.entries = this.entries.filter((entry) => !dropped.has(entry.id));
+	private setEntries(entries: ReadonlyArray<DownloadEntryEvent>): void {
+		this.revision++;
+		this.entries = entries;
 	}
 
 	open(entry: DownloadEntryEvent): void {
-		getElectronAPI()?.downloadOpen?.(entry.filePath);
+		getElectronAPI()?.downloadOpen?.(entry.id);
 	}
 
 	reveal(entry: DownloadEntryEvent): void {
-		getElectronAPI()?.downloadReveal?.(entry.filePath);
+		getElectronAPI()?.downloadReveal?.(entry.id);
 	}
 
 	cancel(entry: DownloadEntryEvent): void {
@@ -77,11 +70,11 @@ class DownloadsStore {
 	}
 
 	dismiss(entry: DownloadEntryEvent): void {
-		this.entries = this.entries.filter((existing) => existing.id !== entry.id);
+		getElectronAPI()?.downloadDismiss?.(entry.id);
 	}
 
-	clearAll(): void {
-		this.entries = this.entries.filter((entry) => entry.state === 'started' || entry.state === 'progressing');
+	clearList(): void {
+		getElectronAPI()?.downloadsClear?.();
 	}
 }
 

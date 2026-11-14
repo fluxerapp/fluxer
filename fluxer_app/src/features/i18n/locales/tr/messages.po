@@ -1891,11 +1891,6 @@ msgstr "{optionName}, zorunlu {optionType} seçeneği"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} ödemeleri güvenli bir şekilde işler."
 
-#. Download progress with the total size.
-#: src/features/app/components/layout/NativeDownloads.tsx
-msgid "{percent}% of {total}"
-msgstr ""
-
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -2200,6 +2195,11 @@ msgstr "{productName} başlarken güncellenmez. Bir güncelleme mevcut olduğund
 #: src/features/ui/components/icons/FluxerWordmark.tsx
 msgid "{productName} wordmark"
 msgstr "{productName} yazı logosu"
+
+#. Download progress shown under a file name in the downloads panel. {progress} is the formatted percentage downloaded so far, for example 42%. {total} is the formatted size of the whole file, for example 3.2 MB.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{progress} of {total}"
+msgstr "{progress} / {total}"
 
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "{providerName} opens in your browser. Sign in there to connect your account."
@@ -7273,7 +7273,7 @@ msgstr "İptal"
 #. Stops an in-progress download and deletes the partial file.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Cancel download"
-msgstr ""
+msgstr "İndirmeyi iptal et"
 
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
@@ -7346,15 +7346,15 @@ msgstr "Yıllık yükseltmeyi iptal et"
 msgid "Cancel your friend request to {displayName}?"
 msgstr "{displayName} adlı kişiye gönderdiğiniz arkadaşlık isteği iptal edilsin mi?"
 
-#. Download state after the user cancels it.
-#: src/features/app/components/layout/NativeDownloads.tsx
-msgid "Canceled, partial file removed"
-msgstr ""
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Cancellation"
 msgstr "Yankı engelleme"
+
+#. Status shown under a file name in the downloads panel after the user cancels the download. The part of the file that had already downloaded is deleted.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancelled. The partial file was deleted."
+msgstr "İptal edildi. Yarım kalan dosya silindi."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionDescription.tsx
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
@@ -8760,8 +8760,6 @@ msgid "Clear after"
 msgstr "Şu süreden sonra temizle"
 
 #. Button that removes all active filters on the community members page.
-#. Clears finished downloads from the downloads panel.
-#: src/features/app/components/layout/NativeDownloads.tsx
 #: src/features/channel/components/guild_members_page/RolesFilterMenuContent.tsx
 msgid "Clear all"
 msgstr "Tümünü temizle"
@@ -8811,6 +8809,11 @@ msgstr "Bu mesajdaki tüm tepkileri temizlemek istiyor musunuz?"
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx
 msgid "Clear friends search"
 msgstr "Arkadaş aramayı temizle"
+
+#. Removes finished downloads from the downloads panel. Downloaded files stay on disk and in-progress downloads stay in the list.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Clear list"
+msgstr "Listeyi temizle"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -9647,10 +9650,10 @@ msgstr "Karşılaştırma"
 msgid "Complete payment"
 msgstr "Ödemeyi tamamla"
 
-#. Download state.
+#. Status shown under a file name in the downloads panel once the file has finished downloading. Keep it short.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Completed"
-msgstr ""
+msgstr "Tamamlandı"
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14340,7 +14343,7 @@ msgstr "Videoyu indir"
 #. Heading of the downloads panel.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Downloads"
-msgstr ""
+msgstr "İndirilenler"
 
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
@@ -16283,10 +16286,10 @@ msgstr "Mesaj yüklemelerini başarısız yap"
 msgid "Fail message sends"
 msgstr "Mesaj göndermelerini başarısız yap"
 
-#. Download state.
+#. Status shown under a file name in the downloads panel when the download did not finish. Keep it short.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Failed"
-msgstr ""
+msgstr "Başarısız"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
@@ -16595,11 +16598,6 @@ msgstr "{startLabel} ile başlayan emojiler yüklenemedi: {errorMsg}"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
 msgid "Failed to upload emojis. Try again."
 msgstr "Emojiler yüklenemedi. Tekrar deneyin."
-
-#. Download state with the failure reason.
-#: src/features/app/components/layout/NativeDownloads.tsx
-msgid "Failed: {reason}"
-msgstr ""
 
 #. Label for the favicon branding image in the setup wizard.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29720,7 +29718,7 @@ msgstr "Gruptan çıkar"
 #. Removes a finished download from the downloads panel.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Remove from list"
-msgstr ""
+msgstr "Listeden kaldır"
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
@@ -33703,7 +33701,7 @@ msgstr "Tüm topluluklarda göster"
 #. Opens the folder containing a downloaded file.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Show in folder"
-msgstr ""
+msgstr "Klasörde göster"
 
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
@@ -35348,10 +35346,10 @@ msgstr "{name} başlattı"
 msgid "Started displaying members with this role separately"
 msgstr "Bu role sahip üyeler ayrı olarak gösterilmeye başlandı"
 
-#. Download state before any bytes arrive.
+#. Status shown under a file name in the downloads panel while the download is starting and no data has arrived yet. Keep it short.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Starting"
-msgstr ""
+msgstr "Başlatılıyor"
 
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -36911,6 +36909,11 @@ msgstr "Emoji, {user} tarafından yüklendi"
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "Dosya, <0>{dnsUrl}</0> adresinden alacağımız doğrulama belirtecini içeriyor."
+
+#. Status shown under a file name in the downloads panel when the download finished but the file is no longer where it was saved.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "The file was moved or deleted."
+msgstr "Dosya taşındı veya silindi."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
@@ -38967,8 +38970,8 @@ msgstr "Durum değişikliklerini görmek için anahtarları açıp kapatın."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
-msgid "Toggle the downloads menu"
-msgstr ""
+msgid "Toggle the downloads panel"
+msgstr "İndirilenler panelini aç/kapat"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -41942,7 +41945,12 @@ msgstr "Hesabınızda oturum açmış cihazları görüntüleyin"
 #. Button in the app layout native titlebar that opens the downloads panel.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "View downloads"
-msgstr ""
+msgstr "İndirilenleri görüntüle"
+
+#. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
+msgstr "İndirilenleri görüntüle. {count, plural, one {# indirme sürüyor} other {# indirme sürüyor}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

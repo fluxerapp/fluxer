@@ -2,12 +2,11 @@
 
 import {NativeDownloads} from '@app/features/app/components/layout/NativeDownloads';
 import {NativeWindowControls} from '@app/features/app/components/layout/NativeWindowControls';
-import DownloadsStore from '@app/features/app/state/DownloadsStore';
 import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
 import {getElectronAPI, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import type React from 'react';
-import {useEffect, useLayoutEffect} from 'react';
+import {useLayoutEffect} from 'react';
 
 const STARTUP_NATIVE_TITLEBAR_ID = 'fluxer-startup-native-titlebar';
 
@@ -22,12 +21,6 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		if (startupTitlebar != null) {
 			startupTitlebar.remove();
 		}
-	}, []);
-	useEffect(() => {
-		DownloadsStore.subscribe();
-		return () => {
-			DownloadsStore.unsubscribeFromNative();
-		};
 	}, []);
 	const handleDoubleClick = () => {
 		const electronApi = getElectronAPI();
@@ -52,6 +45,7 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 				<>
 					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
 					{brand}
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 				</>
 			) : (
 				<>

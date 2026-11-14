@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID} from 'node:crypto';
-import path from 'node:path';
 import {APP_PROTOCOL, DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
 import {
 	type DesktopTroubleshootingSettings,
@@ -13,7 +11,6 @@ import {
 } from '@electron/common/DesktopConfig';
 import type {
 	ClipboardWriteFileResult,
-	DownloadEntryEvent,
 	DownloadFileResult,
 	MediaAccessType,
 	TrayPresenceStatus,
@@ -33,7 +30,7 @@ import {
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
 import {getDesktopUpdateState, observeDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
-import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
+import {DownloadChecksumError} from '@electron/main/FileDownloads';
 import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {retryBlockedGlobalShortcutHooks} from '@electron/main/GlobalShortcutsIpc';
 import {setDirectMessagesAvailable} from '@electron/main/JumpList';
@@ -74,6 +71,7 @@ import {
 	releaseStreamingPriority,
 } from '@electron/main/StreamingPriority';
 import {registerThemeLocalFileHandlers} from '@electron/main/ThemeLocalFiles';
+import {downloadTrackedFile, registerTrackedDownloadsIpcHandlers} from '@electron/main/TrackedDownloads';
 import {
 	relaunchAndExit,
 	setHardwareAccelerationDisabled,
@@ -171,9 +169,6 @@ function getActiveSmoothScrolling(): boolean {
 function getActiveMiddleClickAutoscroll(): boolean {
 	return process.platform === 'linux' && hasEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
 }
-
-const DOWNLOAD_PROGRESS_EMIT_INTERVAL_MS = 250;
-const activeDownloads = new Map<string, AbortController>();
 
 function applyUnreadBadge(badge: number): void {
 	if (process.platform === 'win32') {
@@ -457,51 +452,11 @@ export function registerIpcHandlers(): void {
 					return {success: false, canceled: true};
 				}
 				const filePath = withDefaultExtension(result.filePath, options.defaultPath);
-				const id = randomUUID();
-				const fileName = path.basename(filePath);
-				const emit = (payload: Omit<DownloadEntryEvent, 'id' | 'fileName' | 'filePath'>): void => {
-					if (win.isDestroyed()) return;
-					win.webContents.send('download-changed', {
-						id,
-						fileName,
-						filePath,
-						...payload,
-					});
-				};
-				const controller = new AbortController();
-				activeDownloads.set(id, controller);
-				let lastEmitAt = 0;
-				let lastReceivedBytes = 0;
-				emit({state: 'started', receivedBytes: 0, totalBytes: null});
-				try {
-					await downloadFile(options.url, filePath, {
-						sha256: options.sha256,
-						signal: controller.signal,
-						onProgress: (receivedBytes, totalBytes) => {
-							lastReceivedBytes = receivedBytes;
-							const now = Date.now();
-							if (now - lastEmitAt < DOWNLOAD_PROGRESS_EMIT_INTERVAL_MS) return;
-							lastEmitAt = now;
-							emit({state: 'progressing', receivedBytes, totalBytes});
-						},
-					});
-					emit({state: 'completed', receivedBytes: lastReceivedBytes, totalBytes: lastReceivedBytes});
-					return {success: true, path: filePath};
-				} catch (error) {
-					if (controller.signal.aborted) {
-						emit({state: 'canceled', receivedBytes: lastReceivedBytes, totalBytes: null});
-						return {success: false, canceled: true};
-					}
-					emit({
-						state: 'failed',
-						receivedBytes: lastReceivedBytes,
-						totalBytes: null,
-						error: error instanceof Error ? error.message : 'Unknown error',
-					});
-					throw error;
-				} finally {
-					activeDownloads.delete(id);
+				const outcome = await downloadTrackedFile(event.sender, options.url, filePath, options.sha256);
+				if (outcome === 'canceled') {
+					return {success: false, canceled: true};
 				}
+				return {success: true, path: filePath};
 			} catch (error) {
 				if (error instanceof DownloadChecksumError) {
 					return {success: false, checksumMismatch: true, error: error.message};
@@ -510,18 +465,7 @@ export function registerIpcHandlers(): void {
 			}
 		},
 	);
-	ipcMain.on('download-cancel', (event, id: unknown) => {
-		if (!isPrivilegedRendererDocumentSender(event) || typeof id !== 'string') return;
-		activeDownloads.get(id)?.abort();
-	});
-	ipcMain.on('download-open', (event, filePath: unknown) => {
-		if (!isPrivilegedRendererDocumentSender(event) || typeof filePath !== 'string') return;
-		void shell.openPath(filePath);
-	});
-	ipcMain.on('download-reveal', (event, filePath: unknown) => {
-		if (!isPrivilegedRendererDocumentSender(event) || typeof filePath !== 'string') return;
-		shell.showItemInFolder(filePath);
-	});
+	registerTrackedDownloadsIpcHandlers();
 	ipcMain.handle('check-media-access', async (_event, type: MediaAccessType): Promise<string> => {
 		if (process.platform !== 'darwin') {
 			return 'granted';

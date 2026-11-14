@@ -1,101 +1,25 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.trigger,
-.arc {
-	--native-download-green: color-mix(in srgb, var(--status-online) 65%, white);
-}
-
 .trigger {
 	position: relative;
 }
 
-.triggerHidden {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.icon {
-	animation: landedIcon 400ms cubic-bezier(0.22, 0.6, 0.35, 1);
-}
-
-@keyframes landedIcon {
-	0% {
-		transform: scale(1.35) rotate(-10deg);
-	}
-	45% {
-		transform: scale(0.9) rotate(6deg);
-	}
-	75% {
-		transform: scale(1.1) rotate(-3deg);
-	}
-	100% {
-		transform: scale(1) rotate(0deg);
-	}
-}
-
-.trigger .icon {
-	width: 20px;
-	height: 20px;
-	fill: var(--native-download-green);
-}
-
-.arc {
-	position: fixed;
-	display: grid;
-	width: 24px;
-	height: 24px;
-	margin: -12px 0 0 -12px;
-	pointer-events: none;
-	z-index: calc(var(--z-index-titlebar) + 1);
-	will-change: transform;
-}
-
-.arcIcon {
-	display: grid;
-	place-items: center;
-	border-radius: 50%;
-	background: color-mix(in srgb, var(--native-download-green) 30%, transparent);
-	color: var(--native-download-green);
-	will-change: transform;
-}
-
-.arcIcon svg {
-	width: 16px;
-	height: 16px;
-}
-
-.splash {
+.badge {
 	position: absolute;
-	inset: 0;
-	margin: auto;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: var(--native-download-green);
+	top: 2px;
+	inset-inline-end: 2px;
+	min-width: 14px;
+	height: 14px;
+	padding: 0 3px;
+	box-sizing: border-box;
+	border-radius: 7px;
+	background: var(--brand-primary);
+	color: var(--text-on-brand-primary);
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 14px;
+	text-align: center;
 	pointer-events: none;
-	animation: splashOut 460ms ease-out forwards;
-}
-
-@keyframes splashOut {
-	from {
-		opacity: 0.45;
-		transform: scale(0.25);
-	}
-	to {
-		opacity: 0;
-		transform: scale(1.6);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.splash {
-		animation-duration: 1ms;
-	}
-
-	.icon,
-	.swapIcon {
-		animation: none;
-	}
 }
 
 .panel {
@@ -124,7 +48,7 @@
 	gap: 0.5rem;
 }
 
-.clearAll {
+.clearList {
 	padding: 0;
 	border: none;
 	background: transparent;
@@ -135,7 +59,7 @@
 	transition: color 100ms ease;
 }
 
-.clearAll:hover {
+.clearList:hover {
 	color: var(--text-secondary);
 }
 
@@ -227,19 +151,6 @@
 	transition:
 		background-color 100ms ease,
 		color 100ms ease;
-}
-
-.swapIcon {
-	animation: swapIconTransform 160ms ease-out;
-}
-
-@keyframes swapIconTransform {
-	from {
-		transform: rotate(-90deg) scale(0.85);
-	}
-	to {
-		transform: rotate(0deg) scale(1);
-	}
 }
 
 .cancelOrDismiss:hover {

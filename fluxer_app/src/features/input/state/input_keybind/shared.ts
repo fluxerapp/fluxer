@@ -178,8 +178,8 @@ export const TOGGLE_THE_MEMBER_LIST_OR_VOICE_CHAT_DESCRIPTOR = msg({
 	message: 'Toggle the member list or voice chat',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
-export const TOGGLE_THE_DOWNLOADS_MENU_DESCRIPTOR = msg({
-	message: 'Toggle the downloads menu',
+export const TOGGLE_THE_DOWNLOADS_PANEL_DESCRIPTOR = msg({
+	message: 'Toggle the downloads panel',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
 export const TOGGLE_THE_EMOJI_PICKER_DESCRIPTOR = msg({

@@ -500,21 +500,28 @@ const api: ElectronAPI = {
 		ipcRenderer.send('window-close');
 	},
 	windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke('window-is-maximized'),
-	onDownloadChanged: (handler: (entry: DownloadEntryEvent) => void): (() => void) => {
-		const listener = (_event: Electron.IpcRendererEvent, entry: DownloadEntryEvent): void => handler(entry);
-		ipcRenderer.on('download-changed', listener);
+	onDownloadsChanged: (handler: (entries: Array<DownloadEntryEvent>) => void): (() => void) => {
+		const listener = (_event: Electron.IpcRendererEvent, entries: Array<DownloadEntryEvent>): void => handler(entries);
+		ipcRenderer.on('downloads-changed', listener);
 		return () => {
-			ipcRenderer.off('download-changed', listener);
+			ipcRenderer.off('downloads-changed', listener);
 		};
 	},
+	downloadsList: (): Promise<Array<DownloadEntryEvent>> => ipcRenderer.invoke('downloads-list'),
 	downloadCancel: (id: string): void => {
 		ipcRenderer.send('download-cancel', id);
 	},
-	downloadOpen: (filePath: string): void => {
-		ipcRenderer.send('download-open', filePath);
+	downloadOpen: (id: string): void => {
+		ipcRenderer.send('download-open', id);
 	},
-	downloadReveal: (filePath: string): void => {
-		ipcRenderer.send('download-reveal', filePath);
+	downloadReveal: (id: string): void => {
+		ipcRenderer.send('download-reveal', id);
+	},
+	downloadDismiss: (id: string): void => {
+		ipcRenderer.send('download-dismiss', id);
+	},
+	downloadsClear: (): void => {
+		ipcRenderer.send('downloads-clear');
 	},
 	popoutSetAlwaysOnTop: (key: string, flag: boolean): Promise<boolean> =>
 		ipcRenderer.invoke('popout:set-always-on-top', key, flag),
