@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Nem küldhetsz ismerősjelölést letiltott felhasználónak.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Nem küldhetsz magadnak ismerősjelölést.",
 	"friends_and_dms.cannot_send_messages_to_user": "Nem küldhetsz üzenetet ennek a felhasználónak.",
+	"friends_and_dms.community_member_dms_disabled": "Egy közösség, amelyben ezzel a személlyel együtt vagy, kikapcsolta a közvetlen üzeneteket azok között a tagok között, akik nem barátok.",
 	"friends_and_dms.direct_messages_disabled": "A közvetlen üzenetek le vannak tiltva ezen a példányon.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Ugyanaz a címzett nem szerepelhet többször.",
 	"friends_and_dms.friend_request_blocked": "A felhasználó jelenleg nem fogad ismerősjelölést.",

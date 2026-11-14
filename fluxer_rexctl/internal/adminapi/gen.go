@@ -2011,6 +2011,9 @@ type CreateVoiceRegionRequest struct {
 	// Emoji Emoji representing the region
 	Emoji string `json:"emoji"`
 
+	// Hidden Whether to leave the region out of the region lists clients show, while placement still uses it
+	Hidden *bool `json:"hidden,omitempty"`
+
 	// Id Unique identifier for the voice region
 	Id string `json:"id"`
 
@@ -3036,6 +3039,9 @@ type ListVoiceRegionsResponse struct {
 		// Emoji Emoji representing the region
 		Emoji string `json:"emoji"`
 
+		// Hidden Whether the region is left out of the region lists clients show, while placement still uses it
+		Hidden bool `json:"hidden"`
+
 		// Id Unique identifier for the voice region
 		Id string `json:"id"`
 
@@ -3455,6 +3461,9 @@ type VoiceRegionAdminResponse struct {
 
 	// Emoji Emoji representing the region
 	Emoji string `json:"emoji"`
+
+	// Hidden Whether the region is left out of the region lists clients show, while placement still uses it
+	Hidden bool `json:"hidden"`
 
 	// Id Unique identifier for the voice region
 	Id string `json:"id"`

@@ -1,18 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
+use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES, PLANNED_JOIN_WAVES};
 use crate::{
     acl,
-    api::types::GuildInfo,
+    api::types::GuildDetailInfo,
     config::AdminConfig,
     templates::components::{
-        form::{Checkbox, csrf_input, form_actions, submit_button},
+        form::{
+            Checkbox, FORM_INPUT_CLASS, csrf_input, form_actions, form_field_group, submit_button,
+        },
         page_container::card_with_header,
     },
 };
 use maud::{Markup, html};
 
 const HOSTED_ONLY: &[&str] = &["VISIONARY", "VIP_VOICE"];
+
+fn planned_join_waves_end(guild: &GuildDetailInfo) -> Option<String> {
+    if !guild.features.iter().any(|f| f == PLANNED_JOIN_WAVES) {
+        return None;
+    }
+    Some(match guild.planned_join_waves_until.as_deref() {
+        Some(until) => format!(
+            "Planned join waves end on {} UTC.",
+            until.chars().take(16).collect::<String>().replace('T', " ")
+        ),
+        None => "Planned join waves are permanent.".to_owned(),
+    })
+}
 
 fn feature_label(feature: &str) -> String {
     if DEPRECATED_GUILD_FEATURES.contains(&feature) {
@@ -24,7 +39,7 @@ fn feature_label(feature: &str) -> String {
 
 pub fn features_tab(
     config: &AdminConfig,
-    guild: &GuildInfo,
+    guild: &GuildDetailInfo,
     csrf_token: &str,
     admin_acls: &[String],
 ) -> Markup {
@@ -49,6 +64,11 @@ pub fn features_tab(
         .filter(|f| !features_list.contains(&f.as_str()))
         .map(String::as_str)
         .collect();
+    let waves_until_value: String = guild
+        .planned_join_waves_until
+        .as_deref()
+        .map(|until| until.chars().take(16).collect())
+        .unwrap_or_default();
     html! {
         div class="space-y-6" {
             (card_with_header("Guild Features", html! {
@@ -68,6 +88,25 @@ pub fn features_tab(
                                 enabled: true,
                             }.render())
                         }
+                    }
+                    div class="mt-6 border-t border-neutral-200 pt-6 space-y-2" {
+                        @if let Some(end) = planned_join_waves_end(guild) {
+                            p class="text-sm text-neutral-700" { (end) }
+                        }
+                        (form_field_group(
+                            "Planned join waves end (UTC, optional)",
+                            "planned_join_waves_until",
+                            false,
+                            None,
+                            Some("Used only while PLANNED_JOIN_WAVES is selected. Leave it empty to keep the \
+                                  feature on with no end date. When the date passes, the feature is \
+                                  removed automatically."),
+                            html! {
+                                input type="datetime-local" id="planned_join_waves_until"
+                                    name="planned_join_waves_until" value=(waves_until_value)
+                                    class=(FORM_INPUT_CLASS);
+                            },
+                        ))
                     }
                     div class="mt-6 border-t border-neutral-200 pt-6 space-y-2" {
                         label class="block text-sm font-medium text-neutral-700" {
@@ -95,7 +134,7 @@ pub fn features_tab(
     }
 }
 
-fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
+fn features_tab_readonly(guild: &GuildDetailInfo, features_list: &[&str]) -> Markup {
     let enabled: Vec<&str> = features_list
         .iter()
         .filter(|f| guild.features.iter().any(|g| g == **f))
@@ -131,6 +170,9 @@ fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
                             "No features enabled."
                         }
                     }
+                }
+                @if let Some(end) = planned_join_waves_end(guild) {
+                    p class="mt-4 text-sm text-neutral-700" { (end) }
                 }
             }))
         }

@@ -166,6 +166,16 @@ const REQUIRE_2FA_FOR_MODERATION_SWITCH_LABEL_DESCRIPTOR = msg({
 	comment:
 		'Switch label in the community moderation settings tab. Requires moderators to have two-factor auth enabled before they can ban, kick, time out, or delete messages. Security-sensitive; keep tone plain.',
 });
+const MEMBER_DMS_DISABLED_SWITCH_LABEL_DESCRIPTOR = msg({
+	message: "Turn off DMs between members who aren't friends",
+	comment:
+		'Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.',
+});
+const MEMBER_DMS_DISABLED_SWITCH_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Friends can still DM each other, and so can members who share another community. Bots aren't affected.",
+	comment:
+		'Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.',
+});
 
 interface FormInputs {
 	verification_level: number;
@@ -174,6 +184,7 @@ interface FormInputs {
 	content_warning_level: number;
 	content_warning_text: string;
 	explicit_content_filter: number;
+	member_dms_disabled: boolean;
 }
 
 const GUILD_MODERATION_TAB_ID = 'moderation';
@@ -191,6 +202,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		content_warning_level: guild?.contentWarningLevel ?? ContentWarningLevel.INHERIT,
 		content_warning_text: guild?.contentWarningText ?? '',
 		explicit_content_filter: guild?.explicitContentFilter ?? GuildExplicitContentFilterTypes.DISABLED,
+		member_dms_disabled: guild?.features.has(GuildFeatures.MEMBER_DMS_DISABLED) ?? false,
 	};
 	const form = useForm<FormInputs>({defaultValues: remoteValues});
 	const {resetToRemoteValues, commitRemoteValues} = useRemoteFormReset<FormInputs>({
@@ -211,6 +223,15 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 				updateData.content_warning_text = trimmed.length > 0 ? trimmed : null;
 			}
 			if (dirtyFields.explicit_content_filter) updateData.explicit_content_filter = data.explicit_content_filter;
+			if (data.member_dms_disabled !== guild.features.has(GuildFeatures.MEMBER_DMS_DISABLED)) {
+				const features = new Set(guild.features);
+				if (data.member_dms_disabled) {
+					features.add(GuildFeatures.MEMBER_DMS_DISABLED);
+				} else {
+					features.delete(GuildFeatures.MEMBER_DMS_DISABLED);
+				}
+				updateData.features = Array.from(features);
+			}
 			if (isGuildOwner && dirtyFields.mfa_level && data.mfa_level !== guild.mfaLevel) {
 				updateData.mfa_level = data.mfa_level;
 			}
@@ -469,6 +490,29 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 								data-flx="guild.guild-tabs.guild-moderation-tab.controller--5"
 							/>
 						)}
+					</div>
+					<div className={styles.section} data-flx="guild.guild-tabs.guild-moderation-tab.section--member-dms">
+						<h3
+							className={styles.sectionTitle}
+							data-flx="guild.guild-tabs.guild-moderation-tab.section-title--member-dms"
+						>
+							<Trans>Direct messages</Trans>
+						</h3>
+						<Controller
+							name="member_dms_disabled"
+							control={form.control}
+							render={({field}) => (
+								<Switch
+									label={i18n._(MEMBER_DMS_DISABLED_SWITCH_LABEL_DESCRIPTOR)}
+									description={i18n._(MEMBER_DMS_DISABLED_SWITCH_DESCRIPTION_DESCRIPTOR)}
+									value={field.value}
+									onChange={field.onChange}
+									disabled={!canManageGuild}
+									data-flx="guild.guild-tabs.guild-moderation-tab.switch.member-dms-disabled"
+								/>
+							)}
+							data-flx="guild.guild-tabs.guild-moderation-tab.controller--member-dms"
+						/>
 					</div>
 					{isGuildOwner && (
 						<div className={styles.section} data-flx="guild.guild-tabs.guild-moderation-tab.section--4">

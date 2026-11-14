@@ -74,6 +74,12 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR = msg({
 		"Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}.",
 	comment: 'Label in the message queue state.',
 });
+const COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR = msg({
+	message:
+		"Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends.",
+	comment:
+		'System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.',
+});
 const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_YOU_NEED_DESCRIPTOR = msg({
 	message: 'Your message could not be delivered. You need to claim your account to send direct messages.',
 	comment: 'Description text in the message queue state.',
@@ -223,6 +229,10 @@ function isFileTooLargeError(error: HttpError): boolean {
 
 function isDMRestrictedError(error: HttpError): boolean {
 	return getApiErrorBody(error)?.code === APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER;
+}
+
+function isCommunityMemberDmsDisabledError(error: HttpError): boolean {
+	return getApiErrorBody(error)?.code === APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED;
 }
 
 function getUnclaimedAccountErrorCode(error: HttpError): string | undefined {
@@ -1053,6 +1063,11 @@ class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | un
 		}
 		if (!(error instanceof HttpError)) {
 			this.showErrorModal(error, channelId, hasAttachments);
+			return;
+		}
+		if (isCommunityMemberDmsDisabledError(error)) {
+			const systemMessage = createSystemMessage(channelId, i18n._(COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR));
+			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;
 		}
 		if (isDMRestrictedError(error)) {

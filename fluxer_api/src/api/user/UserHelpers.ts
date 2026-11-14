@@ -271,7 +271,3 @@ const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF;
 export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>): boolean {
 	return (user.flags & PROFILE_SUBSTRING_EXEMPT_FLAGS) !== 0n;
 }
-
-export function isBugHunterBotUser(user: Pick<User, 'flags' | 'isBot'>): boolean {
-	return user.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
-}

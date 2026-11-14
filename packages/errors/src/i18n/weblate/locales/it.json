@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Non puoi inviare una richiesta di amicizia a un utente bloccato.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Non puoi inviare una richiesta di amicizia a te stesso.",
 	"friends_and_dms.cannot_send_messages_to_user": "Non puoi mandare messaggi a questo utente.",
+	"friends_and_dms.community_member_dms_disabled": "Una community che condividi con questa persona ha disattivato i messaggi diretti tra i membri che non sono amici.",
 	"friends_and_dms.direct_messages_disabled": "I messaggi diretti sono disabilitati su questa istanza.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Non sono consentiti destinatari duplicati.",
 	"friends_and_dms.friend_request_blocked": "Questo utente non accetta richieste di amicizia in questo momento.",

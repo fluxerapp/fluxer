@@ -337,9 +337,11 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 | INVITE_SPLASH | Guild can use invite splash assets |
 | INVITES_DISABLED<sup>3</sup> | Guild invites can't be used |
 | LARGE_GUILD_OVERRIDE<sup>4</sup> | Guild is marked as a large guild |
+| MEMBER_DMS_DISABLED<sup>3</sup> | Members who aren't friends can't message each other through this guild. See [Direct messages](/http-api/users/private-channels/#direct-messages) |
 | MORE_EMOJI<sup>4</sup> | Raises the emoji limit |
 | MORE_STICKERS<sup>4</sup> | Raises the sticker limit |
 | PARTNERED | Guild has partnered status |
+| PLANNED_JOIN_WAVES | Guild expects large planned waves of new members. Invites aren't paused after a raid |
 | RAID_DETECTED | Set together with `INVITES_DISABLED` while invites are paused after a raid |
 | TEXT_CHANNEL_FLEXIBLE_NAMES<sup>3</sup> | Text, announcement, forum and media channel names keep uppercase letters, spaces and punctuation |
 | UNAVAILABLE_FOR_EVERYONE<sup>5</sup> | Guild is unavailable to every account, including the owner |
@@ -569,7 +571,7 @@ Changes guild settings and returns the updated [guild object](#guild-object). Yo
 
 <sup>4</sup> Needs `INVITE_SPLASH`
 
-<sup>5</sup> You can only add or remove `INVITES_DISABLED`, `TEXT_CHANNEL_FLEXIBLE_NAMES`, `DETACHED_BANNER`, `CLONE_EMOJI_ENABLED`, `CLONE_STICKER_ENABLED`, `HIDE_OWNER_CROWN` and `VISITS_ENABLED`, and Fluxer keeps every other feature the guild has
+<sup>5</sup> You can only add or remove `INVITES_DISABLED`, `TEXT_CHANNEL_FLEXIBLE_NAMES`, `DETACHED_BANNER`, `CLONE_EMOJI_ENABLED`, `CLONE_STICKER_ENABLED`, `HIDE_OWNER_CROWN`, `VISITS_ENABLED` and `MEMBER_DMS_DISABLED`, and Fluxer keeps every other feature the guild has
 
 :::caution[Leaving out a feature you can change removes it]
 Send the current `features` array with your changes applied.

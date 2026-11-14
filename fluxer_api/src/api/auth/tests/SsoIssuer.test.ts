@@ -11,7 +11,7 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -348,6 +348,67 @@ describe('SSO issuer', () => {
 			await saveSso({issuer: 'test-new', migrate_identities: false}).expect(200).execute();
 			expect(await holderOf('test-old', sub)).toBe(userId);
 			expect(await holderOf('test-new', sub)).toBeUndefined();
+		});
+
+		async function connectFromSettings(account: TestAccount, sub: string): Promise<void> {
+			const start = await createBuilder<SsoStartResponse>(harness, account.token)
+				.post('/users/@me/sso/link/start')
+				.body({password: account.password})
+				.execute();
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: JSON.stringify({sub, email: createUniqueEmail('sso-connect')}),
+					state: start.state,
+					client_binding: start.client_binding,
+				})
+				.expect(200)
+				.execute();
+		}
+
+		async function traitsOf(account: TestAccount): Promise<Array<string>> {
+			return (await createBuilder<{traits: Array<string>}>(harness, account.token).get('/users/@me').execute()).traits;
+		}
+
+		async function providerTrait(): Promise<string | undefined> {
+			return (await createBuilderWithoutAuth<{provider_trait?: string}>(harness).get('/auth/sso/status').execute())
+				.provider_trait;
+		}
+
+		it('connects an account from settings to a new provider while its old links are left behind', async () => {
+			await enableSso(harness, admin.token, {enforced: false, issuer: 'test-connect-old'});
+			const account = await createTestAccount(harness);
+			const oldSub = subject('connect-old');
+			await connectFromSettings(account, oldSub);
+			const oldProviderTrait = await providerTrait();
+			expect(await traitsOf(account)).toContain(oldProviderTrait);
+			await saveSso({issuer: 'test-connect-new', migrate_identities: false}).expect(200).execute();
+			const newProviderTrait = await providerTrait();
+			expect(newProviderTrait).not.toBe(oldProviderTrait);
+			expect(await traitsOf(account)).not.toContain(newProviderTrait);
+			const newSub = subject('connect-new');
+			await connectFromSettings(account, newSub);
+			expect(await traitsOf(account)).toEqual(expect.arrayContaining([oldProviderTrait, newProviderTrait]));
+			expect(await holderOf('test-connect-old', oldSub)).toBe(account.userId);
+			expect(await holderOf('test-connect-new', newSub)).toBe(account.userId);
+			expect(await signInWithTestProvider(newSub)).toBe(account.userId);
+		});
+
+		it('adds the provider trait to an older link at its next sign-in', async () => {
+			await enableSso(harness, admin.token, {enforced: false, issuer: 'test-backfill'});
+			const account = await createTestAccount(harness);
+			const sub = subject('backfill');
+			await connectFromSettings(account, sub);
+			const trait = await providerTrait();
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+			await getUserRepository().patchUpsert(
+				user.id,
+				{traits: new Set(Array.from(user.traits).filter((value) => value !== trait))},
+				user.toRow(),
+			);
+			expect(await traitsOf(account)).not.toContain(trait);
+			expect(await signInWithTestProvider(sub)).toBe(account.userId);
+			expect(await traitsOf(account)).toContain(trait);
 		});
 	});
 });

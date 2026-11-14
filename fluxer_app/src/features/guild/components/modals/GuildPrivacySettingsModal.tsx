@@ -10,6 +10,7 @@ import {
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -17,6 +18,11 @@ import {observer} from 'mobx-react-lite';
 const ALLOW_DIRECT_MESSAGES_FROM_OTHER_MEMBERS_IN_THIS_DESCRIPTOR = msg({
 	message: 'Let members of this community DM you',
 	comment: 'Toggle label in the community privacy modal: allow DMs from non-friend members of this community.',
+});
+const COMMUNITY_TURNED_OFF_MEMBER_DMS_DESCRIPTOR = msg({
+	message: "This community has turned off DMs between members who aren't friends",
+	comment:
+		'Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.',
 });
 const BOT_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	message: 'Bot direct messages',
@@ -32,7 +38,8 @@ export const GuildPrivacySettingsModal = observer(({guildId}: {guildId: string})
 	const restrictedGuilds = UserSettings.restrictedGuilds;
 	const botRestrictedGuilds = UserSettings.botRestrictedGuilds;
 	if (!guild) return null;
-	const isDMsAllowed = !restrictedGuilds.includes(guildId);
+	const memberDmsDisabled = guild.features.has(GuildFeatures.MEMBER_DMS_DISABLED);
+	const isDMsAllowed = !memberDmsDisabled && !restrictedGuilds.includes(guildId);
 	const isBotDMsAllowed = !botRestrictedGuilds.includes(guildId);
 	const handleToggleDMs = async (value: boolean) => {
 		let newRestrictedGuilds: Array<string>;
@@ -66,9 +73,14 @@ export const GuildPrivacySettingsModal = observer(({guildId}: {guildId: string})
 				<div className={styles.container} data-flx="guild.guild-privacy-settings-modal.container">
 					<Switch
 						label={i18n._(DIRECT_MESSAGES_DESCRIPTOR)}
-						description={i18n._(ALLOW_DIRECT_MESSAGES_FROM_OTHER_MEMBERS_IN_THIS_DESCRIPTOR)}
+						description={i18n._(
+							memberDmsDisabled
+								? COMMUNITY_TURNED_OFF_MEMBER_DMS_DESCRIPTOR
+								: ALLOW_DIRECT_MESSAGES_FROM_OTHER_MEMBERS_IN_THIS_DESCRIPTOR,
+						)}
 						value={isDMsAllowed}
 						onChange={handleToggleDMs}
+						disabled={memberDmsDisabled}
 						data-flx="guild.guild-privacy-settings-modal.switch.toggle-d-ms"
 					/>
 					<Switch

@@ -14,7 +14,6 @@ import {
 	deleteChannel,
 	getChannel,
 	type MinimalChannelResponse,
-	sendChannelMessage,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -23,18 +22,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-
-interface PrivateChannelsResponse extends Array<MinimalChannelResponse> {}
-
-async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
-	await createBuilder(harness, '')
-		.patch(`/test/users/${userId}/flags`)
-		.body({flags: flags.toString()})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-}
 
 describe('UserChannelService', () => {
 	let harness: ApiTestHarness;
@@ -62,27 +50,6 @@ describe('UserChannelService', () => {
 				.execute();
 			expect(channel.id).toBeDefined();
 			expect(channel.type).toBe(ChannelTypes.DM);
-		});
-		test('bug hunter bot can create and send one-to-one DM without normal recipient limits', async () => {
-			const botAccount = await createTestBotAccount(harness);
-			const recipient = await createTestAccount(harness);
-			await setUserFlags(harness, botAccount.botUserId, UserFlags.BUG_HUNTER | UserFlags.SPAMMER);
-			await blockUser(harness, recipient, botAccount.botUserId);
-			const channel = await createBuilder<MinimalChannelResponse>(harness, `Bot ${botAccount.botToken}`)
-				.post('/users/@me/channels')
-				.body({recipient_id: recipient.userId})
-				.execute();
-			expect(channel.id).toBeDefined();
-			expect(channel.type).toBe(ChannelTypes.DM);
-			let recipientChannels = await createBuilder<PrivateChannelsResponse>(harness, recipient.token)
-				.get('/users/@me/channels')
-				.execute();
-			expect(recipientChannels.some((recipientChannel) => recipientChannel.id === channel.id)).toBe(false);
-			await sendChannelMessage(harness, `Bot ${botAccount.botToken}`, channel.id, 'bug hunter bot dm');
-			recipientChannels = await createBuilder<PrivateChannelsResponse>(harness, recipient.token)
-				.get('/users/@me/channels')
-				.execute();
-			expect(recipientChannels.some((recipientChannel) => recipientChannel.id === channel.id)).toBe(true);
 		});
 		test('can create DM with a user who blocked you', async () => {
 			const user1 = await createTestAccount(harness);

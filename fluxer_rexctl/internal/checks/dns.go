@@ -64,10 +64,10 @@ func runDNS(ctx context.Context, e *Env) Result {
 	if len(addrs) == 0 {
 		if perr != nil {
 			return fail(fmt.Sprintf("%s doesn't point to this machine yet.", e.Domain),
-				"Add an A record for it pointing to this machine's public IP address, then run rexctl doctor.")
+				"Add an A record for it pointing to this machine's public IP address, or a CNAME to a dynamic DNS name that points here, then run rexctl doctor.")
 		}
 		return fail(fmt.Sprintf("%s doesn't point to this machine yet.", e.Domain),
-			fmt.Sprintf("Add an %s record for it pointing to %s, then run rexctl doctor.", record, public))
+			fmt.Sprintf("Add an %s record for it pointing to %s, or a CNAME to a dynamic DNS name that points there, then run rexctl doctor.", record, public))
 	}
 	matched := matchHere(addrs, public, listen == nil)
 	if len(matched) > 0 {

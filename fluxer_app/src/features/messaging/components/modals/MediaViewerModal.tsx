@@ -16,6 +16,7 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
+import {OPEN_POST_DESCRIPTOR} from '@app/features/messaging/components/modals/media_modal/shared';
 import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
@@ -36,6 +37,7 @@ import {
 	isGifvRenderedAsImage,
 	isViewerImageItem,
 } from '@app/features/messaging/utils/MediaViewerItemUtils';
+import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import {
 	copyMediaLinkToClipboard,
 	copyMediaToClipboard,
@@ -56,6 +58,7 @@ import {AudioPlayer} from '@app/features/voice/components/media_player/component
 import {VideoPlayer} from '@app/features/voice/components/media_player/components/VideoPlayer';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {ChatCircleIcon} from '@phosphor-icons/react';
 import {untracked} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import {
@@ -129,6 +132,7 @@ interface MobileMediaOptionsSheetProps {
 	message: Message;
 	onClose: () => void;
 	onDelete: (bypassConfirm?: boolean) => void;
+	onViewPost?: () => void;
 	sourceChannel?: Channel | null;
 }
 
@@ -241,6 +245,7 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 	message,
 	onClose,
 	onDelete,
+	onViewPost,
 	sourceChannel,
 }: MobileMediaOptionsSheetProps) {
 	const {i18n} = useLingui();
@@ -266,12 +271,29 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 		onClose,
 		onDelete,
 		sourceChannel,
+		hideReply: onViewPost != null,
 	});
 	const visibleMessageGroups = useMemo(() => messageGroups.filter((group) => group.items.length > 0), [messageGroups]);
-	const mediaMenuGroupsWithMessageActions = useMemo(
-		() => [...mediaMenuData.groups, ...visibleMessageGroups],
-		[mediaMenuData.groups, visibleMessageGroups],
-	);
+	const mediaMenuGroupsWithMessageActions = useMemo(() => {
+		const groups = [...mediaMenuData.groups, ...visibleMessageGroups];
+		if (!onViewPost) return groups;
+		const viewPostItem = {
+			id: 'media-view-post',
+			icon: (
+				<ChatCircleIcon
+					size={20}
+					weight="bold"
+					data-flx="messaging.media-viewer-modal.mobile-media-options-sheet.chat-circle-icon"
+				/>
+			),
+			label: i18n._(OPEN_POST_DESCRIPTOR),
+			onClick: () => {
+				onClose();
+				onViewPost();
+			},
+		};
+		return [{items: [viewPostItem]}, ...groups];
+	}, [i18n.locale, mediaMenuData.groups, onClose, onViewPost, visibleMessageGroups]);
 	return (
 		<MenuBottomSheet
 			isOpen={isOpen}
@@ -309,7 +331,7 @@ function resolveAdjacentPinUrls(items: ReadonlyArray<MediaViewerItem>, currentIn
 }
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
-	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete} =
+	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete, sourcePost} =
 		MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
@@ -436,10 +458,11 @@ const MediaViewerModalComponent: FC = observer(() => {
 					naturalHeight={item.naturalHeight}
 					onClose={onClose}
 					onDelete={handleDelete}
+					hideReply={sourcePost != null}
 					data-flx="messaging.media-viewer-modal.render-media-menu.media-context-menu"
 				/>
 			),
-		[defaultName, handleDelete, sourceChannel],
+		[defaultName, handleDelete, sourceChannel, sourcePost],
 	);
 	const handleContextMenu = useCallback(
 		(event: MouseEvent<HTMLDivElement>) => {
@@ -499,6 +522,11 @@ const MediaViewerModalComponent: FC = observer(() => {
 		MediaViewerCommands.closeMediaViewer();
 		requestMessageReply(message, {sourceChannel});
 	}, [message, sourceChannel]);
+	const handleViewPost = useCallback(() => {
+		if (!sourcePost) return;
+		MediaViewerCommands.closeMediaViewer();
+		openThread(sourcePost);
+	}, [sourcePost]);
 	const handleForward = useCallback(() => {
 		if (!message || !forwardMediaSelection) return;
 		const handleForwardSuccess = ({shouldNavigate}: ForwardModalSuccess) => {
@@ -725,8 +753,9 @@ const MediaViewerModalComponent: FC = observer(() => {
 				onCopyLink={downloadHidden ? undefined : handleCopyLink}
 				onCopyMedia={downloadHidden ? undefined : handleCopyMedia}
 				onDeleteAttachment={deletableAttachmentId ? handleDeleteAttachment : undefined}
-				onReply={permissions?.canSendMessages ? handleReply : undefined}
+				onReply={!sourcePost && permissions?.canSendMessages ? handleReply : undefined}
 				onForward={canForwardCurrentMedia ? handleForward : undefined}
+				onViewPost={sourcePost ? handleViewPost : undefined}
 				enablePanZoom={currentItem.type === 'image' || currentItem.type === 'gif' || currentItem.type === 'gifv'}
 				currentIndex={currentIndex}
 				totalAttachments={items.length}
@@ -759,6 +788,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					message={message}
 					onClose={() => setIsMediaMenuOpen(false)}
 					onDelete={handleDelete}
+					onViewPost={sourcePost ? handleViewPost : undefined}
 					sourceChannel={sourceChannel}
 					data-flx="messaging.media-viewer-modal.media-viewer-modal-component.mobile-media-options-sheet"
 				/>

@@ -10062,6 +10062,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "คอนเนตทิคัต"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10943,6 +10948,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "ลงชื่อเข้าใช้ไม่สำเร็จ โปรดลองอีกครั้ง"
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "เชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียวไม่สำเร็จ"
@@ -13525,6 +13532,7 @@ msgstr "แสดงตัวอย่างข้อความส่วนต
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17567,6 +17575,11 @@ msgstr "เพื่อนๆ สามารถส่งข้อความ�
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ การตั้งค่าเหล่านี้จะครอบคลุมถึงผู้คนและบอทที่คุณแชร์ชุมชนด้วยเท่านั้น"
+
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "เพื่อนยังคงส่งข้อความส่วนตัวหากันได้ รวมถึงสมาชิกที่อยู่ในคอมมูนิตี้อื่นร่วมกันด้วย บอทจะไม่ได้รับผลกระทบ"
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -26273,6 +26286,11 @@ msgstr "เปิดหน้าชำระเงินอีกครั้ง
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "เปิดป๊อปอัป"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "เปิดโพสต์"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -37648,6 +37666,11 @@ msgstr "คอมมูนิตี้นี้หยุดรับคำเช
 msgid "This community has paused invites. You can try again later."
 msgstr "คอมมูนิตี้นี้หยุดรับคำเชิญชั่วคราว ลองใหม่อีกครั้งในภายหลังได้เลย"
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "คอมมูนิตี้นี้ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38765,6 +38788,11 @@ msgstr "หากต้องการสร้าง webhook ให้เปิ
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "หากต้องการให้ผู้คนเข้ามา ให้สร้างลิงก์ลงทะเบียนในแผงผู้ดูแลระบบ"
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "หากต้องการโอนความเป็นเจ้าของ ให้ไปที่ {generalSettingsPath} แล้วใช้ตัวเลือกโอนความเป็นเจ้าของ"
@@ -39376,6 +39404,11 @@ msgstr "ปิดกล้องของอุปกรณ์"
 msgid "Turn off device stream"
 msgstr "ปิดสตรีมของอุปกรณ์"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39448,6 +39481,16 @@ msgstr "เปลี่ยนอิโมติคอนแบบข้อคว
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "เปิดธีมนี้เพื่อดูการเปลี่ยนแปลงในแอป"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "เปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกันอีกครั้งแล้ว"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกันแล้ว"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -44844,6 +44887,11 @@ msgstr "ไม่สามารถส่งข้อความของคุ
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "ไม่สามารถส่งข้อความของคุณได้ เนื่องจากถูกระบบความปลอดภัยของเราตรวจจับไว้ หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อผู้ดูแลระบบของอินสแตนซ์นี้"
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "ส่งข้อความของคุณไม่ได้ คอมมูนิตี้ที่คุณอยู่ร่วมกับบุคคลนี้ได้ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

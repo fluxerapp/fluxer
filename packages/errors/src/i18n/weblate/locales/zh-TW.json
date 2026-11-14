@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "你無法傳送好友邀請給已封鎖的使用者。",
 	"friends_and_dms.cannot_send_friend_request_to_self": "你無法傳送好友邀請給自己。",
 	"friends_and_dms.cannot_send_messages_to_user": "你無法傳送訊息給此使用者。",
+	"friends_and_dms.community_member_dms_disabled": "你與此人共同所在的某個社群已關閉非好友成員之間的私訊。",
 	"friends_and_dms.direct_messages_disabled": "此實例已停用私訊。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "不允許重複成員。",
 	"friends_and_dms.friend_request_blocked": "此使用者目前不接受好友邀請。",

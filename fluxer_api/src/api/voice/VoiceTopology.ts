@@ -56,6 +56,7 @@ export class VoiceTopology {
 			latitude: region.latitude,
 			longitude: region.longitude,
 			isDefault: region.isDefault,
+			hidden: region.hidden,
 			vipOnly: region.restrictions.vipOnly,
 			requiredGuildFeatures: Array.from(region.restrictions.requiredGuildFeatures),
 		}));
@@ -91,6 +92,7 @@ export class VoiceTopology {
 				latitude: region.latitude,
 				longitude: region.longitude,
 				isDefault: region.isDefault,
+				hidden: region.hidden,
 				restrictions: {
 					vipOnly: region.restrictions.vipOnly,
 					requiredGuildFeatures: new Set(region.restrictions.requiredGuildFeatures),

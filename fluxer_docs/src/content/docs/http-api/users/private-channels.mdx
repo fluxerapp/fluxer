@@ -74,6 +74,8 @@ When your account is limited from starting new conversations, opening a direct m
 
 Your own ID returns 400 `CANNOT_DM_YOURSELF` on `recipient_id`, and an unknown user returns 404 `UNKNOWN_USER`. Blocks don't stop you from opening a direct message, but [Create message](/http-api/messages/#create-message) returns 400 `CANNOT_SEND_MESSAGES_TO_USER` when either of you has blocked the other.
 
+A guild with the `MEMBER_DMS_DISABLED` [guild feature](/http-api/guilds/#guild-features) doesn't count as a shared guild between two people who aren't friends, unless one of them is a bot. When the only guilds you share have it, [Create message](/http-api/messages/#create-message) returns 400 `COMMUNITY_MEMBER_DMS_DISABLED`. This also applies to direct messages opened before the guild turned it on.
+
 ### Group DMs
 
 A [limited](/http-api/users/#account-limitation) account gets 403 `ACCOUNT_LIMITED`.

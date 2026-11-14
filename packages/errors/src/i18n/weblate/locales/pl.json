@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Nie możesz wysłać zaproszenia do znajomych do zablokowanego użytkownika.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Nie możesz wysłać zaproszenia do znajomych do siebie.",
 	"friends_and_dms.cannot_send_messages_to_user": "Nie możesz wysyłać wiadomości do tego użytkownika.",
+	"friends_and_dms.community_member_dms_disabled": "Społeczność, do której należysz razem z tą osobą, wyłączyła wiadomości prywatne między członkami, którzy nie są znajomymi.",
 	"friends_and_dms.direct_messages_disabled": "Wiadomości prywatne są wyłączone w tej instancji.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplikowanie odbiorców jest niedozwolone.",
 	"friends_and_dms.friend_request_blocked": "Użytkownik nie akceptuje obecnie zaproszeń do znajomych.",

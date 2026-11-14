@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Je kunt geen vriendschapsverzoek sturen naar een geblokkeerde gebruiker.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Je kunt jezelf geen vriendschapsverzoek sturen.",
 	"friends_and_dms.cannot_send_messages_to_user": "Je kunt geen berichten sturen naar deze gebruiker.",
+	"friends_and_dms.community_member_dms_disabled": "Een community die je met deze persoon deelt, heeft privéberichten uitgeschakeld tussen leden die geen vrienden zijn.",
 	"friends_and_dms.direct_messages_disabled": "Directe berichten zijn uitgeschakeld op deze instantie.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Dubbele ontvangers zijn niet toegestaan.",
 	"friends_and_dms.friend_request_blocked": "Gebruiker accepteert op dit moment geen vriendschapsverzoeken.",

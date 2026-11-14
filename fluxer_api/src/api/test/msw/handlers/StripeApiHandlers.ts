@@ -117,6 +117,7 @@ interface StripeApiMockSpies {
 
 	retrievedSubscriptions: Array<string>;
 	cancelledSubscriptions: Array<string>;
+	voidedInvoices: Array<{id: string; idempotencyKey: string | null}>;
 
 	retrievedPaymentIntents: Array<string>;
 	updatedPaymentIntents: Array<{id: string; metadata: Record<string, string>}>;
@@ -473,6 +474,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		retrievedCharges: [],
 		retrievedSubscriptions: [],
 		cancelledSubscriptions: [],
+		voidedInvoices: [],
 
 		retrievedPaymentIntents: [],
 		updatedPaymentIntents: [],
@@ -1221,7 +1223,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				url: '/v1/invoices',
 			});
 		}),
-		http.post(`${STRIPE_API_BASE}/v1/invoices/:id/void`, ({params}) => {
+		http.post(`${STRIPE_API_BASE}/v1/invoices/:id/void`, ({params, request}) => {
 			const invoice = getInvoice(params.id as string);
 			if (invoice.status !== 'open') {
 				return HttpResponse.json(
@@ -1231,6 +1233,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			}
 			const voided = {...invoice, status: 'void' as const};
 			invoiceStore.set(voided.id, voided);
+			spies.voidedInvoices.push({id: voided.id, idempotencyKey: request.headers.get('Idempotency-Key')});
 			return HttpResponse.json(voided);
 		}),
 		http.post(`${STRIPE_API_BASE}/v1/invoices/create_preview`, async ({request}) => {
@@ -2055,6 +2058,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		spies.retrievedCharges.length = 0;
 		spies.retrievedSubscriptions.length = 0;
 		spies.cancelledSubscriptions.length = 0;
+		spies.voidedInvoices.length = 0;
 
 		spies.retrievedPaymentIntents.length = 0;
 		spies.updatedPaymentIntents.length = 0;

@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "你无法向被屏蔽用户发送好友请求。",
 	"friends_and_dms.cannot_send_friend_request_to_self": "你无法给自己发送好友请求。",
 	"friends_and_dms.cannot_send_messages_to_user": "你无法向该用户发送消息。",
+	"friends_and_dms.community_member_dms_disabled": "你与此人共同所在的某个社区已关闭非好友成员之间的私信。",
 	"friends_and_dms.direct_messages_disabled": "此实例已禁用私信。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "不允许重复添加接收者。",
 	"friends_and_dms.friend_request_blocked": "该用户当前不接受好友请求。",

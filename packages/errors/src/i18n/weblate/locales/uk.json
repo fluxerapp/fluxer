@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Ти не можеш надіслати запит у друзі заблокованому користувачеві.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Ти не можеш надіслати запит у друзі собі.",
 	"friends_and_dms.cannot_send_messages_to_user": "Ти не можеш надсилати повідомлення цьому користувачеві.",
+	"friends_and_dms.community_member_dms_disabled": "Спільнота, у якій ти перебуваєш разом із цією людиною, вимкнула особисті повідомлення між учасниками, які не є друзями.",
 	"friends_and_dms.direct_messages_disabled": "Особисті повідомлення вимкнено на цьому екземплярі.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Одержувачі не можуть повторюватися.",
 	"friends_and_dms.friend_request_blocked": "Користувач наразі не приймає запити в друзі.",

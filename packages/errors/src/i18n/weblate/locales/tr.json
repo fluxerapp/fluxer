@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Engellediğin bir kullanıcıya arkadaşlık isteği gönderemezsin.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Kendine arkadaşlık isteği gönderemezsin.",
 	"friends_and_dms.cannot_send_messages_to_user": "Bu kullanıcıya mesaj gönderemezsin.",
+	"friends_and_dms.community_member_dms_disabled": "Bu kişiyle paylaştığın bir topluluk, arkadaş olmayan üyeler arasındaki doğrudan mesajları kapattı.",
 	"friends_and_dms.direct_messages_disabled": "Bu kurulumda DM'ler devre dışı.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Yinelenen alıcılara izin verilmez.",
 	"friends_and_dms.friend_request_blocked": "Kullanıcı şu anda arkadaşlık isteklerini kabul etmiyor.",
