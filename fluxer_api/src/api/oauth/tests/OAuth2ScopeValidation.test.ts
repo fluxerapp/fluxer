@@ -32,6 +32,24 @@ describe('OAuth2 Scope Validation', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
+	test('should report an unknown scope next to bot as invalid_scope without a redirect_uri', async () => {
+		const {appOwner, endUser} = await createOAuth2TestSetup(harness);
+		const application = await createOAuth2Application(harness, appOwner, {
+			name: 'Bot Unknown Scope Test',
+			redirect_uris: [],
+		});
+		const json = await createBuilder<{
+			error: string;
+		}>(harness, endUser.token)
+			.post('/oauth2/authorize/consent')
+			.body({
+				client_id: application.id,
+				scope: 'bot applications.commands',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		expect(json.error).toBe('invalid_scope');
+	});
 	test('should reject the removed admin scope for third-party applications', async () => {
 		const {appOwner, endUser} = await createOAuth2TestSetup(harness);
 		const application = await createOAuth2Application(harness, appOwner, {
