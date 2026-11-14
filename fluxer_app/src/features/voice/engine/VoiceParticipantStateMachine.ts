@@ -45,12 +45,12 @@ interface VoiceRemoteSpeakingMachineContext {
 export type VoiceRemoteSpeakingEvent =
 	| {type: 'remote.attach'; identity: string; track: unknown}
 	| {type: 'remote.detach'; identity: string}
-	| {type: 'remote.tick'; identity: string; rms: number; threshold: number; nowMs: number; trackEnded?: boolean}
+	| {type: 'remote.tick'; identity: string; rms: number; nowMs: number; trackEnded?: boolean}
 	| {type: 'remote.clear'}
 	| {type: 'remote.clearCommands'};
 const EMPTY_REMOTE_COMMANDS: ReadonlyArray<VoiceRemoteSpeakingCommand> = [];
 const REMOTE_PLAYBACK_TARGET_RMS = 0.09;
-const REMOTE_PLAYBACK_MIN_RMS = 0.0025;
+const REMOTE_PLAYBACK_MIN_RMS = 0.006;
 const REMOTE_PLAYBACK_MAX_BOOST = 3;
 const REMOTE_PLAYBACK_MIN_CHANGE_RATIO = 1.03;
 const REMOTE_PLAYBACK_BOOST_UP_COEFF = 0.08;
@@ -100,7 +100,6 @@ function attachRemoteAnalyser(
 		track,
 		speaking: false,
 		belowSinceMs: null,
-		aboveSinceMs: null,
 		playbackBoost: 1,
 		appliedBoost: 1,
 	});
@@ -141,10 +140,9 @@ function snapRemotePlaybackBoost(entry: RemoteSpeakingAnalyserState): {
 function updateRemotePlaybackBoost(
 	entry: RemoteSpeakingAnalyserState,
 	rms: number,
-	threshold: number,
 	nowMs: number,
 ): {entry: RemoteSpeakingAnalyserState; command: VoiceRemoteSpeakingCommand | null} {
-	const isActiveSpeech = Number.isFinite(rms) && rms >= REMOTE_PLAYBACK_MIN_RMS && rms >= threshold && entry.speaking;
+	const isActiveSpeech = Number.isFinite(rms) && rms >= REMOTE_PLAYBACK_MIN_RMS && entry.speaking;
 	if (isActiveSpeech) {
 		const desiredBoost = Math.max(1, Math.min(REMOTE_PLAYBACK_MAX_BOOST, REMOTE_PLAYBACK_TARGET_RMS / rms));
 		const coefficient =
@@ -171,12 +169,12 @@ function tickRemoteAnalyser(
 	const commands: Array<VoiceRemoteSpeakingCommand> = [];
 	let entry: RemoteSpeakingAnalyserState = {
 		...existing,
-		...advanceSpeakingHysteresis(existing, event.rms, event.threshold, event.nowMs),
+		...advanceSpeakingHysteresis(existing, event.rms, event.nowMs),
 	};
 	if (entry.speaking !== existing.speaking) {
 		commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: entry.speaking});
 	}
-	const boostUpdate = updateRemotePlaybackBoost(entry, event.rms, event.threshold, event.nowMs);
+	const boostUpdate = updateRemotePlaybackBoost(entry, event.rms, event.nowMs);
 	entry = boostUpdate.entry;
 	if (boostUpdate.command) commands.push(boostUpdate.command);
 	if (entry === existing && commands.length === 0) return context;
