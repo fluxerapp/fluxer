@@ -52,6 +52,34 @@ pub fn synthetic_png16(width: u32, height: u32) -> Vec<u8> {
     )
 }
 
+pub fn red_jpeg_tagged_with_swapped_red_and_blue_primaries(width: u32, height: u32) -> Vec<u8> {
+    let pixels = [255, 0, 0, 255].repeat(width as usize * height as usize);
+    let mut jpeg = encode_rgba(
+        &pixels,
+        width,
+        height,
+        unsafe { native::fluxer_vips_format_uchar },
+        ".jpg[Q=100,profile=srgb]",
+    );
+    let marker = b"ICC_PROFILE\0";
+    let profile = jpeg
+        .windows(marker.len())
+        .position(|window| window == marker)
+        .expect("the jpeg embeds an icc profile")
+        + marker.len()
+        + 2;
+    let tag_count = u32::from_be_bytes(jpeg[profile + 128..profile + 132].try_into().unwrap());
+    for tag in 0..tag_count as usize {
+        let signature = profile + 132 + tag * 12;
+        match &jpeg[signature..signature + 4] {
+            b"rXYZ" => jpeg[signature..signature + 4].copy_from_slice(b"bXYZ"),
+            b"bXYZ" => jpeg[signature..signature + 4].copy_from_slice(b"rXYZ"),
+            _ => {}
+        }
+    }
+    jpeg
+}
+
 pub fn synthetic_image(width: u32, height: u32, suffix: &str) -> Vec<u8> {
     let pixels = synthetic_rgba(width, height);
     encode_rgba(
