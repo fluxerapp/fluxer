@@ -97,16 +97,19 @@ ControlButton.displayName = 'ControlButton';
 
 interface OverlayTooltipButtonProps extends ControlButtonProps {
 	tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
+	buttonRef?: Ref<HTMLButtonElement>;
 }
 
 const OverlayTooltipButton: FC<OverlayTooltipButtonProps> = ({
 	label,
 	tooltipPosition = 'top',
+	buttonRef,
 	...buttonProps
 }: OverlayTooltipButtonProps) => (
 	<Tooltip text={label} position={tooltipPosition} data-flx="messaging.media-modal.overlay-tooltip-button.tooltip">
 		<span className={styles.overlayActionButtonWrap} data-flx="messaging.media-modal.overlay-tooltip-button.wrap">
 			<ControlButton
+				ref={buttonRef}
 				label={label}
 				data-flx="messaging.media-modal.media-controls.overlay-tooltip-button.control-button"
 				{...buttonProps}
@@ -139,6 +142,7 @@ export interface MediaOverlayActionsProps {
 	onPointerEnter?: () => void;
 	onPointerLeave?: () => void;
 	rootRef?: Ref<HTMLDivElement>;
+	closeButtonRef?: Ref<HTMLButtonElement>;
 }
 
 export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
@@ -166,6 +170,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onPointerEnter,
 		onPointerLeave,
 		rootRef,
+		closeButtonRef,
 	}: MediaOverlayActionsProps) => {
 		const {i18n} = useLingui();
 		const favoriteLabel = isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR);
@@ -180,6 +185,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 				data-flx="messaging.media-modal.media-overlay-actions.action-bar"
 			>
 				<OverlayTooltipButton
+					buttonRef={closeButtonRef}
 					icon={<XIcon size={20} weight="bold" data-flx="messaging.media-modal.media-overlay-actions.close-icon" />}
 					label={i18n._(CLOSE_MODAL_DESCRIPTOR)}
 					onClick={onClose}
