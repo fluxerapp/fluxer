@@ -32,6 +32,7 @@ import {
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
 import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {createRole} from '@app/api/guild/tests/GuildTestUtils';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
@@ -128,6 +129,16 @@ describe('Crosspost propagation', () => {
 			expect(updated.content).toBe('final');
 			expect(updated.edited_timestamp).toBeTruthy();
 		}
+	});
+
+	test('role mentions show as plain role names in copies on delivery and edit', async () => {
+		await followInto(harness, world, world.b.t1.id);
+		const testers = await createRole(harness, world.a.owner.token, world.a.guild.id, {name: 'Beta *Testers*'});
+		const source = await postAndPublish(harness, world, {content: `Hello <@&${testers.id}>`});
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Hello \\@Beta \\*Testers\\*');
+		await edit(source.id, {content: `Bye <@&${testers.id}> and <@&${world.a.guild.id}>`});
+		await world.worker.drain();
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Bye \\@Beta \\*Testers\\* and \\@everyone');
 	});
 
 	test('embed edits and suppress-embeds toggles propagate, including flag-only edits', async () => {
