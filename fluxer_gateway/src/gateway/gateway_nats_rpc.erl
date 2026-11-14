@@ -203,6 +203,7 @@ handle_connect_ok(Pid, Conn, State) ->
         {ok, Pid} ->
             cleanup_old(State),
             MRef = nats:monitor(Conn),
+            _ = gateway_nats_pool_conn:watch_liveness(Conn),
             OpenState = State#{
                 conn => Conn,
                 ready => false,
