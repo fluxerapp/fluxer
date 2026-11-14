@@ -137,6 +137,7 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		discoveryRepository: getGuildDiscoveryRepository(),
 		enforcement: enforcementService,
 		customBadgeCatalog: getCustomBadgeCatalog(),
+		kvClient: deps.kvClient,
 	});
 	return {auditService, banManagementService, userService, guildService};
 }

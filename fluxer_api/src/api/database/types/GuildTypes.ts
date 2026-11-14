@@ -51,6 +51,7 @@ export interface GuildRow {
 	members_indexed_at: Date | null;
 	message_history_cutoff: Date | null;
 	invites_paused_until: Date | null;
+	planned_join_waves_until: Date | null;
 	version: number;
 }
 
@@ -91,6 +92,7 @@ export const GUILD_COLUMNS = [
 	'members_indexed_at',
 	'message_history_cutoff',
 	'invites_paused_until',
+	'planned_join_waves_until',
 	'version',
 ] as const satisfies ReadonlyArray<keyof GuildRow>;
 

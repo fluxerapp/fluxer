@@ -1692,6 +1692,10 @@ const AdminLookupGuildSchema = z.object({
 	rules_channel_id: SnowflakeStringType.nullable(),
 	disabled_operations: Int32Type,
 	member_count: Int32Type,
+	planned_join_waves_until: z.iso
+		.datetime()
+		.nullable()
+		.describe('When PLANNED_JOIN_WAVES ends, or null when it has no end or is off'),
 	channels: z.array(AdminGuildChannelSummarySchema),
 	roles: z.array(AdminGuildRoleSummarySchema),
 });

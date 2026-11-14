@@ -22,6 +22,7 @@ import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
 import drainActivitySpool from '@app/api/worker/tasks/DrainActivitySpool';
+import endExpiredPlannedJoinWaves from '@app/api/worker/tasks/EndExpiredPlannedJoinWaves';
 import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
 import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
 import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
@@ -72,6 +73,7 @@ import recordOperatorPassDelivery from '@app/api/worker/tasks/RecordOperatorPass
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
+import restatePlannedJoinWaves from '@app/api/worker/tasks/RestatePlannedJoinWaves';
 import scanBillingNotices from '@app/api/worker/tasks/ScanBillingNotices';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
@@ -141,6 +143,8 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	indexGuildMembers,
 	joinSingleCommunityMembers,
 	liftExpiredGuildInvitePauses,
+	endExpiredPlannedJoinWaves,
+	restatePlannedJoinWaves,
 	messageShred,
 	notifyRegistrationApprovers,
 	operatorPassOfferCompletion,

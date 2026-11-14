@@ -60,7 +60,9 @@ function hasGuildSettingsUpdate(body: UpdateGuildRequest): boolean {
 }
 
 function hasGuildFeatureUpdate(body: UpdateGuildRequest): boolean {
-	return body.add_features !== undefined || body.remove_features !== undefined;
+	return (
+		body.add_features !== undefined || body.remove_features !== undefined || body.planned_join_waves_until !== undefined
+	);
 }
 
 function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
@@ -206,6 +208,10 @@ export function GuildAdminController(app: HonoApp) {
 					guildId: createGuildID(guildIdRaw),
 					addFeatures: body.add_features ?? [],
 					removeFeatures: body.remove_features ?? [],
+					plannedJoinWavesUntil:
+						body.planned_join_waves_until == null
+							? body.planned_join_waves_until
+							: new Date(body.planned_join_waves_until),
 					adminUserId,
 					auditLogReason,
 				});

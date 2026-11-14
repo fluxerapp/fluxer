@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
+    admin_flags::PLANNED_JOIN_WAVES,
     api::{
         client::{AdminApiClient, ApiResultExt},
         generated::types::CommunityRemovalBasis,
@@ -215,7 +216,8 @@ async fn dispatch_guild_action(
     let get = |k: &str| form.clean(k);
     match action {
         "update_features" => {
-            let (add_features, remove_features) = if form.contains_key("features[]")
+            let (add_features, remove_features, planned_join_waves_until) = if form
+                .contains_key("features[]")
                 || form.contains_key("features")
                 || form.contains_key("custom_features")
             {
@@ -247,16 +249,30 @@ async fn dispatch_guild_action(
                     .filter(|feature| !desired_set.contains(feature.as_str()))
                     .cloned()
                     .collect();
-                (add_features, remove_features)
+                let planned_join_waves_until = if desired_set.contains(PLANNED_JOIN_WAVES) {
+                    match parse_planned_join_waves_until(form) {
+                        Ok(until) => Some(until),
+                        Err(message) => return FlashData::error(message),
+                    }
+                } else {
+                    None
+                };
+                (add_features, remove_features, planned_join_waves_until)
             } else {
                 (
                     form.list_values_any(&["add_features[]", "add_features"]),
                     form.list_values_any(&["remove_features[]", "remove_features"]),
+                    None,
                 )
             };
             action_result(
                 client
-                    .update_guild_features(guild_id, &add_features, &remove_features)
+                    .update_guild_features(
+                        guild_id,
+                        &add_features,
+                        &remove_features,
+                        planned_join_waves_until.as_ref().map(Option::as_deref),
+                    )
                     .await,
                 "Guild features updated",
                 "Failed to update guild features",
@@ -516,6 +532,27 @@ fn action_result<T, E: std::fmt::Display>(
             FlashData::error(error_message)
         }
     }
+}
+
+fn parse_planned_join_waves_until(form: &MultiValueForm) -> Result<Option<String>, &'static str> {
+    let Some(value) = form.clean("planned_join_waves_until") else {
+        return Ok(None);
+    };
+    let with_seconds = if value.len() == 16 {
+        format!("{value}:00")
+    } else {
+        value
+    };
+    let format = time::format_description::parse_borrowed::<2>(
+        "[year]-[month]-[day]T[hour]:[minute]:[second]",
+    )
+    .map_err(|_| "Failed to read the end date")?;
+    time::PrimitiveDateTime::parse(&with_seconds, &format)
+        .map_err(|_| "Enter the end date as a date and time")?
+        .assume_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .map(Some)
+        .map_err(|_| "Failed to format the end date")
 }
 
 fn unique_strings(values: Vec<String>) -> Vec<String> {

@@ -428,6 +428,7 @@ export class GuildOperationsService {
 			members_indexed_at: null,
 			message_history_cutoff: null,
 			invites_paused_until: null,
+			planned_join_waves_until: null,
 			version: 1,
 		};
 		batch.addPrepared(Guilds.insert(guildData));
