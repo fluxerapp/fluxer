@@ -12,7 +12,7 @@ import {
 	type VoiceCallLayoutPresentationInput,
 } from '@app/features/voice/components/VoiceCallLayoutPresentationStateMachine';
 import styles from '@app/features/voice/components/VoiceCallView.module.css';
-import {VoiceGridLayout} from '@app/features/voice/components/VoiceGridLayout';
+import {type VoiceGridCapacityInfo, VoiceGridLayout} from '@app/features/voice/components/VoiceGridLayout';
 import type {VoiceGridEntry} from '@app/features/voice/components/VoiceParticipantConsolidation';
 import {VoiceParticipantTile} from '@app/features/voice/components/VoiceParticipantTile';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
@@ -72,7 +72,7 @@ interface VoiceCallLayoutContentProps {
 	pinnedParticipantIdentity: string | null;
 	compact?: boolean;
 	isVoiceCallAppFullscreen?: boolean;
-	onGridCapacityChange?: (info: {visibleTileCount: number; totalTileCount: number; overflow: boolean}) => void;
+	onGridCapacityChange?: (info: VoiceGridCapacityInfo) => void;
 	onExpandUser: (userId: string) => void;
 }
 
