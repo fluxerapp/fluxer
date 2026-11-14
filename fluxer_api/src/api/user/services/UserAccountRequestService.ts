@@ -124,6 +124,7 @@ interface UserProfileParams {
 	withMutualGuilds?: boolean;
 	requestCache: RequestCache;
 	requestLocale: string;
+	viewerTimeZone: string | null;
 }
 
 export class UserAccountRequestService {
@@ -428,6 +429,7 @@ export class UserAccountRequestService {
 			operatorPass,
 			operatorPassQuote: await this.operatorPassWallQuote(profileUser, operatorPass),
 			locale: params.requestLocale,
+			timeZone: params.viewerTimeZone,
 			environment: badgeEnvironment,
 			restricted: restrictProfile,
 			profileHidden: hidden,
@@ -489,6 +491,7 @@ export class UserAccountRequestService {
 			operatorPass,
 			operatorPassQuote: await this.operatorPassWallQuote(user, operatorPass),
 			locale: params.requestLocale,
+			timeZone: user.timezone,
 			environment,
 			profileHidden: isProfileHidden(user),
 		};
