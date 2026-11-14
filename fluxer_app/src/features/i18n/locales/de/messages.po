@@ -2412,9 +2412,9 @@ msgstr "{username} hat den Kanalnamen geändert."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username} ist {name} in diesen Kanal gefolgt. Nachrichten, die dort veröffentlicht werden, erscheinen hier."
 
-#. System message shown inline when community ownership is transferred.
+#. System message shown inline when community ownership is transferred. username is the new owner.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has had the ownership of this community transferred to them."
+msgid "{username} has just received ownership of this community"
 msgstr ""
 
 #. System message in a group DM when a member removes themself from the group.

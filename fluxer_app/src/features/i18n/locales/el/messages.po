@@ -2412,9 +2412,9 @@ msgstr "Ο/Η {username} άλλαξε το όνομα του καναλιού."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "Το {username} ακολούθησε το {name} σε αυτό το κανάλι. Τα μηνύματα που δημοσιεύονται εκεί θα εμφανίζονται εδώ."
 
-#. System message shown inline when community ownership is transferred.
+#. System message shown inline when community ownership is transferred. username is the new owner.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has had the ownership of this community transferred to them."
+msgid "{username} has just received ownership of this community"
 msgstr ""
 
 #. System message in a group DM when a member removes themself from the group.
