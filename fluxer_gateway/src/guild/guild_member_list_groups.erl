@@ -22,7 +22,7 @@ get_hoisted_roles_sorted(Roles, GuildId) ->
         fun(A, B) ->
             PosA = get_effective_hoist_position(A),
             PosB = get_effective_hoist_position(B),
-            PosA > PosB
+            PosA > PosB orelse (PosA =:= PosB andalso role_id(A) < role_id(B))
         end,
         HoistedRoles
     ).
