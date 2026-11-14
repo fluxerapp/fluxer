@@ -22,6 +22,7 @@ async function loadBootstrapAccounts(): Promise<BootstrapAccounts | null> {
 				(account) => account.storageKey !== restoringAccountKey && account.isValid && account.instance !== undefined,
 			),
 			restoreOnNextStart: (accountKey) => SessionManager.restoreAccountOnNextStart(accountKey),
+			addAccountOnNextStart: () => SessionManager.startSignedOutOnNextStart(),
 		};
 	} catch (error) {
 		logger.warn('Failed to load the stored accounts for the bootstrap error screen:', error);

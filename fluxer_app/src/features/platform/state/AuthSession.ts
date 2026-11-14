@@ -216,6 +216,10 @@ export class AuthSessionManager {
 		await this.deps.credentialMirror.persist(this.accountPersistence.pointer(resolved.account));
 	}
 
+	async startSignedOutOnNextStart(): Promise<void> {
+		await this.deps.credentialMirror.persist(emptyStoredSessionMirror());
+	}
+
 	get currentAccount(): Account | null {
 		const accountKey = this.currentAccountKey;
 		if (accountKey === null) return null;
