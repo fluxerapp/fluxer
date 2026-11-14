@@ -54,7 +54,6 @@ function canonicalUrl(url: string | null | undefined): string | null {
 
 export class EmbedService {
 	private readonly MAX_EMBED_CHARACTERS = 6000;
-	private readonly MAX_EMBED_CHARACTERS_BUG_HUNTER = 12000;
 
 	constructor(
 		private unfurlerService: IUnfurlerService,
@@ -66,13 +65,12 @@ export class EmbedService {
 		content: string | null;
 		customEmbeds?: Array<RichEmbedRequest>;
 		nsfwMode: MediaProxyNsfwMode;
-		isBugHunterBot?: boolean;
 	}): Promise<{
 		embeds: Array<MessageEmbed> | null;
 		hasUncachedUrls: boolean;
 	}> {
 		if (params.customEmbeds?.length) {
-			this.validateEmbedSize(params.customEmbeds, params.isBugHunterBot ?? false);
+			this.validateEmbedSize(params.customEmbeds);
 			const embeds = await Promise.all(params.customEmbeds.map((embed) => this.createEmbed(embed, params.nsfwMode)));
 			return {embeds: embeds.map((embed) => embed.toMessageEmbed()), hasUncachedUrls: false};
 		}
@@ -230,7 +228,7 @@ export class EmbedService {
 		};
 	}
 
-	private validateEmbedSize(embeds: Array<RichEmbedRequest>, isBugHunterBot: boolean = false): void {
+	private validateEmbedSize(embeds: Array<RichEmbedRequest>): void {
 		const totalChars = embeds.reduce<number>((sum, embed) => {
 			return (
 				sum +
@@ -241,10 +239,9 @@ export class EmbedService {
 				(embed.fields?.reduce((fieldSum, field) => fieldSum + field.name.length + field.value.length, 0) || 0)
 			);
 		}, 0);
-		const maxCharacters = isBugHunterBot ? this.MAX_EMBED_CHARACTERS_BUG_HUNTER : this.MAX_EMBED_CHARACTERS;
-		if (totalChars > maxCharacters) {
+		if (totalChars > this.MAX_EMBED_CHARACTERS) {
 			throw InputValidationError.fromCode('embeds', ValidationErrorCodes.EMBEDS_EXCEED_MAX_CHARACTERS, {
-				maxCharacters,
+				maxCharacters: this.MAX_EMBED_CHARACTERS,
 			});
 		}
 	}
