@@ -493,6 +493,14 @@
 	overflow: hidden;
 }
 
+.cardOpenTarget {
+	display: flex;
+	flex: 1;
+	flex-direction: inherit;
+	gap: inherit;
+	min-width: 0;
+}
+
 .cardGrid .cardBody {
 	padding: 0.75rem;
 }
@@ -671,6 +679,16 @@
 	aspect-ratio: 4 / 3;
 	overflow: hidden;
 	background-color: var(--background-tertiary);
+}
+
+.cardMediaViewer {
+	display: block;
+	flex-shrink: 0;
+	padding: 0;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	cursor: zoom-in;
 }
 
 .cardMediaImage {

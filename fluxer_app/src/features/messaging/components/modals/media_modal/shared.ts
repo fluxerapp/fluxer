@@ -28,6 +28,7 @@ export interface MediaModalProps {
 	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReply?: () => void;
 	onForward?: () => void;
+	onViewPost?: () => void;
 	children: ReactNode;
 	enablePanZoom?: boolean;
 	currentIndex?: number;
@@ -82,6 +83,11 @@ export const FORWARD_MEDIA_DESCRIPTOR = msg({
 export const REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
 	comment: 'Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.',
+});
+export const OPEN_POST_DESCRIPTOR = msg({
+	message: 'Open post',
+	comment:
+		'Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.',
 });
 export const CLOSE_MODAL_DESCRIPTOR = msg({
 	message: 'Close modal',

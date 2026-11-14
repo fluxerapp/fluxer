@@ -26261,6 +26261,11 @@ msgstr "Fizetési oldal újbóli megnyitása"
 msgid "Open popup"
 msgstr "Felugró ablak megnyitása"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Bejegyzés megnyitása"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
