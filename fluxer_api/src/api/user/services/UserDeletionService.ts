@@ -15,6 +15,7 @@ import type {ConnectionRepository} from '@app/api/connection/ConnectionRepositor
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
@@ -407,6 +408,7 @@ export async function processUserDeletion(
 			storageService,
 			purgeQueue,
 			workerService,
+			guildAuditLogService: new GuildAuditLogService(guildRepository, snowflakeService, workerService, gatewayService),
 		}).deleteUserMessagesBulk(userId);
 		await userRepository.patchUpsert(
 			userId,
