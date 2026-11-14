@@ -5,7 +5,6 @@ import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.module.css';
-import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
 import {ManageRolesBottomSheet} from '@app/features/guild/components/RoleManagement';
 import {
 	resolveGuildScopedModerationActionKeys,
@@ -16,7 +15,6 @@ import {
 	COPY_USER_ID_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
 	REPORT_MESSAGE_DESCRIPTOR,
-	TRANSFER_OWNERSHIP_DESCRIPTOR,
 	VIEW_PROFILE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
@@ -64,7 +62,6 @@ import {useLingui} from '@lingui/react/macro';
 import {
 	ChatTeardropIcon,
 	ClockIcon,
-	CrownIcon,
 	FlagIcon,
 	GavelIcon,
 	IdentificationCardIcon,
@@ -125,8 +122,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 			member,
 		);
 		const memberIsTimedOut = member.isTimedOut();
-		const isOwner = guild?.ownerId === currentUserId;
-		const canTransfer = !isCurrentUser && !isBot && isOwner;
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const manageRolesLabel = PermissionUtils.formatPermissionLabel(i18n, Permissions.MANAGE_ROLES);
 		const [manageRolesSheetOpen, setManageRolesSheetOpen] = useState(false);
@@ -237,19 +232,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const handleManageRoles = () => {
 			setManageRolesSheetOpen(true);
 		};
-		const handleTransferOwnership = () => {
-			ModalCommands.pushAfterBottomSheetClose(
-				onClose,
-				modal(() => (
-					<TransferOwnershipModal
-						guildId={guildId}
-						targetUser={user}
-						targetMember={member}
-						data-flx="guild.guild-tabs.guild-member-actions-sheet.handle-transfer-ownership.transfer-ownership-modal"
-					/>
-				)),
-			);
-		};
 		const handleReportMessage = () => {
 			if (!message || !canReportMessage(message)) {
 				return;
@@ -335,17 +317,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 						),
 						label: manageRolesLabel,
 						onClick: handleManageRoles,
-					},
-				],
-			});
-		}
-		if (canTransfer) {
-			menuGroups.push({
-				items: [
-					{
-						icon: <CrownIcon className={styles.icon} data-flx="guild.guild-tabs.guild-member-actions-sheet.icon--9" />,
-						label: i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR),
-						onClick: handleTransferOwnership,
 					},
 				],
 			});

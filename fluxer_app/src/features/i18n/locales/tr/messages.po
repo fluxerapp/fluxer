@@ -21953,6 +21953,11 @@ msgstr "Bakım {localizedTime} için planlanmıştır. Tahmini süre: {duration}
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "{userName} grubun sahibi olsun mu? Sahiplik ayrıcalıklarınızı kaybedersiniz."
 
+#. Description of the community ownership transfer section in community settings.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Make another member the owner of this community. You cannot undo this."
+msgstr "Başka bir üyeyi bu topluluğun sahibi yapın. Bunu geri alamazsınız."
+
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -31780,6 +31785,11 @@ msgstr "Dil kodu ara…"
 msgid "Search languages…"
 msgstr "Dilleri ara…"
 
+#. Placeholder of the member search in the community ownership transfer section.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Search members"
+msgstr "Üyeleri ara"
+
 #. Placeholder of the search box in the add members or roles step of the create channel modal.
 #: src/features/channel/components/modals/ChannelCreateAccessStep.tsx
 msgid "Search members or roles"
@@ -39021,8 +39031,8 @@ msgstr "Takip"
 msgid "Tracking parameters"
 msgstr "İzleme parametreleri"
 
-#. Short label in the transfer ownership modal. Keep it concise.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+#. Title of the community ownership transfer section in community settings and of its confirmation modal.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer community ownership"
 msgstr "Topluluk sahipliğini devret"
 
@@ -39032,10 +39042,14 @@ msgid "Transfer group ownership to {userName}?"
 msgstr "Grup sahipliği {userName} adlı kişiye devredilsin mi?"
 
 #. Action label in community settings that hands ownership of the community to another member.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer ownership"
 msgstr "Sahipliği devret"
+
+#. Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.
+#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+msgid "Transfer ownership ({secondsRemaining})"
+msgstr "Sahipliği devret ({secondsRemaining})"
 
 #. Activity log detail line under a community settings update, shown when the community got a new owner. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {user} is the new owner, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43479,10 +43493,11 @@ msgstr "Bu bağlantı zaten mevcut."
 msgid "You are about to leave {productName}"
 msgstr "{productName} uygulamasından ayrılmak üzeresiniz"
 
+#. Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "You are about to transfer ownership of this community to <0>{0}</0>. This action is <1>irreversible</1> and you will lose all owner privileges."
-msgstr "Bu topluluğun sahipliğini <0>{0}</0> kişisine devretmek üzeresiniz. Bu eylem <1>geri alınamaz</1> ve tüm sahip ayrıcalıklarınızı kaybedersiniz."
+msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
+msgstr "Bu topluluğun sahipliğini <0>{0}</0> ({targetUserId}) kişisine devretmek üzeresiniz. Bu eylem <1>geri alınamaz</1> ve tüm sahip ayrıcalıklarınızı kaybedersiniz."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx

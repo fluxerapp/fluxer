@@ -4,7 +4,10 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {GroupOwnershipTransferFailedModal} from '@app/features/guild/components/alerts/GroupOwnershipTransferFailedModal';
 import styles from '@app/features/guild/components/modals/TransferOwnershipModal.module.css';
-import type {GuildMember} from '@app/features/member/models/GuildMember';
+import {
+	TRANSFER_COMMUNITY_OWNERSHIP_DESCRIPTOR,
+	TRANSFER_OWNERSHIP_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {Button} from '@app/features/ui/button/Button';
@@ -15,22 +18,31 @@ import type {User} from '@app/features/user/models/User';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
+import {WarningIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 
-const TRANSFER_COMMUNITY_OWNERSHIP_DESCRIPTOR = msg({
-	message: 'Transfer community ownership',
-	comment: 'Short label in the transfer ownership modal. Keep it concise.',
+const TRANSFER_OWNERSHIP_COUNTDOWN_DESCRIPTOR = msg({
+	message: 'Transfer ownership ({secondsRemaining})',
+	comment:
+		'Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.',
 });
 const logger = new Logger('TransferOwnershipModal');
+const TRANSFER_CONFIRMATION_SECONDS = 10;
 export const TransferOwnershipModal: React.FC<{
 	guildId: string;
 	targetUser: User;
-	targetMember: GuildMember;
 }> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
+	const targetUserId = targetUser.id;
 	const [isTransferring, setIsTransferring] = useState(false);
+	const [secondsRemaining, setSecondsRemaining] = useState(TRANSFER_CONFIRMATION_SECONDS);
+	useEffect(() => {
+		if (secondsRemaining <= 0) return;
+		const timer = window.setTimeout(() => setSecondsRemaining((seconds) => seconds - 1), 1000);
+		return () => window.clearTimeout(timer);
+	}, [secondsRemaining]);
 	const handleTransfer = async () => {
 		setIsTransferring(true);
 		try {
@@ -68,14 +80,23 @@ export const TransferOwnershipModal: React.FC<{
 			<Modal.Content data-flx="guild.transfer-ownership-modal.modal-content">
 				<Modal.ContentLayout data-flx="guild.transfer-ownership-modal.modal-content-layout">
 					<div className={styles.warningBox} data-flx="guild.transfer-ownership-modal.warning-box">
+						<WarningIcon
+							className={styles.warningIcon}
+							size={20}
+							weight="fill"
+							data-flx="guild.transfer-ownership-modal.warning-icon"
+						/>
 						<Modal.Description className={styles.warningText} data-flx="guild.transfer-ownership-modal.warning-text">
-							<Trans>
+							<Trans comment="Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.">
 								You are about to transfer ownership of this community to{' '}
 								<strong data-flx="guild.transfer-ownership-modal.strong">
 									{NicknameUtils.getNickname(targetUser, guildId)}
-								</strong>
-								. This action is <strong data-flx="guild.transfer-ownership-modal.strong--2">irreversible</strong> and
-								you will lose all owner privileges.
+								</strong>{' '}
+								({targetUserId}). This action is{' '}
+								<strong className={styles.dangerText} data-flx="guild.transfer-ownership-modal.danger-text">
+									irreversible
+								</strong>{' '}
+								and you will lose all owner privileges.
 							</Trans>
 						</Modal.Description>
 					</div>
@@ -93,10 +114,13 @@ export const TransferOwnershipModal: React.FC<{
 				<Button
 					variant="danger"
 					onClick={handleTransfer}
-					disabled={isTransferring}
+					disabled={isTransferring || secondsRemaining > 0}
+					leftIcon={<WarningIcon size={16} weight="fill" data-flx="guild.transfer-ownership-modal.warning-icon--2" />}
 					data-flx="guild.transfer-ownership-modal.button.transfer"
 				>
-					<Trans>Transfer ownership</Trans>
+					{secondsRemaining > 0
+						? i18n._(TRANSFER_OWNERSHIP_COUNTDOWN_DESCRIPTOR, {secondsRemaining})
+						: i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

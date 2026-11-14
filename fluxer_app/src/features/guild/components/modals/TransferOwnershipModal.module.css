@@ -1,11 +1,23 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .warningBox {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
 	border-radius: 0.375rem;
-	border: 0.0625rem solid var(--background-header-secondary);
+	border: 0.0625rem solid var(--status-danger);
 	padding: 1rem;
+}
+
+.warningIcon {
+	flex: 0 0 auto;
+	color: var(--status-danger);
 }
 
 .warningText {
 	margin: 0;
+}
+
+.dangerText {
+	color: var(--settings-danger-text, color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%));
 }
