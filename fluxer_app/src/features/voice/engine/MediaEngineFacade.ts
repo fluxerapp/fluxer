@@ -173,6 +173,7 @@ import {
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
+	isVoiceSpeakPermissionDenied,
 	resolveVoiceStateSelfMute,
 	shouldPrepareMicrophoneForVoiceConnect,
 } from '@app/features/voice/utils/VoicePermissionUtils';
@@ -1864,11 +1865,12 @@ class MediaEngineFacade extends Store {
 				const ptmActive = this.isPushToMuteActive();
 				const pttActive = this.isPushToTalkActive();
 				const applyServerState = shouldApplyIncomingLocalState;
+				const speakDenied = isVoiceSpeakPermissionDenied(guildId ?? voiceState.guild_id, voiceState.channel_id);
 				shouldApplyCurrentServerState = applyServerState;
 				this.applyingGatewayVoiceStateEcho = true;
 				try {
 					LocalVoiceState.syncConnectionState(voiceState.connection_id, {
-						selfMute: ptmActive || pttActive || !applyServerState ? undefined : voiceState.self_mute,
+						selfMute: ptmActive || pttActive || speakDenied || !applyServerState ? undefined : voiceState.self_mute,
 						selfDeaf: applyServerState ? voiceState.self_deaf : undefined,
 						selfVideo: applyServerState ? voiceState.self_video : undefined,
 						selfStream: applyServerState ? voiceState.self_stream : undefined,
