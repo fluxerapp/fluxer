@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import type {ReadableStream as NodeReadableStream} from 'node:stream/web';
-import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import {publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {Config} from '@app/api/Config';
 import {
 	IMediaService,
@@ -188,7 +188,7 @@ export class MediaService extends IMediaService {
 
 	getExternalMediaProxyURL(url: string): string {
 		if (attachmentStorageKeyFromUrl(url, Config.endpoints.media) !== null) {
-			return signAttachmentUrl(url);
+			return publicAttachmentUrl(url);
 		}
 		let urlObj: URL;
 		try {

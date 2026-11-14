@@ -22,6 +22,7 @@ import voiceStates from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStat
 import VoiceSessionRestore from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {isVoicePermissionMuteActive} from '@app/features/voice/utils/VoicePermissionUtils';
+import {ME} from '@fluxer/constants/src/AppConstants';
 import type {VoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room} from 'livekit-client';
 import {makeObservable, observableRef, runInAction} from 'mobx';
@@ -211,7 +212,7 @@ class VoiceRuntime extends Store {
 	load(reason: VoiceRuntimeLoadReason): Promise<LoadedVoiceRuntime> {
 		if (this.loaded !== null) return Promise.resolve(this.loaded);
 		if (this.loading !== null) return this.loading;
-		logger.info('Loading the voice runtime', {reason});
+		logger.debug('Loading the voice runtime', {reason});
 		this.cancelIdleLoad();
 		const loading = loadLazyModule(
 			() => import(/* webpackChunkName: "voice-runtime" */ '@app/features/voice/engine/VoiceRuntimeModule'),
@@ -340,6 +341,23 @@ class VoiceRuntime extends Store {
 		}
 		voiceStates.handleGatewayVoiceStateUpdate(guildId, voiceState);
 		this.loadForCurrentUserVoiceStates([voiceState]);
+	}
+
+	handleCallVoiceStates(channelId: string, callVoiceStates: ReadonlyArray<VoiceState>): void {
+		const localConnectionId = this.connectionId;
+		const known = voiceStates.getAllVoiceStatesInChannel(ME, channelId);
+		const listed = new Set(callVoiceStates.map((voiceState) => voiceState.connection_id));
+		for (const [connectionId, voiceState] of Object.entries(known)) {
+			if (connectionId === localConnectionId || listed.has(connectionId)) continue;
+			this.handleGatewayVoiceStateUpdate(null, {...voiceState, channel_id: null});
+		}
+		for (const voiceState of callVoiceStates) {
+			if (!voiceState.connection_id || voiceState.connection_id === localConnectionId) continue;
+			if (voiceState.channel_id !== channelId) continue;
+			const current = known[voiceState.connection_id];
+			if (current && (voiceState.version ?? 0) <= (current.version ?? 0)) continue;
+			this.handleGatewayVoiceStateUpdate(null, voiceState);
+		}
 	}
 
 	handleGatewayError(error: GatewayErrorData): void {

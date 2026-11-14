@@ -1268,6 +1268,12 @@ msgstr "{count, plural, one {# gemeenschappelijke community} other {# gemeenscha
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# nieuw bericht} other {# nieuwe berichten}}"
 
+#. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "{count, plural, one {# new} other {# new}}"
+msgstr ""
+
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {# Operator Pass} other {# Operator Passes}}"
@@ -1794,7 +1800,7 @@ msgstr "{mentionCount, plural, one {# vermelding} other {# vermeldingen}}"
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# vermelding} other {# vermeldingen}} op {accountCount, plural, one {# andere account} other {# andere accounts}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing} px"
@@ -2450,6 +2456,11 @@ msgstr "{username} is een gesprek gestart."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} is een thread gestart: {threadName}"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -6895,6 +6906,11 @@ msgstr "Knop met contextmenu"
 msgid "Buttons"
 msgstr "Knoppen"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Knoppen en markeringen in de hele app gebruiken deze kleur, en browsers op telefoons gebruiken hem voor hun werkbalk. Zet hem terug om het indigo van Fluxer te houden."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Knoppen kunnen contextmenu's openen bij een klik door de onClick-gebeurtenis direct door te geven aan openContextMenu."
@@ -6911,11 +6927,6 @@ msgstr "Knoppen tonen een laadindicator wanneer submitting de waarde true heeft.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Knoppen met pictogrammen"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Knoppen, links en markeringen in de hele app gebruiken deze kleur, en browsers op telefoons gebruiken hem voor hun werkbalk. Zet hem terug om het indigo van Fluxer te houden."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -7930,7 +7941,7 @@ msgid "Channel access"
 msgstr "Kanaaltoegang"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Toegang tot kanaal geweigerd"
 
@@ -8145,7 +8156,7 @@ msgstr "Lettertype chat"
 msgid "Chat font scaling"
 msgstr "Lettergrootte chats"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "Lettergrootte chat"
@@ -10052,6 +10063,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Connecticut"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10933,6 +10949,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Aanmelden is mislukt. Probeer het opnieuw."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Single sign-on kon niet worden gekoppeld"
@@ -11180,6 +11198,10 @@ msgstr "Kon deze community niet laden. Probeer het later opnieuw."
 #: src/features/platform/components/loadable/LoadableComponent.tsx
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "Kon dit deel van de app niet laden. Controleer je verbinding en probeer het opnieuw."
+
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
 
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
@@ -13358,13 +13380,13 @@ msgstr "Ontwikkelaarsstatus"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Ontwikkelaarstools"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Ontwikkelaarstools zijn beschikbaar via de medewerkersbadge in de kanaalkop."
 
@@ -13516,6 +13538,7 @@ msgstr "Voorvertoningen van directe berichten"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17566,6 +17589,11 @@ msgstr "Vrienden kunnen je altijd een bericht sturen."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Vrienden kunnen je altijd berichten sturen. Deze instellingen gelden voor mensen en bots met wie je alleen een community deelt."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "Vrienden kunnen elkaar nog steeds DM'en, net als leden die een andere community delen. Bots worden niet beïnvloed."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21534,7 +21562,7 @@ msgid "Link styling"
 msgstr "Linkstijl"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Link niet beschikbaar"
 
@@ -24193,6 +24221,12 @@ msgstr "Nooit automatisch"
 msgid "New"
 msgstr "Nieuw"
 
+#. Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "New"
+msgstr ""
+
 #. Small badge on a new or recently added app navigation item.
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgctxt "navigation-badge"
@@ -26256,6 +26290,11 @@ msgstr "Betaalpagina opnieuw openen"
 msgid "Open popup"
 msgstr "Keuzelijst openen"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Post openen"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
@@ -26341,6 +26380,11 @@ msgstr "Open Systeeminstellingen → Privacy en beveiliging → Schermopname en 
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "Open template JSON"
 msgstr "Sjabloon-JSON openen"
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Open de {PRODUCT_NAME}-app waarop je inlogt, kies 'Inloggen op een ander apparaat?' en typ hier de code die de app toont. Voer alleen een code in van een apparaat dat je beheert."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -36671,11 +36715,6 @@ msgstr "Dat waren ze allemaal."
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "De app {PRODUCT_NAME} vroeg om in te loggen als {requestedIdentifier}, maar je koos {name}."
 
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "De {PRODUCT_NAME}-app op je andere apparaat toont dit onder 'Inloggen op een ander apparaat'. Voer alleen een code in van een apparaat dat je beheert."
-
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
@@ -37627,6 +37666,11 @@ msgstr "Deze community heeft uitnodigingen gepauzeerd."
 msgid "This community has paused invites. You can try again later."
 msgstr "Deze community heeft uitnodigingen gepauzeerd. Je kunt het later opnieuw proberen."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "Deze community heeft DM's uitgeschakeld tussen leden die geen vrienden zijn"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38065,7 +38109,7 @@ msgid "This link has expired"
 msgstr "Deze link is verlopen"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Deze link is niet beschikbaar voor je account."
 
@@ -38744,6 +38788,11 @@ msgstr "Om een webhook te maken, open je <0>{channelWebhooksSettingsPath}</0>. J
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Maak in het beheerpaneel een registratielink om mensen binnen te laten."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "Ga naar {generalSettingsPath} en gebruik de optie om het eigendom over te dragen."
@@ -39343,6 +39392,11 @@ msgstr "Apparaatcamera uitschakelen"
 msgid "Turn off device stream"
 msgstr "Apparaatstream uitschakelen"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "DM's uitschakelen tussen leden die geen vrienden zijn"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39415,6 +39469,16 @@ msgstr "Zet tekstsmileys om in emoji"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Zet dit thema aan om je wijzigingen in de app te zien."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "DM's tussen leden die geen vrienden zijn weer ingeschakeld"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "DM's tussen leden die geen vrienden zijn uitgeschakeld"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43847,7 +43911,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Je hebt je tag gewijzigd terwijl je {PREMIUM_PRODUCT_NAME} had. Deze wordt willekeurig opnieuw ingesteld wanneer je {PREMIUM_PRODUCT_NAME} verloopt, tenzij het wordt verlengd."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Je hebt geen toegang tot het kanaal waar dit bericht is verzonden."
 
@@ -44816,6 +44880,11 @@ msgstr "Je bericht kon niet worden bezorgd omdat het is gemarkeerd door onze vei
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Je bericht kon niet worden bezorgd omdat het is gemarkeerd door onze veiligheidssystemen. Als je denkt dat dit een fout is, neem dan contact op met de beheerders van deze instantie."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Je bericht kon niet worden bezorgd. Een community die je met deze persoon deelt, heeft privéberichten uitgeschakeld tussen leden die geen vrienden zijn."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

@@ -36,7 +36,7 @@ const AutoReconnectHandler = observer(() => {
 				MediaEngine.connectToVoiceChannel(lastChannel.guildId, lastChannel.channelId);
 				MediaEngine.markReconnectionAttempted();
 			} else {
-				logger.info('Reconnection was cancelled, skipping');
+				logger.debug('Reconnection was cancelled, skipping');
 			}
 		}, 1500);
 		return () => clearTimeout(timerId);
@@ -53,14 +53,14 @@ const AudioPlaybackHandler = observer(({room}: {room: Room}) => {
 		}
 		if (!canPlayAudio && MediaEngine.connected) {
 			hasShownAudioModal.current = true;
-			logger.info('Audio playback not allowed, showing permission modal');
+			logger.debug('Audio playback not allowed, showing permission modal');
 			ModalCommands.pushWithKey(
 				modal(() => (
 					<AudioPlaybackPermissionModal
 						onStartAudio={async () => {
 							try {
 								await startAudio();
-								logger.info('Audio playback enabled');
+								logger.debug('Audio playback enabled');
 							} catch (error) {
 								logger.error('Failed to enable audio playback', error);
 							}

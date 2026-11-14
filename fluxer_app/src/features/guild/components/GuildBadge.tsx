@@ -5,12 +5,13 @@ import styles from '@app/features/guild/components/GuildBadge.module.css';
 import {GuildBadgesModal} from '@app/features/guild/components/modals/GuildBadgesModal';
 import GuildBadgeDefinitions from '@app/features/guild/state/GuildBadgeDefinitions';
 import {DISCOVERABLE_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {handleExternalLinkAuxClick} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {DiscoverableBadgeIcon} from '@app/features/ui/components/icons/DiscoverableBadgeIcon';
 import {PartneredBadgeIcon} from '@app/features/ui/components/icons/PartneredBadgeIcon';
 import {VerifiedBadgeIcon} from '@app/features/ui/components/icons/VerifiedBadgeIcon';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
 import {customBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
 import {
 	MORE_BADGES_DESCRIPTOR,
@@ -136,6 +137,7 @@ function CustomGuildBadge({
 	readonly tooltipPosition: 'top' | 'bottom';
 	readonly showTooltip: boolean;
 }) {
+	const {i18n} = useLingui();
 	const image = (
 		<img
 			src={customBadgeImageUrl(badge.asset_url)}
@@ -153,7 +155,12 @@ function CustomGuildBadge({
 			target="_blank"
 			rel="noopener noreferrer"
 			className={styles.badgeWrapper}
-			onClick={(event) => handleExternalLinkClick(event, href, {stopPropagation: true})}
+			onClick={(event) => {
+				event.stopPropagation();
+				event.preventDefault();
+				openInAppOrExternalUrl(href, {i18n});
+			}}
+			onAuxClick={(event) => handleExternalLinkAuxClick(event, href)}
 			onPointerDown={(event) => event.stopPropagation()}
 			onKeyDown={(event) => event.stopPropagation()}
 			data-flx="guild.guild-badge.custom-badge-link"

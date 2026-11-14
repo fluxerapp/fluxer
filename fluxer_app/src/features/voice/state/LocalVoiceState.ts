@@ -320,13 +320,13 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 						defaultMuteInitialized,
 					});
 					if (wasMutedByPermission) {
-						logger.info('Microphone permission granted, restoring persisted mute preference', {
+						logger.debug('Microphone permission granted, restoring persisted mute preference', {
 							permissionState,
 							persistedSelfMute: this.persistedSelfMute,
 							persistedHasUserSetMute: this.persistedHasUserSetMute,
 						});
 					} else if (shouldApplyDefaultUnmute) {
-						logger.info('Microphone permission granted, defaulting to unmuted state', {permissionState});
+						logger.debug('Microphone permission granted, defaulting to unmuted state', {permissionState});
 					}
 				});
 				defaultMuteInitialized = true;

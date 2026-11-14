@@ -256,6 +256,12 @@ unsafe extern "C" {
     fn fluxer_av_free(mem: *mut c_void);
     fn fluxer_free_int_array(values: *mut c_int);
 
+    pub fn fluxer_heif_validate(
+        buf: *const c_void,
+        len: size_t,
+        deadline_monotonic_ms: c_longlong,
+    ) -> c_int;
+    pub fn fluxer_bmff_sample_tables_validate(buf: *const c_void, len: size_t) -> c_int;
     pub fn fluxer_heif_decode_primary_still(
         buf: *const c_void,
         len: size_t,

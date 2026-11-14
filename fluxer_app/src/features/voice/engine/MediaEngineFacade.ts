@@ -251,7 +251,10 @@ function buildRoomEventDependencies(facade: {
 			isDisconnecting: () => voiceEngineV2AppConnectionHostAdapter.disconnecting,
 			isUserMovePending: () => facade.isUserMovePending(),
 			markConnected: () => voiceEngineV2AppConnectionHostAdapter.markConnected(),
-			markDisconnected: (reason) => voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason),
+			markDisconnected: (reason) => {
+				if (reason === 'server') VoiceSessionRestore.clearSnapshot();
+				voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason);
+			},
 			markReconnecting: () => voiceEngineV2AppConnectionHostAdapter.markReconnecting(),
 			markReconnected: () => voiceEngineV2AppConnectionHostAdapter.markReconnected(),
 		},
@@ -496,7 +499,7 @@ class MediaEngineFacade extends Store {
 				{description: `voice engine v2 prewarm (${reason})`},
 			)
 			.then(() => {
-				logger.info('Voice engine v2 prewarm completed', {reason});
+				logger.debug('Voice engine v2 prewarm completed', {reason});
 			})
 			.catch((error) => {
 				logger.warn('Voice engine v2 prewarm failed', {reason, error});
@@ -572,7 +575,7 @@ class MediaEngineFacade extends Store {
 		});
 		if (transition.snapshot.lifecycle.tearingDown) {
 			this.voiceEngineV2EstablishedConnectionKey = null;
-			logger.info('Voice engine v2 external establishment observed during lifecycle teardown', {
+			logger.debug('Voice engine v2 external establishment observed during lifecycle teardown', {
 				connectionStatus: transition.snapshot.connection.status,
 			});
 			return;
@@ -947,7 +950,7 @@ class MediaEngineFacade extends Store {
 	switchToStandardCall(): void {
 		const {guildId, channelId, connectionId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
 		if (!channelId || !connectionId) return;
-		logger.info('Switching P2P call to a standard call', {guildId, channelId});
+		logger.debug('Switching P2P call to a standard call', {guildId, channelId});
 		syncVoiceStateToServer(guildId, channelId, connectionId, undefined, false);
 	}
 
@@ -1002,7 +1005,7 @@ class MediaEngineFacade extends Store {
 			return true;
 		}
 		if (!shouldCancelMediaEngineReconnectForServerVoiceStateRemoval(removalInput)) return false;
-		logger.info('Server confirmed current voice connection removal, cancelling auto reconnect', {
+		logger.debug('Server confirmed current voice connection removal, cancelling auto reconnect', {
 			guildId,
 			connectionId,
 		});
@@ -1024,7 +1027,7 @@ class MediaEngineFacade extends Store {
 		if (!connected && !connecting && !channelId && !connectionId && !room && !hasVoiceTransport) return;
 		this.terminalUnloadVoiceDisconnectSent = true;
 		saveCurrentVoiceSessionRestoreSnapshot();
-		logger.info('Terminal page unload voice disconnect', {
+		logger.debug('Terminal page unload voice disconnect', {
 			reason,
 			guildId,
 			channelId,
@@ -1104,7 +1107,7 @@ class MediaEngineFacade extends Store {
 		reason: 'preflight' | 'gateway-error' | 'channel-delete',
 		options: {showToast?: boolean} = {},
 	): void {
-		logger.info('Clearing unavailable voice target', {channelId, reason});
+		logger.debug('Clearing unavailable voice target', {channelId, reason});
 		this.transitionFacadeState({type: 'unavailableTarget.clear', channelId});
 		VoiceSessionRestore.clearSnapshotForChannel(channelId);
 		voiceEngineV2AppConnectionHostAdapter.forgetReconnectChannel(channelId);
@@ -1419,7 +1422,7 @@ class MediaEngineFacade extends Store {
 			VoiceSessionRestore.clearSnapshot();
 		}
 		if (connectionId) CallMediaPrefs.clearForCall(connectionId);
-		logger.info('Voice teardown complete', {channelId, reason});
+		logger.debug('Voice teardown complete', {channelId, reason});
 		this.transitionFacadeState({type: 'cleanup.complete'});
 	}
 
@@ -1467,7 +1470,7 @@ class MediaEngineFacade extends Store {
 					currentVoiceStateChannelId,
 				})
 			) {
-				logger.info('Deferred disconnect executing - no VOICE_SERVER_UPDATE received', {connectionId});
+				logger.debug('Deferred disconnect executing - no VOICE_SERVER_UPDATE received', {connectionId});
 				void this.disconnectFromVoiceChannel('server');
 			} else if (currentVoiceStateChannelId) {
 				logger.debug('Deferred disconnect ignored because voice state is active again', {
@@ -1700,7 +1703,7 @@ class MediaEngineFacade extends Store {
 			},
 			(_room, _attemptId) => {},
 			(newRoom, attemptId, guildId, channelId) => {
-				logger.info('Region hot-swap complete, rebinding tracking', {guildId, channelId, attemptId});
+				logger.debug('Region hot-swap complete, rebinding tracking', {guildId, channelId, attemptId});
 				this.stopTracking();
 				this.startTracking(newRoom);
 				this.voiceEngineV2Participants.hydrateFromRoom(newRoom);
@@ -1903,7 +1906,7 @@ class MediaEngineFacade extends Store {
 				if (shouldRecoverConnectionExpectation) {
 					const recoveredGuildId = guildId ?? voiceState.guild_id ?? null;
 					voiceEngineV2AppConnectionHostAdapter.recoverConnectionExpectation(recoveredGuildId, voiceState.channel_id);
-					logger.info('Recovered connection expectation from voice state update', {
+					logger.debug('Recovered connection expectation from voice state update', {
 						guildId: recoveredGuildId,
 						channelId: voiceState.channel_id,
 						connectionId: voiceState.connection_id,
@@ -1930,11 +1933,11 @@ class MediaEngineFacade extends Store {
 				const streamDisabled =
 					shouldApplyCurrentServerState && previousLocalMediaState.selfStream && voiceState.self_stream === false;
 				if (videoDisabled) {
-					logger.info('Server disabled camera for local connection, unpublishing video track');
+					logger.debug('Server disabled camera for local connection, unpublishing video track');
 					void this.setCameraEnabled(false, {sendUpdate: false});
 				}
 				if (streamDisabled) {
-					logger.info('Server disabled screen share for local connection, unpublishing stream track');
+					logger.debug('Server disabled screen share for local connection, unpublishing stream track');
 					void this.setScreenShareEnabled(false, {sendUpdate: false});
 				}
 			}
@@ -2133,7 +2136,7 @@ class MediaEngineFacade extends Store {
 			);
 		} catch (error) {
 			if (isCameraPermissionDeniedCommandFailure(error)) {
-				logger.info('Camera enable denied by permission; denial already surfaced to the user', {enabled});
+				logger.debug('Camera enable denied by permission; denial already surfaced to the user', {enabled});
 				return;
 			}
 			throw error;
@@ -2366,7 +2369,7 @@ class MediaEngineFacade extends Store {
 				room,
 			});
 		}
-		logger.info('All tracking started');
+		logger.debug('All tracking started');
 	}
 
 	private stopTracking(): void {
@@ -2381,7 +2384,7 @@ class MediaEngineFacade extends Store {
 		this.audioPreferencesSyncDisposer?.();
 		this.audioPreferencesSyncDisposer = null;
 		this.stopAfkTracking();
-		logger.info('All tracking stopped');
+		logger.debug('All tracking stopped');
 	}
 
 	private abortVoiceConnection(): void {
@@ -2551,7 +2554,7 @@ class MediaEngineFacade extends Store {
 		if (!result.changed) return;
 		this.syncLocalVoiceStateWithServer({viewer_stream_keys: result.keys});
 		if (migrated) {
-			logger.info('Migrated watched stream connection id', {
+			logger.debug('Migrated watched stream connection id', {
 				userId: voiceState.user_id,
 				channelId,
 				nextConnectionId,
@@ -2611,7 +2614,7 @@ class MediaEngineFacade extends Store {
 			logger.error('Failed to clear voice stats DB during logout', error);
 			throw error;
 		} finally {
-			logger.info('Cleanup complete');
+			logger.debug('Cleanup complete');
 			this.transitionFacadeState({type: 'cleanup.complete'});
 		}
 	}
@@ -2638,7 +2641,7 @@ class MediaEngineFacade extends Store {
 			this.clearViewerStreamKeys();
 		}
 		if (decision.abortConnection) {
-			logger.info('Gateway voice error while connecting, aborting', {code: error.code});
+			logger.debug('Gateway voice error while connecting, aborting', {code: error.code});
 			this.abortVoiceConnection();
 		}
 		if (decision.disconnectReason) {

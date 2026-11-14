@@ -1268,6 +1268,12 @@ msgstr "{count, plural, one {# bendra bendruomenė} few {# bendros bendruomenės
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# nauja žinutė} other {# naujos žinutės}}"
 
+#. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "{count, plural, one {# new} other {# new}}"
+msgstr ""
+
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {# Operator Pass} other {# Operator Passes}}"
@@ -1794,7 +1800,7 @@ msgstr "{mentionCount, plural, one {# paminėjimas} few {# paminėjimai} many {#
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# paminėjimas} other {# paminėjimai}} {accountCount, plural, one {vienoje paskyroje} other {# kitose paskyrose}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing} px"
@@ -2450,6 +2456,11 @@ msgstr "{username} pradėjo skambutį."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} pradėjo temą: {threadName}"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -6895,6 +6906,11 @@ msgstr "Mygtukas su kontekstiniu meniu"
 msgid "Buttons"
 msgstr "Mygtukai"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Šią spalvą naudoja mygtukai ir paryškinimai visoje programoje, o telefonų naršyklės ja nuspalvina savo įrankių juostą. Atstatykite ją, kad liktų „Fluxer“ indigo spalva."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "Mygtukai gali atidaryti kontekstinius meniu spustelėjus, perduodant „onClick“ įvykį tiesiai į „openContextMenu“."
@@ -6911,11 +6927,6 @@ msgstr "Mygtukai rodo įkėlimo indikatorių, kai submitting reikšmė yra true.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Mygtukai su piktogramomis"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Šią spalvą naudoja mygtukai, nuorodos ir paryškinimai visoje programoje, o telefonų naršyklės ja nuspalvina savo įrankių juostą. Atstatykite ją, kad liktų „Fluxer“ indigo spalva."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -7930,7 +7941,7 @@ msgid "Channel access"
 msgstr "Prieiga prie kanalo"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Prieiga prie kanalo uždrausta"
 
@@ -8145,7 +8156,7 @@ msgstr "Pokalbių šriftas"
 msgid "Chat font scaling"
 msgstr "Pokalbių šrifto dydis"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "Pokalbių šrifto dydis"
@@ -10052,6 +10063,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Konektikutas"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10933,6 +10949,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Nepavyko prisijungti. Bandykite dar kartą."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Nepavyko susieti vienkartinio prisijungimo"
@@ -11180,6 +11198,10 @@ msgstr "Nepavyko įkelti šios bendruomenės. Pabandykite dar kartą po akimirko
 #: src/features/platform/components/loadable/LoadableComponent.tsx
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "Nepavyko įkelti šios programos dalies. Patikrinkite ryšį ir bandykite dar kartą."
+
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
 
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
@@ -13358,13 +13380,13 @@ msgstr "Kūrėjo būsena"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Kūrėjo įrankiai"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Kūrėjo įrankiai pasiekiami iš personalo ženkliuko kanalo antraštėje."
 
@@ -13516,6 +13538,7 @@ msgstr "Tiesioginių žinučių peržiūros"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17566,6 +17589,11 @@ msgstr "Draugai visada gali tau rašyti."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Draugai visada gali tau rašyti. Šie nustatymai taikomi žmonėms ir robotams, su kuriais dalijiesi tik bendruomene."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "Draugai vis tiek gali siųsti vieni kitiems tiesiogines žinutes, kaip ir nariai, turintys kitą bendrą bendruomenę. Robotams tai netaikoma."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21535,7 +21563,7 @@ msgid "Link styling"
 msgstr "Nuorodų stilius"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Nuoroda nepasiekiama"
 
@@ -24194,6 +24222,12 @@ msgstr "Niekada automatiškai"
 msgid "New"
 msgstr "Nauja"
 
+#. Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "New"
+msgstr ""
+
 #. Small badge on a new or recently added app navigation item.
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgctxt "navigation-badge"
@@ -26257,6 +26291,11 @@ msgstr "Vėl atidaryti mokėjimo puslapį"
 msgid "Open popup"
 msgstr "Atidaryti išskleidžiamąjį sąrašą"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Atidaryti įrašą"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
@@ -26342,6 +26381,11 @@ msgstr "Atidarykite „System Settings“ → „Privacy & Security“ → „Sc
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "Open template JSON"
 msgstr "Atidaryti šablono JSON"
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Atidarykite „{PRODUCT_NAME}“ programą, į kurią jungiatės, pasirinkite „Prisijungiate kitame įrenginyje?“ ir įveskite čia jos rodomą kodą. Įveskite kodą tik iš įrenginio, kurį kontroliuojate."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -36672,11 +36716,6 @@ msgstr "Tai viskas."
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "„{PRODUCT_NAME}“ programa paprašė prisijungti kaip {requestedIdentifier}, bet pasirinkote {name}."
 
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "„{PRODUCT_NAME}“ programa jūsų kitame įrenginyje rodoma skiltyje „Prisijungimas kitu įrenginiu“. Įveskite kodą tik iš įrenginio, kurį kontroliuojate."
-
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
@@ -37628,6 +37667,11 @@ msgstr "Ši bendruomenė pristabdė kvietimus."
 msgid "This community has paused invites. You can try again later."
 msgstr "Ši bendruomenė pristabdė kvietimus. Galite bandyti dar kartą vėliau."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "Ši bendruomenė išjungė tiesiogines žinutes tarp narių, kurie nėra draugai"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38066,7 +38110,7 @@ msgid "This link has expired"
 msgstr "Ši nuoroda nebegalioja"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Ši nuoroda nepasiekiama jūsų paskyrai."
 
@@ -38745,6 +38789,11 @@ msgstr "Norėdami sukurti webhooką, atidarykite <0>{channelWebhooksSettingsPath
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Norėdami įleisti žmones, sukurkite registracijos nuorodą administratoriaus skydelyje."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "Norėdami perduoti nuosavybę, eikite į {generalSettingsPath} ir naudokite nuosavybės perdavimo parinktį."
@@ -39344,6 +39393,11 @@ msgstr "Išjungti įrenginio kamerą"
 msgid "Turn off device stream"
 msgstr "Išjungti įrenginio srautą"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "Išjungti tiesiogines žinutes tarp narių, kurie nėra draugai"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39416,6 +39470,16 @@ msgstr "Keisti tekstines šypsenėles jaustukais"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Įjunk šią temą, kad matytum pakeitimus programėlėje."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "Vėl įjungtos tiesioginės žinutės tarp narių, kurie nėra draugai"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "Išjungtos tiesioginės žinutės tarp narių, kurie nėra draugai"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43848,7 +43912,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Pakeitėte savo žymą, kol naudojatės {PREMIUM_PRODUCT_NAME}. Ji bus atsitiktinai pakeista, kai baigs galioti jūsų {PREMIUM_PRODUCT_NAME}, nebent ji bus atnaujinta."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Neturite prieigos prie kanalo, kuriame buvo išsiųsta ši žinutė."
 
@@ -44817,6 +44881,11 @@ msgstr "Jūsų žinutė nebuvo pristatyta, nes ją pažymėjo mūsų saugos sist
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Jūsų žinutė nebuvo pristatyta, nes ją pažymėjo mūsų saugos sistemos. Jei manote, kad tai klaida, susisiekite su šios instancijos administratoriais."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Jūsų žinutės nepavyko pristatyti. Bendruomenė, kurioje esate su šiuo asmeniu, išjungė tiesiogines žinutes tarp narių, kurie nėra draugai."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

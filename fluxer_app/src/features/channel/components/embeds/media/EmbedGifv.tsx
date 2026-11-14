@@ -19,6 +19,7 @@ import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
@@ -27,6 +28,7 @@ import {useMediaLoading} from '@app/features/messaging/hooks/useMediaLoading';
 import {useMediaViewerHoverWarm} from '@app/features/messaging/hooks/useMediaViewerHoverWarm';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentMedia, {fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
@@ -629,7 +631,10 @@ export const EmbedGifv: FC<
 			);
 		}, [dimensions.width, naturalHeight, naturalWidth, posterSource]);
 		const thumbHashURL = useMemo(() => decodeThumbHashDataURL(placeholder), [placeholder]);
-		const thumbHashCurtain = useThumbHashCurtain(posterURL, shouldLoadMedia);
+		const posterDisplayURL = useApiAttachmentSrc(posterURL, shouldLoadMedia);
+		const videoDisplayURL = useApiAttachmentSrc(shouldLoadMedia ? videoProxyURL : '', shouldLoadMedia);
+		const videoPlaybackURL = shouldLoadMedia ? videoDisplayURL : undefined;
+		const thumbHashCurtain = useThumbHashCurtain(posterDisplayURL ?? '', shouldLoadMedia);
 		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
 		const defaultName = deriveDefaultNameFromMessage({
 			message,
@@ -754,8 +759,8 @@ export const EmbedGifv: FC<
 						<video
 							ref={videoRef}
 							className={styles.videoElement}
-							src={shouldLoadMedia ? videoProxyURL : undefined}
-							poster={shouldLoadMedia ? posterURL : thumbHashURL}
+							src={videoPlaybackURL}
+							poster={shouldLoadMedia ? posterDisplayURL : thumbHashURL}
 							preload={videoConfig?.preload ?? 'none'}
 							loop={videoConfig?.loop ?? true}
 							muted={videoConfig?.muted ?? true}
@@ -772,7 +777,7 @@ export const EmbedGifv: FC<
 					) : (
 						<img
 							className={styles.videoElement}
-							src={shouldLoadMedia ? posterURL : thumbHashURL}
+							src={shouldLoadMedia ? posterDisplayURL : thumbHashURL}
 							alt=""
 							width={dimensions.width}
 							height={dimensions.height}
@@ -879,6 +884,7 @@ export const EmbedGif: FC<
 		const shouldShowAnimated = shouldAnimate && animationPolicyAllowed;
 		const activeSource = shouldShowAnimated ? optimizedAnimatedURL : optimizedStaticURL;
 		const {
+			src: activeDisplaySrc,
 			loaded,
 			cachedOnMount,
 			thumbHashURL,
@@ -900,7 +906,10 @@ export const EmbedGif: FC<
 			if (!shouldLoadMedia) return;
 			if (!animationPolicyAllowed) return;
 			if (activeSource === optimizedAnimatedURL) return;
-			return ImageCacheUtils.pinImage(optimizedAnimatedURL);
+			const fetchedKey = fetchedApiAttachmentKey(optimizedAnimatedURL);
+			return fetchedKey === null
+				? ImageCacheUtils.pinImage(optimizedAnimatedURL)
+				: apiAttachmentMedia.retain(fetchedKey);
 		}, [activeSource, animationPolicyAllowed, optimizedAnimatedURL, shouldLoadMedia]);
 		const defaultName = deriveDefaultNameFromMessage({
 			message,
@@ -1010,7 +1019,7 @@ export const EmbedGif: FC<
 					<img
 						ref={mediaRef}
 						alt={i18n._(ANIMATED_GIF_DESCRIPTOR)}
-						src={shouldLoadMedia ? activeSource : undefined}
+						src={shouldLoadMedia ? activeDisplaySrc : undefined}
 						className={styles.videoElement}
 						data-embed-media="gif"
 						loading="eager"

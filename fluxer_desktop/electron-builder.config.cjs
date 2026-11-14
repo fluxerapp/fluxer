@@ -1886,7 +1886,7 @@ module.exports = {
 		target: winTargets,
 	},
 	linux: {
-		icon: `build_resources/${iconDir}/1024x1024.png`,
+		icon: `build_resources/${iconDir}`,
 		category: 'Network;InstantMessaging;Chat;',
 		target: [
 			{

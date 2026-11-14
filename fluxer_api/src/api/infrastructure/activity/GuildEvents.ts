@@ -11,6 +11,7 @@ import {
 } from '@app/api/infrastructure/activity/Contract.generated';
 import type {Guild} from '@app/api/models/Guild';
 import type {Invite} from '@app/api/models/Invite';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 
 export async function emitGuildCreated(guild: Guild): Promise<void> {
 	await emitActivity(
@@ -53,6 +54,24 @@ export async function emitGuildFeaturesChanged(params: {
 		},
 		params.meta ?? null,
 		`${guildId}:${updated.version}`,
+	);
+}
+
+export async function emitPlannedJoinWavesRestated(params: {guild: Guild; day: number; meta: Meta}): Promise<void> {
+	const guildId = params.guild.id.toString();
+	await emitActivity(
+		'guild_features_changed',
+		guildKey(guildId),
+		{
+			guild_id: guildId,
+			actor_id: null,
+			source: 'staff',
+			added: [GuildFeatures.PLANNED_JOIN_WAVES],
+			removed: [],
+			invites_paused_until_ms: params.guild.invitesPausedUntil?.getTime() ?? null,
+		},
+		params.meta,
+		`${guildId}:planned_join_waves:${params.day}`,
 	);
 }
 

@@ -32,6 +32,8 @@ import {
 	VIDEO_PREVIEW_DESCRIPTOR,
 	type ZoomState,
 } from '@app/features/messaging/components/modals/media_modal/shared';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
@@ -40,12 +42,15 @@ import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {CaretLeftIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import LayerManager from '@app/features/ui/state/LayerManager';
+import MediaViewer from '@app/features/ui/state/MediaViewer';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getModalFocusInsideElements} from '@app/features/ui/utils/ModalUtils';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {MobileVideoViewer} from '@app/features/voice/components/modals/MobileVideoViewer';
+import {FloatingFocusManager, useFloating} from '@floating-ui/react';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
@@ -85,6 +90,38 @@ const FITTED_PAN_ZOOM_INFO: PanZoomInfo = {
 	canZoomOut: false,
 };
 
+const ThumbnailVideo: FC<{src: string; label: string}> = ({src, label}) => {
+	const playbackSrc = useApiAttachmentPlaybackSrc(src);
+	return (
+		<video
+			className={styles.thumbnailVideo}
+			src={playbackSrc}
+			muted
+			playsInline
+			preload="metadata"
+			aria-label={label}
+			onError={() => void AttachmentUrlRefresher.refresh(src, {force: true})}
+			data-flx="messaging.media-modal.thumbnail-video"
+		/>
+	);
+};
+
+const ThumbnailImage: FC<{src: string; alt: string}> = ({src, alt}) => {
+	const {ref, isNearViewport} = useNearViewport<HTMLImageElement>({rememberKey: src});
+	const displaySrc = useApiAttachmentSrc(src, isNearViewport);
+	return (
+		<img
+			ref={ref}
+			src={displaySrc}
+			alt={alt}
+			className={styles.thumbnailImage}
+			draggable={false}
+			onError={() => void AttachmentUrlRefresher.refresh(src, {force: true})}
+			data-flx="messaging.media-modal.thumbnail-image"
+		/>
+	);
+};
+
 export const MediaModal: FC<MediaModalProps> = observer(
 	({
 		title,
@@ -100,6 +137,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		onDeleteAttachment,
 		onReply,
 		onForward,
+		onViewPost,
 		children,
 		enablePanZoom = false,
 		currentIndex,
@@ -127,6 +165,10 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		const bottomInfoBarRef = useRef<HTMLDivElement>(null);
 		const thumbnailCarouselRef = useRef<HTMLDivElement>(null);
 		const latestIndexRef = useRef(currentIndex ?? 0);
+		const closeButtonRef = useRef<HTMLButtonElement>(null);
+		const returnFocusRef = useRef(MediaViewer.returnFocusTarget);
+		const {refs, context} = useFloating({open: true});
+		const getFocusInsideElements = useCallback(() => getModalFocusInsideElements(document), []);
 		const [topOverlayHeight, setTopOverlayHeight] = useState(0);
 		const [bottomOverlayHeight, setBottomOverlayHeight] = useState(0);
 		const measureOverlayHeights = useCallback(() => {
@@ -454,6 +496,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 			onRotateCCW: handleRotateCCW,
 			onReply,
 			onForward,
+			onViewPost,
 			onClose: handleClose,
 			canReset: !panZoomInfo.isDefault || hasCustomRotation,
 			canZoomIn: panZoomInfo.canZoomIn,
@@ -468,6 +511,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 				<MobileMediaActions
 					{...actionProps}
 					rootRef={topActionBarRef}
+					closeButtonRef={closeButtonRef}
 					data-flx="messaging.media-modal.mobile-media-actions"
 				/>
 			);
@@ -476,6 +520,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 				<MediaOverlayActions
 					{...actionProps}
 					rootRef={bottomActionBarRef}
+					closeButtonRef={closeButtonRef}
 					onDeleteAttachment={onDeleteAttachment}
 					data-flx="messaging.media-modal.media-overlay-actions"
 				/>
@@ -494,224 +539,227 @@ export const MediaModal: FC<MediaModalProps> = observer(
 						onClick={handleClose}
 						data-flx="messaging.media-modal.modal-backdrop.close"
 					/>
-					<motion.div
-						className={styles.modalContent}
-						initial={{opacity: 0}}
-						animate={{opacity: 1}}
-						exit={{opacity: 0}}
-						transition={prefersReducedMotion ? {duration: 0} : {duration: 0.2}}
-						role="dialog"
-						aria-modal="true"
-						aria-label={title}
-						data-flx="messaging.media-modal.modal-content"
+					<FloatingFocusManager
+						context={context}
+						initialFocus={closeButtonRef}
+						returnFocus={returnFocusRef}
+						outsideElementsInert
+						getInsideElements={getFocusInsideElements}
+						data-flx="messaging.media-modal.floating-focus-manager"
 					>
-						<div
-							className={styles.modalContentInner}
-							style={contentSizingStyle}
-							data-zoom-state={zoomState}
-							data-media-hud-hidden={shouldHideHud ? 'true' : undefined}
-							data-flx="messaging.media-modal.modal-content-inner"
+						<motion.div
+							ref={refs.setFloating}
+							className={styles.modalContent}
+							initial={{opacity: 0}}
+							animate={{opacity: 1}}
+							exit={{opacity: 0}}
+							transition={prefersReducedMotion ? {duration: 0} : {duration: 0.2}}
+							role="dialog"
+							aria-modal="true"
+							aria-label={title}
+							tabIndex={-1}
+							data-flx="messaging.media-modal.modal-content"
 						>
-							<div className={styles.mediaArea} data-flx="messaging.media-modal.media-area">
-								{mediaContent}
-							</div>
-							{currentIndex !== undefined && totalAttachments !== undefined && totalAttachments > 1 && !isMobile && (
-								<>
-									<div
-										className={styles.floatingNavButtonLeft}
-										onPointerEnter={handleHudPointerEnter}
-										onPointerLeave={handleHudPointerLeave}
-										data-flx="messaging.media-modal.floating-nav-button-left"
-									>
-										<Tooltip
-											text={i18n._(PREVIOUS_ATTACHMENT_2_DESCRIPTOR)}
-											position="right"
-											data-flx="messaging.media-modal.tooltip"
+							<div
+								className={styles.modalContentInner}
+								style={contentSizingStyle}
+								data-zoom-state={zoomState}
+								data-media-hud-hidden={shouldHideHud ? 'true' : undefined}
+								data-flx="messaging.media-modal.modal-content-inner"
+							>
+								<div className={styles.mediaArea} data-flx="messaging.media-modal.media-area">
+									{mediaContent}
+								</div>
+								{currentIndex !== undefined && totalAttachments !== undefined && totalAttachments > 1 && !isMobile && (
+									<>
+										<div
+											className={styles.floatingNavButtonLeft}
+											onPointerEnter={handleHudPointerEnter}
+											onPointerLeave={handleHudPointerLeave}
+											data-flx="messaging.media-modal.floating-nav-button-left"
 										>
-											<span data-flx="messaging.media-modal.span">
-												<FocusRing offset={-2} data-flx="messaging.media-modal.focus-ring--2">
-													<button
-														type="button"
-														className={styles.floatingNavButton}
-														onClick={onPrevious ?? (() => {})}
-														aria-label={i18n._(PREVIOUS_ATTACHMENT_2_DESCRIPTOR)}
-														data-flx="messaging.media-modal.floating-nav-button"
-													>
-														<CaretLeftIcon
-															size={remFromPx(24)}
-															weight="bold"
-															data-flx="messaging.media-modal.caret-left-icon"
-														/>
-													</button>
-												</FocusRing>
-											</span>
-										</Tooltip>
-									</div>
-									<div
-										className={styles.floatingNavButtonRight}
-										onPointerEnter={handleHudPointerEnter}
-										onPointerLeave={handleHudPointerLeave}
-										data-flx="messaging.media-modal.floating-nav-button-right"
-									>
-										<Tooltip
-											text={i18n._(NEXT_ATTACHMENT_2_DESCRIPTOR)}
-											position="left"
-											data-flx="messaging.media-modal.tooltip--2"
-										>
-											<span data-flx="messaging.media-modal.span--2">
-												<FocusRing offset={-2} data-flx="messaging.media-modal.focus-ring--3">
-													<button
-														type="button"
-														className={styles.floatingNavButton}
-														onClick={onNext ?? (() => {})}
-														aria-label={i18n._(NEXT_ATTACHMENT_2_DESCRIPTOR)}
-														data-flx="messaging.media-modal.floating-nav-button--2"
-													>
-														<CaretRightIcon
-															size={remFromPx(24)}
-															weight="bold"
-															data-flx="messaging.media-modal.caret-right-icon"
-														/>
-													</button>
-												</FocusRing>
-											</span>
-										</Tooltip>
-									</div>
-								</>
-							)}
-							{hasThumbnailCarousel && (
-								<div
-									ref={thumbnailCarouselRef}
-									className={styles.thumbnailCarouselWrapper}
-									onPointerEnter={handleHudPointerEnter}
-									onPointerLeave={handleHudPointerLeave}
-									data-flx="messaging.media-modal.thumbnail-carousel-wrapper"
-								>
-									<Scroller
-										className={styles.thumbnailCarouselScroller}
-										orientation="horizontal"
-										overflow="auto"
-										fade={false}
-										key="media-modal-thumbnail-carousel-scroller"
-										role="listbox"
-										aria-label={i18n._(ATTACHMENT_THUMBNAILS_DESCRIPTOR)}
-										onKeyDown={handleThumbnailKeyDown}
-										data-flx="messaging.media-modal.thumbnail-carousel-scroller.thumbnail-key-down"
-									>
-										<div className={styles.thumbnailCarousel} data-flx="messaging.media-modal.thumbnail-carousel">
-											{thumbnails?.map((thumb: MediaThumbnail, index: number) => {
-												const isSelected = currentIndex === index;
-												const isRovingTarget = rovingThumbnailIndex === index;
-												const isFirstThumbnail = index === 0;
-												const isLastThumbnail = index === thumbnailCount - 1;
-												const thumbnailLabel = thumb.alt ?? i18n._(ATTACHMENT_DESCRIPTOR, {index1: index + 1});
-												const thumbnailButtonClassName = clsx(
-													styles.thumbnailButton,
-													isSelected && styles.thumbnailButtonSelected,
-												);
-												const thumbnailWrapperClassName = clsx(
-													styles.thumbnailImageWrapper,
-													isFirstThumbnail && styles.thumbnailImageWrapperFirst,
-													isLastThumbnail && styles.thumbnailImageWrapperLast,
-												);
-												let thumbnailContent: ReactNode;
-												if (thumb.type === 'video' || thumb.type === 'gifv') {
-													thumbnailContent = (
-														<video
-															className={styles.thumbnailVideo}
-															src={thumb.src}
-															muted
-															playsInline
-															preload="metadata"
-															aria-label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)}
-															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
-															data-flx="messaging.media-modal.thumbnail-video"
-														/>
-													);
-												} else if (thumb.type === 'audio') {
-													thumbnailContent = (
-														<div
-															className={styles.thumbnailPlaceholder}
-															data-flx="messaging.media-modal.thumbnail-placeholder"
-														>
-															{i18n._(AUDIO_DESCRIPTOR)}
-														</div>
-													);
-												} else {
-													thumbnailContent = (
-														<img
-															src={thumb.src}
-															alt={thumb.alt ?? ''}
-															className={styles.thumbnailImage}
-															draggable={false}
-															onError={() => void AttachmentUrlRefresher.refresh(thumb.src, {force: true})}
-															data-flx="messaging.media-modal.thumbnail-image"
-														/>
-													);
-												}
-												return (
-													<FocusRing
-														key={`${thumb.src}-${index}`}
-														offset={-2}
-														data-flx="messaging.media-modal.focus-ring--4"
-													>
+											<Tooltip
+												text={i18n._(PREVIOUS_ATTACHMENT_2_DESCRIPTOR)}
+												position="right"
+												data-flx="messaging.media-modal.tooltip"
+											>
+												<span data-flx="messaging.media-modal.span">
+													<FocusRing offset={-2} data-flx="messaging.media-modal.focus-ring--2">
 														<button
-															ref={(el) => {
-																thumbnailButtonRefs.current[index] = el;
-															}}
 															type="button"
-															role="option"
-															aria-selected={isSelected}
-															aria-label={thumbnailLabel}
-															className={thumbnailButtonClassName}
-															tabIndex={isRovingTarget ? 0 : -1}
-															onClick={() => handleThumbnailSelect(index)}
-															onKeyDown={handleThumbnailKeyDown}
-															data-flx="messaging.media-modal.thumbnail-button.thumbnail-select"
+															className={styles.floatingNavButton}
+															onClick={onPrevious ?? (() => {})}
+															aria-label={i18n._(PREVIOUS_ATTACHMENT_2_DESCRIPTOR)}
+															data-flx="messaging.media-modal.floating-nav-button"
 														>
-															<div
-																className={thumbnailWrapperClassName}
-																data-flx="messaging.media-modal.thumbnail-image-wrapper"
-															>
-																{thumbnailContent}
-															</div>
+															<CaretLeftIcon
+																size={remFromPx(24)}
+																weight="bold"
+																data-flx="messaging.media-modal.caret-left-icon"
+															/>
 														</button>
 													</FocusRing>
-												);
-											})}
+												</span>
+											</Tooltip>
 										</div>
-									</Scroller>
-								</div>
-							)}
-							{mediaActions}
-							{!isMobile && (
-								<div
-									ref={bottomInfoBarRef}
-									className={styles.bottomInfoBar}
-									onPointerEnter={handleHudPointerEnter}
-									onPointerLeave={handleHudPointerLeave}
-									data-flx="messaging.media-modal.bottom-info-bar"
-								>
-									{[
-										fileName,
-										dimensions,
-										fileSize,
-										formatRoundedPercentage(getFormattingLocale(), panZoomInfo.zoomPercent),
-									]
-										.filter(Boolean)
-										.map((part, index) => (
-											<span
-												key={`${part}-${index}`}
-												className={styles.bottomInfoItem}
-												data-flx="messaging.media-modal.bottom-info-item"
+										<div
+											className={styles.floatingNavButtonRight}
+											onPointerEnter={handleHudPointerEnter}
+											onPointerLeave={handleHudPointerLeave}
+											data-flx="messaging.media-modal.floating-nav-button-right"
+										>
+											<Tooltip
+												text={i18n._(NEXT_ATTACHMENT_2_DESCRIPTOR)}
+												position="left"
+												data-flx="messaging.media-modal.tooltip--2"
 											>
-												{part}
-											</span>
-										))}
-								</div>
-							)}
-						</div>
-					</motion.div>
+												<span data-flx="messaging.media-modal.span--2">
+													<FocusRing offset={-2} data-flx="messaging.media-modal.focus-ring--3">
+														<button
+															type="button"
+															className={styles.floatingNavButton}
+															onClick={onNext ?? (() => {})}
+															aria-label={i18n._(NEXT_ATTACHMENT_2_DESCRIPTOR)}
+															data-flx="messaging.media-modal.floating-nav-button--2"
+														>
+															<CaretRightIcon
+																size={remFromPx(24)}
+																weight="bold"
+																data-flx="messaging.media-modal.caret-right-icon"
+															/>
+														</button>
+													</FocusRing>
+												</span>
+											</Tooltip>
+										</div>
+									</>
+								)}
+								{hasThumbnailCarousel && (
+									<div
+										ref={thumbnailCarouselRef}
+										className={styles.thumbnailCarouselWrapper}
+										onPointerEnter={handleHudPointerEnter}
+										onPointerLeave={handleHudPointerLeave}
+										data-flx="messaging.media-modal.thumbnail-carousel-wrapper"
+									>
+										<Scroller
+											className={styles.thumbnailCarouselScroller}
+											orientation="horizontal"
+											overflow="auto"
+											fade={false}
+											key="media-modal-thumbnail-carousel-scroller"
+											role="listbox"
+											aria-label={i18n._(ATTACHMENT_THUMBNAILS_DESCRIPTOR)}
+											onKeyDown={handleThumbnailKeyDown}
+											data-flx="messaging.media-modal.thumbnail-carousel-scroller.thumbnail-key-down"
+										>
+											<div className={styles.thumbnailCarousel} data-flx="messaging.media-modal.thumbnail-carousel">
+												{thumbnails?.map((thumb: MediaThumbnail, index: number) => {
+													const isSelected = currentIndex === index;
+													const isRovingTarget = rovingThumbnailIndex === index;
+													const isFirstThumbnail = index === 0;
+													const isLastThumbnail = index === thumbnailCount - 1;
+													const thumbnailLabel = thumb.alt ?? i18n._(ATTACHMENT_DESCRIPTOR, {index1: index + 1});
+													const thumbnailButtonClassName = clsx(
+														styles.thumbnailButton,
+														isSelected && styles.thumbnailButtonSelected,
+													);
+													const thumbnailWrapperClassName = clsx(
+														styles.thumbnailImageWrapper,
+														isFirstThumbnail && styles.thumbnailImageWrapperFirst,
+														isLastThumbnail && styles.thumbnailImageWrapperLast,
+													);
+													let thumbnailContent: ReactNode;
+													if (thumb.type === 'video' || thumb.type === 'gifv') {
+														thumbnailContent = (
+															<ThumbnailVideo
+																src={thumb.src}
+																label={thumb.alt ?? i18n._(VIDEO_PREVIEW_DESCRIPTOR)}
+																data-flx="messaging.media-modal.thumbnail-video"
+															/>
+														);
+													} else if (thumb.type === 'audio') {
+														thumbnailContent = (
+															<div
+																className={styles.thumbnailPlaceholder}
+																data-flx="messaging.media-modal.thumbnail-placeholder"
+															>
+																{i18n._(AUDIO_DESCRIPTOR)}
+															</div>
+														);
+													} else {
+														thumbnailContent = (
+															<ThumbnailImage
+																src={thumb.src}
+																alt={thumb.alt ?? ''}
+																data-flx="messaging.media-modal.thumbnail-image"
+															/>
+														);
+													}
+													return (
+														<FocusRing
+															key={`${thumb.src}-${index}`}
+															offset={-2}
+															data-flx="messaging.media-modal.focus-ring--4"
+														>
+															<button
+																ref={(el) => {
+																	thumbnailButtonRefs.current[index] = el;
+																}}
+																type="button"
+																role="option"
+																aria-selected={isSelected}
+																aria-label={thumbnailLabel}
+																className={thumbnailButtonClassName}
+																tabIndex={isRovingTarget ? 0 : -1}
+																onClick={() => handleThumbnailSelect(index)}
+																onKeyDown={handleThumbnailKeyDown}
+																data-flx="messaging.media-modal.thumbnail-button.thumbnail-select"
+															>
+																<div
+																	className={thumbnailWrapperClassName}
+																	data-flx="messaging.media-modal.thumbnail-image-wrapper"
+																>
+																	{thumbnailContent}
+																</div>
+															</button>
+														</FocusRing>
+													);
+												})}
+											</div>
+										</Scroller>
+									</div>
+								)}
+								{mediaActions}
+								{!isMobile && (
+									<div
+										ref={bottomInfoBarRef}
+										className={styles.bottomInfoBar}
+										onPointerEnter={handleHudPointerEnter}
+										onPointerLeave={handleHudPointerLeave}
+										data-flx="messaging.media-modal.bottom-info-bar"
+									>
+										{[
+											fileName,
+											dimensions,
+											fileSize,
+											formatRoundedPercentage(getFormattingLocale(), panZoomInfo.zoomPercent),
+										]
+											.filter(Boolean)
+											.map((part, index) => (
+												<span
+													key={`${part}-${index}`}
+													className={styles.bottomInfoItem}
+													data-flx="messaging.media-modal.bottom-info-item"
+												>
+													{part}
+												</span>
+											))}
+									</div>
+								)}
+							</div>
+						</motion.div>
+					</FloatingFocusManager>
 				</div>
 			</AnimatePresence>
 		);

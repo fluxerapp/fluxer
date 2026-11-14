@@ -481,7 +481,7 @@ export class WebCameraEffectPipeline implements WebCameraPipeline {
 				errorType: initialization.fallbackErrorType,
 			});
 		} else {
-			logger.info('voice.camera_effect_worker.initialized', {backend: initialization.backend});
+			logger.debug('voice.camera_effect_worker.initialized', {backend: initialization.backend});
 		}
 		return pipeline;
 	}

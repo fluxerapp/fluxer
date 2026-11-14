@@ -77,10 +77,14 @@ export const RichEmbed: FC<EmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.rich-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-author-component"
 							/>
 							<EmbedTitle

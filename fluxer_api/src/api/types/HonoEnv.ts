@@ -4,6 +4,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminService} from '@app/api/admin/AdminService';
 import type {AdminApiKeyService} from '@app/api/admin/services/AdminApiKeyService';
 import type {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
+import type {AttachmentMediaTokenPayload} from '@app/api/attachment/AttachmentMediaToken';
 import type {AuthRequestService} from '@app/api/auth/AuthRequestService';
 import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
 import type {SsoService} from '@app/api/auth/services/SsoService';
@@ -85,7 +86,7 @@ import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {Hono} from 'hono';
 
-export type AuthTokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key' | 'operator';
+export type AuthTokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key' | 'operator' | 'attachment_media';
 
 export interface HonoEnv {
 	Variables: {
@@ -102,6 +103,7 @@ export interface HonoEnv {
 		adminUserId: UserID;
 		adminUserAcls: Set<string>;
 		authTokenType?: AuthTokenType;
+		attachmentMediaToken?: AttachmentMediaTokenPayload;
 		clientFeatures: ReadonlySet<string>;
 		authToken?: string;
 		oauthBearerAllowed?: boolean;

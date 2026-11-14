@@ -52,7 +52,7 @@ export async function fetch(target: InstanceHTTPTarget): Promise<void> {
 	AuthSession.fetchPending();
 	try {
 		const sessions = await requestAuthSessions(target);
-		logger.info(`Fetched ${sessions.length} authentication sessions`);
+		logger.debug(`Fetched ${sessions.length} authentication sessions`);
 		AuthSession.fetchSuccess(sessions);
 	} catch (error) {
 		recordFetchFailure(error);
@@ -68,7 +68,7 @@ export async function logout(sessionIdHashes: SessionIdHashes, target: InstanceH
 	AuthSession.logoutPending();
 	try {
 		await requestSessionLogout(sessionIdHashes, target);
-		logger.info(`Successfully logged out ${sessionIdHashes.length} sessions`);
+		logger.debug(`Successfully logged out ${sessionIdHashes.length} sessions`);
 		AuthSession.logoutSuccess([...sessionIdHashes]);
 	} catch (error) {
 		recordLogoutFailure(error);

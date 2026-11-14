@@ -143,7 +143,7 @@ func runConfigEdit(ctx context.Context, app *App) error {
 		return ui.Refused("An upgrade of this instance hasn't finished.", "Run rexctl upgrade to finish it, then try again.")
 	}
 	if inst.State.IsNative() {
-		if err := nativeRoot(app.command); err != nil {
+		if err := nativeRoot(inst.Dir); err != nil {
 			return err
 		}
 		return app.Locked(ctx, inst, func() error { return editNativeSettings(ctx, app, inst) })

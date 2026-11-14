@@ -25,6 +25,7 @@ import {
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {
 	BACK_TO_SIGN_IN_DESCRIPTOR,
+	CONTINUE_DESCRIPTOR,
 	SIGN_IN_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -88,6 +89,14 @@ const SSO_PROVIDER_SIGN_IN_AGAIN_ERRORS = new Set(['login_required', 'consent_re
 const SSO_CONNECTED_DESCRIPTOR = msg({
 	message: 'Your account is connected to single sign-on.',
 	comment: 'Toast shown after the account was connected to single sign-on from account settings.',
+});
+const CONNECT_SSO_FAILED_DESCRIPTOR = msg({
+	message: "Couldn't connect single sign-on",
+	comment: 'Heading on the SSO callback page when connecting single sign-on from account settings failed.',
+});
+const CONNECTING_SSO_DESCRIPTOR = msg({
+	message: 'Connecting single sign-on…',
+	comment: 'Heading on the SSO callback page while connecting single sign-on from account settings.',
 });
 const SSO_TIMEOUT_MS = 30_000;
 const logger = new Logger('SsoCallbackPage');
@@ -294,11 +303,19 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 		}
 		RouterUtils.replaceWith('/login');
 	}, [pendingContext, runtimeTarget, state]);
+	const isLink = pendingContext?.link === true;
+	const handleContinue = useCallback(() => {
+		if (state != null && state.length > 0) {
+			consumeSsoPendingContext(state);
+		}
+		RouterUtils.replaceWith(Routes.ME);
+	}, [state]);
 	const handleRetry = useCallback(async () => {
 		setError(null);
 		setIsProcessing(true);
 		try {
-			const runtimeSnapshot = pendingContext?.runtimeSnapshot ?? runtimeTarget.snapshot;
+			const runtimeSnapshot =
+				pendingContext == null ? null : (pendingContext.runtimeSnapshot ?? runtimeTarget.snapshot);
 			if (runtimeSnapshot == null) {
 				RouterUtils.replaceWith('/login');
 				return;
@@ -394,6 +411,38 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			/>
 		);
 	}
+	if (error != null && isLink) {
+		return (
+			<flx-auth-sso-callback-page
+				className={flxElementClassName(styles.loginContainer)}
+				data-flx="auth.sso-callback-page.login-container--link"
+			>
+				<h1 className={styles.title} data-flx="auth.sso-callback-page.title--link">
+					{i18n._(CONNECT_SSO_FAILED_DESCRIPTOR)}
+				</h1>
+				<flx-auth-sso-callback-page-notice
+					aria-live="assertive"
+					className={flxElementClassName(styles.loginNotice)}
+					data-flx="auth.sso-callback-page.login-notice--link"
+				>
+					{error.message}
+				</flx-auth-sso-callback-page-notice>
+				<flx-auth-sso-callback-page-actions
+					className={flxElementClassName(styles.ssoCallbackActions)}
+					data-flx="auth.sso-callback-page.sso-callback-actions--link"
+				>
+					<button
+						type="button"
+						onClick={handleContinue}
+						className={styles.ssoBackButton}
+						data-flx="auth.sso-callback-page.sso-continue-button"
+					>
+						{i18n._(CONTINUE_DESCRIPTOR)}
+					</button>
+				</flx-auth-sso-callback-page-actions>
+			</flx-auth-sso-callback-page>
+		);
+	}
 	if (error != null) {
 		return (
 			<flx-auth-sso-callback-page
@@ -420,7 +469,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 					className={flxElementClassName(styles.ssoCallbackActions)}
 					data-flx="auth.sso-callback-page.sso-callback-actions"
 				>
-					{error.awaitingApproval ? null : (
+					{error.awaitingApproval || pendingContext == null ? null : (
 						<button
 							type="button"
 							onClick={handleRetry}
@@ -448,7 +497,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			data-flx="auth.sso-callback-page.login-container--2"
 		>
 			<h1 className={styles.title} data-flx="auth.sso-callback-page.title--2">
-				<Trans>Completing sign-in…</Trans>
+				{isLink ? i18n._(CONNECTING_SSO_DESCRIPTOR) : <Trans>Completing sign-in…</Trans>}
 			</h1>
 			{isProcessing && (
 				<p className={styles.ssoProcessingHint} role="status" data-flx="auth.sso-callback-page.sso-processing-hint">

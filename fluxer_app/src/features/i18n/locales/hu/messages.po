@@ -1268,6 +1268,12 @@ msgstr "{count, plural, one {# közös közösség} other {# közös közösség
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# új üzenet} other {# új üzenet}}"
 
+#. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "{count, plural, one {# new} other {# new}}"
+msgstr ""
+
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {# Operator Pass} other {# Operator Passes}}"
@@ -1794,7 +1800,7 @@ msgstr "{mentionCount, plural, one {# említés} other {# említés}}"
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# említés} other {# említés}} {accountCount, plural, one {# másik fiókban} other {# másik fiókban}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing}px"
@@ -2450,6 +2456,11 @@ msgstr "{username} hívást indított."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} új szálat indított: {threadName}"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -6895,6 +6906,11 @@ msgstr "Gomb helyi menüvel"
 msgid "Buttons"
 msgstr "Gombok"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Az alkalmazás gombjai és kiemelései ezt a színt használják, a telefonos böngészők pedig az eszköztárukhoz. Állítsd vissza, ha a Fluxer indigó színét szeretnéd megtartani."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "A gombok kattintásra helyi menüt nyithatnak meg, ha az onClick eseményt közvetlenül az openContextMenu kapja meg."
@@ -6911,11 +6927,6 @@ msgstr "A gombok betöltésjelzőt mutatnak, ha a submitting értéke true."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Gombok ikonokkal"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Az alkalmazás gombjai, hivatkozásai és kiemelései ezt a színt használják, a telefonos böngészők pedig az eszköztárukhoz. Állítsd vissza, ha a Fluxer indigó színét szeretnéd megtartani."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -7930,7 +7941,7 @@ msgid "Channel access"
 msgstr "Csatorna-hozzáférés"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Csatorna-hozzáférés megtagadva"
 
@@ -8145,7 +8156,7 @@ msgstr "Csevegés betűtípusa"
 msgid "Chat font scaling"
 msgstr "Csevegés betűméretezése"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "Csevegés betűmérete"
@@ -10052,6 +10063,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Connecticut"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10933,6 +10949,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Nem sikerült befejezni a bejelentkezést. Próbáld újra."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Nem sikerült összekapcsolni az egyszeri bejelentkezést"
@@ -11180,6 +11198,10 @@ msgstr "Nem sikerült betölteni ezt a közösséget. Próbáld meg később új
 #: src/features/platform/components/loadable/LoadableComponent.tsx
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "Nem sikerült betölteni az alkalmazás ezen részét. Ellenőrizze a kapcsolatát, és próbálkozzon újra."
+
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
 
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
@@ -13358,13 +13380,13 @@ msgstr "Fejlesztői állapot"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Fejlesztői eszközök"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "A fejlesztői eszközök a csatornafejlécben található személyzeti jelvényről érhetők el."
 
@@ -13516,6 +13538,7 @@ msgstr "Közvetlen üzenetek előnézete"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17566,6 +17589,11 @@ msgstr "A barátaid mindig üzenhetnek neked."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "A barátok mindig üzenhetnek neked. Ezek a beállítások azokra az emberekre és botokra vonatkoznak, akikkel csak egy közösséget osztasz meg."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "A barátok továbbra is küldhetnek egymásnak közvetlen üzenetet, ahogy azok a tagok is, akiknek van másik közös közösségük. A botokra ez nem vonatkozik."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21534,7 +21562,7 @@ msgid "Link styling"
 msgstr "Linkstílus"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "A hivatkozás nem érhető el"
 
@@ -24193,6 +24221,12 @@ msgstr "Soha ne automatikusan"
 msgid "New"
 msgstr "Új"
 
+#. Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "New"
+msgstr ""
+
 #. Small badge on a new or recently added app navigation item.
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgctxt "navigation-badge"
@@ -26256,6 +26290,11 @@ msgstr "Fizetési oldal újbóli megnyitása"
 msgid "Open popup"
 msgstr "Felugró ablak megnyitása"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Bejegyzés megnyitása"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
@@ -26341,6 +26380,11 @@ msgstr "Nyisd meg a Rendszerbeállítások > Adatvédelem és biztonság > Képe
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "Open template JSON"
 msgstr "Sablon JSON-jának megnyitása"
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Nyisd meg a(z) {PRODUCT_NAME} alkalmazást, amelybe bejelentkezel, válaszd a „Bejelentkezel egy másik eszközön?” lehetőséget, és írd be ide az általa mutatott kódot. Csak olyan kódot adj meg, amelyik egy általad felügyelt eszközről származik."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -36671,11 +36715,6 @@ msgstr "Ennyi volt az összes."
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "A(z) {PRODUCT_NAME} alkalmazás a(z) {requestedIdentifier} fiókkal szeretett volna bejelentkezni, de Ön a(z) {name} fiókot választotta."
 
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "A(z) {PRODUCT_NAME} alkalmazás a másik eszközödön a „Bejelentkezés másik eszközön” alatt jelenik meg. Csak olyan kódot adj meg, amelyik egy általad felügyelt eszközről származik."
-
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
@@ -37627,6 +37666,11 @@ msgstr "Ez a közösség szünetelteti a meghívókat."
 msgid "This community has paused invites. You can try again later."
 msgstr "Ez a közösség szünetelteti a meghívókat. Később újra próbálkozhatsz."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "Ez a közösség kikapcsolta a közvetlen üzeneteket azok között a tagok között, akik nem barátok"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38065,7 +38109,7 @@ msgid "This link has expired"
 msgstr "Ez a link lejárt"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Ez a hivatkozás nem érhető el a fiókod számára."
 
@@ -38744,6 +38788,11 @@ msgstr "Webhook létrehozásához nyisd meg ezt: <0>{channelWebhooksSettingsPath
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Ha be akarsz engedni embereket, hozz létre regisztrációs linket az adminisztrációs panelen."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "A tulajdonjog átruházásához lépj a(z) {generalSettingsPath} menüpontba, és használd a tulajdonjog átruházása opciót."
@@ -39343,6 +39392,11 @@ msgstr "Eszköz kamerájának kikapcsolása"
 msgid "Turn off device stream"
 msgstr "Eszköz streamjének kikapcsolása"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "Közvetlen üzenetek kikapcsolása azok között a tagok között, akik nem barátok"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39415,6 +39469,16 @@ msgstr "Szöveges emotikonok cseréje emojikra"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Kapcsold be ezt a témát, hogy lásd a változtatásaidat az alkalmazásban."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "Újra bekapcsolta a közvetlen üzeneteket azok között a tagok között, akik nem barátok"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "Kikapcsolta a közvetlen üzeneteket azok között a tagok között, akik nem barátok"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43847,7 +43911,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "A(z) {PREMIUM_PRODUCT_NAME} használata közben megváltoztattad a címkédet. Ha a(z) {PREMIUM_PRODUCT_NAME} nem újul meg, a lejáratakor véletlenszerű új címkét kapsz."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nincs hozzáférésed ahhoz a csatornához, ahová ezt az üzenetet küldték."
 
@@ -44816,6 +44880,11 @@ msgstr "Az üzenetedet nem sikerült kézbesíteni, mert a biztonsági rendszere
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Az üzenetedet nem sikerült kézbesíteni, mert a biztonsági rendszereink megjelölték. Ha úgy gondolod, ez tévedés, kérjük, vedd fel a kapcsolatot ennek a példánynak az adminisztrátoraival."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Az üzenetedet nem sikerült kézbesíteni. Egy közösség, amelyben ezzel a személlyel együtt vagy, kikapcsolta a közvetlen üzeneteket azok között a tagok között, akik nem barátok."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

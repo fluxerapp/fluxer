@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ssoIdentityTraits} from '@app/api/auth/services/SsoIdentityLinks';
 import {
 	deriveSudoMethods,
 	hasNoVerifiableCredential,
@@ -12,6 +13,8 @@ import {User} from '@app/api/models/User';
 import {getAccountTier} from '@app/api/user/AccountTier';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, it} from 'vitest';
+
+const PROVIDER_ID = 'https://idp.example.test';
 
 function createUser(overrides: Partial<UserRow> = {}): User {
 	return new User({
@@ -34,23 +37,40 @@ describe('sudo verification credential capability', () => {
 	});
 
 	it('offers signing in again with SSO to an SSO account without credentials', () => {
-		const user = createUser({password_hash: null, traits: new Set<string>(['sso'])});
-		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(true);
+		const user = createUser({
+			password_hash: null,
+			traits: new Set<string>(ssoIdentityTraits(PROVIDER_ID, 'subject-1')),
+		});
+		expect(deriveSudoMethods(user, false, false, PROVIDER_ID).sso_reauth).toBe(true);
 	});
 
 	it('does not offer signing in again with SSO while SSO is off', () => {
-		const user = createUser({password_hash: null, traits: new Set<string>(['sso'])});
-		expect(deriveSudoMethods(user, false, false, false).sso_reauth).toBe(false);
+		const user = createUser({
+			password_hash: null,
+			traits: new Set<string>(ssoIdentityTraits(PROVIDER_ID, 'subject-1')),
+		});
+		expect(deriveSudoMethods(user, false, false, null).sso_reauth).toBe(false);
+	});
+
+	it('does not offer signing in again with SSO to an account linked only to a previous provider', () => {
+		const user = createUser({
+			password_hash: null,
+			traits: new Set<string>(ssoIdentityTraits('https://old-idp.example.test', 'subject-1')),
+		});
+		expect(deriveSudoMethods(user, false, false, PROVIDER_ID).sso_reauth).toBe(false);
 	});
 
 	it('does not offer signing in again with SSO to an SSO account with a password', () => {
-		const user = createUser({password_hash: 'hash', traits: new Set<string>(['sso'])});
-		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(false);
+		const user = createUser({
+			password_hash: 'hash',
+			traits: new Set<string>(ssoIdentityTraits(PROVIDER_ID, 'subject-1')),
+		});
+		expect(deriveSudoMethods(user, false, false, PROVIDER_ID).sso_reauth).toBe(false);
 	});
 
 	it('does not offer signing in again with SSO to an unclaimed account', () => {
 		const user = createUser({password_hash: null});
-		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(false);
+		expect(deriveSudoMethods(user, false, false, PROVIDER_ID).sso_reauth).toBe(false);
 	});
 
 	it('still lets an unclaimed account satisfy sudo mode', () => {

@@ -227,7 +227,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 			const expectedKeyBytes = urlBase64ToUint8Array(publicVapidKey);
 			const keyMatches = existingKey ? buffersEqual(existingKey, expectedKeyBytes) : false;
 			if (existingSubscription && !keyMatches) {
-				logger.info('VAPID key mismatch; resubscribing push');
+				logger.debug('VAPID key mismatch; resubscribing push');
 				try {
 					await existingSubscription.unsubscribe();
 				} catch (error) {
@@ -277,7 +277,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 						},
 					});
 			writeLastEndpoint(subscription.endpoint);
-			logger.info('Registered push subscription', {
+			logger.debug('Registered push subscription', {
 				subscriptionId: response.body.subscription_id,
 				rotated: isRotation,
 			});

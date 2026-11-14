@@ -84,6 +84,7 @@ void fluxer_free_int_array(int *values);
 
 int fluxer_heif_validate(
     const void *buf, size_t len, long long deadline_monotonic_ms);
+int fluxer_bmff_sample_tables_validate(const void *buf, size_t len);
 
 struct fluxer_heif_primary_still_decode_facts {
     int hdr_tone_mapped;

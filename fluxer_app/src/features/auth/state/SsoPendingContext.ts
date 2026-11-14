@@ -22,6 +22,7 @@ const STORED_SSO_PENDING_CONTEXT_KEYS: ReadonlyArray<string> = [
 	...PRE_BINDING_SSO_PENDING_CONTEXT_KEYS,
 	'clientBinding',
 ];
+const LINK_SSO_PENDING_CONTEXT_KEYS: ReadonlyArray<string> = [...STORED_SSO_PENDING_CONTEXT_KEYS, 'link'];
 
 const LEGACY_SSO_REDIRECT_TO_STORAGE_KEY = 'fluxer:sso:redirect_to';
 
@@ -31,6 +32,7 @@ export interface SsoPendingContext {
 	readonly redirectTo: string | null;
 	readonly runtimeSnapshot: RuntimeConfigSnapshot | null;
 	readonly clientBinding: string | null;
+	readonly link?: true;
 }
 
 interface StoredSsoPendingContext extends SsoPendingContext {
@@ -129,9 +131,14 @@ function parseStoredContext(raw: string, nowMs: number): StoredSsoPendingContext
 		return null;
 	}
 	if (
+		!isExactRecord(value, LINK_SSO_PENDING_CONTEXT_KEYS) &&
 		!isExactRecord(value, STORED_SSO_PENDING_CONTEXT_KEYS) &&
 		!isExactRecord(value, PRE_BINDING_SSO_PENDING_CONTEXT_KEYS)
 	) {
+		return null;
+	}
+	const link = value['link'];
+	if (link !== undefined && link !== true) {
 		return null;
 	}
 	const createdAtMs = value['createdAtMs'];
@@ -157,7 +164,9 @@ function parseStoredContext(raw: string, nowMs: number): StoredSsoPendingContext
 	if (clientBinding !== null && typeof clientBinding !== 'string') {
 		return null;
 	}
-	return {createdAtMs, redirectTo, runtimeSnapshot, clientBinding};
+	return link === true
+		? {createdAtMs, redirectTo, runtimeSnapshot, clientBinding, link}
+		: {createdAtMs, redirectTo, runtimeSnapshot, clientBinding};
 }
 
 function removeStoredContext(key: string): void {
@@ -195,14 +204,10 @@ function pruneStoredContexts(retainedEntries: number, excludedKey: string | null
 		removeStoredContext(entry.key);
 	}
 	return new Map(
-		entries.slice(0, retainedEntries).map((entry) => [
-			entry.key,
-			{
-				redirectTo: entry.context.redirectTo,
-				runtimeSnapshot: entry.context.runtimeSnapshot,
-				clientBinding: entry.context.clientBinding,
-			},
-		]),
+		entries.slice(0, retainedEntries).map((entry) => {
+			const {createdAtMs: _createdAtMs, ...context} = entry.context;
+			return [entry.key, context] as const;
+		}),
 	);
 }
 
@@ -220,6 +225,7 @@ function serializeStoredContext(createdAtMs: number, context: SsoPendingContext)
 		expiresAtMs: createdAtMs + PENDING_SSO_CONTEXT_TTL_MS,
 		instance: context.runtimeSnapshot,
 		redirectTo,
+		...(context.link ? {link: true} : {}),
 	});
 	if (serialized.length > PENDING_SSO_CONTEXT_JSON_MAX_LENGTH) {
 		throw new Error('SSO pending context exceeds its storage contract');

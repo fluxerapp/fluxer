@@ -19,7 +19,8 @@ export_state(State) ->
         caller_id => maps:get(caller_id, State, undefined),
         caller_name => maps:get(caller_name, State, undefined),
         caller_avatar => maps:get(caller_avatar, State, undefined),
-        voice_states => maps:get(voice_states, State, #{}),
+        voice_states => call_state:voice_states_by_user(maps:get(voice_states, State, #{})),
+        connection_voice_states => maps:get(voice_states, State, #{}),
         sessions => export_sessions(maps:get(sessions, State, #{})),
         pending_connections => maps:get(pending_connections, State, #{}),
         initiator_ready => maps:get(initiator_ready, State, true),
@@ -33,9 +34,7 @@ export_state(State) ->
 -spec restore_state(map()) -> map().
 restore_state(TransferState) ->
     Sessions = restore_sessions(maps:get(sessions, TransferState, #{})),
-    VoiceStates = restore_voice_states(
-        maps:get(voice_states, TransferState, #{}), Sessions
-    ),
+    VoiceStates = restore_voice_states(transferred_voice_states(TransferState), Sessions),
     State0 = #{
         channel_id => maps:get(channel_id, TransferState),
         message_id => maps:get(message_id, TransferState),
@@ -114,6 +113,12 @@ maybe_restore_session(SessionId, UserId, SessionPid, Acc) ->
             Acc
     end.
 
+-spec transferred_voice_states(map()) -> map().
+transferred_voice_states(#{connection_voice_states := VoiceStates}) when is_map(VoiceStates) ->
+    VoiceStates;
+transferred_voice_states(TransferState) ->
+    call_state:voice_states_by_connection(maps:get(voice_states, TransferState, #{})).
+
 -spec restore_voice_states(map(), map()) -> map().
 restore_voice_states(VoiceStates, Sessions) ->
     ActiveUsers = maps:fold(
@@ -122,7 +127,9 @@ restore_voice_states(VoiceStates, Sessions) ->
         Sessions
     ),
     maps:filter(
-        fun(UserId, _VoiceState) -> sets:is_element(UserId, ActiveUsers) end,
+        fun(_ConnectionId, VoiceState) ->
+            sets:is_element(voice_state_utils:voice_state_user_id(VoiceState), ActiveUsers)
+        end,
         VoiceStates
     ).
 

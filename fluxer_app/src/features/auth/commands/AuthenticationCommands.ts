@@ -310,7 +310,7 @@ export async function login(params: LoginParams): Promise<LoginResponse | IpAuth
 		if (error instanceof HttpError) {
 			const ipAuthorization = loginIpAuthorizationResponse(error);
 			if (ipAuthorization) {
-				logger.info('Login requires IP authorization', {email: params.email});
+				logger.debug('Login requires IP authorization', {email: params.email});
 				return ipAuthorization;
 			}
 		}
@@ -438,7 +438,7 @@ export async function register(data: RegisterRequest, target: InstanceHTTPTarget
 			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
-		logger.info('Registration successful');
+		logger.debug('Registration successful');
 		return responseBody;
 	} catch (error) {
 		logger.error('Registration failed', error);
@@ -524,7 +524,7 @@ export async function resetPassword(
 			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
-		logger.info('Password reset successful');
+		logger.debug('Password reset successful');
 		return responseBody;
 	} catch (error) {
 		logger.error('Password reset failed', error);
@@ -551,7 +551,7 @@ export async function recoverAccount({
 			body: {login, recovery_key: recoveryKey, password},
 			headers: withAuthLocaleHeader(),
 		});
-		logger.info('Account recovery successful');
+		logger.debug('Account recovery successful');
 		return response.body;
 	} catch (error) {
 		logger.error('Account recovery failed', error);
@@ -573,7 +573,7 @@ export async function revertEmailChange(
 			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
-		logger.info('Email revert successful');
+		logger.debug('Email revert successful');
 		return responseBody;
 	} catch (error) {
 		logger.error('Email revert failed', error);
@@ -590,7 +590,7 @@ export async function verifyEmail(token: string, target: InstanceHTTPTarget): Pr
 			body: tokenBody(token),
 			headers: withAuthLocaleHeader(),
 		});
-		logger.info('Email verification successful');
+		logger.debug('Email verification successful');
 		return VerificationResult.SUCCESS;
 	} catch (error) {
 		const result = verificationResultFromError(error, VerificationResult.EXPIRED_TOKEN, 400);
@@ -611,7 +611,7 @@ export async function resendVerificationEmail(target: InstanceHTTPTarget): Promi
 			target,
 			headers: withAuthLocaleHeader(),
 		});
-		logger.info('Verification email resent');
+		logger.debug('Verification email resent');
 		return VerificationResult.SUCCESS;
 	} catch (error) {
 		const result = verificationResultFromError(error, VerificationResult.RATE_LIMITED, 429);
@@ -650,7 +650,7 @@ export async function authorizeIp(token: string, target: InstanceHTTPTarget): Pr
 			body: tokenBody(token),
 			headers: withAuthLocaleHeader(),
 		});
-		logger.info('IP authorization successful');
+		logger.debug('IP authorization successful');
 		return VerificationResult.SUCCESS;
 	} catch (error) {
 		const result = verificationResultFromError(error, VerificationResult.EXPIRED_TOKEN, 400);
@@ -823,7 +823,7 @@ export async function completeLogin(
 	{token, userId, userData, runtimeSnapshot}: CompleteLoginPayload,
 	options: CompleteLoginOptions = {},
 ): Promise<void> {
-	logger.info('Completing login process');
+	logger.debug('Completing login process');
 	await Accounts.switchToNewAccount({
 		userId: requireLoginCredential(userId, 'userId'),
 		token: requireLoginCredential(token, 'token'),

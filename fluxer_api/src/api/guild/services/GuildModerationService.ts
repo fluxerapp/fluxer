@@ -28,6 +28,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {UnknownGuildBanError} from '@fluxer/errors/src/domains/guild/UnknownGuildBanError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -228,6 +229,21 @@ export class GuildModerationService {
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		const bans = await this.guildRepository.listBans(guildId);
 		return await mapGuildBansToResponse(bans, this.userCacheService, requestCache);
+	}
+
+	async getBan(params: {
+		userId: UserID;
+		guildId: GuildID;
+		targetId: UserID;
+		requestCache: RequestCache;
+	}): Promise<GuildBanResponse> {
+		const {userId, guildId, targetId, requestCache} = params;
+		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
+		const ban = await this.guildRepository.getBan(guildId, targetId);
+		if (!ban) throw new UnknownGuildBanError();
+		const [response] = await mapGuildBansToResponse([ban], this.userCacheService, requestCache);
+		if (!response) throw new UnknownGuildBanError();
+		return response;
 	}
 
 	async unbanMember(

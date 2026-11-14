@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
-import type {CallVoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import Users from '@app/features/user/state/Users';
 import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallAvailability from '@app/features/voice/state/CallAvailability';
@@ -12,7 +12,7 @@ interface CallUpdatePayload {
 	message_id?: string;
 	region?: string;
 	ringing?: Array<string>;
-	voice_states?: Array<CallVoiceState>;
+	voice_states?: Array<VoiceState>;
 }
 
 export function handleCallUpdate(data: CallUpdatePayload, _context: GatewayHandlerContext): void {
@@ -25,5 +25,6 @@ export function handleCallUpdate(data: CallUpdatePayload, _context: GatewayHandl
 	};
 	CallAvailability.setCallAvailable(data.channel_id);
 	CallState.handleCallUpdate(callData);
+	if (data.voice_states) VoiceRuntime.handleCallVoiceStates(data.channel_id, data.voice_states);
 	if (CallState.isUserPendingRinging(data.channel_id, Users.currentUserId)) VoiceRuntime.handleCallRing();
 }

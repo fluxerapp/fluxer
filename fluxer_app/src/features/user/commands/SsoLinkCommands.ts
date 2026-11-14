@@ -15,6 +15,7 @@ export async function connectSso(): Promise<void> {
 		redirectTo: null,
 		runtimeSnapshot: RuntimeConfig.getSnapshot(),
 		clientBinding: body.client_binding,
+		link: true,
 	});
 	await navigateToExternalURL(body.authorization_url);
 }

@@ -257,25 +257,31 @@ mv -f "$tmp/out/rexctl" "$bin_dir/rexctl.new"
 mv -f "$bin_dir/rexctl.new" "$bin_dir/rexctl"
 printf '%s Installed rexctl %s\n' "$glyph_ok" "$version" >&2
 
+case $bin_dir in
+	"$HOME"/*)
+		shown="~${bin_dir#"$HOME"}"
+		path_dir="\$HOME${bin_dir#"$HOME"}"
+		;;
+	*)
+		shown=$bin_dir
+		path_dir=$bin_dir
+		;;
+esac
+
 case ":$PATH:" in
 	*":$bin_dir:"*) ;;
 	*)
-		case $bin_dir in
-			"$HOME"/*)
-				shown="~${bin_dir#"$HOME"}"
-				path_dir="\$HOME${bin_dir#"$HOME"}"
-				;;
-			*)
-				shown=$bin_dir
-				path_dir=$bin_dir
-				;;
-		esac
 		printf '%s rexctl is in %s, which isn'"'"'t on your PATH yet.\n' "$glyph_warn" "$shown" >&2
 		printf '  Run it as %s/rexctl for now. To run rexctl by name in this terminal, run:\n' "$shown" >&2
 		printf '  export PATH="%s:%s"\n' "$path_dir" "\$PATH" >&2
 		printf '  On most Linux distributions, rexctl works by name in a new terminal.\n' >&2
 		;;
 esac
+
+if [ "$os" = linux ] && [ "$bin_dir" != /usr/local/bin ]; then
+	printf '  sudo doesn'"'"'t look in %s. To run rexctl with sudo, use its full path, such as:\n' "$shown" >&2
+	printf '  sudo %s/rexctl status\n' "$shown" >&2
+fi
 
 rm -rf "$tmp"
 trap - EXIT INT HUP TERM

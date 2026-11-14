@@ -206,7 +206,7 @@ class AccountStorage {
 		}
 		if (rekeyed.length > 0) {
 			await this.browserRepository.writeMigration(rekeyed);
-			logger.info(`Re-keyed ${rekeyed.length} stored accounts onto ${instance.apiEndpoint}`);
+			logger.debug(`Re-keyed ${rekeyed.length} stored accounts onto ${instance.apiEndpoint}`);
 		}
 		return moves;
 	}

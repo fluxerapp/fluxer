@@ -144,7 +144,7 @@ export async function uploadFileInChunks(plan: ChunkedUploadPlan, hooks: Chunked
 							const hinted = error instanceof HttpError ? resolveRetryAfterMs(error) : null;
 							const retryAfter = hinted === null ? null : Math.min(hinted, PART_RETRY_HARD_CAP_MS);
 							const delay = retryAfter !== null ? Math.max(retryAfter, backoffDelay) : backoffDelay;
-							logger.info(
+							logger.debug(
 								`Part ${part.partNumber} attempt ${attempt} failed, retrying in ${Math.round(delay)}ms${
 									retryAfter !== null ? ' (server hint)' : ''
 								}`,

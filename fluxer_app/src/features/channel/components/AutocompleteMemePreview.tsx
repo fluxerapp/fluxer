@@ -4,6 +4,7 @@ import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimated
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {MusicNoteIcon} from '@phosphor-icons/react';
@@ -13,6 +14,7 @@ import {useRef} from 'react';
 const AutocompleteMemeVideo = ({src}: {src: string}) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const playbackAllowed = useAnimatedMediaVideoPlayback(videoRef);
+	const playbackSrc = useApiAttachmentPlaybackSrc(src || undefined);
 	return (
 		<video
 			ref={videoRef}
@@ -22,7 +24,7 @@ const AutocompleteMemeVideo = ({src}: {src: string}) => {
 			loop
 			playsInline
 			preload="auto"
-			src={src || undefined}
+			src={playbackSrc}
 			data-flx="channel.autocomplete-meme-preview.meme-video"
 		/>
 	);
@@ -34,6 +36,9 @@ export const AutocompleteMemePreview = observer(({meme}: {meme: FavoriteMeme}) =
 	const isAnimatedImageMeme = !isVideoMeme && !isAudioMeme && contentType.includes('gif');
 	const motionAllowed = useShouldAnimate({kind: 'gif', isAnimated: isVideoMeme || isAnimatedImageMeme});
 	const memeUrl = AttachmentUrlRefresher.freshWhenReady(meme.url, {refreshUnsigned: true}) ?? '';
+	const needsStillFrame = (isVideoMeme || isAnimatedImageMeme) && !motionAllowed;
+	const imageSrc = needsStillFrame && memeUrl ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
+	const imageDisplaySrc = useApiAttachmentSrc(imageSrc, !isAudioMeme && !(isVideoMeme && motionAllowed));
 	if (isAudioMeme) {
 		return (
 			<div className={styles.audioIconWrapper} data-flx="channel.autocomplete-meme-preview.audio-icon-wrapper">
@@ -48,12 +53,11 @@ export const AutocompleteMemePreview = observer(({meme}: {meme: FavoriteMeme}) =
 	if (isVideoMeme && motionAllowed) {
 		return <AutocompleteMemeVideo src={memeUrl} data-flx="channel.autocomplete-meme-preview.autocomplete-meme-video" />;
 	}
-	const needsStillFrame = (isVideoMeme || isAnimatedImageMeme) && !motionAllowed;
 	return (
 		<img
 			draggable={false}
 			className={styles.memeIcon}
-			src={(needsStillFrame && memeUrl ? buildStaticGifPreviewURL(memeUrl) : memeUrl) || undefined}
+			src={imageDisplaySrc || undefined}
 			alt={meme.name}
 			aria-hidden={true}
 			data-flx="channel.autocomplete-meme-preview.meme-icon"

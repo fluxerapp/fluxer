@@ -50,15 +50,12 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
     }
     if let Some(rest) = path.strip_prefix("/external/") {
         let (signature, proxy_path) = rest.split_once('/')?;
-        if !fluxer_common::external_media_path::verify_signature(
+        let target = fluxer_common::external_media_path::verify_signed_proxy_path(
             proxy_path,
             signature,
             app.cfg.secret_key.as_bytes(),
-        ) {
-            return None;
-        }
-        let target =
-            fluxer_common::external_media_path::reconstruct_original_url(proxy_path).ok()?;
+        )
+        .ok()?;
         if own_path(endpoint, &target).is_some() {
             return None;
         }

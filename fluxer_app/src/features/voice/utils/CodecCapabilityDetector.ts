@@ -137,7 +137,7 @@ function probeRawCapabilities(): RawProbeResult {
 		caps.h264 = true;
 	}
 	if (probedSuccessfully) {
-		logger.info('Codec capabilities probed', {capabilities: caps});
+		logger.debug('Codec capabilities probed', {capabilities: caps});
 	}
 	return {caps, probedSuccessfully};
 }

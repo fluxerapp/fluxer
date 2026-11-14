@@ -34,6 +34,8 @@ import (
 
 const nativeCommands = "rexctl start, stop, restart, down, status, logs, config, backup, restore or upgrade"
 
+const nativeInstallFix = "Run rexctl install without --experimental-native to use Docker or Podman, or try again after the next Fluxer release."
+
 var nativeComposeFlags = []string{"engine", "install-docker", "setup-podman", "take-over", "delete-old-data"}
 
 func (a *App) composeOnly() error {
@@ -49,12 +51,30 @@ func nativeTransport(inst *instance.Instance) adminapi.Transport {
 	return adminapi.NewHost(n.OperatorSocket(), native.APIAddr, inst.State.Settings["FLUXER_CLIENT_IP_HEADER_NAME"])
 }
 
-func nativeRoot(again string) error {
-	if runtime.GOOS != "linux" || !host.BootUnitSupported() {
+func nativeSupported() bool {
+	return runtime.GOOS == "linux" && host.BootUnitSupported()
+}
+
+func nativeRoot(dir string) error {
+	if !nativeSupported() {
 		return ui.Refused("A native instance runs only on Linux with systemd.", "Run rexctl install without --experimental-native to use Docker or Podman.")
 	}
 	if euid() != 0 {
-		return ui.Refused("A native instance is managed as root.", "Run sudo "+again+".")
+		return ui.Refused("A native instance is managed as root.", "Run "+sudoAgain(dir)+".")
+	}
+	return nil
+}
+
+func nativeFolder(dir, flag string) error {
+	if p := instance.RootPath(dir, false); p != "" {
+		fix := "Pass " + flag + " with a folder that root owns and only root can change, such as /opt/fluxer."
+		if p == "/opt/fluxer" || strings.HasPrefix("/opt/fluxer", p+"/") || p == "/" {
+			fix = "Pass " + flag + " with a folder that root owns and only root can change."
+		}
+		return ui.Refused(fmt.Sprintf("A native instance can't go in %s, because accounts other than root can change %s.", dir, p), fix)
+	}
+	if p := instance.RootPath(dir, true); p != "" {
+		return ui.Refused(fmt.Sprintf("A native instance can't go in %s, because Fluxer's service account can't open %s.", dir, p), "Pass "+flag+" with another folder, or let every account open "+p+" with sudo chmod o+x "+shellWord(p)+".")
 	}
 	return nil
 }
@@ -78,13 +98,29 @@ func nativeFailure(err error, what string) error {
 	case errors.Is(err, native.ErrNoApt):
 		return ui.Refused("The native runtime installs its packages with apt, and this machine has no apt.", "Use Debian 13, or run rexctl install without --experimental-native.")
 	case errors.Is(err, native.ErrNotRoot):
-		return ui.Refused("A native instance is managed as root.", "Run the command again with sudo.")
+		return ui.Refused("A native instance is managed as root.", "Run "+sudoAgain("")+".")
 	case errors.Is(err, native.ErrProxyPort):
 		return ui.Refused("Behind a proxy, a native instance listens on port "+native.ProxyPort+".", "Set edge.bind in "+instance.StateDirName+"/"+instance.StateFileName+" to an address on port "+native.ProxyPort+", like 127.0.0.1:"+native.ProxyPort+".")
 	case errors.Is(err, native.ErrChecksum):
 		return ui.Wrap(err, "The Fluxer download didn't match its checksum.", "Try again.")
+	case errors.Is(err, release.ErrNoNativeBuild):
+		return ui.Refused(err.Error(), "Try again after the next Fluxer release.")
 	}
 	return ui.Wrap(err, what, "Run the command again with --verbose to see why.")
+}
+
+func nativeRelease(ctx context.Context, version, fix string) (*release.Release, error) {
+	if !release.Valid(version) {
+		version = ""
+	}
+	rel, err := resolveRelease(ctx, version)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := rel.DistFor(runtime.GOARCH); err != nil {
+		return nil, &ui.ExitError{Code: ui.ExitRefused, Msg: err.Error(), Fix: fix, Err: err}
+	}
+	return rel, nil
 }
 
 func saveNative(inst *instance.Instance) error {
@@ -149,7 +185,7 @@ func startNativeStep(ctx context.Context, app *App, inst *instance.Instance, n *
 }
 
 func runNativeStart(ctx context.Context, app *App, inst *instance.Instance) error {
-	if err := nativeRoot("rexctl start"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	if err := nativeAlone(ctx); err != nil {
@@ -200,7 +236,7 @@ func runNativeStop(ctx context.Context, app *App, inst *instance.Instance, down 
 	if down {
 		again = "rexctl down"
 	}
-	if err := nativeRoot(again); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	return app.Locked(ctx, inst, func() error {
@@ -231,7 +267,7 @@ func runNativeStop(ctx context.Context, app *App, inst *instance.Instance, down 
 }
 
 func runNativeRestart(ctx context.Context, app *App, inst *instance.Instance) error {
-	if err := nativeRoot("rexctl restart"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	if err := nativeAlone(ctx); err != nil {
@@ -321,7 +357,7 @@ func runNativeStatus(ctx context.Context, app *App, inst *instance.Instance) err
 	case !running:
 		app.UI.Fail("Fluxer isn't running.", "Run rexctl start.")
 	case st.PSErr != nil && euid() != 0:
-		app.UI.Warn("Fluxer's service is running, and only root can see its services.", "Run sudo rexctl status.")
+		app.UI.Warn("Fluxer's service is running, and only root can see its services.", "Run "+sudoAgain(inst.Dir)+".")
 	case st.PSErr != nil:
 		app.UI.Warn("Fluxer's service is starting.", "Run rexctl status again in a minute.")
 	case len(down) > 0:
@@ -381,7 +417,7 @@ func nativeBackup(ctx context.Context, app *App, inst *instance.Instance, n *nat
 }
 
 func runNativeBackup(ctx context.Context, app *App, inst *instance.Instance) error {
-	if err := nativeRoot("rexctl backup"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	return app.Locked(ctx, inst, func() error {
@@ -430,7 +466,7 @@ func adoptNativeSecrets(inst *instance.Instance, n *native.Stack) error {
 }
 
 func runNativeRestore(ctx context.Context, app *App, inst *instance.Instance, path string, m *backup.Manifest, confirm string) error {
-	if err := nativeRoot("rexctl restore"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	what := fmt.Sprintf("This replaces everything on %s with the backup made on %s.", inst.Domain(), backupTime(m.CreatedAt))
@@ -467,7 +503,7 @@ func restoreNative(ctx context.Context, app *App, inst *instance.Instance, n *na
 }
 
 func runNativeUpgrade(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags) error {
-	if err := nativeRoot("rexctl upgrade"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	if err := nativeAlone(ctx); err != nil {
@@ -497,6 +533,9 @@ func runNativeUpgrade(ctx context.Context, app *App, inst *instance.Instance, f 
 	}
 	if err := release.CheckTarget(nil, rel, inst.State.Schema); err != nil {
 		return floorRefusal(err, to)
+	}
+	if _, err := rel.DistFor(runtime.GOARCH); err != nil {
+		return nativeFailure(err, "")
 	}
 	needSelf := release.Compare(rel.Version, app.Version) != 0
 	if f.DryRun {
@@ -563,7 +602,7 @@ func runNativeUpgrade(ctx context.Context, app *App, inst *instance.Instance, f 
 }
 
 func resumeNativeUpgrade(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags) error {
-	if err := nativeRoot("rexctl upgrade"); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return err
 	}
 	return app.Locked(ctx, inst, func() error {
@@ -725,7 +764,7 @@ func otherNativeInstance(dir string) string {
 }
 
 func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags) error {
-	if err := nativeRoot("rexctl install --experimental-native"); err != nil {
+	if err := nativeRoot(""); err != nil {
 		return err
 	}
 	for _, name := range nativeComposeFlags {
@@ -756,20 +795,35 @@ func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *instal
 	case inst.State.IsNative() && !inst.State.SetupDone:
 		app.UI.Info("Continuing the install in %s.", inst.Dir)
 		f.BehindProxy = inst.State.Settings[settings.EdgeMode] == settings.EdgeProxy || inst.State.Settings[settings.EdgeMode] == settings.EdgeTunnel
+		rel, err := nativeRelease(ctx, inst.State.Release, nativeInstallFix)
+		if err != nil {
+			return err
+		}
 		if err := in.askSetupWhere(); err != nil {
 			return err
 		}
 		if err := in.collectAnswers(inst.Domain()); err != nil {
 			return err
 		}
-		return app.Locked(ctx, inst, func() error { return in.startNative(ctx, inst) })
+		return app.Locked(ctx, inst, func() error { return in.startNative(ctx, inst, rel) })
+	case !inst.State.IsNative():
+		return ui.Refused(fmt.Sprintf("Fluxer already runs in Docker in %s.", dir), "To move it out of Docker, run "+sudoRun(dir, dockerMoveArgs("")...)+".")
 	default:
 		return ui.Refused(fmt.Sprintf("Fluxer is already installed in %s.", dir), "Run rexctl status to check it, or rexctl upgrade to upgrade it.")
 	}
+	if err := nativeFolder(dir, "--dir"); err != nil {
+		return err
+	}
+	dir = instance.RealPath(dir)
+	in.dir = dir
 	if other := otherNativeInstance(dir); other != "" {
 		return ui.Refused(fmt.Sprintf("This machine already runs a native Fluxer instance in %s.", other), "A machine runs one native instance. Pass --dir "+other+" to manage it.")
 	}
 	if err := in.missingFlags(); err != nil {
+		return err
+	}
+	rel, err := nativeRelease(ctx, stack.Embedded().Release, nativeInstallFix)
+	if err != nil {
 		return err
 	}
 	app.UI.Welcome()
@@ -819,7 +873,7 @@ func runNativeInstall(ctx context.Context, app *App, c *cobra.Command, f *instal
 		if err := in.writeNative(inst); err != nil {
 			return err
 		}
-		return in.startNative(ctx, inst)
+		return in.startNative(ctx, inst, rel)
 	})
 }
 
@@ -940,21 +994,13 @@ func (in *installer) showNativeSizing(inst *instance.Instance, set *stack.Set) {
 	}
 }
 
-func (in *installer) startNative(ctx context.Context, inst *instance.Instance) error {
+func (in *installer) startNative(ctx context.Context, inst *instance.Instance, rel *release.Release) error {
 	u := in.app.UI
 	in.app.remember(inst.Dir)
 	origin := inst.Origin()
 	token := setup.Token(inst.State.Secrets)
 	n := native.New(inst)
 	set, err := deploy.ReleaseSet(inst)
-	if err != nil {
-		return err
-	}
-	version := inst.State.Release
-	if !release.Valid(version) {
-		version = ""
-	}
-	rel, err := resolveRelease(ctx, version)
 	if err != nil {
 		return err
 	}
@@ -1055,7 +1101,7 @@ func applyNativeSettings(ctx context.Context, app *App, inst *instance.Instance,
 	if err := refuseDockerOnly(changes); err != nil {
 		return nil, err
 	}
-	if err := nativeRoot(app.command); err != nil {
+	if err := nativeRoot(inst.Dir); err != nil {
 		return nil, err
 	}
 	if err := deploy.Changeable(inst); err != nil {

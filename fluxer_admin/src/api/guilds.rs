@@ -53,16 +53,25 @@ impl AdminApiClient {
         guild_id: &str,
         add_features: &[String],
         remove_features: &[String],
+        planned_join_waves_until: Option<Option<&str>>,
     ) -> ApiResult<()> {
-        let body = generated_types::UpdateGuildRequest {
+        let mut body = serde_json::to_value(generated_types::UpdateGuildRequest {
             add_features: guild_features(add_features),
             remove_features: guild_features(remove_features),
             ..Default::default()
-        };
-        self.generated()
-            .update_admin_guild(&snowflake(guild_id), &body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
+        })
+        .map_err(|e| ApiError::Parse(e.to_string()))?;
+        if let Some(until) = planned_join_waves_until {
+            body["planned_join_waves_until"] = serde_json::json!(until);
+        }
+        let _: serde_json::Value = self
+            .send(
+                Method::PATCH,
+                &format!("/admin/guilds/{}", urlencoding::encode(guild_id)),
+                Some(&body),
+                None,
+            )
+            .await?;
         Ok(())
     }
 

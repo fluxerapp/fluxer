@@ -180,4 +180,4 @@ Use of the Fluxer name and logo is covered by the
 [docs]: https://docs.fluxer.com
 [docs-downloads]: https://docs.fluxer.com/downloads/overview/
 [docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/
-[docs-selfhost]: https://docs.fluxer.com/operator/get-started/
+[docs-selfhost]: https://docs.fluxer.com/operator/

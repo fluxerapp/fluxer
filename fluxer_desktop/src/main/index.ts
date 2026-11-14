@@ -8,6 +8,7 @@ import {errorMessage} from '@electron/common/ErrorMessage';
 import {configureUserDataPath} from '@electron/common/UserDataPath';
 import {isAccountEngineAvailable} from '@electron/main/AccountEngineHost';
 import {startAccountEngine, stopAccountEngine} from '@electron/main/AccountEngineIpc';
+import {registerApiAttachmentAuthorizationIpc} from '@electron/main/ApiAttachmentAuthorizationIpc';
 import {
 	APP_STORE_ADDON_PACKAGE,
 	createAppStoreBoundary,
@@ -129,7 +130,7 @@ import {
 	GLOBAL_STORAGE_SCOPE,
 	readDesktopLegacyImportPhase,
 } from '@fluxer/desktop_ipc/src/StorageContract';
-import {app, dialog, ipcMain, netLog, session, shell} from 'electron';
+import {app, autoUpdater, dialog, ipcMain, netLog, session, shell} from 'electron';
 import log from 'electron-log';
 
 log.transports.file.level = 'info';
@@ -478,6 +479,10 @@ export function initializeMainWindowStartup(): void {
 			log.info('[Shutdown] All windows closed; keeping app alive because close-to-tray is enabled');
 		}
 	});
+	autoUpdater.on('before-quit-for-update', () => {
+		log.info('[Shutdown] before-quit-for-update received');
+		setQuitting(true);
+	});
 	app.on('before-quit', (event) => {
 		finishSyncAnswers();
 		if (deferQuitForBootStateFlush()) {
@@ -715,6 +720,11 @@ export async function startMainApp(
 			runStartupPhase('ipc-handlers', registerIpcHandlers);
 		} catch (error) {
 			log.error('[Init] Failed to register IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('api-attachment-authorization', registerApiAttachmentAuthorizationIpc);
+		} catch (error) {
+			log.error('[Init] Failed to register the attachment authorization handler:', error);
 		}
 		try {
 			runStartupPhase('autostart-handlers', registerAutostartHandlers);

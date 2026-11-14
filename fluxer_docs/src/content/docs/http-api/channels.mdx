@@ -212,7 +212,7 @@ The rate limit is 100 requests per 10 seconds, on the `channel:read::channel_id`
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/rtc-regions" />
 
-Returns the [RTC regions](#rtc-region-object) you can pick for a guild voice channel, sorted by name. You need the same access as for [Get channel](#get-channel), and bots can't use this route.
+Returns the [RTC regions](#rtc-region-object) you can pick for a guild voice channel, sorted by name. [Hidden regions](/admin-api/voice/#hidden-regions) are left out. You need the same access as for [Get channel](#get-channel), and bots can't use this route.
 
 ### Response
 
@@ -262,7 +262,7 @@ Every field is optional, and a field the channel type doesn't use is ignored.
 | content_warning_level? | integer | The [content warning level](#content-warning-levels) |
 | content_warning_text? | ?string | The content warning text (max 200 characters), null to clear it |
 | rate_limit_per_user? | ?integer | The slowmode interval in seconds (0-21,600) |
-| rtc_region? | ?string | The ID of an [RTC region](#list-rtc-regions), null for automatic |
+| rtc_region? | ?string | The ID of an [RTC region](#list-rtc-regions), null for automatic. A [hidden region](/admin-api/voice/#hidden-regions) is accepted only when the channel already uses it |
 | rtc_p2p?<sup>2</sup> | boolean | Whether calls in a voice channel use [peer-to-peer voice](/gateway/events/#peer-to-peer-voice) |
 
 <sup>1</sup> Values over the guild's maximum are lowered to it. The maximum is 96,000 unless the guild has an [audio bitrate feature](/http-api/guilds/#guild-features).

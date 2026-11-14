@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {handleExternalLinkAuxClick} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
 import {BadgeListModal} from '@app/features/user/components/modals/BadgeListModal';
 import styles from '@app/features/user/components/popouts/UserProfileBadges.module.css';
 import {profileBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
@@ -193,7 +194,11 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 						target="_blank"
 						rel="noopener noreferrer"
 						className={styles.link}
-						onClick={(event) => handleExternalLinkClick(event, href)}
+						onClick={(event) => {
+							event.preventDefault();
+							openInAppOrExternalUrl(href, {i18n});
+						}}
+						onAuxClick={(event) => handleExternalLinkAuxClick(event, href)}
 						data-flx={`${dataFlx}.link`}
 					>
 						{children}

@@ -82,6 +82,7 @@ const FEATURE_FLAG_KEYS = Object.freeze([
 	'instant_accounts',
 	'email_codes',
 	'date_of_birth_step',
+	'proxy_attachments_through_api',
 ] as const) satisfies ReadonlyArray<keyof InstanceFeatures>;
 
 const BRANDING_URL_KEYS = Object.freeze([
@@ -654,6 +655,10 @@ function parseSso(value: unknown): InstanceSso | null {
 	const available = readBoolean(source, 'available');
 	if (available != null) {
 		sso.available = available;
+	}
+	const providerTrait = readNonEmptyString(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
 	}
 	return sso;
 }

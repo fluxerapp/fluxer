@@ -204,10 +204,14 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.bluesky-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-author-component"
 							/>
 							{!isNested && (

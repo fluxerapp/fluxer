@@ -95,6 +95,7 @@ export class VoiceRepository {
 			latitude: region.latitude,
 			longitude: region.longitude,
 			is_default: region.isDefault,
+			hidden: region.hidden,
 			vip_only: region.restrictions.vipOnly,
 			required_guild_features: new Set(region.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(region.restrictions.allowedGuildIds).map((id) => BigInt(id))),
@@ -231,6 +232,7 @@ export class VoiceRepository {
 			latitude: row.latitude,
 			longitude: row.longitude,
 			isDefault: row.is_default ?? false,
+			hidden: row.hidden ?? false,
 			restrictions: {
 				vipOnly: row.vip_only ?? false,
 				requiredGuildFeatures: new Set(toIterable<string>(row.required_guild_features)),

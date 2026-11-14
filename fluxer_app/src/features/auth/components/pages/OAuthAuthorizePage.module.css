@@ -202,12 +202,12 @@
 .scopeChip {
 	display: inline-flex;
 	align-items: center;
-	padding: 0.12rem 0.45rem;
-	border-radius: 62.4375rem;
-	background: var(--background-secondary);
-	border: 0.0625rem solid var(--background-modifier-accent);
-	color: var(--text-tertiary);
-	font-size: 0.7rem;
+	padding: 0.125rem 0.5rem;
+	border-radius: var(--radius-md);
+	background: var(--background-tertiary);
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+	font-weight: 600;
 }
 
 .emptyState {

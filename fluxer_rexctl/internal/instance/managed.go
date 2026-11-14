@@ -38,7 +38,26 @@ func ComposeTool(kind string) string {
 	return "docker compose"
 }
 
+type MovedError struct {
+	Dir string
+	To  string
+}
+
+func (e *MovedError) Error() string {
+	return "Fluxer moved from " + e.Dir + " to " + e.To + " and runs there without Docker, so the Docker instance stays stopped."
+}
+
+func (i *Instance) Moved() *MovedError {
+	if i == nil || i.State == nil || i.State.MovedTo == "" || gone(i.State.MovedTo) {
+		return nil
+	}
+	return &MovedError{Dir: i.Dir, To: i.State.MovedTo}
+}
+
 func (i *Instance) Managed() error {
+	if moved := i.Moved(); moved != nil {
+		return moved
+	}
 	if i == nil || i.State == nil || i.State.Ejected == nil {
 		return nil
 	}

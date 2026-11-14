@@ -438,7 +438,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			this.log.warn('Cannot simulate network disconnect: not connected');
 			return;
 		}
-		this.log.info('Simulating network disconnect with resumable close');
+		this.log.debug('Simulating network disconnect with resumable close');
 		this.disconnect(4000, 'Simulated network disconnect', true);
 	}
 
@@ -475,7 +475,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	}
 
 	probeAfterResume(reason: string, options: GatewayResumeProbeOptions = {}): void {
-		this.log.info(`Probing gateway after resume: reason=${reason}, state=${this.connectionState}`);
+		this.log.debug(`Probing gateway after resume: reason=${reason}, state=${this.connectionState}`);
 		switch (this.connectionState) {
 			case GatewayState.Connected:
 				this.verifyConnectionFreshness(reason);
@@ -960,7 +960,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			event.code === GatewayCloseCodes.SESSION_TIMEOUT ||
 			resumeWasPending
 		) {
-			this.log.info(`Resume failed or session invalidated [${event.code}], clearing session to re-identify`);
+			this.log.warn(`Resume failed or session invalidated [${event.code}], clearing session to re-identify`);
 			this.clearSession();
 		}
 		if (!this.isUserInitiatedDisconnect) {
@@ -1101,7 +1101,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	private handleInvalidSessionPayload(payload: GatewayPayload): void {
 		const isResumable = payload.d as boolean;
-		this.log.info(`Session invalidated (resumable=${isResumable})`);
+		this.log.warn(`Session invalidated (resumable=${isResumable})`);
 		if (this.invalidSessionTimeoutId != null) {
 			clearTimeout(this.invalidSessionTimeoutId);
 			this.invalidSessionTimeoutId = null;
@@ -1125,7 +1125,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.clearResumeTimeout();
 		this.clearSession();
 		const delay = Math.floor(Math.random() * GATEWAY_TIMEOUTS.InvalidSessionIdentifySpread);
-		this.log.info(`Resume rejected, identifying on the same connection in ${delay}ms`);
+		this.log.warn(`Resume rejected, identifying on the same connection in ${delay}ms`);
 		this.invalidSessionTimeoutId = window.setTimeout(() => {
 			this.invalidSessionTimeoutId = null;
 			this.sendIdentify();
@@ -1316,7 +1316,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.reconnectTimeoutId = window.setTimeout(() => {
 			this.reconnectTimeoutId = null;
 			if (!this.canResumeSession()) {
-				this.log.info('Session no longer resumable, clearing state');
+				this.log.warn('Session no longer resumable, clearing state');
 				this.clearSession();
 			}
 			this.connect();
@@ -1402,7 +1402,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.dispatchGeneration += 1;
 		this.resetHeartbeatHistory();
 		if (hadSession) {
-			this.log.info('Gateway session cleared');
+			this.log.debug('Gateway session cleared');
 		}
 	}
 
@@ -1486,7 +1486,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		if (this.connectionState === nextState) return;
 		const previous = this.connectionState;
 		this.connectionState = nextState;
-		this.log.info(`Gateway state ${previous} -> ${nextState}`);
+		this.log.debug(`Gateway state ${previous} -> ${nextState}`);
 		this.emitDeferred('stateChange', nextState, previous);
 	}
 }

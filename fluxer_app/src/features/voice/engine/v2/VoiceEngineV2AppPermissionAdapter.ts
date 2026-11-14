@@ -163,7 +163,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 			this.currentRoom = room;
 		});
 		this.beginPermissionWatch(guildId, channelId);
-		logger.info('Started permission watching', {guildId, channelId});
+		logger.debug('Started permission watching', {guildId, channelId});
 	}
 
 	private beginPermissionWatch(guildId: string | null, channelId: string): void {
@@ -203,7 +203,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 			logger.debug('Permissions unchanged, skipping update');
 			return;
 		}
-		logger.info('Permissions updated and enforced', {
+		logger.debug('Permissions updated and enforced', {
 			old: oldPermissions,
 			new: newPermissions,
 		});
@@ -229,7 +229,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 				publicationsById: publicationInputs.publicationsById,
 			},
 		);
-		logger.info('Complete', {participantCount: room.remoteParticipants.size});
+		logger.debug('Complete', {participantCount: room.remoteParticipants.size});
 	}
 
 	applyDeafen(room: Room, deafened: boolean): void {
@@ -252,7 +252,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 				publicationsById: publicationInputs.publicationsById,
 			},
 		);
-		logger.info('Complete', {deafened, participantCount: room.remoteParticipants.size});
+		logger.debug('Complete', {deafened, participantCount: room.remoteParticipants.size});
 	}
 
 	private async handlePermissionRevoked(source: VoiceEngineV2AppPermissionTrackSource, room: Room): Promise<void> {
@@ -260,7 +260,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 			logger.warn('No local participant');
 			return;
 		}
-		logger.info('Revoking permission', {source});
+		logger.debug('Revoking permission', {source});
 		const localParticipant = room.localParticipant;
 		try {
 			switch (source) {
@@ -290,7 +290,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 					});
 					break;
 			}
-			logger.info('Successfully revoked permission', {source});
+			logger.debug('Successfully revoked permission', {source});
 		} catch (error) {
 			logger.error('Failed to revoke permission', {source, error});
 		}

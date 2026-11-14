@@ -172,6 +172,5 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.75rem;
-	text-transform: uppercase;
 	color: var(--text-tertiary);
 }

@@ -71,7 +71,7 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
-import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import {isRegionPickable, type VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -312,7 +312,7 @@ export class ChannelOperationsService {
 		}
 		if (data.rtc_region !== undefined && channel.type === ChannelTypes.GUILD_VOICE) {
 			await checkPermission(Permissions.UPDATE_RTC_REGION);
-			if (data.rtc_region !== null) {
+			if (data.rtc_region !== null && data.rtc_region !== channel.rtcRegion) {
 				if (this.voiceAvailabilityService !== null) {
 					const guildId = createGuildID(BigInt(guild.id));
 					const availableRegions = this.voiceAvailabilityService.getAvailableRegions({
@@ -320,14 +320,19 @@ export class ChannelOperationsService {
 						guildId,
 						guildFeatures: new Set(guild.features ?? []),
 					});
-					const regionAllowed = availableRegions.some((region) => region.id === data.rtc_region && region.isAccessible);
+					const regionAllowed = availableRegions.some(
+						(region) => region.id === data.rtc_region && isRegionPickable(region),
+					);
 					if (!regionAllowed) {
 						throw InputValidationError.fromCode('rtc_region', ValidationErrorCodes.INVALID_OR_RESTRICTED_RTC_REGION, {
 							region: data.rtc_region ?? 'unknown',
 						});
 					}
 				} else {
-					const availableRegions = this.liveKitService.getRegionMetadata().map((region) => region.id);
+					const availableRegions = this.liveKitService
+						.getRegionMetadata()
+						.filter((region) => !region.hidden)
+						.map((region) => region.id);
 					if (availableRegions.length > 0 && !availableRegions.includes(data.rtc_region)) {
 						throw InputValidationError.fromCode('rtc_region', ValidationErrorCodes.INVALID_RTC_REGION, {
 							region: data.rtc_region ?? 'unknown',
@@ -753,8 +758,8 @@ export class ChannelOperationsService {
 			guildId,
 			guildFeatures: new Set(guild.features ?? []),
 		});
-		const accessibleRegions = regions.filter((region) => region.isAccessible);
-		return accessibleRegions.sort((a, b) => a.name.localeCompare(b.name));
+		const pickableRegions = regions.filter(isRegionPickable);
+		return pickableRegions.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
 	private async propagatePermissionsToSyncedChildren({

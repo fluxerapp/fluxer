@@ -12,6 +12,7 @@ import {
 import {getDesktopWindowBehaviorSettings, getLaunchProductName, getPrebootTheme} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import {getApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
 import {createAppLoadRetry} from '@electron/main/AppLoadRetry';
 import {readBootFrameInputs, replayBootFrameInputs} from '@electron/main/BootFrameInputReplay';
 import {prepareBootStateReload, requestBootStateFlush} from '@electron/main/BootState';
@@ -43,7 +44,6 @@ import {
 } from '@electron/main/MainWindowReveal';
 import {signalMainWindowCreated, signalMainWindowReady} from '@electron/main/ModuleBootHandoff';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
-import {dimAndCaptureForReload} from '@electron/main/ReloadTransition';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
 import {resetStreamingPriority} from '@electron/main/StreamingPriority';
 import {getMainWindowRendererGoneAction} from '@electron/main/WindowRendererLifecycle';
@@ -57,6 +57,7 @@ const logger = createChildLogger('Window');
 const runtimeSecurity = new DesktopRuntimeSecurity({
 	logger: createChildLogger('DesktopRuntimeSecurity'),
 	localAppAuthorization: getDesktopLocalAppAuthorization(),
+	attachmentAuthorization: getApiAttachmentAuthorization(),
 });
 const LIVE_RESIZE_IDLE_MS = 400;
 const MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS = 250;
@@ -721,12 +722,9 @@ export function reloadWindowAfterBootStateFlush(window: BrowserWindow, ignoreCac
 		reload();
 		return;
 	}
-	void Promise.all([
-		requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false}).catch(
-			() => undefined,
-		),
-		dimAndCaptureForReload(window),
-	]).finally(reload);
+	void requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false})
+		.catch(() => undefined)
+		.finally(reload);
 }
 
 function revealMaximizedAfterRepaint(window: BrowserWindow, maximize: () => void): void {

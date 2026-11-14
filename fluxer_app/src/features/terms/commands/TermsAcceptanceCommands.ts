@@ -28,7 +28,7 @@ export async function acceptTerms(): Promise<void> {
 	try {
 		const user = await submitTermsAcceptance();
 		hydrateAcceptedUser(user);
-		logger.info('Terms and privacy policy accepted');
+		logger.debug('Terms and privacy policy accepted');
 	} catch (error) {
 		rethrowAcceptanceFailure(error);
 	}

@@ -534,7 +534,7 @@ func nativePackagesStep(ctx context.Context, app *App, n *native.Stack, version 
 }
 
 func runNativeRestoreFresh(ctx context.Context, app *App, dir, path string, m *backup.Manifest, confirm string) error {
-	if err := nativeRoot("rexctl restore"); err != nil {
+	if err := nativeRoot(dir); err != nil {
 		return err
 	}
 	if err := nativeAlone(ctx); err != nil {

@@ -228,12 +228,13 @@ func envArgs(j Job) []string {
 type fakeTarget struct {
 	j      *journal
 	native *fakeHost
+	refuse error
 }
 
 func (t *fakeTarget) Dir() string { return "/srv/native" }
 func (t *fakeTarget) Preflight(context.Context, map[string]string) error {
 	t.j.add("target preflight")
-	return nil
+	return t.refuse
 }
 func (t *fakeTarget) Install(context.Context) error { t.j.add("target install"); return nil }
 func (t *fakeTarget) Discard(context.Context) error { t.j.add("target discard"); return nil }
@@ -336,6 +337,29 @@ func TestEveryCombination(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestRefusedTargetLeavesDockerAlone(t *testing.T) {
+	noBuild := errors.New("no native build")
+	for _, picked := range [][]Option{{OptDocker}, All} {
+		t.Run(fmt.Sprint(picked), func(t *testing.T) {
+			j := &journal{}
+			compose := newHost("compose", Compose, j, nil)
+			nat := newHost("native", Native, j, compose)
+			r := &Run{Host: compose}
+			err := Execute(context.Background(), r, realSteps(picked, &fakeTarget{j: j, native: nat, refuse: noBuild}))
+			var fail *Failure
+			if !errors.As(err, &fail) || fail.Phase != PhasePreflight || !errors.Is(err, noBuild) {
+				t.Fatalf("got %v, want a preflight failure", err)
+			}
+			touched := slices.ContainsFunc(j.lines, func(line string) bool {
+				return strings.HasPrefix(line, "compose backup") || strings.HasPrefix(line, "compose stop") || strings.HasPrefix(line, "compose halt") || strings.HasPrefix(line, "target install")
+			})
+			if r.Backup != "" || touched || !slices.Contains(j.lines, "target preflight") {
+				t.Fatalf("touched the instance before refusing:\n%s", strings.Join(j.lines, "\n"))
+			}
+		})
 	}
 }
 

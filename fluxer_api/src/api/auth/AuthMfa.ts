@@ -658,7 +658,7 @@ export async function getAvailableMfaMethods(ctx: ApiContext, userId: UserID): P
 	}
 	const credentials = await users.listWebAuthnCredentials(userId);
 	const hasPasskeyCredentials = credentials.length > 0;
-	const methods = deriveSudoMethods(user, hasPasskeyCredentials, await hasUnconsumedBackupCodes(ctx, userId), false);
+	const methods = deriveSudoMethods(user, hasPasskeyCredentials, await hasUnconsumedBackupCodes(ctx, userId), null);
 	return {
 		totp: methods.totp,
 		webauthn: methods.webauthn,

@@ -160,6 +160,7 @@ export class UserAccountService {
 		const emailChanged = data.email !== undefined;
 		if (emailChanged) {
 			updates.email_verified = !!emailVerifiedViaToken;
+			updates.email_bounced = false;
 		}
 		let updatedUser: User;
 		try {

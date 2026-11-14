@@ -69,7 +69,58 @@ The `voice` folder of the bundle runs extra LiveKit servers on this machine or o
 
 Download the new bundle into the same folder and unpack it, which replaces every file except `.env`. If the new `.env.example` has an uncommented line your `.env` doesn't have yet, add it, then run `docker compose up -d`.
 
-Back up the Docker volumes yourself before you upgrade, because `rexctl backup` isn't available without rexctl.
+[Make a backup](#back-up-and-restore) before you upgrade.
+
+## Back up and restore
+
+`rexctl backup` and `rexctl restore` aren't available without rexctl. If you can run rexctl on the machine, [switch to rexctl](#switch-to-rexctl-later) and use those. Otherwise, back up these by hand:
+
+- the database, as a dump made with `pg_dump`
+- the volumes `seaweedfs-data` (uploads), `meilisearch-data` (search), `valkey-data` and `nats-data`
+- `.env`, and any files you changed in the folder, such as `Caddyfile` or `caddy.d`
+
+The compose file gives the project the name `fluxer`, so the volumes are called `fluxer_seaweedfs-data` and so on. Some platforms give the project another name. Check the names with `docker volume ls`. With `filesystem-object-store.compose.yml`, uploads are in `objects-data`. With `kv-postgres.compose.yml`, there's no `valkey-data`. When uploads are in your own object store, back them up with that store's tools.
+
+### Make a backup
+
+Run these commands in the folder. Fluxer keeps running while the database is dumped and stops while the volumes are copied.
+
+```sh
+mkdir -p backup
+docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > backup/fluxer.dump
+docker compose stop
+for v in seaweedfs-data objects-data meilisearch-data valkey-data nats-data; do
+  docker volume inspect "fluxer_$v" > /dev/null 2>&1 || continue
+  docker run --rm -v "fluxer_$v":/v:ro -v "$PWD/backup":/b alpine tar -czf "/b/$v.tar.gz" -C /v .
+done
+docker compose up -d
+cp .env backup/
+```
+
+Copy the `backup` folder to another machine or disk.
+
+### Restore a backup
+
+Restore with the compose bundle of the release the backup was made on, and upgrade after the restore. On a new machine, unpack that bundle into an empty folder. On the same machine, remove the old containers and volumes first. It deletes Fluxer's data on this machine. Check that the backup is complete first.
+
+```sh
+docker compose down -v
+```
+
+Put the `backup` folder in the bundle folder and copy `.env` and your changed files back. Then create the containers and volumes, restore the database into the empty one and unpack the volumes.
+
+```sh
+cp backup/.env .env
+docker compose create
+docker compose start postgres
+until docker compose exec -T postgres sh -c 'pg_isready -q -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; do sleep 1; done
+docker compose exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --exit-on-error --single-transaction' < backup/fluxer.dump
+for f in backup/*-data.tar.gz; do
+  v=$(basename "$f" .tar.gz)
+  docker run --rm -v "fluxer_$v":/v -v "$PWD/backup":/b:ro alpine sh -c "find /v -mindepth 1 -delete && tar -xzf /b/$v.tar.gz -C /v"
+done
+docker compose up -d
+```
 
 ## Switch to rexctl later
 

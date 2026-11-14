@@ -16,13 +16,21 @@ interface PickerThumbnailProps {
 }
 
 export const PickerThumbnail: FC<PickerThumbnailProps> = observer(({src, alt, className, placeholder}) => {
-	const {loaded, error, thumbHashURL, ref, onLoad, onError} = useMediaLoading(src, placeholder ?? undefined);
+	const {
+		src: displaySrc,
+		loaded,
+		error,
+		thumbHashURL,
+		ref,
+		onLoad,
+		onError,
+	} = useMediaLoading(src, placeholder ?? undefined);
 	const showThumbHash = (!loaded || error) && Boolean(thumbHashURL);
 	return (
 		<>
 			{!error && (
 				<img
-					src={src || undefined}
+					src={displaySrc || undefined}
 					ref={ref}
 					alt={alt}
 					className={className}

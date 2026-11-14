@@ -64,7 +64,7 @@ export class ScreenShareSubscriptionManager extends PublicationSubscriptionManag
 			logger.warn('Participant not found', {participantIdentity});
 			return;
 		}
-		logger.info('Subscribing to screen share', {participantIdentity, context});
+		logger.debug('Subscribing to screen share', {participantIdentity, context});
 		const screenSharePublication = this.findScreenSharePublication(participant);
 		if (!screenSharePublication) {
 			logger.debug('No screen share publication found', {participantIdentity});
@@ -85,9 +85,9 @@ export class ScreenShareSubscriptionManager extends PublicationSubscriptionManag
 			logger.debug('Not subscribed', {participantIdentity});
 			return;
 		}
-		logger.info('Unsubscribing from screen share', {participantIdentity});
+		logger.debug('Unsubscribing from screen share', {participantIdentity});
 		this.transition({type: 'subscription.unsubscribe', participantIdentity, source: VoiceTrackSource.ScreenShare});
-		logger.info('Screen share unsubscribed successfully', {participantIdentity});
+		logger.debug('Screen share unsubscribed successfully', {participantIdentity});
 	}
 
 	setContext(participantIdentity: string, context: VoiceMediaGraphSubscriptionContext): void {
@@ -116,7 +116,7 @@ export class ScreenShareSubscriptionManager extends PublicationSubscriptionManag
 	reattachAfterPublish(participantIdentity: string, publication?: RemoteTrackPublication): void {
 		const state = this.getSubscriptionEntry(participantIdentity);
 		if (!state?.subscribed || !this.room) return;
-		logger.info('Reattaching screen share subscription after republish', {
+		logger.debug('Reattaching screen share subscription after republish', {
 			participantIdentity,
 			context: state.context,
 			enabled: state.enabled,

@@ -13,6 +13,8 @@ pub enum ExternalPathError {
     InvalidBase64,
     #[error("invalid utf-8")]
     InvalidUtf8,
+    #[error("invalid signature")]
+    InvalidSignature,
 }
 
 pub fn build_opaque_external_media_proxy_path(input_url: &str) -> String {
@@ -137,30 +139,32 @@ pub fn percent_decode_string(input: &str, plus_as_space: bool) -> String {
     String::from_utf8_lossy(&percent_decode(input, plus_as_space)).into_owned()
 }
 
+fn is_scheme_segment(part: &str) -> bool {
+    let mut bytes = part.bytes();
+    bytes
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic())
+        && bytes.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'.' | b'-'))
+}
+
 fn segmented_protocol_index(parts: &[&str]) -> Option<usize> {
-    for (index, part) in parts.iter().enumerate() {
-        if part.is_empty() {
-            continue;
-        }
-        if index == 0 && part.contains("%3D") {
-            continue;
-        }
-        let mut chars = part.bytes();
-        let first = chars.next()?;
-        if !first.is_ascii_alphabetic() {
-            continue;
-        }
-        if chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'.' | b'-')) {
-            return Some(index);
-        }
-    }
-    None
+    parts.iter().enumerate().find_map(|(index, part)| {
+        let legacy_query = index == 0 && part.contains("%3D");
+        (!legacy_query && is_scheme_segment(part)).then_some(index)
+    })
 }
 
 fn reconstruct_segmented(proxy_path: &str) -> Result<String, ExternalPathError> {
     let parts: Vec<&str> = proxy_path.split('/').collect();
     let protocol_index =
         segmented_protocol_index(&parts).ok_or(ExternalPathError::InvalidExternalPath)?;
+    reconstruct_segmented_at(&parts, protocol_index)
+}
+
+fn reconstruct_segmented_at(
+    parts: &[&str],
+    protocol_index: usize,
+) -> Result<String, ExternalPathError> {
     if protocol_index + 1 >= parts.len() {
         return Err(ExternalPathError::InvalidExternalPath);
     }
@@ -235,6 +239,57 @@ pub fn verify_signature(input: &str, provided: &str, secret: &[u8]) -> bool {
         == 0
 }
 
+const MAX_QUERY_SEGMENTS: usize = 32;
+
+fn protocol_index_candidates(parts: &[&str]) -> Vec<usize> {
+    let default = segmented_protocol_index(parts);
+    let mut candidates: Vec<usize> = default.into_iter().collect();
+    let starts_with_query = parts[0]
+        .get(..3)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("%3F"));
+    if starts_with_query {
+        let last = parts.len().saturating_sub(1).min(MAX_QUERY_SEGMENTS);
+        candidates.extend(
+            (1..last).filter(|&index| Some(index) != default && is_scheme_segment(parts[index])),
+        );
+    }
+    candidates
+}
+
+fn verify_re_encoded_proxy_path(
+    parts: &[&str],
+    protocol_index: usize,
+    signature: &str,
+    secret: &[u8],
+) -> Option<String> {
+    let url = reconstruct_segmented_at(parts, protocol_index).ok()?;
+    let canonical = build_external_media_proxy_path(&url).ok()?;
+    if !verify_signature(&canonical, signature, secret) {
+        return None;
+    }
+    reconstruct_original_url(&canonical)
+        .ok()
+        .filter(|signed_url| *signed_url == url)
+}
+
+pub fn verify_signed_proxy_path(
+    proxy_path: &str,
+    signature: &str,
+    secret: &[u8],
+) -> Result<String, ExternalPathError> {
+    if verify_signature(proxy_path, signature, secret) {
+        return reconstruct_original_url(proxy_path);
+    }
+    if proxy_path.starts_with(OPAQUE_PREFIX) {
+        return Err(ExternalPathError::InvalidSignature);
+    }
+    let parts: Vec<&str> = proxy_path.split('/').collect();
+    protocol_index_candidates(&parts)
+        .into_iter()
+        .find_map(|index| verify_re_encoded_proxy_path(&parts, index, signature, secret))
+        .ok_or(ExternalPathError::InvalidSignature)
+}
+
 #[cfg(test)]
 mod signature_tests {
     use super::*;
@@ -282,6 +337,241 @@ mod signature_tests {
             b"secret"
         ));
     }
+
+    const SIGNED_QUERY_PATH: &str =
+        "%3Fsize%3D48/https/cdn.discordapp.com/emojis/1005624491637997568.png";
+
+    fn signed(path: &str) -> String {
+        create_signature(path, b"secret")
+    }
+
+    #[test]
+    fn signed_path_verifies_on_the_fast_path() {
+        assert_eq!(
+            Ok("https://cdn.discordapp.com/emojis/1005624491637997568.png?size=48".to_owned()),
+            verify_signed_proxy_path(SIGNED_QUERY_PATH, &signed(SIGNED_QUERY_PATH), b"secret")
+        );
+    }
+
+    #[test]
+    fn re_encoded_signed_path_verifies_and_fetches_the_signed_url() {
+        let sig = signed(SIGNED_QUERY_PATH);
+        for received in [
+            "%3Fsize=48/https/cdn.discordapp.com/emojis/1005624491637997568.png",
+            "%3fsize%3d48/https/cdn.discordapp.com/emojis/1005624491637997568.png",
+            "%3Fsize%3D48/https/cdn.discordapp.com/emojis/%31005624491637997568.png",
+        ] {
+            assert_eq!(
+                Ok("https://cdn.discordapp.com/emojis/1005624491637997568.png?size=48".to_owned()),
+                verify_signed_proxy_path(received, &sig, b"secret"),
+                "{received}"
+            );
+        }
+        let dashed = "https/example.com/a-b%20c.png";
+        assert_eq!(
+            Ok("https://example.com/a-b c.png".to_owned()),
+            verify_signed_proxy_path(
+                "https/example.com/a%2Db%20c.png",
+                &signed(dashed),
+                b"secret"
+            )
+        );
+    }
+
+    #[test]
+    fn re_encoded_path_for_a_different_url_is_rejected() {
+        let sig = signed(SIGNED_QUERY_PATH);
+        for received in [
+            "%3Fsize=96/https/cdn.discordapp.com/emojis/1005624491637997568.png",
+            "%3Fsize=48/https/evil.example/emojis/1005624491637997568.png",
+            "%3Fsize=48/http/cdn.discordapp.com/emojis/1005624491637997568.png",
+            "%3Fsize=48/https/cdn.discordapp.com/emojis/1.png",
+            "https/cdn.discordapp.com/emojis/1005624491637997568.png",
+            "%3Fsize=48/https/cdn.discordapp.com/emojis/1005624491637997568.png/",
+        ] {
+            assert_eq!(
+                Err(ExternalPathError::InvalidSignature),
+                verify_signed_proxy_path(received, &sig, b"secret"),
+                "{received}"
+            );
+        }
+        assert_eq!(
+            Err(ExternalPathError::InvalidSignature),
+            verify_signed_proxy_path(
+                "%3Fsize=48/https/cdn.discordapp.com/emojis/1005624491637997568.png",
+                &sig,
+                b"other"
+            )
+        );
+    }
+
+    #[test]
+    fn decoded_slash_in_a_path_segment_is_rejected() {
+        let encoded_slash = "https/example.com/a%2Fb.png";
+        assert_eq!(
+            Err(ExternalPathError::InvalidSignature),
+            verify_signed_proxy_path(
+                "https/example.com/a/b.png",
+                &signed(encoded_slash),
+                b"secret"
+            )
+        );
+    }
+
+    fn re_encode(path: &str, decodes: impl Fn(u8) -> bool) -> String {
+        let bytes = path.as_bytes();
+        let mut out = Vec::with_capacity(bytes.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == b'%'
+                && i + 2 < bytes.len()
+                && let (Some(hi), Some(lo)) = (hex_val(bytes[i + 1]), hex_val(bytes[i + 2]))
+                && decodes((hi << 4) | lo)
+            {
+                out.push((hi << 4) | lo);
+                i += 3;
+                continue;
+            }
+            out.push(bytes[i]);
+            i += 1;
+        }
+        String::from_utf8(out).expect("re-encoded path is utf-8")
+    }
+
+    fn apache_decodes(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || b"!$&'()*+,-.:;=@_~".contains(&byte)
+    }
+
+    fn nginx_decodes(byte: u8) -> bool {
+        apache_decodes(byte) || b"[]".contains(&byte)
+    }
+
+    fn caddy_decodes(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || b"$&+,-.:;=@_~".contains(&byte)
+    }
+
+    fn slash_decoding_nginx_decodes(byte: u8) -> bool {
+        nginx_decodes(byte) || byte == b'/'
+    }
+
+    pub(super) fn proxy_rewrites(path: &str) -> Vec<String> {
+        let lowercase_hex = {
+            let mut out = String::with_capacity(path.len());
+            let mut rest = path;
+            while let Some(at) = rest.find('%') {
+                out.push_str(&rest[..at]);
+                let escape = rest.get(at..at + 3).unwrap_or(&rest[at..]);
+                out.push_str(&escape.to_ascii_lowercase());
+                rest = &rest[at + escape.len()..];
+            }
+            out.push_str(rest);
+            out
+        };
+        let go_escaped = path
+            .replace('!', "%21")
+            .replace('\'', "%27")
+            .replace('(', "%28")
+            .replace(')', "%29")
+            .replace('*', "%2A");
+        vec![
+            re_encode(path, apache_decodes),
+            re_encode(path, nginx_decodes),
+            re_encode(path, caddy_decodes),
+            re_encode(path, slash_decoding_nginx_decodes),
+            lowercase_hex,
+            go_escaped,
+        ]
+    }
+
+    #[test]
+    fn every_observed_proxy_rewrite_verifies_to_the_signed_url() {
+        let printable: String = (0x20u8..0x7f)
+            .map(char::from)
+            .filter(|c| !matches!(c, '/' | '#' | '?'))
+            .chain("åäö€😀".chars())
+            .collect();
+        let query_url = format!("https://example.com/a.png?{printable}");
+        let path_url = format!("https://example.com/{printable}/b.png?x=1");
+        for url in [
+            "https://cdn.discordapp.com/emojis/1005624491637997568.png?size=48",
+            "https://example.com/a.png?x=y/b",
+            "https://example.com/a.png?p=/c/d",
+            "https://example.com/a.png?redirect=https://cdn.example/x.png",
+            "https://example.com/a.png?u=https/x/y",
+            "https://example.com/o/x%2Fy.png?alt=media",
+            query_url.as_str(),
+            path_url.as_str(),
+        ] {
+            let path = build_external_media_proxy_path(url).expect("path builds");
+            let sig = signed(&path);
+            let expected = reconstruct_original_url(&path);
+            for received in proxy_rewrites(&path) {
+                assert_eq!(
+                    expected,
+                    verify_signed_proxy_path(&received, &sig, b"secret"),
+                    "{url} received as {received}"
+                );
+                assert_eq!(
+                    Err(ExternalPathError::InvalidSignature),
+                    verify_signed_proxy_path(&received, &sig, b"other"),
+                    "{url} received as {received}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_slashes_in_the_query_never_verify_a_different_host() {
+        let sig = signed("%3Fu%3Dhttps%2Fx%2Fy/https/example.com/a.png");
+        for received in [
+            "%3Fu=https/x/y/https/evil.example/a.png",
+            "%3Fu=https/x/https/example.com/a.png",
+            "%3Fu=https/evil.example/y/https/example.com/a.png",
+        ] {
+            assert_eq!(
+                Err(ExternalPathError::InvalidSignature),
+                verify_signed_proxy_path(received, &sig, b"secret"),
+                "{received}"
+            );
+        }
+    }
+
+    #[test]
+    fn userinfo_smuggled_into_the_host_segment_is_rejected() {
+        let sig = signed("https/cdn.discordapp.com/x.png");
+        for received in [
+            "https/evil.example%5C@cdn.discordapp.com/x.png",
+            "https/evil.example%5C%40cdn.discordapp.com/x.png",
+            "https/evil.example%40cdn.discordapp.com/x.png",
+            "https/evil.example@cdn.discordapp.com/x.png",
+            "https/cdn.discordapp.com%23@evil.example/x.png",
+        ] {
+            assert_eq!(
+                Err(ExternalPathError::InvalidSignature),
+                verify_signed_proxy_path(received, &sig, b"secret"),
+                "{received}"
+            );
+        }
+    }
+
+    #[test]
+    fn opaque_paths_stay_strict() {
+        let opaque = build_opaque_external_media_proxy_path("https://example.com/a.png");
+        let sig = signed(&opaque);
+        assert_eq!(
+            Ok("https://example.com/a.png".to_owned()),
+            verify_signed_proxy_path(&opaque, &sig, b"secret")
+        );
+        assert_eq!(
+            Err(ExternalPathError::InvalidSignature),
+            verify_signed_proxy_path(&format!("{opaque}A"), &sig, b"secret")
+        );
+        let segmented = build_external_media_proxy_path("https://example.com/a.png").unwrap();
+        assert_eq!(
+            Err(ExternalPathError::InvalidSignature),
+            verify_signed_proxy_path(&opaque, &signed(&segmented), b"secret")
+        );
+    }
 }
 
 #[cfg(test)]
@@ -326,6 +616,24 @@ mod tests {
                 build_external_media_proxy_path(normalized.as_str()).expect("path builds"),
                 "vector {original}"
             );
+        }
+    }
+
+    #[test]
+    fn shared_vectors_verify_after_proxy_re_encoding() {
+        let raw = include_str!("testdata/external_media_proxy_path_vectors.json");
+        let vectors: serde_json::Value = serde_json::from_str(raw).expect("vectors parse as json");
+        for vector in vectors.as_array().expect("vectors are an array") {
+            let path = vector["path"].as_str().expect("vector has a path");
+            let signature = create_signature(path, b"secret");
+            let expected = reconstruct_original_url(path);
+            for received in super::signature_tests::proxy_rewrites(path) {
+                assert_eq!(
+                    expected,
+                    verify_signed_proxy_path(&received, &signature, b"secret"),
+                    "{received}"
+                );
+            }
         }
     }
 }

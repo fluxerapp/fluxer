@@ -320,7 +320,7 @@ dispatch_call_create_from_pid(CallPid, ChannelId, _SessionId, SessionPid) ->
     try gen_server:call(CallPid, {get_state}, 5000) of
         {ok, CallData} ->
             gen_server:cast(SessionPid, {call_monitor, ChannelId, CallPid}),
-            DispatchData = guild_data_wire:payload(CallData),
+            DispatchData = guild_data_wire:payload(call_state:broadcast_call_event(CallData)),
             gateway_dispatch_relay:dispatch_direct(SessionPid, call_create, DispatchData),
             ok;
         _ ->

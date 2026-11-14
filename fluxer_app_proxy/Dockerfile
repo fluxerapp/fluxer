@@ -134,7 +134,7 @@ RUN --mount=type=bind,from=app-dist,source=/dist,target=/dist \
 FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static
 
 # ---------- Stage 3: Build the Rust proxy binary ----------
-FROM rust:1-trixie AS rust-builder
+FROM rust:1.98.1-trixie@sha256:a8a5f0a1e5fe7dfe1d352591e4a1c7dd2c08fd70475cae872cf3458ba0df0546 AS rust-builder
 
 
 WORKDIR /usr/src/app

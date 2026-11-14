@@ -79,7 +79,7 @@ export function AudioPlayer({
 	const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({mediaRef});
 	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
 	useEffect(() => {
-		if (hasStarted && pendingPlayRef.current) {
+		if (hasStarted && sourceAttribute !== undefined && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
 				if (pendingPlayRef.current) {
 					pendingPlayRef.current = false;
@@ -89,7 +89,7 @@ export function AudioPlayer({
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [hasStarted, play]);
+	}, [hasStarted, play, sourceAttribute]);
 	useEffect(() => {
 		if (!hasStarted || pendingSeekPercentageRef.current === null) {
 			return;

@@ -135,7 +135,7 @@ const THEME_COLOR_LABEL_DESCRIPTOR = msg({
 });
 const THEME_COLOR_HELP_DESCRIPTOR = msg({
 	message:
-		"Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo.",
+		"Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo.",
 	comment: 'Help text under the theme color picker in the setup wizard branding step.',
 });
 const THEME_COLOR_PRESETS_DESCRIPTOR = msg({

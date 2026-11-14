@@ -22,7 +22,7 @@ export function ssoIdentityTrait(providerId: string, sub: string): string {
 	return `sso_identity:${digest}`;
 }
 
-function ssoProviderTrait(providerId: string): string {
+export function ssoProviderTrait(providerId: string): string {
 	return `sso_provider:${createHash('sha256').update(providerId).digest('hex').slice(0, 32)}`;
 }
 

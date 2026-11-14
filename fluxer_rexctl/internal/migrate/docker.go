@@ -14,9 +14,8 @@ import (
 )
 
 var (
-	ErrAlreadyNative    = errors.New("migrate: the instance already runs without Docker")
-	ErrStorageReadOnly  = errors.New("migrate: uploads are still read-only after the move off SeaweedFS, open them with rexctl migrate --experimental-native --open-writes or go back with rexctl migrate --experimental-native --undo storage first")
-	ErrExternalDatabase = errors.New("migrate: the database is your own Postgres server")
+	ErrAlreadyNative   = errors.New("migrate: the instance already runs without Docker")
+	ErrStorageReadOnly = errors.New("migrate: uploads are still read-only after the move off SeaweedFS, open them with rexctl migrate --experimental-native --open-writes or go back with rexctl migrate --experimental-native --undo storage first")
 )
 
 var ErrNoNativeEquivalent = errors.New("migrate: a setting has no equivalent without Docker")

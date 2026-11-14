@@ -7,6 +7,7 @@ export const Endpoints = {
 	INSTANCE_SETUP_ACCOUNT_IDENTITY: '/instance/setup/account-identity',
 	INSTANCE_SETUP_TOKEN_CHECKS: '/instance/setup/token-checks',
 	ATTACHMENTS_REFRESH_URLS: '/attachments/refresh-urls',
+	USER_ATTACHMENT_TOKEN: '/users/@me/attachment-token',
 	AUTH_LOGIN: '/auth/login',
 	AUTH_LOGIN_MFA_TOTP: '/auth/login/mfa/totp',
 	AUTH_LOGIN_MFA_WEBAUTHN_OPTIONS: '/auth/login/mfa/webauthn/authentication-options',

@@ -76,7 +76,7 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
-		it('allows message when the only mutual guild is verified and the guild id is not disqualified', async () => {
+		it('allows message when the only mutual guild is verified', async () => {
 			const sender = await createTestAccount(harness);
 			const target = await createTestAccount(harness);
 			await ensureSessionStarted(harness, sender.token);

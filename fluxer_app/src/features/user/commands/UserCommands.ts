@@ -248,7 +248,7 @@ export async function completePasswordChange(
 	await SessionManager.setToken(response.body.token);
 	GatewaySessions.foregroundConnection.setToken(response.body.token);
 	AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
-	logger.info('Password changed successfully');
+	logger.debug('Password changed successfully');
 }
 
 export async function updatePasswordWithSudo(newPassword: string): Promise<void> {
@@ -259,7 +259,7 @@ export async function updatePasswordWithSudo(newPassword: string): Promise<void>
 	SessionManager.setToken(response.body.token);
 	GatewaySessions.foregroundConnection.setToken(response.body.token);
 	AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
-	logger.info('Password changed successfully');
+	logger.debug('Password changed successfully');
 }
 
 export async function getWebAuthnRegistrationOptions(): Promise<PublicKeyCredentialCreationOptionsJSON> {
@@ -282,7 +282,7 @@ export async function registerWebAuthnCredential(
 	await http.post(Endpoints.USER_MFA_WEBAUTHN_CREDENTIALS, {
 		body: {response: response, challenge: challenge, name: name},
 	});
-	logger.info('WebAuthn credential registered');
+	logger.debug('WebAuthn credential registered');
 	Sudo.clearToken();
 }
 
@@ -293,7 +293,7 @@ export async function setWebAuthnTwoFactor(enabled: boolean): Promise<Array<Back
 	});
 	const {user, backup_codes: backupCodes} = response.body;
 	Users.handleUserUpdate(user);
-	logger.info('Passkey two-factor preference updated');
+	logger.debug('Passkey two-factor preference updated');
 	Sudo.clearToken();
 	return backupCodes ?? null;
 }
@@ -301,31 +301,31 @@ export async function setWebAuthnTwoFactor(enabled: boolean): Promise<Array<Back
 export async function renameWebAuthnCredential(credentialId: string, name: string): Promise<void> {
 	logger.debug('Renaming WebAuthn credential');
 	await http.patch(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: {name}});
-	logger.info('WebAuthn credential renamed');
+	logger.debug('WebAuthn credential renamed');
 }
 
 export async function deleteWebAuthnCredential(credentialId: string): Promise<void> {
 	logger.debug('Deleting WebAuthn credential');
 	await http.delete(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: EMPTY_BODY});
-	logger.info('WebAuthn credential deleted');
+	logger.debug('WebAuthn credential deleted');
 }
 
 export async function disableAccount(): Promise<void> {
 	logger.debug('Disabling account');
 	await http.post(Endpoints.USER_DISABLE, {body: EMPTY_BODY});
-	logger.info('Account disabled');
+	logger.debug('Account disabled');
 }
 
 export async function deleteAccount(): Promise<void> {
 	logger.debug('Deleting account');
 	await http.post(Endpoints.USER_DELETE, {body: EMPTY_BODY});
-	logger.info('Account scheduled for deletion');
+	logger.debug('Account scheduled for deletion');
 }
 
 export async function forgetAuthorizedIps(): Promise<void> {
 	logger.debug('Forgetting authorized IPs');
 	await http.delete(Endpoints.USER_AUTHORIZED_IPS, {body: {}});
-	logger.info('Authorised IPs cleared');
+	logger.debug('Authorised IPs cleared');
 }
 
 export async function bulkDeleteMyMessages(filter: BulkDeleteMyMessagesFilter): Promise<void> {
@@ -333,13 +333,13 @@ export async function bulkDeleteMyMessages(filter: BulkDeleteMyMessagesFilter): 
 	await http.post(Endpoints.USER_BULK_DELETE_MY_MESSAGES, {
 		body: filter,
 	});
-	logger.info('Bulk message deletion queued');
+	logger.debug('Bulk message deletion queued');
 }
 
 export async function resetPremiumState(): Promise<void> {
 	logger.debug('Resetting premium state for current user');
 	await http.post(Endpoints.USER_PREMIUM_RESET);
-	logger.info('Reset premium state for current user');
+	logger.debug('Reset premium state for current user');
 }
 
 export async function requestDataHarvest(): Promise<{
@@ -347,7 +347,7 @@ export async function requestDataHarvest(): Promise<{
 }> {
 	logger.debug('Requesting data harvest');
 	const harvestId = (await http.post<HarvestRequestResponse>(Endpoints.USER_HARVEST)).body.harvest_id;
-	logger.info('Data harvest request submitted', {harvestId});
+	logger.debug('Data harvest request submitted', {harvestId});
 	return {harvestId};
 }
 
@@ -356,7 +356,7 @@ export async function requestFilteredDataHarvest(filter: HarvestDataFilter): Pro
 	const response = await http.post<HarvestRequestResponse>(Endpoints.USER_HARVEST_FILTERED, {
 		body: filter,
 	});
-	logger.info('Filtered data harvest request submitted', {harvestId: response.body.harvest_id});
+	logger.debug('Filtered data harvest request submitted', {harvestId: response.body.harvest_id});
 	return {harvestId: response.body.harvest_id};
 }
 

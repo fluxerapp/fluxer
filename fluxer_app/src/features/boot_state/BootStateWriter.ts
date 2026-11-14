@@ -695,7 +695,7 @@ class BootStateWriter {
 			const reason = frameSkipReason(blocker, scheduledBlocker, transientUiShown);
 			if (reason !== this.lastHeldReason) {
 				this.lastHeldReason = reason;
-				logger.info('Keeping the previous boot state until a matching frame can be captured', {reason});
+				logger.debug('Keeping the previous boot state until a matching frame can be captured', {reason});
 			}
 			return 'held';
 		}

@@ -30,6 +30,7 @@ import {
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
+import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
 import {Spinner, SpinnerSize} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -157,13 +158,40 @@ function resolveSignInAddress(webAppEndpoint: string): string {
 }
 
 function HandoffCode({code}: {code: string}): ReactElement {
+	const {i18n} = useLingui();
+	const [copied, setCopied] = useState(false);
+	useEffect(() => {
+		setCopied(false);
+	}, [code]);
+	useEffect(() => {
+		if (!copied) return;
+		const timer = setTimeout(() => setCopied(false), 2000);
+		return () => clearTimeout(timer);
+	}, [copied]);
+	const handleCopy = useCallback(async () => {
+		await TextCopyCommands.copy(i18n, code);
+		setCopied(true);
+	}, [code, i18n]);
 	return (
-		<flx-auth-login-browser-step-code
-			className={flxElementClassName(styles.browserCode)}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.code"
+		<flx-auth-login-browser-step-code-row
+			className={flxElementClassName(styles.browserCodeRow)}
+			data-flx="auth.flow.auth-login-core.auth-login-browser-step.code-row"
 		>
-			{code}
-		</flx-auth-login-browser-step-code>
+			<flx-auth-login-browser-step-code
+				className={flxElementClassName(styles.browserCode)}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.code"
+			>
+				{code}
+			</flx-auth-login-browser-step-code>
+			<Button
+				variant={ButtonVariant.SECONDARY}
+				small
+				onClick={handleCopy}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.copy-code"
+			>
+				{i18n._(copied ? COPIED_DESCRIPTOR : COPY_CODE_DESCRIPTOR)}
+			</Button>
+		</flx-auth-login-browser-step-code-row>
 	);
 }
 

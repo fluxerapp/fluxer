@@ -691,6 +691,7 @@ export async function initializeAppStorage(): Promise<void> {
 		} catch (error) {
 			console.error('[AppStorage] Failed to hydrate the scoped cache, serving the legacy corpus', error);
 			replaceScopedCache(new Map());
+			markAppStorageDegraded(toError(error));
 		}
 		replayRawMirror(activeScope);
 		storageInitialized = true;

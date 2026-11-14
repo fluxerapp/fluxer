@@ -11,6 +11,7 @@ import {
 	type ForwardMessagePreviewThumbnail,
 	resolveForwardMessagePreviewContent,
 } from '@app/features/messaging/components/modals/ForwardMessagePreviewContent';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Permission from '@app/features/permissions/state/Permission';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -137,6 +138,10 @@ function ForwardMessagePreviewAttachmentRow({summary, hasText}: ForwardMessagePr
 function ForwardMessagePreviewThumbnailFrame({thumbnail, overflowCount}: ForwardMessagePreviewThumbnailFrameProps) {
 	const {i18n} = useLingui();
 	const hasOverflow = overflowCount > 0;
+	const imageSrc = useApiAttachmentSrc(
+		thumbnail.showsFilePlaceholder ? '' : buildForwardMessagePreviewThumbnailURL(thumbnail),
+		!thumbnail.showsFilePlaceholder,
+	);
 	return (
 		<div
 			className={styles.thumbnailStack}
@@ -163,7 +168,7 @@ function ForwardMessagePreviewThumbnailFrame({thumbnail, overflowCount}: Forward
 				) : (
 					<img
 						className={styles.thumbnailImage}
-						src={buildForwardMessagePreviewThumbnailURL(thumbnail)}
+						src={imageSrc}
 						alt=""
 						data-flx="messaging.forward-message-preview.forward-message-preview-thumbnail-frame.thumbnail-image"
 					/>

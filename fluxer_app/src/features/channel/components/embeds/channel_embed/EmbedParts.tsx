@@ -2,9 +2,11 @@
 
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/embeds/ChannelEmbed.module.css';
+import type {LinkComponentProps} from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedLink} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import type {EmbedAuthor, EmbedField, EmbedFooter} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -20,12 +22,18 @@ const resolveEmbedIconSrc = (proxyIconUrl: string | undefined, allowMotion: bool
 	return buildMediaProxyURL(proxyIconUrl, allowMotion ? {} : STILL_EMBED_ICON_OPTIONS);
 };
 
-export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider}) => {
+type LinkContext = Pick<LinkComponentProps, 'messageId' | 'channelId'>;
+
+export const EmbedProvider: FC<{provider?: EmbedAuthor} & LinkContext> = observer(({provider, ...context}) => {
 	if (!provider) return null;
 	return (
 		<div className={styles.embedProvider} data-flx="channel.embeds.embed.embed-provider.embed-provider">
 			{provider.url ? (
-				<EmbedLink url={provider.url} data-flx="channel.embeds.channel-embed.embed-parts.embed-provider.embed-link">
+				<EmbedLink
+					url={provider.url}
+					{...context}
+					data-flx="channel.embeds.channel-embed.embed-parts.embed-provider.embed-link"
+				>
 					{provider.name}
 				</EmbedLink>
 			) : (
@@ -34,9 +42,9 @@ export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider})
 		</div>
 	);
 });
-export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({author}) => {
+export const EmbedAuthorComponent: FC<{author?: EmbedAuthor} & LinkContext> = observer(({author, ...context}) => {
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
-	const iconSrc = resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!author) return null;
 	return (
 		<div className={styles.embedAuthor} data-flx="channel.embeds.embed.embed-author-component.embed-author">
@@ -54,6 +62,7 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 				<EmbedLink
 					className={clsx(styles.embedAuthorName, styles.embedAuthorNameLink)}
 					url={author.url}
+					{...context}
 					data-flx="channel.embeds.channel-embed.embed-parts.embed-author-component.embed-author-name"
 				>
 					{author.name}
@@ -94,7 +103,12 @@ export const EmbedTitle: FC<{
 	return (
 		<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
 			{url ? (
-				<EmbedLink url={url} data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link">
+				<EmbedLink
+					url={url}
+					messageId={messageId}
+					channelId={channelId}
+					data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link"
+				>
 					{content}
 				</EmbedLink>
 			) : (
@@ -197,7 +211,7 @@ export const EmbedFooterComponent: FC<{
 	const {i18n} = useLingui();
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
 	const formattedTimestamp = timestamp ? DateUtils.getRelativeDateString(timestamp, i18n) : undefined;
-	const iconSrc = resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!(footer || formattedTimestamp)) return null;
 	return (
 		<div

@@ -1,7 +1,10 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
-title: Fluxer API
-description: Where to start with the Fluxer API and how to read the reference pages.
+title: Fluxer API and self-hosting docs
+description: Reference for the Fluxer HTTP API, Gateway, voice and media proxy, and guides for running your own Fluxer instance.
+head:
+  - tag: title
+    content: Fluxer API and self-hosting docs
 ---
 
 Fluxer is a self-hostable chat platform. You can build clients and bots with its HTTP API and Gateway, or run your own instance.
@@ -14,8 +17,9 @@ Fluxer is a self-hostable chat platform. You can build clients and bots with its
 | [Media Proxy](/media-proxy/overview/) | Load media and upload files |
 | [Admin API](/admin-api/) | Manage an instance with admin access |
 | [Self-hosting](/operator/) | Install and run an instance |
+| [Downloads](/downloads/overview/) | Download desktop builds and add the Linux package repositories |
 
-[Authentication](/authentication/), [Errors](/http-api/errors/), [Rate limits](/topics/rate-limits/) and [Locales](/topics/locales/) cover behavior the APIs share. Each page says where it differs. Most IDs are [snowflakes](/snowflakes/).
+[Authentication](/authentication/), [Errors](/http-api/errors/), [Rate limits](/topics/rate-limits/) and [Locales](/topics/locales/) describe behavior that the APIs share. Each page says where it differs. Most IDs are [snowflakes](/snowflakes/).
 
 ## Field notation
 

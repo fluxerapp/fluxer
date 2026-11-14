@@ -145,6 +145,18 @@ export const HAS_UNREAD_MESSAGES_DESCRIPTOR = msg({
 	message: 'New messages',
 	comment: 'Label on a joined forum post card with unread messages when the exact number is unknown.',
 });
+export const UNREAD_MESSAGES_SHORT_DESCRIPTOR = msg({
+	message: '{count, plural, one {# new} other {# new}}',
+	context: 'forum-card-footer',
+	comment:
+		'Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.',
+});
+export const HAS_UNREAD_MESSAGES_SHORT_DESCRIPTOR = msg({
+	message: 'New',
+	context: 'forum-card-footer',
+	comment:
+		'Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.',
+});
 export const ORIGINAL_MESSAGE_DELETED_DESCRIPTOR = msg({
 	message: 'Original message was deleted',
 	comment: 'Preview on a forum post card whose first message was deleted.',

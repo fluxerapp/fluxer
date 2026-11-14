@@ -593,7 +593,7 @@ class Updater {
 			return;
 		}
 		if (this.isNative && this.updateInfo.native.available) {
-			logger.info('Native update is available but not installable in-app; opening desktop downloads...');
+			logger.debug('Native update is available but not installable in-app; opening desktop downloads...');
 			await openExternalUrl(DESKTOP_DOWNLOAD_URL);
 		}
 	}

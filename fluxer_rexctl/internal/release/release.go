@@ -39,6 +39,7 @@ var (
 	ErrTooOld         = errors.New("release: current version is older than min_from")
 	ErrUnknownVersion = errors.New("release: no such version")
 	ErrBadResponse    = errors.New("release: the resolver sent an unexpected response")
+	ErrNoNativeBuild  = errors.New("release: no native build for this machine")
 )
 
 type Asset struct {
@@ -72,6 +73,17 @@ func (e *TooOldError) Error() string {
 func (e *TooOldError) Command() string { return "rexctl upgrade --to " + e.MinFrom }
 
 func (e *TooOldError) Is(target error) bool { return target == ErrTooOld }
+
+type NoNativeBuildError struct {
+	Version string
+	Arch    string
+}
+
+func (e *NoNativeBuildError) Error() string {
+	return fmt.Sprintf("Fluxer %s has no native build for linux/%s yet.", e.Version, e.Arch)
+}
+
+func (e *NoNativeBuildError) Is(target error) bool { return target == ErrNoNativeBuild }
 
 var httpClient = &http.Client{Timeout: 60 * time.Second}
 
@@ -212,5 +224,5 @@ func (r *Release) DistFor(goarch string) (Asset, error) {
 			return a, nil
 		}
 	}
-	return Asset{}, errors.New("release: no native build for linux/" + goarch)
+	return Asset{}, &NoNativeBuildError{Version: r.Version, Arch: goarch}
 }
