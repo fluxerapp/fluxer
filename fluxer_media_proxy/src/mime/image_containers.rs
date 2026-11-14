@@ -283,6 +283,29 @@ fn webp_u24(data: &[u8]) -> u32 {
     u32::from(data[0]) | (u32::from(data[1]) << 8) | (u32::from(data[2]) << 16)
 }
 
+fn webp_animation_frames(data: &[u8]) -> Option<u32> {
+    let riff_size = u32::from_le_bytes(data[4..8].try_into().expect("validated RIFF size slice"));
+    let end = usize::try_from(riff_size).ok()?.checked_add(8)?;
+    let data = data.get(..end)?;
+    let mut frames = 0u32;
+    let mut offset = WEBP_EXTENDED_HEADER_BYTES;
+    while offset < end {
+        let header_end = offset.checked_add(8)?;
+        let header = data.get(offset..header_end)?;
+        let size = usize::try_from(u32::from_le_bytes(
+            header[4..8]
+                .try_into()
+                .expect("validated WebP chunk size slice"),
+        ))
+        .ok()?;
+        if &header[0..4] == b"ANMF" {
+            frames = frames.saturating_add(1);
+        }
+        offset = header_end.checked_add(size)?.checked_add(size % 2)?;
+    }
+    (offset == end).then_some(frames)
+}
+
 pub(super) fn webp_sniff(data: &[u8]) -> SniffInfo {
     let mut out = SniffInfo {
         mime: MediaType::WebP.mime(),
@@ -302,8 +325,13 @@ pub(super) fn webp_sniff(data: &[u8]) -> SniffInfo {
                 return out;
             }
             let flags = data[20];
-            out.animated = flags & 0x02 != 0;
-            out.frames = if out.animated { 2 } else { 1 };
+            if flags & 0x02 != 0 {
+                let frames = webp_animation_frames(data);
+                out.animated = frames.is_none_or(|frames| frames > 1);
+                out.frames = frames.unwrap_or(2).max(1);
+            } else {
+                out.frames = 1;
+            }
             out.has_alpha = flags & 0x10 != 0;
             out.width = webp_u24(&data[24..27])
                 .checked_add(1)
