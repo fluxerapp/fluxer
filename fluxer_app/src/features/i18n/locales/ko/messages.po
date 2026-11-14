@@ -21931,6 +21931,11 @@ msgstr "{localizedTime}에 예정된 점검이 있습니다. 예상 소요 시�
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "{userName}님을 그룹 소유자로 지정하시겠어요? 소유자 권한을 잃게 됩니다."
 
+#. Description of the community ownership transfer section in community settings.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Make another member the owner of this community. You cannot undo this."
+msgstr "다른 멤버를 이 커뮤니티의 소유자로 지정합니다. 이 작업은 되돌릴 수 없습니다."
+
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -31758,6 +31763,11 @@ msgstr "언어 코드 검색…"
 msgid "Search languages…"
 msgstr "언어 검색…"
 
+#. Placeholder of the member search in the community ownership transfer section.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Search members"
+msgstr "멤버를 검색하세요"
+
 #. Placeholder of the search box in the add members or roles step of the create channel modal.
 #: src/features/channel/components/modals/ChannelCreateAccessStep.tsx
 msgid "Search members or roles"
@@ -38992,8 +39002,8 @@ msgstr "추적"
 msgid "Tracking parameters"
 msgstr "추적 매개변수"
 
-#. Short label in the transfer ownership modal. Keep it concise.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+#. Title of the community ownership transfer section in community settings and of its confirmation modal.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer community ownership"
 msgstr "커뮤니티 소유권 이전"
 
@@ -39003,10 +39013,14 @@ msgid "Transfer group ownership to {userName}?"
 msgstr "{userName}님에게 그룹 소유권을 이전하시겠어요?"
 
 #. Action label in community settings that hands ownership of the community to another member.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer ownership"
 msgstr "소유권 이전"
+
+#. Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.
+#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+msgid "Transfer ownership ({secondsRemaining})"
+msgstr "소유권 이전 ({secondsRemaining})"
 
 #. Activity log detail line under a community settings update, shown when the community got a new owner. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {user} is the new owner, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43450,10 +43464,11 @@ msgstr "이미 연결된 계정입니다."
 msgid "You are about to leave {productName}"
 msgstr "{productName}을(를) 떠나려고 합니다"
 
+#. Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "You are about to transfer ownership of this community to <0>{0}</0>. This action is <1>irreversible</1> and you will lose all owner privileges."
-msgstr "커뮤니티 소유권을 <0>{0}</0>님에게 이전합니다. 이 작업은 <1>되돌릴 수 없으며</1> 모든 소유자 권한을 잃게 됩니다."
+msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
+msgstr "커뮤니티 소유권을 <0>{0}</0>님({targetUserId})에게 이전합니다. 이 작업은 <1>되돌릴 수 없으며</1> 모든 소유자 권한을 잃게 됩니다."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx

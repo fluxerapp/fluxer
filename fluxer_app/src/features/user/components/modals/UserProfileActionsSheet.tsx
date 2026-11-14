@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import Authentication from '@app/features/auth/state/Authentication';
 import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
-import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
 import {
 	resolveGuildScopedModerationActionKeys,
 	useGuildMemberModerationCapabilities,
@@ -13,7 +11,6 @@ import {
 	COPY_USER_ID_DESCRIPTOR,
 	COPY_USERNAME_DESCRIPTOR,
 	REPORT_MESSAGE_DESCRIPTOR,
-	TRANSFER_OWNERSHIP_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -53,7 +50,6 @@ import {useLingui} from '@lingui/react/macro';
 import {
 	ClockIcon,
 	CopyIcon,
-	CrownIcon,
 	FlagIcon,
 	GavelIcon,
 	GlobeIcon,
@@ -103,16 +99,13 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 		const relationshipType = Relationships.getRelationship(user.id)?.type;
 
 		const member = guildMember ?? (guildId ? GuildMembers.getMember(guildId, user.id) : null);
-		const currentUserId = Authentication.currentUserId;
 
-		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+		const {canKick, canBan, canTimeout, canManageNicknames} = useGuildMemberModerationCapabilities(
 			guildId,
 			user,
 			isCurrentUser,
 			member,
 		);
-		const isOwner = guild?.ownerId === currentUserId;
-		const canTransfer = !isCurrentUser && !user.bot && isOwner && member;
 		const memberIsTimedOut = member?.isTimedOut() ?? false;
 
 		const handleCopyFluxerTag = () => {
@@ -207,20 +200,6 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 				)),
 			);
 		};
-		const handleTransferOwnership = () => {
-			if (!guildId || !member) return;
-			ModalCommands.pushAfterBottomSheetClose(
-				onClose,
-				modal(() => (
-					<TransferOwnershipModal
-						guildId={guildId}
-						targetUser={user}
-						targetMember={member}
-						data-flx="user.user-profile-actions-sheet.handle-transfer-ownership.transfer-ownership-modal"
-					/>
-				)),
-			);
-		};
 		const handleReportUserProfile = () => {
 			ModalCommands.runAfterBottomSheetClose(onClose, () => openReportUserProfileModal({user, guildId}));
 		};
@@ -272,18 +251,6 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 			}
 			if (guildItems.length > 0) {
 				menuGroups.push({items: guildItems});
-			}
-			if (member && canTransfer) {
-				menuGroups.push({
-					items: [
-						{
-							icon: <CrownIcon className={styles.icon} data-flx="user.user-profile-actions-sheet.icon--5" />,
-							label: i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR),
-							onClick: handleTransferOwnership,
-							danger: true,
-						},
-					],
-				});
 			}
 			const moderationActionKeys = resolveGuildScopedModerationActionKeys({
 				hasMember: member != null,
