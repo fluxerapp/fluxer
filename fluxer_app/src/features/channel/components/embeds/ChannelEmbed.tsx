@@ -31,7 +31,7 @@ import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlR
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {buildAnimatedImageProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {buildMessageEmbedCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
-import {canonicalizeMediaUrl, extractSpoileredUrls, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
+import {getEmbedSpoilerUrls, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
@@ -131,26 +131,11 @@ export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {
 			} as const)
 		: {};
 	const spoilerSourceContent = contextualContent ?? message.content;
-	const spoileredUrls = useMemo(() => extractSpoileredUrls(spoilerSourceContent), [spoilerSourceContent]);
-	const {isSpoilerEmbed, matchingSpoilerUrls} = useMemo(() => {
-		const urlsToCheck = [
-			embed.url,
-			embed.provider?.url,
-			embed.image?.url,
-			embed.image?.proxy_url,
-			embed.thumbnail?.url,
-			embed.thumbnail?.proxy_url,
-			embed.video?.url,
-			embed.video?.proxy_url,
-			embed.audio?.url,
-			embed.audio?.proxy_url,
-		].filter(Boolean) as Array<string>;
-		if (spoileredUrls.size === 0) return {isSpoilerEmbed: false, matchingSpoilerUrls: [] as Array<string>};
-		const matches = urlsToCheck
-			.map((url) => canonicalizeMediaUrl(url))
-			.filter((canonical): canonical is string => !!canonical && spoileredUrls.has(canonical));
-		return {isSpoilerEmbed: matches.length > 0, matchingSpoilerUrls: matches};
-	}, [embed, spoileredUrls]);
+	const matchingSpoilerUrls = useMemo(
+		() => getEmbedSpoilerUrls(embed, spoilerSourceContent),
+		[embed, spoilerSourceContent],
+	);
+	const isSpoilerEmbed = matchingSpoilerUrls.length > 0;
 	const {hidden: spoilerHidden, reveal: revealSpoiler} = useSpoilerState(
 		isSpoilerEmbed,
 		message.channelId,
