@@ -109,18 +109,24 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `CANNOT_BLOCK_SYSTEM_USER` | You can't block the system user |
 | `CANNOT_EDIT_OTHER_USER_MESSAGE` | You can't edit another user's message |
 | `CANNOT_EXECUTE_ON_DM` | This action can't be performed in a DM |
+| `CANNOT_FORWARD_POLL` | You can't forward a message containing a poll |
+| `CANNOT_MODIFY_POLL` | You can't edit a message containing a poll |
 | `CANNOT_MODIFY_SYSTEM_WEBHOOK` | You can't edit system messages |
 | `CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY` | You already have lifetime {premium_tier_name} |
 | `CANNOT_REPORT_GUILD` | You can't report this community |
 | `CANNOT_REPORT_OWN_GUILD` | You can't report your own community |
 | `CANNOT_REPORT_OWN_MESSAGE` | You can't report your own message |
 | `CANNOT_REPORT_YOURSELF` | You can't report yourself |
+| `CANNOT_SELECT_MULTIPLE_ANSWERS` | You can't select multiple answers on this poll |
 | `CANNOT_SEND_EMPTY_MESSAGE` | You can't send an empty message |
 | `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER` | You can't send a friend request to a blocked user |
 | `CANNOT_SEND_FRIEND_REQUEST_TO_SELF` | You can't send a friend request to yourself |
 | `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` | You can't send messages in a non-text channel |
 | `CANNOT_SEND_MESSAGES_TO_USER` | You can't send messages to this user |
+| `CANNOT_SEND_POLL_IN_PERSONAL_NOTES` | You can't send a poll in your personal notes |
 | `CANNOT_TRANSFER_OWNERSHIP_TO_BOT` | Community ownership can't be transferred to a bot |
+| `CANNOT_VOTE_ON_FINALIZED_POLL_ERROR` | You can't vote on a poll that has already ended |
+| `CANNOT_VOTE_ON_NON_POLL_ERROR` | You can't vote on a message that doesn't contain a poll |
 | `CAPTCHA_REQUIRED` | Verification required |
 | `CHANNEL_ALREADY_FOLLOWED` | This channel already receives updates from that announcement channel |
 | `CHANNEL_HAS_FOLLOWED_CHANNELS` | Remove the followed channels posting here before converting it to an announcement channel |
@@ -251,6 +257,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `MAX_GUILD_ROLES` | You can't have more than {count} community roles |
 | `MAX_INVITES` | You can't have more than {count} invites |
 | `MAX_PINNED_THREADS_IN_FORUM` | This channel is at its pinned post limit of {count} |
+| `MAX_POLL_VOTES` | This poll answer has reached its limit of {count} votes |
 | `MAX_REACTIONS` | You can't have more than {count} reactions |
 | `MAX_STICKERS` | You can't have more than {count} stickers |
 | `MAX_THREAD_MEMBERS` | This thread is at its member limit of {count} |
@@ -283,6 +290,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `PASSWORD_REQUIRED_TO_CLAIM` | Set a password to keep this account |
 | `PASSWORD_SIGN_IN_REQUIRED` | Sign in to this account with its password |
 | `PERSONAL_NOTES_DISABLED` | Personal notes are turned off on this instance |
+| `POLL_VOTE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `PREMIUM_PURCHASE_BLOCKED` | No active subscription |
 | `PREVIEW_MUST_BE_JPEG` | Preview must be JPEG |
 | `PROCESSING_FAILED` | We couldn't process the request |
@@ -372,6 +380,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `UNKNOWN_MEMBER` | Member wasn't found in this community |
 | `UNKNOWN_MESSAGE` | Message wasn't found |
 | `UNKNOWN_ORIGIN_HANDOFF` | This sign-in transfer has expired or was already used |
+| `UNKNOWN_POLL_ANSWER` | Poll answer wasn't found |
 | `UNKNOWN_REPORT` | Unknown report |
 | `UNKNOWN_ROLE` | Role wasn't found |
 | `UNKNOWN_SIGN_IN_TICKET` | This sign-in attempt has expired |
@@ -612,6 +621,8 @@ These are the values of `code` inside `errors`.
 | `PASSWORD_IS_TOO_COMMON` | Your password is too common |
 | `PASSWORD_LENGTH_INVALID` | String length must be between {min} and {max} characters |
 | `PASSWORD_NOT_SET` | Password isn't set |
+| `POLL_DURATION_TOO_HIGH` | A poll can't last longer than {maxPollDurationHours} hours |
+| `POLL_DURATION_TOO_LOW` | A poll has to last at least 1 hour |
 | `PRECEDING_CHANNEL_MUST_SHARE_PARENT` | Preceding channel must share the same parent as the moved channel |
 | `PRECEDING_CHANNEL_NOT_IN_GUILD` | Preceding channel isn't present in the community |
 | `PRONOUNS_CHANGED_TOO_MANY_TIMES` | You've changed your pronouns too often recently |
@@ -651,6 +662,7 @@ These are the values of `code` inside `errors`.
 | `TOO_LARGE` | Synced preferences exceed {max_bytes} bytes |
 | `TOO_MANY_EMBEDS` | Too many embeds |
 | `TOO_MANY_FILES` | Too many files |
+| `TOO_MANY_POLL_ANSWERS` | A poll can't have more than {maxPollAnswers} answers |
 | `TOO_MANY_USERS_WITH_THIS_USERNAME` | There are too many users with this username |
 | `TOO_MANY_USERS_WITH_USERNAME_TRY_DIFFERENT` | There are too many users with this username |
 | `TOTP_NOT_ENABLED` | Two-factor authentication using an authenticator app isn't enabled for this account |
@@ -686,6 +698,7 @@ These are the values of `code` inside `errors`.
 | `VOICE_MESSAGES_ATTACHMENT_DURATION_REQUIRED` | Voice message attachments must specify a duration |
 | `VOICE_MESSAGES_ATTACHMENT_MUST_BE_AUDIO` | Voice message attachments must be audio files |
 | `VOICE_MESSAGES_ATTACHMENT_WAVEFORM_REQUIRED` | Voice message attachments must include waveform data |
+| `VOICE_MESSAGES_CANNOT_HAVE_A_POLL` | Voice messages can't have a poll |
 | `VOICE_MESSAGES_CANNOT_HAVE_CONTENT` | Voice messages can't have text content |
 | `VOICE_MESSAGES_CANNOT_HAVE_EMBEDS` | Voice messages can't have embeds |
 | `VOICE_MESSAGES_CANNOT_HAVE_FAVORITE_MEMES` | Voice messages can't have saved media |

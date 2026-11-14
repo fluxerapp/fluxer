@@ -25,7 +25,9 @@
     message_reaction_add,
     message_reaction_remove,
     message_reaction_remove_all,
-    message_reaction_remove_emoji
+    message_reaction_remove_emoji,
+    message_poll_vote_add,
+    message_poll_vote_remove
 ]).
 -define(THREAD_EVENTS, [thread_create, thread_update, thread_delete]).
 -define(VIEW_EVENTS, ?GUILD_VIEW_EVENTS ++ ?CHANNEL_EVENTS).
@@ -42,7 +44,10 @@ allowed(Event) ->
 
 -spec visitor_payload(atom(), map()) -> map().
 visitor_payload(Event, Data) when
-    Event =:= message_reaction_add; Event =:= message_reaction_remove
+    Event =:= message_reaction_add;
+    Event =:= message_reaction_remove;
+    Event =:= message_poll_vote_add;
+    Event =:= message_poll_vote_remove
 ->
     maps:without([<<"user_id">>, <<"member">>, <<"session_id">>], Data);
 visitor_payload(Event, Data) when

@@ -8,6 +8,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import {extractEmbeddableCodeLinkContent} from '@app/features/messaging/utils/EmbeddableCodeLinkContent';
 import {emojiEquals} from '@app/features/messaging/utils/ReactionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -30,6 +31,7 @@ import type {
 	ReactionEmoji,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 
 type MessageInput = Omit<WireMessage, 'mentions' | 'mention_roles' | 'tts'> &
 	Partial<Pick<WireMessage, 'mentions' | 'mention_roles' | 'tts'>>;
@@ -160,6 +162,7 @@ export class Message {
 	readonly mentionRoles: ReadonlyArray<string>;
 	readonly mentionChannels: ReadonlyArray<ChannelMention>;
 	readonly embeds: ReadonlyArray<MessageEmbed>;
+	readonly poll?: MessagePoll | null;
 	readonly attachments: ReadonlyArray<MessageAttachment>;
 	readonly stickerItems: ReadonlyArray<MessageStickerItem>;
 	readonly messageReference?: MessageReference;
@@ -219,6 +222,7 @@ export class Message {
 				return embed.id === id ? embed : {...embed, id};
 			}),
 		);
+		this.poll = message.poll ? Object.freeze(message.poll) : undefined;
 		this.attachments = Object.freeze(message.attachments ?? []);
 		this.stickerItems = Object.freeze(message.stickers ?? []);
 		if (!options?.skipReactionHydration) {
@@ -226,6 +230,12 @@ export class Message {
 				MessageReactions.hydrateMessageReactions(this.id, message.reactions);
 			} else if (options?.missingReactions !== 'preserve') {
 				MessageReactions.hydrateMessageReactions(this.id, []);
+			}
+
+			if ('poll' in message) {
+				PollVotes.hydrateMessagePollVotes(this.id, message.poll?.results?.answer_counts);
+			} else if (options?.missingReactions !== 'preserve') {
+				PollVotes.hydrateMessagePollVotes(this.id, []);
 			}
 		}
 		this.messageReference = message.message_reference;
@@ -313,6 +323,9 @@ export class Message {
 		if ('reactions' in updates) {
 			MessageReactions.hydrateMessageReactions(this.id, updates.reactions ?? []);
 		}
+		if ('poll' in updates) {
+			PollVotes.replaceMessagePollVotes(this.id, updates.poll?.results?.answer_counts ?? []);
+		}
 		return new Message(
 			{
 				id: this.id,
@@ -332,6 +345,22 @@ export class Message {
 				mention_roles: ('mention_roles' in updates ? updates.mention_roles : this.mentionRoles) ?? [],
 				mention_channels: updates.mention_channels ?? this.mentionChannels,
 				embeds: updates.embeds ?? this.embeds,
+				poll: updates.poll
+					? {
+							question: updates.poll.question ?? this.poll?.question,
+							answers: updates.poll.answers ?? this.poll?.answers,
+							expiry: updates.poll.expiry ?? this.poll?.expiry,
+							anonymous_voting: updates.poll.anonymous_voting ?? this.poll?.anonymous_voting,
+							allow_multiselect: updates.poll.allow_multiselect ?? this.poll?.allow_multiselect,
+							layout_type: updates.poll.layout_type ?? this.poll?.layout_type,
+							results: updates.poll.results
+								? {
+										is_finalized: updates.poll.results.is_finalized ?? this.poll?.results?.is_finalized,
+										answer_counts: updates.poll.results.answer_counts ?? this.poll?.results?.answer_counts,
+									}
+								: this.poll?.results,
+						}
+					: this.poll,
 				attachments: updates.attachments ?? this.attachments,
 				stickers: updates.stickers ?? this.stickerItems,
 				reactions: updates.reactions ?? this.reactions,
@@ -354,6 +383,41 @@ export class Message {
 			{...this.toJSON(), referenced_message: null},
 			{skipUserCache: true, instanceId: this.instanceId, skipReactionHydration: true},
 		);
+	}
+
+	withPollVote(answerId: number, add = true, me = false): Message {
+		if (!this.poll) return this.withUpdates({});
+		const newPoll: MessagePoll = JSON.parse(JSON.stringify(this.poll));
+		for (const answer of newPoll.answers ?? []) {
+			answer.answer_id = Number(answer.answer_id);
+		}
+		if (!newPoll.results) {
+			newPoll.results = {
+				answer_counts: undefined,
+				is_finalized: false,
+			};
+		}
+		if (!newPoll.results.answer_counts) {
+			newPoll.results.answer_counts = (newPoll.answers ?? []).map((answer) => ({
+				id: answer.answer_id,
+				count: 0,
+				me_voted: false,
+			}));
+		}
+		for (const answerCount of newPoll.results.answer_counts) {
+			if (answerCount.id === answerId) {
+				if (!answerCount.count) answerCount.count = 0;
+				if (add) {
+					answerCount.count++;
+					if (me) answerCount.me_voted = true;
+				} else {
+					answerCount.count--;
+					if (me) answerCount.me_voted = false;
+				}
+			}
+		}
+		const newMessage = this.withUpdates({poll: newPoll});
+		return newMessage;
 	}
 
 	withoutReactionEmoji(emoji: ReactionEmoji): Message {
@@ -511,6 +575,7 @@ export class Message {
 			mention_roles: this.mentionRoles,
 			mention_channels: this.mentionChannels,
 			embeds: this.embeds,
+			poll: this.poll ?? null,
 			attachments: this.attachments,
 			stickers: this.stickerItems,
 			reactions: this.reactions,

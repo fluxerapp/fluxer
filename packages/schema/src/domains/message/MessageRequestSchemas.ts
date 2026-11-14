@@ -11,6 +11,7 @@ import {
 	ClientAttachmentRequest,
 	ClientUploadedAttachmentRequest,
 } from '@fluxer/schema/src/domains/message/AttachmentSchemas';
+import {MessagePollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import {createQueryIntegerType, DateTimeType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -339,6 +340,7 @@ export const MessageRequestSchema = z
 	.object({
 		content: MessageContentRequest.nullish(),
 		embeds: z.array(RichEmbedRequest).max(100).describe('Array of embed objects to include in the message'),
+		poll: MessagePollRequest.nullish(),
 		attachments: z
 			.array(z.union([ClientUploadedAttachmentRequest, ClientAttachmentRequest]))
 			.max(100)
@@ -409,6 +411,12 @@ export const MessagesQuery = z.object({
 });
 
 export type MessagesQuery = z.infer<typeof MessagesQuery>;
+
+export const PollVoteRequestSchema = z.object({
+	answerIds: z.array(z.string()),
+});
+
+export type PollVoteRequestSchema = z.infer<typeof PollVoteRequestSchema>;
 
 const BulkMessageFetchEntryRequest = z.object({
 	channel_id: SnowflakeType.describe('The ID of the channel to fetch messages from'),

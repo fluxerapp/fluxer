@@ -8,6 +8,7 @@ import {
 	selectChannelMessagesLoadRestoresTrust,
 } from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import {mergeAscendingById} from '@app/features/messaging/utils/MessagePaginationUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
@@ -94,6 +95,11 @@ function hydrateMessage(
 		MessageReactions.hydrateMessageReactions(wire.id, wire.reactions);
 	} else if (missingReactions === 'empty') {
 		MessageReactions.hydrateMessageReactions(wire.id, []);
+	}
+	if ('poll' in wire) {
+		PollVotes.hydrateMessagePollVotes(wire.id, wire.poll?.results?.answer_counts);
+	} else if (missingReactions === 'empty') {
+		PollVotes.hydrateMessagePollVotes(wire.id, []);
 	}
 	const current = channelMessages.get(wire.id);
 	const incoming = raw instanceof Message ? raw : new Message(wire, {missingReactions});

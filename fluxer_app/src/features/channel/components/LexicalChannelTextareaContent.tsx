@@ -70,6 +70,8 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import {showAttachmentPermissionDeniedModal} from '@app/features/messaging/components/alerts/AttachmentPermissionDeniedModal';
 import {FileSizeTooLargeModal} from '@app/features/messaging/components/alerts/FileSizeTooLargeModal';
 import {TooManyAttachmentsModal} from '@app/features/messaging/components/alerts/TooManyAttachmentsModal';
+import {CreatePollBottomSheet} from '@app/features/messaging/components/modals/poll_modal/CreatePollBottomSheet';
+import {CreatePollModal, type PollForm} from '@app/features/messaging/components/modals/poll_modal/CreatePollModal';
 import {useTextareaAttachments} from '@app/features/messaging/hooks/useCloudUpload';
 import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import {type SendMessageFunction, useMessageSubmission} from '@app/features/messaging/hooks/useMessageSubmission';
@@ -105,6 +107,7 @@ import {
 	resolveTypedEmojiShortcodes,
 	resolveTypedEmojiToken,
 } from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
+import Permission from '@app/features/permissions/state/Permission';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {awaitHydration} from '@app/features/platform/utils/MobXPersistence';
@@ -124,6 +127,8 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import {flxElementClassName} from '@app/lib/react';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
@@ -219,6 +224,10 @@ export const LexicalChannelTextareaContent = observer(
 		const mentionPopoutKey = useMemo(() => `mention-everyone-${channel.id}`, [channel.id]);
 		const mentionModalKey = useMemo(() => `mention-everyone-modal-${channel.id}`, [channel.id]);
 		const [mobilePlusSheetOpen, setMobilePlusSheetOpen] = useState(false);
+		const [createPollSheetOpen, setCreatePollSheetOpen] = useState(false);
+		const canSendPolls =
+			onSubmitOverride == null &&
+			(channel.isPrivate() ? !channel.isPersonalNotes() : Permission.can(Permissions.SEND_POLLS, channel));
 		const autocompleteListId = useId();
 		const handleRef = useRef<ComposerHandle | null>(null);
 		const editorDisplayRef = useRef(initialDraftRef.current.display);
@@ -633,6 +642,9 @@ export const LexicalChannelTextareaContent = observer(
 		const handleCloseMobilePlusSheet = useCallback(() => {
 			setMobilePlusSheetOpen(false);
 		}, []);
+		const handleCloseCreatePollSheet = useCallback(() => {
+			setCreatePollSheetOpen(false);
+		}, []);
 		const handleFileButtonClick = useCallback(async () => {
 			if (textareaInputDisabled) {
 				return;
@@ -722,6 +734,46 @@ export const LexicalChannelTextareaContent = observer(
 				handle.focus();
 			}
 		}, [accountKey, textareaInputDisabled, value, channel, uploadAttachments.length, maxAttachments, composerKey]);
+		const handlePollSubmit = useCallback(
+			(pollForm: PollForm) => {
+				if (mobileLayout.enabled) setCreatePollSheetOpen(false);
+				const messagePoll: MessageCreatePoll = {
+					question: {
+						text: pollForm.question,
+					},
+					answers: pollForm.answers.map((answer) => ({
+						answer_id: answer.id,
+						poll_media: {
+							emoji: answer.emoji,
+							text: answer.text,
+						},
+					})),
+					duration: pollForm.duration,
+					anonymous_voting: pollForm.anonymousVoting,
+					allow_multiselect: pollForm.allowMultipleAnswers,
+					layout_type: 1,
+				};
+				handleSendMessage('', false, messagePoll);
+			},
+			[handleSendMessage],
+		);
+		const handleSendPoll = useCallback(async () => {
+			if (textareaInputDisabled || !canSendPolls) return;
+
+			if (mobileLayout.enabled) {
+				setCreatePollSheetOpen(true);
+			} else {
+				ModalCommands.push(
+					modal(() => (
+						<CreatePollModal
+							onSubmit={handlePollSubmit}
+							channelId={channel.id}
+							data-flx="channel.channel-textarea.handle-send-poll"
+						/>
+					)),
+				);
+			}
+		}, [textareaInputDisabled, canSendPolls, handlePollSubmit, channel.id]);
 		useTextareaExpressionHandlers({
 			setValue,
 			previousValueRef,
@@ -1149,8 +1201,10 @@ export const LexicalChannelTextareaContent = observer(
 							onUploadFile={handleFileButtonClick}
 							canAttachFiles={canAttachFilesInChannel(channel)}
 							canSendMessages={!textareaInputDisabled}
+							canSendPolls={canSendPolls}
 							textareaValue={value}
 							onUploadAsFile={handleUploadMessageAsFile}
+							onSendPoll={onSubmitOverride == null ? handleSendPoll : undefined}
 							onSendVoiceMessage={
 								mobileLayout.enabled || draftChannelId != null
 									? undefined
@@ -1507,13 +1561,22 @@ export const LexicalChannelTextareaContent = observer(
 							data-flx="channel.lexical-channel-textarea-content.expression-picker-sheet"
 						/>
 						<MobileTextareaPlusBottomSheet
+							canSendPolls={canSendPolls}
 							giftChannelId={draftChannelId == null ? channel.id : undefined}
 							isOpen={mobilePlusSheetOpen}
 							onClose={handleCloseMobilePlusSheet}
 							onUploadFile={handleFileButtonClick}
+							onSendPoll={handleSendPoll}
 							textareaValue={value}
 							onUploadAsFile={handleUploadMessageAsFile}
 							data-flx="channel.lexical-channel-textarea-content.mobile-textarea-plus-bottom-sheet"
+						/>
+						<CreatePollBottomSheet
+							isOpen={createPollSheetOpen}
+							onClose={handleCloseCreatePollSheet}
+							onSubmit={handlePollSubmit}
+							channelId={channel.id}
+							data-flx="channel.lexical-channel-textarea-content.create-poll-bottom-sheet.poll-submit"
 						/>
 					</>
 				)}

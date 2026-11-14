@@ -163,7 +163,10 @@ filter_state_for_event(_Event, _PreviousState, UpdatedState) ->
 -spec extract_session_id_if_needed(event(), event_data(), guild_state()) ->
     {binary() | undefined, event_data()}.
 extract_session_id_if_needed(Event, EventData, State) when
-    Event =:= message_reaction_add; Event =:= message_reaction_remove
+    Event =:= message_reaction_add;
+    Event =:= message_reaction_remove;
+    Event =:= message_poll_vote_add;
+    Event =:= message_poll_vote_remove
 ->
     {SessionIdOpt, CleanData} = guild_dispatch_decorate:extract_and_remove_session_id(
         EventData

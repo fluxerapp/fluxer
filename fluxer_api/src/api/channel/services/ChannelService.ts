@@ -130,6 +130,16 @@ export class ChannelService {
 			rateLimitService,
 			cacheService,
 		);
+		this.interactions = new MessageInteractionService(
+			channelRepository,
+			userRepository,
+			guildRepository,
+			gatewayService,
+			snowflakeService,
+			messagePersistenceService,
+			guildAuditLogService,
+			limitConfigService,
+		);
 		this.messages = new MessageService(
 			channelRepository,
 			userRepository,
@@ -149,16 +159,7 @@ export class ChannelService {
 			messagePersistenceService,
 			attachmentUploadTraceRepository,
 			limitConfigService,
-		);
-		this.interactions = new MessageInteractionService(
-			channelRepository,
-			userRepository,
-			guildRepository,
-			gatewayService,
-			snowflakeService,
-			messagePersistenceService,
-			guildAuditLogService,
-			limitConfigService,
+			this.interactions.reactionService,
 		);
 		this.attachments = new AttachmentUploadService(
 			channelRepository,

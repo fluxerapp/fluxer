@@ -8,6 +8,7 @@ import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {useEffect, useState} from 'react';
 
 export interface ThreadStarterPayload {
@@ -55,7 +56,7 @@ function useCooldownSeconds(until: number): number {
 	return Math.max(0, Math.ceil((until - now) / 1000));
 }
 export function resolveStarterArgs(
-	stickersOrTts?: Array<MessageStickerItem> | boolean,
+	stickersOrTts?: Array<MessageStickerItem> | MessageCreatePoll | boolean,
 	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 	maybeFavoriteMemeId?: string,
 ): {stickers: Array<MessageStickerItem>; favoriteMemeId?: string} {
@@ -66,7 +67,7 @@ export function resolveStarterArgs(
 		};
 	}
 	return {
-		stickers: stickersOrTts ?? [],
+		stickers: Array.isArray(stickersOrTts) ? stickersOrTts : [],
 		favoriteMemeId: typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined,
 	};
 }

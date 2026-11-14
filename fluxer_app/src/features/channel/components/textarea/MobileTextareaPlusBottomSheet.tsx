@@ -1,43 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	CREATE_POLL_DESCRIPTOR,
+	SEND_GIFT_DESCRIPTOR,
+	UPLOAD_FILE_DESCRIPTOR,
+	UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR,
+} from '@app/features/channel/components/textarea/TextareaPlusMenu';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {MenuBottomSheet, type MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
-import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GiftIcon, PaperclipIcon, UploadSimpleIcon} from '@phosphor-icons/react';
+import {GiftIcon, PaperclipIcon, TableIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
 
-const UPLOAD_FILE_DESCRIPTOR = msg({
-	message: 'Upload file',
-	comment: 'Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.',
-});
-const UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR = msg({
-	message: 'Upload your message as a file',
-	comment: 'Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.',
-});
-const SEND_GIFT_DESCRIPTOR = msg({
-	message: 'Send gift',
-	comment: 'Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.',
-});
-
 interface MobileTextareaPlusBottomSheetProps {
+	canSendPolls: boolean;
 	giftChannelId?: string;
 	isOpen: boolean;
 	onClose: () => void;
 	onUploadFile: () => void;
+	onSendPoll: () => void;
 	textareaValue?: string;
 	onUploadAsFile?: () => void;
 }
 
 export const MobileTextareaPlusBottomSheet = observer(
 	({
+		canSendPolls,
 		giftChannelId,
 		isOpen,
 		onClose,
 		onUploadFile,
+		onSendPoll,
 		textareaValue,
 		onUploadAsFile,
 	}: MobileTextareaPlusBottomSheetProps) => {
@@ -72,6 +68,18 @@ export const MobileTextareaPlusBottomSheet = observer(
 					},
 				});
 			}
+			if (canSendPolls) {
+				items.push({
+					icon: (
+						<TableIcon weight="bold" data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.table-icon" />
+					),
+					label: i18n._(CREATE_POLL_DESCRIPTOR),
+					onClick: () => {
+						onSendPoll();
+						onClose();
+					},
+				});
+			}
 			if (canSendGift) {
 				items.push({
 					icon: <GiftIcon data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.gift-icon" />,
@@ -84,7 +92,17 @@ export const MobileTextareaPlusBottomSheet = observer(
 				});
 			}
 			return [{items}];
-		}, [canSendGift, onClose, onUploadFile, textareaValue, onUploadAsFile, i18n.locale]);
+		}, [
+			canSendGift,
+			canSendPolls,
+			giftChannelId,
+			onClose,
+			onUploadFile,
+			onSendPoll,
+			textareaValue,
+			onUploadAsFile,
+			i18n.locale,
+		]);
 		return (
 			<MenuBottomSheet
 				isOpen={isOpen}

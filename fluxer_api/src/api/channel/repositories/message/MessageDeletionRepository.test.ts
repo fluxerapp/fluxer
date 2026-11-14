@@ -35,6 +35,7 @@ function buildMessageRow(messageId: MessageID, hasReaction: boolean | null): Mes
 		mention_channels: null,
 		attachments: null,
 		embeds: null,
+		poll: null,
 		sticker_items: null,
 		message_reference: null,
 		message_snapshots: null,

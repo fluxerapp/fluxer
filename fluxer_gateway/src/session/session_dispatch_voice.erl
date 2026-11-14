@@ -59,46 +59,49 @@ try_cancel_from_buffer(BufferQ, Data, State) ->
     MessageId = maps:get(<<"message_id">>, Data, undefined),
     UserId = maps:get(<<"user_id">>, Data, undefined),
     Emoji = maps:get(<<"emoji">>, Data, #{}),
-    case remove_matching_reaction(BufferList, MessageId, UserId, Emoji) of
+    ReactionType = reaction_type(Data),
+    case remove_matching_reaction(BufferList, MessageId, UserId, Emoji, ReactionType) of
         {found, NewBufferList} ->
             {cancelled, State#{reaction_buffer => queue:from_list(NewBufferList)}};
         not_found ->
             not_applicable
     end.
 
--spec remove_matching_reaction([map()], term(), term(), map()) ->
+-spec remove_matching_reaction([map()], term(), term(), map(), term()) ->
     {found, [map()]} | not_found.
-remove_matching_reaction(Buffer, MessageId, UserId, Emoji) ->
+remove_matching_reaction(Buffer, MessageId, UserId, Emoji, ReactionType) ->
     EmojiId = maps:get(<<"id">>, Emoji, undefined),
     EmojiName = maps:get(<<"name">>, Emoji, undefined),
-    remove_matching_reaction_loop(Buffer, MessageId, UserId, EmojiId, EmojiName, []).
+    Key = {MessageId, UserId, EmojiId, EmojiName, ReactionType},
+    remove_matching_reaction_loop(Buffer, Key, []).
 
--spec remove_matching_reaction_loop([map()], term(), term(), term(), term(), [map()]) ->
+-spec remove_matching_reaction_loop([map()], tuple(), [map()]) ->
     {found, [map()]} | not_found.
-remove_matching_reaction_loop([], _MessageId, _UserId, _EmojiId, _EmojiName, _Acc) ->
+remove_matching_reaction_loop([], _Key, _Acc) ->
     not_found;
-remove_matching_reaction_loop([Entry | Rest], MessageId, UserId, EmojiId, EmojiName, Acc) ->
-    case matches_reaction(Entry, MessageId, UserId, EmojiId, EmojiName) of
+remove_matching_reaction_loop([Entry | Rest], Key, Acc) ->
+    case matches_reaction(Entry, Key) of
         true ->
             {found, lists:reverse(Acc) ++ Rest};
         false ->
-            remove_matching_reaction_loop(
-                Rest,
-                MessageId,
-                UserId,
-                EmojiId,
-                EmojiName,
-                [Entry | Acc]
-            )
+            remove_matching_reaction_loop(Rest, Key, [Entry | Acc])
     end.
 
--spec matches_reaction(map(), term(), term(), term(), term()) -> boolean().
-matches_reaction(Entry, MessageId, UserId, EmojiId, EmojiName) ->
+-spec matches_reaction(map(), tuple()) -> boolean().
+matches_reaction(Entry, {MessageId, UserId, EmojiId, EmojiName, ReactionType}) ->
     EntryEmoji = maps:get(<<"emoji">>, Entry, #{}),
     maps:get(<<"message_id">>, Entry, undefined) =:= MessageId andalso
         maps:get(<<"user_id">>, Entry, undefined) =:= UserId andalso
         maps:get(<<"id">>, EntryEmoji, undefined) =:= EmojiId andalso
-        maps:get(<<"name">>, EntryEmoji, undefined) =:= EmojiName.
+        maps:get(<<"name">>, EntryEmoji, undefined) =:= EmojiName andalso
+        reaction_type(Entry) =:= ReactionType.
+
+-spec reaction_type(map()) -> term().
+reaction_type(Data) ->
+    case maps:get(<<"reaction_type">>, Data, 0) of
+        null -> 0;
+        Type -> Type
+    end.
 
 -spec flush_reaction_buffer(
     fun((atom(), map(), session_state()) -> {noreply, session_state()}),
@@ -183,10 +186,16 @@ build_single_reaction(Entry) ->
         <<"user_id">> => maps:get(<<"user_id">>, Entry, undefined),
         <<"emoji">> => maps:get(<<"emoji">>, Entry, #{})
     },
-    case maps:get(<<"member">>, Entry, undefined) of
-        undefined -> Base;
-        null -> Base;
-        Member -> Base#{<<"member">> => Member}
+    Base1 =
+        case maps:get(<<"member">>, Entry, undefined) of
+            undefined -> Base;
+            null -> Base;
+            Member -> Base#{<<"member">> => Member}
+        end,
+    case maps:get(<<"reaction_type">>, Entry, undefined) of
+        undefined -> Base1;
+        null -> Base1;
+        ReactionType -> Base1#{<<"reaction_type">> => ReactionType}
     end.
 
 -spec add_guild_id(term(), map()) -> map().

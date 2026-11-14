@@ -2,6 +2,8 @@
 
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {PollMessageExpiryRepository} from '@app/api/channel/repositories/PollMessageExpiryRepository';
+import type {MessageReactionService} from '@app/api/channel/services/interaction/MessageReactionService';
 import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import {MessageCrosspostService} from '@app/api/channel/services/message/MessageCrosspostService';
@@ -10,6 +12,7 @@ import {MessageEditService} from '@app/api/channel/services/message/MessageEditS
 import {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {MessagePollService} from '@app/api/channel/services/message/MessagePollService';
 import {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {MessageRetrievalService} from '@app/api/channel/services/message/MessageRetrievalService';
@@ -46,6 +49,7 @@ export class MessageService {
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
+	public readonly poll: MessagePollService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
 	public readonly writeLock: MessageWriteLock;
@@ -72,6 +76,7 @@ export class MessageService {
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
+		messageReactionService: MessageReactionService,
 	) {
 		this.validation = new MessageValidationService(limitConfigService);
 		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
@@ -114,6 +119,7 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		const pollMessageExpiryRepository = new PollMessageExpiryRepository();
 		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService);
 		this.send = new MessageSendService({
 			threadActivity: this.threadActivity,
@@ -131,6 +137,7 @@ export class MessageService {
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
+			pollMessageExpiryRepository,
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
@@ -150,6 +157,17 @@ export class MessageService {
 			mentionService: this.mention,
 			messageWriteLock: this.writeLock,
 			crosspostPropagation: this.crosspostPropagation,
+		});
+		this.poll = new MessagePollService({
+			channelAuthService: this.channelAuth,
+			channelRepository,
+			userRepository,
+			gatewayService,
+			pollExpiryRepository: pollMessageExpiryRepository,
+			messageReactionService,
+			messageSendService: this.send,
+			limitConfigService,
+			messageWriteLock: this.writeLock,
 		});
 		this.deletion = new MessageDeleteService({
 			channelRepository,

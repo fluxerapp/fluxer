@@ -33,6 +33,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@app/api/database/types/MessageTypes';
+import type {MessagePoll} from '@app/api/database/types/PollTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {IMediaService, MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
@@ -126,6 +127,7 @@ interface CreateMessageParams {
 	processedAttachments?: Array<MessageAttachment>;
 	favoriteMemeAttachment?: MessageAttachment;
 	stickerIds?: Array<StickerID>;
+	poll?: MessagePoll;
 	messageReference?: MessageReference;
 	messageSnapshots?: Array<MessageSnapshot>;
 	guildId: GuildID | null;
@@ -424,6 +426,7 @@ export class MessagePersistenceService {
 			mention_channels: mentionData.mentionChannelIds.length > 0 ? new Set(mentionData.mentionChannelIds) : null,
 			attachments: messageAttachments.length > 0 ? messageAttachments : null,
 			embeds: allowEmbeds ? initialEmbeds : null,
+			poll: params.poll || null,
 			sticker_items: processedStickers.length > 0 ? processedStickers : null,
 			message_reference: params.messageReference || null,
 			message_snapshots:

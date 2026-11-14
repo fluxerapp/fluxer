@@ -61,6 +61,10 @@ const ADD_EMAIL_REASONS: Readonly<Record<AccountGateAction, MessageDescriptor>> 
 		message: 'Add an email to add reactions.',
 		comment: 'Reason shown when someone without an email tries to react to a message.',
 	}),
+	[AccountGateActions.POLL_VOTE]: msg({
+		message: 'Add an email to vote in polls.',
+		comment: 'Reason shown when someone without an email tries to vote in a poll.',
+	}),
 	[AccountGateActions.DIRECT_MESSAGE]: msg({
 		message: 'Add an email to send direct messages.',
 		comment: 'Reason shown when someone without an email tries to send a direct message.',
@@ -163,6 +167,11 @@ const ADD_EMAIL_NO_DELIVERY_REASONS: Readonly<Record<AccountGateAction, MessageD
 		message: 'Add an email and a password to add reactions.',
 		comment:
 			'Reason shown on an instance that cannot send email, when someone without an email tries to react to a message.',
+	}),
+	[AccountGateActions.POLL_VOTE]: msg({
+		message: 'Add an email and a password to vote in polls.',
+		comment:
+			'Reason shown on an instance that cannot send email, when someone without an email tries to vote in a poll.',
 	}),
 	[AccountGateActions.DIRECT_MESSAGE]: msg({
 		message: 'Add an email and a password to send direct messages.',
@@ -283,6 +292,10 @@ const CONFIRM_EMAIL_REASONS: Readonly<Record<AccountGateAction, MessageDescripto
 		message: 'Confirm your email to add reactions.',
 		comment: 'Reason shown when someone with an unconfirmed email tries to react to a message.',
 	}),
+	[AccountGateActions.POLL_VOTE]: msg({
+		message: 'Confirm your email to vote in polls.',
+		comment: 'Reason shown when someone with an unconfirmed email tries to vote in a poll.',
+	}),
 	[AccountGateActions.DIRECT_MESSAGE]: msg({
 		message: 'Confirm your email to send direct messages.',
 		comment: 'Reason shown when someone with an unconfirmed email tries to send a direct message.',
@@ -384,6 +397,10 @@ const SET_PASSWORD_REASONS: Readonly<Record<AccountGateAction, MessageDescriptor
 	[AccountGateActions.REACTION]: msg({
 		message: 'Set a password to add reactions.',
 		comment: 'Reason shown when someone whose account has no password or passkey yet tries to react to a message.',
+	}),
+	[AccountGateActions.POLL_VOTE]: msg({
+		message: 'Set a password to vote in polls.',
+		comment: 'Reason shown when someone whose account has no password or passkey yet tries to vote in a poll.',
 	}),
 	[AccountGateActions.DIRECT_MESSAGE]: msg({
 		message: 'Set a password to send direct messages.',

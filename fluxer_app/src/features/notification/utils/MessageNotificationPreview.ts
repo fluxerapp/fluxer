@@ -18,6 +18,7 @@ import type {
 	MessageStickerItem,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -40,6 +41,10 @@ const STICKERS_NOTIFICATION_BODY_DESCRIPTOR = msg({
 	comment:
 		'Notification body shown when a message has no text but includes multiple stickers. stickerNames is a localized list of sticker names.',
 });
+const POLL_NOTIFICATION_DESCRIPTOR = msg({
+	message: 'Poll: {question}',
+	comment: 'Notification body shown when a poll is sent. question is the question asked on the poll.',
+});
 
 interface MarkdownPreviewOptions {
 	channelId: string;
@@ -52,6 +57,7 @@ interface MessagePreviewContent {
 	attachments?: ReadonlyArray<MessageAttachment> | null;
 	embeds?: ReadonlyArray<MessageEmbed> | null;
 	stickers?: ReadonlyArray<MessageStickerItem> | null;
+	poll?: MessagePoll | null;
 }
 
 function isUserMessageType(type: number): boolean {
@@ -76,6 +82,11 @@ function buildAttachmentNotificationPreview(
 ): string {
 	if (!attachments?.length) return '';
 	return i18n._(ATTACHMENT_DESCRIPTOR, {filename: attachments[0].filename});
+}
+
+function buildPollNotificationPreview(poll: MessagePoll | null | undefined, i18n: I18n): string {
+	if (!poll?.question?.text) return '';
+	return i18n._(POLL_NOTIFICATION_DESCRIPTOR, {question: poll.question?.text});
 }
 
 function buildEmbedNotificationPreview(embeds: ReadonlyArray<MessageEmbed> | null | undefined): string {
@@ -118,7 +129,8 @@ function buildMessageContentFallbackPreview(content: MessagePreviewContent, i18n
 	return (
 		buildStickerNotificationPreview(content.stickers, i18n) ||
 		buildAttachmentNotificationPreview(content.attachments, i18n) ||
-		buildEmbedNotificationPreview(content.embeds)
+		buildEmbedNotificationPreview(content.embeds) ||
+		buildPollNotificationPreview(content.poll, i18n)
 	);
 }
 
@@ -158,6 +170,7 @@ export function buildMessageNotificationBody(message: Message, i18n: I18n): stri
 			attachments: message.attachments,
 			embeds: message.embeds,
 			stickers: message.stickerItems,
+			poll: message.poll,
 		},
 		i18n,
 	);

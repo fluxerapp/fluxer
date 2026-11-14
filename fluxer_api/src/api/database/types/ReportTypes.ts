@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '@app/api/database/types/MessageTypes';
+import type {MessagePollDb} from '@app/api/database/types/PollTypes';
 
 type MentionCollection = ReadonlyArray<bigint> | Set<bigint> | null | undefined;
 
@@ -25,6 +26,7 @@ export interface IARMessageContextRow {
 	embeds: Array<MessageEmbed> | null;
 	sticker_items: Array<MessageStickerItem> | null;
 	missing_attachments?: Array<MessageAttachment> | null;
+	poll?: MessagePollDb | null;
 }
 
 export interface IARSubmissionRow {

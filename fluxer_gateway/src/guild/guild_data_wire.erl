@@ -151,6 +151,7 @@ named_key_kinds() ->
         <<"region_id">> => scalar,
         <<"server_id">> => scalar,
         <<"target_id">> => scalar,
+        <<"answer_id">> => scalar,
         <<"mention_roles">> => scalar_list,
         <<"participants">> => scalar_list,
         <<"ringing">> => scalar_list,

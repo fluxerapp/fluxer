@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import type {MessagePollDb} from '@app/api/database/types/PollTypes';
 import type {IARMessageContextRow} from '@app/api/database/types/ReportTypes';
 import {
 	DSAReportEmailVerifications,
@@ -49,7 +50,18 @@ const IAR_MESSAGE_CONTEXT_FIELDS = {
 	embeds: 'frozen<list<message_embed>>',
 	sticker_items: 'frozen<list<message_sticker_item>>',
 	missing_attachments: 'frozen<list<message_attachment>>',
+	poll: 'frozen<message_poll>',
 } satisfies Record<keyof IARMessageContextRow, string>;
+
+const MESSAGE_POLL_FIELDS = {
+	question: 'frozen<message_poll_media>',
+	answers: 'frozen<list<message_poll_answer>>',
+	expiry: 'timestamp',
+	anonymous_voting: 'boolean',
+	allow_multiselect: 'boolean',
+	layout_type: 'int',
+	results: 'frozen<message_poll_results>',
+} satisfies Record<keyof MessagePollDb, string>;
 
 const REPORT_TABLES = [
 	IARSubmissions,
@@ -71,6 +83,14 @@ describe('Cassandra UDT parity', () => {
 		expect(userType).toBeDefined();
 		expect(sortedFields(userType!.fields.map((field) => [field.name, field.type]))).toEqual(
 			sortedFields(Object.entries(IAR_MESSAGE_CONTEXT_FIELDS)),
+		);
+	});
+
+	it('stores every message_poll field the API writes, with the same type', () => {
+		const userType = SCHEMA.user_types.find((entry) => entry.name === 'message_poll');
+		expect(userType).toBeDefined();
+		expect(sortedFields(userType!.fields.map((field) => [field.name, field.type]))).toEqual(
+			sortedFields(Object.entries(MESSAGE_POLL_FIELDS)),
 		);
 	});
 

@@ -85,6 +85,7 @@ function makeMessageWithMedia(
 			},
 		],
 		embeds,
+		poll: null,
 		sticker_items: null,
 		message_reference: null,
 		message_snapshots: null,

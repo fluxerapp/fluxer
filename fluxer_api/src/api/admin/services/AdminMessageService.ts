@@ -266,6 +266,7 @@ export class AdminMessageService {
 			webhook_id: message.webhook_id ?? null,
 			content: message.content ?? '',
 			timestamp: message.timestamp,
+			poll: message.poll,
 			attachments:
 				message.attachments?.map((attachment) => ({
 					id: attachment.id,

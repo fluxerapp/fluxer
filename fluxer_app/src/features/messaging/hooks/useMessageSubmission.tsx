@@ -24,6 +24,7 @@ import type {
 	MessageAttachment,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
@@ -39,7 +40,7 @@ interface UseMessageSubmissionOptions {
 export type SendMessageFunction = (
 	content: string,
 	hasAttachments: boolean,
-	stickersOrTts?: Array<MessageStickerItem> | boolean,
+	stickersOrTtsOrPoll?: Array<MessageStickerItem> | MessageCreatePoll | boolean,
 	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 	maybeFavoriteMemeId?: string,
 ) => boolean;
@@ -100,19 +101,25 @@ export const useMessageSubmission = ({
 		(
 			content: string,
 			hasAttachments: boolean,
-			stickersOrTts: Array<MessageStickerItem> | boolean = [],
+			stickersOrTtsOrPoll: Array<MessageStickerItem> | MessageCreatePoll | boolean = [],
 			favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 			maybeFavoriteMemeId?: string,
 		) => {
-			const isTtsCall = typeof stickersOrTts === 'boolean';
-			const tts = isTtsCall ? stickersOrTts : undefined;
+			const isTtsCall = typeof stickersOrTtsOrPoll === 'boolean';
+			const tts = isTtsCall ? stickersOrTtsOrPoll : undefined;
 			let stickers: Array<MessageStickerItem>;
 			let favoriteMemeId: string | undefined;
+			let poll: MessageCreatePoll | undefined;
 			if (isTtsCall) {
 				stickers = Array.isArray(favoriteMemeIdOrStickers) ? favoriteMemeIdOrStickers : [];
 				favoriteMemeId = maybeFavoriteMemeId;
 			} else {
-				stickers = stickersOrTts;
+				if (Array.isArray(stickersOrTtsOrPoll)) {
+					stickers = stickersOrTtsOrPoll;
+				} else {
+					stickers = [];
+					poll = stickersOrTtsOrPoll;
+				}
 				favoriteMemeId = typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined;
 			}
 			const currentUser = Users.getCurrentUser();
@@ -121,6 +128,7 @@ export const useMessageSubmission = ({
 				hasAttachments ||
 				stickers.length > 0 ||
 				favoriteMemeId !== undefined ||
+				poll !== undefined ||
 				CloudUpload.getTextareaAttachments(channel.id).length > 0;
 			if (!canSubmitMessage(content, hasNonTextContent)) return false;
 			if (isBlockedBySlowmode(channel)) return false;
@@ -152,8 +160,8 @@ export const useMessageSubmission = ({
 					currentUser,
 					referencedMessage,
 					replyMentioning: replyingMessage?.mentioning,
-					stickers,
 					favoriteMemeId,
+					poll,
 				},
 				uploadingAttachments,
 			);
@@ -174,6 +182,7 @@ export const useMessageSubmission = ({
 					messageReference,
 					flags: message.flags,
 					stickers,
+					poll,
 					favoriteMemeId,
 					tts,
 				}),

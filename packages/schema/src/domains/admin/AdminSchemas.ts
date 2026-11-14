@@ -69,6 +69,7 @@ import {
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {MessagePollResponse} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
@@ -1767,6 +1768,7 @@ export const AdminMessageSchema = z.object({
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
 	embeds: z.array(MessageEmbedResponse).optional(),
+	poll: MessagePollResponse.optional(),
 });
 export const LookupMessageResponse = z.object({
 	messages: z.array(AdminMessageSchema).max(100),

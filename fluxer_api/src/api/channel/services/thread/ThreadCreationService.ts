@@ -602,6 +602,7 @@ export class ThreadCreationService {
 			mention_channels: null,
 			attachments: null,
 			embeds: null,
+			poll: null,
 			sticker_items: null,
 			message_reference: {
 				channel_id: view.channel.id,

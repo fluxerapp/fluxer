@@ -13,6 +13,7 @@ import GuildVerification from '@app/features/guild/state/GuildVerification';
 import {UNPIN_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import * as PollCommands from '@app/features/messaging/commands/PollCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {ForwardModal, type ForwardModalSuccess} from '@app/features/messaging/components/modals/ForwardModal';
@@ -318,6 +319,7 @@ export interface MessageActionHandlers {
 	handleCopyMessageId: () => void;
 	handleCopyMessage: () => void;
 	handleCopyMessageLink: () => void;
+	handleEndPollNow: () => void;
 	handleSaveMessage: (isSaved: boolean) => (event?: React.MouseEvent | React.KeyboardEvent) => void;
 	handleToggleSuppressEmbeds: () => void;
 	handleReply: (event?: React.MouseEvent | React.KeyboardEvent) => void;
@@ -360,6 +362,10 @@ export function createMessageActionHandlers(
 	};
 	const handleCopyMessageLink = () => {
 		requestCopyMessageLink(message, i18n, sourceChannel);
+		onClose?.();
+	};
+	const handleEndPollNow = () => {
+		PollCommands.showEndPollConfirmation(i18n, {message});
 		onClose?.();
 	};
 	const handleSaveMessage = (isSaved: boolean) => () => {
@@ -436,6 +442,7 @@ export function createMessageActionHandlers(
 		handleCopyMessageId,
 		handleCopyMessage,
 		handleCopyMessageLink,
+		handleEndPollNow,
 		handleSaveMessage,
 		handleToggleSuppressEmbeds,
 		handleReply,

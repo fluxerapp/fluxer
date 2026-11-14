@@ -84,6 +84,7 @@ export interface MenuBottomSheetProps {
 	groups: Array<MenuGroupType>;
 	headerContent?: React.ReactNode;
 	showCloseButton?: boolean;
+	snapPoints?: Array<number>;
 }
 
 const MenuCheckboxItem: React.FC<{item: MenuCheckboxType; isLast: boolean}> = observer(({item, isLast}) => {
@@ -405,7 +406,7 @@ const MenuGroup: React.FC<{
 	);
 });
 export const MenuBottomSheet: React.FC<MenuBottomSheetProps> = observer(
-	({isOpen, onClose, title, groups, headerContent, showCloseButton = false}) => {
+	({isOpen, onClose, title, groups, headerContent, showCloseButton = false, snapPoints = [0, 0.6, 1]}) => {
 		const {i18n} = useLingui();
 		const [activeSubmenu, setActiveSubmenu] = useState<MenuSubmenuItemType | null>(null);
 		const hasHeader = Boolean(title || headerContent);
@@ -436,7 +437,7 @@ export const MenuBottomSheet: React.FC<MenuBottomSheetProps> = observer(
 				<BottomSheet
 					isOpen={isOpen}
 					onClose={handleClose}
-					snapPoints={[0, 0.6, 1]}
+					snapPoints={snapPoints}
 					initialSnap={1}
 					title={activeSubmenu.label}
 					showCloseButton={false}
@@ -465,7 +466,7 @@ export const MenuBottomSheet: React.FC<MenuBottomSheetProps> = observer(
 			<BottomSheet
 				isOpen={isOpen}
 				onClose={handleClose}
-				snapPoints={[0, 0.6, 1]}
+				snapPoints={snapPoints}
 				initialSnap={1}
 				title={title}
 				showCloseButton={showCloseButton}
