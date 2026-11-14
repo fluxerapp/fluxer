@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import type {TrackPublishOptions} from 'livekit-client';
+import type {ScreenShareCaptureOptions, TrackPublishOptions} from 'livekit-client';
 
 const OPUS_MAX_AUDIO_BITRATE_BPS = 510000;
 const VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS = 8000;
 const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 64000;
 const SCREEN_SHARE_AUDIO_BITRATE_BPS = 128000;
+
+export const SCREEN_SHARE_AUDIO_CAPTURE_CONSTRAINTS = {
+	channelCount: 2,
+	sampleRate: 48000,
+	echoCancellation: false,
+	noiseSuppression: false,
+	autoGainControl: false,
+} as const satisfies MediaTrackConstraints;
 
 function normaliseAudioBitrateBps(value: number | null | undefined): number | undefined {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined;
@@ -49,6 +57,12 @@ export const SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS: TrackPublishOptions = {
 	stream: 'screen_share',
 };
 
+export function withScreenShareAudioCaptureConstraints(options: ScreenShareCaptureOptions): ScreenShareCaptureOptions {
+	if (!options.audio) return options;
+	const baseAudio = typeof options.audio === 'object' ? options.audio : {};
+	return {...options, audio: {...baseAudio, ...SCREEN_SHARE_AUDIO_CAPTURE_CONSTRAINTS}};
+}
+
 export function prepareHighFidelityScreenShareAudioTrack(track: MediaStreamTrack | undefined): void {
 	if (!track) return;
 	try {
@@ -59,14 +73,6 @@ export function prepareHighFidelityScreenShareAudioTrack(track: MediaStreamTrack
 		).contentHint = 'music';
 	} catch {}
 	if (typeof track.applyConstraints === 'function') {
-		void track
-			.applyConstraints({
-				channelCount: 2,
-				sampleRate: 48000,
-				echoCancellation: false,
-				noiseSuppression: false,
-				autoGainControl: false,
-			})
-			.catch(() => undefined);
+		void track.applyConstraints(SCREEN_SHARE_AUDIO_CAPTURE_CONSTRAINTS).catch(() => undefined);
 	}
 }
