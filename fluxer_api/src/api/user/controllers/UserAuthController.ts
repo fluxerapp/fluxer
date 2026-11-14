@@ -25,6 +25,7 @@ import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
+import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {LocalSignInMethodRequiredError} from '@fluxer/errors/src/domains/auth/LocalSignInMethodRequiredError';
@@ -259,7 +260,9 @@ export function UserAuthController(app: HonoApp) {
 				user.emailVerified &&
 				!user.emailBounced &&
 				(await instanceConfig.isEmailEnabled());
-			if (!hasLocalPassword && !hasEmailCodeSignIn) {
+			const hasLocalPasskey =
+				user.traits.has(UserTraits.PASSKEY) || user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
+			if (!hasLocalPassword && !hasEmailCodeSignIn && !hasLocalPasskey) {
 				throw new LocalSignInMethodRequiredError();
 			}
 

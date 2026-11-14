@@ -14,6 +14,7 @@ import {AccountSecurityRow} from '@app/features/user/components/modals/tabs/acco
 import type {User} from '@app/features/user/models/User';
 import * as FormUtils from '@app/lib/forms';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {msg} from '@lingui/core/macro';
@@ -40,7 +41,10 @@ export function isSsoLinked(user: User): boolean {
 
 export function canDisconnectSso(user: User): boolean {
 	if (!isSsoLinked(user) || RuntimeConfig.getSnapshot().sso?.enforced === true) return false;
-	if (user.hasPassword) return true;
+	const hasPasskey =
+		user.traits.includes(UserTraits.PASSKEY) ||
+		user.authenticatorTypes?.includes(UserAuthenticatorTypes.WEBAUTHN) === true;
+	if (user.hasPassword || hasPasskey) return true;
 	return (
 		RuntimeConfig.getSnapshot().features.identifier_first === true &&
 		!RuntimeConfig.usesUsernameSignIn &&

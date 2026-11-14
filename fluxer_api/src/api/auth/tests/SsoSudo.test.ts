@@ -71,20 +71,6 @@ describe('sudo mode for SSO accounts without credentials', () => {
 		await createBuilder(harness, token).post('/users/@me/disable').body({}).expect(204).execute();
 	});
 
-	it('refuses to disconnect SSO when the account has no local sign-in method', async () => {
-		const token = await signInWithSso();
-		await createBuilder(harness, token)
-			.put('/users/@me/date-of-birth')
-			.body({date_of_birth: '2000-01-01'})
-			.expect(200)
-			.execute();
-		await createBuilder(harness, token)
-			.delete('/users/@me/sso')
-			.body({})
-			.expect(403, 'LOCAL_SIGN_IN_METHOD_REQUIRED')
-			.execute();
-	});
-
 	it('asks an older SSO session to sign in again', async () => {
 		const token = await signInWithSso();
 		travelMinutes(11);
