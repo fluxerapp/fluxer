@@ -27,6 +27,7 @@ import {
 } from '@app/api/stripe/StripeGiftTrialMetadata';
 import {mirrorSubscription} from '@app/api/stripe/StripeMirror';
 import {
+	getInvoiceLatestLinePeriodStart,
 	getPrimarySubscriptionItem,
 	getSubscriptionEntitlementPeriodEndUnix,
 	getSubscriptionItemPeriodEndUnix,
@@ -61,6 +62,7 @@ import type Stripe from 'stripe';
 type BillingCycleChangeEffectiveAt = 'now' | 'period_end';
 
 const CHARGEABLE_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>(['active', 'trialing']);
+const UNPAID_RENEWAL_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>(['past_due', 'unpaid']);
 
 function mapStripeIds(values: Array<string | {id: string}> | null | undefined): Array<string> | null {
 	const ids = (values ?? []).map((value) => extractId(value)).filter((id): id is string => id !== null);
@@ -1358,7 +1360,25 @@ export class StripeSubscriptionService {
 			const item = getPrimarySubscriptionItem(subscription);
 			const currentPeriodEnd = getSubscriptionItemPeriodEndUnix(item);
 			const nowMs = Date.now();
-			const baseUnix = isGiftTrialRunning(subscription, nowMs) ? currentTrialEnd : currentPeriodEnd;
+			const giftTrialRunning = isGiftTrialRunning(subscription, nowMs);
+			let baseUnix = giftTrialRunning ? currentTrialEnd : currentPeriodEnd;
+			const unpaidRenewal = giftTrialRunning ? null : await this.findUnpaidRenewal(subscription, item);
+			if (unpaidRenewal) {
+				const coveredUntil = addGiftCodeDuration(
+					new Date(unpaidRenewal.periodStartUnix * 1000),
+					durationType,
+					durationQuantity,
+				);
+				if (
+					coveredUntil &&
+					coveredUntil.getTime() > nowMs &&
+					!isPastStripeTrialLimit(coveredUntil.getTime(), nowMs) &&
+					(unpaidRenewal.openInvoiceId === null ||
+						(await this.voidUnpaidRenewalInvoice(user.id, unpaidRenewal.openInvoiceId, idempotencyKey)))
+				) {
+					baseUnix = unpaidRenewal.periodStartUnix;
+				}
+			}
 			Logger.debug(
 				{
 					userId: user.id,
@@ -1454,6 +1474,64 @@ export class StripeSubscriptionService {
 				},
 				'Finished Stripe gift trial extension cleanup',
 			);
+		}
+	}
+
+	private async findUnpaidRenewal(
+		subscription: Stripe.Subscription,
+		item: Stripe.SubscriptionItem | null,
+	): Promise<{periodStartUnix: number; openInvoiceId: string | null} | null> {
+		const invoiceId = extractId(subscription.latest_invoice);
+		const periodStartUnix = item?.current_period_start;
+		if (!this.stripe || !invoiceId || !periodStartUnix) {
+			return null;
+		}
+		const unpaidStatus = UNPAID_RENEWAL_SUBSCRIPTION_STATUSES.has(subscription.status);
+		if (!unpaidStatus && subscription.status !== 'active') {
+			return null;
+		}
+		const invoice = await this.stripe.invoices.retrieve(invoiceId);
+		const invoicePeriodStart = getInvoiceLatestLinePeriodStart(invoice);
+		if (
+			invoice.billing_reason !== 'subscription_cycle' ||
+			(invoicePeriodStart && invoicePeriodStart.getTime() !== periodStartUnix * 1000)
+		) {
+			return null;
+		}
+		if (invoice.status === 'open' && unpaidStatus) {
+			return {periodStartUnix, openInvoiceId: invoiceId};
+		}
+		if (invoice.status === 'void') {
+			return {periodStartUnix, openInvoiceId: null};
+		}
+		return null;
+	}
+
+	private async voidUnpaidRenewalInvoice(userId: UserID, invoiceId: string, idempotencyKey: string): Promise<boolean> {
+		if (!this.stripe) {
+			return false;
+		}
+		try {
+			await this.stripe.invoices.voidInvoice(
+				invoiceId,
+				{},
+				{idempotencyKey: `gift_void_invoice:${userId}:${idempotencyKey}`},
+			);
+			Logger.info({userId, invoiceId, idempotencyKey}, 'Voided the unpaid renewal invoice that a gift now covers');
+			return true;
+		} catch (error) {
+			const invoice = await this.stripe.invoices.retrieve(invoiceId);
+			if (invoice.status === 'void') {
+				return true;
+			}
+			if (invoice.status === 'paid') {
+				Logger.info(
+					{userId, invoiceId, idempotencyKey},
+					'Unpaid renewal invoice was paid before the gift could void it, so the gift stacks after the paid period',
+				);
+				return false;
+			}
+			throw error;
 		}
 	}
 

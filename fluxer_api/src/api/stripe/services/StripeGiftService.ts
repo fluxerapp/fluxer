@@ -484,7 +484,12 @@ export class StripeGiftService {
 		if (user.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
 			return false;
 		}
-		return user.premiumUntil === null || user.premiumUntil.getTime() > Date.now();
+		const nowMs = Date.now();
+		return (
+			user.premiumUntil === null ||
+			user.premiumUntil.getTime() > nowMs ||
+			(user.premiumGraceEndsAt !== null && user.premiumGraceEndsAt.getTime() > nowMs)
+		);
 	}
 
 	private shouldFallbackToPremiumFieldGrant(error: unknown): boolean {
