@@ -50,6 +50,9 @@ export const VoiceRegionAdminResponse = z.object({
 	latitude: z.number().describe('Geographic latitude coordinate'),
 	longitude: z.number().describe('Geographic longitude coordinate'),
 	is_default: z.boolean().describe('Whether this is the default region'),
+	hidden: z
+		.boolean()
+		.describe('Whether the region is left out of the region lists clients show, while placement still uses it'),
 	vip_only: z.boolean().describe('Whether this region is restricted to VIP users'),
 	required_guild_features: z.array(z.string()).max(100).describe('Guild features required to use this region'),
 	allowed_guild_ids: z.array(SnowflakeStringType).max(1000).describe('Guild IDs explicitly allowed to use this region'),
@@ -107,6 +110,11 @@ export const CreateVoiceRegionRequest = z.object({
 	latitude: z.number().describe('Geographic latitude coordinate'),
 	longitude: z.number().describe('Geographic longitude coordinate'),
 	is_default: z.boolean().optional().default(false).describe('Whether this is the default region'),
+	hidden: z
+		.boolean()
+		.optional()
+		.default(false)
+		.describe('Whether to leave the region out of the region lists clients show, while placement still uses it'),
 	vip_only: z.boolean().optional().default(false).describe('Whether this region is restricted to VIP users'),
 	required_guild_features: z
 		.array(createStringType(1, 64))
@@ -137,6 +145,10 @@ export const UpdateVoiceRegionRequest = z.object({
 	latitude: z.number().optional().describe('Geographic latitude coordinate'),
 	longitude: z.number().optional().describe('Geographic longitude coordinate'),
 	is_default: z.boolean().optional().describe('Whether this is the default region'),
+	hidden: z
+		.boolean()
+		.optional()
+		.describe('Whether to leave the region out of the region lists clients show, while placement still uses it'),
 	vip_only: z.boolean().optional().describe('Whether this region is restricted to VIP users'),
 	required_guild_features: z
 		.array(createStringType(1, 64))

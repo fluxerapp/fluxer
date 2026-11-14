@@ -14345,6 +14345,10 @@
 					"latitude": {"description": "Geographic latitude coordinate", "type": "number"},
 					"longitude": {"description": "Geographic longitude coordinate", "type": "number"},
 					"is_default": {"description": "Whether this is the default region", "type": "boolean"},
+					"hidden": {
+						"description": "Whether to leave the region out of the region lists clients show, while placement still uses it",
+						"type": "boolean"
+					},
 					"vip_only": {"description": "Whether this region is restricted to VIP users", "type": "boolean"},
 					"required_guild_features": {
 						"description": "Guild features required to use this region",
@@ -14391,6 +14395,10 @@
 							"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 							"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 							"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+							"hidden": {
+								"type": "boolean",
+								"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+							},
 							"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 							"required_guild_features": {
 								"maxItems": 100,
@@ -14433,6 +14441,7 @@
 							"latitude",
 							"longitude",
 							"is_default",
+							"hidden",
 							"vip_only",
 							"required_guild_features",
 							"allowed_guild_ids",
@@ -14455,6 +14464,11 @@
 					"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 					"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 					"is_default": {"default": false, "description": "Whether this is the default region", "type": "boolean"},
+					"hidden": {
+						"default": false,
+						"description": "Whether to leave the region out of the region lists clients show, while placement still uses it",
+						"type": "boolean"
+					},
 					"vip_only": {
 						"default": false,
 						"description": "Whether this region is restricted to VIP users",
@@ -14507,6 +14521,10 @@
 								"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 								"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 								"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+								"hidden": {
+									"type": "boolean",
+									"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+								},
 								"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 								"required_guild_features": {
 									"maxItems": 100,
@@ -14549,6 +14567,7 @@
 								"latitude",
 								"longitude",
 								"is_default",
+								"hidden",
 								"vip_only",
 								"required_guild_features",
 								"allowed_guild_ids",
@@ -27044,6 +27063,10 @@
 					"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 					"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 					"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+					"hidden": {
+						"type": "boolean",
+						"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 					"required_guild_features": {
 						"maxItems": 100,
@@ -27081,6 +27104,7 @@
 					"latitude",
 					"longitude",
 					"is_default",
+					"hidden",
 					"vip_only",
 					"required_guild_features",
 					"allowed_guild_ids",

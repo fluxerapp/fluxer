@@ -10,6 +10,8 @@ pub struct VoiceRegion {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
     pub is_default: Option<bool>,
+    #[serde(default)]
+    pub hidden: bool,
     pub vip_only: Option<bool>,
     #[serde(default)]
     pub required_guild_features: Vec<String>,

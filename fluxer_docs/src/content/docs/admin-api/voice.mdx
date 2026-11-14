@@ -35,6 +35,7 @@ You pick the `id` when you create the region, and you can't change it later. A c
 | latitude | number | The latitude placement measures distance from |
 | longitude | number | The longitude placement measures distance from |
 | is_default<sup>1</sup> | boolean | Whether automatic placement falls back to this region |
+| hidden | boolean | Whether the region is left out of the region lists clients show, see [Hidden regions](#hidden-regions) |
 | vip_only | boolean | Whether the guild needs `VIP_VOICE` |
 | required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
@@ -55,6 +56,7 @@ You pick the `id` when you create the region, and you can't change it later. A c
   "latitude": 59.33,
   "longitude": 18.06,
   "is_default": true,
+  "hidden": false,
   "vip_only": false,
   "required_guild_features": [],
   "allowed_guild_ids": [],
@@ -110,6 +112,12 @@ A server with `draining` set gets no new calls. Calls already on it keep going, 
 ## Soft connection limits
 
 `soft_connection_limit` is the connection count at which placement starts to prefer the region's other servers, and it never refuses a session. The count comes from [Get voice state counts](/admin-api/gateway/#get-voice-state-counts). Each API node refreshes it every 15 seconds, and a burst of joins between refreshes can go past the limit. The limit is checked when a channel's first session is placed, and later joins to that channel use the same server.
+
+## Hidden regions
+
+A region with `hidden` set is left out of [List RTC regions](/http-api/channels/#list-rtc-regions) and out of `rtc_regions` in [Ready](/gateway/events/#ready), so nobody can pick it in a client. Placement still uses it. People for whom it is the nearest region get calls there, and a channel or call already set to it keeps using it.
+
+Setting a channel's `rtc_region` or a call's `region` to a hidden region returns 400 `INVALID_FORM_BODY` with `INVALID_OR_RESTRICTED_RTC_REGION`. Sending the region the channel or call already uses is accepted, so saving other channel settings never clears it. Setting the region to null or `automatic` always works. To send no new calls to a region at all, set `draining` on its servers.
 
 ## List voice regions
 
@@ -179,6 +187,7 @@ Creates a region, and an `id` already in use overwrites that region. Requires `v
 | latitude | number | The latitude placement measures distance from |
 | longitude | number | The longitude placement measures distance from |
 | is_default? | boolean | Whether automatic placement falls back to this region (default false) |
+| hidden? | boolean | Whether to leave the region out of the region lists clients show (default false) |
 | vip_only? | boolean | Whether the guild needs `VIP_VOICE` (default false) |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
@@ -213,6 +222,7 @@ Updates a region, and an array you send replaces the stored one. Requires `voice
 | latitude? | number | The latitude placement measures distance from |
 | longitude? | number | The longitude placement measures distance from |
 | is_default? | boolean | Whether automatic placement falls back to this region |
+| hidden? | boolean | Whether to leave the region out of the region lists clients show |
 | vip_only? | boolean | Whether the guild needs `VIP_VOICE` |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |

@@ -10708,6 +10708,10 @@
 					"type": "boolean"
 				},
 				{
+					"name": "hidden",
+					"type": "boolean"
+				},
+				{
 					"name": "vip_only",
 					"type": "boolean"
 				},

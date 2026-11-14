@@ -154,7 +154,7 @@ The session's initial state, sent once after a successful [Identify](/gateway/co
 | pinned_dms | array[snowflake] | Pinned private channel IDs |
 | favorite_memes | array[[meme](/http-api/memes/#meme-object) object] | Saved memes |
 | webauthn_credentials | array[[WebAuthn credential object](#webauthn-credential-object)] | Registered WebAuthn credentials |
-| rtc_regions | array[[RTC region object](#rtc-region-object)] | Voice regions, nearest first |
+| rtc_regions | array[[RTC region object](#rtc-region-object)] | Voice regions you can pick, nearest first, without [hidden regions](/admin-api/voice/#hidden-regions) |
 | country_code | string | Country of the connecting address, `US` when unknown |
 | latitude? | string | Latitude of the connecting address as a decimal string |
 | longitude? | string | Longitude of the connecting address as a decimal string |

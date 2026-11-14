@@ -64,7 +64,7 @@ export const VoiceAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'create_voice_region',
 					targetType: 'voice_region',
 					targetId: '0',
-					metadata: {region_id: REGION_ID, name: REGION_NAME},
+					metadata: {region_id: REGION_ID, name: REGION_NAME, hidden: 'false'},
 				},
 			};
 		},
@@ -108,12 +108,12 @@ export const VoiceAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		async prepare({harness, admin}) {
 			await createRegion(harness, admin);
 			return {
-				request: {path: `/admin/voice/regions/${REGION_ID}`, body: {name: 'Renamed Region'}},
+				request: {path: `/admin/voice/regions/${REGION_ID}`, body: {name: 'Renamed Region', hidden: true}},
 				expected: {
 					action: 'update_voice_region',
 					targetType: 'voice_region',
 					targetId: '0',
-					metadata: {region_id: REGION_ID},
+					metadata: {region_id: REGION_ID, hidden: 'true'},
 				},
 			};
 		},
