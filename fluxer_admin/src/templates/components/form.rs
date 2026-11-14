@@ -27,13 +27,14 @@ pub const FORM_SELECT_CLASS: &str = "w-full rounded-lg border border-neutral-300
      focus:border-brand-primary focus:outline-none focus:ring-2 \
      focus:ring-brand-primary/20 disabled:cursor-not-allowed \
      disabled:bg-neutral-50 disabled:opacity-50 h-8 appearance-none px-3 py-1.5 pr-10";
-pub const BUTTON_BASE_CLASS: &str = "inline-flex items-center justify-center gap-2 font-medium \
+const BUTTON_BASE_CLASS: &str = "inline-flex items-center justify-center gap-2 font-medium \
      rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 \
      focus:ring-offset-2 w-fit px-4 py-2 text-base";
 const PRIMARY_BUTTON_CLASS: &str =
     "bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-offset-white";
 const DANGER_BUTTON_CLASS: &str = "bg-red-600 text-white hover:bg-red-700 focus:ring-offset-white";
-pub const SECONDARY_BUTTON_CLASS: &str = "bg-neutral-50 text-neutral-700 hover:text-neutral-900 border border-neutral-300 hover:border-neutral-400";
+const SECONDARY_BUTTON_CLASS: &str = "bg-neutral-50 text-neutral-700 hover:text-neutral-900 \
+     border border-neutral-300 hover:border-neutral-400";
 
 fn button_markup(label: &str, button_type: &str, variant_class: &str) -> Markup {
     html! {

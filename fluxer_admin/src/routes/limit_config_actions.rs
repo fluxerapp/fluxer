@@ -54,7 +54,11 @@ fn update_limit_rule_values(
         }
     }
     rule.limits = limits;
-    rule.filters = build_limit_filters(form);
+    rule.filters = if rule.id == "default" {
+        None
+    } else {
+        build_limit_filters(form)
+    };
 }
 
 pub(super) async fn limit_config_post(
